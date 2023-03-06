@@ -28,7 +28,7 @@ export function createDatasourcesStore() {
     }))
   }
 
-  const updateDatasource = async response => {
+  const updateDatasource = response => {
     const { datasource, error } = response
     store.update(state => {
       const currentIdx = state.list.findIndex(ds => ds._id === datasource._id)
@@ -52,7 +52,7 @@ export function createDatasourcesStore() {
       datasourceId: datasource?._id,
       tablesFilter,
     })
-    return await updateDatasource(response)
+    return updateDatasource(response)
   }
 
   const save = async (body, fetchSchema = false) => {

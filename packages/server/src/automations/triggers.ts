@@ -109,8 +109,13 @@ export async function externalTrigger(
     }
     params.fields = coercedFields
   }
-  const data = { automation, event: params }
+  const data: Record<string, any> = { automation, event: params }
   if (getResponses) {
+    data.event = {
+      ...data.event,
+      appId: context.getAppId(),
+      automation,
+    }
     return utils.processEvent({ data })
   } else {
     return automationQueue.add(data, JOB_OPTS)

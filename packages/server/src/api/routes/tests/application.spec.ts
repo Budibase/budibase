@@ -14,8 +14,10 @@ jest.mock("../../../utilities/redis", () => ({
 import { clearAllApps, checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
-import { events } from "@budibase/backend-core"
+import { events, utils } from "@budibase/backend-core"
 import env from "../../../environment"
+
+jest.setTimeout(15000)
 
 describe("/applications", () => {
   let request = setup.getRequest()
@@ -23,9 +25,11 @@ describe("/applications", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
-    await clearAllApps()
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(async () => {
     jest.clearAllMocks()
   })
 
@@ -33,7 +37,7 @@ describe("/applications", () => {
     it("creates empty app", async () => {
       const res = await request
         .post("/api/applications")
-        .field("name", "My App")
+        .field("name", utils.newid())
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -44,7 +48,7 @@ describe("/applications", () => {
     it("creates app from template", async () => {
       const res = await request
         .post("/api/applications")
-        .field("name", "My App")
+        .field("name", utils.newid())
         .field("useTemplate", "true")
         .field("templateKey", "test")
         .field("templateString", "{}") // override the file download
@@ -59,7 +63,7 @@ describe("/applications", () => {
     it("creates app from file", async () => {
       const res = await request
         .post("/api/applications")
-        .field("name", "My App")
+        .field("name", utils.newid())
         .field("useTemplate", "true")
         .set(config.defaultHeaders())
         .attach("templateFile", "src/api/routes/tests/data/export.txt")
@@ -106,6 +110,11 @@ describe("/applications", () => {
   })
 
   describe("fetch", () => {
+    beforeEach(async () => {
+      // Clean all apps but the onde from config
+      await clearAllApps(config.getTenantId(), [config.getAppId()!])
+    })
+
     it("lists all applications", async () => {
       await config.createApp("app1")
       await config.createApp("app2")
@@ -266,6 +275,11 @@ describe("/applications", () => {
   })
 
   describe("unpublish", () => {
+    beforeEach(async () => {
+      // We want to republish as the unpublish will delete the prod app
+      await config.publish()
+    })
+
     it("should unpublish app with dev app ID", async () => {
       const appId = config.getAppId()
       await request

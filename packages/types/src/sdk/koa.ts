@@ -41,7 +41,7 @@ export interface UserCtx<RequestBody = any, ResponseBody = any>
 }
 
 /**
- * Deprecated: Use UserCtx / Ctx appropriately
+ * @deprecated: Use UserCtx / Ctx appropriately
  * Authenticated context.
  */
 export interface BBContext extends Ctx {

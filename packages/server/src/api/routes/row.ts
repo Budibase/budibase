@@ -3,7 +3,7 @@ import * as rowController from "../controllers/row"
 import authorized from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
-const { internalSearchValidator } = require("./utils/validators")
+import { internalSearchValidator } from "./utils/validators"
 const { PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()

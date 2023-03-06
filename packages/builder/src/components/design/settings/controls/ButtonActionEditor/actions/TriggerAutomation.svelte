@@ -36,7 +36,13 @@
   $: selectedSchema = selectedAutomation?.schema
 
   const onFieldsChanged = e => {
-    parameters.fields = e.detail
+    parameters.fields = Object.entries(e.detail || {}).reduce(
+      (acc, [key, value]) => {
+        acc[key.trim()] = value
+        return acc
+      },
+      {}
+    )
   }
 
   const setNew = () => {

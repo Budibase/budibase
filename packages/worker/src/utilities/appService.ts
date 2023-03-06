@@ -2,6 +2,7 @@ import fetch from "node-fetch"
 import { constants, tenancy, logging } from "@budibase/backend-core"
 import { checkSlashesInUrl } from "../utilities"
 import env from "../environment"
+import { SyncUserRequest, User } from "@budibase/types"
 
 async function makeAppRequest(url: string, method: string, body: any) {
   if (env.isTest()) {
@@ -24,11 +25,15 @@ async function makeAppRequest(url: string, method: string, body: any) {
   return fetch(checkSlashesInUrl(env.APPS_URL + url), request)
 }
 
-export async function syncUserInApps(userId: string) {
+export async function syncUserInApps(userId: string, previousUser?: User) {
+  const body: SyncUserRequest = {
+    previousUser,
+  }
+
   const response = await makeAppRequest(
     `/api/users/metadata/sync/${userId}`,
     "POST",
-    {}
+    body
   )
   if (response && response.status !== 200) {
     throw "Unable to sync user."

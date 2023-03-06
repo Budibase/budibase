@@ -1,10 +1,10 @@
 import { PathLike } from "fs"
-const { budibaseTempDir } = require("../budibaseDir")
-const fs = require("fs")
-const { join } = require("path")
-const uuid = require("uuid/v4")
+import fs from "fs"
+import { budibaseTempDir } from "../budibaseDir"
+import { join } from "path"
 import env from "../../environment"
 import tar from "tar"
+const uuid = require("uuid/v4")
 
 export const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 
@@ -112,6 +112,7 @@ export const sendTempFile = (fileContents: any) => {
  * allows a centralised location to check logic is all good.
  */
 export const readFileSync = (filepath: PathLike, options = "utf8") => {
+  // @ts-ignore
   return fs.readFileSync(filepath, options)
 }
 
@@ -147,6 +148,7 @@ export const findFileRec = (startPath: PathLike, filter: string): any => {
 
   const files = fs.readdirSync(startPath)
   for (let i = 0, len = files.length; i < len; i++) {
+    // @ts-ignore
     const filename = join(startPath, files[i])
     const stat = fs.lstatSync(filename)
 

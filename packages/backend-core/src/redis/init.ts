@@ -20,13 +20,17 @@ async function init() {
   ).init()
 }
 
-process.on("exit", async () => {
+export async function shutdown() {
   if (userClient) await userClient.finish()
   if (sessionClient) await sessionClient.finish()
   if (appClient) await appClient.finish()
   if (cacheClient) await cacheClient.finish()
   if (writethroughClient) await writethroughClient.finish()
   if (lockClient) await lockClient.finish()
+}
+
+process.on("exit", async () => {
+  await shutdown()
 })
 
 export async function getUserClient() {

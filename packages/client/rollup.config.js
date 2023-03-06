@@ -5,6 +5,7 @@ import svelte from "rollup-plugin-svelte"
 import { terser } from "rollup-plugin-terser"
 import postcss from "rollup-plugin-postcss"
 import svg from "rollup-plugin-svg"
+import image from "@rollup/plugin-image"
 import json from "rollup-plugin-json"
 import nodePolyfills from "rollup-plugin-polyfill-node"
 import path from "path"
@@ -16,6 +17,7 @@ const ignoredWarnings = [
   "css-unused-selector",
   "module-script-reactive-declaration",
   "a11y-no-onchange",
+  "a11y-click-events-have-key-events",
 ]
 
 export default {
@@ -87,6 +89,9 @@ export default {
       dedupe: ["svelte", "svelte/internal"],
     }),
     svg(),
+    image({
+      exclude: "**/*.svg",
+    }),
     json(),
     production && terser(),
     !production && visualizer(),

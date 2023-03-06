@@ -11,6 +11,6 @@
 
 <style>
   img {
-    padding-top: 1px;
+    padding-top: 5px;
   }
 </style>

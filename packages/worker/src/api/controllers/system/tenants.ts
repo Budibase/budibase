@@ -1,8 +1,7 @@
-import { BBContext } from "@budibase/types"
-import { deprovisioning } from "@budibase/backend-core"
-import { quotas } from "@budibase/pro"
+import { UserCtx } from "@budibase/types"
+import * as tenantSdk from "../../../sdk/tenants"
 
-const _delete = async (ctx: BBContext) => {
+export async function destroy(ctx: UserCtx) {
   const user = ctx.user!
   const tenantId = ctx.params.tenantId
 
@@ -11,13 +10,10 @@ const _delete = async (ctx: BBContext) => {
   }
 
   try {
-    await quotas.bustCache()
-    await deprovisioning.deleteTenant(tenantId)
+    await tenantSdk.deleteTenant(tenantId)
     ctx.status = 204
   } catch (err) {
     ctx.log.error(err)
     throw err
   }
 }
-
-export { _delete as delete }

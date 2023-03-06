@@ -3,6 +3,7 @@
   import Portal from "svelte-portal"
   export let title
   export let icon = ""
+  export let id
 
   const dispatch = createEventDispatcher()
   let selected = getContext("tab")
@@ -31,10 +32,7 @@
   $: {
     if ($selected.title === title && tab_internal) {
       if ($selected.info?.left !== tab_internal.getBoundingClientRect().left) {
-        $selected = {
-          ...$selected,
-          info: tab_internal.getBoundingClientRect(),
-        }
+        setTabInfo()
       }
     }
   }
@@ -50,6 +48,7 @@
 </script>
 
 <div
+  {id}
   bind:this={tab_internal}
   on:click={onClick}
   class:is-selected={$selected.title === title}
@@ -82,7 +81,8 @@
   .spectrum-Tabs-item {
     color: var(--spectrum-global-color-gray-600);
   }
-  .spectrum-Tabs-item.is-selected {
+  .spectrum-Tabs-item.is-selected,
+  .spectrum-Tabs-item:hover {
     color: var(--spectrum-global-color-gray-900);
   }
 </style>

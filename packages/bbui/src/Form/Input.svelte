@@ -13,8 +13,8 @@
   export let error = null
   export let updateOnChange = true
   export let quiet = false
-  export let dataCy
   export let autofocus
+  export let autocomplete
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -25,7 +25,6 @@
 
 <Field {label} {labelPosition} {error}>
   <TextField
-    {dataCy}
     {updateOnChange}
     {error}
     {disabled}
@@ -35,6 +34,7 @@
     {type}
     {quiet}
     {autofocus}
+    {autocomplete}
     on:change={onChange}
     on:click
     on:input

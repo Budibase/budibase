@@ -24,6 +24,7 @@ export interface TriggerOutput {
 
 export interface AutomationContext extends AutomationResults {
   steps: any[]
+  env?: Record<string, string>
   trigger: any
 }
 

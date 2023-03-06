@@ -1,4 +1,5 @@
-import { doInTenant, getTenantIDFromCtx } from "../tenancy"
+import { doInTenant } from "../context"
+import { getTenantIDFromCtx } from "../tenancy"
 import { buildMatcherRegex, matches } from "./matchers"
 import { Header } from "../constants"
 import {

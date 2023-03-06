@@ -1,5 +1,5 @@
-const fs = require("fs")
-const { join } = require("path")
+import fs from "fs"
+import { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
 import { objectStore } from "@budibase/backend-core"
 

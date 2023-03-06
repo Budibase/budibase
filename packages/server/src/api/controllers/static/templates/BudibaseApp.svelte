@@ -2,7 +2,6 @@
   export let title = ""
   export let favicon = ""
   export let metaImage = ""
-  export let url = ""
 
   export let clientLibPath
   export let usedPlugins

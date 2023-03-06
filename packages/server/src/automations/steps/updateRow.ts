@@ -19,6 +19,10 @@ export const definition: AutomationStepSchema = {
   schema: {
     inputs: {
       properties: {
+        meta: {
+          type: "object",
+          title: "Field settings",
+        },
         row: {
           type: "object",
           customType: "row",
@@ -73,7 +77,10 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
 
   // clear any undefined, null or empty string properties so that they aren't updated
   for (let propKey of Object.keys(inputs.row)) {
-    if (inputs.row[propKey] == null || inputs.row[propKey] === "") {
+    if (
+      (inputs.row[propKey] == null || inputs.row[propKey] === "") &&
+      !inputs.meta?.fields?.[propKey]?.clearRelationships
+    ) {
       delete inputs.row[propKey]
     }
   }

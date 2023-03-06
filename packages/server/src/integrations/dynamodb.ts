@@ -5,8 +5,8 @@ import {
   IntegrationBase,
 } from "@budibase/types"
 
-const AWS = require("aws-sdk")
-const { AWS_REGION } = require("../db/dynamoClient")
+import AWS from "aws-sdk"
+import { AWS_REGION } from "../db/dynamoClient"
 
 interface DynamoDBConfig {
   region: string
@@ -182,7 +182,7 @@ class DynamoDBIntegration implements IntegrationBase {
     return response
   }
 
-  async describe(query: { table: string }) {
+  async describe(query: { table: string }): Promise<any> {
     const params = {
       TableName: query.table,
     }

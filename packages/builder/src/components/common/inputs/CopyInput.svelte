@@ -3,7 +3,6 @@
 
   export let label = null
   export let value
-  export let dataCy = null
 
   const copyToClipboard = val => {
     const dummy = document.createElement("textarea")
@@ -12,11 +11,11 @@
     dummy.select()
     document.execCommand("copy")
     document.body.removeChild(dummy)
-    notifications.success(`URL copied to clipboard`)
+    notifications.success(`Copied to clipboard`)
   }
 </script>
 
-<div data-cy={dataCy}>
+<div>
   <Input readonly {value} {label} />
   <div class="icon" on:click={() => copyToClipboard(value)}>
     <Icon size="S" name="Copy" />

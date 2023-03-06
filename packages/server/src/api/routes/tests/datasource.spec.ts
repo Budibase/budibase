@@ -2,7 +2,12 @@ jest.mock("pg")
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { checkCacheForDynamicVariable } from "../../../threads/utils"
-import { events } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
+import sdk from "../../../sdk"
+
+import tk from "timekeeper"
+import { mocks } from "@budibase/backend-core/tests"
+tk.freeze(mocks.date.MOCK_DATE)
 
 let { basicDatasource } = setup.structures
 const pg = require("pg")
@@ -14,11 +19,13 @@ describe("/datasources", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  async function setupTest() {
     await config.init()
     datasource = await config.createDatasource()
     jest.clearAllMocks()
-  })
+  }
+
+  beforeAll(setupTest)
 
   describe("create", () => {
     it("should create a new datasource", async () => {
@@ -55,7 +62,14 @@ describe("/datasources", () => {
         datasource: any,
         fields: { path: string; queryString: string }
       ) {
-        return config.previewQuery(request, config, datasource, fields)
+        return config.previewQuery(
+          request,
+          config,
+          datasource,
+          fields,
+          undefined,
+          ""
+        )
       }
 
       it("should invalidate changed or removed variables", async () => {
@@ -90,6 +104,8 @@ describe("/datasources", () => {
   })
 
   describe("fetch", () => {
+    beforeAll(setupTest)
+
     it("returns all the datasources from the server", async () => {
       const res = await request
         .get(`/api/datasources`)
@@ -158,6 +174,8 @@ describe("/datasources", () => {
   })
 
   describe("destroy", () => {
+    beforeAll(setupTest)
+
     it("deletes queries for the datasource after deletion and returns a success message", async () => {
       await config.createQuery()
 
@@ -181,6 +199,39 @@ describe("/datasources", () => {
         config,
         method: "DELETE",
         url: `/api/datasources/${datasource._id}/${datasource._rev}`,
+      })
+    })
+  })
+
+  describe("check secret replacement", () => {
+    async function makeDatasource() {
+      datasource = basicDatasource()
+      datasource.datasource.config.password = "testing"
+      const res = await request
+        .post(`/api/datasources`)
+        .send(datasource)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      return res.body.datasource
+    }
+
+    it("should save a datasource with password", async () => {
+      const datasource = await makeDatasource()
+      expect(datasource.config.password).toBe("--secret-value--")
+    })
+
+    it("should not the password on update with the --secret-value--", async () => {
+      const datasource = await makeDatasource()
+      await request
+        .put(`/api/datasources/${datasource._id}`)
+        .send(datasource)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      await context.doInAppContext(config.getAppId(), async () => {
+        const dbDatasource: any = await sdk.datasources.get(datasource._id)
+        expect(dbDatasource.config.password).toBe("testing")
       })
     })
   })

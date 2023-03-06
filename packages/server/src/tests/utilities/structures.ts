@@ -1,11 +1,17 @@
-import { roles, permissions } from "@budibase/backend-core"
+import { permissions, roles } from "@budibase/backend-core"
 import { createHomeScreen } from "../../constants/screens"
 import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
-import { TRIGGER_DEFINITIONS, ACTION_DEFINITIONS } from "../../automations"
-const { v4: uuidv4 } = require("uuid")
+import { ACTION_DEFINITIONS, TRIGGER_DEFINITIONS } from "../../automations"
+import {
+  Automation,
+  AutomationActionStepId,
+  AutomationTriggerStepId,
+  Datasource,
+  SourceName,
+} from "@budibase/types"
 
-export const TENANT_ID = "default"
+const { v4: uuidv4 } = require("uuid")
 
 export function basicTable() {
   return {
@@ -116,6 +122,63 @@ export function basicAutomation() {
   }
 }
 
+export function loopAutomation(tableId: string, loopOpts?: any): Automation {
+  if (!loopOpts) {
+    loopOpts = {
+      option: "Array",
+      binding: "{{ steps.1.rows }}",
+    }
+  }
+  const automation: any = {
+    name: "looping",
+    type: "automation",
+    definition: {
+      steps: [
+        {
+          id: "b",
+          type: "ACTION",
+          stepId: AutomationActionStepId.QUERY_ROWS,
+          internal: true,
+          inputs: {
+            tableId,
+          },
+          schema: ACTION_DEFINITIONS.QUERY_ROWS.schema,
+        },
+        {
+          id: "c",
+          type: "ACTION",
+          stepId: AutomationActionStepId.LOOP,
+          internal: true,
+          inputs: loopOpts,
+          blockToLoop: "d",
+          schema: ACTION_DEFINITIONS.LOOP.schema,
+        },
+        {
+          id: "d",
+          type: "ACTION",
+          internal: true,
+          stepId: AutomationActionStepId.SERVER_LOG,
+          inputs: {
+            text: "log statement",
+          },
+          schema: ACTION_DEFINITIONS.SERVER_LOG.schema,
+        },
+      ],
+      trigger: {
+        id: "a",
+        type: "TRIGGER",
+        event: "row:save",
+        stepId: AutomationTriggerStepId.ROW_SAVED,
+        inputs: {
+          tableId,
+        },
+        schema: TRIGGER_DEFINITIONS.ROW_SAVED.schema,
+      },
+    },
+  }
+  return automation as Automation
+}
+
 export function basicRow(tableId: string) {
   return {
     name: "Test Contact",
@@ -144,12 +207,12 @@ export function basicRole() {
   }
 }
 
-export function basicDatasource() {
+export function basicDatasource(): { datasource: Datasource } {
   return {
     datasource: {
       type: "datasource",
       name: "Test",
-      source: "POSTGRES",
+      source: SourceName.POSTGRES,
       config: {},
     },
   }
@@ -190,5 +253,17 @@ export function basicWebhook(automationId: string) {
       type: "automation",
       target: automationId,
     },
+  }
+}
+
+export function basicEnvironmentVariable(
+  name: string,
+  prod: string,
+  dev?: string
+) {
+  return {
+    name,
+    production: prod,
+    development: dev || prod,
   }
 }

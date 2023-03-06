@@ -2,21 +2,19 @@ import { getAllApps, queryGlobalView } from "../db"
 import { options } from "../middleware/passport/jwt"
 import {
   Header,
-  Cookie,
   MAX_VALID_DATE,
   DocumentType,
   SEPARATOR,
   ViewName,
 } from "../constants"
 import env from "../environment"
-import * as userCache from "../cache/user"
-import { getSessionsForUser, invalidateSessions } from "../security/sessions"
-import * as events from "../events"
 import * as tenancy from "../tenancy"
+import * as context from "../context"
 import {
   App,
+  AuditedEventFriendlyName,
   Ctx,
-  PlatformLogoutOpts,
+  Event,
   TenantResolutionStrategy,
 } from "@budibase/types"
 import { SetOption } from "cookies"
@@ -38,7 +36,7 @@ export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
-  let tenantId: string | null = tenancy.getTenantId()
+  let tenantId: string | null = context.getTenantId()
   if (env.MULTI_TENANCY) {
     // always use the tenant id from the subdomain in multi tenancy
     // this ensures the logged-in user tenant id doesn't overwrite
@@ -49,7 +47,7 @@ export async function resolveAppUrl(ctx: Ctx) {
   }
 
   // search prod apps for a url that matches
-  const apps: App[] = await tenancy.doInTenant(tenantId, () =>
+  const apps: App[] = await context.doInTenant(tenantId, () =>
     getAllApps({ dev: false })
   )
   const app = apps.filter(
@@ -222,35 +220,10 @@ export async function getBuildersCount() {
   return builders.length
 }
 
-/**
- * Logs a user out from budibase. Re-used across account portal and builder.
- */
-export async function platformLogout(opts: PlatformLogoutOpts) {
-  const ctx = opts.ctx
-  const userId = opts.userId
-  const keepActiveSession = opts.keepActiveSession
-
-  if (!ctx) throw new Error("Koa context must be supplied to logout.")
-
-  const currentSession = getCookie(ctx, Cookie.Auth)
-  let sessions = await getSessionsForUser(userId)
-
-  if (keepActiveSession) {
-    sessions = sessions.filter(
-      session => session.sessionId !== currentSession.sessionId
-    )
-  } else {
-    // clear cookies
-    clearCookie(ctx, Cookie.Auth)
-    clearCookie(ctx, Cookie.CurrentApp)
-  }
-
-  const sessionIds = sessions.map(({ sessionId }) => sessionId)
-  await invalidateSessions(userId, { sessionIds, reason: "logout" })
-  await events.auth.logout()
-  await userCache.invalidateUser(userId)
-}
-
 export function timeout(timeMs: number) {
   return new Promise(resolve => setTimeout(resolve, timeMs))
+}
+
+export function isAudited(event: Event) {
+  return !!AuditedEventFriendlyName[event]
 }

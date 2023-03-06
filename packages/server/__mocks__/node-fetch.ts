@@ -1,5 +1,7 @@
+// @ts-ignore
 import fs from "fs"
 module FetchMock {
+  // @ts-ignore
   const fetch = jest.requireActual("node-fetch")
   let failCount = 0
 
@@ -170,6 +172,9 @@ module FetchMock {
         ),
         ok: true,
       })
+    } else if (url === "https://www.googleapis.com/oauth2/v4/token") {
+      // any valid response
+      return json({})
     } else if (url.includes("failonce.com")) {
       failCount++
       if (failCount === 1) {

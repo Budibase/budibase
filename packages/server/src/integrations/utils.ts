@@ -8,7 +8,6 @@ const ROW_ID_REGEX = /^\[.*]$/g
 const SQL_NUMBER_TYPE_MAP = {
   integer: FieldTypes.NUMBER,
   int: FieldTypes.NUMBER,
-  bigint: FieldTypes.NUMBER,
   decimal: FieldTypes.NUMBER,
   smallint: FieldTypes.NUMBER,
   real: FieldTypes.NUMBER,
@@ -47,6 +46,7 @@ const SQL_STRING_TYPE_MAP = {
   blob: FieldTypes.STRING,
   long: FieldTypes.STRING,
   text: FieldTypes.STRING,
+  bigint: FieldTypes.STRING,
 }
 
 const SQL_BOOLEAN_TYPE_MAP = {
@@ -141,11 +141,17 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
 export function convertSqlType(type: string) {
   let foundType = FieldTypes.STRING
   const lcType = type.toLowerCase()
+  let matchingTypes = []
   for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
     if (lcType.includes(external)) {
-      foundType = internal
-      break
+      matchingTypes.push({ external, internal })
     }
+  }
+  //Set the foundType based the longest match
+  if (matchingTypes.length > 0) {
+    foundType = matchingTypes.reduce((acc, val) => {
+      return acc.external.length >= val.external.length ? acc : val
+    }).internal
   }
   const schema: any = { type: foundType }
   if (foundType === FieldTypes.DATETIME) {

@@ -135,7 +135,7 @@
   div :global(.CodeMirror) {
     height: var(--code-mirror-height);
     min-height: var(--code-mirror-height);
-    font-family: monospace;
+    font-family: var(--font-mono);
     line-height: 1.3;
     border: var(--spectrum-alias-border-size-thin) solid;
     border-color: var(--spectrum-alias-border-color);

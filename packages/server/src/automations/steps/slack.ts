@@ -50,15 +50,31 @@ export const definition: AutomationStepSchema = {
 
 export async function run({ inputs }: AutomationStepInput) {
   let { url, text } = inputs
-  const response = await fetch(url, {
-    method: "post",
-    body: JSON.stringify({
-      text,
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
+  if (!url?.trim()?.length) {
+    return {
+      httpStatus: 400,
+      response: "Missing Webhook URL",
+      success: false,
+    }
+  }
+  let response
+  try {
+    response = await fetch(url, {
+      method: "post",
+      body: JSON.stringify({
+        text,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+  } catch (err: any) {
+    return {
+      httpStatus: 400,
+      response: err.message,
+      success: false,
+    }
+  }
 
   const { status, message } = await getFetchResponse(response)
   return {

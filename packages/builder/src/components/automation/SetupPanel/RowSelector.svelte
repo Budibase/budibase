@@ -1,6 +1,6 @@
 <script>
   import { tables } from "stores/backend"
-  import { Select } from "@budibase/bbui"
+  import { Select, Checkbox } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
@@ -10,9 +10,11 @@
   const dispatch = createEventDispatcher()
 
   export let value
+  export let meta
   export let bindings
   export let block
   export let isTestModal
+  export let isUpdateRow
 
   $: parsedBindings = bindings.map(binding => {
     let clone = Object.assign({}, binding)
@@ -68,7 +70,7 @@
       return Number(value)
     }
     if (type === "options") {
-      return [value]
+      return value
     }
     if (type === "array") {
       if (Array.isArray(value)) {
@@ -95,6 +97,17 @@
   const onChange = (e, field, type) => {
     value[field] = coerce(e.detail, type)
     dispatch("change", value)
+  }
+
+  const onChangeSetting = (e, field) => {
+    let fields = {}
+    fields[field] = {
+      clearRelationships: e.detail,
+    }
+    dispatch("change", {
+      key: "meta",
+      fields,
+    })
   }
 
   // Ensure any nullish tableId values get set to empty string so
@@ -124,21 +137,33 @@
               {onChange}
             />
           {:else}
-            <svelte:component
-              this={isTestModal ? ModalBindableInput : DrawerBindableInput}
-              placeholder={placeholders[schema.type]}
-              panel={AutomationBindingPanel}
-              value={Array.isArray(value[field])
-                ? value[field].join(" ")
-                : value[field]}
-              on:change={e => onChange(e, field, schema.type)}
-              label={field}
-              type="string"
-              bindings={parsedBindings}
-              fillWidth={true}
-              allowJS={true}
-              updateOnChange={false}
-            />
+            <div>
+              <svelte:component
+                this={isTestModal ? ModalBindableInput : DrawerBindableInput}
+                placeholder={placeholders[schema.type]}
+                panel={AutomationBindingPanel}
+                value={Array.isArray(value[field])
+                  ? value[field].join(" ")
+                  : value[field]}
+                on:change={e => onChange(e, field, schema.type)}
+                label={field}
+                type="string"
+                bindings={parsedBindings}
+                fillWidth={true}
+                allowJS={true}
+                updateOnChange={false}
+              />
+              {#if isUpdateRow && schema.type === "link"}
+                <div class="checkbox-field">
+                  <Checkbox
+                    value={meta.fields?.[field]?.clearRelationships}
+                    text={"Clear relationships if empty?"}
+                    size={"S"}
+                    on:change={e => onChangeSetting(e, field)}
+                  />
+                </div>
+              {/if}
+            </div>
           {/if}
         {/if}
       {/if}
@@ -154,5 +179,13 @@
   }
   .schema-fields :global(label) {
     text-transform: capitalize;
+  }
+  .checkbox-field {
+    padding-bottom: var(--spacing-s);
+    padding-left: 1px;
+    padding-top: var(--spacing-s);
+  }
+  .checkbox-field :global(label) {
+    text-transform: none;
   }
 </style>

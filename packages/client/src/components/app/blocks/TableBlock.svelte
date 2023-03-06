@@ -36,9 +36,12 @@
   let newRowSidePanelId
   let schema
   let primaryDisplay
+  let enrichedSearchColumns
 
   $: fetchSchema(dataSource)
-  $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
+  $: enrichSearchColumns(searchColumns, schema).then(
+    val => (enrichedSearchColumns = val)
+  )
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
   $: editTitle = getEditTitle(detailsFormBlockId, primaryDisplay)
   $: normalFields = getNormalFields(schema)

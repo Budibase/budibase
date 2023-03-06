@@ -26,6 +26,9 @@ import { buildLicensingEndpoints } from "./licensing"
 import { buildGroupsEndpoints } from "./groups"
 import { buildPluginEndpoints } from "./plugins"
 import { buildBackupsEndpoints } from "./backups"
+import { buildEnvironmentVariableEndpoints } from "./environmentVariables"
+import { buildEventEndpoints } from "./events"
+import { buildAuditLogsEndpoints } from "./auditLogs"
 
 const defaultAPIClientConfig = {
   /**
@@ -247,5 +250,8 @@ export const createAPIClient = config => {
     ...buildGroupsEndpoints(API),
     ...buildPluginEndpoints(API),
     ...buildBackupsEndpoints(API),
+    ...buildEnvironmentVariableEndpoints(API),
+    ...buildEventEndpoints(API),
+    ...buildAuditLogsEndpoints(API),
   }
 }

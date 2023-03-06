@@ -15,9 +15,9 @@
     notifications,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-
-  import { automationStore } from "builderStore"
+  import { automationStore, selectedAutomation } from "builderStore"
   import { tables } from "stores/backend"
+  import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
@@ -33,6 +33,7 @@
   import { Utils } from "@budibase/frontend-core"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { cloneDeep } from "lodash/fp"
+  import { onMount } from "svelte"
 
   export let block
   export let testData
@@ -48,22 +49,8 @@
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
   $: stepId = block.stepId
-  $: bindings = getAvailableBindings(
-    block || $automationStore.selectedBlock,
-    $automationStore.selectedAutomation?.automation?.definition
-  )
-
+  $: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
   $: getInputData(testData, block.inputs)
-  const getInputData = (testData, blockInputs) => {
-    let newInputData = testData || blockInputs
-
-    if (block.event === "app:trigger" && !newInputData?.fields) {
-      newInputData = cloneDeep(blockInputs)
-    }
-
-    inputData = newInputData
-  }
-
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
@@ -72,30 +59,50 @@
   $: schemaFields = Object.values(schema || {})
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
+  $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
+
+  const getInputData = (testData, blockInputs) => {
+    let newInputData = testData || blockInputs
+    if (block.event === "app:trigger" && !newInputData?.fields) {
+      newInputData = cloneDeep(blockInputs)
+    }
+    inputData = newInputData
+  }
 
   const onChange = Utils.sequential(async (e, key) => {
+    // We need to cache the schema as part of the definition because it is
+    // used in the server to detect relationships. It would be far better to
+    // instead fetch the schema in the backend at runtime.
+    let schema
+    if (e.detail?.tableId) {
+      schema = getSchemaForTable(e.detail.tableId, {
+        searchableSchema: true,
+      }).schema
+    }
+
     try {
       if (isTestModal) {
+        let newTestData = { schema }
+
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
         if (stepId === TriggerStepID.WEBHOOK) {
-          automationStore.actions.addTestDataToAutomation({
+          newTestData = {
+            ...newTestData,
             body: {
               [key]: e.detail,
-              ...$automationStore.selectedAutomation.automation.testData?.body,
+              ...$selectedAutomation.testData?.body,
             },
-          })
+          }
         }
-        automationStore.actions.addTestDataToAutomation({
+        newTestData = {
+          ...newTestData,
           [key]: e.detail,
-        })
-        testData[key] = e.detail
+        }
+        await automationStore.actions.addTestDataToAutomation(newTestData)
       } else {
-        block.inputs[key] = e.detail
+        const data = { schema, [key]: e.detail }
+        await automationStore.actions.updateBlockInputs(block, data)
       }
-
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
     } catch (error) {
       notifications.error("Error saving automation")
     }
@@ -166,6 +173,24 @@
       )
     }
 
+    // Environment bindings
+    if ($licensing.environmentVariablesEnabled) {
+      bindings = bindings.concat(
+        $environment.variables.map(variable => {
+          return {
+            label: `env.${variable.name}`,
+            path: `env.${variable.name}`,
+            icon: "Key",
+            category: "Environment",
+            display: {
+              type: "string",
+              name: variable.name,
+            },
+          }
+        })
+      )
+    }
+
     return bindings
   }
 
@@ -196,6 +221,14 @@
     onChange({ detail: tempFilters }, defKey)
     drawer.hide()
   }
+
+  onMount(async () => {
+    try {
+      await environment.loadVariables()
+    } catch (error) {
+      console.error(error)
+    }
+  })
 </script>
 
 <div class="fields">
@@ -293,9 +326,17 @@
         <RowSelector
           {block}
           value={inputData[key]}
-          on:change={e => onChange(e, key)}
+          meta={inputData["meta"] || {}}
+          on:change={e => {
+            if (e.detail?.key) {
+              onChange(e, e.detail.key)
+            } else {
+              onChange(e, key)
+            }
+          }}
           {bindings}
           {isTestModal}
+          {isUpdateRow}
         />
       {:else if value.customType === "webhookUrl"}
         <WebhookDisplay

@@ -35,6 +35,7 @@
   let parameters
   let data = []
   let saveId
+  let currentTab = "JSON"
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fieldsToSchema(fields)
@@ -84,7 +85,16 @@
         return
       }
       data = response.rows
+      // need to merge fields that already exist/might have changed
+      if (fields) {
+        for (let key of Object.keys(response.schema)) {
+          if (fields[key]) {
+            response.schema[key] = fields[key]
+          }
+        }
+      }
       fields = response.schema
+      currentTab = "JSON"
       notifications.success("Query executed successfully")
     } catch (error) {
       notifications.error(`Query Error: ${error.message}`)
@@ -205,7 +215,7 @@
       </Body>
       <section class="viewer">
         {#if data}
-          <Tabs selected="JSON">
+          <Tabs bind:selected={currentTab}>
             <Tab title="JSON">
               <JSONPreview data={data[0]} minHeight="120" />
             </Tab>

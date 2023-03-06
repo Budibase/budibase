@@ -32,11 +32,15 @@ const HELPERS = [
   // javascript helper
   new Helper(HelperFunctionNames.JS, processJS, false),
   // this help is applied to all statements
-  new Helper(HelperFunctionNames.ALL, (value, { __opts }) => {
+  new Helper(HelperFunctionNames.ALL, (value, inputs) => {
+    const { __opts } = inputs
     if (isObject(value)) {
       return new SafeString(JSON.stringify(value))
     }
     // null/undefined values produce bad results
+    if (__opts && __opts.onlyFound && value == null) {
+      return __opts.input
+    }
     if (value == null || typeof value !== "string") {
       return value == null ? "" : value
     }

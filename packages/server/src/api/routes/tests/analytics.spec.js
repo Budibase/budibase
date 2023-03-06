@@ -10,8 +10,11 @@ describe("/static", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await config.init()
+  })
+  
+  beforeEach(()=>{
     jest.clearAllMocks()
   })
 

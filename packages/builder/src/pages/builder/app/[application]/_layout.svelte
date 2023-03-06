@@ -1,6 +1,8 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
+  import { auth } from "stores/portal"
+  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
     ActionMenu,
     MenuItem,
@@ -10,13 +12,16 @@
     Heading,
     notifications,
   } from "@budibase/bbui"
-  import RevertModal from "components/deploy/RevertModal.svelte"
-  import VersionModal from "components/deploy/VersionModal.svelte"
-  import DeployNavigation from "components/deploy/DeployNavigation.svelte"
+
+  import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
   import { onMount, onDestroy } from "svelte"
+  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
+  import TourPopover from "components/portal/onboarding/TourPopover.svelte"
+  import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
+  import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
 
   export let application
 
@@ -62,6 +67,36 @@
     })
   }
 
+  const initTour = async () => {
+    // Check if onboarding is enabled.
+    if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
+      if (!$auth.user?.onboardedAt) {
+        // Determine the correct step
+        const activeNav = $layout.children.find(c => $isActive(c.path))
+        const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
+        const targetStep = activeNav
+          ? onboardingTour.find(step => step.route === activeNav?.path)
+          : null
+        await store.update(state => ({
+          ...state,
+          onboarding: true,
+          tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
+          tourStepKey: targetStep?.id,
+        }))
+      } else {
+        // Feature tour date
+        const release_date = new Date("2023-03-01T00:00:00.000Z")
+        const onboarded = new Date($auth.user?.onboardedAt)
+        if (onboarded < release_date) {
+          await store.update(state => ({
+            ...state,
+            tourKey: TOUR_KEYS.FEATURE_ONBOARDING,
+          }))
+        }
+      }
+    }
+  }
+
   onMount(async () => {
     if (!hasSynced && application) {
       try {
@@ -69,6 +104,7 @@
         // check if user has beta access
         // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
         // betaAccess = betaResponse.access
+        initTour()
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }
@@ -88,6 +124,12 @@
   <!-- This should probably be some kind of loading state? -->
   <div class="loading" />
 {:then _}
+  <TourPopover />
+
+  {#if $store.builderSidePanel}
+    <BuilderSidePanel />
+  {/if}
+
   <div class="root">
     <div class="top-nav">
       <div class="topleftnav">
@@ -105,32 +147,34 @@
           </MenuItem>
           <MenuItem
             on:click={() =>
-              $goto(`../../portal/overview/${application}?tab=Access`)}
+              $goto(`../../portal/overview/${application}/access`)}
           >
             Access
           </MenuItem>
           <MenuItem
             on:click={() =>
-              $goto(
-                `../../portal/overview/${application}?tab=${encodeURIComponent(
-                  "Automation History"
-                )}`
-              )}
+              $goto(`../../portal/overview/${application}/automation-history`)}
           >
             Automation history
           </MenuItem>
           <MenuItem
             on:click={() =>
-              $goto(`../../portal/overview/${application}?tab=Backups`)}
+              $goto(`../../portal/overview/${application}/backups`)}
           >
             Backups
           </MenuItem>
 
           <MenuItem
             on:click={() =>
-              $goto(`../../portal/overview/${application}?tab=Settings`)}
+              $goto(`../../portal/overview/${application}/name-and-url`)}
           >
-            Settings
+            Name and URL
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/version`)}
+          >
+            Version
           </MenuItem>
         </ActionMenu>
         <Heading size="XS">{$store.name || "App"}</Heading>
@@ -138,21 +182,20 @@
       <div class="topcenternav">
         <Tabs {selected} size="M">
           {#each $layout.children as { path, title }}
-            <Tab
-              quiet
-              selected={$isActive(path)}
-              on:click={topItemNavigate(path)}
-              title={capitalise(title)}
-            />
+            <TourWrap tourStepKey={`builder-${title}-section`}>
+              <Tab
+                quiet
+                selected={$isActive(path)}
+                on:click={topItemNavigate(path)}
+                title={capitalise(title)}
+                id={`builder-${title}-tab`}
+              />
+            </TourWrap>
           {/each}
         </Tabs>
       </div>
       <div class="toprightnav">
-        <div class="version">
-          <VersionModal />
-        </div>
-        <RevertModal />
-        <DeployNavigation {application} />
+        <AppActions {application} />
       </div>
     </div>
     <slot />
@@ -217,10 +260,6 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-xl);
-  }
-
-  .version {
-    margin-right: var(--spacing-s);
+    gap: var(--spacing-l);
   }
 </style>

@@ -7,6 +7,7 @@ import templateRoutes from "./global/templates"
 import emailRoutes from "./global/email"
 import authRoutes from "./global/auth"
 import roleRoutes from "./global/roles"
+import eventRoutes from "./global/events"
 import environmentRoutes from "./system/environment"
 import tenantsRoutes from "./system/tenants"
 import statusRoutes from "./system/status"
@@ -17,6 +18,8 @@ import accountRoutes from "./system/accounts"
 import restoreRoutes from "./system/restore"
 
 let userGroupRoutes = api.groups
+let auditLogRoutes = api.auditLogs
+
 export const routes: Router[] = [
   configRoutes,
   userRoutes,
@@ -31,7 +34,9 @@ export const routes: Router[] = [
   selfRoutes,
   licenseRoutes,
   userGroupRoutes,
+  auditLogRoutes,
   migrationRoutes,
   accountRoutes,
   restoreRoutes,
+  eventRoutes,
 ]

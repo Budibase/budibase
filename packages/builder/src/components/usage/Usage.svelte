@@ -39,15 +39,21 @@
       {#if showWarning}
         <Icon name="Alert" />
       {/if}
-      <div class="heading header-item">
-        <Heading size="XS" weight="light">{usage.name}</Heading>
-      </div>
+      <Heading size="XS" weight="light">
+        <span class="nowrap">
+          {usage.name}
+        </span>
+      </Heading>
     </div>
-    {#if unlimited}
-      <Body size="S">{usage.used} / Unlimited</Body>
-    {:else}
-      <Body size="S">{usage.used} / {usage.total}</Body>
-    {/if}
+    <Body size="S">
+      <span class="nowrap">
+        {#if unlimited}
+          {usage.used} / Unlimited
+        {:else}
+          {usage.used} / {usage.total}
+        {/if}
+      </span>
+    </Body>
   </div>
   <div>
     {#if unlimited}
@@ -89,13 +95,14 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: flex-end;
     margin-bottom: 12px;
+    gap: var(--spacing-m);
   }
   .header-container {
     display: flex;
   }
-  .heading {
-    margin-top: 3px;
-    margin-left: 5px;
+  .nowrap {
+    white-space: nowrap;
   }
 </style>

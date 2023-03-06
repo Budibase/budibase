@@ -1,8 +1,7 @@
 import { Plugin } from "@budibase/types"
-
-const { budibaseTempDir } = require("../budibaseDir")
-const fs = require("fs")
-const { join } = require("path")
+import { budibaseTempDir } from "../budibaseDir"
+import fs from "fs"
+import { join } from "path"
 import { objectStore } from "@budibase/backend-core"
 
 const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")

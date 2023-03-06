@@ -12,7 +12,6 @@ export function createAdminStore() {
     disableAccountPortal: false,
     accountPortalUrl: "",
     importComplete: false,
-    onboardingProgress: 0,
     checklist: {
       apps: { checked: false },
       smtp: { checked: false },
@@ -76,13 +75,8 @@ export function createAdminStore() {
   async function getChecklist() {
     const tenantId = get(auth).tenantId
     const checklist = await API.getChecklist(tenantId)
-    const totalSteps = Object.keys(checklist).length
-    const completedSteps = Object.values(checklist).filter(
-      x => x?.checked
-    ).length
     admin.update(store => {
       store.checklist = checklist
-      store.onboardingProgress = (completedSteps / totalSteps) * 100
       return store
     })
   }
