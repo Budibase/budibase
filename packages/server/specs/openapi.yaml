@@ -603,7 +603,6 @@ components:
                     type: string
                     enum:
                       - string
-                      - barcodeqr
                       - longform
                       - options
                       - number
@@ -616,6 +615,7 @@ components:
                       - auto
                       - json
                       - internal
+                      - barcodeqr
                     description: Defines the type of the column, most explain themselves, a link
                       column is a relationship.
                   constraints:
@@ -766,7 +766,6 @@ components:
                         type: string
                         enum:
                           - string
-                          - barcodeqr
                           - longform
                           - options
                           - number
@@ -779,6 +778,7 @@ components:
                           - auto
                           - json
                           - internal
+                          - barcodeqr
                         description: Defines the type of the column, most explain themselves, a link
                           column is a relationship.
                       constraints:
@@ -936,7 +936,6 @@ components:
                           type: string
                           enum:
                             - string
-                            - barcodeqr
                             - longform
                             - options
                             - number
@@ -949,6 +948,7 @@ components:
                             - auto
                             - json
                             - internal
+                            - barcodeqr
                           description: Defines the type of the column, most explain themselves, a link
                             column is a relationship.
                         constraints:
@@ -1531,6 +1531,18 @@ paths:
               examples:
                 applications:
                   $ref: "#/components/examples/applications"
+  /metrics:
+    get:
+      operationId: getById
+      summary: Retrieve Budibase tenant metrics
+      description: Output metrics in OpenMetrics format compatible with Prometheus
+      tags:
+        - metrics
+      responses:
+        "200":
+          description: Returns tenant metrics.
+          content:
+            ? text/plain
   "/queries/{queryId}":
     post:
       operationId: execute

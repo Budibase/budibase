@@ -13,8 +13,8 @@ export async function fetch(ctx: BBContext) {
 
   // *** APPS ***
   const allDatabases = await dbCore.getAllDbs()
-  const devAppIDs = await dbCore.getDevAppIDs({ idsOnly: true })
-  const prodAppIDs = await dbCore.getProdAppIDs({ idsOnly: true })
+  const devAppIDs = await dbCore.getDevAppIDs()
+  const prodAppIDs = await dbCore.getProdAppIDs()
   const allAppIds = await dbCore.getAllApps({ idsOnly: true })
 
   // *** USERS ***
@@ -147,7 +147,7 @@ export async function fetch(ctx: BBContext) {
     "budibase_quota_limit_apps",
     "The limit on the number of apps that can be created",
     "gauge",
-    appsQuotaLimit == -1 ? 3000000 : appsQuotaLimit
+    appsQuotaLimit == -1 ? Number.MAX_SAFE_INTEGER : appsQuotaLimit
   )
 
   // **** budibase_quota_usage_rows ****
@@ -163,7 +163,7 @@ export async function fetch(ctx: BBContext) {
     "budibase_quota_limit_rows",
     "The limit on the number of rows that can be created",
     "gauge",
-    rowsQuotaLimit == -1 ? 3000000 : rowsQuotaLimit
+    rowsQuotaLimit == -1 ? Number.MAX_SAFE_INTEGER : rowsQuotaLimit
   )
 
   // **** budibase_quota_usage_plugins ****
@@ -179,7 +179,7 @@ export async function fetch(ctx: BBContext) {
     "budibase_quota_limit_plugins",
     "The limit on the number of plugins that can be created",
     "gauge",
-    pluginsQuotaLimit == -1 ? 3000000 : pluginsQuotaLimit
+    pluginsQuotaLimit == -1 ? Number.MAX_SAFE_INTEGER : pluginsQuotaLimit
   )
 
   // **** budibase_quota_usage_user_groups ****
@@ -195,7 +195,7 @@ export async function fetch(ctx: BBContext) {
     "budibase_quota_limit_user_groups",
     "The limit on the number of user groups that can be created",
     "gauge",
-    userGroupsQuotaLimit == -1 ? 3000000 : userGroupsQuotaLimit
+    userGroupsQuotaLimit == -1 ? Number.MAX_SAFE_INTEGER : userGroupsQuotaLimit
   )
 
   // **** budibase_quota_usage_queries ****
@@ -211,7 +211,7 @@ export async function fetch(ctx: BBContext) {
     "budibase_quota_limit_queries",
     "The limit on the number of queries for the current month",
     "gauge",
-    queryQuotaLimit == -1 ? 3000000 : queryQuotaLimit
+    queryQuotaLimit == -1 ? Number.MAX_SAFE_INTEGER : queryQuotaLimit
   )
 
   // **** budibase_quota_usage_automations ****
@@ -227,10 +227,12 @@ export async function fetch(ctx: BBContext) {
     "budibase_quota_limit_automations",
     "The limit on the number of automations that can be created",
     "gauge",
-    automationsQuotaLimit == -1 ? 3000000 : automationsQuotaLimit
+    automationsQuotaLimit == -1
+      ? Number.MAX_SAFE_INTEGER
+      : automationsQuotaLimit
   )
-
   ctx.body = outputString
+  ctx.set('Content-Type', 'text/plain');
 }
 
 export function convertToOpenMetrics(
