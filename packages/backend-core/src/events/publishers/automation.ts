@@ -18,6 +18,9 @@ async function created(automation: Automation, timestamp?: string | number) {
     automationId: automation._id as string,
     triggerId: automation.definition?.trigger?.id,
     triggerType: automation.definition?.trigger?.stepId,
+    audited: {
+      name: automation.name,
+    },
   }
   await publishEvent(Event.AUTOMATION_CREATED, properties, timestamp)
 }
@@ -38,6 +41,9 @@ async function deleted(automation: Automation) {
     automationId: automation._id as string,
     triggerId: automation.definition?.trigger?.id,
     triggerType: automation.definition?.trigger?.stepId,
+    audited: {
+      name: automation.name,
+    },
   }
   await publishEvent(Event.AUTOMATION_DELETED, properties)
 }
@@ -71,6 +77,9 @@ async function stepCreated(
     triggerType: automation.definition?.trigger?.stepId,
     stepId: step.id!,
     stepType: step.stepId,
+    audited: {
+      name: automation.name,
+    },
   }
   await publishEvent(Event.AUTOMATION_STEP_CREATED, properties, timestamp)
 }
@@ -83,6 +92,9 @@ async function stepDeleted(automation: Automation, step: AutomationStep) {
     triggerType: automation.definition?.trigger?.stepId,
     stepId: step.id!,
     stepType: step.stepId,
+    audited: {
+      name: automation.name,
+    },
   }
   await publishEvent(Event.AUTOMATION_STEP_DELETED, properties)
 }

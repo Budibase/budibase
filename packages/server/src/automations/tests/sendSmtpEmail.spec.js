@@ -36,7 +36,7 @@ const setup = require("./utilities")
 describe("test the outgoing webhook action", () => {
     let inputs
     let config = setup.getConfig()
-    beforeEach(async () => {
+    beforeAll(async () => {
         await config.init()
     })
 

@@ -10,8 +10,7 @@ on:
  pull_request:
     branches:
       - master
-      - develop 
-      - release 
+      - develop
  workflow_dispatch:
 
 env:
@@ -20,9 +19,67 @@ env:
   PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 14.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    - run: yarn
+    - run: yarn lint
+
   build:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Install Pro
+        run: yarn install:pro $BRANCH $BASE_BRANCH
+      - run: yarn
+      - run: yarn bootstrap
+      - run: yarn build
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Install Pro
+        run: yarn install:pro $BRANCH $BASE_BRANCH
+      - run: yarn
+      - run: yarn bootstrap
+      - run: yarn test
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: ./packages/server/coverage/clover.xml,./packages/worker/coverage/clover.xml,./packages/backend-core/coverage/clover.xml
+          name: codecov-umbrella
+          verbose: true
+
+  test-pro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Install Pro
+        run: yarn install:pro $BRANCH $BASE_BRANCH
+      - run: yarn
+      - run: yarn bootstrap
+      - run: yarn test:pro
+
+  integration-test:
+    runs-on: ubuntu-latest
     services:
       couchdb:
         image: ibmcom/couchdb3
@@ -31,39 +88,18 @@ jobs:
           COUCHDB_USER: budibase
         ports:
           - 4567:5984
-
-    strategy:
-      matrix:
-        node-version: [14.x]
-
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-
-    - name: Install Pro
-      run: yarn install:pro $BRANCH $BASE_BRANCH
-
-    - run: yarn
-    - run: yarn bootstrap
-    - run: yarn lint
-    - run: yarn build
-    - run: yarn test
-      env:
-        CI: true
-        name: Budibase CI
-    - uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        files: ./packages/server/coverage/clover.xml,./packages/worker/coverage/clover.xml,./packages/backend-core/coverage/clover.xml
-        name: codecov-umbrella
-        verbose: true 
-
-    - name: QA Core Integration Tests
-      run: | 
-        cd qa-core
-        yarn
-        yarn api:test:ci
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Install Pro
+        run: yarn install:pro $BRANCH $BASE_BRANCH
+      - run: yarn
+      - run: yarn bootstrap
+      - run: yarn build
+      - run: |
+          cd qa-core
+          yarn
+          yarn api:test:ci

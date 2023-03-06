@@ -7,7 +7,7 @@ describe("run misc tests", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 

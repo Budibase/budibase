@@ -18,6 +18,7 @@ import {
   PaginationJson,
   Table,
   Datasource,
+  IncludeRelationship,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -57,6 +58,7 @@ export async function patch(ctx: BBContext) {
   return handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(id),
     row: inputs,
+    includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
 }
 
@@ -65,6 +67,7 @@ export async function save(ctx: BBContext) {
   const tableId = ctx.params.tableId
   return handleRequest(Operation.CREATE, tableId, {
     row: inputs,
+    includeSqlRelationships: IncludeRelationship.EXCLUDE,
   })
 }
 
@@ -78,7 +81,9 @@ export async function fetchView(ctx: BBContext) {
 
 export async function fetch(ctx: BBContext) {
   const tableId = ctx.params.tableId
-  return handleRequest(Operation.READ, tableId)
+  return handleRequest(Operation.READ, tableId, {
+    includeSqlRelationships: IncludeRelationship.INCLUDE,
+  })
 }
 
 export async function find(ctx: BBContext) {
@@ -86,6 +91,7 @@ export async function find(ctx: BBContext) {
   const tableId = ctx.params.tableId
   const response = (await handleRequest(Operation.READ, tableId, {
     id: breakRowIdField(id),
+    includeSqlRelationships: IncludeRelationship.EXCLUDE,
   })) as Row[]
   return response ? response[0] : response
 }
@@ -95,6 +101,7 @@ export async function destroy(ctx: BBContext) {
   const id = ctx.request.body._id
   const { row } = (await handleRequest(Operation.DELETE, tableId, {
     id: breakRowIdField(id),
+    includeSqlRelationships: IncludeRelationship.EXCLUDE,
   })) as { row: Row }
   return { response: { ok: true }, row }
 }
@@ -107,6 +114,7 @@ export async function bulkDestroy(ctx: BBContext) {
     promises.push(
       handleRequest(Operation.DELETE, tableId, {
         id: breakRowIdField(row._id),
+        includeSqlRelationships: IncludeRelationship.EXCLUDE,
       })
     )
   }
@@ -149,6 +157,7 @@ export async function search(ctx: BBContext) {
       filters: query,
       sort,
       paginate: paginateObj as PaginationJson,
+      includeSqlRelationships: IncludeRelationship.INCLUDE,
     })) as Row[]
     let hasNextPage = false
     if (paginate && rows.length === limit) {
@@ -159,6 +168,7 @@ export async function search(ctx: BBContext) {
           limit: 1,
           page: bookmark * limit + 1,
         },
+        includeSqlRelationships: IncludeRelationship.INCLUDE,
       })) as Row[]
       hasNextPage = nextRows.length > 0
     }
@@ -249,6 +259,7 @@ export async function fetchEnrichedRow(ctx: BBContext) {
   const response = (await handleRequest(Operation.READ, tableId, {
     id,
     datasource,
+    includeSqlRelationships: IncludeRelationship.INCLUDE,
   })) as Row[]
   const table: Table = tables[tableName]
   const row = response[0]
@@ -276,6 +287,7 @@ export async function fetchEnrichedRow(ctx: BBContext) {
           [primaryLink]: linkedIds,
         },
       },
+      includeSqlRelationships: IncludeRelationship.INCLUDE,
     })
   }
   return row

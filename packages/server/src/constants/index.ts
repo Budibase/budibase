@@ -1,4 +1,5 @@
 import { objectStore, roles, constants } from "@budibase/backend-core"
+export { FieldType as FieldTypes, RelationshipTypes } from "@budibase/types"
 
 export enum FilterTypes {
   STRING = "string",
@@ -22,23 +23,6 @@ export const NoEmptyFilterStrings = [
   FilterTypes.NOT_CONTAINS,
 ]
 
-export enum FieldTypes {
-  STRING = "string",
-  BARCODEQR = "barcodeqr",
-  LONGFORM = "longform",
-  OPTIONS = "options",
-  NUMBER = "number",
-  BOOLEAN = "boolean",
-  ARRAY = "array",
-  DATETIME = "datetime",
-  ATTACHMENT = "attachment",
-  LINK = "link",
-  FORMULA = "formula",
-  AUTO = "auto",
-  JSON = "json",
-  INTERNAL = "internal",
-}
-
 export const CanSwitchTypes = [
   [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
   [
@@ -53,12 +37,6 @@ export const CanSwitchTypes = [
 export const SwitchableTypes = CanSwitchTypes.reduce((prev, current) =>
   prev ? prev.concat(current) : current
 )
-
-export enum RelationshipTypes {
-  ONE_TO_MANY = "one-to-many",
-  MANY_TO_ONE = "many-to-one",
-  MANY_TO_MANY = "many-to-many",
-}
 
 export enum FormulaTypes {
   STATIC = "static",

@@ -9,7 +9,7 @@ const read = [],
  * @openapi
  * /tables:
  *   post:
- *     operationId: create
+ *     operationId: tableCreate
  *     summary: Create a table
  *     description: Create a table, this could be internal or external.
  *     tags:
@@ -46,7 +46,7 @@ write.push(
  * @openapi
  * /tables/{tableId}:
  *   put:
- *     operationId: update
+ *     operationId: tableUpdate
  *     summary: Update a table
  *     description: Update a table, this could be internal or external.
  *     tags:
@@ -83,7 +83,7 @@ write.push(
  * @openapi
  * /tables/{tableId}:
  *   delete:
- *     operationId: destroy
+ *     operationId: tableDestroy
  *     summary: Delete a table
  *     description: Delete a table, this could be internal or external.
  *     tags:
@@ -108,7 +108,7 @@ write.push(new Endpoint("delete", "/tables/:tableId", controller.destroy))
  * @openapi
  * /tables/{tableId}:
  *   get:
- *     operationId: getById
+ *     operationId: tableGetById
  *     summary: Retrieve a table
  *     description: Lookup a table, this could be internal or external.
  *     tags:
@@ -133,7 +133,7 @@ read.push(new Endpoint("get", "/tables/:tableId", controller.read))
  * @openapi
  * /tables/search:
  *   post:
- *     operationId: search
+ *     operationId: tableSearch
  *     summary: Search for tables
  *     description: Based on table properties (currently only name) search for tables. This could be
  *       an internal or an external table.

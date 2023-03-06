@@ -1,6 +1,11 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { selectedScreen, selectedComponent } from "builderStore"
+import {
+  selectedScreen,
+  selectedComponent,
+  screenHistoryStore,
+  automationHistoryStore,
+} from "builderStore"
 import {
   datasources,
   integrations,
@@ -67,6 +72,8 @@ const INITIAL_FRONTEND_STATE = {
   // onboarding
   onboarding: false,
   tourNodes: null,
+
+  builderSidePanel: false,
 }
 
 export const getFrontendStore = () => {
@@ -122,6 +129,8 @@ export const getFrontendStore = () => {
         navigation: application.navigation || {},
         usedPlugins: application.usedPlugins || [],
       }))
+      screenHistoryStore.reset()
+      automationHistoryStore.reset()
 
       // Initialise backend stores
       database.set(application.instance)
@@ -179,10 +188,7 @@ export const getFrontendStore = () => {
         }
 
         // Check screen isn't already selected
-        if (
-          state.selectedScreenId === screen._id &&
-          state.selectedComponentId === screen.props?._id
-        ) {
+        if (state.selectedScreenId === screen._id) {
           return
         }
 
@@ -256,7 +262,7 @@ export const getFrontendStore = () => {
         }
       },
       save: async screen => {
-        /* 
+        /*
           Temporarily disabled to accomodate migration issues.
           store.actions.screens.validate(screen)
         */
@@ -312,7 +318,7 @@ export const getFrontendStore = () => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
 
         // Build array of promises to speed up bulk deletions
-        const promises = []
+        let promises = []
         let deleteUrls = []
         screensToDelete.forEach(screen => {
           // Delete the screen
@@ -326,8 +332,8 @@ export const getFrontendStore = () => {
           deleteUrls.push(screen.routing.route)
         })
 
-        promises.push(store.actions.links.delete(deleteUrls))
         await Promise.all(promises)
+        await store.actions.links.delete(deleteUrls)
         const deletedIds = screensToDelete.map(screen => screen._id)
         const routesResponse = await API.fetchAppRoutes()
         store.update(state => {
@@ -347,6 +353,7 @@ export const getFrontendStore = () => {
 
           return state
         })
+        return null
       },
       updateSetting: async (screen, name, value) => {
         if (!screen || !name) {

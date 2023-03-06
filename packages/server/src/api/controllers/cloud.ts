@@ -58,7 +58,7 @@ export async function exportApps(ctx: Ctx) {
 }
 
 async function checkHasBeenImported() {
-  if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
+  if (!env.SELF_HOSTED) {
     return true
   }
   const apps = await dbCore.getAllApps({ all: true })
@@ -72,7 +72,7 @@ export async function hasBeenImported(ctx: Ctx) {
 }
 
 export async function importApps(ctx: Ctx) {
-  if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
+  if (!env.SELF_HOSTED) {
     ctx.throw(400, "Importing only allowed in self hosted environments.")
   }
   const beenImported = await checkHasBeenImported()

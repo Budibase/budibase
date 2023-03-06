@@ -1,3 +1,11 @@
+if (process.env.DD_APM_ENABLED) {
+  require("./ddApm")
+}
+
+if (process.env.ELASTIC_APM_ENABLED) {
+  require("./elasticApm")
+}
+
 // need to load environment first
 import env from "./environment"
 
@@ -24,6 +32,7 @@ import { initialise as initialiseWebsockets } from "./websocket"
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
 const destroyable = require("server-destroy")
+const { userAgent } = require("koa-useragent")
 
 const app = new Koa()
 
@@ -45,6 +54,7 @@ app.use(
 )
 
 app.use(middleware.logging)
+app.use(userAgent)
 
 if (env.isProd()) {
   env._set("NODE_ENV", "production")
@@ -66,6 +76,7 @@ initialiseWebsockets(server)
 
 let shuttingDown = false,
   errCode = 0
+
 server.on("close", async () => {
   // already in process
   if (shuttingDown) {
@@ -75,7 +86,7 @@ server.on("close", async () => {
   console.log("Server Closed")
   await automations.shutdown()
   await redis.shutdown()
-  await events.shutdown()
+  events.shutdown()
   await Thread.shutdown()
   api.shutdown()
   if (!env.isTest()) {

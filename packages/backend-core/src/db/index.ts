@@ -7,3 +7,4 @@ export { default as Replication } from "./Replication"
 // exports to support old export structure
 export * from "../constants/db"
 export { getGlobalDBName, baseGlobalDBName } from "../context"
+export * from "./lucene"

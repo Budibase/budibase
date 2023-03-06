@@ -10,8 +10,16 @@ export class ConfigAPI extends TestAPI {
     return this.request
       .get(`/api/global/configs/checklist`)
       .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
       .expect(200)
+      .expect("Content-Type", /json/)
+  }
+
+  getPublicSettings = () => {
+    return this.request
+      .get(`/api/global/configs/public`)
+      .set(this.config.defaultHeaders())
+      .expect(200)
+      .expect("Content-Type", /json/)
   }
 
   saveConfig = (data: any) => {
@@ -19,8 +27,8 @@ export class ConfigAPI extends TestAPI {
       .post(`/api/global/configs`)
       .send(data)
       .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
       .expect(200)
+      .expect("Content-Type", /json/)
   }
 
   OIDCCallback = (configId: string, preAuthRes: any) => {

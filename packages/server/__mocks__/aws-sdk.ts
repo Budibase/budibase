@@ -34,7 +34,7 @@ module AwsMock {
     // @ts-ignore
     this.listObjects = jest.fn(
       response({
-        Contents: {},
+        Contents: [],
       })
     )
 

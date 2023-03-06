@@ -1,6 +1,6 @@
-import { isMultiTenant, getTenantId } from "../../tenancy"
-import { getScopedConfig } from "../../db"
-import { ConfigType, Database, Config } from "@budibase/types"
+import { getTenantId, isMultiTenant } from "../../context"
+import * as configs from "../../configs"
+import { ConfigType, GoogleInnerConfig } from "@budibase/types"
 
 /**
  * Utility to handle authentication errors.
@@ -19,17 +19,14 @@ export function authError(done: Function, message: string, err?: any) {
 }
 
 export async function ssoCallbackUrl(
-  db: Database,
-  config?: { callbackURL?: string },
-  type?: ConfigType
+  type: ConfigType,
+  config?: GoogleInnerConfig
 ) {
   // incase there is a callback URL from before
-  if (config && config.callbackURL) {
-    return config.callbackURL
+  if (config && (config as GoogleInnerConfig).callbackURL) {
+    return (config as GoogleInnerConfig).callbackURL as string
   }
-  const publicConfig = await getScopedConfig(db, {
-    type: ConfigType.SETTINGS,
-  })
+  const settingsConfig = await configs.getSettingsConfig()
 
   let callbackUrl = `/api/global/auth`
   if (isMultiTenant()) {
@@ -37,5 +34,5 @@ export async function ssoCallbackUrl(
   }
   callbackUrl += `/${type}/callback`
 
-  return `${publicConfig.platformUrl}${callbackUrl}`
+  return `${settingsConfig.platformUrl}${callbackUrl}`
 }

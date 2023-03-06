@@ -7,11 +7,11 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationTriggerStepId,
+  Datasource,
+  SourceName,
 } from "@budibase/types"
 
 const { v4: uuidv4 } = require("uuid")
-
-export const TENANT_ID = "default"
 
 export function basicTable() {
   return {
@@ -207,12 +207,12 @@ export function basicRole() {
   }
 }
 
-export function basicDatasource() {
+export function basicDatasource(): { datasource: Datasource } {
   return {
     datasource: {
       type: "datasource",
       name: "Test",
-      source: "POSTGRES",
+      source: SourceName.POSTGRES,
       config: {},
     },
   }
@@ -253,5 +253,17 @@ export function basicWebhook(automationId: string) {
       type: "automation",
       target: automationId,
     },
+  }
+}
+
+export function basicEnvironmentVariable(
+  name: string,
+  prod: string,
+  dev?: string
+) {
+  return {
+    name,
+    production: prod,
+    development: dev || prod,
   }
 }

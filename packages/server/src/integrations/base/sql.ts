@@ -6,11 +6,11 @@ import {
   SearchFilters,
   SortDirection,
 } from "@budibase/types"
+import { db as dbCore } from "@budibase/backend-core"
 import { QueryOptions } from "../../definitions/datasource"
 import { isIsoDateString, SqlClient } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import environment from "../../environment"
-import { removeKeyNumbering } from "./utils"
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -90,10 +90,15 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
 function generateSelectStatement(
   json: QueryJson,
   knex: Knex
-): (string | Knex.Raw)[] {
+): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
+
+  if (!resource) {
+    return "*"
+  }
+
   const schema = meta?.table?.schema
-  return resource!.fields.map(field => {
+  return resource.fields.map(field => {
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
     const columnName = fieldNames[1]
@@ -131,7 +136,7 @@ class InternalBuilder {
       fn: (key: string, value: any) => void
     ) {
       for (let [key, value] of Object.entries(structure)) {
-        const updatedKey = removeKeyNumbering(key)
+        const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
           fn(`${opts.tableName}.${updatedKey}`, value)
@@ -405,6 +410,7 @@ class InternalBuilder {
         delete parsedBody[key]
       }
     }
+
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.insert(parsedBody)
@@ -509,7 +515,7 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.delete()
     } else {
-      return query.delete().returning("*")
+      return query.delete().returning(generateSelectStatement(json, knex))
     }
   }
 }
