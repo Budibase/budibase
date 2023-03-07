@@ -95,6 +95,7 @@
       <slot name="controls" />
     </div>
     <div class="controls-right">
+      <DeleteButton />
       <UserAvatars />
     </div>
   </div>
@@ -104,7 +105,6 @@
       <HeaderRow />
       <SheetBody />
     </div>
-    <DeleteButton />
     <ResizeOverlay />
     <ScrollOverlay />
   </div>
@@ -176,5 +176,8 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--cell-spacing);
+  }
+  .controls-right {
+    gap: 12px;
   }
 </style>
