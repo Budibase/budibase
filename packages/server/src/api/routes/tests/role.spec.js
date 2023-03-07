@@ -10,7 +10,7 @@ describe("/roles", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 
@@ -60,6 +60,11 @@ describe("/roles", () => {
   })
 
   describe("fetch", () => {
+    beforeAll(async () => {
+      // Recreate the app
+      await config.init()
+    })
+
     it("should list custom roles, plus 2 default roles", async () => {
       const customRole = await config.createRole()
 

@@ -14,6 +14,7 @@ export enum FieldType {
   AUTO = "auto",
   JSON = "json",
   INTERNAL = "internal",
+  BARCODEQR = "barcodeqr",
 }
 
 export interface RowAttachment {

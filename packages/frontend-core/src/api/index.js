@@ -28,6 +28,8 @@ import { buildPluginEndpoints } from "./plugins"
 import { buildBackupsEndpoints } from "./backups"
 import { buildEnvironmentVariableEndpoints } from "./environmentVariables"
 import { buildEventEndpoints } from "./events"
+import { buildAuditLogsEndpoints } from "./auditLogs"
+
 const defaultAPIClientConfig = {
   /**
    * Certain definitions can't change at runtime for client apps, such as the
@@ -250,5 +252,6 @@ export const createAPIClient = config => {
     ...buildBackupsEndpoints(API),
     ...buildEnvironmentVariableEndpoints(API),
     ...buildEventEndpoints(API),
+    ...buildAuditLogsEndpoints(API),
   }
 }

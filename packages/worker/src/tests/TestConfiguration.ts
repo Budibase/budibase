@@ -15,39 +15,29 @@ const supertest = require("supertest")
 import { Config } from "../constants"
 import {
   users,
-  tenancy,
+  context,
   sessions,
   auth,
   constants,
   env as coreEnv,
 } from "@budibase/backend-core"
-import structures, { TENANT_ID, TENANT_1, CSRF_TOKEN } from "./structures"
-import { CreateUserResponse, User, AuthToken } from "@budibase/types"
+import structures, { CSRF_TOKEN } from "./structures"
+import { SaveUserResponse, User, AuthToken } from "@budibase/types"
 import API from "./api"
-
-enum Mode {
-  CLOUD = "cloud",
-  SELF = "self",
-}
 
 class TestConfiguration {
   server: any
   request: any
   api: API
-  defaultUser?: User
-  tenant1User?: User
+  tenantId: string
+  user?: User
+  userPassword = "test"
 
-  constructor(
-    opts: { openServer: boolean; mode: Mode } = {
-      openServer: true,
-      mode: Mode.CLOUD,
-    }
-  ) {
-    if (opts.mode === Mode.CLOUD) {
-      this.modeCloud()
-    } else if (opts.mode === Mode.SELF) {
-      this.modeSelf()
-    }
+  constructor(opts: { openServer: boolean } = { openServer: true }) {
+    // default to cloud hosting
+    this.cloudHosted()
+
+    this.tenantId = structures.tenant.id()
 
     if (opts.openServer) {
       env.PORT = "0" // random port
@@ -63,26 +53,19 @@ class TestConfiguration {
     return this.request
   }
 
-  // MODES
-
-  setMultiTenancy = (value: boolean) => {
-    env._set("MULTI_TENANCY", value)
-    coreEnv._set("MULTI_TENANCY", value)
-  }
+  // HOSTING
 
   setSelfHosted = (value: boolean) => {
     env._set("SELF_HOSTED", value)
     coreEnv._set("SELF_HOSTED", value)
   }
 
-  modeCloud = () => {
+  cloudHosted = () => {
     this.setSelfHosted(false)
-    this.setMultiTenancy(true)
   }
 
-  modeSelf = () => {
+  selfHosted = () => {
     this.setSelfHosted(true)
-    this.setMultiTenancy(false)
   }
 
   // UTILS
@@ -103,7 +86,7 @@ class TestConfiguration {
     if (params) {
       request.params = params
     }
-    await tenancy.doInTenant(this.getTenantId(), () => {
+    await context.doInTenant(this.getTenantId(), () => {
       return controlFunc(request)
     })
     return request.body
@@ -112,13 +95,13 @@ class TestConfiguration {
   // SETUP / TEARDOWN
 
   async beforeAll() {
-    await this.createDefaultUser()
-    await this.createSession(this.defaultUser!)
-
-    await tenancy.doInTenant(TENANT_1, async () => {
-      await this.createTenant1User()
-      await this.createSession(this.tenant1User!)
-    })
+    try {
+      await this.createDefaultUser()
+      await this.createSession(this.user!)
+    } catch (e: any) {
+      console.error(e)
+      throw new Error(e.message)
+    }
   }
 
   async afterAll() {
@@ -128,6 +111,12 @@ class TestConfiguration {
   }
 
   // TENANCY
+
+  doInTenant(task: any) {
+    return context.doInTenant(this.tenantId, () => {
+      return task()
+    })
+  }
 
   createTenant = async (): Promise<User> => {
     // create user / new tenant
@@ -150,9 +139,9 @@ class TestConfiguration {
 
   getTenantId() {
     try {
-      return tenancy.getTenantId()
-    } catch (e: any) {
-      return TENANT_ID
+      return context.getTenantId()
+    } catch (e) {
+      return this.tenantId!
     }
   }
 
@@ -200,14 +189,11 @@ class TestConfiguration {
   }
 
   defaultHeaders() {
-    const tenantId = this.getTenantId()
-    if (tenantId === TENANT_ID) {
-      return this.authHeaders(this.defaultUser!)
-    } else if (tenantId === TENANT_1) {
-      return this.authHeaders(this.tenant1User!)
-    } else {
-      throw new Error("could not determine auth headers to use")
-    }
+    return this.authHeaders(this.user!)
+  }
+
+  tenantIdHeaders() {
+    return { [constants.Header.TENANT_ID]: this.tenantId }
   }
 
   internalAPIHeaders() {
@@ -222,22 +208,15 @@ class TestConfiguration {
 
   async createDefaultUser() {
     const user = structures.users.adminUser({
-      email: "test@test.com",
-      password: "test",
+      password: this.userPassword,
     })
-    this.defaultUser = await this.createUser(user)
-  }
-
-  async createTenant1User() {
-    const user = structures.users.adminUser({
-      email: "tenant1@test.com",
-      password: "test",
+    await context.doInTenant(this.tenantId!, async () => {
+      this.user = await this.createUser(user)
     })
-    this.tenant1User = await this.createUser(user)
   }
 
   async getUser(email: string): Promise<User> {
-    return tenancy.doInTenant(this.getTenantId(), () => {
+    return context.doInTenant(this.getTenantId(), () => {
       return users.getGlobalUserByEmail(email)
     })
   }
@@ -247,7 +226,7 @@ class TestConfiguration {
       user = structures.users.user()
     }
     const response = await this._req(user, null, controllers.users.save)
-    const body = response as CreateUserResponse
+    const body = response as SaveUserResponse
     return this.getUser(body.email)
   }
 

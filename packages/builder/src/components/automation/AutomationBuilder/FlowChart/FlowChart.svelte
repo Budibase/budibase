@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "builderStore"
+  import { automationStore, selectedAutomation } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import FlowItem from "./FlowItem.svelte"
   import TestDataModal from "./TestDataModal.svelte"
@@ -13,27 +13,28 @@
     Modal,
   } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
+  import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import { automationHistoryStore } from "builderStore"
 
   export let automation
+
   let testDataModal
-  let blocks
   let confirmDeleteDialog
 
-  $: {
-    blocks = []
-    if (automation) {
-      if (automation.definition.trigger) {
-        blocks.push(automation.definition.trigger)
-      }
-      blocks = blocks.concat(automation.definition.steps || [])
+  $: blocks = getBlocks(automation)
+
+  const getBlocks = automation => {
+    let blocks = []
+    if (automation.definition.trigger) {
+      blocks.push(automation.definition.trigger)
     }
+    blocks = blocks.concat(automation.definition.steps || [])
+    return blocks
   }
 
   async function deleteAutomation() {
     try {
-      await automationStore.actions.delete(
-        $automationStore.selectedAutomation?.automation
-      )
+      await automationStore.actions.delete($selectedAutomation)
     } catch (error) {
       notifications.error("Error deleting automation")
     }
@@ -41,20 +42,17 @@
 </script>
 
 <div class="canvas">
-  <div style="float: left; padding-left: var(--spacing-xl);">
+  <div class="header">
     <Heading size="S">{automation.name}</Heading>
-  </div>
-  <div style="float: right; padding-right: var(--spacing-xl);" class="title">
-    <div class="subtitle">
-      <div style="display:flex; align-items: center;">
-        <div class="icon">
-          <Icon
-            on:click={confirmDeleteDialog.show}
-            hoverable
-            size="M"
-            name="DeleteOutline"
-          />
-        </div>
+    <div class="controls">
+      <UndoRedoControl store={automationHistoryStore} />
+      <Icon
+        on:click={confirmDeleteDialog.show}
+        hoverable
+        size="M"
+        name="DeleteOutline"
+      />
+      <div class="buttons">
         <ActionButton
           on:click={() => {
             testDataModal.show()
@@ -62,15 +60,13 @@
           icon="MultipleCheck"
           size="M">Run test</ActionButton
         >
-        <div style="padding-left: var(--spacing-m);">
-          <ActionButton
-            disabled={!$automationStore.selectedAutomation?.testResults}
-            on:click={() => {
-              $automationStore.showTestPanel = true
-            }}
-            size="M">Test Details</ActionButton
-          >
-        </div>
+        <ActionButton
+          disabled={!$automationStore.testResults}
+          on:click={() => {
+            $automationStore.showTestPanel = true
+          }}
+          size="M">Test Details</ActionButton
+        >
       </div>
     </div>
   </div>
@@ -80,7 +76,7 @@
     <div
       class="block"
       animate:flip={{ duration: 500 }}
-      in:fly|local={{ x: 500, duration: 500 }}
+      in:fly={{ x: 500, duration: 500 }}
       out:fly|local={{ x: 500, duration: 500 }}
     >
       {#if block.stepId !== ActionStepID.LOOP}
@@ -105,6 +101,9 @@
 </Modal>
 
 <style>
+  .canvas {
+    padding: var(--spacing-l) var(--spacing-xl);
+  }
   /* Fix for firefox not respecting bottom padding in scrolling containers */
   .canvas > *:last-child {
     padding-bottom: 40px;
@@ -122,18 +121,19 @@
     text-align: left;
   }
 
-  .title {
-    padding-bottom: var(--spacing-xl);
-  }
-
-  .subtitle {
-    padding-bottom: var(--spacing-xl);
+  .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .icon {
-    cursor: pointer;
-    padding-right: var(--spacing-m);
+  .controls,
+  .buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+  .buttons {
+    gap: var(--spacing-s);
   }
 </style>

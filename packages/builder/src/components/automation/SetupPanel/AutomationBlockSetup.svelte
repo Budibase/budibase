@@ -15,8 +15,7 @@
     notifications,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-
-  import { automationStore } from "builderStore"
+  import { automationStore, selectedAutomation } from "builderStore"
   import { tables } from "stores/backend"
   import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
@@ -50,22 +49,8 @@
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
   $: stepId = block.stepId
-  $: bindings = getAvailableBindings(
-    block || $automationStore.selectedBlock,
-    $automationStore.selectedAutomation?.automation?.definition
-  )
-
+  $: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
   $: getInputData(testData, block.inputs)
-  const getInputData = (testData, blockInputs) => {
-    let newInputData = testData || blockInputs
-
-    if (block.event === "app:trigger" && !newInputData?.fields) {
-      newInputData = cloneDeep(blockInputs)
-    }
-
-    inputData = newInputData
-  }
-
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
@@ -76,39 +61,48 @@
   $: isTrigger = block?.type === "TRIGGER"
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
 
+  const getInputData = (testData, blockInputs) => {
+    let newInputData = testData || blockInputs
+    if (block.event === "app:trigger" && !newInputData?.fields) {
+      newInputData = cloneDeep(blockInputs)
+    }
+    inputData = newInputData
+  }
+
   const onChange = Utils.sequential(async (e, key) => {
+    // We need to cache the schema as part of the definition because it is
+    // used in the server to detect relationships. It would be far better to
+    // instead fetch the schema in the backend at runtime.
+    let schema
     if (e.detail?.tableId) {
-      const tableSchema = getSchemaForTable(e.detail.tableId, {
+      schema = getSchemaForTable(e.detail.tableId, {
         searchableSchema: true,
       }).schema
-      if (isTestModal) {
-        testData.schema = tableSchema
-      } else {
-        block.inputs.schema = tableSchema
-      }
     }
+
     try {
       if (isTestModal) {
+        let newTestData = { schema }
+
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
         if (stepId === TriggerStepID.WEBHOOK) {
-          automationStore.actions.addTestDataToAutomation({
+          newTestData = {
+            ...newTestData,
             body: {
               [key]: e.detail,
-              ...$automationStore.selectedAutomation.automation.testData?.body,
+              ...$selectedAutomation.testData?.body,
             },
-          })
+          }
         }
-        automationStore.actions.addTestDataToAutomation({
+        newTestData = {
+          ...newTestData,
           [key]: e.detail,
-        })
-        testData[key] = e.detail
+        }
+        await automationStore.actions.addTestDataToAutomation(newTestData)
       } else {
-        block.inputs[key] = e.detail
+        const data = { schema, [key]: e.detail }
+        await automationStore.actions.updateBlockInputs(block, data)
       }
-
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
     } catch (error) {
       notifications.error("Error saving automation")
     }

@@ -83,7 +83,14 @@ export class DatabaseImpl implements Database {
       throw new Error("DB does not exist")
     }
     if (!exists) {
-      await this.nano().db.create(this.name)
+      try {
+        await this.nano().db.create(this.name)
+      } catch (err: any) {
+        // Handling race conditions
+        if (err.statusCode !== 412) {
+          throw err
+        }
+      }
     }
     return this.nano().db.use(this.name)
   }
@@ -178,7 +185,7 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     try {
-      await this.nano().db.destroy(this.name)
+      return await this.nano().db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
       if (err.statusCode === 404) {

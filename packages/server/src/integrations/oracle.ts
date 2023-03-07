@@ -247,7 +247,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     )
   }
 
-  private internalConvertType(column: OracleColumn): { type: string } {
+  private internalConvertType(column: OracleColumn): { type: FieldTypes } {
     if (this.isBooleanType(column)) {
       return { type: FieldTypes.BOOLEAN }
     }

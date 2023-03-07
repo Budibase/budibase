@@ -28,6 +28,8 @@ const DefaultBucketName = {
   PLUGINS: "plugins",
 }
 
+const selfHosted = !!parseInt(process.env.SELF_HOSTED || "")
+
 const environment = {
   isTest,
   isJest,
@@ -44,8 +46,9 @@ const environment = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
-  REDIS_URL: process.env.REDIS_URL,
-  REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  REDIS_URL: process.env.REDIS_URL || "localhost:6379",
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD || "budibase",
+  MOCK_REDIS: process.env.MOCK_REDIS,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   AWS_REGION: process.env.AWS_REGION,
@@ -57,7 +60,7 @@ const environment = {
     process.env.ACCOUNT_PORTAL_URL || "https://account.budibase.app",
   ACCOUNT_PORTAL_API_KEY: process.env.ACCOUNT_PORTAL_API_KEY || "",
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
-  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED || ""),
+  SELF_HOSTED: selfHosted,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL || "",
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
@@ -82,6 +85,24 @@ const environment = {
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
+  ENABLE_4XX_HTTP_LOGGING: process.env.ENABLE_4XX_HTTP_LOGGING || true,
+  ENABLE_AUDIT_LOG_IP_ADDR: process.env.ENABLE_AUDIT_LOG_IP_ADDR,
+  // smtp
+  SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: parseInt(process.env.SMTP_PORT || ""),
+  SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
+  DISABLE_JWT_WARNING: process.env.DISABLE_JWT_WARNING,
+  /**
+   * Enable to allow an admin user to login using a password.
+   * This can be useful to prevent lockout when configuring SSO.
+   * However, this should be turned OFF by default for security purposes.
+   */
+  ENABLE_SSO_MAINTENANCE_MODE: selfHosted
+    ? process.env.ENABLE_SSO_MAINTENANCE_MODE
+    : false,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore

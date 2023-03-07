@@ -15,8 +15,11 @@ describe("/permission", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+  
+  beforeEach(async () => {
     table = await config.createTable()
     row = await config.createRow()
     perms = await config.addPermission(STD_ROLE_ID, table._id)

@@ -72,6 +72,9 @@
   // These are a combination of the enriched, nested and conditional settings.
   let cachedSettings
 
+  // Conditional UI expressions, enriched and ready to evaluate
+  let conditions
+
   // Latest timestamp that we started a props update.
   // Due to enrichment now being async, we need to avoid overwriting newer
   // settings with old ones, depending on how long enrichment takes.
@@ -150,9 +153,7 @@
   $: enrichComponentSettings($context, settingsDefinitionMap)
 
   // Evaluate conditional UI settings and store any component setting changes
-  // which need to be made. This is broken into 2 lines to avoid svelte
-  // reactivity re-evaluating conditions more often than necessary.
-  $: conditions = enrichedSettings?._conditions
+  // which need to be made
   $: evaluateConditions(conditions)
 
   // Determine and apply settings to the component
@@ -297,7 +298,7 @@
     let newStaticSettings = { ...settings }
     let newDynamicSettings = { ...settings }
 
-    // Attach some internal properties
+    // Attach some internal properties which we assume always need enriched
     newDynamicSettings["_conditions"] = instance._conditions
     newDynamicSettings["_css"] = instance._styles?.custom
 
@@ -336,6 +337,24 @@
     }
   }
 
+  // Generates the array of conditional UI expressions, accounting for both
+  // nested and non-nested settings, extracting a mixture of values from both
+  // the un-enriched and enriched settings
+  const generateConditions = () => {
+    if (!enrichedSettings?._conditions) {
+      conditions = []
+      return
+    }
+    conditions = enrichedSettings._conditions.map(condition => {
+      const raw = instance._conditions?.find(x => x.id === condition.id)
+      if (settingsDefinitionMap[condition.setting]?.nested && raw) {
+        return { ...condition, settingValue: raw.settingValue }
+      } else {
+        return condition
+      }
+    })
+  }
+
   // Enriches any string component props using handlebars
   const enrichComponentSettings = (
     context,
@@ -364,7 +383,11 @@
       return
     }
 
+    // Store new enriched settings
     enrichedSettings = newEnrichedSettings
+
+    // Once settings have been enriched, re-evaluate conditions
+    generateConditions()
   }
 
   // Evaluates the list of conditional UI conditions and determines any setting

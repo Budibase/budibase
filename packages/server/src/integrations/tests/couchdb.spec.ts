@@ -1,5 +1,3 @@
-import { DatabaseWithConnection } from "@budibase/backend-core/src/db"
-
 jest.mock("@budibase/backend-core", () => {
   const core = jest.requireActual("@budibase/backend-core")
   return {
