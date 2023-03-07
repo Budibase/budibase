@@ -8,7 +8,7 @@ import {
   HostInfo,
 } from "@budibase/types"
 import { EventProcessor } from "./types"
-import { getAppId } from "../../context"
+import { getAppId, doInTenant, getTenantId } from "../../context"
 import BullQueue from "bull"
 import { createQueue, JobQueue } from "../../queue"
 import { isAudited } from "../../utils"
@@ -26,28 +26,30 @@ export default class AuditLogsProcessor implements EventProcessor {
       JobQueue.AUDIT_LOG
     )
     return AuditLogsProcessor.auditLogQueue.process(async job => {
-      let properties = job.data.properties
-      if (properties.audited) {
-        properties = {
-          ...properties,
-          ...properties.audited,
+      return doInTenant(job.data.tenantId, async () => {
+        let properties = job.data.properties
+        if (properties.audited) {
+          properties = {
+            ...properties,
+            ...properties.audited,
+          }
+          delete properties.audited
         }
-        delete properties.audited
-      }
 
-      // this feature is disabled by default due to privacy requirements
-      // in some countries - available as env var in-case it is desired
-      // in self host deployments
-      let hostInfo: HostInfo | undefined = {}
-      if (env.ENABLE_AUDIT_LOG_IP_ADDR) {
-        hostInfo = job.data.opts.hostInfo
-      }
+        // this feature is disabled by default due to privacy requirements
+        // in some countries - available as env var in-case it is desired
+        // in self host deployments
+        let hostInfo: HostInfo | undefined = {}
+        if (env.ENABLE_AUDIT_LOG_IP_ADDR) {
+          hostInfo = job.data.opts.hostInfo
+        }
 
-      await writeAuditLogs(job.data.event, properties, {
-        userId: job.data.opts.userId,
-        timestamp: job.data.opts.timestamp,
-        appId: job.data.opts.appId,
-        hostInfo,
+        await writeAuditLogs(job.data.event, properties, {
+          userId: job.data.opts.userId,
+          timestamp: job.data.opts.timestamp,
+          appId: job.data.opts.appId,
+          hostInfo,
+        })
       })
     })
   }
@@ -72,6 +74,7 @@ export default class AuditLogsProcessor implements EventProcessor {
           appId: getAppId(),
           hostInfo: identity.hostInfo,
         },
+        tenantId: getTenantId(),
       })
     }
   }

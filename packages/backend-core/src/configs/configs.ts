@@ -42,7 +42,9 @@ export async function getConfig<T extends Config>(
   }
 }
 
-export async function save(config: Config) {
+export async function save(
+  config: Config
+): Promise<{ id: string; rev: string }> {
   const db = context.getGlobalDB()
   return db.put(config)
 }
@@ -54,7 +56,7 @@ export async function getSettingsConfigDoc(): Promise<SettingsConfig> {
 
   if (!config) {
     config = {
-      _id: generateConfigID(ConfigType.GOOGLE),
+      _id: generateConfigID(ConfigType.SETTINGS),
       type: ConfigType.SETTINGS,
       config: {},
     }
