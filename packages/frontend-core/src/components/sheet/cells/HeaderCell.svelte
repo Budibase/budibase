@@ -7,8 +7,16 @@
   export let column
   export let orderable = true
 
-  const { reorder, isReordering, isResizing, rand, sort, columns, dispatch } =
-    getContext("sheet")
+  const {
+    reorder,
+    isReordering,
+    isResizing,
+    rand,
+    sort,
+    columns,
+    dispatch,
+    config,
+  } = getContext("sheet")
 
   let anchor
   let open = false
@@ -117,7 +125,9 @@
   animate={false}
 >
   <Menu>
-    <MenuItem icon="Edit" on:click={editColumn}>Edit column</MenuItem>
+    {#if $config.allowEditColumns}
+      <MenuItem icon="Edit" on:click={editColumn}>Edit column</MenuItem>
+    {/if}
     <MenuItem icon="SortOrderUp" on:click={sortAscending}>
       Sort ascending
     </MenuItem>

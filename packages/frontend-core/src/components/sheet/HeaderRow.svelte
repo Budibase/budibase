@@ -2,8 +2,9 @@
   import { getContext } from "svelte"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
   import HeaderCell from "./cells/HeaderCell.svelte"
+  import { Icon } from "@budibase/bbui"
 
-  const { visibleColumns } = getContext("sheet")
+  const { visibleColumns, dispatch, config } = getContext("sheet")
 </script>
 
 <div class="header">
@@ -14,6 +15,11 @@
       {/each}
     </div>
   </SheetScrollWrapper>
+  {#if $config.allowAddColumns}
+    <div class="new-column" on:click={() => dispatch("add-column")}>
+      <Icon size="S" name="Add" />
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -25,5 +31,20 @@
   }
   .row {
     display: flex;
+  }
+  .new-column {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: var(--cell-height);
+    background: var(--spectrum-global-color-gray-100);
+    display: grid;
+    place-items: center;
+    width: 40px;
+    border-left: var(--cell-border);
+  }
+  .new-column:hover {
+    cursor: pointer;
+    background: var(--spectrum-global-color-gray-200);
   }
 </style>

@@ -26,6 +26,8 @@
   export let tableId
   export let allowAddRows = true
   export let allowSelectRows = true
+  export let allowAddColumns = true
+  export let allowEditColumns = true
 
   // Sheet constants
   const cellHeight = 36
@@ -36,6 +38,8 @@
     tableId,
     allowAddRows,
     allowSelectRows,
+    allowAddColumns,
+    allowEditColumns,
   })
 
   // Build up spreadsheet context
@@ -65,6 +69,8 @@
     tableId,
     allowAddRows,
     allowSelectRows,
+    allowAddColumns,
+    allowEditColumns,
   })
 
   // Set context for children to consume
