@@ -370,7 +370,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
       if (query.sort) {
         const sortInfo = Object.entries(query.sort)[0]
-        response = dataFilters.luceneSort(response, sortInfo[0], sortInfo[1])
+        response = dataFilters.luceneSort(
+          response,
+          sortInfo[0],
+          sortInfo[1].direction,
+          sortInfo[1].type
+        )
       }
 
       return response
