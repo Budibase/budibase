@@ -21,7 +21,7 @@
 </script>
 
 <div class="wrapper">
-  <Sheet {API} tableId={id}>
+  <Sheet {API} tableId={id} allowAddRows={!isUsersTable}>
     <svelte:fragment slot="controls">
       <SheetCreateColumnButton />
       {#if !isUsersTable}
