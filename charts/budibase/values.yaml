@@ -74,6 +74,7 @@ tolerations: []
 affinity: {}
 
 globals:
+  appVersion: "" # Use as an override to .Chart.AppVersion
   budibaseEnv: PRODUCTION
   tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
   enableAnalytics: "1"
