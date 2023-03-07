@@ -205,7 +205,7 @@ spec:
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
 
-        image: budibase/apps:{{ .Values.globals.appVersion }}
+        image: budibase/apps:v{{ .Chart.AppVersion }}
         imagePullPolicy: Always
         livenessProbe:
           httpGet:

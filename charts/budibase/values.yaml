@@ -74,7 +74,6 @@ tolerations: []
 affinity: {}
 
 globals:
-  appVersion: "latest"
   budibaseEnv: PRODUCTION
   tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
   enableAnalytics: "1"
