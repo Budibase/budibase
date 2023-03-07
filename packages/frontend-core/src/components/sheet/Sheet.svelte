@@ -1,6 +1,7 @@
 <script>
-  import { setContext, createEventDispatcher, onMount } from "svelte"
+  import { setContext, onMount } from "svelte"
   import { writable } from "svelte/store"
+  import { createEventManagers } from "./events"
   import { createAPIClient } from "../../api"
   import { createReorderStores } from "./stores/reorder"
   import { createViewportStores } from "./stores/viewport"
@@ -25,17 +26,14 @@
   export let tableId
   export let allowAddRows = true
   export let allowSelectRows = true
-  export let filter
 
   // Sheet constants
   const cellHeight = 36
   const rand = Math.random()
 
   // State stores
-  const dispatch = createEventDispatcher()
   const config = writable({
     tableId,
-    filter,
     allowAddRows,
     allowSelectRows,
   })
@@ -47,8 +45,8 @@
     rand,
     cellHeight,
     config,
-    dispatch,
   }
+  context = { ...context, ...createEventManagers() }
   context = { ...context, ...createRowsStore(context) }
   context = { ...context, ...createColumnsStores(context) }
   context = { ...context, ...createResizeStores(context) }
@@ -65,13 +63,15 @@
   // Keep config store up to date
   $: config.set({
     tableId,
-    filter,
     allowAddRows,
     allowSelectRows,
   })
 
   // Set context for children to consume
   setContext("sheet", context)
+
+  // Expose ability to retrieve context externally to allow sheet control
+  export const getContext = () => context
 
   // Initialise websocket for multi-user
   onMount(() => createWebsocket(context))

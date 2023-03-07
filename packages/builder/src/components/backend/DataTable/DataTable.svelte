@@ -1,225 +1,51 @@
 <script>
-  import { fade } from "svelte/transition"
   import { tables } from "stores/backend"
-  import CreateRowButton from "./buttons/CreateRowButton.svelte"
-  import CreateColumnButton from "./buttons/CreateColumnButton.svelte"
-  import CreateViewButton from "./buttons/CreateViewButton.svelte"
-  import ExistingRelationshipButton from "./buttons/ExistingRelationshipButton.svelte"
-  import ExportButton from "./buttons/ExportButton.svelte"
-  import ImportButton from "./buttons/ImportButton.svelte"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
-  import ManageAccessButton from "./buttons/ManageAccessButton.svelte"
-  import HideAutocolumnButton from "./buttons/HideAutocolumnButton.svelte"
-  import TableFilterButton from "./buttons/TableFilterButton.svelte"
-  import Table from "./Table.svelte"
   import { TableNames } from "constants"
-  import CreateEditRow from "./modals/CreateEditRow.svelte"
-  import {
-    Pagination,
-    Heading,
-    Body,
-    Modal,
-    Layout,
-    notifications,
-  } from "@budibase/bbui"
-  import { fetchData, Sheet } from "@budibase/frontend-core"
+  import { Sheet } from "@budibase/frontend-core"
   import { API } from "api"
-  import CreateEditColumn from "components/backend/DataTable/modals/CreateEditColumn.svelte"
 
-  let createColumnModal
+  import SheetCreateColumnButton from "components/backend/DataTable/buttons/sheet/SheetCreateColumnButton.svelte"
+  import SheetCreateRowButton from "components/backend/DataTable/buttons/sheet/SheetCreateRowButton.svelte"
+  import SheetCreateViewButton from "components/backend/DataTable/buttons/sheet/SheetCreateViewButton.svelte"
+  import SheetImportButton from "components/backend/DataTable/buttons/sheet/SheetImportButton.svelte"
+  import SheetExportButton from "components/backend/DataTable/buttons/sheet/SheetExportButton.svelte"
+  import SheetFilterButton from "components/backend/DataTable/buttons/sheet/SheetFilterButton.svelte"
+  import SheetManageAccessButton from "components/backend/DataTable/buttons/sheet/SheetManageAccessButton.svelte"
+  import SheetRelationshipButton from "components/backend/DataTable/buttons/sheet/SheetRelationshipButton.svelte"
+  import SheetEditColumnModal from "components/backend/DataTable/modals/sheet/SheetEditColumnModal.svelte"
 
-  let hideAutocolumns = true
-  let filters
-  let hasRows = true
-
-  $: isUsersTable = $tables.selected?._id === TableNames.USERS
-  $: type = $tables.selected?.type
-  $: isInternal = type !== "external"
-  $: schema = $tables.selected?.schema
-  $: enrichedSchema = enrichSchema($tables.selected?.schema)
   $: id = $tables.selected?._id
-  $: hasCols = checkHasCols(schema)
-  $: id, (filters = null)
-
-  let appliedFilter
-  let rawFilter
-  let appliedSort
-  let selectedRows = []
-
-  $: enrichedSchema,
-    () => {
-      appliedFilter = null
-      rawFilter = null
-      appliedSort = null
-      selectedRows = []
-    }
-
-  const enrichSchema = schema => {
-    let tempSchema = { ...schema }
-    tempSchema._id = {
-      type: "internal",
-      editable: false,
-      displayName: "ID",
-      autocolumn: true,
-    }
-    if (isInternal) {
-      tempSchema._rev = {
-        type: "internal",
-        editable: false,
-        displayName: "Revision",
-        autocolumn: true,
-      }
-    }
-
-    return tempSchema
-  }
-
-  const checkHasCols = schema => {
-    if (!schema || Object.keys(schema).length === 0) {
-      return false
-    }
-    let fields = Object.values(schema)
-    for (let field of fields) {
-      if (!field.autocolumn) {
-        return true
-      }
-    }
-    return false
-  }
-
-  // Fetch data whenever sorting option changes
-  const onSort = async e => {
-    const sort = {
-      sortColumn: e.detail.column,
-      sortOrder: e.detail.order,
-    }
-    appliedSort = { ...sort }
-    appliedSort.sortOrder = appliedSort.sortOrder.toLowerCase()
-    selectedRows = []
-  }
-
-  // Fetch data whenever filters change
-  const onFilter = e => {
-    filters = e.detail
-    appliedFilter = e.detail
-  }
+  $: isUsersTable = id === TableNames.USERS
+  $: isInternal = $tables.selected?.type !== "external"
 </script>
 
 <div class="wrapper">
-  <Sheet
-    tableId={$tables.selected?._id}
-    {API}
-    filter={filters}
-    on:add-column={createColumnModal.show}
-  >
+  <Sheet {API} tableId={id}>
     <svelte:fragment slot="controls">
-      <CreateColumnButton
-        highlighted={!hasCols || !hasRows}
-        on:updatecolumns={null}
-      />
+      <SheetCreateColumnButton />
       {#if !isUsersTable}
-        <CreateRowButton
-          on:updaterows={null}
-          title="Create row"
-          modalContentComponent={CreateEditRow}
-          disabled={!hasCols}
-          highlighted={hasCols && !hasRows}
-        />
+        <SheetCreateRowButton />
       {/if}
       {#if isInternal}
-        <CreateViewButton disabled={!hasCols || !hasRows} />
+        <SheetCreateViewButton />
       {/if}
-      <ManageAccessButton resourceId={$tables.selected?._id} />
+      <SheetManageAccessButton />
       {#if isUsersTable}
         <EditRolesButton />
       {/if}
       {#if !isInternal}
-        <ExistingRelationshipButton
-          table={$tables.selected}
-          on:updatecolumns={null}
-        />
+        <SheetRelationshipButton />
       {/if}
-      <ImportButton
-        disabled={$tables.selected?._id === "ta_users"}
-        tableId={$tables.selected?._id}
-        on:importrows={null}
-      />
-      <ExportButton
-        disabled={!hasRows || !hasCols}
-        view={$tables.selected?._id}
-        filters={appliedFilter}
-        sorting={appliedSort}
-        {selectedRows}
-      />
-      {#key id}
-        <TableFilterButton
-          {schema}
-          {filters}
-          on:change={onFilter}
-          disabled={!hasCols}
-          tableId={id}
-        />
-      {/key}
+      {#if !isUsersTable}
+        <SheetImportButton />
+      {/if}
+      <SheetExportButton />
+      <SheetFilterButton />
+      <SheetEditColumnModal />
     </svelte:fragment>
   </Sheet>
 </div>
-
-<!--<div>-->
-<!--  <Table-->
-<!--    title={$tables.selected?.name}-->
-<!--    schema={enrichedSchema}-->
-<!--    {type}-->
-<!--    tableId={id}-->
-<!--    data={$fetch.rows}-->
-<!--    bind:hideAutocolumns-->
-<!--    loading={!$fetch.loaded}-->
-<!--    on:sort={onSort}-->
-<!--    allowEditing-->
-<!--    disableSorting-->
-<!--    on:updatecolumns={onUpdateColumns}-->
-<!--    on:updaterows={onUpdateRows}-->
-<!--    on:selectionUpdated={e => {-->
-<!--      selectedRows = e.detail-->
-<!--    }}-->
-<!--    customPlaceholder-->
-<!--  >-->
-<!--    <div slot="placeholder">-->
-<!--      <Layout gap="S">-->
-<!--        {#if !hasCols}-->
-<!--          <Heading>Let's create some columns</Heading>-->
-<!--          <Body>-->
-<!--            Start building out your table structure<br />-->
-<!--            by adding some columns-->
-<!--          </Body>-->
-<!--        {:else}-->
-<!--          <Heading>Now let's add a row</Heading>-->
-<!--          <Body>-->
-<!--            Add some data to your table<br />-->
-<!--            by adding some rows-->
-<!--          </Body>-->
-<!--        {/if}-->
-<!--      </Layout>-->
-<!--    </div>-->
-<!--  </Table>-->
-<!--  {#key id}-->
-<!--    <div in:fade={{ delay: 200, duration: 100 }}>-->
-<!--      <div class="pagination">-->
-<!--        <Pagination-->
-<!--          page={$fetch.pageNumber + 1}-->
-<!--          hasPrevPage={$fetch.hasPrevPage}-->
-<!--          hasNextPage={$fetch.hasNextPage}-->
-<!--          goToPrevPage={$fetch.loading ? null : fetch.prevPage}-->
-<!--          goToNextPage={$fetch.loading ? null : fetch.nextPage}-->
-<!--        />-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  {/key}-->
-
-<!--</div>-->
-
-<Modal bind:this={createColumnModal}>
-  <CreateEditColumn on:updatecolumns />
-</Modal>
 
 <style>
   .wrapper {
