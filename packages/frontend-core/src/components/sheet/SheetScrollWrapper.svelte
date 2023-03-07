@@ -12,6 +12,7 @@
     hoveredRowId,
     maxScrollTop,
     maxScrollLeft,
+    selectedCellId,
   } = getContext("sheet")
 
   export let scrollVertically = true
@@ -71,7 +72,11 @@
   })
 </script>
 
-<div class="outer" on:wheel={wheelInteractive ? handleWheel : null}>
+<div
+  class="outer"
+  on:wheel={wheelInteractive ? handleWheel : null}
+  on:click|self={() => ($selectedCellId = null)}
+>
   <div {style}>
     <slot />
   </div>

@@ -14,10 +14,13 @@
     visibleColumns,
     hoveredRowId,
     selectedCellMap,
+    selectedCellRow,
+    menu,
   } = getContext("sheet")
 
   $: rowSelected = !!$selectedRows[row._id]
   $: rowHovered = $hoveredRowId === row._id
+  $: containsSelectedCell = $selectedCellRow?._id === row._id
 </script>
 
 <div
@@ -27,23 +30,24 @@
   on:mouseleave={() => ($hoveredRowId = null)}
 >
   {#each $visibleColumns as column (column.name)}
-    {@const cellIdx = `${row._id}-${column.name}`}
+    {@const cellId = `${row._id}-${column.name}`}
     <SheetCell
-      {rowSelected}
+      rowSelected={rowSelected || containsSelectedCell}
       {rowHovered}
       rowIdx={idx}
-      selected={$selectedCellId === cellIdx}
-      selectedUser={$selectedCellMap[cellIdx]}
+      selected={$selectedCellId === cellId}
+      selectedUser={$selectedCellMap[cellId]}
       reorderSource={$reorder.sourceColumn === column.name}
       reorderTarget={$reorder.targetColumn === column.name}
-      on:click={() => ($selectedCellId = cellIdx)}
+      on:click={() => ($selectedCellId = cellId)}
+      on:contextmenu={e => menu.actions.open(cellId, e)}
       width={column.width}
     >
       <svelte:component
         this={getCellRenderer(column)}
         value={row[column.name]}
         schema={column.schema}
-        selected={$selectedCellId === cellIdx}
+        selected={$selectedCellId === cellId}
         onChange={val => rows.actions.updateRow(row._id, column, val)}
         readonly={column.schema.autocolumn}
       />

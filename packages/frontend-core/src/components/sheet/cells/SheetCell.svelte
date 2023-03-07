@@ -83,10 +83,10 @@
     cursor: default;
   }
   .cell.row-selected {
-    background-color: var(--spectrum-global-color-gray-100);
+    --cell-background: var(--spectrum-global-color-gray-75);
   }
   .cell.row-hovered {
-    background: var(--cell-background-hover);
+    --cell-background: var(--cell-background-hover);
   }
   .cell.center {
     justify-content: center;
@@ -94,7 +94,7 @@
 
   /* Reorder styles */
   .cell.reorder-source {
-    background: var(--spectrum-global-color-gray-100);
+    --cell-background: var(--spectrum-global-color-gray-100);
   }
   .cell.reorder-target:after {
     content: " ";

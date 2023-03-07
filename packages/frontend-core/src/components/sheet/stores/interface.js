@@ -1,10 +1,20 @@
-import { writable, get } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 
 export const createInterfaceStores = context => {
-  const { rows } = context
+  const { rows, rowLookupMap } = context
   const selectedCellId = writable(null)
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
+
+  // Derive the row that contains the selected cell.
+  const selectedCellRow = derived(
+    [selectedCellId, rowLookupMap, rows],
+    ([$selectedCellId, $rowLookupMap, $rows]) => {
+      const rowId = $selectedCellId?.split("-")[0]
+      const index = $rowLookupMap[rowId]
+      return $rows[index]
+    }
+  )
 
   // Ensure we clear invalid rows from state if they disappear
   rows.subscribe($rows => {
@@ -38,5 +48,5 @@ export const createInterfaceStores = context => {
     }
   })
 
-  return { selectedCellId, selectedRows, hoveredRowId }
+  return { selectedCellId, selectedRows, hoveredRowId, selectedCellRow }
 }

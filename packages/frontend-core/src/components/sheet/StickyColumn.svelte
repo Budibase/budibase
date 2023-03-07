@@ -1,7 +1,6 @@
 <script>
   import { getContext } from "svelte"
   import { Checkbox, Icon } from "@budibase/bbui"
-  import { getIconForField } from "./utils"
   import SheetCell from "./cells/SheetCell.svelte"
   import { getCellRenderer } from "./renderers"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
@@ -18,6 +17,7 @@
     reorder,
     config,
     selectedCellMap,
+    selectedCellRow,
   } = getContext("sheet")
 
   $: scrollLeft = $scroll.left
@@ -88,8 +88,14 @@
       {#each $visibleRows as row, idx}
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
+        {@const containsSelectedRow = $selectedCellRow?._id === row._id}
         <div class="row" on:mouseenter={() => ($hoveredRowId = row._id)}>
-          <SheetCell label {rowSelected} {rowHovered} width="40">
+          <SheetCell
+            label
+            rowSelected={rowSelected || containsSelectedRow}
+            {rowHovered}
+            width="40"
+          >
             <div
               on:click={() => selectRow(row._id)}
               class="checkbox"
@@ -108,9 +114,9 @@
           </SheetCell>
 
           {#if $stickyColumn}
-            {@const cellIdx = `${row._id}-${$stickyColumn.name}`}
+            {@const cellIdx = `${row._id}-${stickyColumn.name}`}
             <SheetCell
-              {rowSelected}
+              rowSelected={rowSelected || containsSelectedRow}
               {rowHovered}
               rowIdx={idx}
               sticky
