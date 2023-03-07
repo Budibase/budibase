@@ -1,7 +1,7 @@
 import { get, writable, derived } from "svelte/store"
 
 export const createReorderStores = context => {
-  const { columns, rand, scroll, bounds, stickyColumn } = context
+  const { columns, scroll, bounds, stickyColumn } = context
   const reorderInitialState = {
     sourceColumn: null,
     targetColumn: null,
