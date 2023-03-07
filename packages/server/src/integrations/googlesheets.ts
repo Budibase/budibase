@@ -16,7 +16,7 @@ import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
-import { runLuceneQuery } from "@budibase/shared-core"
+import { dataFilters } from "@budibase/shared-core"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -359,7 +359,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       await this.connect()
       const sheet = this.client.sheetsByTitle[query.sheet]
       const rows = await sheet.getRows()
-      const filtered = runLuceneQuery(rows, query.filters)
+      const filtered = dataFilters.runLuceneQuery(rows, query.filters)
       const headerValues = sheet.headerValues
       const response = []
       for (let row of filtered) {

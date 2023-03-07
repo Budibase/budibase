@@ -1,2 +1,2 @@
 export * from "./constants"
-export * from "./filters"
+export * as dataFilters from "./filters"
