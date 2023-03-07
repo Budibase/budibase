@@ -88,8 +88,8 @@ export const doWithLock = async <T>(
     let name: string = `lock:${prefix}_${opts.name}`
 
     // add additional unique name if required
-    if (opts.nameSuffix) {
-      name = name + `_${opts.nameSuffix}`
+    if (opts.resource) {
+      name = name + `_${opts.resource}`
     }
 
     // create the lock
