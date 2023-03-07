@@ -45,7 +45,8 @@ async function put(
     const lockResponse = await locks.doWithLock(
       {
         type: LockType.TRY_ONCE,
-        name: LockName.PERSIST_WRITETHROUGH(key!),
+        name: LockName.PERSIST_WRITETHROUGH,
+        nameSuffix: key,
         ttl: 1000,
       },
       async () => {
