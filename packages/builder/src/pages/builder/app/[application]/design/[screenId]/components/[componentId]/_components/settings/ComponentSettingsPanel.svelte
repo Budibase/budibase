@@ -28,17 +28,11 @@
   $: isScreen = $selectedComponent?._id === $selectedScreen?.props._id
   $: title = isScreen ? "Screen" : $selectedComponent?._instanceName
 
-  let section = "general"
-  let componentInstanceId = null
+  let section = "settings"
+  const tabs = ["settings", "styles", "conditions"]
 
-  const tabs = ["general", "styles", "conditions"]
-  const updateSection = () => {
-    if (componentInstanceId !== $selectedComponent?._id) {
-      section = tabs[0]
-      componentInstanceId = $selectedComponent?._id
-    }
-  }
-  $: updateSection(componentInstance)
+  $: id = $selectedComponent?._id
+  $: id, (section = tabs[0])
 </script>
 
 {#if $selectedComponent}
@@ -60,7 +54,7 @@
           {/each}
         </div>
       </span>
-      {#if section == "general"}
+      {#if section == "settings"}
         {#if componentDefinition?.info}
           <ComponentInfoSection {componentDefinition} />
         {/if}
@@ -96,6 +90,6 @@
     display: flex;
     gap: var(--spacing-s);
     padding: 0 var(--spacing-l);
-    padding-top: var(--spacing-xl);
+    padding-bottom: var(--spacing-l);
   }
 </style>

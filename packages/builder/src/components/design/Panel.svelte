@@ -14,38 +14,42 @@
   export let borderRight = false
 
   let wide = false
+  $: customHeaderContent = $$slots["panel-header-content"]
 </script>
 
 <div class="panel" class:wide class:borderLeft class:borderRight>
-  <div class="header-wrap">
-    <div class="header">
-      {#if showBackButton}
-        <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
-      {/if}
-      {#if icon}
-        <Icon name={icon} />
-      {/if}
-      <div class="title">
-        <Heading size="XXS">{title || ""}</Heading>
-      </div>
-      {#if expandable}
-        <Icon
-          name={wide ? "Minimize" : "Maximize"}
-          hoverable
-          on:click={() => (wide = !wide)}
-        />
-      {/if}
-      {#if showAddButton}
-        <div class="add-button" on:click={onClickAddButton}>
-          <Icon name="Add" />
-        </div>
-      {/if}
-      {#if showCloseButton}
-        <Icon name="Close" hoverable on:click={onClickCloseButton} />
-      {/if}
+  <div class="header" class:custom={customHeaderContent}>
+    {#if showBackButton}
+      <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
+    {/if}
+    {#if icon}
+      <Icon name={icon} />
+    {/if}
+    <div class="title">
+      <Heading size="XXS">{title || ""}</Heading>
     </div>
-    <slot name="panel-header-content" />
+    {#if expandable}
+      <Icon
+        name={wide ? "Minimize" : "Maximize"}
+        hoverable
+        on:click={() => (wide = !wide)}
+      />
+    {/if}
+    {#if showAddButton}
+      <div class="add-button" on:click={onClickAddButton}>
+        <Icon name="Add" />
+      </div>
+    {/if}
+    {#if showCloseButton}
+      <Icon name="Close" hoverable on:click={onClickCloseButton} />
+    {/if}
   </div>
+
+  {#if customHeaderContent}
+    <span class="custom-content-wrap">
+      <slot name="panel-header-content" />
+    </span>
+  {/if}
 
   <div class="body">
     <slot />
@@ -80,11 +84,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 var(--spacing-l);
-    gap: var(--spacing-l);
-  }
-  .header-wrap {
     border-bottom: var(--border-light);
-    padding: var(--spacing-l) 0px;
+    gap: var(--spacing-l);
   }
   .title {
     flex: 1 1 auto;
@@ -122,5 +123,11 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+  }
+  .header.custom {
+    border: none;
+  }
+  .custom-content-wrap {
+    border-bottom: var(--border-light);
   }
 </style>
