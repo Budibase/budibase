@@ -8,7 +8,7 @@ export const getColor = (idx, opacity = 0.3) => {
 export const getIconForField = field => {
   const type = field.schema.type
   if (type === "options") {
-    return "ChevronDown"
+    return "Dropdown"
   } else if (type === "datetime") {
     return "Date"
   }

@@ -77,27 +77,19 @@ export const createReorderStores = context => {
   // Callback when stopping reordering columns
   const stopReordering = () => {
     // Swap position of columns
-    const $columns = get(columns)
     let { sourceColumn, targetColumn } = get(reorder)
+    const $columns = get(columns)
     let sourceIdx = $columns.findIndex(x => x.name === sourceColumn)
     let targetIdx = $columns.findIndex(x => x.name === targetColumn)
     targetIdx++
+    console.log(sourceIdx, targetIdx)
     columns.update(state => {
       const removed = state.splice(sourceIdx, 1)
       if (--targetIdx < sourceIdx) {
         targetIdx++
       }
       state.splice(targetIdx, 0, removed[0])
-      let offset = 0
-      return state.map((col, idx) => {
-        const newCol = {
-          ...col,
-          idx,
-          left: offset,
-        }
-        offset += col.width
-        return newCol
-      })
+      return state.slice()
     })
 
     // Reset state
@@ -108,12 +100,42 @@ export const createReorderStores = context => {
     document.removeEventListener("mouseup", stopReordering)
   }
 
+  const moveColumnLeft = column => {
+    const $columns = get(columns)
+    const sourceIdx = $columns.findIndex(x => x.name === column)
+    if (sourceIdx === 0) {
+      return
+    }
+    columns.update(state => {
+      let tmp = state[sourceIdx]
+      state[sourceIdx] = state[sourceIdx - 1]
+      state[sourceIdx - 1] = tmp
+      return state.slice()
+    })
+  }
+
+  const moveColumnRight = column => {
+    const $columns = get(columns)
+    const sourceIdx = $columns.findIndex(x => x.name === column)
+    if (sourceIdx === $columns.length - 1) {
+      return
+    }
+    columns.update(state => {
+      let tmp = state[sourceIdx]
+      state[sourceIdx] = state[sourceIdx + 1]
+      state[sourceIdx + 1] = tmp
+      return state.slice()
+    })
+  }
+
   return {
     reorder: {
       ...reorder,
       actions: {
         startReordering,
         stopReordering,
+        moveColumnLeft,
+        moveColumnRight,
       },
     },
     isReordering,
