@@ -1,4 +1,5 @@
 import { redis, utils } from "@budibase/backend-core"
+import env from "../environment"
 
 function getExpirySecondsForDB(db: string) {
   switch (db) {
@@ -142,5 +143,8 @@ export async function getInviteCodes(tenantIds?: string[]) {
       code: invite.key,
     }
   })
+  if (!env.MULTI_TENANCY) {
+    return results
+  }
   return results.filter(invite => tenantIds?.length && tenantIds.includes(invite.info.tenantId))
 }
