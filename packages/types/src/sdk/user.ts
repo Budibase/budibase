@@ -3,6 +3,7 @@ export interface UpdateSelf {
   lastName?: string
   password?: string
   forceResetPassword?: boolean
+  onboardedAt?: string
 }
 
 export interface SaveUserOpts {

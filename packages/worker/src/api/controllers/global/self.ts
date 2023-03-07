@@ -123,11 +123,12 @@ export async function updateSelf(
   ctx: UserCtx<UpdateSelfRequest, UpdateSelfResponse>
 ) {
   const body = ctx.request.body
-  const update: UpdateSelf = {
-    firstName: body.firstName,
-    lastName: body.lastName,
-    password: body.password,
-    forceResetPassword: body.forceResetPassword,
+
+  const update: UpdateSelf = {}
+  for (let [key, value] of Object.entries(body)) {
+    if (value) {
+      update[key as keyof UpdateSelf] = value
+    }
   }
 
   const user = await userSdk.updateSelf(ctx.user._id!, update)
