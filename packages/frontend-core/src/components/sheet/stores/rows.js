@@ -10,13 +10,11 @@ export const createRowsStore = context => {
   const schema = writable({})
   const table = writable(null)
   const filter = writable([])
+  const loaded = writable(false)
   const sort = writable({
     column: null,
     order: null,
   })
-
-  // Flag for whether this is the first time loading our fetch
-  let loaded = false
 
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}
@@ -37,7 +35,7 @@ export const createRowsStore = context => {
       return null
     }
     // Wipe state and fully hydrate next time our fetch returns data
-    loaded = false
+    loaded.set(false)
 
     // Create fetch and load initial data
     return fetchData({
@@ -63,9 +61,9 @@ export const createRowsStore = context => {
     }
     $fetch.subscribe($$fetch => {
       if ($$fetch.loaded) {
-        if (!loaded) {
+        if (!get(loaded)) {
           // Hydrate initial data
-          loaded = true
+          loaded.set(true)
           rowCacheMap = {}
           rows.set([])
         }
@@ -273,5 +271,6 @@ export const createRowsStore = context => {
     schema,
     sort,
     filter,
+    loaded,
   }
 }
