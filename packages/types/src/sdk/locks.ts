@@ -30,9 +30,9 @@ export interface LockOptions {
    */
   ttl: number
   /**
-   * The suffix to add to the lock name for additional uniqueness
+   * The resource to the lock name
    */
-  nameSuffix?: string
+  resource?: string
   /**
    * This is a system-wide lock - don't use tenancy in lock key
    */

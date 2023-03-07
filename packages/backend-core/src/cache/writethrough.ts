@@ -46,7 +46,7 @@ async function put(
       {
         type: LockType.TRY_ONCE,
         name: LockName.PERSIST_WRITETHROUGH,
-        nameSuffix: key,
+        resource: key,
         ttl: 1000,
       },
       async () => {
