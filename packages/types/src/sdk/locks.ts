@@ -13,6 +13,7 @@ export enum LockName {
   TRIGGER_QUOTA = "trigger_quota",
   SYNC_ACCOUNT_LICENSE = "sync_account_license",
   UPDATE_TENANTS_DOC = "update_tenants_doc",
+  PERSIST_WRITETHROUGH = "persist_writethrough",
 }
 
 export interface LockOptions {
@@ -29,9 +30,9 @@ export interface LockOptions {
    */
   ttl: number
   /**
-   * The suffix to add to the lock name for additional uniqueness
+   * The individual resource to lock. This is useful for locking around very specific identifiers, e.g. a document that is prone to conflicts
    */
-  nameSuffix?: string
+  resource?: string
   /**
    * This is a system-wide lock - don't use tenancy in lock key
    */
