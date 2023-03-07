@@ -47,7 +47,7 @@
 
   const onContextMenu = e => {
     e.preventDefault()
-    open = true
+    open = !open
   }
 
   const sortAscending = () => {
