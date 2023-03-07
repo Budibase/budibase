@@ -1,4 +1,5 @@
-import { redis, utils } from "@budibase/backend-core"
+import { redis, utils, tenancy } from "@budibase/backend-core"
+import env from "../environment"
 
 function getExpirySecondsForDB(db: string) {
   switch (db) {
@@ -129,10 +130,9 @@ export async function checkInviteCode(
 }
 
 /** 
-  Get all currently available user invitations.
-  @return {Object[]} A list of all objects containing invite metadata
+  Get all currently available user invitations for the current tenant.
 **/
-export async function getInviteCodes(tenantIds?: string[]) {
+export async function getInviteCodes() {
   const client = await getClient(redis.utils.Databases.INVITATIONS)
   const invites: any[] = await client.scan()
 
@@ -142,12 +142,9 @@ export async function getInviteCodes(tenantIds?: string[]) {
       code: invite.key,
     }
   })
-  return results.reduce((acc, invite) => {
-    if (tenantIds?.length && tenantIds.includes(invite.info.tenantId)) {
-      acc.push(invite)
-    } else {
-      acc.push(invite)
-    }
-    return acc
-  }, [])
+  if (!env.MULTI_TENANCY) {
+    return results
+  }
+  const tenantId = tenancy.getTenantId()
+  return results.filter(invite => tenantId === invite.info.tenantId)
 }
