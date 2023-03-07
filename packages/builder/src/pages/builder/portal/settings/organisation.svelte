@@ -7,7 +7,7 @@
     Divider,
     Label,
     Input,
-    Dropzone,
+    // Dropzone,
     notifications,
     Toggle,
   } from "@budibase/bbui"
@@ -87,7 +87,7 @@
         <Label size="L">Org. name</Label>
         <Input thin bind:value={$values.company} />
       </div>
-      <div class="field logo">
+      <!-- <div class="field logo">
         <Label size="L">Logo</Label>
         <div class="file">
           <Dropzone
@@ -101,7 +101,7 @@
             }}
           />
         </div>
-      </div>
+      </div> -->
       {#if !$admin.cloud}
         <div class="field">
           <Label
