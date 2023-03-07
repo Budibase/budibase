@@ -37,7 +37,6 @@ env:
 jobs:
   release-images:
     runs-on: ubuntu-latest
-
     steps:
       - name: Fail if branch is not master
         if: github.ref != 'refs/heads/master' 
@@ -93,12 +92,15 @@ jobs:
   release-helm-chart:
     needs: [release-images]
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: Setup Helm
         uses: azure/setup-helm@v1
         id: helm-install
+
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       # due to helm repo index issue: https://github.com/helm/helm/issues/7363
       # we need to create new package in a different dir, merge the index and move the package back
@@ -130,6 +132,10 @@ jobs:
     needs: [release-helm-chart]
     runs-on: ubuntu-latest
     steps:
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        
       - uses: passeidireto/trigger-external-workflow-action@main
         env:
           PAYLOAD_VERSION: ${{ steps.previoustag.outputs.tag }}
