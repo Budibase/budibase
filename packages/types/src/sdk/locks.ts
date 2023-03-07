@@ -30,7 +30,7 @@ export interface LockOptions {
    */
   ttl: number
   /**
-   * The resource to the lock name
+   * The individual resource to lock. This is useful for locking around very specific identifiers, e.g. a document that is prone to conflicts
    */
   resource?: string
   /**
