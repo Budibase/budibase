@@ -28,6 +28,11 @@ yarn unlink
 yarn link
 cd -
 
+echo "Linking shared-core"
+cd packages/shared-core
+yarn unlink
+yarn link
+cd -
 
 if [ -d "../budibase-pro" ]; then
   cd ../budibase-pro
