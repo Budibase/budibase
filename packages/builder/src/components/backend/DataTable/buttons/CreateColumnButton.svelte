@@ -6,6 +6,8 @@
   export let disabled = false
 
   let modal
+
+  export const show = () => modal?.show()
 </script>
 
 <ActionButton

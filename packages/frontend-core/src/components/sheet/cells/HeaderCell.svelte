@@ -7,7 +7,7 @@
   export let column
   export let orderable = true
 
-  const { reorder, isReordering, isResizing, rand, sort, columns } =
+  const { reorder, isReordering, isResizing, rand, sort, columns, dispatch } =
     getContext("sheet")
 
   let anchor
@@ -17,6 +17,11 @@
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && column.idx > 0
   $: canMoveRight = orderable && column.idx < $columns.length - 1
+
+  const editColumn = () => {
+    dispatch("edit-column", column.schema)
+    open = false
+  }
 
   const onMouseDown = e => {
     if (e.button === 0 && orderable) {
@@ -112,7 +117,7 @@
   animate={false}
 >
   <Menu>
-    <MenuItem icon="Edit">Edit column</MenuItem>
+    <MenuItem icon="Edit" on:click={editColumn}>Edit column</MenuItem>
     <MenuItem icon="SortOrderUp" on:click={sortAscending}>
       Sort ascending
     </MenuItem>
@@ -125,7 +130,6 @@
     <MenuItem disabled={!canMoveRight} icon="ArrowRight" on:click={moveRight}>
       Move right
     </MenuItem>
-    <MenuItem icon="Delete">Delete</MenuItem>
   </Menu>
 </Popover>
 

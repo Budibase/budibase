@@ -369,6 +369,27 @@ export default class DataFetch {
   }
 
   /**
+   * Refreshes the datasource's definition and schema
+   */
+  async refreshDefinition() {
+    const { datasource } = this.options
+
+    // Fetch datasource definition and determine feature flags
+    const definition = await this.getDefinition(datasource)
+
+    // Fetch and enrich schema
+    let schema = this.getSchema(datasource, definition)
+    schema = this.enrichSchema(schema)
+
+    // Update state
+    this.store.update(state => ({
+      ...state,
+      definition,
+      schema,
+    }))
+  }
+
+  /**
    * Determines whether there is a next page of data based on the state of the
    * store
    * @param state the current store state

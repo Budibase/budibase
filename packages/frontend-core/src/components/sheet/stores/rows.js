@@ -6,10 +6,13 @@ import { notifications } from "@budibase/bbui"
 export const createRowsStore = context => {
   const { config, API } = context
   const tableId = derived(config, $config => $config.tableId)
-  const filter = derived(config, $config => $config.filter)
+  const rows = writable([])
+  const schema = writable({})
+  const table = writable(null)
+  const filter = writable([])
   const sort = writable({
     column: null,
-    order: "ascending",
+    order: null,
   })
 
   // Flag for whether this is the first time loading our fetch
@@ -18,9 +21,14 @@ export const createRowsStore = context => {
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}
 
-  // Exported stores
-  const rows = writable([])
-  const schema = writable({})
+  // Reset everything when table ID changes
+  tableId.subscribe(() => {
+    filter.set([])
+    sort.set({
+      column: null,
+      order: null,
+    })
+  })
 
   // Local stores for managing fetching data
   const query = derived(filter, $filter => buildLuceneQuery($filter))
@@ -60,15 +68,16 @@ export const createRowsStore = context => {
           loaded = true
           rowCacheMap = {}
           rows.set([])
-
-          // Enrich primary display into schema
-          let newSchema = $$fetch.schema
-          const primaryDisplay = $$fetch.definition?.primaryDisplay
-          if (primaryDisplay && newSchema[primaryDisplay]) {
-            newSchema[primaryDisplay].primaryDisplay = true
-          }
-          schema.set(newSchema)
         }
+
+        // Update schema and enrich primary display into schema
+        let newSchema = $$fetch.schema
+        const primaryDisplay = $$fetch.definition?.primaryDisplay
+        if (primaryDisplay && newSchema[primaryDisplay]) {
+          newSchema[primaryDisplay].primaryDisplay = true
+        }
+        schema.set(newSchema)
+        table.set($$fetch.definition)
 
         // Process new rows
         handleNewRows($$fetch.rows)
@@ -141,6 +150,15 @@ export const createRowsStore = context => {
       // A row was removed
       handleRemoveRows([$rows[index]])
     }
+  }
+
+  // Refreshes all data
+  const refreshData = () => {
+    filter.set([])
+    sort.set({
+      column: null,
+      order: null,
+    })
   }
 
   // Updates a value of a row
@@ -233,6 +251,11 @@ export const createRowsStore = context => {
     get(fetch)?.nextPage()
   }
 
+  // Refreshes the schema of the data fetch subscription
+  const refreshSchema = async () => {
+    return await get(fetch)?.refreshDefinition()
+  }
+
   return {
     rows: {
       ...rows,
@@ -242,9 +265,13 @@ export const createRowsStore = context => {
         deleteRows,
         loadNextPage,
         refreshRow,
+        refreshData,
+        refreshSchema,
       },
     },
+    table,
     schema,
     sort,
+    filter,
   }
 }
