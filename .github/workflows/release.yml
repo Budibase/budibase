@@ -35,7 +35,7 @@ env:
   PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
-  release:
+  release-images:
     runs-on: ubuntu-latest
 
     steps:
