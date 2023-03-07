@@ -18,14 +18,23 @@
   $: canMoveLeft = orderable && column.idx > 0
   $: canMoveRight = orderable && column.idx < $columns.length - 1
 
-  const startReordering = e => {
-    timeout = setTimeout(() => {
-      reorder.actions.startReordering(column.name, e)
-    }, 200)
+  const onMouseDown = e => {
+    if (e.button === 0 && orderable) {
+      timeout = setTimeout(() => {
+        reorder.actions.startReordering(column.name, e)
+      }, 200)
+    }
   }
 
-  const stopReordering = () => {
-    clearTimeout(timeout)
+  const onMouseUp = e => {
+    if (e.button === 0 && orderable) {
+      clearTimeout(timeout)
+    }
+  }
+
+  const onContextMenu = e => {
+    e.preventDefault()
+    open = true
   }
 
   const sortAscending = () => {
@@ -66,8 +75,9 @@
   <SheetCell
     reorderSource={$reorder.sourceColumn === column.name}
     reorderTarget={$reorder.targetColumn === column.name}
-    on:mousedown={orderable ? startReordering : null}
-    on:mouseup={orderable ? stopReordering : null}
+    on:mousedown={onMouseDown}
+    on:mouseup={onMouseUp}
+    on:contextmenu={onContextMenu}
     width={column.width}
     left={column.left}
   >

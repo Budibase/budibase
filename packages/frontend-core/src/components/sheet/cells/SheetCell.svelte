@@ -39,6 +39,7 @@
   on:mousedown
   on:mouseup
   on:click
+  on:contextmenu
   {style}
   data-row={rowIdx}
 >
