@@ -142,12 +142,5 @@ export async function getInviteCodes(tenantIds?: string[]) {
       code: invite.key,
     }
   })
-  return results.reduce((acc, invite) => {
-    if (tenantIds?.length && tenantIds.includes(invite.info.tenantId)) {
-      acc.push(invite)
-    } else {
-      acc.push(invite)
-    }
-    return acc
-  }, [])
+  return results.filter(invite => tenantIds?.length && tenantIds.includes(invite.info.tenantId))
 }
