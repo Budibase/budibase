@@ -19,11 +19,11 @@ let schema: any = {
 
 export const buildSelfSaveValidation = () => {
   schema = {
-    password: Joi.string().allow(null, ""),
+    password: Joi.string().optional(),
     forceResetPassword: Joi.boolean().optional(),
-    firstName: Joi.string().allow(null, ""),
-    lastName: Joi.string().allow(null, ""),
-    onboardedAt: Joi.string().allow(null, ""),
+    firstName: Joi.string().allow("").optional(),
+    lastName: Joi.string().allow("").optional(),
+    onboardedAt: Joi.string().optional(),
   }
   return auth.joiValidator.body(Joi.object(schema).required().unknown(false))
 }

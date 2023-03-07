@@ -124,11 +124,8 @@ export async function updateSelf(
 ) {
   const body = ctx.request.body
 
-  const update: UpdateSelf = {}
-  for (let [key, value] of Object.entries(body)) {
-    if (value) {
-      update[key as keyof UpdateSelf] = value
-    }
+  const update: UpdateSelf = {
+    ...body,
   }
 
   const user = await userSdk.updateSelf(ctx.user._id!, update)
