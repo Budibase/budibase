@@ -15,7 +15,6 @@
   .users {
     display: flex;
     flex-direction: row;
-    padding: 0 10px;
     gap: 8px;
   }
 </style>

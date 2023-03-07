@@ -40,7 +40,7 @@
     background: var(--spectrum-global-color-gray-100);
     display: grid;
     place-items: center;
-    width: 40px;
+    width: 46px;
     border-left: var(--cell-border);
   }
   .new-column:hover {
