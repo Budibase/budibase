@@ -1,3 +1,4 @@
+import { SortDirection } from "@budibase/types"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
@@ -399,7 +400,7 @@ export const runLuceneQuery = (
 export const luceneSort = (
   docs: any[],
   sort: string | number,
-  sortOrder: string,
+  sortOrder: SortDirection,
   sortType = "string"
 ) => {
   if (!sort || !sortOrder || !sortType) {
@@ -412,7 +413,7 @@ export const luceneSort = (
     .sort((a: { [x: string]: any }, b: { [x: string]: any }) => {
       const colA = parse(a[sort])
       const colB = parse(b[sort])
-      if (sortOrder === "Descending") {
+      if (sortOrder.toLowerCase() === "descending") {
         return colA > colB ? -1 : 1
       } else {
         return colA > colB ? 1 : -1

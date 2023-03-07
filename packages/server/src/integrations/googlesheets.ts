@@ -361,12 +361,18 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       const rows = await sheet.getRows()
       const filtered = dataFilters.runLuceneQuery(rows, query.filters)
       const headerValues = sheet.headerValues
-      const response = []
+      let response = []
       for (let row of filtered) {
         response.push(
           this.buildRowObject(headerValues, row._rawData, row._rowNumber)
         )
       }
+
+      if (query.sort) {
+        const sortInfo = Object.entries(query.sort)[0]
+        response = dataFilters.luceneSort(response, sortInfo[0], sortInfo[1])
+      }
+
       return response
     } catch (err) {
       console.error("Error reading from google sheets", err)

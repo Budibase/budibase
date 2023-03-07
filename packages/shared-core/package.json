@@ -10,6 +10,9 @@
     "build": "tsc",
     "dev:builder": "tsc --watch"
   },
+  "dependencies": {
+    "@budibase/types": "2.3.21-alpha.2"
+  },
   "devDependencies": {
     "typescript": "4.7.3"
   }
