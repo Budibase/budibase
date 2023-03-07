@@ -82,7 +82,6 @@ export const createReorderStores = context => {
     let sourceIdx = $columns.findIndex(x => x.name === sourceColumn)
     let targetIdx = $columns.findIndex(x => x.name === targetColumn)
     targetIdx++
-    console.log(sourceIdx, targetIdx)
     columns.update(state => {
       const removed = state.splice(sourceIdx, 1)
       if (--targetIdx < sourceIdx) {
