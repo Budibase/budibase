@@ -661,6 +661,7 @@
     align-items: center;
     gap: var(--spacing-m);
     color: var(--spectrum-global-color-gray-900);
+    overflow: hidden;
   }
 
   .auth-entity .user-email {
@@ -741,11 +742,11 @@
   }
 
   .builder-side-panel-header {
-    height: 58px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    flex: 0 0 58px;
   }
 
   .invite-header {
