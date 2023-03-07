@@ -7,6 +7,10 @@ export const createRowsStore = context => {
   const { config, API } = context
   const tableId = derived(config, $config => $config.tableId)
   const filter = derived(config, $config => $config.filter)
+  const sort = writable({
+    column: null,
+    order: "ascending",
+  })
 
   // Flag for whether this is the first time loading our fetch
   let loaded = false
@@ -20,7 +24,7 @@ export const createRowsStore = context => {
 
   // Local stores for managing fetching data
   const query = derived(filter, $filter => buildLuceneQuery($filter))
-  const fetch = derived([tableId, query], ([$tableId, $query]) => {
+  const fetch = derived([tableId, query, sort], ([$tableId, $query, $sort]) => {
     if (!$tableId) {
       return null
     }
@@ -35,8 +39,8 @@ export const createRowsStore = context => {
         tableId: $tableId,
       },
       options: {
-        sortColumn: null,
-        sortOrder: null,
+        sortColumn: $sort.column,
+        sortOrder: $sort.order,
         query: $query,
         limit: 100,
         paginate: true,
@@ -241,5 +245,6 @@ export const createRowsStore = context => {
       },
     },
     schema,
+    sort,
   }
 }

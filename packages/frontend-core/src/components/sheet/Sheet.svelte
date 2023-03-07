@@ -60,7 +60,7 @@
   context = { ...context, ...createUserStores(context) }
 
   // Reference some stores for local use
-  const isResizing = context.isResizing
+  const { isResizing, isReordering } = context
 
   // Keep config store up to date
   $: config.set({
@@ -80,6 +80,7 @@
 <div
   class="sheet"
   class:is-resizing={$isResizing}
+  class:is-reordering={$isReordering}
   style="--cell-height:{cellHeight}px;"
   id="sheet-{rand}"
 >
@@ -128,6 +129,9 @@
   }
   .sheet.is-resizing :global(*) {
     cursor: col-resize !important;
+  }
+  .sheet.is-reordering :global(*) {
+    cursor: grabbing !important;
   }
 
   .sheet-data {

@@ -7,30 +7,51 @@
   export let column
   export let orderable = true
 
-  const { reorder, isReordering, isResizing, rand } = getContext("sheet")
+  const { reorder, isReordering, isResizing, rand, sort, columns } =
+    getContext("sheet")
 
-  let timeout
   let anchor
   let open = false
-  let isClick = true
+  let timeout
+
+  $: sortedBy = column.name === $sort.column
+  $: canMoveLeft = orderable && column.idx > 0
+  $: canMoveRight = orderable && column.idx < $columns.length - 1
 
   const startReordering = e => {
-    isClick = true
     timeout = setTimeout(() => {
-      isClick = false
       reorder.actions.startReordering(column.name, e)
-    }, 250)
+    }, 200)
   }
 
   const stopReordering = () => {
     clearTimeout(timeout)
   }
 
-  const onClick = () => {
-    if (isClick) {
-      stopReordering()
-      open = true
-    }
+  const sortAscending = () => {
+    sort.set({
+      column: column.name,
+      order: "ascending",
+    })
+    open = false
+  }
+
+  const sortDescending = () => {
+    sort.set({
+      column: column.name,
+      order: "descending",
+    })
+    open = false
+  }
+
+  const moveLeft = () => {
+    reorder.actions.moveColumnLeft(column.name)
+    open = false
+  }
+
+  const moveRight = () => {
+    reorder.actions.moveColumnRight(column.name)
+    open = false
   }
 </script>
 
@@ -40,26 +61,34 @@
   style="flex: 0 0 {column.width}px;"
   bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
+  class:sorted={sortedBy}
 >
   <SheetCell
     reorderSource={$reorder.sourceColumn === column.name}
     reorderTarget={$reorder.targetColumn === column.name}
     on:mousedown={orderable ? startReordering : null}
     on:mouseup={orderable ? stopReordering : null}
-    on:click={onClick}
     width={column.width}
     left={column.left}
   >
     <Icon
       size="S"
       name={getIconForField(column)}
-      color="var(--spectrum-global-color-gray-600)"
+      color={`var(--spectrum-global-color-gray-600)`}
     />
     <div class="name">
       {column.name}
     </div>
-    <div class="more">
-      <Icon size="S" name="MoreVertical" />
+    <div
+      class="more"
+      on:mousedown|stopPropagation
+      on:click={() => (open = true)}
+    >
+      <Icon
+        size="S"
+        name="MoreVertical"
+        color={`var(--spectrum-global-color-gray-600)`}
+      />
     </div>
   </SheetCell>
 </div>
@@ -67,19 +96,25 @@
 <Popover
   bind:open
   {anchor}
-  align="left"
+  align="right"
   offset={0}
   popoverTarget={document.getElementById(`sheet-${rand}`)}
   animate={false}
 >
   <Menu>
     <MenuItem icon="Edit">Edit column</MenuItem>
-    <MenuItem icon="SortOrderUp">Sort ascending</MenuItem>
-    <MenuItem icon="SortOrderDown">Sort descending</MenuItem>
-    {#if orderable}
-      <MenuItem icon="ArrowLeft">Move left</MenuItem>
-      <MenuItem icon="ArrowRight">Move right</MenuItem>
-    {/if}
+    <MenuItem icon="SortOrderUp" on:click={sortAscending}>
+      Sort ascending
+    </MenuItem>
+    <MenuItem icon="SortOrderDown" on:click={sortDescending}>
+      Sort descending
+    </MenuItem>
+    <MenuItem disabled={!canMoveLeft} icon="ArrowLeft" on:click={moveLeft}>
+      Move left
+    </MenuItem>
+    <MenuItem disabled={!canMoveRight} icon="ArrowRight" on:click={moveRight}>
+      Move right
+    </MenuItem>
     <MenuItem icon="Delete">Delete</MenuItem>
   </Menu>
 </Popover>
@@ -88,16 +123,14 @@
   .header-cell {
     display: flex;
   }
-  .header-cell:not(.disabled):hover :global(.cell),
-  .header-cell:not(.disabled).open :global(.cell) {
-    cursor: pointer;
-    background: var(--spectrum-global-color-gray-200);
-  }
+
   .header-cell :global(.cell) {
     background: var(--background);
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
     border-bottom: none;
+  }
+  .header-cell.sorted :global(.cell) {
   }
 
   .name {
@@ -109,10 +142,13 @@
   }
 
   .more {
-    display: none;
+    padding: 4px;
+    margin: 0 -4px;
   }
-  .header-cell:not(.disabled):hover .more,
-  .header-cell:not(.disabled).open .more {
-    display: block;
+  .more:hover {
+    cursor: pointer;
+  }
+  .more:hover :global(.spectrum-Icon) {
+    color: var(--spectrum-global-color-gray-800) !important;
   }
 </style>

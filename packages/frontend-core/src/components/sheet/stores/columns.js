@@ -1,10 +1,25 @@
-import { get, writable } from "svelte/store"
+import { derived, get, writable } from "svelte/store"
 
 export const createColumnsStores = context => {
   const { schema } = context
   const defaultWidth = 200
   const columns = writable([])
   const stickyColumn = writable(null)
+
+  // Derive an enriched version of columns with left offsets and indexes
+  // automatically calculated
+  const enrichedColumns = derived(columns, $columns => {
+    let offset = 0
+    return $columns.map((column, idx) => {
+      const enriched = {
+        ...column,
+        idx,
+        left: offset,
+      }
+      offset += column.width
+      return enriched
+    })
+  })
 
   // Merge new schema fields with existing schema in order to preserve widths
   schema.subscribe($schema => {
@@ -23,19 +38,14 @@ export const createColumnsStores = context => {
     })
 
     // Update columns, removing extraneous columns and adding missing ones
-    let offset = 0
     columns.set(
-      fields.map((field, idx) => {
+      fields.map(field => {
         const existing = currentColumns.find(x => x.name === field)
-        const newCol = {
-          idx,
+        return {
           name: field,
           width: existing?.width || defaultWidth,
-          left: offset,
           schema: $schema[field],
         }
-        offset += newCol.width
-        return newCol
       })
     )
   })
@@ -60,7 +70,10 @@ export const createColumnsStores = context => {
   })
 
   return {
-    columns,
+    columns: {
+      ...columns,
+      subscribe: enrichedColumns.subscribe,
+    },
     stickyColumn,
   }
 }

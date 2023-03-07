@@ -51,11 +51,6 @@ export const createResizeStores = context => {
     } else {
       columns.update(state => {
         state[columnIdx].width = newWidth
-        let offset = state[columnIdx].left + newWidth
-        for (let i = columnIdx + 1; i < state.length; i++) {
-          state[i].left = offset
-          offset += state[i].width
-        }
         return [...state]
       })
     }
