@@ -47,7 +47,7 @@ async function getACode(db: string, code: string, deleteCode = true) {
   const client = await getClient(db)
   const value = await client.get(code)
   if (!value) {
-    throw "Invalid code."
+    throw new Error("Invalid code.")
   }
   if (deleteCode) {
     await client.delete(code)

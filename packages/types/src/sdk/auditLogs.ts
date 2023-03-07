@@ -18,4 +18,5 @@ export type AuditLogQueueEvent = {
   event: Event
   properties: any
   opts: AuditWriteOpts
+  tenantId: string
 }

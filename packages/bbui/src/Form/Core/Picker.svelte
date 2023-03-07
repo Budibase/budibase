@@ -33,6 +33,7 @@
   export let autocomplete = false
   export let sort = false
   export let fetchTerm = null
+  export let useFetch = false
   export let customPopoverHeight
   export let align = "left"
   export let footer = null
@@ -150,9 +151,9 @@
   >
     {#if autocomplete}
       <Search
-        value={fetchTerm ? fetchTerm : searchTerm}
+        value={useFetch ? fetchTerm : searchTerm}
         on:change={event =>
-          fetchTerm ? (fetchTerm = event.detail) : (searchTerm = event.detail)}
+          useFetch ? (fetchTerm = event.detail) : (searchTerm = event.detail)}
         {disabled}
         placeholder="Search"
       />
