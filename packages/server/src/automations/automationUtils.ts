@@ -61,7 +61,9 @@ export function cleanInputValues(inputs: Record<string, any>, schema: any) {
     ) {
       try {
         inputs.row[key] = JSON.parse(inputs.row[key])
-      } catch (e) {}
+      } catch (e) {
+        //Link is not an array or object, so continue
+      }
     }
   }
   return inputs
