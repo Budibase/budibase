@@ -2,11 +2,11 @@
   import CreateColumnButton from "../CreateColumnButton.svelte"
   import { getContext, onMount } from "svelte"
 
-  const { rows, columns, subscribe } = getContext("sheet")
+  const { rows, columns, subscribe, filter } = getContext("sheet")
 
   let createColumnModal
 
-  $: highlighted = !$rows.length || !$columns.length
+  $: highlighted = !$filter.length && (!$rows.length || !$columns.length)
 
   onMount(() => subscribe("add-column", createColumnModal.show))
 </script>
