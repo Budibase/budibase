@@ -154,9 +154,14 @@ export function createAuthStore() {
       await setInitInfo({})
     },
     updateSelf: async fields => {
-      const newUser = { ...get(auth).user, ...fields }
-      await API.updateSelf(newUser)
-      setUser(newUser)
+      await API.updateSelf({ ...fields })
+      // Refetch to enrich after update.
+      try {
+        const user = await API.fetchBuilderSelf()
+        setUser(user)
+      } catch (error) {
+        setUser(null)
+      }
     },
     forgotPassword: async email => {
       const tenantId = get(store).tenantId

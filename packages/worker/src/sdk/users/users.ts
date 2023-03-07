@@ -233,7 +233,7 @@ export async function updateSelf(id: string, data: UpdateSelf) {
     ...user,
     ...data,
   }
-  return save(user)
+  return save(user, { requirePassword: false })
 }
 
 export const save = async (
