@@ -10,12 +10,7 @@ import {
 } from "@budibase/backend-core"
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
-import {
-  UpdateSelfRequest,
-  UpdateSelfResponse,
-  UpdateSelf,
-  UserCtx,
-} from "@budibase/types"
+import { UpdateSelfRequest, UpdateSelfResponse, UserCtx } from "@budibase/types"
 const { getCookie, clearCookie, newid } = utils
 
 function newTestApiKey() {
@@ -122,15 +117,14 @@ export async function getSelf(ctx: any) {
 export async function updateSelf(
   ctx: UserCtx<UpdateSelfRequest, UpdateSelfResponse>
 ) {
-  const body = ctx.request.body
-  const update: UpdateSelf = {
-    firstName: body.firstName,
-    lastName: body.lastName,
-    password: body.password,
-    forceResetPassword: body.forceResetPassword,
-  }
+  const update = ctx.request.body
 
-  const user = await userSdk.updateSelf(ctx.user._id!, update)
+  let user = await userSdk.getUser(ctx.user._id!)
+  user = {
+    ...user,
+    ...update,
+  }
+  user = await userSdk.save(user, { requirePassword: false })
 
   if (update.password) {
     // Log all other sessions out apart from the current one

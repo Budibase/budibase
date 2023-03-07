@@ -128,7 +128,7 @@ router
   .get("/api/global/users/self", selfController.getSelf)
   .post(
     "/api/global/users/self",
-    users.buildUserSaveValidation(true),
+    users.buildUserSaveValidation(),
     selfController.updateSelf
   )
 
