@@ -1,5 +1,5 @@
 <script>
-  import { Modal, ModalContent, Button } from "@budibase/bbui"
+  import { Modal, ModalContent, ActionButton } from "@budibase/bbui"
   import { getContext } from "svelte"
 
   const { selectedRows, rows } = getContext("sheet")
@@ -25,9 +25,9 @@
 
 {#if selectedRowCount}
   <div class="delete-button">
-    <Button icon="Delete" size="M" cta on:click={modal.show}>
+    <ActionButton icon="Delete" size="S" on:click={modal.show}>
       Delete {selectedRowCount} row{selectedRowCount === 1 ? "" : "s"}
-    </Button>
+    </ActionButton>
   </div>
 {/if}
 
@@ -46,16 +46,11 @@
 
 <style>
   .delete-button {
-    position: absolute;
-    bottom: 30px;
-    right: 30px;
   }
-  .delete-button :global(.spectrum-Button) {
-    background: var(--spectrum-global-color-red-400);
+  .delete-button :global(.spectrum-ActionButton *) {
+    color: var(--spectrum-global-color-red-400);
+  }
+  .delete-button :global(.spectrum-ActionButton) {
     border-color: var(--spectrum-global-color-red-400);
-  }
-  .delete-button :global(.spectrum-Button:hover) {
-    background: var(--spectrum-global-color-red-500);
-    border-color: var(--spectrum-global-color-red-500);
   }
 </style>
