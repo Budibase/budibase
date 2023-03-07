@@ -35,9 +35,8 @@ env:
   PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
-  release:
+  release-images:
     runs-on: ubuntu-latest
-
     steps:
       - name: Fail if branch is not master
         if: github.ref != 'refs/heads/master' 
@@ -90,14 +89,56 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
 
+  release-helm-chart:
+    needs: [release-images]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Helm
+        uses: azure/setup-helm@v1
+        id: helm-install
+
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      # due to helm repo index issue: https://github.com/helm/helm/issues/7363
+      # we need to create new package in a different dir, merge the index and move the package back
+      - name: Build and release helm chart
+        run: |
+          git config user.name "Budibase Helm Bot"
+          git config user.email "<>"
+          git reset --hard
+          git pull
+          mkdir sync
+          echo "Packaging chart to sync dir"
+          helm package charts/budibase --version 0.0.0-master --app-version "$RELEASE_VERSION" --destination sync
+          echo "Packaging successful"
+          git checkout gh-pages
+          echo "Indexing helm repo"         
+          helm repo index --merge docs/index.yaml sync
+          mv -f sync/* docs
+          rm -rf sync
+          echo "Pushing new helm release"
+          git add -A
+          git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
+          git push
+        env:
+          RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+
+
   # Trigger deploy to new EKS preprod environment
   trigger-deploy-to-preprod-env:
     needs: [release-helm-chart]
     runs-on: ubuntu-latest
     steps:
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        
       - uses: passeidireto/trigger-external-workflow-action@main
         env:
-          PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
+          PAYLOAD_VERSION: ${{ steps.previoustag.outputs.tag }}
         with:
           repository: budibase/budibase-deploys
           event: budicloud-preprod-deploy
