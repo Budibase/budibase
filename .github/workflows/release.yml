@@ -132,10 +132,11 @@ jobs:
     needs: [release-helm-chart]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: 'Get Previous tag'
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
-        
+
       - uses: passeidireto/trigger-external-workflow-action@main
         env:
           PAYLOAD_VERSION: ${{ steps.previoustag.outputs.tag }}
