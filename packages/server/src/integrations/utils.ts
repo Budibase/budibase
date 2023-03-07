@@ -223,14 +223,15 @@ function shouldCopySpecialColumn(
   column: { type: string },
   fetchedColumn: { type: string } | undefined
 ) {
+  const isFormula = column.type === FieldTypes.FORMULA
   const specialTypes = [
     FieldTypes.OPTIONS,
     FieldTypes.LONGFORM,
     FieldTypes.ARRAY,
     FieldTypes.FORMULA,
   ]
-  // column has been deleted, remove
-  if (column && !fetchedColumn) {
+  // column has been deleted, remove - formulas will never exist, always copy
+  if (!isFormula && column && !fetchedColumn) {
     return false
   }
   const fetchedIsNumber =
