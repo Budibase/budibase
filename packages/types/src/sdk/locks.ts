@@ -8,22 +8,12 @@ export enum LockType {
   DELAY_500 = "delay_500",
 }
 
-export class LockName {
-  static readonly MIGRATIONS = new LockName("migrations")
-  static readonly TRIGGER_QUOTA = new LockName("trigger_quota")
-  static readonly SYNC_ACCOUNT_LICENSE = new LockName("sync_account_license")
-  static readonly UPDATE_TENANTS_DOC = new LockName("update_tenants_doc")
-  static readonly PERSIST_WRITETHROUGH = (key: string) =>
-    new LockName(`persist_writethrough_${key}`)
-
-  constructor(public readonly value: string) {}
-
-  valueOf() {
-    return this.value
-  }
-  toString() {
-    return this.valueOf()
-  }
+export enum LockName {
+  MIGRATIONS = "migrations",
+  TRIGGER_QUOTA = "trigger_quota",
+  SYNC_ACCOUNT_LICENSE = "sync_account_license",
+  UPDATE_TENANTS_DOC = "update_tenants_doc",
+  PERSIST_WRITETHROUGH = "persist_writethrough",
 }
 
 export interface LockOptions {
