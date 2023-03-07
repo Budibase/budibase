@@ -1,5 +1,10 @@
 <script>
-  import { Modal, ModalContent, ActionButton } from "@budibase/bbui"
+  import {
+    Modal,
+    ModalContent,
+    ActionButton,
+    notifications,
+  } from "@budibase/bbui"
   import { getContext } from "svelte"
 
   const { selectedRows, rows } = getContext("sheet")
@@ -19,7 +24,9 @@
 
   // Deletion callback when confirmed
   const performDeletion = async () => {
+    const count = rowsToDelete.length
     await rows.actions.deleteRows(rowsToDelete)
+    notifications.success(`Deleted ${count} row${count === 1 ? "" : "s"}`)
   }
 </script>
 
@@ -33,7 +40,7 @@
 
 <Modal bind:this={modal}>
   <ModalContent
-    title="Add screens"
+    title="Delete rows"
     confirmText="Continue"
     cancelText="Cancel"
     onConfirm={performDeletion}

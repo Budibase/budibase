@@ -15,6 +15,19 @@ export const createRowsStore = context => {
     column: null,
     order: null,
   })
+  const enrichedRows = derived(rows, $rows => {
+    return $rows.map((row, idx) => ({
+      ...row,
+      __idx: idx,
+    }))
+  })
+  const rowLookupMap = derived(enrichedRows, $rows => {
+    let map = {}
+    for (let i = 0; i < $rows.length; i++) {
+      map[$rows[i]._id] = i
+    }
+    return map
+  })
 
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}
@@ -84,29 +97,21 @@ export const createRowsStore = context => {
   })
 
   // Adds a new empty row
-  const addRow = async () => {
+  const addRow = async (row, idx) => {
     try {
       // Create row
-      let newRow = await API.saveRow({ tableId: get(tableId) })
-
-      // Use search endpoint to fetch the row again, ensuring relationships are
-      // properly enriched
-      const res = await API.searchTable({
-        tableId: get(tableId),
-        limit: 1,
-        query: {
-          equal: {
-            _id: newRow._id,
-          },
-        },
-        paginate: false,
-      })
-      if (res?.rows?.[0]) {
-        newRow = res.rows[0]
-      }
+      const newRow = await API.saveRow({ ...row, tableId: get(tableId) })
 
       // Update state
-      handleNewRows([newRow])
+      if (idx) {
+        rowCacheMap[newRow._id] = true
+        rows.update(state => {
+          state.splice(idx, 0, newRow)
+          return state.slice()
+        })
+      } else {
+        handleNewRows([newRow])
+      }
       return newRow
     } catch (error) {
       notifications.error(`Error adding row: ${error?.message}`)
@@ -115,10 +120,6 @@ export const createRowsStore = context => {
 
   // Refreshes a specific row, handling updates, addition or deletion
   const refreshRow = async id => {
-    // Get index of row to check if it exists
-    const $rows = get(rows)
-    const index = $rows.findIndex(row => row._id === id)
-
     // Fetch row from the server again
     const res = await API.searchTable({
       tableId: get(tableId),
@@ -132,12 +133,16 @@ export const createRowsStore = context => {
     })
     let newRow = res?.rows?.[0]
 
+    // Get index of row to check if it exists
+    const $rows = get(rows)
+    const index = $rows.findIndex(row => row._id === id)
+
     // Process as either an update, addition or deletion
     if (newRow) {
       if (index !== -1) {
         // An existing row was updated
         rows.update(state => {
-          state[index] = { ...newRow, __idx: index }
+          state[index] = { ...newRow }
           return state
         })
       } else {
@@ -182,8 +187,6 @@ export const createRowsStore = context => {
     } catch (error) {
       notifications.error(`Error saving row: ${error?.message}`)
     }
-
-    return await refreshRow(row._id)
   }
 
   // Deletes an array of rows
@@ -214,15 +217,7 @@ export const createRowsStore = context => {
       }
     }
     if (rowsToAppend.length) {
-      rows.update($rows => {
-        return [
-          ...$rows,
-          ...rowsToAppend.map((row, idx) => ({
-            ...row,
-            __idx: $rows.length + idx,
-          })),
-        ]
-      })
+      rows.update(state => [...state, ...rowsToAppend])
     }
   }
 
@@ -233,9 +228,7 @@ export const createRowsStore = context => {
     // We deliberately do not remove IDs from the cache map as the data may
     // still exist inside the fetch, but we don't want to add it again
     rows.update(state => {
-      return state
-        .filter(row => !deletedIds.includes(row._id))
-        .map((row, idx) => ({ ...row, __idx: idx }))
+      return state.filter(row => !deletedIds.includes(row._id))
     })
 
     // If we ended up with no rows, try getting the next page
@@ -257,6 +250,7 @@ export const createRowsStore = context => {
   return {
     rows: {
       ...rows,
+      subscribe: enrichedRows.subscribe,
       actions: {
         addRow,
         updateRow,
@@ -267,6 +261,7 @@ export const createRowsStore = context => {
         refreshSchema,
       },
     },
+    rowLookupMap,
     table,
     schema,
     sort,

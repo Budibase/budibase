@@ -14,11 +14,13 @@
   import { createWebsocket } from "./websocket"
   import { createUserStores } from "./stores/users"
   import { createResizeStores } from "./stores/resize"
+  import { createMenuStores } from "./stores/menu"
   import DeleteButton from "./DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "./ResizeOverlay.svelte"
   import HeaderRow from "./HeaderRow.svelte"
   import ScrollOverlay from "./ScrollOverlay.svelte"
+  import MenuOverlay from "./MenuOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
   import UserAvatars from "./UserAvatars.svelte"
 
@@ -60,6 +62,7 @@
   context = { ...context, ...createReorderStores(context) }
   context = { ...context, ...createInterfaceStores(context) }
   context = { ...context, ...createUserStores(context) }
+  context = { ...context, ...createMenuStores(context) }
 
   // Reference some stores for local use
   const { isResizing, isReordering } = context
@@ -107,6 +110,7 @@
     </div>
     <ResizeOverlay />
     <ScrollOverlay />
+    <MenuOverlay />
   </div>
 </div>
 
@@ -122,7 +126,7 @@
 
     /* Variables */
     --cell-background: var(--spectrum-global-color-gray-50);
-    --cell-background-hover: var(--spectrum-global-color-gray-75);
+    --cell-background-hover: var(--spectrum-global-color-gray-100);
     --cell-padding: 10px;
     --cell-spacing: 4px;
     --cell-font-size: 14px;

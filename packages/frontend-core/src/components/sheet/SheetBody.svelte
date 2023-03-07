@@ -4,27 +4,23 @@
   import NewRow from "./NewRow.svelte"
   import SheetRow from "./SheetRow.svelte"
 
-  const { selectedCellId, bounds, visibleRows, config } = getContext("sheet")
+  const { bounds, visibleRows, config } = getContext("sheet")
 
-  let ref
+  let body
 
   onMount(() => {
     // Observe and record the height of the body
     const observer = new ResizeObserver(() => {
-      bounds.set(ref.getBoundingClientRect())
+      bounds.set(body.getBoundingClientRect())
     })
-    observer.observe(ref)
+    observer.observe(body)
     return () => {
       observer.disconnect()
     }
   })
 </script>
 
-<div
-  bind:this={ref}
-  class="sheet-body"
-  on:click|self={() => ($selectedCellId = null)}
->
+<div bind:this={body} class="sheet-body">
   <SheetScrollWrapper>
     {#each $visibleRows as row, idx}
       <SheetRow {row} {idx} />
