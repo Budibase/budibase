@@ -3,10 +3,10 @@
   import CreateEditRow from "../../modals/CreateEditRow.svelte"
   import { getContext } from "svelte"
 
-  const { rows, columns } = getContext("sheet")
+  const { rows, columns, filter } = getContext("sheet")
 
   $: hasCols = !!$columns.length
-  $: hasRows = !!$rows.length
+  $: hasRows = $rows.length || $filter.length
 </script>
 
 <CreateRowButton

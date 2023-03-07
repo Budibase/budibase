@@ -5,7 +5,7 @@
   const { columns, config, filter, schema } = getContext("sheet")
 
   const onFilter = e => {
-    filter.set(e.detail)
+    filter.set(e.detail || [])
   }
 </script>
 
