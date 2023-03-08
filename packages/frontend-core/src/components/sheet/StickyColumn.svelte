@@ -18,6 +18,7 @@
     config,
     selectedCellMap,
     selectedCellRow,
+    menu,
   } = getContext("sheet")
 
   $: scrollLeft = $scroll.left
@@ -114,15 +115,16 @@
           </SheetCell>
 
           {#if $stickyColumn}
-            {@const cellIdx = `${row._id}-${stickyColumn.name}`}
+            {@const cellId = `${row._id}-${$stickyColumn.name}`}
             <SheetCell
               rowSelected={rowSelected || containsSelectedRow}
               {rowHovered}
               rowIdx={idx}
               sticky
-              selected={$selectedCellId === cellIdx}
-              selectedUser={$selectedCellMap[cellIdx]}
-              on:click={() => ($selectedCellId = cellIdx)}
+              selected={$selectedCellId === cellId}
+              selectedUser={$selectedCellMap[cellId]}
+              on:click={() => ($selectedCellId = cellId)}
+              on:contextmenu={e => menu.actions.open(cellId, e)}
               width={$stickyColumn.width}
               reorderTarget={$reorder.targetColumn === $stickyColumn.name}
             >
@@ -130,7 +132,7 @@
                 this={getCellRenderer($stickyColumn)}
                 value={row[$stickyColumn.name]}
                 schema={$stickyColumn.schema}
-                selected={$selectedCellId === cellIdx}
+                selected={$selectedCellId === cellId}
                 onChange={val =>
                   rows.actions.updateRow(row._id, $stickyColumn, val)}
                 readonly={$stickyColumn.schema.autocolumn}

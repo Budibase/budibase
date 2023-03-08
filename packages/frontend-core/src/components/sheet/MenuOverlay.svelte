@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { selectedCellRow, menu, rows, columns, selectedCellId } =
+  const { selectedCellRow, menu, rows, columns, selectedCellId, stickyColumn } =
     getContext("sheet")
 
   let modal
@@ -33,7 +33,8 @@
     delete clone.__idx
     const newRow = await rows.actions.addRow(clone, $selectedCellRow.__idx + 1)
     if (newRow) {
-      $selectedCellId = `${newRow._id}-${$columns[0].name}`
+      const column = $stickyColumn?.name || $columns[0].name
+      $selectedCellId = `${newRow._id}-${column}`
       menu.actions.close()
     }
   }
@@ -62,6 +63,7 @@
 
 <style>
   .menu {
+    z-index: 1;
     position: absolute;
     background: var(--cell-background);
     border: var(--cell-border);
