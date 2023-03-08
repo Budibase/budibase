@@ -18,10 +18,10 @@
     "build": "rollup -c",
     "dev:builder": "rollup -cw"
   },
-  "dependencies": {    
+  "dependencies": {
     "@budibase/bbui": "2.4.8-alpha.0",
     "@budibase/frontend-core": "2.4.8-alpha.0",
-    "@budibase/shared-core": "2.3.21-alpha.2",
+    "@budibase/shared-core": "2.4.8-alpha.0",
     "@budibase/string-templates": "2.4.8-alpha.0",
     "@spectrum-css/button": "^3.0.3",
     "@spectrum-css/card": "^3.0.3",
