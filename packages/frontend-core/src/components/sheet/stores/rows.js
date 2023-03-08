@@ -140,7 +140,7 @@ export const createRowsStore = context => {
 
     // Process as either an update, addition or deletion
     if (newRow) {
-      if (index !== -1) {
+      if (index != null) {
         // An existing row was updated
         rows.update(state => {
           state[index] = { ...newRow }
@@ -150,7 +150,7 @@ export const createRowsStore = context => {
         // A new row was created
         handleNewRows([newRow])
       }
-    } else if (index !== -1) {
+    } else if (index != null) {
       // A row was removed
       handleRemoveRows([$rows[index]])
     }
@@ -171,7 +171,7 @@ export const createRowsStore = context => {
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[rowId]
     const row = $rows[index]
-    if (index === -1 || row?.[column] === value) {
+    if (index == null || row?.[column] === value) {
       return
     }
 

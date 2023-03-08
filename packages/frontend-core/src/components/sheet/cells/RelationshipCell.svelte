@@ -6,9 +6,11 @@
 
 <div class="container">
   {#each value || [] as relationship, idx}
-    <div class="badge" style="--color: {getColor(idx)}">
-      {relationship.primaryDisplay}
-    </div>
+    {#if relationship.primaryDisplay}
+      <div class="badge" style="--color: {getColor(idx)}">
+        {relationship.primaryDisplay}
+      </div>
+    {/if}
   {/each}
 </div>
 
