@@ -67,7 +67,7 @@
   context = { ...context, ...createMenuStores(context) }
 
   // Reference some stores for local use
-  const { isResizing, isReordering, ui } = context
+  const { isResizing, isReordering, ui, loaded } = context
 
   // Keep config store up to date
   $: config.set({
@@ -83,6 +83,10 @@
 
   // Expose ability to retrieve context externally to allow sheet control
   export const getContext = () => context
+
+  // Local flag for if the sheet has ever had data
+  let initialised = false
+  loaded.subscribe(state => (initialised = initialised || state))
 
   // Initialise websocket for multi-user
   onMount(() => createWebsocket(context))
@@ -105,16 +109,18 @@
       <UserAvatars />
     </div>
   </div>
-  <div class="sheet-data">
-    <StickyColumn />
-    <div class="sheet-main">
-      <HeaderRow />
-      <SheetBody />
+  {#if initialised}
+    <div class="sheet-data">
+      <StickyColumn />
+      <div class="sheet-main">
+        <HeaderRow />
+        <SheetBody />
+      </div>
+      <ResizeOverlay />
+      <ScrollOverlay />
+      <MenuOverlay />
     </div>
-    <ResizeOverlay />
-    <ScrollOverlay />
-    <MenuOverlay />
-  </div>
+  {/if}
   <KeyboardManager />
 </div>
 
