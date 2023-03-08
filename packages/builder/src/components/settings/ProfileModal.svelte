@@ -13,6 +13,7 @@
       await auth.updateSelf($values)
       notifications.success("Information updated successfully")
     } catch (error) {
+      console.error(error)
       notifications.error("Failed to update information")
     }
   }

@@ -8,6 +8,7 @@
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
   import { currentAsset } from "builderStore"
+  import { getFields } from "helpers/searchFields"
 
   export let componentInstance
   export let value = []
@@ -21,9 +22,14 @@
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: schema = getSchema($currentAsset, datasource)
-  $: options = Object.keys(schema || {})
+  $: options = allowCellEditing
+    ? Object.keys(schema || {})
+    : enrichedSchemaFields?.map(field => field.name)
   $: sanitisedValue = getValidColumns(value, options)
   $: updateBoundValue(sanitisedValue)
+  $: enrichedSchemaFields = getFields(Object.values(schema) || [], {
+    allowLinks: true,
+  })
 
   const getSchema = (asset, datasource) => {
     const schema = getSchemaForDatasource(asset, datasource).schema
