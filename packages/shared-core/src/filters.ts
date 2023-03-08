@@ -1,5 +1,6 @@
 import { SortDirection } from "@budibase/types"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
+import { deepGet } from "./helpers"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -233,20 +234,6 @@ export const buildLuceneQuery = (filter: Filter[]) => {
     })
   }
   return query
-}
-
-const deepGet = (obj: { [x: string]: any }, key: string) => {
-  if (!obj || !key) {
-    return null
-  }
-  if (Object.prototype.hasOwnProperty.call(obj, key)) {
-    return obj[key]
-  }
-  const split = key.split(".")
-  for (let i = 0; i < split.length; i++) {
-    obj = obj?.[split[i]]
-  }
-  return obj
 }
 
 /**
