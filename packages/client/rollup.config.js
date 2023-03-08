@@ -69,10 +69,6 @@ export default {
           find: "sdk",
           replacement: path.resolve("./src/sdk"),
         },
-        {
-          find: "@budibase/shared-core",
-          replacement: path.resolve("../shared-core/dist/src"),
-        },
       ],
     }),
     svelte({

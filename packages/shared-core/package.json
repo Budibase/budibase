@@ -3,6 +3,7 @@
   "version": "2.3.21-alpha.2",
   "description": "Shared data utils",
   "main": "dist/src/index.js",
+  "module": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "author": "Budibase",
   "license": "GPL-3.0",
