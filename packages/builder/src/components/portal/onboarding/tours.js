@@ -1,8 +1,9 @@
 import { get } from "svelte/store"
 import { store } from "builderStore"
-import { users, auth } from "stores/portal"
+import { auth } from "stores/portal"
 import analytics from "analytics"
 import { OnboardingData, OnboardingDesign, OnboardingPublish } from "./steps"
+import { API } from "api"
 const ONBOARDING_EVENT_PREFIX = "onboarding"
 
 export const TOUR_STEP_KEYS = {
@@ -83,8 +84,7 @@ const getTours = () => {
           // Mark the users onboarding as complete
           // Clear all tour related state
           if (get(auth).user) {
-            await users.save({
-              ...get(auth).user,
+            await API.updateSelf({
               onboardedAt: new Date().toISOString(),
             })
 
@@ -114,8 +114,7 @@ const getTours = () => {
         onComplete: async () => {
           // Push the onboarding forward
           if (get(auth).user) {
-            await users.save({
-              ...get(auth).user,
+            await API.updateSelf({
               onboardedAt: new Date().toISOString(),
             })
 

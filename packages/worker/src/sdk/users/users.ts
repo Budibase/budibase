@@ -29,7 +29,6 @@ import {
   PlatformUserByEmail,
   RowResponse,
   SearchUsersRequest,
-  UpdateSelf,
   User,
   SaveUserOpts,
 } from "@budibase/types"
@@ -225,15 +224,6 @@ export async function isPreventPasswordActions(user: User) {
   // Check account sso
   const account = await accountSdk.api.getAccount(user.email)
   return !!(account && isSSOAccount(account))
-}
-
-export async function updateSelf(id: string, data: UpdateSelf) {
-  let user = await getUser(id)
-  user = {
-    ...user,
-    ...data,
-  }
-  return save(user)
 }
 
 export const save = async (
