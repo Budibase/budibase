@@ -19,6 +19,7 @@ import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
 import FormData from "form-data"
 import { URLSearchParams } from "url"
+import { blacklist } from "@budibase/backend-core"
 
 const BodyTypes = {
   NONE: "none",
@@ -398,6 +399,9 @@ class RestIntegration implements IntegrationBase {
 
     this.startTimeMs = performance.now()
     const url = this.getUrl(path, queryString, pagination, paginationValues)
+    if (await blacklist.isBlacklisted(url)) {
+      throw new Error("Cannot connect to URL.")
+    }
     const response = await fetch(url, input)
     return await this.parseResponse(response, pagination)
   }
