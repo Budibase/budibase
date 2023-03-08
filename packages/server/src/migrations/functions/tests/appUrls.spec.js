@@ -6,7 +6,7 @@ const migration = require("../appUrls")
 describe("run", () => {
   let config = new TestConfig(false)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 

@@ -3,7 +3,10 @@
   import ExportModal from "../modals/ExportModal.svelte"
 
   export let view
+  export let filters
+  export let sorting
   export let disabled = false
+  export let selectedRows
 
   let modal
 </script>
@@ -18,5 +21,5 @@
   Export
 </ActionButton>
 <Modal bind:this={modal}>
-  <ExportModal {view} />
+  <ExportModal {view} {filters} {sorting} {selectedRows} />
 </Modal>

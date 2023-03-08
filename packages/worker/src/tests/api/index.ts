@@ -10,7 +10,11 @@ import { MigrationAPI } from "./migrations"
 import { StatusAPI } from "./status"
 import { RestoreAPI } from "./restore"
 import { TenantAPI } from "./tenants"
-
+import { GroupsAPI } from "./groups"
+import { RolesAPI } from "./roles"
+import { TemplatesAPI } from "./templates"
+import { LicenseAPI } from "./license"
+import { AuditLogAPI } from "./auditLogs"
 export default class API {
   accounts: AccountAPI
   auth: AuthAPI
@@ -23,6 +27,11 @@ export default class API {
   status: StatusAPI
   restore: RestoreAPI
   tenants: TenantAPI
+  groups: GroupsAPI
+  roles: RolesAPI
+  templates: TemplatesAPI
+  license: LicenseAPI
+  auditLogs: AuditLogAPI
 
   constructor(config: TestConfiguration) {
     this.accounts = new AccountAPI(config)
@@ -36,5 +45,10 @@ export default class API {
     this.status = new StatusAPI(config)
     this.restore = new RestoreAPI(config)
     this.tenants = new TenantAPI(config)
+    this.groups = new GroupsAPI(config)
+    this.roles = new RolesAPI(config)
+    this.templates = new TemplatesAPI(config)
+    this.license = new LicenseAPI(config)
+    this.auditLogs = new AuditLogAPI(config)
   }
 }

@@ -17,7 +17,7 @@
 <div class="container">
   <Slider min={0} max={3} step={1} value={index} on:change={onChange} />
   <div class="button" style="--radius: {customTheme.buttonBorderRadius};">
-    <Button primary newStyles>Button</Button>
+    <Button primary>Button</Button>
   </div>
 </div>
 

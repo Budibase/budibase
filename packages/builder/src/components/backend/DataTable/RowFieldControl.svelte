@@ -42,13 +42,7 @@
 </script>
 
 {#if type === "options" && meta.constraints.inclusion.length !== 0}
-  <Select
-    {label}
-    data-cy="{meta.name}-select"
-    bind:value
-    options={meta.constraints.inclusion}
-    sort
-  />
+  <Select {label} bind:value options={meta.constraints.inclusion} sort />
 {:else if type === "datetime"}
   <DatePicker
     {error}
@@ -61,7 +55,7 @@
 {:else if type === "attachment"}
   <Dropzone {label} {error} bind:value />
 {:else if type === "boolean"}
-  <Toggle text={label} {error} bind:value data-cy="{meta.name}-input" />
+  <Toggle text={label} {error} bind:value />
 {:else if type === "array" && meta.constraints.inclusion.length !== 0}
   <Multiselect
     bind:value
@@ -87,12 +81,5 @@
     {error}
   />
 {:else}
-  <Input
-    {label}
-    data-cy="{meta.name}-input"
-    {type}
-    {error}
-    bind:value
-    disabled={readonly}
-  />
+  <Input {label} {type} {error} bind:value disabled={readonly} />
 {/if}

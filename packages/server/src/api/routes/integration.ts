@@ -13,4 +13,4 @@ router
     controller.find
   )
 
-export = router
+export default router

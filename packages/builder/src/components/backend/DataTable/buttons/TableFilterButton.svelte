@@ -6,6 +6,7 @@
   export let schema
   export let filters
   export let disabled = false
+  export let tableId
 
   const dispatch = createEventDispatcher()
 
@@ -37,6 +38,7 @@
         allowBindings={false}
         {filters}
         {schemaFields}
+        datasource={{ type: "table", tableId }}
         on:change={e => (tempValue = e.detail)}
       />
     </div>

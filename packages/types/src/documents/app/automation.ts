@@ -50,6 +50,7 @@ export interface AutomationStepSchema {
   internal?: boolean
   deprecated?: boolean
   stepId: AutomationTriggerStepId | AutomationActionStepId
+  blockToLoop?: string
   inputs: {
     [key: string]: any
   }

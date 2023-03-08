@@ -30,7 +30,7 @@
 {#if $selectedComponent}
   {#key $selectedComponent._id}
     <Panel {title} icon={componentDefinition?.icon} borderLeft>
-      {#if componentDefinition.info}
+      {#if componentDefinition?.info}
         <ComponentInfoSection {componentDefinition} />
       {/if}
       <ComponentSettingsSection

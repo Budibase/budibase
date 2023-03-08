@@ -12,5 +12,5 @@
   Import
 </ActionButton>
 <Modal bind:this={modal}>
-  <ImportModal {tableId} on:updaterows />
+  <ImportModal {tableId} on:importrows />
 </Modal>

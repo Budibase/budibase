@@ -26,7 +26,7 @@ interface MSSQLConfig {
   user: string
   password: string
   server: string
-  port: number
+  port: number | string
   database: string
   schema: string
   encrypt?: boolean

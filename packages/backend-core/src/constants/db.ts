@@ -68,6 +68,7 @@ export enum DocumentType {
   MEM_VIEW = "view",
   USER_FLAG = "flag",
   AUTOMATION_METADATA = "meta_au",
+  AUDIT_LOG = "al",
 }
 
 export const StaticDatabases = {
@@ -77,6 +78,7 @@ export const StaticDatabases = {
       apiKeys: "apikeys",
       usageQuota: "usage_quota",
       licenseInfo: "license_info",
+      environmentVariables: "environmentvariables",
     },
   },
   // contains information about tenancy and so on
@@ -86,6 +88,9 @@ export const StaticDatabases = {
       tenants: "tenants",
       install: "install",
     },
+  },
+  AUDIT_LOGS: {
+    name: "audit-logs",
   },
 }
 

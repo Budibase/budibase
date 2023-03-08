@@ -1,10 +1,12 @@
 import { QueryJson, Datasource } from "@budibase/types"
-const { getIntegration } = require("../index")
+import { getIntegration } from "../index"
+import sdk from "../../sdk"
 
 export async function makeExternalQuery(
   datasource: Datasource,
   json: QueryJson
 ) {
+  datasource = await sdk.datasources.enrich(datasource)
   const Integration = await getIntegration(datasource.source)
   // query is the opinionated function
   if (Integration.prototype.query) {

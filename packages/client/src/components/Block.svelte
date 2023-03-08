@@ -38,7 +38,7 @@
         ...$component.styles?.normal,
       },
       custom:
-        definition._styles?.custom || "" + $component.styles?.custom || "",
+        (definition._styles?.custom || "") + ($component.styles?.custom || ""),
     }
 
     // Create component tree

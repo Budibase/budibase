@@ -1,4 +1,4 @@
-const selfHostMiddleware = require("../selfhost")
+const selfHostMiddleware = require("../selfhost").default
 const env = require("../../environment")
 jest.mock("../../environment")
 

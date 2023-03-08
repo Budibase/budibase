@@ -4,7 +4,7 @@ export const UserGroup = () => {
     color: "var(--spectrum-global-color-blue-600)",
     icon: "UserGroup",
     name: "New group",
-    roles: {},
+    roles: { app_uuid1: "ADMIN", app_uuid2: "POWER" },
     users: [],
   }
   return group

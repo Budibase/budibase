@@ -33,7 +33,7 @@ router
   .post(
     "/api/global/auth/:tenantId/login",
     buildAuthValidation(),
-    authController.authenticate
+    authController.login
   )
   .post("/api/global/auth/logout", authController.logout)
   .post(
@@ -68,21 +68,24 @@ router
 
   // GOOGLE - MULTI TENANT
   .get("/api/global/auth/:tenantId/google", authController.googlePreAuth)
-  .get("/api/global/auth/:tenantId/google/callback", authController.googleAuth)
+  .get(
+    "/api/global/auth/:tenantId/google/callback",
+    authController.googleCallback
+  )
 
   // GOOGLE - SINGLE TENANT - DEPRECATED
-  .get("/api/global/auth/google/callback", authController.googleAuth)
-  .get("/api/admin/auth/google/callback", authController.googleAuth)
+  .get("/api/global/auth/google/callback", authController.googleCallback)
+  .get("/api/admin/auth/google/callback", authController.googleCallback)
 
   // OIDC - MULTI TENANT
   .get(
     "/api/global/auth/:tenantId/oidc/configs/:configId",
     authController.oidcPreAuth
   )
-  .get("/api/global/auth/:tenantId/oidc/callback", authController.oidcAuth)
+  .get("/api/global/auth/:tenantId/oidc/callback", authController.oidcCallback)
 
   // OIDC - SINGLE TENANT - DEPRECATED
-  .get("/api/global/auth/oidc/callback", authController.oidcAuth)
-  .get("/api/admin/auth/oidc/callback", authController.oidcAuth)
+  .get("/api/global/auth/oidc/callback", authController.oidcCallback)
+  .get("/api/admin/auth/oidc/callback", authController.oidcCallback)
 
-export = router
+export default router

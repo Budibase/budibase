@@ -1,6 +1,7 @@
 import { db as dbCore, context } from "@budibase/backend-core"
 import { search as stringSearch, addRev } from "./utils"
 import * as controller from "../application"
+import * as deployController from "../deploy"
 import { Application } from "../../../definitions/common"
 
 function fixAppID(app: Application, params: any) {
@@ -74,10 +75,26 @@ export async function destroy(ctx: any, next: any) {
   })
 }
 
+export async function unpublish(ctx: any, next: any) {
+  await context.doInAppContext(ctx.params.appId, async () => {
+    await controller.unpublish(ctx)
+    await next()
+  })
+}
+
+export async function publish(ctx: any, next: any) {
+  await context.doInAppContext(ctx.params.appId, async () => {
+    await deployController.publishApp(ctx)
+    await next()
+  })
+}
+
 export default {
   create,
   update,
   read,
   destroy,
   search,
+  publish,
+  unpublish,
 }

@@ -20,7 +20,8 @@
     $isActive,
     $tables,
     $queries,
-    $views
+    $views,
+    openDataSources
   )
   $: openDataSource = enrichedDataSources.find(x => x.open)
   $: {
@@ -36,7 +37,8 @@
     isActive,
     tables,
     queries,
-    views
+    views,
+    openDataSources
   ) => {
     if (!datasources?.list?.length) {
       return []

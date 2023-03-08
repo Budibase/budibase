@@ -39,6 +39,23 @@
   $: showError($fetch.error)
   $: id, (filters = null)
 
+  let appliedFilter
+  let rawFilter
+  let appliedSort
+  let selectedRows = []
+
+  $: enrichedSchema,
+    () => {
+      appliedFilter = null
+      rawFilter = null
+      appliedSort = null
+      selectedRows = []
+    }
+
+  $: if (Number.isInteger($fetch.pageNumber)) {
+    selectedRows = []
+  }
+
   const showError = error => {
     if (error) {
       notifications.error(error?.message || "Unable to fetch data.")
@@ -95,11 +112,15 @@
   }
 
   // Fetch data whenever sorting option changes
-  const onSort = e => {
-    fetch.update({
+  const onSort = async e => {
+    const sort = {
       sortColumn: e.detail.column,
       sortOrder: e.detail.order,
-    })
+    }
+    await fetch.update(sort)
+    appliedSort = { ...sort }
+    appliedSort.sortOrder = appliedSort.sortOrder.toLowerCase()
+    selectedRows = []
   }
 
   // Fetch data whenever filters change
@@ -108,17 +129,26 @@
     fetch.update({
       filter: filters,
     })
+    appliedFilter = e.detail
   }
 
   // Fetch data whenever schema changes
   const onUpdateColumns = () => {
+    selectedRows = []
     fetch.refresh()
   }
 
   // Fetch data whenever rows are modified. Unfortunately we have to lose
   // our pagination place, as our bookmarks will have shifted.
   const onUpdateRows = () => {
+    selectedRows = []
     fetch.refresh()
+  }
+
+  // When importing new rows it is better to reinitialise request/paging data.
+  // Not doing so causes inconsistency in paging behaviour and content.
+  const onImportData = () => {
+    fetch.getInitialData()
   }
 </script>
 
@@ -136,6 +166,9 @@
     disableSorting
     on:updatecolumns={onUpdateColumns}
     on:updaterows={onUpdateRows}
+    on:selectionUpdated={e => {
+      selectedRows = e.detail
+    }}
     customPlaceholder
   >
     <div class="buttons">
@@ -172,11 +205,14 @@
         <ImportButton
           disabled={$tables.selected?._id === "ta_users"}
           tableId={$tables.selected?._id}
-          on:updaterows={onUpdateRows}
+          on:importrows={onImportData}
         />
         <ExportButton
           disabled={!hasRows || !hasCols}
           view={$tables.selected?._id}
+          filters={appliedFilter}
+          sorting={appliedSort}
+          {selectedRows}
         />
         {#key id}
           <TableFilterButton
@@ -184,6 +220,7 @@
             {filters}
             on:change={onFilter}
             disabled={!hasCols}
+            tableId={id}
           />
         {/key}
       </div>

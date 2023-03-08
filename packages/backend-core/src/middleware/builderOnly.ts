@@ -1,6 +1,6 @@
 import { BBContext } from "@budibase/types"
 
-export = async (ctx: BBContext, next: any) => {
+export default async (ctx: BBContext, next: any) => {
   if (
     !ctx.internal &&
     (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)

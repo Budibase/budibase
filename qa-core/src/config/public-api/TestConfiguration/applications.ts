@@ -46,4 +46,21 @@ export default class AppApi {
     const json = await response.json()
     return [response, json.data]
   }
+
+  async delete(id: string): Promise<[Response, Application]> {
+    const response = await this.api.del(`/applications/${id}`)
+    const json = await response.json()
+    return [response, json.data]
+  }
+
+  async publish(id: string): Promise<[Response, any]> {
+    const response = await this.api.post(`/applications/${id}/publish`)
+    const json = await response.json()
+    return [response, json.data]
+  }
+
+  async unpublish(id: string): Promise<[Response]> {
+    const response = await this.api.post(`/applications/${id}/unpublish`)
+    return [response]
+  }
 }

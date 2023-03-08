@@ -19,7 +19,6 @@
 
 <style>
   p, span {
-    font-family: var(--font-sans);
     font-size: var(--font-size-s);
   }
 

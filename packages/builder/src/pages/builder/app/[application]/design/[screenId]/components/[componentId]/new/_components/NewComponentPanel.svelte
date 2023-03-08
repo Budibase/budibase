@@ -176,7 +176,6 @@
   const addComponent = async component => {
     try {
       await store.actions.components.create(component)
-      $goto("../")
     } catch (error) {
       notifications.error(error || "Error creating component")
     }
@@ -257,12 +256,12 @@
                   draggable="true"
                   on:dragstart={() => onDragStart(component.component)}
                   on:dragend={onDragEnd}
-                  data-cy={`component-${component.name}`}
                   class="component"
                   class:selected={selectedIndex ===
                     orderMap[component.component]}
                   on:click={() => addComponent(component.component)}
                   on:mouseover={() => (selectedIndex = null)}
+                  on:focus
                 >
                   <Icon name={component.icon} />
                   <Body size="XS">{component.name}</Body>

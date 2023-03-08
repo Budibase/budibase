@@ -13,4 +13,4 @@ router
     controller.removeAppRole
   )
 
-export = router
+export default router

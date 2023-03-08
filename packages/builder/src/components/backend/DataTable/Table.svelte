@@ -16,6 +16,7 @@
     UNSORTABLE_TYPES,
   } from "constants"
   import RoleCell from "./cells/RoleCell.svelte"
+  import { createEventDispatcher } from "svelte"
 
   export let schema = {}
   export let data = []
@@ -25,9 +26,10 @@
   export let loading = false
   export let hideAutocolumns
   export let rowCount
-  export let type
   export let disableSorting = false
   export let customPlaceholder = false
+
+  const dispatch = createEventDispatcher()
 
   let selectedRows = []
   let editableColumn
@@ -37,6 +39,7 @@
   let customRenderers = []
   let confirmDelete
 
+  $: selectedRows, dispatch("selectionUpdated", selectedRows)
   $: isUsersTable = tableId === TableNames.USERS
   $: data && resetSelectedRows()
   $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow

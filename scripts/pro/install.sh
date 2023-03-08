@@ -35,5 +35,5 @@ if [[ -d "budibase-pro" ]]; then
   git pull
 
   echo "Initializing pro repo..."
-  yarn setup
+  yarn
 fi

@@ -35,4 +35,4 @@ router
     controller.getMetadata
   )
 
-export = router
+export default router

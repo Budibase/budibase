@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { tables, rows } from "stores/backend"
+  import { tables } from "stores/backend"
   import { roles } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
@@ -57,7 +57,6 @@
     try {
       await API.saveRow({ ...row, tableId: table._id })
       notifications.success("User saved successfully")
-      rows.save()
       dispatch("updaterows")
     } catch (error) {
       if (error.handled) {
@@ -120,7 +119,6 @@
        selection is always undefined -->
   <Select
     label="Role"
-    data-cy="roleId-select"
     bind:value={row.roleId}
     options={$roles}
     getOptionLabel={role => role.name}

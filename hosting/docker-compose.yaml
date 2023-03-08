@@ -82,6 +82,12 @@ services:
     environment:
       - PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10
       - PROXY_RATE_LIMIT_API_PER_SECOND=20
+      - APPS_UPSTREAM_URL=http://app-service:4002
+      - WORKER_UPSTREAM_URL=http://worker-service:4003
+      - MINIO_UPSTREAM_URL=http://minio-service:9000
+      - COUCHDB_UPSTREAM_URL=http://couchdb-service:5984
+      - WATCHTOWER_UPSTREAM_URL=http://watchtower-service:8080
+      - RESOLVER=127.0.0.11
     depends_on:
       - minio-service
       - worker-service

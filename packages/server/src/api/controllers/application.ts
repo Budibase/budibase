@@ -23,21 +23,18 @@ import {
   errors,
   events,
   migrations,
+  objectStore,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import {
-  clientLibraryPath,
-  stringToReadStream,
-  isQsTrue,
-} from "../../utilities"
+import { stringToReadStream, isQsTrue } from "../../utilities"
 import { getLocksById } from "../../utilities/redis"
 import {
   updateClientLibrary,
   backupClientLibrary,
   revertClientLibrary,
-} from "../../utilities/fileSystem/clientLibrary"
+} from "../../utilities/fileSystem"
 import { cleanupAutomations } from "../../automations/utils"
 import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
@@ -49,9 +46,9 @@ import {
   MigrationType,
   BBContext,
   Database,
+  UserCtx,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
-import { enrichPluginURLs } from "../../utilities/plugins"
 import sdk from "../../sdk"
 
 // utility function, need to do away with this
@@ -115,12 +112,11 @@ function checkAppName(
   }
 }
 
-async function createInstance(template: any, includeSampleData: boolean) {
-  const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
-  const baseAppId = generateAppID(tenantId)
-  const appId = generateDevAppID(baseAppId)
-  await context.updateAppId(appId)
-
+async function createInstance(
+  appId: string,
+  template: any,
+  includeSampleData: boolean
+) {
   const db = context.getAppDB()
   await db.put({
     _id: "_design/database",
@@ -204,27 +200,34 @@ export async function fetchAppDefinition(ctx: BBContext) {
   }
 }
 
-export async function fetchAppPackage(ctx: BBContext) {
+export async function fetchAppPackage(ctx: UserCtx) {
   const db = context.getAppDB()
   let application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
 
   // Enrich plugin URLs
-  application.usedPlugins = enrichPluginURLs(application.usedPlugins)
+  application.usedPlugins = objectStore.enrichPluginURLs(
+    application.usedPlugins
+  )
 
   // Only filter screens if the user is not a builder
-  if (!(ctx.user?.builder && ctx.user.builder.global)) {
+  if (!(ctx.user.builder && ctx.user.builder.global)) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
+  const clientLibPath = objectStore.clientLibraryUrl(
+    ctx.params.appId,
+    application.version
+  )
+
   ctx.body = {
     application,
     screens,
     layouts,
-    clientLibPath: clientLibraryPath(ctx.params.appId, application.version),
+    clientLibPath,
   }
 }
 
@@ -246,82 +249,90 @@ async function performAppCreate(ctx: BBContext) {
     instanceConfig.file = ctx.request.files.templateFile
   }
   const includeSampleData = isQsTrue(ctx.request.body.sampleData)
-  const instance = await createInstance(instanceConfig, includeSampleData)
-  const appId = instance._id
-  const db = context.getAppDB()
+  const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
+  const appId = generateDevAppID(generateAppID(tenantId))
 
-  let newApplication: App = {
-    _id: DocumentType.APP_METADATA,
-    _rev: undefined,
-    appId,
-    type: "app",
-    version: packageJson.version,
-    componentLibraries: ["@budibase/standard-components"],
-    name: name,
-    url: url,
-    template: templateKey,
-    instance,
-    tenantId: tenancy.getTenantId(),
-    updatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-    status: AppStatus.DEV,
-    navigation: {
-      navigation: "Top",
-      title: name,
-      navWidth: "Large",
-      navBackground: "var(--spectrum-global-color-gray-100)",
-      links: [
-        {
-          url: "/home",
-          text: "Home",
-        },
-      ],
-    },
-    theme: "spectrum--light",
-    customTheme: {
-      buttonBorderRadius: "16px",
-    },
-  }
+  return await context.doInAppContext(appId, async () => {
+    const instance = await createInstance(
+      appId,
+      instanceConfig,
+      includeSampleData
+    )
+    const db = context.getAppDB()
 
-  // If we used a template or imported an app there will be an existing doc.
-  // Fetch and migrate some metadata from the existing app.
-  try {
-    const existing: App = await db.get(DocumentType.APP_METADATA)
-    const keys: (keyof App)[] = [
-      "_rev",
-      "navigation",
-      "theme",
-      "customTheme",
-      "icon",
-    ]
-    keys.forEach(key => {
-      if (existing[key]) {
-        // @ts-ignore
-        newApplication[key] = existing[key]
-      }
-    })
-
-    // Migrate navigation settings and screens if required
-    if (existing) {
-      const navigation = await migrateAppNavigation()
-      if (navigation) {
-        newApplication.navigation = navigation
-      }
+    let newApplication: App = {
+      _id: DocumentType.APP_METADATA,
+      _rev: undefined,
+      appId,
+      type: "app",
+      version: packageJson.version,
+      componentLibraries: ["@budibase/standard-components"],
+      name: name,
+      url: url,
+      template: templateKey,
+      instance,
+      tenantId: tenancy.getTenantId(),
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      status: AppStatus.DEV,
+      navigation: {
+        navigation: "Top",
+        title: name,
+        navWidth: "Large",
+        navBackground: "var(--spectrum-global-color-gray-100)",
+        links: [
+          {
+            url: "/home",
+            text: "Home",
+          },
+        ],
+      },
+      theme: "spectrum--light",
+      customTheme: {
+        buttonBorderRadius: "16px",
+      },
     }
-  } catch (err) {
-    // Nothing to do
-  }
 
-  const response = await db.put(newApplication, { force: true })
-  newApplication._rev = response.rev
+    // If we used a template or imported an app there will be an existing doc.
+    // Fetch and migrate some metadata from the existing app.
+    try {
+      const existing: App = await db.get(DocumentType.APP_METADATA)
+      const keys: (keyof App)[] = [
+        "_rev",
+        "navigation",
+        "theme",
+        "customTheme",
+        "icon",
+      ]
+      keys.forEach(key => {
+        if (existing[key]) {
+          // @ts-ignore
+          newApplication[key] = existing[key]
+        }
+      })
 
-  /* istanbul ignore next */
-  if (!env.isTest()) {
-    await createApp(appId)
-  }
+      // Migrate navigation settings and screens if required
+      if (existing) {
+        const navigation = await migrateAppNavigation()
+        if (navigation) {
+          newApplication.navigation = navigation
+        }
+      }
+    } catch (err) {
+      // Nothing to do
+    }
 
-  await cache.app.invalidateAppMetadata(appId, newApplication)
-  return newApplication
+    const response = await db.put(newApplication, { force: true })
+    newApplication._rev = response.rev
+
+    /* istanbul ignore next */
+    if (!env.isTest()) {
+      await createApp(appId)
+    }
+
+    await cache.app.invalidateAppMetadata(appId, newApplication)
+    return newApplication
+  })
 }
 
 async function creationEvents(request: any, app: App) {
@@ -370,7 +381,7 @@ async function appPostCreate(ctx: BBContext, app: App) {
         if (err.code && err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
           // this import resulted in row usage exceeding the quota
           // delete the app
-          // skip pre- and post-steps as no rows have been added to quotas yet
+          // skip pre and post-steps as no rows have been added to quotas yet
           ctx.params.appId = app.appId
           await destroyApp(ctx)
         }
@@ -460,41 +471,47 @@ export async function revertClient(ctx: BBContext) {
   ctx.body = app
 }
 
-async function destroyApp(ctx: BBContext) {
+const unpublishApp = async (ctx: any) => {
   let appId = ctx.params.appId
-  let isUnpublish = ctx.query && ctx.query.unpublish
+  appId = dbCore.getProdAppID(appId)
 
-  if (isUnpublish) {
-    appId = dbCore.getProdAppID(appId)
-    const devAppId = dbCore.getDevAppID(appId)
-    // sync before removing the published app
-    await sdk.applications.syncApp(devAppId)
-  }
-
-  const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
-  const app = await db.get(DocumentType.APP_METADATA)
+  const db = context.getProdAppDB()
   const result = await db.destroy()
 
-  if (isUnpublish) {
-    await events.app.unpublished(app)
-  } else {
-    await quotas.removeApp()
-    await events.app.deleted(app)
+  await events.app.unpublished({ appId } as App)
+
+  // automations only in production
+  await cleanupAutomations(appId)
+
+  await cache.app.invalidateAppMetadata(appId)
+  return result
+}
+
+async function destroyApp(ctx: BBContext) {
+  let appId = ctx.params.appId
+  appId = dbCore.getProdAppID(appId)
+  const devAppId = dbCore.getDevAppID(appId)
+
+  // check if we need to unpublish first
+  if (await dbCore.dbExists(appId)) {
+    // app is deployed, run through unpublish flow
+    await sdk.applications.syncApp(devAppId)
+    await unpublishApp(ctx)
   }
 
-  /* istanbul ignore next */
-  if (!env.isTest() && !isUnpublish) {
+  const db = dbCore.getDB(devAppId)
+  // standard app deletion flow
+  const app = await db.get(DocumentType.APP_METADATA)
+  const result = await db.destroy()
+  await quotas.removeApp()
+  await events.app.deleted(app)
+
+  if (!env.isTest()) {
     await deleteApp(appId)
   }
-  // automations only in production
-  if (isUnpublish) {
-    await cleanupAutomations(appId)
-  }
-  // remove app role when the dev app is deleted (no trace of app anymore)
-  else {
-    await removeAppFromUserRoles(ctx, appId)
-  }
-  await cache.app.invalidateAppMetadata(appId)
+
+  await removeAppFromUserRoles(ctx, appId)
+  await cache.app.invalidateAppMetadata(devAppId)
   return result
 }
 
@@ -517,6 +534,21 @@ export async function destroy(ctx: BBContext) {
   await postDestroyApp(ctx)
   ctx.status = 200
   ctx.body = result
+}
+
+export const unpublish = async (ctx: BBContext) => {
+  const prodAppId = dbCore.getProdAppID(ctx.params.appId)
+  const dbExists = await dbCore.dbExists(prodAppId)
+
+  // check app has been published
+  if (!dbExists) {
+    return ctx.throw(400, "App has not been published.")
+  }
+
+  await preDestroyApp(ctx)
+  await unpublishApp(ctx)
+  await postDestroyApp(ctx)
+  ctx.status = 204
 }
 
 export async function sync(ctx: BBContext) {

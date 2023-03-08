@@ -1,5 +1,13 @@
+if (process.env.DD_APM_ENABLED) {
+  require("./ddApm")
+}
+
+if (process.env.ELASTIC_APM_ENABLED) {
+  require("./elasticApm")
+}
+
 // need to load environment first
-import * as env from "./environment"
+import env from "./environment"
 
 // enable APM if configured
 if (process.env.ELASTIC_APM_ENABLED) {
@@ -19,26 +27,34 @@ import * as api from "./api"
 import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
-import { events, logging } from "@budibase/backend-core"
+import { events, logging, middleware } from "@budibase/backend-core"
 import { initialise as initialiseWebsockets } from "./websocket"
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
 const destroyable = require("server-destroy")
+const { userAgent } = require("koa-useragent")
 
 const app = new Koa()
 
+let mbNumber = parseInt(env.HTTP_MB_LIMIT || "10")
+if (!mbNumber || isNaN(mbNumber)) {
+  mbNumber = 10
+}
 // set up top level koa middleware
 app.use(
   koaBody({
     multipart: true,
-    formLimit: "10mb",
-    jsonLimit: "10mb",
-    textLimit: "10mb",
+    formLimit: `${mbNumber}mb`,
+    jsonLimit: `${mbNumber}mb`,
+    textLimit: `${mbNumber}mb`,
     // @ts-ignore
     enableTypes: ["json", "form", "text"],
     parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
   })
 )
+
+app.use(middleware.logging)
+app.use(userAgent)
 
 if (env.isProd()) {
   env._set("NODE_ENV", "production")
@@ -60,6 +76,7 @@ initialiseWebsockets(server)
 
 let shuttingDown = false,
   errCode = 0
+
 server.on("close", async () => {
   // already in process
   if (shuttingDown) {
@@ -69,7 +86,7 @@ server.on("close", async () => {
   console.log("Server Closed")
   await automations.shutdown()
   await redis.shutdown()
-  await events.shutdown()
+  events.shutdown()
   await Thread.shutdown()
   api.shutdown()
   if (!env.isTest()) {
@@ -77,7 +94,7 @@ server.on("close", async () => {
   }
 })
 
-export = server.listen(env.PORT || 0, async () => {
+export default server.listen(env.PORT || 0, async () => {
   await startup(app, server)
 })
 

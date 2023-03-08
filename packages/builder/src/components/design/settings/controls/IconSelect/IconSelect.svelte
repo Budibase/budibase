@@ -121,12 +121,7 @@
     {displayValue}
   </ActionButton>
 </div>
-<Popover
-  bind:this={dropdown}
-  on:open={setSelectedUI}
-  anchor={buttonAnchor}
-  dataCy="icon-popover"
->
+<Popover bind:this={dropdown} on:open={setSelectedUI} anchor={buttonAnchor}>
   <div class="container">
     <div class="search-area">
       <div class="alphabet-area">

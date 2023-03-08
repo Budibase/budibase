@@ -14,10 +14,7 @@ function isCustom(datasource: Datasource) {
   return !sources.includes(datasource.source)
 }
 
-export async function created(
-  datasource: Datasource,
-  timestamp?: string | number
-) {
+async function created(datasource: Datasource, timestamp?: string | number) {
   const properties: DatasourceCreatedEvent = {
     datasourceId: datasource._id as string,
     source: datasource.source,
@@ -26,7 +23,7 @@ export async function created(
   await publishEvent(Event.DATASOURCE_CREATED, properties, timestamp)
 }
 
-export async function updated(datasource: Datasource) {
+async function updated(datasource: Datasource) {
   const properties: DatasourceUpdatedEvent = {
     datasourceId: datasource._id as string,
     source: datasource.source,
@@ -35,11 +32,17 @@ export async function updated(datasource: Datasource) {
   await publishEvent(Event.DATASOURCE_UPDATED, properties)
 }
 
-export async function deleted(datasource: Datasource) {
+async function deleted(datasource: Datasource) {
   const properties: DatasourceDeletedEvent = {
     datasourceId: datasource._id as string,
     source: datasource.source,
     custom: isCustom(datasource),
   }
   await publishEvent(Event.DATASOURCE_DELETED, properties)
+}
+
+export default {
+  created,
+  updated,
+  deleted,
 }

@@ -124,7 +124,7 @@ class TestConfiguration {
     // import as late as possible for mocks
     jest.resetModules()
     require("../../db").init()
-    const currentAppMiddleware = require("../currentapp")
+    const currentAppMiddleware = require("../currentapp").default
     return currentAppMiddleware(this.ctx, this.next)
   }
 }

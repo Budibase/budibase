@@ -61,7 +61,7 @@
     if (messageHandler) {
       messageHandler(message)
     } else {
-      console.warning("Unknown event type", message?.data?.type)
+      console.warn("Unknown event type", message?.data?.type)
     }
   }
 

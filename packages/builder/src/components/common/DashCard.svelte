@@ -4,12 +4,11 @@
   export let title = ""
   export let actionIcon
   export let action
-  export let dataCy
 
   $: actionDefined = typeof action === "function"
 </script>
 
-<div class="dash-card" data-cy={dataCy}>
+<div class="dash-card">
   <div class="dash-card-header" class:active={actionDefined} on:click={action}>
     <span class="dash-card-title">
       <Detail size="M">{title}</Detail>

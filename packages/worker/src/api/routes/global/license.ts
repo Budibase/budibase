@@ -10,4 +10,4 @@ router
   .delete("/api/global/license/info", controller.deleteInfo)
   .get("/api/global/license/usage", controller.getQuotaUsage)
 
-export = router
+export default router

@@ -39,6 +39,14 @@ export default class TablesApi {
     return [response, json]
   }
 
+  async forbiddenSave(body: any): Promise<[Response, Table]> {
+    const response = await this.api.post(`/tables`, { body })
+    const json = await response.json()
+    expect(response).toHaveStatusCode(403)
+
+    return [response, json]
+  }
+
   async delete(
     id: string,
     revId: string

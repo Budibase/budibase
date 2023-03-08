@@ -8,27 +8,35 @@ import {
 } from "@budibase/types"
 import { publishEvent } from "../events"
 
-export async function appBackupRestored(backup: AppBackup) {
+async function appBackupRestored(backup: AppBackup) {
   const properties: AppBackupRestoreEvent = {
     appId: backup.appId,
     restoreId: backup._id!,
     backupCreatedAt: backup.timestamp,
+    name: backup.name as string,
   }
 
   await publishEvent(Event.APP_BACKUP_RESTORED, properties)
 }
 
-export async function appBackupTriggered(
+async function appBackupTriggered(
   appId: string,
   backupId: string,
   type: AppBackupType,
-  trigger: AppBackupTrigger
+  trigger: AppBackupTrigger,
+  name: string
 ) {
   const properties: AppBackupTriggeredEvent = {
     appId: appId,
     backupId,
     type,
     trigger,
+    name,
   }
   await publishEvent(Event.APP_BACKUP_TRIGGERED, properties)
+}
+
+export default {
+  appBackupRestored,
+  appBackupTriggered,
 }

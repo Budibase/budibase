@@ -1,6 +1,7 @@
 <script>
   import { goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "stores/backend"
+  import { environment } from "stores/portal"
   import {
     Banner,
     Body,
@@ -117,10 +118,17 @@
     )
   }
 
+  const cleanUrl = inputUrl =>
+    url
+      ?.replace(/(https)|(http)|[{}:]/g, "")
+      ?.replaceAll(".", "_")
+      ?.replaceAll("/", " ")
+      ?.trim() || inputUrl
+
   function checkQueryName(inputUrl = null) {
     if (query && (!query.name || query.flags.urlName)) {
       query.flags.urlName = true
-      query.name = url || inputUrl
+      query.name = cleanUrl(inputUrl)
     }
   }
 
@@ -353,6 +361,13 @@
       await datasources.init()
     } catch (error) {
       notifications.error("Error getting datasources")
+    }
+
+    try {
+      // load the environment variables
+      await environment.loadVariables()
+    } catch (error) {
+      notifications.error(`Error getting environment variables - ${error}`)
     }
 
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)

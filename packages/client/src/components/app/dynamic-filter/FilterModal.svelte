@@ -15,6 +15,7 @@
 
   export let schemaFields
   export let filters = []
+  export let datasource
 
   const context = getContext("context")
   const BannedTypes = ["link", "attachment", "json"]
@@ -56,10 +57,15 @@
   const onFieldChange = (expression, field) => {
     // Update the field type
     expression.type = schemaFields.find(x => x.name === field)?.type
+    expression.externalType = schemaFields.find(
+      x => x.name === field
+    )?.externalType
 
     // Ensure a valid operator is set
     const validOperators = LuceneUtils.getValidOperatorsForType(
-      expression.type
+      expression.type,
+      expression.field,
+      datasource
     ).map(x => x.value)
     if (!validOperators.includes(expression.operator)) {
       expression.operator =
@@ -118,7 +124,11 @@
           />
           <Select
             disabled={!filter.field}
-            options={LuceneUtils.getValidOperatorsForType(filter.type)}
+            options={LuceneUtils.getValidOperatorsForType(
+              filter.type,
+              filter.field,
+              datasource
+            )}
             bind:value={filter.operator}
             on:change={e => onOperatorChange(filter, e.detail)}
             placeholder={null}

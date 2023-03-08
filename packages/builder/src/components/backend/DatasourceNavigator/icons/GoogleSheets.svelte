@@ -182,3 +182,9 @@
     </g>
   </g>
 </svg>
+
+<style>
+  svg {
+    padding-top: 3px;
+  }
+</style>

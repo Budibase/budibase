@@ -1,5 +1,6 @@
 import Router from "@koa/router"
 import * as controller from "../controllers/application"
+import * as deploymentController from "../controllers/deploy"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { applicationValidator } from "./utils/validators"
@@ -37,10 +38,20 @@ router
     authorized(permissions.BUILDER),
     controller.revertClient
   )
+  .post(
+    "/api/applications/:appId/publish",
+    authorized(permissions.BUILDER),
+    deploymentController.publishApp
+  )
+  .post(
+    "/api/applications/:appId/unpublish",
+    authorized(permissions.BUILDER),
+    controller.unpublish
+  )
   .delete(
     "/api/applications/:appId",
     authorized(permissions.BUILDER),
     controller.destroy
   )
 
-export = router
+export default router

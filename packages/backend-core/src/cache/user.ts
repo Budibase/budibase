@@ -1,8 +1,9 @@
 import * as redis from "../redis/init"
-import { getTenantId, lookupTenantId, doWithGlobalDB } from "../tenancy"
+import * as tenancy from "../tenancy"
+import * as context from "../context"
+import * as platform from "../platform"
 import env from "../environment"
-import * as accounts from "../cloud/accounts"
-import { Database } from "@budibase/types"
+import * as accounts from "../accounts"
 
 const EXPIRY_SECONDS = 3600
 
@@ -10,7 +11,8 @@ const EXPIRY_SECONDS = 3600
  * The default populate user function
  */
 async function populateFromDB(userId: string, tenantId: string) {
-  const user = await doWithGlobalDB(tenantId, (db: Database) => db.get(userId))
+  const db = tenancy.getTenantDB(tenantId)
+  const user = await db.get(userId)
   user.budibaseAccess = true
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const account = await accounts.getAccount(user.email)
@@ -42,9 +44,9 @@ export async function getUser(
   }
   if (!tenantId) {
     try {
-      tenantId = getTenantId()
+      tenantId = context.getTenantId()
     } catch (err) {
-      tenantId = await lookupTenantId(userId)
+      tenantId = await platform.users.lookupTenantId(userId)
     }
   }
   const client = await redis.getUserClient()

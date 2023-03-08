@@ -36,9 +36,12 @@
   let dataProviderId
   let repeaterId
   let schema
+  let enrichedSearchColumns
 
   $: fetchSchema(dataSource)
-  $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
+  $: enrichSearchColumns(searchColumns, schema).then(
+    val => (enrichedSearchColumns = val)
+  )
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
   $: cardWidth = cardHorizontal ? 420 : 300
   $: fullCardURL = buildFullCardUrl(

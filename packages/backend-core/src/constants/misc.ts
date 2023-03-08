@@ -22,6 +22,7 @@ export enum Header {
   TENANT_ID = "x-budibase-tenant-id",
   TOKEN = "x-budibase-token",
   CSRF_TOKEN = "x-csrf-token",
+  CORRELATION_ID = "x-budibase-correlation-id",
 }
 
 export enum GlobalRole {
@@ -40,5 +41,6 @@ export enum Config {
   OIDC_LOGOS = "logos_oidc",
 }
 
+export const MIN_VALID_DATE = new Date(-2147483647000)
 export const MAX_VALID_DATE = new Date(2147483647000)
 export const DEFAULT_TENANT_ID = "default"

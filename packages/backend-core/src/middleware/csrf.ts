@@ -32,7 +32,7 @@ const INCLUDED_CONTENT_TYPES = [
  * https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#synchronizer-token-pattern
  *
  */
-export = function (
+export default function (
   opts: { noCsrfPatterns: EndpointMatcher[] } = { noCsrfPatterns: [] }
 ) {
   const noCsrfOptions = buildMatcherRegex(opts.noCsrfPatterns)

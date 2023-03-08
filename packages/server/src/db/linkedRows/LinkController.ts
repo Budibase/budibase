@@ -1,13 +1,14 @@
 import { IncludeDocs, getLinkDocuments } from "./linkUtils"
 import { InternalTables, getUserMetadataParams } from "../utils"
 import Sentry from "@sentry/node"
-import { FieldTypes, RelationshipTypes } from "../../constants"
+import { FieldTypes } from "../../constants"
 import { context } from "@budibase/backend-core"
 import LinkDocument from "./LinkDocument"
 import {
   Database,
   FieldSchema,
   LinkDocumentValue,
+  RelationshipTypes,
   Row,
   Table,
 } from "@budibase/types"
@@ -441,4 +442,4 @@ class LinkController {
   }
 }
 
-export = LinkController
+export default LinkController

@@ -137,4 +137,4 @@ class InMemoryQueue {
   }
 }
 
-export = InMemoryQueue
+export default InMemoryQueue

@@ -2,7 +2,7 @@
 // store an app ID to pretend there is a context
 import env from "../environment"
 import Context from "./Context"
-import { getDevelopmentAppID, getProdAppID } from "../db/conversions"
+import * as conversions from "../db/conversions"
 import { getDB } from "../db/db"
 import {
   DocumentType,
@@ -11,12 +11,7 @@ import {
   DEFAULT_TENANT_ID,
 } from "../constants"
 import { Database, IdentityContext } from "@budibase/types"
-
-export type ContextMap = {
-  tenantId?: string
-  appId?: string
-  identity?: IdentityContext
-}
+import { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null
 
@@ -29,14 +24,23 @@ export function getGlobalDBName(tenantId?: string) {
   return baseGlobalDBName(tenantId)
 }
 
-export function baseGlobalDBName(tenantId: string | undefined | null) {
-  let dbName
-  if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
-    dbName = StaticDatabases.GLOBAL.name
-  } else {
-    dbName = `${tenantId}${SEPARATOR}${StaticDatabases.GLOBAL.name}`
+export function getAuditLogDBName(tenantId?: string) {
+  if (!tenantId) {
+    tenantId = getTenantId()
   }
-  return dbName
+  if (tenantId === DEFAULT_TENANT_ID) {
+    return StaticDatabases.AUDIT_LOGS.name
+  } else {
+    return `${tenantId}${SEPARATOR}${StaticDatabases.AUDIT_LOGS.name}`
+  }
+}
+
+export function baseGlobalDBName(tenantId: string | undefined | null) {
+  if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
+    return StaticDatabases.GLOBAL.name
+  } else {
+    return `${tenantId}${SEPARATOR}${StaticDatabases.GLOBAL.name}`
+  }
 }
 
 export function isMultiTenant() {
@@ -75,7 +79,7 @@ export function getTenantIDFromAppID(appId: string) {
   }
 }
 
-function updateContext(updates: ContextMap) {
+function updateContext(updates: ContextMap): ContextMap {
   let context: ContextMap
   try {
     context = Context.get()
@@ -120,15 +124,23 @@ export async function doInTenant(
   return newContext(updates, task)
 }
 
-export async function doInAppContext(appId: string, task: any): Promise<any> {
-  if (!appId) {
+export async function doInAppContext(
+  appId: string | null,
+  task: any
+): Promise<any> {
+  if (!appId && !env.isTest()) {
     throw new Error("appId is required")
   }
 
-  const tenantId = getTenantIDFromAppID(appId)
-  const updates: ContextMap = { appId }
-  if (tenantId) {
-    updates.tenantId = tenantId
+  let updates: ContextMap
+  if (!appId) {
+    updates = { appId: "" }
+  } else {
+    const tenantId = getTenantIDFromAppID(appId)
+    updates = { appId }
+    if (tenantId) {
+      updates.tenantId = tenantId
+    }
   }
   return newContext(updates, task)
 }
@@ -181,25 +193,33 @@ export function getAppId(): string | undefined {
   }
 }
 
-export function updateTenantId(tenantId?: string) {
-  let context: ContextMap = updateContext({
-    tenantId,
-  })
-  Context.set(context)
+export const getProdAppId = () => {
+  const appId = getAppId()
+  if (!appId) {
+    throw new Error("Could not get appId")
+  }
+  return conversions.getProdAppID(appId)
 }
 
-export function updateAppId(appId: string) {
-  let context: ContextMap = updateContext({
-    appId,
-  })
-  try {
-    Context.set(context)
-  } catch (err) {
-    if (env.isTest()) {
-      TEST_APP_ID = appId
-    } else {
-      throw err
-    }
+export function doInEnvironmentContext(
+  values: Record<string, string>,
+  task: any
+) {
+  if (!values) {
+    throw new Error("Must supply environment variables.")
+  }
+  const updates = {
+    environmentVariables: values,
+  }
+  return newContext(updates, task)
+}
+
+export function getEnvironmentVariables() {
+  const context = Context.get()
+  if (!context.environmentVariables) {
+    return null
+  } else {
+    return context.environmentVariables
   }
 }
 
@@ -209,6 +229,13 @@ export function getGlobalDB(): Database {
     throw new Error("Global DB not found")
   }
   return getDB(baseGlobalDBName(context?.tenantId))
+}
+
+export function getAuditLogsDB(): Database {
+  if (!getTenantId()) {
+    throw new Error("No tenant ID found - cannot open audit log DB")
+  }
+  return getDB(getAuditLogDBName())
 }
 
 /**
@@ -229,7 +256,7 @@ export function getProdAppDB(opts?: any): Database {
   if (!appId) {
     throw new Error("Unable to retrieve prod DB - no app ID.")
   }
-  return getDB(getProdAppID(appId), opts)
+  return getDB(conversions.getProdAppID(appId), opts)
 }
 
 /**
@@ -241,5 +268,5 @@ export function getDevAppDB(opts?: any): Database {
   if (!appId) {
     throw new Error("Unable to retrieve dev DB - no app ID.")
   }
-  return getDB(getDevelopmentAppID(appId), opts)
+  return getDB(conversions.getDevelopmentAppID(appId), opts)
 }

@@ -31,4 +31,4 @@ router
   )
   .post("/api/views", authorized(permissions.BUILDER), viewController.save)
 
-export = router
+export default router

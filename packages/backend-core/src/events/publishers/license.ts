@@ -13,7 +13,7 @@ import {
   LicensePaymentRecoveredEvent,
 } from "@budibase/types"
 
-export async function tierChanged(account: Account, from: number, to: number) {
+async function tierChanged(account: Account, from: number, to: number) {
   const properties: LicenseTierChangedEvent = {
     accountId: account.accountId,
     to,
@@ -22,11 +22,7 @@ export async function tierChanged(account: Account, from: number, to: number) {
   await publishEvent(Event.LICENSE_TIER_CHANGED, properties)
 }
 
-export async function planChanged(
-  account: Account,
-  from: PlanType,
-  to: PlanType
-) {
+async function planChanged(account: Account, from: PlanType, to: PlanType) {
   const properties: LicensePlanChangedEvent = {
     accountId: account.accountId,
     to,
@@ -35,44 +31,55 @@ export async function planChanged(
   await publishEvent(Event.LICENSE_PLAN_CHANGED, properties)
 }
 
-export async function activated(account: Account) {
+async function activated(account: Account) {
   const properties: LicenseActivatedEvent = {
     accountId: account.accountId,
   }
   await publishEvent(Event.LICENSE_ACTIVATED, properties)
 }
 
-export async function checkoutOpened(account: Account) {
+async function checkoutOpened(account: Account) {
   const properties: LicenseCheckoutOpenedEvent = {
     accountId: account.accountId,
   }
   await publishEvent(Event.LICENSE_CHECKOUT_OPENED, properties)
 }
 
-export async function checkoutSuccess(account: Account) {
+async function checkoutSuccess(account: Account) {
   const properties: LicenseCheckoutSuccessEvent = {
     accountId: account.accountId,
   }
   await publishEvent(Event.LICENSE_CHECKOUT_SUCCESS, properties)
 }
 
-export async function portalOpened(account: Account) {
+async function portalOpened(account: Account) {
   const properties: LicensePortalOpenedEvent = {
     accountId: account.accountId,
   }
   await publishEvent(Event.LICENSE_PORTAL_OPENED, properties)
 }
 
-export async function paymentFailed(account: Account) {
+async function paymentFailed(account: Account) {
   const properties: LicensePaymentFailedEvent = {
     accountId: account.accountId,
   }
   await publishEvent(Event.LICENSE_PAYMENT_FAILED, properties)
 }
 
-export async function paymentRecovered(account: Account) {
+async function paymentRecovered(account: Account) {
   const properties: LicensePaymentRecoveredEvent = {
     accountId: account.accountId,
   }
   await publishEvent(Event.LICENSE_PAYMENT_RECOVERED, properties)
+}
+
+export default {
+  tierChanged,
+  planChanged,
+  activated,
+  checkoutOpened,
+  checkoutSuccess,
+  portalOpened,
+  paymentFailed,
+  paymentRecovered,
 }

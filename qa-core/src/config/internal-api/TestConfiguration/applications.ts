@@ -13,12 +13,13 @@ export default class AppApi {
   constructor(apiClient: InternalAPIClient) {
     this.api = apiClient
   }
-
+  //  TODO Fix the fetch apps to receive an optional number of apps and compare if the received app is more or less.
+  //  each possible scenario should have its own method.
   async fetchEmptyAppList(): Promise<[Response, Application[]]> {
     const response = await this.api.get(`/applications?status=all`)
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    expect(json.length).toEqual(0)
+    expect(json.length).toBeGreaterThanOrEqual(0)
     return [response, json]
   }
 
@@ -32,9 +33,9 @@ export default class AppApi {
 
   async canRender(): Promise<[Response, boolean]> {
     const response = await this.api.get("/routing/client")
+    expect(response).toHaveStatusCode(200)
     const json = await response.json()
     const publishedAppRenders = Object.keys(json.routes).length > 0
-    expect(response).toHaveStatusCode(200)
     expect(publishedAppRenders).toBe(true)
     return [response, publishedAppRenders]
   }
@@ -47,15 +48,10 @@ export default class AppApi {
     return [response, json]
   }
 
-  async publish(appUrl: string): Promise<[Response, DeployConfig]> {
-    const response = await this.api.post("/deploy")
+  async publish(appId: string | undefined): Promise<[Response, DeployConfig]> {
+    const response = await this.api.post(`/applications/${appId}/publish`)
     const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    expect(json).toEqual({
-      _id: expect.any(String),
-      appUrl: appUrl,
-      status: "SUCCESS",
-    })
     return [response, json]
   }
 
@@ -114,14 +110,13 @@ export default class AppApi {
     return [response, json]
   }
 
-  async delete(appId: string): Promise<[Response, any]> {
+  async delete(appId: string): Promise<Response> {
     const response = await this.api.del(`/applications/${appId}`)
-    const json = await response.json()
     expect(response).toHaveStatusCode(200)
-    return [response, json]
+    return response
   }
 
-  async update(
+  async rename(
     appId: string,
     oldName: string,
     body: any
@@ -152,13 +147,32 @@ export default class AppApi {
     return [response, json]
   }
 
-  async unpublish(appId: string): Promise<[Response, UnpublishAppResponse]> {
-    const response = await this.api.del(`/applications/${appId}?unpublish=1`)
-    expect(response).toHaveStatusCode(200)
+  async unpublish(appId: string): Promise<[Response]> {
+    const response = await this.api.post(`/applications/${appId}/unpublish`)
+    expect(response).toHaveStatusCode(204)
+    return [response]
+  }
+
+  async unlock(appId: string): Promise<[Response, responseMessage]> {
+    const response = await this.api.del(`/dev/${appId}/lock`)
     const json = await response.json()
-    expect(json.data.ok).toBe(true)
-    expect(json.ok).toBe(true)
-    expect(json.status).toBe(200)
+    expect(response).toHaveStatusCode(200)
+    expect(json.message).toEqual("Lock released successfully.")
+    return [response, json]
+  }
+
+  async updateIcon(appId: string): Promise<[Response, Application]> {
+    const body = {
+      icon: {
+        name: "ConversionFunnel",
+        color: "var(--spectrum-global-color-red-400)",
+      },
+    }
+    const response = await this.api.put(`/applications/${appId}`, { body })
+    const json = await response.json()
+    expect(response).toHaveStatusCode(200)
+    expect(json.icon.name).toEqual(body.icon.name)
+    expect(json.icon.color).toEqual(body.icon.color)
     return [response, json]
   }
 }

@@ -1,16 +1,11 @@
-import * as env from "./environment"
+import env from "./environment"
 import * as redis from "./utilities/redis"
 import {
   createAdminUser,
   generateApiKey,
   getChecklist,
 } from "./utilities/workerRequests"
-import {
-  installation,
-  pinoSettings,
-  tenancy,
-  logging,
-} from "@budibase/backend-core"
+import { installation, tenancy, logging, events } from "@budibase/backend-core"
 import fs from "fs"
 import { watch } from "./watch"
 import * as automations from "./automations"
@@ -26,7 +21,7 @@ const pino = require("koa-pino-logger")
 let STARTUP_RAN = false
 
 async function initRoutes(app: any) {
-  app.use(pino(pinoSettings()))
+  app.use(pino(logging.pinoSettings()))
 
   if (!env.isTest()) {
     const plugin = await bullboard.init()
@@ -129,6 +124,9 @@ export async function startup(app?: any, server?: any) {
   // get the references to the queue promises, don't await as
   // they will never end, unless the processing stops
   let queuePromises = []
+  // configure events to use the pro audit log write
+  // can't integrate directly into backend-core due to cyclic issues
+  queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
   queuePromises.push(automations.init())
   queuePromises.push(initPro())
   if (app) {

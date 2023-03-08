@@ -1,17 +1,16 @@
 import { db as dbCore, objectStore } from "@budibase/backend-core"
-import { Database } from "@budibase/types"
+import { Database, Row } from "@budibase/types"
 import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import { downloadTemplate } from "../../../utilities/fileSystem"
-import { FieldTypes, ObjectStoreBuckets } from "../../../constants"
+import { ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
 import sdk from "../../"
 import {
   Automation,
   AutomationTriggerStepId,
-  CouchFindOptions,
   RowAttachment,
 } from "@budibase/types"
 const uuid = require("uuid/v4")
@@ -25,58 +24,45 @@ type TemplateType = {
   key?: string
 }
 
-async function updateAttachmentColumns(prodAppId: string, db: Database) {
+function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
+  // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
+  const urlParts = attachment.key.split("/")
+  // remove the app ID
+  urlParts.shift()
+  // add new app ID
+  urlParts.unshift(appId)
+  const key = urlParts.join("/")
+  return {
+    ...attachment,
+    key,
+    url: "", // calculated on retrieval using key
+  }
+}
+
+export async function updateAttachmentColumns(prodAppId: string, db: Database) {
   // iterate through attachment documents and update them
   const tables = await sdk.tables.getAllInternalTables(db)
+  let updatedRows: Row[] = []
   for (let table of tables) {
-    const attachmentCols: string[] = []
-    for (let [key, column] of Object.entries(table.schema)) {
-      if (column.type === FieldTypes.ATTACHMENT) {
-        attachmentCols.push(key)
-      }
-    }
-    // no attachment columns, nothing to do
-    if (attachmentCols.length === 0) {
-      continue
-    }
-    // use the CouchDB Mango query API to lookup rows that have attachments
-    const params: CouchFindOptions = {
-      selector: {
-        _id: {
-          $regex: `^${TABLE_ROW_PREFIX}`,
-        },
-      },
-    }
-    attachmentCols.forEach(col => (params.selector[col] = { $exists: true }))
-    const { rows } = await dbCore.directCouchFind(db.name, params)
-    for (let row of rows) {
-      for (let column of attachmentCols) {
-        if (!Array.isArray(row[column])) {
-          continue
-        }
-        row[column] = row[column].map((attachment: RowAttachment) => {
-          // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
-          const urlParts = attachment.url.split("/")
-          // drop the first empty element
-          urlParts.shift()
-          // get the prefix
-          const prefix = urlParts.shift()
-          // remove the app ID
-          urlParts.shift()
-          // add new app ID
-          urlParts.unshift(prodAppId)
-          const key = urlParts.join("/")
-          return {
-            ...attachment,
-            key,
-            url: `/${prefix}/${key}`,
+    const { rows, columns } = await sdk.rows.getRowsWithAttachments(
+      db.name,
+      table
+    )
+    updatedRows = updatedRows.concat(
+      rows.map(row => {
+        for (let column of columns) {
+          if (Array.isArray(row[column])) {
+            row[column] = row[column].map((attachment: RowAttachment) =>
+              rewriteAttachmentUrl(prodAppId, attachment)
+            )
           }
-        })
-      }
-    }
-    // write back the updated attachments
-    await db.bulkDocs(rows)
+        }
+        return row
+      })
+    )
   }
+  // write back the updated attachments
+  await db.bulkDocs(updatedRows)
 }
 
 async function updateAutomations(prodAppId: string, db: Database) {

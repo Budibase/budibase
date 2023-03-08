@@ -1,6 +1,7 @@
 import { Context, Request } from "koa"
 import { User, Role, UserRoles, Account } from "../documents"
 import { FeatureFlag, License } from "../sdk"
+import { Files } from "formidable"
 
 export interface ContextUser extends Omit<User, "roles"> {
   globalId?: string
@@ -15,12 +16,34 @@ export interface ContextUser extends Omit<User, "roles"> {
   account?: Account
 }
 
-export interface BBRequest extends Request {
-  body: any
-  files?: any
+/**
+ * Add support for koa-body in context.
+ */
+export interface BBRequest<RequestBody> extends Request {
+  body: RequestBody
+  files?: Files
 }
 
-export interface BBContext extends Context {
-  request: BBRequest
+/**
+ * Basic context with no user.
+ */
+export interface Ctx<RequestBody = any, ResponseBody = any> extends Context {
+  request: BBRequest<RequestBody>
+  body: ResponseBody
+}
+
+/**
+ * Authenticated context.
+ */
+export interface UserCtx<RequestBody = any, ResponseBody = any>
+  extends Ctx<RequestBody, ResponseBody> {
+  user: ContextUser
+}
+
+/**
+ * @deprecated: Use UserCtx / Ctx appropriately
+ * Authenticated context.
+ */
+export interface BBContext extends Ctx {
   user?: ContextUser
 }

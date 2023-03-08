@@ -1,3 +1,8 @@
+const tk = require( "timekeeper")
+const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
+tk.freeze(timestamp)
+
+
 const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
@@ -10,6 +15,7 @@ const {
   StaticQuotaName,
   MonthlyQuotaName,
 } = require("@budibase/types")
+const { structures } = require("@budibase/backend-core/tests");
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -19,8 +25,11 @@ describe("/rows", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(async()=>{
     table = await config.createTable()
     row = basicRow(table._id)
   })
@@ -110,8 +119,8 @@ describe("/rows", () => {
         _id: existing._id,
         _rev: existing._rev,
         type: "row",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
+        createdAt: timestamp,
+        updatedAt: timestamp,
       })
       await assertQueryUsage(queryUsage + 1)
     })
@@ -494,12 +503,13 @@ describe("/rows", () => {
   describe("attachments", () => {
     it("should allow enriching attachment rows", async () => {
       const table = await config.createAttachmentTable()
+      const attachmentId = `${structures.uuid()}.csv`
       const row = await config.createRow({
         name: "test",
         description: "test",
         attachment: [
           {
-            key: `${config.getAppId()}/attachments/test/thing.csv`,
+            key: `${config.getAppId()}/attachments/${attachmentId}`,
           },
         ],
         tableId: table._id,
@@ -509,7 +519,7 @@ describe("/rows", () => {
         context.doInAppContext(config.getAppId(), async () => {
           const enriched = await outputProcessing(table, [row])
           expect(enriched[0].attachment[0].url).toBe(
-            `/prod-budi-app-assets/${config.getAppId()}/attachments/test/thing.csv`
+            `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
           )
         })
       })

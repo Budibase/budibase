@@ -1,6 +1,5 @@
 import env from "../environment"
-import { OBJ_STORE_DIRECTORY } from "../constants"
-import { objectStore, context } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { generateMetadataID } from "../db/utils"
 import { Document } from "@budibase/types"
 import stream from "stream"
@@ -30,49 +29,6 @@ export function removeFromArray(array: any[], element: any) {
  */
 export function checkSlashesInUrl(url: string) {
   return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
-}
-
-/**
- * Gets the address of the object store, depending on whether self hosted or in cloud.
- * @return {string} The base URL of the object store (MinIO or S3).
- */
-export function objectStoreUrl() {
-  if (env.SELF_HOSTED || env.MINIO_URL) {
-    // can use a relative url for this as all goes through the proxy (this is hosted in minio)
-    return OBJ_STORE_DIRECTORY
-  } else {
-    return env.CDN_URL
-  }
-}
-
-/**
- * In production the client library is stored in the object store, however in development
- * we use the symlinked version produced by lerna, located in node modules. We link to this
- * via a specific endpoint (under /api/assets/client).
- * @param {string} appId In production we need the appId to look up the correct bucket, as the
- * version of the client lib may differ between apps.
- * @param {string} version The version to retrieve.
- * @return {string} The URL to be inserted into appPackage response or server rendered
- * app index file.
- */
-export function clientLibraryPath(appId: string, version: string) {
-  if (env.isProd()) {
-    let url = `${objectStoreUrl()}/${objectStore.sanitizeKey(
-      appId
-    )}/budibase-client.js`
-
-    // append app version to bust the cache
-    if (version) {
-      url += `?v=${version}`
-    }
-    return url
-  } else {
-    return `/api/assets/client`
-  }
-}
-
-export function attachmentsRelativeURL(attachmentKey: string) {
-  return checkSlashesInUrl(`${objectStoreUrl()}/${attachmentKey}`)
 }
 
 export async function updateEntityMetadata(

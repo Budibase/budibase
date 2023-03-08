@@ -7,7 +7,7 @@ function generateTenantKey(key: string) {
   return `${key}:${tenantId}`
 }
 
-export = class BaseCache {
+export default class BaseCache {
   client: Client | undefined
 
   constructor(client: Client | undefined = undefined) {

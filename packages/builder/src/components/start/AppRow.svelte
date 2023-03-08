@@ -1,85 +1,126 @@
 <script>
-  import { Heading, Button, Icon } from "@budibase/bbui"
+  import { Heading, Body, Button, Icon, notifications } from "@budibase/bbui"
   import AppLockModal from "../common/AppLockModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
+  import { goto } from "@roxi/routify"
 
   export let app
-  export let editApp
-  export let appOverview
+
+  const handleDefaultClick = () => {
+    if (window.innerWidth < 640) {
+      goToOverview()
+    } else {
+      goToBuilder()
+    }
+  }
+
+  const goToBuilder = () => {
+    if (app.lockedOther) {
+      notifications.error(
+        `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
+      )
+      return
+    }
+    $goto(`../../app/${app.devId}`)
+  }
+
+  const goToOverview = () => {
+    $goto(`../overview/${app.devId}`)
+  }
 </script>
 
-<div class="title" data-cy={`${app.devId}`}>
-  <div>
-    <div class="app-icon" style="color: {app.icon?.color || ''}">
-      <Icon size="XL" name={app.icon?.name || "Apps"} />
+<div class="app-row" on:click={handleDefaultClick}>
+  <div class="title">
+    <div class="app-icon">
+      <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
     </div>
-    <div class="name" data-cy="app-name-link" on:click={() => editApp(app)}>
-      <Heading size="XS">
+    <div class="name">
+      <Heading size="S">
         {app.name}
       </Heading>
     </div>
   </div>
-</div>
-<div class="desktop">
-  {#if app.updatedAt}
-    {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
-      time: new Date().getTime() - new Date(app.updatedAt).getTime(),
-    })}
-  {:else}
-    Never updated
-  {/if}
-</div>
-<div class="desktop">
-  <span><AppLockModal {app} buttonSize="M" /></span>
-</div>
-<div class="desktop">
-  <div class="app-status">
-    {#if app.deployed}
-      <Icon name="Globe" disabled={false} />
-      Published
+
+  <div class="updated">
+    {#if app.updatedAt}
+      {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
+        time: new Date().getTime() - new Date(app.updatedAt).getTime(),
+      })}
     {:else}
-      <Icon name="GlobeStrike" disabled={true} />
-      <span class="disabled"> Unpublished </span>
+      Never updated
     {/if}
   </div>
-</div>
-<div data-cy={`row_actions_${app.appId}`}>
+
+  <div class="title app-status" class:deployed={app.deployed}>
+    <Icon size="L" name={app.deployed ? "GlobeCheck" : "GlobeStrike"} />
+    <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
+  </div>
+
   <div class="app-row-actions">
-    <Button size="S" secondary newStyles on:click={() => appOverview(app)}>
-      Manage
-    </Button>
-    <Button
-      size="S"
-      primary
-      newStyles
-      disabled={app.lockedOther}
-      on:click={() => editApp(app)}
-    >
+    <AppLockModal {app} buttonSize="M" />
+    <Button size="S" secondary on:click={goToOverview}>Manage</Button>
+    <Button size="S" primary disabled={app.lockedOther} on:click={goToBuilder}>
       Edit
     </Button>
   </div>
 </div>
 
 <style>
-  div.title,
-  div.title > div {
-    display: flex;
-    max-width: 100%;
+  .app-row {
+    background: var(--background);
+    padding: 24px 32px;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 35% 25% 15% auto;
+    align-items: center;
+    gap: var(--spacing-m);
+    transition: border 130ms ease-out;
+    border: 1px solid transparent;
   }
+  .app-row:hover {
+    cursor: pointer;
+    border-color: var(--spectrum-global-color-gray-300);
+  }
+
+  .updated {
+    color: var(--spectrum-global-color-gray-700);
+  }
+
+  .title,
+  .name {
+    flex: 1 1 auto;
+  }
+  .name {
+    width: 0;
+  }
+  .title,
+  .app-status {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .title :global(.spectrum-Heading),
+  .title :global(.spectrum-Icon),
+  .title :global(.spectrum-Body) {
+    color: var(--spectrum-global-color-gray-900);
+  }
+
+  .app-status:not(.deployed) :global(.spectrum-Icon),
+  .app-status:not(.deployed) :global(.spectrum-Body) {
+    color: var(--spectrum-global-color-gray-600);
+  }
+
   .app-row-actions {
-    grid-gap: var(--spacing-s);
+    gap: var(--spacing-m);
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+    align-items: center;
   }
-  .app-status {
-    display: grid;
-    grid-gap: var(--spacing-s);
-    grid-template-columns: 24px 100px;
-  }
-  .app-status span.disabled {
-    opacity: 0.3;
-  }
+
   .name {
     text-decoration: none;
     overflow: hidden;
@@ -88,17 +129,30 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    margin-left: calc(1.5 * var(--spacing-xl));
-  }
-  .title :global(h1:hover) {
-    color: var(--spectrum-global-color-blue-600);
-    cursor: pointer;
-    transition: color 130ms ease;
   }
 
+  @media (max-width: 1000px) {
+    .app-row {
+      grid-template-columns: 45% 30% auto;
+    }
+    .updated {
+      display: none;
+    }
+  }
+  @media (max-width: 800px) {
+    .app-row {
+      grid-template-columns: 1fr auto;
+    }
+    .app-status {
+      display: none;
+    }
+  }
   @media (max-width: 640px) {
-    .desktop {
-      display: none !important;
+    .app-row {
+      padding: 20px;
+    }
+    .app-row-actions {
+      display: none;
     }
   }
 </style>

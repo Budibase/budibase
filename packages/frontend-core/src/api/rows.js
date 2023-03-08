@@ -67,12 +67,13 @@ export const buildRowEndpoints = API => ({
    * @param format the format to export (csv or json)
    * @param columns which columns to export (all if undefined)
    */
-  exportRows: async ({ tableId, rows, format, columns }) => {
+  exportRows: async ({ tableId, rows, format, columns, search }) => {
     return await API.post({
       url: `/api/${tableId}/rows/exportRows?format=${format}`,
       body: {
         rows,
         columns,
+        ...search,
       },
       parseResponse: async response => {
         return await response.text()

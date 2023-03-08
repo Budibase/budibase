@@ -2,7 +2,7 @@ import { newid } from "./utils"
 import * as events from "./events"
 import { StaticDatabases } from "./db"
 import { doWithDB } from "./db"
-import { Installation, IdentityType } from "@budibase/types"
+import { Installation, IdentityType, Database } from "@budibase/types"
 import * as context from "./context"
 import semver from "semver"
 import { bustCache, withCache, TTL, CacheKey } from "./cache/generic"
@@ -13,6 +13,24 @@ export const getInstall = async (): Promise<Installation> => {
   return withCache(CacheKey.INSTALLATION, TTL.ONE_DAY, getInstallFromDB, {
     useTenancy: false,
   })
+}
+async function createInstallDoc(platformDb: Database) {
+  const install: Installation = {
+    _id: StaticDatabases.PLATFORM_INFO.docs.install,
+    installId: newid(),
+    version: pkg.version,
+  }
+  try {
+    const resp = await platformDb.put(install)
+    install._rev = resp.rev
+    return install
+  } catch (err: any) {
+    if (err.status === 409) {
+      return getInstallFromDB()
+    } else {
+      throw err
+    }
+  }
 }
 
 const getInstallFromDB = async (): Promise<Installation> => {
@@ -26,13 +44,7 @@ const getInstallFromDB = async (): Promise<Installation> => {
         )
       } catch (e: any) {
         if (e.status === 404) {
-          install = {
-            _id: StaticDatabases.PLATFORM_INFO.docs.install,
-            installId: newid(),
-            version: pkg.version,
-          }
-          const resp = await platformDb.put(install)
-          install._rev = resp.rev
+          install = await createInstallDoc(platformDb)
         } else {
           throw e
         }

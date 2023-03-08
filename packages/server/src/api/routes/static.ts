@@ -3,7 +3,7 @@ import * as controller from "../controllers/static"
 import { budibaseTempDir } from "../../utilities/budibaseDir"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
-import * as env from "../../environment"
+import env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
 const { BUILDER, PermissionType, PermissionLevel } = permissions
 
@@ -62,4 +62,4 @@ router
     controller.getSignedUploadURL
   )
 
-export = router
+export default router

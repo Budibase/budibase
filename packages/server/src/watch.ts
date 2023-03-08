@@ -1,5 +1,5 @@
 import path from "path"
-import * as env from "./environment"
+import env from "./environment"
 import chokidar from "chokidar"
 import fs from "fs"
 import { constants, tenancy } from "@budibase/backend-core"

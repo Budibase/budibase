@@ -5,6 +5,7 @@ import {
 } from "@budibase/string-templates"
 import sdk from "../sdk"
 import { Row } from "@budibase/types"
+import { LoopStep, LoopStepType, LoopInput } from "../definitions/automations"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -49,6 +50,16 @@ export function cleanInputValues(inputs: Record<string, any>, schema: any) {
       if (!isNaN(floatInput)) {
         inputs[inputKey] = floatInput
       }
+    }
+  }
+  //Check if input field should be a relationship and cast to array
+  for (let key in inputs.row) {
+    if (
+      inputs.schema?.[key]?.type === "link" &&
+      inputs.row[key] &&
+      typeof inputs.row[key] === "string"
+    ) {
+      inputs.row[key] = JSON.parse(inputs.row[key])
     }
   }
   return inputs
@@ -122,4 +133,27 @@ export function stringSplit(value: string | string[]) {
     value = value.split(",")
   }
   return value
+}
+
+export function typecastForLooping(loopStep: LoopStep, input: LoopInput) {
+  if (!input || !input.binding) {
+    return null
+  }
+  try {
+    switch (loopStep.inputs.option) {
+      case LoopStepType.ARRAY:
+        if (typeof input.binding === "string") {
+          return JSON.parse(input.binding)
+        }
+        break
+      case LoopStepType.STRING:
+        if (Array.isArray(input.binding)) {
+          return input.binding.join(",")
+        }
+        break
+    }
+  } catch (err) {
+    throw new Error("Unable to cast to correct type")
+  }
+  return input.binding
 }

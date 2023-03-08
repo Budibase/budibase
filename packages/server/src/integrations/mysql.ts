@@ -16,7 +16,7 @@ import {
   finaliseExternalTables,
 } from "./utils"
 import dayjs from "dayjs"
-const { NUMBER_REGEX } = require("../utilities")
+import { NUMBER_REGEX } from "../utilities"
 import Sql from "./base/sql"
 import { MySQLColumn } from "./base/types"
 
@@ -147,9 +147,13 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         if (
           field.type == "DATETIME" ||
           field.type === "DATE" ||
-          field.type === "TIMESTAMP"
+          field.type === "TIMESTAMP" ||
+          field.type === "LONGLONG"
         ) {
           return field.string()
+        }
+        if (field.type === "BIT" && field.length === 1) {
+          return field.buffer()?.[0]
         }
         return next()
       },

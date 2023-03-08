@@ -51,6 +51,8 @@ export async function update(ctx: BBContext, next: any) {
   }
   // disallow updating your own role - always overwrite with DB roles
   if (isLoggedInUser(ctx, user)) {
+    ctx.request.body.builder = user.builder
+    ctx.request.body.admin = user.admin
     ctx.request.body.roles = user.roles
   }
   const response = await saveGlobalUser(publicApiUserFix(ctx))

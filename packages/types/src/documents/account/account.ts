@@ -1,8 +1,10 @@
 import {
   Feature,
   Hosting,
+  License,
   MonthlyQuotaName,
   PlanType,
+  PriceDuration,
   Quotas,
   StaticQuotaName,
 } from "../../sdk"
@@ -46,6 +48,7 @@ export interface Account extends CreateAccount {
   tier: string // deprecated
   planType?: PlanType
   planTier?: number
+  license?: License
   stripeCustomerId?: string
   licenseKey?: string
   licenseKeyActivatedAt?: number
@@ -76,13 +79,23 @@ export const isSelfHostAccount = (account: Account) =>
 export const isSSOAccount = (account: Account): account is SSOAccount =>
   account.authType === AuthType.SSO
 
-export interface SSOAccount extends Account {
-  pictureUrl?: string
-  provider?: string
-  providerType?: string
+export enum AccountSSOProviderType {
+  GOOGLE = "google",
+}
+
+export enum AccountSSOProvider {
+  GOOGLE = "google",
+}
+
+export interface AccountSSO {
+  provider: AccountSSOProvider
+  providerType: AccountSSOProviderType
   oauth2?: OAuthTokens
+  pictureUrl?: string
   thirdPartyProfile: any // TODO: define what the google profile looks like
 }
+
+export type SSOAccount = (Account | CloudAccount) & AccountSSO
 
 export enum AuthType {
   SSO = "sso",

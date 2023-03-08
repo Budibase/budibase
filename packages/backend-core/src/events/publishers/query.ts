@@ -13,7 +13,7 @@ import {
 
 /* eslint-disable */
 
-export const created = async (
+const created = async (
   datasource: Datasource,
   query: Query,
   timestamp?: string | number
@@ -27,7 +27,7 @@ export const created = async (
   await publishEvent(Event.QUERY_CREATED, properties, timestamp)
 }
 
-export const updated = async (datasource: Datasource, query: Query) => {
+const updated = async (datasource: Datasource, query: Query) => {
   const properties: QueryUpdatedEvent = {
     queryId: query._id as string,
     datasourceId: datasource._id as string,
@@ -37,7 +37,7 @@ export const updated = async (datasource: Datasource, query: Query) => {
   await publishEvent(Event.QUERY_UPDATED, properties)
 }
 
-export const deleted = async (datasource: Datasource, query: Query) => {
+const deleted = async (datasource: Datasource, query: Query) => {
   const properties: QueryDeletedEvent = {
     queryId: query._id as string,
     datasourceId: datasource._id as string,
@@ -47,7 +47,7 @@ export const deleted = async (datasource: Datasource, query: Query) => {
   await publishEvent(Event.QUERY_DELETED, properties)
 }
 
-export const imported = async (
+const imported = async (
   datasource: Datasource,
   importSource: any,
   count: any
@@ -61,14 +61,14 @@ export const imported = async (
   await publishEvent(Event.QUERY_IMPORT, properties)
 }
 
-export const run = async (count: number, timestamp?: string | number) => {
+const run = async (count: number, timestamp?: string | number) => {
   const properties: QueriesRunEvent = {
     count,
   }
   await publishEvent(Event.QUERIES_RUN, properties, timestamp)
 }
 
-export const previewed = async (datasource: Datasource, query: Query) => {
+const previewed = async (datasource: Datasource, query: Query) => {
   const properties: QueryPreviewedEvent = {
     queryId: query._id,
     datasourceId: datasource._id as string,
@@ -76,4 +76,13 @@ export const previewed = async (datasource: Datasource, query: Query) => {
     queryVerb: query.queryVerb,
   }
   await publishEvent(Event.QUERY_PREVIEWED, properties)
+}
+
+export default {
+  created,
+  updated,
+  deleted,
+  imported,
+  run,
+  previewed,
 }

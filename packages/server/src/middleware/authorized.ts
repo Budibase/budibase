@@ -63,7 +63,11 @@ const checkAuthorizedResource = async (
   }
 }
 
-export = (permType: any, permLevel: any = null, opts = { schema: false }) =>
+export default (
+    permType: any,
+    permLevel: any = null,
+    opts = { schema: false }
+  ) =>
   async (ctx: any, next: any) => {
     // webhooks don't need authentication, each webhook unique
     // also internal requests (between services) don't need authorized
@@ -74,10 +78,6 @@ export = (permType: any, permLevel: any = null, opts = { schema: false }) =>
     if (!ctx.user) {
       return ctx.throw(403, "No user info found")
     }
-
-    // check general builder stuff, this middleware is a good way
-    // to find API endpoints which are builder focused
-    await builderMiddleware(ctx, permType)
 
     // get the resource roles
     let resourceRoles: any = []
@@ -106,6 +106,12 @@ export = (permType: any, permLevel: any = null, opts = { schema: false }) =>
     // check authenticated
     if (!ctx.isAuthenticated) {
       return ctx.throw(403, "Session not authenticated")
+    }
+
+    // check general builder stuff, this middleware is a good way
+    // to find API endpoints which are builder focused
+    if (permType === permissions.PermissionType.BUILDER) {
+      await builderMiddleware(ctx)
     }
 
     try {

@@ -114,6 +114,9 @@ export const ApiVersion = "1"
 export const Features = {
   USER_GROUPS: "userGroups",
   BACKUPS: "appBackups",
+  ENVIRONMENT_VARIABLES: "environmentVariables",
+  AUDIT_LOGS: "auditLogs",
+  ENFORCEABLE_SSO: "enforceableSSO",
 }
 
 // Role IDs
@@ -174,3 +177,7 @@ export const Themes = [
     base: "darkest",
   },
 ]
+
+export const EventPublishType = {
+  ENV_VAR_UPGRADE_PANEL_OPENED: "environment_variable_upgrade_panel_opened",
+}

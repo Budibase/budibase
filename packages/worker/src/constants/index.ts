@@ -27,6 +27,14 @@ export enum EmailTemplatePurpose {
   CUSTOM = "custom",
 }
 
+export enum TemplateMetadataNames {
+  BASE = "Base format",
+  PASSWORD_RECOVERY = "Password recovery",
+  WELCOME = "User welcome",
+  INVITATION = "User invitation",
+  CUSTOM = "Custom",
+}
+
 export enum InternalTemplateBinding {
   PLATFORM_URL = "platformUrl",
   COMPANY = "company",
@@ -93,7 +101,7 @@ export const TemplateBindings = {
 export const TemplateMetadata = {
   [TemplateType.EMAIL]: [
     {
-      name: "Base format",
+      name: TemplateMetadataNames.BASE,
       description:
         "This is the base template, all others are based on it. The {{ body }} will be replaced with another email template.",
       category: "miscellaneous",
@@ -110,7 +118,7 @@ export const TemplateMetadata = {
       ],
     },
     {
-      name: "Password recovery",
+      name: TemplateMetadataNames.PASSWORD_RECOVERY,
       description:
         "When a user requests a password reset they will receive an email built with this template.",
       category: "user management",
@@ -129,7 +137,7 @@ export const TemplateMetadata = {
       ],
     },
     {
-      name: "User welcome",
+      name: TemplateMetadataNames.WELCOME,
       description:
         "When a new user is added they will be sent a welcome email using this template.",
       category: "user management",
@@ -137,7 +145,7 @@ export const TemplateMetadata = {
       bindings: [],
     },
     {
-      name: "User invitation",
+      name: TemplateMetadataNames.INVITATION,
       description:
         "When inviting a user via the email on-boarding this template will be used.",
       category: "user management",
@@ -156,7 +164,7 @@ export const TemplateMetadata = {
       ],
     },
     {
-      name: "Custom",
+      name: TemplateMetadataNames.CUSTOM,
       description:
         "A custom template, this is currently used for SMTP email actions in automations.",
       category: "automations",

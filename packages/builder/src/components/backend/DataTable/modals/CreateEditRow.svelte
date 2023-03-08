@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { tables, rows } from "stores/backend"
+  import { tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import { API } from "api"
@@ -25,7 +25,6 @@
     try {
       await API.saveRow({ ...row, tableId: table._id })
       notifications.success("Row saved successfully")
-      rows.save()
       dispatch("updaterows")
     } catch (error) {
       if (error.handled) {

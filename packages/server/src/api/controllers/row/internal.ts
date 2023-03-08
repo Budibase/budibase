@@ -13,7 +13,7 @@ import {
   cleanupAttachments,
 } from "../../../utilities/rowProcessor"
 import { FieldTypes } from "../../../constants"
-import { validate as rowValidate, findRow } from "./utils"
+import * as utils from "./utils"
 import { fullSearch, paginatedSearch } from "./internalSearch"
 import { getGlobalUsersFromMetadata } from "../../../utilities/global"
 import * as inMemoryViews from "../../../db/inMemoryView"
@@ -27,15 +27,18 @@ import {
 import { cloneDeep } from "lodash/fp"
 import { context, db as dbCore } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
-import * as exporters from "../view/exporters"
+import { csv, json, jsonWithSchema, Format } from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import {
-  BBContext,
+  Ctx,
+  UserCtx,
   Database,
   LinkDocumentValue,
   Row,
   Table,
 } from "@budibase/types"
+
+const { cleanExportRows } = require("./utils")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -69,7 +72,7 @@ async function getView(db: Database, viewName: string) {
   return viewInfo
 }
 
-async function getRawTableData(ctx: BBContext, db: Database, tableId: string) {
+async function getRawTableData(ctx: Ctx, db: Database, tableId: string) {
   let rows
   if (tableId === InternalTables.USER_METADATA) {
     await userController.fetchMetadata(ctx)
@@ -85,7 +88,7 @@ async function getRawTableData(ctx: BBContext, db: Database, tableId: string) {
   return rows as Row[]
 }
 
-export async function patch(ctx: BBContext) {
+export async function patch(ctx: UserCtx) {
   const db = context.getAppDB()
   const inputs = ctx.request.body
   const tableId = inputs.tableId
@@ -95,7 +98,7 @@ export async function patch(ctx: BBContext) {
     let dbTable = await db.get(tableId)
     oldRow = await outputProcessing(
       dbTable,
-      await findRow(ctx, tableId, inputs._id)
+      await utils.findRow(ctx, tableId, inputs._id)
     )
   } catch (err) {
     if (isUserTable) {
@@ -117,8 +120,8 @@ export async function patch(ctx: BBContext) {
   }
 
   // this returns the table and row incase they have been updated
-  let { table, row } = inputProcessing(ctx.user!, dbTable, combinedRow)
-  const validateResult = await rowValidate({
+  let { table, row } = inputProcessing(ctx.user, dbTable, combinedRow)
+  const validateResult = await utils.validate({
     row,
     table,
   })
@@ -150,7 +153,7 @@ export async function patch(ctx: BBContext) {
   })
 }
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: UserCtx) {
   const db = context.getAppDB()
   let inputs = ctx.request.body
   inputs.tableId = ctx.params.tableId
@@ -161,8 +164,8 @@ export async function save(ctx: BBContext) {
 
   // this returns the table and row incase they have been updated
   const dbTable = await db.get(inputs.tableId)
-  let { table, row } = inputProcessing(ctx.user!, dbTable, inputs)
-  const validateResult = await rowValidate({
+  let { table, row } = inputProcessing(ctx.user, dbTable, inputs)
+  const validateResult = await utils.validate({
     row,
     table,
   })
@@ -185,8 +188,8 @@ export async function save(ctx: BBContext) {
   })
 }
 
-export async function fetchView(ctx: BBContext) {
-  const viewName = ctx.params.viewName
+export async function fetchView(ctx: Ctx) {
+  const viewName = decodeURIComponent(ctx.params.viewName)
 
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(DocumentType.TABLE)) {
@@ -252,7 +255,7 @@ export async function fetchView(ctx: BBContext) {
   return rows
 }
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: Ctx) {
   const db = context.getAppDB()
 
   const tableId = ctx.params.tableId
@@ -261,15 +264,15 @@ export async function fetch(ctx: BBContext) {
   return outputProcessing(table, rows)
 }
 
-export async function find(ctx: BBContext) {
+export async function find(ctx: Ctx) {
   const db = dbCore.getDB(ctx.appId)
   const table = await db.get(ctx.params.tableId)
-  let row = await findRow(ctx, ctx.params.tableId, ctx.params.rowId)
+  let row = await utils.findRow(ctx, ctx.params.tableId, ctx.params.rowId)
   row = await outputProcessing(table, row)
   return row
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: Ctx) {
   const db = context.getAppDB()
   const { _id } = ctx.request.body
   let row = await db.get(_id)
@@ -305,7 +308,7 @@ export async function destroy(ctx: BBContext) {
   return { response, row }
 }
 
-export async function bulkDestroy(ctx: BBContext) {
+export async function bulkDestroy(ctx: Ctx) {
   const db = context.getAppDB()
   const tableId = ctx.params.tableId
   const table = await db.get(tableId)
@@ -344,7 +347,7 @@ export async function bulkDestroy(ctx: BBContext) {
   return { response: { ok: true }, rows: processedRows }
 }
 
-export async function search(ctx: BBContext) {
+export async function search(ctx: Ctx) {
   // Fetch the whole table when running in cypress, as search doesn't work
   if (!env.COUCH_DB_URL && env.isCypress()) {
     return { rows: await fetch(ctx) }
@@ -355,6 +358,14 @@ export async function search(ctx: BBContext) {
   const { paginate, query, ...params } = ctx.request.body
   params.version = ctx.version
   params.tableId = tableId
+
+  let table
+  if (params.sort && !params.sortType) {
+    table = await db.get(tableId)
+    const schema = table.schema
+    const sortField = schema[params.sort]
+    params.sortType = sortField.type == "number" ? "number" : "string"
+  }
 
   let response
   if (paginate) {
@@ -369,35 +380,44 @@ export async function search(ctx: BBContext) {
     if (tableId === InternalTables.USER_METADATA) {
       response.rows = await getGlobalUsersFromMetadata(response.rows)
     }
-    const table = await db.get(tableId)
+    table = table || (await db.get(tableId))
     response.rows = await outputProcessing(table, response.rows)
   }
 
   return response
 }
 
-export async function validate(ctx: BBContext) {
-  return rowValidate({
+export async function validate(ctx: Ctx) {
+  return utils.validate({
     tableId: ctx.params.tableId,
     row: ctx.request.body,
   })
 }
 
-export async function exportRows(ctx: BBContext) {
+export async function exportRows(ctx: Ctx) {
   const db = context.getAppDB()
   const table = await db.get(ctx.params.tableId)
   const rowIds = ctx.request.body.rows
   let format = ctx.query.format
-  const { columns } = ctx.request.body
-  let response = (
-    await db.allDocs({
-      include_docs: true,
-      keys: rowIds,
-    })
-  ).rows.map(row => row.doc)
+  const { columns, query } = ctx.request.body
 
-  let result = (await outputProcessing(table, response)) as Row[]
+  let result
+  if (rowIds) {
+    let response = (
+      await db.allDocs({
+        include_docs: true,
+        keys: rowIds,
+      })
+    ).rows.map(row => row.doc)
+
+    result = await outputProcessing(table, response)
+  } else if (query) {
+    let searchResponse = await exports.search(ctx)
+    result = searchResponse.rows
+  }
+
   let rows: Row[] = []
+  let schema = table.schema
 
   // Filter data to only specified columns if required
   if (columns && columns.length) {
@@ -411,24 +431,29 @@ export async function exportRows(ctx: BBContext) {
     rows = result
   }
 
-  let headers = Object.keys(rows[0])
-  // @ts-ignore
-  const exporter = exporters[format]
-  const filename = `export.${format}`
-
-  // send down the file
-  ctx.attachment(filename)
-  return apiFileReturn(exporter(headers, rows))
+  let exportRows = cleanExportRows(rows, schema, format, columns)
+  if (format === Format.CSV) {
+    ctx.attachment("export.csv")
+    return apiFileReturn(csv(Object.keys(rows[0]), exportRows))
+  } else if (format === Format.JSON) {
+    ctx.attachment("export.json")
+    return apiFileReturn(json(exportRows))
+  } else if (format === Format.JSON_WITH_SCHEMA) {
+    ctx.attachment("export.json")
+    return apiFileReturn(jsonWithSchema(schema, exportRows))
+  } else {
+    throw "Format not recognised"
+  }
 }
 
-export async function fetchEnrichedRow(ctx: BBContext) {
+export async function fetchEnrichedRow(ctx: Ctx) {
   const db = context.getAppDB()
   const tableId = ctx.params.tableId
   const rowId = ctx.params.rowId
   // need table to work out where links go in row
   let [table, row] = await Promise.all([
     db.get(tableId),
-    findRow(ctx, tableId, rowId),
+    utils.findRow(ctx, tableId, rowId),
   ])
   // get the link docs
   const linkVals = (await linkRows.getLinkDocuments({

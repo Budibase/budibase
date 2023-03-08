@@ -1,5 +1,5 @@
-import { init as coreInit } from "@budibase/backend-core"
-import env = require("../environment")
+import * as core from "@budibase/backend-core"
+import env from "../environment"
 
 export function init() {
   const dbConfig: any = {
@@ -12,5 +12,5 @@ export function init() {
     dbConfig.allDbs = true
   }
 
-  coreInit({ db: dbConfig })
+  core.init({ db: dbConfig })
 }

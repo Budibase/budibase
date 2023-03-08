@@ -36,9 +36,8 @@
           indentLevel={2}
           icon="Remove"
           text={viewName}
-          selected={$isActive("./view/:viewName") &&
-            $views.selected?.name === viewName}
-          on:click={() => $goto(`./view/${viewName}`)}
+          selected={$isActive("./view") && $views.selected?.name === viewName}
+          on:click={() => $goto(`./view/${encodeURIComponent(viewName)}`)}
         >
           <EditViewPopover
             view={{ name: viewName, ...table.views[viewName] }}

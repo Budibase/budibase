@@ -11,9 +11,9 @@
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
-  export let dataCy
   export let align
   export let autofocus = false
+  export let autocomplete = null
 
   const dispatch = createEventDispatcher()
 
@@ -89,7 +89,6 @@
     {disabled}
     {readonly}
     {id}
-    data-cy={dataCy}
     value={value || ""}
     placeholder={placeholder || ""}
     on:click
@@ -105,15 +104,12 @@
     class="spectrum-Textfield-input"
     style={align ? `text-align: ${align};` : ""}
     inputmode={type === "number" ? "decimal" : "text"}
+    {autocomplete}
   />
 </div>
 
 <style>
   .spectrum-Textfield {
     width: 100%;
-  }
-  input:disabled {
-    color: var(--spectrum-global-color-gray-600) !important;
-    -webkit-text-fill-color: var(--spectrum-global-color-gray-600) !important;
   }
 </style>

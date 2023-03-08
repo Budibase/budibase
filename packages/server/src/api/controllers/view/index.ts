@@ -1,31 +1,40 @@
 import viewTemplate from "./viewBuilder"
 import { apiFileReturn } from "../../../utilities/fileSystem"
-import * as exporters from "./exporters"
+import { csv, json, jsonWithSchema, Format, isFormat } from "./exporters"
 import { deleteView, getView, getViews, saveView } from "./utils"
 import { fetchView } from "../row"
-import { FieldTypes } from "../../../constants"
 import { context, events } from "@budibase/backend-core"
 import { DocumentType } from "../../../db/utils"
 import sdk from "../../../sdk"
+import { FieldTypes } from "../../../constants"
 import {
-  BBContext,
+  Ctx,
   Row,
   Table,
   TableExportFormat,
   TableSchema,
   View,
 } from "@budibase/types"
+import { cleanExportRows } from "../row/utils"
 
 const { cloneDeep, isEqual } = require("lodash")
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: Ctx) {
   ctx.body = await getViews()
 }
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: Ctx) {
   const db = context.getAppDB()
   const { originalName, ...viewToSave } = ctx.request.body
-  const view = viewTemplate(viewToSave)
+
+  const existingTable = await db.get(ctx.request.body.tableId)
+  const table = cloneDeep(existingTable)
+
+  const groupByField: any = Object.values(table.schema).find(
+    (field: any) => field.name == viewToSave.groupBy
+  )
+
+  const view = viewTemplate(viewToSave, groupByField?.type === FieldTypes.ARRAY)
   const viewName = viewToSave.name
 
   if (!viewName) {
@@ -35,8 +44,6 @@ export async function save(ctx: BBContext) {
   await saveView(originalName, viewName, view)
 
   // add views to table document
-  const existingTable = await db.get(ctx.request.body.tableId)
-  const table = cloneDeep(existingTable)
   if (!table.views) table.views = {}
   if (!view.meta.schema) {
     view.meta.schema = table.schema
@@ -111,9 +118,9 @@ async function handleViewEvents(existingView: View, newView: View) {
   await filterEvents(existingView, newView)
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: Ctx) {
   const db = context.getAppDB()
-  const viewName = decodeURI(ctx.params.viewName)
+  const viewName = decodeURIComponent(ctx.params.viewName)
   const view = await deleteView(viewName)
   const table = await db.get(view.meta.tableId)
   delete table.views[viewName]
@@ -123,13 +130,17 @@ export async function destroy(ctx: BBContext) {
   ctx.body = view
 }
 
-export async function exportView(ctx: BBContext) {
-  const viewName = decodeURI(ctx.query.view as string)
+export async function exportView(ctx: Ctx) {
+  const viewName = decodeURIComponent(ctx.query.view as string)
   const view = await getView(viewName)
 
-  const format = ctx.query.format as string
-  if (!format || !Object.values(exporters.ExportFormats).includes(format)) {
-    ctx.throw(400, "Format must be specified, either csv or json")
+  const format = ctx.query.format as unknown
+
+  if (!isFormat(format)) {
+    ctx.throw(
+      400,
+      "Format must be specified, either csv, json or jsonWithSchema"
+    )
   }
 
   if (view) {
@@ -158,37 +169,20 @@ export async function exportView(ctx: BBContext) {
     schema = table.schema
   }
 
-  // remove any relationships
-  const relationships = Object.entries(schema)
-    .filter(entry => entry[1].type === FieldTypes.LINK)
-    .map(entry => entry[0])
-  // iterate relationship columns and remove from and row and schema
-  relationships.forEach(column => {
-    rows.forEach(row => {
-      delete row[column]
-    })
-    delete schema[column]
-  })
+  let exportRows = cleanExportRows(rows, schema, format, [])
 
-  // make sure no "undefined" entries appear in the CSV
-  if (format === exporters.ExportFormats.CSV) {
-    const schemaKeys = Object.keys(schema)
-    for (let key of schemaKeys) {
-      for (let row of rows) {
-        if (row[key] == null) {
-          row[key] = ""
-        }
-      }
-    }
+  if (format === Format.CSV) {
+    ctx.attachment(`${viewName}.csv`)
+    ctx.body = apiFileReturn(csv(Object.keys(schema), exportRows))
+  } else if (format === Format.JSON) {
+    ctx.attachment(`${viewName}.json`)
+    ctx.body = apiFileReturn(json(exportRows))
+  } else if (format === Format.JSON_WITH_SCHEMA) {
+    ctx.attachment(`${viewName}.json`)
+    ctx.body = apiFileReturn(jsonWithSchema(schema, exportRows))
+  } else {
+    throw "Format not recognised"
   }
-
-  // Export part
-  let headers = Object.keys(schema)
-  const exporter = format === "csv" ? exporters.csv : exporters.json
-  const filename = `${viewName}.${format}`
-  // send down the file
-  ctx.attachment(filename)
-  ctx.body = apiFileReturn(exporter(headers, rows))
 
   if (viewName.startsWith(DocumentType.TABLE)) {
     await events.table.exported(table, format as TableExportFormat)

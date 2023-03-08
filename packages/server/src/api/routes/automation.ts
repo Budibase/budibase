@@ -38,7 +38,7 @@ router
     "/api/automations",
     bodyResource("_id"),
     authorized(permissions.BUILDER),
-    automationValidator(true),
+    automationValidator(false),
     controller.update
   )
   .post(
@@ -84,4 +84,4 @@ router
     controller.test
   )
 
-export = router
+export default router

@@ -7,7 +7,7 @@ jest.mock("../../environment", () => ({
     }
   })
 )
-const authorizedMiddleware = require("../authorized")
+const authorizedMiddleware = require("../authorized").default
 const env = require("../../environment")
 const { permissions } = require("@budibase/backend-core")
 

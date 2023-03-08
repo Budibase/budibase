@@ -5,4 +5,4 @@ const router: Router = new Router()
 
 router.get("/api/system/environment", controller.fetch)
 
-export = router
+export default router

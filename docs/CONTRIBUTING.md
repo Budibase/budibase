@@ -9,7 +9,6 @@ From opening a bug report to creating a pull request: every contribution is appr
 - [Glossary of Terms](#glossary-of-terms)
 - [Contributing to Budibase](#contributing-to-budibase)
 
-
 ## Not Sure Where to Start?
 
 Budibase is a low-code web application builder that creates svelte-based web applications.
@@ -22,7 +21,7 @@ Budibase is a monorepo managed by [lerna](https://github.com/lerna/lerna). Lerna
 
 - **packages/server** - The budibase server. This [Koa](https://koajs.com/) app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
 
-- **packages/worker** - This [Koa](https://koajs.com/) app is responsible for providing global apis for managing your budibase installation. Authentication, Users, Email, Org and Auth configs are all provided by the worker. 
+- **packages/worker** - This [Koa](https://koajs.com/) app is responsible for providing global apis for managing your budibase installation. Authentication, Users, Email, Org and Auth configs are all provided by the worker.
 
 ## Contributor License Agreement (CLA)
 
@@ -45,7 +44,7 @@ A client represents a single budibase customer. Each budibase client will have 1
 
 ### App
 
-A client can have one or more budibase applications. Budibase applications would be things like "Developer Inventory Management" or "Goat Herder CRM". Think of a budibase application as a tree. 
+A client can have one or more budibase applications. Budibase applications would be things like "Developer Inventory Management" or "Goat Herder CRM". Think of a budibase application as a tree.
 
 ### Database
 
@@ -73,28 +72,55 @@ A component is the basic frontend building block of a budibase app.
 
 ### Component Library
 
-Component libraries are collections of components as well as the definition of their props contained in a file called `components.json`. 
+Component libraries are collections of components as well as the definition of their props contained in a file called `components.json`.
 
 ## Contributing to Budibase
 
-* Please maintain the existing code style. 
+- Please maintain the existing code style.
 
-* Please try to keep your commits small and focused.
+- Please try to keep your commits small and focused.
 
-* Please write tests.
+- Please write tests.
 
-* If the project diverges from your branch, please rebase instead of merging. This makes the commit graph easier to read.
+- If the project diverges from your branch, please rebase instead of merging. This makes the commit graph easier to read.
 
-* Once your work is completed, please raise a PR against the `develop` branch with some information about what has changed and why.
+- Once your work is completed, please raise a PR against the `develop` branch with some information about what has changed and why.
 
 ### Getting Started For Contributors
-#### 1.  Prerequisites
 
-NodeJS Version `14.x.x`
+#### 1. Prerequisites
 
-*yarn -* `npm install -g yarn`
+- NodeJS version `14.x.x`
+- Python version `3.x`
 
-*jest* - `npm install -g jest`
+### Using asdf (recommended)
+
+Asdf is a package manager that allows managing multiple dependencies.
+
+You can install them following any of the steps described below:
+
+- Install using script (only for mac users):
+
+`./scripts/install-contributor-dependencies.sh`
+
+- Or, manually:
+
+  - Installation steps: https://asdf-vm.com/guide/getting-started.html
+  - asdf plugin add nodejs
+  - asdf plugin add python
+  - npm install -g yarn
+
+### Using NVM and pyenv
+
+- NVM:
+  - Install: https://github.com/nvm-sh/nvm#installing-and-updating
+  - Setup: `nvm use`
+- Pyenv:
+
+  - Install: https://github.com/pyenv/pyenv#installation
+  - Setup: `pyenv install -v 3.7.2`
+
+- _yarn -_ `npm install -g yarn`
 
 #### 2. Clone this repository
 
@@ -102,7 +128,7 @@ NodeJS Version `14.x.x`
 
 then `cd ` into your local copy.
 
-#### 3.  Install and Build
+#### 3. Install and Build
 
 | **NOTE**: On Windows, all yarn commands must be executed on a bash shell (e.g. git bash)
 
@@ -134,9 +160,9 @@ This will enable watch mode for both the builder app, server, client library and
 
 #### 5. Debugging using VS Code
 
-To debug the budibase server and worker a VS Code launch configuration has been provided. 
+To debug the budibase server and worker a VS Code launch configuration has been provided.
 
-Visit the debug window and select `Budibase Server` or `Budibase Worker` to debug the respective component. 
+Visit the debug window and select `Budibase Server` or `Budibase Worker` to debug the respective component.
 Alternatively to start both components simultaneously select `Start Budibase`.
 
 In addition to the above, the remaining budibase components may be run in dev mode using: `yarn dev:noserver`.
@@ -156,11 +182,11 @@ For the backend we run [Redis](https://redis.io/), [CouchDB](https://couchdb.apa
 
 When you are running locally, budibase stores data on disk using docker volumes. The volumes and the types of data associated with each are:
 
-- `redis_data` 
+- `redis_data`
   - Sessions, email tokens
-- `couchdb3_data` 
+- `couchdb3_data`
   - Global and app databases
-- `minio_data` 
+- `minio_data`
   - App manifest, budibase client, static assets
 
 ### Development Modes
@@ -172,34 +198,42 @@ A combination of environment variables controls the mode budibase runs in.
 Yarn commands can be used to mimic the different modes as described in the sections below:
 
 #### Self Hosted
-The default mode. A single tenant installation with no usage restrictions. 
+
+The default mode. A single tenant installation with no usage restrictions.
 
 To enable this mode, use:
+
 ```
 yarn mode:self
 ```
 
 #### Cloud
-The cloud mode, with account portal turned off. 
+
+The cloud mode, with account portal turned off.
 
 To enable this mode, use:
+
 ```
 yarn mode:cloud
 ```
-#### Cloud & Account
-The cloud mode, with account portal turned on. This is a replica of the mode that runs at https://budibase.app 
 
+#### Cloud & Account
+
+The cloud mode, with account portal turned on. This is a replica of the mode that runs at https://budibase.app
 
 To enable this mode, use:
+
 ```
 yarn mode:account
 ```
+
 ### CI
- An overview of the CI pipelines can be found [here](../.github/workflows/README.md)
+
+An overview of the CI pipelines can be found [here](../.github/workflows/README.md)
 
 ### Pro
 
-@budibase/pro is the closed source package that supports licensed features in budibase. By default the package will be pulled from NPM and will not normally need to be touched in local development. If you require to update code inside the pro package it can be cloned to the same root level as budibase, e.g. 
+@budibase/pro is the closed source package that supports licensed features in budibase. By default the package will be pulled from NPM and will not normally need to be touched in local development. If you require to update code inside the pro package it can be cloned to the same root level as budibase, e.g.
 
 ```
 .
@@ -207,13 +241,14 @@ yarn mode:account
 |_ budibase-pro
 ```
 
-Note that only budibase maintainers will be able to access the pro repo. 
+Note that only budibase maintainers will be able to access the pro repo.
 
-The `yarn bootstrap` command can be used to replace the NPM supplied dependency with the local source aware version. This is achieved using the `yarn link` command. To see specifically how dependencies are linked see [scripts/link-dependencies.sh](../scripts/link-dependencies.sh). The same link script is used to link dependencies to account-portal in local dev. 
+The `yarn bootstrap` command can be used to replace the NPM supplied dependency with the local source aware version. This is achieved using the `yarn link` command. To see specifically how dependencies are linked see [scripts/link-dependencies.sh](../scripts/link-dependencies.sh). The same link script is used to link dependencies to account-portal in local dev.
 
 ### Troubleshooting
 
 Sometimes, things go wrong. This can be due to incompatible updates on the budibase platform. To clear down your development environment and start again follow **Step 6. Cleanup**, then proceed from **Step 3. Install and Build** in the setup guide above to create a fresh Budibase installation.
+
 ### Running tests
 
 #### End-to-end Tests
@@ -226,12 +261,11 @@ yarn test:e2e
 
 Or if you are in the builder you can run `yarn cy:test`.
 
-
 ### Other Useful Information
 
-* The contributors are listed in [AUTHORS.md](https://github.com/Budibase/budibase/blob/master/.github/AUTHORS.md) (add yourself).
+- The contributors are listed in [AUTHORS.md](https://github.com/Budibase/budibase/blob/master/.github/AUTHORS.md) (add yourself).
 
-* This project uses a modified version of the MPLv2 license, see [LICENSE](https://github.com/budibase/server/blob/master/LICENSE).
+- This project uses a modified version of the MPLv2 license, see [LICENSE](https://github.com/budibase/server/blob/master/LICENSE).
 
-* We use the [C4 (Collective Code Construction Contract)](https://rfc.zeromq.org/spec:42/C4/) process for contributions.
+- We use the [C4 (Collective Code Construction Contract)](https://rfc.zeromq.org/spec:42/C4/) process for contributions.
   Please read this if you are unfamiliar with it.

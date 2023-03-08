@@ -64,32 +64,22 @@ export const buildTableEndpoints = API => ({
    * @param tableId the table ID to import to
    * @param data the data import object
    */
-  importTableData: async ({ tableId, data }) => {
+  importTableData: async ({ tableId, rows }) => {
     return await API.post({
       url: `/api/tables/${tableId}/import`,
       body: {
-        dataImport: data,
+        rows,
       },
     })
   },
-
-  /**
-   * Validates a candidate CSV to be imported for a certain table.
-   * @param tableId the table ID to import to
-   * @param csvString the CSV contents as a string
-   * @param schema the proposed schema
-   */
-  validateTableCSV: async ({ tableId, csvString, schema }) => {
+  csvToJson: async csvString => {
     return await API.post({
-      url: "/api/tables/csv/validate",
+      url: "/api/convert/csvToJson",
       body: {
         csvString,
-        schema,
-        tableId,
       },
     })
   },
-
   /**
    * Gets a list o tables.
    */
@@ -118,6 +108,24 @@ export const buildTableEndpoints = API => ({
   deleteTable: async ({ tableId, tableRev }) => {
     return await API.delete({
       url: `/api/tables/${tableId}/${tableRev}`,
+    })
+  },
+  validateNewTableImport: async ({ rows, schema }) => {
+    return await API.post({
+      url: "/api/tables/validateNewTableImport",
+      body: {
+        rows,
+        schema,
+      },
+    })
+  },
+  validateExistingTableImport: async ({ rows, tableId }) => {
+    return await API.post({
+      url: "/api/tables/validateExistingTableImport",
+      body: {
+        rows,
+        tableId,
+      },
     })
   },
 })

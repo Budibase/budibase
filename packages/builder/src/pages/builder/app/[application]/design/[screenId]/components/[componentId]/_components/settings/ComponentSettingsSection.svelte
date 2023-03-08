@@ -147,8 +147,8 @@
               options: setting.options || [],
 
               // Number fields
-              min: setting.min || null,
-              max: setting.max || null,
+              min: setting.min ?? null,
+              max: setting.max ?? null,
             }}
             {bindings}
             {componentBindings}
