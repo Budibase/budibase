@@ -93,9 +93,9 @@ const cleanupQuery = (query: Query) => {
       continue
     }
 
-    for (let [key, value] of Object.entries(query[filterField])) {
+    for (let [key, value] of Object.entries(query[filterField]!)) {
       if (value == null || value === "") {
-        delete query[filterField][key]
+        delete query[filterField]![key]
       }
     }
   }
@@ -125,17 +125,42 @@ type Filter = {
 
 type Query = QueryFields & QueryConfig
 type QueryFields = {
-  string: Record<string, any>
-  fuzzy: Record<string, any>
-  range: Record<string, { low: string | number; high: string | number }>
-  equal: Record<string, true>
-  notEqual: Record<string, true>
-  empty: Record<string, any>
-  notEmpty: Record<string, any>
-  contains: Record<string, any>
-  notContains: Record<string, any>
-  oneOf: Record<string, any>
-  containsAny: Record<string, any>
+  string?: {
+    [key: string]: string
+  }
+  fuzzy?: {
+    [key: string]: string
+  }
+  range?: {
+    [key: string]: {
+      high: number | string
+      low: number | string
+    }
+  }
+  equal?: {
+    [key: string]: any
+  }
+  notEqual?: {
+    [key: string]: any
+  }
+  empty?: {
+    [key: string]: any
+  }
+  notEmpty?: {
+    [key: string]: any
+  }
+  oneOf?: {
+    [key: string]: any[]
+  }
+  contains?: {
+    [key: string]: any[]
+  }
+  notContains?: {
+    [key: string]: any[]
+  }
+  containsAny?: {
+    [key: string]: any[]
+  }
 }
 
 type QueryConfig = {
@@ -205,7 +230,7 @@ export const buildLuceneQuery = (filter: Filter[]) => {
       ) {
         value = value.split(",")
       }
-      if (operator.startsWith("range")) {
+      if (operator.startsWith("range") && query.range) {
         const minint =
           SqlNumberTypeRangeMap[externalType]?.min || Number.MIN_SAFE_INTEGER
         const maxint =
@@ -231,14 +256,18 @@ export const buildLuceneQuery = (filter: Filter[]) => {
           // "equals false" needs to be "not equals true"
           // "not equals false" needs to be "equals true"
           if (operator === "equal" && value === false) {
+            query.notEqual = query.notEqual || {}
             query.notEqual[field] = true
           } else if (operator === "notEqual" && value === false) {
+            query.equal = query.equal || {}
             query.equal[field] = true
           } else {
-            query[operator][field] = value
+            query[operator] = query[operator] || {}
+            query[operator]![field] = value
           }
         } else {
-          query[operator][field] = value
+          query[operator] = query[operator] || {}
+          query[operator]![field] = value
         }
       }
     })
