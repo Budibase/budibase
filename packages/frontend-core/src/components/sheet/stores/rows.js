@@ -135,7 +135,8 @@ export const createRowsStore = context => {
 
     // Get index of row to check if it exists
     const $rows = get(rows)
-    const index = $rows.findIndex(row => row._id === id)
+    const $rowLookupMap = get(rowLookupMap)
+    const index = $rowLookupMap[id]
 
     // Process as either an update, addition or deletion
     if (newRow) {
@@ -167,7 +168,8 @@ export const createRowsStore = context => {
   // Updates a value of a row
   const updateRow = async (rowId, column, value) => {
     const $rows = get(rows)
-    const index = $rows.findIndex(x => x._id === rowId)
+    const $rowLookupMap = get(rowLookupMap)
+    const index = $rowLookupMap[rowId]
     const row = $rows[index]
     if (index === -1 || row?.[column] === value) {
       return
