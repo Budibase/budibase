@@ -73,14 +73,14 @@
             <Tabs noHorizPadding selected="Input">
               <Tab title="Input">
                 <TextArea
-                  minHeight="80px"
+                  minHeight="160px"
                   disabled
                   value={textArea(filteredResults?.[idx]?.inputs, "No input")}
                 />
               </Tab>
               <Tab title="Output">
                 <TextArea
-                  minHeight="100px"
+                  minHeight="160px"
                   disabled
                   value={textArea(filteredResults?.[idx]?.outputs, "No output")}
                 />
@@ -98,8 +98,9 @@
 
 <style>
   .container {
-    padding: 0 30px 0 30px;
+    padding: 0 30px 30px 30px;
     height: 100%;
+    overflow: auto;
   }
 
   .tabs {
