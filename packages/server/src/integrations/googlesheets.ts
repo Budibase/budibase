@@ -369,12 +369,17 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       }
 
       if (query.sort) {
-        const sortInfo = Object.entries(query.sort)[0]
+        if (Object.keys(query.sort).length !== 1) {
+          console.warn("Googlesheets does not support multiple sorting", {
+            sortInfo: query.sort,
+          })
+        }
+        const [sortField, sortInfo] = Object.entries(query.sort)[0]
         response = dataFilters.luceneSort(
           response,
-          sortInfo[0],
-          sortInfo[1].direction,
-          sortInfo[1].type
+          sortField,
+          sortInfo.direction,
+          sortInfo.type
         )
       }
 
