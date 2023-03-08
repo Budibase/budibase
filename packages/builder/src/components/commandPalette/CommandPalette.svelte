@@ -22,6 +22,14 @@
   const modalContext = getContext(Context.Modal)
   const commands = [
     {
+      type: "Access",
+      name: "Invite users and manage app access",
+      description: "",
+      icon: "User",
+      action: () =>
+        store.update(state => ({ ...state, builderSidePanel: true })),
+    },
+    {
       type: "Navigate",
       name: "Portal",
       description: "",
