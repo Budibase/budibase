@@ -7,13 +7,15 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
-    "build": "tsc",
-    "dev:builder": "tsc --watch"
+    "prebuild": "rimraf dist/",
+    "build": "tsc -p tsconfig.build.json",
+    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput"
   },
   "dependencies": {
-    "@budibase/types": "2.3.21-alpha.2"
+    "@budibase/types": "2.4.5-alpha.0"
   },
   "devDependencies": {
-    "typescript": "4.7.3"
+    "typescript": "4.7.3",
+    "rimraf": "3.0.2"
   }
 }
