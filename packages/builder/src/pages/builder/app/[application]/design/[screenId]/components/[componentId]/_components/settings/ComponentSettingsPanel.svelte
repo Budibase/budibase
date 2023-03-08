@@ -42,7 +42,7 @@
         <div class="settings-tabs">
           {#each tabs as tab}
             <ActionButton
-              size="S"
+              size="M"
               quiet
               selected={section === tab}
               on:click={() => {
