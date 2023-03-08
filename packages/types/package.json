@@ -9,7 +9,8 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "build": "tsc -p tsconfig.build.json",
-    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput"
+    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
+    "dev:builder": "tsc -p tsconfig.build.json --watch"
   },
   "jest": {},
   "devDependencies": {
