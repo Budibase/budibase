@@ -131,6 +131,11 @@ const buildUser = async (
 ): Promise<User> => {
   let { password, _id } = user
 
+  // don't require a password if the db user doesn't already have one
+  if (dbUser && !dbUser.password) {
+    opts.requirePassword = false
+  }
+
   let hashedPassword
   if (password) {
     if (await isPreventPasswordActions(user)) {

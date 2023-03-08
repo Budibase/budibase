@@ -4,6 +4,7 @@ jest.mock("nodemailer")
 import { TestConfiguration, mocks, structures } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
 import { events, tenancy, accounts as _accounts } from "@budibase/backend-core"
+import * as userSdk from "../../../../sdk/users"
 
 const accounts = jest.mocked(_accounts)
 
@@ -467,6 +468,20 @@ describe("/api/global/users", () => {
         200,
         config.authHeaders(nonAdmin)
       )
+    })
+
+    describe("sso users", () => {
+      function createSSOUser() {
+        return config.doInTenant(() => {
+          const user = structures.users.ssoUser()
+          return userSdk.save(user, { requirePassword: false })
+        })
+      }
+
+      it("should be able to update an sso user that has no password", async () => {
+        const user = await createSSOUser()
+        await config.api.users.saveUser(user)
+      })
     })
   })
 
