@@ -48,7 +48,7 @@
         value={row[column.name]}
         schema={column.schema}
         selected={$selectedCellId === cellId}
-        onChange={val => rows.actions.updateRow(row._id, column, val)}
+        onChange={val => rows.actions.updateRow(row._id, column.name, val)}
         readonly={column.schema.autocolumn}
       />
     </SheetCell>

@@ -1,6 +1,6 @@
 import { writable, get, derived } from "svelte/store"
 
-export const createInterfaceStores = context => {
+export const createUIStores = context => {
   const { rows, rowLookupMap } = context
   const selectedCellId = writable(null)
   const selectedRows = writable({})
@@ -62,5 +62,22 @@ export const createInterfaceStores = context => {
     }
   })
 
-  return { selectedCellId, selectedRows, hoveredRowId, selectedCellRow }
+  // Callback when leaving the sheet, deselecting all focussed or selected items
+  const blur = () => {
+    selectedCellId.set(null)
+    selectedRows.set({})
+    hoveredRowId.set(null)
+  }
+
+  return {
+    selectedCellId,
+    selectedRows,
+    hoveredRowId,
+    selectedCellRow,
+    ui: {
+      actions: {
+        blur,
+      },
+    },
+  }
 }

@@ -9,7 +9,7 @@
   import { createColumnsStores } from "./stores/columns"
   import { createScrollStores } from "./stores/scroll"
   import { createBoundsStores } from "./stores/bounds"
-  import { createInterfaceStores } from "./stores/interface"
+  import { createUIStores } from "./stores/ui"
   export { createUserStores } from "./stores/users"
   import { createWebsocket } from "./websocket"
   import { createUserStores } from "./stores/users"
@@ -23,6 +23,8 @@
   import MenuOverlay from "./MenuOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
   import UserAvatars from "./UserAvatars.svelte"
+  import KeyboardManager from "./KeyboardManager.svelte"
+  import { clickOutside } from "@budibase/bbui"
 
   export let API
   export let tableId
@@ -60,12 +62,12 @@
   context = { ...context, ...createScrollStores(context) }
   context = { ...context, ...createViewportStores(context) }
   context = { ...context, ...createReorderStores(context) }
-  context = { ...context, ...createInterfaceStores(context) }
+  context = { ...context, ...createUIStores(context) }
   context = { ...context, ...createUserStores(context) }
   context = { ...context, ...createMenuStores(context) }
 
   // Reference some stores for local use
-  const { isResizing, isReordering } = context
+  const { isResizing, isReordering, ui } = context
 
   // Keep config store up to date
   $: config.set({
@@ -88,10 +90,11 @@
 
 <div
   class="sheet"
+  id="sheet-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
+  use:clickOutside={ui.actions.blur}
   style="--cell-height:{cellHeight}px;"
-  id="sheet-{rand}"
 >
   <div class="controls">
     <div class="controls-left">
@@ -112,6 +115,7 @@
     <ScrollOverlay />
     <MenuOverlay />
   </div>
+  <KeyboardManager />
 </div>
 
 <style>

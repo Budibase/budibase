@@ -134,7 +134,7 @@
                 schema={$stickyColumn.schema}
                 selected={$selectedCellId === cellId}
                 onChange={val =>
-                  rows.actions.updateRow(row._id, $stickyColumn, val)}
+                  rows.actions.updateRow(row._id, $stickyColumn.name, val)}
                 readonly={$stickyColumn.schema.autocolumn}
               />
             </SheetCell>
