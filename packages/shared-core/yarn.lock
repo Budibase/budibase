@@ -2,11 +2,6 @@
 # yarn lockfile v1
 
 
-"@budibase/types@2.3.21-alpha.2":
-  version "2.3.21-alpha.2"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.3.21-alpha.2.tgz#1d9e6dfc839fdde9d3801cfbdeedb2f49ded146d"
-  integrity sha512-tlNT5qd9+2pNl1WkLGeUFOb/2QiO6Ny/tWzALP9nmKRhVgEuwzGAbj/HixG3TjpzhOIQZAMD4+t19GDqlVecug==
-
 balanced-match@^1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.2.tgz#e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"
