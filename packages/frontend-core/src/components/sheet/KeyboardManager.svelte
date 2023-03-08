@@ -1,7 +1,8 @@
 <script>
   import { getContext, onMount } from "svelte"
 
-  const { rows, selectedCellId, columns, selectedCellRow } = getContext("sheet")
+  const { rows, selectedCellId, columns, selectedCellRow, stickyColumn } =
+    getContext("sheet")
 
   const handleKeyDown = e => {
     switch (e.key) {
@@ -24,29 +25,36 @@
   }
 
   const changeSelectedColumn = delta => {
-    const cellId = $selectedCellId
-    if (!cellId) {
+    if (!$selectedCellId) {
       return
     }
     const cols = $columns
-    const split = cellId.split("-")
+    const split = $selectedCellId.split("-")
     const columnName = split[1]
-    const column = cols.findIndex(col => col.name === columnName)
-    const newColumn = cols[column + delta]
-    if (newColumn) {
-      $selectedCellId = `${split[0]}-${newColumn.name}`
+    let newColumnName
+    if (columnName === $stickyColumn?.name) {
+      const index = delta - 1
+      newColumnName = $columns[index]?.name
+    } else {
+      const index = cols.findIndex(col => col.name === columnName) + delta
+      if (index === -1) {
+        newColumnName = $stickyColumn?.name
+      } else {
+        newColumnName = cols[index]?.name
+      }
+    }
+    if (newColumnName) {
+      $selectedCellId = `${split[0]}-${newColumnName}`
     }
   }
 
   const changeSelectedRow = delta => {
-    const row = $selectedCellRow
-    const cellId = $selectedCellId
-    if (!row) {
+    if (!$selectedCellRow) {
       return
     }
-    const newRow = $rows[row.__idx + delta]
+    const newRow = $rows[$selectedCellRow.__idx + delta]
     if (newRow) {
-      const split = cellId.split("-")
+      const split = $selectedCellId.split("-")
       $selectedCellId = `${newRow._id}-${split[1]}`
     }
   }
