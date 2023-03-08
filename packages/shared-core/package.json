@@ -8,7 +8,8 @@
     ".": {
       "import": "./dist/mjs/src/index.js",
       "require": "./dist/cjs/src/index.js"
-    }
+    },
+    "./package.json": "./dist/mjs/package.json"
   },
   "author": "Budibase",
   "license": "GPL-3.0",

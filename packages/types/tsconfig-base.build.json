@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "moduleResolution": "node",
     "lib": ["es2020"],
     "strict": true,
     "noImplicitAny": true,
@@ -9,8 +7,7 @@
     "resolveJsonModule": true,
     "incremental": true,
     "sourceMap": true,
-    "declaration": true,
-    "outDir": "dist"
+    "declaration": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.spec.js"]
