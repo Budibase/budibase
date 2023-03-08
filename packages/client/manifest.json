@@ -967,12 +967,12 @@
       },
       {
         "type": "boolean",
-        "label": "Show delete icon",
+        "label": "Allow delete",
         "key": "closable"
       },
       {
         "type": "event",
-        "label": "On click delete icon",
+        "label": "On click delete",
         "key": "onClick",
         "dependsOn": "closable"
       }
@@ -3269,7 +3269,7 @@
       },
       {
         "type": "boolean",
-        "label": "Allow manual entry",
+        "label": "Manual entry",
         "key": "allowManualEntry",
         "defaultValue": false
       },
@@ -3328,7 +3328,7 @@
       },
       {
         "type": "boolean",
-        "label": "Enable creating markers",
+        "label": "Enable adding",
         "key": "creationEnabled",
         "defaultValue": false
       },
@@ -3374,13 +3374,13 @@
       },
       {
         "type": "text",
-        "label": "Default Location (when empty)",
+        "label": "Default Location",
         "key": "defaultLocation",
         "placeholder": "51.5072,-0.1276"
       },
       {
         "type": "number",
-        "label": "Default Location Zoom Level (0-100)",
+        "label": "Default Zoom (0-100)",
         "key": "zoomLevel",
         "placeholder": 50,
         "max": 100,
@@ -3786,7 +3786,7 @@
       },
       {
         "type": "boolean",
-        "label": "Allow row selection",
+        "label": "Row selection",
         "key": "allowSelectRows",
         "defaultValue": false,
         "info": "Row selection is only compatible with internal or SQL tables"
@@ -3895,7 +3895,7 @@
       {
         "type": "boolean",
         "key": "linkPeek",
-        "label": "Open link in modal"
+        "label": "Open in modal"
       },
       {
         "type": "boolean",
@@ -3904,7 +3904,7 @@
       },
       {
         "type": "boolean",
-        "label": "Use button for click action",
+        "label": "Show button",
         "key": "showButton"
       },
       {
@@ -4468,7 +4468,7 @@
           },
           {
             "type": "columns",
-            "label": "Table Columns",
+            "label": "Columns",
             "key": "tableColumns",
             "dependsOn": "dataSource",
             "placeholder": "All columns",
@@ -4529,7 +4529,7 @@
           },
           {
             "type": "boolean",
-            "label": "Allow row selection",
+            "label": "Row selection",
             "key": "allowSelectRows",
             "info": "Row selection is only compatible with internal or SQL tables"
           },
@@ -4593,7 +4593,7 @@
           {
             "type": "boolean",
             "key": "showTitleButton",
-            "label": "Show button above table",
+            "label": "Show button",
             "defaultValue": false
           },
           {
@@ -4659,7 +4659,7 @@
       },
       {
         "type": "searchfield",
-        "label": "Search Columns",
+        "label": "Search Cols.",
         "key": "searchColumns",
         "placeholder": "Choose search columns",
         "info": "Only the first 5 search columns will be used"
@@ -4735,7 +4735,7 @@
           {
             "type": "boolean",
             "key": "cardPeek",
-            "label": "Open link in modal"
+            "label": "Open in modal"
           },
           {
             "type": "url",
@@ -4750,7 +4750,7 @@
           },
           {
             "type": "boolean",
-            "label": "Use button for click action",
+            "label": "Add button",
             "key": "showCardButton"
           },
           {
@@ -4775,11 +4775,11 @@
           {
             "type": "boolean",
             "key": "showTitleButton",
-            "label": "Show link button"
+            "label": "Show button"
           },
           {
             "type": "boolean",
-            "label": "Open link in modal",
+            "label": "Open in modal",
             "key": "titleButtonPeek"
           },
           {
@@ -4800,7 +4800,7 @@
         "settings": [
           {
             "type": "field",
-            "label": "ID column for linking (appended to URL)",
+            "label": "ID column",
             "key": "linkColumn",
             "placeholder": "Default"
           }
@@ -5178,7 +5178,7 @@
           },
           {
             "type": "boolean",
-            "label": "Show delete button",
+            "label": "Allow delete",
             "key": "showDeleteButton",
             "defaultValue": false,
             "dependsOn": {
