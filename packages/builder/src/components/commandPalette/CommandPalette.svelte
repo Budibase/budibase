@@ -1,7 +1,5 @@
 <script>
   import {
-    ActionGroup,
-    ActionButton,
     Context,
     Icon,
     Input,
@@ -19,6 +17,7 @@
   } from "builderStore"
   import { datasources, queries, tables, views } from "stores/backend"
   import { getContext } from "svelte"
+  import { Constants } from "@budibase/frontend-core"
 
   const modalContext = getContext(Context.Modal)
   const commands = [
@@ -122,18 +121,16 @@
       icon: "ShareAndroid",
       action: () => $goto(`./automate/${automation._id}`),
     })),
-    ...["lightest", "light", "dark", "darkest", "nord", "midnight"].map(
-      theme => ({
-        type: "Change Builder Theme",
-        name: theme,
-        icon: "ColorPalette",
-        action: () =>
-          themeStore.update(state => {
-            state.theme = theme
-            return state
-          }),
-      })
-    ),
+    ...Constants.Themes.map(theme => ({
+      type: "Change Builder Theme",
+      name: theme.name,
+      icon: "ColorPalette",
+      action: () =>
+        themeStore.update(state => {
+          state.theme = theme.class
+          return state
+        }),
+    })),
   ]
 
   let search
