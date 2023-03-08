@@ -113,6 +113,9 @@
   .spectrum-ActionButton--quiet {
     padding: 0 8px;
   }
+  .spectrum-ActionButton--quiet.is-selected {
+    color: var(--spectrum-global-color-gray-900);
+  }
   .is-selected:not(.emphasized) .spectrum-Icon {
     color: var(--spectrum-global-color-gray-900);
   }
