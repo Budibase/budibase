@@ -75,12 +75,10 @@
 </script>
 
 <div class="property-control" class:highlighted={highlighted && nullishValue}>
-  {#if type !== "boolean" && label}
-    <div class="label">
-      <Label>{label}</Label>
-    </div>
+  {#if label}
+    <Label size="M">{label}</Label>
   {/if}
-  <div id={`${key}-prop-control`} class="control">
+  <div id={`${key}-prop-control`} class="control" class:wide={!label}>
     <svelte:component
       this={control}
       {componentInstance}
@@ -90,7 +88,6 @@
       onChange={handleChange}
       bindings={allBindings}
       name={key}
-      text={label}
       {nested}
       {key}
       {type}
@@ -105,28 +102,32 @@
 <style>
   .property-control {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    align-items: center;
     transition: background 130ms ease-out, border-color 130ms ease-out;
     border-left: 4px solid transparent;
     margin: -6px calc(-1 * var(--spacing-xl));
-    padding: 6px var(--spacing-xl) 6px calc(var(--spacing-xl) - 4px);
+    padding: 2px var(--spacing-xl) 6px calc(var(--spacing-xl) - 4px);
+    gap: 8px;
+  }
+  .property-control :global(.spectrum-FieldLabel) {
+    white-space: normal;
   }
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-blue-400);
   }
-  .label {
-    padding-bottom: var(--spectrum-global-dimension-size-65);
-  }
   .control {
     position: relative;
   }
+  .control.wide {
+    grid-column: 1 / -1;
+  }
   .text {
-    margin-top: var(--spectrum-global-dimension-size-65);
+    margin-top: 4px;
     font-size: var(--spectrum-global-dimension-font-size-75);
     color: var(--grey-6);
+    grid-column: 1 / -1;
   }
 </style>
