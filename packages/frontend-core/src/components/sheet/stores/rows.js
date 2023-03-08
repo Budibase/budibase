@@ -169,12 +169,12 @@ export const createRowsStore = context => {
     const $rows = get(rows)
     const index = $rows.findIndex(x => x._id === rowId)
     const row = $rows[index]
-    if (index === -1 || row?.[column.name] === value) {
+    if (index === -1 || row?.[column] === value) {
       return
     }
 
     // Immediately update state so that the change is reflected
-    let newRow = { ...row, [column.name]: value }
+    let newRow = { ...row, [column]: value }
     rows.update(state => {
       state[index] = { ...newRow }
       return state
