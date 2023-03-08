@@ -213,6 +213,12 @@
 </Modal>
 
 <style>
+  .loading {
+    min-height: 100%;
+    height: 100%;
+    width: 100%;
+    background: var(--background);
+  }
   .root {
     min-height: 100%;
     height: 100%;
