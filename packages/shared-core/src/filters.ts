@@ -1,4 +1,4 @@
-import { SortDirection } from "@budibase/types"
+import { Datasource, FieldType, SortDirection, SortType } from "@budibase/types"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
 
@@ -9,9 +9,9 @@ const HBS_REGEX = /{{([^{].*?)}}/g
  * @param type the data type
  */
 export const getValidOperatorsForType = (
-  type: string,
+  type: FieldType,
   field: string,
-  datasource: { tableId: string | string[]; type: string }
+  datasource: Datasource & { tableId: any } // TODO: is this table id ever populated?
 ) => {
   const Op = OperatorOptions
   const stringOps = [
@@ -32,7 +32,10 @@ export const getValidOperatorsForType = (
     Op.NotEmpty,
     Op.In,
   ]
-  let ops: any[] = []
+  let ops: {
+    value: string
+    label: string
+  }[] = []
   if (type === "string") {
     ops = stringOps
   } else if (type === "number") {
@@ -75,13 +78,13 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotEquals.value,
   OperatorOptions.Contains.value,
   OperatorOptions.NotContains.value,
-]
+] as (keyof QueryFields)[]
 
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
  */
-const cleanupQuery = (query: { [x: string]: { [x: string]: any } }) => {
+const cleanupQuery = (query: Query) => {
   if (!query) {
     return query
   }
@@ -89,6 +92,7 @@ const cleanupQuery = (query: { [x: string]: { [x: string]: any } }) => {
     if (!query[filterField]) {
       continue
     }
+
     for (let [key, value] of Object.entries(query[filterField])) {
       if (value == null || value === "") {
         delete query[filterField][key]
@@ -119,7 +123,8 @@ type Filter = {
   externalType: keyof typeof SqlNumberTypeRangeMap
 }
 
-type Query = {
+type Query = QueryFields & QueryConfig
+type QueryFields = {
   string: Record<string, any>
   fuzzy: Record<string, any>
   range: Record<string, { low: string | number; high: string | number }>
@@ -131,8 +136,13 @@ type Query = {
   notContains: Record<string, any>
   oneOf: Record<string, any>
   containsAny: Record<string, any>
+}
+
+type QueryConfig = {
   allOr?: boolean
 }
+
+type QueryFieldsType = keyof QueryFields
 
 /**
  * Builds a lucene JSON query from the filter structure generated in the builder
@@ -241,10 +251,7 @@ export const buildLuceneQuery = (filter: Filter[]) => {
  * @param docs the data
  * @param query the JSON lucene query
  */
-export const runLuceneQuery = (
-  docs: any[],
-  query?: { [x: string]: any; sheet?: string }
-) => {
+export const runLuceneQuery = (docs: any[], query?: Query) => {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -257,7 +264,10 @@ export const runLuceneQuery = (
 
   // Iterates over a set of filters and evaluates a fail function against a doc
   const match =
-    (type: string, failFn: (docValue: any, testValue: any) => boolean) =>
+    (
+      type: QueryFieldsType,
+      failFn: (docValue: any, testValue: any) => boolean
+    ) =>
     (doc: any) => {
       const filters = Object.entries(query![type] || {})
       for (let i = 0; i < filters.length; i++) {
@@ -386,9 +396,9 @@ export const runLuceneQuery = (
  */
 export const luceneSort = (
   docs: any[],
-  sort: string | number,
+  sort: string,
   sortOrder: SortDirection,
-  sortType = "string"
+  sortType = SortType.STRING
 ) => {
   if (!sort || !sortOrder || !sortType) {
     return docs
@@ -414,7 +424,7 @@ export const luceneSort = (
  * @param docs the data
  * @param limit the number of docs to limit to
  */
-export const luceneLimit = (docs: string | any[], limit: string) => {
+export const luceneLimit = (docs: any[], limit: string) => {
   const numLimit = parseFloat(limit)
   if (isNaN(numLimit)) {
     return docs
