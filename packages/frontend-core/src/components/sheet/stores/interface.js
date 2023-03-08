@@ -48,5 +48,19 @@ export const createInterfaceStores = context => {
     }
   })
 
+  // Reset selected rows when selected cell changes
+  selectedCellId.subscribe(id => {
+    if (id) {
+      selectedRows.set({})
+    }
+  })
+
+  // Unset selected cell when rows are selected
+  selectedRows.subscribe(rows => {
+    if (Object.keys(rows || {}).length) {
+      selectedCellId.set(null)
+    }
+  })
+
   return { selectedCellId, selectedRows, hoveredRowId, selectedCellRow }
 }
