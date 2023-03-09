@@ -20,6 +20,9 @@ import {
   auth,
   constants,
   env as coreEnv,
+  db as dbCore,
+  encryption,
+  utils,
 } from "@budibase/backend-core"
 import structures, { CSRF_TOKEN } from "./structures"
 import { SaveUserResponse, User, AuthToken } from "@budibase/types"
@@ -31,6 +34,7 @@ class TestConfiguration {
   api: API
   tenantId: string
   user?: User
+  apiKey?: string
   userPassword = "test"
 
   constructor(opts: { openServer: boolean } = { openServer: true }) {
@@ -200,6 +204,12 @@ class TestConfiguration {
     return { [constants.Header.API_KEY]: env.INTERNAL_API_KEY }
   }
 
+  bearerAPIHeaders() {
+    return {
+      [constants.Header.AUTHORIZATION]: `Bearer ${this.apiKey}`,
+    }
+  }
+
   adminOnlyResponse = () => {
     return { message: "Admin user only endpoint.", status: 403 }
   }
@@ -212,6 +222,20 @@ class TestConfiguration {
     })
     await context.doInTenant(this.tenantId!, async () => {
       this.user = await this.createUser(user)
+
+      const db = context.getGlobalDB()
+
+      const id = dbCore.generateDevInfoID(this.user._id)
+      // TODO: dry
+      this.apiKey = encryption.encrypt(
+        `${this.tenantId}${dbCore.SEPARATOR}${utils.newid()}`
+      )
+      const devInfo = {
+        _id: id,
+        userId: this.user._id,
+        apiKey: this.apiKey,
+      }
+      await db.put(devInfo)
     })
   }
 
