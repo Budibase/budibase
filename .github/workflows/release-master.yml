@@ -120,6 +120,7 @@ jobs:
           RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
 
   deploy-to-legacy-preprod-env:
+    needs: [release-images]
     uses: ./.github/workflows/deploy-preprod.yml
     secrets: inherit
 
