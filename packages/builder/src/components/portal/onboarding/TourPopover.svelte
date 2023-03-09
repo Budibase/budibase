@@ -122,7 +122,9 @@
         <Layout noPadding gap="M">
           <div class="tour-header">
             <Heading size="XS">{tourStep?.title || "-"}</Heading>
-            <div>{`${tourStepIdx + 1}/${tourSteps?.length}`}</div>
+            {#if tourSteps?.length > 1}
+              <div>{`${tourStepIdx + 1}/${tourSteps?.length}`}</div>
+            {/if}
           </div>
           <Body size="S">
             <span class="tour-body">

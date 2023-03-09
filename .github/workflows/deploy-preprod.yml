@@ -1,18 +1,16 @@
-name: Budibase Deploy Preprod
-
+name: "deploy-preprod"
 on:
- workflow_dispatch:
-
-env:
-  INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
-  SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
-  release:
+  deploy-to-legacy-preprod-env:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -21,23 +19,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-
-      - name: Get the latest budibase release version
-        id: version
-        run: | 
-          release_version=$(cat lerna.json | jq -r '.version')
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-
       - name: Pull values.yaml from budibase-infra
-        run: | 
-          curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
+        run: |
+          curl -H "Authorization: token ${{ secrets.GH_ACCESS_TOKEN }}" \
           -H 'Accept: application/vnd.github.v3.raw' \
           -o values.preprod.yaml \
           -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/budibase-preprod/values.yaml
           wc -l values.preprod.yaml
 
       - name: Deploy to Preprod Environment
-        uses: glopezep/helm@v1.7.1
+        uses: budibase/helm@v1.8.0
         with:
           release: budibase-preprod
           namespace: budibase
@@ -46,7 +37,7 @@ jobs:
           helm: helm3
           values: |
             globals: 
-              appVersion: v${{ env.RELEASE_VERSION }}
+              appVersion: ${{ steps.previoustag.outputs.tag }}
             ingress:
               enabled: true
               nginx: true
@@ -61,5 +52,5 @@ jobs:
         uses: tsickert/discord-webhook@v4.0.0
         with:
           webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
-          content: "Preprod Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Pre-prod."
-          embed-title: ${{ env.RELEASE_VERSION }}
+          content: "Preprod Deployment Complete: ${{ steps.previoustag.outputs.tag }} deployed to Budibase Pre-prod."
+          embed-title: ${{ steps.previoustag.outputs.tag }}

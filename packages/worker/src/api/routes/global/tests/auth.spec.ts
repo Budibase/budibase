@@ -106,12 +106,12 @@ describe("/api/global/auth", () => {
             tenantId,
             email,
             password,
-            { status: 400 }
+            { status: 403 }
           )
 
           expect(response.body).toEqual({
-            message: "Password login is disabled for this user",
-            status: 400,
+            message: "Invalid credentials",
+            status: 403,
           })
         }
 
@@ -170,18 +170,8 @@ describe("/api/global/auth", () => {
         async function testSSOUser() {
           const { res } = await config.api.auth.requestPasswordReset(
             sendMailMock,
-            user.email,
-            { status: 400 }
+            user.email
           )
-
-          expect(res.body).toEqual({
-            message: "Password reset is disabled for this user",
-            status: 400,
-            error: {
-              code: "http",
-              type: "generic",
-            },
-          })
           expect(sendMailMock).not.toHaveBeenCalled()
         }
 

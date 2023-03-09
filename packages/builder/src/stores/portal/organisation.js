@@ -1,6 +1,7 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
 import { auth } from "stores/portal"
+import _ from "lodash"
 
 const DEFAULT_CONFIG = {
   platformUrl: "",
@@ -26,14 +27,14 @@ export function createOrganisationStore() {
 
   async function save(config) {
     // Delete non-persisted fields
-    const storeConfig = get(store)
+    const storeConfig = _.cloneDeep(get(store))
     delete storeConfig.oidc
     delete storeConfig.google
     delete storeConfig.oidcCallbackUrl
     delete storeConfig.googleCallbackUrl
     await API.saveConfig({
       type: "settings",
-      config: { ...get(store), ...config },
+      config: { ...storeConfig, ...config },
     })
     await init()
   }

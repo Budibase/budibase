@@ -4,6 +4,7 @@ jest.mock("nodemailer")
 import { TestConfiguration, mocks, structures } from "../../../../tests"
 const sendMailMock = mocks.email.mock()
 import { events, tenancy, accounts as _accounts } from "@budibase/backend-core"
+import * as userSdk from "../../../../sdk/users"
 
 const accounts = jest.mocked(_accounts)
 
@@ -30,7 +31,11 @@ describe("/api/global/users", () => {
         email
       )
 
-      expect(res.body).toEqual({ message: "Invitation has been sent." })
+      expect(res.body?.message).toBe("Invitation has been sent.")
+      expect(res.body?.unsuccessful.length).toBe(0)
+      expect(res.body?.successful.length).toBe(1)
+      expect(res.body?.successful[0].email).toBe(email)
+
       expect(sendMailMock).toHaveBeenCalled()
       expect(code).toBeDefined()
       expect(events.user.invited).toBeCalledTimes(1)
@@ -463,6 +468,20 @@ describe("/api/global/users", () => {
         200,
         config.authHeaders(nonAdmin)
       )
+    })
+
+    describe("sso users", () => {
+      function createSSOUser() {
+        return config.doInTenant(() => {
+          const user = structures.users.ssoUser()
+          return userSdk.save(user, { requirePassword: false })
+        })
+      }
+
+      it("should be able to update an sso user that has no password", async () => {
+        const user = await createSSOUser()
+        await config.api.users.saveUser(user)
+      })
     })
   })
 

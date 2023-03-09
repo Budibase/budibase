@@ -181,6 +181,13 @@ class TestConfiguration {
     coreEnv._set("SELF_HOSTED", value)
   }
 
+  setGoogleAuth = (value: string) => {
+    env._set("GOOGLE_CLIENT_ID", value)
+    env._set("GOOGLE_CLIENT_SECRET", value)
+    coreEnv._set("GOOGLE_CLIENT_ID", value)
+    coreEnv._set("GOOGLE_CLIENT_SECRET", value)
+  }
+
   modeCloud = () => {
     this.setSelfHosted(false)
   }

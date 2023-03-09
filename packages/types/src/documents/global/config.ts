@@ -36,6 +36,9 @@ export interface SettingsConfig extends Config {
   config: SettingsInnerConfig
 }
 
+export type SSOConfigType = ConfigType.GOOGLE | ConfigType.OIDC
+export type SSOConfig = GoogleInnerConfig | OIDCInnerConfig
+
 export interface GoogleInnerConfig {
   clientID: string
   clientSecret: string
@@ -60,6 +63,10 @@ export interface OIDCStrategyConfiguration {
   callbackURL: string
 }
 
+export interface OIDCConfigs {
+  configs: OIDCInnerConfig[]
+}
+
 export interface OIDCInnerConfig {
   configUrl: string
   clientID: string
@@ -72,9 +79,7 @@ export interface OIDCInnerConfig {
 }
 
 export interface OIDCConfig extends Config {
-  config: {
-    configs: OIDCInnerConfig[]
-  }
+  config: OIDCConfigs
 }
 
 export interface OIDCWellKnownConfig {

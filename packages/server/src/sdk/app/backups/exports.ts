@@ -7,10 +7,15 @@ import {
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
 } from "../../../db/utils"
-import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
+import {
+  DB_EXPORT_FILE,
+  GLOBAL_DB_EXPORT_FILE,
+  STATIC_APP_FILES,
+} from "./constants"
 import fs from "fs"
 import { join } from "path"
 import env from "../../../environment"
+
 const uuid = require("uuid/v4")
 const tar = require("tar")
 const MemoryStream = require("memorystream")
@@ -91,14 +96,25 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   const prodAppId = dbCore.getProdAppID(appId)
   const appPath = `${prodAppId}/`
   // export bucket contents
-  let tmpPath
+  let tmpPath = createTempFolder(uuid())
   if (!env.isTest()) {
-    tmpPath = await objectStore.retrieveDirectory(
-      ObjectStoreBuckets.APPS,
-      appPath
-    )
-  } else {
-    tmpPath = createTempFolder(uuid())
+    // write just the static files
+    if (config?.excludeRows) {
+      for (let path of STATIC_APP_FILES) {
+        const contents = await objectStore.retrieve(
+          ObjectStoreBuckets.APPS,
+          join(appPath, path)
+        )
+        fs.writeFileSync(join(tmpPath, path), contents)
+      }
+    }
+    // get all of the files
+    else {
+      tmpPath = await objectStore.retrieveDirectory(
+        ObjectStoreBuckets.APPS,
+        appPath
+      )
+    }
   }
   const downloadedPath = join(tmpPath, appPath)
   if (fs.existsSync(downloadedPath)) {
