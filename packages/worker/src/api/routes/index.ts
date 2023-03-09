@@ -39,4 +39,5 @@ export const routes: Router[] = [
   accountRoutes,
   restoreRoutes,
   eventRoutes,
+  ...api.scimRoutes,
 ]
