@@ -8,7 +8,6 @@ import {
   breakRowIdField,
 } from "../../../integrations/utils"
 import { ExternalRequest, RunConfig } from "./ExternalRequest"
-import { context } from "@budibase/backend-core"
 import * as exporters from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import {
@@ -19,6 +18,7 @@ import {
   Table,
   Datasource,
   IncludeRelationship,
+  SortJson,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
@@ -142,14 +142,14 @@ export async function search(ctx: BBContext) {
       limit: limit,
     }
   }
-  let sort
+  let sort: SortJson | undefined
   if (params.sort) {
     const direction =
       params.sortOrder === "descending"
         ? SortDirection.DESCENDING
         : SortDirection.ASCENDING
     sort = {
-      [params.sort]: direction,
+      [params.sort]: { direction },
     }
   }
   try {

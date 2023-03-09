@@ -1,6 +1,7 @@
 import {
   GoogleInnerConfig,
   JwtClaims,
+  OAuth2,
   OIDCInnerConfig,
   OIDCWellKnownConfig,
   SSOAuthDetails,
@@ -13,6 +14,13 @@ import { uuid, email } from "./common"
 import * as shared from "./shared"
 import _ from "lodash"
 import { user } from "./shared"
+
+export function OAuth(): OAuth2 {
+  return {
+    refreshToken: generator.string(),
+    accessToken: generator.string(),
+  }
+}
 
 export function authDetails(userDoc?: User): SSOAuthDetails {
   if (!userDoc) {
@@ -28,10 +36,7 @@ export function authDetails(userDoc?: User): SSOAuthDetails {
 
   return {
     email: userDoc.email,
-    oauth2: {
-      refreshToken: generator.string(),
-      accessToken: generator.string(),
-    },
+    oauth2: OAuth(),
     profile,
     provider,
     providerType: providerType(),

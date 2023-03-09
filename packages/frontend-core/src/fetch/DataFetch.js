@@ -1,12 +1,10 @@
 import { writable, derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import {
-  buildLuceneQuery,
-  luceneLimit,
-  runLuceneQuery,
-  luceneSort,
-} from "../utils/lucene"
+import { LuceneUtils } from "../utils"
 import { convertJSONSchemaToTableSchema } from "../utils/json"
+
+const { buildLuceneQuery, luceneLimit, runLuceneQuery, luceneSort } =
+  LuceneUtils
 
 /**
  * Parent class which handles the implementation of fetching data from an

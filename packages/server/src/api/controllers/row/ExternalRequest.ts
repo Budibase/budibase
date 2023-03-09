@@ -11,6 +11,8 @@ import {
   Row,
   Table,
   RelationshipTypes,
+  FieldType,
+  SortType,
 } from "@budibase/types"
 import {
   breakRowIdField,
@@ -749,8 +751,16 @@ export class ExternalRequest {
     )
     //if the sort column is a formula, remove it
     for (let sortColumn of Object.keys(sort || {})) {
-      if (table.schema[sortColumn]?.type === "formula") {
-        delete sort?.[sortColumn]
+      if (!sort?.[sortColumn]) {
+        continue
+      }
+      switch (table.schema[sortColumn]?.type) {
+        case FieldType.FORMULA:
+          delete sort?.[sortColumn]
+          break
+        case FieldType.NUMBER:
+          sort[sortColumn].type = SortType.number
+          break
       }
     }
     filters = buildFilters(id, filters || {}, table)
