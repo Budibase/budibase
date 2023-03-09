@@ -5,7 +5,6 @@ on:
 
 jobs:
   deploy-to-legacy-preprod-env:
-    needs: [release-images]
     runs-on: ubuntu-latest
     steps:
       - name: 'Get Previous tag'
