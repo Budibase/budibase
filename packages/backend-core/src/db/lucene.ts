@@ -199,6 +199,10 @@ export class QueryBuilder<T> {
     return this
   }
 
+  setAllOr() {
+    this.query.allOr = true
+  }
+
   handleSpaces(input: string) {
     if (this.noEscaping) {
       return input
