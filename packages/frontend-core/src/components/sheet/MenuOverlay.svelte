@@ -67,7 +67,7 @@
     position: absolute;
     background: var(--cell-background);
     border: var(--cell-border);
-    width: 160px;
+    width: 180px;
     border-radius: 4px;
     display: flex;
     flex-direction: column;
