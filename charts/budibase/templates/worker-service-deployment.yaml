@@ -188,8 +188,6 @@ spec:
         - name: GLOBAL_AGENT_NO_PROXY
           value: {{ .Values.globals.globalAgentNoProxy | quote }}
         {{ end }}
-        - name: CDN_URL
-          value: {{ .Values.globals.cdnUrl }}
         {{ if .Values.services.tlsRejectUnauthorized }}
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
