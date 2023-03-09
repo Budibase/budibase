@@ -15,6 +15,8 @@ import { RolesAPI } from "./roles"
 import { TemplatesAPI } from "./templates"
 import { LicenseAPI } from "./license"
 import { AuditLogAPI } from "./auditLogs"
+import { ScimUsersAPI } from "./scim/users"
+
 export default class API {
   accounts: AccountAPI
   auth: AuthAPI
@@ -32,6 +34,7 @@ export default class API {
   templates: TemplatesAPI
   license: LicenseAPI
   auditLogs: AuditLogAPI
+  scimUsersAPI: ScimUsersAPI
 
   constructor(config: TestConfiguration) {
     this.accounts = new AccountAPI(config)
@@ -50,5 +53,6 @@ export default class API {
     this.templates = new TemplatesAPI(config)
     this.license = new LicenseAPI(config)
     this.auditLogs = new AuditLogAPI(config)
+    this.scimUsersAPI = new ScimUsersAPI(config)
   }
 }
