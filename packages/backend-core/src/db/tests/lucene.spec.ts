@@ -6,9 +6,13 @@ import { QueryBuilder, paginatedSearch, fullSearch } from "../lucene"
 const INDEX_NAME = "main"
 
 const index = `function(doc) {
-  let props = ["property", "number"]
+  let props = ["property", "number", "array"]
   for (let key of props) {
-    if (doc[key]) {
+    if (Array.isArray(doc[key])) {
+      for (let val of doc[key]) {
+        index(key, val)
+      }
+    } else if (doc[key]) {
       index(key, doc[key])
     }
   }
@@ -21,9 +25,14 @@ describe("lucene", () => {
     dbName = `db-${newid()}`
     // create the DB for testing
     db = getDB(dbName)
-    await db.put({ _id: newid(), property: "word" })
-    await db.put({ _id: newid(), property: "word2" })
-    await db.put({ _id: newid(), property: "word3", number: 1 })
+    await db.put({ _id: newid(), property: "word", array: ["1", "4"] })
+    await db.put({ _id: newid(), property: "word2", array: ["3", "1"] })
+    await db.put({
+      _id: newid(),
+      property: "word3",
+      number: 1,
+      array: ["1", "2"],
+    })
   })
 
   it("should be able to create a lucene index", async () => {
@@ -115,6 +124,15 @@ describe("lucene", () => {
     it("should be able to perform a not contains search", async () => {
       const builder = new QueryBuilder(dbName, INDEX_NAME)
       builder.addNotContains("property", ["word2"])
+      const resp = await builder.run()
+      expect(resp.rows.length).toBe(2)
+    })
+
+    it("should be able to perform an or not contains search", async () => {
+      const builder = new QueryBuilder(dbName, INDEX_NAME)
+      builder.addNotContains("array", ["1"])
+      builder.addNotContains("array", ["2"])
+      builder.setAllOr()
       const resp = await builder.run()
       expect(resp.rows.length).toBe(2)
     })
