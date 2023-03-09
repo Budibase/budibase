@@ -74,11 +74,15 @@
   })
 </script>
 
-<div class="property-control" class:highlighted={highlighted && nullishValue}>
+<div
+  class="property-control"
+  class:wide={!label}
+  class:highlighted={highlighted && nullishValue}
+>
   {#if label}
     <Label size="M">{label}</Label>
   {/if}
-  <div id={`${key}-prop-control`} class="control" class:wide={!label}>
+  <div id={`${key}-prop-control`} class="control">
     <svelte:component
       this={control}
       {componentInstance}
@@ -107,8 +111,8 @@
     align-items: center;
     transition: background 130ms ease-out, border-color 130ms ease-out;
     border-left: 4px solid transparent;
-    margin: -6px calc(-1 * var(--spacing-xl));
-    padding: 2px var(--spacing-xl) 6px calc(var(--spacing-xl) - 4px);
+    margin: 0 calc(-1 * var(--spacing-xl));
+    padding: 0 var(--spacing-xl) 0 calc(var(--spacing-xl) - 4px);
     gap: 8px;
   }
   .property-control :global(.spectrum-FieldLabel) {
@@ -121,13 +125,15 @@
   .control {
     position: relative;
   }
-  .control.wide {
+  .property-control.wide .control {
     grid-column: 1 / -1;
   }
   .text {
-    margin-top: 4px;
     font-size: var(--spectrum-global-dimension-font-size-75);
     color: var(--grey-6);
+    grid-column: 2 / 2;
+  }
+  .property-control.wide .text {
     grid-column: 1 / -1;
   }
 </style>
