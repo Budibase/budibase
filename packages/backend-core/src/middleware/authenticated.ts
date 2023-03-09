@@ -96,9 +96,15 @@ export default function (
     }
     try {
       // check the actual user is authenticated first, try header or cookie
-      const headerToken = ctx.request.headers[Header.TOKEN]
+      let headerToken = ctx.request.headers[Header.TOKEN]
+
       const authCookie = getCookie(ctx, Cookie.Auth) || openJwt(headerToken)
-      const apiKey = ctx.request.headers[Header.API_KEY]
+      let apiKey = ctx.request.headers[Header.API_KEY]
+
+      if (!apiKey && ctx.request.headers[Header.AUTHORIZATION]) {
+        apiKey = ctx.request.headers[Header.AUTHORIZATION].split(" ")[1]
+      }
+
       const tenantId = ctx.request.headers[Header.TENANT_ID]
       let authenticated = false,
         user = null,

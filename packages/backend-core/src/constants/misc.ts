@@ -23,6 +23,7 @@ export enum Header {
   TOKEN = "x-budibase-token",
   CSRF_TOKEN = "x-csrf-token",
   CORRELATION_ID = "x-budibase-correlation-id",
+  AUTHORIZATION = "authorization",
 }
 
 export enum GlobalRole {
