@@ -121,7 +121,7 @@
       },
       {
         "type": "select",
-        "label": "Horiz. Align",
+        "label": "Horiz. align",
         "key": "hAlign",
         "showInBar": true,
         "barStyle": "buttons",
@@ -155,7 +155,7 @@
       },
       {
         "type": "select",
-        "label": "Vert. Align",
+        "label": "Vert. align",
         "key": "vAlign",
         "showInBar": true,
         "barStyle": "buttons",
@@ -245,7 +245,7 @@
       },
       {
         "type": "event",
-        "label": "On Click",
+        "label": "On click",
         "key": "onClick"
       }
     ]
@@ -317,7 +317,7 @@
             "value": "warning"
           },
           {
-            "label": "Over Background",
+            "label": "Over background",
             "value": "overBackground"
           }
         ],
@@ -367,7 +367,7 @@
       },
       {
         "type": "event",
-        "label": "On Click",
+        "label": "On click",
         "key": "onClick"
       }
     ]
@@ -432,7 +432,7 @@
       },
       {
         "type": "text",
-        "label": "Empty Text",
+        "label": "Empty text",
         "key": "noRowsMessage",
         "defaultValue": "No rows found"
       },
@@ -460,7 +460,7 @@
       },
       {
         "type": "select",
-        "label": "Horiz. Align",
+        "label": "Horiz. align",
         "key": "hAlign",
         "showInBar": true,
         "barStyle": "buttons",
@@ -494,7 +494,7 @@
       },
       {
         "type": "select",
-        "label": "Vert. Align",
+        "label": "Vert. align",
         "key": "vAlign",
         "showInBar": true,
         "barStyle": "buttons",
@@ -561,7 +561,7 @@
         "type": "static",
         "values": [
           {
-            "label": "Row Index",
+            "label": "Row index",
             "key": "index",
             "type": "number"
           }
@@ -627,7 +627,7 @@
       },
       {
         "type": "text",
-        "label": "Link Text",
+        "label": "Link text",
         "key": "linkText"
       },
       {
@@ -638,19 +638,19 @@
       },
       {
         "type": "color",
-        "label": "Link Color",
+        "label": "Link color",
         "key": "linkColor",
         "defaultValue": "#000"
       },
       {
         "type": "color",
-        "label": "Hover Color",
+        "label": "Hover color",
         "key": "linkHoverColor",
         "defaultValue": "#222"
       },
       {
         "type": "select",
-        "label": "Image Height",
+        "label": "Image height",
         "key": "imageHeight",
         "options": [
           "auto",
@@ -663,7 +663,7 @@
       },
       {
         "type": "select",
-        "label": "Card Width",
+        "label": "Card width",
         "key": "cardWidth",
         "options": [
           "16rem",
@@ -701,7 +701,7 @@
         "barStyle": "picker",
         "options": [
           {
-            "label": "Extra Small",
+            "label": "Extra small",
             "value": "XS"
           },
           {
@@ -717,7 +717,7 @@
             "value": "L"
           },
           {
-            "label": "Extra Large",
+            "label": "Extra large",
             "value": "XL"
           },
           {
@@ -826,7 +826,7 @@
         "barStyle": "picker",
         "options": [
           {
-            "label": "Extra Small",
+            "label": "Extra amall",
             "value": "XS"
           },
           {
@@ -842,7 +842,7 @@
             "value": "L"
           },
           {
-            "label": "Extra Large",
+            "label": "Extra large",
             "value": "XL"
           },
           {
@@ -1023,7 +1023,7 @@
         "defaultValue": "center center",
         "options": [
           {
-            "label": "Center Top",
+            "label": "Center top",
             "value": "center top"
           },
           {
@@ -1031,31 +1031,31 @@
             "value": "center center"
           },
           {
-            "label": "Center Bottom",
+            "label": "Center bottom",
             "value": "center bottom"
           },
           {
-            "label": "Left Top",
+            "label": "Left top",
             "value": "left top"
           },
           {
-            "label": "Left Center",
+            "label": "Left center",
             "value": "left center"
           },
           {
-            "label": "Left Bottom",
+            "label": "Left bottom",
             "value": "left bottom"
           },
           {
-            "label": "Right Top",
+            "label": "Right top",
             "value": "right top"
           },
           {
-            "label": "Right Center",
+            "label": "Right center",
             "value": "right center"
           },
           {
-            "label": "Right Bottom",
+            "label": "Right bottom",
             "value": "right bottom"
           }
         ]
@@ -1152,7 +1152,7 @@
       },
       {
         "type": "event",
-        "label": "On Click",
+        "label": "On click",
         "key": "onClick"
       }
     ]
@@ -1203,7 +1203,7 @@
       },
       {
         "type": "boolean",
-        "label": "New Tab",
+        "label": "New tab",
         "key": "openInNewTab"
       },
       {
@@ -1325,7 +1325,7 @@
       },
       {
         "type": "text",
-        "label": "Link Text",
+        "label": "Link text",
         "key": "linkText"
       },
       {
@@ -1336,19 +1336,19 @@
       },
       {
         "type": "color",
-        "label": "Link Color",
+        "label": "Link color",
         "key": "linkColor",
         "defaultValue": "#000"
       },
       {
         "type": "color",
-        "label": "Hover Color",
+        "label": "Hover color",
         "key": "linkHoverColor",
         "defaultValue": "#222"
       },
       {
         "type": "select",
-        "label": "Card Width",
+        "label": "Card width",
         "key": "cardWidth",
         "options": [
           "24rem",
@@ -1363,7 +1363,7 @@
       },
       {
         "type": "select",
-        "label": "Image Width",
+        "label": "Image width",
         "key": "imageWidth",
         "options": [
           "auto",
@@ -1375,7 +1375,7 @@
       },
       {
         "type": "select",
-        "label": "Image Height",
+        "label": "Image height",
         "key": "imageHeight",
         "options": [
           "auto",
@@ -1462,14 +1462,14 @@
       },
       {
         "type": "field",
-        "label": "Label Col.",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "multifield",
-        "label": "Data Cols.",
+        "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
         "required": true
@@ -1487,12 +1487,12 @@
       },
       {
         "type": "text",
-        "label": "Y Axis Label",
+        "label": "Y axis label",
         "key": "yAxisLabel"
       },
       {
         "type": "text",
-        "label": "X Axis Label",
+        "label": "X axis label",
         "key": "xAxisLabel"
       },
       {
@@ -1584,7 +1584,7 @@
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -1624,14 +1624,14 @@
       },
       {
         "type": "field",
-        "label": "Label Col.",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "multifield",
-        "label": "Data Cols.",
+        "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
         "required": true
@@ -1649,12 +1649,12 @@
       },
       {
         "type": "text",
-        "label": "Y Axis Label",
+        "label": "Y axis label",
         "key": "yAxisLabel"
       },
       {
         "type": "text",
-        "label": "X Axis Label",
+        "label": "X axis label",
         "key": "xAxisLabel"
       },
       {
@@ -1745,7 +1745,7 @@
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -1785,14 +1785,14 @@
       },
       {
         "type": "field",
-        "label": "Label Col.",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "multifield",
-        "label": "Data Cols.",
+        "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
         "required": true
@@ -1810,12 +1810,12 @@
       },
       {
         "type": "text",
-        "label": "Y Axis Label",
+        "label": "Y axis label",
         "key": "yAxisLabel"
       },
       {
         "type": "text",
-        "label": "X Axis Label",
+        "label": "X axis label",
         "key": "xAxisLabel"
       },
       {
@@ -1906,7 +1906,7 @@
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -1958,14 +1958,14 @@
       },
       {
         "type": "field",
-        "label": "Label Col.",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "Data Col.",
+        "label": "Data columns",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
         "required": true
@@ -2047,7 +2047,7 @@
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -2087,14 +2087,14 @@
       },
       {
         "type": "field",
-        "label": "Label Col.",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "Data Col.",
+        "label": "Data columns",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
         "required": true
@@ -2176,7 +2176,7 @@
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -2216,35 +2216,35 @@
       },
       {
         "type": "field",
-        "label": "Date Col.",
+        "label": "Date column",
         "key": "dateColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "Open Col.",
+        "label": "Open column",
         "key": "openColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "Close Col.",
+        "label": "Close column",
         "key": "closeColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "High Col.",
+        "label": "High column",
         "key": "highColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "Low Col.",
+        "label": "Low column",
         "key": "lowColumn",
         "dependsOn": "dataProvider",
         "required": true
@@ -2262,12 +2262,12 @@
       },
       {
         "type": "text",
-        "label": "Y Axis Label",
+        "label": "Y axis label",
         "key": "yAxisLabel"
       },
       {
         "type": "text",
-        "label": "X Axis Label",
+        "label": "X axis label",
         "key": "xAxisLabel"
       },
       {
@@ -2483,7 +2483,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -2575,7 +2575,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -2633,7 +2633,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -2687,7 +2687,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -2750,7 +2750,7 @@
       },
       {
         "type": "boolean",
-        "label": "Sort in alphabetical order",
+        "label": "Alphabetical",
         "key": "sort",
         "defaultValue": true
       },
@@ -2783,7 +2783,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Options Provider",
+        "label": "Options provider",
         "key": "dataProvider",
         "required": true,
         "dependsOn": {
@@ -2793,7 +2793,7 @@
       },
       {
         "type": "field",
-        "label": "Label Column",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": {
           "setting": "optionsSource",
@@ -2802,7 +2802,7 @@
       },
       {
         "type": "field",
-        "label": "Value Column",
+        "label": "Value column",
         "key": "valueColumn",
         "dependsOn": {
           "setting": "optionsSource",
@@ -2861,7 +2861,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -2946,7 +2946,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Options Provider",
+        "label": "Options provider",
         "key": "dataProvider",
         "required": true,
         "dependsOn": {
@@ -2956,7 +2956,7 @@
       },
       {
         "type": "field",
-        "label": "Label Column",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": {
           "setting": "optionsSource",
@@ -2965,7 +2965,7 @@
       },
       {
         "type": "field",
-        "label": "Value Column",
+        "label": "Value column",
         "key": "valueColumn",
         "dependsOn": {
           "setting": "optionsSource",
@@ -3044,7 +3044,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3103,7 +3103,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3189,7 +3189,7 @@
       },
       {
         "type": "boolean",
-        "label": "24-Hour time",
+        "label": "24-hour time",
         "key": "time24hr",
         "defaultValue": false
       },
@@ -3206,7 +3206,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3299,25 +3299,25 @@
       },
       {
         "type": "field",
-        "label": "Latitude Key",
+        "label": "Latitude key",
         "key": "latitudeKey",
         "dependsOn": "dataProvider"
       },
       {
         "type": "field",
-        "label": "Longitude Key",
+        "label": "Longitude key",
         "key": "longitudeKey",
         "dependsOn": "dataProvider"
       },
       {
         "type": "field",
-        "label": "Title Key",
+        "label": "Title key",
         "key": "titleKey",
         "dependsOn": "dataProvider"
       },
       {
         "type": "event",
-        "label": "On Click Marker",
+        "label": "On click marker",
         "key": "onClickMarker",
         "context": [
           {
@@ -3334,7 +3334,7 @@
       },
       {
         "type": "event",
-        "label": "On Create Marker",
+        "label": "On create marker",
         "key": "onCreateMarker",
         "dependsOn": "creationEnabled",
         "context": [
@@ -3374,13 +3374,13 @@
       },
       {
         "type": "text",
-        "label": "Default Location",
+        "label": "Default location",
         "key": "defaultLocation",
         "placeholder": "51.5072,-0.1276"
       },
       {
         "type": "number",
-        "label": "Default Zoom (0-100)",
+        "label": "Default zoom (0-100)",
         "key": "zoomLevel",
         "placeholder": 50,
         "max": 100,
@@ -3388,7 +3388,7 @@
       },
       {
         "type": "text",
-        "label": "Map Attribution",
+        "label": "Map attribution",
         "key": "mapAttribution",
         "defaultValue": "OpenStreetMap contributors"
       }
@@ -3425,13 +3425,13 @@
       },
       {
         "type": "number",
-        "label": "No. of attachment",
+        "label": "Max attachments",
         "key": "maximum",
         "min": 1
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3495,7 +3495,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3559,7 +3559,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3601,7 +3601,7 @@
       },
       {
         "type": "dataSource/s3",
-        "label": "S3 Datasource",
+        "label": "S3 datasource",
         "key": "datasourceId",
         "info": "This component can't be used with S3 datasources that use custom endpoints"
       },
@@ -3612,12 +3612,12 @@
       },
       {
         "type": "text",
-        "label": "File Name",
+        "label": "File name",
         "key": "key"
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3667,12 +3667,12 @@
       },
       {
         "type": "field/sortable",
-        "label": "Sort Column",
+        "label": "Sort column",
         "key": "sortColumn"
       },
       {
         "type": "select",
-        "label": "Sort Order",
+        "label": "Sort order",
         "key": "sortOrder",
         "options": [
           "Ascending",
@@ -3975,7 +3975,7 @@
     "settings": [
       {
         "type": "select",
-        "label": "Chart Type",
+        "label": "Chart type",
         "key": "chartType",
         "required": true,
         "options": [
@@ -4024,12 +4024,12 @@
       },
       {
         "type": "field",
-        "label": "Sort Column",
+        "label": "Sort column",
         "key": "sortColumn"
       },
       {
         "type": "select",
-        "label": "Sort Order",
+        "label": "Sort order",
         "key": "sortOrder",
         "options": [
           "Ascending",
@@ -4120,7 +4120,7 @@
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -4147,14 +4147,14 @@
         "settings": [
           {
             "type": "field",
-            "label": "Label Col.",
+            "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "Data Col.",
+            "label": "Data column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
             "required": true
@@ -4172,14 +4172,14 @@
         "settings": [
           {
             "type": "field",
-            "label": "Label Col.",
+            "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "Data Col.",
+            "label": "Data column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
             "required": true
@@ -4197,14 +4197,14 @@
         "settings": [
           {
             "type": "field",
-            "label": "Label Col.",
+            "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "multifield",
-            "label": "Data Cols.",
+            "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
             "required": true
@@ -4222,12 +4222,12 @@
           },
           {
             "type": "text",
-            "label": "Y Axis Label",
+            "label": "Y axis label",
             "key": "yAxisLabel"
           },
           {
             "type": "text",
-            "label": "X Axis Label",
+            "label": "X axis label",
             "key": "xAxisLabel"
           },
           {
@@ -4255,14 +4255,14 @@
         "settings": [
           {
             "type": "field",
-            "label": "Label Col.",
+            "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "multifield",
-            "label": "Data Cols.",
+            "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
             "required": true
@@ -4280,12 +4280,12 @@
           },
           {
             "type": "text",
-            "label": "Y Axis Label",
+            "label": "Y axis label",
             "key": "yAxisLabel"
           },
           {
             "type": "text",
-            "label": "X Axis Label",
+            "label": "X axis label",
             "key": "xAxisLabel"
           },
           {
@@ -4312,14 +4312,14 @@
         "settings": [
           {
             "type": "field",
-            "label": "Label Col.",
+            "label": "Label columns",
             "key": "labelColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "multifield",
-            "label": "Data Cols.",
+            "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
             "required": true
@@ -4337,12 +4337,12 @@
           },
           {
             "type": "text",
-            "label": "Y Axis Label",
+            "label": "Y axis label",
             "key": "yAxisLabel"
           },
           {
             "type": "text",
-            "label": "X Axis Label",
+            "label": "X axis label",
             "key": "xAxisLabel"
           },
           {
@@ -4381,35 +4381,35 @@
         "settings": [
           {
             "type": "field",
-            "label": "Date Col.",
+            "label": "Date column",
             "key": "dateColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "Open Col.",
+            "label": "Open column",
             "key": "openColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "Close Col.",
+            "label": "Close column",
             "key": "closeColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "High Col.",
+            "label": "High column",
             "key": "highColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "Low Col.",
+            "label": "Low column",
             "key": "lowColumn",
             "dependsOn": "dataSource",
             "required": true
@@ -4427,12 +4427,12 @@
           },
           {
             "type": "text",
-            "label": "Y Axis Label",
+            "label": "Y axis label",
             "key": "yAxisLabel"
           },
           {
             "type": "text",
-            "label": "X Axis Label",
+            "label": "X axis label",
             "key": "xAxisLabel"
           }
         ]
@@ -4476,12 +4476,12 @@
           },
           {
             "type": "field/sortable",
-            "label": "Sort By",
+            "label": "Sort by",
             "key": "sortColumn"
           },
           {
             "type": "select",
-            "label": "Sort Order",
+            "label": "Sort order",
             "key": "sortOrder",
             "options": [
               "Ascending",
@@ -4507,7 +4507,7 @@
           },
           {
             "type": "number",
-            "label": "Scroll Limit",
+            "label": "Scroll limit",
             "key": "rowCount",
             "defaultValue": 8
           },
@@ -4541,10 +4541,10 @@
           },
           {
             "type": "searchfield",
-            "label": "Search Fields",
+            "label": "Search fields",
             "key": "searchColumns",
             "placeholder": "Choose search fields",
-            "info": "Only the first 5 search fields will be used"
+            "info": "Only the first 5 fields will be used"
           }
         ]
       },
@@ -4606,7 +4606,7 @@
           {
             "type": "radio",
             "key": "titleButtonClickBehaviour",
-            "label": "On Click",
+            "label": "Click behaviour",
             "dependsOn": "showTitleButton",
             "defaultValue": "actions",
             "info": "New row side panel is only compatible with internal or SQL tables",
@@ -4622,6 +4622,7 @@
             ]
           },
           {
+            "label": "On click",
             "type": "event",
             "key": "onClickTitleButton",
             "nested": true,
@@ -4659,10 +4660,10 @@
       },
       {
         "type": "searchfield",
-        "label": "Search Cols.",
+        "label": "Search columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns",
-        "info": "Only the first 5 search columns will be used"
+        "info": "Max 5 columns will be used"
       },
       {
         "type": "filter",
@@ -4672,12 +4673,12 @@
       },
       {
         "type": "field/sortable",
-        "label": "Sort Column",
+        "label": "Sort column",
         "key": "sortColumn"
       },
       {
         "type": "select",
-        "label": "Sort Order",
+        "label": "Sort order",
         "key": "sortOrder",
         "options": [
           "Ascending",
@@ -4839,12 +4840,12 @@
       },
       {
         "type": "field/sortable",
-        "label": "Sort Column",
+        "label": "Sort column",
         "key": "sortColumn"
       },
       {
         "type": "select",
-        "label": "Sort Order",
+        "label": "Sort order",
         "key": "sortOrder",
         "options": [
           "Ascending",
@@ -4869,7 +4870,7 @@
         "settings": [
           {
             "type": "text",
-            "label": "Empty Text",
+            "label": "Empty text",
             "key": "noRowsMessage",
             "defaultValue": "No rows found"
           },
@@ -4897,7 +4898,7 @@
           },
           {
             "type": "select",
-            "label": "Horiz. Align",
+            "label": "Horiz. align",
             "key": "hAlign",
             "showInBar": true,
             "barStyle": "buttons",
@@ -4931,7 +4932,7 @@
           },
           {
             "type": "select",
-            "label": "Vert. Align",
+            "label": "Vert. align",
             "key": "vAlign",
             "showInBar": true,
             "barStyle": "buttons",
@@ -5250,7 +5251,7 @@
         "settings": [
           {
             "type": "field",
-            "label": "Search Field",
+            "label": "Search field",
             "key": "cardSearchField",
             "nested": true
           },
