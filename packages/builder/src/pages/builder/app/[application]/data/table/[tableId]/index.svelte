@@ -34,8 +34,8 @@
   {#if duplicates?.length}
     <div class="alert-wrap">
       <Banner type="warning" showCloseButton={false}>
-        {`Schema Invalid - There are duplicate auto column types defined in this schema. 
-      Please delete the duplicate entries where appropriate: - 
+        {`Schema Invalid - There are duplicate auto column types defined in this schema.
+      Please delete the duplicate entries where appropriate: -
       ${invalidColumnText.join(", ")}`}
       </Banner>
     </div>
