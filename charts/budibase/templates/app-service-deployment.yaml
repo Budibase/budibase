@@ -125,9 +125,9 @@ spec:
         - name: SELF_HOSTED
           value: {{ .Values.globals.selfHosted | quote }}
         - name: SENTRY_DSN
-          value: {{ .Values.globals.sentryDSN }}
+          value: {{ .Values.globals.sentryDSN | quote }}
         - name: POSTHOG_TOKEN
-          value: {{ .Values.globals.posthogToken }}
+          value: {{ .Values.globals.posthogToken | quote }}
         - name: WORKER_URL
           value: http://worker-service:{{ .Values.services.worker.port }}
         - name: PLATFORM_URL
@@ -198,8 +198,6 @@ spec:
         - name: GLOBAL_AGENT_NO_PROXY
           value: {{ .Values.globals.globalAgentNoProxy | quote }}
         {{ end }}
-        - name: CDN_URL
-          value: {{ .Values.globals.cdnUrl }}
         {{ if .Values.services.tlsRejectUnauthorized }}
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
