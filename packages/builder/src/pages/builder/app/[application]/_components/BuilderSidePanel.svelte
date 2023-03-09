@@ -346,7 +346,14 @@
 
   onMount(() => {
     rendered = true
+    searchFocus = true
   })
+
+  function handleKeyDown(evt) {
+    if (evt.key === "Enter" && queryIsEmail && !inviting) {
+      onInviteUser()
+    }
+  }
 
   const userTitle = user => {
     if (user.admin?.global) {
@@ -369,6 +376,8 @@
     return null
   }
 </script>
+
+<svelte:window on:keydown={handleKeyDown} />
 
 <div
   id="builder-side-panel-container"
@@ -403,6 +412,7 @@
         autocomplete="off"
         disabled={inviting}
         value={query}
+        autofocus
         on:input={e => {
           query = e.target.value.trim()
         }}
@@ -661,6 +671,7 @@
     align-items: center;
     gap: var(--spacing-m);
     color: var(--spectrum-global-color-gray-900);
+    overflow: hidden;
   }
 
   .auth-entity .user-email {
@@ -741,11 +752,11 @@
   }
 
   .builder-side-panel-header {
-    height: 58px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    flex: 0 0 58px;
   }
 
   .invite-header {

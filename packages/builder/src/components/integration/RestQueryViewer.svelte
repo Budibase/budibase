@@ -120,7 +120,7 @@
 
   const cleanUrl = inputUrl =>
     url
-      ?.replace(/(http)|(https)|[{}:]/g, "")
+      ?.replace(/(https)|(http)|[{}:]/g, "")
       ?.replaceAll(".", "_")
       ?.replaceAll("/", " ")
       ?.trim() || inputUrl

@@ -62,4 +62,72 @@ describe("automationUtils", () => {
       ).toThrow()
     })
   })
+
+  describe("cleanInputValues", () => {
+    it("should handle array relationship fields from read binding", () => {
+      const schema = {
+        relationship: {
+          type: "link",
+          constraints: {
+            type: "array",
+            presence: false,
+          },
+          fieldName: "Users",
+          name: "relationship",
+          relationshipType: "many-to-many",
+          tableId: "ta_users",
+          sortable: false,
+        },
+      }
+      expect(
+        automationUtils.cleanInputValues(
+          {
+            row: {
+              relationship: `[{"_id": "ro_ta_users_us_3"}]`,
+            },
+            schema,
+          },
+          schema
+        )
+      ).toEqual({
+        row: {
+          relationship: [{ _id: "ro_ta_users_us_3" }],
+        },
+        schema,
+      })
+    })
+
+    it("should handle single string relationship field", () => {
+      const schema = {
+        relationship: {
+          type: "link",
+          constraints: {
+            type: "array",
+            presence: false,
+          },
+          fieldName: "Users",
+          name: "relationship",
+          relationshipType: "many-to-many",
+          tableId: "ta_users",
+          sortable: false,
+        },
+      }
+      expect(
+        automationUtils.cleanInputValues(
+          {
+            row: {
+              relationship: `ro_ta_users_us_3`,
+            },
+            schema,
+          },
+          schema
+        )
+      ).toEqual({
+        row: {
+          relationship: "ro_ta_users_us_3",
+        },
+        schema,
+      })
+    })
+  })
 })

@@ -29,7 +29,6 @@ import {
   PlatformUserByEmail,
   RowResponse,
   SearchUsersRequest,
-  UpdateSelf,
   User,
   SaveUserOpts,
 } from "@budibase/types"
@@ -132,6 +131,11 @@ const buildUser = async (
 ): Promise<User> => {
   let { password, _id } = user
 
+  // don't require a password if the db user doesn't already have one
+  if (dbUser && !dbUser.password) {
+    opts.requirePassword = false
+  }
+
   let hashedPassword
   if (password) {
     if (await isPreventPasswordActions(user)) {
@@ -225,15 +229,6 @@ export async function isPreventPasswordActions(user: User) {
   // Check account sso
   const account = await accountSdk.api.getAccount(user.email)
   return !!(account && isSSOAccount(account))
-}
-
-export async function updateSelf(id: string, data: UpdateSelf) {
-  let user = await getUser(id)
-  user = {
-    ...user,
-    ...data,
-  }
-  return save(user)
 }
 
 export const save = async (
