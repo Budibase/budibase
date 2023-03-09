@@ -31,6 +31,7 @@ export default function positionDropdown(element, opts) {
       styles.top = anchorBounds.top
     } else if (window.innerHeight - anchorBounds.bottom < 100) {
       styles.top = anchorBounds.top - elementBounds.height - offset
+      styles.maxHeight = 240
     } else {
       styles.top = anchorBounds.bottom + offset
       styles.maxHeight = window.innerHeight - anchorBounds.bottom - 20
