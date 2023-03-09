@@ -8,6 +8,7 @@
   "dependencies": {
     "@budibase/bbui": "2.4.12-alpha.0",
     "@budibase/shared-core": "2.4.12-alpha.0",
+    "dayjs": "^1.11.7",
     "lodash": "^4.17.21",
     "socket.io-client": "^4.6.1",
     "svelte": "^3.46.2"
