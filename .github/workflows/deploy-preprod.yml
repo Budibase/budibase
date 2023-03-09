@@ -48,7 +48,7 @@ jobs:
           helm: helm3
           values: |
             globals: 
-              appVersion: ${{ env.RELEASE_VERSION }}
+              appVersion: v${{ env.RELEASE_VERSION }}
             ingress:
               enabled: true
               nginx: true
