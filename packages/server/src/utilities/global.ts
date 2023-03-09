@@ -35,8 +35,6 @@ export function updateAppRole(
     user.roleId = roles.BUILTIN_ROLE_IDS.ADMIN
   } else if (!user.roleId && !user?.userGroups?.length) {
     user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
-  } else if (user?.userGroups?.length) {
-    user.roleId = undefined
   }
 
   delete user.roles

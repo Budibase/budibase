@@ -53,3 +53,13 @@ So this command will actually run the application in dev mode. It creates .env f
 The dev version will be available on port 10000 i.e.
 
 http://127.0.0.1:10000/builder/admin
+
+### File descriptor issues with Vite and Chrome in Linux
+If your dev environment stalls forever, with some network requests stuck in flight, it's likely that Chrome is trying to open more file descriptors than your system allows.
+To fix this, apply the following tweaks.
+
+Debian based distros:
+Add `* - nofile 65536` to `/etc/security/limits.conf`.
+
+Arch:
+Add `DefaultLimitNOFILE=65536` to `/etc/systemd/system.conf`.

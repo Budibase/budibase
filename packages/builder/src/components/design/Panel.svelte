@@ -14,10 +14,11 @@
   export let borderRight = false
 
   let wide = false
+  $: customHeaderContent = $$slots["panel-header-content"]
 </script>
 
 <div class="panel" class:wide class:borderLeft class:borderRight>
-  <div class="header">
+  <div class="header" class:custom={customHeaderContent}>
     {#if showBackButton}
       <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
     {/if}
@@ -43,6 +44,13 @@
       <Icon name="Close" hoverable on:click={onClickCloseButton} />
     {/if}
   </div>
+
+  {#if customHeaderContent}
+    <span class="custom-content-wrap">
+      <slot name="panel-header-content" />
+    </span>
+  {/if}
+
   <div class="body">
     <slot />
   </div>
@@ -115,5 +123,11 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+  }
+  .header.custom {
+    border: none;
+  }
+  .custom-content-wrap {
+    border-bottom: var(--border-light);
   }
 </style>
