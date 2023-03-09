@@ -45,6 +45,8 @@ jobs:
             [
               "values.preprod.yaml"
             ]
+        env:
+          KUBECONFIG_FILE: '${{ secrets.PREPROD_KUBECONFIG }}'
 
       - name: Discord Webhook Action
         uses: tsickert/discord-webhook@v4.0.0
