@@ -4,14 +4,22 @@ import AccountsAPIClient from "../../../config/public-api/TestConfiguration/acco
 import generateApp from "../../../config/public-api/fixtures/applications"
 import { Application } from "@budibase/server/api/controllers/public/mapping/types"
 import { db as dbCore } from "@budibase/backend-core"
+import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
 
-describe.skip("Public API - /applications endpoints", () => {
+describe("Public API - /applications endpoints", () => {
   const api = new PublicAPIClient()
   const accountsAPI = new AccountsAPIClient()
-  const config = new TestConfiguration<Application>(api, accountsAPI)
+  const internalAPI = new InternalAPIClient()
+  const config = new TestConfiguration<Application>(
+    api,
+    accountsAPI,
+    internalAPI
+  )
 
   beforeAll(async () => {
-    await config.beforeAll()
+    await config.setupAccountAndTenant()
+    await config.setApiKey()
+
     const [response, app] = await config.applications.seed()
     config.context = app
   })

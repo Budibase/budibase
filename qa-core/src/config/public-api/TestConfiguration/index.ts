@@ -7,6 +7,9 @@ import AuthApi from "./auth"
 import AccountsApiClient from "./accountsAPIClient"
 import AccountsApi from "./accounts"
 import { generateAccount } from "../fixtures/accounts"
+import internalApplicationsApi from "../../internal-api/TestConfiguration/applications"
+
+import InternalAPIClient from "../../internal-api/TestConfiguration/InternalAPIClient"
 
 export default class TestConfiguration<T> {
   applications: ApplicationApi
@@ -18,20 +21,28 @@ export default class TestConfiguration<T> {
   accounts: AccountsApi
   apiClient: PublicAPIClient
   accountsApiClient: AccountsApiClient
+  internalApiClient: InternalAPIClient
+  internalApplicationsApi: internalApplicationsApi
 
   constructor(
     apiClient: PublicAPIClient,
-    accountsApiClient: AccountsApiClient
+    accountsApiClient: AccountsApiClient,
+    internalApiClient: InternalAPIClient
   ) {
     this.apiClient = apiClient
     this.accountsApiClient = accountsApiClient
+    this.internalApiClient = internalApiClient
 
-    this.auth = new AuthApi(this.accountsApiClient)
+    this.auth = new AuthApi(this.internalApiClient)
     this.accounts = new AccountsApi(this.accountsApiClient)
     this.applications = new ApplicationApi(apiClient)
     this.users = new UserApi(apiClient)
     this.tables = new TableApi(apiClient)
     this.rows = new RowApi(apiClient)
+    this.internalApplicationsApi = new internalApplicationsApi(
+      internalApiClient
+    )
+
     this.context = <T>{}
   }
 
@@ -43,7 +54,13 @@ export default class TestConfiguration<T> {
     await this.accounts.create(account)
     await this.updateApiClients(<string>account.tenantName)
     await this.auth.login(<string>account.email, <string>account.password)
-    await this.applications.createFirstApp()
+    const body = {
+      name: "My first app",
+      url: "my-first-app",
+      useTemplate: false,
+      sampleData: true,
+    }
+    await this.internalApplicationsApi.create(body)
   }
 
   async setApiKey() {
@@ -54,7 +71,11 @@ export default class TestConfiguration<T> {
     this.apiClient.setTenantName(tenantName)
     this.applications = new ApplicationApi(this.apiClient)
     this.rows = new RowApi(this.apiClient)
-
+    this.internalApiClient.setTenantName(tenantName)
+    this.internalApplicationsApi = new internalApplicationsApi(
+      this.internalApiClient
+    )
+    this.auth = new AuthApi(this.internalApiClient)
     this.context = <T>{}
   }
 

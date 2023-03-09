@@ -3,14 +3,18 @@ import { generateTable } from "../../../config/public-api/fixtures/tables"
 import TestConfiguration from "../../../config/public-api/TestConfiguration"
 import PublicAPIClient from "../../../config/public-api/TestConfiguration/PublicAPIClient"
 import AccountsAPIClient from "../../../config/public-api/TestConfiguration/accountsAPIClient"
+import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
 
-describe.skip("Public API - /tables endpoints", () => {
+describe("Public API - /tables endpoints", () => {
   const api = new PublicAPIClient()
   const accountsAPI = new AccountsAPIClient()
-  const config = new TestConfiguration<Table>(api, accountsAPI)
+  const internalAPI = new InternalAPIClient()
+  const config = new TestConfiguration<Table>(api, accountsAPI, internalAPI)
 
   beforeAll(async () => {
-    await config.beforeAll()
+    await config.setupAccountAndTenant()
+    await config.setApiKey()
+
     const [appResp, app] = await config.applications.seed()
     config.tables.api.appId = app._id
 
