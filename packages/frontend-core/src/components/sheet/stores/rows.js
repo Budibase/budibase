@@ -1,5 +1,5 @@
 import { writable, derived, get } from "svelte/store"
-import { buildLuceneQuery } from "../../../utils/lucene"
+import { LuceneUtils } from "../../../index"
 import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 
@@ -42,7 +42,9 @@ export const createRowsStore = context => {
   })
 
   // Local stores for managing fetching data
-  const query = derived(filter, $filter => buildLuceneQuery($filter))
+  const query = derived(filter, $filter =>
+    LuceneUtils.buildLuceneQuery($filter)
+  )
   const fetch = derived([tableId, query, sort], ([$tableId, $query, $sort]) => {
     if (!$tableId) {
       return null
