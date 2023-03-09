@@ -91,9 +91,11 @@ jobs:
         uses: azure/setup-helm@v1
         id: helm-install
 
-      - name: 'Get Previous tag'
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      - name: Get the latest budibase release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
       # due to helm repo index issue: https://github.com/helm/helm/issues/7363
       # we need to create new package in a different dir, merge the index and move the package back
@@ -116,8 +118,6 @@ jobs:
           git add -A
           git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
           git push
-        env:
-          RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
 
   deploy-to-legacy-preprod-env:
     needs: [release-images]
@@ -130,13 +130,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: 'Get Previous tag'
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      - name: Get the latest budibase release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
       - uses: passeidireto/trigger-external-workflow-action@main
         env:
-          PAYLOAD_VERSION: ${{ steps.previoustag.outputs.tag }}
+          PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
         with:
           repository: budibase/budibase-deploys
           event: budicloud-preprod-deploy
