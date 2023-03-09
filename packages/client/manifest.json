@@ -2448,7 +2448,6 @@
     ]
   },
   "stringfield": {
-    "skeleton": false,
     "name": "Text Field",
     "icon": "Text",
     "styles": [
@@ -2540,7 +2539,6 @@
     ]
   },
   "numberfield": {
-    "skeleton": false,
     "name": "Number Field",
     "icon": "123",
     "styles": [
@@ -2598,7 +2596,6 @@
     ]
   },
   "passwordfield": {
-    "skeleton": false,
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": [
@@ -2656,7 +2653,6 @@
     ]
   },
   "optionsfield": {
-    "skeleton": false,
     "name": "Options Picker",
     "icon": "Menu",
     "styles": [
@@ -2825,7 +2821,6 @@
     ]
   },
   "multifieldselect": {
-    "skeleton": false,
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": [
@@ -2988,7 +2983,6 @@
     ]
   },
   "booleanfield": {
-    "skeleton": false,
     "name": "Checkbox",
     "icon": "SelectBox",
     "editable": true,
@@ -3067,7 +3061,6 @@
     ]
   },
   "longformfield": {
-    "skeleton": false,
     "name": "Long Form Field",
     "icon": "TextAlignLeft",
     "styles": [
@@ -3147,7 +3140,6 @@
     ]
   },
   "datetimefield": {
-    "skeleton": false,
     "name": "Date Picker",
     "icon": "Date",
     "styles": [
@@ -3229,7 +3221,6 @@
     ]
   },
   "codescanner": {
-    "skeleton": false,
     "name": "Barcode/QR Scanner",
     "icon": "Camera",
     "styles": [
@@ -3395,7 +3386,6 @@
     ]
   },
   "attachmentfield": {
-    "skeleton": false,
     "name": "Attachment",
     "icon": "Attach",
     "styles": [
@@ -3460,7 +3450,6 @@
     ]
   },
   "relationshipfield": {
-    "skeleton": false,
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styles": [
@@ -3524,7 +3513,6 @@
     ]
   },
   "jsonfield": {
-    "skeleton": false,
     "name": "JSON Field",
     "icon": "Brackets",
     "styles": [
@@ -3726,7 +3714,6 @@
     }
   },
   "table": {
-    "skeleton": false,
     "name": "Table",
     "icon": "Table",
     "illegalChildren": [

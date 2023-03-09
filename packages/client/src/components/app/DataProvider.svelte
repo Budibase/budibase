@@ -1,7 +1,6 @@
 <script>
-  import { writable } from "svelte/store"
-  import { setContext, getContext } from "svelte"
-  import { Pagination } from "@budibase/bbui"
+  import { getContext } from "svelte"
+  import { Pagination, ProgressCircle } from "@budibase/bbui"
   import { fetchData, LuceneUtils } from "@budibase/frontend-core"
 
   export let dataSource
@@ -14,11 +13,6 @@
   const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
 
-  // Update loading state
-  const parentLoading = getContext("loading")
-  const loading = writable(true)
-  setContext("loading", loading)
-
   // We need to manage our lucene query manually as we want to allow components
   // to extend it
   let queryExtensions = {}
@@ -26,17 +20,14 @@
   $: query = extendQuery(defaultQuery, queryExtensions)
 
   // Fetch data and refresh when needed
-  $: fetch = createFetch(dataSource, $parentLoading)
-  $: updateFetch({
+  $: fetch = createFetch(dataSource)
+  $: fetch.update({
     query,
     sortColumn,
     sortOrder,
     limit,
     paginate,
   })
-
-  // Keep loading context updated
-  $: loading.set($parentLoading || !$fetch.loaded)
 
   // Build our action context
   $: actions = [
@@ -89,18 +80,7 @@
     limit,
   }
 
-  const createFetch = (datasource, parentLoading) => {
-    // Return a dummy fetch if parent is still loading. We do this so that we
-    // can still properly subscribe to a valid fetch object and check all
-    // properties, but we want to avoid fetching the real data until all parents
-    // have finished loading.
-    // This logic is only needed due to skeleton loaders, as previously we
-    // simply blocked component rendering until data was ready.
-    if (parentLoading) {
-      return fetchData({ API })
-    }
-
-    // Otherwise return the real thing
+  const createFetch = datasource => {
     return fetchData({
       API,
       datasource,
@@ -112,14 +92,6 @@
         paginate,
       },
     })
-  }
-
-  const updateFetch = opts => {
-    // Only update fetch if parents have stopped loading. Otherwise we will
-    // trigger a fetch of the real data before parents are ready.
-    if (!$parentLoading) {
-      fetch.update(opts)
-    }
   }
 
   const addQueryExtension = (key, extension) => {
@@ -155,17 +127,23 @@
 
 <div use:styleable={$component.styles} class="container">
   <Provider {actions} data={dataContext}>
-    <slot />
-    {#if paginate && $fetch.supportsPagination}
-      <div class="pagination">
-        <Pagination
-          page={$fetch.pageNumber + 1}
-          hasPrevPage={$fetch.hasPrevPage}
-          hasNextPage={$fetch.hasNextPage}
-          goToPrevPage={fetch.prevPage}
-          goToNextPage={fetch.nextPage}
-        />
+    {#if !$fetch.loaded}
+      <div class="loading">
+        <ProgressCircle />
       </div>
+    {:else}
+      <slot />
+      {#if paginate && $fetch.supportsPagination}
+        <div class="pagination">
+          <Pagination
+            page={$fetch.pageNumber + 1}
+            hasPrevPage={$fetch.hasPrevPage}
+            hasNextPage={$fetch.hasNextPage}
+            goToPrevPage={fetch.prevPage}
+            goToNextPage={fetch.nextPage}
+          />
+        </div>
+      {/if}
     {/if}
   </Provider>
 </div>
@@ -176,6 +154,13 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+  }
+  .loading {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
   }
   .pagination {
     display: flex;
