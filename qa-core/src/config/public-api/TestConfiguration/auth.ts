@@ -22,9 +22,9 @@ export default class AuthApi {
   }
 
   async login(email: String, password: String): Promise<[Response, any]> {
-    const response = await this.api.post(`/auth/login`, {
+    const response = await this.api.post(`/global/auth/default/login`, {
       body: {
-        email: email,
+        username: email,
         password: password,
       },
     })
