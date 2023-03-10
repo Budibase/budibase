@@ -67,11 +67,21 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: internalApiKey
+        - name: INTERNAL_API_KEYS
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: internalApiKeys
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: jwtSecret
+        - name: JWT_SECRETS
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: jwtSecrets
         {{ if .Values.services.objectStore.region }}
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}

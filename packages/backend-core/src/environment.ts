@@ -30,6 +30,33 @@ const DefaultBucketName = {
 
 const selfHosted = !!parseInt(process.env.SELF_HOSTED || "")
 
+/**
+ * Return an array of secrets from a comma separated list.
+ * This allows for rotation with zero downtime.
+ * Outside of rotation only a single secret should be used.
+ */
+function getRotatableSecrets(name: string, fallbackName: string) {
+    let secrets: string[] = []
+    const value = process.env[name]
+    const fallbackValue = process.env[fallbackName]
+    if (value) {
+      secrets = value.split(",")
+    } else if (fallbackValue) {
+      // for backwards compatibility
+      secrets = [fallbackValue]
+    }
+    return secrets
+}
+
+function getAPIEncryptionKey() {
+  if (process.env.API_ENCRYPTION_KEY) {
+    return process.env.API_ENCRYPTION_KEY
+  } else {
+    // for backwards compatibility
+    return process.env.JWT_SECRET
+  }
+}
+
 const environment = {
   isTest,
   isJest,
@@ -38,8 +65,9 @@ const environment = {
     return !isDev()
   },
   JS_BCRYPT: process.env.JS_BCRYPT,
-  JWT_SECRET: process.env.JWT_SECRET,
+  JWT_SECRETS: getRotatableSecrets("JWT_SECRETS", "JWT_SECRET"),
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
+  API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
@@ -54,7 +82,7 @@ const environment = {
   AWS_REGION: process.env.AWS_REGION,
   MINIO_URL: process.env.MINIO_URL,
   MINIO_ENABLED: process.env.MINIO_ENABLED || 1,
-  INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+  INTERNAL_API_KEYS: getRotatableSecrets("INTERNAL_API_KEYS", "INTERNAL_API_KEY"),
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ACCOUNT_PORTAL_URL:
     process.env.ACCOUNT_PORTAL_URL || "https://account.budibase.app",

@@ -1,5 +1,4 @@
 import { getAllApps, queryGlobalView } from "../db"
-import { options } from "../middleware/passport/jwt"
 import {
   Header,
   MAX_VALID_DATE,
@@ -133,7 +132,20 @@ export function openJwt(token: string) {
   if (!token) {
     return token
   }
-  return jwt.verify(token, options.secretOrKey)
+  try {
+    return jwt.verify(token, env.JWT_SECRETS[0])
+  } catch (e) {
+    if (env.JWT_SECRETS[1]) {
+      // fallback to second to enable rotation
+      return jwt.verify(token, env.JWT_SECRETS[1])
+    } else {
+      throw e
+    }
+  }
+}
+
+export function isValidInternalAPIKey(apiKey: string) {
+  return apiKey === env.INTERNAL_API_KEYS[0] || apiKey === env.INTERNAL_API_KEYS[1]
 }
 
 /**
@@ -165,7 +177,7 @@ export function setCookie(
   opts = { sign: true }
 ) {
   if (value && opts && opts.sign) {
-    value = jwt.sign(value, options.secretOrKey)
+    value = jwt.sign(value, env.JWT_SECRETS[0])
   }
 
   const config: SetOption = {

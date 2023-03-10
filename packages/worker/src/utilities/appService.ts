@@ -1,5 +1,5 @@
 import fetch from "node-fetch"
-import { constants, tenancy, logging } from "@budibase/backend-core"
+import { constants, tenancy, logging, env as coreEnv } from "@budibase/backend-core"
 import { checkSlashesInUrl } from "../utilities"
 import env from "../environment"
 import { SyncUserRequest, User } from "@budibase/types"
@@ -9,7 +9,7 @@ async function makeAppRequest(url: string, method: string, body: any) {
     return
   }
   const request: any = { headers: {} }
-  request.headers[constants.Header.API_KEY] = env.INTERNAL_API_KEY
+  request.headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEYS[0]
   if (tenancy.isTenantIdSet()) {
     request.headers[constants.Header.TENANT_ID] = tenancy.getTenantId()
   }

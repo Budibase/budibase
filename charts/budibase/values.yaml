@@ -97,7 +97,9 @@ globals:
 
   # if createSecrets is set to false, you can hard-code your secrets here
   internalApiKey: ""
+  internalApiKeys: ""
   jwtSecret: ""
+  jwtSecrets: ""
   cdnUrl: ""
 
   smtp:
