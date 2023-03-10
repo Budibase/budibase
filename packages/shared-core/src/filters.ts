@@ -1,5 +1,6 @@
-import { Helpers } from "@budibase/bbui"
-import { OperatorOptions, SqlNumberTypeRangeMap } from "../constants"
+import { Datasource, FieldType, SortDirection, SortType } from "@budibase/types"
+import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
+import { deepGet } from "./helpers"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -7,7 +8,11 @@ const HBS_REGEX = /{{([^{].*?)}}/g
  * Returns the valid operator options for a certain data type
  * @param type the data type
  */
-export const getValidOperatorsForType = (type, field, datasource) => {
+export const getValidOperatorsForType = (
+  type: FieldType,
+  field: string,
+  datasource: Datasource & { tableId: any } // TODO: is this table id ever populated?
+) => {
   const Op = OperatorOptions
   const stringOps = [
     Op.Equals,
@@ -27,7 +32,10 @@ export const getValidOperatorsForType = (type, field, datasource) => {
     Op.NotEmpty,
     Op.In,
   ]
-  let ops = []
+  let ops: {
+    value: string
+    label: string
+  }[] = []
   if (type === "string") {
     ops = stringOps
   } else if (type === "number") {
@@ -70,13 +78,13 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotEquals.value,
   OperatorOptions.Contains.value,
   OperatorOptions.NotContains.value,
-]
+] as (keyof QueryFields)[]
 
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
  */
-const cleanupQuery = query => {
+const cleanupQuery = (query: Query) => {
   if (!query) {
     return query
   }
@@ -84,9 +92,10 @@ const cleanupQuery = query => {
     if (!query[filterField]) {
       continue
     }
-    for (let [key, value] of Object.entries(query[filterField])) {
+
+    for (let [key, value] of Object.entries(query[filterField]!)) {
       if (value == null || value === "") {
-        delete query[filterField][key]
+        delete query[filterField]![key]
       }
     }
   }
@@ -96,7 +105,7 @@ const cleanupQuery = query => {
 /**
  * Removes a numeric prefix on field names designed to give fields uniqueness
  */
-const removeKeyNumbering = key => {
+const removeKeyNumbering = (key: string) => {
   if (typeof key === "string" && key.match(/\d[0-9]*:/g) != null) {
     const parts = key.split(":")
     parts.shift()
@@ -106,12 +115,66 @@ const removeKeyNumbering = key => {
   }
 }
 
+type Filter = {
+  operator: keyof Query
+  field: string
+  type: any
+  value: any
+  externalType: keyof typeof SqlNumberTypeRangeMap
+}
+
+type Query = QueryFields & QueryConfig
+type QueryFields = {
+  string?: {
+    [key: string]: string
+  }
+  fuzzy?: {
+    [key: string]: string
+  }
+  range?: {
+    [key: string]: {
+      high: number | string
+      low: number | string
+    }
+  }
+  equal?: {
+    [key: string]: any
+  }
+  notEqual?: {
+    [key: string]: any
+  }
+  empty?: {
+    [key: string]: any
+  }
+  notEmpty?: {
+    [key: string]: any
+  }
+  oneOf?: {
+    [key: string]: any[]
+  }
+  contains?: {
+    [key: string]: any[]
+  }
+  notContains?: {
+    [key: string]: any[]
+  }
+  containsAny?: {
+    [key: string]: any[]
+  }
+}
+
+type QueryConfig = {
+  allOr?: boolean
+}
+
+type QueryFieldsType = keyof QueryFields
+
 /**
  * Builds a lucene JSON query from the filter structure generated in the builder
  * @param filter the builder filter structure
  */
-export const buildLuceneQuery = filter => {
-  let query = {
+export const buildLuceneQuery = (filter: Filter[]) => {
+  let query: Query = {
     string: {},
     fuzzy: {},
     range: {},
@@ -128,7 +191,7 @@ export const buildLuceneQuery = filter => {
     filter.forEach(expression => {
       let { operator, field, type, value, externalType } = expression
       const isHbs =
-        typeof value === "string" && value.match(HBS_REGEX)?.length > 0
+        typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
       // Parse all values into correct types
       if (operator === "allOr") {
         query.allOr = true
@@ -167,7 +230,7 @@ export const buildLuceneQuery = filter => {
       ) {
         value = value.split(",")
       }
-      if (operator.startsWith("range")) {
+      if (operator.startsWith("range") && query.range) {
         const minint =
           SqlNumberTypeRangeMap[externalType]?.min || Number.MIN_SAFE_INTEGER
         const maxint =
@@ -178,9 +241,13 @@ export const buildLuceneQuery = filter => {
             high: type === "number" ? maxint : "9999-00-00T00:00:00.000Z",
           }
         }
-        if (operator === "rangeLow" && value != null && value !== "") {
+        if ((operator as any) === "rangeLow" && value != null && value !== "") {
           query.range[field].low = value
-        } else if (operator === "rangeHigh" && value != null && value !== "") {
+        } else if (
+          (operator as any) === "rangeHigh" &&
+          value != null &&
+          value !== ""
+        ) {
           query.range[field].high = value
         }
       } else if (query[operator]) {
@@ -189,14 +256,18 @@ export const buildLuceneQuery = filter => {
           // "equals false" needs to be "not equals true"
           // "not equals false" needs to be "equals true"
           if (operator === "equal" && value === false) {
+            query.notEqual = query.notEqual || {}
             query.notEqual[field] = true
           } else if (operator === "notEqual" && value === false) {
+            query.equal = query.equal || {}
             query.equal[field] = true
           } else {
-            query[operator][field] = value
+            query[operator] = query[operator] || {}
+            query[operator]![field] = value
           }
         } else {
-          query[operator][field] = value
+          query[operator] = query[operator] || {}
+          query[operator]![field] = value
         }
       }
     })
@@ -209,7 +280,7 @@ export const buildLuceneQuery = filter => {
  * @param docs the data
  * @param query the JSON lucene query
  */
-export const runLuceneQuery = (docs, query) => {
+export const runLuceneQuery = (docs: any[], query?: Query) => {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -221,87 +292,110 @@ export const runLuceneQuery = (docs, query) => {
   query = cleanupQuery(query)
 
   // Iterates over a set of filters and evaluates a fail function against a doc
-  const match = (type, failFn) => doc => {
-    const filters = Object.entries(query[type] || {})
-    for (let i = 0; i < filters.length; i++) {
-      const [key, testValue] = filters[i]
-      const docValue = Helpers.deepGet(doc, removeKeyNumbering(key))
-      if (failFn(docValue, testValue)) {
-        return false
+  const match =
+    (
+      type: QueryFieldsType,
+      failFn: (docValue: any, testValue: any) => boolean
+    ) =>
+    (doc: any) => {
+      const filters = Object.entries(query![type] || {})
+      for (let i = 0; i < filters.length; i++) {
+        const [key, testValue] = filters[i]
+        const docValue = deepGet(doc, removeKeyNumbering(key))
+        if (failFn(docValue, testValue)) {
+          return false
+        }
       }
+      return true
     }
-    return true
-  }
 
   // Process a string match (fails if the value does not start with the string)
-  const stringMatch = match("string", (docValue, testValue) => {
+  const stringMatch = match("string", (docValue: string, testValue: string) => {
     return (
       !docValue || !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
     )
   })
 
   // Process a fuzzy match (treat the same as starts with when running locally)
-  const fuzzyMatch = match("fuzzy", (docValue, testValue) => {
+  const fuzzyMatch = match("fuzzy", (docValue: string, testValue: string) => {
     return (
       !docValue || !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
     )
   })
 
   // Process a range match
-  const rangeMatch = match("range", (docValue, testValue) => {
-    return (
-      docValue == null ||
-      docValue === "" ||
-      docValue < testValue.low ||
-      docValue > testValue.high
-    )
-  })
+  const rangeMatch = match(
+    "range",
+    (
+      docValue: string | number | null,
+      testValue: { low: number; high: number }
+    ) => {
+      return (
+        docValue == null ||
+        docValue === "" ||
+        docValue < testValue.low ||
+        docValue > testValue.high
+      )
+    }
+  )
 
   // Process an equal match (fails if the value is different)
-  const equalMatch = match("equal", (docValue, testValue) => {
-    return testValue != null && testValue !== "" && docValue !== testValue
-  })
+  const equalMatch = match(
+    "equal",
+    (docValue: any, testValue: string | null) => {
+      return testValue != null && testValue !== "" && docValue !== testValue
+    }
+  )
 
   // Process a not-equal match (fails if the value is the same)
-  const notEqualMatch = match("notEqual", (docValue, testValue) => {
-    return testValue != null && testValue !== "" && docValue === testValue
-  })
+  const notEqualMatch = match(
+    "notEqual",
+    (docValue: any, testValue: string | null) => {
+      return testValue != null && testValue !== "" && docValue === testValue
+    }
+  )
 
   // Process an empty match (fails if the value is not empty)
-  const emptyMatch = match("empty", docValue => {
+  const emptyMatch = match("empty", (docValue: string | null) => {
     return docValue != null && docValue !== ""
   })
 
   // Process a not-empty match (fails is the value is empty)
-  const notEmptyMatch = match("notEmpty", docValue => {
+  const notEmptyMatch = match("notEmpty", (docValue: string | null) => {
     return docValue == null || docValue === ""
   })
 
   // Process an includes match (fails if the value is not included)
-  const oneOf = match("oneOf", (docValue, testValue) => {
+  const oneOf = match("oneOf", (docValue: any, testValue: any) => {
     if (typeof testValue === "string") {
       testValue = testValue.split(",")
       if (typeof docValue === "number") {
-        testValue = testValue.map(item => parseFloat(item))
+        testValue = testValue.map((item: string) => parseFloat(item))
       }
     }
     return !testValue?.includes(docValue)
   })
 
-  const containsAny = match("containsAny", (docValue, testValue) => {
+  const containsAny = match("containsAny", (docValue: any, testValue: any) => {
     return !docValue?.includes(...testValue)
   })
 
-  const contains = match("contains", (docValue, testValue) => {
-    return !testValue?.every(item => docValue?.includes(item))
-  })
+  const contains = match(
+    "contains",
+    (docValue: string | any[], testValue: any[]) => {
+      return !testValue?.every((item: any) => docValue?.includes(item))
+    }
+  )
 
-  const notContains = match("notContains", (docValue, testValue) => {
-    return testValue?.every(item => docValue?.includes(item))
-  })
+  const notContains = match(
+    "notContains",
+    (docValue: string | any[], testValue: any[]) => {
+      return testValue?.every((item: any) => docValue?.includes(item))
+    }
+  )
 
   // Match a document against all criteria
-  const docMatch = doc => {
+  const docMatch = (doc: any) => {
     return (
       stringMatch(doc) &&
       fuzzyMatch(doc) &&
@@ -329,20 +423,28 @@ export const runLuceneQuery = (docs, query) => {
  * @param sortOrder the sort order ("ascending" or "descending")
  * @param sortType the type of sort ("string" or "number")
  */
-export const luceneSort = (docs, sort, sortOrder, sortType = "string") => {
+export const luceneSort = (
+  docs: any[],
+  sort: string,
+  sortOrder: SortDirection,
+  sortType = SortType.STRING
+) => {
   if (!sort || !sortOrder || !sortType) {
     return docs
   }
-  const parse = sortType === "string" ? x => `${x}` : x => parseFloat(x)
-  return docs.slice().sort((a, b) => {
-    const colA = parse(a[sort])
-    const colB = parse(b[sort])
-    if (sortOrder === "Descending") {
-      return colA > colB ? -1 : 1
-    } else {
-      return colA > colB ? 1 : -1
-    }
-  })
+  const parse =
+    sortType === "string" ? (x: any) => `${x}` : (x: string) => parseFloat(x)
+  return docs
+    .slice()
+    .sort((a: { [x: string]: any }, b: { [x: string]: any }) => {
+      const colA = parse(a[sort])
+      const colB = parse(b[sort])
+      if (sortOrder.toLowerCase() === "descending") {
+        return colA > colB ? -1 : 1
+      } else {
+        return colA > colB ? 1 : -1
+      }
+    })
 }
 
 /**
@@ -351,7 +453,7 @@ export const luceneSort = (docs, sort, sortOrder, sortType = "string") => {
  * @param docs the data
  * @param limit the number of docs to limit to
  */
-export const luceneLimit = (docs, limit) => {
+export const luceneLimit = (docs: any[], limit: string) => {
   const numLimit = parseFloat(limit)
   if (isNaN(numLimit)) {
     return docs

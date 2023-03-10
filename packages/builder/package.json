@@ -58,10 +58,11 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^2.4.17",
-    "@budibase/client": "^2.4.17",
-    "@budibase/frontend-core": "^2.4.17",
-    "@budibase/string-templates": "^2.4.17",
+    "@budibase/bbui": "2.4.17",
+    "@budibase/client": "2.4.17",
+    "@budibase/frontend-core": "2.4.17",
+    "@budibase/shared-core": "2.4.17",
+    "@budibase/string-templates": "2.4.17",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-brands-svg-icons": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
