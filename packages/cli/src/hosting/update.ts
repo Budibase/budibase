@@ -4,6 +4,8 @@ import {
   downloadDockerCompose,
   handleError,
   getServices,
+  getServiceImage,
+  setServiceImage,
 } from "./utils"
 import { confirmation } from "../questions"
 import compose from "docker-compose"
@@ -23,7 +25,11 @@ export async function update() {
     !isSingle &&
     (await confirmation("Do you wish to update you docker-compose.yaml?"))
   ) {
+    // get current MinIO image
+    const image = await getServiceImage("minio")
     await downloadDockerCompose()
+    // replace MinIO image
+    setServiceImage("minio", image)
   }
   await handleError(async () => {
     const status = await compose.ps()
