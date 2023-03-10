@@ -7,6 +7,7 @@
     clickOutside,
     notifications,
     ActionButton,
+    CopyInput,
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import { groups, licensing, apps, users } from "stores/portal"
@@ -17,7 +18,6 @@
   import RoleSelect from "components/common/RoleSelect.svelte"
   import { Constants, Utils } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
-  import CopyInput from "components/common/inputs/CopyInput.svelte"
   import { roles } from "stores/backend"
 
   let query = null
