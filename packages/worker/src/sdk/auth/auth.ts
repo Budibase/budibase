@@ -26,7 +26,7 @@ export async function loginUser(user: User) {
       sessionId,
       tenantId,
     },
-    coreEnv.JWT_SECRETS[0]
+    coreEnv.JWT_SECRET!
   )
   return token
 }

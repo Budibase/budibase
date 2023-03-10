@@ -14,7 +14,7 @@ async function makeAppRequest(url: string, method: string, body: any) {
     return
   }
   const request: any = { headers: {} }
-  request.headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEYS[0]
+  request.headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEY
   if (tenancy.isTenantIdSet()) {
     request.headers[constants.Header.TENANT_ID] = tenancy.getTenantId()
   }

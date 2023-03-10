@@ -16,7 +16,7 @@ export function request(ctx?: BBContext, request?: any) {
     request.headers = {}
   }
   if (!ctx) {
-    request.headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEYS[0]
+    request.headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEY
     if (tenancy.isTenantIdSet()) {
       request.headers[constants.Header.TENANT_ID] = tenancy.getTenantId()
     }

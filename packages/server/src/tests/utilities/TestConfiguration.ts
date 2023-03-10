@@ -331,8 +331,8 @@ class TestConfiguration {
         roleId: roleId,
         appId,
       }
-      const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRETS[0])
-      const appToken = auth.jwt.sign(app, coreEnv.JWT_SECRETS[0])
+      const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
+      const appToken = auth.jwt.sign(app, coreEnv.JWT_SECRET)
 
       // returning necessary request headers
       await cache.user.invalidateUser(userId)
@@ -360,8 +360,8 @@ class TestConfiguration {
       roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
       appId: this.appId,
     }
-    const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRETS[0])
-    const appToken = auth.jwt.sign(app, coreEnv.JWT_SECRETS[0])
+    const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
+    const appToken = auth.jwt.sign(app, coreEnv.JWT_SECRET)
     const headers: any = {
       Accept: "application/json",
       Cookie: [

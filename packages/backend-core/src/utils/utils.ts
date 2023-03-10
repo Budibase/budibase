@@ -133,11 +133,11 @@ export function openJwt(token: string) {
     return token
   }
   try {
-    return jwt.verify(token, env.JWT_SECRETS[0])
+    return jwt.verify(token, env.JWT_SECRET)
   } catch (e) {
-    if (env.JWT_SECRETS[1]) {
-      // fallback to second to enable rotation
-      return jwt.verify(token, env.JWT_SECRETS[1])
+    if (env.JWT_SECRET_FALLBACK) {
+      // fallback to enable rotation
+      return jwt.verify(token, env.JWT_SECRET_FALLBACK)
     } else {
       throw e
     }
@@ -145,9 +145,14 @@ export function openJwt(token: string) {
 }
 
 export function isValidInternalAPIKey(apiKey: string) {
-  return (
-    apiKey === env.INTERNAL_API_KEYS[0] || apiKey === env.INTERNAL_API_KEYS[1]
-  )
+  if (env.INTERNAL_API_KEY && env.INTERNAL_API_KEY === apiKey) {
+    return true
+  }
+  // fallback to enable rotation
+  if (env.INTERNAL_API_KEY_FALLBACK && env.INTERNAL_API_KEY_FALLBACK === apiKey) {
+    return true
+  }
+  return false
 }
 
 /**
@@ -179,7 +184,7 @@ export function setCookie(
   opts = { sign: true }
 ) {
   if (value && opts && opts.sign) {
-    value = jwt.sign(value, env.JWT_SECRETS[0])
+    value = jwt.sign(value, env.JWT_SECRET)
   }
 
   const config: SetOption = {

@@ -179,7 +179,7 @@ class TestConfiguration {
       sessionId: "sessionid",
       tenantId: user.tenantId,
     }
-    const authCookie = auth.jwt.sign(authToken, coreEnv.JWT_SECRETS[0])
+    const authCookie = auth.jwt.sign(authToken, coreEnv.JWT_SECRET)
     return {
       Accept: "application/json",
       ...this.cookieHeader([`${constants.Cookie.Auth}=${authCookie}`]),
@@ -196,7 +196,7 @@ class TestConfiguration {
   }
 
   internalAPIHeaders() {
-    return { [constants.Header.API_KEY]: coreEnv.INTERNAL_API_KEYS[0] }
+    return { [constants.Header.API_KEY]: coreEnv.INTERNAL_API_KEY }
   }
 
   adminOnlyResponse = () => {
@@ -276,7 +276,7 @@ class TestConfiguration {
   // CONFIGS - OIDC
 
   getOIDConfigCookie(configId: string) {
-    const token = auth.jwt.sign(configId, coreEnv.JWT_SECRETS[0])
+    const token = auth.jwt.sign(configId, coreEnv.JWT_SECRET)
     return this.cookieHeader([[`${constants.Cookie.OIDC_CONFIG}=${token}`]])
   }
 
