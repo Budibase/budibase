@@ -16,7 +16,6 @@
   emphasized={highlighted}
   icon="TableColumnAddRight"
   quiet
-  size="S"
   on:click={modal.show}
 >
   Create column
