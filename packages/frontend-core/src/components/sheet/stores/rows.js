@@ -1,5 +1,4 @@
 import { writable, derived, get } from "svelte/store"
-import { LuceneUtils } from "../../../index"
 import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 
@@ -11,20 +10,25 @@ export const createRowsStore = context => {
   const table = writable(null)
   const filter = writable([])
   const loaded = writable(false)
+  const fetch = writable(null)
   const sort = writable({
     column: null,
     order: null,
   })
+
+  // Enrich rows with an index property
   const enrichedRows = derived(rows, $rows => {
     return $rows.map((row, idx) => ({
       ...row,
       __idx: idx,
     }))
   })
+
+  // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(enrichedRows, $rows => {
     let map = {}
-    for (let i = 0; i < $rows.length; i++) {
-      map[$rows[i]._id] = i
+    for (let row of $rows) {
+      map[row._id] = row.__idx
     }
     return map
   })
@@ -33,68 +37,83 @@ export const createRowsStore = context => {
   let rowCacheMap = {}
 
   // Reset everything when table ID changes
-  tableId.subscribe(() => {
-    filter.set([])
+  let unsubscribe = null
+  tableId.subscribe($tableId => {
+    // Unsub from previous fetch if one exists
+    unsubscribe?.()
+    fetch.set(null)
+
+    // Reset state
     sort.set({
       column: null,
       order: null,
     })
-  })
+    filter.set([])
 
-  // Local stores for managing fetching data
-  const query = derived(filter, $filter =>
-    LuceneUtils.buildLuceneQuery($filter)
-  )
-  const fetch = derived([tableId, query, sort], ([$tableId, $query, $sort]) => {
-    if (!$tableId) {
-      return null
-    }
-    // Wipe state and fully hydrate next time our fetch returns data
-    loaded.set(false)
-
-    // Create fetch and load initial data
-    return fetchData({
+    // Create new fetch model
+    const newFetch = fetchData({
       API,
       datasource: {
         type: "table",
         tableId: $tableId,
       },
       options: {
-        sortColumn: $sort.column,
-        sortOrder: $sort.order,
-        query: $query,
+        filter: [],
+        sortColumn: null,
+        sortOrder: null,
         limit: 100,
         paginate: true,
       },
     })
-  })
 
-  // Observe each data fetch and extract some data
-  fetch.subscribe($fetch => {
-    if (!$fetch) {
-      return
-    }
-    $fetch.subscribe($$fetch => {
-      if ($$fetch.loaded) {
-        if (!get(loaded)) {
+    // Subscribe to changes of this fetch model
+    unsubscribe = newFetch.subscribe($fetch => {
+      if ($fetch.loaded && !$fetch.loading) {
+        if ($fetch.pageNumber === 0) {
           // Hydrate initial data
-          loaded.set(true)
           rowCacheMap = {}
           rows.set([])
+
+          // Update sorting from fetch if required
+          const $sort = get(sort)
+          if (!$sort.column) {
+            sort.set({
+              column: $fetch.sortColumn,
+              order: $fetch.sortOrder,
+            })
+          }
         }
 
         // Update schema and enrich primary display into schema
-        let newSchema = $$fetch.schema
-        const primaryDisplay = $$fetch.definition?.primaryDisplay
+        let newSchema = $fetch.schema
+        const primaryDisplay = $fetch.definition?.primaryDisplay
         if (primaryDisplay && newSchema[primaryDisplay]) {
           newSchema[primaryDisplay].primaryDisplay = true
         }
         schema.set(newSchema)
-        table.set($$fetch.definition)
+        table.set($fetch.definition)
 
         // Process new rows
-        handleNewRows($$fetch.rows)
+        handleNewRows($fetch.rows)
+
+        // Notify that we're loaded
+        loaded.set(true)
       }
+    })
+
+    fetch.set(newFetch)
+  })
+
+  // Update fetch when filter or sort config changes
+  filter.subscribe($filter => {
+    get(fetch)?.update({
+      filter: $filter,
+    })
+  })
+  sort.subscribe($sort => {
+    get(fetch)?.update({
+      sortOrder: $sort.order,
+      sortColumn: $sort.column,
     })
   })
 
