@@ -145,7 +145,9 @@ export function openJwt(token: string) {
 }
 
 export function isValidInternalAPIKey(apiKey: string) {
-  return apiKey === env.INTERNAL_API_KEYS[0] || apiKey === env.INTERNAL_API_KEYS[1]
+  return (
+    apiKey === env.INTERNAL_API_KEYS[0] || apiKey === env.INTERNAL_API_KEYS[1]
+  )
 }
 
 /**

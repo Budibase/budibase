@@ -6,7 +6,7 @@ import {
   constants,
   tenancy,
   logging,
-  env as coreEnv
+  env as coreEnv,
 } from "@budibase/backend-core"
 import { updateAppRole } from "./global"
 import { BBContext, User } from "@budibase/types"

@@ -1,5 +1,10 @@
 import fetch from "node-fetch"
-import { constants, tenancy, logging, env as coreEnv } from "@budibase/backend-core"
+import {
+  constants,
+  tenancy,
+  logging,
+  env as coreEnv,
+} from "@budibase/backend-core"
 import { checkSlashesInUrl } from "../utilities"
 import env from "../environment"
 import { SyncUserRequest, User } from "@budibase/types"

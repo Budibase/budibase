@@ -5,7 +5,7 @@ import {
   sessions,
   events,
   HTTPError,
-  env as coreEnv
+  env as coreEnv,
 } from "@budibase/backend-core"
 import { PlatformLogoutOpts, User } from "@budibase/types"
 import jwt from "jsonwebtoken"

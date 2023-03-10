@@ -1,5 +1,5 @@
 import env from "../environment"
-import { constants, utils} from "@budibase/backend-core"
+import { constants, utils } from "@budibase/backend-core"
 import { BBContext } from "@budibase/types"
 
 /**

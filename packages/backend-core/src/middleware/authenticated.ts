@@ -1,5 +1,10 @@
 import { Cookie, Header } from "../constants"
-import { getCookie, clearCookie, openJwt, isValidInternalAPIKey } from "../utils"
+import {
+  getCookie,
+  clearCookie,
+  openJwt,
+  isValidInternalAPIKey,
+} from "../utils"
 import { getUser } from "../cache/user"
 import { getSession, updateSessionTTL } from "../security/sessions"
 import { buildMatcherRegex, matches } from "./matchers"

@@ -36,16 +36,16 @@ const selfHosted = !!parseInt(process.env.SELF_HOSTED || "")
  * Outside of rotation only a single secret should be used.
  */
 function getRotatableSecrets(name: string, fallbackName: string) {
-    let secrets: string[] = []
-    const value = process.env[name]
-    const fallbackValue = process.env[fallbackName]
-    if (value) {
-      secrets = value.split(",")
-    } else if (fallbackValue) {
-      // for backwards compatibility
-      secrets = [fallbackValue]
-    }
-    return secrets
+  let secrets: string[] = []
+  const value = process.env[name]
+  const fallbackValue = process.env[fallbackName]
+  if (value) {
+    secrets = value.split(",")
+  } else if (fallbackValue) {
+    // for backwards compatibility
+    secrets = [fallbackValue]
+  }
+  return secrets
 }
 
 function getAPIEncryptionKey() {
@@ -82,7 +82,10 @@ const environment = {
   AWS_REGION: process.env.AWS_REGION,
   MINIO_URL: process.env.MINIO_URL,
   MINIO_ENABLED: process.env.MINIO_ENABLED || 1,
-  INTERNAL_API_KEYS: getRotatableSecrets("INTERNAL_API_KEYS", "INTERNAL_API_KEY"),
+  INTERNAL_API_KEYS: getRotatableSecrets(
+    "INTERNAL_API_KEYS",
+    "INTERNAL_API_KEY"
+  ),
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ACCOUNT_PORTAL_URL:
     process.env.ACCOUNT_PORTAL_URL || "https://account.budibase.app",
