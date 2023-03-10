@@ -6,15 +6,12 @@ import {
 import TestConfiguration from "../../TestConfiguration"
 import { TestAPI } from "../base"
 
-export interface RequestSettings {
-  expect: number
-  setHeaders: boolean
-}
-
-const defaultConfig: RequestSettings = {
+const defaultConfig = {
   expect: 200,
   setHeaders: true,
 }
+
+type RequestSettings = typeof defaultConfig
 
 export class ScimUsersAPI extends TestAPI {
   constructor(config: TestConfiguration) {

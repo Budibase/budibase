@@ -1,12 +1,4 @@
-import { InviteUsersResponse, User } from "@budibase/types"
-
-jest.mock("nodemailer")
-import { TestConfiguration, mocks, structures } from "../../../../../tests"
-const sendMailMock = mocks.email.mock()
-import { events, tenancy, accounts as _accounts } from "@budibase/backend-core"
-import * as userSdk from "../../../../../sdk/users"
-
-const accounts = jest.mocked(_accounts)
+import { TestConfiguration } from "../../../../../tests"
 
 describe("/api/global/scim/v2/users", () => {
   const config = new TestConfiguration()
@@ -24,6 +16,15 @@ describe("/api/global/scim/v2/users", () => {
   })
 
   describe("GET /api/global/scim/v2/users", () => {
+    it("unauthorised calls are not allowed", async () => {
+      const response = await config.api.scimUsersAPI.get({
+        setHeaders: false,
+        expect: 403,
+      })
+
+      expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+    })
+
     describe("no users exist", () => {
       it("should retrieve empty list", async () => {
         const response = await config.api.scimUsersAPI.get()
@@ -40,8 +41,20 @@ describe("/api/global/scim/v2/users", () => {
   })
 
   describe("POST /api/global/scim/v2/users", () => {
+    it("unauthorised calls are not allowed", async () => {
+      const response = await config.api.scimUsersAPI.post(
+        { body: {} as any },
+        {
+          setHeaders: false,
+          expect: 403,
+        }
+      )
+
+      expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+    })
+
     describe("no users exist", () => {
-      it("should retrieve empty list", async () => {
+      it("a new user can be created", async () => {
         const body = {} as any
         const response = await config.api.scimUsersAPI.post(body)
 
