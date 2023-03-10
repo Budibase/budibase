@@ -9,10 +9,9 @@
   export let multi = false
   export let readonly = false
 
-  const options = schema?.constraints?.inclusion || []
-
   let open = false
 
+  $: options = schema?.constraints?.inclusion || []
   $: editable = selected && !readonly
   $: values = Array.isArray(value) ? value : [value].filter(x => x != null)
   $: unselectedOptions = options.filter(x => !values.includes(x))

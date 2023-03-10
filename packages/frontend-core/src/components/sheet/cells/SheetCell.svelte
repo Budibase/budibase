@@ -1,8 +1,6 @@
 <script>
-  export let label = false
   export let rowSelected = false
   export let rowHovered = false
-  export let sticky = false
   export let selected = false
   export let reorderSource = false
   export let reorderTarget = false
@@ -10,7 +8,6 @@
   export let center = false
   export let selectedUser = null
   export let rowIdx
-  export let foo
 
   $: style = getStyle(width, selectedUser)
 
@@ -25,11 +22,8 @@
 
 <div
   class="cell"
-  class:foo
-  class:label
   class:row-selected={rowSelected}
   class:row-hovered={rowHovered}
-  class:sticky
   class:selected
   class:selected-other={selectedUser != null}
   class:reorder-source={reorderSource}
@@ -103,19 +97,6 @@
     background: var(--spectrum-global-color-blue-400);
     width: 2px;
     height: calc(var(--cell-height) + 2px);
-  }
-
-  /* Label cells */
-  .cell.label {
-    padding: var(--cell-padding);
-    flex: 0 0 40px;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-  }
-  .cell.foo {
-    background: var(--spectrum-global-color-gray-100);
   }
 
   /* Other user email */

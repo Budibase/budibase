@@ -44,8 +44,19 @@ export const createViewportStores = context => {
         leftEdge += $columns[endColIdx].width
         endColIdx++
       }
-      return $columns.slice(startColIdx, endColIdx)
-    }
+      const nextVisibleColumns = $columns.slice(startColIdx, endColIdx)
+
+      // Cautiously shrink the number of rendered columns.
+      // This is to avoid rapidly shrinking and growing the visible column count
+      // which results in remounting cells
+      const currentCount = get(visibleColumns).length
+      if (currentCount === nextVisibleColumns.length + 1) {
+        return $columns.slice(startColIdx, endColIdx + 1)
+      } else {
+        return nextVisibleColumns
+      }
+    },
+    []
   )
 
   // Fetch next page when approaching end of data
