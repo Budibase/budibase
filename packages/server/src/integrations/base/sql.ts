@@ -317,7 +317,8 @@ class InternalBuilder {
     const table = json.meta?.table
     if (sort) {
       for (let [key, value] of Object.entries(sort)) {
-        const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
+        const direction =
+          value.direction === SortDirection.ASCENDING ? "asc" : "desc"
         query = query.orderBy(`${table?.name}.${key}`, direction)
       }
     } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
