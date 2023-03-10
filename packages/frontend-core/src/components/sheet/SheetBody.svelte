@@ -1,10 +1,9 @@
 <script>
   import { getContext, onMount } from "svelte"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
-  import NewRow from "./NewRow.svelte"
   import SheetRow from "./SheetRow.svelte"
 
-  const { bounds, visibleRows, config } = getContext("sheet")
+  const { bounds, visibleRows } = getContext("sheet")
 
   let body
 
@@ -25,9 +24,6 @@
     {#each $visibleRows as row, idx}
       <SheetRow {row} {idx} />
     {/each}
-    {#if $config.allowAddRows}
-      <NewRow />
-    {/if}
   </SheetScrollWrapper>
 </div>
 

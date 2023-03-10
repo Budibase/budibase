@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { Checkbox, Icon } from "@budibase/bbui"
+  import { Checkbox } from "@budibase/bbui"
   import SheetCell from "./cells/SheetCell.svelte"
   import { getCellRenderer } from "./renderers"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
@@ -51,18 +51,11 @@
       return newState
     })
   }
-
-  const addRow = async field => {
-    const newRow = await rows.actions.addRow()
-    if (newRow) {
-      $selectedCellId = `${newRow._id}-${field.name}`
-    }
-  }
 </script>
 
 <div
   class="sticky-column"
-  style="--width:{width}px;"
+  style="flex: 0 0 {width}px"
   class:scrolled={scrollLeft > 0}
 >
   <div class="header row">
@@ -88,7 +81,11 @@
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
         {@const containsSelectedRow = $selectedCellRow?._id === row._id}
-        <div class="row" on:mouseenter={() => ($hoveredRowId = row._id)}>
+        <div
+          class="row"
+          on:mouseover={() => ($hoveredRowId = row._id)}
+          on:mouseleave={() => ($hoveredRowId = null)}
+        >
           <SheetCell
             rowSelected={rowSelected || containsSelectedRow}
             {rowHovered}
@@ -138,38 +135,14 @@
           {/if}
         </div>
       {/each}
-
-      {#if $config.allowAddRows}
-        <div
-          class="row new"
-          on:focus
-          on:mouseover={() => ($hoveredRowId = "new")}
-        >
-          <SheetCell
-            rowHovered={$hoveredRowId === "new"}
-            on:click={addRow}
-            width="40"
-            center
-          >
-            <Icon name="Add" size="S" />
-          </SheetCell>
-          {#if $stickyColumn}
-            <SheetCell
-              on:click={addRow}
-              width={$stickyColumn.width}
-              rowHovered={$hoveredRowId === "new"}
-              reorderTarget={$reorder.targetColumn === $stickyColumn.name}
-            />
-          {/if}
-        </div>
-      {/if}
     </SheetScrollWrapper>
   </div>
 </div>
 
 <style>
   .sticky-column {
-    flex: 0 0 var(--width);
+    display: flex;
+    flex-direction: column;
   }
 
   /* Add shadow when scrolled */
@@ -205,9 +178,7 @@
   .content {
     position: relative;
     z-index: 1;
-  }
-  .row.new:hover :global(.cell) {
-    cursor: pointer;
+    flex: 1 1 auto;
   }
 
   /* Styles for label cell */
