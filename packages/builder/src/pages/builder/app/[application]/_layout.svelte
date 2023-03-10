@@ -10,6 +10,7 @@
     Tabs,
     Tab,
     Heading,
+    Modal,
     notifications,
   } from "@budibase/bbui"
 
@@ -18,6 +19,7 @@
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
   import { onMount, onDestroy } from "svelte"
+  import CommandPalette from "components/commandPalette/CommandPalette.svelte"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
@@ -25,12 +27,9 @@
 
   export let application
 
-  // Get Package and set store
   let promise = getPackage()
-  // let betaAccess = false
-
-  // Sync once when you load the app
   let hasSynced = false
+  let commandPaletteModal
 
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
@@ -50,7 +49,6 @@
       $redirect("../../")
     }
   }
-
   // Handles navigation between frontend, backend, automation.
   // This remembers your last place on each of the sections
   // e.g. if one of your screens is selected on front end, then
@@ -65,6 +63,14 @@
       $goto(state.previousTopNavPath[path] || path)
       return state
     })
+  }
+
+  // Event handler for the command palette
+  const handleKeyDown = e => {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      commandPaletteModal.toggle()
+    }
   }
 
   const initTour = async () => {
@@ -200,6 +206,11 @@
     <p>Something went wrong: {error.message}</p>
   {/await}
 </div>
+
+<svelte:window on:keydown={handleKeyDown} />
+<Modal bind:this={commandPaletteModal}>
+  <CommandPalette />
+</Modal>
 
 <style>
   .loading {
