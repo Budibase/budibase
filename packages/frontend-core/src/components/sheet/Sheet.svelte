@@ -25,6 +25,7 @@
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "./KeyboardManager.svelte"
   import { clickOutside } from "@budibase/bbui"
+  import NewRow from "./NewRow.svelte"
 
   export let API
   export let tableId
@@ -159,17 +160,17 @@
     display: flex;
     flex-direction: row;
     justify-items: flex-start;
-    align-items: flex-start;
+    align-items: stretch;
     overflow: hidden;
     height: 0;
     position: relative;
+    background: var(--spectrum-global-color-gray-75);
   }
   .sheet-main {
     flex: 1 1 auto;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    align-self: stretch;
   }
 
   /* Controls */
