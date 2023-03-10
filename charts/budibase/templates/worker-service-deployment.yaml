@@ -62,6 +62,11 @@ spec:
           {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
           {{ end }}
+        - name: API_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: budibase-budibase {{ template "budibase.fullname" . }}
+              key: jwtSecret
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
