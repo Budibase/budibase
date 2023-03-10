@@ -6,18 +6,48 @@ import {
 import TestConfiguration from "../../TestConfiguration"
 import { TestAPI } from "../base"
 
+export interface RequestSettings {
+  expect: number
+  setHeaders: boolean
+}
+
+const defaultConfig: RequestSettings = {
+  expect: 200,
+  setHeaders: true,
+}
+
 export class ScimUsersAPI extends TestAPI {
   constructor(config: TestConfiguration) {
     super(config)
   }
 
-  get = async (expect = 200) => {
-    const res = await this.request
-      .get(`/api/global/scim/v2/users`)
-      .set(this.config.bearerAPIHeaders())
+  #createRequest = (
+    url: string,
+    method: "get" | "post",
+    requestSettings?: Partial<RequestSettings>,
+    body?: object
+  ) => {
+    const { expect, setHeaders } = { ...defaultConfig, ...requestSettings }
+    let request = this.request[method](url)
       .expect("Content-Type", /json/)
       .expect(expect)
 
+    if (body) {
+      request = request.send(body)
+    }
+
+    if (setHeaders) {
+      request = request.set(this.config.bearerAPIHeaders())
+    }
+    return request
+  }
+
+  get = async (requestSettings?: Partial<RequestSettings>) => {
+    const res = await this.#createRequest(
+      `/api/global/scim/v2/users`,
+      "get",
+      requestSettings
+    )
     return res.body as ScimListResponse
   }
 
@@ -27,14 +57,14 @@ export class ScimUsersAPI extends TestAPI {
     }: {
       body: ScimUserRequest
     },
-    expect = 200
+    requestSettings?: Partial<RequestSettings>
   ) => {
-    const res = await this.request
-      .post(`/api/global/scim/v2/users`)
-      .send(body)
-      .set(this.config.bearerAPIHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expect)
+    const res = await this.#createRequest(
+      `/api/global/scim/v2/users`,
+      "post",
+      requestSettings,
+      body
+    )
 
     return res.body as ScimListResponse
   }
