@@ -13,13 +13,13 @@ function generateAttachmentFindParams(
 ) {
   const params: CouchFindOptions = {
     selector: {
+      $or: attachmentCols.map(col => ({ [col]: { $exists: true } })),
       _id: {
         $regex: `^${DocumentType.ROW}${SEPARATOR}${tableId}`,
       },
     },
     limit: FIND_LIMIT,
   }
-  attachmentCols.forEach(col => (params.selector[col] = { $exists: true }))
   if (bookmark) {
     params.bookmark = bookmark
   }

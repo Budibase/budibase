@@ -18,6 +18,8 @@ import accountRoutes from "./system/accounts"
 import restoreRoutes from "./system/restore"
 
 let userGroupRoutes = api.groups
+let auditLogRoutes = api.auditLogs
+
 export const routes: Router[] = [
   configRoutes,
   userRoutes,
@@ -32,6 +34,7 @@ export const routes: Router[] = [
   selfRoutes,
   licenseRoutes,
   userGroupRoutes,
+  auditLogRoutes,
   migrationRoutes,
   accountRoutes,
   restoreRoutes,

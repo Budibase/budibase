@@ -2,10 +2,11 @@
 name: Bug report
 about: Create a report to help us improve
 title: ''
-labels: bug
+labels: bug, linear
 assignees: ''
 
 ---
+
 **Checklist**
 - [ ] I have searched budibase discussions and github issues to check if my issue already exists
 

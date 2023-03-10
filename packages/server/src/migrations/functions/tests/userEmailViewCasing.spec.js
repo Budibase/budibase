@@ -8,9 +8,8 @@ jest.mock("@budibase/backend-core", () => {
     }
   }
 })
-const { tenancy, db: dbCore } = require("@budibase/backend-core")
+const { context, db: dbCore } = require("@budibase/backend-core")
 const TestConfig = require("../../../tests/utilities/TestConfiguration")
-const { TENANT_ID } = require("../../../tests/utilities/structures")
 
 // mock email view creation
 
@@ -26,8 +25,8 @@ describe("run", () => {
     afterAll(config.end)
 
     it("runs successfully", async () => {
-      await tenancy.doInTenant(TENANT_ID, async () => {
-        const globalDb = tenancy.getGlobalDB()
+      await config.doInTenant(async () => {
+        const globalDb = context.getGlobalDB()
         await migration.run(globalDb)
         expect(dbCore.createNewUserEmailView).toHaveBeenCalledTimes(1)
       })

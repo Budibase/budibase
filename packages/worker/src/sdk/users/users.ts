@@ -14,6 +14,7 @@ import {
   users as usersCore,
   utils,
   ViewName,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import {
   AccountMetadata,
@@ -28,13 +29,12 @@ import {
   PlatformUserByEmail,
   RowResponse,
   SearchUsersRequest,
-  UpdateSelf,
   User,
   SaveUserOpts,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
-import { groups as groupsSdk } from "@budibase/pro"
+import * as pro from "@budibase/pro"
 import * as accountSdk from "../accounts"
 
 const PAGE_LIMIT = 8
@@ -56,11 +56,22 @@ export const countUsersByApp = async (appId: string) => {
   }
 }
 
+export const getUsersByAppAccess = async (appId?: string) => {
+  const opts: any = {
+    include_docs: true,
+    limit: 50,
+  }
+  let response: User[] = await usersCore.searchGlobalUsersByAppAccess(
+    appId,
+    opts
+  )
+  return response
+}
+
 export const paginatedUsers = async ({
   page,
   email,
   appId,
-  userIds,
 }: SearchUsersRequest = {}) => {
   const db = tenancy.getGlobalDB()
   // get one extra document, to have the next page
@@ -120,15 +131,25 @@ const buildUser = async (
 ): Promise<User> => {
   let { password, _id } = user
 
+  // don't require a password if the db user doesn't already have one
+  if (dbUser && !dbUser.password) {
+    opts.requirePassword = false
+  }
+
   let hashedPassword
   if (password) {
-    if (await isPreventSSOPasswords(user)) {
-      throw new HTTPError("SSO user cannot set password", 400)
+    if (await isPreventPasswordActions(user)) {
+      throw new HTTPError("Password change is disabled for this user", 400)
     }
     hashedPassword = opts.hashPassword ? await utils.hash(password) : password
   } else if (dbUser) {
     hashedPassword = dbUser.password
-  } else if (opts.requirePassword) {
+  }
+
+  // passwords are never required if sso is enforced
+  const requirePasswords =
+    opts.requirePassword && !(await pro.features.isSSOEnforced())
+  if (!hashedPassword && requirePasswords) {
     throw "Password must be specified."
   }
 
@@ -188,11 +209,16 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   }
 }
 
-export async function isPreventSSOPasswords(user: User) {
+export async function isPreventPasswordActions(user: User) {
   // when in maintenance mode we allow sso users with the admin role
   // to perform any password action - this prevents lockout
-  if (env.ENABLE_SSO_MAINTENANCE_MODE && user.admin?.global) {
+  if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE && user.admin?.global) {
     return false
+  }
+
+  // SSO is enforced for all users
+  if (await pro.features.isSSOEnforced()) {
+    return true
   }
 
   // Check local sso
@@ -203,15 +229,6 @@ export async function isPreventSSOPasswords(user: User) {
   // Check account sso
   const account = await accountSdk.api.getAccount(user.email)
   return !!(account && isSSOAccount(account))
-}
-
-export async function updateSelf(id: string, data: UpdateSelf) {
-  let user = await getUser(id)
-  user = {
-    ...user,
-    ...data,
-  }
-  return save(user)
 }
 
 export const save = async (
@@ -228,7 +245,7 @@ export const save = async (
   const tenantId = tenancy.getTenantId()
   const db = tenancy.getGlobalDB()
 
-  let { email, _id, userGroups = [] } = user
+  let { email, _id, userGroups = [], roles } = user
 
   if (!email && !_id) {
     throw new Error("_id or email is required")
@@ -270,6 +287,10 @@ export const save = async (
     builtUser.roles = dbUser.roles
   }
 
+  if (!dbUser && roles?.length) {
+    builtUser.roles = { ...roles }
+  }
+
   // make sure we set the _id field for a new user
   // Also if this is a new user, associate groups with them
   let groupPromises = []
@@ -278,7 +299,7 @@ export const save = async (
 
     if (userGroups.length > 0) {
       for (let groupId of userGroups) {
-        groupPromises.push(groupsSdk.addUsers(groupId, [_id]))
+        groupPromises.push(pro.groups.addUsers(groupId, [_id]))
       }
     }
   }
@@ -456,7 +477,7 @@ export const bulkCreate = async (
     const groupPromises = []
     const createdUserIds = saved.map(user => user._id)
     for (let groupId of groups) {
-      groupPromises.push(groupsSdk.addUsers(groupId, createdUserIds))
+      groupPromises.push(pro.groups.addUsers(groupId, createdUserIds))
     }
     await Promise.all(groupPromises)
   }
@@ -631,7 +652,7 @@ export const invite = async (
       }
       await sendEmail(user.email, EmailTemplatePurpose.INVITATION, opts)
       response.successful.push({ email: user.email })
-      await events.user.invited()
+      await events.user.invited(user.email)
     } catch (e) {
       console.error(`Failed to send email invitation email=${user.email}`, e)
       response.unsuccessful.push({

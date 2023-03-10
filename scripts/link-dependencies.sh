@@ -28,6 +28,12 @@ yarn unlink
 yarn link
 cd -
 
+echo "Linking shared-core"
+cd packages/shared-core
+yarn unlink
+yarn link
+cd -
+
 if [ -d "../budibase-pro" ]; then
   cd ../budibase-pro
   echo "Bootstrapping budibase-pro"
@@ -43,6 +49,9 @@ if [ -d "../budibase-pro" ]; then
 
   echo "Linking types to pro"
   yarn link '@budibase/types'
+
+  echo "Linking string-templates to pro"
+  yarn link '@budibase/string-templates'
 
   cd ../../../budibase
 

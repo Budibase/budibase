@@ -6,16 +6,19 @@
 
   export let tourStepKey
 
-  let currentTour
+  let currentTourStep
   let ready = false
   let handler
 
   onMount(() => {
     if (!$store.tourKey) return
 
-    currentTour = TOURS[$store.tourKey].find(step => step.id === tourStepKey)
+    currentTourStep = TOURS[$store.tourKey].find(
+      step => step.id === tourStepKey
+    )
+    if (!currentTourStep) return
 
-    const elem = document.querySelector(currentTour.query)
+    const elem = document.querySelector(currentTourStep.query)
     handler = tourHandler(elem, tourStepKey)
     ready = true
   })

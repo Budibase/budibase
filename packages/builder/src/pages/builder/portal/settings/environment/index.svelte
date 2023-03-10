@@ -1,21 +1,17 @@
 <script>
   import {
     Layout,
-    Heading,
-    Body,
     Button,
-    Divider,
     Modal,
     Table,
-    Tags,
-    Tag,
     InlineAlert,
     notifications,
   } from "@budibase/bbui"
-  import { environment, licensing, auth, admin } from "stores/portal"
+  import { environment, licensing } from "stores/portal"
   import { onMount } from "svelte"
   import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
   import EditVariableColumn from "./_components/EditVariableColumn.svelte"
+  import LockedFeature from "../../_components/LockedFeature.svelte"
 
   let modal
 
@@ -61,91 +57,43 @@
   }
 </script>
 
-<Layout noPadding>
-  <Layout gap="XS" noPadding>
-    <div class="title">
-      <Heading size="M">Environment Variables</Heading>
-      {#if !$licensing.environmentVariablesEnabled}
-        <Tags>
-          <Tag icon="LockClosed">Business plan</Tag>
-        </Tags>
-      {/if}
-    </div>
-    <Body
-      >Add and manage environment variables for development and production</Body
-    >
-  </Layout>
-  <Divider size="S" />
-
-  {#if $licensing.environmentVariablesEnabled}
-    {#if noEncryptionKey}
-      <InlineAlert
-        message="Your Budibase installation does not have a key for encryption, please update your app service's environment variables to contain an 'ENCRYPTION_KEY' value."
-        header="No encryption key found"
-        type="error"
-      />
-    {/if}
-    <div>
-      <Button on:click={modal.show} cta disabled={noEncryptionKey}
-        >Add Variable</Button
-      >
-    </div>
-
-    <Layout noPadding>
-      <Table
-        {schema}
-        data={$environment.variables}
-        allowEditColumns={false}
-        allowEditRows={false}
-        allowSelectRows={false}
-        {customRenderers}
-      />
-    </Layout>
-  {:else}
-    <div class="buttons">
-      <Button
-        primary
-        disabled={!$auth.accountPortalAccess && $admin.cloud}
-        on:click={async () => {
-          await environment.upgradePanelOpened()
-          $licensing.goToUpgradePage()
-        }}
-      >
-        Upgrade
-      </Button>
-      <!--Show the view plans button-->
-      <Button
-        secondary
-        on:click={() => {
-          window.open("https://budibase.com/pricing/", "_blank")
-        }}
-      >
-        View Plans
-      </Button>
-    </div>
+<LockedFeature
+  title={"Environment Variables"}
+  planType={"Business plan"}
+  description={"Add and manage environment variables for development and production"}
+  enabled={$licensing.environmentVariablesEnabled}
+  upgradeButtonClick={async () => {
+    await environment.upgradePanelOpened()
+    $licensing.goToUpgradePage()
+  }}
+>
+  {#if noEncryptionKey}
+    <InlineAlert
+      message="Your Budibase installation does not have a key for encryption, please update your app service's environment variables to contain an 'ENCRYPTION_KEY' value."
+      header="No encryption key found"
+      type="error"
+    />
   {/if}
-</Layout>
+  <div>
+    <Button on:click={modal.show} cta disabled={noEncryptionKey}
+      >Add Variable</Button
+    >
+  </div>
+  <Layout noPadding>
+    <Table
+      {schema}
+      data={$environment.variables}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
+      {customRenderers}
+    />
+  </Layout>
+</LockedFeature>
 
 <Modal bind:this={modal}>
   <CreateEditVariableModal {save} />
 </Modal>
 
 <style>
-  .buttons {
-    display: flex;
-    gap: var(--spacing-l);
-  }
-  .title {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--spacing-m);
-  }
-
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    gap: var(--spacing-m);
-  }
 </style>
