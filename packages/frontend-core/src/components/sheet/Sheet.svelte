@@ -86,10 +86,6 @@
   // Expose ability to retrieve context externally to allow sheet control
   export const getContext = () => context
 
-  // Local flag for if the sheet has ever had data
-  let initialised = false
-  loaded.subscribe(state => (initialised = initialised || state))
-
   // Initialise websocket for multi-user
   onMount(() => createWebsocket(context))
 </script>
@@ -112,7 +108,7 @@
       <UserAvatars />
     </div>
   </div>
-  {#if initialised}
+  {#if $loaded}
     <div class="sheet-data">
       <StickyColumn />
       <div class="sheet-main">
