@@ -50,7 +50,7 @@
   $: tempFilters = filters
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
-  $: getInputData(testData, block.inputs)
+  $: getInputData(testData, cloneDeep(block.inputs))
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
@@ -79,7 +79,6 @@
         searchableSchema: true,
       }).schema
     }
-
     try {
       if (isTestModal) {
         let newTestData = { schema }

@@ -107,7 +107,7 @@ export function substituteLoopStep(hbsString: string, substitute: string) {
   let pointer = 0,
     openPointer = 0,
     closedPointer = 0
-  while (pointer < hbsString.length) {
+  while (pointer < hbsString?.length) {
     openPointer = hbsString.indexOf(open, pointer)
     closedPointer = hbsString.indexOf(closed, pointer) + 2
     if (openPointer < 0 || closedPointer < 0) {
