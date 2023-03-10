@@ -68,11 +68,9 @@
   <div class="header row">
     <!-- Field headers -->
     <SheetCell
-      header
-      foo
-      label
       width="40"
       on:click={$config.allowSelectRows && selectAll}
+      center
     >
       {#if $config.allowSelectRows}
         <Checkbox value={rowCount && selectedRowCount === rowCount} />
@@ -92,10 +90,10 @@
         {@const containsSelectedRow = $selectedCellRow?._id === row._id}
         <div class="row" on:mouseenter={() => ($hoveredRowId = row._id)}>
           <SheetCell
-            label
             rowSelected={rowSelected || containsSelectedRow}
             {rowHovered}
             width="40"
+            center
           >
             <div
               on:click={() => selectRow(row._id)}
@@ -120,7 +118,6 @@
               rowSelected={rowSelected || containsSelectedRow}
               {rowHovered}
               rowIdx={idx}
-              sticky
               selected={$selectedCellId === cellId}
               selectedUser={$selectedCellMap[cellId]}
               on:click={() => ($selectedCellId = cellId)}
@@ -150,9 +147,9 @@
         >
           <SheetCell
             rowHovered={$hoveredRowId === "new"}
-            label
             on:click={addRow}
             width="40"
+            center
           >
             <Icon name="Add" size="S" />
           </SheetCell>
@@ -172,8 +169,10 @@
 
 <style>
   .sticky-column {
-    flex: 0 0 calc(var(--width) + 0px);
+    flex: 0 0 var(--width);
   }
+
+  /* Add shadow when scrolled */
   .sticky-column.scrolled :global(.cell:last-child:after) {
     content: " ";
     position: absolute;
@@ -182,6 +181,8 @@
     left: 100%;
     background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);
   }
+
+  /* Don't show borders between cells in the sticky column */
   .sticky-column :global(.cell:not(:last-child)) {
     border-right: none;
   }
@@ -190,6 +191,10 @@
     border-bottom: var(--cell-border);
     position: relative;
     z-index: 2;
+  }
+  .header :global(.cell) {
+    background: var(--spectrum-global-color-gray-100);
+    border-bottom: none;
   }
   .row {
     display: flex;
@@ -206,6 +211,10 @@
   }
 
   /* Styles for label cell */
+  .checkbox,
+  .number {
+    padding: 0 var(--cell-padding);
+  }
   .checkbox {
     display: none;
   }
