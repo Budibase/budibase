@@ -12,8 +12,10 @@ export const buildUserEndpoints = API => ({
    * Gets a list of users in the current tenant.
    * @param {string} page The page to retrieve
    * @param {string} search The starts with string to search username/email by.
+   * @param {string} appId Facilitate app/role based user searching
+   * @param {boolean} paginated Allow the disabling of pagination
    */
-  searchUsers: async ({ page, email, appId } = {}) => {
+  searchUsers: async ({ paginated, page, email, appId } = {}) => {
     const opts = {}
     if (page) {
       opts.page = page
@@ -23,6 +25,9 @@ export const buildUserEndpoints = API => ({
     }
     if (appId) {
       opts.appId = appId
+    }
+    if (typeof paginated === "boolean") {
+      opts.paginated = paginated
     }
     return await API.post({
       url: `/api/global/users/search`,
@@ -133,7 +138,7 @@ export const buildUserEndpoints = API => ({
    * @param builder whether the user should be a global builder
    * @param admin whether the user should be a global admin
    */
-  inviteUser: async ({ email, builder, admin }) => {
+  inviteUser: async ({ email, builder, admin, apps }) => {
     return await API.post({
       url: "/api/global/users/invite",
       body: {
@@ -141,7 +146,39 @@ export const buildUserEndpoints = API => ({
         userInfo: {
           admin: admin ? { global: true } : undefined,
           builder: builder ? { global: true } : undefined,
+          apps: apps ? apps : undefined,
         },
+      },
+    })
+  },
+
+  onboardUsers: async payload => {
+    return await API.post({
+      url: "/api/global/users/onboard",
+      body: payload.map(invite => {
+        const { email, admin, builder, apps } = invite
+        return {
+          email,
+          userInfo: {
+            admin: admin ? { global: true } : undefined,
+            builder: builder ? { global: true } : undefined,
+            apps: apps ? apps : undefined,
+          },
+        }
+      }),
+    })
+  },
+
+  /**
+   * Accepts a user invite as a body and will update the associated app roles.
+   * for an existing invite
+   * @param invite the invite code sent in the email
+   */
+  updateUserInvite: async invite => {
+    await API.post({
+      url: `/api/global/users/invite/update/${invite.code}`,
+      body: {
+        apps: invite.apps,
       },
     })
   },
@@ -153,6 +190,15 @@ export const buildUserEndpoints = API => ({
   getUserInvite: async code => {
     return await API.get({
       url: `/api/global/users/invite/${code}`,
+    })
+  },
+
+  /**
+   * Retrieves all user invitations for the current tenant.
+   */
+  getUserInvites: async () => {
+    return await API.get({
+      url: `/api/global/users/invites`,
     })
   },
 
@@ -169,6 +215,7 @@ export const buildUserEndpoints = API => ({
           admin: user.admin ? { global: true } : undefined,
           builder: user.admin || user.builder ? { global: true } : undefined,
           userGroups: user.groups,
+          roles: user.apps ? user.apps : undefined,
         },
       })),
     })

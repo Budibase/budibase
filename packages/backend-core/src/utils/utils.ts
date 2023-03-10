@@ -10,7 +10,13 @@ import {
 import env from "../environment"
 import * as tenancy from "../tenancy"
 import * as context from "../context"
-import { App, Ctx, TenantResolutionStrategy } from "@budibase/types"
+import {
+  App,
+  AuditedEventFriendlyName,
+  Ctx,
+  Event,
+  TenantResolutionStrategy,
+} from "@budibase/types"
 import { SetOption } from "cookies"
 const jwt = require("jsonwebtoken")
 
@@ -216,4 +222,8 @@ export async function getBuildersCount() {
 
 export function timeout(timeMs: number) {
   return new Promise(resolve => setTimeout(resolve, timeMs))
+}
+
+export function isAudited(event: Event) {
+  return !!AuditedEventFriendlyName[event]
 }

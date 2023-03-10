@@ -1,0 +1,143 @@
+name: Budibase Release
+concurrency: release
+
+on:
+ push:
+    branches:
+      - master
+    paths:
+      - '.aws/**'
+      - '.github/**'
+      - 'charts/**'
+      - 'packages/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'package.json'
+      - 'yarn.lock'
+ workflow_dispatch:
+  inputs:
+    versioning:
+      type: choice
+      description: "Versioning type: patch, minor, major"
+      default: patch
+      options:
+        - patch
+        - minor
+        - major
+      required: true
+
+env:
+  # Posthog token used by ui at build time 
+  POSTHOG_TOKEN: phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
+  INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
+  SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+jobs:
+  release-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if branch is not master
+        if: github.ref != 'refs/heads/master' 
+        run: | 
+          echo "Ref is not master, you must run this job from master."
+          exit 1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+
+      - name: Install Pro
+        run: yarn install:pro master
+
+      - run: yarn
+      - run: yarn bootstrap
+      - run: yarn lint
+      - run: yarn build
+      - run: yarn build:sdk
+
+      - name: Publish budibase packages to NPM
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_VERSION_TYPE: ${{ github.event.inputs.versioning }}
+        run: |
+          # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
+          git config --global user.name "Budibase Release Bot"
+          git config --global user.email "<>"
+          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
+          yarn release
+
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      - name: Build/release Docker images
+        run: | 
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          yarn build
+          yarn build:docker
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+
+  release-helm-chart:
+    needs: [release-images]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Helm
+        uses: azure/setup-helm@v1
+        id: helm-install
+
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      # due to helm repo index issue: https://github.com/helm/helm/issues/7363
+      # we need to create new package in a different dir, merge the index and move the package back
+      - name: Build and release helm chart
+        run: |
+          git config user.name "Budibase Helm Bot"
+          git config user.email "<>"
+          git reset --hard
+          git pull
+          mkdir sync
+          echo "Packaging chart to sync dir"
+          helm package charts/budibase --version 0.0.0-master --app-version "$RELEASE_VERSION" --destination sync
+          echo "Packaging successful"
+          git checkout gh-pages
+          echo "Indexing helm repo"         
+          helm repo index --merge docs/index.yaml sync
+          mv -f sync/* docs
+          rm -rf sync
+          echo "Pushing new helm release"
+          git add -A
+          git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
+          git push
+        env:
+          RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+
+  deploy-to-legacy-preprod-env:
+    needs: [release-images]
+    uses: ./.github/workflows/deploy-preprod.yml
+    secrets: inherit
+
+  # Trigger deploy to new EKS preprod environment
+  trigger-deploy-to-preprod-env:
+    needs: [release-helm-chart]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      - uses: passeidireto/trigger-external-workflow-action@main
+        env:
+          PAYLOAD_VERSION: ${{ steps.previoustag.outputs.tag }}
+        with:
+          repository: budibase/budibase-deploys
+          event: budicloud-preprod-deploy
+          github_pat: ${{ secrets.GH_ACCESS_TOKEN }}

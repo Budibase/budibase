@@ -140,8 +140,8 @@ const triggerAutomationHandler = async action => {
 }
 
 const navigationHandler = action => {
-  const { url, peek } = action.parameters
-  routeStore.actions.navigate(url, peek)
+  const { url, peek, externalNewTab } = action.parameters
+  routeStore.actions.navigate(url, peek, externalNewTab)
 }
 
 const queryExecutionHandler = async action => {

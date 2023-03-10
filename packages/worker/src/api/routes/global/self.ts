@@ -11,7 +11,7 @@ router
   .get("/api/global/self", controller.getSelf)
   .post(
     "/api/global/self",
-    users.buildUserSaveValidation(true),
+    users.buildSelfSaveValidation(),
     controller.updateSelf
   )
 

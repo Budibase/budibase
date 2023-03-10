@@ -11,6 +11,8 @@ import {
   Row,
   Table,
   RelationshipTypes,
+  FieldType,
+  SortType,
 } from "@budibase/types"
 import {
   breakRowIdField,
@@ -24,8 +26,7 @@ import { breakExternalTableId, isSQL } from "../../../integrations/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { processFormulas, processDates } from "../../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
-import { removeKeyNumbering } from "./utils"
+import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
 export interface ManyRelationship {
@@ -61,7 +62,7 @@ function buildFilters(
     let prefix = 1
     for (let operator of Object.values(filters)) {
       for (let field of Object.keys(operator || {})) {
-        if (removeKeyNumbering(field) === "_id") {
+        if (dbCore.removeKeyNumbering(field) === "_id") {
           if (primary) {
             const parts = breakRowIdField(operator[field])
             for (let field of primary) {
@@ -750,8 +751,16 @@ export class ExternalRequest {
     )
     //if the sort column is a formula, remove it
     for (let sortColumn of Object.keys(sort || {})) {
-      if (table.schema[sortColumn]?.type === "formula") {
-        delete sort?.[sortColumn]
+      if (!sort?.[sortColumn]) {
+        continue
+      }
+      switch (table.schema[sortColumn]?.type) {
+        case FieldType.FORMULA:
+          delete sort?.[sortColumn]
+          break
+        case FieldType.NUMBER:
+          sort[sortColumn].type = SortType.number
+          break
       }
     }
     filters = buildFilters(id, filters || {}, table)

@@ -38,13 +38,6 @@ function buildInviteMultipleValidation() {
   ))
 }
 
-function buildInviteLookupValidation() {
-  // prettier-ignore
-  return auth.joiValidator.params(Joi.object({
-    code: Joi.string().required()
-  }).unknown(true))
-}
-
 const createUserAdminOnly = (ctx: any, next: any) => {
   if (!ctx.request.body._id) {
     return auth.adminOnly(ctx, next)
@@ -57,8 +50,8 @@ function buildInviteAcceptValidation() {
   // prettier-ignore
   return auth.joiValidator.body(Joi.object({
     inviteCode: Joi.string().required(),
-    password: Joi.string().required(),
-    firstName: Joi.string().required(),
+    password: Joi.string().optional(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
   }).required().unknown(true))
 }
@@ -88,22 +81,34 @@ router
   .get("/api/global/roles/:appId")
   .post(
     "/api/global/users/invite",
-    auth.adminOnly,
+    auth.builderOrAdmin,
     buildInviteValidation(),
     controller.invite
   )
   .post(
+    "/api/global/users/onboard",
+    auth.builderOrAdmin,
+    buildInviteMultipleValidation(),
+    controller.onboardUsers
+  )
+  .post(
     "/api/global/users/multi/invite",
-    auth.adminOnly,
+    auth.builderOrAdmin,
     buildInviteMultipleValidation(),
     controller.inviteMultiple
   )
 
   // non-global endpoints
+  .get("/api/global/users/invite/:code", controller.checkInvite)
+  .post(
+    "/api/global/users/invite/update/:code",
+    auth.builderOrAdmin,
+    controller.updateInvite
+  )
   .get(
-    "/api/global/users/invite/:code",
-    buildInviteLookupValidation(),
-    controller.checkInvite
+    "/api/global/users/invites",
+    auth.builderOrAdmin,
+    controller.getUserInvites
   )
   .post(
     "/api/global/users/invite/accept",
@@ -123,7 +128,7 @@ router
   .get("/api/global/users/self", selfController.getSelf)
   .post(
     "/api/global/users/self",
-    users.buildUserSaveValidation(true),
+    users.buildUserSaveValidation(),
     selfController.updateSelf
   )
 

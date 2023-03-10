@@ -58,8 +58,8 @@ export const reset = async (email: string) => {
   }
 
   // exit if user has sso
-  if (await userSdk.isPreventSSOPasswords(user)) {
-    throw new HTTPError("SSO user cannot reset password", 400)
+  if (await userSdk.isPreventPasswordActions(user)) {
+    return
   }
 
   // send password reset

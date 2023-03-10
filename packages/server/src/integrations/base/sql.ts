@@ -6,11 +6,11 @@ import {
   SearchFilters,
   SortDirection,
 } from "@budibase/types"
+import { db as dbCore } from "@budibase/backend-core"
 import { QueryOptions } from "../../definitions/datasource"
 import { isIsoDateString, SqlClient } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import environment from "../../environment"
-import { removeKeyNumbering } from "./utils"
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -136,7 +136,7 @@ class InternalBuilder {
       fn: (key: string, value: any) => void
     ) {
       for (let [key, value] of Object.entries(structure)) {
-        const updatedKey = removeKeyNumbering(key)
+        const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
           fn(`${opts.tableName}.${updatedKey}`, value)
@@ -317,7 +317,8 @@ class InternalBuilder {
     const table = json.meta?.table
     if (sort) {
       for (let [key, value] of Object.entries(sort)) {
-        const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
+        const direction =
+          value.direction === SortDirection.ASCENDING ? "asc" : "desc"
         query = query.orderBy(`${table?.name}.${key}`, direction)
       }
     } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {

@@ -1,29 +1,13 @@
-import { generator } from "../"
 import {
   AdminUser,
   BuilderUser,
   SSOAuthDetails,
   SSOUser,
-  User,
 } from "@budibase/types"
-import { v4 as uuid } from "uuid"
-import * as sso from "./sso"
+import { user } from "./shared"
+import { authDetails } from "./sso"
 
-export const newEmail = () => {
-  return `${uuid()}@test.com`
-}
-
-export const user = (userProps?: any): User => {
-  return {
-    email: newEmail(),
-    password: "test",
-    roles: { app_test: "admin" },
-    firstName: generator.first(),
-    lastName: generator.last(),
-    pictureUrl: "http://test.com",
-    ...userProps,
-  }
-}
+export { user, newEmail } from "./shared"
 
 export const adminUser = (userProps?: any): AdminUser => {
   return {
@@ -53,7 +37,7 @@ export function ssoUser(
   delete base.password
 
   if (!opts.details) {
-    opts.details = sso.authDetails(base)
+    opts.details = authDetails(base)
   }
 
   return {

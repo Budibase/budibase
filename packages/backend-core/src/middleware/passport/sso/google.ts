@@ -2,12 +2,11 @@ import { ssoCallbackUrl } from "../utils"
 import * as sso from "./sso"
 import {
   ConfigType,
-  GoogleConfig,
-  Database,
   SSOProfile,
   SSOAuthDetails,
   SSOProviderType,
   SaveSSOUserFunction,
+  GoogleInnerConfig,
 } from "@budibase/types"
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
@@ -45,7 +44,7 @@ export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {
  * @returns Dynamically configured Passport Google Strategy
  */
 export async function strategyFactory(
-  config: GoogleConfig["config"],
+  config: GoogleInnerConfig,
   callbackUrl: string,
   saveUserFn: SaveSSOUserFunction
 ) {
@@ -73,9 +72,6 @@ export async function strategyFactory(
   }
 }
 
-export async function getCallbackUrl(
-  db: Database,
-  config: { callbackURL?: string }
-) {
-  return ssoCallbackUrl(db, config, ConfigType.GOOGLE)
+export async function getCallbackUrl(config: GoogleInnerConfig) {
+  return ssoCallbackUrl(ConfigType.GOOGLE, config)
 }

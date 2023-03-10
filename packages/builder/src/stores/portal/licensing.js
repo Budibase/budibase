@@ -12,6 +12,7 @@ export const createLicensingStore = () => {
     // the top level license
     license: undefined,
     isFreePlan: true,
+    isEnterprisePlan: true,
     // features
     groupsEnabled: false,
     backupsEnabled: false,
@@ -53,7 +54,9 @@ export const createLicensingStore = () => {
     },
     setLicense: () => {
       const license = get(auth).user.license
-      const isFreePlan = license?.plan.type === Constants.PlanType.FREE
+      const planType = license?.plan.type
+      const isEnterprisePlan = planType === Constants.PlanType.ENTERPRISE
+      const isFreePlan = planType === Constants.PlanType.FREE
       const groupsEnabled = license.features.includes(
         Constants.Features.USER_GROUPS
       )
@@ -63,15 +66,24 @@ export const createLicensingStore = () => {
       const environmentVariablesEnabled = license.features.includes(
         Constants.Features.ENVIRONMENT_VARIABLES
       )
+      const enforceableSSO = license.features.includes(
+        Constants.Features.ENFORCEABLE_SSO
+      )
 
+      const auditLogsEnabled = license.features.includes(
+        Constants.Features.AUDIT_LOGS
+      )
       store.update(state => {
         return {
           ...state,
           license,
+          isEnterprisePlan,
           isFreePlan,
           groupsEnabled,
           backupsEnabled,
           environmentVariablesEnabled,
+          auditLogsEnabled,
+          enforceableSSO,
         }
       })
     },
