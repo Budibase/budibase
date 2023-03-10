@@ -79,6 +79,7 @@
         searchableSchema: true,
       }).schema
     }
+
     try {
       if (isTestModal) {
         let newTestData = { schema }
