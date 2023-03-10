@@ -5,8 +5,8 @@
   import { Sheet } from "@budibase/frontend-core"
   import { API } from "api"
 
-  import SheetCreateColumnButton from "components/backend/DataTable/buttons/sheet/SheetCreateColumnButton.svelte"
-  import SheetCreateRowButton from "components/backend/DataTable/buttons/sheet/SheetCreateRowButton.svelte"
+  import SheetAddColumnModal from "components/backend/DataTable/modals/sheet/SheetCreateColumnModal.svelte"
+  import SheetAddRowModal from "components/backend/DataTable/modals/sheet/SheetCreateRowModal.svelte"
   import SheetCreateViewButton from "components/backend/DataTable/buttons/sheet/SheetCreateViewButton.svelte"
   import SheetImportButton from "components/backend/DataTable/buttons/sheet/SheetImportButton.svelte"
   import SheetExportButton from "components/backend/DataTable/buttons/sheet/SheetExportButton.svelte"
@@ -23,10 +23,6 @@
 <div class="wrapper">
   <Sheet {API} tableId={id} allowAddRows={!isUsersTable}>
     <svelte:fragment slot="controls">
-      <SheetCreateColumnButton />
-      {#if !isUsersTable}
-        <SheetCreateRowButton />
-      {/if}
       {#if isInternal}
         <SheetCreateViewButton />
       {/if}
@@ -42,7 +38,9 @@
       {/if}
       <SheetExportButton />
       <SheetFilterButton />
+      <SheetAddColumnModal />
       <SheetEditColumnModal />
+      <SheetAddRowModal />
     </svelte:fragment>
   </Sheet>
 </div>

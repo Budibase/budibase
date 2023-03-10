@@ -8,6 +8,8 @@
   export let highlighted = false
 
   let modal
+
+  export const show = () => modal?.show()
 </script>
 
 <ActionButton
@@ -15,7 +17,6 @@
   emphasized={highlighted}
   selected={highlighted}
   icon="TableRowAddBottom"
-  size="S"
   quiet
   on:click={modal.show}
 >

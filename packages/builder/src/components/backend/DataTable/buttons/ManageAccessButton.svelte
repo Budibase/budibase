@@ -14,7 +14,7 @@
   }
 </script>
 
-<ActionButton icon="LockClosed" size="S" quiet on:click={openDropdown}>
+<ActionButton icon="LockClosed" quiet on:click={openDropdown}>
   Manage access
 </ActionButton>
 <Modal bind:this={modal}>

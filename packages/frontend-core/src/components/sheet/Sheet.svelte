@@ -25,7 +25,8 @@
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "./KeyboardManager.svelte"
   import { clickOutside } from "@budibase/bbui"
-  import NewRow from "./NewRow.svelte"
+  import AddRowButton from "./AddRowButton.svelte"
+  import SheetControls from "./SheetControls.svelte"
 
   export let API
   export let tableId
@@ -104,6 +105,7 @@
   <div class="controls">
     <div class="controls-left">
       <slot name="controls" />
+      <SheetControls />
     </div>
     <div class="controls-right">
       <DeleteButton />
@@ -120,6 +122,9 @@
       <ResizeOverlay />
       <ScrollOverlay />
       <MenuOverlay />
+      {#if $config.allowAddRows}
+        <AddRowButton />
+      {/if}
     </div>
   {/if}
   <KeyboardManager />

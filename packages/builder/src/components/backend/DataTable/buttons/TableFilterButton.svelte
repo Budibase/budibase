@@ -18,7 +18,6 @@
 
 <ActionButton
   icon="Filter"
-  size="S"
   quiet
   {disabled}
   on:click={modal.show}

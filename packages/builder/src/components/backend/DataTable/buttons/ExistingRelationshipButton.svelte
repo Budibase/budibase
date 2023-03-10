@@ -38,13 +38,7 @@
 
 {#if datasource}
   <div>
-    <ActionButton
-      icon="DataCorrelated"
-      primary
-      size="S"
-      quiet
-      on:click={modal.show}
-    >
+    <ActionButton icon="DataCorrelated" primary quiet on:click={modal.show}>
       Define existing relationship
     </ActionButton>
   </div>
