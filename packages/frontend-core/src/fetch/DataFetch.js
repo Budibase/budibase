@@ -196,7 +196,6 @@ export default class DataFetch {
     const { query } = get(this.store)
 
     // Get the actual data
-    console.log("===== FETCH =====")
     let { rows, info, hasNextPage, cursor, error } = await this.getData()
 
     // If we don't support searching, do a client search
