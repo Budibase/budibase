@@ -199,7 +199,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
       this.client.useOAuth2Client(oauthClient)
       await this.client.loadInfo()
-    } catch (err) {
+    } catch (err: any) {
+      // this happens for xlsx imports
+      if (err.message?.includes("operation is not supported")) {
+        err.message =
+          "This operation is not supported - XLSX sheets must be converted."
+      }
       console.error("Error connecting to google sheets", err)
       throw err
     }

@@ -4,7 +4,7 @@
   import cloneDeep from "lodash/cloneDeepWith"
   import GoogleButton from "../_components/GoogleButton.svelte"
   import { saveDatasource as save } from "builderStore/datasource"
-  import { API } from "api"
+  import { organisation } from "stores/portal"
   import { onMount } from "svelte"
 
   export let integration
@@ -12,11 +12,10 @@
 
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)
-  let isGoogleConfigured
+  $: isGoogleConfigured = !!$organisation.google
 
   onMount(async () => {
-    const config = await API.getTenantConfig()
-    isGoogleConfigured = !!config?.config.google
+    await organisation.init()
   })
 </script>
 
