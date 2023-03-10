@@ -37,8 +37,6 @@ import { EmailTemplatePurpose } from "../../constants"
 import * as pro from "@budibase/pro"
 import * as accountSdk from "../accounts"
 
-const PAGE_LIMIT = 8
-
 export const allUsers = async () => {
   const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
@@ -66,43 +64,6 @@ export const getUsersByAppAccess = async (appId?: string) => {
     opts
   )
   return response
-}
-
-export const paginatedUsers = async ({
-  page,
-  email,
-  appId,
-}: SearchUsersRequest = {}) => {
-  const db = tenancy.getGlobalDB()
-  // get one extra document, to have the next page
-  const opts: any = {
-    include_docs: true,
-    limit: PAGE_LIMIT + 1,
-  }
-  // add a startkey if the page was specified (anchor)
-  if (page) {
-    opts.startkey = page
-  }
-  // property specifies what to use for the page/anchor
-  let userList,
-    property = "_id",
-    getKey
-  if (appId) {
-    userList = await usersCore.searchGlobalUsersByApp(appId, opts)
-    getKey = (doc: any) => usersCore.getGlobalUserByAppPage(appId, doc)
-  } else if (email) {
-    userList = await usersCore.searchGlobalUsersByEmail(email, opts)
-    property = "email"
-  } else {
-    // no search, query allDocs
-    const response = await db.allDocs(dbUtils.getGlobalUserParams(null, opts))
-    userList = response.rows.map((row: any) => row.doc)
-  }
-  return dbUtils.pagination(userList, PAGE_LIMIT, {
-    paginate: true,
-    property,
-    getKey,
-  })
 }
 
 export async function getUserByEmail(email: string) {
