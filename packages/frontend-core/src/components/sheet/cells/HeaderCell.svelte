@@ -128,12 +128,8 @@
     {#if $config.allowEditColumns}
       <MenuItem icon="Edit" on:click={editColumn}>Edit column</MenuItem>
     {/if}
-    <MenuItem icon="SortOrderUp" on:click={sortAscending}>
-      Sort ascending
-    </MenuItem>
-    <MenuItem icon="SortOrderDown" on:click={sortDescending}>
-      Sort descending
-    </MenuItem>
+    <MenuItem icon="SortOrderUp" on:click={sortAscending}>Sort A-Z</MenuItem>
+    <MenuItem icon="SortOrderDown" on:click={sortDescending}>Sort Z-A</MenuItem>
     <MenuItem disabled={!canMoveLeft} icon="ArrowLeft" on:click={moveLeft}>
       Move left
     </MenuItem>

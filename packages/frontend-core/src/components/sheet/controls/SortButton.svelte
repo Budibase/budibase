@@ -4,15 +4,14 @@
 
   const { sort, columns, stickyColumn } = getContext("sheet")
   const orderOptions = [
-    { label: "Ascending", value: "ascending" },
-    { label: "Descending", value: "descending" },
+    { label: "A-Z", value: "ascending" },
+    { label: "Z-A", value: "descending" },
   ]
 
   let open = false
   let anchor
 
   $: columnOptions = getColumnOptions($stickyColumn, $columns)
-  $: console.log($sort)
 
   const getColumnOptions = (stickyColumn, columns) => {
     let options = []
