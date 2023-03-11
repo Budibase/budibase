@@ -11,7 +11,11 @@ export const createReorderStores = context => {
     sheetLeft: 0,
   }
   const reorder = writable(reorderInitialState)
-  const isReordering = derived(reorder, $reorder => !!$reorder.sourceColumn)
+  const isReordering = derived(
+    reorder,
+    $reorder => !!$reorder.sourceColumn,
+    false
+  )
 
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (column, e) => {

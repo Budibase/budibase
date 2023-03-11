@@ -419,6 +419,7 @@ export default class DataFetch {
     if (state.loading || !this.options.paginate || !state.hasNextPage) {
       return
     }
+    console.log("NEXT PAGE")
 
     // Fetch next page
     const nextCursor = state.cursors[state.pageNumber + 1]

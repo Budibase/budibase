@@ -9,8 +9,8 @@ export const createScrollStores = context => {
   })
 
   // Memoize store primitives
-  const scrollTop = derived(scroll, $scroll => $scroll.top)
-  const scrollLeft = derived(scroll, $scroll => $scroll.left)
+  const scrollTop = derived(scroll, $scroll => $scroll.top, 0)
+  const scrollLeft = derived(scroll, $scroll => $scroll.left, 0)
 
   // Derive vertical limits
   const height = derived(bounds, $bounds => $bounds.height, 0)
@@ -77,6 +77,23 @@ export const createScrollStores = context => {
         ...state,
         left: get(maxScrollLeft),
       }))
+    }
+  })
+
+  // Fetch next page when fewer than 50 scrollable rows remaining
+  const scrollableRows = derived(
+    [scrollTop, maxScrollTop],
+    ([$scrollTop, $maxScrollTop]) => {
+      if (!$maxScrollTop) {
+        return 100
+      }
+      return ($maxScrollTop - $scrollTop) / cellHeight
+    },
+    100
+  )
+  scrollableRows.subscribe(count => {
+    if (count < 25) {
+      rows.actions.loadNextPage()
     }
   })
 

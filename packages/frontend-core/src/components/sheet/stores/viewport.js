@@ -6,23 +6,32 @@ export const createViewportStores = context => {
   const scrollLeft = derived(scroll, $scroll => $scroll.left, 0)
 
   // Derive height and width as primitives to avoid wasted computation
-  const width = derived(bounds, $bounds => $bounds.width)
-  const height = derived(bounds, $bounds => $bounds.height)
+  const width = derived(bounds, $bounds => $bounds.width, 0)
+  const height = derived(bounds, $bounds => $bounds.height, 0)
 
   // Derive visible rows
   // Split into multiple stores containing primitives to optimise invalidation
   // as mich as possible
-  const firstRowIdx = derived(scrollTop, $scrollTop => {
-    return Math.floor($scrollTop / cellHeight)
-  })
-  const renderedRowCount = derived(height, $height => {
-    return Math.ceil($height / cellHeight)
-  })
+  const firstRowIdx = derived(
+    scrollTop,
+    $scrollTop => {
+      return Math.floor($scrollTop / cellHeight)
+    },
+    0
+  )
+  const renderedRowCount = derived(
+    height,
+    $height => {
+      return Math.ceil($height / cellHeight)
+    },
+    0
+  )
   const renderedRows = derived(
     [rows, firstRowIdx, renderedRowCount],
     ([$rows, $firstRowIdx, $visibleRowCount]) => {
       return $rows.slice($firstRowIdx, $firstRowIdx + $visibleRowCount)
-    }
+    },
+    []
   )
 
   // Derive visible columns
@@ -64,16 +73,6 @@ export const createViewportStores = context => {
     },
     []
   )
-
-  // Fetch next page when approaching end of data
-  renderedRows.subscribe($renderedRows => {
-    const lastVisible = $renderedRows[$renderedRows.length - 1]
-    const $rows = get(rows)
-    const lastRow = $rows[$rows.length - 1]
-    if (lastVisible && lastRow && lastVisible._id === lastRow._id) {
-      rows.actions.loadNextPage()
-    }
-  })
 
   return { renderedRows, renderedColumns }
 }
