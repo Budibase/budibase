@@ -5,7 +5,7 @@
     columns,
     resize,
     scroll,
-    visibleColumns,
+    renderedColumns,
     stickyColumn,
     isReordering,
   } = getContext("sheet")
@@ -13,7 +13,7 @@
   $: scrollLeft = $scroll.left
   $: cutoff = scrollLeft + 40 + ($columns[0]?.width || 0)
   $: offset = 40 + ($stickyColumn?.width || 0)
-  $: columnIdx = $resize.columnIdx
+  $: column = $resize.column
 
   const getStyle = (column, offset, scrollLeft) => {
     const left = offset + column.left + column.width - scrollLeft
@@ -25,17 +25,17 @@
   {#if $stickyColumn}
     <div
       class="resize-slider sticky"
-      class:visible={columnIdx === "sticky"}
+      class:visible={column === $stickyColumn.name}
       on:mousedown={e => resize.actions.startResizing($stickyColumn, e)}
       style="left:{40 + $stickyColumn.width}px;"
     >
       <div class="resize-indicator" />
     </div>
   {/if}
-  {#each $visibleColumns as column}
+  {#each $renderedColumns as column}
     <div
       class="resize-slider"
-      class:visible={columnIdx === column.idx}
+      class:visible={column === column.name}
       on:mousedown={e => resize.actions.startResizing(column, e)}
       style={getStyle(column, offset, scrollLeft)}
     >

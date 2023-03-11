@@ -6,9 +6,9 @@
     cellHeight,
     scroll,
     bounds,
-    columns,
-    visibleRows,
     visibleColumns,
+    renderedRows,
+    renderedColumns,
     hoveredRowId,
     maxScrollTop,
     maxScrollLeft,
@@ -19,7 +19,7 @@
   export let scrollHorizontally = true
   export let wheelInteractive = true
 
-  $: hiddenWidths = calculateHiddenWidths($visibleColumns)
+  $: hiddenWidths = calculateHiddenWidths($renderedColumns)
   $: scrollLeft = $scroll.left
   $: scrollTop = $scroll.top
   $: style = generateStyle($scroll, hiddenWidths)
@@ -31,12 +31,14 @@
   }
 
   // Calculates with total width of all columns currently not rendered
-  const calculateHiddenWidths = visibleColumns => {
-    const idx = visibleColumns[0]?.idx
+  const calculateHiddenWidths = renderedColumns => {
+    const idx = $visibleColumns.findIndex(
+      col => col.name === renderedColumns[0]?.name
+    )
     let width = 0
     if (idx > 0) {
       for (let i = 0; i < idx; i++) {
-        width += $columns[i].width
+        width += $visibleColumns[i].width
       }
     }
     return width
@@ -67,7 +69,7 @@
 
     // Hover row under cursor
     const y = clientY - $bounds.top + (newScrollTop % cellHeight)
-    const hoveredRow = $visibleRows[Math.floor(y / cellHeight)]
+    const hoveredRow = $renderedRows[Math.floor(y / cellHeight)]
     $hoveredRowId = hoveredRow?._id
   })
 </script>

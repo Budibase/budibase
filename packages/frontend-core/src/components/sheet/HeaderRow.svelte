@@ -4,14 +4,14 @@
   import HeaderCell from "./cells/HeaderCell.svelte"
   import { Icon } from "@budibase/bbui"
 
-  const { visibleColumns, dispatch, config } = getContext("sheet")
+  const { renderedColumns, dispatch, config } = getContext("sheet")
 </script>
 
 <div class="header">
   <SheetScrollWrapper scrollVertically={false} wheelInteractive={false}>
     <div class="row">
-      {#each $visibleColumns as column}
-        <HeaderCell {column} />
+      {#each $renderedColumns as column, idx}
+        <HeaderCell {column} {idx} />
       {/each}
     </div>
   </SheetScrollWrapper>
@@ -28,6 +28,7 @@
     border-bottom: var(--cell-border);
     position: relative;
     z-index: 1;
+    height: var(--cell-height);
   }
   .row {
     display: flex;
@@ -42,6 +43,7 @@
     place-items: center;
     width: 46px;
     border-left: var(--cell-border);
+    border-bottom: var(--cell-border);
   }
   .new-column:hover {
     cursor: pointer;

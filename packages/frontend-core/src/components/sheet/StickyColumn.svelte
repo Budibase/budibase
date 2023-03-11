@@ -10,7 +10,7 @@
     rows,
     selectedRows,
     stickyColumn,
-    visibleRows,
+    renderedRows,
     selectedCellId,
     hoveredRowId,
     scroll,
@@ -77,7 +77,7 @@
 
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
     <SheetScrollWrapper scrollHorizontally={false}>
-      {#each $visibleRows as row, idx}
+      {#each $renderedRows as row, idx}
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
         {@const containsSelectedRow = $selectedCellRow?._id === row._id}
@@ -161,13 +161,11 @@
   }
 
   .header {
-    border-bottom: var(--cell-border);
     position: relative;
     z-index: 2;
   }
   .header :global(.cell) {
     background: var(--spectrum-global-color-gray-100);
-    border-bottom: none;
   }
   .row {
     display: flex;

@@ -5,6 +5,7 @@
   import { getIconForField } from "../utils"
 
   export let column
+  export let idx
   export let orderable = true
 
   const {
@@ -13,7 +14,7 @@
     isResizing,
     rand,
     sort,
-    columns,
+    renderedColumns,
     dispatch,
     config,
   } = getContext("sheet")
@@ -23,8 +24,8 @@
   let timeout
 
   $: sortedBy = column.name === $sort.column
-  $: canMoveLeft = orderable && column.idx > 0
-  $: canMoveRight = orderable && column.idx < $columns.length - 1
+  $: canMoveLeft = orderable && idx > 0
+  $: canMoveRight = orderable && idx < $renderedColumns.length - 1
 
   const editColumn = () => {
     dispatch("edit-column", column.schema)
@@ -147,7 +148,6 @@
     background: var(--background);
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
-    border-bottom: none;
   }
 
   .name {

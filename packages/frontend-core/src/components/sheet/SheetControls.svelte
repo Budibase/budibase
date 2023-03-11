@@ -1,7 +1,7 @@
 <script>
-  import { ActionButton } from "@budibase/bbui"
   import SortButton from "./controls/SortButton.svelte"
+  import HideColumnsButton from "./controls/HideColumnsButton.svelte"
 </script>
 
-<ActionButton icon="VisibilityOff" quiet size="M">Hide fields</ActionButton>
+<HideColumnsButton />
 <SortButton />

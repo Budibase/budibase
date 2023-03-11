@@ -10,15 +10,21 @@ export const createColumnsStores = context => {
   // automatically calculated
   const enrichedColumns = derived(columns, $columns => {
     let offset = 0
-    return $columns.map((column, idx) => {
+    return $columns.map(column => {
       const enriched = {
         ...column,
-        idx,
         left: offset,
       }
-      offset += column.width
+      if (column.visible) {
+        offset += column.width
+      }
       return enriched
     })
+  })
+
+  // Derived list of columns which have not been explicitly hidden
+  const visibleColumns = derived(enrichedColumns, $columns => {
+    return $columns.filter(col => col.visible)
   })
 
   // Merge new schema fields with existing schema in order to preserve widths
@@ -45,6 +51,7 @@ export const createColumnsStores = context => {
           name: field,
           width: existing?.width || defaultWidth,
           schema: $schema[field],
+          visible: existing?.visible ?? true,
         }
       })
     )
@@ -75,5 +82,6 @@ export const createColumnsStores = context => {
       subscribe: enrichedColumns.subscribe,
     },
     stickyColumn,
+    visibleColumns,
   }
 }
