@@ -59,14 +59,16 @@
   class:scrolled={scrollLeft > 0}
 >
   <div class="header row">
-    <!-- Field headers -->
     <SheetCell
       width="40"
       on:click={$config.allowSelectRows && selectAll}
       center
     >
       {#if $config.allowSelectRows}
-        <Checkbox value={rowCount && selectedRowCount === rowCount} />
+        <Checkbox
+          value={rowCount && selectedRowCount === rowCount}
+          disabled={!$renderedRows.length}
+        />
       {/if}
     </SheetCell>
 

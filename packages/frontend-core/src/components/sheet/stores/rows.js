@@ -11,10 +11,11 @@ export const createRowsStore = context => {
   const filter = writable([])
   const loaded = writable(false)
   const fetch = writable(null)
-  const sort = writable({
+  const initialSortState = {
     column: null,
-    order: null,
-  })
+    order: "ascending",
+  }
+  const sort = writable(initialSortState)
 
   // Enrich rows with an index property
   const enrichedRows = derived(rows, $rows => {
@@ -44,10 +45,7 @@ export const createRowsStore = context => {
     fetch.set(null)
 
     // Reset state
-    sort.set({
-      column: null,
-      order: null,
-    })
+    sort.set(initialSortState)
     filter.set([])
 
     // Create new fetch model
@@ -59,8 +57,8 @@ export const createRowsStore = context => {
       },
       options: {
         filter: [],
-        sortColumn: null,
-        sortOrder: null,
+        sortColumn: initialSortState.column,
+        sortOrder: initialSortState.order,
         limit: 100,
         paginate: true,
       },
@@ -73,15 +71,6 @@ export const createRowsStore = context => {
           // Hydrate initial data
           rowCacheMap = {}
           rows.set([])
-
-          // Update sorting from fetch if required
-          const $sort = get(sort)
-          if (!$sort.column) {
-            sort.set({
-              column: $fetch.sortColumn,
-              order: $fetch.sortOrder,
-            })
-          }
         }
 
         // Update schema and enrich primary display into schema
@@ -180,10 +169,7 @@ export const createRowsStore = context => {
   // Refreshes all data
   const refreshData = () => {
     filter.set([])
-    sort.set({
-      column: null,
-      order: null,
-    })
+    sort.set(initialSortState)
   }
 
   // Updates a value of a row

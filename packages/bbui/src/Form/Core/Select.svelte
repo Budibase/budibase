@@ -44,7 +44,10 @@
   const getFieldText = (value, options, placeholder) => {
     // Always use placeholder if no value
     if (value == null || value === "") {
-      return placeholder !== false ? "Choose an option" : ""
+      if (placeholder === false) {
+        return ""
+      }
+      return placeholder || "Choose an option"
     }
 
     return getFieldAttribute(getOptionLabel, value, options)

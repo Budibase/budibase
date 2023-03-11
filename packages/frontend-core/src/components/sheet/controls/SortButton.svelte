@@ -22,6 +22,20 @@
     return [...options, ...columns.map(col => col.name)]
   }
 
+  const updateSortColumn = e => {
+    sort.update(state => ({
+      ...state,
+      column: e.detail,
+    }))
+  }
+
+  const updateSortOrder = e => {
+    sort.update(state => ({
+      ...state,
+      order: e.detail,
+    }))
+  }
+
   // Ensure we never have a sort column selected that is not visible
   const checkValidSortColumn = (sortColumn, stickyColumn, visibleColumns) => {
     if (!sortColumn) {
@@ -52,8 +66,8 @@
     quiet
     size="M"
     on:click={() => (open = !open)}
-    selected={!!$sort.column}
-    disabled={!$visibleColumns.length}
+    selected={open || $sort.column}
+    disabled={!columnOptions.length}
   >
     Sort
   </ActionButton>
@@ -61,8 +75,20 @@
 
 <Popover bind:open {anchor} align="left">
   <div class="content">
-    <Select bind:value={$sort.column} options={columnOptions} autoWidth />
-    <Select bind:value={$sort.order} options={orderOptions} autoWidth />
+    <Select
+      placeholder="Default"
+      value={$sort.column}
+      options={columnOptions}
+      autoWidth
+      on:change={updateSortColumn}
+    />
+    <Select
+      placeholder={null}
+      value={$sort.order}
+      options={orderOptions}
+      autoWidth
+      on:change={updateSortOrder}
+    />
   </div>
 </Popover>
 

@@ -1,7 +1,7 @@
 import { derived, get, writable } from "svelte/store"
 
 export const createScrollStores = context => {
-  const { rows, columns, stickyColumn, bounds, cellHeight } = context
+  const { rows, visibleColumns, stickyColumn, bounds, cellHeight } = context
   const padding = 180
   const scroll = writable({
     left: 0,
@@ -28,10 +28,10 @@ export const createScrollStores = context => {
 
   // Derive horizontal limits
   const contentWidth = derived(
-    [columns, stickyColumn],
-    ([$columns, $stickyColumn]) => {
+    [visibleColumns, stickyColumn],
+    ([$visibleColumns, $stickyColumn]) => {
       let width = 40 + padding + ($stickyColumn?.width || 0)
-      $columns.forEach(col => {
+      $visibleColumns.forEach(col => {
         width += col.width
       })
       return width
