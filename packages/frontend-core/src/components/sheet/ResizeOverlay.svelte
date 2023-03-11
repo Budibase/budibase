@@ -27,6 +27,7 @@
       class="resize-slider sticky"
       class:visible={column === $stickyColumn.name}
       on:mousedown={e => resize.actions.startResizing($stickyColumn, e)}
+      on:dblclick={() => resize.actions.resetSize($stickyColumn)}
       style="left:{40 + $stickyColumn.width}px;"
     >
       <div class="resize-indicator" />
@@ -37,6 +38,7 @@
       class="resize-slider"
       class:visible={column === column.name}
       on:mousedown={e => resize.actions.startResizing(column, e)}
+      on:dblclick={() => resize.actions.resetSize(column)}
       style={getStyle(column, offset, scrollLeft)}
     >
       <div class="resize-indicator" />

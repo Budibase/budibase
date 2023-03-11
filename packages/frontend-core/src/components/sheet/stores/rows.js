@@ -168,8 +168,7 @@ export const createRowsStore = context => {
 
   // Refreshes all data
   const refreshData = () => {
-    filter.set([])
-    sort.set(initialSortState)
+    get(fetch)?.getInitialData()
   }
 
   // Updates a value of a row

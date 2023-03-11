@@ -1,8 +1,9 @@
 import { derived, get, writable } from "svelte/store"
 
+export const DefaultColumnWidth = 200
+
 export const createColumnsStores = context => {
   const { schema } = context
-  const defaultWidth = 200
   const columns = writable([])
   const stickyColumn = writable(null)
 
@@ -49,7 +50,7 @@ export const createColumnsStores = context => {
         const existing = currentColumns.find(x => x.name === field)
         return {
           name: field,
-          width: existing?.width || defaultWidth,
+          width: existing?.width || DefaultColumnWidth,
           schema: $schema[field],
           visible: existing?.visible ?? true,
         }
@@ -69,7 +70,7 @@ export const createColumnsStores = context => {
     const same = primaryDisplay[0] === get(stickyColumn)?.name
     stickyColumn.set({
       name: primaryDisplay[0],
-      width: same ? existingWidth : defaultWidth,
+      width: same ? existingWidth : DefaultColumnWidth,
       left: 40,
       schema: primaryDisplay[1],
       idx: "sticky",

@@ -1,4 +1,7 @@
 import { writable, get, derived } from "svelte/store"
+import { DefaultColumnWidth } from "./columns"
+
+export const MinColumnWidth = 100
 
 export const createResizeStores = context => {
   const { columns, stickyColumn } = context
@@ -12,7 +15,6 @@ export const createResizeStores = context => {
   }
   const resize = writable(initialState)
   const isResizing = derived(resize, $resize => $resize.column != null)
-  const MinColumnWidth = 100
 
   // Starts resizing a certain column
   const startResizing = (column, e) => {
@@ -78,11 +80,28 @@ export const createResizeStores = context => {
     document.removeEventListener("mouseup", stopResizing)
   }
 
+  // Resets a column size back to default
+  const resetSize = column => {
+    let columnIdx = get(columns).findIndex(col => col.name === column.name)
+    if (columnIdx === -1) {
+      stickyColumn.update(state => ({
+        ...state,
+        width: DefaultColumnWidth,
+      }))
+    } else {
+      columns.update(state => {
+        state[columnIdx].width = DefaultColumnWidth
+        return [...state]
+      })
+    }
+  }
+
   return {
     resize: {
       ...resize,
       actions: {
         startResizing,
+        resetSize,
       },
     },
     isResizing,
