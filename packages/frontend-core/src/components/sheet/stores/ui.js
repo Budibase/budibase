@@ -14,7 +14,8 @@ export const createUIStores = context => {
       const rowId = $selectedCellId?.split("-")[0]
       const index = $rowLookupMap[rowId]
       return $rows[index]
-    }
+    },
+    null
   )
 
   // Ensure we clear invalid rows from state if they disappear

@@ -9,24 +9,32 @@ export const createColumnsStores = context => {
 
   // Derive an enriched version of columns with left offsets and indexes
   // automatically calculated
-  const enrichedColumns = derived(columns, $columns => {
-    let offset = 0
-    return $columns.map(column => {
-      const enriched = {
-        ...column,
-        left: offset,
-      }
-      if (column.visible) {
-        offset += column.width
-      }
-      return enriched
-    })
-  })
+  const enrichedColumns = derived(
+    columns,
+    $columns => {
+      let offset = 0
+      return $columns.map(column => {
+        const enriched = {
+          ...column,
+          left: offset,
+        }
+        if (column.visible) {
+          offset += column.width
+        }
+        return enriched
+      })
+    },
+    []
+  )
 
   // Derived list of columns which have not been explicitly hidden
-  const visibleColumns = derived(enrichedColumns, $columns => {
-    return $columns.filter(col => col.visible)
-  })
+  const visibleColumns = derived(
+    enrichedColumns,
+    $columns => {
+      return $columns.filter(col => col.visible)
+    },
+    []
+  )
 
   // Merge new schema fields with existing schema in order to preserve widths
   schema.subscribe($schema => {

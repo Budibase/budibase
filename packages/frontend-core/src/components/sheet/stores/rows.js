@@ -18,21 +18,29 @@ export const createRowsStore = context => {
   const sort = writable(initialSortState)
 
   // Enrich rows with an index property
-  const enrichedRows = derived(rows, $rows => {
-    return $rows.map((row, idx) => ({
-      ...row,
-      __idx: idx,
-    }))
-  })
+  const enrichedRows = derived(
+    rows,
+    $rows => {
+      return $rows.map((row, idx) => ({
+        ...row,
+        __idx: idx,
+      }))
+    },
+    []
+  )
 
   // Generate a lookup map to quick find a row by ID
-  const rowLookupMap = derived(enrichedRows, $rows => {
-    let map = {}
-    for (let row of $rows) {
-      map[row._id] = row.__idx
-    }
-    return map
-  })
+  const rowLookupMap = derived(
+    enrichedRows,
+    $rows => {
+      let map = {}
+      for (let row of $rows) {
+        map[row._id] = row.__idx
+      }
+      return map
+    },
+    {}
+  )
 
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}

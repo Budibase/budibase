@@ -14,7 +14,7 @@ export const createResizeStores = context => {
     left: 0,
   }
   const resize = writable(initialState)
-  const isResizing = derived(resize, $resize => $resize.column != null)
+  const isResizing = derived(resize, $resize => $resize.column != null, false)
 
   // Starts resizing a certain column
   const startResizing = (column, e) => {
