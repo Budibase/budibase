@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover, Select } from "@budibase/bbui"
 
-  const { sort, columns, stickyColumn } = getContext("sheet")
+  const { sort, visibleColumns, stickyColumn } = getContext("sheet")
   const orderOptions = [
     { label: "A-Z", value: "ascending" },
     { label: "Z-A", value: "descending" },
@@ -11,7 +11,8 @@
   let open = false
   let anchor
 
-  $: columnOptions = getColumnOptions($stickyColumn, $columns)
+  $: columnOptions = getColumnOptions($stickyColumn, $visibleColumns)
+  $: checkValidSortColumn($sort.column, $stickyColumn, $visibleColumns)
 
   const getColumnOptions = (stickyColumn, columns) => {
     let options = []
@@ -19,6 +20,29 @@
       options.push(stickyColumn.name)
     }
     return [...options, ...columns.map(col => col.name)]
+  }
+
+  // Ensure we never have a sort column selected that is not visible
+  const checkValidSortColumn = (sortColumn, stickyColumn, visibleColumns) => {
+    if (!sortColumn) {
+      return
+    }
+    if (
+      sortColumn !== stickyColumn?.name &&
+      !visibleColumns.some(col => col.name === sortColumn)
+    ) {
+      if (stickyColumn) {
+        sort.update(state => ({
+          ...state,
+          column: stickyColumn.name,
+        }))
+      } else {
+        sort.update(state => ({
+          ...state,
+          column: visibleColumns[0]?.name,
+        }))
+      }
+    }
   }
 </script>
 
@@ -28,7 +52,8 @@
     quiet
     size="M"
     on:click={() => (open = !open)}
-    selected={!!$sort.order}
+    selected={!!$sort.column}
+    disabled={!$visibleColumns.length}
   >
     Sort
   </ActionButton>

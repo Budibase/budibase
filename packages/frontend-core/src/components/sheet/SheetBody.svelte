@@ -3,7 +3,7 @@
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
   import SheetRow from "./SheetRow.svelte"
 
-  const { bounds, visibleRows } = getContext("sheet")
+  const { bounds, renderedRows } = getContext("sheet")
 
   let body
 
@@ -21,7 +21,7 @@
 
 <div bind:this={body} class="sheet-body">
   <SheetScrollWrapper>
-    {#each $visibleRows as row, idx}
+    {#each $renderedRows as row, idx}
       <SheetRow {row} {idx} />
     {/each}
   </SheetScrollWrapper>

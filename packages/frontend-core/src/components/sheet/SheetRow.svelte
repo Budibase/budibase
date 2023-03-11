@@ -11,7 +11,7 @@
     reorder,
     selectedRows,
     rows,
-    visibleColumns,
+    renderedColumns,
     hoveredRowId,
     selectedCellMap,
     selectedCellRow,
@@ -29,7 +29,7 @@
   on:mouseover={() => ($hoveredRowId = row._id)}
   on:mouseleave={() => ($hoveredRowId = null)}
 >
-  {#each $visibleColumns as column (column.name)}
+  {#each $renderedColumns as column (column.name)}
     {@const cellId = `${row._id}-${column.name}`}
     <SheetCell
       rowSelected={rowSelected || containsSelectedCell}

@@ -5,12 +5,13 @@ export const createResizeStores = context => {
   const initialState = {
     initialMouseX: null,
     initialWidth: null,
+    column: null,
     columnIdx: null,
     width: 0,
     left: 0,
   }
   const resize = writable(initialState)
-  const isResizing = derived(resize, $resize => $resize.columnIdx != null)
+  const isResizing = derived(resize, $resize => $resize.column != null)
   const MinColumnWidth = 100
 
   // Starts resizing a certain column
@@ -18,12 +19,20 @@ export const createResizeStores = context => {
     // Prevent propagation to stop reordering triggering
     e.stopPropagation()
 
+    // Find and cache index
+    let columnIdx = get(columns).findIndex(col => col.name === column.name)
+    if (columnIdx === -1) {
+      columnIdx = "sticky"
+    }
+
+    // Set initial store state
     resize.set({
       width: column.width,
       left: column.left,
       initialWidth: column.width,
       initialMouseX: e.clientX,
-      columnIdx: column.idx,
+      column: column.name,
+      columnIdx,
     })
 
     // Add mouse event listeners to handle resizing

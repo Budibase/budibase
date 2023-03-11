@@ -2,12 +2,14 @@
   import { Icon } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { dispatch } = getContext("sheet")
+  const { dispatch, columns } = getContext("sheet")
 </script>
 
-<div class="add-component" on:click={() => dispatch("add-row")}>
-  <Icon size="XL" name="Add" />
-</div>
+{#if $columns.length}
+  <div class="add-component" on:click={() => dispatch("add-row")}>
+    <Icon size="XL" name="Add" />
+  </div>
+{/if}
 
 <style>
   .add-component {

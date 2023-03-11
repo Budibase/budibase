@@ -6,7 +6,7 @@
   import { getCellRenderer } from "./renderers"
 
   const {
-    visibleColumns,
+    renderedColumns,
     hoveredRowId,
     rows,
     selectedCellId,
@@ -71,7 +71,7 @@
     </div>
     <SheetScrollWrapper scrollVertically={false}>
       <div class="row">
-        {#each $visibleColumns as column}
+        {#each $renderedColumns as column}
           {@const cellId = `new-${column.name}`}
           <SheetCell
             width={column.width}

@@ -1,7 +1,7 @@
 import { derived, get } from "svelte/store"
 
 export const createViewportStores = context => {
-  const { cellHeight, columns, rows, scroll, bounds } = context
+  const { cellHeight, visibleColumns, rows, scroll, bounds } = context
   const scrollTop = derived(scroll, $scroll => $scroll.top, 0)
   const scrollLeft = derived(scroll, $scroll => $scroll.left, 0)
 
@@ -15,53 +15,59 @@ export const createViewportStores = context => {
   const firstRowIdx = derived(scrollTop, $scrollTop => {
     return Math.floor($scrollTop / cellHeight)
   })
-  const visibleRowCount = derived(height, $height => {
+  const renderedRowCount = derived(height, $height => {
     return Math.ceil($height / cellHeight)
   })
-  const visibleRows = derived(
-    [rows, firstRowIdx, visibleRowCount],
+  const renderedRows = derived(
+    [rows, firstRowIdx, renderedRowCount],
     ([$rows, $firstRowIdx, $visibleRowCount]) => {
       return $rows.slice($firstRowIdx, $firstRowIdx + $visibleRowCount)
     }
   )
 
   // Derive visible columns
-  const visibleColumns = derived(
-    [columns, scrollLeft, width],
-    ([$columns, $scrollLeft, $width]) => {
-      if (!$columns.length) {
+  const renderedColumns = derived(
+    [visibleColumns, scrollLeft, width],
+    ([$visibleColumns, $scrollLeft, $width]) => {
+      if (!$visibleColumns.length) {
         return []
       }
       let startColIdx = 0
-      let rightEdge = $columns[0].width
-      while (rightEdge < $scrollLeft && startColIdx < $columns.length - 1) {
+      let rightEdge = $visibleColumns[0].width
+      while (
+        rightEdge < $scrollLeft &&
+        startColIdx < $visibleColumns.length - 1
+      ) {
         startColIdx++
-        rightEdge += $columns[startColIdx].width
+        rightEdge += $visibleColumns[startColIdx].width
       }
       let endColIdx = startColIdx + 1
       let leftEdge = rightEdge
-      while (leftEdge < $width + $scrollLeft && endColIdx < $columns.length) {
-        leftEdge += $columns[endColIdx].width
+      while (
+        leftEdge < $width + $scrollLeft &&
+        endColIdx < $visibleColumns.length
+      ) {
+        leftEdge += $visibleColumns[endColIdx].width
         endColIdx++
       }
-      const nextVisibleColumns = $columns.slice(startColIdx, endColIdx)
+      const nextRenderedColumns = $visibleColumns.slice(startColIdx, endColIdx)
 
       // Cautiously shrink the number of rendered columns.
       // This is to avoid rapidly shrinking and growing the visible column count
       // which results in remounting cells
-      const currentCount = get(visibleColumns).length
-      if (currentCount === nextVisibleColumns.length + 1) {
-        return $columns.slice(startColIdx, endColIdx + 1)
+      const currentCount = get(renderedColumns).length
+      if (currentCount === nextRenderedColumns.length + 1) {
+        return $visibleColumns.slice(startColIdx, endColIdx + 1)
       } else {
-        return nextVisibleColumns
+        return nextRenderedColumns
       }
     },
     []
   )
 
   // Fetch next page when approaching end of data
-  visibleRows.subscribe($visibleRows => {
-    const lastVisible = $visibleRows[$visibleRows.length - 1]
+  renderedRows.subscribe($renderedRows => {
+    const lastVisible = $renderedRows[$renderedRows.length - 1]
     const $rows = get(rows)
     const lastRow = $rows[$rows.length - 1]
     if (lastVisible && lastRow && lastVisible._id === lastRow._id) {
@@ -69,5 +75,5 @@ export const createViewportStores = context => {
     }
   })
 
-  return { visibleRows, visibleColumns }
+  return { renderedRows, renderedColumns }
 }

@@ -17,7 +17,7 @@ export const createScrollStores = context => {
   const width = derived(bounds, $bounds => $bounds.width, 0)
   const contentHeight = derived(
     rows,
-    $rows => ($rows.length + 1) * cellHeight + padding,
+    $rows => $rows.length * cellHeight + padding,
     0
   )
   const maxScrollTop = derived(
