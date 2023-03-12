@@ -15,6 +15,8 @@
   import { createUserStores } from "./stores/users"
   import { createResizeStores } from "./stores/resize"
   import { createMenuStores } from "./stores/menu"
+  import { createMaxScrollStores } from "./stores/max-scroll"
+  import { createPaginationStores } from "./stores/pagination"
   import DeleteButton from "./DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "./ResizeOverlay.svelte"
@@ -57,16 +59,18 @@
     config,
   }
   context = { ...context, ...createEventManagers() }
-  context = { ...context, ...createRowsStore(context) }
-  context = { ...context, ...createColumnsStores(context) }
-  context = { ...context, ...createResizeStores(context) }
   context = { ...context, ...createBoundsStores(context) }
   context = { ...context, ...createScrollStores(context) }
+  context = { ...context, ...createRowsStore(context) }
+  context = { ...context, ...createColumnsStores(context) }
+  context = { ...context, ...createMaxScrollStores(context) }
+  context = { ...context, ...createResizeStores(context) }
   context = { ...context, ...createViewportStores(context) }
   context = { ...context, ...createReorderStores(context) }
   context = { ...context, ...createUIStores(context) }
   context = { ...context, ...createUserStores(context) }
   context = { ...context, ...createMenuStores(context) }
+  context = { ...context, ...createPaginationStores(context) }
 
   // Reference some stores for local use
   const { isResizing, isReordering, ui, loaded } = context
