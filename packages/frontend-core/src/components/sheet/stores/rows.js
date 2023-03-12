@@ -32,11 +32,11 @@ export const createRowsStore = context => {
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(
-    enrichedRows,
+    rows,
     $rows => {
       let map = {}
-      for (let row of $rows) {
-        map[row._id] = row.__idx
+      for (let i = 0; i < $rows.length; i++) {
+        map[$rows[i]._id] = i
       }
       return map
     },
@@ -259,11 +259,6 @@ export const createRowsStore = context => {
     rows.update(state => {
       return state.filter(row => !deletedIds.includes(row._id))
     })
-
-    // If we ended up with no rows, try getting the next page
-    if (!get(rows).length) {
-      loadNextPage()
-    }
   }
 
   // Loads the next page of data if available
@@ -276,6 +271,11 @@ export const createRowsStore = context => {
     return await get(fetch)?.refreshDefinition()
   }
 
+  // Checks if we have a row with a certain ID
+  const hasRow = id => {
+    return get(rowLookupMap)[id] != null
+  }
+
   return {
     rows: {
       ...rows,
@@ -284,6 +284,7 @@ export const createRowsStore = context => {
         addRow,
         updateRow,
         deleteRows,
+        hasRow,
         loadNextPage,
         refreshRow,
         refreshData,
