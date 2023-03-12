@@ -19,19 +19,20 @@ export const createUIStores = context => {
   )
 
   // Ensure we clear invalid rows from state if they disappear
-  rows.subscribe($rows => {
+  rows.subscribe(() => {
     const $selectedCellId = get(selectedCellId)
     const $selectedRows = get(selectedRows)
     const $hoveredRowId = get(hoveredRowId)
+    const hasRow = rows.actions.hasRow
 
     // Check selected cell
     const selectedRowId = $selectedCellId?.split("-")[0]
-    if (selectedRowId && !$rows.find(row => row._id === selectedRowId)) {
+    if (selectedRowId && !hasRow(selectedRowId)) {
       selectedCellId.set(null)
     }
 
     // Check hovered row
-    if ($hoveredRowId && !$rows.find(row => row._id === $hoveredRowId)) {
+    if ($hoveredRowId && !hasRow($hoveredRowId)) {
       hoveredRowId.set(null)
     }
 
@@ -40,7 +41,7 @@ export const createUIStores = context => {
     let selectedRowsNeedsUpdate = false
     const selectedIds = Object.keys($selectedRows)
     for (let i = 0; i < selectedIds.length; i++) {
-      if (!$rows.find(row => row._id === selectedIds[i])) {
+      if (!hasRow(selectedIds[i])) {
         delete newSelectedRows[selectedIds[i]]
         selectedRowsNeedsUpdate = true
       }
