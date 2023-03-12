@@ -3,13 +3,14 @@ import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 
 export const createRowsStore = context => {
-  const { config, API } = context
+  const { config, API, scroll } = context
   const tableId = derived(config, $config => $config.tableId)
   const rows = writable([])
   const schema = writable({})
   const table = writable(null)
   const filter = writable([])
   const loaded = writable(false)
+  const instanceLoaded = writable(false)
   const fetch = writable(null)
   const initialSortState = {
     column: null,
@@ -51,6 +52,7 @@ export const createRowsStore = context => {
     // Unsub from previous fetch if one exists
     unsubscribe?.()
     fetch.set(null)
+    instanceLoaded.set(false)
 
     // Reset state
     sort.set(initialSortState)
@@ -75,10 +77,16 @@ export const createRowsStore = context => {
     // Subscribe to changes of this fetch model
     unsubscribe = newFetch.subscribe($fetch => {
       if ($fetch.loaded && !$fetch.loading) {
-        if ($fetch.pageNumber === 0) {
-          // Hydrate initial data
-          rowCacheMap = {}
-          rows.set([])
+        const resetRows = $fetch.pageNumber === 0
+
+        // Reset scroll state when data changes
+        if (!get(instanceLoaded)) {
+          // Reset both top and left for a new table ID
+          instanceLoaded.set(true)
+          scroll.set({ top: 0, left: 0 })
+        } else if (resetRows) {
+          // Only reset top scroll position when resetting rows
+          scroll.update(state => ({ ...state, top: 0 }))
         }
 
         // Update schema and enrich primary display into schema
@@ -91,7 +99,7 @@ export const createRowsStore = context => {
         table.set($fetch.definition)
 
         // Process new rows
-        handleNewRows($fetch.rows)
+        handleNewRows($fetch.rows, resetRows)
 
         // Notify that we're loaded
         loaded.set(true)
@@ -222,7 +230,10 @@ export const createRowsStore = context => {
 
   // Local handler to process new rows inside the fetch, and append any new
   // rows to state that we haven't encountered before
-  const handleNewRows = newRows => {
+  const handleNewRows = (newRows, resetRows) => {
+    if (resetRows) {
+      rowCacheMap = {}
+    }
     let rowsToAppend = []
     let newRow
     for (let i = 0; i < newRows.length; i++) {
@@ -232,7 +243,9 @@ export const createRowsStore = context => {
         rowsToAppend.push(newRow)
       }
     }
-    if (rowsToAppend.length) {
+    if (resetRows) {
+      rows.set(rowsToAppend)
+    } else if (rowsToAppend.length) {
       rows.update(state => [...state, ...rowsToAppend])
     }
   }

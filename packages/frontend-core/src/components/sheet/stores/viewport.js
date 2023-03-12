@@ -12,14 +12,14 @@ export const createViewportStores = context => {
   // Derive visible rows
   // Split into multiple stores containing primitives to optimise invalidation
   // as mich as possible
-  const firstRowIdx = derived(
+  const scrolledRowCount = derived(
     scrollTop,
     $scrollTop => {
       return Math.floor($scrollTop / cellHeight)
     },
     0
   )
-  const renderedRowCount = derived(
+  const visualRowCapacity = derived(
     height,
     $height => {
       return Math.ceil($height / cellHeight)
@@ -27,9 +27,12 @@ export const createViewportStores = context => {
     0
   )
   const renderedRows = derived(
-    [rows, firstRowIdx, renderedRowCount],
-    ([$rows, $firstRowIdx, $visibleRowCount]) => {
-      return $rows.slice($firstRowIdx, $firstRowIdx + $visibleRowCount)
+    [rows, scrolledRowCount, visualRowCapacity],
+    ([$rows, $scrolledRowCount, $visualRowCapacity]) => {
+      return $rows.slice(
+        $scrolledRowCount,
+        $scrolledRowCount + $visualRowCapacity
+      )
     },
     []
   )
@@ -74,5 +77,5 @@ export const createViewportStores = context => {
     []
   )
 
-  return { renderedRows, renderedColumns }
+  return { scrolledRowCount, visualRowCapacity, renderedRows, renderedColumns }
 }
