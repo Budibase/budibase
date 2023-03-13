@@ -85,7 +85,7 @@
         {@const containsSelectedRow = $selectedCellRow?._id === row._id}
         <div
           class="row"
-          on:mouseover={() => ($hoveredRowId = row._id)}
+          on:mouseenter={() => ($hoveredRowId = row._id)}
           on:mouseleave={() => ($hoveredRowId = null)}
         >
           <SheetCell
