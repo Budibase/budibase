@@ -1,19 +1,20 @@
 import {
   DatasourceFieldType,
   DatasourcePlus,
+  FieldType,
   Integration,
   Operation,
   PaginationJson,
   QueryJson,
   QueryType,
+  Row,
   SearchFilters,
   SortJson,
   Table,
-  Row,
+  TableRequest,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
-import { buildExternalTableId } from "./utils"
-import { FieldTypes } from "../constants"
+import { buildExternalTableId, finaliseExternalTables } from "./utils"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
@@ -39,6 +40,17 @@ interface AuthTokenRequest {
 interface AuthTokenResponse {
   access_token: string
 }
+
+const ALLOWED_TYPES = [
+  FieldType.STRING,
+  FieldType.FORMULA,
+  FieldType.NUMBER,
+  FieldType.LONGFORM,
+  FieldType.DATETIME,
+  FieldType.OPTIONS,
+  FieldType.BOOLEAN,
+  FieldType.BARCODEQR,
+]
 
 const SCHEMA: Integration = {
   plus: true,
@@ -225,13 +237,13 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     for (let header of headerValues) {
       table.schema[header] = {
         name: header,
-        type: FieldTypes.STRING,
+        type: FieldType.STRING,
       }
     }
     return table
   }
 
-  async buildSchema(datasourceId: string) {
+  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
     await this.connect()
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, Table> = {}
@@ -246,7 +258,9 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         id
       )
     }
-    this.tables = tables
+    const final = finaliseExternalTables(tables, entities)
+    this.tables = final.tables
+    this.schemaErrors = final.errors
   }
 
   async query(json: QueryJson) {
@@ -274,7 +288,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       case Operation.CREATE_TABLE:
         return this.createTable(json?.table?.name)
       case Operation.UPDATE_TABLE:
-        return this.updateTable(json.table)
+        return this.updateTable(json.table!)
       case Operation.DELETE_TABLE:
         return this.deleteTable(json?.table?.name)
       default:
@@ -296,52 +310,65 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async createTable(name?: string) {
     try {
       await this.connect()
-      return await this.client.addSheet({ title: name, headerValues: ["test"] })
+      return await this.client.addSheet({ title: name, headerValues: [] })
     } catch (err) {
       console.error("Error creating new table in google sheets", err)
       throw err
     }
   }
 
-  async updateTable(table?: any) {
-    try {
-      await this.connect()
-      const sheet = this.client.sheetsByTitle[table.name]
-      await sheet.loadHeaderRow()
+  async updateTable(table: TableRequest) {
+    await this.connect()
+    const sheet = this.client.sheetsByTitle[table.name]
+    await sheet.loadHeaderRow()
 
-      if (table._rename) {
-        const headers = []
-        for (let header of sheet.headerValues) {
-          if (header === table._rename.old) {
-            headers.push(table._rename.updated)
-          } else {
-            headers.push(header)
-          }
+    if (table._rename) {
+      const headers = []
+      for (let header of sheet.headerValues) {
+        if (header === table._rename.old) {
+          headers.push(table._rename.updated)
+        } else {
+          headers.push(header)
         }
-        await sheet.setHeaderRow(headers)
-      } else {
-        const updatedHeaderValues = [...sheet.headerValues]
-
-        // add new column - doesn't currently exist
-        for (let key of Object.keys(table.schema)) {
-          if (!sheet.headerValues.includes(key)) {
-            updatedHeaderValues.push(key)
-          }
-        }
-
-        // clear out deleted columns
-        for (let key of sheet.headerValues) {
-          if (!Object.keys(table.schema).includes(key)) {
-            const idx = updatedHeaderValues.indexOf(key)
-            updatedHeaderValues.splice(idx, 1)
-          }
-        }
-
-        await sheet.setHeaderRow(updatedHeaderValues)
       }
-    } catch (err) {
-      console.error("Error updating table in google sheets", err)
-      throw err
+      try {
+        await sheet.setHeaderRow(headers)
+      } catch (err) {
+        console.error("Error updating column name in google sheets", err)
+        throw err
+      }
+    } else {
+      const updatedHeaderValues = [...sheet.headerValues]
+
+      // add new column - doesn't currently exist
+      for (let [key, column] of Object.entries(table.schema)) {
+        if (!ALLOWED_TYPES.includes(column.type)) {
+          throw new Error(
+            `Column type: ${column.type} not allowed for GSheets integration.`
+          )
+        }
+        if (
+          !sheet.headerValues.includes(key) &&
+          column.type !== FieldType.FORMULA
+        ) {
+          updatedHeaderValues.push(key)
+        }
+      }
+
+      // clear out deleted columns
+      for (let key of sheet.headerValues) {
+        if (!Object.keys(table.schema).includes(key)) {
+          const idx = updatedHeaderValues.indexOf(key)
+          updatedHeaderValues.splice(idx, 1)
+        }
+      }
+
+      try {
+        await sheet.setHeaderRow(updatedHeaderValues)
+      } catch (err) {
+        console.error("Error updating table in google sheets", err)
+        throw err
+      }
     }
   }
 
