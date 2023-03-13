@@ -1,7 +1,48 @@
 import tk from "timekeeper"
 import { mocks, structures } from "@budibase/backend-core/tests"
-import { ScimCreateUserRequest } from "@budibase/types"
+import { ScimCreateUserRequest, ScimUserResponse } from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
+
+function createScimCreateUserRequest(userData?: {
+  externalId?: string
+  email?: string
+  firstName?: string
+  lastName?: string
+}) {
+  const {
+    externalId = structures.uuid(),
+    email = structures.generator.email(),
+    firstName = structures.generator.first(),
+    lastName = structures.generator.last(),
+  } = userData || {}
+
+  const user: ScimCreateUserRequest = {
+    schemas: [
+      "urn:ietf:params:scim:schemas:core:2.0:User",
+      "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+    ],
+    externalId,
+    userName: structures.generator.name(),
+    active: true,
+    emails: [
+      {
+        primary: true,
+        type: "work",
+        value: email,
+      },
+    ],
+    meta: {
+      resourceType: "User",
+    },
+    name: {
+      formatted: structures.generator.name(),
+      familyName: lastName,
+      givenName: firstName,
+    },
+    roles: [],
+  }
+  return user
+}
 
 describe("/api/global/scim/v2/users", () => {
   let mockedTime = new Date(structures.generator.timestamp())
@@ -102,31 +143,7 @@ describe("/api/global/scim/v2/users", () => {
           firstName: structures.generator.first(),
           lastName: structures.generator.last(),
         }
-        const body: ScimCreateUserRequest = {
-          schemas: [
-            "urn:ietf:params:scim:schemas:core:2.0:User",
-            "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
-          ],
-          externalId: userData.externalId,
-          userName: structures.generator.name(),
-          active: true,
-          emails: [
-            {
-              primary: true,
-              type: "work",
-              value: userData.email,
-            },
-          ],
-          meta: {
-            resourceType: "User",
-          },
-          name: {
-            formatted: structures.generator.name(),
-            familyName: userData.lastName,
-            givenName: userData.firstName,
-          },
-          roles: [],
-        }
+        const body = createScimCreateUserRequest(userData)
 
         const response = await postScimUser({ body })
 
@@ -164,6 +181,40 @@ describe("/api/global/scim/v2/users", () => {
           })
         )
       })
+    })
+  })
+
+  describe("GET /api/global/scim/v2/users/:id", () => {
+    let user: ScimUserResponse
+
+    beforeEach(async () => {
+      const body = createScimCreateUserRequest()
+
+      user = await config.api.scimUsersAPI.post({ body })
+    })
+
+    const findScimUser = config.api.scimUsersAPI.find
+
+    it("unauthorised calls are not allowed", async () => {
+      const response = await findScimUser(user.id, {
+        setHeaders: false,
+        expect: 403,
+      })
+
+      expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+    })
+
+    it("cannot be called when feature is disabled", async () => {
+      mocks.licenses.useCloudFree()
+      const response = await findScimUser(user.id, { expect: 400 })
+
+      expect(response).toEqual(featureDisabledResponse)
+    })
+
+    it("should return existing user", async () => {
+      const response = await findScimUser(user.id)
+
+      expect(response).toEqual(user)
     })
   })
 })
