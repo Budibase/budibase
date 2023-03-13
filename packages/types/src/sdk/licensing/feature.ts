@@ -5,4 +5,5 @@ export enum Feature {
   AUDIT_LOGS = "auditLogs",
   ENFORCEABLE_SSO = "enforceableSSO",
   BRANDING = "branding",
+  SCIM_INTEGRATION = "scimIntegration",
 }
