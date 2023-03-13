@@ -15,7 +15,6 @@
     if (ready && !registered && tourKey) {
       currentTourStep = TOURS[tourKey].find(step => step.id === stepKey)
       if (!currentTourStep) {
-        console.log("Could not find tour step : ", stepKey)
         return
       }
       const elem = document.querySelector(currentTourStep.query)
@@ -30,6 +29,7 @@
   onMount(() => {
     ready = true
   })
+
   onDestroy(() => {
     if (handler) {
       handler.destroy()
