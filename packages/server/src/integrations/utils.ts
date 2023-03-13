@@ -257,8 +257,11 @@ function copyExistingPropsOver(
   tableIds: [string]
 ) {
   if (entities && entities[tableName]) {
-    if (entities[tableName].primaryDisplay) {
+    if (entities[tableName]?.primaryDisplay) {
       table.primaryDisplay = entities[tableName].primaryDisplay
+    }
+    if (entities[tableName]?.created) {
+      table.created = entities[tableName]?.created
     }
     const existingTableSchema = entities[tableName].schema
     for (let key in existingTableSchema) {
