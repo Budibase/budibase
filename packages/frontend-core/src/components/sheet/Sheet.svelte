@@ -63,10 +63,10 @@
   context = { ...context, ...createScrollStores(context) }
   context = { ...context, ...createRowsStore(context) }
   context = { ...context, ...createColumnsStores(context) }
-  context = { ...context, ...createMaxScrollStores(context) }
   context = { ...context, ...createUIStores(context) }
   context = { ...context, ...createResizeStores(context) }
   context = { ...context, ...createViewportStores(context) }
+  context = { ...context, ...createMaxScrollStores(context) }
   context = { ...context, ...createReorderStores(context) }
   context = { ...context, ...createUserStores(context) }
   context = { ...context, ...createMenuStores(context) }

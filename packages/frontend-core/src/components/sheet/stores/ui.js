@@ -79,6 +79,13 @@ export const createUIStores = context => {
     }
   })
 
+  // Remove hovered row when a cell is selected
+  selectedCellId.subscribe(cell => {
+    if (cell && get(hoveredRowId)) {
+      hoveredRowId.set(null)
+    }
+  })
+
   return {
     selectedCellId,
     selectedRows,

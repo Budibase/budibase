@@ -1,8 +1,18 @@
 import { derived, get } from "svelte/store"
 
 export const createMaxScrollStores = context => {
-  const { rows, visibleColumns, stickyColumn, bounds, cellHeight, scroll } =
-    context
+  const {
+    rows,
+    visibleColumns,
+    stickyColumn,
+    bounds,
+    cellHeight,
+    scroll,
+    selectedCellRow,
+    scrolledRowCount,
+    visualRowCapacity,
+    selectedCellId,
+  } = context
   const padding = 180
 
   // Memoize store primitives
@@ -74,6 +84,70 @@ export const createMaxScrollStores = context => {
         ...state,
         left: get(maxScrollLeft),
       }))
+    }
+  })
+
+  // Ensure the selected cell is visible
+  selectedCellRow.subscribe(row => {
+    if (!row) {
+      return
+    }
+    const $scroll = get(scroll)
+    const $bounds = get(bounds)
+    const scrollBarOffset = 16
+
+    // Ensure row is not below bottom of screen
+    const rowYPos = row.__idx * cellHeight
+    const bottomCutoff =
+      $scroll.top + $bounds.height - cellHeight - scrollBarOffset
+    let delta = rowYPos - bottomCutoff
+    if (delta > 0) {
+      scroll.update(state => ({
+        ...state,
+        top: state.top + delta,
+      }))
+    }
+
+    // Ensure row is not above top of screen
+    else {
+      delta = $scroll.top - rowYPos
+      if (delta > 0) {
+        scroll.update(state => ({
+          ...state,
+          top: Math.max(0, state.top - delta),
+        }))
+      }
+    }
+
+    // Check horizontal position of columns next
+    const $selectedCellId = get(selectedCellId)
+    const $visibleColumns = get(visibleColumns)
+    const columnName = $selectedCellId?.split("-")[1]
+    const column = $visibleColumns.find(col => col.name === columnName)
+    if (!column) {
+      return
+    }
+
+    // Ensure column is not cutoff on left edge
+    delta = $scroll.left - column.left
+    if (delta > 0) {
+      scroll.update(state => ({
+        ...state,
+        left: state.left - delta,
+      }))
+    }
+
+    // Ensure column is not cutoff on right edge
+    else {
+      const rightEdge = column.left + column.width
+      const rightBound = $bounds.width + $scroll.left
+      delta = rightEdge - rightBound
+      if (delta > 0) {
+        scroll.update(state => ({
+          ...state,
+          left: state.left + delta + scrollBarOffset,
+        }))
+      }
     }
   })
 

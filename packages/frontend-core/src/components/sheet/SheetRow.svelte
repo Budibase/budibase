@@ -27,7 +27,7 @@
 <div
   class="row"
   on:focus
-  on:mouseover={() => ($hoveredRowId = row._id)}
+  on:mouseenter={() => ($hoveredRowId = row._id)}
   on:mouseleave={() => ($hoveredRowId = null)}
 >
   {#each $renderedColumns as column (column.name)}
