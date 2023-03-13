@@ -48,6 +48,15 @@ export class ScimUsersAPI extends TestAPI {
     return res.body as ScimUserListResponse
   }
 
+  find = async (id: string, requestSettings?: Partial<RequestSettings>) => {
+    const res = await this.#createRequest(
+      `/api/global/scim/v2/users/${id}`,
+      "get",
+      requestSettings
+    )
+    return res.body as ScimUserResponse
+  }
+
   post = async (
     {
       body,
