@@ -86,6 +86,10 @@ export const useAuditLogs = () => {
   return useFeature(Feature.AUDIT_LOGS)
 }
 
+export const useScimIntegration = () => {
+  return useFeature(Feature.SCIM_INTEGRATION)
+}
+
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {
