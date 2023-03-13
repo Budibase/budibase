@@ -47,6 +47,8 @@ export default class TestConfiguration<T> {
   }
 
   async setupAccountAndTenant() {
+    // This step is required to create a new account and tenant for the tests, its part of
+    // the support for running tests in multiple environments.
     const account = generateAccount()
     await this.accounts.validateEmail(<string>account.email)
     await this.accounts.validateTenantId(<string>account.tenantId)
@@ -63,6 +65,7 @@ export default class TestConfiguration<T> {
     await this.internalApplicationsApi.create(body)
   }
 
+  // After the account and tenant have been created, we need to get and set the API key for the test
   async setApiKey() {
     const apiKeyResponse = await this.auth.getApiKey()
     this.apiClient.setApiKey(apiKeyResponse.apiKey)

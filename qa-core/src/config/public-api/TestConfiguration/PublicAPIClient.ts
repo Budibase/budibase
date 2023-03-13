@@ -59,11 +59,7 @@ class PublicAPIClient {
       // @ts-ignore
       const response = await fetch(`https://${process.env.TENANT_ID}.${this.host}${url}`, requestOptions)
 
-      if (
-        response.status == 404 ||
-        response.status == 500 ||
-        response.status == 403
-      ) {
+      if (response.status == 500 || response.status == 403) {
         console.error("Error in apiCall")
         console.error("Response:", response)
         const json = await response.json()
