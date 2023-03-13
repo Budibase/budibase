@@ -308,9 +308,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   }
 
   async createTable(name?: string) {
+    if (!name) {
+      throw new Error("Must provide name for new sheet.")
+    }
     try {
       await this.connect()
-      return await this.client.addSheet({ title: name, headerValues: [] })
+      return await this.client.addSheet({ title: name, headerValues: [name] })
     } catch (err) {
       console.error("Error creating new table in google sheets", err)
       throw err
