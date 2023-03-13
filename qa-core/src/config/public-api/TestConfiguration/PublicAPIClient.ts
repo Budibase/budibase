@@ -44,7 +44,7 @@ class PublicAPIClient {
         method,
         body: JSON.stringify(options.body),
         headers: {
-          "x-budibase-api-key": this.apiKey ? this.apiKey : null,
+          "x-budibase-api-key": this.apiKey || null,
           "x-budibase-app-id": this.appId,
           "Content-Type": "application/json",
           Accept: "application/json",
