@@ -65,7 +65,7 @@ describe("/api/global/scim/v2/users", () => {
     })
 
     describe("no users exist", () => {
-      it("a new user can be created", async () => {
+      it("a new user can be created and persisted", async () => {
         const userData = {
           externalId: structures.uuid(),
           email: structures.generator.email(),
@@ -100,7 +100,7 @@ describe("/api/global/scim/v2/users", () => {
 
         const response = await config.api.scimUsersAPI.post({ body })
 
-        expect(response).toEqual({
+        const expectedScimUser = {
           schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
           id: expect.any(String),
           externalId: userData.externalId,
@@ -123,7 +123,16 @@ describe("/api/global/scim/v2/users", () => {
               primary: true,
             },
           ],
-        })
+        }
+        expect(response).toEqual(expectedScimUser)
+
+        const persistedUsers = await config.api.scimUsersAPI.get()
+        expect(persistedUsers).toEqual(
+          expect.objectContaining({
+            totalResults: 1,
+            Resources: [expectedScimUser],
+          })
+        )
       })
     })
   })
