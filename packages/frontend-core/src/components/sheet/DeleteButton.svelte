@@ -31,8 +31,8 @@
 </script>
 
 {#if selectedRowCount}
-  <div class="delete-button">
-    <ActionButton icon="Delete" size="S" on:click={modal.show}>
+  <div class="delete-button" on:mousedown|stopPropagation={modal.show}>
+    <ActionButton icon="Delete" size="S">
       Delete {selectedRowCount} row{selectedRowCount === 1 ? "" : "s"}
     </ActionButton>
   </div>

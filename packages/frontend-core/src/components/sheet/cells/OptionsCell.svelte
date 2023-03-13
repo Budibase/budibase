@@ -1,6 +1,7 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import { getColor } from "../utils"
+  import { onMount } from "svelte"
 
   export let value
   export let schema
@@ -8,18 +9,30 @@
   export let selected = false
   export let multi = false
   export let readonly = false
+  export let api
 
-  let open = false
+  let isOpen = false
+  let focusedOptionIdx = null
 
   $: options = schema?.constraints?.inclusion || []
   $: editable = selected && !readonly
   $: values = Array.isArray(value) ? value : [value].filter(x => x != null)
   $: unselectedOptions = options.filter(x => !values.includes(x))
+  $: orderedOptions = values.concat(unselectedOptions)
   $: {
     // Close when deselected
     if (!selected) {
-      open = false
+      close()
     }
+  }
+
+  const open = () => {
+    isOpen = true
+    focusedOptionIdx = 0
+  }
+
+  const close = () => {
+    isOpen = false
   }
 
   const getOptionColor = value => {
@@ -30,6 +43,7 @@
   const toggleOption = option => {
     if (!multi) {
       onChange(option)
+      close()
     } else {
       if (values.includes(option)) {
         onChange(values.filter(x => x !== option))
@@ -39,23 +53,32 @@
     }
   }
 
-  const toggleOpen = () => {
-    if (multi) {
-      open = true
-    } else {
-      open = !open
+  const onKeyDown = e => {
+    if (!isOpen) {
+      return false
     }
+    e.preventDefault()
+    if (e.key === "ArrowDown") {
+      focusedOptionIdx = Math.min(focusedOptionIdx + 1, options.length - 1)
+    } else if (e.key === "ArrowUp") {
+      focusedOptionIdx = Math.max(focusedOptionIdx - 1, 0)
+    } else if (e.key === "Enter") {
+      toggleOption(orderedOptions[focusedOptionIdx])
+    }
+    return true
   }
+
+  onMount(() => {
+    api = {
+      focus: open,
+      blur: close,
+      onKeyDown,
+    }
+  })
 </script>
 
-<div
-  class="container"
-  class:multi
-  class:editable
-  class:open
-  on:click={editable ? toggleOpen : null}
->
-  <div class="values">
+<div class="container" class:multi class:editable class:open>
+  <div class="values" on:click={editable ? open : null}>
     {#each values as val}
       {@const color = getOptionColor(val)}
       {#if color}
@@ -74,11 +97,15 @@
       <Icon name="ChevronDown" />
     </div>
   {/if}
-  {#if open}
+  {#if isOpen}
     <div class="options" on:wheel={e => e.stopPropagation()}>
-      {#each values as val}
+      {#each values as val, idx}
         {@const color = getOptionColor(val)}
-        <div class="option" on:click={() => toggleOption(val)}>
+        <div
+          class="option"
+          on:click={() => toggleOption(val)}
+          class:focused={focusedOptionIdx === idx}
+        >
           <div class="badge text" style="--color: {color}">
             {val}
           </div>
@@ -88,8 +115,12 @@
           />
         </div>
       {/each}
-      {#each unselectedOptions as option}
-        <div class="option" on:click={() => toggleOption(option)}>
+      {#each unselectedOptions as option, idx}
+        <div
+          class="option"
+          on:click={() => toggleOption(option)}
+          class:focused={focusedOptionIdx === values.length + idx}
+        >
           <div class="badge text" style="--color: {getOptionColor(option)}">
             {option}
           </div>
@@ -177,7 +208,8 @@
   .option:first-child {
     flex: 0 0 calc(var(--cell-height) - 1px);
   }
-  .option:hover {
+  .option:hover,
+  .option.focused {
     background-color: var(--spectrum-global-color-gray-200);
   }
 </style>

@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { Checkbox } from "@budibase/bbui"
   import SheetCell from "./cells/SheetCell.svelte"
-  import { getCellRenderer } from "./renderers"
+  import DataCell from "./cells/DataCell.svelte"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
   import HeaderCell from "./cells/HeaderCell.svelte"
 
@@ -113,27 +113,18 @@
 
           {#if $stickyColumn}
             {@const cellId = `${row._id}-${$stickyColumn.name}`}
-            <SheetCell
+            <DataCell
               rowSelected={rowSelected || containsSelectedRow}
               {rowHovered}
               rowIdx={idx}
               selected={$selectedCellId === cellId}
               selectedUser={$selectedCellMap[cellId]}
-              on:click={() => ($selectedCellId = cellId)}
-              on:contextmenu={e => menu.actions.open(cellId, e)}
               width={$stickyColumn.width}
               reorderTarget={$reorder.targetColumn === $stickyColumn.name}
-            >
-              <svelte:component
-                this={getCellRenderer($stickyColumn)}
-                value={row[$stickyColumn.name]}
-                schema={$stickyColumn.schema}
-                selected={$selectedCellId === cellId}
-                onChange={val =>
-                  rows.actions.updateRow(row._id, $stickyColumn.name, val)}
-                readonly={$stickyColumn.schema.autocolumn}
-              />
-            </SheetCell>
+              column={$stickyColumn}
+              {row}
+              {cellId}
+            />
           {/if}
         </div>
       {/each}

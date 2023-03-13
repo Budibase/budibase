@@ -1,19 +1,52 @@
 <script>
+  import { onMount } from "svelte"
+
   export let value
   export let selected = false
   export let onChange
   export let type = "text"
   export let readonly = false
+  export let api
+
+  let input
+  let focused = false
 
   $: editable = selected && !readonly
 
   const handleChange = e => {
     onChange(e.target.value)
   }
+
+  const onKeyDown = e => {
+    if (!focused) {
+      return false
+    }
+    if (e.key === "Enter") {
+      input?.blur()
+      const event = new KeyboardEvent("keydown", { key: "ArrowDown" })
+      document.dispatchEvent(event)
+    }
+    return true
+  }
+
+  onMount(() => {
+    api = {
+      focus: () => input?.focus(),
+      blur: () => input?.blur(),
+      onKeyDown,
+    }
+  })
 </script>
 
 {#if editable}
-  <input {type} value={value || ""} on:change={handleChange} />
+  <input
+    bind:this={input}
+    on:focus={() => (focused = true)}
+    on:blur={() => (focused = false)}
+    {type}
+    value={value || ""}
+    on:change={handleChange}
+  />
 {:else}
   <div class="text-cell">
     {value || ""}

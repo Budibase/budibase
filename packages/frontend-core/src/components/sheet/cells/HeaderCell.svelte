@@ -17,6 +17,7 @@
     renderedColumns,
     dispatch,
     config,
+    ui
   } = getContext("sheet")
 
   let anchor
@@ -48,6 +49,7 @@
 
   const onContextMenu = e => {
     e.preventDefault()
+    ui.actions.blur()
     open = !open
   }
 
@@ -81,7 +83,7 @@
 <div
   class="header-cell"
   class:open
-  style="flex: 0 0 {column.width}px;"
+  style="flex: 0 0 {column.width}px"
   bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
   class:sorted={sortedBy}
