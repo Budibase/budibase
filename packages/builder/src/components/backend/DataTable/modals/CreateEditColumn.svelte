@@ -319,7 +319,6 @@
         FIELDS.FORMULA,
       ]
       // no-sql or a spreadsheet
-      console.log(table)
       if (!external || table.sql) {
         fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
       }
