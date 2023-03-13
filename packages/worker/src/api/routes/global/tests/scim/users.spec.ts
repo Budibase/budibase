@@ -226,4 +226,58 @@ describe("/api/global/scim/v2/users", () => {
       })
     })
   })
+
+  describe("PATCH /api/global/scim/v2/users", () => {
+    const patchScimUser = config.api.scimUsersAPI.patch
+
+    let user: ScimUser
+
+    beforeEach(async () => {
+      const body = createScimCreateUserRequest()
+
+      user = await config.api.scimUsersAPI.post({ body })
+    })
+
+    it("unauthorised calls are not allowed", async () => {
+      const response = await patchScimUser({} as any, {
+        setHeaders: false,
+        expect: 403,
+      })
+
+      expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+    })
+
+    it("cannot be called when feature is disabled", async () => {
+      mocks.licenses.useCloudFree()
+      const response = await patchScimUser({} as any, { expect: 400 })
+
+      expect(response).toEqual(featureDisabledResponse)
+    })
+
+    it("an existing user can be updated", async () => {
+      const body: ScimUpdateRequest = {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        Operations: [
+          {
+            op: "add",
+            path: "string",
+            value: "string",
+          },
+        ],
+      }
+
+      const response = await patchScimUser({ id: user.id, body })
+
+      const expectedScimUser = { ...user }
+      expect(response).toEqual(expectedScimUser)
+
+      const persistedUsers = await config.api.scimUsersAPI.get()
+      expect(persistedUsers).toEqual(
+        expect.objectContaining({
+          totalResults: 1,
+          Resources: [expectedScimUser],
+        })
+      )
+    })
+  })
 })
