@@ -21,7 +21,9 @@
 
 {#if url}
   <div class="outer" use:styleable={$component.styles}>
-    <div class="inner" {style} />
+    <div class="inner" {style}>
+      <slot />
+    </div>
   </div>
 {:else if $builderStore.inBuilder}
   <div
