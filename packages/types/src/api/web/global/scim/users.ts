@@ -23,17 +23,6 @@ export interface ScimUserResponse {
   ]
 }
 
-interface ScimListResponse<T> {
-  schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"]
-  totalResults: number
-  Resources: T[]
-  startIndex: number
-  itemsPerPage: number
-}
-
-export interface ScimUserListResponse
-  extends ScimListResponse<ScimUserResponse> {}
-
 export interface ScimCreateUserRequest {
   schemas: [
     "urn:ietf:params:scim:schemas:core:2.0:User",
@@ -59,3 +48,25 @@ export interface ScimCreateUserRequest {
   }
   roles: []
 }
+
+export interface ScimUpdateRequest {
+  schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
+  Operations: [
+    {
+      op: "add" | "replace" | "remove"
+      path: string
+      value: string
+    }
+  ]
+}
+
+interface ScimListResponse<T> {
+  schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"]
+  totalResults: number
+  Resources: T[]
+  startIndex: number
+  itemsPerPage: number
+}
+
+export interface ScimUserListResponse
+  extends ScimListResponse<ScimUserResponse> {}
