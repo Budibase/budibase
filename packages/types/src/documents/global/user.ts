@@ -54,6 +54,7 @@ export interface User extends Document {
   userGroups?: string[]
   onboardedAt?: string
   scimInfo?: {
+    externalId: string
     isSync: boolean
     firstSync: number
   }
