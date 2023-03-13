@@ -31,9 +31,9 @@ const DefaultBucketName = {
 const selfHosted = !!parseInt(process.env.SELF_HOSTED || "")
 
 function getAPIEncryptionKey() {
-  return process.env.API_ENCRYPTION_KEY ?
-    process.env.API_ENCRYPTION_KEY :
-    process.env.JWT_SECRET // fallback to the JWT_SECRET used historically
+  return process.env.API_ENCRYPTION_KEY
+    ? process.env.API_ENCRYPTION_KEY
+    : process.env.JWT_SECRET // fallback to the JWT_SECRET used historically
 }
 
 const environment = {
