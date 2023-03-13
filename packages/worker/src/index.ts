@@ -34,6 +34,7 @@ const logger = require("koa-pino-logger")
 const { userAgent } = require("koa-useragent")
 
 import destroyable from "server-destroy"
+import { initPro } from "./initPro"
 
 // configure events to use the pro audit log write
 // can't integrate directly into backend-core due to cyclic issues
@@ -106,6 +107,7 @@ const shutdown = () => {
 
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
+  await initPro()
   await redis.init()
 })
 
