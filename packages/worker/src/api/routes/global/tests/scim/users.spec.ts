@@ -216,5 +216,14 @@ describe("/api/global/scim/v2/users", () => {
 
       expect(response).toEqual(user)
     })
+
+    it("should return 404 when requesting unexisting user id", async () => {
+      const response = await findScimUser(structures.uuid(), { expect: 404 })
+
+      expect(response).toEqual({
+        message: "missing",
+        status: 404,
+      })
+    })
   })
 })
