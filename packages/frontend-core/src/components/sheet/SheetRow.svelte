@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import SheetCell from "./cells/SheetCell.svelte"
+  import DataCell from "./cells/DataCell.svelte"
   import { getCellRenderer } from "./renderers"
 
   export let row
@@ -31,7 +32,7 @@
 >
   {#each $renderedColumns as column (column.name)}
     {@const cellId = `${row._id}-${column.name}`}
-    <SheetCell
+    <DataCell
       rowSelected={rowSelected || containsSelectedCell}
       {rowHovered}
       rowIdx={idx}
@@ -39,19 +40,11 @@
       selectedUser={$selectedCellMap[cellId]}
       reorderSource={$reorder.sourceColumn === column.name}
       reorderTarget={$reorder.targetColumn === column.name}
-      on:click={() => ($selectedCellId = cellId)}
-      on:contextmenu={e => menu.actions.open(cellId, e)}
       width={column.width}
-    >
-      <svelte:component
-        this={getCellRenderer(column)}
-        value={row[column.name]}
-        schema={column.schema}
-        selected={$selectedCellId === cellId}
-        onChange={val => rows.actions.updateRow(row._id, column.name, val)}
-        readonly={column.schema.autocolumn}
-      />
-    </SheetCell>
+      {cellId}
+      {column}
+      {row}
+    />
   {/each}
 </div>
 

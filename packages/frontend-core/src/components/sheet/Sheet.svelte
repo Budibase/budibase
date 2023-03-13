@@ -64,10 +64,10 @@
   context = { ...context, ...createRowsStore(context) }
   context = { ...context, ...createColumnsStores(context) }
   context = { ...context, ...createMaxScrollStores(context) }
+  context = { ...context, ...createUIStores(context) }
   context = { ...context, ...createResizeStores(context) }
   context = { ...context, ...createViewportStores(context) }
   context = { ...context, ...createReorderStores(context) }
-  context = { ...context, ...createUIStores(context) }
   context = { ...context, ...createUserStores(context) }
   context = { ...context, ...createMenuStores(context) }
   context = { ...context, ...createPaginationStores(context) }
@@ -99,7 +99,6 @@
   id="sheet-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
-  use:clickOutside={ui.actions.blur}
   style="--cell-height:{cellHeight}px;"
 >
   <div class="controls">
@@ -113,7 +112,7 @@
     </div>
   </div>
   {#if $loaded}
-    <div class="sheet-data">
+    <div class="sheet-data" use:clickOutside={ui.actions.blur}>
       <StickyColumn />
       <div class="sheet-main">
         <HeaderRow />

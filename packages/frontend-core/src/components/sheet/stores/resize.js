@@ -4,7 +4,7 @@ import { DefaultColumnWidth } from "./columns"
 export const MinColumnWidth = 100
 
 export const createResizeStores = context => {
-  const { columns, stickyColumn } = context
+  const { columns, stickyColumn, ui } = context
   const initialState = {
     initialMouseX: null,
     initialWidth: null,
@@ -20,6 +20,7 @@ export const createResizeStores = context => {
   const startResizing = (column, e) => {
     // Prevent propagation to stop reordering triggering
     e.stopPropagation()
+    ui.actions.blur()
 
     // Find and cache index
     let columnIdx = get(columns).findIndex(col => col.name === column.name)

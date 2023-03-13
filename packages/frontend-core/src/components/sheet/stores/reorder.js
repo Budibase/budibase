@@ -1,7 +1,7 @@
 import { get, writable, derived } from "svelte/store"
 
 export const createReorderStores = context => {
-  const { columns, scroll, bounds, stickyColumn } = context
+  const { columns, scroll, bounds, stickyColumn, ui } = context
   const reorderInitialState = {
     sourceColumn: null,
     targetColumn: null,
@@ -23,6 +23,7 @@ export const createReorderStores = context => {
     const $bounds = get(bounds)
     const $scroll = get(scroll)
     const $stickyColumn = get(stickyColumn)
+    ui.actions.blur()
 
     // Generate new breakpoints for the current columns
     let breakpoints = $columns.map(col => ({

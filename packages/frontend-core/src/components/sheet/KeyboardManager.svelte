@@ -1,10 +1,26 @@
 <script>
   import { getContext, onMount } from "svelte"
+  import { get } from "svelte/store"
 
-  const { rows, selectedCellId, columns, selectedCellRow, stickyColumn } =
+  const { rows, rand, selectedCellId, columns, selectedCellRow, stickyColumn, selectedCellAPI } =
     getContext("sheet")
 
   const handleKeyDown = e => {
+    const api = get(selectedCellAPI)
+
+    // Always capture escape and blur any selected cell
+    if (e.key === "Escape") {
+      api?.blur()
+    }
+
+    // Pass the key event to the selected cell and let it decide whether to
+    // capture it or not
+    const handled = api?.onKeyDown?.(e)
+    if (handled) {
+      return
+    }
+
+    // Handle the key ourselves
     switch (e.key) {
       case "ArrowLeft":
         changeSelectedColumn(-1)
@@ -21,6 +37,9 @@
       case "Delete":
         deleteSelectedCell()
         break
+      case "Enter":
+        focusSelectedCell()
+        break;
     }
   }
 
@@ -65,6 +84,10 @@
     }
     const [rowId, column] = $selectedCellId.split("-")
     rows.actions.updateRow(rowId, column, null)
+  }
+
+  const focusSelectedCell = () => {
+    $selectedCellAPI?.focus()
   }
 
   onMount(() => {

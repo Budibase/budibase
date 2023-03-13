@@ -3,16 +3,12 @@
     clickOutside,
     Menu,
     MenuItem,
-    Modal,
-    ModalContent,
     notifications,
   } from "@budibase/bbui"
   import { getContext } from "svelte"
 
   const { selectedCellRow, menu, rows, columns, selectedCellId, stickyColumn } =
     getContext("sheet")
-
-  let modal
 
   $: style = makeStyle($menu)
 
@@ -43,23 +39,11 @@
 {#if $menu.visible}
   <div class="menu" {style} use:clickOutside={() => menu.actions.close()}>
     <Menu>
-      <MenuItem icon="Delete" on:click={modal.show}>Delete row</MenuItem>
+      <MenuItem icon="Delete" on:click={deleteRow}>Delete row</MenuItem>
       <MenuItem icon="Duplicate" on:click={duplicate}>Duplicate row</MenuItem>
     </Menu>
   </div>
 {/if}
-
-<Modal bind:this={modal}>
-  <ModalContent
-    title="Delete row"
-    confirmText="Continue"
-    cancelText="Cancel"
-    onConfirm={deleteRow}
-    size="M"
-  >
-    Are you sure you want to delete this row?
-  </ModalContent>
-</Modal>
 
 <style>
   .menu {

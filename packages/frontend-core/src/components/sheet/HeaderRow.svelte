@@ -4,7 +4,12 @@
   import HeaderCell from "./cells/HeaderCell.svelte"
   import { Icon } from "@budibase/bbui"
 
-  const { renderedColumns, dispatch, config } = getContext("sheet")
+  const { renderedColumns, dispatch, config, ui } = getContext("sheet")
+
+  const addColumn = () => {
+    ui.actions.blur()
+    dispatch("add-column")
+  }
 </script>
 
 <div class="header">
@@ -16,7 +21,7 @@
     </div>
   </SheetScrollWrapper>
   {#if $config.allowAddColumns}
-    <div class="new-column" on:click={() => dispatch("add-column")}>
+    <div class="new-column" on:click={addColumn}>
       <Icon size="S" name="Add" />
     </div>
   {/if}

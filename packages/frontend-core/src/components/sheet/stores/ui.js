@@ -72,6 +72,13 @@ export const createUIStores = context => {
     hoveredRowId.set(null)
   }
 
+  // Remove selected cell API when no selected cell is present
+  selectedCellId.subscribe(cell => {
+    if (!cell && get(selectedCellAPI)) {
+      selectedCellAPI.set(null)
+    }
+  })
+
   return {
     selectedCellId,
     selectedRows,
