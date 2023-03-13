@@ -8,7 +8,6 @@ import {
   SearchFilters,
   SortJson,
   Table,
-  TableSchema,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId } from "./utils"
@@ -210,6 +209,26 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
+  getTableSchema(title: string, headerValues: string[], id?: string) {
+    // base table
+    const table: Table = {
+      name: title,
+      primary: ["rowNumber"],
+      schema: {},
+    }
+    if (id) {
+      table._id = id
+    }
+    // build schema from headers
+    for (let header of headerValues) {
+      table.schema[header] = {
+        name: header,
+        type: FieldTypes.STRING,
+      }
+    }
+    return table
+  }
+
   async buildSchema(datasourceId: string) {
     await this.connect()
     const sheets = this.client.sheetsByIndex
@@ -217,26 +236,14 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     for (let sheet of sheets) {
       // must fetch rows to determine schema
       await sheet.getRows()
-      // build schema
-      const schema: TableSchema = {}
 
-      // build schema from headers
-      for (let header of sheet.headerValues) {
-        schema[header] = {
-          name: header,
-          type: FieldTypes.STRING,
-        }
-      }
-
-      // create tables
-      tables[sheet.title] = {
-        _id: buildExternalTableId(datasourceId, sheet.title),
-        name: sheet.title,
-        primary: ["rowNumber"],
-        schema,
-      }
+      const id = buildExternalTableId(datasourceId, sheet.title)
+      tables[sheet.title] = this.getTableSchema(
+        sheet.title,
+        sheet.headerValues,
+        id
+      )
     }
-
     this.tables = tables
   }
 
@@ -311,12 +318,19 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       } else {
         const updatedHeaderValues = [...sheet.headerValues]
 
-        const newField = Object.keys(table.schema).find(
-          key => !sheet.headerValues.includes(key)
-        )
+        // add new column - doesn't currently exist
+        for (let key of Object.keys(table.schema)) {
+          if (!sheet.headerValues.includes(key)) {
+            updatedHeaderValues.push(key)
+          }
+        }
 
-        if (newField) {
-          updatedHeaderValues.push(newField)
+        // clear out deleted columns
+        for (let key of sheet.headerValues) {
+          if (!Object.keys(table.schema).includes(key)) {
+            const idx = updatedHeaderValues.indexOf(key)
+            updatedHeaderValues.splice(idx, 1)
+          }
         }
 
         await sheet.setHeaderRow(updatedHeaderValues)

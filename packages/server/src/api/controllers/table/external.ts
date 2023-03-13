@@ -20,7 +20,7 @@ import {
   Operation,
   RenameColumn,
   FieldSchema,
-  BBContext,
+  UserCtx,
   TableRequest,
   RelationshipTypes,
 } from "@budibase/types"
@@ -194,7 +194,7 @@ function isRelationshipSetup(column: FieldSchema) {
   return column.foreignKey || column.through
 }
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: UserCtx) {
   const table: TableRequest = ctx.request.body
   const renamed = table?._rename
   // can't do this right now
@@ -313,7 +313,7 @@ export async function save(ctx: BBContext) {
   return tableToSave
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: UserCtx) {
   const tableToDelete: TableRequest = await sdk.tables.getTable(
     ctx.params.tableId
   )
@@ -339,7 +339,7 @@ export async function destroy(ctx: BBContext) {
   return tableToDelete
 }
 
-export async function bulkImport(ctx: BBContext) {
+export async function bulkImport(ctx: UserCtx) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows }: { rows: unknown } = ctx.request.body
   const schema: unknown = table.schema
@@ -348,7 +348,7 @@ export async function bulkImport(ctx: BBContext) {
     ctx.throw(400, "Provided data import information is invalid.")
   }
 
-  const parsedRows = await parse(rows, schema)
+  const parsedRows = parse(rows, schema)
   await handleRequest(Operation.BULK_CREATE, table._id!, {
     rows: parsedRows,
   })
