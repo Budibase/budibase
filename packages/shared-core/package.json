@@ -1,6 +1,6 @@
 {
   "name": "@budibase/shared-core",
-  "version": "2.4.21",
+  "version": "2.4.22",
   "description": "Shared data utils",
   "main": "dist/cjs/src/index.js",
   "types": "dist/mjs/src/index.d.ts",
