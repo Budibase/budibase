@@ -95,4 +95,24 @@ export class ScimUsersAPI extends TestAPI {
 
     return res.body as ScimUserResponse
   }
+
+  patch = async (
+    {
+      id,
+      body,
+    }: {
+      id: string
+      body: ScimUpdateRequest
+    },
+    requestSettings?: Partial<RequestSettings>
+  ) => {
+    const res = await this.#createRequest(
+      `/api/global/scim/v2/users/${id}`,
+      "patch",
+      requestSettings,
+      body
+    )
+
+    return res.body as ScimUser
+  }
 }
