@@ -2,16 +2,18 @@ import {
   DatasourceFieldType,
   DatasourcePlus,
   Integration,
+  Operation,
   PaginationJson,
   QueryJson,
   QueryType,
   SearchFilters,
   SortJson,
   Table,
+  Row,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId } from "./utils"
-import { DataSourceOperation, FieldTypes } from "../constants"
+import { FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
@@ -249,35 +251,37 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async query(json: QueryJson) {
     const sheet = json.endpoint.entityId
-
-    const handlers = {
-      [DataSourceOperation.CREATE]: () =>
-        this.create({ sheet, row: json.body }),
-      [DataSourceOperation.READ]: () => this.read({ ...json, sheet }),
-      [DataSourceOperation.UPDATE]: () =>
-        this.update({
+    switch (json.endpoint.operation) {
+      case Operation.CREATE:
+        return this.create({ sheet, row: json.body as Row })
+      case Operation.BULK_CREATE:
+        return this.createBulk({ sheet, rows: json.body as Row[] })
+      case Operation.READ:
+        return this.read({ ...json, sheet })
+      case Operation.UPDATE:
+        return this.update({
           // exclude the header row and zero index
           rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
           sheet,
           row: json.body,
-        }),
-      [DataSourceOperation.DELETE]: () =>
-        this.delete({
+        })
+      case Operation.DELETE:
+        return this.delete({
           // exclude the header row and zero index
           rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
           sheet,
-        }),
-      [DataSourceOperation.CREATE_TABLE]: () =>
-        this.createTable(json?.table?.name),
-      [DataSourceOperation.UPDATE_TABLE]: () => this.updateTable(json.table),
-      [DataSourceOperation.DELETE_TABLE]: () =>
-        this.deleteTable(json?.table?.name),
+        })
+      case Operation.CREATE_TABLE:
+        return this.createTable(json?.table?.name)
+      case Operation.UPDATE_TABLE:
+        return this.updateTable(json.table)
+      case Operation.DELETE_TABLE:
+        return this.deleteTable(json?.table?.name)
+      default:
+        throw new Error(
+          `GSheets integration does not support "${json.endpoint.operation}".`
+        )
     }
-
-    // @ts-ignore
-    const internalQueryMethod = handlers[json.endpoint.operation]
-
-    return await internalQueryMethod()
   }
 
   buildRowObject(headers: string[], values: string[], rowNumber: number) {
@@ -364,6 +368,24 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       ]
     } catch (err) {
       console.error("Error writing to google sheets", err)
+      throw err
+    }
+  }
+
+  async createBulk(query: { sheet: string; rows: any[] }) {
+    try {
+      await this.connect()
+      const sheet = this.client.sheetsByTitle[query.sheet]
+      let rowsToInsert = []
+      for (let row of query.rows) {
+        rowsToInsert.push(typeof row === "string" ? JSON.parse(row) : row)
+      }
+      const rows = await sheet.addRows(rowsToInsert)
+      return rows.map(row =>
+        this.buildRowObject(sheet.headerValues, row._rawData, row._rowNumber)
+      )
+    } catch (err) {
+      console.error("Error bulk writing to google sheets", err)
       throw err
     }
   }
