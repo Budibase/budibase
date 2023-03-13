@@ -1,6 +1,17 @@
+import tk from "timekeeper"
+import { structures } from "@budibase/backend-core/tests"
+import { ScimUserRequest } from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
 
 describe("/api/global/scim/v2/users", () => {
+  let mockedTime = new Date(structures.generator.timestamp())
+
+  beforeEach(() => {
+    tk.reset()
+    mockedTime = new Date(structures.generator.timestamp())
+    tk.freeze(mockedTime)
+  })
+
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -55,29 +66,59 @@ describe("/api/global/scim/v2/users", () => {
 
     describe("no users exist", () => {
       it("a new user can be created", async () => {
-        const body = {} as any
-        const response = await config.api.scimUsersAPI.post(body)
+        const userData = {
+          externalId: structures.uuid(),
+          email: structures.generator.email(),
+          firstName: structures.generator.first(),
+          lastName: structures.generator.last(),
+        }
+        const body: ScimUserRequest = {
+          schemas: [
+            "urn:ietf:params:scim:schemas:core:2.0:User",
+            "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
+          ],
+          externalId: userData.externalId,
+          userName: structures.generator.name(),
+          active: true,
+          emails: [
+            {
+              primary: true,
+              type: "work",
+              value: userData.email,
+            },
+          ],
+          meta: {
+            resourceType: "User",
+          },
+          name: {
+            formatted: structures.generator.name(),
+            familyName: userData.lastName,
+            givenName: userData.firstName,
+          },
+          roles: [],
+        }
+
+        const response = await config.api.scimUsersAPI.post({ body })
 
         expect(response).toEqual({
           schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
-          id: "48af03ac28ad4fb88478",
-          externalId: "0a21f0f2-8d2a-4f8e-bf98-7363c4aed4ef",
+          id: expect.any(String),
+          externalId: userData.externalId,
           meta: {
             resourceType: "User",
-            created: "2018-03-27T19:59:26.000Z",
-            lastModified: "2018-03-27T19:59:26.000Z",
+            created: mockedTime.toISOString(),
+            lastModified: mockedTime.toISOString(),
           },
-          userName: "Test_User_ab6490ee-1e48-479e-a20b-2d77186b5dd1",
+          userName: `${userData.firstName} ${userData.lastName}`,
           name: {
-            formatted: "givenName familyName",
-            familyName: "familyName",
-            givenName: "givenName",
+            formatted: `${userData.firstName} ${userData.lastName}`,
+            familyName: userData.lastName,
+            givenName: userData.firstName,
           },
           active: true,
           emails: [
             {
-              value:
-                "Test_User_fd0ea19b-0777-472c-9f96-4f70d2226f2e@testuser.com",
+              value: userData.email,
               type: "work",
               primary: true,
             },
