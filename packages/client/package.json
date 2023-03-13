@@ -23,7 +23,7 @@
     "@budibase/frontend-core": "2.4.12-alpha.2",
     "@budibase/shared-core": "2.4.12-alpha.2",
     "@budibase/string-templates": "2.4.12-alpha.2",
-    "@budibase/types": "2.4.8-alpha.4",
+    "@budibase/types": "2.4.12-alpha.2",
     "@spectrum-css/button": "^3.0.3",
     "@spectrum-css/card": "^3.0.3",
     "@spectrum-css/divider": "^1.0.3",
