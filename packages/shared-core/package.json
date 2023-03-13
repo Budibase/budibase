@@ -20,7 +20,7 @@
     "dev:builder": "yarn prebuild && concurrently \"tsc -p tsconfig.build.json --watch\" \"tsc -p tsconfig-cjs.build.json --watch\""
   },
   "dependencies": {
-    "@budibase/types": "2.4.5-alpha.0"
+    "@budibase/types": "2.4.12-alpha.2"
   },
   "devDependencies": {
     "concurrently": "^7.6.0",
