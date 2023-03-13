@@ -20,6 +20,19 @@ const ignoredWarnings = [
   "a11y-click-events-have-key-events",
 ]
 
+const devPaths = production
+  ? []
+  : [
+      {
+        find: "@budibase/shared-core",
+        replacement: path.resolve("../shared-core/dist/mjs/src/index"),
+      },
+      {
+        find: "@budibase/types",
+        replacement: path.resolve("../types/dist/mjs/index"),
+      },
+    ]
+
 export default {
   input: "src/index.js",
   output: [
@@ -69,6 +82,7 @@ export default {
           find: "sdk",
           replacement: path.resolve("./src/sdk"),
         },
+        ...devPaths,
       ],
     }),
     svelte({
