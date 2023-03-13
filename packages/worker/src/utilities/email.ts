@@ -1,6 +1,6 @@
 import env from "../environment"
 import { EmailTemplatePurpose, TemplateType } from "../constants"
-import { getTemplateByPurpose } from "../constants/templates"
+import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import { getResetPasswordCode, getInviteCode } from "./redis"
@@ -108,30 +108,53 @@ async function buildEmail(
   let [base, body] = await Promise.all([
     getTemplateByPurpose(TYPE, EmailTemplatePurpose.BASE),
     getTemplateByPurpose(TYPE, purpose),
+    //getTemplateByPurpose(TYPE, "branding"), //should generalise to 'branding'
   ])
-  if (!base || !body) {
+
+  let branding = EmailTemplates["branding"]
+
+  if (!base || !body || !branding) {
     throw "Unable to build email, missing base components"
   }
   base = base.contents
   body = body.contents
+
+  //branding = branding.contents
+
   let name = user ? user.name : undefined
   if (user && !name && user.firstName) {
     name = user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName
   }
   context = {
-    ...context,
+    ...context, //enableEmailBranding
     contents,
     email,
     name,
     user: user || {},
   }
 
-  body = await processString(body, context)
-  // this should now be the complete email HTML
+  const core = branding + body
+
+  body = await processString(core, context)
+
+  // Conditional elements
+  // branding = await processString(branding, {
+  //   ...context,
+  //   body,
+  // })
+
+  // this should now be the core email HTML
   return processString(base, {
     ...context,
-    body,
+    body, //: branding, // pass as body as usual
   })
+
+  // body = await processString(body, context)
+  // // this should now be the coree email HTML
+  // return processString(base, {
+  //   ...context,
+  //   body,
+  // })
 }
 
 /**

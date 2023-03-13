@@ -13,6 +13,7 @@ export const createLicensingStore = () => {
     license: undefined,
     isFreePlan: true,
     isEnterprisePlan: true,
+    isBusinessPlan: true,
     // features
     groupsEnabled: false,
     backupsEnabled: false,
@@ -57,6 +58,7 @@ export const createLicensingStore = () => {
       const planType = license?.plan.type
       const isEnterprisePlan = planType === Constants.PlanType.ENTERPRISE
       const isFreePlan = planType === Constants.PlanType.FREE
+      const isBusinessPlan = planType === Constants.PlanType.BUSINESS
       const groupsEnabled = license.features.includes(
         Constants.Features.USER_GROUPS
       )
@@ -79,6 +81,7 @@ export const createLicensingStore = () => {
           license,
           isEnterprisePlan,
           isFreePlan,
+          isBusinessPlan,
           groupsEnabled,
           backupsEnabled,
           environmentVariablesEnabled,

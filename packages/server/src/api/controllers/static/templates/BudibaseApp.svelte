@@ -22,7 +22,6 @@
   <meta property="og:title" content="{title} - built with Budibase" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content={metaImage} />
-
   <title>{title}</title>
   <link rel="icon" type="image/png" href={favicon} />
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />

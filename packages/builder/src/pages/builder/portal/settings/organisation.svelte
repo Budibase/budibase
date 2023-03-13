@@ -28,21 +28,21 @@
     company: $organisation.company,
     platformUrl: $organisation.platformUrl,
     analyticsEnabled: $organisation.analyticsEnabled,
-    logo: $organisation.logoUrl
-      ? { url: $organisation.logoUrl, type: "image", name: "Logo" }
-      : null,
+    // logo: $organisation.logoUrl
+    //   ? { url: $organisation.logoUrl, type: "image", name: "Logo" }
+    //   : null,
   })
   let loading = false
 
-  async function uploadLogo(file) {
-    try {
-      let data = new FormData()
-      data.append("file", file)
-      await API.uploadLogo(data)
-    } catch (error) {
-      notifications.error("Error uploading logo")
-    }
-  }
+  // async function uploadLogo(file) {
+  //   try {
+  //     let data = new FormData()
+  //     data.append("file", file)
+  //     await API.uploadLogo(data)
+  //   } catch (error) {
+  //     notifications.error("Error uploading logo")
+  //   }
+  // }
 
   async function saveConfig() {
     loading = true
@@ -87,21 +87,7 @@
         <Label size="L">Org. name</Label>
         <Input thin bind:value={$values.company} />
       </div>
-      <!-- <div class="field logo">
-        <Label size="L">Logo</Label>
-        <div class="file">
-          <Dropzone
-            value={[$values.logo]}
-            on:change={e => {
-              if (!e.detail || e.detail.length === 0) {
-                $values.logo = null
-              } else {
-                $values.logo = e.detail[0]
-              }
-            }}
-          />
-        </div>
-      </div> -->
+
       {#if !$admin.cloud}
         <div class="field">
           <Label
@@ -136,11 +122,5 @@
     grid-template-columns: 120px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
-  }
-  .file {
-    max-width: 30ch;
-  }
-  .logo {
-    align-items: start;
   }
 </style>

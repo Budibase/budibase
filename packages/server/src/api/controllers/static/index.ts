@@ -105,14 +105,16 @@ export const serveApp = async function (ctx: any) {
   if (!env.isJest()) {
     const App = require("./templates/BudibaseApp.svelte").default
     const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
+    console.log(appInfo)
     const { head, html, css } = App.render({
       metaImage:
         "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
-      title: appInfo.name,
+      title: appInfo.name, //Replace Title here?
       production: env.isProd(),
       appId,
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
       usedPlugins: plugins,
+      favicon: objectStore.getGlobalFileUrl("settings", "faviconUrl"),
     })
 
     const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
