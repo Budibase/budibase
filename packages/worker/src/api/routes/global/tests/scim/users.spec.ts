@@ -1,5 +1,5 @@
 import tk from "timekeeper"
-import { structures } from "@budibase/backend-core/tests"
+import { mocks, structures } from "@budibase/backend-core/tests"
 import { ScimCreateUserRequest } from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
 
@@ -10,6 +10,8 @@ describe("/api/global/scim/v2/users", () => {
     tk.reset()
     mockedTime = new Date(structures.generator.timestamp())
     tk.freeze(mockedTime)
+
+    mocks.licenses.useScimIntegration()
   })
 
   const config = new TestConfiguration()
@@ -26,9 +28,21 @@ describe("/api/global/scim/v2/users", () => {
     jest.clearAllMocks()
   })
 
+  const featureDisabledResponse = {
+    error: {
+      code: "feature_disabled",
+      featureName: "scimIntegration",
+      type: "license_error",
+    },
+    message: "scimIntegration is not currently enabled",
+    status: 400,
+  }
+
   describe("GET /api/global/scim/v2/users", () => {
+    const getScimUsers = config.api.scimUsersAPI.get
+
     it("unauthorised calls are not allowed", async () => {
-      const response = await config.api.scimUsersAPI.get({
+      const response = await getScimUsers({
         setHeaders: false,
         expect: 403,
       })
@@ -36,9 +50,16 @@ describe("/api/global/scim/v2/users", () => {
       expect(response).toEqual({ message: "Tenant id not set", status: 403 })
     })
 
+    it("cannot be called when feature is disabled", async () => {
+      mocks.licenses.useCloudFree()
+      const response = await getScimUsers({ expect: 400 })
+
+      expect(response).toEqual(featureDisabledResponse)
+    })
+
     describe("no users exist", () => {
       it("should retrieve empty list", async () => {
-        const response = await config.api.scimUsersAPI.get()
+        const response = await getScimUsers()
 
         expect(response).toEqual({
           Resources: [],
@@ -52,8 +73,10 @@ describe("/api/global/scim/v2/users", () => {
   })
 
   describe("POST /api/global/scim/v2/users", () => {
+    const postScimUser = config.api.scimUsersAPI.post
+
     it("unauthorised calls are not allowed", async () => {
-      const response = await config.api.scimUsersAPI.post(
+      const response = await postScimUser(
         { body: {} as any },
         {
           setHeaders: false,
@@ -62,6 +85,13 @@ describe("/api/global/scim/v2/users", () => {
       )
 
       expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+    })
+
+    it("cannot be called when feature is disabled", async () => {
+      mocks.licenses.useCloudFree()
+      const response = await postScimUser({ body: {} as any }, { expect: 400 })
+
+      expect(response).toEqual(featureDisabledResponse)
     })
 
     describe("no users exist", () => {
@@ -98,7 +128,7 @@ describe("/api/global/scim/v2/users", () => {
           roles: [],
         }
 
-        const response = await config.api.scimUsersAPI.post({ body })
+        const response = await postScimUser({ body })
 
         const expectedScimUser = {
           schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
