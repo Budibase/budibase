@@ -8,18 +8,26 @@
 
   let currentTourStep
   let ready = false
+  let registered = false
   let handler
 
+  const registerTourNode = (tourKey, stepKey) => {
+    if (ready && !registered && tourKey) {
+      currentTourStep = TOURS[tourKey].find(step => step.id === stepKey)
+      if (!currentTourStep) {
+        console.log("Could not find tour step : ", stepKey)
+        return
+      }
+      const elem = document.querySelector(currentTourStep.query)
+      handler = tourHandler(elem, stepKey)
+      registered = true
+    }
+  }
+
+  $: tourKeyWatch = $store.tourKey
+  $: registerTourNode(tourKeyWatch, tourStepKey, ready)
+
   onMount(() => {
-    if (!$store.tourKey) return
-
-    currentTourStep = TOURS[$store.tourKey].find(
-      step => step.id === tourStepKey
-    )
-    if (!currentTourStep) return
-
-    const elem = document.querySelector(currentTourStep.query)
-    handler = tourHandler(elem, tourStepKey)
     ready = true
   })
   onDestroy(() => {
