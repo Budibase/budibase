@@ -27,6 +27,20 @@ export interface SettingsInnerConfig {
   company?: string
   logoUrl?: string // Populated on read
   logoUrlEtag?: string
+
+  faviconUrl?: string
+  faviconUrlEtag?: string
+
+  emailBrandingEnabled?: boolean
+
+  // Self host only
+  appFooterEnabled?: boolean
+  testimonialsEnabled?: boolean
+  licenceAgreementEnabled?: boolean
+  platformTitle?: string
+  loginHeading?: string
+  loginButton?: string
+
   uniqueTenantId?: string
   analyticsEnabled?: boolean
   isSSOEnforced?: boolean

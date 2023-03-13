@@ -285,6 +285,14 @@ export async function publicSettings(
       )
     }
 
+    if (config.faviconUrl && config.faviconUrl !== "") {
+      config.faviconUrl = objectStore.getGlobalFileUrl(
+        "settings",
+        "faviconUrl",
+        config.faviconUrl
+      )
+    }
+
     // google
     const googleConfig = await configs.getGoogleConfig()
     const preActivated = googleConfig?.activated == null

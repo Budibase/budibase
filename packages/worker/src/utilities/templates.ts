@@ -25,6 +25,11 @@ export async function getSettingsTemplateContext(
     [InternalTemplateBinding.CURRENT_DATE]: new Date().toISOString(),
     [InternalTemplateBinding.CURRENT_YEAR]: new Date().getFullYear(),
   }
+
+  // Need to be careful with the binding as it shouldn't be surfacable
+  // Also default to false if not explicit
+  context["enableEmailBranding"] = settings.emailBrandingEnabled
+
   // attach purpose specific context
   switch (purpose) {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:

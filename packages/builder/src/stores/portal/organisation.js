@@ -5,7 +5,19 @@ import _ from "lodash"
 
 const DEFAULT_CONFIG = {
   platformUrl: "",
+
   logoUrl: undefined,
+  faviconUrl: undefined,
+
+  emailBrandingEnabled: true,
+  appFooterEnabled: true,
+  // Self host only
+  testimonialsEnabled: true,
+  licenceAgreementEnabled: true,
+  platformTitle: "Budibase",
+  loginHeading: undefined,
+  loginButton: undefined,
+
   docsUrl: undefined,
   company: "Budibase",
   oidc: undefined,
