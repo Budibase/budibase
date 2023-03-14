@@ -1,6 +1,10 @@
 import tk from "timekeeper"
 import { mocks, structures } from "@budibase/backend-core/tests"
-import { ScimCreateUserRequest, ScimUserResponse } from "@budibase/types"
+import {
+  ScimCreateUserRequest,
+  ScimUpdateRequest,
+  ScimUserResponse,
+} from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
 
 function createScimCreateUserRequest(userData?: {
@@ -233,7 +237,7 @@ describe("/api/global/scim/v2/users", () => {
   describe("PATCH /api/global/scim/v2/users", () => {
     const patchScimUser = config.api.scimUsersAPI.patch
 
-    let user: ScimUser
+    let user: ScimUserResponse
 
     beforeEach(async () => {
       const body = createScimCreateUserRequest()
@@ -278,7 +282,7 @@ describe("/api/global/scim/v2/users", () => {
 
       const response = await patchScimUser({ id: user.id, body })
 
-      const expectedScimUser: ScimUser = {
+      const expectedScimUser: ScimUserResponse = {
         ...user,
         userName: newUserName,
         name: {
