@@ -301,7 +301,7 @@ describe("/api/global/scim/v2/users", () => {
   describe("DELETE /api/global/scim/v2/users/:id", () => {
     const deleteScimUser = config.api.scimUsersAPI.delete
 
-    let user: ScimUser
+    let user: ScimUserResponse
 
     beforeEach(async () => {
       const body = createScimCreateUserRequest()
