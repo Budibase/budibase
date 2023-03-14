@@ -1,11 +1,11 @@
-export interface ScimUserResponse {
+import { ScimResource, ScimMeta, ScimPatchOperation } from "scim-patch"
+
+export interface ScimUserResponse extends ScimResource {
   schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
   id: string
   externalId: string
-  meta: {
+  meta: ScimMeta & {
     resourceType: "User"
-    created: string
-    lastModified: string
   }
   userName: string
   name: {
@@ -51,13 +51,7 @@ export interface ScimCreateUserRequest {
 
 export interface ScimUpdateRequest {
   schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
-  Operations: [
-    {
-      op: "add" | "replace" | "remove"
-      path: string
-      value: string
-    }
-  ]
+  Operations: ScimPatchOperation[]
 }
 
 interface ScimListResponse<T> {
