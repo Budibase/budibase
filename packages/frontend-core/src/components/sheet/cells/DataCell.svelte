@@ -20,7 +20,10 @@
 
   $: {
     if (selected) {
-      selectedCellAPI.set(api)
+      selectedCellAPI.set({
+        ...api,
+        isReadonly: () => !!column.schema.autocolumn,
+      })
     }
   }
 </script>
