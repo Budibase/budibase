@@ -271,13 +271,8 @@ describe("/api/global/scim/v2/users", () => {
       const expectedScimUser = { ...user }
       expect(response).toEqual(expectedScimUser)
 
-      const persistedUsers = await config.api.scimUsersAPI.get()
-      expect(persistedUsers).toEqual(
-        expect.objectContaining({
-          totalResults: 1,
-          Resources: [expectedScimUser],
-        })
-      )
+      const persistedUser = await config.api.scimUsersAPI.find(user.id)
+      expect(persistedUser).toEqual(expectedScimUser)
     })
   })
 })
