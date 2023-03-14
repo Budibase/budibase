@@ -32,7 +32,6 @@
   import { getSchemaForTable } from "builderStore/dataBinding"
   import { Utils } from "@budibase/frontend-core"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
-  import { cloneDeep } from "lodash/fp"
   import { onMount } from "svelte"
 
   export let block
