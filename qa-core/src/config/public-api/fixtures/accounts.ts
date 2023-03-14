@@ -5,7 +5,8 @@ import { Hosting } from "@budibase/types"
 
 export const generateAccount = (): Partial<NewAccount> => {
   const randomGuid = generator.guid()
-  let tenant: string = "a" + randomGuid
+  //Needs to start with a letter
+  let tenant: string = "tenant" + randomGuid
   tenant = tenant.replace(/-/g, "")
 
   return {
