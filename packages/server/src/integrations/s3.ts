@@ -107,6 +107,7 @@ const SCHEMA: Integration = {
     readCsv: {
       displayName: "Read CSV",
       type: QueryType.FIELDS,
+      readable: true,
       fields: {
         bucket: {
           type: DatasourceFieldType.STRING,
