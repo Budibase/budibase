@@ -15,6 +15,7 @@ import {
   utils,
   ViewName,
   env as coreEnv,
+  context,
 } from "@budibase/backend-core"
 import {
   AccountMetadata,
@@ -537,7 +538,7 @@ export const bulkDelete = async (
   return response
 }
 
-export const destroy = async (id: string, currentUser: any) => {
+export const destroy = async (id: string) => {
   const db = tenancy.getGlobalDB()
   const dbUser = (await db.get(id)) as User
   const userId = dbUser._id as string
@@ -547,7 +548,7 @@ export const destroy = async (id: string, currentUser: any) => {
     const email = dbUser.email
     const account = await accounts.getAccount(email)
     if (account) {
-      if (email === currentUser.email) {
+      if (dbUser.userId === context.getIdentity()!._id) {
         throw new HTTPError('Please visit "Account" to delete this user', 400)
       } else {
         throw new HTTPError("Account holder cannot be deleted", 400)
