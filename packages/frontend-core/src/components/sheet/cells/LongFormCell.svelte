@@ -19,7 +19,6 @@
 
   const handleChange = e => {
     onChange(e.target.value)
-    console.log(e.target.value)
   }
 
   const onKeyDown = () => {
