@@ -1,5 +1,6 @@
 <script>
   import { getContext, onMount } from "svelte"
+  import { debounce } from "../../utils/utils"
 
   const {
     rows,
@@ -11,15 +12,16 @@
   } = getContext("sheet")
 
   const handleKeyDown = e => {
+    // If nothing selected avoid processing further key presses
     if (!$selectedCellId) {
       if (e.key === "Tab") {
         selectFirstCell()
       }
       return
     }
-    const api = $selectedCellAPI
 
     // Always intercept certain key presses
+    const api = $selectedCellAPI
     if (e.key === "Escape") {
       api?.blur?.()
     } else if (e.key === "Tab") {
@@ -105,13 +107,14 @@
     }
   }
 
-  const deleteSelectedCell = () => {
+  // Debounce to avoid holding down delete and spamming requests
+  const deleteSelectedCell = debounce(() => {
     if (!$selectedCellId) {
       return
     }
     const [rowId, column] = $selectedCellId.split("-")
     rows.actions.updateRow(rowId, column, null)
-  }
+  }, 100)
 
   const focusSelectedCell = () => {
     $selectedCellAPI?.focus?.()

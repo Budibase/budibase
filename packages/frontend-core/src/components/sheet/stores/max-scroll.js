@@ -9,11 +9,9 @@ export const createMaxScrollStores = context => {
     cellHeight,
     scroll,
     selectedCellRow,
-    scrolledRowCount,
-    visualRowCapacity,
     selectedCellId,
   } = context
-  const padding = 180
+  const padding = 250
 
   // Memoize store primitives
   const scrollTop = derived(scroll, $scroll => $scroll.top, 0)
