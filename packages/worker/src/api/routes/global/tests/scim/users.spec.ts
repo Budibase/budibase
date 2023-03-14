@@ -1,6 +1,6 @@
 import tk from "timekeeper"
 import { structures } from "@budibase/backend-core/tests"
-import { ScimUserRequest } from "@budibase/types"
+import { ScimCreateUserRequest } from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
 
 describe("/api/global/scim/v2/users", () => {
@@ -72,7 +72,7 @@ describe("/api/global/scim/v2/users", () => {
           firstName: structures.generator.first(),
           lastName: structures.generator.last(),
         }
-        const body: ScimUserRequest = {
+        const body: ScimCreateUserRequest = {
           schemas: [
             "urn:ietf:params:scim:schemas:core:2.0:User",
             "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
