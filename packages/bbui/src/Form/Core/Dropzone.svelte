@@ -138,7 +138,7 @@
   }
 </script>
 
-<div class="container">
+<div class="container" class:compact>
   {#if selectedImage}
     {#if gallery}
       <div class="gallery">
@@ -379,6 +379,10 @@
     object-fit: contain;
     margin: 20px 30px;
   }
+  .compact .placeholder,
+  .compact img {
+    margin: 12px 16px;
+  }
   .title {
     display: flex;
     flex-direction: row;
@@ -446,6 +450,13 @@
   }
   .disabled .spectrum-Heading--sizeL {
     color: var(--spectrum-alias-text-color-disabled);
+  }
+  .compact .spectrum-Dropzone {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .compact .spectrum-IllustratedMessage-description {
+    margin: 0;
   }
 
   .tags {
