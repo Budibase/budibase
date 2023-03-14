@@ -112,6 +112,9 @@
     if (!$selectedCellId) {
       return
     }
+    if ($selectedCellAPI?.isReadonly()) {
+      return
+    }
     const [rowId, column] = $selectedCellId.split("-")
     rows.actions.updateRow(rowId, column, null)
   }, 100)
