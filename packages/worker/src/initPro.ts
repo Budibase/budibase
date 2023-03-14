@@ -6,6 +6,7 @@ export const initPro = async () => {
     scimUserServiceConfig: {
       functions: {
         saveUser: userSdk.save,
+        removeUser: (id: string) => userSdk.destroy(id, undefined),
       },
     },
   })

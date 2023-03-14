@@ -21,14 +21,18 @@ export class ScimUsersAPI extends TestAPI {
 
   #createRequest = (
     url: string,
-    method: "get" | "post" | "patch",
+    method: "get" | "post" | "patch" | "delete",
     requestSettings?: Partial<RequestSettings>,
     body?: object
   ) => {
     const { expect, setHeaders } = { ...defaultConfig, ...requestSettings }
-    let request = this.request[method](url)
-      .expect("Content-Type", /json/)
+    let request =
+      this.request[method](url)
       .expect(expect)
+
+    if (method !== "delete") {
+      request = request.expect("Content-Type", /json/)
+    }
 
     if (body) {
       request = request.send(body)
@@ -113,6 +117,15 @@ export class ScimUsersAPI extends TestAPI {
       body
     )
 
+    return res.body as ScimUser
+  }
+
+  delete = async (id: string, requestSettings?: Partial<RequestSettings>) => {
+    const res = await this.#createRequest(
+      `/api/global/scim/v2/users/${id}`,
+      "delete",
+      requestSettings
+    )
     return res.body as ScimUser
   }
 }
