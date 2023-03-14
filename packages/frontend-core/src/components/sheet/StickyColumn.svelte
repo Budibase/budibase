@@ -18,7 +18,6 @@
     config,
     selectedCellMap,
     selectedCellRow,
-    menu,
   } = getContext("sheet")
 
   $: scrollLeft = $scroll.left

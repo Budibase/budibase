@@ -1,8 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import SheetCell from "./cells/SheetCell.svelte"
   import DataCell from "./cells/DataCell.svelte"
-  import { getCellRenderer } from "./renderers"
 
   export let row
   export let idx
@@ -11,12 +9,10 @@
     selectedCellId,
     reorder,
     selectedRows,
-    rows,
     renderedColumns,
     hoveredRowId,
     selectedCellMap,
     selectedCellRow,
-    menu,
   } = getContext("sheet")
 
   $: rowSelected = !!$selectedRows[row._id]
