@@ -23,15 +23,18 @@ export interface ScimUserResponse {
   ]
 }
 
-export interface ScimListResponse {
+interface ScimListResponse<T> {
   schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"]
   totalResults: number
-  Resources: ScimUserResponse[]
+  Resources: T[]
   startIndex: number
   itemsPerPage: number
 }
 
-export interface ScimUserRequest {
+export interface ScimUserListResponse
+  extends ScimListResponse<ScimUserResponse> {}
+
+export interface ScimCreateUserRequest {
   schemas: [
     "urn:ietf:params:scim:schemas:core:2.0:User",
     "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"

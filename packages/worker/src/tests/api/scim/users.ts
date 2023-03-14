@@ -1,7 +1,7 @@
 import {
-  AccountMetadata,
-  ScimListResponse,
-  ScimUserRequest,
+  ScimUserListResponse,
+  ScimCreateUserRequest,
+  ScimUserResponse,
 } from "@budibase/types"
 import TestConfiguration from "../../TestConfiguration"
 import { TestAPI } from "../base"
@@ -45,14 +45,14 @@ export class ScimUsersAPI extends TestAPI {
       "get",
       requestSettings
     )
-    return res.body as ScimListResponse
+    return res.body as ScimUserListResponse
   }
 
   post = async (
     {
       body,
     }: {
-      body: ScimUserRequest
+      body: ScimCreateUserRequest
     },
     requestSettings?: Partial<RequestSettings>
   ) => {
@@ -63,6 +63,6 @@ export class ScimUsersAPI extends TestAPI {
       body
     )
 
-    return res.body as ScimListResponse
+    return res.body as ScimUserResponse
   }
 }
