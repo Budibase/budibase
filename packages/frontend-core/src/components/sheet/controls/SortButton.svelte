@@ -81,6 +81,7 @@
       options={columnOptions}
       autoWidth
       on:change={updateSortColumn}
+      label="Column"
     />
     <Select
       placeholder={null}
@@ -88,15 +89,19 @@
       options={orderOptions}
       autoWidth
       on:change={updateSortOrder}
+      label="Order"
     />
   </div>
 </Popover>
 
 <style>
   .content {
-    padding: 12px 12px;
+    padding: 6px 12px 12px 12px;
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+  .content :global(.spectrum-Picker) {
+    width: 140px;
   }
 </style>

@@ -105,6 +105,15 @@
     <div class="name">
       {column.name}
     </div>
+    {#if sortedBy}
+      <div class="sort-indicator">
+        <Icon
+          size="S"
+          name={$sort.order === "descending" ? "ChevronDown" : "ChevronUp"}
+          color="var(--spectrum-global-color-gray-600)"
+        />
+      </div>
+    {/if}
     <div
       class="more"
       on:mousedown|stopPropagation
@@ -151,6 +160,9 @@
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
   }
+  .header-cell.sorted :global(.cell) {
+    background: var(--spectrum-global-color-gray-200);
+  }
 
   .name {
     flex: 1 1 auto;
@@ -161,13 +173,23 @@
   }
 
   .more {
+    display: none;
     padding: 4px;
     margin: 0 -4px;
+  }
+  .header-cell.open .more,
+  .header-cell:hover .more {
+    display: block;
   }
   .more:hover {
     cursor: pointer;
   }
   .more:hover :global(.spectrum-Icon) {
     color: var(--spectrum-global-color-gray-800) !important;
+  }
+
+  .header-cell.open .sort-indicator,
+  .header-cell:hover .sort-indicator {
+    display: none;
   }
 </style>
