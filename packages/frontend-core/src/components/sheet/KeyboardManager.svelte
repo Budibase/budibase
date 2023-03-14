@@ -1,24 +1,23 @@
 <script>
   import { getContext, onMount } from "svelte"
-  import { get } from "svelte/store"
 
   const {
     rows,
     selectedCellId,
-    columns,
+    visibleColumns,
     selectedCellRow,
     stickyColumn,
     selectedCellAPI,
   } = getContext("sheet")
 
   const handleKeyDown = e => {
-    if (!get(selectedCellId)) {
+    if (!$selectedCellId) {
       if (e.key === "Tab") {
         selectFirstCell()
       }
       return
     }
-    const api = get(selectedCellAPI)
+    const api = $selectedCellAPI
 
     // Always intercept certain key presses
     if (e.key === "Escape") {
@@ -60,20 +59,28 @@
   }
 
   const selectFirstCell = () => {
-    console.log("select first")
+    const firstRow = $rows[0]
+    if (!firstRow) {
+      return
+    }
+    const firstColumn = $stickyColumn || $visibleColumns[0]
+    if (!firstColumn) {
+      return
+    }
+    selectedCellId.set(`${firstRow._id}-${firstColumn.name}`)
   }
 
   const changeSelectedColumn = delta => {
     if (!$selectedCellId) {
       return
     }
-    const cols = $columns
+    const cols = $visibleColumns
     const split = $selectedCellId.split("-")
     const columnName = split[1]
     let newColumnName
     if (columnName === $stickyColumn?.name) {
       const index = delta - 1
-      newColumnName = $columns[index]?.name
+      newColumnName = cols[index]?.name
     } else {
       const index = cols.findIndex(col => col.name === columnName) + delta
       if (index === -1) {
