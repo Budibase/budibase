@@ -53,6 +53,12 @@ class TestConfiguration {
     this.api = new API(this)
   }
 
+  async useNewTenant() {
+    this.tenantId = structures.tenant.id()
+
+    await this.beforeAll()
+  }
+
   getRequest() {
     return this.request
   }
