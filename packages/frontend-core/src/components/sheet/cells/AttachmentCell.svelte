@@ -110,6 +110,7 @@
     flex-wrap: nowrap;
     gap: var(--cell-spacing);
     align-self: stretch;
+    overflow: hidden;
   }
   .attachment-cell.editable:hover {
     cursor: pointer;
