@@ -6,16 +6,17 @@ import RelationshipCell from "./cells/RelationshipCell.svelte"
 import TextCell from "./cells/TextCell.svelte"
 import BlankCell from "./cells/BlankCell.svelte"
 import LongFormCell from "./cells/LongFormCell.svelte"
+import BooleanCell from "./cells/BooleanCell.svelte"
 
 const TypeComponentMap = {
   text: TextCell,
   options: OptionsCell,
   datetime: DateCell,
-  barcodeqr: BlankCell,
+  barcodeqr: TextCell,
   longform: LongFormCell,
   array: MultiSelectCell,
   number: NumberCell,
-  boolean: BlankCell,
+  boolean: BooleanCell,
   attachment: BlankCell,
   link: RelationshipCell,
   formula: BlankCell,

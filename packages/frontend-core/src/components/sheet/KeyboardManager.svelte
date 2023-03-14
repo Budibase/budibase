@@ -12,22 +12,25 @@
   } = getContext("sheet")
 
   const handleKeyDown = e => {
-    const api = get(selectedCellAPI)
-    if (!api) {
+    if (!get(selectedCellId)) {
+      if (e.key === "Tab") {
+        selectFirstCell()
+      }
       return
     }
+    const api = get(selectedCellAPI)
 
     // Always intercept certain key presses
     if (e.key === "Escape") {
-      api.blur()
+      api?.blur?.()
     } else if (e.key === "Tab") {
-      api.blur()
+      api?.blur?.()
       changeSelectedColumn(1)
     }
 
     // Pass the key event to the selected cell and let it decide whether to
     // capture it or not
-    const handled = api.onKeyDown?.(e)
+    const handled = api?.onKeyDown?.(e)
     if (handled) {
       return
     }
@@ -54,6 +57,10 @@
         focusSelectedCell()
         break
     }
+  }
+
+  const selectFirstCell = () => {
+    console.log("select first")
   }
 
   const changeSelectedColumn = delta => {
@@ -100,7 +107,7 @@
   }
 
   const focusSelectedCell = () => {
-    $selectedCellAPI?.focus()
+    $selectedCellAPI?.focus?.()
   }
 
   onMount(() => {
