@@ -177,7 +177,7 @@ export const destroy = async (ctx: any) => {
     ctx.throw(400, "Unable to delete self.")
   }
 
-  await userSdk.destroy(id, ctx.user)
+  await userSdk.destroy(id)
 
   ctx.body = {
     message: `User ${id} deleted.`,
