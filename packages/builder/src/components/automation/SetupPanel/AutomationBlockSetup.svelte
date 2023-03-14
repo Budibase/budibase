@@ -50,7 +50,7 @@
   $: tempFilters = filters
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(block, $selectedAutomation?.definition)
-  $: getInputData(testData, cloneDeep(block.inputs))
+  $: getInputData(testData, block.inputs)
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
