@@ -44,12 +44,10 @@ class AccountsAPIClient {
       const response = await fetch(`${this.host}${url}`, requestOptions)
       if (response.status == 404 || response.status == 500) {
         console.error("Error in apiCall")
-        console.error("Response:")
-        console.error(response)
-        console.error("Response body:")
-        console.error(response.body)
-        console.error("Request body:")
-        console.error(requestOptions.body)
+        console.error("Response:", response)
+        const json = await response.json()
+        console.error("Response body:", json)
+        console.error("Request body:", requestOptions.body)
       }
       return response
     }
