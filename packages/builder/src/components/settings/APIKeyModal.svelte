@@ -1,9 +1,7 @@
 <script>
-  import { ModalContent } from "@budibase/bbui"
-  import { Body, notifications } from "@budibase/bbui"
+  import { ModalContent, Body, notifications, CopyInput } from "@budibase/bbui"
   import { auth } from "stores/portal"
   import { onMount } from "svelte"
-  import CopyInput from "components/common/inputs/CopyInput.svelte"
 
   let apiKey = null
 

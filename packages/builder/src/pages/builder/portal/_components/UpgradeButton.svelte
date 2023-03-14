@@ -1,11 +1,11 @@
 <script>
   import { Button } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { auth, admin } from "stores/portal"
+  import { auth, admin, licensing } from "stores/portal"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 </script>
 
-{#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING)}
+{#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING) && !$licensing.isEnterprisePlan}
   {#if $admin.cloud && $auth?.user?.accountPortalAccess}
     <Button
       cta

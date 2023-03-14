@@ -30,6 +30,12 @@ const DefaultBucketName = {
 
 const selfHosted = !!parseInt(process.env.SELF_HOSTED || "")
 
+function getAPIEncryptionKey() {
+  return process.env.API_ENCRYPTION_KEY
+    ? process.env.API_ENCRYPTION_KEY
+    : process.env.JWT_SECRET // fallback to the JWT_SECRET used historically
+}
+
 const environment = {
   isTest,
   isJest,
@@ -39,7 +45,9 @@ const environment = {
   },
   JS_BCRYPT: process.env.JS_BCRYPT,
   JWT_SECRET: process.env.JWT_SECRET,
+  JWT_SECRET_FALLBACK: process.env.JWT_SECRET_FALLBACK,
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
+  API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
@@ -55,6 +63,7 @@ const environment = {
   MINIO_URL: process.env.MINIO_URL,
   MINIO_ENABLED: process.env.MINIO_ENABLED || 1,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+  INTERNAL_API_KEY_FALLBACK: process.env.INTERNAL_API_KEY_FALLBACK,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ACCOUNT_PORTAL_URL:
     process.env.ACCOUNT_PORTAL_URL || "https://account.budibase.app",

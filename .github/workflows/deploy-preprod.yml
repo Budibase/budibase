@@ -22,7 +22,6 @@ jobs:
             release_version=${{ github.event.inputs.version }}
           fi
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -37,7 +36,6 @@ jobs:
           -o values.preprod.yaml \
           -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/budibase-preprod/values.yaml
           wc -l values.preprod.yaml
-
       - name: Deploy to Preprod Environment
         uses: budibase/helm@v1.8.0
         with:
