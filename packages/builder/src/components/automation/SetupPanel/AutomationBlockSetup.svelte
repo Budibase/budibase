@@ -32,7 +32,6 @@
   import { getSchemaForTable } from "builderStore/dataBinding"
   import { Utils } from "@budibase/frontend-core"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
-  import { cloneDeep } from "lodash/fp"
   import { onMount } from "svelte"
 
   export let block
@@ -63,9 +62,6 @@
 
   const getInputData = (testData, blockInputs) => {
     let newInputData = testData || blockInputs
-    if (block.event === "app:trigger" && !newInputData?.fields) {
-      newInputData = cloneDeep(blockInputs)
-    }
     inputData = newInputData
   }
 
@@ -214,8 +210,6 @@
   function saveFilters(key) {
     const filters = LuceneUtils.buildLuceneQuery(tempFilters)
     const defKey = `${key}-def`
-    inputData[key] = filters
-    inputData[defKey] = tempFilters
     onChange({ detail: filters }, key)
     // need to store the builder definition in the automation
     onChange({ detail: tempFilters }, defKey)
