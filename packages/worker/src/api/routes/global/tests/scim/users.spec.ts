@@ -8,12 +8,14 @@ function createScimCreateUserRequest(userData?: {
   email?: string
   firstName?: string
   lastName?: string
+  username?: string
 }) {
   const {
     externalId = structures.uuid(),
     email = structures.generator.email(),
     firstName = structures.generator.first(),
     lastName = structures.generator.last(),
+    username = structures.generator.name(),
   } = userData || {}
 
   const user: ScimCreateUserRequest = {
@@ -22,7 +24,7 @@ function createScimCreateUserRequest(userData?: {
       "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
     ],
     externalId,
-    userName: structures.generator.name(),
+    userName: username,
     active: true,
     emails: [
       {
@@ -142,6 +144,7 @@ describe("/api/global/scim/v2/users", () => {
           email: structures.generator.email(),
           firstName: structures.generator.first(),
           lastName: structures.generator.last(),
+          username: structures.generator.name(),
         }
         const body = createScimCreateUserRequest(userData)
 
@@ -156,7 +159,7 @@ describe("/api/global/scim/v2/users", () => {
             created: mockedTime.toISOString(),
             lastModified: mockedTime.toISOString(),
           },
-          userName: `${userData.firstName} ${userData.lastName}`,
+          userName: userData.username,
           name: {
             formatted: `${userData.firstName} ${userData.lastName}`,
             familyName: userData.lastName,
@@ -255,20 +258,35 @@ describe("/api/global/scim/v2/users", () => {
     })
 
     it("an existing user can be updated", async () => {
+      const newUserName = structures.generator.name()
+      const newFamilyName = structures.generator.last()
       const body: ScimUpdateRequest = {
         schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
         Operations: [
           {
-            op: "add",
-            path: "string",
-            value: "string",
+            op: "Replace",
+            path: "userName",
+            value: newUserName,
+          },
+          {
+            op: "Replace",
+            path: "name.familyName",
+            value: newFamilyName,
           },
         ],
       }
 
       const response = await patchScimUser({ id: user.id, body })
 
-      const expectedScimUser = { ...user }
+      const expectedScimUser: ScimUser = {
+        ...user,
+        userName: newUserName,
+        name: {
+          ...user.name,
+          familyName: newFamilyName,
+          formatted: `${user.name.givenName} ${newFamilyName}`,
+        },
+      }
       expect(response).toEqual(expectedScimUser)
 
       const persistedUser = await config.api.scimUsersAPI.find(user.id)
