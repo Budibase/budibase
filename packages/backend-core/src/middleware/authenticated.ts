@@ -1,5 +1,10 @@
 import { Cookie, Header } from "../constants"
-import { getCookie, clearCookie, openJwt } from "../utils"
+import {
+  getCookie,
+  clearCookie,
+  openJwt,
+  isValidInternalAPIKey,
+} from "../utils"
 import { getUser } from "../cache/user"
 import { getSession, updateSessionTTL } from "../security/sessions"
 import { buildMatcherRegex, matches } from "./matchers"
@@ -35,7 +40,9 @@ function finalise(ctx: any, opts: FinaliseOpts = {}) {
 }
 
 async function checkApiKey(apiKey: string, populateUser?: Function) {
-  if (apiKey === env.INTERNAL_API_KEY) {
+  // check both the primary and the fallback internal api keys
+  // this allows for rotation
+  if (isValidInternalAPIKey(apiKey)) {
     return { valid: true }
   }
   const decrypted = decrypt(apiKey)

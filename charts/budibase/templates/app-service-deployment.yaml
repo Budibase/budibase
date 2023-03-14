@@ -62,16 +62,22 @@ spec:
         {{ end }}
         - name: ENABLE_ANALYTICS
           value: {{ .Values.globals.enableAnalytics | quote }}
+        - name: API_ENCRYPTION_KEY
+          value: {{ .Values.globals.apiEncryptionKey | quote }}
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: internalApiKey
+        - name: INTERNAL_API_KEY_FALLBACK
+          value: {{ .Values.globals.internalApiKeyFallback | quote }}
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: jwtSecret
+        - name: JWT_SECRET_FALLBACK
+          value: {{ .Values.globals.jwtSecretFallback | quote }}
         {{ if .Values.services.objectStore.region }}
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}

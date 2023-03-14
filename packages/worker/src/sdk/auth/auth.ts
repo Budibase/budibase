@@ -5,10 +5,10 @@ import {
   sessions,
   events,
   HTTPError,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import { PlatformLogoutOpts, User } from "@budibase/types"
 import jwt from "jsonwebtoken"
-import env from "../../environment"
 import * as userSdk from "../users"
 import * as emails from "../../utilities/email"
 import * as redis from "../../utilities/redis"
@@ -26,7 +26,7 @@ export async function loginUser(user: User) {
       sessionId,
       tenantId,
     },
-    env.JWT_SECRET!
+    coreEnv.JWT_SECRET!
   )
   return token
 }

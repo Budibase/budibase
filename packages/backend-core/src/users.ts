@@ -5,6 +5,8 @@ import {
   generateAppUserID,
   queryGlobalView,
   UNICODE_MAX,
+  DocumentType,
+  SEPARATOR,
   directCouchFind,
 } from "./db"
 import { BulkDocsResponse, User } from "@budibase/types"
@@ -43,6 +45,16 @@ export const bulkGetGlobalUsersById = async (
     users = removeUserPassword(users) as User[]
   }
   return users
+}
+
+export const getAllUserIds = async () => {
+  const db = getGlobalDB()
+  const startKey = `${DocumentType.USER}${SEPARATOR}`
+  const response = await db.allDocs({
+    startkey: startKey,
+    endkey: `${startKey}${UNICODE_MAX}`,
+  })
+  return response.rows.map(row => row.id)
 }
 
 export const bulkUpdateGlobalUsers = async (users: User[]) => {
