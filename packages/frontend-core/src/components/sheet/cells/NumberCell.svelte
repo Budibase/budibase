@@ -4,4 +4,4 @@
   export let api
 </script>
 
-<TextCell bind:api {...$$props} type="number" />
+<TextCell {...$$props} bind:api type="number" />
