@@ -85,7 +85,7 @@ describe("/api/global/scim/v2/users", () => {
     const getScimUsers = config.api.scimUsersAPI.get
 
     it("unauthorised calls are not allowed", async () => {
-      const response = await getScimUsers({
+      const response = await getScimUsers(undefined, {
         setHeaders: false,
         expect: 403,
       })
@@ -95,7 +95,7 @@ describe("/api/global/scim/v2/users", () => {
 
     it("cannot be called when feature is disabled", async () => {
       mocks.licenses.useCloudFree()
-      const response = await getScimUsers({ expect: 400 })
+      const response = await getScimUsers(undefined, { expect: 400 })
 
       expect(response).toEqual(featureDisabledResponse)
     })
@@ -118,23 +118,37 @@ describe("/api/global/scim/v2/users", () => {
       const userCount = 30
       let users: ScimUserResponse[]
 
-      beforeEach(async () => {
+      beforeAll(async () => {
         users = []
 
         for (let i = 0; i < userCount; i++) {
           const body = createScimCreateUserRequest()
           users.push(await config.api.scimUsersAPI.post({ body }))
         }
+
+        users = users.sort((a, b) => (a.id > b.id ? 1 : -1))
       })
 
-      it("fetch full first page", async () => {
+      it("fetches full first page", async () => {
         const response = await getScimUsers()
 
         expect(response).toEqual({
-          Resources: expect.arrayContaining(users.splice(0, 20)),
+          Resources: expect.arrayContaining(users.slice(0, 20)),
           itemsPerPage: 20,
           schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
           startIndex: 1,
+          totalResults: userCount,
+        })
+      })
+
+      it("fetches second page", async () => {
+        const response = await getScimUsers({ startIndex: 20 })
+
+        expect(response).toEqual({
+          Resources: users.slice(20),
+          itemsPerPage: 20,
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+          startIndex: 21,
           totalResults: userCount,
         })
       })

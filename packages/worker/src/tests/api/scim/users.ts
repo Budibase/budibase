@@ -42,12 +42,18 @@ export class ScimUsersAPI extends TestAPI {
     return request
   }
 
-  get = async (requestSettings?: Partial<RequestSettings>) => {
-    const res = await this.#createRequest(
-      `/api/global/scim/v2/users`,
-      "get",
-      requestSettings
-    )
+  get = async (
+    params?: { startIndex?: number; pageSize?: number },
+    requestSettings?: Partial<RequestSettings>
+  ) => {
+    let url = `/api/global/scim/v2/users?`
+    if (params?.pageSize) {
+      url += `count=${params.pageSize}&`
+    }
+    if (params?.startIndex) {
+      url += `startIndex=${params.startIndex}&`
+    }
+    const res = await this.#createRequest(url, "get", requestSettings)
     return res.body as ScimUserListResponse
   }
 
