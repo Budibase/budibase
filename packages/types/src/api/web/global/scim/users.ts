@@ -1,4 +1,4 @@
-export interface ScimUser {
+export interface ScimUserResponse {
   schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
   id: string
   externalId: string
@@ -26,7 +26,7 @@ export interface ScimUser {
 export interface ScimListResponse {
   schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"]
   totalResults: number
-  Resources: ScimUser[]
+  Resources: ScimUserResponse[]
   startIndex: number
   itemsPerPage: number
 }
@@ -55,29 +55,4 @@ export interface ScimUserRequest {
     givenName: string
   }
   roles: []
-}
-
-export interface ScimUserResponse {
-  schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
-  id: string
-  externalId: string
-  meta: {
-    resourceType: "User"
-    created: string
-    lastModified: string
-  }
-  userName: string
-  name: {
-    formatted: string
-    familyName: string
-    givenName: string
-  }
-  active: boolean
-  emails: [
-    {
-      value: string
-      type: "work"
-      primary: true
-    }
-  ]
 }
