@@ -67,6 +67,7 @@ const SCHEMA: Integration = {
     database: {
       type: DatasourceFieldType.STRING,
       required: true,
+      display: "Service Name",
     },
     user: {
       type: DatasourceFieldType.STRING,

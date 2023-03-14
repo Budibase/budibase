@@ -13,6 +13,7 @@ export const ENV_PATH = path.resolve("./.env")
 
 function getSecrets(opts = { single: false }) {
   const secrets = [
+    "API_ENCRYPTION_KEY",
     "JWT_SECRET",
     "MINIO_ACCESS_KEY",
     "MINIO_SECRET_KEY",

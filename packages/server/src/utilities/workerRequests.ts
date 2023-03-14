@@ -6,6 +6,7 @@ import {
   constants,
   tenancy,
   logging,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import { updateAppRole } from "./global"
 import { BBContext, User } from "@budibase/types"
@@ -15,7 +16,7 @@ export function request(ctx?: BBContext, request?: any) {
     request.headers = {}
   }
   if (!ctx) {
-    request.headers[constants.Header.API_KEY] = env.INTERNAL_API_KEY
+    request.headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEY
     if (tenancy.isTenantIdSet()) {
       request.headers[constants.Header.TENANT_ID] = tenancy.getTenantId()
     }

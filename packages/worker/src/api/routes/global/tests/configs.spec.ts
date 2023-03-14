@@ -288,7 +288,7 @@ describe("configs", () => {
           company: "Budibase",
           logoUrl: "",
           analyticsEnabled: false,
-          google: true,
+          google: false,
           googleCallbackUrl: `http://localhost:10000/api/global/auth/${config.tenantId}/google/callback`,
           isSSOEnforced: false,
           oidc: false,
