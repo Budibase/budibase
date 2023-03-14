@@ -7,6 +7,8 @@ import TextCell from "./cells/TextCell.svelte"
 import BlankCell from "./cells/BlankCell.svelte"
 import LongFormCell from "./cells/LongFormCell.svelte"
 import BooleanCell from "./cells/BooleanCell.svelte"
+import FormulaCell from "./cells/FormulaCell.svelte"
+import JSONCell from "./cells/JSONCell.svelte"
 
 const TypeComponentMap = {
   text: TextCell,
@@ -19,8 +21,8 @@ const TypeComponentMap = {
   boolean: BooleanCell,
   attachment: BlankCell,
   link: RelationshipCell,
-  formula: BlankCell,
-  json: BlankCell,
+  formula: FormulaCell,
+  json: JSONCell,
 }
 export const getCellRenderer = column => {
   return TypeComponentMap[column?.schema?.type] || TextCell
