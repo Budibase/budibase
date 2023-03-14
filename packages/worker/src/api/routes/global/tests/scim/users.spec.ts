@@ -234,7 +234,7 @@ describe("/api/global/scim/v2/users", () => {
     })
   })
 
-  describe("PATCH /api/global/scim/v2/users", () => {
+  describe("PATCH /api/global/scim/v2/users/:id", () => {
     const patchScimUser = config.api.scimUsersAPI.patch
 
     let user: ScimUserResponse
@@ -295,6 +295,42 @@ describe("/api/global/scim/v2/users", () => {
 
       const persistedUser = await config.api.scimUsersAPI.find(user.id)
       expect(persistedUser).toEqual(expectedScimUser)
+    })
+  })
+
+  describe("DELETE /api/global/scim/v2/users/:id", () => {
+    const deleteScimUser = config.api.scimUsersAPI.delete
+
+    let user: ScimUser
+
+    beforeEach(async () => {
+      const body = createScimCreateUserRequest()
+
+      user = await config.api.scimUsersAPI.post({ body })
+    })
+
+    it("unauthorised calls are not allowed", async () => {
+      const response = await deleteScimUser({} as any, {
+        setHeaders: false,
+        expect: 403,
+      })
+
+      expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+    })
+
+    it("cannot be called when feature is disabled", async () => {
+      mocks.licenses.useCloudFree()
+      const response = await deleteScimUser({} as any, { expect: 400 })
+
+      expect(response).toEqual(featureDisabledResponse)
+    })
+
+    it("an existing user can be deleted", async () => {
+      const response = await deleteScimUser(user.id, { expect: 204 })
+
+      expect(response).toEqual({})
+
+      await config.api.scimUsersAPI.find(user.id, { expect: 404 })
     })
   })
 })
