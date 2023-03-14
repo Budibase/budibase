@@ -19,6 +19,7 @@ import { GoogleSpreadsheet } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
 import { dataFilters } from "@budibase/shared-core"
+import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -227,7 +228,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     // base table
     const table: Table = {
       name: title,
-      primary: ["rowNumber"],
+      primary: [GOOGLE_SHEETS_PRIMARY_KEY],
       schema: {},
     }
     if (id) {
