@@ -183,17 +183,18 @@
     );
   }
   .options {
-    min-width: 100%;
+    min-width: calc(100% + 2px);
     position: absolute;
-    top: 0;
-    left: 0;
+    top: -1px;
+    left: -1px;
     display: flex;
     flex-direction: column;
     box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
     justify-content: flex-start;
     align-items: stretch;
-    max-height: calc(6 * var(--cell-height) - 1px);
+    max-height: calc(5 * var(--cell-height) + 1px);
     overflow-y: auto;
+    border: var(--cell-border);
   }
   .option {
     flex: 0 0 var(--cell-height);

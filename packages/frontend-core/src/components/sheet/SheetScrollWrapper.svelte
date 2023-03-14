@@ -46,6 +46,7 @@
 
   // Handles a wheel even and updates the scroll offsets
   const handleWheel = e => {
+    console.log("wheel scrol!")
     e.preventDefault()
     const modifier = e.ctrlKey || e.metaKey
     let x = modifier ? e.deltaY : e.deltaX

@@ -2,23 +2,36 @@
   import { getContext, onMount } from "svelte"
   import { get } from "svelte/store"
 
-  const { rows, rand, selectedCellId, columns, selectedCellRow, stickyColumn, selectedCellAPI } =
-    getContext("sheet")
+  const {
+    rows,
+    selectedCellId,
+    columns,
+    selectedCellRow,
+    stickyColumn,
+    selectedCellAPI,
+  } = getContext("sheet")
 
   const handleKeyDown = e => {
     const api = get(selectedCellAPI)
+    if (!api) {
+      return
+    }
 
-    // Always capture escape and blur any selected cell
+    // Always intercept certain key presses
     if (e.key === "Escape") {
-      api?.blur()
+      api.blur()
+    } else if (e.key === "Tab") {
+      api.blur()
+      changeSelectedColumn(1)
     }
 
     // Pass the key event to the selected cell and let it decide whether to
     // capture it or not
-    const handled = api?.onKeyDown?.(e)
+    const handled = api.onKeyDown?.(e)
     if (handled) {
       return
     }
+    e.preventDefault()
 
     // Handle the key ourselves
     switch (e.key) {
@@ -39,7 +52,7 @@
         break
       case "Enter":
         focusSelectedCell()
-        break;
+        break
     }
   }
 

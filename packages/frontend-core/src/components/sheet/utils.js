@@ -5,10 +5,10 @@ export const getColor = (idx, opacity = 0.3) => {
   return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, ${opacity})`
 }
 
-const DataTypeIconMap = {
+const TypeIconMap = {
+  text: "Text",
   options: "Dropdown",
   datetime: "Date",
-  text: "Text",
   barcodeqr: "Camera",
   longform: "TextAlignLeft",
   array: "Dropdown",
@@ -20,7 +20,7 @@ const DataTypeIconMap = {
   json: "Brackets",
 }
 
-export const getIconForField = field => {
-  const type = field.schema.type
-  return DataTypeIconMap[type] || "Text"
+export const getColumnIcon = column => {
+  const type = column.schema.type
+  return TypeIconMap[type] || "Text"
 }

@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import SheetCell from "./SheetCell.svelte"
   import { Icon, Popover, Menu, MenuItem } from "@budibase/bbui"
-  import { getIconForField } from "../utils"
+  import { getColumnIcon } from "../utils"
 
   export let column
   export let idx
@@ -17,7 +17,7 @@
     renderedColumns,
     dispatch,
     config,
-    ui
+    ui,
   } = getContext("sheet")
 
   let anchor
@@ -99,7 +99,7 @@
   >
     <Icon
       size="S"
-      name={getIconForField(column)}
+      name={getColumnIcon(column)}
       color={`var(--spectrum-global-color-gray-600)`}
     />
     <div class="name">
