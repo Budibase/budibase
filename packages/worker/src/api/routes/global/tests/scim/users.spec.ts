@@ -310,7 +310,7 @@ describe("/api/global/scim/v2/users", () => {
     })
 
     it("unauthorised calls are not allowed", async () => {
-      const response = await deleteScimUser({} as any, {
+      const response = await deleteScimUser(user.id, {
         setHeaders: false,
         expect: 403,
       })
@@ -320,7 +320,7 @@ describe("/api/global/scim/v2/users", () => {
 
     it("cannot be called when feature is disabled", async () => {
       mocks.licenses.useCloudFree()
-      const response = await deleteScimUser({} as any, { expect: 400 })
+      const response = await deleteScimUser(user.id, { expect: 400 })
 
       expect(response).toEqual(featureDisabledResponse)
     })
@@ -331,6 +331,10 @@ describe("/api/global/scim/v2/users", () => {
       expect(response).toEqual({})
 
       await config.api.scimUsersAPI.find(user.id, { expect: 404 })
+    })
+
+    it("an non existing user can not be deleted", async () => {
+      await deleteScimUser(structures.uuid(), { expect: 404 })
     })
   })
 })
