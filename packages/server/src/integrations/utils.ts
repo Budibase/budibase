@@ -4,6 +4,7 @@ import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
+const ENCODED_SPACE = encodeURIComponent(" ")
 
 const SQL_NUMBER_TYPE_MAP = {
   integer: FieldTypes.NUMBER,
@@ -79,6 +80,10 @@ export function isExternalTable(tableId: string) {
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
+  // encode spaces
+  if (tableName.includes(" ")) {
+    tableName = encodeURIComponent(tableName)
+  }
   return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
 }
 
@@ -90,6 +95,10 @@ export function breakExternalTableId(tableId: string | undefined) {
   let datasourceId = parts.shift()
   // if they need joined
   let tableName = parts.join(DOUBLE_SEPARATOR)
+  // if contains encoded spaces, decode it
+  if (tableName.includes(ENCODED_SPACE)) {
+    tableName = decodeURIComponent(tableName)
+  }
   return { datasourceId, tableName }
 }
 
