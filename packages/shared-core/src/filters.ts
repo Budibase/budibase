@@ -62,7 +62,7 @@ export const getValidOperatorsForType = (
 
   // Only allow equal/not equal for _id in SQL tables
   if (field === "_id" && externalTable) {
-    ops = [Op.Equals, Op.NotEquals]
+    ops = [Op.Equals, Op.NotEquals, Op.In]
   }
 
   return ops

@@ -29,13 +29,6 @@ router
       br: false,
     })
   )
-  .use(async (ctx, next) => {
-    ctx.config = {
-      jwtSecret: env.JWT_SECRET,
-      useAppRootPath: true,
-    }
-    await next()
-  })
   // re-direct before any middlewares occur
   .redirect("/", "/builder")
   .use(

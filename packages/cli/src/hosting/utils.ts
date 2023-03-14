@@ -9,10 +9,44 @@ const ERROR_FILE = "docker-error.log"
 const COMPOSE_URL =
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml"
 
-export async function downloadDockerCompose() {
-  const fileName = COMPOSE_URL.split("/").slice(-1)[0]
+function composeFilename() {
+  return COMPOSE_URL.split("/").slice(-1)[0]
+}
+
+export function getServiceImage(service: string) {
+  const filename = composeFilename()
   try {
-    await downloadFile(COMPOSE_URL, `./${fileName}`)
+    const { services } = getServices(filename)
+    const serviceKey = Object.keys(services).find(name =>
+      name.includes(service)
+    )
+    if (serviceKey) {
+      return services[serviceKey].image
+    } else {
+      return null
+    }
+  } catch (err) {
+    return null
+  }
+}
+
+export function setServiceImage(service: string, image: string) {
+  const filename = composeFilename()
+  if (!fs.existsSync(filename)) {
+    throw new Error(
+      `File ${filename} not found, cannot update ${service} image.`
+    )
+  }
+  const current = getServiceImage(service)!
+  let contents = fs.readFileSync(filename, "utf8")
+  contents = contents.replace(`image: ${current}`, `image: ${image}`)
+  fs.writeFileSync(filename, contents)
+}
+
+export async function downloadDockerCompose() {
+  const filename = composeFilename()
+  try {
+    await downloadFile(COMPOSE_URL, `./${filename}`)
   } catch (err) {
     console.error(error(`Failed to retrieve compose file - ${err}`))
   }
@@ -49,6 +83,9 @@ export async function handleError(func: Function) {
 }
 
 export function getServices(path: string) {
+  if (!fs.existsSync(path)) {
+    throw new Error(`No yaml found at path: ${path}`)
+  }
   const dockerYaml = fs.readFileSync(path, "utf8")
   const parsedYaml = yaml.parse(dockerYaml)
   return { yaml: parsedYaml, services: parsedYaml.services }

@@ -1,6 +1,10 @@
 name: "deploy-preprod"
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: Budibase release version. For example - 1.0.0
+        required: false
   workflow_call:
 
 jobs:
@@ -8,10 +12,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: 'Get Previous tag'
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
+      - name: Get the latest budibase release version
+        id: version
+        run: |
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            release_version=$(cat lerna.json | jq -r '.version')
+          else
+            release_version=${{ github.event.inputs.version }}
+          fi
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -26,7 +36,6 @@ jobs:
           -o values.preprod.yaml \
           -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/budibase-preprod/values.yaml
           wc -l values.preprod.yaml
-
       - name: Deploy to Preprod Environment
         uses: budibase/helm@v1.8.0
         with:
@@ -37,7 +46,7 @@ jobs:
           helm: helm3
           values: |
             globals: 
-              appVersion: ${{ steps.previoustag.outputs.tag }}
+              appVersion: v${{ env.RELEASE_VERSION }}
             ingress:
               enabled: true
               nginx: true
@@ -52,5 +61,5 @@ jobs:
         uses: tsickert/discord-webhook@v4.0.0
         with:
           webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
-          content: "Preprod Deployment Complete: ${{ steps.previoustag.outputs.tag }} deployed to Budibase Pre-prod."
-          embed-title: ${{ steps.previoustag.outputs.tag }}
+          content: "Preprod Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Pre-prod."
+          embed-title: ${{ env.RELEASE_VERSION }}

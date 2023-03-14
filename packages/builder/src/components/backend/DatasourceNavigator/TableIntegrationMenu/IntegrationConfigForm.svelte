@@ -74,6 +74,14 @@
     }
     return capitalise(name)
   }
+
+  function getDisplayError(error, configKey) {
+    return error?.replace(
+      new RegExp(`${configKey}`, "i"),
+      getDisplayName(configKey)
+    )
+  }
+
   function getFieldGroupKeys(fieldGroup) {
     return Object.entries(schema[fieldGroup].fields || {})
       .filter(el => filter(el))
@@ -147,7 +155,7 @@
             type={schema[configKey].type}
             on:change
             bind:value={config[configKey]}
-            error={$validation.errors[configKey]}
+            error={getDisplayError($validation.errors[configKey], configKey)}
           />
         </div>
       {:else if schema[configKey].type === "fieldGroup"}
@@ -180,7 +188,7 @@
             type={configKey === "port" ? "string" : schema[configKey].type}
             on:change
             bind:value={config[configKey]}
-            error={$validation.errors[configKey]}
+            error={getDisplayError($validation.errors[configKey], configKey)}
             environmentVariablesEnabled={$licensing.environmentVariablesEnabled}
             {handleUpgradePanel}
           />

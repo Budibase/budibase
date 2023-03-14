@@ -1,4 +1,3 @@
-export * as jwt from "./passport/jwt"
 export * as local from "./passport/local"
 export * as google from "./passport/sso/google"
 export * as oidc from "./passport/sso/oidc"

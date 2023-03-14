@@ -96,9 +96,13 @@ globals:
   createSecrets: true # creates an internal API key, JWT secrets and redis password for you
 
   # if createSecrets is set to false, you can hard-code your secrets here
+  apiEncryptionKey: ""
   internalApiKey: ""
   jwtSecret: ""
   cdnUrl: ""
+  # fallback values used during live rotation
+  internalApiKeyFallback: ""
+  jwtSecretFallback: ""
 
   smtp:
     enabled: false
