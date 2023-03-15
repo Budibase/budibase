@@ -16,6 +16,7 @@
   let isOpen = false
   let searchResults
   let searchString
+  let lastSearchString
   let definition
   let primaryDisplay
   let candidateIndex
@@ -24,12 +25,14 @@
   $: editable = selected && !readonly
   $: results = getResults(searchResults, value)
   $: lookupMap = buildLookupMap(value, isOpen)
+  $: search(searchString)
   $: {
     if (!selected) {
       close()
     }
   }
 
+  // Builds a lookup map to quickly check which rows are selected
   const buildLookupMap = (value, isOpen) => {
     let map = {}
     if (!isOpen || !value?.length) {
@@ -41,6 +44,7 @@
     return map
   }
 
+  // Checks if a certain row is currently selected
   const isRowSelected = row => {
     if (!row?._id) {
       return false
@@ -48,14 +52,24 @@
     return lookupMap?.[row._id] === true
   }
 
-  const search = debounce(async value => {
-    if (!value || !schema?.tableId || !isOpen) {
-      searchString = value
+  // Debounced function to search for rows based on the search string
+  const search = debounce(async searchString => {
+    // Avoid update state at all if we've already handled the update and this is
+    // a wasted search due to svelte reactivity
+    if (!searchString && !lastSearchString) {
+      return
+    }
+
+    // Reset state if this search is invalid
+    if (!searchString || !schema?.tableId || !isOpen) {
+      lastSearchString = null
       candidateIndex = null
       searchResults = []
       return
     }
 
+    // Search for results, using IDs to track invocations and ensure we're
+    // handling the latest update
     lastSearchId = Math.random()
     const thisSearchId = lastSearchId
     const results = await API.searchTable({
@@ -64,7 +78,7 @@
       limit: 20,
       query: {
         string: {
-          [`1:${primaryDisplay}`]: value,
+          [`1:${primaryDisplay}`]: searchString,
         },
       },
     })
@@ -81,9 +95,10 @@
       primaryDisplay: row[primaryDisplay],
     }))
     candidateIndex = searchResults?.length ? 0 : null
-    searchString = value
+    lastSearchString = searchString
   }, 250)
 
+  // Alphabetically sorts rows by their primary display column
   const sortRows = rows => {
     if (!rows?.length) {
       return []
@@ -93,6 +108,7 @@
     })
   }
 
+  // Generates the list of results to show inside the dropdown
   const getResults = (searchResults, value) => {
     return searchString ? sortRows(searchResults) : sortRows(value)
   }
@@ -110,8 +126,9 @@
 
   const close = () => {
     isOpen = false
-    searchString = null
     searchResults = []
+    searchString = null
+    lastSearchString = null
     candidateIndex = null
   }
 
@@ -120,6 +137,7 @@
       return false
     }
     if (e.key === "ArrowDown") {
+      // Select next result on down arrow
       e.preventDefault()
       if (candidateIndex == null) {
         candidateIndex = 0
@@ -127,6 +145,7 @@
         candidateIndex = Math.min(results.length - 1, candidateIndex + 1)
       }
     } else if (e.key === "ArrowUp") {
+      // Select previous result on up array
       e.preventDefault()
       if (candidateIndex === 0) {
         candidateIndex = null
@@ -134,6 +153,7 @@
         candidateIndex = Math.max(0, candidateIndex - 1)
       }
     } else if (e.key === "Enter") {
+      // Toggle the highlighted result on enter press
       if (candidateIndex != null && results[candidateIndex] != null) {
         toggleRow(results[candidateIndex])
       }
@@ -141,22 +161,28 @@
     return true
   }
 
-  const toggleRow = row => {
+  // Toggles whether a row is included in the relationship or not
+  const toggleRow = async row => {
     if (value?.some(x => x._id === row._id)) {
+      // If the row is already included, remove it and update the candidate
+      // row to be the the same position if possible
       const newValue = value.filter(x => x._id !== row._id)
       if (!newValue.length) {
         candidateIndex = null
       } else {
         candidateIndex = Math.min(candidateIndex, newValue.length - 1)
       }
-      onChange(newValue)
+      await onChange(newValue)
     } else {
-      lookupMap[row._id] = true
-      onChange(sortRows([...(value || []), row]))
+      // If we don't have this row, include it
+      await onChange(sortRows([...(value || []), row]))
       candidateIndex = null
     }
+
+    // Clear search state to allow finding a new row again
     searchString = null
     searchResults = []
+    lastSearchString = null
   }
 
   onMount(() => {
@@ -181,15 +207,9 @@
 {#if isOpen}
   <div class="dropdown" on:wheel|stopPropagation>
     <div class="search">
-      <Input
-        autofocus
-        quiet
-        type="text"
-        value={searchString}
-        on:change={e => search(e.detail)}
-      />
+      <Input autofocus quiet type="text" bind:value={searchString} />
     </div>
-    {#if !searchString}
+    {#if !lastSearchString}
       {#if primaryDisplay}
         <div class="info">
           Search for {definition.name} rows by {primaryDisplay}
@@ -241,6 +261,7 @@
   .container.editable:hover {
     cursor: pointer;
   }
+
   .badge {
     flex: 0 0 auto;
     padding: 2px var(--cell-padding);
@@ -251,9 +272,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .result .badge {
-    max-width: 340px;
-  }
+
   .dropdown {
     position: absolute;
     top: -1px;
@@ -269,6 +288,7 @@
     align-items: stretch;
     background-color: var(--cell-background-hover);
   }
+
   .results {
     overflow-y: auto;
     overflow-x: hidden;
@@ -287,6 +307,9 @@
   .result.candidate {
     background-color: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+  .result .badge {
+    max-width: 340px;
   }
 
   .search {
