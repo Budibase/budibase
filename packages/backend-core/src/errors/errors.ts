@@ -28,7 +28,7 @@ export const getPublicError = (err: any) => {
   if (err.code) {
     // add generic error information
     error = {
-      code: err.code
+      code: err.code,
     }
 
     if (err.getPublicError) {
@@ -48,11 +48,7 @@ export const getPublicError = (err: any) => {
 export class HTTPError extends BudibaseError {
   status: number
 
-  constructor(
-    message: string,
-    httpStatus: number,
-    code = ErrorCode.HTTP,
-  ) {
+  constructor(message: string, httpStatus: number, code = ErrorCode.HTTP) {
     super(message, code)
     this.status = httpStatus
   }
@@ -70,7 +66,7 @@ export class UsageLimitError extends HTTPError {
 
   getPublicError() {
     return {
-      status: this.status
+      status: this.status,
     }
   }
 }
@@ -85,7 +81,7 @@ export class FeatureDisabledError extends HTTPError {
 
   getPublicError() {
     return {
-      featureName: this.featureName
+      featureName: this.featureName,
     }
   }
 }
