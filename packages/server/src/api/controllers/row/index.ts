@@ -2,6 +2,8 @@ import { quotas } from "@budibase/pro"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTable } from "../../../integrations/utils"
+import { Ctx } from "@budibase/types"
+import * as utils from "./utils"
 
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
@@ -129,9 +131,12 @@ export async function search(ctx: any) {
   })
 }
 
-export async function validate(ctx: any) {
+export async function validate(ctx: Ctx) {
   const tableId = getTableId(ctx)
-  ctx.body = await pickApi(tableId).validate(ctx)
+  ctx.body = await utils.validate({
+    row: ctx.request.body,
+    tableId,
+  })
 }
 
 export async function fetchEnrichedRow(ctx: any) {
