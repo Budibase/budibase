@@ -1,4 +1,5 @@
 import tk from "timekeeper"
+import _ from "lodash"
 import { mocks, structures } from "@budibase/backend-core/tests"
 import {
   ScimCreateUserRequest,
@@ -6,6 +7,8 @@ import {
   ScimUserResponse,
 } from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
+
+mocks.licenses.useScimIntegration()
 
 function createScimCreateUserRequest(userData?: {
   externalId?: string
@@ -150,6 +153,25 @@ describe("/api/global/scim/v2/users", () => {
           schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
           startIndex: 21,
           totalResults: userCount,
+        })
+      })
+
+      it("can filter by user name", async () => {
+        // '/api/global/scim/v2/Users?filter=userName+eq+%2212e18327-eee2-4a12-961e-bceff00f6b92%22'
+        const userToFetch = _.sample(users)
+
+        const response = await getScimUsers({
+          params: {
+            filter: `userName+eq+%22${userToFetch?.userName}%22`,
+          },
+        })
+
+        expect(response).toEqual({
+          Resources: [userToFetch],
+          itemsPerPage: 20,
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+          startIndex: 1,
+          totalResults: 1,
         })
       })
     })
