@@ -157,12 +157,29 @@ describe("/api/global/scim/v2/users", () => {
       })
 
       it("can filter by user name", async () => {
-        // '/api/global/scim/v2/Users?filter=userName+eq+%2212e18327-eee2-4a12-961e-bceff00f6b92%22'
         const userToFetch = _.sample(users)
 
         const response = await getScimUsers({
           params: {
-            filter: `userName+eq+%22${userToFetch?.userName}%22`,
+            filter: encodeURI(`userName eq "${userToFetch?.userName}"`),
+          },
+        })
+
+        expect(response).toEqual({
+          Resources: [userToFetch],
+          itemsPerPage: 20,
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+          startIndex: 1,
+          totalResults: 1,
+        })
+      })
+
+      it("can filter by external id", async () => {
+        const userToFetch = _.sample(users)
+
+        const response = await getScimUsers({
+          params: {
+            filter: encodeURI(`externalId eq "${userToFetch?.externalId}"`),
           },
         })
 
