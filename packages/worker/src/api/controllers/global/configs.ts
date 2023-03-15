@@ -295,7 +295,7 @@ export async function publicSettings(
 
     // google
     const googleConfig = await configs.getGoogleConfig()
-    const preActivated = googleConfig?.activated == null
+    const preActivated = googleConfig && googleConfig.activated == null
     const google = preActivated || !!googleConfig?.activated
     const _googleCallbackUrl = await googleCallbackUrl(googleConfig)
 
