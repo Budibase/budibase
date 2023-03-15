@@ -71,10 +71,6 @@ describe("/api/global/scim/v2/users", () => {
     await config.afterAll()
   })
 
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
   const featureDisabledResponse = {
     error: {
       code: "feature_disabled",
@@ -117,10 +113,54 @@ describe("/api/global/scim/v2/users", () => {
         })
       })
     })
+
+    describe("multiple users exist", () => {
+      const userCount = 30
+      let users: ScimUserResponse[]
+
+      beforeAll(async () => {
+        users = []
+
+        for (let i = 0; i < userCount; i++) {
+          const body = createScimCreateUserRequest()
+          users.push(await config.api.scimUsersAPI.post({ body }))
+        }
+
+        users = users.sort((a, b) => (a.id > b.id ? 1 : -1))
+      })
+
+      it("fetches full first page", async () => {
+        const response = await getScimUsers()
+
+        expect(response).toEqual({
+          Resources: expect.arrayContaining(users.slice(0, 20)),
+          itemsPerPage: 20,
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+          startIndex: 1,
+          totalResults: userCount,
+        })
+      })
+
+      it("fetches second page", async () => {
+        const response = await getScimUsers({ params: { startIndex: 20 } })
+
+        expect(response).toEqual({
+          Resources: users.slice(20),
+          itemsPerPage: 20,
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+          startIndex: 21,
+          totalResults: userCount,
+        })
+      })
+    })
   })
 
   describe("POST /api/global/scim/v2/users", () => {
     const postScimUser = config.api.scimUsersAPI.post
+
+    beforeAll(async () => {
+      await config.useNewTenant()
+    })
 
     it("unauthorised calls are not allowed", async () => {
       const response = await postScimUser(
