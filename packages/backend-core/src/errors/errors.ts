@@ -8,14 +8,15 @@ export abstract class BudibaseError extends Error {
     this.code = code
   }
 
-  abstract getPublicError(): any
+  protected getPublicError?(): any
 }
 
 // ERROR HANDLING
 
-export const codes = {
-  USAGE_LIMIT_EXCEEDED: "usage_limit_exceeded",
-  FEATURE_DISABLED: "feature_disabled",
+export enum ErrorCode {
+  USAGE_LIMIT_EXCEEDED = "usage_limit_exceeded",
+  FEATURE_DISABLED = "feature_disabled",
+  HTTP = "http",
 }
 
 /**
@@ -50,16 +51,10 @@ export class HTTPError extends BudibaseError {
   constructor(
     message: string,
     httpStatus: number,
-    code = "http",
+    code = ErrorCode.HTTP,
   ) {
     super(message, code)
     this.status = httpStatus
-  }
-
-  getPublicError() {
-    return {
-      status: this.status
-    }
   }
 }
 
@@ -69,13 +64,12 @@ export class UsageLimitError extends HTTPError {
   limitName: string
 
   constructor(message: string, limitName: string) {
-    super(message, 400, codes.USAGE_LIMIT_EXCEEDED)
+    super(message, 400, ErrorCode.USAGE_LIMIT_EXCEEDED)
     this.limitName = limitName
   }
 
   getPublicError() {
     return {
-      ...super.getPublicError(),
       status: this.status
     }
   }
@@ -85,13 +79,12 @@ export class FeatureDisabledError extends HTTPError {
   featureName: string
 
   constructor(message: string, featureName: string) {
-    super(message, 400, codes.FEATURE_DISABLED)
+    super(message, 400, ErrorCode.FEATURE_DISABLED)
     this.featureName = featureName
   }
 
   getPublicError() {
     return {
-      ...super.getPublicError(),
       featureName: this.featureName
     }
   }
