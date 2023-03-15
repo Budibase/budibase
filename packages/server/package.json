@@ -45,7 +45,7 @@
     "@apidevtools/swagger-parser": "10.0.3",
     "@budibase/backend-core": "^2.4.29",
     "@budibase/client": "^2.4.29",
-    "@budibase/pro": "2.4.28",
+    "@budibase/pro": "2.4.29",
     "@budibase/shared-core": "^2.4.29",
     "@budibase/string-templates": "^2.4.29",
     "@budibase/types": "^2.4.29",
