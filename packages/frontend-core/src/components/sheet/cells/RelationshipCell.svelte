@@ -19,9 +19,9 @@
   let definition
   let primaryDisplay
   let candidateIndex
+  let lastSearchId
 
   $: editable = selected && !readonly
-  $: search(searchString)
   $: results = getResults(searchResults, value)
   $: lookupMap = buildLookupMap(value, isOpen)
   $: {
@@ -48,29 +48,41 @@
     return lookupMap?.[row._id] === true
   }
 
-  const search = debounce(async searchString => {
-    if (!searchString || !schema?.tableId || !isOpen) {
+  const search = debounce(async value => {
+    if (!value || !schema?.tableId || !isOpen) {
+      searchString = value
       candidateIndex = null
       searchResults = []
       return
     }
 
+    lastSearchId = Math.random()
+    const thisSearchId = lastSearchId
     const results = await API.searchTable({
       paginate: false,
       tableId: schema.tableId,
       limit: 20,
       query: {
         string: {
-          [`1:${primaryDisplay}`]: searchString,
+          [`1:${primaryDisplay}`]: value,
         },
       },
     })
+
+    // In case searching takes longer than our debounced update, abandon these
+    // results
+    if (thisSearchId !== lastSearchId) {
+      return
+    }
+
+    // Sort and process results
     searchResults = results.rows?.map(row => ({
       ...row,
       primaryDisplay: row[primaryDisplay],
     }))
     candidateIndex = searchResults?.length ? 0 : null
-  }, 500)
+    searchString = value
+  }, 250)
 
   const sortRows = rows => {
     if (!rows?.length) {
@@ -161,7 +173,6 @@
     {#if relationship.primaryDisplay}
       <div class="badge" style="--color: {getColor(idx)}">
         {relationship.primaryDisplay}
-        {relationship.primaryDisplay}
       </div>
     {/if}
   {/each}
@@ -170,9 +181,15 @@
 {#if isOpen}
   <div class="dropdown" on:wheel|stopPropagation>
     <div class="search">
-      <Input autofocus quiet type="text" bind:value={searchString} />
+      <Input
+        autofocus
+        quiet
+        type="text"
+        value={searchString}
+        on:change={e => search(e.detail)}
+      />
     </div>
-    {#if !searchResults?.length}
+    {#if !searchString}
       {#if primaryDisplay}
         <div class="info">
           Search for {definition.name} rows by {primaryDisplay}
@@ -193,9 +210,6 @@
             on:mouseenter={() => (candidateIndex = idx)}
           >
             <div class="badge" style="--color: {getColor(idx)}">
-              {row.primaryDisplay}
-              {row.primaryDisplay}
-              {row.primaryDisplay}
               {row.primaryDisplay}
             </div>
             {#if isRowSelected(row)}
@@ -238,7 +252,7 @@
     text-overflow: ellipsis;
   }
   .result .badge {
-    max-width: calc(100% - 24px);
+    max-width: 340px;
   }
   .dropdown {
     position: absolute;
