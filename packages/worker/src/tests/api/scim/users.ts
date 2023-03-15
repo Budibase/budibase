@@ -28,6 +28,11 @@ export class ScimUsersAPI extends TestAPI {
     const { expect, setHeaders } = { ...defaultConfig, ...requestSettings }
     let request = this.request[method](url).expect(expect)
 
+    request = request.set(
+      "content-type",
+      "application/scim+json; charset=utf-8"
+    )
+
     if (method !== "delete") {
       request = request.expect("Content-Type", /json/)
     }

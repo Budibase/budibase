@@ -8,5 +8,5 @@ export const handleScimBody = (ctx: Ctx, next: any) => {
     ctx.req.headers["content-type"] = "application/json"
   }
 
-  next()
+  return next()
 }
