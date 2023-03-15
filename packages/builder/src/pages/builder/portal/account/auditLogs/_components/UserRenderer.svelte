@@ -12,18 +12,20 @@
   }
 </script>
 
-<div
-  class="container"
-  on:mouseover={() => (showTooltip = true)}
-  on:focus={() => (showTooltip = true)}
-  on:mouseleave={() => (showTooltip = false)}
->
-  <Avatar size="M" initials={getInitials(row?.user)} />
-</div>
-{#if showTooltip}
-  <div class="tooltip">
-    <Tooltip textWrapping text={row?.user.email} direction="bottom" />
+{#if row?.user?.email}
+  <div
+    class="container"
+    on:mouseover={() => (showTooltip = true)}
+    on:focus={() => (showTooltip = true)}
+    on:mouseleave={() => (showTooltip = false)}
+  >
+    <Avatar size="M" initials={getInitials(row.user)} />
   </div>
+  {#if showTooltip}
+    <div class="tooltip">
+      <Tooltip textWrapping text={row.user.email} direction="bottom" />
+    </div>
+  {/if}
 {/if}
 
 <style>

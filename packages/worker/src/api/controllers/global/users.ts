@@ -341,7 +341,7 @@ export const getUserInvites = async (ctx: any) => {
   let invites
   try {
     // Restricted to the currently authenticated tenant
-    invites = await getInviteCodes([ctx.user.tenantId])
+    invites = await getInviteCodes()
   } catch (e) {
     ctx.throw(400, "There was a problem fetching invites")
   }

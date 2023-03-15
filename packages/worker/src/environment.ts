@@ -30,10 +30,8 @@ const environment = {
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
-  JWT_SECRET: process.env.JWT_SECRET,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-  INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   // urls
   MINIO_URL: process.env.MINIO_URL,
@@ -42,7 +40,6 @@ const environment = {
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
   PLATFORM_URL: process.env.PLATFORM_URL,
   APPS_URL: process.env.APPS_URL,
-  CDN_URL: process.env.CDN_URL || "https://tenants.cdn.budi.live",
   // ports
   // prefer worker port to generic port
   PORT: process.env.WORKER_PORT || process.env.PORT,
@@ -69,6 +66,15 @@ const environment = {
    * Mock the email service in use - links to ethereal hosted emails are logged instead.
    */
   ENABLE_EMAIL_TEST_MODE: process.env.ENABLE_EMAIL_TEST_MODE,
+  PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT:
+    process.env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT || "/",
+  PASSPORT_GOOGLEAUTH_FAILURE_REDIRECT:
+    process.env.PASSPORT_GOOGLEAUTH_FAILURE_REDIRECT || "/error",
+  PASSPORT_OIDCAUTH_SUCCESS_REDIRECT:
+    process.env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT || "/",
+  PASSPORT_OIDCAUTH_FAILURE_REDIRECT:
+    process.env.PASSPORT_OIDCAUTH_FAILURE_REDIRECT || "/error",
+
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore

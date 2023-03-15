@@ -17,6 +17,7 @@ export interface UpdateSelfRequest {
   lastName?: string
   password?: string
   forceResetPassword?: boolean
+  onboardedAt?: string
 }
 
 export interface UpdateSelfResponse {

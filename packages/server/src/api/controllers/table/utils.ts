@@ -1,7 +1,11 @@
 import { parse, isSchema, isRows } from "../../../utilities/schema"
 import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
 import { isEqual } from "lodash"
-import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
+import {
+  AutoFieldSubTypes,
+  FieldTypes,
+  GOOGLE_SHEETS_PRIMARY_KEY,
+} from "../../../constants"
 import {
   inputProcessing,
   cleanupAttachments,
@@ -16,7 +20,7 @@ import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
-import { Database } from "@budibase/types"
+import { Database, Datasource, SourceName, Table } from "@budibase/types"
 
 export async function clearColumns(table: any, columnNames: any) {
   const db: Database = context.getAppDB()
@@ -390,6 +394,18 @@ export function hasTypeChanged(table: any, oldTable: any) {
     }
   }
   return false
+}
+
+// used for external tables, some of them will have static schemas that need
+// to be hard set
+export function setStaticSchemas(datasource: Datasource, table: Table) {
+  // GSheets is a specific case - only ever has a static primary key
+  if (table && datasource.source === SourceName.GOOGLE_SHEETS) {
+    table.primary = [GOOGLE_SHEETS_PRIMARY_KEY]
+    // if there is an id column, remove it, should never exist in GSheets
+    delete table.schema?.id
+  }
+  return table
 }
 
 const _TableSaveFunctions = TableSaveFunctions

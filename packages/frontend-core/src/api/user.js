@@ -194,8 +194,7 @@ export const buildUserEndpoints = API => ({
   },
 
   /**
-   * Retrieves the invitation associated with a provided code.
-   * @param code The unique code for the target invite
+   * Retrieves all user invitations for the current tenant.
    */
   getUserInvites: async () => {
     return await API.get({

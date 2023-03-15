@@ -15,6 +15,12 @@ const application = {
   lockedBy: userResource.getExamples().user.value.user,
 }
 
+const deployment = {
+  _id: "ef12381f934b4f129675cdbb76eff3c2",
+  status: "SUCCESS",
+  appUrl: "/app-url",
+}
+
 const base = {
   name: {
     description: "The name of the app.",
@@ -106,6 +112,11 @@ export default new Resource()
     applications: {
       value: {
         data: [application],
+      },
+    },
+    deploymentOutput: {
+      value: {
+        data: deployment,
       },
     },
   })

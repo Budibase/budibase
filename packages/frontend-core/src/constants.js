@@ -1,56 +1,7 @@
 /**
  * Operator options for lucene queries
  */
-export const OperatorOptions = {
-  Equals: {
-    value: "equal",
-    label: "Equals",
-  },
-  NotEquals: {
-    value: "notEqual",
-    label: "Not equals",
-  },
-  Empty: {
-    value: "empty",
-    label: "Is empty",
-  },
-  NotEmpty: {
-    value: "notEmpty",
-    label: "Is not empty",
-  },
-  StartsWith: {
-    value: "string",
-    label: "Starts with",
-  },
-  Like: {
-    value: "fuzzy",
-    label: "Like",
-  },
-  MoreThan: {
-    value: "rangeLow",
-    label: "More than or equal to",
-  },
-  LessThan: {
-    value: "rangeHigh",
-    label: "Less than or equal to",
-  },
-  Contains: {
-    value: "contains",
-    label: "Contains",
-  },
-  NotContains: {
-    value: "notContains",
-    label: "Does not contain",
-  },
-  In: {
-    value: "oneOf",
-    label: "Is in",
-  },
-  ContainsAny: {
-    value: "containsAny",
-    label: "Has any",
-  },
-}
+export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
 
 // Cookie names
 export const Cookies = {
@@ -126,27 +77,6 @@ export const Roles = {
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
-}
-/**
- * Maximum minimum range for SQL number values
- */
-export const SqlNumberTypeRangeMap = {
-  integer: {
-    max: 2147483647,
-    min: -2147483648,
-  },
-  int: {
-    max: 2147483647,
-    min: -2147483648,
-  },
-  smallint: {
-    max: 32767,
-    min: -32768,
-  },
-  mediumint: {
-    max: 8388607,
-    min: -8388608,
-  },
 }
 
 export const Themes = [
