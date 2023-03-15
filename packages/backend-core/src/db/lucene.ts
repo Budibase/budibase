@@ -52,7 +52,7 @@ export class QueryBuilder<T> {
   bookmark?: string
   sortOrder: string
   sortType: string
-  includeDocs: boolean
+  #includeDocs: boolean
   version?: string
   indexBuilder?: () => Promise<any>
   noEscaping = false
@@ -78,7 +78,7 @@ export class QueryBuilder<T> {
     this.limit = 50
     this.sortOrder = "ascending"
     this.sortType = "string"
-    this.includeDocs = true
+    this.#includeDocs = true
   }
 
   disableEscaping() {
@@ -139,7 +139,12 @@ export class QueryBuilder<T> {
   }
 
   excludeDocs() {
-    this.includeDocs = false
+    this.#includeDocs = false
+    return this
+  }
+
+  includeDocs() {
+    this.#includeDocs = true
     return this
   }
 
@@ -449,7 +454,7 @@ export class QueryBuilder<T> {
     let body: any = {
       q: this.buildSearchQuery(),
       limit: Math.min(this.limit, 200),
-      include_docs: this.includeDocs,
+      include_docs: this.#includeDocs,
     }
     if (this.bookmark) {
       body.bookmark = this.bookmark
