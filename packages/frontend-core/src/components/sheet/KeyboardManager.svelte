@@ -31,9 +31,11 @@
 
     // Pass the key event to the selected cell and let it decide whether to
     // capture it or not
-    const handled = api?.onKeyDown?.(e)
-    if (handled) {
-      return
+    if (!api?.isReadonly()) {
+      const handled = api?.onKeyDown?.(e)
+      if (handled) {
+        return
+      }
     }
     e.preventDefault()
 
@@ -120,6 +122,9 @@
   }, 100)
 
   const focusSelectedCell = () => {
+    if ($selectedCellAPI?.isReadonly()) {
+      return
+    }
     $selectedCellAPI?.focus?.()
   }
 

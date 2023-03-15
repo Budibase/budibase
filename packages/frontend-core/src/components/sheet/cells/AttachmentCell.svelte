@@ -128,6 +128,7 @@
     text-transform: uppercase;
     font-weight: 600;
     font-size: 10px;
+    user-select: none;
   }
   img {
     height: calc(var(--cell-height) - 12px);
