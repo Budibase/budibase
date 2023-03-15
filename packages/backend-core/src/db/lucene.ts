@@ -1,6 +1,7 @@
 import fetch from "node-fetch"
 import { getCouchInfo } from "./couch"
 import { SearchFilters, Row } from "@budibase/types"
+import { createUserIndex } from "./searchIndexes/searchIndexes"
 
 const QUERY_START_REGEX = /\d[0-9]*:/g
 
