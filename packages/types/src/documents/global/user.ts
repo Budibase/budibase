@@ -57,7 +57,6 @@ export interface User extends Document {
     userName: string
     externalId: string
     isSync: boolean
-    firstSync: number
   }
 }
 
