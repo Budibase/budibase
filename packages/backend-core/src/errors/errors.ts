@@ -66,7 +66,7 @@ export class UsageLimitError extends HTTPError {
 
   getPublicError() {
     return {
-      status: this.status,
+      limitName: this.limitName,
     }
   }
 }
