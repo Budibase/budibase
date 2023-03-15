@@ -3,7 +3,7 @@
 export abstract class BudibaseError extends Error {
   code: string
 
-  constructor(message: string, code: string) {
+  constructor(message: string, code: ErrorCode) {
     super(message)
     this.code = code
   }
