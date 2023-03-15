@@ -191,6 +191,26 @@ describe("/api/global/scim/v2/users", () => {
           totalResults: 1,
         })
       })
+
+      it("can filter by email", async () => {
+        const userToFetch = _.sample(users)
+
+        const response = await getScimUsers({
+          params: {
+            filter: encodeURI(
+              `emails[type eq "work"].value eq "${userToFetch?.emails[0].value}"`
+            ),
+          },
+        })
+
+        expect(response).toEqual({
+          Resources: [userToFetch],
+          itemsPerPage: 20,
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+          startIndex: 1,
+          totalResults: 1,
+        })
+      })
     })
   })
 
