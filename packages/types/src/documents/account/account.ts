@@ -81,7 +81,7 @@ export const isSSOAccount = (account: Account): account is SSOAccount =>
 
 export enum AccountSSOProviderType {
   GOOGLE = "google",
-  OIDC = "OIDC",
+  MICROSOFT = "microsoft",
 }
 
 export enum AccountSSOProvider {
