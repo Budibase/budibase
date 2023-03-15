@@ -57,7 +57,7 @@ app.keys = ["secret", "key"]
 
 // set up top level koa middleware
 app.use(handleScimBody)
-app.use(koaBody({ multipart: true, jsonStrict: false }))
+app.use(koaBody({ multipart: true }))
 
 app.use(koaSession(app))
 app.use(middleware.logging)
