@@ -85,7 +85,7 @@ describe("/api/global/scim/v2/users", () => {
     const getScimUsers = config.api.scimUsersAPI.get
 
     it("unauthorised calls are not allowed", async () => {
-      const response = await getScimUsers(undefined, {
+      const response = await getScimUsers({
         setHeaders: false,
         expect: 403,
       })
@@ -95,7 +95,7 @@ describe("/api/global/scim/v2/users", () => {
 
     it("cannot be called when feature is disabled", async () => {
       mocks.licenses.useCloudFree()
-      const response = await getScimUsers(undefined, { expect: 400 })
+      const response = await getScimUsers({ expect: 400 })
 
       expect(response).toEqual(featureDisabledResponse)
     })
@@ -142,7 +142,7 @@ describe("/api/global/scim/v2/users", () => {
       })
 
       it("fetches second page", async () => {
-        const response = await getScimUsers({ startIndex: 20 })
+        const response = await getScimUsers({ params: { startIndex: 20 } })
 
         expect(response).toEqual({
           Resources: users.slice(20),
