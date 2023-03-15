@@ -7,7 +7,8 @@ const QUERY_START_REGEX = /\d[0-9]*:/g
 
 interface SearchResponse<T> {
   rows: T[] | any[]
-  bookmark: string
+  bookmark?: string
+  totalRows: number
 }
 
 interface PaginatedSearchResponse<T> extends SearchResponse<T> {
@@ -503,14 +504,19 @@ async function runQuery<T>(
   }
   const json = await response.json()
 
-  let output: any = {
+  let output: SearchResponse<T> = {
     rows: [],
+
+    totalRows: 0,
   }
   if (json.rows != null && json.rows.length > 0) {
     output.rows = json.rows.map((row: any) => row.doc)
   }
   if (json.bookmark) {
     output.bookmark = json.bookmark
+  }
+  if (json.total_rows) {
+    output.totalRows = json.total_rows
   }
   return output
 }
