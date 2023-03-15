@@ -44,23 +44,23 @@ export function removeKeyNumbering(key: any): string {
  * Optionally takes a base lucene query object.
  */
 export class QueryBuilder<T> {
-  dbName: string
-  index: string
-  query: SearchFilters
-  limit: number
-  sort?: string
-  bookmark?: string
-  sortOrder: string
-  sortType: string
+  #dbName: string
+  #index: string
+  #query: SearchFilters
+  #limit: number
+  #sort?: string
+  #bookmark?: string
+  #sortOrder: string
+  #sortType: string
   #includeDocs: boolean
-  version?: string
-  indexBuilder?: () => Promise<any>
-  noEscaping = false
+  #version?: string
+  #indexBuilder?: () => Promise<any>
+  #noEscaping = false
 
   constructor(dbName: string, index: string, base?: SearchFilters) {
-    this.dbName = dbName
-    this.index = index
-    this.query = {
+    this.#dbName = dbName
+    this.#index = index
+    this.#query = {
       allOr: false,
       string: {},
       fuzzy: {},
@@ -75,65 +75,65 @@ export class QueryBuilder<T> {
       containsAny: {},
       ...base,
     }
-    this.limit = 50
-    this.sortOrder = "ascending"
-    this.sortType = "string"
+    this.#limit = 50
+    this.#sortOrder = "ascending"
+    this.#sortType = "string"
     this.#includeDocs = true
   }
 
   disableEscaping() {
-    this.noEscaping = true
+    this.#noEscaping = true
     return this
   }
 
   setIndexBuilder(builderFn: () => Promise<any>) {
-    this.indexBuilder = builderFn
+    this.#indexBuilder = builderFn
     return this
   }
 
   setVersion(version?: string) {
     if (version != null) {
-      this.version = version
+      this.#version = version
     }
     return this
   }
 
   setTable(tableId: string) {
-    this.query.equal!.tableId = tableId
+    this.#query.equal!.tableId = tableId
     return this
   }
 
   setLimit(limit?: number) {
     if (limit != null) {
-      this.limit = limit
+      this.#limit = limit
     }
     return this
   }
 
   setSort(sort?: string) {
     if (sort != null) {
-      this.sort = sort
+      this.#sort = sort
     }
     return this
   }
 
   setSortOrder(sortOrder?: string) {
     if (sortOrder != null) {
-      this.sortOrder = sortOrder
+      this.#sortOrder = sortOrder
     }
     return this
   }
 
   setSortType(sortType?: string) {
     if (sortType != null) {
-      this.sortType = sortType
+      this.#sortType = sortType
     }
     return this
   }
 
   setBookmark(bookmark?: string) {
     if (bookmark != null) {
-      this.bookmark = bookmark
+      this.#bookmark = bookmark
     }
     return this
   }
@@ -149,17 +149,17 @@ export class QueryBuilder<T> {
   }
 
   addString(key: string, partial: string) {
-    this.query.string![key] = partial
+    this.#query.string![key] = partial
     return this
   }
 
   addFuzzy(key: string, fuzzy: string) {
-    this.query.fuzzy![key] = fuzzy
+    this.#query.fuzzy![key] = fuzzy
     return this
   }
 
   addRange(key: string, low: string | number, high: string | number) {
-    this.query.range![key] = {
+    this.#query.range![key] = {
       low,
       high,
     }
@@ -167,51 +167,51 @@ export class QueryBuilder<T> {
   }
 
   addEqual(key: string, value: any) {
-    this.query.equal![key] = value
+    this.#query.equal![key] = value
     return this
   }
 
   addNotEqual(key: string, value: any) {
-    this.query.notEqual![key] = value
+    this.#query.notEqual![key] = value
     return this
   }
 
   addEmpty(key: string, value: any) {
-    this.query.empty![key] = value
+    this.#query.empty![key] = value
     return this
   }
 
   addNotEmpty(key: string, value: any) {
-    this.query.notEmpty![key] = value
+    this.#query.notEmpty![key] = value
     return this
   }
 
   addOneOf(key: string, value: any) {
-    this.query.oneOf![key] = value
+    this.#query.oneOf![key] = value
     return this
   }
 
   addContains(key: string, value: any) {
-    this.query.contains![key] = value
+    this.#query.contains![key] = value
     return this
   }
 
   addNotContains(key: string, value: any) {
-    this.query.notContains![key] = value
+    this.#query.notContains![key] = value
     return this
   }
 
   addContainsAny(key: string, value: any) {
-    this.query.containsAny![key] = value
+    this.#query.containsAny![key] = value
     return this
   }
 
   setAllOr() {
-    this.query.allOr = true
+    this.#query.allOr = true
   }
 
   handleSpaces(input: string) {
-    if (this.noEscaping) {
+    if (this.#noEscaping) {
       return input
     } else {
       return input.replace(/ /g, "_")
@@ -226,7 +226,7 @@ export class QueryBuilder<T> {
    * @returns {string|*}
    */
   preprocess(value: any, { escape, lowercase, wrap, type }: any = {}) {
-    const hasVersion = !!this.version
+    const hasVersion = !!this.#version
     // Determine if type needs wrapped
     const originalType = typeof value
     // Convert to lowercase
@@ -234,7 +234,7 @@ export class QueryBuilder<T> {
       value = value.toLowerCase ? value.toLowerCase() : value
     }
     // Escape characters
-    if (!this.noEscaping && escape && originalType === "string") {
+    if (!this.#noEscaping && escape && originalType === "string") {
       value = `${value}`.replace(/[ #+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
     }
 
@@ -249,7 +249,7 @@ export class QueryBuilder<T> {
 
   isMultiCondition() {
     let count = 0
-    for (let filters of Object.values(this.query)) {
+    for (let filters of Object.values(this.#query)) {
       // not contains is one massive filter in allOr mode
       if (typeof filters === "object") {
         count += Object.keys(filters).length
@@ -279,13 +279,13 @@ export class QueryBuilder<T> {
 
   buildSearchQuery() {
     const builder = this
-    let allOr = this.query && this.query.allOr
+    let allOr = this.#query && this.#query.allOr
     let query = allOr ? "" : "*:*"
     const allPreProcessingOpts = { escape: true, lowercase: true, wrap: true }
     let tableId
-    if (this.query.equal!.tableId) {
-      tableId = this.query.equal!.tableId
-      delete this.query.equal!.tableId
+    if (this.#query.equal!.tableId) {
+      tableId = this.#query.equal!.tableId
+      delete this.#query.equal!.tableId
     }
 
     const equal = (key: string, value: any) => {
@@ -370,8 +370,8 @@ export class QueryBuilder<T> {
     }
 
     // Construct the actual lucene search query string from JSON structure
-    if (this.query.string) {
-      build(this.query.string, (key: string, value: any) => {
+    if (this.#query.string) {
+      build(this.#query.string, (key: string, value: any) => {
         if (!value) {
           return null
         }
@@ -383,8 +383,8 @@ export class QueryBuilder<T> {
         return `${key}:${value}*`
       })
     }
-    if (this.query.range) {
-      build(this.query.range, (key: string, value: any) => {
+    if (this.#query.range) {
+      build(this.#query.range, (key: string, value: any) => {
         if (!value) {
           return null
         }
@@ -399,8 +399,8 @@ export class QueryBuilder<T> {
         return `${key}:[${low} TO ${high}]`
       })
     }
-    if (this.query.fuzzy) {
-      build(this.query.fuzzy, (key: string, value: any) => {
+    if (this.#query.fuzzy) {
+      build(this.#query.fuzzy, (key: string, value: any) => {
         if (!value) {
           return null
         }
@@ -412,34 +412,34 @@ export class QueryBuilder<T> {
         return `${key}:${value}~`
       })
     }
-    if (this.query.equal) {
-      build(this.query.equal, equal)
+    if (this.#query.equal) {
+      build(this.#query.equal, equal)
     }
-    if (this.query.notEqual) {
-      build(this.query.notEqual, (key: string, value: any) => {
+    if (this.#query.notEqual) {
+      build(this.#query.notEqual, (key: string, value: any) => {
         if (!value) {
           return null
         }
         return `!${key}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }
-    if (this.query.empty) {
-      build(this.query.empty, (key: string) => `!${key}:["" TO *]`)
+    if (this.#query.empty) {
+      build(this.#query.empty, (key: string) => `!${key}:["" TO *]`)
     }
-    if (this.query.notEmpty) {
-      build(this.query.notEmpty, (key: string) => `${key}:["" TO *]`)
+    if (this.#query.notEmpty) {
+      build(this.#query.notEmpty, (key: string) => `${key}:["" TO *]`)
     }
-    if (this.query.oneOf) {
-      build(this.query.oneOf, oneOf)
+    if (this.#query.oneOf) {
+      build(this.#query.oneOf, oneOf)
     }
-    if (this.query.contains) {
-      build(this.query.contains, contains)
+    if (this.#query.contains) {
+      build(this.#query.contains, contains)
     }
-    if (this.query.notContains) {
-      build(this.compressFilters(this.query.notContains), notContains)
+    if (this.#query.notContains) {
+      build(this.compressFilters(this.#query.notContains), notContains)
     }
-    if (this.query.containsAny) {
-      build(this.query.containsAny, containsAny)
+    if (this.#query.containsAny) {
+      build(this.#query.containsAny, containsAny)
     }
     // make sure table ID is always added as an AND
     if (tableId) {
@@ -453,29 +453,31 @@ export class QueryBuilder<T> {
   buildSearchBody() {
     let body: any = {
       q: this.buildSearchQuery(),
-      limit: Math.min(this.limit, 200),
+      limit: Math.min(this.#limit, 200),
       include_docs: this.#includeDocs,
     }
-    if (this.bookmark) {
-      body.bookmark = this.bookmark
+    if (this.#bookmark) {
+      body.bookmark = this.#bookmark
     }
-    if (this.sort) {
-      const order = this.sortOrder === "descending" ? "-" : ""
-      const type = `<${this.sortType}>`
-      body.sort = `${order}${this.handleSpaces(this.sort)}${type}`
+    if (this.#sort) {
+      const order = this.#sortOrder === "descending" ? "-" : ""
+      const type = `<${this.#sortType}>`
+      body.sort = `${order}${this.handleSpaces(this.#sort)}${type}`
     }
     return body
   }
 
   async run() {
     const { url, cookie } = getCouchInfo()
-    const fullPath = `${url}/${this.dbName}/_design/database/_search/${this.index}`
+    const fullPath = `${url}/${this.#dbName}/_design/database/_search/${
+      this.#index
+    }`
     const body = this.buildSearchBody()
     try {
       return await runQuery<T>(fullPath, body, cookie)
     } catch (err: any) {
-      if (err.status === 404 && this.indexBuilder) {
-        await this.indexBuilder()
+      if (err.status === 404 && this.#indexBuilder) {
+        await this.#indexBuilder()
         return await runQuery<T>(fullPath, body, cookie)
       } else {
         throw err
