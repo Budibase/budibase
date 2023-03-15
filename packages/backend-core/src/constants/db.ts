@@ -22,7 +22,6 @@ export enum ViewName {
   PLATFORM_USERS_LOWERCASE = "platform_users_lowercase",
   USER_BY_GROUP = "by_group_user",
   APP_BACKUP_BY_TRIGGER = "by_trigger",
-  SCIM_USERS = "scim_users",
 }
 
 export const DeprecatedViews = {
