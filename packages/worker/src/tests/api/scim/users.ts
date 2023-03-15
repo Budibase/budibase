@@ -49,7 +49,11 @@ export class ScimUsersAPI extends TestAPI {
 
   get = async (
     requestSettings?: Partial<RequestSettings> & {
-      params?: { startIndex?: number; pageSize?: number }
+      params?: {
+        startIndex?: number
+        pageSize?: number
+        filter?: string
+      }
     }
   ) => {
     let url = `/api/global/scim/v2/users?`
@@ -59,6 +63,9 @@ export class ScimUsersAPI extends TestAPI {
     }
     if (params?.startIndex) {
       url += `startIndex=${params.startIndex}&`
+    }
+    if (params?.filter) {
+      url += `filter=${params.filter}&`
     }
     const res = await this.#createRequest(url, "get", requestSettings)
     return res.body as ScimUserListResponse
