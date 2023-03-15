@@ -5,6 +5,7 @@ import { Writable } from "stream"
 export enum SearchIndex {
   ROWS = "rows",
   AUDIT = "audit",
+  USER = "user",
 }
 
 export type PouchOptions = {
