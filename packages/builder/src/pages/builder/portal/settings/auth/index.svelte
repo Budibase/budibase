@@ -47,8 +47,9 @@
   $: googleCallbackTooltip = $admin.cloud
     ? null
     : googleCallbackReadonly
-    ? "Vist the organisation page to update the platform URL"
+    ? "Visit the organisation page to update the platform URL"
     : "Leave blank to use the default callback URL"
+  $: googleSheetsCallbackUrl = `${$organisation.platformUrl}/api/global/auth/datasource/google/callback`
 
   $: GoogleConfigFields = {
     Google: [
@@ -60,6 +61,14 @@
         readonly: googleCallbackReadonly,
         tooltip: googleCallbackTooltip,
         placeholder: $organisation.googleCallbackUrl,
+        copyButton: true,
+      },
+      {
+        name: "sheetsURL",
+        label: "Sheets URL",
+        readonly: googleCallbackReadonly,
+        tooltip: googleCallbackTooltip,
+        placeholder: googleSheetsCallbackUrl,
         copyButton: true,
       },
     ],
@@ -396,7 +405,11 @@
       </Heading>
       <Body size="S">
         To allow users to authenticate using their Google accounts, fill out the
-        fields below.
+        fields below. Read the <Link
+          size="M"
+          href={"https://docs.budibase.com/docs/sso-with-google"}
+          >documentation</Link
+        > for more information.
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
