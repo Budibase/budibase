@@ -58,6 +58,8 @@ export class QueryBuilder<T> {
   #noEscaping = false
   #skip?: number
 
+  static readonly maxLimit = 200
+
   constructor(dbName: string, index: string, base?: SearchFilters) {
     this.#dbName = dbName
     this.#index = index
@@ -459,7 +461,7 @@ export class QueryBuilder<T> {
   buildSearchBody() {
     let body: any = {
       q: this.buildSearchQuery(),
-      limit: Math.min(this.#limit, 200),
+      limit: Math.min(this.#limit, QueryBuilder.maxLimit),
       include_docs: this.#includeDocs,
     }
     if (this.#bookmark) {
@@ -492,14 +494,13 @@ export class QueryBuilder<T> {
     const prevLimit = this.#limit
 
     this.excludeDocs()
-    const maxPageSize = 1000
     let skipRemaining = skip
     do {
-      const toSkip = Math.min(maxPageSize, skipRemaining)
+      const toSkip = Math.min(QueryBuilder.maxLimit, skipRemaining)
       this.setLimit(toSkip)
-      const { bookmark } = await this.#execute()
+      const { bookmark, rows } = await this.#execute()
       this.setBookmark(bookmark)
-      skipRemaining -= toSkip
+      skipRemaining -= rows.length
     } while (skipRemaining > 0)
 
     this.#includeDocs = prevIncludeDocs
@@ -596,8 +597,8 @@ async function recursiveSearch<T>(
   if (rows.length >= params.limit) {
     return rows
   }
-  let pageSize = 200
-  if (rows.length > params.limit - 200) {
+  let pageSize = QueryBuilder.maxLimit
+  if (rows.length > params.limit - QueryBuilder.maxLimit) {
     pageSize = params.limit - rows.length
   }
   const page = await new QueryBuilder<T>(dbName, index, query)
@@ -612,7 +613,7 @@ async function recursiveSearch<T>(
   if (!page.rows.length) {
     return rows
   }
-  if (page.rows.length < 200) {
+  if (page.rows.length < QueryBuilder.maxLimit) {
     return [...rows, ...page.rows]
   }
   const newParams = {
@@ -650,7 +651,7 @@ export async function paginatedSearch<T>(
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 50
   }
-  limit = Math.min(limit, 200)
+  limit = Math.min(limit, QueryBuilder.maxLimit)
   const search = new QueryBuilder<T>(dbName, index, query)
   if (params.version) {
     search.setVersion(params.version)
