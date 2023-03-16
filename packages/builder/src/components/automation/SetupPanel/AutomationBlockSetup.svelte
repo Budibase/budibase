@@ -33,6 +33,7 @@
   import { Utils } from "@budibase/frontend-core"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
+  import { cloneDeep } from "lodash/fp"
 
   export let block
   export let testData
@@ -62,6 +63,9 @@
 
   const getInputData = (testData, blockInputs) => {
     let newInputData = testData || blockInputs
+    if (block.event === "app:trigger" && !newInputData?.fields) {
+      newInputData = cloneDeep(blockInputs)
+    }
     inputData = newInputData
   }
 
