@@ -210,6 +210,17 @@ describe("lucene", () => {
           docs.slice(skip, skip + resp.rows.length).map(expect.objectContaining)
         )
       })
+
+      it("should not return results if skipping all docs", async () => {
+        const builder = new QueryBuilder(skipDbName, INDEX_NAME)
+        // Skipping 2 max limits plus a little bit more
+        const skip = docs.length + 1
+        builder.setSkip(skip)
+
+        const resp = await builder.run()
+
+        expect(resp.rows.length).toBe(0)
+      })
     })
   })
 
