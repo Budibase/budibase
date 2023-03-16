@@ -4,73 +4,35 @@
   import Icon from "../../Icon/Icon.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value = null //support multi?
+  export let value = null
   export let title = "Upload file"
   export let disabled = false
-  export let extensions = "*"
+  export let extensions = null
   export let handleFileTooLarge = null
-  export let handleTooManyFiles = null
-  export let fileSizeLimit = BYTES_IN_MB * 20 // Centralise
+  export let fileSizeLimit = BYTES_IN_MB * 20
   export let id = null
+  export let previewUrl = null
 
-  const dispatch = createEventDispatcher()
-
-  //Is this necessary?
   const fieldId = id || uuid()
-
-  // Centralise all in new file section?
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
 
+  const dispatch = createEventDispatcher()
+
   let fileInput
-  // $: file = value[0] || null
 
-  // const imageExtensions = [
-  //   "png",
-  //   "tiff",
-  //   "gif",
-  //   "raw",
-  //   "jpg",
-  //   "jpeg",
-  //   "svg",
-  //   "bmp",
-  //   "jfif",
-  // ]
+  $: inputAccept = Array.isArray(extensions) ? extensions.join(",") : "*"
 
-  // Should support only 1 file for now.
-  // Files[0]
-
-  //What is the limit? 50mb?
-
-  async function processFileList(fileList) {
-    if (
-      handleFileTooLarge &&
-      Array.from(fileList).some(file => file.size >= fileSizeLimit)
-    ) {
-      handleFileTooLarge(fileSizeLimit, value)
+  async function processFile(targetFile) {
+    if (handleFileTooLarge && targetFile?.size >= fileSizeLimit) {
+      handleFileTooLarge(targetFile)
       return
     }
-
-    const fileCount = fileList.length + value.length
-    if (handleTooManyFiles && maximum && fileCount > maximum) {
-      handleTooManyFiles(maximum)
-      return
-    }
-
-    if (processFiles) {
-      const processedFiles = await processFiles(fileList)
-      const newValue = [...value, ...processedFiles]
-      dispatch("change", newValue)
-      selectedImageIdx = newValue.length - 1
-    } else {
-      dispatch("change", fileList)
-    }
+    dispatch("change", targetFile)
   }
 
   function handleFile(evt) {
-    console.log("Hello ", evt.target.files[0])
-    dispatch("change", evt.target.files[0])
-    //processFileList(evt.target.files)
+    processFile(evt.target.files[0])
   }
 
   function clearFile() {
@@ -82,7 +44,7 @@
   id={fieldId}
   {disabled}
   type="file"
-  accept={extensions}
+  accept={inputAccept}
   bind:this={fileInput}
   on:change={handleFile}
 />
@@ -90,7 +52,9 @@
 <div class="field">
   {#if value}
     <div class="file-view">
-      <!-- <img alt="" src={value.url} /> -->
+      {#if previewUrl}
+        <img class="preview" alt="" src={previewUrl} />
+      {/if}
       <div class="filename">{value.name}</div>
       {#if value.size}
         <div class="filesize">
@@ -128,6 +92,23 @@
     display: none;
   }
   .delete-button {
+    transition: all 0.3s;
+    margin-left: 10px;
+    display: flex;
+  }
+  .delete-button:hover {
     cursor: pointer;
+    color: var(--red);
+  }
+  .filesize {
+    white-space: nowrap;
+  }
+  .filename {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .preview {
+    height: 1.5em;
   }
 </style>

@@ -7,12 +7,10 @@
     Divider,
     Label,
     Input,
-    // Dropzone,
     notifications,
     Toggle,
   } from "@budibase/bbui"
   import { auth, organisation, admin } from "stores/portal"
-  import { API } from "api"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"
 
@@ -28,21 +26,9 @@
     company: $organisation.company,
     platformUrl: $organisation.platformUrl,
     analyticsEnabled: $organisation.analyticsEnabled,
-    // logo: $organisation.logoUrl
-    //   ? { url: $organisation.logoUrl, type: "image", name: "Logo" }
-    //   : null,
   })
-  let loading = false
 
-  // async function uploadLogo(file) {
-  //   try {
-  //     let data = new FormData()
-  //     data.append("file", file)
-  //     await API.uploadLogo(data)
-  //   } catch (error) {
-  //     notifications.error("Error uploading logo")
-  //   }
-  // }
+  let loading = false
 
   async function saveConfig() {
     loading = true

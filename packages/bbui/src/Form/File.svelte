@@ -6,6 +6,9 @@
   export let label = null
   export let labelPosition = "above"
   export let disabled = false
+  export let handleFileTooLarge = () => {}
+  export let previewUrl = null
+  export let extensions = null
   export let error = null
   export let title = null
   export let value = null
@@ -19,5 +22,14 @@
 </script>
 
 <Field {label} {labelPosition} {error} {tooltip}>
-  <CoreFile {error} {disabled} {title} {value} on:change={onChange} />
+  <CoreFile
+    {error}
+    {disabled}
+    {title}
+    {value}
+    {previewUrl}
+    {handleFileTooLarge}
+    {extensions}
+    on:change={onChange}
+  />
 </Field>

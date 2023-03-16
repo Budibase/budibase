@@ -32,14 +32,16 @@ export interface SettingsInnerConfig {
   faviconUrlEtag?: string
 
   emailBrandingEnabled?: boolean
-
-  // Self host only
   appFooterEnabled?: boolean
   testimonialsEnabled?: boolean
-  licenceAgreementEnabled?: boolean
+  licenseAgreementEnabled?: boolean
   platformTitle?: string
   loginHeading?: string
   loginButton?: string
+
+  metaDescription?: string
+  metaImageUrl?: string
+  metaTitle?: string
 
   uniqueTenantId?: string
   analyticsEnabled?: boolean

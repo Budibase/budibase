@@ -108,53 +108,39 @@ async function buildEmail(
   let [base, body] = await Promise.all([
     getTemplateByPurpose(TYPE, EmailTemplatePurpose.BASE),
     getTemplateByPurpose(TYPE, purpose),
-    //getTemplateByPurpose(TYPE, "branding"), //should generalise to 'branding'
   ])
 
-  let branding = EmailTemplates["branding"]
+  // Change from branding to core
+  let core = EmailTemplates.core
 
-  if (!base || !body || !branding) {
+  if (!base || !body || !core) {
     throw "Unable to build email, missing base components"
   }
   base = base.contents
   body = body.contents
-
-  //branding = branding.contents
 
   let name = user ? user.name : undefined
   if (user && !name && user.firstName) {
     name = user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName
   }
   context = {
-    ...context, //enableEmailBranding
+    ...context,
     contents,
     email,
     name,
     user: user || {},
   }
 
-  const core = branding + body
+  // Prepend the core template
+  const fullBody = core + body
 
-  body = await processString(core, context)
-
-  // Conditional elements
-  // branding = await processString(branding, {
-  //   ...context,
-  //   body,
-  // })
+  body = await processString(fullBody, context)
 
   // this should now be the core email HTML
   return processString(base, {
     ...context,
-    body, //: branding, // pass as body as usual
+    body,
   })
-
-  // body = await processString(body, context)
-  // // this should now be the coree email HTML
-  // return processString(base, {
-  //   ...context,
-  //   body,
-  // })
 }
 
 /**
