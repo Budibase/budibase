@@ -1278,14 +1278,14 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.4.27-alpha.0":
-  version "2.4.27-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.4.27-alpha.0.tgz#0fa33cf5aa23b166ecb2e5f1f8a9bafa13b2c254"
-  integrity sha512-iuPu19TyHGWCXnCl9P3yuSPDCsxXg1bvVu6DDAyPNUORUzonbrwlopZb4leDvP7Sc9BJbORW8E9QyErsnpUpXA==
+"@budibase/backend-core@2.4.27-alpha.3":
+  version "2.4.27-alpha.3"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.4.27-alpha.3.tgz#c067bf894f90e0f86c85bc4cc711c76974a32be3"
+  integrity sha512-m8m/lJAB2y36MCE72tRH6O4nAQaECg+9n1W4ozAqtfMWW6JqGLvd4Naxd+LEgO8OOw/vLvzWLbFtek3MasgXCg==
   dependencies:
     "@budibase/nano" "10.1.2"
     "@budibase/pouchdb-replication-stream" "1.2.10"
-    "@budibase/types" "2.4.27-alpha.0"
+    "@budibase/types" "2.4.27-alpha.3"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -1417,14 +1417,14 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.4.27-alpha.0":
-  version "2.4.27-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.4.27-alpha.0.tgz#ab2e8a014894a62b3584d8f40b306e3d82eb24b6"
-  integrity sha512-Opug1Ewefnc3t5d5a/TzDXfNfRO8BJ/wKpX3JBJLQDpMxYgBbqa4l7XECnnawA6TN1Dayvk0l++BXEjRDKAGyQ==
+"@budibase/pro@2.4.27-alpha.3":
+  version "2.4.27-alpha.3"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.4.27-alpha.3.tgz#c2264116fc5cfbf379d0fb9fae74fb9d8b2a8345"
+  integrity sha512-/OtPXehLN9DerycSCcnCrtY4hxBp229RGx2sFuu/gy/1xrOcMqcZ2+ZLNFhVR/LFm95JQzpPU0TCsJF0bBj+jQ==
   dependencies:
-    "@budibase/backend-core" "2.4.27-alpha.0"
+    "@budibase/backend-core" "2.4.27-alpha.3"
     "@budibase/string-templates" "2.3.20"
-    "@budibase/types" "2.4.27-alpha.0"
+    "@budibase/types" "2.4.27-alpha.3"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1463,10 +1463,10 @@
     lodash "^4.17.20"
     vm2 "^3.9.4"
 
-"@budibase/types@2.4.27-alpha.0":
-  version "2.4.27-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.27-alpha.0.tgz#b5e5d468e35caa3b2da1372c8fb90099425efac6"
-  integrity sha512-BSEXIZhIdNXCTUpBY5yxNgBsMeWdAkQko+UKzUNzuMVuBCtEc5xkrbATwYiVapOGJLfw3xWUTZcuCkEVTaZOrA==
+"@budibase/types@2.4.27-alpha.3":
+  version "2.4.27-alpha.3"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.27-alpha.3.tgz#1251f2d0a058022fa72bd971ca1017eb0a37253a"
+  integrity sha512-2xplbfF2RZMrzXnOoXTLJLMGRapYcu7QturO/S7OMz3WXJ8gsd0U0lh/pi7i1L7YEs34xmKLNjmeMGbwozTfPw==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"

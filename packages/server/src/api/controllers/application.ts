@@ -20,10 +20,10 @@ import {
   cache,
   tenancy,
   context,
-  errors,
   events,
   migrations,
   objectStore,
+  ErrorCode,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -378,7 +378,7 @@ async function appPostCreate(ctx: BBContext, app: App) {
           return quotas.addRows(rowCount)
         })
       } catch (err: any) {
-        if (err.code && err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
+        if (err.code && err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
           // this import resulted in row usage exceeding the quota
           // delete the app
           // skip pre and post-steps as no rows have been added to quotas yet
