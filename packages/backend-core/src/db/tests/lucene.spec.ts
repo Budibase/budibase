@@ -148,7 +148,7 @@ describe("lucene", () => {
       beforeAll(async () => {
         const db = getDB(skipDbName)
 
-        docs = Array(1500)
+        docs = Array(QueryBuilder.maxLimit * 2.5)
           .fill(0)
           .map((_, i) => ({
             _id: i.toString().padStart(4, "0"),
@@ -194,6 +194,20 @@ describe("lucene", () => {
         expect(resp.rows.length).toBe(10)
         expect(resp.rows).toEqual(
           docs.slice(50, 60).map(expect.objectContaining)
+        )
+      })
+
+      it("should be able to skip searching through multiple responses", async () => {
+        const builder = new QueryBuilder(skipDbName, INDEX_NAME)
+        // Skipping 2 max limits plus a little bit more
+        const skip = QueryBuilder.maxLimit * 2 + 37
+        builder.setSkip(skip)
+        builder.setSort("_id")
+        const resp = await builder.run()
+
+        expect(resp.rows.length).toBe(50)
+        expect(resp.rows).toEqual(
+          docs.slice(skip, skip + resp.rows.length).map(expect.objectContaining)
         )
       })
     })
