@@ -72,14 +72,11 @@
   })
 
   const makeLabel = setting => {
-    if (setting.section) {
-      let label = setting.section
-      if (setting.label) {
-        return `${label} - ${setting.label}`
-      }
-      return label
+    const { section, label } = setting
+    if (section) {
+      return label ? `${section} - ${label}` : section
     } else {
-      return setting.label
+      return label
     }
   }
 
