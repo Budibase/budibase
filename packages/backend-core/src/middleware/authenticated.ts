@@ -14,6 +14,7 @@ import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
 import env from "../environment"
 import { Ctx, EndpointMatcher } from "@budibase/types"
+import { InvalidAPIKeyError, ErrorCode } from "../errors"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
   ? parseInt(env.SESSION_UPDATE_PERIOD)
@@ -68,11 +69,7 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
         user: await getUser(userId, tenantId, populateUser),
       }
     } else {
-      throw {
-        message:
-          "Invalid API key - may need re-generated, or user doesn't exist",
-        name: "InvalidApiKey",
-      }
+      throw new InvalidAPIKeyError()
     }
   })
 }
@@ -175,7 +172,7 @@ export default function (
       // invalid token, clear the cookie
       if (err?.name === "JsonWebTokenError") {
         clearCookie(ctx, Cookie.Auth)
-      } else if (err?.name === "InvalidApiKey") {
+      } else if (err?.code === ErrorCode.INVALID_API_KEY) {
         ctx.throw(403, err.message)
       }
       // allow configuring for public access
