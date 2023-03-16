@@ -132,6 +132,7 @@
             type={setting.type}
             control={getComponentForSetting(setting)}
             label={setting.label}
+            labelHidden={setting.labelHidden}
             key={setting.key}
             value={componentInstance[setting.key]}
             defaultValue={setting.defaultValue}
