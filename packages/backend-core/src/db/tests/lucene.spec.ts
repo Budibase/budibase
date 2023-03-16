@@ -151,8 +151,8 @@ describe("lucene", () => {
         docs = Array(QueryBuilder.maxLimit * 2.5)
           .fill(0)
           .map((_, i) => ({
-            _id: i.toString().padStart(4, "0"),
-            property: `value${i}`,
+            _id: i.toString().padStart(3, "0"),
+            property: `value_${i.toString().padStart(3, "0")}`,
             array: [],
           }))
         await db.bulkDocs(docs)
@@ -220,6 +220,20 @@ describe("lucene", () => {
         const resp = await builder.run()
 
         expect(resp.rows.length).toBe(0)
+      })
+
+      it("skip should respect with filters", async () => {
+        const builder = new QueryBuilder(skipDbName, INDEX_NAME)
+        builder.setLimit(10)
+        builder.setSkip(50)
+        builder.addString("property", "value_1")
+        builder.setSort("property")
+
+        const resp = await builder.run()
+        expect(resp.rows.length).toBe(10)
+        expect(resp.rows).toEqual(
+          docs.slice(150, 160).map(expect.objectContaining)
+        )
       })
     })
   })
