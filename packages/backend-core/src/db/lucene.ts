@@ -475,7 +475,7 @@ export class QueryBuilder<T> {
 
   async run() {
     if (this.#skip) {
-      await this.#skipPages(this.#skip)
+      await this.#skipItems(this.#skip)
     }
     return await this.#execute()
   }
@@ -485,7 +485,7 @@ export class QueryBuilder<T> {
    * For the given builder, walk through pages using bookmarks until the desired
    * page has been met.
    */
-  async #skipPages(skip: number) {
+  async #skipItems(skip: number) {
     // Lucene does not support pagination.
     // Handle pagination by finding the right bookmark
     const prevIncludeDocs = this.#includeDocs
