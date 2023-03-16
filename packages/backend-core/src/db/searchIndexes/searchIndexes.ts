@@ -16,7 +16,17 @@ export async function createUserIndex() {
     if (user._id && !user._id.startsWith("us_")) {
       return
     }
-    const ignoredFields = ["_id", "_rev", "password"]
+    const ignoredFields = [
+      "_id",
+      "_rev",
+      "password",
+      "account",
+      "license",
+      "budibaseAccess",
+      "accountPortalAccess",
+      "csrfToken",
+    ]
+
     function idx(input: Record<string, any>, prev?: string) {
       for (let key of Object.keys(input)) {
         if (ignoredFields.includes(key)) {
