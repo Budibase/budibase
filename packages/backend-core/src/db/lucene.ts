@@ -56,6 +56,7 @@ export class QueryBuilder<T> {
   #version?: string
   #indexBuilder?: () => Promise<any>
   #noEscaping = false
+  #skip?: number
 
   constructor(dbName: string, index: string, base?: SearchFilters) {
     this.#dbName = dbName
@@ -135,6 +136,11 @@ export class QueryBuilder<T> {
     if (bookmark != null) {
       this.#bookmark = bookmark
     }
+    return this
+  }
+
+  setSkip(skip: number | undefined) {
+    this.#skip = skip
     return this
   }
 
@@ -468,6 +474,34 @@ export class QueryBuilder<T> {
   }
 
   async run() {
+    if (this.#skip) {
+      await this.#skipPages(this.#skip)
+    }
+    return await this.#execute()
+  }
+
+  async #skipPages(skip: number) {
+    // Lucene does not support pagination.
+    // Handle pagination by finding the right bookmark
+    const prevIncludeDocs = this.#includeDocs
+    const prevLimit = this.#limit
+
+    this.excludeDocs()
+    const maxPageSize = 1000
+    let skipRemaining = skip
+    do {
+      const toSkip = Math.min(maxPageSize, skipRemaining)
+      this.setLimit(toSkip)
+      const { bookmark } = await this.#execute()
+      this.setBookmark(bookmark)
+      skipRemaining -= toSkip
+    } while (skipRemaining > 0)
+
+    this.#includeDocs = prevIncludeDocs
+    this.#limit = prevLimit
+  }
+
+  async #execute() {
     const { url, cookie } = getCouchInfo()
     const fullPath = `${url}/${this.#dbName}/_design/database/_search/${
       this.#index
