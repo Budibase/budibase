@@ -11,7 +11,7 @@ export async function createUserIndex() {
       designDoc = { _id: "_design/database" }
     }
   }
-  // this is a very specific function given that it is only for audit logs
+
   const fn = function (user: User) {
     if (user._id && !user._id.startsWith("us_")) {
       return
