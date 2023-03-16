@@ -480,6 +480,11 @@ export class QueryBuilder<T> {
     return await this.#execute()
   }
 
+  /**
+   * Lucene queries do not support pagination and use bookmarks instead.
+   * For the given builder, walk through pages using bookmarks until the desired
+   * page has been met.
+   */
   async #skipPages(skip: number) {
     // Lucene does not support pagination.
     // Handle pagination by finding the right bookmark
