@@ -413,6 +413,34 @@ describe("/api/global/scim/v2/users", () => {
       const persistedUser = await config.api.scimUsersAPI.find(user.id)
       expect(persistedUser).toEqual(expectedScimUser)
     })
+
+    it("supports updating unmapped fields", async () => {
+      const body: ScimUpdateRequest = {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        Operations: [
+          {
+            op: "Add",
+            path: "displayName",
+            value: structures.generator.name(),
+          },
+          {
+            op: "Add",
+            path: "preferredLanguage",
+            value: structures.generator.letter(),
+          },
+        ],
+      }
+
+      const response = await patchScimUser({ id: user.id, body })
+
+      const expectedScimUser: ScimUserResponse = {
+        ...user,
+      }
+      expect(response).toEqual(expectedScimUser)
+
+      const persistedUser = await config.api.scimUsersAPI.find(user.id)
+      expect(persistedUser).toEqual(expectedScimUser)
+    })
   })
 
   describe("DELETE /api/global/scim/v2/users/:id", () => {
