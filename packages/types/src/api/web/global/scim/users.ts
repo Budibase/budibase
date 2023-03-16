@@ -1,6 +1,6 @@
 import { ScimResource, ScimMeta, ScimPatchOperation } from "scim-patch"
 
-type BooleanString = boolean | "True" | "False"
+type BooleanString = boolean | "True" | "true" | "False" | "false"
 
 export interface ScimUserResponse extends ScimResource {
   schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
