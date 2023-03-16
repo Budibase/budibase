@@ -395,6 +395,24 @@ describe("/api/global/scim/v2/users", () => {
       const persistedUser = await config.api.scimUsersAPI.find(user.id)
       expect(persistedUser).toEqual(expectedScimUser)
     })
+
+    it("can deactive an active user", async () => {
+      const body: ScimUpdateRequest = {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        Operations: [{ op: "Replace", path: "active", value: "False" }],
+      }
+
+      const response = await patchScimUser({ id: user.id, body })
+
+      const expectedScimUser: ScimUserResponse = {
+        ...user,
+        active: false,
+      }
+      expect(response).toEqual(expectedScimUser)
+
+      const persistedUser = await config.api.scimUsersAPI.find(user.id)
+      expect(persistedUser).toEqual(expectedScimUser)
+    })
   })
 
   describe("DELETE /api/global/scim/v2/users/:id", () => {
