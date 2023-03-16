@@ -12,15 +12,34 @@
     Toggle,
     Input,
     Label,
+    TextArea,
   } from "@budibase/bbui"
   import { auth, organisation, licensing, admin } from "stores/portal"
   import { API } from "api"
   import { onMount } from "svelte"
 
+  const imageExtensions = [
+    ".png",
+    ".tiff",
+    ".gif",
+    ".raw",
+    ".jpg",
+    ".jpeg",
+    ".svg",
+    ".bmp",
+    ".jfif",
+  ]
+
+  const faviconExtensions = [".png", ".ico", ".gif"]
+
   let loaded = false
   let saving = false
+
   let logoFile = null
+  let logoPreview = null
+
   let faviconFile = null
+  let faviconPreview = null
 
   let config = {}
   let updated = false
@@ -39,8 +58,44 @@
     : null
 
   $: favicon = config.faviconUrl
-    ? { url: config.logoUrl, type: "image", name: "Favicon" }
+    ? { url: config.faviconUrl, type: "image", name: "Favicon" }
     : null
+
+  //If type of file do this IN the picker
+  //If string use the string
+  //If object?.url us that
+  const previewUrl = async localFile => {
+    if (!localFile) {
+      return Promise.resolve(null)
+    }
+
+    return new Promise(resolve => {
+      let reader = new FileReader()
+      try {
+        reader.onload = e => {
+          resolve({
+            result: e.target.result,
+          })
+        }
+        reader.readAsDataURL(localFile)
+      } catch (error) {
+        console.error(error)
+        resolve(null)
+      }
+    })
+  }
+
+  $: previewUrl(logoFile).then(response => {
+    if (response) {
+      logoPreview = response.result
+    }
+  })
+
+  $: previewUrl(faviconFile).then(response => {
+    if (response) {
+      faviconPreview = response.result
+    }
+  })
 
   async function uploadLogo(file) {
     let response = {}
@@ -54,8 +109,6 @@
     return response
   }
 
-  // Limit file types
-  // PNG, GIF, or ICO?
   async function uploadFavicon(file) {
     let response = {}
     try {
@@ -70,9 +123,7 @@
 
   async function saveConfig() {
     saving = true
-
-    console.log("Save Config")
-
+    console.log("SAVING CONFIG ")
     if (logoFile) {
       const logoResp = await uploadLogo(logoFile)
       if (logoResp.url) {
@@ -80,8 +131,8 @@
           ...config,
           logoUrl: logoResp.url,
         }
-      } else {
-        //would have to delete
+        logoFile = null
+        logoPreview = null
       }
     }
 
@@ -92,6 +143,8 @@
           ...config,
           faviconUrl: faviconResp.url,
         }
+        faviconFile = null
+        faviconPreview = null
       }
     }
     console.log("SAVE CONFIG ", config)
@@ -111,28 +164,19 @@
   onMount(async () => {
     await organisation.init()
 
-    const {
-      faviconUrl,
-      logoUrl,
-      platformTitle,
-      emailBrandingEnabled,
-      appFooterEnabled,
-      loginHeading,
-      loginButton,
-      licenceAgreementEnabled,
-      testimonialsEnabled,
-    } = $organisation
-
     config = {
-      faviconUrl,
-      logoUrl,
-      platformTitle,
-      emailBrandingEnabled,
-      appFooterEnabled,
-      loginHeading,
-      loginButton,
-      licenceAgreementEnabled,
-      testimonialsEnabled,
+      faviconUrl: $organisation.faviconUrl,
+      logoUrl: $organisation.logoUrl,
+      platformTitle: $organisation.platformTitle,
+      emailBrandingEnabled: $organisation.emailBrandingEnabled,
+      appFooterEnabled: $organisation.appFooterEnabled,
+      loginHeading: $organisation.loginHeading,
+      loginButton: $organisation.loginButton,
+      licenseAgreementEnabled: $organisation.licenseAgreementEnabled,
+      testimonialsEnabled: $organisation.testimonialsEnabled,
+      metaDescription: $organisation.metaDescription,
+      metaImageUrl: $organisation.metaImageUrl,
+      metaTitle: $organisation.metaTitle,
     }
 
     loaded = true
@@ -158,17 +202,24 @@
         <Label size="L">Logo</Label>
         <File
           title="Upload image"
+          handleFileTooLarge={() => {
+            notifications.warn("File too large. 20mb limit")
+          }}
+          extensions={imageExtensions}
+          previewUrl={logoPreview || logo?.url}
           on:change={e => {
             console.log("Updated Logo")
             let clone = { ...config }
             if (e.detail) {
               logoFile = e.detail
+              logoPreview = null
             } else {
+              logoFile = null
               clone.logoUrl = ""
             }
             config = clone
           }}
-          value={logo}
+          value={logoFile || logo}
         />
       </div>
 
@@ -176,17 +227,22 @@
         <Label size="L">Favicon</Label>
         <File
           title="Upload image"
+          handleFileTooLarge={() => {
+            notifications.warn("File too large. 20mb limit")
+          }}
+          extensions={faviconExtensions}
+          previewUrl={faviconPreview || favicon?.url}
           on:change={e => {
-            console.log("Updated Favicon")
             let clone = { ...config }
             if (e.detail) {
               faviconFile = e.detail
+              faviconPreview = null
             } else {
               clone.faviconUrl = ""
             }
             config = clone
           }}
-          value={favicon}
+          value={faviconFile || favicon}
         />
       </div>
       <div class="field">
@@ -197,12 +253,12 @@
             clone.platformTitle = e.detail ? e.detail : ""
             config = clone
           }}
-          value={config.platformTitle || "Budibase"}
+          value={config.platformTitle || ""}
         />
       </div>
       <div>
         <Toggle
-          text={"Remove Buidbase brand from emails"}
+          text={"Remove Budibase brand from emails"}
           on:change={e => {
             let clone = { ...config }
             clone.emailBrandingEnabled = !e.detail
@@ -222,7 +278,6 @@
       </div>
     </div>
 
-    <!-- Should this be displayed? -->
     {#if !$admin.cloud}
       <Divider />
       <Layout gap="XS" noPadding>
@@ -239,7 +294,7 @@
                 clone.loginHeading = e.detail ? e.detail : ""
                 config = clone
               }}
-              value={config.loginHeading || "Log in to Budibase"}
+              value={config.loginHeading || ""}
             />
           </div>
 
@@ -251,7 +306,7 @@
                 clone.loginButton = e.detail ? e.detail : ""
                 config = clone
               }}
-              value={config.loginButton || "Log in to Budibase"}
+              value={config.loginButton || ""}
             />
           </div>
           <div>
@@ -265,13 +320,13 @@
               value={!config.testimonialsEnabled}
             />
             <Toggle
-              text={"Remove licence agreement"}
+              text={"Remove license agreement"}
               on:change={e => {
                 let clone = { ...config }
-                clone.licenceAgreementEnabled = !e.detail
+                clone.licenseAgreementEnabled = !e.detail
                 config = clone
               }}
-              value={!config.licenceAgreementEnabled}
+              value={!config.licenseAgreementEnabled}
             />
           </div>
         </div>
@@ -285,15 +340,37 @@
     <div class="app-previews">
       <div class="fields">
         <div class="field">
-          <!-- <Label size="L">Header</Label>
-            <Input
-              on:change={e => {
-                let clone = { ...config }
-                clone.loginHeading = e.detail ? e.detail : ""
-                config = clone
-              }}
-              value={config.loginHeading || "Log in to Budibase"}
-            /> -->
+          <Label size="L">Image URL</Label>
+          <Input
+            on:change={e => {
+              let clone = { ...config }
+              clone.metaImageUrl = e.detail ? e.detail : ""
+              config = clone
+            }}
+            value={config.metaImageUrl}
+          />
+        </div>
+        <div class="field">
+          <Label size="L">Title</Label>
+          <Input
+            on:change={e => {
+              let clone = { ...config }
+              clone.metaTitle = e.detail ? e.detail : ""
+              config = clone
+            }}
+            value={config.metaTitle}
+          />
+        </div>
+        <div class="field">
+          <Label size="L">Description</Label>
+          <TextArea
+            on:change={e => {
+              let clone = { ...config }
+              clone.metaDescription = e.detail ? e.detail : ""
+              config = clone
+            }}
+            value={config.metaDescription}
+          />
         </div>
       </div>
     </div>
@@ -316,7 +393,8 @@
 
   .branding,
   .login {
-    width: 60%;
+    width: 70%;
+    max-width: 70%;
   }
   .fields {
     display: grid;
@@ -324,7 +402,7 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 80px 1fr;
+    grid-template-columns: 80px auto;
     grid-gap: var(--spacing-l);
     align-items: center;
   }

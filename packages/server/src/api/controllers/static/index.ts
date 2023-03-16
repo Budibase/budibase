@@ -11,10 +11,11 @@ import {
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
 import { DocumentType } from "../../../db/utils"
-import { context, objectStore, utils } from "@budibase/backend-core"
+import { context, objectStore, utils, configs } from "@budibase/backend-core"
 import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
+
 const send = require("koa-send")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
@@ -98,6 +99,8 @@ export const deleteObjects = async function (ctx: any) {
 }
 
 export const serveApp = async function (ctx: any) {
+  const { config } = await configs.getSettingsConfigDoc()
+
   const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentType.APP_METADATA)
   let appId = context.getAppId()
@@ -105,16 +108,19 @@ export const serveApp = async function (ctx: any) {
   if (!env.isJest()) {
     const App = require("./templates/BudibaseApp.svelte").default
     const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
-    console.log(appInfo)
     const { head, html, css } = App.render({
       metaImage:
+        config?.metaImageUrl ||
         "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
-      title: appInfo.name, //Replace Title here?
+      metaDescription: config?.metaDescription || "",
+      metaTitle: `${appInfo.name} - built with Budibase` || config?.metaTitle,
+      title: appInfo.name,
       production: env.isProd(),
       appId,
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
       usedPlugins: plugins,
       favicon: objectStore.getGlobalFileUrl("settings", "faviconUrl"),
+      //logo: objectStore.getGlobalFileUrl("settings", "logoUrl"),
     })
 
     const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)

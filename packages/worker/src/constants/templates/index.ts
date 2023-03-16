@@ -21,8 +21,7 @@ export const EmailTemplates = {
     join(__dirname, "welcome.hbs")
   ),
   [EmailTemplatePurpose.CUSTOM]: readStaticFile(join(__dirname, "custom.hbs")),
-  //Core wrapper
-  ["branding"]: readStaticFile(join(__dirname, "core.hbs")),
+  [EmailTemplatePurpose.CORE]: readStaticFile(join(__dirname, "core.hbs")),
 }
 
 export function addBaseTemplates(templates: Template[], type?: string) {
