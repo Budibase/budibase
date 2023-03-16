@@ -495,13 +495,15 @@ export class QueryBuilder<T> {
 
     this.excludeDocs()
     let skipRemaining = skip
+    let iterationFetched = 0
     do {
       const toSkip = Math.min(QueryBuilder.maxLimit, skipRemaining)
       this.setLimit(toSkip)
       const { bookmark, rows } = await this.#execute()
       this.setBookmark(bookmark)
+      iterationFetched = rows.length
       skipRemaining -= rows.length
-    } while (skipRemaining > 0)
+    } while (skipRemaining > 0 && iterationFetched > 0)
 
     this.#includeDocs = prevIncludeDocs
     this.#limit = prevLimit
