@@ -26,7 +26,8 @@ export const createUserStores = () => {
             // Generate random colour hue
             let hue = 1
             for (let i = 0; i < user.email.length && i < 5; i++) {
-              hue *= user.email.charCodeAt(i)
+              hue *= user.email.charCodeAt(i + 1)
+              hue /= 17
             }
             hue = hue % 360
             const color =
