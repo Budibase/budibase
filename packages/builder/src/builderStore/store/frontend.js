@@ -493,64 +493,54 @@ export const getFrontendStore = () => {
         }
         return get(store).components[componentName]
       },
+      getDefaultDatasource: () => {
+        const filteredTables = get(tables).list.filter(
+          table => table._id != "ta_users"
+        )
+        const internalTable = filteredTables.find(
+          table =>
+            table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+            table.type === DB_TYPE_INTERNAL
+        )
+        const defaultSourceTable = filteredTables.find(
+          table =>
+            table.sourceId !== BUDIBASE_INTERNAL_DB_ID &&
+            table.type === DB_TYPE_INTERNAL
+        )
+        const defaultExternalTable = filteredTables.find(
+          table => table.type === DB_TYPE_EXTERNAL
+        )
+        return defaultSourceTable || internalTable || defaultExternalTable
+      },
       createInstance: (componentName, presetProps) => {
         const definition = store.actions.components.getDefinition(componentName)
         if (!definition) {
           return null
         }
 
-        // Flattened settings
-        const settings = getComponentSettings(componentName)
-
-        let dataSourceField = settings.find(
-          setting => setting.type == "dataSource" || setting.type == "table"
-        )
-
-        let defaultDatasource
-        if (dataSourceField) {
-          const _tables = get(tables)
-          const filteredTables = _tables.list.filter(
-            table => table._id != "ta_users"
-          )
-
-          const internalTable = filteredTables.find(
-            table =>
-              table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
-              table.type == DB_TYPE_INTERNAL
-          )
-
-          const defaultSourceTable = filteredTables.find(
-            table =>
-              table.sourceId !== BUDIBASE_INTERNAL_DB_ID &&
-              table.type == DB_TYPE_INTERNAL
-          )
-
-          const defaultExternalTable = filteredTables.find(
-            table => table.type == DB_TYPE_EXTERNAL
-          )
-
-          defaultDatasource =
-            defaultSourceTable || internalTable || defaultExternalTable
-        }
-
-        // Generate default props
+        // Generate default props and handle custom edge cases
         let props = { ...presetProps }
+        const defaultDS = store.actions.components.getDefaultDatasource()
+        const settings = getComponentSettings(componentName)
         settings.forEach(setting => {
           if (setting.type === "multifield" && setting.selectAllFields) {
-            props[setting.key] = Object.keys(defaultDatasource.schema || {})
+            // Select all schema fields where required
+            props[setting.key] = Object.keys(defaultDS?.schema || {})
+          } else if (
+            (setting.type === "dataSource" || setting.type === "table") &&
+            defaultDS
+          ) {
+            // Select default datasource where require
+            props[setting.key] = {
+              label: defaultDS.name,
+              tableId: defaultDS._id,
+              type: "table",
+            }
           } else if (setting.defaultValue !== undefined) {
+            // Use default value where required
             props[setting.key] = setting.defaultValue
           }
         })
-
-        // Set a default datasource
-        if (dataSourceField && defaultDatasource) {
-          props[dataSourceField.key] = {
-            label: defaultDatasource.name,
-            tableId: defaultDatasource._id,
-            type: "table",
-          }
-        }
 
         // Add any extra properties the component needs
         let extras = {}
