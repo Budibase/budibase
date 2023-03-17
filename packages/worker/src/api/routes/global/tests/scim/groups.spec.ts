@@ -312,7 +312,7 @@ describe("/api/global/scim/v2/groups", () => {
     })
 
     describe("adding users", () => {
-      it("new users can be added to an existing group", async () => {
+      it("a new user can be added to an existing group", async () => {
         const userToAdd = _.sample(users)!
 
         const body: ScimUpdateRequest = {
@@ -340,6 +340,48 @@ describe("/api/global/scim/v2/groups", () => {
               value: userToAdd.id,
             },
           ],
+        }
+        expect(response).toEqual(expectedScimGroup)
+
+        const persistedGroup = await config.api.scimGroupsAPI.find(group.id)
+        expect(persistedGroup).toEqual(expectedScimGroup)
+      })
+
+      it("multiple users can be added to an existing group", async () => {
+        const [user1ToAdd, user2ToAdd] = _.sampleSize(users, 2)
+
+        const body: ScimUpdateRequest = {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          Operations: [
+            {
+              op: "Add",
+              path: "members",
+              value: [
+                {
+                  $ref: null,
+                  value: user1ToAdd.id,
+                },
+                {
+                  $ref: null,
+                  value: user2ToAdd.id,
+                },
+              ],
+            },
+          ],
+        }
+
+        const response = await patchScimGroup({ id: group.id, body })
+
+        const expectedScimGroup: ScimGroupResponse = {
+          ...group,
+          members: expect.arrayContaining([
+            {
+              value: user1ToAdd.id,
+            },
+            {
+              value: user2ToAdd.id,
+            },
+          ]),
         }
         expect(response).toEqual(expectedScimGroup)
 
