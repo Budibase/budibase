@@ -1,4 +1,5 @@
 import { ScimResource, ScimMeta, ScimPatchOperation } from "scim-patch"
+import { ScimListResponse } from "./shared"
 
 type BooleanString = boolean | "True" | "true" | "False" | "false"
 
@@ -54,14 +55,6 @@ export interface ScimCreateUserRequest {
 export interface ScimUpdateRequest {
   schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
   Operations: ScimPatchOperation[]
-}
-
-interface ScimListResponse<T> {
-  schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"]
-  totalResults: number
-  Resources: T[]
-  startIndex: number
-  itemsPerPage: number
 }
 
 export interface ScimUserListResponse
