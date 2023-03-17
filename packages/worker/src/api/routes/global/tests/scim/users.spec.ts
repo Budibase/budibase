@@ -78,7 +78,6 @@ describe("/api/global/scim/v2/users", () => {
     error: {
       code: "feature_disabled",
       featureName: "scimIntegration",
-      type: "license_error",
     },
     message: "scimIntegration is not currently enabled",
     status: 400,
