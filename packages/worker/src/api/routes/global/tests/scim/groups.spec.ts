@@ -23,13 +23,6 @@ describe("/api/global/scim/v2/groups", () => {
 
   beforeAll(async () => {
     await config.beforeAll()
-
-    for (let i = 0; i < 30; i++) {
-      const body = structures.scim.createUserRequest()
-      users.push(await config.api.scimUsersAPI.post({ body }))
-    }
-
-    users = users.sort((a, b) => (a.id > b.id ? 1 : -1))
   })
 
   afterAll(async () => {
@@ -156,6 +149,7 @@ describe("/api/global/scim/v2/groups", () => {
             created: mockedTime.toISOString(),
             lastModified: mockedTime.toISOString(),
           },
+          members: [],
         }
         expect(response).toEqual(expectedScimGroup)
 
@@ -257,6 +251,17 @@ describe("/api/global/scim/v2/groups", () => {
     const patchScimGroup = config.api.scimGroupsAPI.patch
 
     let group: ScimGroupResponse
+    let users: ScimUserResponse[]
+
+    beforeAll(async () => {
+      users = []
+      for (let i = 0; i < 30; i++) {
+        const body = structures.scim.createUserRequest()
+        users.push(await config.api.scimUsersAPI.post({ body }))
+      }
+
+      users = users.sort((a, b) => (a.id > b.id ? 1 : -1))
+    })
 
     beforeEach(async () => {
       const body = structures.scim.createGroupRequest()
@@ -304,6 +309,43 @@ describe("/api/global/scim/v2/groups", () => {
 
       const persistedGroup = await config.api.scimGroupsAPI.find(group.id)
       expect(persistedGroup).toEqual(expectedScimGroup)
+    })
+
+    describe("adding users", () => {
+      it("new users can be added to an existing group", async () => {
+        const userToAdd = _.sample(users)!
+
+        const body: ScimUpdateRequest = {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          Operations: [
+            {
+              op: "Add",
+              path: "members",
+              value: [
+                {
+                  $ref: null,
+                  value: userToAdd.id,
+                },
+              ],
+            },
+          ],
+        }
+
+        const response = await patchScimGroup({ id: group.id, body })
+
+        const expectedScimGroup: ScimGroupResponse = {
+          ...group,
+          members: [
+            {
+              value: userToAdd.id,
+            },
+          ],
+        }
+        expect(response).toEqual(expectedScimGroup)
+
+        const persistedGroup = await config.api.scimGroupsAPI.find(group.id)
+        expect(persistedGroup).toEqual(expectedScimGroup)
+      })
     })
   })
 })
