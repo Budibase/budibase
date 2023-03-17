@@ -52,4 +52,13 @@ export class ScimGroupsAPI extends ScimTestAPI {
 
     return res.body as ScimGroupResponse
   }
+
+  find = async (id: string, requestSettings?: Partial<RequestSettings>) => {
+    const res = await this.call(
+      `/api/global/scim/v2/groups/${id}`,
+      "get",
+      requestSettings
+    )
+    return res.body as ScimGroupResponse
+  }
 }
