@@ -50,10 +50,5 @@ export interface ScimCreateUserRequest {
   roles: []
 }
 
-export interface ScimUpdateRequest {
-  schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
-  Operations: ScimPatchOperation[]
-}
-
 export interface ScimUserListResponse
   extends ScimListResponse<ScimUserResponse> {}

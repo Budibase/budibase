@@ -2,6 +2,7 @@ import {
   ScimCreateGroupRequest,
   ScimGroupListResponse,
   ScimGroupResponse,
+  ScimUpdateRequest,
 } from "@budibase/types"
 import TestConfiguration from "../../TestConfiguration"
 import { RequestSettings, ScimTestAPI } from "./shared"
@@ -68,6 +69,26 @@ export class ScimGroupsAPI extends ScimTestAPI {
       "delete",
       requestSettings
     )
+    return res.body as ScimGroupResponse
+  }
+
+  patch = async (
+    {
+      id,
+      body,
+    }: {
+      id: string
+      body: ScimUpdateRequest
+    },
+    requestSettings?: Partial<RequestSettings>
+  ) => {
+    const res = await this.call(
+      `/api/global/scim/v2/groups/${id}`,
+      "patch",
+      requestSettings,
+      body
+    )
+
     return res.body as ScimGroupResponse
   }
 }
