@@ -1,7 +1,11 @@
 import tk from "timekeeper"
 import _ from "lodash"
 import { mocks, structures } from "@budibase/backend-core/tests"
-import { ScimCreateGroupRequest, ScimGroupResponse } from "@budibase/types"
+import {
+  ScimCreateGroupRequest,
+  ScimGroupResponse,
+  ScimUpdateRequest,
+} from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
 
 mocks.licenses.useScimIntegration()
@@ -260,6 +264,60 @@ describe("/api/global/scim/v2/groups", () => {
 
     it("an non existing group can not be deleted", async () => {
       await deleteScimGroup(structures.uuid(), { expect: 404 })
+    })
+  })
+
+  describe("PATCH /api/global/scim/v2/groups/:id", () => {
+    const patchScimGroup = config.api.scimGroupsAPI.patch
+
+    let group: ScimGroupResponse
+
+    beforeEach(async () => {
+      const body = createScimCreateGroupRequest()
+
+      group = await config.api.scimGroupsAPI.post({ body })
+    })
+
+    it("unauthorised calls are not allowed", async () => {
+      const response = await patchScimGroup({} as any, {
+        setHeaders: false,
+        expect: 403,
+      })
+
+      expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+    })
+
+    it("cannot be called when feature is disabled", async () => {
+      mocks.licenses.useCloudFree()
+      const response = await patchScimGroup({} as any, { expect: 400 })
+
+      expect(response).toEqual(featureDisabledResponse)
+    })
+
+    it("an existing group can be updated", async () => {
+      const newDisplayName = structures.generator.word()
+
+      const body: ScimUpdateRequest = {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        Operations: [
+          {
+            op: "Replace",
+            path: "displayName",
+            value: newDisplayName,
+          },
+        ],
+      }
+
+      const response = await patchScimGroup({ id: group.id, body })
+
+      const expectedScimGroup: ScimGroupResponse = {
+        ...group,
+        displayName: newDisplayName,
+      }
+      expect(response).toEqual(expectedScimGroup)
+
+      const persistedGroup = await config.api.scimGroupsAPI.find(group.id)
+      expect(persistedGroup).toEqual(expectedScimGroup)
     })
   })
 })
