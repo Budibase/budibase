@@ -61,4 +61,13 @@ export class ScimGroupsAPI extends ScimTestAPI {
     )
     return res.body as ScimGroupResponse
   }
+
+  delete = async (id: string, requestSettings?: Partial<RequestSettings>) => {
+    const res = await this.call(
+      `/api/global/scim/v2/groups/${id}`,
+      "delete",
+      requestSettings
+    )
+    return res.body as ScimGroupResponse
+  }
 }

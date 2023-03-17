@@ -222,4 +222,44 @@ describe("/api/global/scim/v2/groups", () => {
       })
     })
   })
+
+  describe("DELETE /api/global/scim/v2/groups/:id", () => {
+    const deleteScimGroup = config.api.scimGroupsAPI.delete
+
+    let group: ScimGroupResponse
+
+    beforeEach(async () => {
+      const body = createScimCreateGroupRequest()
+
+      group = await config.api.scimGroupsAPI.post({ body })
+    })
+
+    it("unauthorised calls are not allowed", async () => {
+      const response = await deleteScimGroup(group.id, {
+        setHeaders: false,
+        expect: 403,
+      })
+
+      expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+    })
+
+    it("cannot be called when feature is disabled", async () => {
+      mocks.licenses.useCloudFree()
+      const response = await deleteScimGroup(group.id, { expect: 400 })
+
+      expect(response).toEqual(featureDisabledResponse)
+    })
+
+    it("an existing group can be deleted", async () => {
+      const response = await deleteScimGroup(group.id, { expect: 204 })
+
+      expect(response).toEqual({})
+
+      await config.api.scimGroupsAPI.find(group.id, { expect: 404 })
+    })
+
+    it("an non existing group can not be deleted", async () => {
+      await deleteScimGroup(structures.uuid(), { expect: 404 })
+    })
+  })
 })
