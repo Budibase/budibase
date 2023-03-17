@@ -5,10 +5,13 @@ export interface ScimGroupResponse extends ScimResource {
   schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
   id: string
   externalId: string
+  displayName: string
   meta: ScimMeta & {
     resourceType: "Group"
   }
-  displayName: string
+  members?: {
+    value: string
+  }[]
 }
 
 export interface ScimCreateGroupRequest {
