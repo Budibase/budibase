@@ -2,38 +2,17 @@ import tk from "timekeeper"
 import _ from "lodash"
 import { mocks, structures } from "@budibase/backend-core/tests"
 import {
-  ScimCreateGroupRequest,
   ScimGroupResponse,
   ScimUpdateRequest,
+  ScimUserResponse,
 } from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
 
 mocks.licenses.useScimIntegration()
 
-function createScimCreateGroupRequest(groupData?: {
-  externalId?: string
-  displayName?: string
-}) {
-  const {
-    externalId = structures.uuid(),
-    displayName = structures.generator.word(),
-  } = groupData || {}
-
-  const group: ScimCreateGroupRequest = {
-    schemas: [
-      "urn:ietf:params:scim:schemas:core:2.0:Group",
-      "http://schemas.microsoft.com/2006/11/ResourceManagement/ADSCIM/2.0/Group",
-    ],
-    externalId: externalId,
-    displayName: displayName,
-    meta: {
-      resourceType: "Group",
-    },
-  }
-  return group
-}
-
 describe("/api/global/scim/v2/groups", () => {
+  let users: ScimUserResponse[]
+
   beforeEach(() => {
     tk.freeze(mocks.date.MOCK_DATE)
 
@@ -44,6 +23,13 @@ describe("/api/global/scim/v2/groups", () => {
 
   beforeAll(async () => {
     await config.beforeAll()
+
+    for (let i = 0; i < 30; i++) {
+      const body = structures.scim.createUserRequest()
+      users.push(await config.api.scimUsersAPI.post({ body }))
+    }
+
+    users = users.sort((a, b) => (a.id > b.id ? 1 : -1))
   })
 
   afterAll(async () => {
@@ -100,7 +86,7 @@ describe("/api/global/scim/v2/groups", () => {
         groups = []
 
         for (let i = 0; i < groupCount; i++) {
-          const body = createScimCreateGroupRequest()
+          const body = structures.scim.createGroupRequest()
           groups.push(await config.api.scimGroupsAPI.post({ body }))
         }
 
@@ -156,7 +142,7 @@ describe("/api/global/scim/v2/groups", () => {
           externalId: structures.uuid(),
           displayName: structures.generator.word(),
         }
-        const body = createScimCreateGroupRequest(groupData)
+        const body = structures.scim.createGroupRequest(groupData)
 
         const response = await postScimGroup({ body })
 
@@ -188,7 +174,7 @@ describe("/api/global/scim/v2/groups", () => {
     let group: ScimGroupResponse
 
     beforeEach(async () => {
-      const body = createScimCreateGroupRequest()
+      const body = structures.scim.createGroupRequest()
 
       group = await config.api.scimGroupsAPI.post({ body })
     })
@@ -233,7 +219,7 @@ describe("/api/global/scim/v2/groups", () => {
     let group: ScimGroupResponse
 
     beforeEach(async () => {
-      const body = createScimCreateGroupRequest()
+      const body = structures.scim.createGroupRequest()
 
       group = await config.api.scimGroupsAPI.post({ body })
     })
@@ -273,7 +259,7 @@ describe("/api/global/scim/v2/groups", () => {
     let group: ScimGroupResponse
 
     beforeEach(async () => {
-      const body = createScimCreateGroupRequest()
+      const body = structures.scim.createGroupRequest()
 
       group = await config.api.scimGroupsAPI.post({ body })
     })

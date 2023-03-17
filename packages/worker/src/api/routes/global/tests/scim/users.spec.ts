@@ -10,49 +10,6 @@ import { TestConfiguration } from "../../../../../tests"
 
 mocks.licenses.useScimIntegration()
 
-function createScimCreateUserRequest(userData?: {
-  externalId?: string
-  email?: string
-  firstName?: string
-  lastName?: string
-  username?: string
-}) {
-  const {
-    externalId = structures.uuid(),
-    email = structures.generator.email(),
-    firstName = structures.generator.first(),
-    lastName = structures.generator.last(),
-    username = structures.generator.name(),
-  } = userData || {}
-
-  const user: ScimCreateUserRequest = {
-    schemas: [
-      "urn:ietf:params:scim:schemas:core:2.0:User",
-      "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
-    ],
-    externalId,
-    userName: username,
-    active: true,
-    emails: [
-      {
-        primary: true,
-        type: "work",
-        value: email,
-      },
-    ],
-    meta: {
-      resourceType: "User",
-    },
-    name: {
-      formatted: structures.generator.name(),
-      familyName: lastName,
-      givenName: firstName,
-    },
-    roles: [],
-  }
-  return user
-}
-
 describe("/api/global/scim/v2/users", () => {
   let mockedTime = new Date(structures.generator.timestamp())
 
@@ -124,7 +81,7 @@ describe("/api/global/scim/v2/users", () => {
         users = []
 
         for (let i = 0; i < userCount; i++) {
-          const body = createScimCreateUserRequest()
+          const body = structures.scim.createUserRequest()
           users.push(await config.api.scimUsersAPI.post({ body }))
         }
 
@@ -248,7 +205,7 @@ describe("/api/global/scim/v2/users", () => {
           lastName: structures.generator.last(),
           username: structures.generator.name(),
         }
-        const body = createScimCreateUserRequest(userData)
+        const body = structures.scim.createUserRequest(userData)
 
         const response = await postScimUser({ body })
 
@@ -293,7 +250,7 @@ describe("/api/global/scim/v2/users", () => {
     let user: ScimUserResponse
 
     beforeEach(async () => {
-      const body = createScimCreateUserRequest()
+      const body = structures.scim.createUserRequest()
 
       user = await config.api.scimUsersAPI.post({ body })
     })
@@ -338,7 +295,7 @@ describe("/api/global/scim/v2/users", () => {
     let user: ScimUserResponse
 
     beforeEach(async () => {
-      const body = createScimCreateUserRequest()
+      const body = structures.scim.createUserRequest()
 
       user = await config.api.scimUsersAPI.post({ body })
     })
@@ -481,7 +438,7 @@ describe("/api/global/scim/v2/users", () => {
     let user: ScimUserResponse
 
     beforeEach(async () => {
-      const body = createScimCreateUserRequest()
+      const body = structures.scim.createUserRequest()
 
       user = await config.api.scimUsersAPI.post({ body })
     })
