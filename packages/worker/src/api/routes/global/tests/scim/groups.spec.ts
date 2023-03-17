@@ -179,4 +179,47 @@ describe("/api/global/scim/v2/groups", () => {
       })
     })
   })
+
+  describe("GET /api/global/scim/v2/groups/:id", () => {
+    let group: ScimGroupResponse
+
+    beforeEach(async () => {
+      const body = createScimCreateGroupRequest()
+
+      group = await config.api.scimGroupsAPI.post({ body })
+    })
+
+    const findScimGroup = config.api.scimGroupsAPI.find
+
+    it("unauthorised calls are not allowed", async () => {
+      const response = await findScimGroup(group.id, {
+        setHeaders: false,
+        expect: 403,
+      })
+
+      expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+    })
+
+    it("cannot be called when feature is disabled", async () => {
+      mocks.licenses.useCloudFree()
+      const response = await findScimGroup(group.id, { expect: 400 })
+
+      expect(response).toEqual(featureDisabledResponse)
+    })
+
+    it("should return existing group", async () => {
+      const response = await findScimGroup(group.id)
+
+      expect(response).toEqual(group)
+    })
+
+    it("should return 404 when requesting unexisting group id", async () => {
+      const response = await findScimGroup(structures.uuid(), { expect: 404 })
+
+      expect(response).toEqual({
+        message: "missing",
+        status: 404,
+      })
+    })
+  })
 })
