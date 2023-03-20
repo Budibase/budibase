@@ -87,7 +87,7 @@ export const useAuditLogs = () => {
 }
 
 export const useScimIntegration = () => {
-  return useFeature(Feature.SCIM_INTEGRATION)
+  return useFeature(Feature.SCIM)
 }
 
 // QUOTAS
