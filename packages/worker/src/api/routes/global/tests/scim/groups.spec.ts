@@ -299,10 +299,6 @@ describe("/api/global/scim/v2/groups", () => {
       const expectedScimGroup = {
         ...group,
         displayName: newDisplayName,
-        meta: {
-          ...group.meta,
-          lastModified: mockedTime.toISOString(),
-        },
       }
       expect(response).toEqual(expectedScimGroup)
 
@@ -516,10 +512,6 @@ describe("/api/global/scim/v2/groups", () => {
         const expectedScimGroup: ScimGroupResponse = {
           ...group,
           displayName: newDisplayName,
-          meta: {
-            ...group.meta,
-            lastModified: mockedTime.toISOString() as any,
-          },
           members: expect.arrayContaining([
             {
               value: users[3].id,
