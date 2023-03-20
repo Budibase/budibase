@@ -5,46 +5,11 @@ import {
   ScimUpdateRequest,
 } from "@budibase/types"
 import TestConfiguration from "../../TestConfiguration"
-import { TestAPI } from "../base"
+import { RequestSettings, ScimTestAPI } from "./shared"
 
-const defaultConfig = {
-  expect: 200,
-  setHeaders: true,
-}
-
-type RequestSettings = typeof defaultConfig
-
-export class ScimUsersAPI extends TestAPI {
+export class ScimUsersAPI extends ScimTestAPI {
   constructor(config: TestConfiguration) {
     super(config)
-  }
-
-  #createRequest = (
-    url: string,
-    method: "get" | "post" | "patch" | "delete",
-    requestSettings?: Partial<RequestSettings>,
-    body?: object
-  ) => {
-    const { expect, setHeaders } = { ...defaultConfig, ...requestSettings }
-    let request = this.request[method](url).expect(expect)
-
-    request = request.set(
-      "content-type",
-      "application/scim+json; charset=utf-8"
-    )
-
-    if (method !== "delete") {
-      request = request.expect("Content-Type", /json/)
-    }
-
-    if (body) {
-      request = request.send(body)
-    }
-
-    if (setHeaders) {
-      request = request.set(this.config.bearerAPIHeaders())
-    }
-    return request
   }
 
   get = async (
@@ -67,12 +32,12 @@ export class ScimUsersAPI extends TestAPI {
     if (params?.filter) {
       url += `filter=${params.filter}&`
     }
-    const res = await this.#createRequest(url, "get", requestSettings)
+    const res = await this.call(url, "get", requestSettings)
     return res.body as ScimUserListResponse
   }
 
   find = async (id: string, requestSettings?: Partial<RequestSettings>) => {
-    const res = await this.#createRequest(
+    const res = await this.call(
       `/api/global/scim/v2/users/${id}`,
       "get",
       requestSettings
@@ -88,7 +53,7 @@ export class ScimUsersAPI extends TestAPI {
     },
     requestSettings?: Partial<RequestSettings>
   ) => {
-    const res = await this.#createRequest(
+    const res = await this.call(
       `/api/global/scim/v2/users`,
       "post",
       requestSettings,
@@ -108,7 +73,7 @@ export class ScimUsersAPI extends TestAPI {
     },
     requestSettings?: Partial<RequestSettings>
   ) => {
-    const res = await this.#createRequest(
+    const res = await this.call(
       `/api/global/scim/v2/users/${id}`,
       "patch",
       requestSettings,
@@ -119,7 +84,7 @@ export class ScimUsersAPI extends TestAPI {
   }
 
   delete = async (id: string, requestSettings?: Partial<RequestSettings>) => {
-    const res = await this.#createRequest(
+    const res = await this.call(
       `/api/global/scim/v2/users/${id}`,
       "delete",
       requestSettings
