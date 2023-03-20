@@ -5,6 +5,8 @@ import {
   selectedComponent,
   screenHistoryStore,
   automationHistoryStore,
+  currentAsset,
+  store,
 } from "builderStore"
 import {
   datasources,
@@ -22,6 +24,7 @@ import {
   findComponent,
   getComponentSettings,
   makeComponentUnique,
+  findComponentPath,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { Utils } from "@budibase/frontend-core"
@@ -31,6 +34,7 @@ import {
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
 import { getSchemaForDatasource } from "builderStore/dataBinding"
+import { makePropSafe } from "@budibase/string-templates"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -262,22 +266,27 @@ export const getFrontendStore = () => {
         }
       },
       save: async screen => {
-        /*
-          Temporarily disabled to accomodate migration issues.
-          store.actions.screens.validate(screen)
-        */
-        const state = get(store)
+        // Validate screen structure
+        // Temporarily disabled to accommodate migration issues
+        // store.actions.screens.validate(screen)
+
+        // Check screen definition for any component settings which need updated
+        store.actions.screens.enrichEmptySettings(screen)
+
+        // Save screen
         const creatingNewScreen = screen._id === undefined
         const savedScreen = await API.saveScreen(screen)
         const routesResponse = await API.fetchAppRoutes()
-        let usedPlugins = state.usedPlugins
 
         // If plugins changed we need to fetch the latest app metadata
+        const state = get(store)
+        let usedPlugins = state.usedPlugins
         if (savedScreen.pluginAdded) {
           const { application } = await API.fetchAppPackage(state.appId)
           usedPlugins = application.usedPlugins || []
         }
 
+        // Update state
         store.update(state => {
           // Update screen object
           const idx = state.screens.findIndex(x => x._id === savedScreen._id)
@@ -298,7 +307,6 @@ export const getFrontendStore = () => {
 
           // Update used plugins
           state.usedPlugins = usedPlugins
-
           return state
         })
         return savedScreen
@@ -406,6 +414,17 @@ export const getFrontendStore = () => {
         }
         await store.actions.screens.patch(patch, screen._id)
       },
+      enrichEmptySettings: screen => {
+        // Flatten the recursive component tree
+        const components = findAllMatchingComponents(screen.props, x => x)
+
+        // Iterate over all components and run checks
+        components.forEach(component => {
+          store.actions.components.enrichEmptySettings(component, {
+            screen,
+          })
+        })
+      },
     },
     preview: {
       setDevice: device => {
@@ -512,34 +531,96 @@ export const getFrontendStore = () => {
         )
         return defaultSourceTable || internalTable || defaultExternalTable
       },
-      createInstance: (componentName, presetProps) => {
+      enrichEmptySettings: (component, opts) => {
+        if (!component?._component) {
+          return
+        }
+        const defaultDS = store.actions.components.getDefaultDatasource()
+        const settings = getComponentSettings(component._component)
+        const { parent, screen, useDefaultValues } = opts || {}
+        settings.forEach(setting => {
+          const value = component[setting.key]
+
+          if (value == null || value === "") {
+            // Fill empty values
+            if (setting.type === "multifield" && setting.selectAllFields) {
+              // Select all schema fields where required
+              component[setting.key] = Object.keys(defaultDS?.schema || {})
+            } else if (
+              (setting.type === "dataSource" || setting.type === "table") &&
+              defaultDS
+            ) {
+              // Select default datasource where require
+              component[setting.key] = {
+                label: defaultDS.name,
+                tableId: defaultDS._id,
+                type: "table",
+              }
+            } else if (setting.type === "dataProvider") {
+              const parentId = parent?._id || get(selectedComponent)?._id
+              console.log(get(currentAsset)?.props, parentId)
+              const path = findComponentPath(get(currentAsset)?.props, parentId)
+              const providers = path.filter(component =>
+                component._component?.endsWith("/dataprovider")
+              )
+              if (providers.length) {
+                const id = providers[providers.length - 1]?._id
+                component[setting.key] = `{{ literal ${makePropSafe(id)} }}`
+              }
+            } else if (useDefaultValues && setting.defaultValue !== undefined) {
+              // Use default value where required
+              component[setting.key] = setting.defaultValue
+            }
+          } else {
+            if (setting.type === "dataProvider") {
+              const parentId = parent?._id || get(selectedComponent)?._id
+              console.log(screen?.props, parentId)
+              const path = findComponentPath(screen?.props, parentId)
+              const providers = path.filter(component =>
+                component._component?.endsWith("/dataprovider")
+              )
+              if (providers.length) {
+                // Validate non-empty values
+                const valid =
+                  providers.find(
+                    x => `{{ literal ${makePropSafe(x._id)} }}` === value
+                  ) != null
+                if (!valid && providers.length) {
+                  console.log("update")
+                  const id = providers[providers.length - 1]?._id
+                  console.log(`{{ literal ${makePropSafe(id)} }}`)
+                  component[setting.key] = `{{ literal ${makePropSafe(id)} }}`
+                }
+              }
+            }
+          }
+        })
+      },
+      createInstance: (componentName, presetProps, parent) => {
+        console.log("create instance", parent)
         const definition = store.actions.components.getDefinition(componentName)
         if (!definition) {
           return null
         }
 
-        // Generate default props and handle custom edge cases
-        let props = { ...presetProps }
-        const defaultDS = store.actions.components.getDefaultDatasource()
-        const settings = getComponentSettings(componentName)
-        settings.forEach(setting => {
-          if (setting.type === "multifield" && setting.selectAllFields) {
-            // Select all schema fields where required
-            props[setting.key] = Object.keys(defaultDS?.schema || {})
-          } else if (
-            (setting.type === "dataSource" || setting.type === "table") &&
-            defaultDS
-          ) {
-            // Select default datasource where require
-            props[setting.key] = {
-              label: defaultDS.name,
-              tableId: defaultDS._id,
-              type: "table",
-            }
-          } else if (setting.defaultValue !== undefined) {
-            // Use default value where required
-            props[setting.key] = setting.defaultValue
-          }
+        // Generate basic component structure
+        let instance = {
+          _id: Helpers.uuid(),
+          _component: definition.component,
+          _styles: {
+            normal: {},
+            hover: {},
+            active: {},
+          },
+          _instanceName: `New ${definition.friendlyName || definition.name}`,
+          ...presetProps,
+        }
+
+        // Enrich empty settings
+        store.actions.components.enrichEmptySettings(instance, {
+          parent,
+          screen: get(selectedScreen),
+          useDefaultValues: true,
         })
 
         // Add any extra properties the component needs
@@ -559,17 +640,8 @@ export const getFrontendStore = () => {
           extras.step = formSteps.length + 1
           extras._instanceName = `Step ${formSteps.length + 1}`
         }
-
         return {
-          _id: Helpers.uuid(),
-          _component: definition.component,
-          _styles: {
-            normal: {},
-            hover: {},
-            active: {},
-          },
-          _instanceName: `New ${definition.friendlyName || definition.name}`,
-          ...cloneDeep(props),
+          ...cloneDeep(instance),
           ...extras,
         }
       },
@@ -577,7 +649,8 @@ export const getFrontendStore = () => {
         const state = get(store)
         const componentInstance = store.actions.components.createInstance(
           componentName,
-          presetProps
+          presetProps,
+          parent
         )
         if (!componentInstance) {
           return
