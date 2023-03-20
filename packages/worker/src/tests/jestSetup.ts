@@ -1,5 +1,3 @@
-import "./logging"
-
 import { mocks, testContainerUtils } from "@budibase/backend-core/tests"
 import env from "../environment"
 import { env as coreEnv } from "@budibase/backend-core"

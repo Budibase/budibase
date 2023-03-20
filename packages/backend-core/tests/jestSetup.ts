@@ -1,4 +1,3 @@
-import "./logging"
 import env from "../src/environment"
 import { mocks, testContainerUtils } from "./utilities"
 
