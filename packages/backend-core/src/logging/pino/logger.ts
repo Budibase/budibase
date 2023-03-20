@@ -2,6 +2,7 @@ import env from "../../environment"
 import pino, { LoggerOptions } from "pino"
 import * as context from "../../context"
 import * as correlation from "../correlation"
+import { IdentityType } from "@budibase/types"
 
 // LOGGER
 
@@ -32,36 +33,87 @@ export const logger = pino(pinoOptions)
 
 // CONSOLE OVERRIDES
 
-function getCtx() {
-  const identity = getIdentity()
-  return {
-    ctx: {
-      tenantId: getTenantId(),
-      appId: getAppId(),
-      identityId: identity?._id,
-      identityType: identity?.type,
-      correlationId: correlation.getId(),
-    },
-  }
+interface MergingObject {
+  tenantId?: string,
+  appId?: string,
+  identityId?: string,
+  identityType?: IdentityType,
+  correlationId?: string
+  err?: Error
 }
 
-console.log = data => {
-  logger.info(getCtx(), data)
+function isPlainObject(obj: any) {
+  return typeof obj === 'object' && obj !== null && !(obj instanceof Error);
 }
-console.info = data => {
-  logger.info(getCtx(), data)
+
+function isError(obj: any) {
+  return obj instanceof Error
 }
-console.warn = data => {
-  logger.warn(getCtx(), data)
+
+function isMessage(obj: any) {
+  return typeof obj === 'string'
 }
-console.error = data => {
-  logger.error(getCtx(), data)
+
+/**
+ * Backwards compatibility between console logging statements
+ * and pino logging requirements.
+ */
+function getLogParams(args: any[]): [MergingObject, string] {
+  let error = undefined
+  let message = ""
+
+  args.forEach(arg => {
+    if (isMessage(arg)) {
+      message = `${message} ${arg}`.trimStart()
+    }
+    if (isPlainObject(arg)) {
+      message = `${message} ${JSON.stringify(arg)}`.trimStart()
+    }
+    if (isError(arg)) {
+      error = arg
+    }
+  })
+
+  const identity = getIdentity()
+
+  const mergingObject = {
+    tenantId: getTenantId(),
+    appId: getAppId(),
+    identityId: identity?._id,
+    identityType: identity?.type,
+    correlationId: correlation.getId(),
+    err: error,
+  }
+
+  return [
+    mergingObject,
+    message
+  ]
 }
-console.trace = data => {
-  logger.trace(getCtx(), data)
+
+console.log = (...arg: any[]) => {
+  const [obj, msg] = getLogParams(arg)
+  logger.info(obj, msg)
 }
-console.debug = data => {
-  logger.debug(getCtx(), data)
+console.info = (...arg: any[]) => {
+  const [obj, msg] = getLogParams(arg)
+  logger.info(obj, msg)
+}
+console.warn = (...arg: any[]) => {
+  const [obj, msg] = getLogParams(arg)
+  logger.warn(obj, msg)
+}
+console.error = (...arg: any[]) => {
+  const [obj, msg] = getLogParams(arg)
+  logger.error(obj, msg)
+}
+console.trace = (...arg: any[]) => {
+  const [obj, msg] = getLogParams(arg)
+  logger.trace(obj, msg)
+}
+console.debug = (...arg: any) => {
+  const [obj, msg] = getLogParams(arg)
+  logger.debug(obj, msg)
 }
 
 // CONTEXT
