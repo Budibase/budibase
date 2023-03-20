@@ -7,13 +7,7 @@ import { TestConfiguration } from "../../../../../tests"
 mocks.licenses.useScimIntegration()
 
 describe("/api/global/scim/v2/users", () => {
-  let mockedTime: Date
-
   beforeEach(() => {
-    tk.reset()
-    mockedTime = new Date(structures.generator.timestamp())
-    tk.freeze(mockedTime)
-
     mocks.licenses.useScimIntegration()
   })
 
@@ -194,6 +188,9 @@ describe("/api/global/scim/v2/users", () => {
 
     describe("no users exist", () => {
       it("a new user can be created and persisted", async () => {
+        const mockedTime = new Date(structures.generator.timestamp())
+        tk.freeze(mockedTime)
+
         const userData = {
           externalId: structures.uuid(),
           email: structures.generator.email(),
