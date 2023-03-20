@@ -14,6 +14,7 @@ import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
 import env from "../environment"
 import { Ctx, EndpointMatcher } from "@budibase/types"
+import { InvalidAPIKeyError, ErrorCode } from "../errors"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
   ? parseInt(env.SESSION_UPDATE_PERIOD)
@@ -48,22 +49,27 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
   const decrypted = decrypt(apiKey)
   const tenantId = decrypted.split(SEPARATOR)[0]
   return doInTenant(tenantId, async () => {
-    const db = getGlobalDB()
-    // api key is encrypted in the database
-    const userId = (await queryGlobalView(
-      ViewName.BY_API_KEY,
-      {
-        key: apiKey,
-      },
-      db
-    )) as string
+    let userId
+    try {
+      const db = getGlobalDB()
+      // api key is encrypted in the database
+      userId = (await queryGlobalView(
+        ViewName.BY_API_KEY,
+        {
+          key: apiKey,
+        },
+        db
+      )) as string
+    } catch (err) {
+      userId = undefined
+    }
     if (userId) {
       return {
         valid: true,
         user: await getUser(userId, tenantId, populateUser),
       }
     } else {
-      throw "Invalid API key"
+      throw new InvalidAPIKeyError()
     }
   })
 }
@@ -164,8 +170,10 @@ export default function (
       console.error(`Auth Error: ${err.message}`)
       console.error(err)
       // invalid token, clear the cookie
-      if (err && err.name === "JsonWebTokenError") {
+      if (err?.name === "JsonWebTokenError") {
         clearCookie(ctx, Cookie.Auth)
+      } else if (err?.code === ErrorCode.INVALID_API_KEY) {
+        ctx.throw(403, err.message)
       }
       // allow configuring for public access
       if ((opts && opts.publicAllowed) || publicEndpoint) {
