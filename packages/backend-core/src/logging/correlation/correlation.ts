@@ -11,4 +11,3 @@ export const setHeader = (headers: any) => {
 export function getId() {
   return correlator.getId()
 }
-

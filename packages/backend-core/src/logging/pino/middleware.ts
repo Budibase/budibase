@@ -12,18 +12,18 @@ export function pinoSettings(): Options {
       ignore: (req: IncomingMessage) => !!req.url?.includes("/health"),
     },
     serializers: {
-      req: (req) => {
+      req: req => {
         return {
           method: req.method,
-          url: req.url
+          url: req.url,
         }
       },
-      res: (res) => {
+      res: res => {
         return {
-          status: res.statusCode
+          status: res.statusCode,
         }
       },
-    }
+    },
   }
 }
 

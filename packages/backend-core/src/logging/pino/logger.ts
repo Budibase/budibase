@@ -8,11 +8,11 @@ import * as correlation from "../correlation"
 const pinoOptions: LoggerOptions = {
   level: env.LOG_LEVEL,
   formatters: {
-    level: (label) => {
-      return { level: label.toUpperCase() };
+    level: label => {
+      return { level: label.toUpperCase() }
     },
     bindings: () => {
-      return { };
+      return {}
     },
   },
   timestamp: () => `,"timestamp":"${new Date(Date.now()).toISOString()}"`,
@@ -20,9 +20,9 @@ const pinoOptions: LoggerOptions = {
 
 if (env.isDev()) {
   pinoOptions.transport = {
-    target: 'pino-pretty',
+    target: "pino-pretty",
     options: {
-      singleLine: true
+      singleLine: true,
     },
     // ignore: "responseTime"
   }
@@ -40,17 +40,29 @@ function getCtx() {
       appId: getAppId(),
       identityId: identity?._id,
       identityType: identity?.type,
-      correlationId: correlation.getId()
-    }
+      correlationId: correlation.getId(),
+    },
   }
 }
 
-console.log = (data) => { logger.info(getCtx(), data) }
-console.info = (data) => { logger.info(getCtx(), data) }
-console.warn = (data) => { logger.warn(getCtx(), data) }
-console.error = (data) => { logger.error(getCtx(), data) }
-console.trace = (data) => { logger.trace(getCtx(), data) }
-console.debug = (data) => { logger.debug(getCtx(), data) }
+console.log = data => {
+  logger.info(getCtx(), data)
+}
+console.info = data => {
+  logger.info(getCtx(), data)
+}
+console.warn = data => {
+  logger.warn(getCtx(), data)
+}
+console.error = data => {
+  logger.error(getCtx(), data)
+}
+console.trace = data => {
+  logger.trace(getCtx(), data)
+}
+console.debug = data => {
+  logger.debug(getCtx(), data)
+}
 
 // CONTEXT
 
