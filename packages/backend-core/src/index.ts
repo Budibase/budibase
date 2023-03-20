@@ -25,6 +25,7 @@ export * as locks from "./redis/redlockImpl"
 export * as utils from "./utils"
 export * as errors from "./errors"
 export { default as env } from "./environment"
+export * as blacklist from "./blacklist"
 export { SearchParams } from "./db"
 // Add context to tenancy for backwards compatibility
 // only do this for external usages to prevent internal
