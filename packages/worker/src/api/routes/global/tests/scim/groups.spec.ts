@@ -11,8 +11,6 @@ import { TestConfiguration } from "../../../../../tests"
 mocks.licenses.useScimIntegration()
 
 describe("/api/global/scim/v2/groups", () => {
-  let users: ScimUserResponse[]
-
   beforeEach(() => {
     tk.freeze(mocks.date.MOCK_DATE)
 
@@ -261,11 +259,8 @@ describe("/api/global/scim/v2/groups", () => {
       }
 
       users = users.sort((a, b) => (a.id > b.id ? 1 : -1))
-    })
 
-    beforeEach(async () => {
       const body = structures.scim.createGroupRequest()
-
       group = await config.api.scimGroupsAPI.post({ body })
     })
 
@@ -301,9 +296,13 @@ describe("/api/global/scim/v2/groups", () => {
 
       const response = await patchScimGroup({ id: group.id, body })
 
-      const expectedScimGroup: ScimGroupResponse = {
+      const expectedScimGroup = {
         ...group,
         displayName: newDisplayName,
+        meta: {
+          ...group.meta,
+          lastModified: mockedTime.toISOString(),
+        },
       }
       expect(response).toEqual(expectedScimGroup)
 
@@ -312,8 +311,13 @@ describe("/api/global/scim/v2/groups", () => {
     })
 
     describe("adding users", () => {
+      beforeAll(async () => {
+        const body = structures.scim.createGroupRequest()
+        group = await config.api.scimGroupsAPI.post({ body })
+      })
+
       it("a new user can be added to an existing group", async () => {
-        const userToAdd = _.sample(users)!
+        const userToAdd = users[0]
 
         const body: ScimUpdateRequest = {
           schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
@@ -348,8 +352,6 @@ describe("/api/global/scim/v2/groups", () => {
       })
 
       it("multiple users can be added to an existing group", async () => {
-        const [user1ToAdd, user2ToAdd] = _.sampleSize(users, 2)
-
         const body: ScimUpdateRequest = {
           schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
           Operations: [
@@ -359,11 +361,61 @@ describe("/api/global/scim/v2/groups", () => {
               value: [
                 {
                   $ref: null,
-                  value: user1ToAdd.id,
+                  value: users[1].id,
                 },
                 {
                   $ref: null,
-                  value: user2ToAdd.id,
+                  value: users[2].id,
+                },
+                {
+                  $ref: null,
+                  value: users[3].id,
+                },
+              ],
+            },
+          ],
+        }
+
+        const response = await patchScimGroup({ id: group.id, body })
+
+        const expectedScimGroup: ScimGroupResponse = {
+          ...group,
+          members: [
+            {
+              value: users[0].id,
+            },
+            {
+              value: users[1].id,
+            },
+            {
+              value: users[2].id,
+            },
+            {
+              value: users[3].id,
+            },
+          ],
+        }
+        expect(response).toEqual(expectedScimGroup)
+
+        const persistedGroup = await config.api.scimGroupsAPI.find(group.id)
+        expect(persistedGroup).toEqual(expectedScimGroup)
+      })
+
+      it("existing users can be removed from to an existing group", async () => {
+        const body: ScimUpdateRequest = {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          Operations: [
+            {
+              op: "Remove",
+              path: "members",
+              value: [
+                {
+                  $ref: null,
+                  value: users[0].id,
+                },
+                {
+                  $ref: null,
+                  value: users[2].id,
                 },
               ],
             },
@@ -376,10 +428,107 @@ describe("/api/global/scim/v2/groups", () => {
           ...group,
           members: expect.arrayContaining([
             {
-              value: user1ToAdd.id,
+              value: users[1].id,
             },
             {
-              value: user2ToAdd.id,
+              value: users[3].id,
+            },
+          ]),
+        }
+        expect(response).toEqual(expectedScimGroup)
+
+        const persistedGroup = await config.api.scimGroupsAPI.find(group.id)
+        expect(persistedGroup).toEqual(expectedScimGroup)
+      })
+
+      it("adding and removing can be added in a single operation", async () => {
+        const body: ScimUpdateRequest = {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          Operations: [
+            {
+              op: "Remove",
+              path: "members",
+              value: [
+                {
+                  $ref: null,
+                  value: users[1].id,
+                },
+              ],
+            },
+            {
+              op: "Add",
+              path: "members",
+              value: [
+                {
+                  $ref: null,
+                  value: users[4].id,
+                },
+              ],
+            },
+          ],
+        }
+
+        const response = await patchScimGroup({ id: group.id, body })
+
+        const expectedScimGroup: ScimGroupResponse = {
+          ...group,
+          members: expect.arrayContaining([
+            {
+              value: users[3].id,
+            },
+            {
+              value: users[4].id,
+            },
+          ]),
+        }
+        expect(response).toEqual(expectedScimGroup)
+
+        const persistedGroup = await config.api.scimGroupsAPI.find(group.id)
+        expect(persistedGroup).toEqual(expectedScimGroup)
+      })
+
+      it("adding members and updating fields can performed in a single operation", async () => {
+        const newDisplayName = structures.generator.word()
+
+        const body: ScimUpdateRequest = {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          Operations: [
+            {
+              op: "Replace",
+              path: "displayName",
+              value: newDisplayName,
+            },
+            {
+              op: "Add",
+              path: "members",
+              value: [
+                {
+                  $ref: null,
+                  value: users[5].id,
+                },
+              ],
+            },
+          ],
+        }
+
+        const response = await patchScimGroup({ id: group.id, body })
+
+        const expectedScimGroup: ScimGroupResponse = {
+          ...group,
+          displayName: newDisplayName,
+          meta: {
+            ...group.meta,
+            lastModified: mockedTime.toISOString() as any,
+          },
+          members: expect.arrayContaining([
+            {
+              value: users[3].id,
+            },
+            {
+              value: users[4].id,
+            },
+            {
+              value: users[5].id,
             },
           ]),
         }

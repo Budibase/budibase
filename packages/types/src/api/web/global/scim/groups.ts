@@ -21,7 +21,7 @@ export interface ScimCreateGroupRequest {
   ]
   externalId: string
   displayName: string
-  meta: {
+  meta: ScimMeta & {
     resourceType: "Group"
   }
 }
