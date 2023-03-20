@@ -2,20 +2,8 @@ if (process.env.DD_APM_ENABLED) {
   require("./ddApm")
 }
 
-if (process.env.ELASTIC_APM_ENABLED) {
-  require("./elasticApm")
-}
-
 // need to load environment first
 import env from "./environment"
-
-// enable APM if configured
-if (process.env.ELASTIC_APM_ENABLED) {
-  const apm = require("elastic-apm-node").start({
-    serviceName: process.env.SERVICE,
-    environment: process.env.BUDIBASE_ENVIRONMENT,
-  })
-}
 
 import { ExtendableContext } from "koa"
 import * as db from "./db"
@@ -53,7 +41,8 @@ app.use(
   })
 )
 
-app.use(middleware.logging)
+app.use(middleware.correlation)
+app.use(middleware.pino)
 app.use(userAgent)
 
 if (env.isProd()) {
