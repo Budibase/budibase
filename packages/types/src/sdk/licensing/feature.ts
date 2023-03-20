@@ -4,5 +4,5 @@ export enum Feature {
   ENVIRONMENT_VARIABLES = "environmentVariables",
   AUDIT_LOGS = "auditLogs",
   ENFORCEABLE_SSO = "enforceableSSO",
-  SCIM_INTEGRATION = "scimIntegration",
+  SCIM = "scim",
 }
