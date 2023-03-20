@@ -49,9 +49,9 @@ describe("/api/global/scim/v2/groups", () => {
   const featureDisabledResponse = {
     error: {
       code: "feature_disabled",
-      featureName: "scimIntegration",
+      featureName: "scim",
     },
-    message: "scimIntegration is not currently enabled",
+    message: "scim is not currently enabled",
     status: 400,
   }
 
