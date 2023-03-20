@@ -1,17 +1,13 @@
 import tk from "timekeeper"
 import _ from "lodash"
 import { mocks, structures } from "@budibase/backend-core/tests"
-import {
-  ScimCreateUserRequest,
-  ScimUpdateRequest,
-  ScimUserResponse,
-} from "@budibase/types"
+import { ScimUpdateRequest, ScimUserResponse } from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
 
 mocks.licenses.useScimIntegration()
 
 describe("/api/global/scim/v2/users", () => {
-  let mockedTime = new Date(structures.generator.timestamp())
+  let mockedTime: Date
 
   beforeEach(() => {
     tk.reset()
