@@ -30,12 +30,8 @@ function createScimCreateGroupRequest(groupData?: {
 }
 
 describe("/api/global/scim/v2/groups", () => {
-  let mockedTime = new Date(structures.generator.timestamp())
-
   beforeEach(() => {
-    tk.reset()
-    mockedTime = new Date(structures.generator.timestamp())
-    tk.freeze(mockedTime)
+    tk.freeze(mocks.date.MOCK_DATE)
 
     mocks.licenses.useScimIntegration()
   })
@@ -149,6 +145,9 @@ describe("/api/global/scim/v2/groups", () => {
 
     describe("no groups exist", () => {
       it("a new group can be created and persisted", async () => {
+        const mockedTime = new Date(structures.generator.timestamp())
+        tk.freeze(mockedTime)
+
         const groupData = {
           externalId: structures.uuid(),
           displayName: structures.generator.word(),
