@@ -6,7 +6,7 @@ import * as correlation from "../correlation"
 // LOGGER
 
 const pinoOptions: LoggerOptions = {
-  level: env.LOG_LEVEL || "info",
+  level: env.LOG_LEVEL,
   formatters: {
     level: (label) => {
       return { level: label.toUpperCase() };
