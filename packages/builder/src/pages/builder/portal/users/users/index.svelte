@@ -231,7 +231,7 @@
   </Layout>
   <Divider />
   <div class="controls">
-    {#if $licensing.scimEnabled}
+    {#if !$licensing.scimEnabled}
       <ButtonGroup>
         <Button disabled={readonly} on:click={createUserModal.show} cta>
           Add users
