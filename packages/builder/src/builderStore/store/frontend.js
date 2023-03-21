@@ -6,7 +6,6 @@ import {
   screenHistoryStore,
   automationHistoryStore,
   currentAsset,
-  store,
 } from "builderStore"
 import {
   datasources,
@@ -34,7 +33,7 @@ import {
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
 import { getSchemaForDatasource } from "builderStore/dataBinding"
-import { makePropSafe } from "@budibase/string-templates"
+import { makePropSafe as safe } from "@budibase/string-templates"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -513,23 +512,33 @@ export const getFrontendStore = () => {
         return get(store).components[componentName]
       },
       getDefaultDatasource: () => {
-        const filteredTables = get(tables).list.filter(
-          table => table._id != "ta_users"
-        )
-        const internalTable = filteredTables.find(
-          table =>
-            table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
-            table.type === DB_TYPE_INTERNAL
-        )
-        const defaultSourceTable = filteredTables.find(
-          table =>
+        // Ignore users table
+        const validTables = get(tables).list.filter(x => x._id !== "ta_users")
+
+        // Try to use their own internal table first
+        let table = validTables.find(table => {
+          return (
             table.sourceId !== BUDIBASE_INTERNAL_DB_ID &&
             table.type === DB_TYPE_INTERNAL
-        )
-        const defaultExternalTable = filteredTables.find(
-          table => table.type === DB_TYPE_EXTERNAL
-        )
-        return defaultSourceTable || internalTable || defaultExternalTable
+          )
+        })
+        if (table) {
+          return table
+        }
+
+        // Then try sample data
+        table = validTables.find(table => {
+          return (
+            table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+            table.type === DB_TYPE_INTERNAL
+          )
+        })
+        if (table) {
+          return table
+        }
+
+        // Finally try an external table
+        return validTables.find(table => table.type === DB_TYPE_EXTERNAL)
       },
       enrichEmptySettings: (component, opts) => {
         if (!component?._component) {
@@ -541,8 +550,8 @@ export const getFrontendStore = () => {
         settings.forEach(setting => {
           const value = component[setting.key]
 
+          // Fill empty settings
           if (value == null || value === "") {
-            // Fill empty values
             if (setting.type === "multifield" && setting.selectAllFields) {
               // Select all schema fields where required
               component[setting.key] = Object.keys(defaultDS?.schema || {})
@@ -550,46 +559,46 @@ export const getFrontendStore = () => {
               (setting.type === "dataSource" || setting.type === "table") &&
               defaultDS
             ) {
-              // Select default datasource where require
+              // Select default datasource where required
               component[setting.key] = {
                 label: defaultDS.name,
                 tableId: defaultDS._id,
                 type: "table",
               }
             } else if (setting.type === "dataProvider") {
-              const parentId = parent?._id || get(selectedComponent)?._id
-              console.log(get(currentAsset)?.props, parentId)
-              const path = findComponentPath(get(currentAsset)?.props, parentId)
+              // Pick closest data provider where required
+              const treeId = parent?._id || component._id
+              const path = findComponentPath(screen?.props, treeId)
               const providers = path.filter(component =>
                 component._component?.endsWith("/dataprovider")
               )
               if (providers.length) {
                 const id = providers[providers.length - 1]?._id
-                component[setting.key] = `{{ literal ${makePropSafe(id)} }}`
+                component[setting.key] = `{{ literal ${safe(id)} }}`
               }
             } else if (useDefaultValues && setting.defaultValue !== undefined) {
               // Use default value where required
               component[setting.key] = setting.defaultValue
             }
-          } else {
+          }
+
+          // Validate non-empty settings
+          else {
             if (setting.type === "dataProvider") {
-              const parentId = parent?._id || get(selectedComponent)?._id
-              console.log(screen?.props, parentId)
-              const path = findComponentPath(screen?.props, parentId)
+              // Validate data provider exists, or else clear it
+              const treeId = parent?._id || component._id
+              const path = findComponentPath(screen?.props, treeId)
               const providers = path.filter(component =>
                 component._component?.endsWith("/dataprovider")
               )
-              if (providers.length) {
-                // Validate non-empty values
-                const valid =
-                  providers.find(
-                    x => `{{ literal ${makePropSafe(x._id)} }}` === value
-                  ) != null
-                if (!valid && providers.length) {
-                  console.log("update")
+              // Validate non-empty values
+              const valid = providers?.some(dp => value.includes?.(dp._id))
+              if (!valid) {
+                if (providers.length) {
                   const id = providers[providers.length - 1]?._id
-                  console.log(`{{ literal ${makePropSafe(id)} }}`)
-                  component[setting.key] = `{{ literal ${makePropSafe(id)} }}`
+                  component[setting.key] = `{{ literal ${safe(id)} }}`
+                } else {
+                  delete component[setting.key]
                 }
               }
             }
@@ -597,7 +606,6 @@ export const getFrontendStore = () => {
         })
       },
       createInstance: (componentName, presetProps, parent) => {
-        console.log("create instance", parent)
         const definition = store.actions.components.getDefinition(componentName)
         if (!definition) {
           return null
