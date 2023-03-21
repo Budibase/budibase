@@ -13,11 +13,12 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "api"
-  import { organisation } from "stores/portal"
+  import { organisation, auth } from "stores/portal"
 
   const configType = "scim"
 
   $: scimEnabled = true
+  $: apiKey = null
 
   async function saveConfig(config) {
     // Delete unsupported fields
@@ -39,7 +40,7 @@
     }
   }
 
-  onMount(async () => {
+  async function fetchConfig() {
     try {
       const scimConfig = await API.getConfig(configType)
       scimEnabled = scimConfig?.enabled
@@ -47,6 +48,18 @@
       console.error(error)
       notifications.error("Error fetching SCIM config")
     }
+  }
+
+  async function fetchAPIKey() {
+    try {
+      apiKey = await auth.fetchAPIKey()
+    } catch (err) {
+      notifications.error("Unable to fetch API key")
+    }
+  }
+
+  onMount(async () => {
+    await Promise.all(fetchConfig(), fetchAPIKey())
   })
 
   const copyToClipboard = async value => {
@@ -54,12 +67,12 @@
     notifications.success("Copied")
   }
 
-  const settings = [
+  $: settings = [
     {
       title: "Provisioning URL",
       value: `${$organisation.platformUrl}/api/global/scim/v2`,
     },
-    { title: "Provisioning Token", value: "token" },
+    { title: "Provisioning Token", value: apiKey },
   ]
 </script>
 
