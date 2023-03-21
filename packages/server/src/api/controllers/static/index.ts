@@ -99,40 +99,71 @@ export const deleteObjects = async function (ctx: any) {
 }
 
 export const serveApp = async function (ctx: any) {
+  //Public Settings
   const { config } = await configs.getSettingsConfigDoc()
+  let db
+  try {
+    db = context.getAppDB({ skip_setup: true })
+    const appInfo = await db.get(DocumentType.APP_METADATA)
+    let appId = context.getAppId()
 
-  const db = context.getAppDB({ skip_setup: true })
-  const appInfo = await db.get(DocumentType.APP_METADATA)
-  let appId = context.getAppId()
+    if (!env.isJest()) {
+      const App = require("./templates/BudibaseApp.svelte").default
+      const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
+      const { head, html, css } = App.render({
+        metaImage:
+          config?.metaImageUrl ||
+          "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
+        metaDescription: config?.metaDescription || "",
+        metaTitle: config?.metaTitle || `${appInfo.name} - built with Budibase`,
+        title: appInfo.name,
+        production: env.isProd(),
+        appId,
+        clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
+        usedPlugins: plugins,
+        favicon:
+          config.faviconUrl !== ""
+            ? objectStore.getGlobalFileUrl("settings", "faviconUrl")
+            : "",
+        logo:
+          config?.logoUrl !== ""
+            ? objectStore.getGlobalFileUrl("settings", "logoUrl")
+            : "",
+      })
+      const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+      ctx.body = await processString(appHbs, {
+        head,
+        body: html,
+        style: css.code,
+        appId,
+      })
+    } else {
+      // just return the app info for jest to assert on
+      ctx.body = appInfo
+    }
+  } catch (error) {
+    if (!env.isJest()) {
+      const App = require("./templates/BudibaseApp.svelte").default
+      const { head, html, css } = App.render({
+        title: config?.metaTitle,
+        metaTitle: config?.metaTitle,
+        metaImage:
+          config?.metaImageUrl ||
+          "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
+        metaDescription: config?.metaDescription || "",
+        favicon:
+          config.faviconUrl !== ""
+            ? objectStore.getGlobalFileUrl("settings", "faviconUrl")
+            : "",
+      })
 
-  if (!env.isJest()) {
-    const App = require("./templates/BudibaseApp.svelte").default
-    const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
-    const { head, html, css } = App.render({
-      metaImage:
-        config?.metaImageUrl ||
-        "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
-      metaDescription: config?.metaDescription || "",
-      metaTitle: `${appInfo.name} - built with Budibase` || config?.metaTitle,
-      title: appInfo.name,
-      production: env.isProd(),
-      appId,
-      clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
-      usedPlugins: plugins,
-      favicon: objectStore.getGlobalFileUrl("settings", "faviconUrl"),
-      //logo: objectStore.getGlobalFileUrl("settings", "logoUrl"),
-    })
-
-    const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
-    ctx.body = await processString(appHbs, {
-      head,
-      body: html,
-      style: css.code,
-      appId,
-    })
-  } else {
-    // just return the app info for jest to assert on
-    ctx.body = appInfo
+      const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+      ctx.body = await processString(appHbs, {
+        head,
+        body: html,
+        style: css.code,
+      })
+    }
   }
 }
 

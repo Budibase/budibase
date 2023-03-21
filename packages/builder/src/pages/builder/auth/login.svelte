@@ -30,7 +30,7 @@
   async function login() {
     form.validate()
     if (Object.keys(errors).length > 0) {
-      console.log("errors")
+      console.log("errors", errors)
       return
     }
     try {
@@ -135,7 +135,7 @@
             disabled={Object.keys(errors).length > 0}
             on:click={login}
           >
-            {$organisation.loginButton || `Log in to {company}`}
+            {$organisation.loginButton || `Log in to ${company}`}
           </Button>
         </Layout>
         <Layout gap="XS" noPadding justifyItems="center">

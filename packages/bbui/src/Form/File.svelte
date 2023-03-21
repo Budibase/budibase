@@ -6,6 +6,7 @@
   export let label = null
   export let labelPosition = "above"
   export let disabled = false
+  export let allowClear = null
   export let handleFileTooLarge = () => {}
   export let previewUrl = null
   export let extensions = null
@@ -25,6 +26,7 @@
   <CoreFile
     {error}
     {disabled}
+    {allowClear}
     {title}
     {value}
     {previewUrl}
