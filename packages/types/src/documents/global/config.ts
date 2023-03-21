@@ -32,7 +32,6 @@ export interface SettingsInnerConfig {
   faviconUrlEtag?: string
 
   emailBrandingEnabled?: boolean
-  appFooterEnabled?: boolean
   testimonialsEnabled?: boolean
   licenseAgreementEnabled?: boolean
   platformTitle?: string

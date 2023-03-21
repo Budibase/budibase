@@ -17,6 +17,7 @@
   import { auth, organisation, licensing, admin } from "stores/portal"
   import { API } from "api"
   import { onMount } from "svelte"
+  import { goto } from "@roxi/routify"
 
   const imageExtensions = [
     ".png",
@@ -32,25 +33,32 @@
 
   const faviconExtensions = [".png", ".ico", ".gif"]
 
-  let loaded = false
+  let mounted = false
   let saving = false
 
   let logoFile = null
   let logoPreview = null
-
   let faviconFile = null
   let faviconPreview = null
 
   let config = {}
   let updated = false
-  $: onConfigUpdate(config)
+
+  $: onConfigUpdate(config, mounted)
+  $: init = Object.keys(config).length > 0
+
+  $: cloudPremium = !$licensing.isFreePlan
+  $: selfhostPremium = $licensing.isEnterprisePlan || $licensing.isBusinessPlan
+  $: isCloud = $admin.cloud
+
+  $: isLicenseLocked =
+    (isCloud && !cloudPremium) || (!isCloud && !selfhostPremium)
 
   const onConfigUpdate = config => {
-    if (!loaded || updated) {
+    if (!mounted || updated || !init) {
       return
     }
     updated = true
-    console.log("config updated ", config)
   }
 
   $: logo = config.logoUrl
@@ -61,9 +69,6 @@
     ? { url: config.faviconUrl, type: "image", name: "Favicon" }
     : null
 
-  //If type of file do this IN the picker
-  //If string use the string
-  //If object?.url us that
   const previewUrl = async localFile => {
     if (!localFile) {
       return Promise.resolve(null)
@@ -123,7 +128,7 @@
 
   async function saveConfig() {
     saving = true
-    console.log("SAVING CONFIG ")
+
     if (logoFile) {
       const logoResp = await uploadLogo(logoFile)
       if (logoResp.url) {
@@ -147,7 +152,6 @@
         faviconPreview = null
       }
     }
-    console.log("SAVE CONFIG ", config)
     try {
       // Update settings
       await organisation.save(config)
@@ -157,7 +161,7 @@
       console.error("Branding updated failed", e)
       notifications.error("Branding updated failed")
     }
-
+    updated = false
     saving = false
   }
 
@@ -169,7 +173,6 @@
       logoUrl: $organisation.logoUrl,
       platformTitle: $organisation.platformTitle,
       emailBrandingEnabled: $organisation.emailBrandingEnabled,
-      appFooterEnabled: $organisation.appFooterEnabled,
       loginHeading: $organisation.loginHeading,
       loginButton: $organisation.loginButton,
       licenseAgreementEnabled: $organisation.licenseAgreementEnabled,
@@ -178,19 +181,23 @@
       metaImageUrl: $organisation.metaImageUrl,
       metaTitle: $organisation.metaTitle,
     }
-
-    loaded = true
+    mounted = true
   })
 </script>
 
-{#if $auth.isAdmin && loaded}
+{#if $auth.isAdmin && mounted}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <div class="title">
         <Heading size="M">Branding</Heading>
-        {#if !$licensing.isBusinessPlan}
+        {#if !isCloud && !selfhostPremium}
           <Tags>
             <Tag icon="LockClosed">Business</Tag>
+          </Tags>
+        {/if}
+        {#if isCloud && !cloudPremium}
+          <Tags>
+            <Tag icon="LockClosed">Pro</Tag>
           </Tags>
         {/if}
       </div>
@@ -208,7 +215,6 @@
           extensions={imageExtensions}
           previewUrl={logoPreview || logo?.url}
           on:change={e => {
-            console.log("Updated Logo")
             let clone = { ...config }
             if (e.detail) {
               logoFile = e.detail
@@ -220,6 +226,8 @@
             config = clone
           }}
           value={logoFile || logo}
+          disabled={isLicenseLocked || saving}
+          allowClear={true}
         />
       </div>
 
@@ -243,19 +251,24 @@
             config = clone
           }}
           value={faviconFile || favicon}
+          disabled={isLicenseLocked || saving}
+          allowClear={true}
         />
       </div>
-      <div class="field">
-        <Label size="L">Title</Label>
-        <Input
-          on:change={e => {
-            let clone = { ...config }
-            clone.platformTitle = e.detail ? e.detail : ""
-            config = clone
-          }}
-          value={config.platformTitle || ""}
-        />
-      </div>
+      {#if !isCloud}
+        <div class="field">
+          <Label size="L">Title</Label>
+          <Input
+            on:change={e => {
+              let clone = { ...config }
+              clone.platformTitle = e.detail ? e.detail : ""
+              config = clone
+            }}
+            value={config.platformTitle || ""}
+            disabled={!selfhostPremium || saving}
+          />
+        </div>
+      {/if}
       <div>
         <Toggle
           text={"Remove Budibase brand from emails"}
@@ -265,24 +278,16 @@
             config = clone
           }}
           value={!config.emailBrandingEnabled}
-        />
-        <Toggle
-          text={"Remove Budibase footer from apps"}
-          on:change={e => {
-            let clone = { ...config }
-            clone.appFooterEnabled = !e.detail
-            config = clone
-          }}
-          value={!config.appFooterEnabled}
+          disabled={isLicenseLocked || saving}
         />
       </div>
     </div>
 
-    {#if !$admin.cloud}
+    {#if !isCloud}
       <Divider />
       <Layout gap="XS" noPadding>
-        <Heading size="S">Login page (Self host)</Heading>
-        <Body>You can only customise your login page in self host</Body>
+        <Heading size="S">Login page</Heading>
+        <Body />
       </Layout>
       <div class="login">
         <div class="fields">
@@ -295,6 +300,7 @@
                 config = clone
               }}
               value={config.loginHeading || ""}
+              disabled={!selfhostPremium || saving}
             />
           </div>
 
@@ -307,6 +313,7 @@
                 config = clone
               }}
               value={config.loginButton || ""}
+              disabled={!selfhostPremium || saving}
             />
           </div>
           <div>
@@ -318,6 +325,7 @@
                 config = clone
               }}
               value={!config.testimonialsEnabled}
+              disabled={!selfhostPremium || saving}
             />
             <Toggle
               text={"Remove license agreement"}
@@ -327,6 +335,7 @@
                 config = clone
               }}
               value={!config.licenseAgreementEnabled}
+              disabled={!selfhostPremium || saving}
             />
           </div>
         </div>
@@ -348,6 +357,7 @@
               config = clone
             }}
             value={config.metaImageUrl}
+            disabled={isLicenseLocked || saving}
           />
         </div>
         <div class="field">
@@ -359,6 +369,7 @@
               config = clone
             }}
             value={config.metaTitle}
+            disabled={isLicenseLocked || saving}
           />
         </div>
         <div class="field">
@@ -370,12 +381,28 @@
               config = clone
             }}
             value={config.metaDescription}
+            disabled={isLicenseLocked || saving}
           />
         </div>
       </div>
     </div>
-    <div>
-      <Button on:click={saveConfig} cta disabled={saving || !updated}>
+    <div class="buttons">
+      {#if isLicenseLocked}
+        <Button
+          on:click={() => {
+            if (isCloud && $auth?.user?.accountPortalAccess) {
+              window.open($admin.accountPortalUrl + "/portal/upgrade", "_blank")
+            } else if ($auth.isAdmin) {
+              $goto("/builder/portal/account/upgrade")
+            }
+          }}
+          secondary
+          disabled={saving}
+        >
+          Upgrade
+        </Button>
+      {/if}
+      <Button on:click={saveConfig} cta disabled={saving || !updated || !init}>
         Save
       </Button>
     </div>
@@ -383,6 +410,10 @@
 {/if}
 
 <style>
+  .buttons {
+    display: flex;
+    gap: var(--spacing-m);
+  }
   .title {
     display: flex;
     flex-direction: row;

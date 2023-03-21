@@ -21,11 +21,6 @@
   <meta name="title" content={metaTitle} />
   <meta name="description" content={metaDescription} />
 
-  <!-- 
-    metaTitle should match the title... 
-    should title override metaTitle, if set??
-  -->
-
   <!-- Opengraph Meta Tags -->
   <meta property="og:site_name" content="Budibase" />
   <meta property="og:title" content="{title} - built with Budibase" />
@@ -37,12 +32,17 @@
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:site" content="@budibase" />
   <meta property="twitter:image" content={metaImage} />
-  <!-- Consider adding this twitter:image:alt -->
+  <meta property="twitter:image:alt" content="{title} - built with Budibase" />
   <meta property="twitter:title" content="{title} - built with Budibase" />
   <meta property="twitter:description" content={metaDescription} />
 
   <title>{title}</title>
-  <link rel="icon" type="image/png" href={favicon} />
+  {#if favicon !== ""}
+    <link rel="icon" type="image/png" href={favicon} />
+  {:else}
+    <link rel="icon" type="image/png" href="https://i.imgur.com/Xhdt1YP.png" />
+  {/if}
+
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
   <link rel="preconnect" href="https://fonts.gstatic.com" />
   <link
@@ -101,11 +101,16 @@
 
 <body id="app">
   <div id="error">
-    <h1>There was an error loading your app</h1>
-    <h2>
-      The Budibase client library could not be loaded. Try republishing your
-      app.
-    </h2>
+    {#if clientLibPath}
+      <h1>There was an error loading your app</h1>
+      <h2>
+        The Budibase client library could not be loaded. Try republishing your
+        app.
+      </h2>
+    {:else}
+      <h2>We couldn't find that application</h2>
+      <p />
+    {/if}
   </div>
   <script type="application/javascript">
     window.INIT_TIME = Date.now()

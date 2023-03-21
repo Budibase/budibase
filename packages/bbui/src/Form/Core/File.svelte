@@ -7,6 +7,7 @@
   export let value = null
   export let title = "Upload file"
   export let disabled = false
+  export let allowClear = null
   export let extensions = null
   export let handleFileTooLarge = null
   export let fileSizeLimit = BYTES_IN_MB * 20
@@ -65,14 +66,14 @@
           {/if}
         </div>
       {/if}
-      {#if !disabled}
+      {#if !disabled || (allowClear === true && disabled)}
         <div class="delete-button" on:click={clearFile}>
           <Icon name="Close" size="XS" />
         </div>
       {/if}
     </div>
   {/if}
-  <ActionButton on:click={fileInput.click()}>{title}</ActionButton>
+  <ActionButton {disabled} on:click={fileInput.click()}>{title}</ActionButton>
 </div>
 
 <style>
