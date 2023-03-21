@@ -34,6 +34,7 @@ export const logger = pino(pinoOptions)
 // CONSOLE OVERRIDES
 
 interface MergingObject {
+  objects?: any[]
   tenantId?: string,
   appId?: string,
   identityId?: string,
@@ -60,6 +61,7 @@ function isMessage(obj: any) {
  */
 function getLogParams(args: any[]): [MergingObject, string] {
   let error = undefined
+  let objects: any[] = []
   let message = ""
 
   args.forEach(arg => {
@@ -67,7 +69,7 @@ function getLogParams(args: any[]): [MergingObject, string] {
       message = `${message} ${arg}`.trimStart()
     }
     if (isPlainObject(arg)) {
-      message = `${message} ${JSON.stringify(arg)}`.trimStart()
+      objects.push(arg)
     }
     if (isError(arg)) {
       error = arg
@@ -77,6 +79,7 @@ function getLogParams(args: any[]): [MergingObject, string] {
   const identity = getIdentity()
 
   const mergingObject = {
+    objects: objects.length ? objects : undefined,
     tenantId: getTenantId(),
     appId: getAppId(),
     identityId: identity?._id,
