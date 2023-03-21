@@ -21,6 +21,7 @@
   import UsersTableRenderer from "./_components/UsersTableRenderer.svelte"
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
   import { goto } from "@roxi/routify"
+  import ScimBanner from "../_components/SCIMBanner.svelte"
 
   const DefaultGroup = {
     name: "",
@@ -106,10 +107,14 @@
   <div class="controls">
     <ButtonGroup>
       {#if $licensing.groupsEnabled}
-        <!--Show the group create button-->
-        <Button disabled={readonly} cta on:click={showCreateGroupModal}>
-          Add group
-        </Button>
+        {#if !$licensing.scimEnabled}
+          <!--Show the group create button-->
+          <Button disabled={readonly} cta on:click={showCreateGroupModal}>
+            Add group
+          </Button>
+        {:else}
+          <ScimBanner />
+        {/if}
       {:else}
         <Button
           primary
