@@ -68,6 +68,7 @@ export const Features = {
   ENVIRONMENT_VARIABLES: "environmentVariables",
   AUDIT_LOGS: "auditLogs",
   ENFORCEABLE_SSO: "enforceableSSO",
+  SCIM: "scim",
 }
 
 // Role IDs
