@@ -13,6 +13,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "api"
+  import { organisation } from "stores/portal"
 
   const configType = "scim"
 
@@ -54,7 +55,10 @@
   }
 
   const settings = [
-    { title: "Provisioning URL", value: "url" },
+    {
+      title: "Provisioning URL",
+      value: `${$organisation.platformUrl}/api/global/scim/v2`,
+    },
     { title: "Provisioning Token", value: "token" },
   ]
 </script>
