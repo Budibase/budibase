@@ -31,6 +31,7 @@
   import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
+  import ScimBanner from "../_components/SCIMBanner.svelte"
 
   export let userId
 
@@ -268,10 +269,7 @@
       <div class="details-title">
         <Heading size="S">Details</Heading>
         {#if scimEnabled}
-          <div class="scim-banner">
-            <Icon name="Info" size="S" />
-            Users are synced from your AD
-          </div>
+          <ScimBanner />
         {/if}
       </div>
       <div class="fields">
@@ -422,9 +420,5 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-  .scim-banner {
-    display: flex;
-    gap: var(--spacing-s);
   }
 </style>
