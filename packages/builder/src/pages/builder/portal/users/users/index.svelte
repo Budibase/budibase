@@ -11,7 +11,6 @@
     notifications,
     Pagination,
     Divider,
-    Icon,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import { users, groups, auth, licensing, organisation } from "stores/portal"
@@ -29,6 +28,7 @@
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "api"
   import { OnboardingType } from "../../../../../constants"
+  import ScimBanner from "../_components/SCIMBanner.svelte"
 
   const fetch = fetchData({
     API,
@@ -241,10 +241,7 @@
         </Button>
       </ButtonGroup>
     {:else}
-      <div class="scim-banner">
-        <Icon name="Info" size="S" />
-        Users are synced from your AD
-      </div>
+      <ScimBanner />
     {/if}
     <div class="controls-right">
       <Search bind:value={searchEmail} placeholder="Search" />
@@ -329,10 +326,5 @@
 
   .controls-right :global(.spectrum-Search) {
     width: 200px;
-  }
-
-  .scim-banner {
-    display: flex;
-    gap: var(--spacing-s);
   }
 </style>
