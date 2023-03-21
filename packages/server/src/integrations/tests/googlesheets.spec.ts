@@ -99,8 +99,8 @@ describe("Google Sheets Integration", () => {
       })
     })
 
-    test("removing an existing field will not remove the data from the spreadsheet", async () => {
-      await config.doInContext(structures.uuid(), async () => {
+    test("removing an existing field will remove the header from the google sheet", async () => {
+      const sheet = await config.doInContext(structures.uuid(), async () => {
         const tableColumns = ["name"]
         const table = createBasicTable(structures.uuid(), tableColumns)
 
@@ -109,18 +109,14 @@ describe("Google Sheets Integration", () => {
         })
         sheetsByTitle[table.name] = sheet
         await integration.updateTable(table)
-
-        expect(sheet.loadHeaderRow).toBeCalledTimes(1)
-        expect(sheet.setHeaderRow).toBeCalledTimes(1)
-        expect(sheet.setHeaderRow).toBeCalledWith([
-          "name",
-          "description",
-          "location",
-        ])
-
-        // No undefineds are sent
-        expect((sheet.setHeaderRow as any).mock.calls[0][0]).toHaveLength(3)
+        return sheet
       })
+      expect(sheet.loadHeaderRow).toBeCalledTimes(1)
+      expect(sheet.setHeaderRow).toBeCalledTimes(1)
+      expect(sheet.setHeaderRow).toBeCalledWith(["name"])
+
+      // No undefined are sent
+      expect((sheet.setHeaderRow as any).mock.calls[0][0]).toHaveLength(1)
     })
   })
 })
