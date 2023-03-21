@@ -14,7 +14,7 @@
   } from "@budibase/bbui"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "helpers/pagination"
-  import { users, apps, groups, auth } from "stores/portal"
+  import { users, apps, groups, auth, licensing } from "stores/portal"
   import { onMount, setContext } from "svelte"
   import { roles } from "stores/backend"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -27,15 +27,19 @@
 
   export let groupId
 
-  const userSchema = {
+  $: userSchema = {
     email: {
       width: "1fr",
     },
-    _id: {
-      displayName: "",
-      width: "auto",
-      borderLeft: true,
-    },
+    ...(readonly
+      ? {}
+      : {
+          _id: {
+            displayName: "",
+            width: "auto",
+            borderLeft: true,
+          },
+        }),
   }
   const appSchema = {
     name: {
@@ -70,7 +74,9 @@
   let loaded = false
   let editModal, deleteModal
 
-  $: readonly = !$auth.isAdmin
+  const scimEnabled = $licensing.scimEnabled
+
+  $: readonly = !$auth.isAdmin || scimEnabled
   $: page = $pageInfo.page
   $: fetchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
