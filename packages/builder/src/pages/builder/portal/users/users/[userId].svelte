@@ -84,8 +84,7 @@
   const scimEnabled = $licensing.scimEnabled
 
   $: isSSO = !!user?.provider
-  $: readonly = !$auth.isAdmin
-  $: fullName = user?.firstName ? user?.firstName + " " + user?.lastName : ""
+  $: readonly = !$auth.isAdmin || scimEnabled
   $: privileged = user?.admin?.global || user?.builder?.global
   $: nameLabel = getNameLabel(user)
   $: initials = getInitials(nameLabel)
@@ -294,10 +293,11 @@
         </div>
         <!-- don't let a user remove the privileges that let them be here -->
         {#if userId !== $auth.user._id}
+          <!-- Disabled if it's not admin, enabled for SCIM integration   -->
           <div class="field">
             <Label size="L">Role</Label>
             <Select
-              disabled={readonly}
+              disabled={!$auth.isAdmin}
               value={globalRole}
               options={Constants.BudibaseRoleOptions}
               on:change={updateUserRole}
