@@ -614,8 +614,10 @@
       </Button>
     </div>
   {/if}
-  <Divider />
-  <Scim />
+  {#if $licensing.scimEnabled}
+    <Divider />
+    <Scim />
+  {/if}
 </Layout>
 
 <style>
