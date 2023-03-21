@@ -555,7 +555,6 @@ async function runQuery<T>(
 
   let output: SearchResponse<T> = {
     rows: [],
-
     totalRows: 0,
   }
   if (json.rows != null && json.rows.length > 0) {
