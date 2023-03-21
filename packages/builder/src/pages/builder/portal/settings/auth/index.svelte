@@ -31,6 +31,7 @@
   const ConfigTypes = {
     Google: "google",
     OIDC: "oidc",
+    SCIM: "scim",
   }
 
   const HasSpacesRegex = /[\\"\s]/
@@ -160,6 +161,8 @@
     providers.oidc?.config?.configs[0].clientSecret
   )
 
+  $: scimEnabled = true
+
   const onFileSelected = e => {
     let fileName = e.target.files[0].name
     image = e.target.files[0]
@@ -253,6 +256,19 @@
     originalGoogleDoc = cloneDeep(providers.google)
   }
 
+  async function saveSCIM() {
+    try {
+      const res = await saveConfig({
+        type: "scim",
+        enabled: scimEnabled,
+      })
+      notifications.success(`Settings saved`)
+    } catch (e) {
+      notifications.error(e.message)
+      return
+    }
+  }
+
   let defaultScopes = ["profile", "email", "offline_access"]
 
   const refreshScopes = idx => {
@@ -342,6 +358,14 @@
     } else {
       originalOidcDoc = cloneDeep(oidcDoc)
       providers.oidc = oidcDoc
+    }
+
+    try {
+      const scimConfig = await API.getConfig(ConfigTypes.SCIM)
+      scimEnabled = scimConfig?.enabled
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error fetching SCIM config")
     }
   })
 </script>
@@ -606,10 +630,27 @@
         </Tags>
       </div>
     </Layout>
+
     <div>
       <Button disabled={oidcSaveButtonDisabled} cta on:click={() => saveOIDC()}>
         Save
       </Button>
+    </div>
+
+    <Divider />
+    <Layout gap="XS" noPadding>
+      <div class="provider-title">
+        <Heading size="S">SCIM</Heading>
+      </div>
+      <Body size="S">Sync users with your identity provider.</Body>
+      <div class="form-row">
+        <Label size="L">Activated</Label>
+        <Toggle text="" bind:value={scimEnabled} />
+      </div>
+    </Layout>
+
+    <div>
+      <Button cta on:click={saveSCIM}>Save</Button>
     </div>
   {/if}
 </Layout>
