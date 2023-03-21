@@ -34,22 +34,11 @@
     loading = true
 
     try {
-      // Upload logo if required
-      if ($values.logo && !$values.logo.url) {
-        await uploadLogo($values.logo)
-        await organisation.init()
-      }
-
       const config = {
         isSSOEnforced: $values.isSSOEnforced,
         company: $values.company ?? "",
         platformUrl: $values.platformUrl ?? "",
         analyticsEnabled: $values.analyticsEnabled,
-      }
-
-      // Remove logo if required
-      if (!$values.logo) {
-        config.logoUrl = ""
       }
 
       // Update settings

@@ -54,7 +54,7 @@
   $: isLicenseLocked =
     (isCloud && !cloudPremium) || (!isCloud && !selfhostPremium)
 
-  const onConfigUpdate = config => {
+  const onConfigUpdate = () => {
     if (!mounted || updated || !init) {
       return
     }
