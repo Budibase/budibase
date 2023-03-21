@@ -109,10 +109,21 @@ console.error = (...arg: any[]) => {
   const [obj, msg] = getLogParams(arg)
   logger.error(obj, msg)
 }
+
+/**
+ * custom trace impl - this resembles the node trace behaviour rather
+ * than traditional trace logging
+ * @param arg
+ */
 console.trace = (...arg: any[]) => {
   const [obj, msg] = getLogParams(arg)
+  if (!obj.err) {
+    // to get stack trace
+    obj.err = new Error()
+  }
   logger.trace(obj, msg)
 }
+
 console.debug = (...arg: any) => {
   const [obj, msg] = getLogParams(arg)
   logger.debug(obj, msg)
