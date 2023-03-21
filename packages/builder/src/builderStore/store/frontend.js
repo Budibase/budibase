@@ -5,7 +5,6 @@ import {
   selectedComponent,
   screenHistoryStore,
   automationHistoryStore,
-  currentAsset,
 } from "builderStore"
 import {
   datasources,
@@ -32,8 +31,13 @@ import {
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
-import { getSchemaForDatasource } from "builderStore/dataBinding"
+import {
+  buildFormSchema,
+  getDatasourceForProvider,
+  getSchemaForDatasource,
+} from "builderStore/dataBinding"
 import { makePropSafe as safe } from "@budibase/string-templates"
+import { getComponentFieldOptions } from "helpers/formFields"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -547,6 +551,10 @@ export const getFrontendStore = () => {
         const defaultDS = store.actions.components.getDefaultDatasource()
         const settings = getComponentSettings(component._component)
         const { parent, screen, useDefaultValues } = opts || {}
+        const treeId = parent?._id || component._id
+        if (!screen) {
+          return
+        }
         settings.forEach(setting => {
           const value = component[setting.key]
 
@@ -567,14 +575,39 @@ export const getFrontendStore = () => {
               }
             } else if (setting.type === "dataProvider") {
               // Pick closest data provider where required
-              const treeId = parent?._id || component._id
-              const path = findComponentPath(screen?.props, treeId)
+              const path = findComponentPath(screen.props, treeId)
               const providers = path.filter(component =>
                 component._component?.endsWith("/dataprovider")
               )
               if (providers.length) {
                 const id = providers[providers.length - 1]?._id
                 component[setting.key] = `{{ literal ${safe(id)} }}`
+              }
+            } else if (setting.type.startsWith("field/")) {
+              // Autofill form field names
+              // Get all available field names in this form schema
+              let fieldOptions = getComponentFieldOptions(
+                screen.props,
+                treeId,
+                setting.type,
+                false
+              )
+
+              // Get all currently used fields
+              const form = findClosestMatchingComponent(
+                screen.props,
+                treeId,
+                x => x._component === "@budibase/standard-components/form"
+              )
+              const usedFields = Object.keys(buildFormSchema(form) || {})
+
+              // Filter out already used fields
+              fieldOptions = fieldOptions.filter(x => !usedFields.includes(x))
+
+              // Set field name and also assume we have a label setting
+              if (fieldOptions[0]) {
+                component[setting.key] = fieldOptions[0]
+                component.label = fieldOptions[0]
               }
             } else if (useDefaultValues && setting.defaultValue !== undefined) {
               // Use default value where required
