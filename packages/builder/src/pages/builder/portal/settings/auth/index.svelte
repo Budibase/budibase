@@ -613,10 +613,9 @@
         Save
       </Button>
     </div>
-
-    <Divider />
-    <Scim />
   {/if}
+  <Divider />
+  <Scim />
 </Layout>
 
 <style>

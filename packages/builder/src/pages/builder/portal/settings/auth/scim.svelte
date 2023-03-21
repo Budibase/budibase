@@ -7,6 +7,9 @@
     Layout,
     Body,
     Toggle,
+    Input,
+    Icon,
+    Helpers,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "api"
@@ -44,6 +47,16 @@
       notifications.error("Error fetching SCIM config")
     }
   })
+
+  const copyToClipboard = async value => {
+    await Helpers.copyToClipboard(value)
+    notifications.success("Copied")
+  }
+
+  const settings = [
+    { title: "Provisioning URL", value: "url" },
+    { title: "Provisioning Token", value: "token" },
+  ]
 </script>
 
 <Layout gap="XS" noPadding>
@@ -55,8 +68,78 @@
     <Label size="L">Activated</Label>
     <Toggle text="" bind:value={scimEnabled} />
   </div>
+  {#if scimEnabled}
+    {#each settings as setting}
+      <div class="form-row">
+        <Label size="L" tooltip={""}>{setting.title}</Label>
+        <div class="inputContainer">
+          <div class="input">
+            <Input value={setting.value} readonly={true} />
+          </div>
+
+          <div class="copy" on:click={() => copyToClipboard(setting.value)}>
+            <Icon size="S" name="Copy" />
+          </div>
+        </div>
+      </div>
+    {/each}
+  {/if}
 </Layout>
 
 <div>
   <Button cta on:click={saveSCIM}>Save</Button>
 </div>
+
+<!-- TODO: DRY -->
+<style>
+  .form-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    grid-gap: var(--spacing-l);
+    align-items: center;
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+  .sso-link-icon {
+    padding-top: 4px;
+    margin-left: 3px;
+  }
+  .sso-link {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  .enforce-sso-title {
+    margin-right: 10px;
+  }
+  .enforce-sso-heading-container {
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+  }
+  .provider-title {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+  .provider-title span {
+    flex: 1 1 auto;
+  }
+  .inputContainer {
+    display: flex;
+    flex-direction: row;
+  }
+  .input {
+    flex: 1;
+  }
+  .copy {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+  }
+</style>
