@@ -24,6 +24,7 @@
   import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
   import RemoveUserTableRenderer from "./_components/RemoveUserTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
+  import ScimBanner from "../_components/SCIMBanner.svelte"
 
   export let groupId
 
@@ -188,11 +189,15 @@
     <Layout noPadding gap="S">
       <div class="header">
         <Heading size="S">Users</Heading>
-        <div bind:this={popoverAnchor}>
-          <Button disabled={readonly} on:click={popover.show()} cta
-            >Add user</Button
-          >
-        </div>
+        {#if !scimEnabled}
+          <div bind:this={popoverAnchor}>
+            <Button disabled={readonly} on:click={popover.show()} cta
+              >Add user</Button
+            >
+          </div>
+        {:else}
+          <ScimBanner />
+        {/if}
         <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
           <UserGroupPicker
             bind:searchTerm
