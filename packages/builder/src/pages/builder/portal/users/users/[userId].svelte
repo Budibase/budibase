@@ -34,15 +34,19 @@
 
   export let userId
 
-  const groupSchema = {
+  $: groupSchema = {
     name: {
       width: "1fr",
     },
-    _id: {
-      displayName: "",
-      width: "auto",
-      borderLeft: true,
-    },
+    ...(readonly
+      ? {}
+      : {
+          _id: {
+            displayName: "",
+            width: "auto",
+            borderLeft: true,
+          },
+        }),
   }
   const appSchema = {
     name: {
