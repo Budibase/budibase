@@ -16,9 +16,9 @@ export function pinoSettings(): Options {
     serializers: {
       req: req => {
         return {
-          correlationId: req.id,
           method: req.method,
           url: req.url,
+          correlationId: req.id,
         }
       },
       res: res => {

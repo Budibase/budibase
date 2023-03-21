@@ -25,7 +25,6 @@ if (env.isDev()) {
     options: {
       singleLine: true,
     },
-    // ignore: "responseTime"
   }
 }
 
