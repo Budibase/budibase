@@ -31,10 +31,10 @@ export function pinoSettings(): Options {
 }
 
 function getMiddleware() {
-  if (env.DISABLE_HTTP_LOGGING) {
-    return (ctx: Ctx, next: any) => { return next() }
-  } else {
+  if (env.HTTP_LOGGING) {
     return pino(pinoSettings())
+  } else {
+    return (ctx: Ctx, next: any) => { return next() }
   }
 }
 

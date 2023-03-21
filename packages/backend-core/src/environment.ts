@@ -36,6 +36,15 @@ function getAPIEncryptionKey() {
     : process.env.JWT_SECRET // fallback to the JWT_SECRET used historically
 }
 
+function httpLogging() {
+  if (process.env.HTTP_LOGGING === undefined) {
+    // on by default unless otherwise specified
+    return true
+  } else {
+    return process.env.HTTP_LOGGING
+  }
+}
+
 const environment = {
   isTest,
   isJest,
@@ -94,7 +103,7 @@ const environment = {
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
-  DISABLE_HTTP_LOGGING: process.env.DISABLE_HTTP_LOGGING,
+  HTTP_LOGGING: httpLogging(),
   ENABLE_AUDIT_LOG_IP_ADDR: process.env.ENABLE_AUDIT_LOG_IP_ADDR,
   // smtp
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
