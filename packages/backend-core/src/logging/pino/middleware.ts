@@ -34,7 +34,9 @@ function getMiddleware() {
   if (env.HTTP_LOGGING) {
     return pino(pinoSettings())
   } else {
-    return (ctx: Ctx, next: any) => { return next() }
+    return (ctx: Ctx, next: any) => {
+      return next()
+    }
   }
 }
 

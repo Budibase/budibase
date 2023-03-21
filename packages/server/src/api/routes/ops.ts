@@ -8,33 +8,23 @@ export function logsValidator() {
     Joi.object({
       message: Joi.string().required(),
       data: Joi.object(),
-    }))
+    })
+  )
 }
 
 export function errorValidator() {
   return middleware.joiValidator.body(
     Joi.object({
       message: Joi.string().required(),
-    }))
+    })
+  )
 }
 
 const router: Router = new Router()
 
 router
-  .post(
-    "/api/ops/log",
-    logsValidator(),
-    controller.log
-  )
-  .post(
-    "/api/ops/error",
-    errorValidator(),
-    controller.error
-  )
-  .post(
-    "/api/ops/alert",
-    errorValidator(),
-    controller.alert
-  )
+  .post("/api/ops/log", logsValidator(), controller.log)
+  .post("/api/ops/error", errorValidator(), controller.error)
+  .post("/api/ops/alert", errorValidator(), controller.alert)
 
 export default router

@@ -14,30 +14,21 @@ export default class LoggingProcessor implements EventProcessor {
     if (skipLogging) {
       return
     }
-    console.log(
-      `[audit] [identityType=${identity.type}] ${event}`,
-      properties
-    )
+    console.log(`[audit] [identityType=${identity.type}] ${event}`, properties)
   }
 
   async identify(identity: Identity, timestamp?: string | number) {
     if (skipLogging) {
       return
     }
-    console.log(
-      `[audit] identified`,
-      identity
-    )
+    console.log(`[audit] identified`, identity)
   }
 
   async identifyGroup(group: Group, timestamp?: string | number) {
     if (skipLogging) {
       return
     }
-    console.log(
-      `[audit] group identified`,
-      group
-    )
+    console.log(`[audit] group identified`, group)
   }
 
   shutdown(): void {

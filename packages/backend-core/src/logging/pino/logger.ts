@@ -34,16 +34,16 @@ export const logger = pino(pinoOptions)
 
 interface MergingObject {
   objects?: any[]
-  tenantId?: string,
-  appId?: string,
-  identityId?: string,
-  identityType?: IdentityType,
+  tenantId?: string
+  appId?: string
+  identityId?: string
+  identityType?: IdentityType
   correlationId?: string
   err?: Error
 }
 
 function isPlainObject(obj: any) {
-  return typeof obj === 'object' && obj !== null && !(obj instanceof Error);
+  return typeof obj === "object" && obj !== null && !(obj instanceof Error)
 }
 
 function isError(obj: any) {
@@ -51,7 +51,7 @@ function isError(obj: any) {
 }
 
 function isMessage(obj: any) {
-  return typeof obj === 'string'
+  return typeof obj === "string"
 }
 
 /**
@@ -87,10 +87,7 @@ function getLogParams(args: any[]): [MergingObject, string] {
     err: error,
   }
 
-  return [
-    mergingObject,
-    message
-  ]
+  return [mergingObject, message]
 }
 
 console.log = (...arg: any[]) => {

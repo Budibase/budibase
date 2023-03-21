@@ -99,9 +99,7 @@ export const runMigration = async (
           options.force[migrationType] &&
           options.force[migrationType].includes(migrationName)
         ) {
-          log(
-            `[Migration: ${migrationName}] [DB: ${dbName}] Forcing`
-          )
+          log(`[Migration: ${migrationName}] [DB: ${dbName}] Forcing`)
         } else {
           // no force, exit
           return
@@ -131,9 +129,7 @@ export const runMigration = async (
           await migration.fn(db)
         }
 
-        log(
-          `[Migration: ${migrationName}] [DB: ${dbName}] Complete`
-        )
+        log(`[Migration: ${migrationName}] [DB: ${dbName}] Complete`)
       }
 
       // mark as complete

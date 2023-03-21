@@ -45,7 +45,7 @@ async function init() {
       BB_ADMIN_USER_PASSWORD: "",
       PLUGINS_DIR: "",
       TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR",
-      HTTP_LOGGING: 0
+      HTTP_LOGGING: 0,
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {
