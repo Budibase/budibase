@@ -42,6 +42,8 @@ spec:
           value: {{ .Values.globals.budibaseEnv }}
         - name: DEPLOYMENT_ENVIRONMENT
           value: "kubernetes"
+        - name: DISABLE_HTTP_LOGGING
+          value: {{ .Values.globals.disableHttpLogging }}
         - name: CLUSTER_PORT
           value: {{ .Values.services.worker.port | quote }}
         {{ if .Values.services.couchdb.enabled }}
