@@ -81,6 +81,8 @@
   let user
   let loaded = false
 
+  const scimEnabled = $licensing.scimEnabled
+
   $: isSSO = !!user?.provider
   $: readonly = !$auth.isAdmin
   $: fullName = user?.firstName ? user?.firstName + " " + user?.lastName : ""
@@ -260,7 +262,15 @@
       {/if}
     </div>
     <Layout noPadding gap="S">
-      <Heading size="S">Details</Heading>
+      <div class="details-title">
+        <Heading size="S">Details</Heading>
+        {#if scimEnabled}
+          <div class="scim-banner">
+            <Icon name="Info" size="S" />
+            Users are synced from your AD
+          </div>
+        {/if}
+      </div>
       <div class="fields">
         <div class="field">
           <Label size="L">Email</Label>
@@ -403,5 +413,14 @@
   .placeholder {
     width: 100%;
     text-align: center;
+  }
+  .details-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .scim-banner {
+    display: flex;
+    gap: var(--spacing-s);
   }
 </style>
