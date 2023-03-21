@@ -16,6 +16,7 @@ export const createLicensingStore = () => {
     // features
     groupsEnabled: false,
     backupsEnabled: false,
+    scimEnabled: false,
     // the currently used quotas from the db
     quotaUsage: undefined,
     // derived quota metrics for percentages used
@@ -63,6 +64,7 @@ export const createLicensingStore = () => {
       const backupsEnabled = license.features.includes(
         Constants.Features.BACKUPS
       )
+      const scimEnabled = license.features.includes(Constants.Features.SCIM)
       const environmentVariablesEnabled = license.features.includes(
         Constants.Features.ENVIRONMENT_VARIABLES
       )
@@ -81,6 +83,7 @@ export const createLicensingStore = () => {
           isFreePlan,
           groupsEnabled,
           backupsEnabled,
+          scimEnabled,
           environmentVariablesEnabled,
           auditLogsEnabled,
           enforceableSSO,
