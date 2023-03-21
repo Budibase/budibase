@@ -11,6 +11,7 @@
     notifications,
     Pagination,
     Divider,
+    Icon,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import { users, groups, auth, licensing, organisation } from "stores/portal"
@@ -230,14 +231,21 @@
   </Layout>
   <Divider />
   <div class="controls">
-    <ButtonGroup>
-      <Button disabled={readonly} on:click={createUserModal.show} cta>
-        Add users
-      </Button>
-      <Button disabled={readonly} on:click={importUsersModal.show} secondary>
-        Import
-      </Button>
-    </ButtonGroup>
+    {#if $licensing.scimEnabled}
+      <ButtonGroup>
+        <Button disabled={readonly} on:click={createUserModal.show} cta>
+          Add users
+        </Button>
+        <Button disabled={readonly} on:click={importUsersModal.show} secondary>
+          Import
+        </Button>
+      </ButtonGroup>
+    {:else}
+      <div class="scim-banner">
+        <Icon name="Info" size="S" />
+        Users are synced from your AD
+      </div>
+    {/if}
     <div class="controls-right">
       <Search bind:value={searchEmail} placeholder="Search" />
       {#if selectedRows.length > 0}
@@ -321,5 +329,10 @@
 
   .controls-right :global(.spectrum-Search) {
     width: 200px;
+  }
+
+  .scim-banner {
+    display: flex;
+    gap: var(--spacing-s);
   }
 </style>
