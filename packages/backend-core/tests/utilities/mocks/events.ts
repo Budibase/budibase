@@ -122,3 +122,4 @@ jest.spyOn(events.plugin, "imported")
 jest.spyOn(events.plugin, "deleted")
 
 jest.spyOn(events.scim, "SCIMUserCreated")
+jest.spyOn(events.scim, "SCIMUserUpdated")
