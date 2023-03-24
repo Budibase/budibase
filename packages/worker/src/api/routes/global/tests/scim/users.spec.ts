@@ -437,6 +437,27 @@ describe("/api/global/scim/v2/users", () => {
       const persistedUser = await config.api.scimUsersAPI.find(user.id)
       expect(persistedUser).toEqual(expectedScimUser)
     })
+
+    it.only("an event is dispatched", async () => {
+      const body: ScimUpdateRequest = {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        Operations: [
+          {
+            op: "Replace",
+            path: "userName",
+            value: structures.generator.name(),
+          },
+        ],
+      }
+
+      await patchScimUser({ id: user.id, body })
+
+      expect(events.scim.SCIMUserUpdated).toBeCalledTimes(1)
+      expect(events.scim.SCIMUserUpdated).toBeCalledWith({
+        email: user.emails[0].value,
+        timestamp: mockedTime.toISOString(),
+      })
+    })
   })
 
   describe("DELETE /api/global/scim/v2/users/:id", () => {
