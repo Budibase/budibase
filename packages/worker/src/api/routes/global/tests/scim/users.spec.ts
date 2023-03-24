@@ -1,5 +1,6 @@
 import tk from "timekeeper"
 import _ from "lodash"
+import { events } from "@budibase/backend-core"
 import { mocks, structures } from "@budibase/backend-core/tests"
 import { ScimUpdateRequest, ScimUserResponse } from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
@@ -235,6 +236,19 @@ describe("/api/global/scim/v2/users", () => {
             Resources: [expectedScimUser],
           })
         )
+      })
+
+      it("an event is dispatched", async () => {
+        const email = structures.email()
+        const body = createScimCreateUserRequest({ email })
+
+        await postScimUser({ body })
+
+        expect(events.scim.SCIMUserCreated).toBeCalledTimes(1)
+        expect(events.scim.SCIMUserCreated).toBeCalledWith({
+          email,
+          timestamp: mockedTime.toISOString(),
+        })
       })
     })
   })
