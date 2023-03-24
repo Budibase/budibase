@@ -438,7 +438,7 @@ describe("/api/global/scim/v2/users", () => {
       expect(persistedUser).toEqual(expectedScimUser)
     })
 
-    it.only("an event is dispatched", async () => {
+    it("an event is dispatched", async () => {
       const body: ScimUpdateRequest = {
         schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
         Operations: [
@@ -497,6 +497,15 @@ describe("/api/global/scim/v2/users", () => {
 
     it("an non existing user can not be deleted", async () => {
       await deleteScimUser(structures.uuid(), { expect: 404 })
+    })
+
+    it("an event is dispatched", async () => {
+      await deleteScimUser(user.id, { expect: 204 })
+
+      expect(events.scim.SCIMUserDeleted).toBeCalledTimes(1)
+      expect(events.scim.SCIMUserDeleted).toBeCalledWith({
+        userId: user.id,
+      })
     })
   })
 })
