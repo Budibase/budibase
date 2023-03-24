@@ -239,14 +239,13 @@ describe("/api/global/scim/v2/users", () => {
       })
 
       it("an event is dispatched", async () => {
-        const email = structures.email()
-        const body = createScimCreateUserRequest({ email })
+        const body = createScimCreateUserRequest()
 
-        await postScimUser({ body })
+        const res = await postScimUser({ body })
 
         expect(events.scim.SCIMUserCreated).toBeCalledTimes(1)
         expect(events.scim.SCIMUserCreated).toBeCalledWith({
-          email,
+          userId: res.id,
           timestamp: mockedTime.toISOString(),
         })
       })
@@ -454,7 +453,7 @@ describe("/api/global/scim/v2/users", () => {
 
       expect(events.scim.SCIMUserUpdated).toBeCalledTimes(1)
       expect(events.scim.SCIMUserUpdated).toBeCalledWith({
-        email: user.emails[0].value,
+        userId: user.id,
         timestamp: mockedTime.toISOString(),
       })
     })

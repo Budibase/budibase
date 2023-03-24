@@ -7,21 +7,21 @@ import {
 } from "@budibase/types"
 
 async function SCIMUserCreated(props: {
-  email: string
+  userId: string
   timestamp?: string | number
 }) {
   const properties: ScimUserCreatedEvent = {
-    email: props.email,
+    userId: props.userId,
   }
   await publishEvent(Event.SCIM_USER_CREATED, properties, props.timestamp)
 }
 
 async function SCIMUserUpdated(props: {
-  email: string
+  userId: string
   timestamp?: string | number
 }) {
   const properties: ScimUserUpdatedEvent = {
-    email: props.email,
+    userId: props.userId,
   }
   await publishEvent(Event.SCIM_USER_UPDATED, properties, props.timestamp)
 }
