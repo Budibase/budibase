@@ -21,6 +21,7 @@ async function created(user: User, timestamp?: number) {
     userId: user._id as string,
     audited: {
       email: user.email,
+      scim: !!user.scimInfo?.isSync,
     },
   }
   await publishEvent(Event.USER_CREATED, properties, timestamp)

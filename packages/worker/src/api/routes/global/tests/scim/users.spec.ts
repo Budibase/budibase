@@ -243,11 +243,16 @@ describe("/api/global/scim/v2/users", () => {
 
         const res = await postScimUser({ body })
 
-        expect(events.scim.SCIMUserCreated).toBeCalledTimes(1)
-        expect(events.scim.SCIMUserCreated).toBeCalledWith({
-          userId: res.id,
-          timestamp: mockedTime.toISOString(),
-        })
+        expect(events.user.created).toBeCalledTimes(1)
+        expect(events.user.created).toBeCalledWith(
+          expect.objectContaining({
+            _id: res.id,
+            createdAt: mockedTime.toISOString(),
+            scimInfo: expect.objectContaining({
+              isSync: true,
+            }),
+          })
+        )
       })
     })
   })
