@@ -198,7 +198,7 @@ export enum Event {
 // a user facing event or not.
 export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   // USER
-  [Event.USER_CREATED]: `User "{{ email }}" created{{#if scim}} via SCIM{{/if}}`,
+  [Event.USER_CREATED]: `User "{{ email }}" created{{#if viaScim}} via SCIM{{/if}}`,
   [Event.USER_UPDATED]: `User "{{ email }}" updated`,
   [Event.USER_DELETED]: `User "{{ email }}" deleted`,
   [Event.USER_PERMISSION_ADMIN_ASSIGNED]: `User "{{ email }}" admin role assigned`,

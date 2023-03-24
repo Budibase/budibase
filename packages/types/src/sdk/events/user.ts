@@ -4,7 +4,7 @@ export interface UserCreatedEvent extends BaseEvent {
   userId: string
   audited: {
     email: string
-    scim: boolean
+    viaScim: boolean
   }
 }
 
