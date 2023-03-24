@@ -239,7 +239,7 @@ describe("/api/global/scim/v2/users", () => {
       })
 
       it("an event is dispatched", async () => {
-        const body = createScimCreateUserRequest()
+        const body = structures.scim.createUserRequest()
 
         await postScimUser({ body })
 
