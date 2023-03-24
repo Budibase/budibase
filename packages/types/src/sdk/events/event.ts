@@ -184,6 +184,9 @@ export enum Event {
   // AUDIT LOG
   AUDIT_LOGS_FILTERED = "audit_log:filtered",
   AUDIT_LOGS_DOWNLOADED = "audit_log:downloaded",
+
+  // SCIM
+  SCIM_USER_CREATED = "scim:user:created",
 }
 
 // all events that are not audited have been added to this record as undefined, this means
@@ -364,6 +367,9 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   // AUDIT LOG - NOT AUDITED
   [Event.AUDIT_LOGS_FILTERED]: undefined,
   [Event.AUDIT_LOGS_DOWNLOADED]: undefined,
+
+  // SCIM
+  [Event.SCIM_USER_CREATED]: `SCIM user "{{ email }}" created`,
 }
 
 // properties added at the final stage of the event pipeline
