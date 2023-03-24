@@ -241,18 +241,9 @@ describe("/api/global/scim/v2/users", () => {
       it("an event is dispatched", async () => {
         const body = createScimCreateUserRequest()
 
-        const res = await postScimUser({ body })
+        await postScimUser({ body })
 
         expect(events.user.created).toBeCalledTimes(1)
-        expect(events.user.created).toBeCalledWith(
-          expect.objectContaining({
-            _id: res.id,
-            createdAt: mockedTime.toISOString(),
-            scimInfo: expect.objectContaining({
-              isSync: true,
-            }),
-          })
-        )
       })
     })
   })
@@ -456,11 +447,7 @@ describe("/api/global/scim/v2/users", () => {
 
       await patchScimUser({ id: user.id, body })
 
-      expect(events.scim.SCIMUserUpdated).toBeCalledTimes(1)
-      expect(events.scim.SCIMUserUpdated).toBeCalledWith({
-        userId: user.id,
-        timestamp: mockedTime.toISOString(),
-      })
+      expect(events.user.updated).toBeCalledTimes(1)
     })
   })
 
@@ -506,10 +493,7 @@ describe("/api/global/scim/v2/users", () => {
     it("an event is dispatched", async () => {
       await deleteScimUser(user.id, { expect: 204 })
 
-      expect(events.scim.SCIMUserDeleted).toBeCalledTimes(1)
-      expect(events.scim.SCIMUserDeleted).toBeCalledWith({
-        userId: user.id,
-      })
+      expect(events.user.deleted).toBeCalledTimes(1)
     })
   })
 })
