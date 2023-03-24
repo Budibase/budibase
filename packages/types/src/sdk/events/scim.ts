@@ -7,3 +7,6 @@ export interface ScimUserCreatedEvent extends BaseEvent {
 export interface ScimUserUpdatedEvent extends BaseEvent {
   email: string
 }
+export interface ScimUserDeletedEvent extends BaseEvent {
+  userId: string
+}
