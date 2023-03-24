@@ -120,3 +120,5 @@ jest.spyOn(events.view, "calculationDeleted")
 jest.spyOn(events.plugin, "init")
 jest.spyOn(events.plugin, "imported")
 jest.spyOn(events.plugin, "deleted")
+
+jest.spyOn(events.scim, "SCIMUserCreated")
