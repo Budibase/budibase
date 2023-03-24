@@ -4,21 +4,23 @@ export interface UserCreatedEvent extends BaseEvent {
   userId: string
   audited: {
     email: string
-    viaScim: boolean
+    viaScim?: boolean
   }
 }
 
 export interface UserUpdatedEvent extends BaseEvent {
   userId: string
   audited: {
-    email: string
+    email: string,
+    viaScim?: boolean
   }
 }
 
 export interface UserDeletedEvent extends BaseEvent {
   userId: string
   audited: {
-    email: string
+    email: string,
+    viaScim?: boolean
   }
 }
 

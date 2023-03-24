@@ -199,8 +199,8 @@ export enum Event {
 export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   // USER
   [Event.USER_CREATED]: `User "{{ email }}" created{{#if viaScim}} via SCIM{{/if}}`,
-  [Event.USER_UPDATED]: `User "{{ email }}" updated`,
-  [Event.USER_DELETED]: `User "{{ email }}" deleted`,
+  [Event.USER_UPDATED]: `User "{{ email }}" updated{{#if viaScim}} via SCIM{{/if}}`,
+  [Event.USER_DELETED]: `User "{{ email }}" deleted{{#if viaScim}} via SCIM{{/if}}`,
   [Event.USER_PERMISSION_ADMIN_ASSIGNED]: `User "{{ email }}" admin role assigned`,
   [Event.USER_PERMISSION_ADMIN_REMOVED]: `User "{{ email }}" admin role removed`,
   [Event.USER_PERMISSION_BUILDER_ASSIGNED]: `User "{{ email }}" builder role assigned`,
