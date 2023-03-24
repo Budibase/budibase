@@ -186,7 +186,6 @@ export enum Event {
   AUDIT_LOGS_DOWNLOADED = "audit_log:downloaded",
 
   // SCIM
-  SCIM_USER_CREATED = "scim:user:created",
   SCIM_USER_UPDATED = "scim:user:updated",
   SCIM_USER_DELETED = "scim:user:deleted",
 }
@@ -199,7 +198,7 @@ export enum Event {
 // a user facing event or not.
 export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   // USER
-  [Event.USER_CREATED]: `User "{{ email }}" created`,
+  [Event.USER_CREATED]: `User "{{ email }}" created{{#if scim}} via SCIM{{/if}}`,
   [Event.USER_UPDATED]: `User "{{ email }}" updated`,
   [Event.USER_DELETED]: `User "{{ email }}" deleted`,
   [Event.USER_PERMISSION_ADMIN_ASSIGNED]: `User "{{ email }}" admin role assigned`,
@@ -371,7 +370,6 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.AUDIT_LOGS_DOWNLOADED]: undefined,
 
   // SCIM
-  [Event.SCIM_USER_CREATED]: `SCIM user "{{ email }}" created`,
   [Event.SCIM_USER_UPDATED]: `SCIM user "{{ email }}" updated`,
   [Event.SCIM_USER_DELETED]: `SCIM user "{{ email }}" deleted`,
 }
