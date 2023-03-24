@@ -19,7 +19,12 @@ export function doInIdentityContext(identity: IdentityContext, task: any) {
 }
 
 // used in server/worker
-export function doInUserContext(user: User, ctx: Ctx, task: any) {
+export function doInUserContext(
+  user: User,
+  ctx: Ctx,
+  task: any,
+  isScim: boolean
+) {
   const userContext: UserContext = {
     ...user,
     _id: user._id as string,
@@ -29,6 +34,7 @@ export function doInUserContext(user: User, ctx: Ctx, task: any) {
       // filled in by koa-useragent package
       userAgent: ctx.userAgent._agent.source,
     },
+    isScimCall: isScim,
   }
   return doInIdentityContext(userContext, task)
 }

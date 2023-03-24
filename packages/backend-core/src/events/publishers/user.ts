@@ -15,13 +15,14 @@ import {
   UserUpdatedEvent,
   UserOnboardingEvent,
 } from "@budibase/types"
+import { context } from "../.."
 
 async function created(user: User, timestamp?: number) {
   const properties: UserCreatedEvent = {
     userId: user._id as string,
     audited: {
       email: user.email,
-      scim: !!user.scimInfo?.isSync,
+      viaScim: !!(context.getIdentity() as any)?.isScimCall,
     },
   }
   await publishEvent(Event.USER_CREATED, properties, timestamp)
@@ -31,7 +32,7 @@ async function updated(user: User) {
   const properties: UserUpdatedEvent = {
     userId: user._id as string,
     audited: {
-      email: user.email,
+      email: user.email
     },
   }
   await publishEvent(Event.USER_UPDATED, properties)
