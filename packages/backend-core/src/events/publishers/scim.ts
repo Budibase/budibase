@@ -1,20 +1,9 @@
 import { publishEvent } from "../events"
 import {
   Event,
-  ScimUserCreatedEvent,
   ScimUserDeletedEvent,
   ScimUserUpdatedEvent,
 } from "@budibase/types"
-
-async function SCIMUserCreated(props: {
-  userId: string
-  timestamp?: string | number
-}) {
-  const properties: ScimUserCreatedEvent = {
-    userId: props.userId,
-  }
-  await publishEvent(Event.SCIM_USER_CREATED, properties, props.timestamp)
-}
 
 async function SCIMUserUpdated(props: {
   userId: string
@@ -34,7 +23,6 @@ async function SCIMUserDeleted(props: { userId: string }) {
 }
 
 export default {
-  SCIMUserCreated,
   SCIMUserUpdated,
   SCIMUserDeleted,
 }
