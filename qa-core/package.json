@@ -13,13 +13,15 @@
     "test:watch": "env-cmd jest --watch",
     "test:debug": "DEBUG=1 jest",
     "test:notify": "node scripts/testResultsWebhook",
-    "test:ci": "jest --runInBand --json --outputFile=testResults.json",
+    "test:ci": "jest --runInBand --testPathIgnorePatterns=\\\"\\/dataSources\\/\\\"",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "api:server:setup": "npm run docker:up && env-cmd ts-node ../packages/builder/ts/setup.ts",
     "api:server:setup:ci": "env-cmd node ../packages/builder/setup.js",
     "api:test:ci": "start-server-and-test api:server:setup:ci http://localhost:4100/builder test",
-    "api:test": "start-server-and-test api:server:setup http://localhost:4100/builder test"
+    "api:test": "start-server-and-test api:server:setup http://localhost:4100/builder test",
+    "api:test:local": "env-cmd jest --runInBand --testPathIgnorePatterns=\\\"\\/dataSources\\/\\\"",
+    "api:test:local:withDataSources": "env-cmd jest --runInBand"
   },
   "jest": {
     "preset": "ts-jest",
