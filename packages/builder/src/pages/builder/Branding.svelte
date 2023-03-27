@@ -8,7 +8,7 @@
   $: platformTitleText = $organisation.platformTitle
   $: platformTitleText,
     (platformTitle =
-      !$admin.isCloud && !$auth.user ? platformTitleText : "Budibase")
+      !$auth.user && platformTitleText ? platformTitleText : "Budibase")
 
   $: faviconUrl = $organisation.faviconUrl || "https://i.imgur.com/Xhdt1YP.png"
 

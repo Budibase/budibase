@@ -47,12 +47,8 @@
   $: onConfigUpdate(config, mounted)
   $: init = Object.keys(config).length > 0
 
-  $: cloudPremium = !$licensing.isFreePlan
-  $: selfhostPremium = $licensing.isEnterprisePlan || $licensing.isBusinessPlan
   $: isCloud = $admin.cloud
-
-  $: isLicenseLocked =
-    (isCloud && !cloudPremium) || (!isCloud && !selfhostPremium)
+  $: brandingEnabled = $licensing.brandingEnabled
 
   const onConfigUpdate = () => {
     if (!mounted || updated || !init) {
@@ -152,6 +148,27 @@
         faviconPreview = null
       }
     }
+
+    // Trim
+    const userStrings = [
+      "metaTitle",
+      "platformTitle",
+      "loginButton",
+      "loginHeading",
+      "metaDescription",
+      "metaImageUrl",
+    ]
+
+    const trimmed = userStrings.reduce((acc, fieldName) => {
+      acc[fieldName] = config[fieldName] ? config[fieldName].trim() : undefined
+      return acc
+    }, {})
+
+    config = {
+      ...config,
+      ...trimmed,
+    }
+
     try {
       // Update settings
       await organisation.save(config)
@@ -190,12 +207,12 @@
     <Layout gap="XS" noPadding>
       <div class="title">
         <Heading size="M">Branding</Heading>
-        {#if !isCloud && !selfhostPremium}
+        {#if !isCloud && !brandingEnabled}
           <Tags>
             <Tag icon="LockClosed">Business</Tag>
           </Tags>
         {/if}
-        {#if isCloud && !cloudPremium}
+        {#if isCloud && !brandingEnabled}
           <Tags>
             <Tag icon="LockClosed">Pro</Tag>
           </Tags>
@@ -226,7 +243,7 @@
             config = clone
           }}
           value={logoFile || logo}
-          disabled={isLicenseLocked || saving}
+          disabled={!brandingEnabled || saving}
           allowClear={true}
         />
       </div>
@@ -251,7 +268,7 @@
             config = clone
           }}
           value={faviconFile || favicon}
-          disabled={isLicenseLocked || saving}
+          disabled={!brandingEnabled || saving}
           allowClear={true}
         />
       </div>
@@ -265,7 +282,7 @@
               config = clone
             }}
             value={config.platformTitle || ""}
-            disabled={!selfhostPremium || saving}
+            disabled={!brandingEnabled || saving}
           />
         </div>
       {/if}
@@ -278,7 +295,7 @@
             config = clone
           }}
           value={!config.emailBrandingEnabled}
-          disabled={isLicenseLocked || saving}
+          disabled={!brandingEnabled || saving}
         />
       </div>
     </div>
@@ -300,7 +317,7 @@
                 config = clone
               }}
               value={config.loginHeading || ""}
-              disabled={!selfhostPremium || saving}
+              disabled={!brandingEnabled || saving}
             />
           </div>
 
@@ -313,7 +330,7 @@
                 config = clone
               }}
               value={config.loginButton || ""}
-              disabled={!selfhostPremium || saving}
+              disabled={!brandingEnabled || saving}
             />
           </div>
           <div>
@@ -325,7 +342,7 @@
                 config = clone
               }}
               value={!config.testimonialsEnabled}
-              disabled={!selfhostPremium || saving}
+              disabled={!brandingEnabled || saving}
             />
             <Toggle
               text={"Remove license agreement"}
@@ -335,7 +352,7 @@
                 config = clone
               }}
               value={!config.licenseAgreementEnabled}
-              disabled={!selfhostPremium || saving}
+              disabled={!brandingEnabled || saving}
             />
           </div>
         </div>
@@ -357,7 +374,7 @@
               config = clone
             }}
             value={config.metaImageUrl}
-            disabled={isLicenseLocked || saving}
+            disabled={!brandingEnabled || saving}
           />
         </div>
         <div class="field">
@@ -369,7 +386,7 @@
               config = clone
             }}
             value={config.metaTitle}
-            disabled={isLicenseLocked || saving}
+            disabled={!brandingEnabled || saving}
           />
         </div>
         <div class="field">
@@ -381,13 +398,13 @@
               config = clone
             }}
             value={config.metaDescription}
-            disabled={isLicenseLocked || saving}
+            disabled={!brandingEnabled || saving}
           />
         </div>
       </div>
     </div>
     <div class="buttons">
-      {#if isLicenseLocked}
+      {#if !brandingEnabled}
         <Button
           on:click={() => {
             if (isCloud && $auth?.user?.accountPortalAccess) {

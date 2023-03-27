@@ -17,6 +17,7 @@ export const createLicensingStore = () => {
     // features
     groupsEnabled: false,
     backupsEnabled: false,
+    brandingEnabled: false,
     // the currently used quotas from the db
     quotaUsage: undefined,
     // derived quota metrics for percentages used
@@ -71,7 +72,9 @@ export const createLicensingStore = () => {
       const enforceableSSO = license.features.includes(
         Constants.Features.ENFORCEABLE_SSO
       )
-
+      const brandingEnabled = license.features.includes(
+        Constants.Features.BRANDING
+      )
       const auditLogsEnabled = license.features.includes(
         Constants.Features.AUDIT_LOGS
       )
@@ -84,6 +87,7 @@ export const createLicensingStore = () => {
           isBusinessPlan,
           groupsEnabled,
           backupsEnabled,
+          brandingEnabled,
           environmentVariablesEnabled,
           auditLogsEnabled,
           enforceableSSO,
