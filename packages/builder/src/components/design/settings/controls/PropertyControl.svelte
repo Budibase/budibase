@@ -8,6 +8,7 @@
   import { onDestroy } from "svelte"
 
   export let label = ""
+  export let labelHidden = false
   export let componentInstance = {}
   export let control = null
   export let key = ""
@@ -75,7 +76,7 @@
 </script>
 
 <div class="property-control" class:highlighted={highlighted && nullishValue}>
-  {#if type !== "boolean" && label}
+  {#if type !== "boolean" && label && !labelHidden}
     <div class="label">
       <Label>{label}</Label>
     </div>
