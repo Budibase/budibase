@@ -15,7 +15,6 @@ import {
   Config,
   ConfigType,
   Ctx,
-  Feature,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
   GoogleInnerConfig,
@@ -30,7 +29,6 @@ import {
   UserCtx,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
-import { licensing } from "@budibase/pro"
 
 const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []
@@ -271,31 +269,6 @@ export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
   }
 }
 
-export async function getLicensedConfig() {
-  let licensedConfig: object = {}
-  const defaults = {
-    emailBrandingEnabled: true,
-    testimonialsEnabled: true,
-    platformTitle: undefined,
-    metaDescription: undefined,
-    metaImageUrl: undefined,
-    metaTitle: undefined,
-  }
-
-  try {
-    // License/Feature Checks
-    const license = await licensing.getLicense()
-
-    if (!license || license?.features.indexOf(Feature.BRANDING) == -1) {
-      licensedConfig = { ...defaults }
-    }
-  } catch (e) {
-    licensedConfig = { ...defaults }
-    console.info("Could not retrieve license", e)
-  }
-  return licensedConfig
-}
-
 export async function publicSettings(
   ctx: Ctx<void, GetPublicSettingsResponse>
 ) {
@@ -304,7 +277,7 @@ export async function publicSettings(
     const configDoc = await configs.getSettingsConfigDoc()
     const config = configDoc.config
 
-    const licensedConfig: object = await getLicensedConfig()
+    const branding = await pro.branding.getBrandingConfig(config)
 
     // enrich the logo url - empty url means deleted
     if (config.logoUrl && config.logoUrl !== "") {
@@ -315,11 +288,12 @@ export async function publicSettings(
       )
     }
 
-    if (config.faviconUrl && config.faviconUrl !== "") {
+    if (branding.faviconUrl && branding.faviconUrl !== "") {
+      // @ts-ignore
       config.faviconUrl = objectStore.getGlobalFileUrl(
         "settings",
         "faviconUrl",
-        config.faviconUrl
+        branding.faviconUrl
       )
     }
 
@@ -343,7 +317,7 @@ export async function publicSettings(
       _rev: configDoc._rev,
       config: {
         ...config,
-        ...licensedConfig,
+        ...branding,
         google,
         oidc,
         isSSOEnforced,
