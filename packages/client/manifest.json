@@ -2346,7 +2346,6 @@
     ]
   },
   "stringfield": {
-    "skeleton": false,
     "name": "Text Field",
     "icon": "Text",
     "styles": ["size"],
@@ -2436,7 +2435,6 @@
     ]
   },
   "numberfield": {
-    "skeleton": false,
     "name": "Number Field",
     "icon": "123",
     "styles": ["size"],
@@ -2492,7 +2490,6 @@
     ]
   },
   "passwordfield": {
-    "skeleton": false,
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": ["size"],
@@ -2548,7 +2545,6 @@
     ]
   },
   "optionsfield": {
-    "skeleton": false,
     "name": "Options Picker",
     "icon": "Menu",
     "styles": ["size"],
@@ -2715,7 +2711,6 @@
     ]
   },
   "multifieldselect": {
-    "skeleton": false,
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": ["size"],
@@ -2876,7 +2871,6 @@
     ]
   },
   "booleanfield": {
-    "skeleton": false,
     "name": "Checkbox",
     "icon": "SelectBox",
     "editable": true,
@@ -2955,7 +2949,6 @@
     ]
   },
   "longformfield": {
-    "skeleton": false,
     "name": "Long Form Field",
     "icon": "TextAlignLeft",
     "styles": ["size"],
@@ -3033,7 +3026,6 @@
     ]
   },
   "datetimefield": {
-    "skeleton": false,
     "name": "Date Picker",
     "icon": "Date",
     "styles": ["size"],
@@ -3113,7 +3105,6 @@
     ]
   },
   "codescanner": {
-    "skeleton": false,
     "name": "Barcode/QR Scanner",
     "icon": "Camera",
     "styles": ["size"],
@@ -3275,7 +3266,6 @@
     ]
   },
   "attachmentfield": {
-    "skeleton": false,
     "name": "Attachment",
     "icon": "Attach",
     "styles": ["size"],
@@ -3338,7 +3328,6 @@
     ]
   },
   "relationshipfield": {
-    "skeleton": false,
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styles": ["size"],
@@ -3400,7 +3389,6 @@
     ]
   },
   "jsonfield": {
-    "skeleton": false,
     "name": "JSON Field",
     "icon": "Brackets",
     "styles": ["size"],
@@ -3591,7 +3579,6 @@
     }
   },
   "table": {
-    "skeleton": false,
     "name": "Table",
     "icon": "Table",
     "illegalChildren": ["section"],
