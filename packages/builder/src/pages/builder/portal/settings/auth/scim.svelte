@@ -17,7 +17,7 @@
 
   const configType = "scim"
 
-  $: scimEnabled = true
+  $: scimEnabled = false
   $: apiKey = null
 
   async function saveConfig(config) {
