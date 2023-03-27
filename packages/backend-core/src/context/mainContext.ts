@@ -214,6 +214,13 @@ export function doInEnvironmentContext(
   return newContext(updates, task)
 }
 
+export function doInScimContext(task: any) {
+  const updates: ContextMap = {
+    scimCall: true,
+  }
+  return newContext(updates, task)
+}
+
 export function getEnvironmentVariables() {
   const context = Context.get()
   if (!context.environmentVariables) {
@@ -269,4 +276,10 @@ export function getDevAppDB(opts?: any): Database {
     throw new Error("Unable to retrieve dev DB - no app ID.")
   }
   return getDB(conversions.getDevelopmentAppID(appId), opts)
+}
+
+export function isScimCall(): boolean {
+  const context = Context.get()
+  const scimCall = context?.scimCall
+  return !!scimCall
 }
