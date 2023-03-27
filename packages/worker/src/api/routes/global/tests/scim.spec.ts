@@ -41,6 +41,17 @@ const unauthorisedTests = (
         status: 400,
       })
     })
+
+    it("cannot be called when feature is enabled but the config disabled", async () => {
+      const response = await fn(...Array(fn.length - 1).fill({}), {
+        expect: 400,
+      })
+
+      expect(response).toEqual({
+        message: "SCIM is not enabled",
+        status: 400,
+      })
+    })
   })
 }
 
@@ -62,7 +73,7 @@ describe("scim", () => {
   })
 
   describe("/api/global/scim/v2/users", () => {
-    describe("GET /api/global/scim/v2/users", () => {
+    describe.only("GET /api/global/scim/v2/users", () => {
       const getScimUsers = config.api.scimUsersAPI.get
 
       unauthorisedTests(getScimUsers)

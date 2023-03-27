@@ -5,6 +5,7 @@ import {
   GoogleInnerConfig,
   OIDCConfig,
   OIDCInnerConfig,
+  SCIMConfig,
   SettingsConfig,
   SettingsInnerConfig,
   SMTPConfig,
@@ -241,4 +242,8 @@ export async function getSMTPConfig(
       },
     }
   }
+}
+
+export async function getSCIMConfig(): Promise<SCIMConfig | undefined> {
+  return getConfig<SCIMConfig>(ConfigType.SCIM)
 }
