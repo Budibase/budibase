@@ -57,10 +57,10 @@ jobs:
       - run: yarn
       - run: yarn bootstrap
       - run: yarn test
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          files: ./packages/worker/coverage/clover.xml,./packages/backend-core/coverage/clover.xml,./packages/server/coverage/clover.xml
+          files: ./packages/backend-core/coverage/clover.xml,./packages/worker/coverage/clover.xml,./packages/server/coverage/clover.xml
           name: codecov-umbrella
           verbose: true
 
