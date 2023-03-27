@@ -2,25 +2,25 @@ import { BaseEvent } from "./event"
 
 export interface UserCreatedEvent extends BaseEvent {
   userId: string
+  viaScim?: boolean
   audited: {
     email: string
-    viaScim?: boolean
   }
 }
 
 export interface UserUpdatedEvent extends BaseEvent {
   userId: string
+  viaScim?: boolean
   audited: {
-    email: string,
-    viaScim?: boolean
+    email: string
   }
 }
 
 export interface UserDeletedEvent extends BaseEvent {
   userId: string
+  viaScim?: boolean
   audited: {
-    email: string,
-    viaScim?: boolean
+    email: string
   }
 }
 
