@@ -9,6 +9,7 @@ mocks.licenses.useScimIntegration()
 
 describe("/api/global/scim/v2/users", () => {
   beforeEach(() => {
+    jest.resetAllMocks()
     mocks.licenses.useScimIntegration()
   })
 
