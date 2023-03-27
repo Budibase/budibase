@@ -1,6 +1,5 @@
 import tk from "timekeeper"
 import _ from "lodash"
-import { events } from "@budibase/backend-core"
 import { mocks, structures } from "@budibase/backend-core/tests"
 import {
   ScimGroupResponse,
@@ -8,14 +7,47 @@ import {
   ScimUserResponse,
 } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
+import { events } from "@budibase/backend-core"
 
 mocks.licenses.useScimIntegration()
+
+const unauthorisedTests = (
+  fn: (
+    ...params: any //settings: RequestSettings
+  ) => Promise<any>
+) => {
+  describe("unauthorised calls", () => {
+    it("unauthorised calls are not allowed", async () => {
+      const response = await fn(...Array(fn.length - 1).fill({}), {
+        setHeaders: false,
+        expect: 403,
+      })
+
+      expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+    })
+
+    it("cannot be called when feature is disabled", async () => {
+      mocks.licenses.useCloudFree()
+      const response = await fn(...Array(fn.length - 1).fill({}), {
+        expect: 400,
+      })
+
+      expect(response).toEqual({
+        error: {
+          code: "feature_disabled",
+          featureName: "scim",
+        },
+        message: "scim is not currently enabled",
+        status: 400,
+      })
+    })
+  })
+}
 
 describe("scim", () => {
   beforeEach(() => {
     jest.resetAllMocks()
     tk.freeze(mocks.date.MOCK_DATE)
-
     mocks.licenses.useScimIntegration()
   })
 
@@ -29,34 +61,11 @@ describe("scim", () => {
     await config.afterAll()
   })
 
-  const featureDisabledResponse = {
-    error: {
-      code: "feature_disabled",
-      featureName: "scim",
-    },
-    message: "scim is not currently enabled",
-    status: 400,
-  }
-
   describe("/api/global/scim/v2/users", () => {
     describe("GET /api/global/scim/v2/users", () => {
       const getScimUsers = config.api.scimUsersAPI.get
 
-      it("unauthorised calls are not allowed", async () => {
-        const response = await getScimUsers({
-          setHeaders: false,
-          expect: 403,
-        })
-
-        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-      })
-
-      it("cannot be called when feature is disabled", async () => {
-        mocks.licenses.useCloudFree()
-        const response = await getScimUsers({ expect: 400 })
-
-        expect(response).toEqual(featureDisabledResponse)
-      })
+      unauthorisedTests(getScimUsers)
 
       describe("no users exist", () => {
         it("should retrieve empty list", async () => {
@@ -176,27 +185,7 @@ describe("scim", () => {
         await config.useNewTenant()
       })
 
-      it("unauthorised calls are not allowed", async () => {
-        const response = await postScimUser(
-          { body: {} as any },
-          {
-            setHeaders: false,
-            expect: 403,
-          }
-        )
-
-        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-      })
-
-      it("cannot be called when feature is disabled", async () => {
-        mocks.licenses.useCloudFree()
-        const response = await postScimUser(
-          { body: {} as any },
-          { expect: 400 }
-        )
-
-        expect(response).toEqual(featureDisabledResponse)
-      })
+      unauthorisedTests(postScimUser)
 
       describe("no users exist", () => {
         it("a new user can be created and persisted", async () => {
@@ -270,21 +259,7 @@ describe("scim", () => {
 
       const findScimUser = config.api.scimUsersAPI.find
 
-      it("unauthorised calls are not allowed", async () => {
-        const response = await findScimUser(user.id, {
-          setHeaders: false,
-          expect: 403,
-        })
-
-        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-      })
-
-      it("cannot be called when feature is disabled", async () => {
-        mocks.licenses.useCloudFree()
-        const response = await findScimUser(user.id, { expect: 400 })
-
-        expect(response).toEqual(featureDisabledResponse)
-      })
+      unauthorisedTests(findScimUser)
 
       it("should return existing user", async () => {
         const response = await findScimUser(user.id)
@@ -313,21 +288,7 @@ describe("scim", () => {
         user = await config.api.scimUsersAPI.post({ body })
       })
 
-      it("unauthorised calls are not allowed", async () => {
-        const response = await patchScimUser({} as any, {
-          setHeaders: false,
-          expect: 403,
-        })
-
-        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-      })
-
-      it("cannot be called when feature is disabled", async () => {
-        mocks.licenses.useCloudFree()
-        const response = await patchScimUser({} as any, { expect: 400 })
-
-        expect(response).toEqual(featureDisabledResponse)
-      })
+      unauthorisedTests(patchScimUser)
 
       it("an existing user can be updated", async () => {
         const newUserName = structures.generator.name()
@@ -473,21 +434,7 @@ describe("scim", () => {
         user = await config.api.scimUsersAPI.post({ body })
       })
 
-      it("unauthorised calls are not allowed", async () => {
-        const response = await deleteScimUser(user.id, {
-          setHeaders: false,
-          expect: 403,
-        })
-
-        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-      })
-
-      it("cannot be called when feature is disabled", async () => {
-        mocks.licenses.useCloudFree()
-        const response = await deleteScimUser(user.id, { expect: 400 })
-
-        expect(response).toEqual(featureDisabledResponse)
-      })
+      unauthorisedTests(deleteScimUser)
 
       it("an existing user can be deleted", async () => {
         const response = await deleteScimUser(user.id, { expect: 204 })
@@ -513,21 +460,7 @@ describe("scim", () => {
     describe("GET /api/global/scim/v2/groups", () => {
       const getScimGroups = config.api.scimGroupsAPI.get
 
-      it("unauthorised calls are not allowed", async () => {
-        const response = await getScimGroups({
-          setHeaders: false,
-          expect: 403,
-        })
-
-        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-      })
-
-      it("cannot be called when feature is disabled", async () => {
-        mocks.licenses.useCloudFree()
-        const response = await getScimGroups({ expect: 400 })
-
-        expect(response).toEqual(featureDisabledResponse)
-      })
+      unauthorisedTests(getScimGroups)
 
       describe("no groups exist", () => {
         it("should retrieve empty list", async () => {
@@ -579,27 +512,7 @@ describe("scim", () => {
         await config.useNewTenant()
       })
 
-      it("unauthorised calls are not allowed", async () => {
-        const response = await postScimGroup(
-          { body: {} as any },
-          {
-            setHeaders: false,
-            expect: 403,
-          }
-        )
-
-        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-      })
-
-      it("cannot be called when feature is disabled", async () => {
-        mocks.licenses.useCloudFree()
-        const response = await postScimGroup(
-          { body: {} as any },
-          { expect: 400 }
-        )
-
-        expect(response).toEqual(featureDisabledResponse)
-      })
+      unauthorisedTests(postScimGroup)
 
       describe("no groups exist", () => {
         it("a new group can be created and persisted", async () => {
@@ -650,21 +563,7 @@ describe("scim", () => {
 
       const findScimGroup = config.api.scimGroupsAPI.find
 
-      it("unauthorised calls are not allowed", async () => {
-        const response = await findScimGroup(group.id, {
-          setHeaders: false,
-          expect: 403,
-        })
-
-        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-      })
-
-      it("cannot be called when feature is disabled", async () => {
-        mocks.licenses.useCloudFree()
-        const response = await findScimGroup(group.id, { expect: 400 })
-
-        expect(response).toEqual(featureDisabledResponse)
-      })
+      unauthorisedTests(findScimGroup)
 
       it("should return existing group", async () => {
         const response = await findScimGroup(group.id)
@@ -693,21 +592,7 @@ describe("scim", () => {
         group = await config.api.scimGroupsAPI.post({ body })
       })
 
-      it("unauthorised calls are not allowed", async () => {
-        const response = await deleteScimGroup(group.id, {
-          setHeaders: false,
-          expect: 403,
-        })
-
-        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-      })
-
-      it("cannot be called when feature is disabled", async () => {
-        mocks.licenses.useCloudFree()
-        const response = await deleteScimGroup(group.id, { expect: 400 })
-
-        expect(response).toEqual(featureDisabledResponse)
-      })
+      unauthorisedTests(deleteScimGroup)
 
       it("an existing group can be deleted", async () => {
         const response = await deleteScimGroup(group.id, { expect: 204 })
@@ -741,21 +626,7 @@ describe("scim", () => {
         group = await config.api.scimGroupsAPI.post({ body })
       })
 
-      it("unauthorised calls are not allowed", async () => {
-        const response = await patchScimGroup({} as any, {
-          setHeaders: false,
-          expect: 403,
-        })
-
-        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-      })
-
-      it("cannot be called when feature is disabled", async () => {
-        mocks.licenses.useCloudFree()
-        const response = await patchScimGroup({} as any, { expect: 400 })
-
-        expect(response).toEqual(featureDisabledResponse)
-      })
+      unauthorisedTests(patchScimGroup)
 
       it("an existing group can be updated", async () => {
         const newDisplayName = structures.generator.word()
