@@ -15,6 +15,7 @@ import {
   Config,
   ConfigType,
   Ctx,
+  Feature,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
   GoogleInnerConfig,
@@ -29,6 +30,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
+import { licensing } from "@budibase/pro"
 
 const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []
@@ -276,6 +278,20 @@ export async function publicSettings(
     // settings
     const configDoc = await configs.getSettingsConfigDoc()
     const config = configDoc.config
+
+    // License/Feature Checks
+    const license = await licensing.getLicense()
+
+    const licensedConfig: any = {}
+    if (!license || license?.features.indexOf(Feature.BRANDING) == -1) {
+      licensedConfig["emailBrandingEnabled"] = true
+      licensedConfig["testimonialsEnabled"] = true
+      licensedConfig["platformTitle"] = undefined
+      licensedConfig["metaDescription"] = undefined
+      licensedConfig["metaImageUrl"] = undefined
+      licensedConfig["metaTitle"] = undefined
+    }
+
     // enrich the logo url - empty url means deleted
     if (config.logoUrl && config.logoUrl !== "") {
       config.logoUrl = objectStore.getGlobalFileUrl(
@@ -313,6 +329,7 @@ export async function publicSettings(
       _rev: configDoc._rev,
       config: {
         ...config,
+        ...licensedConfig,
         google,
         oidc,
         isSSOEnforced,
