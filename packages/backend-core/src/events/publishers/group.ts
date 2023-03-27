@@ -15,7 +15,7 @@ import { context } from "../.."
 async function created(group: UserGroup, timestamp?: number) {
   const properties: GroupCreatedEvent = {
     groupId: group._id as string,
-    viaScim: context.isScimCall(),
+    viaScim: context.isScim(),
     audited: {
       name: group.name,
     },
@@ -26,7 +26,7 @@ async function created(group: UserGroup, timestamp?: number) {
 async function updated(group: UserGroup) {
   const properties: GroupUpdatedEvent = {
     groupId: group._id as string,
-    viaScim: context.isScimCall(),
+    viaScim: context.isScim(),
     audited: {
       name: group.name,
     },
@@ -37,7 +37,7 @@ async function updated(group: UserGroup) {
 async function deleted(group: UserGroup) {
   const properties: GroupDeletedEvent = {
     groupId: group._id as string,
-    viaScim: context.isScimCall(),
+    viaScim: context.isScim(),
     audited: {
       name: group.name,
     },
@@ -49,7 +49,7 @@ async function usersAdded(count: number, group: UserGroup) {
   const properties: GroupUsersAddedEvent = {
     count,
     groupId: group._id as string,
-    viaScim: context.isScimCall(),
+    viaScim: context.isScim(),
     audited: {
       name: group.name,
     },
@@ -61,7 +61,7 @@ async function usersDeleted(count: number, group: UserGroup) {
   const properties: GroupUsersDeletedEvent = {
     count,
     groupId: group._id as string,
-    viaScim: context.isScimCall(),
+    viaScim: context.isScim(),
     audited: {
       name: group.name,
     },

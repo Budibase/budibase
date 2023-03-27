@@ -6,5 +6,5 @@ export type ContextMap = {
   appId?: string
   identity?: IdentityContext
   environmentVariables?: Record<string, string>
-  scimCall?: boolean
+  isScim?: boolean
 }
