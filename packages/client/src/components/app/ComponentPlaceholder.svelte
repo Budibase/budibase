@@ -3,12 +3,13 @@
   import { builderStore } from "stores"
 
   const component = getContext("component")
+  const { styleable } = getContext("sdk")
 
   $: requiredSetting = $component.missingRequiredSettings?.[0]
 </script>
 
 {#if $builderStore.inBuilder && requiredSetting}
-  <div class="component-placeholder">
+  <div class="component-placeholder" use:styleable={$component.styles}>
     <span>
       Add the <mark>{requiredSetting.label}</mark> setting to start using your component
       -
@@ -32,7 +33,7 @@
   }
   .component-placeholder mark {
     background-color: var(--spectrum-global-color-gray-400);
-    padding: 0 2px;
+    padding: 0 4px;
     border-radius: 2px;
   }
   .component-placeholder .spectrum-Link {
