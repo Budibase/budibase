@@ -23,7 +23,7 @@ import { LoopStep, LoopStepType, LoopInput } from "../definitions/automations"
  * @returns {object} The inputs object which has had all the various types supported by this function converted to their
  * primitive types.
  */
-export function cleanInputValues(inputs: Record<string, any>, schema: any) {
+export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
   if (schema == null) {
     return inputs
   }
