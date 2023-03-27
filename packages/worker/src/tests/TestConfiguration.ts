@@ -25,7 +25,13 @@ import {
   utils,
 } from "@budibase/backend-core"
 import structures, { CSRF_TOKEN } from "./structures"
-import { SaveUserResponse, User, AuthToken } from "@budibase/types"
+import {
+  SaveUserResponse,
+  User,
+  AuthToken,
+  SCIMConfig,
+  ConfigType,
+} from "@budibase/types"
 import API from "./api"
 
 class TestConfiguration {
@@ -334,6 +340,19 @@ class TestConfiguration {
       null,
       controllers.config.save
     )
+  }
+
+  // CONFIGS - SCIM
+
+  async setSCIMConfig(enabled: boolean) {
+    await this.deleteConfig(Config.SCIM)
+    const config: SCIMConfig = {
+      type: ConfigType.SCIM,
+      config: { enabled },
+    }
+
+    await this._req(config, null, controllers.config.save)
+    return config
   }
 }
 
