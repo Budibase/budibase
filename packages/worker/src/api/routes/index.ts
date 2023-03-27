@@ -36,5 +36,5 @@ export const routes: Router[] = [
   accountRoutes,
   restoreRoutes,
   eventRoutes,
-  ...pro.scimRoutes,
+  pro.scim,
 ]
