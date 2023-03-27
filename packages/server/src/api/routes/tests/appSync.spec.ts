@@ -24,7 +24,7 @@ describe("/api/applications/:appId/sync", () => {
     return rows
   }
 
-  it("make sure its empty initially", async () => {
+  it("make sure that user metadata is correctly sync'd", async () => {
     const rows = await getUserMetadata()
     expect(rows.length).toBe(1)
   })

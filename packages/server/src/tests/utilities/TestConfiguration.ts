@@ -165,6 +165,8 @@ class TestConfiguration {
     }
     if (this.server) {
       this.server.close()
+    } else {
+      require("../../app").default.close()
     }
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
