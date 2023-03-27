@@ -216,7 +216,7 @@ export function doInEnvironmentContext(
 
 export function doInScimContext(task: any) {
   const updates: ContextMap = {
-    scimCall: true,
+    isScim: true,
   }
   return newContext(updates, task)
 }
@@ -278,8 +278,8 @@ export function getDevAppDB(opts?: any): Database {
   return getDB(conversions.getDevelopmentAppID(appId), opts)
 }
 
-export function isScimCall(): boolean {
+export function isScim(): boolean {
   const context = Context.get()
-  const scimCall = context?.scimCall
+  const scimCall = context?.isScim
   return !!scimCall
 }

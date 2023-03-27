@@ -20,7 +20,7 @@ import { context } from "../.."
 async function created(user: User, timestamp?: number) {
   const properties: UserCreatedEvent = {
     userId: user._id as string,
-    viaScim: context.isScimCall(),
+    viaScim: context.isScim(),
     audited: {
       email: user.email,
     },
@@ -31,7 +31,7 @@ async function created(user: User, timestamp?: number) {
 async function updated(user: User) {
   const properties: UserUpdatedEvent = {
     userId: user._id as string,
-    viaScim: context.isScimCall(),
+    viaScim: context.isScim(),
     audited: {
       email: user.email,
     },
@@ -42,7 +42,7 @@ async function updated(user: User) {
 async function deleted(user: User) {
   const properties: UserDeletedEvent = {
     userId: user._id as string,
-    viaScim: context.isScimCall(),
+    viaScim: context.isScim(),
     audited: {
       email: user.email,
     },
