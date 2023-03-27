@@ -108,4 +108,5 @@ export enum ConfigType {
   GOOGLE = "google",
   OIDC = "oidc",
   OIDC_LOGOS = "logos_oidc",
+  SCIM = "scim",
 }
