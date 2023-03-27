@@ -20,16 +20,9 @@
   $: scimEnabled = false
   $: apiKey = null
 
-  async function saveConfig(config) {
-    // Delete unsupported fields
-    delete config.createdAt
-    delete config.updatedAt
-    return API.saveConfig(config)
-  }
-
   async function saveSCIM() {
     try {
-      await saveConfig({
+      await API.saveConfig({
         type: configType,
         enabled: scimEnabled,
       })
