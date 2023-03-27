@@ -118,7 +118,8 @@ export const serveApp = async function (ctx: any) {
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
         metaDescription: branding?.metaDescription || "",
-        metaTitle: branding?.metaTitle || `${appInfo.name} - built with Budibase`,
+        metaTitle:
+          branding?.metaTitle || `${appInfo.name} - built with Budibase`,
         title: appInfo.name,
         production: env.isProd(),
         appId,
