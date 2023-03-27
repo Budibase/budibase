@@ -192,7 +192,6 @@
       emailBrandingEnabled: $organisation.emailBrandingEnabled,
       loginHeading: $organisation.loginHeading,
       loginButton: $organisation.loginButton,
-      licenseAgreementEnabled: $organisation.licenseAgreementEnabled,
       testimonialsEnabled: $organisation.testimonialsEnabled,
       metaDescription: $organisation.metaDescription,
       metaImageUrl: $organisation.metaImageUrl,
@@ -342,16 +341,6 @@
                 config = clone
               }}
               value={!config.testimonialsEnabled}
-              disabled={!brandingEnabled || saving}
-            />
-            <Toggle
-              text={"Remove license agreement"}
-              on:change={e => {
-                let clone = { ...config }
-                clone.licenseAgreementEnabled = !e.detail
-                config = clone
-              }}
-              value={!config.licenseAgreementEnabled}
               disabled={!brandingEnabled || saving}
             />
           </div>

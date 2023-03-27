@@ -33,7 +33,6 @@ export interface SettingsInnerConfig {
 
   emailBrandingEnabled?: boolean
   testimonialsEnabled?: boolean
-  licenseAgreementEnabled?: boolean
   platformTitle?: string
   loginHeading?: string
   loginButton?: string
