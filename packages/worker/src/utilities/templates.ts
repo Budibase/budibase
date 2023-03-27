@@ -1,10 +1,13 @@
 import { tenancy, configs } from "@budibase/backend-core"
+import { SettingsInnerConfig } from "@budibase/types"
 import {
   InternalTemplateBinding,
   LOGO_URL,
   EmailTemplatePurpose,
 } from "../constants"
 import { checkSlashesInUrl } from "./index"
+import { getLicensedConfig } from "./configs"
+
 const BASE_COMPANY = "Budibase"
 
 export async function getSettingsTemplateContext(
@@ -26,7 +29,12 @@ export async function getSettingsTemplateContext(
     [InternalTemplateBinding.CURRENT_YEAR]: new Date().getFullYear(),
   }
 
-  context["enableEmailBranding"] = settings.emailBrandingEnabled === true
+  try {
+    const config: SettingsInnerConfig = await getLicensedConfig()
+    context["enableEmailBranding"] = config?.emailBrandingEnabled || true
+  } catch (e) {
+    context["enableEmailBranding"] = true
+  }
 
   // attach purpose specific context
   switch (purpose) {
