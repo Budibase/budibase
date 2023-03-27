@@ -271,6 +271,31 @@ export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
   }
 }
 
+export async function getLicensedConfig() {
+  let licensedConfig: object = {}
+  const defaults = {
+    emailBrandingEnabled: true,
+    testimonialsEnabled: true,
+    platformTitle: undefined,
+    metaDescription: undefined,
+    metaImageUrl: undefined,
+    metaTitle: undefined,
+  }
+
+  try {
+    // License/Feature Checks
+    const license = await licensing.getLicense()
+
+    if (!license || license?.features.indexOf(Feature.BRANDING) == -1) {
+      licensedConfig = { ...defaults }
+    }
+  } catch (e) {
+    licensedConfig = { ...defaults }
+    console.info("Could not retrieve license", e)
+  }
+  return licensedConfig
+}
+
 export async function publicSettings(
   ctx: Ctx<void, GetPublicSettingsResponse>
 ) {
@@ -279,18 +304,7 @@ export async function publicSettings(
     const configDoc = await configs.getSettingsConfigDoc()
     const config = configDoc.config
 
-    // License/Feature Checks
-    const license = await licensing.getLicense()
-
-    const licensedConfig: any = {}
-    if (!license || license?.features.indexOf(Feature.BRANDING) == -1) {
-      licensedConfig["emailBrandingEnabled"] = true
-      licensedConfig["testimonialsEnabled"] = true
-      licensedConfig["platformTitle"] = undefined
-      licensedConfig["metaDescription"] = undefined
-      licensedConfig["metaImageUrl"] = undefined
-      licensedConfig["metaTitle"] = undefined
-    }
+    const licensedConfig: object = await getLicensedConfig()
 
     // enrich the logo url - empty url means deleted
     if (config.logoUrl && config.logoUrl !== "") {

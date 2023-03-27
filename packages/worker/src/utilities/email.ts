@@ -111,7 +111,7 @@ async function buildEmail(
   ])
 
   // Change from branding to core
-  let core = EmailTemplates.core
+  let core = EmailTemplates[EmailTemplatePurpose.CORE]
 
   if (!base || !body || !core) {
     throw "Unable to build email, missing base components"
