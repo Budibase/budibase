@@ -1,5 +1,6 @@
 import tk from "timekeeper"
 import _ from "lodash"
+import { events } from "@budibase/backend-core"
 import { mocks, structures } from "@budibase/backend-core/tests"
 import { ScimUpdateRequest, ScimUserResponse } from "@budibase/types"
 import { TestConfiguration } from "../../../../../tests"
@@ -8,6 +9,7 @@ mocks.licenses.useScimIntegration()
 
 describe("/api/global/scim/v2/users", () => {
   beforeEach(() => {
+    jest.resetAllMocks()
     mocks.licenses.useScimIntegration()
   })
 
@@ -236,6 +238,14 @@ describe("/api/global/scim/v2/users", () => {
           })
         )
       })
+
+      it("an event is dispatched", async () => {
+        const body = structures.scim.createUserRequest()
+
+        await postScimUser({ body })
+
+        expect(events.user.created).toBeCalledTimes(1)
+      })
     })
   })
 
@@ -423,6 +433,23 @@ describe("/api/global/scim/v2/users", () => {
       const persistedUser = await config.api.scimUsersAPI.find(user.id)
       expect(persistedUser).toEqual(expectedScimUser)
     })
+
+    it("an event is dispatched", async () => {
+      const body: ScimUpdateRequest = {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        Operations: [
+          {
+            op: "Replace",
+            path: "userName",
+            value: structures.generator.name(),
+          },
+        ],
+      }
+
+      await patchScimUser({ id: user.id, body })
+
+      expect(events.user.updated).toBeCalledTimes(1)
+    })
   })
 
   describe("DELETE /api/global/scim/v2/users/:id", () => {
@@ -462,6 +489,12 @@ describe("/api/global/scim/v2/users", () => {
 
     it("an non existing user can not be deleted", async () => {
       await deleteScimUser(structures.uuid(), { expect: 404 })
+    })
+
+    it("an event is dispatched", async () => {
+      await deleteScimUser(user.id, { expect: 204 })
+
+      expect(events.user.deleted).toBeCalledTimes(1)
     })
   })
 })
