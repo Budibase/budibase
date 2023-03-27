@@ -45,6 +45,7 @@
     "dev:noserver": "yarn run kill-builder && lerna link && lerna run dev:stack:up && lerna run --parallel dev:builder --concurrency 1 --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
     "dev:server": "yarn run kill-server && lerna run --parallel dev:builder --concurrency 1 --scope @budibase/backend-core --scope @budibase/worker --scope @budibase/server",
     "test": "lerna run test",
+    "test:ci": "lerna run test --ignore @budibase/server && cd packages/server && yarn test",
     "test:pro": "bash scripts/pro/test.sh",
     "lint:eslint": "eslint packages && eslint qa-core",
     "lint:prettier": "prettier --check \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\" && prettier --check \"qa-core/**/*.{js,ts,svelte}\"",
