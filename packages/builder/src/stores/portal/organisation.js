@@ -9,7 +9,6 @@ const DEFAULT_CONFIG = {
   faviconUrl: undefined,
   emailBrandingEnabled: true,
   testimonialsEnabled: true,
-  licenseAgreementEnabled: true,
   platformTitle: "Budibase",
   loginHeading: undefined,
   loginButton: undefined,

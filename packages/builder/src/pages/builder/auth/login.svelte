@@ -147,7 +147,7 @@
         </Layout>
       {/if}
 
-      {#if cloud && $organisation.licenseAgreementEnabled}
+      {#if cloud}
         <Body size="xs" textAlign="center">
           By using Budibase Cloud
           <br />
