@@ -11,11 +11,11 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
+import { getLicensedConfig } from "../../../utilities/configs"
 import {
   Config,
   ConfigType,
   Ctx,
-  Feature,
   GetPublicOIDCConfigResponse,
   GetPublicSettingsResponse,
   GoogleInnerConfig,
@@ -30,7 +30,6 @@ import {
   UserCtx,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
-import { licensing } from "@budibase/pro"
 
 const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []
@@ -213,6 +212,38 @@ export async function save(ctx: UserCtx<Config>) {
     ctx.throw(400, err)
   }
 
+  // Ignore branding changes if the license does not permit it
+  // Favicon and Logo Url are excluded.
+  try {
+    const brandingEnabled = await pro.features.isBrandingEnabled()
+    if (existingConfig?.config && !brandingEnabled) {
+      const {
+        emailBrandingEnabled,
+        testimonialsEnabled,
+        platformTitle,
+        metaDescription,
+        loginHeading,
+        loginButton,
+        metaImageUrl,
+        metaTitle,
+      } = existingConfig.config
+
+      body.config = {
+        ...body.config,
+        emailBrandingEnabled,
+        testimonialsEnabled,
+        platformTitle,
+        metaDescription,
+        loginHeading,
+        loginButton,
+        metaImageUrl,
+        metaTitle,
+      }
+    }
+  } catch (e) {
+    console.error("There was an issue retrieving the license", e)
+  }
+
   try {
     body._id = configs.generateConfigID(type)
     const response = await configs.save(body)
@@ -269,31 +300,6 @@ export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
   } catch (err: any) {
     ctx.throw(err.status, err)
   }
-}
-
-export async function getLicensedConfig() {
-  let licensedConfig: object = {}
-  const defaults = {
-    emailBrandingEnabled: true,
-    testimonialsEnabled: true,
-    platformTitle: undefined,
-    metaDescription: undefined,
-    metaImageUrl: undefined,
-    metaTitle: undefined,
-  }
-
-  try {
-    // License/Feature Checks
-    const license = await licensing.getLicense()
-
-    if (!license || license?.features.indexOf(Feature.BRANDING) == -1) {
-      licensedConfig = { ...defaults }
-    }
-  } catch (e) {
-    licensedConfig = { ...defaults }
-    console.info("Could not retrieve license", e)
-  }
-  return licensedConfig
 }
 
 export async function publicSettings(
