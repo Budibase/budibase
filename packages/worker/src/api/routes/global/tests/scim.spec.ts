@@ -11,58 +11,57 @@ import { events } from "@budibase/backend-core"
 
 mocks.licenses.useScimIntegration()
 
-const unauthorisedTests = (
-  fn: (
-    ...params: any //settings: RequestSettings
-  ) => Promise<any>
-) => {
-  describe("unauthorised calls", () => {
-    it("unauthorised calls are not allowed", async () => {
-      const response = await fn(...Array(fn.length - 1).fill({}), {
-        setHeaders: false,
-        expect: 403,
-      })
-
-      expect(response).toEqual({ message: "Tenant id not set", status: 403 })
-    })
-
-    it("cannot be called when feature is disabled", async () => {
-      mocks.licenses.useCloudFree()
-      const response = await fn(...Array(fn.length - 1).fill({}), {
-        expect: 400,
-      })
-
-      expect(response).toEqual({
-        error: {
-          code: "feature_disabled",
-          featureName: "scim",
-        },
-        message: "scim is not currently enabled",
-        status: 400,
-      })
-    })
-
-    it("cannot be called when feature is enabled but the config disabled", async () => {
-      const response = await fn(...Array(fn.length - 1).fill({}), {
-        expect: 400,
-      })
-
-      expect(response).toEqual({
-        message: "SCIM is not enabled",
-        status: 400,
-      })
-    })
-  })
-}
-
 describe("scim", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.resetAllMocks()
     tk.freeze(mocks.date.MOCK_DATE)
     mocks.licenses.useScimIntegration()
+
+    await config.setSCIMConfig(true)
   })
 
   const config = new TestConfiguration()
+
+  const unauthorisedTests = (fn: (...params: any) => Promise<any>) => {
+    describe("unauthorised calls", () => {
+      it("unauthorised calls are not allowed", async () => {
+        const response = await fn(...Array(fn.length - 1).fill({}), {
+          setHeaders: false,
+          expect: 403,
+        })
+
+        expect(response).toEqual({ message: "Tenant id not set", status: 403 })
+      })
+
+      it("cannot be called when feature is disabled", async () => {
+        mocks.licenses.useCloudFree()
+        const response = await fn(...Array(fn.length - 1).fill({}), {
+          expect: 400,
+        })
+
+        expect(response).toEqual({
+          error: {
+            code: "feature_disabled",
+            featureName: "scim",
+          },
+          message: "scim is not currently enabled",
+          status: 400,
+        })
+      })
+
+      it("cannot be called when feature is enabled but the config disabled", async () => {
+        await config.setSCIMConfig(false)
+        const response = await fn(...Array(fn.length - 1).fill({}), {
+          expect: 400,
+        })
+
+        expect(response).toEqual({
+          message: "SCIM is not enabled",
+          status: 400,
+        })
+      })
+    })
+  }
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -73,7 +72,7 @@ describe("scim", () => {
   })
 
   describe("/api/global/scim/v2/users", () => {
-    describe.only("GET /api/global/scim/v2/users", () => {
+    describe("GET /api/global/scim/v2/users", () => {
       const getScimUsers = config.api.scimUsersAPI.get
 
       unauthorisedTests(getScimUsers)
