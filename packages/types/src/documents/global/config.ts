@@ -107,6 +107,10 @@ export interface OIDCWellKnownConfig {
   userinfo_endpoint: string
 }
 
+export interface SCIMConfig extends Config {
+  enabled: boolean
+}
+
 export const isSettingsConfig = (config: Config): config is SettingsConfig =>
   config.type === ConfigType.SETTINGS
 
@@ -118,6 +122,9 @@ export const isGoogleConfig = (config: Config): config is GoogleConfig =>
 
 export const isOIDCConfig = (config: Config): config is OIDCConfig =>
   config.type === ConfigType.OIDC
+
+export const isSCIMConfig = (config: Config): config is SCIMConfig =>
+  config.type === ConfigType.SCIM
 
 export enum ConfigType {
   SETTINGS = "settings",
