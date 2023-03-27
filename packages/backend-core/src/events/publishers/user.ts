@@ -17,14 +17,12 @@ import {
 } from "@budibase/types"
 import { context } from "../.."
 
-const isScim = () => (context.getIdentity() as any)?.isScimCall
-
 async function created(user: User, timestamp?: number) {
   const properties: UserCreatedEvent = {
     userId: user._id as string,
     audited: {
       email: user.email,
-      viaScim: isScim(),
+      viaScim: context.isScimCall(),
     },
   }
   await publishEvent(Event.USER_CREATED, properties, timestamp)
@@ -35,7 +33,7 @@ async function updated(user: User) {
     userId: user._id as string,
     audited: {
       email: user.email,
-      viaScim: isScim(),
+      viaScim: context.isScimCall(),
     },
   }
   await publishEvent(Event.USER_UPDATED, properties)
@@ -46,7 +44,7 @@ async function deleted(user: User) {
     userId: user._id as string,
     audited: {
       email: user.email,
-      viaScim: isScim(),
+      viaScim: context.isScimCall(),
     },
   }
   await publishEvent(Event.USER_DELETED, properties)
