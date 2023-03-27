@@ -62,7 +62,7 @@
     type: "text",
   })
   $: settingOptions = settings.map(setting => ({
-    label: setting.label,
+    label: makeLabel(setting),
     value: setting.key,
   }))
   $: conditions.forEach(link => {
@@ -70,6 +70,15 @@
       link.id = generate()
     }
   })
+
+  const makeLabel = setting => {
+    const { section, label } = setting
+    if (section) {
+      return label ? `${section} - ${label}` : section
+    } else {
+      return label
+    }
+  }
 
   const getSettingDefinition = key => {
     return settings.find(setting => setting.key === key)
