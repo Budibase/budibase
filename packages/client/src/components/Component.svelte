@@ -120,6 +120,7 @@
   $: showEmptyState = definition?.showEmptyState !== false
   $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
   $: editable = !!definition?.editable && !hasMissingRequiredSettings
+  $: errorState = hasMissingRequiredSettings
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
@@ -183,6 +184,7 @@
       custom: customCSS,
       id,
       empty: emptyState,
+      selected,
       interactive,
       draggable,
       editable,
@@ -194,6 +196,7 @@
     editing,
     type: instance._component,
     missingRequiredSettings,
+    errorState,
   })
 
   const initialise = (instance, force = false) => {
@@ -482,6 +485,7 @@
         getDataContext: () => get(context),
         reload: () => initialise(instance, true),
         setEphemeralStyles: styles => (ephemeralStyles = styles),
+        state: store,
       })
     }
   })
@@ -509,6 +513,7 @@
     class:pad
     class:parent={hasChildren}
     class:block={isBlock}
+    class:error={errorState}
     data-id={id}
     data-name={name}
     data-icon={icon}

@@ -70,17 +70,19 @@ const INITIAL_FRONTEND_STATE = {
   customTheme: {},
   previewDevice: "desktop",
   highlightedSettingKey: null,
+  builderSidePanel: false,
 
   // URL params
   selectedScreenId: null,
   selectedComponentId: null,
   selectedLayoutId: null,
 
-  // onboarding
+  // Client state
+  selectedComponentInstance: null,
+
+  // Onboarding
   onboarding: false,
   tourNodes: null,
-
-  builderSidePanel: false,
 }
 
 export const getFrontendStore = () => {
