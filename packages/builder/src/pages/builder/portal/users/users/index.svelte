@@ -28,6 +28,7 @@
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "api"
   import { OnboardingType } from "../../../../../constants"
+  import ScimBanner from "../_components/SCIMBanner.svelte"
 
   const fetch = fetchData({
     API,
@@ -230,14 +231,18 @@
   </Layout>
   <Divider />
   <div class="controls">
-    <ButtonGroup>
-      <Button disabled={readonly} on:click={createUserModal.show} cta>
-        Add users
-      </Button>
-      <Button disabled={readonly} on:click={importUsersModal.show} secondary>
-        Import
-      </Button>
-    </ButtonGroup>
+    {#if !$licensing.scimEnabled}
+      <ButtonGroup>
+        <Button disabled={readonly} on:click={createUserModal.show} cta>
+          Add users
+        </Button>
+        <Button disabled={readonly} on:click={importUsersModal.show} secondary>
+          Import
+        </Button>
+      </ButtonGroup>
+    {:else}
+      <ScimBanner />
+    {/if}
     <div class="controls-right">
       <Search bind:value={searchEmail} placeholder="Search" />
       {#if selectedRows.length > 0}
