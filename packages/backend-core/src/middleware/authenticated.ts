@@ -4,7 +4,6 @@ import {
   clearCookie,
   openJwt,
   isValidInternalAPIKey,
-  isScimEndpoint,
 } from "../utils"
 import { getUser } from "../cache/user"
 import { getSession, updateSessionTTL } from "../security/sessions"
@@ -106,8 +105,6 @@ export default function (
         apiKey = ctx.request.headers[Header.AUTHORIZATION].split(" ")[1]
       }
 
-      const isScimCall = isScimEndpoint(ctx)
-
       const tenantId = ctx.request.headers[Header.TENANT_ID]
       let authenticated = false,
         user = null,
@@ -171,7 +168,7 @@ export default function (
       finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
 
       if (user && user.email) {
-        return identity.doInUserContext(user, ctx, next, isScimCall)
+        return identity.doInUserContext(user, ctx, next)
       } else {
         return next()
       }
