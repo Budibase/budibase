@@ -17,7 +17,6 @@ export interface UserContext extends BaseContext, User {
   tenantId: string
   account?: Account
   hostInfo: HostInfo
-  isScimCall?: boolean
 }
 
 export type IdentityContext = BaseContext | AccountUserContext | UserContext
