@@ -108,7 +108,7 @@ export interface OIDCWellKnownConfig {
 }
 
 export interface SCIMConfig extends Config {
-  enabled: boolean
+  config: { enabled: boolean }
 }
 
 export const isSettingsConfig = (config: Config): config is SettingsConfig =>

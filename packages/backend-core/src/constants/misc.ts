@@ -40,6 +40,7 @@ export enum Config {
   GOOGLE = "google",
   OIDC = "oidc",
   OIDC_LOGOS = "logos_oidc",
+  SCIM = "scim",
 }
 
 export const MIN_VALID_DATE = new Date(-2147483647000)
