@@ -245,6 +245,8 @@ export async function getSMTPConfig(
   }
 }
 
+// SCIM
+
 export async function getSCIMConfig(): Promise<SCIMInnerConfig | undefined> {
   const config = await getConfig<SCIMConfig>(ConfigType.SCIM)
   return config?.config
