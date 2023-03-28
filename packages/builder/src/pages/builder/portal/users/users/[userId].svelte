@@ -19,7 +19,7 @@
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
-  import { users, auth, groups, apps, licensing } from "stores/portal"
+  import { users, auth, groups, apps, licensing, features } from "stores/portal"
   import { roles } from "stores/backend"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
@@ -86,7 +86,7 @@
   let user
   let loaded = false
 
-  const scimEnabled = $licensing.scimEnabled
+  const scimEnabled = $features.isScimEnabled
 
   $: isSSO = !!user?.provider
   $: readonly = !$auth.isAdmin || scimEnabled
