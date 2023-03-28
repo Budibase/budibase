@@ -7,7 +7,7 @@
   export let title
   export let fillWidth
   export let left = "314px"
-  export let width = "calc(100% - 576px)"
+  export let width = "calc(100% - 626px)"
 
   let visible = false
 

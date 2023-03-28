@@ -3,7 +3,6 @@
 
   export let title
   export let icon
-  export let expandable = false
   export let showAddButton = false
   export let showBackButton = false
   export let showCloseButton = false
@@ -12,8 +11,8 @@
   export let onClickCloseButton
   export let borderLeft = false
   export let borderRight = false
+  export let wide = false
 
-  let wide = false
   $: customHeaderContent = $$slots["panel-header-content"]
 </script>
 
@@ -28,13 +27,6 @@
     <div class="title">
       <Heading size="XXS">{title || ""}</Heading>
     </div>
-    {#if expandable}
-      <Icon
-        name={wide ? "Minimize" : "Maximize"}
-        hoverable
-        on:click={() => (wide = !wide)}
-      />
-    {/if}
     {#if showAddButton}
       <div class="add-button" on:click={onClickAddButton}>
         <Icon name="Add" />
@@ -74,8 +66,8 @@
     border-right: var(--border-light);
   }
   .panel.wide {
-    width: 420px;
-    flex: 0 0 420px;
+    width: 310px;
+    flex: 0 0 310px;
   }
   .header {
     flex: 0 0 48px;
