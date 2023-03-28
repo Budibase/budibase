@@ -9,9 +9,8 @@
 
   $: definition = componentStore.actions.getComponentDefinition($component.type)
   $: fullAncestorType = `${BudibasePrefix}${requiredAncestor}`
-  $: ancestorDefinition = componentStore.actions.getComponentDefinition(
-    fullAncestorType
-  )
+  $: ancestorDefinition =
+    componentStore.actions.getComponentDefinition(fullAncestorType)
   $: pluralName = getPluralName(definition?.name, $component.type)
   $: ancestorName = getAncestorName(ancestorDefinition?.name, requiredAncestor)
 
@@ -39,5 +38,4 @@
   }}
 >
   Add {ancestorName}
-
 </span>

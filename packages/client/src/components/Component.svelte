@@ -26,7 +26,7 @@
   } from "stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
-  import Placeholder from "components/app/Placeholder.svelte"
+  import EmptyPlaceholder from "components/app/EmptyPlaceholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
   import ComponentErrorState from "components/error-states/ComponentErrorState.svelte"
   import { BudibasePrefix } from "../stores/components.js"
@@ -203,7 +203,7 @@
     type: instance._component,
     errorState,
     parent: id,
-    ancestors: [...$component?.ancestors, instance._component]
+    ancestors: [...$component?.ancestors, instance._component],
   })
 
   const initialise = (instance, force = false) => {
@@ -535,16 +535,13 @@
       <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
         {#if children.length}
           {#each children as child (child._id)}
-            <svelte:self
-              instance={child}
-
-            />
+            <svelte:self instance={child} />
           {/each}
         {:else if emptyState}
           {#if isScreen}
             <ScreenPlaceholder />
           {:else}
-            <Placeholder />
+            <EmptyPlaceholder />
           {/if}
         {:else if isBlock}
           <slot />
