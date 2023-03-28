@@ -14,6 +14,10 @@
       label: "Stop if",
       value: "stop",
     },
+    {
+      label: "Goto if",
+      value: "goto",
+    },
   ]
   const operatorOptions = [
     {
@@ -61,6 +65,13 @@
     placeholder="Reference value"
     bind:value={parameters.referenceValue}
     on:change={e => (parameters.referenceValue = e.detail)}
+    {bindings}
+  />
+  <DrawerBindableInput
+    disabled={!(parameters.type == "goto")}
+    placeholder="Go to Action no"
+    bind:value={parameters.gotovalue}
+    on:change={e => (parameters.gotovalue = e.detail)}
     {bindings}
   />
 </div>

@@ -117,7 +117,7 @@
       "component": "ExportData"
     },
     {
-      "name": "Continue if / Stop if",
+      "name": "Continue / Stop / Goto",
       "type": "logic",
       "component": "ContinueIf",
       "dependsOnFeature": "continueIfAction"

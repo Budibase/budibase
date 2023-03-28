@@ -16,6 +16,9 @@ import { API } from "api"
 import { ActionTypes } from "constants"
 import { enrichDataBindings } from "./enrichDataBinding"
 import { Helpers } from "@budibase/bbui"
+let stepno = 0
+let maxaction = 0
+let maxiter = 0
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId, tableId, notificationOverride } =
@@ -314,7 +317,7 @@ const exportDataHandler = async action => {
 }
 
 const continueIfHandler = action => {
-  const { type, value, operator, referenceValue } = action.parameters
+  const { type, value, operator, referenceValue, gotovalue } = action.parameters
   if (!type || !operator) {
     return
   }
@@ -328,8 +331,17 @@ const continueIfHandler = action => {
   }
   if (type === "continue") {
     return operator === "equal" ? match : !match
-  } else {
+  } else if (type === "stop") {
     return operator === "equal" ? !match : match
+  } else {
+    if (
+      gotovalue > 0 &&
+      gotovalue <= maxaction &&
+      ((operator === "equal" && match === true) ||
+        (operator != "equal" && match === false))
+    )
+      stepno = gotovalue - 1
+    return true
   }
 }
 
@@ -372,7 +384,7 @@ const handlerMap = {
   ["Update State"]: updateStateHandler,
   ["Upload File to S3"]: s3UploadHandler,
   ["Export Data"]: exportDataHandler,
-  ["Continue if / Stop if"]: continueIfHandler,
+  ["Continue / Stop / Goto"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
   ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: OpenSidePanelHandler,
@@ -416,6 +428,10 @@ export const enrichButtonActions = (actions, context) => {
         if (!handlers[i]) {
           continue
         }
+        stepno = i + 1
+        maxaction = handlers.length
+        maxiter++
+        if (maxiter > 300) break
 
         // Built total context for this action
         const totalContext = {
@@ -475,6 +491,7 @@ export const enrichButtonActions = (actions, context) => {
           if (result === false) {
             return
           } else {
+            i = stepno - 1
             buttonContext.push(result)
           }
         }
