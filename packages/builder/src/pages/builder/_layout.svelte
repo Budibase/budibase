@@ -4,6 +4,7 @@
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
   import { API } from "api"
+  import Branding from "./Branding.svelte"
 
   let loaded = false
 
@@ -145,6 +146,9 @@
     }
   }
 </script>
+
+<!--Portal branding overrides -->
+<Branding />
 
 {#if loaded}
   <slot />

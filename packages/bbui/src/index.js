@@ -77,6 +77,7 @@ export { default as IconSideNav } from "./IconSideNav/IconSideNav.svelte"
 export { default as IconSideNavItem } from "./IconSideNav/IconSideNavItem.svelte"
 export { default as Slider } from "./Form/Slider.svelte"
 export { default as Accordion } from "./Accordion/Accordion.svelte"
+export { default as File } from "./Form/File.svelte"
 
 // Renderers
 export { default as BoldRenderer } from "./Table/BoldRenderer.svelte"

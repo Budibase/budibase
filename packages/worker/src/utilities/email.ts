@@ -1,6 +1,6 @@
 import env from "../environment"
 import { EmailTemplatePurpose, TemplateType } from "../constants"
-import { getTemplateByPurpose } from "../constants/templates"
+import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import { getResetPasswordCode, getInviteCode } from "./redis"
@@ -109,11 +109,16 @@ async function buildEmail(
     getTemplateByPurpose(TYPE, EmailTemplatePurpose.BASE),
     getTemplateByPurpose(TYPE, purpose),
   ])
-  if (!base || !body) {
+
+  // Change from branding to core
+  let core = EmailTemplates[EmailTemplatePurpose.CORE]
+
+  if (!base || !body || !core) {
     throw "Unable to build email, missing base components"
   }
   base = base.contents
   body = body.contents
+
   let name = user ? user.name : undefined
   if (user && !name && user.firstName) {
     name = user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName
@@ -126,8 +131,12 @@ async function buildEmail(
     user: user || {},
   }
 
-  body = await processString(body, context)
-  // this should now be the complete email HTML
+  // Prepend the core template
+  const fullBody = core + body
+
+  body = await processString(fullBody, context)
+
+  // this should now be the core email HTML
   return processString(base, {
     ...context,
     body,

@@ -22,6 +22,24 @@ export interface SMTPConfig extends Config {
   config: SMTPInnerConfig
 }
 
+/**
+ * Accessible only via pro.
+ */
+export interface SettingsBrandingConfig {
+  faviconUrl?: string
+  faviconUrlEtag?: string
+
+  emailBrandingEnabled?: boolean
+  testimonialsEnabled?: boolean
+  platformTitle?: string
+  loginHeading?: string
+  loginButton?: string
+
+  metaDescription?: string
+  metaImageUrl?: string
+  metaTitle?: string
+}
+
 export interface SettingsInnerConfig {
   platformUrl?: string
   company?: string
