@@ -150,9 +150,9 @@ const createScreenStore = () => {
             navigationSettings.title = $appStore.application?.name
           }
 
+          // Default to the org logo
           if (!navigationSettings.logoUrl) {
-            navigationSettings.logoUrl =
-              $orgStore?.logoUrl || navigationSettings.logoUrl
+            navigationSettings.logoUrl = $orgStore?.logoUrl
           }
         }
         activeLayout = {
