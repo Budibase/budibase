@@ -15,6 +15,7 @@ import { context, objectStore, utils, configs } from "@budibase/backend-core"
 import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
+import * as pro from "@budibase/pro"
 
 const send = require("koa-send")
 
@@ -101,6 +102,8 @@ export const deleteObjects = async function (ctx: any) {
 export const serveApp = async function (ctx: any) {
   //Public Settings
   const { config } = await configs.getSettingsConfigDoc()
+  const branding = await pro.branding.getBrandingConfig(config)
+
   let db
   try {
     db = context.getAppDB({ skip_setup: true })
@@ -112,17 +115,18 @@ export const serveApp = async function (ctx: any) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
       const { head, html, css } = App.render({
         metaImage:
-          config?.metaImageUrl ||
+          branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
-        metaDescription: config?.metaDescription || "",
-        metaTitle: config?.metaTitle || `${appInfo.name} - built with Budibase`,
+        metaDescription: branding?.metaDescription || "",
+        metaTitle:
+          branding?.metaTitle || `${appInfo.name} - built with Budibase`,
         title: appInfo.name,
         production: env.isProd(),
         appId,
         clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
         usedPlugins: plugins,
         favicon:
-          config.faviconUrl !== ""
+          branding.faviconUrl !== ""
             ? objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
         logo:
@@ -145,14 +149,14 @@ export const serveApp = async function (ctx: any) {
     if (!env.isJest()) {
       const App = require("./templates/BudibaseApp.svelte").default
       const { head, html, css } = App.render({
-        title: config?.metaTitle,
-        metaTitle: config?.metaTitle,
+        title: branding?.metaTitle,
+        metaTitle: branding?.metaTitle,
         metaImage:
-          config?.metaImageUrl ||
+          branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
-        metaDescription: config?.metaDescription || "",
+        metaDescription: branding?.metaDescription || "",
         favicon:
-          config.faviconUrl !== ""
+          branding.faviconUrl !== ""
             ? objectStore.getGlobalFileUrl("settings", "faviconUrl")
             : "",
       })
