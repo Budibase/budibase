@@ -1,8 +1,8 @@
 import { Document } from "../document"
 
-export interface Config extends Document {
+export interface Config<T = any> extends Document {
   type: ConfigType
-  config: any
+  config: T
 }
 
 export interface SMTPInnerConfig {
@@ -18,9 +18,7 @@ export interface SMTPInnerConfig {
   connectionTimeout?: any
 }
 
-export interface SMTPConfig extends Config {
-  config: SMTPInnerConfig
-}
+export interface SMTPConfig extends Config<SMTPInnerConfig> {}
 
 /**
  * Accessible only via pro.
@@ -50,9 +48,7 @@ export interface SettingsInnerConfig {
   isSSOEnforced?: boolean
 }
 
-export interface SettingsConfig extends Config {
-  config: SettingsInnerConfig
-}
+export interface SettingsConfig extends Config<SettingsInnerConfig> {}
 
 export type SSOConfigType = ConfigType.GOOGLE | ConfigType.OIDC
 export type SSOConfig = GoogleInnerConfig | OIDCInnerConfig
@@ -67,9 +63,7 @@ export interface GoogleInnerConfig {
   callbackURL?: string
 }
 
-export interface GoogleConfig extends Config {
-  config: GoogleInnerConfig
-}
+export interface GoogleConfig extends Config<GoogleInnerConfig> {}
 
 export interface OIDCStrategyConfiguration {
   issuer: string
@@ -96,9 +90,7 @@ export interface OIDCInnerConfig {
   scopes: string[]
 }
 
-export interface OIDCConfig extends Config {
-  config: OIDCConfigs
-}
+export interface OIDCConfig extends Config<OIDCConfigs> {}
 
 export interface OIDCWellKnownConfig {
   issuer: string
@@ -107,9 +99,11 @@ export interface OIDCWellKnownConfig {
   userinfo_endpoint: string
 }
 
-export interface SCIMConfig extends Config {
-  config: { enabled: boolean }
+export interface SCIMInnerConfig {
+  enabled: boolean
 }
+
+export interface SCIMConfig extends Config<SCIMInnerConfig> {}
 
 export const isSettingsConfig = (config: Config): config is SettingsConfig =>
   config.type === ConfigType.SETTINGS
