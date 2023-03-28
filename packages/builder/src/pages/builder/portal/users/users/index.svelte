@@ -238,7 +238,7 @@
   </Layout>
   <Divider />
   <div class="controls">
-    {#if !$features.isScimEnabled}
+    {#if !readonly}
       <ButtonGroup>
         <Button disabled={readonly} on:click={createUserModal.show} cta>
           Add users
