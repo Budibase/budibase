@@ -1,22 +1,13 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import { goto } from "@roxi/routify"
-  import {
-    Layout,
-    ActionGroup,
-    ActionButton,
-    Search,
-    Icon,
-    Body,
-    notifications,
-  } from "@budibase/bbui"
+  import { Layout, Search, Icon, Body, notifications } from "@budibase/bbui"
   import structure from "./componentStructure.json"
   import { store, selectedComponent, selectedScreen } from "builderStore"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
   import { findComponentPath } from "builderStore/componentUtils"
 
-  let section = "components"
   let searchString
   let searchRef
   let selectedIndex
@@ -37,7 +28,6 @@
     allowedComponents,
     searchString
   )
-  $: blocks = enrichedStructure.find(x => x.name === "Blocks").children
   $: orderMap = createComponentOrderMap(componentList)
 
   const getAllowedComponents = (allComponents, screen, component) => {
@@ -127,6 +117,11 @@
       }
     })
 
+    // Swap blocks and plugins
+    let tmp = enrichedStructure[1]
+    enrichedStructure[1] = enrichedStructure[0]
+    enrichedStructure[0] = tmp
+
     return enrichedStructure
   }
 
@@ -135,11 +130,6 @@
     componentList = []
     if (!structure?.length) {
       return []
-    }
-
-    // Remove blocks if there is no search string
-    if (!search) {
-      structure = structure.filter(category => category.name !== "Blocks")
     }
 
     // Return only items which match the search string
@@ -225,6 +215,7 @@
     showCloseButton
     onClickCloseButton={() => $goto("../")}
     borderLeft
+    wide
   >
     <Layout paddingX="L" paddingY="XL" gap="S">
       <Search
@@ -233,64 +224,31 @@
         on:change={e => (searchString = e.detail)}
         bind:inputRef={searchRef}
       />
-      {#if !searchString}
-        <ActionGroup compact justified>
-          <ActionButton
-            fullWidth
-            selected={section === "components"}
-            on:click={() => (section = "components")}>Components</ActionButton
-          >
-          <ActionButton
-            fullWidth
-            selected={section === "blocks"}
-            on:click={() => (section = "blocks")}>Blocks</ActionButton
-          >
-        </ActionGroup>
-      {/if}
-      {#if searchString || section === "components"}
-        {#if filteredStructure.length}
-          {#each filteredStructure as category}
-            <Layout noPadding gap="XS">
-              <div class="category-label">{category.name}</div>
-              {#each category.children as component}
-                <div
-                  draggable="true"
-                  on:dragstart={() => onDragStart(component.component)}
-                  on:dragend={onDragEnd}
-                  class="component"
-                  class:selected={selectedIndex ===
-                    orderMap[component.component]}
-                  on:click={() => addComponent(component.component)}
-                  on:mouseover={() => (selectedIndex = null)}
-                  on:focus
-                >
-                  <Icon name={component.icon} />
-                  <Body size="XS">{component.name}</Body>
-                </div>
-              {/each}
-            </Layout>
-          {/each}
-        {:else}
-          <Body size="S">
-            There aren't any components matching the current filter
-          </Body>
-        {/if}
+      {#if filteredStructure.length}
+        {#each filteredStructure as category}
+          <Layout noPadding gap="XS">
+            <div class="category-label">{category.name}</div>
+            {#each category.children as component}
+              <div
+                draggable="true"
+                on:dragstart={() => onDragStart(component.component)}
+                on:dragend={onDragEnd}
+                class="component"
+                class:selected={selectedIndex === orderMap[component.component]}
+                on:click={() => addComponent(component.component)}
+                on:mouseover={() => (selectedIndex = null)}
+                on:focus
+              >
+                <Icon name={component.icon} />
+                <Body size="XS">{component.name}</Body>
+              </div>
+            {/each}
+          </Layout>
+        {/each}
       {:else}
-        <Body size="S">Blocks are collections of pre-built components</Body>
-        <Layout noPadding gap="XS">
-          {#each blocks as block}
-            <div
-              draggable="true"
-              class="component"
-              on:click={() => addComponent(block.component)}
-              on:dragstart={() => onDragStart(block.component)}
-              on:dragend={onDragEnd}
-            >
-              <Icon name={block.icon} />
-              <Body size="XS">{block.name}</Body>
-            </div>
-          {/each}
-        </Layout>
+        <Body size="S">
+          There aren't any components matching the current filter
+        </Body>
       {/if}
     </Layout>
   </Panel>
