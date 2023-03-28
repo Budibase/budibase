@@ -6,6 +6,7 @@ import {
   OIDCConfig,
   OIDCInnerConfig,
   SCIMConfig,
+  SCIMInnerConfig,
   SettingsConfig,
   SettingsInnerConfig,
   SMTPConfig,
@@ -244,6 +245,7 @@ export async function getSMTPConfig(
   }
 }
 
-export async function getSCIMConfig(): Promise<SCIMConfig | undefined> {
-  return getConfig<SCIMConfig>(ConfigType.SCIM)
+export async function getSCIMConfig(): Promise<SCIMInnerConfig | undefined> {
+  const config = await getConfig<SCIMConfig>(ConfigType.SCIM)
+  return config?.config
 }
