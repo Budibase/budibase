@@ -29,12 +29,14 @@
   import Placeholder from "components/app/Placeholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
   import ComponentPlaceholder from "components/app/ComponentPlaceholder.svelte"
+  import { BudibasePrefix } from "../stores/components.js"
 
   export let instance = {}
   export let isLayout = false
   export let isScreen = false
   export let isBlock = false
   export let parent = null
+  export let ancestors = []
 
   // Get parent contexts
   const context = getContext("context")
@@ -120,7 +122,12 @@
   $: showEmptyState = definition?.showEmptyState !== false
   $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
   $: editable = !!definition?.editable && !hasMissingRequiredSettings
-  $: errorState = hasMissingRequiredSettings
+  $: requiredAncestors = definition?.requiredAncestors || []
+  $: missingRequiredAncestors = requiredAncestors.filter(
+    ancestor => !ancestors.includes(`${BudibasePrefix}${ancestor}`)
+  )
+  $: hasMissingRequiredAncestors = missingRequiredAncestors?.length > 0
+  $: errorState = hasMissingRequiredSettings || hasMissingRequiredAncestors
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
@@ -195,7 +202,6 @@
     name,
     editing,
     type: instance._component,
-    missingRequiredSettings,
     errorState,
   })
 
@@ -519,13 +525,20 @@
     data-icon={icon}
     data-parent={parent}
   >
-    {#if hasMissingRequiredSettings}
-      <ComponentPlaceholder />
+    {#if errorState}
+      <ComponentPlaceholder
+        {missingRequiredSettings}
+        {missingRequiredAncestors}
+      />
     {:else}
       <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
         {#if children.length}
           {#each children as child (child._id)}
-            <svelte:self instance={child} parent={id} />
+            <svelte:self
+              instance={child}
+              parent={id}
+              ancestors={[...ancestors, instance._component]}
+            />
           {/each}
         {:else if emptyState}
           {#if isScreen}

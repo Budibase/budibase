@@ -1229,6 +1229,46 @@ export const getFrontendStore = () => {
           })
         }
       },
+      addParent: async (componentId, parentType) => {
+        if (!componentId || !parentType) {
+          return
+        }
+
+        // Create new parent instance
+        const newParentDefinition = store.actions.components.createInstance(
+          parentType,
+          null,
+          parent
+        )
+        if (!newParentDefinition) {
+          return
+        }
+
+        // Replace component with a version wrapped in a new parent
+        await store.actions.screens.patch(screen => {
+          // Get this component definition and parent definition
+          let definition = findComponent(screen.props, componentId)
+          let oldParentDefinition = findComponentParent(
+            screen.props,
+            componentId
+          )
+          if (!definition || !oldParentDefinition) {
+            return false
+          }
+
+          // Replace component with parent
+          const index = oldParentDefinition._children.findIndex(
+            component => component._id === componentId
+          )
+          if (index === -1) {
+            return false
+          }
+          oldParentDefinition._children[index] = {
+            ...newParentDefinition,
+            _children: [definition],
+          }
+        })
+      },
     },
     links: {
       save: async (url, title) => {

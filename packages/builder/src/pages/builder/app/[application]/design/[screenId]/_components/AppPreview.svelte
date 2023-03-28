@@ -220,6 +220,9 @@
     } else if (type === "drop-new-component") {
       const { component, parent, index } = data
       await store.actions.components.create(component, null, parent, index)
+    } else if (type === "add-parent-component") {
+      const { componentId, parentType } = data
+      await store.actions.components.addParent(componentId, parentType)
     } else {
       console.warn(`Client sent unknown event type: ${type}`)
     }
