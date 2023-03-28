@@ -28,7 +28,7 @@
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
-  import ComponentPlaceholder from "components/app/ComponentPlaceholder.svelte"
+  import ComponentErrorState from "components/app/ComponentErrorState.svelte"
   import { BudibasePrefix } from "../stores/components.js"
 
   export let instance = {}
@@ -526,7 +526,7 @@
     data-parent={parent}
   >
     {#if errorState}
-      <ComponentPlaceholder
+      <ComponentErrorState
         {missingRequiredSettings}
         {missingRequiredAncestors}
       />
