@@ -25,6 +25,7 @@
     "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
     "bootstrap": "lerna bootstrap && lerna link && ./scripts/link-dependencies.sh",
     "build": "lerna run build",
+    "build:client": "lerna run build --ignore @budibase/backend-core --ignore @budibase/worker --ignore @budibase/server --ignore @budibase/builder --ignore @budibase/cli --ignore @budibase/sdk",
     "build:dev": "lerna run prebuild && tsc --build --watch --preserveWatchOutput",
     "build:backend": "lerna run build --ignore @budibase/client --ignore @budibase/bbui --ignore @budibase/builder --ignore @budibase/cli",
     "build:sdk": "lerna run build:sdk",

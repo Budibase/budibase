@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`/views query returns data for the created view 1`] = `
-Array [
-  Object {
+[
+  {
     "avg": 2333.3333333333335,
     "count": 3,
     "group": null,
@@ -15,8 +15,8 @@ Array [
 `;
 
 exports[`/views query returns data for the created view using a group by 1`] = `
-Array [
-  Object {
+[
+  {
     "avg": 1500,
     "count": 2,
     "group": "One",
@@ -25,7 +25,7 @@ Array [
     "sum": 3000,
     "sumsqr": 5000000,
   },
-  Object {
+  {
     "avg": 4000,
     "count": 1,
     "group": "Two",

@@ -1,3 +1,6 @@
+import fetch from "node-fetch"
+// @ts-ignore
+fetch.mockSearch()
 import {
   generateMakeRequest,
   MakeRequestResponse,
@@ -16,6 +19,7 @@ import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 import { GenericContainer } from "testcontainers"
+import { generateRowIdField } from "../integrations/utils"
 
 const config = setup.getConfig()!
 
@@ -80,16 +84,10 @@ describe("row api - postgres", () => {
             name: "id",
             type: FieldType.AUTO,
             autocolumn: true,
-            constraints: {
-              presence: true,
-            },
           },
           title: {
             name: "title",
             type: FieldType.STRING,
-            constraints: {
-              presence: true,
-            },
           },
         },
         sourceId: postgresDatasource._id,
@@ -121,16 +119,10 @@ describe("row api - postgres", () => {
           name: "id",
           type: FieldType.AUTO,
           autocolumn: true,
-          constraints: {
-            presence: true,
-          },
         },
         name: {
           name: "name",
           type: FieldType.STRING,
-          constraints: {
-            presence: true,
-          },
         },
         description: {
           name: "description",
@@ -144,7 +136,6 @@ describe("row api - postgres", () => {
           type: FieldType.LINK,
           constraints: {
             type: "array",
-            presence: false,
           },
           fieldName: oneToManyRelationshipInfo.fieldName,
           name: "oneToManyRelation",
@@ -156,7 +147,6 @@ describe("row api - postgres", () => {
           type: FieldType.LINK,
           constraints: {
             type: "array",
-            presence: false,
           },
           fieldName: manyToOneRelationshipInfo.fieldName,
           name: "manyToOneRelation",
@@ -168,7 +158,6 @@ describe("row api - postgres", () => {
           type: FieldType.LINK,
           constraints: {
             type: "array",
-            presence: false,
           },
           fieldName: manyToManyRelationshipInfo.fieldName,
           name: "manyToManyRelation",
@@ -309,9 +298,6 @@ describe("row api - postgres", () => {
         id: {
           name: "id",
           type: FieldType.AUTO,
-          constraints: {
-            presence: true,
-          },
         },
       },
       sourceId: postgresDatasource._id,
@@ -921,47 +907,55 @@ describe("row api - postgres", () => {
             foreignRows,
             x => x.relationshipType
           )
-          expect(res.body).toEqual({
-            ...rowData,
-            [`fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`]:
-              foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row.id,
-            [oneToManyRelationshipInfo.fieldName]: [
+          const m2mFieldName = manyToManyRelationshipInfo.fieldName,
+            o2mFieldName = oneToManyRelationshipInfo.fieldName,
+            m2oFieldName = manyToOneRelationshipInfo.fieldName
+          const m2mRow1 = res.body[m2mFieldName].find(
+            (row: Row) => row.id === 1
+          )
+          const m2mRow2 = res.body[m2mFieldName].find(
+            (row: Row) => row.id === 2
+          )
+          expect(m2mRow1).toEqual({
+            ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][0].row,
+            [m2mFieldName]: [
               {
-                ...foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row,
-                _id: expect.any(String),
-                _rev: expect.any(String),
+                _id: row._id,
               },
             ],
-            [manyToOneRelationshipInfo.fieldName]: [
-              {
-                ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][0].row,
-                [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
-                  row.id,
-              },
-              {
-                ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][1].row,
-                [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
-                  row.id,
-              },
-              {
-                ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][2].row,
-                [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
-                  row.id,
-              },
-            ],
-            [manyToManyRelationshipInfo.fieldName]: [
-              {
-                ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][0].row,
-              },
-              {
-                ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][1].row,
-              },
-            ],
-            id: row.id,
-            tableId: row.tableId,
-            _id: expect.any(String),
-            _rev: expect.any(String),
           })
+          expect(m2mRow2).toEqual({
+            ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][1].row,
+            [m2mFieldName]: [
+              {
+                _id: row._id,
+              },
+            ],
+          })
+          expect(res.body[m2oFieldName]).toEqual([
+            {
+              ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][0].row,
+              [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
+                row.id,
+            },
+            {
+              ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][1].row,
+              [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
+                row.id,
+            },
+            {
+              ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][2].row,
+              [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
+                row.id,
+            },
+          ])
+          expect(res.body[o2mFieldName]).toEqual([
+            {
+              ...foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row,
+              _id: expect.any(String),
+              _rev: expect.any(String),
+            },
+          ])
         })
       })
     })

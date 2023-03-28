@@ -92,7 +92,7 @@ class RedisIntegration {
   }
 
   async disconnect() {
-    return this.client.disconnect()
+    return this.client.quit()
   }
 
   async redisContext(query: Function) {
