@@ -13,7 +13,7 @@
     Search,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth, licensing, admin } from "stores/portal"
+  import { groups, auth, licensing, admin, features } from "stores/portal"
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import { cloneDeep } from "lodash/fp"
@@ -107,7 +107,7 @@
   <div class="controls">
     <ButtonGroup>
       {#if $licensing.groupsEnabled}
-        {#if !$licensing.scimEnabled}
+        {#if !$features.isScimEnabled}
           <!--Show the group create button-->
           <Button disabled={readonly} cta on:click={showCreateGroupModal}>
             Add group
