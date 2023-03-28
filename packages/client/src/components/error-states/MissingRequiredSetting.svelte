@@ -7,8 +7,7 @@
 </script>
 
 <span>
-  Add the <mark>{requiredSetting.label}</mark> setting to start using your
-  component
+  Add the <mark>{requiredSetting.label}</mark> setting to start using your component
 </span>
 <span>-</span>
 <span

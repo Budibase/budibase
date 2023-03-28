@@ -112,9 +112,9 @@ const createBuilderStore = () => {
     addParentComponent: (componentId, parentType) => {
       eventStore.actions.dispatchEvent("add-parent-component", {
         componentId,
-        parentType
+        parentType,
       })
-    }
+    },
   }
   return {
     ...store,

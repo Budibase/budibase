@@ -22,7 +22,7 @@
       {#if requiredAncestor}
         <MissingRequiredAncestor {requiredAncestor} />
       {:else if requiredSetting}
-       <MissingRequiredSetting {requiredSetting} />
+        <MissingRequiredSetting {requiredSetting} />
       {/if}
     </div>
   {/if}

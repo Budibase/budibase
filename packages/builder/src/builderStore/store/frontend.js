@@ -33,7 +33,6 @@ import {
 } from "constants/backend"
 import {
   buildFormSchema,
-  getDatasourceForProvider,
   getSchemaForDatasource,
 } from "builderStore/dataBinding"
 import { makePropSafe as safe } from "@budibase/string-templates"
