@@ -286,14 +286,16 @@ describe("configs", () => {
         type: "settings",
         config: {
           company: "Budibase",
+          emailBrandingEnabled: true,
           logoUrl: "",
           analyticsEnabled: false,
-          google: true,
+          google: false,
           googleCallbackUrl: `http://localhost:10000/api/global/auth/${config.tenantId}/google/callback`,
           isSSOEnforced: false,
           oidc: false,
           oidcCallbackUrl: `http://localhost:10000/api/global/auth/${config.tenantId}/oidc/callback`,
           platformUrl: "http://localhost:10000",
+          testimonialsEnabled: true,
         },
       }
       delete body._rev

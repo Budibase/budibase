@@ -20,6 +20,7 @@ export enum TemplateType {
 }
 
 export enum EmailTemplatePurpose {
+  CORE = "core",
   BASE = "base",
   PASSWORD_RECOVERY = "password_recovery",
   INVITATION = "invitation",

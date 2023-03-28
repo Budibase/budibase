@@ -12,25 +12,22 @@
 
   const { Provider } = getContext("sdk")
   const component = getContext("component")
-  const loading = getContext("loading")
 
-  // If the parent DataProvider is loading, fill the rows array with a number of empty objects corresponding to the DataProvider's page size; this allows skeleton loader components to be rendered further down the tree.
-  $: rows = $loading
-    ? new Array(dataProvider.limit > 20 ? 20 : dataProvider.limit).fill({})
-    : dataProvider?.rows
+  $: rows = dataProvider?.rows ?? []
+  $: loaded = dataProvider?.loaded ?? true
 </script>
 
 <Container {direction} {hAlign} {vAlign} {gap} wrap>
   {#if $component.empty}
     <Placeholder />
-  {:else if !$loading && rows.length === 0}
-    <div class="noRows"><i class="ri-list-check-2" />{noRowsMessage}</div>
-  {:else}
+  {:else if rows.length > 0}
     {#each rows as row, index}
       <Provider data={{ ...row, index }}>
         <slot />
       </Provider>
     {/each}
+  {:else if loaded && noRowsMessage}
+    <div class="noRows"><i class="ri-list-check-2" />{noRowsMessage}</div>
   {/if}
 </Container>
 

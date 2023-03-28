@@ -27,8 +27,8 @@ import * as api from "./api"
 import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
-import { events, logging, middleware } from "@budibase/backend-core"
 import { initialise as initialiseWebsockets } from "./websockets"
+import { events, logging, middleware, timers } from "@budibase/backend-core"
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
 const destroyable = require("server-destroy")
@@ -84,6 +84,7 @@ server.on("close", async () => {
   }
   shuttingDown = true
   console.log("Server Closed")
+  timers.cleanup()
   await automations.shutdown()
   await redis.shutdown()
   events.shutdown()

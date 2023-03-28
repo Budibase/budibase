@@ -1,17 +1,22 @@
 import { tenancy, configs } from "@budibase/backend-core"
+import { SettingsInnerConfig } from "@budibase/types"
 import {
   InternalTemplateBinding,
   LOGO_URL,
   EmailTemplatePurpose,
 } from "../constants"
 import { checkSlashesInUrl } from "./index"
+import { getLicensedConfig } from "./configs"
+
 const BASE_COMPANY = "Budibase"
+import * as pro from "@budibase/pro"
 
 export async function getSettingsTemplateContext(
   purpose: EmailTemplatePurpose,
   code?: string | null
 ) {
-  let settings = await configs.getSettingsConfig()
+  const settings = await configs.getSettingsConfig()
+  const branding = await pro.branding.getBrandingConfig(settings)
   const URL = settings.platformUrl
   const context: any = {
     [InternalTemplateBinding.LOGO_URL]:
@@ -25,6 +30,9 @@ export async function getSettingsTemplateContext(
     [InternalTemplateBinding.CURRENT_DATE]: new Date().toISOString(),
     [InternalTemplateBinding.CURRENT_YEAR]: new Date().getFullYear(),
   }
+
+  context["enableEmailBranding"] = branding.emailBrandingEnabled === true
+
   // attach purpose specific context
   switch (purpose) {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:

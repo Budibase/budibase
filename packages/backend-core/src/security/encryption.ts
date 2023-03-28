@@ -8,7 +8,7 @@ const RANDOM_BYTES = 16
 const STRETCH_LENGTH = 32
 
 export enum SecretOption {
-  JWT = "jwt",
+  API = "api",
   ENCRYPTION = "encryption",
 }
 
@@ -19,10 +19,10 @@ function getSecret(secretOption: SecretOption): string {
       secret = env.ENCRYPTION_KEY
       secretName = "ENCRYPTION_KEY"
       break
-    case SecretOption.JWT:
+    case SecretOption.API:
     default:
-      secret = env.JWT_SECRET
-      secretName = "JWT_SECRET"
+      secret = env.API_ENCRYPTION_KEY
+      secretName = "API_ENCRYPTION_KEY"
       break
   }
   if (!secret) {
@@ -37,7 +37,7 @@ function stretchString(string: string, salt: Buffer) {
 
 export function encrypt(
   input: string,
-  secretOption: SecretOption = SecretOption.JWT
+  secretOption: SecretOption = SecretOption.API
 ) {
   const salt = crypto.randomBytes(RANDOM_BYTES)
   const stretched = stretchString(getSecret(secretOption), salt)
@@ -50,7 +50,7 @@ export function encrypt(
 
 export function decrypt(
   input: string,
-  secretOption: SecretOption = SecretOption.JWT
+  secretOption: SecretOption = SecretOption.API
 ) {
   const [salt, encrypted] = input.split(SEPARATOR)
   const saltBuffer = Buffer.from(salt, "hex")

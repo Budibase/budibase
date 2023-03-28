@@ -2,13 +2,18 @@ import TestConfiguration from "../../../config/public-api/TestConfiguration"
 import PublicAPIClient from "../../../config/public-api/TestConfiguration/PublicAPIClient"
 import generateUser from "../../../config/public-api/fixtures/users"
 import { User } from "@budibase/server/api/controllers/public/mapping/types"
+import AccountsAPIClient from "../../../config/public-api/TestConfiguration/accountsAPIClient"
+import InternalAPIClient from "../../../config/internal-api/TestConfiguration/InternalAPIClient"
 
 describe("Public API - /users endpoints", () => {
   const api = new PublicAPIClient()
-  const config = new TestConfiguration<User>(api)
+  const accountsAPI = new AccountsAPIClient()
+  const internalAPI = new InternalAPIClient()
+  const config = new TestConfiguration<User>(api, accountsAPI, internalAPI)
 
   beforeAll(async () => {
-    await config.beforeAll()
+    await config.setupAccountAndTenant()
+    await config.setApiKey()
     const [_, user] = await config.users.seed()
     config.context = user
   })

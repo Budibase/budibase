@@ -37,6 +37,7 @@
   let schema
   let primaryDisplay
   let enrichedSearchColumns
+  let schemaLoaded = false
 
   $: fetchSchema(dataSource)
   $: enrichSearchColumns(searchColumns, schema).then(
@@ -91,6 +92,7 @@
         enrichRelationships: true,
       })
     }
+    schemaLoaded = true
   }
 
   const getNormalFields = schema => {
@@ -114,160 +116,162 @@
   }
 </script>
 
-<Block>
-  <BlockComponent
-    type="form"
-    bind:id={formId}
-    props={{
-      dataSource,
-      disableValidation: true,
-      editAutoColumns: true,
-      size,
-    }}
-  >
-    {#if title || enrichedSearchColumns?.length || showTitleButton}
-      <BlockComponent
-        type="container"
-        props={{
-          direction: "row",
-          hAlign: "stretch",
-          vAlign: "middle",
-          gap: "M",
-          wrap: true,
-        }}
-        styles={{
-          normal: {
-            "margin-bottom": "20px",
-          },
-        }}
-        order={0}
-      >
-        <BlockComponent
-          type="heading"
-          props={{
-            text: title,
-          }}
-          order={0}
-        />
+{#if schemaLoaded}
+  <Block>
+    <BlockComponent
+      type="form"
+      bind:id={formId}
+      props={{
+        dataSource,
+        disableValidation: true,
+        editAutoColumns: true,
+        size,
+      }}
+    >
+      {#if title || enrichedSearchColumns?.length || showTitleButton}
         <BlockComponent
           type="container"
           props={{
             direction: "row",
-            hAlign: "left",
-            vAlign: "center",
+            hAlign: "stretch",
+            vAlign: "middle",
             gap: "M",
             wrap: true,
           }}
-          order={1}
+          styles={{
+            normal: {
+              "margin-bottom": "20px",
+            },
+          }}
+          order={0}
         >
-          {#if enrichedSearchColumns?.length}
-            {#each enrichedSearchColumns as column, idx}
+          <BlockComponent
+            type="heading"
+            props={{
+              text: title,
+            }}
+            order={0}
+          />
+          <BlockComponent
+            type="container"
+            props={{
+              direction: "row",
+              hAlign: "left",
+              vAlign: "center",
+              gap: "M",
+              wrap: true,
+            }}
+            order={1}
+          >
+            {#if enrichedSearchColumns?.length}
+              {#each enrichedSearchColumns as column, idx}
+                <BlockComponent
+                  type={column.componentType}
+                  props={{
+                    field: column.name,
+                    placeholder: column.name,
+                    text: column.name,
+                    autoWidth: true,
+                  }}
+                  styles={{
+                    normal: {
+                      width: "192px",
+                    },
+                  }}
+                  order={idx}
+                />
+              {/each}
+            {/if}
+            {#if showTitleButton}
               <BlockComponent
-                type={column.componentType}
+                type="button"
                 props={{
-                  field: column.name,
-                  placeholder: column.name,
-                  text: column.name,
-                  autoWidth: true,
+                  onClick: buttonClickActions,
+                  text: titleButtonText,
+                  type: "cta",
                 }}
-                styles={{
-                  normal: {
-                    width: "192px",
-                  },
-                }}
-                order={idx}
+                order={enrichedSearchColumns?.length ?? 0}
               />
-            {/each}
-          {/if}
-          {#if showTitleButton}
-            <BlockComponent
-              type="button"
-              props={{
-                onClick: buttonClickActions,
-                text: titleButtonText,
-                type: "cta",
-              }}
-              order={enrichedSearchColumns?.length ?? 0}
-            />
-          {/if}
+            {/if}
+          </BlockComponent>
         </BlockComponent>
-      </BlockComponent>
-    {/if}
-    <BlockComponent
-      type="dataprovider"
-      bind:id={dataProviderId}
-      props={{
-        dataSource,
-        filter: enrichedFilter,
-        sortColumn: sortColumn || primaryDisplay,
-        sortOrder,
-        paginate,
-        limit: rowCount,
-      }}
-      order={1}
-    >
+      {/if}
       <BlockComponent
-        type="table"
-        context="table"
+        type="dataprovider"
+        bind:id={dataProviderId}
         props={{
-          dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
-          columns: tableColumns,
-          rowCount,
-          quiet,
-          compact,
-          allowSelectRows,
-          size,
-          onClick: rowClickActions,
+          dataSource,
+          filter: enrichedFilter,
+          sortColumn: sortColumn || primaryDisplay,
+          sortOrder,
+          paginate,
+          limit: rowCount,
         }}
-      />
+        order={1}
+      >
+        <BlockComponent
+          type="table"
+          context="table"
+          props={{
+            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+            columns: tableColumns,
+            rowCount,
+            quiet,
+            compact,
+            allowSelectRows,
+            size,
+            onClick: rowClickActions,
+          }}
+        />
+      </BlockComponent>
+      {#if clickBehaviour === "details"}
+        <BlockComponent
+          name="Details side panel"
+          type="sidepanel"
+          bind:id={detailsSidePanelId}
+          context="details-side-panel"
+          order={2}
+        >
+          <BlockComponent
+            name="Details form block"
+            type="formblock"
+            bind:id={detailsFormBlockId}
+            props={{
+              dataSource,
+              showSaveButton: true,
+              showDeleteButton: true,
+              actionType: "Update",
+              rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
+              fields: normalFields,
+              title: editTitle,
+              labelPosition: "left",
+            }}
+          />
+        </BlockComponent>
+      {/if}
+      {#if showTitleButton && titleButtonClickBehaviour === "new"}
+        <BlockComponent
+          name="New row side panel"
+          type="sidepanel"
+          bind:id={newRowSidePanelId}
+          context="new-side-panel"
+          order={3}
+        >
+          <BlockComponent
+            name="New row form block"
+            type="formblock"
+            props={{
+              dataSource,
+              showSaveButton: true,
+              showDeleteButton: false,
+              actionType: "Create",
+              fields: normalFields,
+              title: "Create Row",
+              labelPosition: "left",
+            }}
+          />
+        </BlockComponent>
+      {/if}
     </BlockComponent>
-    {#if clickBehaviour === "details"}
-      <BlockComponent
-        name="Details side panel"
-        type="sidepanel"
-        bind:id={detailsSidePanelId}
-        context="details-side-panel"
-        order={2}
-      >
-        <BlockComponent
-          name="Details form block"
-          type="formblock"
-          bind:id={detailsFormBlockId}
-          props={{
-            dataSource,
-            showSaveButton: true,
-            showDeleteButton: true,
-            actionType: "Update",
-            rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
-            fields: normalFields,
-            title: editTitle,
-            labelPosition: "left",
-          }}
-        />
-      </BlockComponent>
-    {/if}
-    {#if showTitleButton && titleButtonClickBehaviour === "new"}
-      <BlockComponent
-        name="New row side panel"
-        type="sidepanel"
-        bind:id={newRowSidePanelId}
-        context="new-side-panel"
-        order={3}
-      >
-        <BlockComponent
-          name="New row form block"
-          type="formblock"
-          props={{
-            dataSource,
-            showSaveButton: true,
-            showDeleteButton: false,
-            actionType: "Create",
-            fields: normalFields,
-            title: "Create Row",
-            labelPosition: "left",
-          }}
-        />
-      </BlockComponent>
-    {/if}
-  </BlockComponent>
-</Block>
+  </Block>
+{/if}

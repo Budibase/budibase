@@ -1,6 +1,6 @@
 import "./logging"
 import env from "../environment"
-import { env as coreEnv } from "@budibase/backend-core"
+import { env as coreEnv, timers } from "@budibase/backend-core"
 import { testContainerUtils } from "@budibase/backend-core/tests"
 
 if (!process.env.DEBUG) {
@@ -17,3 +17,7 @@ if (!process.env.CI) {
 }
 
 testContainerUtils.setupEnv(env, coreEnv)
+
+afterAll(() => {
+  timers.cleanup()
+})

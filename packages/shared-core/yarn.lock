@@ -2,11 +2,6 @@
 # yarn lockfile v1
 
 
-"@budibase/types@2.4.5-alpha.0":
-  version "2.4.5-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.5-alpha.0.tgz#70fea09b5e471fe8fa6a760a1a2dd0dd74caac3a"
-  integrity sha512-tVFM9XnKwcCOo7nw6v7C8ZsK9hQLQBv3kHDn7/MFWnDMFCj72pUdtP/iFrAKr2c3tE84lkkWJfNHIolMSktHZA==
-
 ansi-regex@^5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/ansi-regex/-/ansi-regex-5.0.1.tgz#082cb2c89c9fe8659a311a53bd6a4dc5301db304"

@@ -20,10 +20,10 @@ import {
   cache,
   tenancy,
   context,
-  errors,
   events,
   migrations,
   objectStore,
+  ErrorCode,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -44,7 +44,6 @@ import {
   Layout,
   Screen,
   MigrationType,
-  BBContext,
   Database,
   UserCtx,
 } from "@budibase/types"
@@ -74,14 +73,14 @@ async function getScreens() {
   ).rows.map((row: any) => row.doc)
 }
 
-function getUserRoleId(ctx: BBContext) {
+function getUserRoleId(ctx: UserCtx) {
   return !ctx.user?.role || !ctx.user.role._id
     ? roles.BUILTIN_ROLE_IDS.PUBLIC
     : ctx.user.role._id
 }
 
 function checkAppUrl(
-  ctx: BBContext,
+  ctx: UserCtx,
   apps: App[],
   url: string,
   currentAppId?: string
@@ -95,7 +94,7 @@ function checkAppUrl(
 }
 
 function checkAppName(
-  ctx: BBContext,
+  ctx: UserCtx,
   apps: App[],
   name: string,
   currentAppId?: string
@@ -160,7 +159,7 @@ async function addDefaultTables(db: Database) {
   await db.bulkDocs([...defaultDbDocs])
 }
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: UserCtx) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
   const apps = (await dbCore.getAllApps({ dev, all })) as App[]
@@ -185,7 +184,7 @@ export async function fetch(ctx: BBContext) {
   ctx.body = await checkAppMetadata(apps)
 }
 
-export async function fetchAppDefinition(ctx: BBContext) {
+export async function fetchAppDefinition(ctx: UserCtx) {
   const layouts = await getLayouts()
   const userRoleId = getUserRoleId(ctx)
   const accessController = new roles.AccessController()
@@ -231,7 +230,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
   }
 }
 
-async function performAppCreate(ctx: BBContext) {
+async function performAppCreate(ctx: UserCtx) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   const name = ctx.request.body.name,
     possibleUrl = ctx.request.body.url
@@ -360,7 +359,7 @@ async function creationEvents(request: any, app: App) {
   }
 }
 
-async function appPostCreate(ctx: BBContext, app: App) {
+async function appPostCreate(ctx: UserCtx, app: App) {
   const tenantId = tenancy.getTenantId()
   await migrations.backPopulateMigrations({
     type: MigrationType.APP,
@@ -378,7 +377,7 @@ async function appPostCreate(ctx: BBContext, app: App) {
           return quotas.addRows(rowCount)
         })
       } catch (err: any) {
-        if (err.code && err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
+        if (err.code && err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
           // this import resulted in row usage exceeding the quota
           // delete the app
           // skip pre and post-steps as no rows have been added to quotas yet
@@ -391,7 +390,7 @@ async function appPostCreate(ctx: BBContext, app: App) {
   }
 }
 
-export async function create(ctx: BBContext) {
+export async function create(ctx: UserCtx) {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
@@ -401,7 +400,7 @@ export async function create(ctx: BBContext) {
 
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
-export async function update(ctx: BBContext) {
+export async function update(ctx: UserCtx) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   // validation
   const name = ctx.request.body.name,
@@ -421,7 +420,7 @@ export async function update(ctx: BBContext) {
   ctx.body = app
 }
 
-export async function updateClient(ctx: BBContext) {
+export async function updateClient(ctx: UserCtx) {
   // Get current app version
   const db = context.getAppDB()
   const application = await db.get(DocumentType.APP_METADATA)
@@ -445,7 +444,7 @@ export async function updateClient(ctx: BBContext) {
   ctx.body = app
 }
 
-export async function revertClient(ctx: BBContext) {
+export async function revertClient(ctx: UserCtx) {
   // Check app can be reverted
   const db = context.getAppDB()
   const application = await db.get(DocumentType.APP_METADATA)
@@ -471,7 +470,7 @@ export async function revertClient(ctx: BBContext) {
   ctx.body = app
 }
 
-const unpublishApp = async (ctx: any) => {
+async function unpublishApp(ctx: UserCtx) {
   let appId = ctx.params.appId
   appId = dbCore.getProdAppID(appId)
 
@@ -487,7 +486,7 @@ const unpublishApp = async (ctx: any) => {
   return result
 }
 
-async function destroyApp(ctx: BBContext) {
+async function destroyApp(ctx: UserCtx) {
   let appId = ctx.params.appId
   appId = dbCore.getProdAppID(appId)
   const devAppId = dbCore.getDevAppID(appId)
@@ -515,12 +514,12 @@ async function destroyApp(ctx: BBContext) {
   return result
 }
 
-async function preDestroyApp(ctx: BBContext) {
+async function preDestroyApp(ctx: UserCtx) {
   const { rows } = await getUniqueRows([ctx.params.appId])
   ctx.rowCount = rows.length
 }
 
-async function postDestroyApp(ctx: BBContext) {
+async function postDestroyApp(ctx: UserCtx) {
   const rowCount = ctx.rowCount
   await groups.cleanupApp(ctx.params.appId)
   if (rowCount) {
@@ -528,7 +527,7 @@ async function postDestroyApp(ctx: BBContext) {
   }
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: UserCtx) {
   await preDestroyApp(ctx)
   const result = await destroyApp(ctx)
   await postDestroyApp(ctx)
@@ -536,7 +535,7 @@ export async function destroy(ctx: BBContext) {
   ctx.body = result
 }
 
-export const unpublish = async (ctx: BBContext) => {
+export async function unpublish(ctx: UserCtx) {
   const prodAppId = dbCore.getProdAppID(ctx.params.appId)
   const dbExists = await dbCore.dbExists(prodAppId)
 
@@ -551,7 +550,7 @@ export const unpublish = async (ctx: BBContext) => {
   ctx.status = 204
 }
 
-export async function sync(ctx: BBContext) {
+export async function sync(ctx: UserCtx) {
   const appId = ctx.params.appId
   try {
     ctx.body = await sdk.applications.syncApp(appId)

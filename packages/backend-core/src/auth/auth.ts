@@ -1,6 +1,5 @@
 const _passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
-const JwtStrategy = require("passport-jwt").Strategy
 import { getGlobalDB } from "../context"
 import { Cookie } from "../constants"
 import { getSessionsForUser, invalidateSessions } from "../security/sessions"
@@ -8,7 +7,6 @@ import {
   authenticated,
   csrf,
   google,
-  jwt as jwtPassport,
   local,
   oidc,
   tenancy,
@@ -21,14 +19,11 @@ import {
   OIDCInnerConfig,
   PlatformLogoutOpts,
   SSOProviderType,
-  User,
 } from "@budibase/types"
-import { logAlert } from "../logging"
 import * as events from "../events"
 import * as configs from "../configs"
 import { clearCookie, getCookie } from "../utils"
 import { ssoSaveUserNoOp } from "../middleware/passport/sso/sso"
-import env from "../environment"
 
 const refresh = require("passport-oauth2-refresh")
 export {
@@ -51,25 +46,6 @@ export const jwt = require("jsonwebtoken")
 
 // Strategies
 _passport.use(new LocalStrategy(local.options, local.authenticate))
-if (jwtPassport.options.secretOrKey) {
-  _passport.use(new JwtStrategy(jwtPassport.options, jwtPassport.authenticate))
-} else if (!env.DISABLE_JWT_WARNING) {
-  logAlert("No JWT Secret supplied, cannot configure JWT strategy")
-}
-
-_passport.serializeUser((user: User, done: any) => done(null, user))
-
-_passport.deserializeUser(async (user: User, done: any) => {
-  const db = getGlobalDB()
-
-  try {
-    const dbUser = await db.get(user._id)
-    return done(null, dbUser)
-  } catch (err) {
-    console.error(`User not found`, err)
-    return done(null, false, { message: "User not found" })
-  }
-})
 
 async function refreshOIDCAccessToken(
   chosenConfig: OIDCInnerConfig,

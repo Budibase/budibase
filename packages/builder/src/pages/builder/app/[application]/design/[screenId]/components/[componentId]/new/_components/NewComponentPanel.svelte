@@ -182,12 +182,13 @@
   }
 
   const handleKeyDown = e => {
-    if (e.key === "Tab") {
+    if (e.key === "Tab" || e.key === "ArrowDown" || e.key === "ArrowUp") {
       // Cycle selected components on tab press
       if (selectedIndex == null) {
         selectedIndex = 0
       } else {
-        selectedIndex = (selectedIndex + 1) % componentList.length
+        const direction = e.key === "ArrowUp" ? -1 : 1
+        selectedIndex = (selectedIndex + direction) % componentList.length
       }
       e.preventDefault()
       e.stopPropagation()

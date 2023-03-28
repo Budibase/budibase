@@ -8,6 +8,7 @@ import {
   SEPARATOR,
   SelectableDatabase,
 } from "./utils"
+import * as timers from "../timers"
 
 const RETRY_PERIOD_MS = 2000
 const STARTUP_TIMEOUT_MS = 5000
@@ -117,9 +118,9 @@ function waitForConnection(selectDb: number = DEFAULT_SELECT_DB) {
       return
     }
     // check if the connection is ready
-    const interval = setInterval(() => {
+    const interval = timers.set(() => {
       if (CONNECTED) {
-        clearInterval(interval)
+        timers.clear(interval)
         resolve("")
       }
     }, 500)
