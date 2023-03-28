@@ -28,7 +28,7 @@
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
-  import ComponentErrorState from "components/app/ComponentErrorState.svelte"
+  import ComponentErrorState from "components/error-states/ComponentErrorState.svelte"
   import { BudibasePrefix } from "../stores/components.js"
 
   export let instance = {}

@@ -1,8 +1,8 @@
 <script>
   import { getContext } from "svelte"
   import { Icon } from "@budibase/bbui"
-  import MissingRequiredSetting from "./error-states/MissingRequiredSetting.svelte"
-  import MissingRequiredAncestor from "./error-states/MissingRequiredAncestor.svelte"
+  import MissingRequiredSetting from "./MissingRequiredSetting.svelte"
+  import MissingRequiredAncestor from "./MissingRequiredAncestor.svelte"
 
   export let missingRequiredSettings
   export let missingRequiredAncestors

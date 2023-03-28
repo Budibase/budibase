@@ -1268,6 +1268,12 @@ export const getFrontendStore = () => {
             _children: [definition],
           }
         })
+
+        // Select the new parent
+        store.update(state => {
+          state.selectedComponentId = newParentDefinition._id
+          return state
+        })
       },
     },
     links: {
