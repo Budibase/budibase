@@ -54,7 +54,7 @@
   ]
   let userData = []
 
-  $: readonly = !$auth.isAdmin
+  $: readonly = !$auth.isAdmin || $licensing.scimEnabled
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
