@@ -21,6 +21,7 @@ import {
   middleware,
   queue,
   env as coreEnv,
+  timers,
 } from "@budibase/backend-core"
 db.init()
 import Koa from "koa"
@@ -91,6 +92,7 @@ server.on("close", async () => {
   }
   shuttingDown = true
   console.log("Server Closed")
+  timers.cleanup()
   await redis.shutdown()
   await events.shutdown()
   await queue.shutdown()

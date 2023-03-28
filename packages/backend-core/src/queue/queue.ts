@@ -4,6 +4,7 @@ import { JobQueue } from "./constants"
 import InMemoryQueue from "./inMemoryQueue"
 import BullQueue from "bull"
 import { addListeners, StalledFn } from "./listeners"
+import * as timers from "../timers"
 
 const CLEANUP_PERIOD_MS = 60 * 1000
 let QUEUES: BullQueue.Queue[] | InMemoryQueue[] = []
@@ -29,8 +30,8 @@ export function createQueue<T>(
   }
   addListeners(queue, jobQueue, opts?.removeStalledCb)
   QUEUES.push(queue)
-  if (!cleanupInterval) {
-    cleanupInterval = setInterval(cleanup, CLEANUP_PERIOD_MS)
+  if (!cleanupInterval && !env.isTest()) {
+    cleanupInterval = timers.set(cleanup, CLEANUP_PERIOD_MS)
     // fire off an initial cleanup
     cleanup().catch(err => {
       console.error(`Unable to cleanup automation queue initially - ${err}`)
@@ -41,7 +42,7 @@ export function createQueue<T>(
 
 export async function shutdown() {
   if (cleanupInterval) {
-    clearInterval(cleanupInterval)
+    timers.clear(cleanupInterval)
   }
   if (QUEUES.length) {
     for (let queue of QUEUES) {

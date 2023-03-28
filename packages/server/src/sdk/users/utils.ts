@@ -9,7 +9,10 @@ import { isEqual } from "lodash"
 
 export function combineMetadataAndUser(user: any, metadata: any) {
   // skip users with no access
-  if (user.roleId === rolesCore.BUILTIN_ROLE_IDS.PUBLIC) {
+  if (
+    user.roleId == null ||
+    user.roleId === rolesCore.BUILTIN_ROLE_IDS.PUBLIC
+  ) {
     return null
   }
   delete user._rev
