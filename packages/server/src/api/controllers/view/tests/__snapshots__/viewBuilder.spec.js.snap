@@ -1,48 +1,48 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`viewBuilder Calculate and filter creates a view with the calculation statistics and filter schema 1`] = `
-Object {
+{
   "map": "function (doc) {
-      if ((doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && !(
-      doc[\\"myField\\"] === undefined ||
-      doc[\\"myField\\"] === null ||
-      doc[\\"myField\\"] === \\"\\" ||
-      (Array.isArray(doc[\\"myField\\"]) && doc[\\"myField\\"].length === 0)
-  )) && (doc[\\"age\\"] > 17)) {
-        emit(doc[\\"_id\\"], doc[\\"myField\\"]);
+      if ((doc.tableId === "14f1c4e94d6a47b682ce89d35d4c78b0" && !(
+      doc["myField"] === undefined ||
+      doc["myField"] === null ||
+      doc["myField"] === "" ||
+      (Array.isArray(doc["myField"]) && doc["myField"].length === 0)
+  )) && (doc["age"] > 17)) {
+        emit(doc["_id"], doc["myField"]);
       }
     }",
-  "meta": Object {
+  "meta": {
     "calculation": "stats",
     "field": "myField",
-    "filters": Array [
-      Object {
+    "filters": [
+      {
         "condition": "MT",
         "key": "age",
         "value": 17,
       },
     ],
     "groupBy": undefined,
-    "schema": Object {
-      "avg": Object {
+    "schema": {
+      "avg": {
         "type": "number",
       },
-      "count": Object {
+      "count": {
         "type": "number",
       },
-      "field": Object {
+      "field": {
         "type": "string",
       },
-      "max": Object {
+      "max": {
         "type": "number",
       },
-      "min": Object {
+      "min": {
         "type": "number",
       },
-      "sum": Object {
+      "sum": {
         "type": "number",
       },
-      "sumsqr": Object {
+      "sumsqr": {
         "type": "number",
       },
     },
@@ -53,42 +53,42 @@ Object {
 `;
 
 exports[`viewBuilder Calculate creates a view with the calculation statistics schema 1`] = `
-Object {
+{
   "map": "function (doc) {
-      if ((doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && !(
-      doc[\\"myField\\"] === undefined ||
-      doc[\\"myField\\"] === null ||
-      doc[\\"myField\\"] === \\"\\" ||
-      (Array.isArray(doc[\\"myField\\"]) && doc[\\"myField\\"].length === 0)
+      if ((doc.tableId === "14f1c4e94d6a47b682ce89d35d4c78b0" && !(
+      doc["myField"] === undefined ||
+      doc["myField"] === null ||
+      doc["myField"] === "" ||
+      (Array.isArray(doc["myField"]) && doc["myField"].length === 0)
   )) ) {
-        emit(doc[\\"_id\\"], doc[\\"myField\\"]);
+        emit(doc["_id"], doc["myField"]);
       }
     }",
-  "meta": Object {
+  "meta": {
     "calculation": "stats",
     "field": "myField",
-    "filters": Array [],
+    "filters": [],
     "groupBy": undefined,
-    "schema": Object {
-      "avg": Object {
+    "schema": {
+      "avg": {
         "type": "number",
       },
-      "count": Object {
+      "count": {
         "type": "number",
       },
-      "field": Object {
+      "field": {
         "type": "string",
       },
-      "max": Object {
+      "max": {
         "type": "number",
       },
-      "min": Object {
+      "min": {
         "type": "number",
       },
-      "sum": Object {
+      "sum": {
         "type": "number",
       },
-      "sumsqr": Object {
+      "sumsqr": {
         "type": "number",
       },
     },
@@ -99,22 +99,22 @@ Object {
 `;
 
 exports[`viewBuilder Filter creates a view with multiple filters and conjunctions 1`] = `
-Object {
+{
   "map": "function (doc) {
-      if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && (doc[\\"Name\\"] === \\"Test\\" || doc[\\"Yes\\"] > \\"Value\\")) {
-        emit(doc[\\"_id\\"], doc[\\"undefined\\"]);
+      if (doc.tableId === "14f1c4e94d6a47b682ce89d35d4c78b0" && (doc["Name"] === "Test" || doc["Yes"] > "Value")) {
+        emit(doc["_id"], doc["undefined"]);
       }
     }",
-  "meta": Object {
+  "meta": {
     "calculation": undefined,
     "field": undefined,
-    "filters": Array [
-      Object {
+    "filters": [
+      {
         "condition": "EQUALS",
         "key": "Name",
         "value": "Test",
       },
-      Object {
+      {
         "condition": "MT",
         "conjunction": "OR",
         "key": "Yes",
@@ -129,16 +129,16 @@ Object {
 `;
 
 exports[`viewBuilder Group By creates a view emitting the group by field 1`] = `
-Object {
+{
   "map": "function (doc) {
-      if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" ) {
-        emit(doc[\\"age\\"], doc[\\"score\\"]);
+      if (doc.tableId === "14f1c4e94d6a47b682ce89d35d4c78b0" ) {
+        emit(doc["age"], doc["score"]);
       }
     }",
-  "meta": Object {
+  "meta": {
     "calculation": undefined,
     "field": "score",
-    "filters": Array [],
+    "filters": [],
     "groupBy": "age",
     "schema": null,
     "tableId": "14f1c4e94d6a47b682ce89d35d4c78b0",
