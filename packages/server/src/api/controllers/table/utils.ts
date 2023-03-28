@@ -109,6 +109,7 @@ export function importToRows(data: any, table: any, user: any = {}) {
       noAutoRelationships: true,
     })
     row = processed.row
+    table = processed.table
 
     let fieldName: any
     let schema: any
