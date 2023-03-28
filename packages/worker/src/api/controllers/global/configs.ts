@@ -310,7 +310,7 @@ export async function publicSettings(
     const configDoc = await configs.getSettingsConfigDoc()
     const config = configDoc.config
 
-    const licensedConfig: object = await getLicensedConfig()
+    const branding = await pro.branding.getBrandingConfig(config)
 
     // enrich the logo url - empty url means deleted
     if (config.logoUrl && config.logoUrl !== "") {
@@ -321,11 +321,12 @@ export async function publicSettings(
       )
     }
 
-    if (config.faviconUrl && config.faviconUrl !== "") {
+    if (branding.faviconUrl && branding.faviconUrl !== "") {
+      // @ts-ignore
       config.faviconUrl = objectStore.getGlobalFileUrl(
         "settings",
         "faviconUrl",
-        config.faviconUrl
+        branding.faviconUrl
       )
     }
 
@@ -349,7 +350,7 @@ export async function publicSettings(
       _rev: configDoc._rev,
       config: {
         ...config,
-        ...licensedConfig,
+        ...branding,
         google,
         oidc,
         isSSOEnforced,

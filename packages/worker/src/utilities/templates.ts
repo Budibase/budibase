@@ -9,12 +9,14 @@ import { checkSlashesInUrl } from "./index"
 import { getLicensedConfig } from "./configs"
 
 const BASE_COMPANY = "Budibase"
+import * as pro from "@budibase/pro"
 
 export async function getSettingsTemplateContext(
   purpose: EmailTemplatePurpose,
   code?: string | null
 ) {
-  let settings = await configs.getSettingsConfig()
+  const settings = await configs.getSettingsConfig()
+  const branding = await pro.branding.getBrandingConfig(settings)
   const URL = settings.platformUrl
   const context: any = {
     [InternalTemplateBinding.LOGO_URL]:
@@ -29,12 +31,7 @@ export async function getSettingsTemplateContext(
     [InternalTemplateBinding.CURRENT_YEAR]: new Date().getFullYear(),
   }
 
-  try {
-    const config: SettingsInnerConfig = await getLicensedConfig()
-    context["enableEmailBranding"] = config?.emailBrandingEnabled || true
-  } catch (e) {
-    context["enableEmailBranding"] = true
-  }
+  context["enableEmailBranding"] = branding.emailBrandingEnabled === true
 
   // attach purpose specific context
   switch (purpose) {

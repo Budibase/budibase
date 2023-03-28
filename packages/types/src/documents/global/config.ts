@@ -22,12 +22,10 @@ export interface SMTPConfig extends Config {
   config: SMTPInnerConfig
 }
 
-export interface SettingsInnerConfig {
-  platformUrl?: string
-  company?: string
-  logoUrl?: string // Populated on read
-  logoUrlEtag?: string
-
+/**
+ * Accessible only via pro.
+ */
+export interface SettingsBrandingConfig {
   faviconUrl?: string
   faviconUrlEtag?: string
 
@@ -40,7 +38,13 @@ export interface SettingsInnerConfig {
   metaDescription?: string
   metaImageUrl?: string
   metaTitle?: string
+}
 
+export interface SettingsInnerConfig {
+  platformUrl?: string
+  company?: string
+  logoUrl?: string // Populated on read
+  logoUrlEtag?: string
   uniqueTenantId?: string
   analyticsEnabled?: boolean
   isSSOEnforced?: boolean
