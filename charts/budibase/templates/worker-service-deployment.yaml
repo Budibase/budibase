@@ -217,7 +217,7 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 5
           successThreshold: 1
-          failureThreshold: 1
+          failureThreshold: 3
           timeoutSeconds: 3
         name: bbworker
         ports:
