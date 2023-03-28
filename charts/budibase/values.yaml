@@ -138,7 +138,6 @@ services:
     replicaCount: 1
     logLevel: info
     resources: {}
-    liveness:
 #    nodeDebug: "" # set the value of NODE_DEBUG
 #    annotations:
 #      co.elastic.logs/multiline.type: pattern
@@ -341,20 +340,3 @@ couchdb:
   # This is used to generate FQDNs for peers when joining the CouchDB cluster.
   dns:
     clusterDomainSuffix: cluster.local
-
-  ## Configure liveness and readiness probe values
-  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
-  livenessProbe:
-    enabled: true
-    failureThreshold: 3
-    initialDelaySeconds: 0
-    periodSeconds: 10
-    successThreshold: 1
-    timeoutSeconds: 1
-  readinessProbe:
-    enabled: true
-    failureThreshold: 3
-    initialDelaySeconds: 0
-    periodSeconds: 10
-    successThreshold: 1
-    timeoutSeconds: 1
