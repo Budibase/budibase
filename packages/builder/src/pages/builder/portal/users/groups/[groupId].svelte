@@ -14,7 +14,7 @@
   } from "@budibase/bbui"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "helpers/pagination"
-  import { users, apps, groups, auth, licensing } from "stores/portal"
+  import { users, apps, groups, auth, features } from "stores/portal"
   import { onMount, setContext } from "svelte"
   import { roles } from "stores/backend"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -75,7 +75,7 @@
   let loaded = false
   let editModal, deleteModal
 
-  const scimEnabled = $licensing.scimEnabled
+  const scimEnabled = $features.isScimEnabled
 
   $: readonly = !$auth.isAdmin || scimEnabled
   $: page = $pageInfo.page
