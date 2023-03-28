@@ -1,5 +1,6 @@
 import "./logging"
 import env from "../src/environment"
+import { cleanup } from "../src/timers"
 import { mocks, testContainerUtils } from "./utilities"
 
 // must explicitly enable fetch mock
@@ -21,3 +22,7 @@ if (!process.env.CI) {
 }
 
 testContainerUtils.setupEnv(env)
+
+afterAll(() => {
+  cleanup()
+})

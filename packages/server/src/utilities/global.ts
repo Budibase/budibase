@@ -8,7 +8,7 @@ import {
 } from "@budibase/backend-core"
 import env from "../environment"
 import { groups } from "@budibase/pro"
-import { BBContext, ContextUser, User } from "@budibase/types"
+import { UserCtx, ContextUser, User, UserGroup } from "@budibase/types"
 
 export function updateAppRole(
   user: ContextUser,
@@ -43,33 +43,40 @@ export function updateAppRole(
 
 async function checkGroupRoles(
   user: ContextUser,
-  { appId }: { appId?: string } = {}
+  opts: { appId?: string; groups?: UserGroup[] } = {}
 ) {
   if (user.roleId && user.roleId !== roles.BUILTIN_ROLE_IDS.PUBLIC) {
     return user
   }
-  if (appId) {
-    user.roleId = await groups.getGroupRoleId(user as User, appId)
+  if (opts.appId) {
+    user.roleId = await groups.getGroupRoleId(user as User, opts.appId, {
+      groups: opts.groups,
+    })
+  }
+  // final fallback, simply couldn't find a role - user must be public
+  if (!user.roleId) {
+    user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
   }
   return user
 }
 
 async function processUser(
   user: ContextUser,
-  { appId }: { appId?: string } = {}
+  opts: { appId?: string; groups?: UserGroup[] } = {}
 ) {
   if (user) {
     delete user.password
   }
-  user = await updateAppRole(user, { appId })
+  const appId = opts.appId || context.getAppId()
+  user = updateAppRole(user, { appId })
   if (!user.roleId && user?.userGroups?.length) {
-    user = await checkGroupRoles(user, { appId })
+    user = await checkGroupRoles(user, { appId, groups: opts?.groups })
   }
 
   return user
 }
 
-export async function getCachedSelf(ctx: BBContext, appId: string) {
+export async function getCachedSelf(ctx: UserCtx, appId: string) {
   // this has to be tenant aware, can't depend on the context to find it out
   // running some middlewares before the tenancy causes context to break
   const user = await cache.user.getUser(ctx.user?._id!)
@@ -90,6 +97,7 @@ export async function getGlobalUser(userId: string) {
 export async function getGlobalUsers(users?: ContextUser[]) {
   const appId = context.getAppId()
   const db = tenancy.getGlobalDB()
+  const allGroups = await groups.fetch()
   let globalUsers
   if (users) {
     const globalIds = users.map(user =>
@@ -118,7 +126,11 @@ export async function getGlobalUsers(users?: ContextUser[]) {
     return globalUsers
   }
 
-  return globalUsers.map(user => updateAppRole(user))
+  // pass in the groups, meaning we don't actually need to retrieve them for
+  // each user individually
+  return Promise.all(
+    globalUsers.map(user => processUser(user, { groups: allGroups }))
+  )
 }
 
 export async function getGlobalUsersFromMetadata(users: ContextUser[]) {

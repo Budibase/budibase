@@ -10,9 +10,9 @@ import { generateUserMetadataID, isDevAppID } from "../db/utils"
 import { getCachedSelf } from "../utilities/global"
 import env from "../environment"
 import { isWebhookEndpoint } from "./utils"
-import { BBContext } from "@budibase/types"
+import { UserCtx } from "@budibase/types"
 
-export default async (ctx: BBContext, next: any) => {
+export default async (ctx: UserCtx, next: any) => {
   // try to get the appID from the request
   let requestAppId = await utils.getAppIdFromCtx(ctx)
   // get app cookie if it exists

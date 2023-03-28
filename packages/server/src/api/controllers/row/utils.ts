@@ -62,10 +62,11 @@ export async function validate({
   }
   const errors: any = {}
   for (let fieldName of Object.keys(fetchedTable.schema)) {
-    const constraints = cloneDeep(fetchedTable.schema[fieldName].constraints)
-    const type = fetchedTable.schema[fieldName].type
+    const column = fetchedTable.schema[fieldName]
+    const constraints = cloneDeep(column.constraints)
+    const type = column.type
     // formulas shouldn't validated, data will be deleted anyway
-    if (type === FieldTypes.FORMULA) {
+    if (type === FieldTypes.FORMULA || column.autocolumn) {
       continue
     }
     // special case for options, need to always allow unselected (null)
