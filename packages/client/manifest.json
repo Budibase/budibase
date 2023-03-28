@@ -394,6 +394,7 @@
     "description": "A configurable data list that attaches to your backend tables.",
     "icon": "JourneyData",
     "illegalChildren": ["section"],
+    "requiredAncestors": ["dataprovider"],
     "hasChildren": true,
     "size": {
       "width": 400,
@@ -1384,6 +1385,7 @@
     "name": "Bar Chart",
     "description": "Bar chart",
     "icon": "GraphBarVertical",
+    "requiredAncestors": ["dataprovider"],
     "size": {
       "width": 600,
       "height": 400
@@ -1546,6 +1548,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -1699,6 +1702,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -1864,6 +1868,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -1993,6 +1998,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -2122,6 +2128,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -2349,6 +2356,7 @@
     "name": "Text Field",
     "icon": "Text",
     "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -2438,6 +2446,7 @@
     "name": "Number Field",
     "icon": "123",
     "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -2493,6 +2502,7 @@
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -2548,6 +2558,7 @@
     "name": "Options Picker",
     "icon": "Menu",
     "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -2714,6 +2725,7 @@
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -2874,6 +2886,7 @@
     "name": "Checkbox",
     "icon": "SelectBox",
     "editable": true,
+    "requiredAncestors": ["form"],
     "size": {
       "width": 20,
       "height": 20
@@ -2952,6 +2965,7 @@
     "name": "Long Form Field",
     "icon": "TextAlignLeft",
     "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3029,6 +3043,7 @@
     "name": "Date Picker",
     "icon": "Date",
     "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3162,6 +3177,7 @@
       "width": 400,
       "height": 320
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "dataProvider",
@@ -3269,6 +3285,7 @@
     "name": "Attachment",
     "icon": "Attach",
     "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3331,6 +3348,7 @@
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3393,6 +3411,7 @@
     "icon": "Brackets",
     "styles": ["size"],
     "editable": true,
+    "requiredAncestors": ["form"],
     "size": {
       "width": 400,
       "height": 100
@@ -3582,6 +3601,7 @@
     "name": "Table",
     "icon": "Table",
     "illegalChildren": ["section"],
+    "requiredAncestors": ["dataprovider"],
     "hasChildren": true,
     "showEmptyState": false,
     "size": {
@@ -3666,6 +3686,7 @@
     "name": "Date Range",
     "icon": "Calendar",
     "styles": ["size"],
+    "requiredAncestors": ["dataprovider"],
     "hasChildren": false,
     "size": {
       "width": 200,
@@ -3773,6 +3794,7 @@
       "width": 100,
       "height": 35
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "dataProvider",

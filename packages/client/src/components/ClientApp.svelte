@@ -37,7 +37,7 @@
 
   // Provide contexts
   setContext("sdk", SDK)
-  setContext("component", writable({}))
+  setContext("component", writable({ id: null, ancestors: [] }))
   setContext("context", createContextStore())
 
   let dataLoaded = false
