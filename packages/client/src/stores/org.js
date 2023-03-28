@@ -20,7 +20,9 @@ const createOrgStore = () => {
 
   return {
     subscribe,
-    init,
+    actions: {
+      init,
+    },
   }
 }
 

@@ -3,12 +3,10 @@
   import { onMount } from "svelte"
 
   let loaded = false
-  let platformTitle = null
 
   $: platformTitleText = $organisation.platformTitle
-  $: platformTitleText,
-    (platformTitle =
-      !$auth.user && platformTitleText ? platformTitleText : "Budibase")
+  $: platformTitle =
+    !$auth.user && platformTitleText ? platformTitleText : "Budibase"
 
   $: faviconUrl = $organisation.faviconUrl || "https://i.imgur.com/Xhdt1YP.png"
 

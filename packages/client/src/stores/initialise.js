@@ -5,5 +5,5 @@ import { orgStore } from "./org"
 export async function initialise() {
   await routeStore.actions.fetchRoutes()
   await appStore.actions.fetchAppDefinition()
-  await orgStore.init()
+  await orgStore.actions.init()
 }
