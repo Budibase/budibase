@@ -35,12 +35,11 @@
   export let isLayout = false
   export let isScreen = false
   export let isBlock = false
-  export let parent = null
-  export let ancestors = []
 
   // Get parent contexts
   const context = getContext("context")
   const insideScreenslot = !!getContext("screenslot")
+  const component = getContext("component")
 
   // Create component context
   const store = writable({})
@@ -124,7 +123,7 @@
   $: editable = !!definition?.editable && !hasMissingRequiredSettings
   $: requiredAncestors = definition?.requiredAncestors || []
   $: missingRequiredAncestors = requiredAncestors.filter(
-    ancestor => !ancestors.includes(`${BudibasePrefix}${ancestor}`)
+    ancestor => !$component.ancestors.includes(`${BudibasePrefix}${ancestor}`)
   )
   $: hasMissingRequiredAncestors = missingRequiredAncestors?.length > 0
   $: errorState = hasMissingRequiredSettings || hasMissingRequiredAncestors
@@ -203,6 +202,8 @@
     editing,
     type: instance._component,
     errorState,
+    parent: id,
+    ancestors: [...$component?.ancestors, instance._component]
   })
 
   const initialise = (instance, force = false) => {
@@ -523,7 +524,7 @@
     data-id={id}
     data-name={name}
     data-icon={icon}
-    data-parent={parent}
+    data-parent={$component.id}
   >
     {#if errorState}
       <ComponentErrorState
@@ -536,8 +537,7 @@
           {#each children as child (child._id)}
             <svelte:self
               instance={child}
-              parent={id}
-              ancestors={[...ancestors, instance._component]}
+
             />
           {/each}
         {:else if emptyState}

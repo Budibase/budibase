@@ -116,7 +116,7 @@
   }
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
-    border-color: var(--spectrum-global-color-blue-400);
+    border-color: var(--spectrum-global-color-static-red-600);
   }
   .label {
     padding-bottom: var(--spectrum-global-dimension-size-65);
