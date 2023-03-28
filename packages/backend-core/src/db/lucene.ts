@@ -199,6 +199,10 @@ export class QueryBuilder<T> {
     return this
   }
 
+  setAllOr() {
+    this.query.allOr = true
+  }
+
   handleSpaces(input: string) {
     if (this.noEscaping) {
       return input
@@ -234,6 +238,36 @@ export class QueryBuilder<T> {
       value = originalType === "number" ? value : `"${value}"`
     }
     return value
+  }
+
+  isMultiCondition() {
+    let count = 0
+    for (let filters of Object.values(this.query)) {
+      // not contains is one massive filter in allOr mode
+      if (typeof filters === "object") {
+        count += Object.keys(filters).length
+      }
+    }
+    return count > 1
+  }
+
+  compressFilters(filters: Record<string, string[]>) {
+    const compressed: typeof filters = {}
+    for (let key of Object.keys(filters)) {
+      const finalKey = removeKeyNumbering(key)
+      if (compressed[finalKey]) {
+        compressed[finalKey] = compressed[finalKey].concat(filters[key])
+      } else {
+        compressed[finalKey] = filters[key]
+      }
+    }
+    // add prefixes back
+    const final: typeof filters = {}
+    let count = 1
+    for (let [key, value] of Object.entries(compressed)) {
+      final[`${count++}:${key}`] = value
+    }
+    return final
   }
 
   buildSearchQuery() {
@@ -272,9 +306,9 @@ export class QueryBuilder<T> {
     }
 
     const notContains = (key: string, value: any) => {
-      // @ts-ignore
-      const allPrefix = allOr === "" ? "*:* AND" : ""
-      return allPrefix + "NOT " + contains(key, value)
+      const allPrefix = allOr ? "*:* AND " : ""
+      const mode = allOr ? "AND" : undefined
+      return allPrefix + "NOT " + contains(key, value, mode)
     }
 
     const containsAny = (key: string, value: any) => {
@@ -299,21 +333,32 @@ export class QueryBuilder<T> {
       return `${key}:(${orStatement})`
     }
 
-    function build(structure: any, queryFn: any) {
+    function build(
+      structure: any,
+      queryFn: (key: string, value: any) => string | null,
+      opts?: { returnBuilt?: boolean; mode?: string }
+    ) {
+      let built = ""
       for (let [key, value] of Object.entries(structure)) {
         // check for new format - remove numbering if needed
         key = removeKeyNumbering(key)
         key = builder.preprocess(builder.handleSpaces(key), {
           escape: true,
         })
-        const expression = queryFn(key, value)
+        let expression = queryFn(key, value)
         if (expression == null) {
           continue
         }
-        if (query.length > 0) {
-          query += ` ${allOr ? "OR" : "AND"} `
+        if (built.length > 0 || query.length > 0) {
+          const mode = opts?.mode ? opts.mode : allOr ? "OR" : "AND"
+          built += ` ${mode} `
         }
-        query += expression
+        built += expression
+      }
+      if (opts?.returnBuilt) {
+        return built
+      } else {
+        query += built
       }
     }
 
@@ -384,14 +429,14 @@ export class QueryBuilder<T> {
       build(this.query.contains, contains)
     }
     if (this.query.notContains) {
-      build(this.query.notContains, notContains)
+      build(this.compressFilters(this.query.notContains), notContains)
     }
     if (this.query.containsAny) {
       build(this.query.containsAny, containsAny)
     }
     // make sure table ID is always added as an AND
     if (tableId) {
-      query = `(${query})`
+      query = this.isMultiCondition() ? `(${query})` : query
       allOr = false
       build({ tableId }, equal)
     }

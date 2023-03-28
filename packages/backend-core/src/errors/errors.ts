@@ -1,37 +1,99 @@
-import * as licensing from "./licensing"
+// BASE
 
-// combine all error codes into single object
+export abstract class BudibaseError extends Error {
+  code: string
 
-export const codes = {
-  ...licensing.codes,
+  constructor(message: string, code: ErrorCode) {
+    super(message)
+    this.code = code
+  }
+
+  protected getPublicError?(): any
 }
 
-// combine all error types
-export const types = [licensing.type]
+// ERROR HANDLING
 
-// combine all error contexts
-const context = {
-  ...licensing.context,
+export enum ErrorCode {
+  USAGE_LIMIT_EXCEEDED = "usage_limit_exceeded",
+  FEATURE_DISABLED = "feature_disabled",
+  INVALID_API_KEY = "invalid_api_key",
+  HTTP = "http",
 }
 
-// derive a public error message using codes, types and any custom contexts
+/**
+ * For the given error, build the public representation that is safe
+ * to be exposed over an api.
+ */
 export const getPublicError = (err: any) => {
   let error
-  if (err.code || err.type) {
+  if (err.code) {
     // add generic error information
     error = {
       code: err.code,
-      type: err.type,
     }
 
-    if (err.code && context[err.code]) {
+    if (err.getPublicError) {
       error = {
         ...error,
         // get any additional context from this error
-        ...context[err.code](err),
+        ...err.getPublicError(),
       }
     }
   }
 
   return error
+}
+
+// HTTP
+
+export class HTTPError extends BudibaseError {
+  status: number
+
+  constructor(message: string, httpStatus: number, code = ErrorCode.HTTP) {
+    super(message, code)
+    this.status = httpStatus
+  }
+}
+
+// LICENSING
+
+export class UsageLimitError extends HTTPError {
+  limitName: string
+
+  constructor(message: string, limitName: string) {
+    super(message, 400, ErrorCode.USAGE_LIMIT_EXCEEDED)
+    this.limitName = limitName
+  }
+
+  getPublicError() {
+    return {
+      limitName: this.limitName,
+    }
+  }
+}
+
+export class FeatureDisabledError extends HTTPError {
+  featureName: string
+
+  constructor(message: string, featureName: string) {
+    super(message, 400, ErrorCode.FEATURE_DISABLED)
+    this.featureName = featureName
+  }
+
+  getPublicError() {
+    return {
+      featureName: this.featureName,
+    }
+  }
+}
+
+// AUTH
+
+export class InvalidAPIKeyError extends BudibaseError {
+  constructor() {
+    super(
+      "Invalid API key - may need re-generated, or user doesn't exist",
+      ErrorCode.INVALID_API_KEY
+    )
+  }
 }

@@ -1,5 +1,4 @@
 <script>
-  import { writable } from "svelte/store"
   import { setContext, getContext, onMount } from "svelte"
   import Router, { querystring } from "svelte-spa-router"
   import { routeStore, stateStore } from "stores"
@@ -9,9 +8,6 @@
   const { styleable } = getContext("sdk")
   const component = getContext("component")
   setContext("screenslot", true)
-
-  const loading = writable(false)
-  setContext("loading", loading)
 
   // Only wrap this as an array to take advantage of svelte keying,
   // to ensure the svelte-spa-router is fully remounted when route config

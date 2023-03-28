@@ -1,21 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`/datasources fetch returns all the datasources from the server 1`] = `
-Array [
-  Object {
-    "config": Object {},
-    "entities": Array [
-      Object {
+[
+  {
+    "config": {},
+    "entities": [
+      {
         "_id": "ta_users",
         "_rev": "1-2375e1bc58aeec664dc1b1f04ad43e44",
         "createdAt": "2020-01-01T00:00:00.000Z",
         "name": "Users",
         "primaryDisplay": "email",
-        "schema": Object {
-          "email": Object {
-            "constraints": Object {
+        "schema": {
+          "email": {
+            "constraints": {
               "email": true,
-              "length": Object {
+              "length": {
                 "maximum": "",
               },
               "presence": true,
@@ -25,8 +25,8 @@ Array [
             "name": "email",
             "type": "string",
           },
-          "firstName": Object {
-            "constraints": Object {
+          "firstName": {
+            "constraints": {
               "presence": false,
               "type": "string",
             },
@@ -34,8 +34,8 @@ Array [
             "name": "firstName",
             "type": "string",
           },
-          "lastName": Object {
-            "constraints": Object {
+          "lastName": {
+            "constraints": {
               "presence": false,
               "type": "string",
             },
@@ -43,9 +43,9 @@ Array [
             "name": "lastName",
             "type": "string",
           },
-          "roleId": Object {
-            "constraints": Object {
-              "inclusion": Array [
+          "roleId": {
+            "constraints": {
+              "inclusion": [
                 "ADMIN",
                 "POWER",
                 "BASIC",
@@ -58,9 +58,9 @@ Array [
             "name": "roleId",
             "type": "options",
           },
-          "status": Object {
-            "constraints": Object {
-              "inclusion": Array [
+          "status": {
+            "constraints": {
+              "inclusion": [
                 "active",
                 "inactive",
               ],
@@ -74,15 +74,15 @@ Array [
         },
         "type": "table",
         "updatedAt": "2020-01-01T00:00:00.000Z",
-        "views": Object {},
+        "views": {},
       },
     ],
     "name": "Budibase DB",
     "source": "BUDIBASE",
     "type": "budibase",
   },
-  Object {
-    "config": Object {},
+  {
+    "config": {},
     "createdAt": "2020-01-01T00:00:00.000Z",
     "name": "Test",
     "source": "POSTGRES",

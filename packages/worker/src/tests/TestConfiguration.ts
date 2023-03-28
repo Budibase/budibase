@@ -74,7 +74,6 @@ class TestConfiguration {
     const request: any = {}
     // fake cookies, we don't need them
     request.cookies = { set: () => {}, get: () => {} }
-    request.config = { jwtSecret: env.JWT_SECRET }
     request.user = { tenantId: this.getTenantId() }
     request.query = {}
     request.request = {
@@ -107,6 +106,8 @@ class TestConfiguration {
   async afterAll() {
     if (this.server) {
       await this.server.close()
+    } else {
+      await require("../index").default.close()
     }
   }
 
@@ -180,7 +181,7 @@ class TestConfiguration {
       sessionId: "sessionid",
       tenantId: user.tenantId,
     }
-    const authCookie = auth.jwt.sign(authToken, env.JWT_SECRET)
+    const authCookie = auth.jwt.sign(authToken, coreEnv.JWT_SECRET)
     return {
       Accept: "application/json",
       ...this.cookieHeader([`${constants.Cookie.Auth}=${authCookie}`]),
@@ -197,7 +198,7 @@ class TestConfiguration {
   }
 
   internalAPIHeaders() {
-    return { [constants.Header.API_KEY]: env.INTERNAL_API_KEY }
+    return { [constants.Header.API_KEY]: coreEnv.INTERNAL_API_KEY }
   }
 
   adminOnlyResponse = () => {
@@ -277,7 +278,7 @@ class TestConfiguration {
   // CONFIGS - OIDC
 
   getOIDConfigCookie(configId: string) {
-    const token = auth.jwt.sign(configId, env.JWT_SECRET)
+    const token = auth.jwt.sign(configId, coreEnv.JWT_SECRET)
     return this.cookieHeader([[`${constants.Cookie.OIDC_CONFIG}=${token}`]])
   }
 

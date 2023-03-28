@@ -106,7 +106,7 @@ export function newAutomation({ steps, trigger }: any = {}) {
   return automation
 }
 
-export function basicAutomation() {
+export function basicAutomation(appId?: string) {
   return {
     name: "My Automation",
     screenId: "kasdkfldsafkl",
@@ -114,11 +114,23 @@ export function basicAutomation() {
     uiTree: {},
     definition: {
       trigger: {
+        stepId: AutomationTriggerStepId.APP,
+        name: "test",
+        tagline: "test",
+        icon: "test",
+        description: "test",
+        type: "trigger",
+        id: "test",
         inputs: {},
+        schema: {
+          inputs: {},
+          outputs: {},
+        },
       },
       steps: [],
     },
     type: "automation",
+    appId,
   }
 }
 

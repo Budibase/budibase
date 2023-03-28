@@ -4,11 +4,11 @@ import { FieldTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Row, Table } from "@budibase/types"
-const validateJs = require("validate.js")
-const { cloneDeep } = require("lodash/fp")
 import { Format } from "../view/exporters"
 import { Ctx } from "@budibase/types"
 import sdk from "../../../sdk"
+const validateJs = require("validate.js")
+const { cloneDeep } = require("lodash/fp")
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -56,17 +56,17 @@ export async function validate({
 }) {
   let fetchedTable: Table
   if (!table) {
-    const db = context.getAppDB()
-    fetchedTable = await db.get(tableId)
+    fetchedTable = await sdk.tables.getTable(tableId)
   } else {
     fetchedTable = table
   }
   const errors: any = {}
   for (let fieldName of Object.keys(fetchedTable.schema)) {
-    const constraints = cloneDeep(fetchedTable.schema[fieldName].constraints)
-    const type = fetchedTable.schema[fieldName].type
+    const column = fetchedTable.schema[fieldName]
+    const constraints = cloneDeep(column.constraints)
+    const type = column.type
     // formulas shouldn't validated, data will be deleted anyway
-    if (type === FieldTypes.FORMULA) {
+    if (type === FieldTypes.FORMULA || column.autocolumn) {
       continue
     }
     // special case for options, need to always allow unselected (null)

@@ -62,16 +62,22 @@ spec:
           {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
           {{ end }}
+        - name: API_ENCRYPTION_KEY
+          value: {{ .Values.globals.apiEncryptionKey | quote }}
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: internalApiKey
+        - name: INTERNAL_API_KEY_FALLBACK
+          value: {{ .Values.globals.internalApiKeyFallback | quote }}
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: jwtSecret
+        - name: JWT_SECRET_FALLBACK
+          value: {{ .Values.globals.jwtSecretFallback | quote }}
         {{ if .Values.services.objectStore.region }}
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}
@@ -188,8 +194,6 @@ spec:
         - name: GLOBAL_AGENT_NO_PROXY
           value: {{ .Values.globals.globalAgentNoProxy | quote }}
         {{ end }}
-        - name: CDN_URL
-          value: {{ .Values.globals.cdnUrl }}
         {{ if .Values.services.tlsRejectUnauthorized }}
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
@@ -218,6 +222,9 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      {{ if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{ end }}     
       {{ if .Values.imagePullSecrets }}
       imagePullSecrets:
       {{- toYaml .Values.imagePullSecrets | nindent 6 }}
