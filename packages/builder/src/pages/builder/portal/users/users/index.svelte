@@ -13,7 +13,14 @@
     Divider,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
-  import { users, groups, auth, licensing, organisation } from "stores/portal"
+  import {
+    users,
+    groups,
+    auth,
+    licensing,
+    organisation,
+    features,
+  } from "stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
@@ -54,7 +61,7 @@
   ]
   let userData = []
 
-  $: readonly = !$auth.isAdmin || $licensing.scimEnabled
+  $: readonly = !$auth.isAdmin || $features.isScimEnabled
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -231,7 +238,7 @@
   </Layout>
   <Divider />
   <div class="controls">
-    {#if !$licensing.scimEnabled}
+    {#if !$features.isScimEnabled}
       <ButtonGroup>
         <Button disabled={readonly} on:click={createUserModal.show} cta>
           Add users
