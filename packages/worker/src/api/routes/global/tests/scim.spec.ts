@@ -56,7 +56,11 @@ describe("scim", () => {
         })
 
         expect(response).toEqual({
-          message: "SCIM is not enabled",
+          error: {
+            code: "feature_disabled",
+            featureName: "scim",
+          },
+          message: "scim is not currently enabled",
           status: 400,
         })
       })
