@@ -265,7 +265,7 @@ describe("scim", () => {
     describe("GET /api/global/scim/v2/users/:id", () => {
       let user: ScimUserResponse
 
-      beforeEach(async () => {
+      beforeAll(async () => {
         const body = structures.scim.createUserRequest()
 
         user = await config.api.scimUsersAPI.post({ body })
@@ -569,7 +569,7 @@ describe("scim", () => {
     describe("GET /api/global/scim/v2/groups/:id", () => {
       let group: ScimGroupResponse
 
-      beforeEach(async () => {
+      beforeAll(async () => {
         const body = structures.scim.createGroupRequest()
 
         group = await config.api.scimGroupsAPI.post({ body })
@@ -600,7 +600,7 @@ describe("scim", () => {
 
       let group: ScimGroupResponse
 
-      beforeEach(async () => {
+      beforeAll(async () => {
         const body = structures.scim.createGroupRequest()
 
         group = await config.api.scimGroupsAPI.post({ body })
