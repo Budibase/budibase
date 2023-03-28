@@ -120,7 +120,7 @@
   }
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
-    border-color: var(--spectrum-global-color-blue-400);
+    border-color: var(--spectrum-global-color-static-red-600);
   }
   .control {
     position: relative;
