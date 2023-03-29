@@ -11,6 +11,7 @@ export interface ScimUserResponse extends ScimResource {
     resourceType: "User"
   }
   userName: string
+  displayName?: string
   name: {
     formatted: string
     familyName: string
@@ -44,6 +45,7 @@ export interface ScimCreateUserRequest {
   meta: {
     resourceType: "User"
   }
+  displayName?: string
   name: {
     formatted: string
     familyName: string
