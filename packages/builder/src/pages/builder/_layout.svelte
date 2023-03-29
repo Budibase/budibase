@@ -41,13 +41,13 @@
         return
       }
 
-      if (user.tenantId !== urlTenantId) {
+      if (urlTenantId && user.tenantId !== urlTenantId) {
         // user should not be here - play it safe and log them out
         try {
           await auth.logout()
           await auth.setOrganisation(null)
         } catch (error) {
-          // Swallow error and do nothing
+          console.error("Tenant mis-match, logout.")
         }
       }
     } else {

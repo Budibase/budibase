@@ -78,6 +78,8 @@
     reorder.actions.moveColumnRight(column.name)
     open = false
   }
+
+  const makeDisplayColumn = () => {}
 </script>
 
 <div
@@ -148,6 +150,9 @@
     <MenuItem disabled={!canMoveRight} icon="ArrowRight" on:click={moveRight}>
       Move right
     </MenuItem>
+    <MenuItem icon="Label" on:click={makeDisplayColumn}
+      >Use as display column</MenuItem
+    >
   </Menu>
 </Popover>
 
