@@ -84,8 +84,9 @@ export async function buildSchemaFromDb(ctx: UserCtx) {
   setDefaultDisplayColumns(datasource)
   const dbResp = await db.put(datasource)
   datasource._rev = dbResp.rev
+  const cleanedDatasource = await sdk.datasources.removeSecretSingle(datasource)
 
-  const response: any = { datasource }
+  const response: any = { datasource: cleanedDatasource }
   if (error) {
     response.error = error
   }
