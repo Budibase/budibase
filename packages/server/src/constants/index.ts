@@ -180,3 +180,4 @@ export enum AutomationErrors {
 // pass through the list from the auth/core lib
 export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 export const MAX_AUTOMATION_RECURRING_ERRORS = 5
+export const GOOGLE_SHEETS_PRIMARY_KEY = "rowNumber"
