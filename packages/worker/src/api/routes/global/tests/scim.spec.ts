@@ -397,11 +397,6 @@ describe("scim", () => {
           Operations: [
             {
               op: "Add",
-              path: "displayName",
-              value: structures.generator.name(),
-            },
-            {
-              op: "Add",
               path: "preferredLanguage",
               value: structures.generator.letter(),
             },
