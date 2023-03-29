@@ -64,7 +64,7 @@ describe("syncGlobalUsers", () => {
     })
   })
 
-  it("app users are removed when removed from the tenant", async () => {
+  it("app users are added when group is assigned to app", async () => {
     await config.doInTenant(async () => {
       const group = await proSdk.groups.save(structures.userGroups.userGroup())
       const user1 = await config.createUser({ admin: false, builder: false })
@@ -94,6 +94,33 @@ describe("syncGlobalUsers", () => {
             _id: db.generateUserMetadataID(user2._id),
           })
         )
+      })
+    })
+  })
+
+  it("app users are removed when user removed from user group", async () => {
+    await config.doInTenant(async () => {
+      const group = await proSdk.groups.save(structures.userGroups.userGroup())
+      const user1 = await config.createUser({ admin: false, builder: false })
+      const user2 = await config.createUser({ admin: false, builder: false })
+      await proSdk.groups.updateGroupApps(group.id, {
+        appsToAdd: [
+          { appId: config.prodAppId!, roleId: roles.BUILTIN_ROLE_IDS.BASIC },
+        ],
+      })
+      await proSdk.groups.addUsers(group.id, [user1._id, user2._id])
+
+      await config.doInContext(config.appId, async () => {
+        await syncGlobalUsers()
+        expect(await rawUserMetadata()).toHaveLength(3)
+
+        await proSdk.groups.updateGroupApps(group.id, {
+          appsToRemove: [{ appId: config.prodAppId! }],
+        })
+        await syncGlobalUsers()
+
+        const metadata = await rawUserMetadata()
+        expect(metadata).toHaveLength(1)
       })
     })
   })
