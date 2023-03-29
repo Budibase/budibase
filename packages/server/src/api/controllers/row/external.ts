@@ -56,13 +56,6 @@ export async function patch(ctx: UserCtx) {
   const id = inputs._id
   // don't save the ID to db
   delete inputs._id
-  const validateResult = await utils.validate({
-    row: inputs,
-    tableId,
-  })
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
   return handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(id),
     row: inputs,
@@ -73,13 +66,6 @@ export async function patch(ctx: UserCtx) {
 export async function save(ctx: UserCtx) {
   const inputs = ctx.request.body
   const tableId = ctx.params.tableId
-  const validateResult = await utils.validate({
-    row: inputs,
-    tableId,
-  })
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
   return handleRequest(Operation.CREATE, tableId, {
     row: inputs,
     includeSqlRelationships: IncludeRelationship.EXCLUDE,
