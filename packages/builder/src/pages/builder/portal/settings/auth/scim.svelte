@@ -24,7 +24,9 @@
     try {
       await API.saveConfig({
         type: configType,
-        enabled: scimEnabled,
+        config: {
+          enabled: scimEnabled,
+        },
       })
       notifications.success(`Settings saved`)
     } catch (e) {
