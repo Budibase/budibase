@@ -387,6 +387,13 @@ export async function search(ctx: Ctx) {
   return response
 }
 
+export async function validate(ctx: Ctx) {
+  return utils.validate({
+    tableId: ctx.params.tableId,
+    row: ctx.request.body,
+  })
+}
+
 export async function exportRows(ctx: Ctx) {
   const db = context.getAppDB()
   const table = await db.get(ctx.params.tableId)

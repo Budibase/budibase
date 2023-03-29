@@ -35,9 +35,7 @@
       await datasources.fetch()
       $goto(`../../table/${table._id}`)
     } catch (error) {
-      notifications.error(
-        `Error saving table - ${error?.message || "unknown error"}`
-      )
+      notifications.error("Error saving table")
     }
   }
 </script>

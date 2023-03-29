@@ -308,7 +308,7 @@
         { name: "Auto Column", type: AUTO_TYPE },
       ]
     } else {
-      let fields = [
+      return [
         FIELDS.STRING,
         FIELDS.BARCODEQR,
         FIELDS.LONGFORM,
@@ -316,13 +316,10 @@
         FIELDS.DATETIME,
         FIELDS.NUMBER,
         FIELDS.BOOLEAN,
+        FIELDS.ARRAY,
         FIELDS.FORMULA,
+        FIELDS.LINK,
       ]
-      // no-sql or a spreadsheet
-      if (!external || table.sql) {
-        fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
-      }
-      return fields
     }
   }
 

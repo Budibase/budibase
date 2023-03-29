@@ -7,7 +7,6 @@ import {
   generateJunctionTableName,
   foreignKeyStructure,
   hasTypeChanged,
-  setStaticSchemas,
 } from "./utils"
 import { FieldTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
@@ -21,7 +20,7 @@ import {
   Operation,
   RenameColumn,
   FieldSchema,
-  UserCtx,
+  BBContext,
   TableRequest,
   RelationshipTypes,
 } from "@budibase/types"
@@ -195,20 +194,20 @@ function isRelationshipSetup(column: FieldSchema) {
   return column.foreignKey || column.through
 }
 
-export async function save(ctx: UserCtx) {
-  const inputs: TableRequest = ctx.request.body
-  const renamed = inputs?._rename
+export async function save(ctx: BBContext) {
+  const table: TableRequest = ctx.request.body
+  const renamed = table?._rename
   // can't do this right now
-  delete inputs.rows
+  delete table.rows
   const datasourceId = getDatasourceId(ctx.request.body)!
   // table doesn't exist already, note that it is created
-  if (!inputs._id) {
-    inputs.created = true
+  if (!table._id) {
+    table.created = true
   }
   let tableToSave: TableRequest = {
     type: "table",
-    _id: buildExternalTableId(datasourceId, inputs.name),
-    ...inputs,
+    _id: buildExternalTableId(datasourceId, table.name),
+    ...table,
   }
 
   let oldTable
@@ -225,10 +224,6 @@ export async function save(ctx: UserCtx) {
   if (!datasource.entities) {
     datasource.entities = {}
   }
-
-  // GSheets is a specific case - only ever has a static primary key
-  tableToSave = setStaticSchemas(datasource, tableToSave)
-
   const oldTables = cloneDeep(datasource.entities)
   const tables: Record<string, Table> = datasource.entities
 
@@ -251,7 +246,7 @@ export async function save(ctx: UserCtx) {
       const junctionTable = generateManyLinkSchema(
         datasource,
         schema,
-        tableToSave,
+        table,
         relatedTable
       )
       if (tables[junctionTable.name]) {
@@ -261,12 +256,10 @@ export async function save(ctx: UserCtx) {
       extraTablesToUpdate.push(junctionTable)
     } else {
       const fkTable =
-        relationType === RelationshipTypes.ONE_TO_MANY
-          ? tableToSave
-          : relatedTable
+        relationType === RelationshipTypes.ONE_TO_MANY ? table : relatedTable
       const foreignKey = generateLinkSchema(
         schema,
-        tableToSave,
+        table,
         relatedTable,
         relationType
       )
@@ -278,11 +271,11 @@ export async function save(ctx: UserCtx) {
         fkTable.constrained.push(foreignKey)
       }
       // foreign key is in other table, need to save it to external
-      if (fkTable._id !== tableToSave._id) {
+      if (fkTable._id !== table._id) {
         extraTablesToUpdate.push(fkTable)
       }
     }
-    generateRelatedSchema(schema, relatedTable, tableToSave, relatedColumnName)
+    generateRelatedSchema(schema, relatedTable, table, relatedColumnName)
     schema.main = true
   }
 
@@ -320,7 +313,7 @@ export async function save(ctx: UserCtx) {
   return tableToSave
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: BBContext) {
   const tableToDelete: TableRequest = await sdk.tables.getTable(
     ctx.params.tableId
   )
@@ -346,7 +339,7 @@ export async function destroy(ctx: UserCtx) {
   return tableToDelete
 }
 
-export async function bulkImport(ctx: UserCtx) {
+export async function bulkImport(ctx: BBContext) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows }: { rows: unknown } = ctx.request.body
   const schema: unknown = table.schema
@@ -355,7 +348,7 @@ export async function bulkImport(ctx: UserCtx) {
     ctx.throw(400, "Provided data import information is invalid.")
   }
 
-  const parsedRows = parse(rows, schema)
+  const parsedRows = await parse(rows, schema)
   await handleRequest(Operation.BULK_CREATE, table._id!, {
     rows: parsedRows,
   })
