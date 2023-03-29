@@ -42,12 +42,9 @@
       }
 
       // check if real tenant
-      const info = await tenants.info(urlTenantId)
-      if (!info.exists) {
-        return
-      }
+      const { exists: tenantExists } = await tenants.info(urlTenantId)
 
-      if (urlTenantId && user.tenantId !== urlTenantId) {
+      if (tenantExists && user.tenantId !== urlTenantId) {
         // user should not be here - play it safe and log them out
         try {
           await auth.logout()
