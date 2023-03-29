@@ -3,7 +3,7 @@ import { derived, get, writable } from "svelte/store"
 export const DefaultColumnWidth = 200
 
 export const createColumnsStores = context => {
-  const { schema } = context
+  const { table } = context
   const columns = writable([])
   const stickyColumn = writable(null)
 
@@ -37,8 +37,9 @@ export const createColumnsStores = context => {
   )
 
   // Merge new schema fields with existing schema in order to preserve widths
-  schema.subscribe($schema => {
-    if (!$schema) {
+  table.subscribe($table => {
+    const schema = $table?.schema
+    if (!schema) {
       columns.set([])
       stickyColumn.set(null)
       return
@@ -46,10 +47,16 @@ export const createColumnsStores = context => {
     const currentColumns = get(columns)
     const currentStickyColumn = get(stickyColumn)
 
+    // Find primary display
+    let primaryDisplay
+    if ($table.primaryDisplay && schema[$table.primaryDisplay]) {
+      primaryDisplay = $table.primaryDisplay
+    }
+
     // Get field list
     let fields = []
-    Object.entries($schema || {}).forEach(([field, fieldSchema]) => {
-      if (!fieldSchema.primaryDisplay) {
+    Object.keys(schema).forEach(field => {
+      if (field !== primaryDisplay) {
         fields.push(field)
       }
     })
@@ -66,31 +73,28 @@ export const createColumnsStores = context => {
         return {
           name: field,
           width: existing?.width || DefaultColumnWidth,
-          schema: $schema[field],
+          schema: schema[field],
           visible: existing?.visible ?? true,
         }
       })
     )
 
     // Update sticky column
-    const primaryDisplay = Object.entries($schema).find(entry => {
-      return entry[1].primaryDisplay
-    })
     if (!primaryDisplay) {
       return
     }
 
     // Check if there is an existing column with this name so we can keep
     // the width setting
-    let existing = currentColumns.find(x => x.name === primaryDisplay[0])
-    if (!existing && currentStickyColumn?.name === primaryDisplay[0]) {
+    let existing = currentColumns.find(x => x.name === primaryDisplay)
+    if (!existing && currentStickyColumn?.name === primaryDisplay) {
       existing = currentStickyColumn
     }
     stickyColumn.set({
-      name: primaryDisplay[0],
+      name: primaryDisplay,
       width: existing?.width || DefaultColumnWidth,
       left: 40,
-      schema: primaryDisplay[1],
+      schema: schema[primaryDisplay],
       idx: "sticky",
     })
   })

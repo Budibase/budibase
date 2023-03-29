@@ -91,7 +91,7 @@
       ...tableDefinition,
       primaryDisplay: column.name,
     })
-    await rows.actions.refreshSchema()
+    await rows.actions.refreshTableDefinition()
     open = false
   }
 </script>
@@ -164,9 +164,13 @@
     <MenuItem disabled={!canMoveRight} icon="ArrowRight" on:click={moveRight}>
       Move right
     </MenuItem>
-    <MenuItem icon="Label" on:click={makeDisplayColumn}
-      >Use as display column</MenuItem
+    <MenuItem
+      icon="Label"
+      on:click={makeDisplayColumn}
+      disabled={column.idx === "sticky"}
     >
+      Use as display column
+    </MenuItem>
   </Menu>
 </Popover>
 
