@@ -74,3 +74,10 @@ async function removeTenantUsers(tenantId: string) {
     throw err
   }
 }
+
+export async function tenantInfo(tenantId: string) {
+  const globalDbName = tenancy.getGlobalDBName(tenantId)
+  return {
+    exists: await dbCore.dbExists(globalDbName),
+  }
+}

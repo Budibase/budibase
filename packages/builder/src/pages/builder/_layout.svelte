@@ -1,6 +1,6 @@
 <script>
   import { isActive, redirect, params } from "@roxi/routify"
-  import { admin, auth, licensing } from "stores/portal"
+  import { admin, auth, licensing, tenants } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
   import { API } from "api"
@@ -41,7 +41,10 @@
         return
       }
 
-      if (urlTenantId && user.tenantId !== urlTenantId) {
+      // check if real tenant
+      const { exists: tenantExists } = await tenants.info(urlTenantId)
+
+      if (tenantExists && user.tenantId !== urlTenantId) {
         // user should not be here - play it safe and log them out
         try {
           await auth.logout()
