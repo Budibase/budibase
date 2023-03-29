@@ -5,7 +5,7 @@ export async function destroy(ctx: UserCtx) {
   const user = ctx.user!
   const tenantId = ctx.params.tenantId
 
-  if (tenantId !== user.tenantId) {
+  if (!ctx.internal && tenantId !== user.tenantId) {
     ctx.throw(403, "Tenant ID does not match current user")
   }
 
