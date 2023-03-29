@@ -6,7 +6,6 @@ export const createRowsStore = context => {
   const { config, API, scroll } = context
   const tableId = derived(config, $config => $config.tableId)
   const rows = writable([])
-  const schema = writable({})
   const table = writable(null)
   const filter = writable([])
   const loaded = writable(false)
@@ -89,13 +88,7 @@ export const createRowsStore = context => {
           scroll.update(state => ({ ...state, top: 0 }))
         }
 
-        // Update schema and enrich primary display into schema
-        let newSchema = $fetch.schema
-        const primaryDisplay = $fetch.definition?.primaryDisplay
-        if (primaryDisplay && newSchema[primaryDisplay]) {
-          newSchema[primaryDisplay].primaryDisplay = true
-        }
-        schema.set(newSchema)
+        // Update table definition
         table.set($fetch.definition)
 
         // Process new rows
@@ -267,7 +260,7 @@ export const createRowsStore = context => {
   }
 
   // Refreshes the schema of the data fetch subscription
-  const refreshSchema = async () => {
+  const refreshTableDefinition = async () => {
     return await get(fetch)?.refreshDefinition()
   }
 
@@ -288,12 +281,11 @@ export const createRowsStore = context => {
         loadNextPage,
         refreshRow,
         refreshData,
-        refreshSchema,
+        refreshTableDefinition,
       },
     },
     rowLookupMap,
     table,
-    schema,
     sort,
     filter,
     loaded,
