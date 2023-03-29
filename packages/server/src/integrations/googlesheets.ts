@@ -1,25 +1,22 @@
 import {
   DatasourceFieldType,
   DatasourcePlus,
-  FieldType,
   Integration,
-  Operation,
   PaginationJson,
   QueryJson,
   QueryType,
-  Row,
   SearchFilters,
   SortJson,
   Table,
-  TableRequest,
+  TableSchema,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
-import { buildExternalTableId, finaliseExternalTables } from "./utils"
+import { buildExternalTableId } from "./utils"
+import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
 import { dataFilters } from "@budibase/shared-core"
-import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -41,17 +38,6 @@ interface AuthTokenRequest {
 interface AuthTokenResponse {
   access_token: string
 }
-
-const ALLOWED_TYPES = [
-  FieldType.STRING,
-  FieldType.FORMULA,
-  FieldType.NUMBER,
-  FieldType.LONGFORM,
-  FieldType.DATETIME,
-  FieldType.OPTIONS,
-  FieldType.BOOLEAN,
-  FieldType.BARCODEQR,
-]
 
 const SCHEMA: Integration = {
   plus: true,
@@ -213,90 +199,73 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
       this.client.useOAuth2Client(oauthClient)
       await this.client.loadInfo()
-    } catch (err: any) {
-      // this happens for xlsx imports
-      if (err.message?.includes("operation is not supported")) {
-        err.message =
-          "This operation is not supported - XLSX sheets must be converted."
-      }
+    } catch (err) {
       console.error("Error connecting to google sheets", err)
       throw err
     }
   }
 
-  getTableSchema(title: string, headerValues: string[], id?: string) {
-    // base table
-    const table: Table = {
-      name: title,
-      primary: [GOOGLE_SHEETS_PRIMARY_KEY],
-      schema: {},
-    }
-    if (id) {
-      table._id = id
-    }
-    // build schema from headers
-    for (let header of headerValues) {
-      table.schema[header] = {
-        name: header,
-        type: FieldType.STRING,
-      }
-    }
-    return table
-  }
-
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+  async buildSchema(datasourceId: string) {
     await this.connect()
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, Table> = {}
     for (let sheet of sheets) {
       // must fetch rows to determine schema
       await sheet.getRows()
+      // build schema
+      const schema: TableSchema = {}
 
-      const id = buildExternalTableId(datasourceId, sheet.title)
-      tables[sheet.title] = this.getTableSchema(
-        sheet.title,
-        sheet.headerValues,
-        id
-      )
+      // build schema from headers
+      for (let header of sheet.headerValues) {
+        schema[header] = {
+          name: header,
+          type: FieldTypes.STRING,
+        }
+      }
+
+      // create tables
+      tables[sheet.title] = {
+        _id: buildExternalTableId(datasourceId, sheet.title),
+        name: sheet.title,
+        primary: ["rowNumber"],
+        schema,
+      }
     }
-    const final = finaliseExternalTables(tables, entities)
-    this.tables = final.tables
-    this.schemaErrors = final.errors
+
+    this.tables = tables
   }
 
   async query(json: QueryJson) {
     const sheet = json.endpoint.entityId
-    switch (json.endpoint.operation) {
-      case Operation.CREATE:
-        return this.create({ sheet, row: json.body as Row })
-      case Operation.BULK_CREATE:
-        return this.createBulk({ sheet, rows: json.body as Row[] })
-      case Operation.READ:
-        return this.read({ ...json, sheet })
-      case Operation.UPDATE:
-        return this.update({
+
+    const handlers = {
+      [DataSourceOperation.CREATE]: () =>
+        this.create({ sheet, row: json.body }),
+      [DataSourceOperation.READ]: () => this.read({ ...json, sheet }),
+      [DataSourceOperation.UPDATE]: () =>
+        this.update({
           // exclude the header row and zero index
           rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
           sheet,
           row: json.body,
-        })
-      case Operation.DELETE:
-        return this.delete({
+        }),
+      [DataSourceOperation.DELETE]: () =>
+        this.delete({
           // exclude the header row and zero index
           rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
           sheet,
-        })
-      case Operation.CREATE_TABLE:
-        return this.createTable(json?.table?.name)
-      case Operation.UPDATE_TABLE:
-        return this.updateTable(json.table!)
-      case Operation.DELETE_TABLE:
-        return this.deleteTable(json?.table?.name)
-      default:
-        throw new Error(
-          `GSheets integration does not support "${json.endpoint.operation}".`
-        )
+        }),
+      [DataSourceOperation.CREATE_TABLE]: () =>
+        this.createTable(json?.table?.name),
+      [DataSourceOperation.UPDATE_TABLE]: () => this.updateTable(json.table),
+      [DataSourceOperation.DELETE_TABLE]: () =>
+        this.deleteTable(json?.table?.name),
     }
+
+    // @ts-ignore
+    const internalQueryMethod = handlers[json.endpoint.operation]
+
+    return await internalQueryMethod()
   }
 
   buildRowObject(headers: string[], values: string[], rowNumber: number) {
@@ -309,70 +278,47 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   }
 
   async createTable(name?: string) {
-    if (!name) {
-      throw new Error("Must provide name for new sheet.")
-    }
     try {
       await this.connect()
-      return await this.client.addSheet({ title: name, headerValues: [name] })
+      return await this.client.addSheet({ title: name, headerValues: ["test"] })
     } catch (err) {
       console.error("Error creating new table in google sheets", err)
       throw err
     }
   }
 
-  async updateTable(table: TableRequest) {
-    await this.connect()
-    const sheet = this.client.sheetsByTitle[table.name]
-    await sheet.loadHeaderRow()
+  async updateTable(table?: any) {
+    try {
+      await this.connect()
+      const sheet = this.client.sheetsByTitle[table.name]
+      await sheet.loadHeaderRow()
 
-    if (table._rename) {
-      const headers = []
-      for (let header of sheet.headerValues) {
-        if (header === table._rename.old) {
-          headers.push(table._rename.updated)
-        } else {
-          headers.push(header)
+      if (table._rename) {
+        const headers = []
+        for (let header of sheet.headerValues) {
+          if (header === table._rename.old) {
+            headers.push(table._rename.updated)
+          } else {
+            headers.push(header)
+          }
         }
-      }
-      try {
         await sheet.setHeaderRow(headers)
-      } catch (err) {
-        console.error("Error updating column name in google sheets", err)
-        throw err
-      }
-    } else {
-      const updatedHeaderValues = [...sheet.headerValues]
+      } else {
+        const updatedHeaderValues = [...sheet.headerValues]
 
-      // add new column - doesn't currently exist
-      for (let [key, column] of Object.entries(table.schema)) {
-        if (!ALLOWED_TYPES.includes(column.type)) {
-          throw new Error(
-            `Column type: ${column.type} not allowed for GSheets integration.`
-          )
-        }
-        if (
-          !sheet.headerValues.includes(key) &&
-          column.type !== FieldType.FORMULA
-        ) {
-          updatedHeaderValues.push(key)
-        }
-      }
+        const newField = Object.keys(table.schema).find(
+          key => !sheet.headerValues.includes(key)
+        )
 
-      // clear out deleted columns
-      for (let key of sheet.headerValues) {
-        if (!Object.keys(table.schema).includes(key)) {
-          const idx = updatedHeaderValues.indexOf(key)
-          updatedHeaderValues.splice(idx, 1)
+        if (newField) {
+          updatedHeaderValues.push(newField)
         }
-      }
 
-      try {
         await sheet.setHeaderRow(updatedHeaderValues)
-      } catch (err) {
-        console.error("Error updating table in google sheets", err)
-        throw err
       }
+    } catch (err) {
+      console.error("Error updating table in google sheets", err)
+      throw err
     }
   }
 
@@ -399,24 +345,6 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       ]
     } catch (err) {
       console.error("Error writing to google sheets", err)
-      throw err
-    }
-  }
-
-  async createBulk(query: { sheet: string; rows: any[] }) {
-    try {
-      await this.connect()
-      const sheet = this.client.sheetsByTitle[query.sheet]
-      let rowsToInsert = []
-      for (let row of query.rows) {
-        rowsToInsert.push(typeof row === "string" ? JSON.parse(row) : row)
-      }
-      const rows = await sheet.addRows(rowsToInsert)
-      return rows.map(row =>
-        this.buildRowObject(sheet.headerValues, row._rawData, row._rowNumber)
-      )
-    } catch (err) {
-      console.error("Error bulk writing to google sheets", err)
       throw err
     }
   }

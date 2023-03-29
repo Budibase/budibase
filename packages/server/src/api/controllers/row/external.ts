@@ -12,7 +12,7 @@ import * as exporters from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import {
   Operation,
-  UserCtx,
+  BBContext,
   Row,
   PaginationJson,
   Table,
@@ -21,7 +21,6 @@ import {
   SortJson,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import * as utils from "./utils"
 
 const { cleanExportRows } = require("./utils")
 
@@ -50,19 +49,12 @@ export async function handleRequest(
   )
 }
 
-export async function patch(ctx: UserCtx) {
+export async function patch(ctx: BBContext) {
   const inputs = ctx.request.body
   const tableId = ctx.params.tableId
   const id = inputs._id
   // don't save the ID to db
   delete inputs._id
-  const validateResult = await utils.validate({
-    row: inputs,
-    tableId,
-  })
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
   return handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(id),
     row: inputs,
@@ -70,23 +62,16 @@ export async function patch(ctx: UserCtx) {
   })
 }
 
-export async function save(ctx: UserCtx) {
+export async function save(ctx: BBContext) {
   const inputs = ctx.request.body
   const tableId = ctx.params.tableId
-  const validateResult = await utils.validate({
-    row: inputs,
-    tableId,
-  })
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
   return handleRequest(Operation.CREATE, tableId, {
     row: inputs,
     includeSqlRelationships: IncludeRelationship.EXCLUDE,
   })
 }
 
-export async function fetchView(ctx: UserCtx) {
+export async function fetchView(ctx: BBContext) {
   // there are no views in external datasources, shouldn't ever be called
   // for now just fetch
   const split = ctx.params.viewName.split("all_")
@@ -94,14 +79,14 @@ export async function fetchView(ctx: UserCtx) {
   return fetch(ctx)
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: BBContext) {
   const tableId = ctx.params.tableId
   return handleRequest(Operation.READ, tableId, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: BBContext) {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
   const response = (await handleRequest(Operation.READ, tableId, {
@@ -111,7 +96,7 @@ export async function find(ctx: UserCtx) {
   return response ? response[0] : response
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: BBContext) {
   const tableId = ctx.params.tableId
   const id = ctx.request.body._id
   const { row } = (await handleRequest(Operation.DELETE, tableId, {
@@ -121,7 +106,7 @@ export async function destroy(ctx: UserCtx) {
   return { response: { ok: true }, row }
 }
 
-export async function bulkDestroy(ctx: UserCtx) {
+export async function bulkDestroy(ctx: BBContext) {
   const { rows } = ctx.request.body
   const tableId = ctx.params.tableId
   let promises: Promise<Row[] | { row: Row; table: Table }>[] = []
@@ -137,7 +122,7 @@ export async function bulkDestroy(ctx: UserCtx) {
   return { response: { ok: true }, rows: responses.map(resp => resp.row) }
 }
 
-export async function search(ctx: UserCtx) {
+export async function search(ctx: BBContext) {
   const tableId = ctx.params.tableId
   const { paginate, query, ...params } = ctx.request.body
   let { bookmark, limit } = params
@@ -200,7 +185,12 @@ export async function search(ctx: UserCtx) {
   }
 }
 
-export async function exportRows(ctx: UserCtx) {
+export async function validate(ctx: BBContext) {
+  // can't validate external right now - maybe in future
+  return { valid: true }
+}
+
+export async function exportRows(ctx: BBContext) {
   const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
   const format = ctx.query.format
   const { columns } = ctx.request.body
@@ -254,7 +244,7 @@ export async function exportRows(ctx: UserCtx) {
   return apiFileReturn(exporter(headers, exportRows))
 }
 
-export async function fetchEnrichedRow(ctx: UserCtx) {
+export async function fetchEnrichedRow(ctx: BBContext) {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
   const { datasourceId, tableName } = breakExternalTableId(tableId)
