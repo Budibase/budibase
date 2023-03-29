@@ -4,6 +4,7 @@ import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
+const ENCODED_SPACE = encodeURIComponent(" ")
 
 const SQL_NUMBER_TYPE_MAP = {
   integer: FieldTypes.NUMBER,
@@ -79,6 +80,10 @@ export function isExternalTable(tableId: string) {
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
+  // encode spaces
+  if (tableName.includes(" ")) {
+    tableName = encodeURIComponent(tableName)
+  }
   return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
 }
 
@@ -90,6 +95,10 @@ export function breakExternalTableId(tableId: string | undefined) {
   let datasourceId = parts.shift()
   // if they need joined
   let tableName = parts.join(DOUBLE_SEPARATOR)
+  // if contains encoded spaces, decode it
+  if (tableName.includes(ENCODED_SPACE)) {
+    tableName = decodeURIComponent(tableName)
+  }
   return { datasourceId, tableName }
 }
 
@@ -200,9 +209,9 @@ export function isIsoDateString(str: string) {
  * @param column The column to check, to see if it is a valid relationship.
  * @param tableIds The IDs of the tables which currently exist.
  */
-function shouldCopyRelationship(
+export function shouldCopyRelationship(
   column: { type: string; tableId?: string },
-  tableIds: [string]
+  tableIds: string[]
 ) {
   return (
     column.type === FieldTypes.LINK &&
@@ -219,7 +228,7 @@ function shouldCopyRelationship(
  * @param column The column to check for options or boolean type.
  * @param fetchedColumn The fetched column to check for the type in the external database.
  */
-function shouldCopySpecialColumn(
+export function shouldCopySpecialColumn(
   column: { type: string },
   fetchedColumn: { type: string } | undefined
 ) {
@@ -257,8 +266,11 @@ function copyExistingPropsOver(
   tableIds: [string]
 ) {
   if (entities && entities[tableName]) {
-    if (entities[tableName].primaryDisplay) {
+    if (entities[tableName]?.primaryDisplay) {
       table.primaryDisplay = entities[tableName].primaryDisplay
+    }
+    if (entities[tableName]?.created) {
+      table.created = entities[tableName]?.created
     }
     const existingTableSchema = entities[tableName].schema
     for (let key in existingTableSchema) {
