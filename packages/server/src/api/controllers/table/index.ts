@@ -8,7 +8,7 @@ import {
 import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { getDatasourceParams } from "../../../db/utils"
 import { context, events } from "@budibase/backend-core"
-import { Table, UserCtx } from "@budibase/types"
+import { Table, BBContext } from "@budibase/types"
 import sdk from "../../../sdk"
 import csv from "csvtojson"
 
@@ -25,7 +25,7 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
 }
 
 // covers both internal and external
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: BBContext) {
   const db = context.getAppDB()
 
   const internal = await sdk.tables.getAllInternalTables()
@@ -53,12 +53,12 @@ export async function fetch(ctx: UserCtx) {
   ctx.body = [...internal, ...external]
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: BBContext) {
   const tableId = ctx.params.tableId
   ctx.body = await sdk.tables.getTable(tableId)
 }
 
-export async function save(ctx: UserCtx) {
+export async function save(ctx: BBContext) {
   const appId = ctx.appId
   const table = ctx.request.body
   const isImport = table.rows
@@ -79,7 +79,7 @@ export async function save(ctx: UserCtx) {
   ctx.body = savedTable
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: BBContext) {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
@@ -91,7 +91,7 @@ export async function destroy(ctx: UserCtx) {
   ctx.body = { message: `Table ${tableId} deleted.` }
 }
 
-export async function bulkImport(ctx: UserCtx) {
+export async function bulkImport(ctx: BBContext) {
   const tableId = ctx.params.tableId
   await pickApi({ tableId }).bulkImport(ctx)
   // right now we don't trigger anything for bulk import because it
@@ -101,7 +101,7 @@ export async function bulkImport(ctx: UserCtx) {
   ctx.body = { message: `Bulk rows created.` }
 }
 
-export async function csvToJson(ctx: UserCtx) {
+export async function csvToJson(ctx: BBContext) {
   const { csvString } = ctx.request.body
 
   const result = await csv().fromString(csvString)
@@ -110,7 +110,7 @@ export async function csvToJson(ctx: UserCtx) {
   ctx.body = result
 }
 
-export async function validateNewTableImport(ctx: UserCtx) {
+export async function validateNewTableImport(ctx: BBContext) {
   const { rows, schema }: { rows: unknown; schema: unknown } = ctx.request.body
 
   if (isRows(rows) && isSchema(schema)) {
@@ -121,7 +121,7 @@ export async function validateNewTableImport(ctx: UserCtx) {
   }
 }
 
-export async function validateExistingTableImport(ctx: UserCtx) {
+export async function validateExistingTableImport(ctx: BBContext) {
   const { rows, tableId }: { rows: unknown; tableId: unknown } =
     ctx.request.body
 

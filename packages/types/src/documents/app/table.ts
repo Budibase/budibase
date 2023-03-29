@@ -76,7 +76,6 @@ export interface Table extends Document {
   sql?: boolean
   indexes?: { [key: string]: any }
   rows?: { [key: string]: any }
-  created?: boolean
 }
 
 export interface TableRequest extends Table {

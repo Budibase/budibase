@@ -4,11 +4,11 @@ import { FieldTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Row, Table } from "@budibase/types"
+const validateJs = require("validate.js")
+const { cloneDeep } = require("lodash/fp")
 import { Format } from "../view/exporters"
 import { Ctx } from "@budibase/types"
 import sdk from "../../../sdk"
-const validateJs = require("validate.js")
-const { cloneDeep } = require("lodash/fp")
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -56,7 +56,8 @@ export async function validate({
 }) {
   let fetchedTable: Table
   if (!table) {
-    fetchedTable = await sdk.tables.getTable(tableId)
+    const db = context.getAppDB()
+    fetchedTable = await db.get(tableId)
   } else {
     fetchedTable = table
   }
