@@ -162,10 +162,7 @@ export async function getGoogleConfig(): Promise<
 export async function getGoogleDatasourceConfig(): Promise<
   GoogleInnerConfig | undefined
 > {
-  if (!env.isDev() && !env.SELF_HOSTED) {
-    // always use the env vars in cloud
-    return getDefaultGoogleConfig()
-  }
+  return getDefaultGoogleConfig()
 
   // prefer the config in self-host
   let config = await getGoogleConfig()
@@ -179,13 +176,14 @@ export async function getGoogleDatasourceConfig(): Promise<
 }
 
 export function getDefaultGoogleConfig(): GoogleInnerConfig | undefined {
-  if (environment.GOOGLE_CLIENT_ID && environment.GOOGLE_CLIENT_SECRET) {
-    return {
-      clientID: environment.GOOGLE_CLIENT_ID!,
-      clientSecret: environment.GOOGLE_CLIENT_SECRET!,
-      activated: true,
-    }
+  //if (environment.GOOGLE_CLIENT_ID && environment.GOOGLE_CLIENT_SECRET) {
+  return {
+    clientID:
+      "77746844610-62k43m9b4so4gcmf6ibs7p3l7jv81rug.apps.googleusercontent.com",
+    clientSecret: "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",
+    activated: true,
   }
+  //}
 }
 
 // OIDC

@@ -4,7 +4,7 @@
   import DataPanel from "./_components/DataPanel.svelte"
   import DatasourceConfigPanel from "./_components/DatasourceConfigPanel.svelte"
   import ExampleApp from "./_components/ExampleApp.svelte"
-  import { FancyButton, notifications, Modal } from "@budibase/bbui"
+  import { FancyButton, notifications, Modal, Body } from "@budibase/bbui"
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import { SplitPage } from "@budibase/frontend-core"
   import { API } from "api"
@@ -17,6 +17,7 @@
   import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
   import { Roles } from "constants/backend"
   import Spinner from "components/common/Spinner.svelte"
+  import { helpers } from "@budibase/shared-core"
 
   let name = "My first app"
   let url = "my-first-app"
@@ -25,10 +26,12 @@
 
   let plusIntegrations = {}
   let integrationsLoading = true
-  $: getIntegrations()
   let creationLoading = false
-
   let uploadModal
+  let googleComplete = false
+
+  $: getIntegrations()
+  $: cloudHosted = $admin.cloud
 
   const createApp = async useSampleData => {
     creationLoading = true
@@ -62,6 +65,7 @@
       await store.actions.screens.save(defaultScreenTemplate)
 
       appId = createdApp.instance._id
+      return createdApp
     } catch (e) {
       creationLoading = false
       throw e
@@ -74,6 +78,10 @@
       const newPlusIntegrations = {}
 
       Object.entries($integrations).forEach(([integrationType, schema]) => {
+        // google sheets not available in self-host
+        if (helpers.isGoogleSheets(integrationType) && !cloudHosted) {
+          return
+        }
         if (schema?.plus) {
           newPlusIntegrations[integrationType] = schema
         }
@@ -92,12 +100,17 @@
     notifications.success(`App created successfully`)
   }
 
-  const handleCreateApp = async ({ datasourceConfig, useSampleData }) => {
+  const handleCreateApp = async ({
+    datasourceConfig,
+    useSampleData,
+    isGoogle,
+  }) => {
     try {
-      await createApp(useSampleData)
+      const app = await createApp(useSampleData)
 
+      let datasource
       if (datasourceConfig) {
-        await saveDatasource({
+        datasource = await saveDatasource({
           plus: true,
           auth: undefined,
           name: plusIntegrations[stage].friendlyName,
@@ -107,7 +120,14 @@
         })
       }
 
-      goToApp()
+      store.set()
+
+      if (isGoogle) {
+        googleComplete = true
+        return { datasource, appId: app.appId }
+      } else {
+        goToApp()
+      }
     } catch (e) {
       console.log(e)
       creationLoading = false
@@ -127,8 +147,15 @@
 <SplitPage>
   {#if stage === "name"}
     <NamePanel bind:name bind:url onNext={() => (stage = "data")} />
+  {:else if googleComplete}
+    <div class="centered">
+      <Body
+        >Please login to your Google account in the new tab which as opened to
+        continue.</Body
+      >
+    </div>
   {:else if integrationsLoading || creationLoading}
-    <div class="spinner">
+    <div class="centered">
       <Spinner />
     </div>
   {:else if stage === "data"}
@@ -174,8 +201,13 @@
     <DatasourceConfigPanel
       title={plusIntegrations[stage].friendlyName}
       fields={plusIntegrations[stage].datasource}
+      type={stage}
       onBack={() => (stage = "data")}
-      onNext={data => handleCreateApp({ datasourceConfig: data })}
+      onNext={data => {
+        const isGoogle = data.isGoogle
+        delete data.isGoogle
+        return handleCreateApp({ datasourceConfig: data, isGoogle })
+      }}
     />
   {:else}
     <p>There was an problem. Please refresh the page and try again.</p>
@@ -186,7 +218,7 @@
 </SplitPage>
 
 <style>
-  .spinner {
+  .centered {
     display: flex;
     justify-content: center;
     align-items: center;

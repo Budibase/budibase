@@ -5,18 +5,26 @@
 
   export let preAuthStep
   export let datasource
+  export let disabled
 
   $: tenantId = $auth.tenantId
 </script>
 
 <button
+  class:disabled
+  {disabled}
   on:click={async () => {
     let ds = datasource
+    let appId = $store.appId
     if (!ds) {
-      ds = await preAuthStep()
+      const resp = await preAuthStep()
+      if (resp.datasource && resp.appId) {
+        ds = resp.datasource
+        appId = resp.appId
+      }
     }
     window.open(
-      `/api/global/auth/${tenantId}/datasource/google?datasourceId=${ds._id}&appId=${$store.appId}`,
+      `/api/global/auth/${tenantId}/datasource/google?datasourceId=${ds._id}&appId=${appId}`,
       "_blank"
     )
   }}
@@ -26,6 +34,10 @@
 </button>
 
 <style>
+  .disabled {
+    opacity: 0.5;
+  }
+
   button {
     width: 195px;
     height: 40px;
