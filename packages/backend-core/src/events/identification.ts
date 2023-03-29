@@ -305,5 +305,5 @@ export default {
   identify,
   identifyGroup,
   getInstallationId,
-  getEventTenantId,
+  getUniqueTenantId,
 }
