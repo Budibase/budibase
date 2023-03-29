@@ -133,10 +133,15 @@ export async function search(ctx: any) {
 
 export async function validate(ctx: Ctx) {
   const tableId = getTableId(ctx)
-  ctx.body = await utils.validate({
-    row: ctx.request.body,
-    tableId,
-  })
+  // external tables are hard to validate currently
+  if (isExternalTable(tableId)) {
+    ctx.body = { valid: true }
+  } else {
+    ctx.body = await utils.validate({
+      row: ctx.request.body,
+      tableId,
+    })
+  }
 }
 
 export async function fetchEnrichedRow(ctx: any) {
