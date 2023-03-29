@@ -6,6 +6,9 @@ export function tenantsStore() {
 
   return {
     info: async tenantId => {
+      if (!tenantId) {
+        return { exists: false }
+      }
       const contents = get(store)
       const found = contents.tenantInfo[tenantId]
       if (found) {
