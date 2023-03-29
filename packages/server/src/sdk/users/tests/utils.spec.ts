@@ -5,7 +5,7 @@ import { rawUserMetadata, syncGlobalUsers } from "../utils"
 describe("syncGlobalUsers", () => {
   const config = new TestConfiguration()
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await config.init()
   })
 
@@ -25,11 +25,10 @@ describe("syncGlobalUsers", () => {
     })
   })
 
-  it("app users are synced", async () => {
+  it("admin and builders users are synced", async () => {
+    const user1 = await config.createUser({ admin: true })
+    const user2 = await config.createUser({ admin: false, builder: true })
     await config.doInContext(config.appId, async () => {
-      const user1 = await config.createUser()
-      const user2 = await config.createUser()
-
       await syncGlobalUsers()
 
       const metadata = await rawUserMetadata()
@@ -42,6 +41,21 @@ describe("syncGlobalUsers", () => {
       expect(metadata).toContainEqual(
         expect.objectContaining({
           _id: db.generateUserMetadataID(user2._id),
+        })
+      )
+    })
+  })
+
+  it("app users are not synced if not specified", async () => {
+    const user = await config.createUser({ admin: false, builder: false })
+    await config.doInContext(config.appId, async () => {
+      await syncGlobalUsers()
+
+      const metadata = await rawUserMetadata()
+      expect(metadata).toHaveLength(1)
+      expect(metadata).not.toContainEqual(
+        expect.objectContaining({
+          _id: db.generateUserMetadataID(user._id),
         })
       )
     })
