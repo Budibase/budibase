@@ -16,6 +16,7 @@
   let text
   let icon
   let insideGrid = false
+  let errorState = false
 
   $: visibleIndicators = indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
@@ -85,6 +86,7 @@
         icon = parents[0].dataset.icon
       }
     }
+    errorState = parents?.[0]?.classList.contains("error")
 
     // Batch reads to minimize reflow
     const scrollX = window.scrollX
@@ -152,10 +154,10 @@
       text={idx === 0 ? text : null}
       icon={idx === 0 ? icon : null}
       showResizeAnchors={allowResizeAnchors && insideGrid}
+      color={errorState ? "var(--spectrum-global-color-static-red-600)" : color}
       {componentId}
       {transition}
       {zIndex}
-      {color}
     />
   {/each}
 {/key}

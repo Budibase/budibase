@@ -22,6 +22,7 @@ import {
   findComponent,
   getComponentSettings,
   makeComponentUnique,
+  findComponentPath,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { Utils } from "@budibase/frontend-core"
@@ -30,7 +31,12 @@ import {
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
-import { getSchemaForDatasource } from "builderStore/dataBinding"
+import {
+  buildFormSchema,
+  getSchemaForDatasource,
+} from "builderStore/dataBinding"
+import { makePropSafe as safe } from "@budibase/string-templates"
+import { getComponentFieldOptions } from "helpers/formFields"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -63,17 +69,19 @@ const INITIAL_FRONTEND_STATE = {
   customTheme: {},
   previewDevice: "desktop",
   highlightedSettingKey: null,
+  builderSidePanel: false,
 
   // URL params
   selectedScreenId: null,
   selectedComponentId: null,
   selectedLayoutId: null,
 
-  // onboarding
+  // Client state
+  selectedComponentInstance: null,
+
+  // Onboarding
   onboarding: false,
   tourNodes: null,
-
-  builderSidePanel: false,
 }
 
 export const getFrontendStore = () => {
@@ -262,22 +270,27 @@ export const getFrontendStore = () => {
         }
       },
       save: async screen => {
-        /*
-          Temporarily disabled to accomodate migration issues.
-          store.actions.screens.validate(screen)
-        */
-        const state = get(store)
+        // Validate screen structure
+        // Temporarily disabled to accommodate migration issues
+        // store.actions.screens.validate(screen)
+
+        // Check screen definition for any component settings which need updated
+        store.actions.screens.enrichEmptySettings(screen)
+
+        // Save screen
         const creatingNewScreen = screen._id === undefined
         const savedScreen = await API.saveScreen(screen)
         const routesResponse = await API.fetchAppRoutes()
-        let usedPlugins = state.usedPlugins
 
         // If plugins changed we need to fetch the latest app metadata
+        const state = get(store)
+        let usedPlugins = state.usedPlugins
         if (savedScreen.pluginAdded) {
           const { application } = await API.fetchAppPackage(state.appId)
           usedPlugins = application.usedPlugins || []
         }
 
+        // Update state
         store.update(state => {
           // Update screen object
           const idx = state.screens.findIndex(x => x._id === savedScreen._id)
@@ -298,7 +311,6 @@ export const getFrontendStore = () => {
 
           // Update used plugins
           state.usedPlugins = usedPlugins
-
           return state
         })
         return savedScreen
@@ -406,6 +418,17 @@ export const getFrontendStore = () => {
         }
         await store.actions.screens.patch(patch, screen._id)
       },
+      enrichEmptySettings: screen => {
+        // Flatten the recursive component tree
+        const components = findAllMatchingComponents(screen.props, x => x)
+
+        // Iterate over all components and run checks
+        components.forEach(component => {
+          store.actions.components.enrichEmptySettings(component, {
+            screen,
+          })
+        })
+      },
     },
     preview: {
       setDevice: device => {
@@ -493,64 +516,154 @@ export const getFrontendStore = () => {
         }
         return get(store).components[componentName]
       },
-      createInstance: (componentName, presetProps) => {
+      getDefaultDatasource: () => {
+        // Ignore users table
+        const validTables = get(tables).list.filter(x => x._id !== "ta_users")
+
+        // Try to use their own internal table first
+        let table = validTables.find(table => {
+          return (
+            table.sourceId !== BUDIBASE_INTERNAL_DB_ID &&
+            table.type === DB_TYPE_INTERNAL
+          )
+        })
+        if (table) {
+          return table
+        }
+
+        // Then try sample data
+        table = validTables.find(table => {
+          return (
+            table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+            table.type === DB_TYPE_INTERNAL
+          )
+        })
+        if (table) {
+          return table
+        }
+
+        // Finally try an external table
+        return validTables.find(table => table.type === DB_TYPE_EXTERNAL)
+      },
+      enrichEmptySettings: (component, opts) => {
+        if (!component?._component) {
+          return
+        }
+        const defaultDS = store.actions.components.getDefaultDatasource()
+        const settings = getComponentSettings(component._component)
+        const { parent, screen, useDefaultValues } = opts || {}
+        const treeId = parent?._id || component._id
+        if (!screen) {
+          return
+        }
+        settings.forEach(setting => {
+          const value = component[setting.key]
+
+          // Fill empty settings
+          if (value == null || value === "") {
+            if (setting.type === "multifield" && setting.selectAllFields) {
+              // Select all schema fields where required
+              component[setting.key] = Object.keys(defaultDS?.schema || {})
+            } else if (
+              (setting.type === "dataSource" || setting.type === "table") &&
+              defaultDS
+            ) {
+              // Select default datasource where required
+              component[setting.key] = {
+                label: defaultDS.name,
+                tableId: defaultDS._id,
+                type: "table",
+              }
+            } else if (setting.type === "dataProvider") {
+              // Pick closest data provider where required
+              const path = findComponentPath(screen.props, treeId)
+              const providers = path.filter(component =>
+                component._component?.endsWith("/dataprovider")
+              )
+              if (providers.length) {
+                const id = providers[providers.length - 1]?._id
+                component[setting.key] = `{{ literal ${safe(id)} }}`
+              }
+            } else if (setting.type.startsWith("field/")) {
+              // Autofill form field names
+              // Get all available field names in this form schema
+              let fieldOptions = getComponentFieldOptions(
+                screen.props,
+                treeId,
+                setting.type,
+                false
+              )
+
+              // Get all currently used fields
+              const form = findClosestMatchingComponent(
+                screen.props,
+                treeId,
+                x => x._component === "@budibase/standard-components/form"
+              )
+              const usedFields = Object.keys(buildFormSchema(form) || {})
+
+              // Filter out already used fields
+              fieldOptions = fieldOptions.filter(x => !usedFields.includes(x))
+
+              // Set field name and also assume we have a label setting
+              if (fieldOptions[0]) {
+                component[setting.key] = fieldOptions[0]
+                component.label = fieldOptions[0]
+              }
+            } else if (useDefaultValues && setting.defaultValue !== undefined) {
+              // Use default value where required
+              component[setting.key] = setting.defaultValue
+            }
+          }
+
+          // Validate non-empty settings
+          else {
+            if (setting.type === "dataProvider") {
+              // Validate data provider exists, or else clear it
+              const treeId = parent?._id || component._id
+              const path = findComponentPath(screen?.props, treeId)
+              const providers = path.filter(component =>
+                component._component?.endsWith("/dataprovider")
+              )
+              // Validate non-empty values
+              const valid = providers?.some(dp => value.includes?.(dp._id))
+              if (!valid) {
+                if (providers.length) {
+                  const id = providers[providers.length - 1]?._id
+                  component[setting.key] = `{{ literal ${safe(id)} }}`
+                } else {
+                  delete component[setting.key]
+                }
+              }
+            }
+          }
+        })
+      },
+      createInstance: (componentName, presetProps, parent) => {
         const definition = store.actions.components.getDefinition(componentName)
         if (!definition) {
           return null
         }
 
-        // Flattened settings
-        const settings = getComponentSettings(componentName)
-
-        let dataSourceField = settings.find(
-          setting => setting.type == "dataSource" || setting.type == "table"
-        )
-
-        let defaultDatasource
-        if (dataSourceField) {
-          const _tables = get(tables)
-          const filteredTables = _tables.list.filter(
-            table => table._id != "ta_users"
-          )
-
-          const internalTable = filteredTables.find(
-            table =>
-              table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
-              table.type == DB_TYPE_INTERNAL
-          )
-
-          const defaultSourceTable = filteredTables.find(
-            table =>
-              table.sourceId !== BUDIBASE_INTERNAL_DB_ID &&
-              table.type == DB_TYPE_INTERNAL
-          )
-
-          const defaultExternalTable = filteredTables.find(
-            table => table.type == DB_TYPE_EXTERNAL
-          )
-
-          defaultDatasource =
-            defaultSourceTable || internalTable || defaultExternalTable
+        // Generate basic component structure
+        let instance = {
+          _id: Helpers.uuid(),
+          _component: definition.component,
+          _styles: {
+            normal: {},
+            hover: {},
+            active: {},
+          },
+          _instanceName: `New ${definition.friendlyName || definition.name}`,
+          ...presetProps,
         }
 
-        // Generate default props
-        let props = { ...presetProps }
-        settings.forEach(setting => {
-          if (setting.type === "multifield" && setting.selectAllFields) {
-            props[setting.key] = Object.keys(defaultDatasource.schema || {})
-          } else if (setting.defaultValue !== undefined) {
-            props[setting.key] = setting.defaultValue
-          }
+        // Enrich empty settings
+        store.actions.components.enrichEmptySettings(instance, {
+          parent,
+          screen: get(selectedScreen),
+          useDefaultValues: true,
         })
-
-        // Set a default datasource
-        if (dataSourceField && defaultDatasource) {
-          props[dataSourceField.key] = {
-            label: defaultDatasource.name,
-            tableId: defaultDatasource._id,
-            type: "table",
-          }
-        }
 
         // Add any extra properties the component needs
         let extras = {}
@@ -569,17 +682,8 @@ export const getFrontendStore = () => {
           extras.step = formSteps.length + 1
           extras._instanceName = `Step ${formSteps.length + 1}`
         }
-
         return {
-          _id: Helpers.uuid(),
-          _component: definition.component,
-          _styles: {
-            normal: {},
-            hover: {},
-            active: {},
-          },
-          _instanceName: `New ${definition.friendlyName || definition.name}`,
-          ...cloneDeep(props),
+          ...cloneDeep(instance),
           ...extras,
         }
       },
@@ -587,7 +691,8 @@ export const getFrontendStore = () => {
         const state = get(store)
         const componentInstance = store.actions.components.createInstance(
           componentName,
-          presetProps
+          presetProps,
+          parent
         )
         if (!componentInstance) {
           return
@@ -1122,6 +1227,52 @@ export const getFrontendStore = () => {
             return state
           })
         }
+      },
+      addParent: async (componentId, parentType) => {
+        if (!componentId || !parentType) {
+          return
+        }
+
+        // Create new parent instance
+        const newParentDefinition = store.actions.components.createInstance(
+          parentType,
+          null,
+          parent
+        )
+        if (!newParentDefinition) {
+          return
+        }
+
+        // Replace component with a version wrapped in a new parent
+        await store.actions.screens.patch(screen => {
+          // Get this component definition and parent definition
+          let definition = findComponent(screen.props, componentId)
+          let oldParentDefinition = findComponentParent(
+            screen.props,
+            componentId
+          )
+          if (!definition || !oldParentDefinition) {
+            return false
+          }
+
+          // Replace component with parent
+          const index = oldParentDefinition._children.findIndex(
+            component => component._id === componentId
+          )
+          if (index === -1) {
+            return false
+          }
+          oldParentDefinition._children[index] = {
+            ...newParentDefinition,
+            _children: [definition],
+          }
+        })
+
+        // Select the new parent
+        store.update(state => {
+          state.selectedComponentId = newParentDefinition._id
+          return state
+        })
       },
     },
     links: {
