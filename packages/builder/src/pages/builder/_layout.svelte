@@ -1,6 +1,6 @@
 <script>
   import { isActive, redirect, params } from "@roxi/routify"
-  import { admin, auth, licensing } from "stores/portal"
+  import { admin, auth, licensing, tenants } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
   import { API } from "api"
@@ -38,6 +38,12 @@
           redirectUrl = redirectUrl.replace("://", `://${user.tenantId}.`)
           window.location.href = redirectUrl
         }
+        return
+      }
+
+      // check if real tenant
+      const info = await tenants.info(urlTenantId)
+      if (!info.exists) {
         return
       }
 

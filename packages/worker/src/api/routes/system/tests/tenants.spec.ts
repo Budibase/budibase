@@ -58,4 +58,17 @@ describe("/api/global/tenants", () => {
       expect(res.body).toEqual(config.adminOnlyResponse())
     })
   })
+
+  describe("GET /api/system/tenants/:tenantId/info", () => {
+    it("allows retrieving information about the tenant", async () => {
+      const user1 = await config.createTenant()
+      const res = await config.api.tenants.info(user1.tenantId)
+      expect(res.body.exists).toEqual(true)
+    })
+
+    it("check a tenant that doesn't exist", async () => {
+      const res = await config.api.tenants.info("cannot-exist-tenantid")
+      expect(res.body.exists).toEqual(false)
+    })
+  })
 })

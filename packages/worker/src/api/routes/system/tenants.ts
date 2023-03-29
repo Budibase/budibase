@@ -10,4 +10,6 @@ router.delete(
   controller.destroy
 )
 
+router.get("/api/system/tenants/:tenantId/info", controller.info)
+
 export default router

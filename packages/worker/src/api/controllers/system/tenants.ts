@@ -17,3 +17,7 @@ export async function destroy(ctx: UserCtx) {
     throw err
   }
 }
+
+export async function info(ctx: UserCtx) {
+  ctx.body = await tenantSdk.tenantInfo(ctx.params.tenantId)
+}
