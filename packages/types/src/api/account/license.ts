@@ -10,7 +10,7 @@ export interface QuotaTriggeredRequest {
   resetDate?: string
 }
 
-export interface LicenseActivateRequest extends GetLicenseRequest {
+export interface LicenseActivateRequest {
   installationId: string
   uniqueTenantId: string
 }
