@@ -17,6 +17,7 @@ jobs:
         id: version
         run: |
           if [ -z "${{ github.event.inputs.version }}" ]; then
+            git pull
             release_version=$(cat lerna.json | jq -r '.version')
           else
             release_version=${{ github.event.inputs.version }}

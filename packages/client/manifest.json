@@ -4389,6 +4389,8 @@
         "name": "On row click",
         "settings": [
           {
+            "label": "Behaviour",
+            "labelHidden": true,
             "type": "radio",
             "key": "clickBehaviour",
             "sendEvents": true,
@@ -4406,6 +4408,8 @@
             ]
           },
           {
+            "label": "Actions",
+            "labelHidden": true,
             "type": "event",
             "key": "onClick",
             "nested": true,
@@ -4442,7 +4446,7 @@
           {
             "type": "radio",
             "key": "titleButtonClickBehaviour",
-            "label": "Click behaviour",
+            "label": "Behaviour",
             "dependsOn": "showTitleButton",
             "defaultValue": "actions",
             "info": "New row side panel is only compatible with internal or SQL tables",
@@ -4460,6 +4464,8 @@
           {
             "label": "On click",
             "type": "event",
+            "label": "On click",
+            "labelHidden": true,
             "key": "onClickTitleButton",
             "nested": true,
             "dependsOn": {
