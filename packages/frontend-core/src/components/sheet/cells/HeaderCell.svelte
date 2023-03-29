@@ -18,6 +18,9 @@
     dispatch,
     config,
     ui,
+    table,
+    rows,
+    API,
   } = getContext("sheet")
 
   let anchor
@@ -79,7 +82,18 @@
     open = false
   }
 
-  const makeDisplayColumn = () => {}
+  const makeDisplayColumn = async () => {
+    const tableDefinition = $table
+    if (!tableDefinition) {
+      return
+    }
+    await API.saveTable({
+      ...tableDefinition,
+      primaryDisplay: column.name,
+    })
+    await rows.actions.refreshSchema()
+    open = false
+  }
 </script>
 
 <div

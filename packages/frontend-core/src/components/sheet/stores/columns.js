@@ -38,11 +38,13 @@ export const createColumnsStores = context => {
 
   // Merge new schema fields with existing schema in order to preserve widths
   schema.subscribe($schema => {
-    const currentColumns = get(columns)
     if (!$schema) {
       columns.set([])
+      stickyColumn.set(null)
       return
     }
+    const currentColumns = get(columns)
+    const currentStickyColumn = get(stickyColumn)
 
     // Get field list
     let fields = []
@@ -55,7 +57,12 @@ export const createColumnsStores = context => {
     // Update columns, removing extraneous columns and adding missing ones
     columns.set(
       fields.map(field => {
-        const existing = currentColumns.find(x => x.name === field)
+        // Check if there is an existing column with this name so we can keep
+        // the width setting
+        let existing = currentColumns.find(x => x.name === field)
+        if (!existing && currentStickyColumn?.name === field) {
+          existing = currentStickyColumn
+        }
         return {
           name: field,
           width: existing?.width || DefaultColumnWidth,
@@ -64,21 +71,24 @@ export const createColumnsStores = context => {
         }
       })
     )
-  })
 
-  schema.subscribe($schema => {
+    // Update sticky column
     const primaryDisplay = Object.entries($schema).find(entry => {
       return entry[1].primaryDisplay
     })
     if (!primaryDisplay) {
-      stickyColumn.set(null)
       return
     }
-    const existingWidth = get(stickyColumn)?.width
-    const same = primaryDisplay[0] === get(stickyColumn)?.name
+
+    // Check if there is an existing column with this name so we can keep
+    // the width setting
+    let existing = currentColumns.find(x => x.name === primaryDisplay[0])
+    if (!existing && currentStickyColumn?.name === primaryDisplay[0]) {
+      existing = currentStickyColumn
+    }
     stickyColumn.set({
       name: primaryDisplay[0],
-      width: same ? existingWidth : DefaultColumnWidth,
+      width: existing?.width || DefaultColumnWidth,
       left: 40,
       schema: primaryDisplay[1],
       idx: "sticky",
