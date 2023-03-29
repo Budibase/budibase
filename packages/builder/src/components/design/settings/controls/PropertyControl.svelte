@@ -8,6 +8,7 @@
   import { onDestroy } from "svelte"
 
   export let label = ""
+  export let labelHidden = false
   export let componentInstance = {}
   export let control = null
   export let key = ""
@@ -76,10 +77,10 @@
 
 <div
   class="property-control"
-  class:wide={!label}
+  class:wide={!label || labelHidden}
   class:highlighted={highlighted && nullishValue}
 >
-  {#if label}
+  {#if label && !labelHidden}
     <Label size="M">{label}</Label>
   {/if}
   <div id={`${key}-prop-control`} class="control">
