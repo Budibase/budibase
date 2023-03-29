@@ -215,8 +215,21 @@ spec:
           httpGet:
             path: /health
             port: {{ .Values.services.apps.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.services.apps.port }}
           initialDelaySeconds: 5
           periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          timeoutSeconds: 3
+
         name: bbapps
         ports:
         - containerPort: {{ .Values.services.apps.port }}
