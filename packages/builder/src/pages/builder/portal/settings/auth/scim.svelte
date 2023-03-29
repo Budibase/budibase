@@ -38,7 +38,7 @@
   async function fetchConfig() {
     try {
       const scimConfig = await API.getConfig(configType)
-      scimEnabled = scimConfig?.enabled
+      scimEnabled = scimConfig?.config?.enabled
     } catch (error) {
       console.error(error)
       notifications.error("Error fetching SCIM config")

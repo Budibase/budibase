@@ -39,7 +39,7 @@ export const createFeatureStore = () => {
         ...state,
         scim: {
           ...state.scim,
-          isConfigFlagEnabled: scimConfig.enabled,
+          isConfigFlagEnabled: scimConfig?.config?.enabled,
         },
       }))
     },
