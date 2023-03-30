@@ -32,6 +32,7 @@ describe("syncGlobalUsers", () => {
     const user1 = await config.createUser({ admin: true })
     const user2 = await config.createUser({ admin: false, builder: true })
     await config.doInContext(config.appId, async () => {
+      expect(await rawUserMetadata()).toHaveLength(1)
       await syncGlobalUsers()
 
       const metadata = await rawUserMetadata()
