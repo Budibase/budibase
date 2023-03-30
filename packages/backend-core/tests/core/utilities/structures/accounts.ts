@@ -1,5 +1,5 @@
 import { generator, uuid } from "."
-import * as db from "../../../src/db/utils"
+import { generateGlobalUserID } from "../../../src/db/documents"
 import {
   Account,
   AccountSSOProvider,
@@ -39,7 +39,7 @@ export const cloudAccount = (): CloudAccount => {
   return {
     ...account(),
     hosting: Hosting.CLOUD,
-    budibaseUserId: db.generateGlobalUserID(),
+    budibaseUserId: generateGlobalUserID(),
   }
 }
 
