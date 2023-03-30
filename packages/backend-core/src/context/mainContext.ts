@@ -44,7 +44,7 @@ export function baseGlobalDBName(tenantId: string | undefined | null) {
 }
 
 export function isMultiTenant() {
-  return env.MULTI_TENANCY
+  return !!env.MULTI_TENANCY
 }
 
 export function isTenantIdSet() {

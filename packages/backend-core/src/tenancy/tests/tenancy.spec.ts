@@ -5,7 +5,10 @@ jest.mock("../../context", () => ({
 }))
 
 import { addTenantToUrl } from "../"
-
+import { isMultiTenant } from "../../context"
+const mockedIsMultiTenant = isMultiTenant as jest.MockedFunction<
+  typeof isMultiTenant
+>
 describe("addTenantToUrl", () => {
   it("should append tenantId parameter to the URL", () => {
     const url = "https://budibase.com"
@@ -21,9 +24,8 @@ describe("addTenantToUrl", () => {
 
   it("should not append tenantId parameter to the URL if isMultiTenant is false", () => {
     // mock the `isMultiTenant` function to return false
-    jest.mock("../../src/context", () => ({
-      isMultiTenant: jest.fn(() => false),
-    }))
+
+    mockedIsMultiTenant.mockImplementation(() => false)
 
     const url = "https://budibase.com"
     const expectedUrl = "https://budibase.com"
