@@ -162,7 +162,7 @@ export async function getGoogleConfig(): Promise<
 export async function getGoogleDatasourceConfig(): Promise<
   GoogleInnerConfig | undefined
 > {
-  if (!env.isDev() && !env.SELF_HOSTED) {
+  if (!env.SELF_HOSTED) {
     // always use the env vars in cloud
     return getDefaultGoogleConfig()
   }
