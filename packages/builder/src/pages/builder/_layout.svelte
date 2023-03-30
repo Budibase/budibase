@@ -1,6 +1,6 @@
 <script>
   import { isActive, redirect, params } from "@roxi/routify"
-  import { admin, auth, licensing, tenants } from "stores/portal"
+  import { admin, auth, licensing } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
   import { API } from "api"
@@ -10,24 +10,27 @@
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
+  $: baseUrl = $admin?.baseUrl
   $: tenantSet = $auth.tenantSet
-  $: cloud = $admin.cloud
+  $: cloud = $admin?.cloud
   $: user = $auth.user
 
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
 
   const validateTenantId = async () => {
     const host = window.location.host
-    if (host.includes("localhost:")) {
+    if (host.includes("localhost:") || !baseUrl) {
       // ignore local dev
       return
     }
 
-    // e.g. ['tenant', 'budibase', 'app'] vs ['budibase', 'app']
+    const mainHost = new URL(baseUrl).host
     let urlTenantId
-    const hostParts = host.split(".")
-    if (hostParts.length > 2) {
-      urlTenantId = hostParts[0]
+    // remove the main host part
+    const hostParts = host.split(mainHost).filter(part => part !== "")
+    // if there is a part left, it has to be the tenant ID subdomain
+    if (hostParts.length === 1) {
+      urlTenantId = hostParts[0].replace(/\./g, "")
     }
 
     if (user && user.tenantId) {
@@ -41,16 +44,15 @@
         return
       }
 
-      // check if real tenant
-      const { exists: tenantExists } = await tenants.info(urlTenantId)
-
-      if (tenantExists && user.tenantId !== urlTenantId) {
+      if (urlTenantId && user.tenantId !== urlTenantId) {
         // user should not be here - play it safe and log them out
         try {
           await auth.logout()
           await auth.setOrganisation(null)
         } catch (error) {
-          console.error("Tenant mis-match, logout.")
+          console.error(
+            `Tenant mis-match - "${urlTenantId}" and "${user.tenantId}" - logout`
+          )
         }
       }
     } else {

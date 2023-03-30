@@ -32,8 +32,7 @@ export async function getConfig<T extends Config>(
   const db = context.getGlobalDB()
   try {
     // await to catch error
-    const config = (await db.get(generateConfigID(type))) as T
-    return config
+    return (await db.get(generateConfigID(type))) as T
   } catch (e: any) {
     if (e.status === 404) {
       return
@@ -162,7 +161,10 @@ export async function getGoogleConfig(): Promise<
 export async function getGoogleDatasourceConfig(): Promise<
   GoogleInnerConfig | undefined
 > {
-  return getDefaultGoogleConfig()
+  if (!env.SELF_HOSTED) {
+    // always use the env vars in cloud
+    return getDefaultGoogleConfig()
+  }
 
   // prefer the config in self-host
   let config = await getGoogleConfig()
@@ -176,14 +178,13 @@ export async function getGoogleDatasourceConfig(): Promise<
 }
 
 export function getDefaultGoogleConfig(): GoogleInnerConfig | undefined {
-  //if (environment.GOOGLE_CLIENT_ID && environment.GOOGLE_CLIENT_SECRET) {
-  return {
-    clientID:
-      "77746844610-62k43m9b4so4gcmf6ibs7p3l7jv81rug.apps.googleusercontent.com",
-    clientSecret: "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",
-    activated: true,
+  if (environment.GOOGLE_CLIENT_ID && environment.GOOGLE_CLIENT_SECRET) {
+    return {
+      clientID: environment.GOOGLE_CLIENT_ID!,
+      clientSecret: environment.GOOGLE_CLIENT_SECRET!,
+      activated: true,
+    }
   }
-  //}
 }
 
 // OIDC
