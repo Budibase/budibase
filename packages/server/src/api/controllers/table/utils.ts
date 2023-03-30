@@ -111,21 +111,19 @@ export function importToRows(data: any, table: Table, user: any = {}) {
     row = processed.row
     table = processed.table
 
-    let fieldName: any
-    let schema: any
-    for ([fieldName, schema] of Object.entries(table.schema)) {
+    for (const [fieldName, schema] of Object.entries(table.schema)) {
       // check whether the options need to be updated for inclusion as part of the data import
       if (
         schema.type === FieldTypes.OPTIONS &&
         row[fieldName] &&
-        (!schema.constraints.inclusion ||
-          schema.constraints.inclusion.indexOf(row[fieldName]) === -1)
+        (!schema.constraints!.inclusion ||
+          schema.constraints!.inclusion.indexOf(row[fieldName]) === -1)
       ) {
-        schema.constraints.inclusion = [
-          ...schema.constraints.inclusion,
+        schema.constraints!.inclusion = [
+          ...schema.constraints!.inclusion!,
           row[fieldName],
         ]
-        schema.constraints.inclusion.sort()
+        schema.constraints!.inclusion.sort()
       }
     }
 
