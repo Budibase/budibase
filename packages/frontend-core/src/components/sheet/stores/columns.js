@@ -63,20 +63,30 @@ export const createColumnsStores = context => {
 
     // Update columns, removing extraneous columns and adding missing ones
     columns.set(
-      fields.map(field => {
-        // Check if there is an existing column with this name so we can keep
-        // the width setting
-        let existing = currentColumns.find(x => x.name === field)
-        if (!existing && currentStickyColumn?.name === field) {
-          existing = currentStickyColumn
-        }
-        return {
-          name: field,
-          width: existing?.width || DefaultColumnWidth,
-          schema: schema[field],
-          visible: existing?.visible ?? true,
-        }
-      })
+      fields
+        .map(field => {
+          // Check if there is an existing column with this name so we can keep
+          // the width setting
+          let existing = currentColumns.find(x => x.name === field)
+          if (!existing && currentStickyColumn?.name === field) {
+            existing = currentStickyColumn
+          }
+          return {
+            name: field,
+            width: existing?.width || DefaultColumnWidth,
+            schema: schema[field],
+            visible: existing?.visible ?? true,
+          }
+        })
+        .sort((a, b) => {
+          // Sort columns to put auto columns last
+          let autoColA = a.schema?.autocolumn
+          let autoColB = b.schema?.autocolumn
+          if (autoColA === autoColB) {
+            return 0
+          }
+          return autoColA ? 1 : -1
+        })
     )
 
     // Update sticky column
