@@ -1,8 +1,5 @@
-import {
-  structures,
-  DBTestConfiguration,
-  expectFunctionWasCalledTimesWith,
-} from "../../../tests"
+import { structures, expectFunctionWasCalledTimesWith } from "../../../tests"
+import { DBTestConfiguration } from "../../../tests/extra"
 import { Writethrough } from "../writethrough"
 import { getDB } from "../../db"
 import tk from "timekeeper"

@@ -1,4 +1,4 @@
-import { testEnv, DBTestConfiguration } from "../../../tests"
+import { testEnv, DBTestConfiguration } from "../../../tests/extra"
 import * as migrations from "../index"
 import * as context from "../../context"
 import { MigrationType } from "@budibase/types"

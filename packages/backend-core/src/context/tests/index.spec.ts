@@ -1,4 +1,4 @@
-import { testEnv } from "../../../tests"
+import { testEnv } from "../../../tests/extra"
 const context = require("../")
 const { DEFAULT_TENANT_ID } = require("../../constants")
 

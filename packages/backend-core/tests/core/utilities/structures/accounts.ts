@@ -1,5 +1,5 @@
 import { generator, uuid } from "."
-import { generateGlobalUserID } from "../../../src/db/documents"
+import { generateGlobalUserID } from "../../../../src/docIds"
 import {
   Account,
   AccountSSOProvider,

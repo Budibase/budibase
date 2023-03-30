@@ -3,8 +3,8 @@ import {
   DocumentType,
   InternalTable,
   SEPARATOR,
-} from "../../constants"
-import { newid } from "../../newid"
+} from "../constants"
+import { newid } from "./newid"
 
 /**
  * Generates a new app ID.

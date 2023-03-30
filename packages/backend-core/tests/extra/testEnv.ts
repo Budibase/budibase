@@ -1,6 +1,6 @@
 import env from "../../src/environment"
 import * as context from "../../src/context"
-import * as structures from "../core"
+import * as structures from "../core/utilities/structures"
 
 // TENANCY
 
