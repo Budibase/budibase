@@ -25,14 +25,14 @@ jest.mock("../../src/context", () => ({
 
 describe("addTenantToUrl", () => {
   it("should append tenantId parameter to the URL", () => {
-    const url = "https://example.com"
-    const expectedUrl = "https://example.com?tenantId=budibase"
+    const url = "https://budibase.com"
+    const expectedUrl = "https://budibase.com?tenantId=budibase"
     expect(addTenantToUrl(url)).toEqual(expectedUrl)
   })
 
   it("should append tenantId parameter to the URL query string", () => {
-    const url = "https://example.com?foo=bar"
-    const expectedUrl = "https://example.com?foo=bar&tenantId=default"
+    const url = "https://budibase.com?var=test"
+    const expectedUrl = "https://budibase.com?var=test&tenantId=default"
     expect(addTenantToUrl(url)).toEqual(expectedUrl)
   })
 
@@ -43,8 +43,8 @@ describe("addTenantToUrl", () => {
       isMultiTenant: jest.fn(() => false),
     }))
 
-    const url = "https://example.com"
-    const expectedUrl = "https://example.com"
+    const url = "https://budibase.com"
+    const expectedUrl = "https://budibase.com"
     expect(addTenantToUrl(url)).toEqual(expectedUrl)
   })
 })
