@@ -59,5 +59,39 @@ describe("utils", () => {
         ])
       })
     })
+
+    it("can import data without a specific user performing the action", async () => {
+      await config.doInContext(config.appId, async () => {
+        const table = await config.createTable({
+          name: "table",
+          type: "table",
+          schema: {
+            autoId: {
+              name: "autoId",
+              type: FieldType.NUMBER,
+              subtype: AutoFieldSubTypes.AUTO_ID,
+              autocolumn: true,
+              constraints: {
+                type: FieldType.NUMBER,
+                presence: true,
+              },
+            },
+            name: {
+              name: "name",
+              type: FieldType.STRING,
+              constraints: {
+                type: FieldType.STRING,
+                presence: true,
+              },
+            },
+          },
+        })
+
+        const data = [{ name: "Alice" }, { name: "Bob" }, { name: "Claire" }]
+
+        const result = importToRows(data, table)
+        expect(result).toHaveLength(3)
+      })
+    })
   })
 })
