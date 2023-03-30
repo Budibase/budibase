@@ -17,7 +17,7 @@ class InternalAPIClient {
 
   constructor(appId?: string) {
     if (!env.BUDIBASE_HOST) {
-      throw new Error("Must set BUDIBASE_SERVER_URL env var")
+      throw new Error("Must set BUDIBASE_HOST env var")
     }
     this.host = `${env.BUDIBASE_HOST}/api`
     this.appId = appId
