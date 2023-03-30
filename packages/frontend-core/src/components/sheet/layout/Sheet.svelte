@@ -27,7 +27,6 @@
   import { clickOutside } from "@budibase/bbui"
   import AddRowButton from "../controls/AddRowButton.svelte"
   import SheetControls from "./SheetControls.svelte"
-  import SidePanel from "./SidePanel.svelte"
 
   export let API
   export let tableId
@@ -35,19 +34,21 @@
   export let allowSelectRows = true
   export let allowAddColumns = true
   export let allowEditColumns = true
+  export let allowExpandRows = true
 
   // Sheet constants
   const cellHeight = 36
-  const gutterWidth = 80
+  const gutterWidth = 72
   const rand = Math.random()
 
   // State stores
+  const tableIdStore = writable(tableId)
   const config = writable({
-    tableId,
     allowAddRows,
     allowSelectRows,
     allowAddColumns,
     allowEditColumns,
+    allowExpandRows,
   })
 
   // Build up spreadsheet context
@@ -58,6 +59,7 @@
     cellHeight,
     gutterWidth,
     config,
+    tableId: tableIdStore,
   }
   context = { ...context, ...createEventManagers() }
   context = { ...context, ...createBoundsStores(context) }
@@ -76,13 +78,14 @@
   // Reference some stores for local use
   const { isResizing, isReordering, ui, loaded } = context
 
-  // Keep config store up to date
+  // Keep stores up to date
+  $: tableIdStore.set(tableId)
   $: config.set({
-    tableId,
     allowAddRows,
     allowSelectRows,
     allowAddColumns,
     allowEditColumns,
+    allowExpandRows,
   })
 
   // Set context for children to consume
@@ -127,7 +130,6 @@
       {/if}
     </div>
   {/if}
-  <SidePanel />
   <KeyboardManager />
 </div>
 

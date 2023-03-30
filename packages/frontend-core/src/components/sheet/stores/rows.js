@@ -3,8 +3,7 @@ import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 
 export const createRowsStore = context => {
-  const { config, API, scroll } = context
-  const tableId = derived(config, $config => $config.tableId)
+  const { tableId, API, scroll } = context
   const rows = writable([])
   const table = writable(null)
   const filter = writable([])
@@ -114,6 +113,12 @@ export const createRowsStore = context => {
       sortColumn: $sort.column,
     })
   })
+
+  // Gets a row by ID
+  const getRow = id => {
+    const index = get(rowLookupMap)[id]
+    return index >= 0 ? get(enrichedRows)[index] : null
+  }
 
   // Adds a new empty row
   const addRow = async (row, idx) => {
@@ -281,6 +286,7 @@ export const createRowsStore = context => {
       subscribe: enrichedRows.subscribe,
       actions: {
         addRow,
+        getRow,
         updateRow,
         deleteRows,
         hasRow,

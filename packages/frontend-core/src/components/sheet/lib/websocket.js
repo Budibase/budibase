@@ -1,9 +1,8 @@
-import { derived, get } from "svelte/store"
+import { get } from "svelte/store"
 import { io } from "socket.io-client"
 
 export const createWebsocket = context => {
-  const { rows, config, users, userId, selectedCellId } = context
-  const tableId = derived(config, $config => $config.tableId)
+  const { rows, tableId, users, userId, selectedCellId } = context
 
   // Determine connection info
   const tls = location.protocol === "https:"
