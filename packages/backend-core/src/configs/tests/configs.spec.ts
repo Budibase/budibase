@@ -1,4 +1,9 @@
-import { DBTestConfiguration, generator, testEnv, structures } from "../../../tests"
+import {
+  DBTestConfiguration,
+  generator,
+  testEnv,
+  structures,
+} from "../../../tests"
 import { ConfigType } from "@budibase/types"
 import env from "../../environment"
 import * as configs from "../configs"
@@ -115,7 +120,6 @@ describe("configs", () => {
   })
 
   describe("getGoogleDatasourceConfig", () => {
-
     function setEnvVars() {
       env.GOOGLE_CLIENT_SECRET = "test"
       env.GOOGLE_CLIENT_ID = "test"

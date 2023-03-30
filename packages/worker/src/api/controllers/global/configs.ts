@@ -332,7 +332,8 @@ export async function publicSettings(
 
     // google
     const googleConfig = await configs.getGoogleConfig()
-    const googleDatasourceConfigured = !!(await configs.getGoogleDatasourceConfig())
+    const googleDatasourceConfigured =
+      !!(await configs.getGoogleDatasourceConfig())
     const preActivated = googleConfig && googleConfig.activated == null
     const google = preActivated || !!googleConfig?.activated
     const _googleCallbackUrl = await googleCallbackUrl(googleConfig)
