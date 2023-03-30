@@ -1,4 +1,4 @@
-import { newid } from "../../newid"
+import { newid } from "../../docIds/newid"
 import { getDB } from "../db"
 import { Database } from "@budibase/types"
 import { QueryBuilder, paginatedSearch, fullSearch } from "../lucene"

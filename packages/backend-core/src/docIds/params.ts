@@ -4,8 +4,8 @@ import {
   SEPARATOR,
   UNICODE_MAX,
   ViewName,
-} from "../../constants"
-import { getProdAppID } from "../conversions"
+} from "../constants"
+import { getProdAppID } from "./conversions"
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -62,7 +62,6 @@ export function getRowParams(
 export function getQueryIndex(viewName: ViewName) {
   return `database/${viewName}`
 }
-
 
 /**
  * Check if a given ID is that of a table.
@@ -121,7 +120,6 @@ export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
 export function getUserMetadataParams(userId?: string | null, otherProps = {}) {
   return getRowParams(InternalTable.USER_METADATA, userId, otherProps)
 }
-
 
 export function getUsersByAppParams(appId: any, otherProps: any = {}) {
   const prodAppId = getProdAppID(appId)

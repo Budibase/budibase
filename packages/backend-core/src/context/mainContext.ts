@@ -2,7 +2,7 @@
 // store an app ID to pretend there is a context
 import env from "../environment"
 import Context from "./Context"
-import * as conversions from "../db/conversions"
+import * as conversions from "../docIds/conversions"
 import { getDB } from "../db/db"
 import {
   DocumentType,

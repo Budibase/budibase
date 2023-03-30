@@ -1,1 +1,1 @@
-jest.mock("../../../src/events")
+jest.mock("../../../../src/events")

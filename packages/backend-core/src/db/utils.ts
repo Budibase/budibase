@@ -1,16 +1,12 @@
 import env from "../environment"
-import {
-  DEFAULT_TENANT_ID,
-  SEPARATOR,
-  DocumentType,
-} from "../constants"
+import { DEFAULT_TENANT_ID, SEPARATOR, DocumentType } from "../constants"
 import { getTenantId, getGlobalDBName } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
 import { getAppMetadata } from "../cache/appMetadata"
-import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
+import { isDevApp, isDevAppID, getProdAppID } from "../docIds/conversions"
 import { App, Database } from "@budibase/types"
-import { getStartEndKeyURL } from "./documents"
-export * from "./documents"
+import { getStartEndKeyURL } from "../docIds"
+export * from "../docIds"
 
 /**
  * if in production this will use the CouchDB _all_dbs call to retrieve a list of databases. If testing

@@ -1,7 +1,7 @@
-import "./logging"
+import "./core/logging"
 import env from "../src/environment"
 import { cleanup } from "../src/timers"
-import { mocks, testContainerUtils } from "./utilities"
+import { mocks, testContainerUtils } from "./core/utilities"
 
 // must explicitly enable fetch mock
 mocks.fetch.enable()
