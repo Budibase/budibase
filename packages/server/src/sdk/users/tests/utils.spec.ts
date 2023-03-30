@@ -98,7 +98,7 @@ describe("syncGlobalUsers", () => {
     })
   })
 
-  it("app users are removed when user removed from user group", async () => {
+  it("app users are removed when app is removed from user group", async () => {
     await config.doInTenant(async () => {
       const group = await proSdk.groups.save(structures.userGroups.userGroup())
       const user1 = await config.createUser({ admin: false, builder: false })
