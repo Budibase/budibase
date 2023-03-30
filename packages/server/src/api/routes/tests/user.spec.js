@@ -55,7 +55,7 @@ describe("/users", () => {
 
   describe("update", () => {
     it("should be able to update the user", async () => {
-      const user = await config.createUser({ id: `us_update${Math.random()}` })
+      const user = await config.createUser({ id: `us_update${Math.random() * Math.random()}` })
       user.roleId = BUILTIN_ROLE_IDS.BASIC
       const res = await request
         .put(`/api/users/metadata`)
