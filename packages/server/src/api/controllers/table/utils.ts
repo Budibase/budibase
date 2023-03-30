@@ -105,7 +105,11 @@ export function makeSureTableUpToDate(table: any, tableToSave: any) {
   return tableToSave
 }
 
-export function importToRows(data: any[], table: Table, user: ContextUser) {
+export function importToRows(
+  data: any[],
+  table: Table,
+  user: ContextUser | null = null
+) {
   let finalData: any = []
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
