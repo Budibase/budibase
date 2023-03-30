@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { Checkbox } from "@budibase/bbui"
+  import { Checkbox, Icon } from "@budibase/bbui"
   import SheetCell from "../cells/SheetCell.svelte"
   import DataCell from "../cells/DataCell.svelte"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
@@ -19,6 +19,7 @@
     selectedCellMap,
     selectedCellRow,
     gutterWidth,
+    dispatch,
   } = getContext("sheet")
 
   $: scrollLeft = $scroll.left
@@ -59,17 +60,24 @@
   class:scrolled={scrollLeft > 0}
 >
   <div class="header row">
-    <SheetCell
-      width={gutterWidth}
-      on:click={$config.allowSelectRows && selectAll}
-      center
-    >
-      {#if $config.allowSelectRows}
-        <Checkbox
-          value={rowCount && selectedRowCount === rowCount}
-          disabled={!$renderedRows.length}
-        />
-      {/if}
+    <SheetCell width={gutterWidth}>
+      <div class="gutter">
+        <div class="checkbox visible">
+          {#if $config.allowSelectRows}
+            <div on:click={$config.allowSelectRows && selectAll}>
+              <Checkbox
+                value={rowCount && selectedRowCount === rowCount}
+                disabled={!$renderedRows.length}
+              />
+            </div>
+          {/if}
+        </div>
+        {#if $config.allowExpandRows}
+          <div class="expand">
+            <Icon name="Maximize" size="S" />
+          </div>
+        {/if}
+      </div>
     </SheetCell>
 
     {#if $stickyColumn}
@@ -89,25 +97,41 @@
           on:mouseleave={() => ($hoveredRowId = null)}
         >
           <SheetCell
+            width={gutterWidth}
             rowSelected={rowSelected || containsSelectedRow}
             {rowHovered}
-            width={gutterWidth}
-            center
           >
-            <div
-              on:click={() => selectRow(row._id)}
-              class="checkbox"
-              class:visible={$config.allowSelectRows &&
-                (rowSelected || rowHovered)}
-            >
-              <Checkbox value={rowSelected} />
-            </div>
-            <div
-              class="number"
-              class:visible={!$config.allowSelectRows ||
-                !(rowSelected || rowHovered)}
-            >
-              {row.__idx + 1}
+            <div class="gutter">
+              <div
+                on:click={() => selectRow(row._id)}
+                class="checkbox"
+                class:visible={$config.allowSelectRows &&
+                  (rowSelected || rowHovered || containsSelectedRow)}
+              >
+                <Checkbox value={rowSelected} />
+              </div>
+              <div
+                class="number"
+                class:visible={!$config.allowSelectRows ||
+                  !(rowSelected || rowHovered || containsSelectedRow)}
+              >
+                {row.__idx + 1}
+              </div>
+              {#if $config.allowExpandRows}
+                <div
+                  class="expand"
+                  class:visible={containsSelectedRow || rowHovered}
+                >
+                  <Icon
+                    name="Maximize"
+                    hoverable
+                    size="S"
+                    on:click={() => {
+                      dispatch("edit-row", row)
+                    }}
+                  />
+                </div>
+              {/if}
             </div>
           </SheetCell>
 
@@ -172,20 +196,35 @@
     flex: 1 1 auto;
   }
 
-  /* Styles for label cell */
+  /* Styles for gutter */
+  .gutter {
+    flex: 1 1 auto;
+    display: grid;
+    align-items: center;
+    padding: var(--cell-padding);
+    grid-template-columns: 1fr auto;
+    gap: var(--cell-spacing);
+  }
   .checkbox,
   .number {
-    padding: 0 var(--cell-padding);
-  }
-  .checkbox {
     display: none;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
   }
   .number {
-    display: none;
     color: var(--spectrum-global-color-gray-500);
   }
   .checkbox.visible,
   .number.visible {
     display: flex;
+  }
+  .expand {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .expand.visible {
+    opacity: 1;
+    pointer-events: all;
   }
 </style>
