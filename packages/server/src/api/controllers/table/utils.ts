@@ -20,7 +20,13 @@ import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
-import { Database, Datasource, SourceName, Table } from "@budibase/types"
+import {
+  ContextUser,
+  Database,
+  Datasource,
+  SourceName,
+  Table,
+} from "@budibase/types"
 
 export async function clearColumns(table: any, columnNames: any) {
   const db: Database = context.getAppDB()
@@ -99,7 +105,7 @@ export function makeSureTableUpToDate(table: any, tableToSave: any) {
   return tableToSave
 }
 
-export function importToRows(data: any, table: Table, user: any = {}) {
+export function importToRows(data: any[], table: Table, user: ContextUser) {
   let finalData: any = []
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
