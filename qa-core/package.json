@@ -21,7 +21,7 @@
     "api:test:ci": "start-server-and-test api:server:setup:ci http://localhost:4100/builder test",
     "api:test": "start-server-and-test api:server:setup http://localhost:4100/builder test",
     "api:test:local": "env-cmd jest --runInBand --testPathIgnorePatterns=\\\"\\/dataSources\\/\\\"",
-    "api:test:nightly": "env-cmd jest --runInBand --outputFile=testResults.json"
+    "api:test:nightly": "env-cmd jest --runInBand --json --outputFile=testResults.json"
   },
   "jest": {
     "preset": "ts-jest",
