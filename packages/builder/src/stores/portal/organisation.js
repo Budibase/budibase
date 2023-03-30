@@ -19,6 +19,7 @@ const DEFAULT_CONFIG = {
   company: "Budibase",
   oidc: undefined,
   google: undefined,
+  googleDatasourceConfigured: undefined,
   oidcCallbackUrl: "",
   googleCallbackUrl: "",
   isSSOEnforced: false,
@@ -39,6 +40,7 @@ export function createOrganisationStore() {
     const storeConfig = _.cloneDeep(get(store))
     delete storeConfig.oidc
     delete storeConfig.google
+    delete storeConfig.googleDatasourceConfigured
     delete storeConfig.oidcCallbackUrl
     delete storeConfig.googleCallbackUrl
     await API.saveConfig({
