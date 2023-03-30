@@ -1,4 +1,6 @@
 import {
+  ConfigType,
+  GoogleConfig,
   GoogleInnerConfig,
   JwtClaims,
   OAuth2,
@@ -10,10 +12,10 @@ import {
   User,
 } from "@budibase/types"
 import { generator } from "./generator"
-import { uuid, email } from "./common"
+import { email, uuid } from "./common"
 import * as shared from "./shared"
-import _ from "lodash"
 import { user } from "./shared"
+import _ from "lodash"
 
 export function OAuth(): OAuth2 {
   return {
@@ -105,5 +107,13 @@ export function googleConfig(): GoogleInnerConfig {
     activated: true,
     clientID: generator.string(),
     clientSecret: generator.string(),
+  }
+}
+
+export function googleConfigDoc(): GoogleConfig {
+  return {
+    _id: "config_google",
+    type: ConfigType.GOOGLE,
+    config: googleConfig(),
   }
 }
