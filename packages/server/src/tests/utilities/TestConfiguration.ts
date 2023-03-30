@@ -330,21 +330,13 @@ class TestConfiguration {
         sessionId: "sessionid",
         tenantId: this.getTenantId(),
       }
-      const app = {
-        roleId: roleId,
-        appId,
-      }
       const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
-      const appToken = auth.jwt.sign(app, coreEnv.JWT_SECRET)
 
       // returning necessary request headers
       await cache.user.invalidateUser(userId)
       return {
         Accept: "application/json",
-        Cookie: [
-          `${constants.Cookie.Auth}=${authToken}`,
-          `${constants.Cookie.CurrentApp}=${appToken}`,
-        ],
+        Cookie: [`${constants.Cookie.Auth}=${authToken}`],
         [constants.Header.APP_ID]: appId,
       }
     })
@@ -359,18 +351,11 @@ class TestConfiguration {
       sessionId: "sessionid",
       tenantId,
     }
-    const app = {
-      roleId: roles.BUILTIN_ROLE_IDS.ADMIN,
-      appId: this.appId,
-    }
     const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
-    const appToken = auth.jwt.sign(app, coreEnv.JWT_SECRET)
+
     const headers: any = {
       Accept: "application/json",
-      Cookie: [
-        `${constants.Cookie.Auth}=${authToken}`,
-        `${constants.Cookie.CurrentApp}=${appToken}`,
-      ],
+      Cookie: [`${constants.Cookie.Auth}=${authToken}`],
       [constants.Header.CSRF_TOKEN]: this.defaultUserValues.csrfToken,
       Host: this.tenantHost(),
       ...extras,
