@@ -61,6 +61,7 @@
     white-space: nowrap;
   }
   input {
+    flex: 1 1 auto;
     border: none;
     padding: 0;
     margin: 0 var(--cell-padding);
