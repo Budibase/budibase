@@ -11,8 +11,6 @@
   export let schema
   export let onChange
 
-  $: selected && console.log(schema.relationshipType)
-
   const { API } = getContext("sheet")
 
   let isOpen = false
