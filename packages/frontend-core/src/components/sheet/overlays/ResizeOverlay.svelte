@@ -8,11 +8,12 @@
     renderedColumns,
     stickyColumn,
     isReordering,
+    gutterWidth,
   } = getContext("sheet")
 
   $: scrollLeft = $scroll.left
-  $: cutoff = scrollLeft + 40 + ($columns[0]?.width || 0)
-  $: offset = 40 + ($stickyColumn?.width || 0)
+  $: cutoff = scrollLeft + gutterWidth + ($columns[0]?.width || 0)
+  $: offset = gutterWidth + ($stickyColumn?.width || 0)
   $: column = $resize.column
 
   const getStyle = (column, offset, scrollLeft) => {
@@ -28,7 +29,7 @@
       class:visible={column === $stickyColumn.name}
       on:mousedown={e => resize.actions.startResizing($stickyColumn, e)}
       on:dblclick={() => resize.actions.resetSize($stickyColumn)}
-      style="left:{40 + $stickyColumn.width}px;"
+      style="left:{gutterWidth + $stickyColumn.width}px;"
     >
       <div class="resize-indicator" />
     </div>

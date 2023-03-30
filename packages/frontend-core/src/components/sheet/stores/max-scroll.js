@@ -10,6 +10,7 @@ export const createMaxScrollStores = context => {
     scroll,
     selectedCellRow,
     selectedCellId,
+    gutterWidth,
   } = context
   const padding = 255
 
@@ -35,7 +36,7 @@ export const createMaxScrollStores = context => {
   const contentWidth = derived(
     [visibleColumns, stickyColumn],
     ([$visibleColumns, $stickyColumn]) => {
-      let width = 40 + padding + ($stickyColumn?.width || 0)
+      let width = gutterWidth + padding + ($stickyColumn?.width || 0)
       $visibleColumns.forEach(col => {
         width += col.width
       })
@@ -45,7 +46,8 @@ export const createMaxScrollStores = context => {
   )
   const screenWidth = derived(
     [width, stickyColumn],
-    ([$width, $stickyColumn]) => $width + 40 + ($stickyColumn?.width || 0),
+    ([$width, $stickyColumn]) =>
+      $width + gutterWidth + ($stickyColumn?.width || 0),
     0
   )
   const maxScrollLeft = derived(

@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { domDebounce } from "../../utils/utils"
+  import { domDebounce } from "../../../utils/utils"
 
   const {
     cellHeight,

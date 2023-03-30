@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import SheetCell from "./SheetCell.svelte"
   import { Icon, Popover, Menu, MenuItem } from "@budibase/bbui"
-  import { getColumnIcon } from "../utils"
+  import { getColumnIcon } from "../lib/utils"
 
   export let column
   export let idx

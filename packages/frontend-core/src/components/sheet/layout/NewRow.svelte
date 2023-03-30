@@ -1,9 +1,9 @@
 <script>
-  import SheetCell from "./cells/SheetCell.svelte"
+  import SheetCell from "../cells/SheetCell.svelte"
   import { getContext } from "svelte"
   import { Icon } from "@budibase/bbui"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
-  import { getCellRenderer } from "./renderers"
+  import { getCellRenderer } from "../lib/renderers"
 
   const {
     renderedColumns,
@@ -12,13 +12,14 @@
     selectedCellId,
     reorder,
     stickyColumn,
+    gutterWidth,
   } = getContext("sheet")
 
   let isAdding = false
   let newRow = {}
 
   $: rowHovered = $hoveredRowId === "new"
-  $: width = 40 + ($stickyColumn?.width || 0)
+  $: width = gutterWidth + ($stickyColumn?.width || 0)
 
   const addRow = async field => {
     // const newRow = await rows.actions.addRow()
@@ -48,7 +49,7 @@
     </div>
   {:else}
     <div class="sticky" style="flex: 0 0 {width}px">
-      <SheetCell width="40" center>
+      <SheetCell width={gutterWidth} center>
         <Icon name="Add" size="S" />
       </SheetCell>
       {#if $stickyColumn}
@@ -116,7 +117,7 @@
     background: var(--cell-background-hover);
   }
   .add .icon {
-    flex: 0 0 40px;
+    flex: 0 0 var(--gutter-width);
     display: grid;
     place-items: center;
   }

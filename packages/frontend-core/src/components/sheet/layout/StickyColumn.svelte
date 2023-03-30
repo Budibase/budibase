@@ -1,10 +1,10 @@
 <script>
   import { getContext } from "svelte"
   import { Checkbox } from "@budibase/bbui"
-  import SheetCell from "./cells/SheetCell.svelte"
-  import DataCell from "./cells/DataCell.svelte"
+  import SheetCell from "../cells/SheetCell.svelte"
+  import DataCell from "../cells/DataCell.svelte"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
-  import HeaderCell from "./cells/HeaderCell.svelte"
+  import HeaderCell from "../cells/HeaderCell.svelte"
 
   const {
     rows,
@@ -18,12 +18,13 @@
     config,
     selectedCellMap,
     selectedCellRow,
+    gutterWidth,
   } = getContext("sheet")
 
   $: scrollLeft = $scroll.left
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
-  $: width = 40 + ($stickyColumn?.width || 0)
+  $: width = gutterWidth + ($stickyColumn?.width || 0)
 
   const selectAll = () => {
     const allSelected = selectedRowCount === rowCount
@@ -59,7 +60,7 @@
 >
   <div class="header row">
     <SheetCell
-      width="40"
+      width={gutterWidth}
       on:click={$config.allowSelectRows && selectAll}
       center
     >
@@ -90,7 +91,7 @@
           <SheetCell
             rowSelected={rowSelected || containsSelectedRow}
             {rowHovered}
-            width="40"
+            width={gutterWidth}
             center
           >
             <div

@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
-  import HeaderCell from "./cells/HeaderCell.svelte"
+  import HeaderCell from "../cells/HeaderCell.svelte"
   import { Icon } from "@budibase/bbui"
 
   const { renderedColumns, dispatch, config, ui } = getContext("sheet")

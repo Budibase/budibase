@@ -1,33 +1,33 @@
 <script>
-  import { setContext, onMount } from "svelte"
+  import { setContext } from "svelte"
   import { writable } from "svelte/store"
-  import { createEventManagers } from "./events"
-  import { createAPIClient } from "../../api"
-  import { createReorderStores } from "./stores/reorder"
-  import { createViewportStores } from "./stores/viewport"
-  import { createRowsStore } from "./stores/rows"
-  import { createColumnsStores } from "./stores/columns"
-  import { createScrollStores } from "./stores/scroll"
-  import { createBoundsStores } from "./stores/bounds"
-  import { createUIStores } from "./stores/ui"
-  import { createUserStores } from "./stores/users"
-  import { createWebsocket } from "./websocket"
-  import { createResizeStores } from "./stores/resize"
-  import { createMenuStores } from "./stores/menu"
-  import { createMaxScrollStores } from "./stores/max-scroll"
-  import { createPaginationStores } from "./stores/pagination"
-  import DeleteButton from "./DeleteButton.svelte"
+  import { createEventManagers } from "../lib/events"
+  import { createAPIClient } from "../../../api"
+  import { createReorderStores } from "../stores/reorder"
+  import { createViewportStores } from "../stores/viewport"
+  import { createRowsStore } from "../stores/rows"
+  import { createColumnsStores } from "../stores/columns"
+  import { createScrollStores } from "../stores/scroll"
+  import { createBoundsStores } from "../stores/bounds"
+  import { createUIStores } from "../stores/ui"
+  import { createUserStores } from "../stores/users"
+  import { createResizeStores } from "../stores/resize"
+  import { createMenuStores } from "../stores/menu"
+  import { createMaxScrollStores } from "../stores/max-scroll"
+  import { createPaginationStores } from "../stores/pagination"
+  import DeleteButton from "../controls/DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
-  import ResizeOverlay from "./ResizeOverlay.svelte"
+  import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import HeaderRow from "./HeaderRow.svelte"
-  import ScrollOverlay from "./ScrollOverlay.svelte"
-  import MenuOverlay from "./MenuOverlay.svelte"
+  import ScrollOverlay from "../overlays/ScrollOverlay.svelte"
+  import MenuOverlay from "../overlays/MenuOverlay.svelte"
   import StickyColumn from "./StickyColumn.svelte"
   import UserAvatars from "./UserAvatars.svelte"
-  import KeyboardManager from "./KeyboardManager.svelte"
+  import KeyboardManager from "../overlays/KeyboardManager.svelte"
   import { clickOutside } from "@budibase/bbui"
-  import AddRowButton from "./AddRowButton.svelte"
+  import AddRowButton from "../controls/AddRowButton.svelte"
   import SheetControls from "./SheetControls.svelte"
+  import SidePanel from "./SidePanel.svelte"
 
   export let API
   export let tableId
@@ -38,6 +38,7 @@
 
   // Sheet constants
   const cellHeight = 36
+  const gutterWidth = 80
   const rand = Math.random()
 
   // State stores
@@ -55,6 +56,7 @@
     API: API || createAPIClient(),
     rand,
     cellHeight,
+    gutterWidth,
     config,
   }
   context = { ...context, ...createEventManagers() }
@@ -98,7 +100,7 @@
   id="sheet-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
-  style="--cell-height:{cellHeight}px;"
+  style="--cell-height:{cellHeight}px; --gutter-width:{gutterWidth}px;"
 >
   <div class="controls">
     <div class="controls-left">
@@ -125,6 +127,7 @@
       {/if}
     </div>
   {/if}
+  <SidePanel />
   <KeyboardManager />
 </div>
 
