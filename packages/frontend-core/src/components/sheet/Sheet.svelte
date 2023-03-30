@@ -90,7 +90,7 @@
   export const getContext = () => context
 
   // Initialise websocket for multi-user
-  onMount(() => createWebsocket(context))
+  // onMount(() => createWebsocket(context))
 </script>
 
 <div
