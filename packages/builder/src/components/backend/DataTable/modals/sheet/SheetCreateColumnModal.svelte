@@ -11,5 +11,7 @@
 </script>
 
 <Modal bind:this={modal}>
-  <CreateEditColumn on:updatecolumns={() => rows.actions.refreshSchema()} />
+  <CreateEditColumn
+    on:updatecolumns={() => rows.actions.refreshTableDefinition()}
+  />
 </Modal>

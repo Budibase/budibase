@@ -11,6 +11,8 @@
   export let schema
   export let onChange
 
+  $: selected && console.log(schema.relationshipType)
+
   const { API } = getContext("sheet")
 
   let isOpen = false
@@ -22,6 +24,7 @@
   let candidateIndex
   let lastSearchId
 
+  $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = selected && !readonly
   $: results = getResults(searchResults, value)
   $: lookupMap = buildLookupMap(value, isOpen)
@@ -166,16 +169,24 @@
     if (value?.some(x => x._id === row._id)) {
       // If the row is already included, remove it and update the candidate
       // row to be the the same position if possible
-      const newValue = value.filter(x => x._id !== row._id)
-      if (!newValue.length) {
-        candidateIndex = null
+      if (oneRowOnly) {
+        await onChange([])
       } else {
-        candidateIndex = Math.min(candidateIndex, newValue.length - 1)
+        const newValue = value.filter(x => x._id !== row._id)
+        if (!newValue.length) {
+          candidateIndex = null
+        } else {
+          candidateIndex = Math.min(candidateIndex, newValue.length - 1)
+        }
+        await onChange(newValue)
       }
-      await onChange(newValue)
     } else {
       // If we don't have this row, include it
-      await onChange(sortRows([...(value || []), row]))
+      if (oneRowOnly) {
+        await onChange([row])
+      } else {
+        await onChange(sortRows([...(value || []), row]))
+      }
       candidateIndex = null
     }
 

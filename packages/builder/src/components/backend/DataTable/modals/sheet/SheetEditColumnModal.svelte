@@ -9,7 +9,7 @@
   let editColumnModal
 
   const updateColumns = () => {
-    rows.actions.refreshSchema()
+    rows.actions.refreshTableDefinition()
   }
 
   const editColumn = column => {
