@@ -203,6 +203,12 @@ export const createRowsStore = context => {
       await API.saveRow(newRow)
     } catch (error) {
       notifications.error(`Error saving row: ${error?.message}`)
+
+      // Revert change
+      rows.update(state => {
+        state[index] = row
+        return state
+      })
     }
   }
 
