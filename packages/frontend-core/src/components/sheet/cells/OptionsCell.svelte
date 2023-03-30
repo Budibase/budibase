@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { getColor } from "../utils"
+  import { getColor } from "../lib/utils"
   import { onMount } from "svelte"
 
   export let value

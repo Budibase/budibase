@@ -1,5 +1,5 @@
 <script>
-  import { getColor } from "../utils"
+  import { getColor } from "../lib/utils"
   import { onMount, getContext } from "svelte"
   import { Icon, Input } from "@budibase/bbui"
   import { debounce } from "../../../utils/utils"

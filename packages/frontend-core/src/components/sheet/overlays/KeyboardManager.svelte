@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount } from "svelte"
-  import { debounce } from "../../utils/utils"
+  import { debounce } from "../../../utils/utils"
 
   const {
     rows,

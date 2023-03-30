@@ -3,7 +3,7 @@ import { derived, get, writable } from "svelte/store"
 export const DefaultColumnWidth = 200
 
 export const createColumnsStores = context => {
-  const { table } = context
+  const { table, gutterWidth } = context
   const columns = writable([])
   const stickyColumn = writable(null)
 
@@ -93,7 +93,7 @@ export const createColumnsStores = context => {
     stickyColumn.set({
       name: primaryDisplay,
       width: existing?.width || DefaultColumnWidth,
-      left: 40,
+      left: gutterWidth,
       schema: schema[primaryDisplay],
       idx: "sticky",
     })

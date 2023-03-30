@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import SheetCell from "./SheetCell.svelte"
-  import { getCellRenderer } from "../renderers"
+  import { getCellRenderer } from "../lib/renderers"
 
   const { rows, selectedCellId, menu, selectedCellAPI } = getContext("sheet")
 

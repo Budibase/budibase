@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import DataCell from "./cells/DataCell.svelte"
+  import DataCell from "../cells/DataCell.svelte"
 
   export let row
   export let idx

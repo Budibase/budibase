@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte"
-  import { domDebounce } from "../../utils/utils"
+  import { domDebounce } from "../../../utils/utils"
 
   const {
     scroll,
@@ -11,6 +11,7 @@
     maxScrollTop,
     contentWidth,
     maxScrollLeft,
+    gutterWidth,
   } = getContext("sheet")
 
   // Bar config
@@ -36,7 +37,7 @@
   $: barTop = barOffset + cellHeight + availHeight * (scrollTop / $maxScrollTop)
 
   // Calculate H scrollbar size and offset
-  $: totalWidth = width + 40 + ($stickyColumn?.width || 0)
+  $: totalWidth = width + gutterWidth + ($stickyColumn?.width || 0)
   $: renderWidth = totalWidth - 2 * barOffset
   $: barWidth = Math.max(50, (totalWidth / $contentWidth) * renderWidth)
   $: availWidth = renderWidth - barWidth
