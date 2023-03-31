@@ -44,6 +44,7 @@ const config: Config.InitialOptions = {
     // The use of coverage with couchdb view functions breaks tests
     "!src/db/views/staticViews.*",
     "!src/**/*.spec.{js,ts}",
+    "!src/tests/**/*.{js,ts}",
   ],
   coverageReporters: ["lcov", "json", "clover"],
 }
