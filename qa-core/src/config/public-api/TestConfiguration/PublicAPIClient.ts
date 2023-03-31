@@ -19,7 +19,7 @@ class PublicAPIClient {
   constructor(appId?: string) {
     if (!env.BUDIBASE_HOST) {
       throw new Error(
-        "Must set BUDIBASE_PUBLIC_API_KEY and BUDIBASE_SERVER_URL env vars"
+        "Must set BUDIBASE_HOST env var"
       )
     }
     this.host = `${env.BUDIBASE_HOST}/api/public/v1`
