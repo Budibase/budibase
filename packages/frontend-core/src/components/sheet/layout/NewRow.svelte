@@ -38,7 +38,7 @@
   const addRow = async () => {
     const savedRow = await rows.actions.addRow(newRow)
     if (savedRow && firstColumn) {
-      $selectedCellId = `${newRow._id}-${firstColumn.name}`
+      $selectedCellId = `${savedRow._id}-${firstColumn.name}`
       isAdding = false
     }
   }
@@ -201,15 +201,12 @@
     left: 0;
     width: 100%;
     transition: margin-bottom 130ms ease-out;
-    margin-top: -1px;
   }
   .new-row.visible {
     margin-bottom: 0;
   }
   .new-row :global(.cell) {
-    /*border-bottom: 0;*/
     --cell-background: var(--background) !important;
-    border-top: var(--cell-border);
   }
 
   .sticky-column {
