@@ -8,6 +8,7 @@
   export let center = false
   export let selectedUser = null
   export let rowIdx
+  export let error = null
 
   $: style = getStyle(width, selectedUser)
 
@@ -29,6 +30,7 @@
   class:reorder-source={reorderSource}
   class:reorder-target={reorderTarget}
   class:center
+  class:error={error && selected}
   on:focus
   on:mousedown
   on:mouseup
@@ -38,8 +40,12 @@
   data-row={rowIdx}
 >
   <slot />
-  {#if selectedUser && !selected}
-    <div class="user">
+  {#if selected && error}
+    <div class="label">
+      {error}
+    </div>
+  {:else if selectedUser && !selected}
+    <div class="label">
       {selectedUser.label}
     </div>
   {/if}
@@ -65,6 +71,9 @@
   .cell.selected {
     box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
     z-index: 2;
+  }
+  .cell.error {
+    box-shadow: inset 0 0 0 2px var(--spectrum-global-color-red-400);
   }
   .cell.selected-other:not(.selected) {
     z-index: 1;
@@ -100,7 +109,7 @@
   }
 
   /* Other user email */
-  .user {
+  .label {
     position: absolute;
     bottom: 100%;
     padding: 1px 4px;
@@ -114,14 +123,19 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    user-select: none;
   }
-  .cell[data-row="0"] .user {
+  .cell[data-row="0"] .label {
     bottom: auto;
     top: 100%;
     border-radius: 0 0 2px 2px;
     padding: 0 4px 2px 4px;
   }
-  .cell:hover .user {
+  .cell:hover .label {
+    display: block;
+  }
+  .error .label {
+    background: var(--spectrum-global-color-red-400);
     display: block;
   }
 </style>

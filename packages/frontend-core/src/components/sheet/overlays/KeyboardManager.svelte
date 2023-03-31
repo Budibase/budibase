@@ -1,6 +1,7 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { debounce } from "../../../utils/utils"
+  import { notifications } from "@budibase/bbui"
 
   const {
     rows,
@@ -114,11 +115,7 @@
     if (!$selectedCellId) {
       return
     }
-    if ($selectedCellAPI?.isReadonly()) {
-      return
-    }
-    const [rowId, column] = $selectedCellId.split("-")
-    rows.actions.updateRow(rowId, column, null)
+    $selectedCellAPI.updateValue(null)
   }, 100)
 
   const focusSelectedCell = () => {

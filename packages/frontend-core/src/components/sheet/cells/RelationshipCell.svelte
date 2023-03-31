@@ -10,6 +10,7 @@
   export let selected
   export let schema
   export let onChange
+  export let invert = false
 
   const { API } = getContext("sheet")
 
@@ -21,6 +22,7 @@
   let primaryDisplay
   let candidateIndex
   let lastSearchId
+  let results
 
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = selected && !readonly
@@ -116,6 +118,9 @@
 
   const open = async () => {
     isOpen = true
+
+    // Ensure results are properly reset
+    results = sortRows(value)
 
     // Fetch definition if required
     if (!definition) {
@@ -214,7 +219,7 @@
 </div>
 
 {#if isOpen}
-  <div class="dropdown" on:wheel|stopPropagation>
+  <div class="dropdown" class:invert on:wheel|stopPropagation>
     <div class="search">
       <Input autofocus quiet type="text" bind:value={searchString} />
     </div>
@@ -284,9 +289,9 @@
 
   .dropdown {
     position: absolute;
-    top: -1px;
-    left: -1px;
-    min-width: calc(100% + 2px);
+    top: 100%;
+    left: 0;
+    min-width: 100%;
     max-width: calc(100% + 240px);
     max-height: calc(var(--cell-height) + 240px);
     background: var(--cell-background);
@@ -296,6 +301,10 @@
     flex-direction: column;
     align-items: stretch;
     background-color: var(--cell-background-hover);
+  }
+  .dropdown.invert {
+    transform: translateY(-100%);
+    top: 0;
   }
 
   .results {

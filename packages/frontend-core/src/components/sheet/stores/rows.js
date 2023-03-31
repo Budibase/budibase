@@ -120,7 +120,7 @@ export const createRowsStore = context => {
     return index >= 0 ? get(enrichedRows)[index] : null
   }
 
-  // Adds a new empty row
+  // Adds a new row
   const addRow = async (row, idx) => {
     try {
       // Create row
@@ -136,6 +136,7 @@ export const createRowsStore = context => {
       } else {
         handleNewRows([newRow])
       }
+      notifications.success("Row added successfully")
       return newRow
     } catch (error) {
       notifications.error(`Error adding row: ${error?.message}`)

@@ -10,6 +10,7 @@
   export let multi = false
   export let readonly = false
   export let api
+  export let invert = false
 
   let isOpen = false
   let focusedOptionIdx = null
@@ -98,7 +99,7 @@
     </div>
   {/if}
   {#if isOpen}
-    <div class="options" on:wheel={e => e.stopPropagation()}>
+    <div class="options" class:invert on:wheel={e => e.stopPropagation()}>
       {#each values as val, idx}
         {@const color = getOptionColor(val)}
         <div
@@ -183,10 +184,10 @@
     );
   }
   .options {
-    min-width: calc(100% + 2px);
+    min-width: 100%;
     position: absolute;
-    top: -1px;
-    left: -1px;
+    top: 100%;
+    left: 0;
     display: flex;
     flex-direction: column;
     box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
@@ -195,6 +196,10 @@
     max-height: calc(5 * var(--cell-height) + 1px);
     overflow-y: auto;
     border: var(--cell-border);
+  }
+  .options.invert {
+    transform: translateY(-100%);
+    top: 0;
   }
   .option {
     flex: 0 0 var(--cell-height);

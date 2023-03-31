@@ -6,6 +6,7 @@
   export let onChange
   export let readonly = false
   export let api
+  export let invert = false
 
   let textarea
   let isOpen = false
@@ -48,6 +49,7 @@
 
 {#if isOpen}
   <textarea
+    class:invert
     bind:this={textarea}
     value={value || ""}
     on:change={handleChange}
@@ -92,7 +94,10 @@
     width: calc(100% + 100px);
     height: calc(5 * var(--cell-height) + 1px);
     border: var(--cell-border);
-    box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
+    box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
+  }
+  textarea.invert {
+    transform: translateY(-100%);
   }
   textarea:focus {
     outline: none;
