@@ -36,8 +36,8 @@
     const savedRow = await rows.actions.addRow(newRow)
     if (savedRow && firstColumn) {
       $selectedCellId = `${newRow._id}-${firstColumn.name}`
+      isAdding = false
     }
-    isAdding = false
   }
 
   const cancel = () => {
@@ -62,11 +62,13 @@
 
 <!-- Only show new row functionality if we have any columns -->
 {#if firstColumn}
-  {#if !isAdding}
-    <div class="add-button" class:above-scrollbar={$showHScrollbar}>
-      <Button size="M" cta icon="Add" on:click={startAdding}>Add row</Button>
-    </div>
-  {/if}
+  <div
+    class="add-button"
+    class:visible={!isAdding}
+    class:above-scrollbar={$showHScrollbar}
+  >
+    <Button size="M" cta icon="Add" on:click={startAdding}>Add row</Button>
+  </div>
 
   <div
     class="container"
@@ -148,11 +150,15 @@
   .add-button {
     position: absolute;
     left: 16px;
-    bottom: 16px;
     z-index: 1;
+    transform: translateY(calc(16px + 100%));
+    transition: transform 130ms ease-out;
   }
   .add-button.above-scrollbar {
     bottom: 32px;
+  }
+  .add-button.visible {
+    transform: translateY(0);
   }
 
   .container {
