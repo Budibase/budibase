@@ -26,9 +26,6 @@
   let touched = false
 
   $: firstColumn = $stickyColumn || $visibleColumns[0]
-
-  $: console.log(firstColumn)
-
   $: rowHovered = $hoveredRowId === "new"
   $: containsSelectedCell = $selectedCellId?.startsWith("new-")
   $: width = gutterWidth + ($stickyColumn?.width || 0)
