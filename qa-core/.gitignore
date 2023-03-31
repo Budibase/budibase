@@ -3,3 +3,5 @@ node_modules/
 watchtower-hook.json
 dist/
 .testReport.json
+testResults.json
+
