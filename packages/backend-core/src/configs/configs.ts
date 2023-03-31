@@ -32,8 +32,7 @@ export async function getConfig<T extends Config>(
   const db = context.getGlobalDB()
   try {
     // await to catch error
-    const config = (await db.get(generateConfigID(type))) as T
-    return config
+    return (await db.get(generateConfigID(type))) as T
   } catch (e: any) {
     if (e.status === 404) {
       return

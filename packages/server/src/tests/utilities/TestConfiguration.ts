@@ -47,6 +47,7 @@ import {
   SourceName,
   Table,
   SearchFilters,
+  UserRoles,
 } from "@budibase/types"
 
 type DefaultUserValues = {
@@ -277,7 +278,7 @@ class TestConfiguration {
       email?: string
       builder?: boolean
       admin?: boolean
-      roles?: any
+      roles?: UserRoles
     } = {}
   ) {
     let { id, firstName, lastName, email, builder, admin, roles } = user
