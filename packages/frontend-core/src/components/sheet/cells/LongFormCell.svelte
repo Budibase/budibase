@@ -98,6 +98,7 @@
   }
   textarea.invert {
     transform: translateY(-100%);
+    top: calc(100% + 1px);
   }
   textarea:focus {
     outline: none;

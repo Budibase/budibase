@@ -7,7 +7,7 @@
   } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { selectedRows, rows } = getContext("sheet")
+  const { selectedRows, rows, config } = getContext("sheet")
 
   let modal
 
@@ -31,12 +31,13 @@
 </script>
 
 {#if selectedRowCount}
-  <div
-    class="delete-button"
-    on:click|stopPropagation
-    on:mousedown|stopPropagation={modal.show}
-  >
-    <ActionButton icon="Delete" size="S">
+  <div class="delete-button" data-ignore-click-outside="true">
+    <ActionButton
+      icon="Delete"
+      size="S"
+      on:click={modal.show}
+      disabled={!$config.allowEditRows}
+    >
       Delete {selectedRowCount} row{selectedRowCount === 1 ? "" : "s"}
     </ActionButton>
   </div>
@@ -56,12 +57,16 @@
 </Modal>
 
 <style>
-  .delete-button {
-  }
-  .delete-button :global(.spectrum-ActionButton *) {
+  .delete-button :global(.spectrum-ActionButton:not(:disabled) *) {
     color: var(--spectrum-global-color-red-400);
   }
-  .delete-button :global(.spectrum-ActionButton) {
+  .delete-button :global(.spectrum-ActionButton:not(:disabled)) {
     border-color: var(--spectrum-global-color-red-400);
   }
+  /*.delete-button.disabled :global(.spectrum-ActionButton *) {*/
+  /*  color: var(--spectrum-global-color-gray-600);*/
+  /*}*/
+  /*.delete-button.disabled :global(.spectrum-ActionButton) {*/
+  /*  border-color: var(--spectrum-global-color-gray-400);*/
+  /*}*/
 </style>
