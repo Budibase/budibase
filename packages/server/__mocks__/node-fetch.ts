@@ -4,6 +4,7 @@ module FetchMock {
   // @ts-ignore
   const fetch = jest.requireActual("node-fetch")
   let failCount = 0
+  let mockSearch = false
 
   const func = async (url: any, opts: any) => {
     function json(body: any, status = 200) {
@@ -69,7 +70,7 @@ module FetchMock {
         },
         404
       )
-    } else if (url.includes("_search")) {
+    } else if (mockSearch && url.includes("_search")) {
       const body = opts.body
       const parts = body.split("tableId:")
       let tableId
@@ -191,6 +192,10 @@ module FetchMock {
   }
 
   func.Headers = fetch.Headers
+
+  func.mockSearch = () => {
+    mockSearch = true
+  }
 
   module.exports = func
 }
