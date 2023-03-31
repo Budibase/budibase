@@ -22,7 +22,7 @@ export function combineMetadataAndUser(
     user.roleId === rolesCore.BUILTIN_ROLE_IDS.PUBLIC
   ) {
     // If it exists and it should not, we must remove it
-    if (found) {
+    if (found?._id) {
       return { ...found, _deleted: true }
     }
     return null
