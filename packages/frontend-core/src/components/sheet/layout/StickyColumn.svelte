@@ -164,12 +164,12 @@
 
   /* Add shadow when scrolled */
   .sticky-column.scrolled :global(.cell:last-child:after) {
-    content: " ";
-    position: absolute;
-    width: 10px;
-    height: 100%;
-    left: 100%;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);
+    /*content: " ";*/
+    /*position: absolute;*/
+    /*width: 10px;*/
+    /*height: 100%;*/
+    /*left: 100%;*/
+    /*background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);*/
   }
 
   /* Don't show borders between cells in the sticky column */
@@ -179,7 +179,7 @@
 
   .header {
     position: relative;
-    z-index: 2;
+    z-index: 3;
   }
   .header :global(.cell) {
     background: var(--spectrum-global-color-gray-100);

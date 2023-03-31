@@ -158,10 +158,11 @@
     user-select: none;
   }
   .arrow {
-    border-right: 2px solid var(--spectrum-global-color-blue-400);
+    /*border-right: 2px solid var(--spectrum-global-color-blue-400);*/
     position: absolute;
     right: 0;
-    top: 2px;
+    top: 0;
+    height: 100%;
     bottom: 2px;
     padding: 0 6px 0 16px;
     display: grid;
@@ -182,7 +183,7 @@
     box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
     justify-content: flex-start;
     align-items: stretch;
-    max-height: calc(5 * var(--cell-height) + 1px);
+    max-height: var(--max-cell-render-height);
     overflow-y: auto;
     border: var(--cell-border);
   }

@@ -27,7 +27,8 @@
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
   import { clickOutside } from "@budibase/bbui"
   import SheetControls from "./SheetControls.svelte"
-  import NewRow from "./NewRow.svelte"
+  import NewRowTop from "./NewRowTop.svelte"
+  import { MaxCellRenderHeight } from "../lib/constants"
 
   export let API
   export let tableId
@@ -108,12 +109,12 @@
   id="sheet-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
-  style="--cell-height:{cellHeight}px; --gutter-width:{gutterWidth}px;"
+  style="--cell-height:{cellHeight}px; --gutter-width:{gutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px;"
 >
   <div class="controls">
     <div class="controls-left">
-      <slot name="controls" />
       <SheetControls />
+      <slot name="controls" />
     </div>
     <div class="controls-right">
       <DeleteButton />
@@ -129,7 +130,8 @@
           <SheetBody />
         </div>
         {#if $config.allowAddRows}
-          <NewRow />
+          <!--          <NewRow />-->
+          <NewRowTop />
         {/if}
         <ResizeOverlay />
         <ScrollOverlay />
