@@ -21,6 +21,8 @@
       if (resp.datasource && resp.appId) {
         ds = resp.datasource
         appId = resp.appId
+      } else {
+        ds = resp
       }
     }
     window.open(
