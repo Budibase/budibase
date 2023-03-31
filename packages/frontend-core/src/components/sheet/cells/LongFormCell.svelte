@@ -83,7 +83,7 @@
   textarea {
     padding: var(--cell-padding);
     margin: 0;
-    border: none;
+    border: 2px solid var(--spectrum-global-color-blue-400);
     background: var(--cell-background);
     font-size: var(--cell-font-size);
     font-family: var(--font-sans);
@@ -93,8 +93,7 @@
     left: -1px;
     width: calc(100% + 100px);
     height: calc(5 * var(--row-height) + 1px);
-    border: var(--cell-border);
-    box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
+    z-index: 1;
   }
   textarea.invert {
     transform: translateY(-100%);
