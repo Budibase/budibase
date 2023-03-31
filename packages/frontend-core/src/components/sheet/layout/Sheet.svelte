@@ -40,7 +40,6 @@
   export let allowEditRows = true
 
   // Sheet constants
-  const cellHeight = 36
   const gutterWidth = 72
   const rand = Math.random()
 
@@ -60,7 +59,6 @@
   let context = {
     API: API || createAPIClient(),
     rand,
-    cellHeight,
     gutterWidth,
     config,
     tableId: tableIdStore,
@@ -81,7 +79,7 @@
   context = { ...context, ...createWheelStores(context) }
 
   // Reference some stores for local use
-  const { isResizing, isReordering, ui, loaded } = context
+  const { isResizing, isReordering, ui, loaded, rowHeight } = context
 
   // Keep stores up to date
   $: tableIdStore.set(tableId)
@@ -109,7 +107,7 @@
   id="sheet-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
-  style="--cell-height:{cellHeight}px; --gutter-width:{gutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px;"
+  style="--row-height:{$rowHeight}px; --gutter-width:{gutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px;"
 >
   <div class="controls">
     <div class="controls-left">

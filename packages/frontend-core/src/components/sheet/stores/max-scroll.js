@@ -6,7 +6,7 @@ export const createMaxScrollStores = context => {
     visibleColumns,
     stickyColumn,
     bounds,
-    cellHeight,
+    rowHeight,
     scroll,
     selectedCellRow,
     selectedCellId,
@@ -23,8 +23,8 @@ export const createMaxScrollStores = context => {
   const height = derived(bounds, $bounds => $bounds.height, 0)
   const width = derived(bounds, $bounds => $bounds.width, 0)
   const contentHeight = derived(
-    rows,
-    $rows => $rows.length * cellHeight + padding,
+    [rows, rowHeight],
+    ([$rows, $rowHeight]) => $rows.length * $rowHeight + padding,
     0
   )
   const maxScrollTop = derived(
@@ -94,12 +94,13 @@ export const createMaxScrollStores = context => {
     }
     const $scroll = get(scroll)
     const $bounds = get(bounds)
+    const $rowHeight = get(rowHeight)
     const scrollBarOffset = 16
 
     // Ensure row is not below bottom of screen
-    const rowYPos = row.__idx * cellHeight
+    const rowYPos = row.__idx * $rowHeight
     const bottomCutoff =
-      $scroll.top + $bounds.height - cellHeight - scrollBarOffset
+      $scroll.top + $bounds.height - $rowHeight - scrollBarOffset
     let delta = rowYPos - bottomCutoff
     if (delta > 0) {
       scroll.update(state => ({

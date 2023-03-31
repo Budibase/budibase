@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
 
   const {
-    cellHeight,
+    rowHeight,
     scroll,
     visibleColumns,
     renderedColumns,
@@ -15,11 +15,11 @@
   export let wheelInteractive = true
 
   $: hiddenWidths = calculateHiddenWidths($renderedColumns)
-  $: style = generateStyle($scroll, hiddenWidths)
+  $: style = generateStyle($scroll, $rowHeight, hiddenWidths)
 
-  const generateStyle = (scroll, hiddenWidths) => {
+  const generateStyle = (scroll, rowHeight, hiddenWidths) => {
     const offsetX = scrollHorizontally ? -1 * scroll.left + hiddenWidths : 0
-    const offsetY = scrollVertically ? -1 * (scroll.top % cellHeight) : 0
+    const offsetY = scrollVertically ? -1 * (scroll.top % rowHeight) : 0
     return `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
   }
 

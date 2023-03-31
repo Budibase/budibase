@@ -149,7 +149,7 @@
   .container {
     pointer-events: none;
     position: absolute;
-    top: var(--cell-height);
+    top: var(--row-height);
     transform: translateY(-100%);
     z-index: 1;
     transition: transform 130ms ease-out;

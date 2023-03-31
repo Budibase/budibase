@@ -5,7 +5,7 @@
   const {
     scroll,
     bounds,
-    cellHeight,
+    rowHeight,
     contentHeight,
     maxScrollTop,
     contentWidth,
@@ -35,7 +35,7 @@
   $: renderHeight = height - 2 * barOffset
   $: barHeight = Math.max(50, (height / $contentHeight) * renderHeight)
   $: availHeight = renderHeight - barHeight
-  $: barTop = barOffset + cellHeight + availHeight * (scrollTop / $maxScrollTop)
+  $: barTop = barOffset + $rowHeight + availHeight * (scrollTop / $maxScrollTop)
 
   // Calculate H scrollbar size and offset
   $: renderWidth = $screenWidth - 2 * barOffset

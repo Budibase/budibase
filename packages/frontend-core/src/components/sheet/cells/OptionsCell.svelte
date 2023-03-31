@@ -192,7 +192,7 @@
     top: 0;
   }
   .option {
-    flex: 0 0 var(--cell-height);
+    flex: 0 0 var(--row-height);
     padding: 0 var(--cell-padding);
     display: flex;
     flex-direction: row;
@@ -202,7 +202,7 @@
     background-color: var(--cell-background-hover);
   }
   .option:first-child {
-    flex: 0 0 calc(var(--cell-height) - 1px);
+    flex: 0 0 calc(var(--row-height) - 1px);
   }
   .option:hover,
   .option.focused {

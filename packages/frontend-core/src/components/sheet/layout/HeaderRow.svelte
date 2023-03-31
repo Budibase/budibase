@@ -33,7 +33,7 @@
     border-bottom: var(--cell-border);
     position: relative;
     z-index: 2;
-    height: var(--cell-height);
+    height: var(--row-height);
   }
   .row {
     display: flex;
@@ -42,7 +42,7 @@
     position: absolute;
     right: 0;
     top: 0;
-    height: var(--cell-height);
+    height: var(--row-height);
     background: var(--spectrum-global-color-gray-100);
     display: grid;
     place-items: center;
