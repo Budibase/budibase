@@ -127,7 +127,7 @@ export const createRowsStore = context => {
       const newRow = await API.saveRow({ ...row, tableId: get(tableId) })
 
       // Update state
-      if (idx) {
+      if (idx != null) {
         rowCacheMap[newRow._id] = true
         rows.update(state => {
           state.splice(idx, 0, newRow)
