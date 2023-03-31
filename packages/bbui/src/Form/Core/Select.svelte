@@ -42,9 +42,13 @@
   }
 
   const getFieldText = (value, options, placeholder) => {
-    // Always use placeholder if no value
     if (value == null || value === "") {
-      return placeholder !== false ? "Choose an option" : ""
+      // Explicit false means use no placeholder and allow an empty fields
+      if (placeholder === false) {
+        return ""
+      }
+      // Otherwise we use the placeholder if possible
+      return placeholder || "Choose an option"
     }
 
     return getFieldAttribute(getOptionLabel, value, options)

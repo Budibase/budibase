@@ -37,7 +37,7 @@
 
 {#if $selectedComponent}
   {#key $selectedComponent._id}
-    <Panel {title} icon={componentDefinition?.icon} borderLeft>
+    <Panel {title} icon={componentDefinition?.icon} borderLeft wide>
       <span slot="panel-header-content">
         <div class="settings-tabs">
           {#each tabs as tab}

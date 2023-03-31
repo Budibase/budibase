@@ -27,7 +27,7 @@
     : enrichedSchemaFields?.map(field => field.name)
   $: sanitisedValue = getValidColumns(value, options)
   $: updateBoundValue(sanitisedValue)
-  $: enrichedSchemaFields = getFields(Object.values(schema) || [], {
+  $: enrichedSchemaFields = getFields(Object.values(schema || {}), {
     allowLinks: true,
   })
 

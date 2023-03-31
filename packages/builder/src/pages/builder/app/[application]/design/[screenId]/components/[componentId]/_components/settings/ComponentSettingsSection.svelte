@@ -117,49 +117,52 @@
 {#each sections as section, idx (section.name)}
   {#if section.visible}
     <DetailSummary name={section.name} collapsible={false}>
-      {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen}
-        <PropertyControl
-          control={Input}
-          label="Name"
-          key="_instanceName"
-          value={componentInstance._instanceName}
-          onChange={val => updateSetting({ key: "_instanceName" }, val)}
-        />
-      {/if}
-      {#each section.settings as setting (setting.key)}
-        {#if setting.visible}
+      <div class="settings">
+        {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen}
           <PropertyControl
-            type={setting.type}
-            control={getComponentForSetting(setting)}
-            label={setting.label}
-            key={setting.key}
-            value={componentInstance[setting.key]}
-            defaultValue={setting.defaultValue}
-            nested={setting.nested}
-            onChange={val => updateSetting(setting, val)}
-            highlighted={$store.highlightedSettingKey === setting.key}
-            info={setting.info}
-            props={{
-              // Generic settings
-              placeholder: setting.placeholder || null,
-
-              // Select settings
-              options: setting.options || [],
-
-              // Number fields
-              min: setting.min ?? null,
-              max: setting.max ?? null,
-            }}
-            {bindings}
-            {componentBindings}
-            {componentInstance}
-            {componentDefinition}
+            control={Input}
+            label="Name"
+            key="_instanceName"
+            value={componentInstance._instanceName}
+            onChange={val => updateSetting({ key: "_instanceName" }, val)}
           />
         {/if}
-      {/each}
-      {#if idx === 0 && componentDefinition?.component?.endsWith("/fieldgroup")}
-        <ResetFieldsButton {componentInstance} />
-      {/if}
+        {#each section.settings as setting (setting.key)}
+          {#if setting.visible}
+            <PropertyControl
+              type={setting.type}
+              control={getComponentForSetting(setting)}
+              label={setting.label}
+              labelHidden={setting.labelHidden}
+              key={setting.key}
+              value={componentInstance[setting.key]}
+              defaultValue={setting.defaultValue}
+              nested={setting.nested}
+              onChange={val => updateSetting(setting, val)}
+              highlighted={$store.highlightedSettingKey === setting.key}
+              info={setting.info}
+              props={{
+                // Generic settings
+                placeholder: setting.placeholder || null,
+
+                // Select settings
+                options: setting.options || [],
+
+                // Number fields
+                min: setting.min ?? null,
+                max: setting.max ?? null,
+              }}
+              {bindings}
+              {componentBindings}
+              {componentInstance}
+              {componentDefinition}
+            />
+          {/if}
+        {/each}
+        {#if idx === 0 && componentDefinition?.component?.endsWith("/fieldgroup")}
+          <ResetFieldsButton {componentInstance} />
+        {/if}
+      </div>
     </DetailSummary>
   {/if}
 {/each}
@@ -168,3 +171,13 @@
     <EjectBlockButton />
   </DetailSummary>
 {/if}
+
+<style>
+  .settings {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 8px;
+  }
+</style>

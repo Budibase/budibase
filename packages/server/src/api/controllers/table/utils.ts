@@ -20,7 +20,13 @@ import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
-import { Database, Datasource, SourceName, Table } from "@budibase/types"
+import {
+  ContextUser,
+  Database,
+  Datasource,
+  SourceName,
+  Table,
+} from "@budibase/types"
 
 export async function clearColumns(table: any, columnNames: any) {
   const db: Database = context.getAppDB()
@@ -99,32 +105,35 @@ export function makeSureTableUpToDate(table: any, tableToSave: any) {
   return tableToSave
 }
 
-export function importToRows(data: any, table: any, user: any = {}) {
+export function importToRows(
+  data: any[],
+  table: Table,
+  user: ContextUser | null = null
+) {
   let finalData: any = []
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
-    row._id = generateRowID(table._id)
+    row._id = generateRowID(table._id!)
     row.tableId = table._id
-    const processed: any = inputProcessing(user, table, row, {
+    const processed = inputProcessing(user, table, row, {
       noAutoRelationships: true,
     })
     row = processed.row
+    table = processed.table
 
-    let fieldName: any
-    let schema: any
-    for ([fieldName, schema] of Object.entries(table.schema)) {
+    for (const [fieldName, schema] of Object.entries(table.schema)) {
       // check whether the options need to be updated for inclusion as part of the data import
       if (
         schema.type === FieldTypes.OPTIONS &&
         row[fieldName] &&
-        (!schema.constraints.inclusion ||
-          schema.constraints.inclusion.indexOf(row[fieldName]) === -1)
+        (!schema.constraints!.inclusion ||
+          schema.constraints!.inclusion.indexOf(row[fieldName]) === -1)
       ) {
-        schema.constraints.inclusion = [
-          ...schema.constraints.inclusion,
+        schema.constraints!.inclusion = [
+          ...schema.constraints!.inclusion!,
           row[fieldName],
         ]
-        schema.constraints.inclusion.sort()
+        schema.constraints!.inclusion.sort()
       }
     }
 

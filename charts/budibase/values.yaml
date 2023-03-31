@@ -343,6 +343,7 @@ couchdb:
 
   ## Configure liveness and readiness probe values
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  # FOR COUCHDB
   livenessProbe:
     enabled: true
     failureThreshold: 3
