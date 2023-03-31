@@ -104,6 +104,7 @@ const environment = {
   SMTP_PORT: parseInt(process.env.SMTP_PORT || ""),
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
   DISABLE_JWT_WARNING: process.env.DISABLE_JWT_WARNING,
+  BLACKLIST_IPS: process.env.BLACKLIST_IPS,
   /**
    * Enable to allow an admin user to login using a password.
    * This can be useful to prevent lockout when configuring SSO.

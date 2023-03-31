@@ -205,8 +205,20 @@ spec:
           httpGet:
             path: /health
             port: {{ .Values.services.worker.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.services.worker.port }}
           initialDelaySeconds: 5
           periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          timeoutSeconds: 3
         name: bbworker
         ports:
         - containerPort: {{ .Values.services.worker.port }}

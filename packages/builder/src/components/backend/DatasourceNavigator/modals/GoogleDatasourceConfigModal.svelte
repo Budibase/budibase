@@ -12,7 +12,7 @@
 
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)
-  $: isGoogleConfigured = !!$organisation.google
+  $: isGoogleConfigured = !!$organisation.googleDatasourceConfigured
 
   onMount(async () => {
     await organisation.init()

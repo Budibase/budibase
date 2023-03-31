@@ -23,7 +23,7 @@
 
   <!-- Opengraph Meta Tags -->
   <meta property="og:site_name" content="Budibase" />
-  <meta property="og:title" content="{title} - built with Budibase" />
+  <meta property="og:title" content={metaTitle} />
   <meta property="og:description" content={metaDescription} />
   <meta property="og:type" content="website" />
   <meta property="og:image" content={metaImage} />
@@ -32,8 +32,8 @@
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:site" content="@budibase" />
   <meta property="twitter:image" content={metaImage} />
-  <meta property="twitter:image:alt" content="{title} - built with Budibase" />
-  <meta property="twitter:title" content="{title} - built with Budibase" />
+  <meta property="twitter:image:alt" content={metaTitle} />
+  <meta property="twitter:title" content={metaTitle} />
   <meta property="twitter:description" content={metaDescription} />
 
   <title>{title}</title>

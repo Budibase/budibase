@@ -1,4 +1,9 @@
-import { DBTestConfiguration, generator, testEnv } from "../../../tests"
+import {
+  DBTestConfiguration,
+  generator,
+  testEnv,
+  structures,
+} from "../../../tests"
 import { ConfigType } from "@budibase/types"
 import env from "../../environment"
 import * as configs from "../configs"
@@ -110,6 +115,73 @@ describe("configs", () => {
       await config.doInTenant(async () => {
         const config = await configs.getSettingsConfig()
         expect(config.platformUrl).toBe(DEFAULT_URL)
+      })
+    })
+  })
+
+  describe("getGoogleDatasourceConfig", () => {
+    function setEnvVars() {
+      env.GOOGLE_CLIENT_SECRET = "test"
+      env.GOOGLE_CLIENT_ID = "test"
+    }
+
+    function unsetEnvVars() {
+      env.GOOGLE_CLIENT_SECRET = undefined
+      env.GOOGLE_CLIENT_ID = undefined
+    }
+
+    describe("cloud", () => {
+      beforeEach(() => {
+        testEnv.cloudHosted()
+      })
+
+      it("returns from env vars", async () => {
+        await config.doInTenant(async () => {
+          setEnvVars()
+          const config = await configs.getGoogleDatasourceConfig()
+          unsetEnvVars()
+
+          expect(config).toEqual({
+            activated: true,
+            clientID: "test",
+            clientSecret: "test",
+          })
+        })
+      })
+
+      it("returns undefined when no env vars are configured", async () => {
+        await config.doInTenant(async () => {
+          const config = await configs.getGoogleDatasourceConfig()
+          expect(config).toBeUndefined()
+        })
+      })
+    })
+
+    describe("self host", () => {
+      beforeEach(() => {
+        testEnv.selfHosted()
+      })
+
+      it("returns from config", async () => {
+        await config.doInTenant(async () => {
+          const googleDoc = structures.sso.googleConfigDoc()
+          await configs.save(googleDoc)
+          const config = await configs.getGoogleDatasourceConfig()
+          expect(config).toEqual(googleDoc.config)
+        })
+      })
+
+      it("falls back to env vars when config is disabled", async () => {
+        await config.doInTenant(async () => {
+          setEnvVars()
+          const config = await configs.getGoogleDatasourceConfig()
+          unsetEnvVars()
+          expect(config).toEqual({
+            activated: true,
+            clientID: "test",
+            clientSecret: "test",
+          })
+        })
       })
     })
   })
