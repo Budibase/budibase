@@ -136,6 +136,7 @@
   const onUpdateColumns = () => {
     selectedRows = []
     fetch.refresh()
+    tables.fetchTable(id)
   }
 
   // Fetch data whenever rows are modified. Unfortunately we have to lose

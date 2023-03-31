@@ -2,7 +2,6 @@ import {
   utils,
   constants,
   roles,
-  db as dbCore,
   tenancy,
   context,
 } from "@budibase/backend-core"
@@ -15,27 +14,8 @@ import { UserCtx } from "@budibase/types"
 export default async (ctx: UserCtx, next: any) => {
   // try to get the appID from the request
   let requestAppId = await utils.getAppIdFromCtx(ctx)
-  // get app cookie if it exists
-  let appCookie: { appId?: string } | undefined
-  try {
-    appCookie = utils.getCookie(ctx, constants.Cookie.CurrentApp)
-  } catch (err) {
-    utils.clearCookie(ctx, constants.Cookie.CurrentApp)
-  }
-  if (!appCookie && !requestAppId) {
+  if (!requestAppId) {
     return next()
-  }
-
-  // check the app exists referenced in cookie
-  if (appCookie) {
-    const appId = appCookie.appId
-    const exists = await dbCore.dbExists(appId)
-    if (!exists) {
-      utils.clearCookie(ctx, constants.Cookie.CurrentApp)
-      return next()
-    }
-    // if the request app ID wasn't set, update it with the cookie
-    requestAppId = requestAppId || appId
   }
 
   // deny access to application preview
@@ -45,7 +25,6 @@ export default async (ctx: UserCtx, next: any) => {
       !isWebhookEndpoint(ctx) &&
       (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
     ) {
-      utils.clearCookie(ctx, constants.Cookie.CurrentApp)
       return ctx.redirect("/")
     }
   }
@@ -126,14 +105,6 @@ export default async (ctx: UserCtx, next: any) => {
         roleId,
         role: await roles.getRole(roleId),
       }
-    }
-    if (
-      (requestAppId !== appId ||
-        appCookie == null ||
-        appCookie.appId !== requestAppId) &&
-      !skipCookie
-    ) {
-      utils.setCookie(ctx, { appId }, constants.Cookie.CurrentApp)
     }
 
     return next()
