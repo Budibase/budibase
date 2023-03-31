@@ -4,7 +4,6 @@ export enum UserStatus {
 }
 
 export enum Cookie {
-  CurrentApp = "budibase:currentapp",
   Auth = "budibase:auth",
   Init = "budibase:init",
   ACCOUNT_RETURN_URL = "budibase:account:returnurl",

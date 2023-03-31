@@ -95,8 +95,11 @@
   }
 
   const onChange = (e, field, type) => {
-    value[field] = coerce(e.detail, type)
-    dispatch("change", value)
+    let newValue = {
+      ...value,
+      [field]: coerce(e.detail, type),
+    }
+    dispatch("change", newValue)
   }
 
   const onChangeSetting = (e, field) => {

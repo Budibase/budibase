@@ -26,19 +26,20 @@
   } from "stores"
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
-  import Placeholder from "components/app/Placeholder.svelte"
+  import EmptyPlaceholder from "components/app/EmptyPlaceholder.svelte"
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
-  import ComponentPlaceholder from "components/app/ComponentPlaceholder.svelte"
+  import ComponentErrorState from "components/error-states/ComponentErrorState.svelte"
+  import { BudibasePrefix } from "../stores/components.js"
 
   export let instance = {}
   export let isLayout = false
   export let isScreen = false
   export let isBlock = false
-  export let parent = null
 
   // Get parent contexts
   const context = getContext("context")
   const insideScreenslot = !!getContext("screenslot")
+  const component = getContext("component")
 
   // Create component context
   const store = writable({})
@@ -120,6 +121,12 @@
   $: showEmptyState = definition?.showEmptyState !== false
   $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
   $: editable = !!definition?.editable && !hasMissingRequiredSettings
+  $: requiredAncestors = definition?.requiredAncestors || []
+  $: missingRequiredAncestors = requiredAncestors.filter(
+    ancestor => !$component.ancestors.includes(`${BudibasePrefix}${ancestor}`)
+  )
+  $: hasMissingRequiredAncestors = missingRequiredAncestors?.length > 0
+  $: errorState = hasMissingRequiredSettings || hasMissingRequiredAncestors
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
@@ -183,6 +190,7 @@
       custom: customCSS,
       id,
       empty: emptyState,
+      selected,
       interactive,
       draggable,
       editable,
@@ -193,7 +201,9 @@
     name,
     editing,
     type: instance._component,
-    missingRequiredSettings,
+    errorState,
+    parent: id,
+    ancestors: [...$component?.ancestors, instance._component],
   })
 
   const initialise = (instance, force = false) => {
@@ -482,6 +492,7 @@
         getDataContext: () => get(context),
         reload: () => initialise(instance, true),
         setEphemeralStyles: styles => (ephemeralStyles = styles),
+        state: store,
       })
     }
   })
@@ -509,24 +520,28 @@
     class:pad
     class:parent={hasChildren}
     class:block={isBlock}
+    class:error={errorState}
     data-id={id}
     data-name={name}
     data-icon={icon}
-    data-parent={parent}
+    data-parent={$component.id}
   >
-    {#if hasMissingRequiredSettings}
-      <ComponentPlaceholder />
+    {#if errorState}
+      <ComponentErrorState
+        {missingRequiredSettings}
+        {missingRequiredAncestors}
+      />
     {:else}
       <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
         {#if children.length}
           {#each children as child (child._id)}
-            <svelte:self instance={child} parent={id} />
+            <svelte:self instance={child} />
           {/each}
         {:else if emptyState}
           {#if isScreen}
             <ScreenPlaceholder />
           {:else}
-            <Placeholder />
+            <EmptyPlaceholder />
           {/if}
         {:else if isBlock}
           <slot />

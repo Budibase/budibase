@@ -27,7 +27,6 @@
     <StyleSection
       {style}
       name={style.label}
-      columns={style.columns}
       properties={style.settings}
       {componentInstance}
       {bindings}

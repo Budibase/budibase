@@ -2,6 +2,7 @@ import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
+import { orgStore } from "./org"
 import { dndIndex, dndParent, dndIsNewComponent, dndBounds } from "./dnd.js"
 import { RoleUtils } from "@budibase/frontend-core"
 import { findComponentById, findComponentParent } from "../utils/components.js"
@@ -14,6 +15,7 @@ const createScreenStore = () => {
       appStore,
       routeStore,
       builderStore,
+      orgStore,
       dndParent,
       dndIndex,
       dndIsNewComponent,
@@ -23,6 +25,7 @@ const createScreenStore = () => {
       $appStore,
       $routeStore,
       $builderStore,
+      $orgStore,
       $dndParent,
       $dndIndex,
       $dndIsNewComponent,
@@ -145,6 +148,11 @@ const createScreenStore = () => {
           // Default title to app name
           if (!navigationSettings.title && !navigationSettings.hideTitle) {
             navigationSettings.title = $appStore.application?.name
+          }
+
+          // Default to the org logo
+          if (!navigationSettings.logoUrl) {
+            navigationSettings.logoUrl = $orgStore?.logoUrl
           }
         }
         activeLayout = {
