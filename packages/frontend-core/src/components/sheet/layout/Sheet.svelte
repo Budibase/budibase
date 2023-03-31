@@ -15,6 +15,7 @@
   import { createMenuStores } from "../stores/menu"
   import { createMaxScrollStores } from "../stores/max-scroll"
   import { createPaginationStores } from "../stores/pagination"
+  import { createWheelStores } from "../stores/wheel"
   import DeleteButton from "../controls/DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
@@ -25,8 +26,8 @@
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
   import { clickOutside } from "@budibase/bbui"
-  import AddRowButton from "../controls/AddRowButton.svelte"
   import SheetControls from "./SheetControls.svelte"
+  import NewRow from "./NewRow.svelte"
 
   export let API
   export let tableId
@@ -74,6 +75,7 @@
   context = { ...context, ...createUserStores(context) }
   context = { ...context, ...createMenuStores(context) }
   context = { ...context, ...createPaginationStores(context) }
+  context = { ...context, ...createWheelStores(context) }
 
   // Reference some stores for local use
   const { isResizing, isReordering, ui, loaded } = context
@@ -116,18 +118,20 @@
     </div>
   </div>
   {#if $loaded}
-    <div class="sheet-data" use:clickOutside={ui.actions.blur}>
-      <StickyColumn />
-      <div class="sheet-main">
-        <HeaderRow />
-        <SheetBody />
+    <div class="sheet-data-outer" use:clickOutside={ui.actions.blur}>
+      <div class="sheet-data-inner">
+        <StickyColumn />
+        <div class="sheet-data-content">
+          <HeaderRow />
+          <SheetBody />
+        </div>
+        {#if $config.allowAddRows}
+          <NewRow />
+        {/if}
+        <ResizeOverlay />
+        <ScrollOverlay />
+        <MenuOverlay />
       </div>
-      <ResizeOverlay />
-      <ScrollOverlay />
-      <MenuOverlay />
-      {#if $config.allowAddRows}
-        <AddRowButton />
-      {/if}
     </div>
   {/if}
   <KeyboardManager />
@@ -163,18 +167,25 @@
     cursor: grabbing !important;
   }
 
-  .sheet-data {
+  .sheet-data-outer,
+  .sheet-data-inner {
     flex: 1 1 auto;
     display: flex;
-    flex-direction: row;
     justify-items: flex-start;
     align-items: stretch;
     overflow: hidden;
-    height: 0;
-    position: relative;
-    background: var(--spectrum-global-color-gray-75);
   }
-  .sheet-main {
+  .sheet-data-outer {
+    height: 0;
+    flex-direction: column;
+    /*background: var(--spectrum-global-color-gray-75);*/
+    background: var(--cell-background);
+  }
+  .sheet-data-inner {
+    flex-direction: row;
+    position: relative;
+  }
+  .sheet-data-content {
     flex: 1 1 auto;
     overflow: hidden;
     display: flex;

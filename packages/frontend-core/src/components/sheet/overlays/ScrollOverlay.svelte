@@ -6,16 +6,17 @@
     scroll,
     bounds,
     cellHeight,
-    stickyColumn,
     contentHeight,
     maxScrollTop,
     contentWidth,
     maxScrollLeft,
-    gutterWidth,
+    screenWidth,
+    showHScrollbar,
+    showVScrollbar,
   } = getContext("sheet")
 
   // Bar config
-  const barOffset = 4
+  const barOffset = 8
 
   // State for dragging bars
   let initialMouse
@@ -37,15 +38,10 @@
   $: barTop = barOffset + cellHeight + availHeight * (scrollTop / $maxScrollTop)
 
   // Calculate H scrollbar size and offset
-  $: totalWidth = width + gutterWidth + ($stickyColumn?.width || 0)
-  $: renderWidth = totalWidth - 2 * barOffset
-  $: barWidth = Math.max(50, (totalWidth / $contentWidth) * renderWidth)
+  $: renderWidth = $screenWidth - 2 * barOffset
+  $: barWidth = Math.max(50, ($screenWidth / $contentWidth) * renderWidth)
   $: availWidth = renderWidth - barWidth
   $: barLeft = barOffset + availWidth * (scrollLeft / $maxScrollLeft)
-
-  // Calculate whether to show scrollbars or not
-  $: showVScrollbar = $contentHeight > height
-  $: showHScrollbar = $contentWidth > totalWidth
 
   // V scrollbar drag handlers
   const startVDragging = e => {
@@ -92,17 +88,17 @@
   }
 </script>
 
-{#if showVScrollbar}
+{#if $showVScrollbar}
   <div
     class="v-scrollbar"
-    style="top:{barTop}px; height:{barHeight}px;"
+    style="top:{barTop}px; height:{barHeight}px;right:{barOffset}px;"
     on:mousedown={startVDragging}
   />
 {/if}
-{#if showHScrollbar}
+{#if $showHScrollbar}
   <div
     class="h-scrollbar"
-    style="left:{barLeft}px; width:{barWidth}px;"
+    style="left:{barLeft}px; width:{barWidth}px;bottom:{barOffset}px;"
     on:mousedown={startHDragging}
   />
 {/if}
@@ -110,21 +106,19 @@
 <style>
   div {
     position: absolute;
-    background: var(--spectrum-global-color-gray-600);
-    opacity: 0.6;
+    background: var(--spectrum-global-color-gray-500);
+    opacity: 0.7;
     border-radius: 4px;
-    z-index: 999;
+    z-index: 1;
     transition: opacity 130ms ease-out;
   }
   div:hover {
-    opacity: 0.9;
+    opacity: 1;
   }
   .v-scrollbar {
-    right: 4px;
     width: 8px;
   }
   .h-scrollbar {
-    bottom: 4px;
     height: 8px;
   }
 </style>

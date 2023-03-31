@@ -8,6 +8,7 @@
   export let onChange
   export let readonly = false
   export let api
+  export let invert = false
 
   const { API } = getContext("sheet")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
@@ -88,7 +89,7 @@
 </div>
 
 {#if isOpen}
-  <div class="dropzone">
+  <div class="dropzone" class:invert>
     <Dropzone
       {value}
       compact
@@ -111,6 +112,7 @@
     gap: var(--cell-spacing);
     align-self: stretch;
     overflow: hidden;
+    user-select: none;
   }
   .attachment-cell.editable:hover {
     cursor: pointer;
@@ -136,12 +138,16 @@
   }
   .dropzone {
     position: absolute;
-    top: -1px;
-    left: -1px;
+    top: 100%;
+    left: 0;
     width: 320px;
     background: var(--cell-background);
     border: var(--cell-border);
     box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
     padding: var(--cell-padding);
+  }
+  .dropzone.invert {
+    transform: translateY(-100%);
+    top: 0;
   }
 </style>

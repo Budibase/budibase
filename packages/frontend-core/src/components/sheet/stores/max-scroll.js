@@ -17,6 +17,7 @@ export const createMaxScrollStores = context => {
   // Memoize store primitives
   const scrollTop = derived(scroll, $scroll => $scroll.top, 0)
   const scrollLeft = derived(scroll, $scroll => $scroll.left, 0)
+  const stickyColumnWidth = derived(stickyColumn, $col => $col?.width || 0, 0)
 
   // Derive vertical limits
   const height = derived(bounds, $bounds => $bounds.height, 0)
@@ -34,9 +35,9 @@ export const createMaxScrollStores = context => {
 
   // Derive horizontal limits
   const contentWidth = derived(
-    [visibleColumns, stickyColumn],
-    ([$visibleColumns, $stickyColumn]) => {
-      let width = gutterWidth + padding + ($stickyColumn?.width || 0)
+    [visibleColumns, stickyColumnWidth],
+    ([$visibleColumns, $stickyColumnWidth]) => {
+      let width = gutterWidth + padding + $stickyColumnWidth
       $visibleColumns.forEach(col => {
         width += col.width
       })
@@ -45,9 +46,8 @@ export const createMaxScrollStores = context => {
     0
   )
   const screenWidth = derived(
-    [width, stickyColumn],
-    ([$width, $stickyColumn]) =>
-      $width + gutterWidth + ($stickyColumn?.width || 0),
+    [width, stickyColumnWidth],
+    ([$width, $stickyColumnWidth]) => $width + gutterWidth + $stickyColumnWidth,
     0
   )
   const maxScrollLeft = derived(
@@ -151,10 +151,27 @@ export const createMaxScrollStores = context => {
     }
   })
 
+  // Derive whether to show scrollbars or not
+  const showVScrollbar = derived(
+    [contentHeight, height],
+    ([$contentHeight, $height]) => {
+      return $contentHeight > $height
+    }
+  )
+  const showHScrollbar = derived(
+    [contentWidth, screenWidth],
+    ([$contentWidth, $screenWidth]) => {
+      return $contentWidth > $screenWidth
+    }
+  )
+
   return {
     contentHeight,
     contentWidth,
+    screenWidth,
     maxScrollTop,
     maxScrollLeft,
+    showHScrollbar,
+    showVScrollbar,
   }
 }
