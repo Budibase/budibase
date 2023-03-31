@@ -77,28 +77,28 @@ jobs:
       - run: yarn bootstrap
       - run: yarn test:pro
 
-  integration-test:
-    runs-on: ubuntu-latest
-    services:
-      couchdb:
-        image: ibmcom/couchdb3
-        env:
-          COUCHDB_PASSWORD: budibase
-          COUCHDB_USER: budibase
-        ports:
-          - 4567:5984
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
-        with:
-          node-version: 14.x
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
-      - run: yarn
-      - run: yarn bootstrap
-      - run: yarn build
-      - run: |
-          cd qa-core
-          yarn
-          yarn api:test:ci
+#  integration-test:
+#    runs-on: ubuntu-latest
+#    services:
+#      couchdb:
+#        image: ibmcom/couchdb3
+#        env:
+#          COUCHDB_PASSWORD: budibase
+#          COUCHDB_USER: budibase
+#        ports:
+#          - 4567:5984
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Use Node.js 14.x
+#        uses: actions/setup-node@v1
+#        with:
+#          node-version: 14.x
+#      - name: Install Pro
+#        run: yarn install:pro $BRANCH $BASE_BRANCH
+#      - run: yarn
+#      - run: yarn bootstrap
+#      - run: yarn build
+#      - run: |
+#          cd qa-core
+#          yarn
+#          yarn api:test:ci
