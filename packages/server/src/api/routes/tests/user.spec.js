@@ -1,4 +1,4 @@
-const { roles } = require("@budibase/backend-core")
+const { roles, utils } = require("@budibase/backend-core")
 const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { BUILTIN_ROLE_IDS } = roles
@@ -55,7 +55,7 @@ describe("/users", () => {
 
   describe("update", () => {
     it("should be able to update the user", async () => {
-      const user = await config.createUser({ id: `us_update${Math.random()}` })
+      const user = await config.createUser({ id: `us_update${utils.newid()}` })
       user.roleId = BUILTIN_ROLE_IDS.BASIC
       const res = await request
         .put(`/api/users/metadata`)
