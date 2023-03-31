@@ -23,6 +23,7 @@ describe("/api/system/environment", () => {
         disableAccountPortal: 0,
         isDev: false,
         multiTenancy: true,
+        baseUrl: "http://localhost:10000",
       })
     })
   })

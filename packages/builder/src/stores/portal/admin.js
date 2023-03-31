@@ -53,6 +53,7 @@ export function createAdminStore() {
       store.disableAccountPortal = environment.disableAccountPortal
       store.accountPortalUrl = environment.accountPortalUrl
       store.isDev = environment.isDev
+      store.baseUrl = environment.baseUrl
       return store
     })
   }

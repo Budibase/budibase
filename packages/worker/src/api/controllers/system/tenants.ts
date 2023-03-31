@@ -5,7 +5,7 @@ export async function destroy(ctx: UserCtx) {
   const user = ctx.user!
   const tenantId = ctx.params.tenantId
 
-  if (tenantId !== user.tenantId) {
+  if (!ctx.internal && tenantId !== user.tenantId) {
     ctx.throw(403, "Tenant ID does not match current user")
   }
 
@@ -16,4 +16,8 @@ export async function destroy(ctx: UserCtx) {
     ctx.log.error(err)
     throw err
   }
+}
+
+export async function info(ctx: UserCtx) {
+  ctx.body = await tenantSdk.tenantInfo(ctx.params.tenantId)
 }
