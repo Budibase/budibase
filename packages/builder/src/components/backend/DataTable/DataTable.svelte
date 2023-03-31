@@ -149,10 +149,8 @@
   // When importing new rows it is better to reinitialise request/paging data.
   // Not doing so causes inconsistency in paging behaviour and content.
   const onImportData = () => {
-    fetch.getInitialData(enrichedSchema)
+    fetch.getInitialData()
   }
-
-  $: console.log(enrichedSchema)
 </script>
 
 <div>
