@@ -18,8 +18,6 @@
   $: options = schema?.constraints?.inclusion || []
   $: editable = selected && !readonly
   $: values = Array.isArray(value) ? value : [value].filter(x => x != null)
-  $: unselectedOptions = options.filter(x => !values.includes(x))
-  $: orderedOptions = values.concat(unselectedOptions)
   $: {
     // Close when deselected
     if (!selected) {
@@ -43,7 +41,7 @@
 
   const toggleOption = option => {
     if (!multi) {
-      onChange(option)
+      onChange(option === value ? null : option)
       close()
     } else {
       if (values.includes(option)) {
@@ -64,7 +62,7 @@
     } else if (e.key === "ArrowUp") {
       focusedOptionIdx = Math.max(focusedOptionIdx - 1, 0)
     } else if (e.key === "Enter") {
-      toggleOption(orderedOptions[focusedOptionIdx])
+      toggleOption(options[focusedOptionIdx])
     }
     return true
   }
@@ -100,31 +98,22 @@
   {/if}
   {#if isOpen}
     <div class="options" class:invert on:wheel={e => e.stopPropagation()}>
-      {#each values as val, idx}
-        {@const color = getOptionColor(val)}
-        <div
-          class="option"
-          on:click={() => toggleOption(val)}
-          class:focused={focusedOptionIdx === idx}
-        >
-          <div class="badge text" style="--color: {color}">
-            {val}
-          </div>
-          <Icon
-            name="Checkmark"
-            color="var(--spectrum-global-color-blue-400)"
-          />
-        </div>
-      {/each}
-      {#each unselectedOptions as option, idx}
+      {#each options as option, idx}
+        {@const color = getOptionColor(option)}
         <div
           class="option"
           on:click={() => toggleOption(option)}
-          class:focused={focusedOptionIdx === values.length + idx}
+          class:focused={focusedOptionIdx === idx}
         >
-          <div class="badge text" style="--color: {getOptionColor(option)}">
+          <div class="badge text" style="--color: {color}">
             {option}
           </div>
+          {#if values.includes(option)}
+            <Icon
+              name="Checkmark"
+              color="var(--spectrum-global-color-blue-400)"
+            />
+          {/if}
         </div>
       {/each}
     </div>
