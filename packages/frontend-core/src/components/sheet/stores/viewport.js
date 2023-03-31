@@ -1,7 +1,7 @@
 import { derived, get } from "svelte/store"
 
 export const createViewportStores = context => {
-  const { cellHeight, visibleColumns, rows, scroll, bounds } = context
+  const { rowHeight, visibleColumns, rows, scroll, bounds } = context
   const scrollTop = derived(scroll, $scroll => $scroll.top, 0)
   const scrollLeft = derived(scroll, $scroll => $scroll.left, 0)
 
@@ -13,16 +13,16 @@ export const createViewportStores = context => {
   // Split into multiple stores containing primitives to optimise invalidation
   // as much as possible
   const scrolledRowCount = derived(
-    scrollTop,
-    $scrollTop => {
-      return Math.floor($scrollTop / cellHeight)
+    [scrollTop, rowHeight],
+    ([$scrollTop, $rowHeight]) => {
+      return Math.floor($scrollTop / $rowHeight)
     },
     0
   )
   const visualRowCapacity = derived(
-    height,
-    $height => {
-      return Math.ceil($height / cellHeight) + 1
+    [height, rowHeight],
+    ([$height, $rowHeight]) => {
+      return Math.ceil($height / $rowHeight) + 1
     },
     0
   )

@@ -9,7 +9,7 @@ export const createWheelStores = context => {
     renderedRows,
     bounds,
     scroll,
-    cellHeight,
+    rowHeight,
   } = context
 
   // Handles a wheel even and updates the scroll offsets
@@ -22,6 +22,7 @@ export const createWheelStores = context => {
   }
   const debouncedHandleWheel = domDebounce((deltaX, deltaY, clientY) => {
     const { top, left } = get(scroll)
+    const $rowHeight = get(rowHeight)
 
     // Calculate new scroll top
     let newScrollTop = top + deltaY
@@ -38,8 +39,8 @@ export const createWheelStores = context => {
     })
 
     // Hover row under cursor
-    const y = clientY - get(bounds).top + (newScrollTop % cellHeight)
-    const hoveredRow = get(renderedRows)[Math.floor(y / cellHeight)]
+    const y = clientY - get(bounds).top + (newScrollTop % $rowHeight)
+    const hoveredRow = get(renderedRows)[Math.floor(y / $rowHeight)]
     hoveredRowId.set(hoveredRow?._id)
   })
 

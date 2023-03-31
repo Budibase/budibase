@@ -4,14 +4,13 @@
   import SheetRow from "./SheetRow.svelte"
   import { MaxCellRenderHeight } from "../lib/constants"
 
-  const { bounds, renderedRows, visualRowCapacity, cellHeight } =
+  const { bounds, renderedRows, visualRowCapacity, rowHeight } =
     getContext("sheet")
 
   let body
 
   $: inversionIdx =
-    $visualRowCapacity - Math.ceil(MaxCellRenderHeight / cellHeight) - 2
-  $: console.log(inversionIdx)
+    $visualRowCapacity - Math.ceil(MaxCellRenderHeight / $rowHeight) - 2
 
   onMount(() => {
     // Observe and record the height of the body

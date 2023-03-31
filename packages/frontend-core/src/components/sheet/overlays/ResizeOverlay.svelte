@@ -51,8 +51,8 @@
   .resize-slider {
     position: absolute;
     top: 0;
-    z-index: 1;
-    height: var(--cell-height);
+    z-index: 2;
+    height: var(--row-height);
     opacity: 0;
     padding: 0 8px;
     transform: translateX(-50%);
@@ -64,7 +64,7 @@
     opacity: 1;
   }
   .resize-slider.sticky {
-    z-index: 2;
+    z-index: 3;
   }
   .resize-indicator {
     margin-left: -1px;

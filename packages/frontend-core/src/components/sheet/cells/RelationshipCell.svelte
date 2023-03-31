@@ -316,7 +316,7 @@
   }
   .result {
     padding: 0 var(--cell-padding);
-    flex: 0 0 var(--cell-height);
+    flex: 0 0 var(--row-height);
     display: flex;
     gap: var(--cell-spacing);
     justify-content: space-between;
@@ -331,7 +331,7 @@
   }
 
   .search {
-    flex: 0 0 calc(var(--cell-height) - 1px);
+    flex: 0 0 calc(var(--row-height) - 1px);
     display: flex;
     align-items: center;
     margin: 0 var(--cell-padding);
@@ -349,7 +349,7 @@
     color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
     padding: var(--cell-padding);
-    flex: 0 0 var(--cell-height);
+    flex: 0 0 var(--row-height);
     display: flex;
     align-items: center;
     white-space: nowrap;

@@ -122,7 +122,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    height: calc(var(--cell-height) - 12px);
+    height: calc(var(--row-height) - 12px);
     padding: 0 8px;
     color: var(--spectrum-global-color-gray-800);
     border: 1px solid var(--spectrum-global-color-gray-300);
@@ -133,7 +133,7 @@
     user-select: none;
   }
   img {
-    height: calc(var(--cell-height) - 12px);
+    height: calc(var(--row-height) - 12px);
     max-width: 64px;
   }
   .dropzone {

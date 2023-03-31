@@ -92,7 +92,7 @@
     top: -1px;
     left: -1px;
     width: calc(100% + 100px);
-    height: calc(5 * var(--cell-height) + 1px);
+    height: calc(5 * var(--row-height) + 1px);
     border: var(--cell-border);
     box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
   }

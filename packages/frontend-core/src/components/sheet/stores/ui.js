@@ -6,6 +6,7 @@ export const createUIStores = context => {
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
   const selectedCellAPI = writable(null)
+  const rowHeight = writable(36)
 
   // Derive the row that contains the selected cell.
   const selectedCellRow = derived(
@@ -92,6 +93,7 @@ export const createUIStores = context => {
     hoveredRowId,
     selectedCellRow,
     selectedCellAPI,
+    rowHeight,
     ui: {
       actions: {
         blur,

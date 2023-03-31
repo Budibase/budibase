@@ -54,7 +54,7 @@
 <style>
   /* Cells */
   .cell {
-    height: var(--cell-height);
+    height: var(--row-height);
     border-bottom: var(--cell-border);
     border-right: var(--cell-border);
     display: flex;
@@ -123,7 +123,7 @@
     right: 0;
     background: var(--spectrum-global-color-blue-400);
     width: 2px;
-    height: calc(var(--cell-height) + 2px);
+    height: calc(var(--row-height) + 2px);
   }
 
   /* Other user email */
