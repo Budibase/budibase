@@ -79,7 +79,7 @@
       }
 
       // Validate tenant if in a multi-tenant env
-      if (useAccountPortal && multiTenancyEnabled) {
+      if (multiTenancyEnabled) {
         await validateTenantId()
       }
     } catch (error) {
