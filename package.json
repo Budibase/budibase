@@ -12,7 +12,7 @@
     "husky": "^7.0.1",
     "js-yaml": "^4.1.0",
     "kill-port": "^1.6.1",
-    "lerna": "3.14.1",
+    "lerna": "^6.6.1",
     "madge": "^6.0.0",
     "prettier": "^2.3.1",
     "prettier-plugin-svelte": "^2.3.0",
