@@ -1,6 +1,7 @@
+const fetch = require("node-fetch")
+fetch.mockSearch()
 const search = require("../../controllers/row/internalSearch")
 // this will be mocked out for _search endpoint
-const fetch = require("node-fetch")
 const PARAMS = {
   tableId: "ta_12345679abcdef",
   version: "1",

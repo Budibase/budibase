@@ -46,6 +46,7 @@ import {
   Row,
   SourceName,
   Table,
+  SearchFilters,
 } from "@budibase/types"
 
 type DefaultUserValues = {
@@ -566,6 +567,16 @@ class TestConfiguration {
       tableId = this.table._id
     }
     return this._req(null, { tableId }, controllers.row.fetch)
+  }
+
+  async searchRows(tableId: string, searchParams: SearchFilters = {}) {
+    if (!tableId && this.table) {
+      tableId = this.table._id
+    }
+    const body = {
+      query: searchParams,
+    }
+    return this._req(body, { tableId }, controllers.row.search)
   }
 
   // ROLE
