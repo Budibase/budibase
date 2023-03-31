@@ -34,8 +34,8 @@ const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
 function getLoopIterations(loopStep: LoopStep, input: LoopInput) {
   const binding = automationUtils.typecastForLooping(loopStep, input)
-  if (!loopStep || !binding) {
-    return 1
+  if (!binding) {
+    return 0
   }
   if (Array.isArray(binding)) {
     return binding.length
@@ -43,7 +43,7 @@ function getLoopIterations(loopStep: LoopStep, input: LoopInput) {
   if (typeof binding === "string") {
     return automationUtils.stringSplit(binding).length
   }
-  return 1
+  return 0
 }
 
 /**
@@ -423,13 +423,25 @@ class Orchestrator {
         }
       }
 
+      if (loopStep && iterations === 0) {
+        loopStep = undefined
+        this.executionOutput.steps.splice(loopStepNumber + 1, 0, {
+          id: step.id,
+          stepId: step.stepId,
+          outputs: { status: AutomationStatus.NO_ITERATIONS, success: true },
+          inputs: {},
+        })
+
+        this._context.steps.splice(loopStepNumber, 1)
+        iterations = 1
+      }
+
       // Delete the step after the loop step as it's irrelevant, since information is included
       // in the loop step
       if (wasLoopStep && !loopStep) {
         this._context.steps.splice(loopStepNumber + 1, 1)
         wasLoopStep = false
       }
-
       if (loopSteps && loopSteps.length) {
         let tempOutput = {
           success: true,
