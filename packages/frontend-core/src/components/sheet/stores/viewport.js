@@ -77,5 +77,10 @@ export const createViewportStores = context => {
     []
   )
 
-  return { scrolledRowCount, visualRowCapacity, renderedRows, renderedColumns }
+  return {
+    scrolledRowCount,
+    visualRowCapacity,
+    renderedRows,
+    renderedColumns,
+  }
 }

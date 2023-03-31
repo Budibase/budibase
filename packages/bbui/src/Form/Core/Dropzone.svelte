@@ -355,6 +355,9 @@
   input[type="file"] {
     display: none;
   }
+  .compact .spectrum-Dropzone {
+    padding: 6px 0 !important;
+  }
 
   .gallery {
     display: flex;
@@ -381,7 +384,14 @@
   }
   .compact .placeholder,
   .compact img {
-    margin: 12px 16px;
+    margin: 10px 16px;
+  }
+  .compact img {
+    height: 90px;
+  }
+  .compact .gallery {
+    padding: 6px 10px;
+    margin-bottom: 8px;
   }
   .title {
     display: flex;

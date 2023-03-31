@@ -68,16 +68,34 @@
     position: relative;
     width: 0;
   }
+  .cell.selected:after,
+  .cell.error:after,
+  .cell.selected-other:not(.selected):after {
+    content: " ";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    border: 2px solid transparent;
+    pointer-events: none;
+    border-radius: 2px;
+    box-sizing: border-box;
+  }
   .cell.selected {
-    box-shadow: inset 0 0 0 2px var(--spectrum-global-color-blue-400);
     z-index: 2;
   }
-  .cell.error {
-    box-shadow: inset 0 0 0 2px var(--spectrum-global-color-red-400);
+  .cell.selected:after {
+    border-color: var(--spectrum-global-color-blue-400);
+  }
+  .cell.error:after {
+    border-color: var(--spectrum-global-color-red-400);
   }
   .cell.selected-other:not(.selected) {
     z-index: 1;
-    box-shadow: inset 0 0 0 2px var(--user-color);
+  }
+  .cell.selected-other:not(.selected):after {
+    border-color: var(--spectrum-global-color-red-400);
   }
   .cell:not(.selected) {
     user-select: none;
@@ -112,7 +130,8 @@
   .label {
     position: absolute;
     bottom: 100%;
-    padding: 1px 4px;
+    margin: 0 0 -2px 0;
+    padding: 1px 4px 3px 4px;
     background: var(--user-color);
     border-radius: 2px 2px 0 0;
     display: none;
@@ -129,7 +148,8 @@
     bottom: auto;
     top: 100%;
     border-radius: 0 0 2px 2px;
-    padding: 0 4px 2px 4px;
+    padding: 2px 4px 2px 4px;
+    margin: -2px 0 0 0;
   }
   .cell:hover .label {
     display: block;

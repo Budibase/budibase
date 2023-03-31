@@ -125,7 +125,7 @@
       <div class="sort-indicator">
         <Icon
           size="S"
-          name={$sort.order === "descending" ? "ChevronDown" : "ChevronUp"}
+          name={$sort.order === "descending" ? "SortOrderDown" : "SortOrderUp"}
           color="var(--spectrum-global-color-gray-600)"
         />
       </div>

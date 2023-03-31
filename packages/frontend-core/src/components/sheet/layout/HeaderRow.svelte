@@ -32,7 +32,7 @@
     background: var(--background);
     border-bottom: var(--cell-border);
     position: relative;
-    z-index: 1;
+    z-index: 2;
     height: var(--cell-height);
   }
   .row {

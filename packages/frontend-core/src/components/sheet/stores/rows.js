@@ -136,7 +136,7 @@ export const createRowsStore = context => {
       } else {
         handleNewRows([newRow])
       }
-      notifications.success("Row added successfully")
+      notifications.success("Row created successfully")
       return newRow
     } catch (error) {
       notifications.error(`Error adding row: ${error?.message}`)

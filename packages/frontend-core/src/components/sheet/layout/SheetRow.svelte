@@ -4,6 +4,7 @@
 
   export let row
   export let idx
+  export let invert = false
 
   const {
     selectedCellId,
@@ -40,6 +41,7 @@
       {cellId}
       {column}
       {row}
+      {invert}
     />
   {/each}
 </div>

@@ -293,7 +293,7 @@
     left: 0;
     min-width: 100%;
     max-width: calc(100% + 240px);
-    max-height: calc(var(--cell-height) + 240px);
+    max-height: var(--max-cell-render-height);
     background: var(--cell-background);
     border: var(--cell-border);
     box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
