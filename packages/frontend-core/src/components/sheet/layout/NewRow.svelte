@@ -26,6 +26,9 @@
   let touched = false
 
   $: firstColumn = $stickyColumn || $visibleColumns[0]
+
+  $: console.log(firstColumn)
+
   $: rowHovered = $hoveredRowId === "new"
   $: containsSelectedCell = $selectedCellId?.startsWith("new-")
   $: width = gutterWidth + ($stickyColumn?.width || 0)
@@ -150,6 +153,7 @@
   .add-button {
     position: absolute;
     left: 16px;
+    bottom: 16px;
     z-index: 1;
     transform: translateY(calc(16px + 100%));
     transition: transform 130ms ease-out;
