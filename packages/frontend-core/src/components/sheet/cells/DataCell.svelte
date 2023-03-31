@@ -3,7 +3,8 @@
   import SheetCell from "./SheetCell.svelte"
   import { getCellRenderer } from "../lib/renderers"
 
-  const { rows, selectedCellId, menu, selectedCellAPI } = getContext("sheet")
+  const { rows, selectedCellId, menu, selectedCellAPI, config } =
+    getContext("sheet")
 
   export let rowSelected
   export let rowHovered
@@ -22,10 +23,13 @@
   let api
   let error
 
+  // Determine if the cell is editable
+  $: readonly = column.schema.autocolumn || (!$config.allowEditRows && row._id)
+
   // Build cell API
   $: cellAPI = {
     ...api,
-    isReadonly: () => !!column.schema.autocolumn,
+    isReadonly: () => readonly,
     isRequired: () => !!column.schema.constraints?.presence,
     updateValue: value => {
       error = null
@@ -80,7 +84,7 @@
       schema={column.schema}
       {selected}
       onChange={cellAPI.updateValue}
-      readonly={column.schema.autocolumn}
+      {readonly}
       {invert}
     />
   {/if}

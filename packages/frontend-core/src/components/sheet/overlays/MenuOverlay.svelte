@@ -1,14 +1,16 @@
 <script>
-  import {
-    clickOutside,
-    Menu,
-    MenuItem,
-    notifications,
-  } from "@budibase/bbui"
+  import { clickOutside, Menu, MenuItem, notifications } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { selectedCellRow, menu, rows, columns, selectedCellId, stickyColumn } =
-    getContext("sheet")
+  const {
+    selectedCellRow,
+    menu,
+    rows,
+    columns,
+    selectedCellId,
+    stickyColumn,
+    config,
+  } = getContext("sheet")
 
   $: style = makeStyle($menu)
 
@@ -39,8 +41,16 @@
 {#if $menu.visible}
   <div class="menu" {style} use:clickOutside={() => menu.actions.close()}>
     <Menu>
-      <MenuItem icon="Delete" on:click={deleteRow}>Delete row</MenuItem>
-      <MenuItem icon="Duplicate" on:click={duplicate}>Duplicate row</MenuItem>
+      <MenuItem
+        icon="Delete"
+        disabled={!$config.allowEditRows}
+        on:click={deleteRow}>Delete row</MenuItem
+      >
+      <MenuItem
+        icon="Duplicate"
+        disabled={!$config.allowAddRows}
+        on:click={duplicate}>Duplicate row</MenuItem
+      >
     </Menu>
   </div>
 {/if}
