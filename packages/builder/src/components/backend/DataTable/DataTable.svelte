@@ -136,6 +136,7 @@
   const onUpdateColumns = () => {
     selectedRows = []
     fetch.refresh()
+    tables.fetchTable(id)
   }
 
   // Fetch data whenever rows are modified. Unfortunately we have to lose
@@ -148,8 +149,10 @@
   // When importing new rows it is better to reinitialise request/paging data.
   // Not doing so causes inconsistency in paging behaviour and content.
   const onImportData = () => {
-    fetch.getInitialData()
+    fetch.getInitialData(enrichedSchema)
   }
+
+  $: console.log(enrichedSchema)
 </script>
 
 <div>
