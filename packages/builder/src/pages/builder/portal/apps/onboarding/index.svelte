@@ -11,7 +11,7 @@
   import { store, automationStore } from "builderStore"
   import { saveDatasource } from "builderStore/datasource"
   import { integrations } from "stores/backend"
-  import { auth, admin } from "stores/portal"
+  import { auth, admin, organisation } from "stores/portal"
   import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
@@ -31,7 +31,6 @@
   let googleComplete = false
 
   $: getIntegrations()
-  $: cloudHosted = $admin.cloud
 
   const createApp = async useSampleData => {
     creationLoading = true
@@ -79,7 +78,10 @@
 
       Object.entries($integrations).forEach(([integrationType, schema]) => {
         // google sheets not available in self-host
-        if (helpers.isGoogleSheets(integrationType) && !cloudHosted) {
+        if (
+          helpers.isGoogleSheets(integrationType) &&
+          !$organisation.googleDatasourceConfigured
+        ) {
           return
         }
         if (schema?.plus) {
