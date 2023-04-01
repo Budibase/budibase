@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import { domDebounce } from "../../../utils/utils"
 
   const {
     rowHeight,
@@ -7,7 +8,11 @@
     visibleColumns,
     renderedColumns,
     selectedCellId,
-    wheel,
+    renderedRows,
+    maxScrollTop,
+    maxScrollLeft,
+    bounds,
+    hoveredRowId,
   } = getContext("sheet")
 
   export let scrollVertically = true
@@ -36,11 +41,42 @@
     }
     return width
   }
+
+  // Handles a wheel even and updates the scroll offsets
+  const handleWheel = e => {
+    e.preventDefault()
+    const modifier = e.ctrlKey || e.metaKey
+    let x = modifier ? e.deltaY : e.deltaX
+    let y = modifier ? e.deltaX : e.deltaY
+    debouncedHandleWheel(x, y, e.clientY)
+  }
+  const debouncedHandleWheel = domDebounce((deltaX, deltaY, clientY) => {
+    const { top, left } = $scroll
+
+    // Calculate new scroll top
+    let newScrollTop = top + deltaY
+    newScrollTop = Math.max(0, Math.min(newScrollTop, $maxScrollTop))
+
+    // Calculate new scroll left
+    let newScrollLeft = left + deltaX
+    newScrollLeft = Math.max(0, Math.min(newScrollLeft, $maxScrollLeft))
+
+    // Update state
+    scroll.set({
+      left: newScrollLeft,
+      top: newScrollTop,
+    })
+
+    // Hover row under cursor
+    const y = clientY - $bounds.top + (newScrollTop % $rowHeight)
+    const hoveredRow = $renderedRows[Math.floor(y / $rowHeight)]
+    hoveredRowId.set(hoveredRow?._id)
+  })
 </script>
 
 <div
   class="outer"
-  on:wheel={wheelInteractive ? wheel.actions.handleWheel : null}
+  on:wheel={wheelInteractive ? handleWheel : null}
   on:click|self={() => ($selectedCellId = null)}
 >
   <div {style}>

@@ -70,11 +70,7 @@
     <Button size="M" cta icon="Add" on:click={startAdding}>Add row</Button>
   </div>
 
-  <div
-    class="container"
-    class:visible={isAdding}
-    on:wheel={wheel.actions.handleWheel}
-  >
+  <div class="container" class:visible={isAdding}>
     <div class="buttons">
       <Button size="M" cta on:click={addRow}>Save</Button>
       <Button size="M" secondary newStyles on:click={cancel}>Cancel</Button>
