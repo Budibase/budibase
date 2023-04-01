@@ -72,53 +72,52 @@
 
 <!-- Only show new row functionality if we have any columns -->
 {#if firstColumn}
-  <div
-    class="container"
-    class:visible={isAdding}
-    on:wheel={wheel.actions.handleWheel}
-  >
+  <div class="container" class:visible={isAdding}>
     <div class="content" class:above-scrollbar={$showHScrollbar}>
       <div
         class="new-row"
         on:mouseenter={() => ($hoveredRowId = "new")}
         on:mouseleave={() => ($hoveredRowId = null)}
       >
-        <div
-          class="sticky-column"
-          style="flex: 0 0 {width}px"
-          class:scrolled={scrollLeft > 0}
-        >
-          <SheetCell
-            width={gutterWidth}
-            {rowHovered}
-            rowSelected={containsSelectedCell}
+        <SheetScrollWrapper scrollHorizontally={false} scrollVertically={false}>
+          <div
+            class="sticky-column"
+            style="flex: 0 0 {width}px"
+            class:scrolled={scrollLeft > 0}
           >
-            <div class="gutter">
-              <div class="number">1</div>
-              {#if $config.allowExpandRows}
-                <Icon
-                  name="Maximize"
-                  size="S"
-                  hoverable
-                  on:click={addViaModal}
-                />
-              {/if}
-            </div>
-          </SheetCell>
-          {#if $stickyColumn}
-            {@const cellId = `new-${$stickyColumn.name}`}
-            <DataCell
-              {cellId}
-              column={$stickyColumn}
-              row={newRow}
+            <SheetCell
+              width={gutterWidth}
               {rowHovered}
-              selected={$selectedCellId === cellId}
               rowSelected={containsSelectedCell}
-              width={$stickyColumn.width}
-              {updateRow}
-            />
-          {/if}
-        </div>
+            >
+              <div class="gutter">
+                <div class="number">1</div>
+                {#if $config.allowExpandRows}
+                  <Icon
+                    name="Maximize"
+                    size="S"
+                    hoverable
+                    on:click={addViaModal}
+                  />
+                {/if}
+              </div>
+            </SheetCell>
+            {#if $stickyColumn}
+              {@const cellId = `new-${$stickyColumn.name}`}
+              <DataCell
+                {cellId}
+                column={$stickyColumn}
+                row={newRow}
+                {rowHovered}
+                selected={$selectedCellId === cellId}
+                rowSelected={containsSelectedCell}
+                width={$stickyColumn.width}
+                {updateRow}
+              />
+            {/if}
+          </div>
+        </SheetScrollWrapper>
+
         <SheetScrollWrapper scrollVertically={false}>
           <div class="row">
             {#each $renderedColumns as column}

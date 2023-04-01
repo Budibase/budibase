@@ -15,7 +15,6 @@
   import { createMenuStores } from "../stores/menu"
   import { createMaxScrollStores } from "../stores/max-scroll"
   import { createPaginationStores } from "../stores/pagination"
-  import { createWheelStores } from "../stores/wheel"
   import DeleteButton from "../controls/DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
@@ -76,7 +75,6 @@
   context = { ...context, ...createUserStores(context) }
   context = { ...context, ...createMenuStores(context) }
   context = { ...context, ...createPaginationStores(context) }
-  context = { ...context, ...createWheelStores(context) }
 
   // Reference some stores for local use
   const { isResizing, isReordering, ui, loaded, rowHeight } = context
