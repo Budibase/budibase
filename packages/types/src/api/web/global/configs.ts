@@ -5,6 +5,7 @@ import { SettingsConfig, SettingsInnerConfig } from "../../../documents"
  */
 export interface PublicSettingsInnerConfig extends SettingsInnerConfig {
   google: boolean
+  googleDatasourceConfigured: boolean
   oidc: boolean
   oidcCallbackUrl: string
   googleCallbackUrl: string

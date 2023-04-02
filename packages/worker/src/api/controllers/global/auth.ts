@@ -50,11 +50,6 @@ async function passportCallback(
   setCookie(ctx, token, Cookie.Auth, { sign: false })
   // set the token in a header as well for APIs
   ctx.set(Header.TOKEN, token)
-  // get rid of any app cookies on login
-  // have to check test because this breaks cypress
-  if (!env.isTest()) {
-    clearCookie(ctx, Cookie.CurrentApp)
-  }
 }
 
 export const login = async (ctx: Ctx<LoginRequest>, next: any) => {

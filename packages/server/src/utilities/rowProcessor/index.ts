@@ -131,7 +131,7 @@ export function coerce(row: any, type: string) {
  * @returns {object} the row which has been prepared to be written to the DB.
  */
 export function inputProcessing(
-  user: ContextUser,
+  user: ContextUser | null,
   table: Table,
   row: Row,
   opts?: AutoColumnProcessingOpts

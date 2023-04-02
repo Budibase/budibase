@@ -6,10 +6,20 @@ import _ from "lodash"
 const DEFAULT_CONFIG = {
   platformUrl: "",
   logoUrl: undefined,
+  faviconUrl: undefined,
+  emailBrandingEnabled: true,
+  testimonialsEnabled: true,
+  platformTitle: "Budibase",
+  loginHeading: undefined,
+  loginButton: undefined,
+  metaDescription: undefined,
+  metaImageUrl: undefined,
+  metaTitle: undefined,
   docsUrl: undefined,
   company: "Budibase",
   oidc: undefined,
   google: undefined,
+  googleDatasourceConfigured: undefined,
   oidcCallbackUrl: "",
   googleCallbackUrl: "",
   isSSOEnforced: false,
@@ -30,6 +40,7 @@ export function createOrganisationStore() {
     const storeConfig = _.cloneDeep(get(store))
     delete storeConfig.oidc
     delete storeConfig.google
+    delete storeConfig.googleDatasourceConfigured
     delete storeConfig.oidcCallbackUrl
     delete storeConfig.googleCallbackUrl
     await API.saveConfig({

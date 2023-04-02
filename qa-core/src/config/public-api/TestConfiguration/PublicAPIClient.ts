@@ -11,18 +11,30 @@ interface ApiOptions {
 
 class PublicAPIClient {
   host: string
-  apiKey: string
+  apiKey?: string
+  tenantName?: string
   appId?: string
+  cookie?: string
 
   constructor(appId?: string) {
-    if (!env.BUDIBASE_PUBLIC_API_KEY || !env.BUDIBASE_SERVER_URL) {
+    if (!env.BUDIBASE_HOST) {
       throw new Error(
         "Must set BUDIBASE_PUBLIC_API_KEY and BUDIBASE_SERVER_URL env vars"
       )
     }
-    this.host = `${env.BUDIBASE_SERVER_URL}/api/public/v1`
-    this.apiKey = env.BUDIBASE_PUBLIC_API_KEY
+    this.host = `${env.BUDIBASE_HOST}/api/public/v1`
+
     this.appId = appId
+  }
+
+  setTenantName(tenantName: string) {
+    this.tenantName = tenantName
+  }
+
+  setApiKey(apiKey: string) {
+    this.apiKey = apiKey
+    process.env.BUDIBASE_PUBLIC_API_KEY = apiKey
+    this.host = `${env.BUDIBASE_HOST}/api/public/v1`
   }
 
   apiCall =
@@ -32,18 +44,27 @@ class PublicAPIClient {
         method,
         body: JSON.stringify(options.body),
         headers: {
-          "x-budibase-api-key": this.apiKey,
+          "x-budibase-api-key": this.apiKey || null,
           "x-budibase-app-id": this.appId,
           "Content-Type": "application/json",
           Accept: "application/json",
           ...options.headers,
+          cookie: this.cookie,
+          redirect: "follow",
+          follow: 20,
         },
       }
 
+      // prettier-ignore
       // @ts-ignore
-      const response = await fetch(`${this.host}${url}`, requestOptions)
-      if (response.status !== 200) {
-        console.error(response)
+      const response = await fetch(`https://${process.env.TENANT_ID}.${this.host}${url}`, requestOptions)
+
+      if (response.status == 500 || response.status == 403) {
+        console.error("Error in apiCall")
+        console.error("Response:", response)
+        const json = await response.json()
+        console.error("Response body:", json)
+        console.error("Request body:", requestOptions.body)
       }
       return response
     }

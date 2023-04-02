@@ -4,7 +4,6 @@ import "./bbui.css"
 import "@spectrum-css/icon/dist/index-vars.css"
 
 // Components
-export { default as Skeleton } from "./Skeleton/Skeleton.svelte"
 export { default as Input } from "./Form/Input.svelte"
 export { default as Stepper } from "./Form/Stepper.svelte"
 export { default as TextArea } from "./Form/TextArea.svelte"
@@ -67,6 +66,7 @@ export { default as ColorPicker } from "./ColorPicker/ColorPicker.svelte"
 export { default as IconPicker } from "./IconPicker/IconPicker.svelte"
 export { default as InlineAlert } from "./InlineAlert/InlineAlert.svelte"
 export { default as Banner } from "./Banner/Banner.svelte"
+export { default as CopyInput } from "./Input/CopyInput.svelte"
 export { default as BannerDisplay } from "./Banner/BannerDisplay.svelte"
 export { default as MarkdownEditor } from "./Markdown/MarkdownEditor.svelte"
 export { default as MarkdownViewer } from "./Markdown/MarkdownViewer.svelte"
@@ -77,6 +77,7 @@ export { default as IconSideNav } from "./IconSideNav/IconSideNav.svelte"
 export { default as IconSideNavItem } from "./IconSideNav/IconSideNavItem.svelte"
 export { default as Slider } from "./Form/Slider.svelte"
 export { default as Accordion } from "./Accordion/Accordion.svelte"
+export { default as File } from "./Form/File.svelte"
 
 // Renderers
 export { default as BoldRenderer } from "./Table/BoldRenderer.svelte"

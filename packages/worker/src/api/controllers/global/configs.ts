@@ -11,6 +11,7 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
+import { getLicensedConfig } from "../../../utilities/configs"
 import {
   Config,
   ConfigType,
@@ -211,6 +212,38 @@ export async function save(ctx: UserCtx<Config>) {
     ctx.throw(400, err)
   }
 
+  // Ignore branding changes if the license does not permit it
+  // Favicon and Logo Url are excluded.
+  try {
+    const brandingEnabled = await pro.features.isBrandingEnabled()
+    if (existingConfig?.config && !brandingEnabled) {
+      const {
+        emailBrandingEnabled,
+        testimonialsEnabled,
+        platformTitle,
+        metaDescription,
+        loginHeading,
+        loginButton,
+        metaImageUrl,
+        metaTitle,
+      } = existingConfig.config
+
+      body.config = {
+        ...body.config,
+        emailBrandingEnabled,
+        testimonialsEnabled,
+        platformTitle,
+        metaDescription,
+        loginHeading,
+        loginButton,
+        metaImageUrl,
+        metaTitle,
+      }
+    }
+  } catch (e) {
+    console.error("There was an issue retrieving the license", e)
+  }
+
   try {
     body._id = configs.generateConfigID(type)
     const response = await configs.save(body)
@@ -276,6 +309,9 @@ export async function publicSettings(
     // settings
     const configDoc = await configs.getSettingsConfigDoc()
     const config = configDoc.config
+
+    const branding = await pro.branding.getBrandingConfig(config)
+
     // enrich the logo url - empty url means deleted
     if (config.logoUrl && config.logoUrl !== "") {
       config.logoUrl = objectStore.getGlobalFileUrl(
@@ -285,8 +321,19 @@ export async function publicSettings(
       )
     }
 
+    if (branding.faviconUrl && branding.faviconUrl !== "") {
+      // @ts-ignore
+      config.faviconUrl = objectStore.getGlobalFileUrl(
+        "settings",
+        "faviconUrl",
+        branding.faviconUrl
+      )
+    }
+
     // google
     const googleConfig = await configs.getGoogleConfig()
+    const googleDatasourceConfigured =
+      !!(await configs.getGoogleDatasourceConfig())
     const preActivated = googleConfig && googleConfig.activated == null
     const google = preActivated || !!googleConfig?.activated
     const _googleCallbackUrl = await googleCallbackUrl(googleConfig)
@@ -305,7 +352,9 @@ export async function publicSettings(
       _rev: configDoc._rev,
       config: {
         ...config,
+        ...branding,
         google,
+        googleDatasourceConfigured,
         oidc,
         isSSOEnforced,
         oidcCallbackUrl: _oidcCallbackUrl,

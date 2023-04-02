@@ -6,6 +6,7 @@ labels: bug
 assignees: ''
 
 ---
+
 **Checklist**
 - [ ] I have searched budibase discussions and github issues to check if my issue already exists
 
