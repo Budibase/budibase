@@ -18,10 +18,9 @@
     "docker:down": "docker-compose down",
     "api:server:setup": "npm run docker:up && env-cmd ts-node ../packages/builder/ts/setup.ts",
     "api:server:setup:ci": "env-cmd node ../packages/builder/setup.js",
+    "api:test": "jest --runInBand --json --outputFile=testResults.json",
     "api:test:ci": "start-server-and-test api:server:setup:ci http://localhost:4100/builder test",
-    "api:test": "start-server-and-test api:server:setup http://localhost:4100/builder test",
-    "api:test:local": "env-cmd jest --runInBand --testPathIgnorePatterns=\\\"\\/dataSources\\/\\\"",
-    "api:test:nightly": "env-cmd jest --runInBand --json --outputFile=testResults.json"
+    "api:test:local": "start-server-and-test api:server:setup http://localhost:4100/builder test"
   },
   "jest": {
     "preset": "ts-jest",
