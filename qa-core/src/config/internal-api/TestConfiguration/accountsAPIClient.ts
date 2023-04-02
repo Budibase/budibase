@@ -16,7 +16,7 @@ class AccountsAPIClient {
 
   constructor(appId?: string) {
     if (!env.BUDIBASE_ACCOUNTS_URL) {
-      throw new Error("Must set BUDIBASE_SERVER_URL env var")
+      throw new Error("Must set BUDIBASE_ACCOUNTS_URL env var")
     }
     this.host = `${env.BUDIBASE_ACCOUNTS_URL}/api`
     this.appId = appId
