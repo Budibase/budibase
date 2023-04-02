@@ -245,6 +245,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   }
 
   async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+    // not fully configured yet
+    if (!this.config.auth) {
+      return
+    }
     await this.connect()
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, Table> = {}
