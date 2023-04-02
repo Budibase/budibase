@@ -7,12 +7,10 @@
     Divider,
     Label,
     Input,
-    Dropzone,
     notifications,
     Toggle,
   } from "@budibase/bbui"
   import { auth, organisation, admin } from "stores/portal"
-  import { API } from "api"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"
 
@@ -28,42 +26,19 @@
     company: $organisation.company,
     platformUrl: $organisation.platformUrl,
     analyticsEnabled: $organisation.analyticsEnabled,
-    logo: $organisation.logoUrl
-      ? { url: $organisation.logoUrl, type: "image", name: "Logo" }
-      : null,
   })
-  let loading = false
 
-  async function uploadLogo(file) {
-    try {
-      let data = new FormData()
-      data.append("file", file)
-      await API.uploadLogo(data)
-    } catch (error) {
-      notifications.error("Error uploading logo")
-    }
-  }
+  let loading = false
 
   async function saveConfig() {
     loading = true
 
     try {
-      // Upload logo if required
-      if ($values.logo && !$values.logo.url) {
-        await uploadLogo($values.logo)
-        await organisation.init()
-      }
-
       const config = {
         isSSOEnforced: $values.isSSOEnforced,
         company: $values.company ?? "",
         platformUrl: $values.platformUrl ?? "",
         analyticsEnabled: $values.analyticsEnabled,
-      }
-
-      // Remove logo if required
-      if (!$values.logo) {
-        config.logoUrl = ""
       }
 
       // Update settings
@@ -87,21 +62,7 @@
         <Label size="L">Org. name</Label>
         <Input thin bind:value={$values.company} />
       </div>
-      <div class="field logo">
-        <Label size="L">Logo</Label>
-        <div class="file">
-          <Dropzone
-            value={[$values.logo]}
-            on:change={e => {
-              if (!e.detail || e.detail.length === 0) {
-                $values.logo = null
-              } else {
-                $values.logo = e.detail[0]
-              }
-            }}
-          />
-        </div>
-      </div>
+
       {#if !$admin.cloud}
         <div class="field">
           <Label
@@ -136,11 +97,5 @@
     grid-template-columns: 120px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
-  }
-  .file {
-    max-width: 30ch;
-  }
-  .logo {
-    align-items: start;
   }
 </style>

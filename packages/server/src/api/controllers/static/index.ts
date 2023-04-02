@@ -11,10 +11,12 @@ import {
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
 import { DocumentType } from "../../../db/utils"
-import { context, objectStore, utils } from "@budibase/backend-core"
+import { context, objectStore, utils, configs } from "@budibase/backend-core"
 import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
+import * as pro from "@budibase/pro"
+
 const send = require("koa-send")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
@@ -98,33 +100,74 @@ export const deleteObjects = async function (ctx: any) {
 }
 
 export const serveApp = async function (ctx: any) {
-  const db = context.getAppDB({ skip_setup: true })
-  const appInfo = await db.get(DocumentType.APP_METADATA)
-  let appId = context.getAppId()
+  //Public Settings
+  const { config } = await configs.getSettingsConfigDoc()
+  const branding = await pro.branding.getBrandingConfig(config)
 
-  if (!env.isJest()) {
-    const App = require("./templates/BudibaseApp.svelte").default
-    const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
-    const { head, html, css } = App.render({
-      metaImage:
-        "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
-      title: appInfo.name,
-      production: env.isProd(),
-      appId,
-      clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
-      usedPlugins: plugins,
-    })
+  let db
+  try {
+    db = context.getAppDB({ skip_setup: true })
+    const appInfo = await db.get(DocumentType.APP_METADATA)
+    let appId = context.getAppId()
 
-    const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
-    ctx.body = await processString(appHbs, {
-      head,
-      body: html,
-      style: css.code,
-      appId,
-    })
-  } else {
-    // just return the app info for jest to assert on
-    ctx.body = appInfo
+    if (!env.isJest()) {
+      const App = require("./templates/BudibaseApp.svelte").default
+      const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
+      const { head, html, css } = App.render({
+        metaImage:
+          branding?.metaImageUrl ||
+          "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
+        metaDescription: branding?.metaDescription || "",
+        metaTitle:
+          branding?.metaTitle || `${appInfo.name} - built with Budibase`,
+        title: appInfo.name,
+        production: env.isProd(),
+        appId,
+        clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
+        usedPlugins: plugins,
+        favicon:
+          branding.faviconUrl !== ""
+            ? objectStore.getGlobalFileUrl("settings", "faviconUrl")
+            : "",
+        logo:
+          config?.logoUrl !== ""
+            ? objectStore.getGlobalFileUrl("settings", "logoUrl")
+            : "",
+      })
+      const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+      ctx.body = await processString(appHbs, {
+        head,
+        body: html,
+        style: css.code,
+        appId,
+      })
+    } else {
+      // just return the app info for jest to assert on
+      ctx.body = appInfo
+    }
+  } catch (error) {
+    if (!env.isJest()) {
+      const App = require("./templates/BudibaseApp.svelte").default
+      const { head, html, css } = App.render({
+        title: branding?.metaTitle,
+        metaTitle: branding?.metaTitle,
+        metaImage:
+          branding?.metaImageUrl ||
+          "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
+        metaDescription: branding?.metaDescription || "",
+        favicon:
+          branding.faviconUrl !== ""
+            ? objectStore.getGlobalFileUrl("settings", "faviconUrl")
+            : "",
+      })
+
+      const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+      ctx.body = await processString(appHbs, {
+        head,
+        body: html,
+        style: css.code,
+      })
+    }
   }
 }
 

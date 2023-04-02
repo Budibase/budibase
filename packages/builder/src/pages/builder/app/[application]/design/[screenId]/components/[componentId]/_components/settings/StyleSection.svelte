@@ -4,7 +4,6 @@
   import { store } from "builderStore"
 
   export let name
-  export let columns
   export let properties
   export let componentInstance
   export let bindings = []
@@ -34,27 +33,27 @@
 </script>
 
 <DetailSummary collapsible={false} name={`${name}${changed ? " *" : ""}`}>
-  <div class="group-content" style="grid-template-columns: {columns || '1fr'}">
+  <div class="styles">
     {#each properties as prop (`${componentInstance._id}-${prop.key}-${prop.label}`)}
-      <div style="grid-column: {prop.column || 'auto'}">
-        <PropertyControl
-          label={`${prop.label}${hasPropChanged(style, prop) ? " *" : ""}`}
-          control={prop.control}
-          key={prop.key}
-          value={style[prop.key]}
-          onChange={val => updateStyle(prop.key, val)}
-          props={getControlProps(prop)}
-          {bindings}
-        />
-      </div>
+      <PropertyControl
+        label={`${prop.label}${hasPropChanged(style, prop) ? " *" : ""}`}
+        control={prop.control}
+        key={prop.key}
+        value={style[prop.key]}
+        onChange={val => updateStyle(prop.key, val)}
+        props={getControlProps(prop)}
+        {bindings}
+      />
     {/each}
   </div>
 </DetailSummary>
 
 <style>
-  .group-content {
-    display: grid;
+  .styles {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-l);
+    gap: 8px;
   }
 </style>

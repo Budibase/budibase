@@ -3,6 +3,7 @@ import row from "./row"
 import table from "./table"
 import query from "./query"
 import user from "./user"
+import metrics from "./metrics"
 import misc from "./misc"
 
 export const examples = {
@@ -12,6 +13,7 @@ export const examples = {
   ...query.getExamples(),
   ...user.getExamples(),
   ...misc.getExamples(),
+  ...metrics.getExamples(),
 }
 
 export const schemas = {

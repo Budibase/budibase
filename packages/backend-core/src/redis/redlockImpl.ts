@@ -24,7 +24,7 @@ const getClient = async (type: LockType): Promise<Redlock> => {
   }
 }
 
-export const OPTIONS = {
+const OPTIONS = {
   TRY_ONCE: {
     // immediately throws an error if the lock is already held
     retryCount: 0,
@@ -56,14 +56,29 @@ export const OPTIONS = {
   },
 }
 
-export const newRedlock = async (opts: Options = {}) => {
+const newRedlock = async (opts: Options = {}) => {
   let options = { ...OPTIONS.DEFAULT, ...opts }
   const redisWrapper = await getLockClient()
   const client = redisWrapper.getClient()
   return new Redlock([client], options)
 }
 
-export const doWithLock = async (opts: LockOptions, task: any) => {
+type SuccessfulRedlockExecution<T> = {
+  executed: true
+  result: T
+}
+type UnsuccessfulRedlockExecution = {
+  executed: false
+}
+
+type RedlockExecution<T> =
+  | SuccessfulRedlockExecution<T>
+  | UnsuccessfulRedlockExecution
+
+export const doWithLock = async <T>(
+  opts: LockOptions,
+  task: () => Promise<T>
+): Promise<RedlockExecution<T>> => {
   const redlock = await getClient(opts.type)
   let lock
   try {
@@ -73,8 +88,8 @@ export const doWithLock = async (opts: LockOptions, task: any) => {
     let name: string = `lock:${prefix}_${opts.name}`
 
     // add additional unique name if required
-    if (opts.nameSuffix) {
-      name = name + `_${opts.nameSuffix}`
+    if (opts.resource) {
+      name = name + `_${opts.resource}`
     }
 
     // create the lock
@@ -83,7 +98,7 @@ export const doWithLock = async (opts: LockOptions, task: any) => {
     // perform locked task
     // need to await to ensure completion before unlocking
     const result = await task()
-    return result
+    return { executed: true, result }
   } catch (e: any) {
     console.warn("lock error")
     // lock limit exceeded
@@ -92,7 +107,7 @@ export const doWithLock = async (opts: LockOptions, task: any) => {
         // don't throw for try-once locks, they will always error
         // due to retry count (0) exceeded
         console.warn(e)
-        return
+        return { executed: false }
       } else {
         console.error(e)
         throw e

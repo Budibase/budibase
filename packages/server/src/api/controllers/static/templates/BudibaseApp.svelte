@@ -1,7 +1,10 @@
 <script>
   export let title = ""
   export let favicon = ""
+
   export let metaImage = ""
+  export let metaTitle = ""
+  export let metaDescription = ""
 
   export let clientLibPath
   export let usedPlugins
@@ -13,18 +16,33 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
+
+  <!-- Primary Meta Tags -->
+  <meta name="title" content={metaTitle} />
+  <meta name="description" content={metaDescription} />
+
   <!-- Opengraph Meta Tags -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:site" content="@budibase" />
-  <meta name="twitter:image" content={metaImage} />
-  <meta name="twitter:title" content="{title} - built with Budibase" />
   <meta property="og:site_name" content="Budibase" />
-  <meta property="og:title" content="{title} - built with Budibase" />
+  <meta property="og:title" content={metaTitle} />
+  <meta property="og:description" content={metaDescription} />
   <meta property="og:type" content="website" />
   <meta property="og:image" content={metaImage} />
 
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:site" content="@budibase" />
+  <meta property="twitter:image" content={metaImage} />
+  <meta property="twitter:image:alt" content={metaTitle} />
+  <meta property="twitter:title" content={metaTitle} />
+  <meta property="twitter:description" content={metaDescription} />
+
   <title>{title}</title>
-  <link rel="icon" type="image/png" href={favicon} />
+  {#if favicon !== ""}
+    <link rel="icon" type="image/png" href={favicon} />
+  {:else}
+    <link rel="icon" type="image/png" href="https://i.imgur.com/Xhdt1YP.png" />
+  {/if}
+
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
   <link rel="preconnect" href="https://fonts.gstatic.com" />
   <link
@@ -83,11 +101,16 @@
 
 <body id="app">
   <div id="error">
-    <h1>There was an error loading your app</h1>
-    <h2>
-      The Budibase client library could not be loaded. Try republishing your
-      app.
-    </h2>
+    {#if clientLibPath}
+      <h1>There was an error loading your app</h1>
+      <h2>
+        The Budibase client library could not be loaded. Try republishing your
+        app.
+      </h2>
+    {:else}
+      <h2>We couldn't find that application</h2>
+      <p />
+    {/if}
   </div>
   <script type="application/javascript">
     window.INIT_TIME = Date.now()

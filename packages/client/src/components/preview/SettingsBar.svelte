@@ -15,17 +15,22 @@
   let self
   let measured = false
 
+  $: id = $builderStore.selectedComponentId
+  $: instance = componentStore.actions.getComponentInstance(id)
+  $: state = $instance?.state
   $: definition = $componentStore.selectedComponentDefinition
   $: showBar =
-    definition?.showSettingsBar !== false && !$dndIsDragging && definition
+    definition?.showSettingsBar !== false &&
+    !$dndIsDragging &&
+    definition &&
+    !$state?.errorState
   $: {
     if (!showBar) {
       measured = false
     }
   }
   $: settings = getBarSettings(definition)
-  $: isScreen =
-    $builderStore.selectedComponentId === $builderStore.screen?.props?._id
+  $: isScreen = id === $builderStore.screen?.props?._id
 
   const getBarSettings = definition => {
     let allSettings = []

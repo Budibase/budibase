@@ -39,6 +39,10 @@ describe("Google Sheets Integration", () => {
     config.setGoogleAuth("test")
   })
 
+  afterAll(async () => {
+    await config.end()
+  })
+
   beforeEach(async () => {
     integration = new GoogleSheetsIntegration.integration({
       spreadsheetId: "randomId",
