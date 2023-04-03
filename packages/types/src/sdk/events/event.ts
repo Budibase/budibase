@@ -186,6 +186,22 @@ export enum Event {
   AUDIT_LOGS_DOWNLOADED = "audit_log:downloaded",
 }
 
+export const DocumentUpdateEvents: Event[] = [
+  Event.USER_CREATED,
+  Event.USER_UPDATED,
+  Event.USER_DELETED,
+  Event.USER_PERMISSION_ADMIN_ASSIGNED,
+  Event.USER_PERMISSION_ADMIN_REMOVED,
+  Event.USER_PERMISSION_BUILDER_ASSIGNED,
+  Event.USER_PERMISSION_BUILDER_REMOVED,
+  Event.USER_GROUP_CREATED,
+  Event.USER_GROUP_UPDATED,
+  Event.USER_GROUP_DELETED,
+  Event.USER_GROUP_USERS_ADDED,
+  Event.USER_GROUP_USERS_REMOVED,
+  Event.USER_GROUP_PERMISSIONS_EDITED,
+]
+
 // all events that are not audited have been added to this record as undefined, this means
 // that Typescript can protect us against new events being added and auditing of those
 // events not being considered. This might be a little ugly, but provides a level of
