@@ -475,14 +475,14 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.4.44-alpha.1.tgz#0c558082e54806ec6197a042b5b8333f7aa171ea"
-  integrity sha512-bm4WK74CcDnxJuZXtFhhyf7ZtfrUskdqZMgdqZPS9TSlvauVBnv9dcZh+ufrGlLRvR65WBYjWRg4LVQcivm8Fw==
+"@budibase/backend-core@2.4.44-alpha.2":
+  version "2.4.44-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.4.44-alpha.2.tgz#58bbbee8016e65c3fea5cc63bd8f52880fc77b6e"
+  integrity sha512-JWnrfZqcF4J3XJxGA0p6GpYjkFQcvniyanNbsg6MuWPL3PR8AmLrRZuKY8y0mLVHPgvDn2nazCeztE3eGMThsQ==
   dependencies:
     "@budibase/nano" "10.1.2"
     "@budibase/pouchdb-replication-stream" "1.2.10"
-    "@budibase/types" "2.4.44-alpha.1"
+    "@budibase/types" "2.4.44-alpha.2"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -564,14 +564,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.4.44-alpha.1.tgz#d0eec378bca0d4edf809319eda2c7b0967c3a5dd"
-  integrity sha512-d2kNUvDzKCORdDKlhwEH9naN1xc3GjJ1KCvPoYuMaYdJ8ruTLsFsDAc4ndPd05HmrBJhXpcMWev/hh80QYmcrw==
+"@budibase/pro@2.4.44-alpha.2":
+  version "2.4.44-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.4.44-alpha.2.tgz#771328d09d1c25e3594ae028acd2ffd74d781f38"
+  integrity sha512-Mf5oeYdfBKHZOVK7FMLiaNFU5hDpROTONOfvVWoH4eD0Qn1WrS+5EjIcCu5WGDF9D54o+DnD62f8fDWoQtxzTA==
   dependencies:
-    "@budibase/backend-core" "2.4.44-alpha.1"
-    "@budibase/string-templates" "2.3.20"
-    "@budibase/types" "2.4.44-alpha.1"
+    "@budibase/backend-core" "2.4.44-alpha.2"
+    "@budibase/shared-core" "2.4.44-alpha.1"
+    "@budibase/string-templates" "2.4.44-alpha.1"
+    "@budibase/types" "2.4.44-alpha.2"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -579,11 +580,20 @@
     lru-cache "^7.14.1"
     memorystream "^0.3.1"
     node-fetch "^2.6.1"
+    scim-patch "^0.7.0"
+    scim2-parse-filter "^0.2.8"
 
-"@budibase/string-templates@2.3.20":
-  version "2.3.20"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.3.20.tgz#35f74b6f515e8127cc375ee0a4679b0a7c117588"
-  integrity sha512-wMKau3IzVF6M+dRu99aKV1yMdrrK5lghVm9qYtR1B163SMbHEwC8JmZFGPLIi1XsG0T+vw+xfcemfJ2zcATWwg==
+"@budibase/shared-core@2.4.44-alpha.1":
+  version "2.4.44-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/shared-core/-/shared-core-2.4.44-alpha.1.tgz#3d499e40e7e6c646e13a87cd08e01ba116c2ff1d"
+  integrity sha512-cN8LaDczijtsfWUYiXC4sg9Z+US4020i3Mb8TwCbf8TQyA1b06U5PwPCp+GHVA/wDFqfwcpcE1GXf8GwVuYs7A==
+  dependencies:
+    "@budibase/types" "2.4.44-alpha.1"
+
+"@budibase/string-templates@2.4.44-alpha.1":
+  version "2.4.44-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.4.44-alpha.1.tgz#6c2aee594d16eac1f173c509e087a817dd3172f0"
+  integrity sha512-4gC2+0kccK0ilLnd0i/dmJzC0Ur7UgSAmV6zbzDDYNL4spU0qSy5VhBh7E3qKieg5RKMMzbpXLMWERpoPLlnqA==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
@@ -596,6 +606,11 @@
   version "2.4.44-alpha.1"
   resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.1.tgz#1679657aa180d9c59afa1dffa611bff0638bd933"
   integrity sha512-Sq+8HfM75EBMoOvKYFwELdlxmVN6wNZMofDjT/2G+9aF+Zfe5Tzw69C+unmdBgcGGjGCHEYWSz4mF0v8FPAGbg==
+
+"@budibase/types@2.4.44-alpha.2":
+  version "2.4.44-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.2.tgz#f82b7747feed5e62b2f56ea80390b418bbe044fd"
+  integrity sha512-UFvBEnr697glnINyyxLDN2oHHHTuSkwQHPdahLk1U9eVuIP9ueQtzHsGkar/uwcK76ROglRVW2LvO5hAAMluDg==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
@@ -3939,7 +3954,7 @@ extsprintf@^1.2.0:
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.4.1.tgz#8d172c064867f235c0c84a596806d279bf4bcc07"
   integrity sha512-Wrk35e8ydCKDj/ArClo1VrPVmN8zph5V4AtHwIuHhvMXsKf73UT3BOD+azBIW+3wOJ4FhEH7zyaJCFvChjYvMA==
 
-fast-deep-equal@^3.1.1:
+fast-deep-equal@3.1.3, fast-deep-equal@^3.1.1:
   version "3.1.3"
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz#3a7d56b559d6cbc3eb512325244e619a65c6c525"
   integrity sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==
@@ -8142,6 +8157,19 @@ sax@>=0.1.1, sax@>=0.6.0:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
+
+scim-patch@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/scim-patch/-/scim-patch-0.7.0.tgz#3f6d94256c07be415a74a49c0ff48dc91e4e0219"
+  integrity sha512-wXKcsZl+aLfE0yId7MjiOd91v8as6dEYLFvm1gGu3yJxSPhl1Fl3vWiNN4V3D68UKpqO/umK5rwWc8wGpBaOHw==
+  dependencies:
+    fast-deep-equal "3.1.3"
+    scim2-parse-filter "0.2.8"
+
+scim2-parse-filter@0.2.8, scim2-parse-filter@^0.2.8:
+  version "0.2.8"
+  resolved "https://registry.yarnpkg.com/scim2-parse-filter/-/scim2-parse-filter-0.2.8.tgz#12e836514b9a55ae51218dd6e7fbea91daccfa4d"
+  integrity sha512-1V+6FIMIiP+gDiFkC3dIw86KfoXhnQRXhfPaiQImeeFukpLtEkTtYq/Vmy1yDgHQcIHQxQQqOWyGLKX0FTvvaA==
 
 self-closing-tags@^1.0.1:
   version "1.0.1"
