@@ -58,6 +58,13 @@ function oidcValidation() {
   }).unknown(true)
 }
 
+function scimValidation() {
+  // prettier-ignore
+  return Joi.object({
+    enabled: Joi.boolean().required(),
+  }).unknown(true)
+}
+
 function buildConfigSaveValidation() {
   // prettier-ignore
   return auth.joiValidator.body(Joi.object({
@@ -74,7 +81,8 @@ function buildConfigSaveValidation() {
           { is: ConfigType.SETTINGS, then: settingValidation() },
           { is: ConfigType.ACCOUNT, then: Joi.object().unknown(true) },
           { is: ConfigType.GOOGLE, then: googleValidation() },
-          { is: ConfigType.OIDC, then: oidcValidation() }
+          { is: ConfigType.OIDC, then: oidcValidation() },
+          { is: ConfigType.SCIM, then: scimValidation() }
         ],
       }),
   }).required().unknown(true),
