@@ -9,3 +9,6 @@ node_modules
 
 **/prebuilds/
 **/build/
+
+packages/server/builder/*
+packages/server/client/*
