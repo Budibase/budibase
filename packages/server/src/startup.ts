@@ -64,6 +64,7 @@ export async function startup(app?: any, server?: any) {
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
   await redis.init()
+  sdk.applications.initUserGroupSync()
 
   // run migrations on startup if not done via http
   // not recommended in a clustered environment

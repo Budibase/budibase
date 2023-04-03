@@ -1,6 +1,20 @@
 import env from "../../../environment"
-import { db as dbCore, context } from "@budibase/backend-core"
+import {
+  db as dbCore,
+  context,
+  docUpdates,
+  constants,
+} from "@budibase/backend-core"
 import sdk from "../../"
+
+export function initUserGroupSync() {
+  const types = [constants.DocumentType.USER, constants.DocumentType.GROUP]
+  docUpdates.process(types, async update => {
+    console.log("syncing - ", JSON.stringify(update))
+    // TODO: make the sync smarter
+    await sdk.users.syncGlobalUsers()
+  })
+}
 
 export async function syncApp(
   appId: string,
