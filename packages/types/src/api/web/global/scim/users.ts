@@ -9,7 +9,6 @@ type Emails =
       type: "work"
       primary: boolean
     }[]
-  | undefined
 
 export interface ScimUserResponse extends ScimResource {
   schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
@@ -26,7 +25,7 @@ export interface ScimUserResponse extends ScimResource {
     givenName: string
   }
   active: BooleanString
-  emails: Emails
+  emails?: Emails
 }
 
 export interface ScimCreateUserRequest {
@@ -37,7 +36,7 @@ export interface ScimCreateUserRequest {
   externalId: string
   userName: string
   active: BooleanString
-  emails: Emails
+  emails?: Emails
   meta: {
     resourceType: "User"
   }
