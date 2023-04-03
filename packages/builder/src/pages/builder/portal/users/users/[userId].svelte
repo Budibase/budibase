@@ -19,7 +19,7 @@
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
-  import { users, auth, groups, apps, licensing } from "stores/portal"
+  import { users, auth, groups, apps, licensing, features } from "stores/portal"
   import { roles } from "stores/backend"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
@@ -31,18 +31,23 @@
   import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
+  import ScimBanner from "../_components/SCIMBanner.svelte"
 
   export let userId
 
-  const groupSchema = {
+  $: groupSchema = {
     name: {
       width: "1fr",
     },
-    _id: {
-      displayName: "",
-      width: "auto",
-      borderLeft: true,
-    },
+    ...(readonly
+      ? {}
+      : {
+          _id: {
+            displayName: "",
+            width: "auto",
+            borderLeft: true,
+          },
+        }),
   }
   const appSchema = {
     name: {
@@ -81,9 +86,10 @@
   let user
   let loaded = false
 
+  const scimEnabled = $features.isScimEnabled
+
   $: isSSO = !!user?.provider
-  $: readonly = !$auth.isAdmin
-  $: fullName = user?.firstName ? user?.firstName + " " + user?.lastName : ""
+  $: readonly = !$auth.isAdmin || scimEnabled
   $: privileged = user?.admin?.global || user?.builder?.global
   $: nameLabel = getNameLabel(user)
   $: initials = getInitials(nameLabel)
@@ -260,7 +266,12 @@
       {/if}
     </div>
     <Layout noPadding gap="S">
-      <Heading size="S">Details</Heading>
+      <div class="details-title">
+        <Heading size="S">Details</Heading>
+        {#if scimEnabled}
+          <ScimBanner />
+        {/if}
+      </div>
       <div class="fields">
         <div class="field">
           <Label size="L">Email</Label>
@@ -284,10 +295,11 @@
         </div>
         <!-- don't let a user remove the privileges that let them be here -->
         {#if userId !== $auth.user._id}
+          <!-- Disabled if it's not admin, enabled for SCIM integration   -->
           <div class="field">
             <Label size="L">Role</Label>
             <Select
-              disabled={readonly}
+              disabled={!$auth.isAdmin}
               value={globalRole}
               options={Constants.BudibaseRoleOptions}
               on:change={updateUserRole}
@@ -403,5 +415,10 @@
   .placeholder {
     width: 100%;
     text-align: center;
+  }
+  .details-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 </style>
