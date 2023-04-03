@@ -13,7 +13,9 @@
     try {
       await features.init()
     } catch (error) {
-      notifications.error("Error fetching feature configs")
+      notifications.error(
+        `Error fetching feature configs - ${error?.message || "unknown error"}`
+      )
     }
   })
 </script>

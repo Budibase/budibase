@@ -41,7 +41,9 @@
       scimEnabled = scimConfig?.config?.enabled
     } catch (error) {
       console.error(error)
-      notifications.error("Error fetching SCIM config")
+      notifications.error(
+        `Error fetching SCIM config - ${error?.message || "unknown error"}`
+      )
     }
   }
 
@@ -49,7 +51,9 @@
     try {
       apiKey = await auth.fetchAPIKey()
     } catch (err) {
-      notifications.error("Unable to fetch API key")
+      notifications.error(
+        `Unable to fetch API key - ${err?.message || "unknown error"}`
+      )
     }
   }
 
