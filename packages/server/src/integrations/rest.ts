@@ -151,6 +151,9 @@ class RestIntegration implements IntegrationBase {
           data = data[keys[0]]
         }
         raw = rawXml
+      } else if (contentType.includes("application/pdf")) {
+        data = await response.arrayBuffer() // Save PDF as ArrayBuffer
+        raw = Buffer.from(data)
       } else {
         data = await response.text()
         raw = data
