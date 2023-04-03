@@ -199,7 +199,6 @@ export async function platformLogout(opts: PlatformLogoutOpts) {
   } else {
     // clear cookies
     clearCookie(ctx, Cookie.Auth)
-    clearCookie(ctx, Cookie.CurrentApp)
   }
 
   const sessionIds = sessions.map(({ sessionId }) => sessionId)

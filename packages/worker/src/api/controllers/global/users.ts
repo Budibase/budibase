@@ -177,7 +177,7 @@ export const destroy = async (ctx: any) => {
     ctx.throw(400, "Unable to delete self.")
   }
 
-  await userSdk.destroy(id, ctx.user)
+  await userSdk.destroy(id)
 
   ctx.body = {
     message: `User ${id} deleted.`,
@@ -197,7 +197,7 @@ export const search = async (ctx: any) => {
   if (body.paginated === false) {
     await getAppUsers(ctx)
   } else {
-    const paginated = await userSdk.paginatedUsers(body)
+    const paginated = await userSdk.core.paginatedUsers(body)
     // user hashed password shouldn't ever be returned
     for (let user of paginated.data) {
       if (user) {

@@ -10,7 +10,7 @@ const GITHUB_ACTIONS_RUN_URL = process.env.GITHUB_ACTIONS_RUN_URL
 
 async function generateReport() {
   // read the report file
-  const REPORT_PATH = path.resolve(__dirname, "..", "testReport.json")
+  const REPORT_PATH = path.resolve(__dirname, "..", "testResults.json")
   const report = fs.readFileSync(REPORT_PATH, "utf-8")
   return JSON.parse(report)
 }

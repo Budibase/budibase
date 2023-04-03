@@ -35,6 +35,8 @@ const logger = require("koa-pino-logger")
 const { userAgent } = require("koa-useragent")
 
 import destroyable from "server-destroy"
+import { initPro } from "./initPro"
+import { handleScimBody } from "./middleware/handleScimBody"
 
 // configure events to use the pro audit log write
 // can't integrate directly into backend-core due to cyclic issues
@@ -54,7 +56,9 @@ const app: Application = new Koa()
 app.keys = ["secret", "key"]
 
 // set up top level koa middleware
+app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
+
 app.use(koaSession(app))
 app.use(middleware.logging)
 app.use(logger(logging.pinoSettings()))
@@ -108,6 +112,7 @@ const shutdown = () => {
 
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
+  await initPro()
   await redis.init()
 })
 

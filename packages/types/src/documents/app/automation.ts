@@ -83,6 +83,7 @@ export enum AutomationStatus {
   ERROR = "error",
   STOPPED = "stopped",
   STOPPED_ERROR = "stopped_error",
+  NO_ITERATIONS = "no_iterations",
 }
 
 export interface AutomationResults {

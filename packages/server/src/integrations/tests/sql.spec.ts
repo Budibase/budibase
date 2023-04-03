@@ -351,7 +351,7 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: [10, "%20%", "%25%", `%"John"%`, `%"Mary"%`],
+      bindings: [10, "%20%", "%25%", `%"john"%`, `%"mary"%`],
       sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER([${TABLE_NAME}].[age]) LIKE @p1 AND LOWER([${TABLE_NAME}].[age]) LIKE @p2) and (LOWER([${TABLE_NAME}].[name]) LIKE @p3 AND LOWER([${TABLE_NAME}].[name]) LIKE @p4)) as [${TABLE_NAME}]`,
     })
   })
@@ -402,7 +402,7 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: [10, "%20%", `%"John"%`],
+      bindings: [10, "%20%", `%"john"%`],
       sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where NOT (LOWER([${TABLE_NAME}].[age]) LIKE @p1) and NOT (LOWER([${TABLE_NAME}].[name]) LIKE @p2)) as [${TABLE_NAME}]`,
     })
   })
@@ -453,7 +453,7 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: [10, "%20%", "%25%", `%"John"%`, `%"Mary"%`],
+      bindings: [10, "%20%", "%25%", `%"john"%`, `%"mary"%`],
       sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER([${TABLE_NAME}].[age]) LIKE @p1 OR LOWER([${TABLE_NAME}].[age]) LIKE @p2) and (LOWER([${TABLE_NAME}].[name]) LIKE @p3 OR LOWER([${TABLE_NAME}].[name]) LIKE @p4)) as [${TABLE_NAME}]`,
     })
   })
@@ -531,7 +531,7 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: ["John%", limit],
+      bindings: ["john%", limit],
       sql: `select * from (select * from \`${tableName}\` where LOWER(\`${tableName}\`.\`name\`) LIKE ? limit ?) as \`${tableName}\``,
     })
   })
@@ -549,7 +549,7 @@ describe("SQL query builder", () => {
       })
     )
     expect(query).toEqual({
-      bindings: [limit, "John%"],
+      bindings: [limit, "john%"],
       sql: `select * from (select top (@p0) * from [${tableName}] where LOWER([${tableName}].[name]) LIKE @p1) as [${tableName}]`,
     })
   })
@@ -589,6 +589,51 @@ describe("SQL query builder", () => {
     expect(query).toEqual({
       bindings: ["2010-01-01 00:00:00", 500],
       sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"dob\" < $1 limit $2) as \"${TABLE_NAME}\"`,
+    })
+  })
+
+  it("should lowercase the values for Oracle LIKE statements", () => {
+    let query = new Sql(SqlClient.ORACLE, limit)._query(
+      generateReadJson({
+        filters: {
+          string: {
+            name: "John",
+          },
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: ["john%", limit],
+      sql: `select * from (select * from (select * from \"test\" where LOWER(\"test\".\"name\") LIKE :1) where rownum <= :2) \"test\"`,
+    })
+
+    query = new Sql(SqlClient.ORACLE, limit)._query(
+      generateReadJson({
+        filters: {
+          contains: {
+            age: [20, 25],
+            name: ["John", "Mary"],
+          },
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit],
+      sql: `select * from (select * from (select * from \"test\" where (LOWER(\"test\".\"age\") LIKE :1 AND LOWER(\"test\".\"age\") LIKE :2) and (LOWER(\"test\".\"name\") LIKE :3 AND LOWER(\"test\".\"name\") LIKE :4)) where rownum <= :5) \"test\"`,
+    })
+
+    query = new Sql(SqlClient.ORACLE, limit)._query(
+      generateReadJson({
+        filters: {
+          fuzzy: {
+            name: "Jo",
+          },
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: [`%jo%`, limit],
+      sql: `select * from (select * from (select * from \"test\" where LOWER(\"test\".\"name\") LIKE :1) where rownum <= :2) \"test\"`,
     })
   })
 })

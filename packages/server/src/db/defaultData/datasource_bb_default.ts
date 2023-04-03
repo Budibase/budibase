@@ -34,7 +34,7 @@ function syncLastIds(table: Table, rowCount: number) {
   })
 }
 
-function tableImport(table: Table, data: Row) {
+function tableImport(table: Table, data: Row[]) {
   const cloneTable = cloneDeep(table)
   const rowDocs = importToRows(data, cloneTable)
   syncLastIds(cloneTable, rowDocs.length)
