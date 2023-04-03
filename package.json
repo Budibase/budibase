@@ -86,5 +86,8 @@
     "postinstall": "husky install",
     "install:pro": "bash scripts/pro/install.sh",
     "dep:clean": "yarn clean && yarn bootstrap"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }
