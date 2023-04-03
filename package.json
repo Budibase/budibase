@@ -41,7 +41,7 @@
     "kill-builder": "kill-port 3000",
     "kill-server": "kill-port 4001 4002",
     "kill-all": "yarn run kill-builder && yarn run kill-server",
-    "dev": "yarn run kill-all && lerna link --stream && lerna run --parallel dev:builder --concurrency 1 --stream",
+    "dev": "yarn run kill-all && lerna link && lerna run --parallel dev:builder --concurrency 1 --stream",
     "dev:noserver": "yarn run kill-builder && lerna link && lerna run dev:stack:up && lerna run --parallel dev:builder --concurrency 1 --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
     "dev:server": "yarn run kill-server && lerna run --parallel dev:builder --concurrency 1 --scope @budibase/backend-core --scope @budibase/worker --scope @budibase/server",
     "test": "lerna run test --stream",
