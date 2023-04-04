@@ -48,8 +48,10 @@ async function initPro() {
 }
 
 function shutdown(server?: any) {
-  server.close()
-  server.destroy()
+  if (server) {
+    server.close()
+    server.destroy()
+  }
 }
 
 export async function startup(app?: any, server?: any) {
@@ -72,7 +74,7 @@ export async function startup(app?: any, server?: any) {
       await migrations.migrate()
     } catch (e) {
       logging.logAlert("Error performing migrations. Exiting.", e)
-      shutdown()
+      shutdown(server)
     }
   }
 
@@ -103,7 +105,7 @@ export async function startup(app?: any, server?: any) {
         )
       } catch (e) {
         logging.logAlert("Error creating initial admin user. Exiting.", e)
-        shutdown()
+        shutdown(server)
       }
     }
   }
