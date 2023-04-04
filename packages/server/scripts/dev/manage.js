@@ -46,6 +46,7 @@ async function init() {
       PLUGINS_DIR: "",
       TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR",
       HTTP_MIGRATIONS: "0",
+      HTTP_LOGGING: "0",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {
