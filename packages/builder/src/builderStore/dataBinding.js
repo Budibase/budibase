@@ -120,7 +120,7 @@ export const toBindingsArray = (valueMap, prefix, category) => {
     return []
   }
   return Object.keys(valueMap).reduce((acc, binding) => {
-    if (!binding || !valueMap[binding]) {
+    if (!binding) {
       return acc
     }
 
