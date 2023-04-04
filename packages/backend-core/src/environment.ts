@@ -40,9 +40,9 @@ function httpLogging() {
   if (process.env.HTTP_LOGGING === undefined) {
     // on by default unless otherwise specified
     return true
-  } else {
-    return process.env.HTTP_LOGGING
   }
+  
+  return process.env.HTTP_LOGGING
 }
 
 const environment = {
