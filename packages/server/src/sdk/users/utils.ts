@@ -1,12 +1,13 @@
 import { getGlobalUsers } from "../../utilities/global"
 import { context, roles as rolesCore } from "@budibase/backend-core"
 import {
+  getGlobalIDFromUserMetadataID,
   generateUserMetadataID,
   getUserMetadataParams,
   InternalTables,
 } from "../../db/utils"
 import { isEqual } from "lodash"
-import { ContextUser, UserMetadata } from "@budibase/types"
+import { ContextUser, UserMetadata, User } from "@budibase/types"
 
 export function combineMetadataAndUser(
   user: ContextUser,
@@ -37,6 +38,10 @@ export function combineMetadataAndUser(
   if (found) {
     newDoc._rev = found._rev
   }
+  // clear fields that shouldn't be in metadata
+  delete newDoc.password
+  delete newDoc.forceResetPassword
+  delete newDoc.roles
   if (found == null || !isEqual(newDoc, found)) {
     return {
       ...found,
@@ -60,15 +65,23 @@ export async function rawUserMetadata() {
 export async function syncGlobalUsers() {
   // sync user metadata
   const db = context.getAppDB()
-  const [users, metadata] = await Promise.all([
-    getGlobalUsers(),
-    rawUserMetadata(),
-  ])
+  const resp = await Promise.all([getGlobalUsers(), rawUserMetadata()])
+  const users = resp[0] as User[]
+  const metadata = resp[1] as UserMetadata[]
   const toWrite = []
   for (let user of users) {
     const combined = combineMetadataAndUser(user, metadata)
     if (combined) {
       toWrite.push(combined)
+    }
+  }
+  for (let data of metadata) {
+    if (!data._id) {
+      continue
+    }
+    const globalId = getGlobalIDFromUserMetadataID(data._id)
+    if (!users.find(user => user._id === globalId)) {
+      toWrite.push({ ...data, _deleted: true })
     }
   }
   await db.bulkDocs(toWrite)

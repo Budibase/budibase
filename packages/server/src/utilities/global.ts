@@ -94,16 +94,13 @@ export async function getGlobalUser(userId: string) {
   return processUser(user, { appId })
 }
 
-export async function getGlobalUsers(users?: ContextUser[]) {
+export async function getGlobalUsers(userIds?: string[]) {
   const appId = context.getAppId()
   const db = tenancy.getGlobalDB()
   const allGroups = await groups.fetch()
   let globalUsers
-  if (users) {
-    const globalIds = users.map(user =>
-      getGlobalIDFromUserMetadataID(user._id!)
-    )
-    globalUsers = (await db.allDocs(getMultiIDParams(globalIds))).rows.map(
+  if (userIds) {
+    globalUsers = (await db.allDocs(getMultiIDParams(userIds))).rows.map(
       row => row.doc
     )
   } else {
@@ -134,7 +131,7 @@ export async function getGlobalUsers(users?: ContextUser[]) {
 }
 
 export async function getGlobalUsersFromMetadata(users: ContextUser[]) {
-  const globalUsers = await getGlobalUsers(users)
+  const globalUsers = await getGlobalUsers(users.map(user => user._id!))
   return users.map(user => {
     const globalUser = globalUsers.find(
       globalUser => globalUser && user._id?.includes(globalUser._id)
