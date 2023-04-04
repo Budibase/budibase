@@ -475,14 +475,14 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.4.44-alpha.4":
-  version "2.4.44-alpha.4"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.4.44-alpha.4.tgz#cc72db65d1d7e522dceff8adb2cdcf1434ca7d6a"
-  integrity sha512-dD6543k4k/vQAnQOvZHG2ERhf3keSY1w/vMA2nwwyk2/DDKE0TjNgEk+0JEy+WG7yyjP8/TrXrjKJmWr3+mGCw==
+"@budibase/backend-core@2.4.44-alpha.5":
+  version "2.4.44-alpha.5"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.4.44-alpha.5.tgz#072082d5322a27b9cfaee75718ddcf464afaec13"
+  integrity sha512-TRiepsq3MlQ0ZqZoRJDmYUUTb31gURPvHs6CmfqR1wP0sh+yf+5PgmLQDLLXTHOZ7b461yp5KDVC9OjNsna3WQ==
   dependencies:
     "@budibase/nano" "10.1.2"
     "@budibase/pouchdb-replication-stream" "1.2.10"
-    "@budibase/types" "2.4.44-alpha.4"
+    "@budibase/types" "2.4.44-alpha.5"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -564,15 +564,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.4.44-alpha.4":
-  version "2.4.44-alpha.4"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.4.44-alpha.4.tgz#d869ce64af40dcabca6341e103ab92de78a77b0d"
-  integrity sha512-RcUlogGuC820zXK0G0LwEeSnrUEAb3F6bKvpANH3ZZnN1fsvnUlYCItEOPCaolPo8NJO1nD675+D80FKlMHMmA==
+"@budibase/pro@2.4.44-alpha.5":
+  version "2.4.44-alpha.5"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.4.44-alpha.5.tgz#c748dfc16f5b30226c4006ae42a07636e5499102"
+  integrity sha512-HTKFiglaRb3aii4XakLezyLteo4SAg2ZumH6o/FSaRPrcN4KlPjxVCSxhXVSxu3m6GMdbcGLlah7+lK6iHnyEA==
   dependencies:
-    "@budibase/backend-core" "2.4.44-alpha.4"
+    "@budibase/backend-core" "2.4.44-alpha.5"
     "@budibase/shared-core" "2.4.44-alpha.1"
     "@budibase/string-templates" "2.4.44-alpha.1"
-    "@budibase/types" "2.4.44-alpha.4"
+    "@budibase/types" "2.4.44-alpha.5"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -607,10 +607,10 @@
   resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.1.tgz#1679657aa180d9c59afa1dffa611bff0638bd933"
   integrity sha512-Sq+8HfM75EBMoOvKYFwELdlxmVN6wNZMofDjT/2G+9aF+Zfe5Tzw69C+unmdBgcGGjGCHEYWSz4mF0v8FPAGbg==
 
-"@budibase/types@2.4.44-alpha.4":
-  version "2.4.44-alpha.4"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.4.tgz#975407c6f14d98f844b69b2bf36d28dfb2570fd0"
-  integrity sha512-TuaFkd5EvqhZEIVVLGtZiOpJtW2ZtmWpz4ES6DTw/CctB0AtuLZ/Qlw7nv51TaktYQ2dEiguY6smJhJrO1iuEQ==
+"@budibase/types@2.4.44-alpha.5":
+  version "2.4.44-alpha.5"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.5.tgz#42c56241ab29ef81a048b93bc84644b69e41e63b"
+  integrity sha512-ACco4vREtv1un3aMH2sTKI8kD+/Hly2ee9AZw9YxFlsl78sOkvBPD25ki7oc8GH2pjLQ1Sjw7yG3SgW8MIsdbg==
   dependencies:
     scim-patch "^0.7.0"
 
@@ -5765,10 +5765,10 @@ join-component@^1.1.0:
   resolved "https://registry.yarnpkg.com/join-component/-/join-component-1.1.0.tgz#b8417b750661a392bee2c2537c68b2a9d4977cd5"
   integrity sha512-bF7vcQxbODoGK1imE2P9GS9aw4zD0Sd+Hni68IMZLj7zRnquH7dXUmMw9hDI5S/Jzt7q+IyTXN0rSg2GI0IKhQ==
 
-joycon@^2.2.5:
-  version "2.2.5"
-  resolved "https://registry.yarnpkg.com/joycon/-/joycon-2.2.5.tgz#8d4cf4cbb2544d7b7583c216fcdfec19f6be1615"
-  integrity sha512-YqvUxoOcVPnCp0VU1/56f+iKSdvIRJYPznH22BdXV3xMk75SFXhWeJkZ8C9XxUWt1b5x2X1SxuFygW1U0FmkEQ==
+joycon@^3.0.0:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/joycon/-/joycon-3.1.1.tgz#bce8596d6ae808f8b68168f5fc69280996894f03"
+  integrity sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==
 
 js-tokens@^4.0.0:
   version "4.0.0"
@@ -7265,10 +7265,10 @@ pino-http@^5.0.1:
     pino "^6.13.0"
     pino-std-serializers "^4.0.0"
 
-pino-pretty@4.8.0:
-  version "4.8.0"
-  resolved "https://registry.yarnpkg.com/pino-pretty/-/pino-pretty-4.8.0.tgz#f2f3055bf222456217b14ffb04d8be0a0cc17fce"
-  integrity sha512-mhQfHG4rw5ZFpWL44m0Utjo4GC2+HMfdNvxyA8lLw0sIqn6fCf7uQe6dPckUcW/obly+OQHD7B/MTso6LNizYw==
+pino-pretty@5.1.3:
+  version "5.1.3"
+  resolved "https://registry.yarnpkg.com/pino-pretty/-/pino-pretty-5.1.3.tgz#c4085093d1dffda359ab52731f87d96f7f832dc9"
+  integrity sha512-Zj+0TVdYKkAAIx9EUCL5e4TttwgsaFvJh2ceIMQeFCY8ak9tseEZQGSgpvyjEj1/iIVGIh5tdhkGEQWSMILKHA==
   dependencies:
     "@hapi/bourne" "^2.0.0"
     args "^5.0.1"
@@ -7276,7 +7276,7 @@ pino-pretty@4.8.0:
     dateformat "^4.5.1"
     fast-safe-stringify "^2.0.7"
     jmespath "^0.15.0"
-    joycon "^2.2.5"
+    joycon "^3.0.0"
     pump "^3.0.0"
     readable-stream "^3.6.0"
     rfdc "^1.3.0"
