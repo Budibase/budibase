@@ -41,7 +41,7 @@ function httpLogging() {
     // on by default unless otherwise specified
     return true
   }
-  
+
   return process.env.HTTP_LOGGING
 }
 
