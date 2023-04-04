@@ -2,7 +2,7 @@ import {
   structures,
   DBTestConfiguration,
   expectFunctionWasCalledTimesWith,
-  mocks
+  mocks,
 } from "../../../tests"
 import { Writethrough } from "../writethrough"
 import { getDB } from "../../db"
