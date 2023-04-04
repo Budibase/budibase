@@ -16,13 +16,10 @@ import * as bullboard from "./automations/bullboard"
 import * as pro from "@budibase/pro"
 import * as api from "./api"
 import sdk from "./sdk"
-const pino = require("koa-pino-logger")
 
 let STARTUP_RAN = false
 
 async function initRoutes(app: any) {
-  app.use(pino(logging.pinoSettings()))
-
   if (!env.isTest()) {
     const plugin = await bullboard.init()
     app.use(plugin)
