@@ -8,7 +8,7 @@ export async function errorHandling(ctx: any, next: any) {
     const status = err.status || err.statusCode || 500
     ctx.status = status
 
-    if (err.status >= 400 && err.status < 500) {
+    if (status >= 400 && status < 500) {
       console.warn(err)
     } else {
       console.error(err)
