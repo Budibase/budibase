@@ -53,12 +53,7 @@ export interface User extends Document {
   dayPassRecordedAt?: string
   userGroups?: string[]
   onboardedAt?: string
-  scimInfo?: {
-    isSync: boolean
-    userName: string
-    externalId: string
-    displayName?: string
-  }
+  scimInfo?: { isSync: true } & Record<string, any>
 }
 
 export enum UserStatus {

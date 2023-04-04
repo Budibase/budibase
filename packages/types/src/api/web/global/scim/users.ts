@@ -1,7 +1,14 @@
-import { ScimResource, ScimMeta, ScimPatchOperation } from "scim-patch"
+import { ScimResource, ScimMeta } from "scim-patch"
 import { ScimListResponse } from "./shared"
 
 type BooleanString = boolean | "True" | "true" | "False" | "false"
+
+type Emails =
+  | {
+      value: string
+      type: "work"
+      primary: boolean
+    }[]
 
 export interface ScimUserResponse extends ScimResource {
   schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
@@ -18,13 +25,7 @@ export interface ScimUserResponse extends ScimResource {
     givenName: string
   }
   active: BooleanString
-  emails: [
-    {
-      value: string
-      type: "work"
-      primary: true
-    }
-  ]
+  emails?: Emails
 }
 
 export interface ScimCreateUserRequest {
@@ -35,13 +36,7 @@ export interface ScimCreateUserRequest {
   externalId: string
   userName: string
   active: BooleanString
-  emails: [
-    {
-      primary: true
-      type: "work"
-      value: string
-    }
-  ]
+  emails?: Emails
   meta: {
     resourceType: "User"
   }
