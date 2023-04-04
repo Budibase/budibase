@@ -1,8 +1,6 @@
 import { BudibaseInternalAPI } from "../internal-api"
 import { AccountInternalAPI } from "../account-api"
 import { CreateAppRequest, State } from "../types"
-import { DEFAULT_TENANT_ID } from "@budibase/backend-core"
-
 import * as fixtures from "../internal-api/fixtures"
 
 export default class BudibaseTestConfiguration {
@@ -23,21 +21,14 @@ export default class BudibaseTestConfiguration {
   // LIFECYCLE
 
   async beforeAll() {
-    // const env = await this.internalApi.environment.getEnvironment()
-    //
-    // if (env.multiTenancy) {
-    //   const account = await this.createAccount()
-    //   this.state.tenantId = account.tenantId
-    //   await this.login(account.email, account.password)
-    //   BudibaseTestConfiguration.ACCOUNT_TENANT_ID = account.tenantId
-    // } else {
-    //   this.state.tenantId = DEFAULT_TENANT_ID
-    //   await this.loginAsAdmin()
-    // }
+    // @ts-ignore
+    this.state.tenantId = global.TENANT_ID
+    // @ts-ignore
+    this.state.cookie = global.AUTH_COOKIE
   }
 
   async afterAll() {
-    await this.internalApi.auth.logout()
+    // nothing yet
   }
 
   async createApp(overrides: Partial<CreateAppRequest> = {}) {

@@ -1,5 +1,6 @@
 import { GetEnvironmentResponse } from "@budibase/types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
+import { APIRequestOpts } from "../../../types"
 
 export default class EnvironmentAPI {
 
@@ -9,9 +10,11 @@ export default class EnvironmentAPI {
     this.client = client
   }
   
-  async getEnvironment(): Promise<GetEnvironmentResponse> {
+  async getEnvironment(opts: APIRequestOpts = { doExpect: true }): Promise<GetEnvironmentResponse> {
     const [response, json] = await this.client.get(`/system/environment`)
-    expect(response.status).toBe(200)
+    if (opts.doExpect) {
+      expect(response.status).toBe(200)
+    }
     return json
   }
 }

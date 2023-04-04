@@ -20,7 +20,7 @@ describe("Internal API - Application creation", () => {
   it("Get all Applications after creating an application", async () => {
     await config.api.apps.create({
       ...fixtures.apps.generateApp(),
-      useTemplate: false,
+      useTemplate: "false",
     })
 
     await config.api.apps.fetchAllApplications()
@@ -29,7 +29,7 @@ describe("Internal API - Application creation", () => {
   it("Get application details", async () => {
     const app = await config.createApp({
       ...fixtures.apps.generateApp(),
-      useTemplate: false,
+      useTemplate: "false",
     })
 
     const [appPackageResponse, appPackageJson] =

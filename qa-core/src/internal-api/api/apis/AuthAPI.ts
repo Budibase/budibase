@@ -1,6 +1,6 @@
 import { Response } from "node-fetch"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
-import { State } from "../../../types"
+import { APIRequestOpts, State } from "../../../types"
 
 export default class AuthAPI {
 
@@ -12,14 +12,16 @@ export default class AuthAPI {
     this.state = state
   }
 
-  async login(tenantId: string, email: String, password: String): Promise<[Response, string]> {
+  async login(tenantId: string, email: String, password: String, opts: APIRequestOpts = { doExpect: true }): Promise<[Response, string]> {
     const [response, json] = await this.client.post(`/global/auth/${tenantId}/login`, {
       body: {
         username: email,
         password: password,
       },
     })
-    expect(response).toHaveStatusCode(200)
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(200)
+    }
     const cookie = response.headers.get("set-cookie")
     return [response, cookie!]
   }

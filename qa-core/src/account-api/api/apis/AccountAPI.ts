@@ -1,6 +1,7 @@
 import { Response } from "node-fetch"
 import { Account, CreateAccountRequest } from "@budibase/types"
 import AccountInternalAPIClient from "../AccountInternalAPIClient"
+import { APIRequestOpts } from "../../../types"
 
 export default class AccountAPI {
 
@@ -10,28 +11,34 @@ export default class AccountAPI {
     this.client = client
   }
 
-  async validateEmail(email: string): Promise<Response> {
+  async validateEmail(email: string, opts: APIRequestOpts = { doExpect: true }): Promise<Response> {
     const [response, json] = await this.client.post(`/api/accounts/validate/email`, {
       body: { email },
     })
-    expect(response).toHaveStatusCode(200)
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(200)
+    }
     return response
   }
 
-  async validateTenantId(tenantId: string): Promise<Response> {
+  async validateTenantId(tenantId: string, opts: APIRequestOpts = { doExpect: true }): Promise<Response> {
     const [response, json] = await this.client.post(`/api/accounts/validate/tenantId`, {
       body: { tenantId },
     })
-    expect(response).toHaveStatusCode(200)
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(200)
+    }
     return response
   }
 
-  async create(body: CreateAccountRequest): Promise<[Response, Account]> {
+  async create(body: CreateAccountRequest, opts: APIRequestOpts = { doExpect: true }): Promise<[Response, Account]> {
     const headers = {
       "no-verify": "1",
     }
     const [response, json] = await this.client.post(`/api/accounts`, { body, headers })
-    expect(response).toHaveStatusCode(201)
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(201)
+    }
     return [response, json]
   }
 }

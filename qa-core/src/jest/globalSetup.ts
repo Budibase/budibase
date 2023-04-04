@@ -3,52 +3,60 @@ import * as fixtures from "../internal-api/fixtures"
 import { BudibaseInternalAPI } from "../internal-api"
 import { DEFAULT_TENANT_ID } from "@budibase/backend-core"
 import { CreateAccountRequest } from "@budibase/types"
+import env from "../environment"
+import { APIRequestOpts } from "../types"
 
 const accountsApi = new AccountInternalAPI({})
 const internalApi = new BudibaseInternalAPI({})
 
-let TENANT_ID: string
-let AUTH_COOKIE: string
+const API_OPTS: APIRequestOpts = { doExpect: false }
+
+// @ts-ignore
+global.qa = {}
 
 async function createAccount() {
-  const accountsApi = new AccountInternalAPI({})
   const account = fixtures.accounts.generateAccount()
-  await accountsApi.accounts.validateEmail(account.email)
-  await accountsApi.accounts.validateTenantId(account.tenantId)
-  await accountsApi.accounts.create(account)
+  await accountsApi.accounts.validateEmail(account.email, API_OPTS)
+  await accountsApi.accounts.validateTenantId(account.tenantId, API_OPTS)
+  await accountsApi.accounts.create(account, API_OPTS)
   return account
 }
 
 async function loginAsAdmin() {
-  const username = process.env.BB_ADMIN_USER_EMAIL!
-  const password = process.env.BB_ADMIN_USER_PASSWORD!
+  const username = env.BB_ADMIN_USER_EMAIL!
+  const password = env.BB_ADMIN_USER_PASSWORD!
   const tenantId = DEFAULT_TENANT_ID
-
-  const [res, cookie] = await internalApi.auth.login(DEFAULT_TENANT_ID, username, password)
-  AUTH_COOKIE = cookie
+  const [res, cookie] = await internalApi.auth.login(tenantId, username, password, API_OPTS)
+  // @ts-ignore
+  global.AUTH_COOKIE = cookie
 }
 
 async function loginAsAccount(account: CreateAccountRequest) {
-  const [res, cookie] = await internalApi.auth.login(account.tenantId, account.email, account.password)
-  AUTH_COOKIE = cookie
+  const [res, cookie] = await internalApi.auth.login(account.tenantId, account.email, account.password, API_OPTS)
+  // @ts-ignore
+  global.AUTH_COOKIE = cookie
 }
 
 async function setup() {
-  const env = await internalApi.environment.getEnvironment()
+  console.log("\nGLOBAL SETUP STARTING")
+  const env = await internalApi.environment.getEnvironment(API_OPTS)
+
+  console.log(`Environment: ${JSON.stringify(env)}`)
 
   if (env.multiTenancy) {
     const account = await createAccount()
-    TENANT_ID = account.tenantId
+    // @ts-ignore
+    global.TENANT_ID = account.tenantId
     await loginAsAccount(account)
   } else {
-    TENANT_ID = DEFAULT_TENANT_ID
-    await this.loginAsAdmin()
+    // @ts-ignore
+    global.TENANT_ID = DEFAULT_TENANT_ID
+    await loginAsAdmin()
   }
 
-
-
-  AUTH_COOKIE = cookie
+  // @ts-ignore
+  console.log(`Tenant: ${global.TENANT_ID}`)
+  console.log("GLOBAL SETUP COMPLETE")
 }
-
 
 export default setup
