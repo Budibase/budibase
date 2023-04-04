@@ -1,5 +1,4 @@
 import env from "../../environment"
-import * as apps from "../../utilities/appService"
 import * as eventHelpers from "./events"
 import {
   accounts,
@@ -29,7 +28,6 @@ import {
   PlatformUser,
   PlatformUserByEmail,
   RowResponse,
-  SearchUsersRequest,
   User,
   SaveUserOpts,
 } from "@budibase/types"
@@ -275,9 +273,6 @@ export const save = async (
     await platform.users.addUser(tenantId, builtUser._id!, builtUser.email)
     await cache.user.invalidateUser(response.id)
 
-    // let server know to sync user
-    await apps.syncUserInApps(_id, dbUser)
-
     await Promise.all(groupPromises)
 
     // finally returned the saved user from the db
@@ -424,7 +419,6 @@ export const bulkCreate = async (
     // instead of relying on looping tenant creation
     await platform.users.addUser(tenantId, user._id, user.email)
     await eventHelpers.handleSaveEvents(user, undefined)
-    await apps.syncUserInApps(user._id)
   }
 
   const saved = usersToBulkSave.map(user => {
@@ -563,8 +557,6 @@ export const destroy = async (id: string) => {
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "deletion" })
-  // let server know to sync user
-  await apps.syncUserInApps(userId, dbUser)
 }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
@@ -573,8 +565,6 @@ const bulkDeleteProcessing = async (dbUser: User) => {
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "bulk-deletion" })
-  // let server know to sync user
-  await apps.syncUserInApps(userId, dbUser)
 }
 
 export const invite = async (
