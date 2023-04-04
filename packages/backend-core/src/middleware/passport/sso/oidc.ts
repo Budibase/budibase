@@ -1,6 +1,7 @@
 import fetch from "node-fetch"
 import * as sso from "./sso"
 import { ssoCallbackUrl } from "../utils"
+import { validEmail } from "../../../utils"
 import {
   ConfigType,
   OIDCInnerConfig,
@@ -11,6 +12,7 @@ import {
   JwtClaims,
   SaveSSOUserFunction,
 } from "@budibase/types"
+
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 
 export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {
@@ -83,15 +85,6 @@ function getEmail(profile: SSOProfile, jwtClaims: JwtClaims) {
     `Could not determine user email from profile ${JSON.stringify(
       profile
     )} and claims ${JSON.stringify(jwtClaims)}`
-  )
-}
-
-function validEmail(value: string) {
-  return (
-    value &&
-    !!value.match(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    )
   )
 }
 
