@@ -156,7 +156,7 @@ class InternalBuilder {
         const rawFnc = `${fnc}Raw`
         // @ts-ignore
         query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
-          `%${value}%`,
+          `%${value.toLowerCase()}%`,
         ])
       }
     }
@@ -202,7 +202,7 @@ class InternalBuilder {
           let statement = ""
           for (let i in value) {
             if (typeof value[i] === "string") {
-              value[i] = `%"${value[i]}"%`
+              value[i] = `%"${value[i].toLowerCase()}"%`
             } else {
               value[i] = `%${value[i]}%`
             }
@@ -238,7 +238,7 @@ class InternalBuilder {
           const rawFnc = `${fnc}Raw`
           // @ts-ignore
           query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
-            `${value}%`,
+            `${value.toLowerCase()}%`,
           ])
         }
       })

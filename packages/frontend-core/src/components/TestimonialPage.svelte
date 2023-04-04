@@ -5,6 +5,8 @@
   import Covanta from "../../assets/covanta.png"
   import Schnellecke from "../../assets/schnellecke.png"
 
+  export let enabled = true
+
   const testimonials = [
     {
       text: "Budibase was the only solution that checked all the boxes for Covanta. Covanta expects to realize $3.2MM in savings due to the elimination of redundant data entry.",
@@ -33,23 +35,25 @@
 
 <SplitPage>
   <slot />
-  <div class="wrapper" slot="right">
-    <div class="testimonial">
-      <Layout noPadding gap="S">
-        <img
-          width={testimonial.imageSize}
-          alt="a-happy-budibase-user"
-          src={testimonial.image}
-        />
-        <div class="text">
-          "{testimonial.text}"
-        </div>
-        <div class="author">
-          <div class="name">{testimonial.name}</div>
-          <div class="company">{testimonial.role}</div>
-        </div>
-      </Layout>
-    </div>
+  <div class:wrapper={enabled} slot="right">
+    {#if enabled}
+      <div class="testimonial">
+        <Layout noPadding gap="S">
+          <img
+            width={testimonial.imageSize}
+            alt="a-happy-budibase-user"
+            src={testimonial.image}
+          />
+          <div class="text">
+            "{testimonial.text}"
+          </div>
+          <div class="author">
+            <div class="name">{testimonial.name}</div>
+            <div class="company">{testimonial.role}</div>
+          </div>
+        </Layout>
+      </div>
+    {/if}
   </div>
 </SplitPage>
 

@@ -1,5 +1,7 @@
 <script>
-  import { Input, Icon, notifications } from "@budibase/bbui"
+  import Input from "../Form/Input.svelte"
+  import Icon from "../Icon/Icon.svelte"
+  import { notifications } from "../Stores/notifications"
 
   export let label = null
   export let value

@@ -24,10 +24,6 @@ export const init = () => {
       }
     }
   }
-  const clientLibPath = join(budibaseTempDir(), "budibase-client.js")
-  if (env.isTest() && !fs.existsSync(clientLibPath)) {
-    fs.copyFileSync(require.resolve("@budibase/client"), clientLibPath)
-  }
 }
 
 /**

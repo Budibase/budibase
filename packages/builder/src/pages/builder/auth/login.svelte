@@ -30,7 +30,7 @@
   async function login() {
     form.validate()
     if (Object.keys(errors).length > 0) {
-      console.log("errors")
+      console.log("errors", errors)
       return
     }
     try {
@@ -64,99 +64,106 @@
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
-
-<TestimonialPage>
-  <Layout gap="L" noPadding>
-    <Layout justifyItems="center" noPadding>
-      {#if loaded}
-        <img alt="logo" src={$organisation.logoUrl || Logo} />
-      {/if}
-      <Heading size="M">Log in to Budibase</Heading>
-    </Layout>
-    <Layout gap="S" noPadding>
-      {#if loaded && ($organisation.google || $organisation.oidc)}
-        <FancyForm>
-          <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
-          <GoogleButton />
-        </FancyForm>
-      {/if}
+{#if loaded}
+  <TestimonialPage enabled={$organisation.testimonialsEnabled}>
+    <Layout gap="L" noPadding>
+      <Layout justifyItems="center" noPadding>
+        {#if loaded}
+          <img alt="logo" src={$organisation.logoUrl || Logo} />
+        {/if}
+        <Heading size="M">
+          {$organisation.loginHeading || "Log in to Budibase"}
+        </Heading>
+      </Layout>
+      <Layout gap="S" noPadding>
+        {#if loaded && ($organisation.google || $organisation.oidc)}
+          <FancyForm>
+            <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} samePage />
+            <GoogleButton samePage />
+          </FancyForm>
+        {/if}
+        {#if !$organisation.isSSOEnforced}
+          <Divider />
+          <FancyForm bind:this={form}>
+            <FancyInput
+              label="Your work email"
+              value={formData.username}
+              on:change={e => {
+                formData = {
+                  ...formData,
+                  username: e.detail,
+                }
+              }}
+              validate={() => {
+                let fieldError = {
+                  username: !formData.username
+                    ? "Please enter a valid email"
+                    : undefined,
+                }
+                errors = handleError({ ...errors, ...fieldError })
+              }}
+              error={errors.username}
+            />
+            <FancyInput
+              label="Password"
+              value={formData.password}
+              type="password"
+              on:change={e => {
+                formData = {
+                  ...formData,
+                  password: e.detail,
+                }
+              }}
+              validate={() => {
+                let fieldError = {
+                  password: !formData.password
+                    ? "Please enter your password"
+                    : undefined,
+                }
+                errors = handleError({ ...errors, ...fieldError })
+              }}
+              error={errors.password}
+            />
+          </FancyForm>
+        {/if}
+      </Layout>
       {#if !$organisation.isSSOEnforced}
-        <Divider />
-        <FancyForm bind:this={form}>
-          <FancyInput
-            label="Your work email"
-            value={formData.username}
-            on:change={e => {
-              formData = {
-                ...formData,
-                username: e.detail,
-              }
-            }}
-            validate={() => {
-              let fieldError = {
-                username: !formData.username
-                  ? "Please enter a valid email"
-                  : undefined,
-              }
-              errors = handleError({ ...errors, ...fieldError })
-            }}
-            error={errors.username}
-          />
-          <FancyInput
-            label="Password"
-            value={formData.password}
-            type="password"
-            on:change={e => {
-              formData = {
-                ...formData,
-                password: e.detail,
-              }
-            }}
-            validate={() => {
-              let fieldError = {
-                password: !formData.password
-                  ? "Please enter your password"
-                  : undefined,
-              }
-              errors = handleError({ ...errors, ...fieldError })
-            }}
-            error={errors.password}
-          />
-        </FancyForm>
+        <Layout gap="XS" noPadding justifyItems="center">
+          <Button
+            size="L"
+            cta
+            disabled={Object.keys(errors).length > 0}
+            on:click={login}
+          >
+            {$organisation.loginButton || `Log in to ${company}`}
+          </Button>
+        </Layout>
+        <Layout gap="XS" noPadding justifyItems="center">
+          <div class="user-actions">
+            <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
+              Forgot password?
+            </ActionButton>
+          </div>
+        </Layout>
+      {/if}
+
+      {#if cloud}
+        <Body size="xs" textAlign="center">
+          By using Budibase Cloud
+          <br />
+          you are agreeing to our
+          <Link
+            href="https://budibase.com/eula"
+            target="_blank"
+            secondary={true}
+          >
+            License Agreement
+          </Link>
+        </Body>
       {/if}
     </Layout>
-    {#if !$organisation.isSSOEnforced}
-      <Layout gap="XS" noPadding justifyItems="center">
-        <Button
-          size="L"
-          cta
-          disabled={Object.keys(errors).length > 0}
-          on:click={login}
-        >
-          Log in to {company}
-        </Button>
-      </Layout>
-      <Layout gap="XS" noPadding justifyItems="center">
-        <div class="user-actions">
-          <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
-            Forgot password?
-          </ActionButton>
-        </div>
-      </Layout>
-    {/if}
-
-    {#if cloud}
-      <Body size="xs" textAlign="center">
-        By using Budibase Cloud
-        <br />
-        you are agreeing to our
-        <Link href="https://budibase.com/eula" target="_blank" secondary={true}>
-          License Agreement
-        </Link>
-      </Body>
-    {/if}
-  </Layout>
-</TestimonialPage>
+  </TestimonialPage>
+{/if}
 
 <style>
   .user-actions {

@@ -5,9 +5,13 @@ import {
   generateAppUserID,
   queryGlobalView,
   UNICODE_MAX,
+  DocumentType,
+  SEPARATOR,
   directCouchFind,
+  getGlobalUserParams,
+  pagination,
 } from "./db"
-import { BulkDocsResponse, User } from "@budibase/types"
+import { BulkDocsResponse, SearchUsersRequest, User } from "@budibase/types"
 import { getGlobalDB } from "./context"
 import * as context from "./context"
 
@@ -43,6 +47,16 @@ export const bulkGetGlobalUsersById = async (
     users = removeUserPassword(users) as User[]
   }
   return users
+}
+
+export const getAllUserIds = async () => {
+  const db = getGlobalDB()
+  const startKey = `${DocumentType.USER}${SEPARATOR}`
+  const response = await db.allDocs({
+    startkey: startKey,
+    endkey: `${startKey}${UNICODE_MAX}`,
+  })
+  return response.rows.map(row => row.id)
 }
 
 export const bulkUpdateGlobalUsers = async (users: User[]) => {
@@ -186,4 +200,42 @@ export const searchGlobalUsersByEmail = async (
     users = removeUserPassword(users) as User[]
   }
   return users
+}
+
+const PAGE_LIMIT = 8
+export const paginatedUsers = async ({
+  page,
+  email,
+  appId,
+}: SearchUsersRequest = {}) => {
+  const db = getGlobalDB()
+  // get one extra document, to have the next page
+  const opts: any = {
+    include_docs: true,
+    limit: PAGE_LIMIT + 1,
+  }
+  // add a startkey if the page was specified (anchor)
+  if (page) {
+    opts.startkey = page
+  }
+  // property specifies what to use for the page/anchor
+  let userList: User[],
+    property = "_id",
+    getKey
+  if (appId) {
+    userList = await searchGlobalUsersByApp(appId, opts)
+    getKey = (doc: any) => getGlobalUserByAppPage(appId, doc)
+  } else if (email) {
+    userList = await searchGlobalUsersByEmail(email, opts)
+    property = "email"
+  } else {
+    // no search, query allDocs
+    const response = await db.allDocs(getGlobalUserParams(null, opts))
+    userList = response.rows.map((row: any) => row.doc)
+  }
+  return pagination(userList, PAGE_LIMIT, {
+    paginate: true,
+    property,
+    getKey,
+  })
 }

@@ -3,7 +3,6 @@ import {
   getInviteCodes,
   updateInviteCode,
 } from "../../../utilities/redis"
-// import sdk from "../../../sdk"
 import * as userSdk from "../../../sdk/users"
 import env from "../../../environment"
 import {
@@ -26,11 +25,11 @@ import {
 import {
   accounts,
   cache,
-  errors,
   events,
   migrations,
   tenancy,
   platform,
+  ErrorCode,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
@@ -178,7 +177,7 @@ export const destroy = async (ctx: any) => {
     ctx.throw(400, "Unable to delete self.")
   }
 
-  await userSdk.destroy(id, ctx.user)
+  await userSdk.destroy(id)
 
   ctx.body = {
     message: `User ${id} deleted.`,
@@ -198,7 +197,7 @@ export const search = async (ctx: any) => {
   if (body.paginated === false) {
     await getAppUsers(ctx)
   } else {
-    const paginated = await userSdk.paginatedUsers(body)
+    const paginated = await userSdk.core.paginatedUsers(body)
     // user hashed password shouldn't ever be returned
     for (let user of paginated.data) {
       if (user) {
@@ -421,7 +420,7 @@ export const inviteAccept = async (
       email: user.email,
     }
   } catch (err: any) {
-    if (err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
+    if (err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
       ctx.throw(400, err)
     }

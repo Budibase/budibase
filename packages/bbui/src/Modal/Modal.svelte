@@ -29,6 +29,14 @@
     visible = false
   }
 
+  export function toggle() {
+    if (visible) {
+      hide()
+    } else {
+      show()
+    }
+  }
+
   export function cancel() {
     if (!visible) {
       return
@@ -61,7 +69,7 @@
     }
   }
 
-  setContext(Context.Modal, { show, hide, cancel })
+  setContext(Context.Modal, { show, hide, toggle, cancel })
 
   onMount(() => {
     document.addEventListener("keydown", handleKey)

@@ -2,7 +2,6 @@ import * as userSdk from "../../../sdk/users"
 import {
   featureFlags,
   tenancy,
-  constants,
   db as dbCore,
   utils,
   encryption,
@@ -11,7 +10,7 @@ import {
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
 import { UpdateSelfRequest, UpdateSelfResponse, UserCtx } from "@budibase/types"
-const { getCookie, clearCookie, newid } = utils
+const { newid } = utils
 
 function newTestApiKey() {
   return env.ENCRYPTED_TEST_PUBLIC_API_KEY
@@ -71,16 +70,6 @@ export async function fetchAPIKey(ctx: any) {
   ctx.body = cleanupDevInfo(devInfo)
 }
 
-const checkCurrentApp = (ctx: any) => {
-  const appCookie = getCookie(ctx, constants.Cookie.CurrentApp)
-  if (appCookie && !tenancy.isUserInAppTenant(appCookie.appId)) {
-    // there is a currentapp cookie from another tenant
-    // remove the cookie as this is incompatible with the builder
-    // due to builder and admin permissions being removed
-    clearCookie(ctx, constants.Cookie.CurrentApp)
-  }
-}
-
 /**
  * Add the attributes that are session based to the current user.
  */
@@ -100,8 +89,6 @@ export async function getSelf(ctx: any) {
   ctx.params = {
     id: userId,
   }
-
-  checkCurrentApp(ctx)
 
   // get the main body of the user
   const user = await userSdk.getUser(userId)

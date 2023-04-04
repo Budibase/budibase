@@ -50,11 +50,6 @@ async function passportCallback(
   setCookie(ctx, token, Cookie.Auth, { sign: false })
   // set the token in a header as well for APIs
   ctx.set(Header.TOKEN, token)
-  // get rid of any app cookies on login
-  // have to check test because this breaks cypress
-  if (!env.isTest()) {
-    clearCookie(ctx, Cookie.CurrentApp)
-  }
 }
 
 export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
@@ -204,13 +199,16 @@ export const googleCallback = async (ctx: any, next: any) => {
 
   return passport.authenticate(
     strategy,
-    { successRedirect: "/", failureRedirect: "/error" },
+    {
+      successRedirect: env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT,
+      failureRedirect: env.PASSPORT_GOOGLEAUTH_FAILURE_REDIRECT,
+    },
     async (err: any, user: SSOUser, info: any) => {
       await passportCallback(ctx, user, err, info)
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("google-internal", user.email)
       })
-      ctx.redirect("/")
+      ctx.redirect(env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT)
     }
   )(ctx, next)
 }
@@ -269,13 +267,16 @@ export const oidcCallback = async (ctx: any, next: any) => {
 
   return passport.authenticate(
     strategy,
-    { successRedirect: "/", failureRedirect: "/error" },
+    {
+      successRedirect: env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT,
+      failureRedirect: env.PASSPORT_OIDCAUTH_FAILURE_REDIRECT,
+    },
     async (err: any, user: SSOUser, info: any) => {
       await passportCallback(ctx, user, err, info)
       await context.identity.doInUserContext(user, ctx, async () => {
         await events.auth.login("oidc", user.email)
       })
-      ctx.redirect("/")
+      ctx.redirect(env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT)
     }
   )(ctx, next)
 }
