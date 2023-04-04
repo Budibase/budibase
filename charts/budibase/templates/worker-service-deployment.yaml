@@ -65,7 +65,7 @@ spec:
         - name: API_ENCRYPTION_KEY
           value: {{ .Values.globals.apiEncryptionKey | quote }}
         - name: HTTP_LOGGING
-          value: {{ .Values.services.worker.httpLogging }}
+          value: {{ .Values.services.worker.httpLogging | quote }}
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
