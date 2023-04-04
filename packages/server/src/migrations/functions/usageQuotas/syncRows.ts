@@ -1,4 +1,4 @@
-import { tenancy, db as dbCore } from "@budibase/backend-core"
+import { db as dbCore } from "@budibase/backend-core"
 import { getUniqueRows } from "../../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
 import { StaticQuotaName, QuotaUsageType, App } from "@budibase/types"
@@ -18,8 +18,7 @@ export const run = async () => {
   })
 
   // sync row count
-  const tenantId = tenancy.getTenantId()
-  console.log(`[Tenant: ${tenantId}] Syncing row count: ${rowCount}`)
+  console.log(`Syncing row count: ${rowCount}`)
   await quotas.setUsagePerApp(
     counts,
     StaticQuotaName.ROWS,

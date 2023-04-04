@@ -2,10 +2,6 @@ if (process.env.DD_APM_ENABLED) {
   require("./ddApm")
 }
 
-if (process.env.ELASTIC_APM_ENABLED) {
-  require("./elasticApm")
-}
-
 // need to load environment first
 import env from "./environment"
 import { Scope } from "@sentry/node"
@@ -31,7 +27,6 @@ import api from "./api"
 import * as redis from "./utilities/redis"
 const Sentry = require("@sentry/node")
 const koaSession = require("koa-session")
-const logger = require("koa-pino-logger")
 const { userAgent } = require("koa-useragent")
 
 import destroyable from "server-destroy"
@@ -60,8 +55,8 @@ app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
 
 app.use(koaSession(app))
-app.use(middleware.logging)
-app.use(logger(logging.pinoSettings()))
+app.use(middleware.correlation)
+app.use(middleware.pino)
 app.use(userAgent)
 
 // authentication
