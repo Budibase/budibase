@@ -57,6 +57,7 @@ describe("/users", () => {
     it("should be able to update the user", async () => {
       const user = await config.createUser({ id: `us_update${utils.newid()}` })
       user.roleId = BUILTIN_ROLE_IDS.BASIC
+      delete user._rev
       const res = await request
         .put(`/api/users/metadata`)
         .set(config.defaultHeaders())
@@ -64,6 +65,46 @@ describe("/users", () => {
         .expect(200)
         .expect("Content-Type", /json/)
       expect(res.body.ok).toEqual(true)
+    })
+
+    it("should be able to update the user multiple times", async () => {
+      const user = await config.createUser()
+      delete user._rev
+
+      const res1 = await request
+        .put(`/api/users/metadata`)
+        .set(config.defaultHeaders())
+        .send({ ...user, roleId: BUILTIN_ROLE_IDS.BASIC })
+        .expect(200)
+        .expect("Content-Type", /json/)
+
+      const res = await request
+        .put(`/api/users/metadata`)
+        .set(config.defaultHeaders())
+        .send({ ...user, _rev: res1.body.rev, roleId: BUILTIN_ROLE_IDS.POWER })
+        .expect(200)
+        .expect("Content-Type", /json/)
+
+      expect(res.body.ok).toEqual(true)
+    })
+
+    it("should require the _rev field for multiple updates", async () => {
+      const user = await config.createUser()
+      delete user._rev
+
+      await request
+        .put(`/api/users/metadata`)
+        .set(config.defaultHeaders())
+        .send({ ...user, roleId: BUILTIN_ROLE_IDS.BASIC })
+        .expect(200)
+        .expect("Content-Type", /json/)
+
+      await request
+        .put(`/api/users/metadata`)
+        .set(config.defaultHeaders())
+        .send({ ...user, roleId: BUILTIN_ROLE_IDS.POWER })
+        .expect(409)
+        .expect("Content-Type", /json/)
     })
   })
 
