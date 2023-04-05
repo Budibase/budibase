@@ -25,6 +25,7 @@ import devRoutes from "./dev"
 import cloudRoutes from "./cloud"
 import migrationRoutes from "./migrations"
 import pluginRoutes from "./plugin"
+import opsRoutes from "./ops"
 import Router from "@koa/router"
 import { api as pro } from "@budibase/pro"
 
@@ -63,6 +64,7 @@ export const mainRoutes: Router[] = [
   rowRoutes,
   migrationRoutes,
   pluginRoutes,
+  opsRoutes,
   scheduleRoutes,
   environmentVariableRoutes,
   // these need to be handled last as they still use /api/:tableId
