@@ -2,7 +2,6 @@ import { BudibasePublicAPI } from "../api"
 import { BudibaseTestConfiguration } from "../../shared"
 
 export default class TestConfiguration<T> extends BudibaseTestConfiguration {
-
   // apis
   api: BudibasePublicAPI
 

@@ -3,7 +3,6 @@ import * as fixtures from "../../fixtures"
 import { Row } from "../../../types"
 
 describe("Public API - /rows endpoints", () => {
-
   const config = new TestConfiguration<Row>()
 
   beforeAll(async () => {
@@ -22,7 +21,9 @@ describe("Public API - /rows endpoints", () => {
   })
 
   it("POST - Create a row", async () => {
-    const [response, row] = await config.api.rows.create(fixtures.rows.generateRow())
+    const [response, row] = await config.api.rows.create(
+      fixtures.rows.generateRow()
+    )
     expect(response).toHaveStatusCode(200)
     expect(row._id).toBeDefined()
   })

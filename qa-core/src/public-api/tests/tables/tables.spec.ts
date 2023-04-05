@@ -3,7 +3,6 @@ import * as fixtures from "../../fixtures"
 import { Table } from "../../../types"
 
 describe("Public API - /tables endpoints", () => {
-
   const config = new TestConfiguration<Table>()
 
   beforeAll(async () => {
@@ -19,7 +18,9 @@ describe("Public API - /tables endpoints", () => {
   })
 
   it("POST - Create a table", async () => {
-    const [response, table] = await config.api.tables.create(fixtures.tables.generateTable())
+    const [response, table] = await config.api.tables.create(
+      fixtures.tables.generateTable()
+    )
     expect(response).toHaveStatusCode(200)
     expect(table._id).toBeDefined()
   })

@@ -3,7 +3,6 @@ import { generator } from "../../../shared"
 import * as fixtures from "../../fixtures"
 
 describe("Internal API - Table Operations", () => {
-  
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -33,9 +32,8 @@ describe("Internal API - Table Operations", () => {
     await config.api.tables.getAll(2)
 
     // Add new table
-    const [createdTableResponse, createdTableData] = await config.api.tables.save(
-      fixtures.tables.generateTable()
-    )
+    const [createdTableResponse, createdTableData] =
+      await config.api.tables.save(fixtures.tables.generateTable())
 
     //Table was added
     await config.api.tables.getAll(3)
@@ -44,7 +42,8 @@ describe("Internal API - Table Operations", () => {
     await config.api.tables.getTableById(createdTableData._id!)
 
     //Add Column to table
-    const newColumn = fixtures.tables.generateNewColumnForTable(createdTableData)
+    const newColumn =
+      fixtures.tables.generateNewColumnForTable(createdTableData)
     const [addColumnResponse, addColumnData] = await config.api.tables.save(
       newColumn,
       true
@@ -55,7 +54,9 @@ describe("Internal API - Table Operations", () => {
     await config.api.rows.add(addColumnData._id!, newRow)
 
     //Get Row from table
-    const [getRowResponse, getRowData] = await config.api.rows.getAll(addColumnData._id!)
+    const [getRowResponse, getRowData] = await config.api.rows.getAll(
+      addColumnData._id!
+    )
 
     //Delete Row from table
     const rowToDelete = {
@@ -85,9 +86,8 @@ describe("Internal API - Table Operations", () => {
     await config.api.tables.getAll(2)
 
     // Add new table
-    const [createdTableResponse, createdTableData] = await config.api.tables.save(
-      fixtures.tables.generateTable()
-    )
+    const [createdTableResponse, createdTableData] =
+      await config.api.tables.save(fixtures.tables.generateTable())
 
     //Table was added
     await config.api.tables.getAll(3)
@@ -96,7 +96,8 @@ describe("Internal API - Table Operations", () => {
     await config.api.tables.getTableById(createdTableData._id!)
 
     //Add Column to table
-    const newColumn = fixtures.tables.generateNewColumnForTable(createdTableData)
+    const newColumn =
+      fixtures.tables.generateNewColumnForTable(createdTableData)
     const [addColumnResponse, addColumnData] = await config.api.tables.save(
       newColumn,
       true

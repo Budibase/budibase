@@ -1,7 +1,7 @@
 export interface GetEnvironmentResponse {
-  multiTenancy: boolean,
-  cloud: boolean,
-  accountPortalUrl: string,
+  multiTenancy: boolean
+  cloud: boolean
+  accountPortalUrl: string
   baseUrl: string
   disableAccountPortal: boolean
   isDev: boolean

@@ -3,7 +3,6 @@ import { generator } from "../../../shared"
 import * as fixtures from "../../fixtures"
 
 describe("Internal API - Application creation, update, publish and delete", () => {
-  
   const config = new TestConfiguration()
 
   beforeAll(async () => {

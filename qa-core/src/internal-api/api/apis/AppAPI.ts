@@ -4,18 +4,17 @@ import {
   RouteConfig,
   AppPackageResponse,
   DeployConfig,
-  MessageResponse
+  MessageResponse,
 } from "../../../types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 
 export default class AppAPI {
-  
   client: BudibaseInternalAPIClient
-  
+
   constructor(client: BudibaseInternalAPIClient) {
     this.client = client
   }
-  
+
   //  TODO Fix the fetch apps to receive an optional number of apps and compare if the received app is more or less.
   //  each possible scenario should have its own method.
   async fetchEmptyAppList(): Promise<[Response, App[]]> {
@@ -41,14 +40,18 @@ export default class AppAPI {
   }
 
   async getAppPackage(appId: string): Promise<[Response, AppPackageResponse]> {
-    const [response, json] = await this.client.get(`/applications/${appId}/appPackage`)
+    const [response, json] = await this.client.get(
+      `/applications/${appId}/appPackage`
+    )
     expect(response).toHaveStatusCode(200)
     expect(json.application.appId).toEqual(appId)
     return [response, json]
   }
 
   async publish(appId: string | undefined): Promise<[Response, DeployConfig]> {
-    const [response, json] = await this.client.post(`/applications/${appId}/publish`)
+    const [response, json] = await this.client.post(
+      `/applications/${appId}/publish`
+    )
     expect(response).toHaveStatusCode(200)
     return [response, json]
   }
@@ -66,16 +69,15 @@ export default class AppAPI {
   }
 
   async sync(appId: string): Promise<[Response, MessageResponse]> {
-    const [response, json] = await this.client.post(`/applications/${appId}/sync`)
+    const [response, json] = await this.client.post(
+      `/applications/${appId}/sync`
+    )
     expect(response).toHaveStatusCode(200)
     return [response, json]
   }
 
   // TODO
-  async updateClient(
-    appId: string,
-    body: any
-  ): Promise<[Response, App]> {
+  async updateClient(appId: string, body: any): Promise<[Response, App]> {
     const [response, json] = await this.client.put(
       `/applications/${appId}/client/update`,
       { body }
@@ -113,7 +115,9 @@ export default class AppAPI {
     oldName: string,
     body: any
   ): Promise<[Response, App]> {
-    const [response, json] = await this.client.put(`/applications/${appId}`, { body })
+    const [response, json] = await this.client.put(`/applications/${appId}`, {
+      body,
+    })
     expect(response).toHaveStatusCode(200)
     expect(json.name).not.toEqual(oldName)
     return [response, json]
@@ -137,7 +141,9 @@ export default class AppAPI {
   }
 
   async unpublish(appId: string): Promise<[Response]> {
-    const [response, json] = await this.client.post(`/applications/${appId}/unpublish`)
+    const [response, json] = await this.client.post(
+      `/applications/${appId}/unpublish`
+    )
     expect(response).toHaveStatusCode(204)
     return [response]
   }
@@ -156,7 +162,9 @@ export default class AppAPI {
         color: "var(--spectrum-global-color-red-400)",
       },
     }
-    const [response, json] = await this.client.put(`/applications/${appId}`, { body })
+    const [response, json] = await this.client.put(`/applications/${appId}`, {
+      body,
+    })
     expect(response).toHaveStatusCode(200)
     expect(json.icon.name).toEqual(body.icon.name)
     expect(json.icon.color).toEqual(body.icon.color)

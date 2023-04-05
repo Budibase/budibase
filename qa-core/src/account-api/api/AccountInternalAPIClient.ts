@@ -11,7 +11,6 @@ interface ApiOptions {
 }
 
 export default class AccountInternalAPIClient {
-
   state: State
   host: string
 
@@ -69,4 +68,3 @@ export default class AccountInternalAPIClient {
   del = this.apiCall("DELETE")
   put = this.apiCall("PUT")
 }
-

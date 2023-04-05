@@ -3,7 +3,6 @@ import { User } from "@budibase/types"
 import * as fixtures from "./../../fixtures"
 
 describe("Internal API - User Management & Permissions", () => {
-  
   const config = new TestConfiguration()
 
   // Before each test, login as admin. Some tests will require login as a different user

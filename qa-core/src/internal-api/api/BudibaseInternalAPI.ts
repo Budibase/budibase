@@ -11,7 +11,6 @@ import BudibaseInternalAPIClient from "./BudibaseInternalAPIClient"
 import { State } from "../../types"
 
 export default class BudibaseInternalAPI {
-
   client: BudibaseInternalAPIClient
 
   apps: AppAPI
@@ -23,19 +22,18 @@ export default class BudibaseInternalAPI {
   self: SelfAPI
   tables: TableAPI
   users: UserAPI
-  
+
   constructor(state: State) {
     this.client = new BudibaseInternalAPIClient(state)
 
     this.apps = new AppAPI(this.client)
-    this.auth =  new AuthAPI(this.client, state)
+    this.auth = new AuthAPI(this.client, state)
     this.environment = new EnvironmentAPI(this.client)
-    this.roles =  new RoleAPI(this.client)
+    this.roles = new RoleAPI(this.client)
     this.rows = new RowAPI(this.client)
     this.screens = new ScreenAPI(this.client)
     this.self = new SelfAPI(this.client)
     this.tables = new TableAPI(this.client)
-    this.users =  new UserAPI(this.client)
+    this.users = new UserAPI(this.client)
   }
-
 }

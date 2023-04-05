@@ -4,7 +4,6 @@ import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import { MessageResponse } from "../../../types"
 
 export default class UserAPI {
-
   client: BudibaseInternalAPIClient
 
   constructor(client: BudibaseInternalAPIClient) {
@@ -39,7 +38,9 @@ export default class UserAPI {
         groups: [],
       },
     }
-    const [response, json] = await this.client.post(`/global/users/bulk`, { body })
+    const [response, json] = await this.client.post(`/global/users/bulk`, {
+      body,
+    })
     expect(response).toHaveStatusCode(200)
     expect(json.created.unsuccessful.length).toEqual(0)
     expect(json.created.successful.length).toEqual(body.create.users.length)
@@ -52,7 +53,9 @@ export default class UserAPI {
         userIds: [userId],
       },
     }
-    const [response, json] = await this.client.post(`/global/users/bulk`, { body })
+    const [response, json] = await this.client.post(`/global/users/bulk`, {
+      body,
+    })
     expect(response).toHaveStatusCode(200)
     expect(json.deleted.successful.length).toEqual(1)
     expect(json.deleted.unsuccessful.length).toEqual(0)
@@ -67,7 +70,10 @@ export default class UserAPI {
   }
 
   async invite(body: any): Promise<[Response, MessageResponse]> {
-    const [response, json] = await this.client.post(`/global/users/multi/invite`, { body })
+    const [response, json] = await this.client.post(
+      `/global/users/multi/invite`,
+      { body }
+    )
     expect(response).toHaveStatusCode(200)
     expect(json.unsuccessful.length).toEqual(0)
     expect(json.successful.length).toEqual(body.length)

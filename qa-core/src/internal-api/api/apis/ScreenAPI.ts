@@ -3,7 +3,6 @@ import { Response } from "node-fetch"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 
 export default class ScreenAPI {
-
   client: BudibaseInternalAPIClient
 
   constructor(client: BudibaseInternalAPIClient) {
@@ -19,7 +18,9 @@ export default class ScreenAPI {
   }
 
   async delete(screenId: string, rev: string): Promise<[Response, Screen]> {
-    const [response, json] = await this.client.del(`/screens/${screenId}/${rev}`)
+    const [response, json] = await this.client.del(
+      `/screens/${screenId}/${rev}`
+    )
     expect(response).toHaveStatusCode(200)
     return [response, json]
   }

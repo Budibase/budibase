@@ -1,8 +1,5 @@
 import { generator } from "../../shared"
-import {
-  Application,
-  CreateApplicationParams,
-} from "../../types"
+import { Application, CreateApplicationParams } from "../../types"
 
 export const generateApp = (
   overrides: Partial<Application> = {}
@@ -11,4 +8,3 @@ export const generateApp = (
   url: `/${generator.word()}`,
   ...overrides,
 })
-

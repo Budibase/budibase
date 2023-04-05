@@ -4,7 +4,6 @@ import { db } from "@budibase/backend-core"
 import * as fixtures from "./../../fixtures"
 
 describe.skip("Internal API - App Specific Roles & Permissions", () => {
-
   const config = new TestConfiguration()
   let app: Partial<App>
 
@@ -23,9 +22,8 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      appUser
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(appUser)
 
     //Create level 1 role
     const role = {
@@ -33,9 +31,8 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       permissionId: "public",
       name: "level 1",
     }
-    const [createRoleResponse, createRoleJson] = await config.api.users.createRole(
-      role
-    )
+    const [createRoleResponse, createRoleJson] =
+      await config.api.users.createRole(role)
 
     // Update user roles
     const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
@@ -68,7 +65,11 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     expect(firstappPackageJson.screens.length).toEqual(3)
 
     // login with level 1 user
-    await config.login(config.state.tenantId!, appUser[0].email!, appUser[0].password!)
+    await config.login(
+      config.state.tenantId!,
+      appUser[0].email!,
+      appUser[0].password!
+    )
     const [selfInfoResponse, selfInfoJson] = await config.api.users.getSelf()
 
     // fetch app package
@@ -83,9 +84,8 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      appUser
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(appUser)
 
     // Create App
 
@@ -95,9 +95,8 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       permissionId: "read_only",
       name: "level 2",
     }
-    const [createRoleResponse, createRoleJson] = await config.api.users.createRole(
-      role
-    )
+    const [createRoleResponse, createRoleJson] =
+      await config.api.users.createRole(role)
 
     // Update user roles
     const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
@@ -143,9 +142,8 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      appUser
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(appUser)
 
     // Create App
 
@@ -155,9 +153,8 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       permissionId: "write",
       name: "level 3",
     }
-    const [createRoleResponse, createRoleJson] = await config.api.users.createRole(
-      role
-    )
+    const [createRoleResponse, createRoleJson] =
+      await config.api.users.createRole(role)
 
     // Update user roles
     const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
@@ -203,9 +200,8 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      appUser
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(appUser)
 
     // Create App
 
@@ -215,9 +211,8 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       permissionId: "power",
       name: "level 4",
     }
-    const [createRoleResponse, createRoleJson] = await config.api.users.createRole(
-      role
-    )
+    const [createRoleResponse, createRoleJson] =
+      await config.api.users.createRole(role)
 
     // Update user roles
     const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
@@ -263,9 +258,8 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      appUser
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(appUser)
 
     // Create App
 
@@ -275,9 +269,8 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       permissionId: "admin",
       name: "level 5",
     }
-    const [createRoleResponse, createRoleJson] = await config.api.users.createRole(
-      role
-    )
+    const [createRoleResponse, createRoleJson] =
+      await config.api.users.createRole(role)
 
     // Update user roles
     const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(

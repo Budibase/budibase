@@ -8,13 +8,12 @@ import BudibasePublicAPIClient from "../BudibasePublicAPIClient"
 import * as fixtures from "../../fixtures"
 
 export default class UserAPI {
-
   client: BudibasePublicAPIClient
 
   constructor(client: BudibasePublicAPIClient) {
     this.client = client
   }
-  
+
   async seed() {
     return this.create(fixtures.users.generateUser())
   }

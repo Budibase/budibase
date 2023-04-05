@@ -11,7 +11,6 @@ interface ApiOptions {
 }
 
 class BudibaseInternalAPIClient {
-
   host: string
   state: State
 

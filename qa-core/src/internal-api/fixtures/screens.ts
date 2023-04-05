@@ -30,4 +30,3 @@ export const generateScreen = (roleId: string): any => ({
     homeScreen: false,
   },
 })
-

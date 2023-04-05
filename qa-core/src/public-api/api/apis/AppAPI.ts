@@ -4,17 +4,16 @@ import * as fixtures from "../../fixtures"
 import {
   Application,
   SearchInputParams,
-  CreateApplicationParams
+  CreateApplicationParams,
 } from "../../../types"
 
 export default class AppAPI {
-
   client: BudibasePublicAPIClient
 
   constructor(client: BudibasePublicAPIClient) {
     this.client = client
   }
-  
+
   async seed(): Promise<[Response, Application]> {
     return this.create(fixtures.apps.generateApp())
   }
@@ -32,7 +31,9 @@ export default class AppAPI {
   }
 
   async search(body: SearchInputParams): Promise<[Response, [Application]]> {
-    const [response, json] = await this.client.post(`/applications/search`, { body })
+    const [response, json] = await this.client.post(`/applications/search`, {
+      body,
+    })
     return [response, json.data]
   }
 
@@ -40,7 +41,9 @@ export default class AppAPI {
     id: string,
     body: Application
   ): Promise<[Response, Application]> {
-    const [response, json] = await this.client.put(`/applications/${id}`, { body })
+    const [response, json] = await this.client.put(`/applications/${id}`, {
+      body,
+    })
     return [response, json.data]
   }
 
@@ -50,13 +53,16 @@ export default class AppAPI {
   }
 
   async publish(id: string): Promise<[Response, any]> {
-    const [response, json] = await this.client.post(`/applications/${id}/publish`)
+    const [response, json] = await this.client.post(
+      `/applications/${id}/publish`
+    )
     return [response, json.data]
   }
 
   async unpublish(id: string): Promise<[Response]> {
-    const [response, json] = await this.client.post(`/applications/${id}/unpublish`)
+    const [response, json] = await this.client.post(
+      `/applications/${id}/unpublish`
+    )
     return [response]
   }
-
 }

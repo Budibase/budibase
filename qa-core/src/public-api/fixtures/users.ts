@@ -4,7 +4,9 @@ import {
 } from "@budibase/server/api/controllers/public/mapping/types"
 import { generator } from "../../shared"
 
-export const generateUser = (overrides: Partial<User> = {}): CreateUserParams => ({
+export const generateUser = (
+  overrides: Partial<User> = {}
+): CreateUserParams => ({
   email: generator.email(),
   roles: {
     [generator.string({ length: 32, alpha: true, numeric: true })]:
@@ -21,4 +23,3 @@ export const generateUser = (overrides: Partial<User> = {}): CreateUserParams =>
   },
   ...overrides,
 })
-

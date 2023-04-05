@@ -3,7 +3,6 @@ import { db } from "@budibase/backend-core"
 import * as fixtures from "../../fixtures"
 
 describe("Internal API - Application creation, update, publish and delete", () => {
-  
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -35,9 +34,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
   it("Sync application before deployment", async () => {
     const app = await config.createApp()
 
-    const [syncResponse, sync] = await config.api.apps.sync(
-      app.appId!
-    )
+    const [syncResponse, sync] = await config.api.apps.sync(app.appId!)
     expect(sync).toEqual({
       message: "App sync not required, app not deployed.",
     })
@@ -49,9 +46,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     // publish app
     await config.api.apps.publish(app._id)
 
-    const [syncResponse, sync] = await config.api.apps.sync(
-      app.appId!
-    )
+    const [syncResponse, sync] = await config.api.apps.sync(app.appId!)
     expect(sync).toEqual({
       message: "App sync completed successfully.",
     })

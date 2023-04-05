@@ -7,7 +7,6 @@ import BudibasePublicAPIClient from "./BudibasePublicAPIClient"
 import { State } from "../../types"
 
 export default class BudibasePublicAPI {
-
   client: BudibasePublicAPIClient
   apps: AppAPI
   users: UserAPI

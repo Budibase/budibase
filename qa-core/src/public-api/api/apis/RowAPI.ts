@@ -9,7 +9,6 @@ import * as fixtures from "../../fixtures"
 import { State } from "../../../types"
 
 export default class RowAPI {
-  
   client: BudibasePublicAPIClient
 
   headers?: HeadersInit
@@ -26,14 +25,19 @@ export default class RowAPI {
   }
 
   async create(body: CreateRowParams): Promise<[Response, Row]> {
-    const [response, json] = await this.client.post(`/tables/${this.state.tableId}/rows`, {
-      body,
-    })
+    const [response, json] = await this.client.post(
+      `/tables/${this.state.tableId}/rows`,
+      {
+        body,
+      }
+    )
     return [response, json.data]
   }
 
   async read(id: string): Promise<[Response, Row]> {
-    const [response, json] = await this.client.get(`/tables/${this.state.tableId}/rows/${id}`)
+    const [response, json] = await this.client.get(
+      `/tables/${this.state.tableId}/rows/${id}`
+    )
     return [response, json.data]
   }
 
@@ -46,9 +50,12 @@ export default class RowAPI {
   }
 
   async update(id: string, body: Row): Promise<[Response, Row]> {
-    const [response, json] = await this.client.put(`/tables/${this.state.tableId}/rows/${id}`, {
-      body,
-    })
+    const [response, json] = await this.client.put(
+      `/tables/${this.state.tableId}/rows/${id}`,
+      {
+        body,
+      }
+    )
     return [response, json.data]
   }
 }

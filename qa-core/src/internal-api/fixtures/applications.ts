@@ -10,7 +10,7 @@ export const generateApp = (
 })
 
 // Applications type doesn't work here, save to add useTemplate parameter?
-export const appFromTemplate = (): CreateAppRequest=> {
+export const appFromTemplate = (): CreateAppRequest => {
   return {
     name: generator.word(),
     url: `/${generator.word()}`,

@@ -2,7 +2,6 @@ import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
 
 describe("Internal API - Data Sources", () => {
-
   const config = new TestConfiguration()
 
   beforeAll(async () => {

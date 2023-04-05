@@ -30,14 +30,24 @@ async function loginAsAdmin() {
   const username = env.BB_ADMIN_USER_EMAIL!
   const password = env.BB_ADMIN_USER_PASSWORD!
   const tenantId = DEFAULT_TENANT_ID
-  const [res, cookie] = await internalApi.auth.login(tenantId, username, password, API_OPTS)
+  const [res, cookie] = await internalApi.auth.login(
+    tenantId,
+    username,
+    password,
+    API_OPTS
+  )
 
   // @ts-ignore
   global.qa.authCookie = cookie
 }
 
 async function loginAsAccount(account: CreateAccountRequest) {
-  const [res, cookie] = await internalApi.auth.login(account.tenantId, account.email, account.password, API_OPTS)
+  const [res, cookie] = await internalApi.auth.login(
+    account.tenantId,
+    account.email,
+    account.password,
+    API_OPTS
+  )
 
   // @ts-ignore
   global.qa.authCookie = cookie

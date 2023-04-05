@@ -3,7 +3,6 @@ import { User } from "@budibase/types"
 import * as fixtures from "./../../fixtures"
 
 describe.skip("Internal API - Role table access", () => {
-  
   const config = new TestConfiguration()
 
   // Before each test, login as admin. Some tests will require login as a different user
@@ -19,9 +18,8 @@ describe.skip("Internal API - Role table access", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      appUser
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(appUser)
 
     const app = await config.createApp()
 
@@ -41,13 +39,13 @@ describe.skip("Internal API - Role table access", () => {
     expect(changedUserInfoJson.roles[app.appId!]).toBeDefined()
     expect(changedUserInfoJson.roles[app.appId!]).toEqual("BASIC")
 
-    const [createdTableResponse, createdTableData] = await config.api.tables.save(
-      fixtures.tables.generateTable()
-    )
+    const [createdTableResponse, createdTableData] =
+      await config.api.tables.save(fixtures.tables.generateTable())
 
     await config.login(appUser[0].email!, appUser[0].password!)
 
-    const newColumn = fixtures.tables.generateNewColumnForTable(createdTableData)
+    const newColumn =
+      fixtures.tables.generateNewColumnForTable(createdTableData)
     await config.api.tables.forbiddenSave(newColumn)
     await config.api.tables.forbiddenSave(fixtures.tables.generateTable())
   })
@@ -56,9 +54,8 @@ describe.skip("Internal API - Role table access", () => {
     const developer = fixtures.users.generateUser(1, "developer")
     expect(developer[0].builder?.global).toEqual(true)
 
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      developer
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(developer)
 
     const app = await config.createApp()
     const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
@@ -77,14 +74,11 @@ describe.skip("Internal API - Role table access", () => {
     expect(changedUserInfoJson.roles[app.appId!]).toBeDefined()
     expect(changedUserInfoJson.roles[app.appId!]).toEqual("POWER")
 
-    const [createdTableResponse, createdTableData] = await config.api.tables.save(
-      fixtures.tables.generateTable()
-    )
-    await config.login(
-      developer[0].email!,
-      developer[0].password!
-    )
-    const newColumn = fixtures.tables.generateNewColumnForTable(createdTableData)
+    const [createdTableResponse, createdTableData] =
+      await config.api.tables.save(fixtures.tables.generateTable())
+    await config.login(developer[0].email!, developer[0].password!)
+    const newColumn =
+      fixtures.tables.generateNewColumnForTable(createdTableData)
     const [addColumnResponse, addColumnData] = await config.api.tables.save(
       newColumn,
       true
@@ -95,9 +89,8 @@ describe.skip("Internal API - Role table access", () => {
     const adminUser = fixtures.users.generateUser(1, "admin")
     expect(adminUser[0].builder?.global).toEqual(true)
     expect(adminUser[0].admin?.global).toEqual(true)
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      adminUser
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(adminUser)
 
     const app = await config.createApp()
 
@@ -117,14 +110,11 @@ describe.skip("Internal API - Role table access", () => {
     expect(changedUserInfoJson.roles[app.appId!]).toBeDefined()
     expect(changedUserInfoJson.roles[app.appId!]).toEqual("ADMIN")
 
-    await config.login(
-      adminUser[0].email!,
-      adminUser[0].password!
-    )
-    const [createdTableResponse, createdTableData] = await config.api.tables.save(
-      fixtures.tables.generateTable()
-    )
-    const newColumn = fixtures.tables.generateNewColumnForTable(createdTableData)
+    await config.login(adminUser[0].email!, adminUser[0].password!)
+    const [createdTableResponse, createdTableData] =
+      await config.api.tables.save(fixtures.tables.generateTable())
+    const newColumn =
+      fixtures.tables.generateNewColumnForTable(createdTableData)
     const [addColumnResponse, addColumnData] = await config.api.tables.save(
       newColumn,
       true

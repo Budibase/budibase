@@ -4,7 +4,6 @@ import { Application } from "../../../types"
 import * as fixtures from "../../fixtures"
 
 describe("Public API - /applications endpoints", () => {
-
   const config = new TestConfiguration<Application>()
 
   beforeAll(async () => {
@@ -18,7 +17,9 @@ describe("Public API - /applications endpoints", () => {
   })
 
   it("POST - Create an application", async () => {
-    const [response, app] = await config.api.apps.create(fixtures.apps.generateApp())
+    const [response, app] = await config.api.apps.create(
+      fixtures.apps.generateApp()
+    )
     expect(response).toHaveStatusCode(200)
     expect(app._id).toBeDefined()
   })

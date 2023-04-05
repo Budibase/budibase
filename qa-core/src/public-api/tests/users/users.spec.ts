@@ -3,7 +3,6 @@ import * as fixtures from "../../fixtures"
 import { User } from "../../../types"
 
 describe("Public API - /users endpoints", () => {
-
   const config = new TestConfiguration<User>()
 
   beforeAll(async () => {
@@ -17,7 +16,9 @@ describe("Public API - /users endpoints", () => {
   })
 
   it("POST - Create a user", async () => {
-    const [response, user] = await config.api.users.create(fixtures.users.generateUser())
+    const [response, user] = await config.api.users.create(
+      fixtures.users.generateUser()
+    )
     expect(response).toHaveStatusCode(200)
     expect(user._id).toBeDefined()
   })

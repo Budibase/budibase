@@ -1,7 +1,6 @@
 import TestConfiguration from "../../config/TestConfiguration"
 
 describe("Internal API - Application creation, update, publish and delete", () => {
-
   const config = new TestConfiguration()
 
   beforeAll(async () => {

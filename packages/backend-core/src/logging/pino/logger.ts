@@ -93,7 +93,7 @@ function getLogParams(args: any[]): [MergingObject, string] {
   const mergingObject = {
     objects: objects.length ? objects : undefined,
     err: error,
-    ...contextObject
+    ...contextObject,
   }
 
   return [mergingObject, message]

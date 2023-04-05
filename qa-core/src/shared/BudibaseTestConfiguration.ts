@@ -4,7 +4,6 @@ import { CreateAppRequest, State } from "../types"
 import * as fixtures from "../internal-api/fixtures"
 
 export default class BudibaseTestConfiguration {
-
   // apis
   internalApi: BudibaseInternalAPI
   accountsApi: AccountInternalAPI
@@ -32,7 +31,9 @@ export default class BudibaseTestConfiguration {
   }
 
   async createApp(overrides: Partial<CreateAppRequest> = {}) {
-    const app = await this.internalApi.apps.create(fixtures.apps.generateApp(overrides))
+    const app = await this.internalApi.apps.create(
+      fixtures.apps.generateApp(overrides)
+    )
     this.state.appId = app.appId
     return app
   }
@@ -45,8 +46,11 @@ export default class BudibaseTestConfiguration {
     } else {
       throw new Error("Could not determine tenant id")
     }
-    const [res, cookie] = await this.internalApi.auth.login(tenantId, email, password)
+    const [res, cookie] = await this.internalApi.auth.login(
+      tenantId,
+      email,
+      password
+    )
     this.state.cookie = cookie
   }
-
 }

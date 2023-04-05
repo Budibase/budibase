@@ -4,7 +4,6 @@ import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import { MessageResponse } from "../../../types"
 
 export default class TableAPI {
-
   client: BudibaseInternalAPIClient
 
   constructor(client: BudibaseInternalAPIClient) {

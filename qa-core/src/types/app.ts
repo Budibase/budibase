@@ -4,7 +4,7 @@ export interface CreateAppRequest {
   url: string
   useTemplate?: string
   templateName?: string
-  templateKey?: string,
-  templateFile?: string,
+  templateKey?: string
+  templateFile?: string
   includeSampleData?: boolean
 }

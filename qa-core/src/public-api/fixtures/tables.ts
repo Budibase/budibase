@@ -1,8 +1,5 @@
-import {
-  CreateTableParams,
-  Table
-} from "../../types"
-import { generator }  from "../../shared"
+import { CreateTableParams, Table } from "../../types"
+import { generator } from "../../shared"
 
 export const generateTable = (
   overrides: Partial<Table> = {}
@@ -48,4 +45,3 @@ export const generateTable = (
   },
   ...overrides,
 })
-

@@ -3,7 +3,6 @@ import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import { APIRequestOpts, State } from "../../../types"
 
 export default class AuthAPI {
-
   state: State
   client: BudibaseInternalAPIClient
 
@@ -12,13 +11,21 @@ export default class AuthAPI {
     this.state = state
   }
 
-  async login(tenantId: string, email: String, password: String, opts: APIRequestOpts = { doExpect: true }): Promise<[Response, string]> {
-    const [response, json] = await this.client.post(`/global/auth/${tenantId}/login`, {
-      body: {
-        username: email,
-        password: password,
-      },
-    })
+  async login(
+    tenantId: string,
+    email: String,
+    password: String,
+    opts: APIRequestOpts = { doExpect: true }
+  ): Promise<[Response, string]> {
+    const [response, json] = await this.client.post(
+      `/global/auth/${tenantId}/login`,
+      {
+        body: {
+          username: email,
+          password: password,
+        },
+      }
+    )
     if (opts.doExpect) {
       expect(response).toHaveStatusCode(200)
     }

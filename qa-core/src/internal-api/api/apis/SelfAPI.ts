@@ -1,10 +1,9 @@
 import { Response } from "node-fetch"
-import { User} from "@budibase/types"
+import { User } from "@budibase/types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import { ApiKeyResponse } from "../../../types"
 
 export default class SelfAPI {
-
   client: BudibaseInternalAPIClient
 
   constructor(client: BudibaseInternalAPIClient) {

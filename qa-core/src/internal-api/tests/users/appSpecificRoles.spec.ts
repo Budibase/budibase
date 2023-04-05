@@ -4,7 +4,6 @@ import { db } from "@budibase/backend-core"
 import * as fixtures from "../../fixtures"
 
 describe("Internal API - App Specific Roles & Permissions", () => {
-  
   const config = new TestConfiguration()
 
   // Before each test, login as admin. Some tests will require login as a different user
@@ -23,9 +22,8 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      appUser
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(appUser)
 
     const app = await config.createApp(fixtures.apps.appFromTemplate())
 
@@ -51,9 +49,8 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     const adminUser = fixtures.users.generateUser(1, "admin")
     expect(adminUser[0].builder?.global).toEqual(true)
     expect(adminUser[0].admin?.global).toEqual(true)
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      adminUser
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(adminUser)
 
     // const app = await config.createApp(fixtures.apps.appFromTemplate())
     const app = await config.createApp(fixtures.apps.appFromTemplate())
@@ -85,9 +82,8 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     const powerUser = fixtures.users.generateUser(1, "developer")
     expect(powerUser[0].builder?.global).toEqual(true)
 
-    const [createUserResponse, createUserJson] = await config.api.users.addMultiple(
-      powerUser
-    )
+    const [createUserResponse, createUserJson] =
+      await config.api.users.addMultiple(powerUser)
 
     const app = await config.createApp()
 

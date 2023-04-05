@@ -9,7 +9,7 @@ function init() {
       BUDIBASE_URL: "http://localhost:10000",
       ACCOUNT_PORTAL_URL: "http://localhost:10001",
       BB_ADMIN_USER_EMAIL: "admin",
-      BB_ADMIN_USER_PASSWORD: "admin"
+      BB_ADMIN_USER_PASSWORD: "admin",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {

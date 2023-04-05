@@ -11,13 +11,12 @@ interface ApiOptions {
 }
 
 class BudibasePublicAPIClient {
-
   state: State
   host: string
 
   constructor(state: State) {
     if (!env.BUDIBASE_URL) {
-      "Must set BUDIBASE_URL env var"
+      ("Must set BUDIBASE_URL env var")
     }
     this.host = `${env.BUDIBASE_URL}/api/public/v1`
     this.state = state
