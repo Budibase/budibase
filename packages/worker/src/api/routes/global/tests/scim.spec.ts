@@ -318,6 +318,15 @@ describe("scim", () => {
           await postScimUser({ body }, { expect: 500 })
         })
       })
+
+      it("creating an existing user name returns a conflict", async () => {
+        const body = structures.scim.createUserRequest()
+
+        await postScimUser({ body })
+
+        const res = await postScimUser({ body }, { expect: 409 })
+        expect((res as any).message).toBe("Email already in use")
+      })
     })
 
     describe("GET /api/global/scim/v2/users/:id", () => {
