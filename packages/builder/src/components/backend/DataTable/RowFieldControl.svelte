@@ -42,7 +42,7 @@
 </script>
 
 {#if type === "options" && meta.constraints.inclusion.length !== 0}
-  <Select {label} bind:value options={meta.constraints.inclusion} sort />
+  <Select {label} bind:value options={meta.constraints.inclusion} sort {error} />
 {:else if type === "datetime"}
   <DatePicker
     {error}
