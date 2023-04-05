@@ -152,9 +152,9 @@ describe("getTenantIDFromCtx", () => {
           TenantResolutionStrategy.PATH,
         ],
       }
-      expect(() => getTenantIDFromCtx(ctx, mockOpts)).rejects.toThrowError(
-        "Tenant id not set"
-      )
+      expect(getTenantIDFromCtx(ctx, mockOpts)).toBeNull()
+      expect(ctx.throw).toBeCalledTimes(1)
+      expect(ctx.throw).toBeCalledWith(403, "Tenant id not set")
     })
 
     it("returns null if allowNoTenant is true", () => {
