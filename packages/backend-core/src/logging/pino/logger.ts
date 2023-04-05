@@ -3,6 +3,7 @@ import pino, { LoggerOptions } from "pino"
 import * as context from "../../context"
 import * as correlation from "../correlation"
 import { IdentityType } from "@budibase/types"
+import { LOG_CONTEXT } from "../index"
 
 // LOGGER
 
@@ -77,14 +78,22 @@ function getLogParams(args: any[]): [MergingObject, string] {
 
   const identity = getIdentity()
 
+  let contextObject = {}
+
+  if (LOG_CONTEXT) {
+    contextObject = {
+      tenantId: getTenantId(),
+      appId: getAppId(),
+      identityId: identity?._id,
+      identityType: identity?.type,
+      correlationId: correlation.getId(),
+    }
+  }
+
   const mergingObject = {
     objects: objects.length ? objects : undefined,
-    tenantId: getTenantId(),
-    appId: getAppId(),
-    identityId: identity?._id,
-    identityType: identity?.type,
-    correlationId: correlation.getId(),
     err: error,
+    ...contextObject,
   }
 
   return [mergingObject, message]
