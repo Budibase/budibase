@@ -75,13 +75,18 @@ export async function syncGlobalUsers() {
       toWrite.push(combined)
     }
   }
+  let foundEmails: string[] = []
   for (let data of metadata) {
     if (!data._id) {
       continue
     }
+    const alreadyExisting = data.email && foundEmails.indexOf(data.email) !== -1
     const globalId = getGlobalIDFromUserMetadataID(data._id)
-    if (!users.find(user => user._id === globalId)) {
+    if (!users.find(user => user._id === globalId) || alreadyExisting) {
       toWrite.push({ ...data, _deleted: true })
+    }
+    if (data.email) {
+      foundEmails.push(data.email)
     }
   }
   await db.bulkDocs(toWrite)
