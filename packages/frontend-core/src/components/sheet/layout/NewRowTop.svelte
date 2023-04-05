@@ -1,6 +1,6 @@
 <script>
   import SheetCell from "../cells/SheetCell.svelte"
-  import { getContext, onMount } from "svelte"
+  import { getContext, onMount, tick } from "svelte"
   import { Icon, Button } from "@budibase/bbui"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
@@ -16,7 +16,6 @@
     dispatch,
     visibleColumns,
     rows,
-    wheel,
     showHScrollbar,
     tableId,
     subscribe,
@@ -34,12 +33,36 @@
   $: scrollLeft = $scroll.left
   $: $tableId, (isAdding = false)
 
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
   const addRow = async () => {
+    // Validate new row
+    let allColumns = []
+    if ($stickyColumn) {
+      allColumns.push($stickyColumn)
+    }
+    allColumns = allColumns.concat($visibleColumns)
+    for (let col of allColumns) {
+      $selectedCellId = `new-${col.name}`
+      await tick()
+      const error = $selectedCellAPI.validate()
+      if (error) {
+        return
+      }
+    }
+
+    // Create row
     const savedRow = await rows.actions.addRow(newRow, 0)
     if (savedRow && firstColumn) {
       $selectedCellId = `${savedRow._id}-${firstColumn.name}`
       isAdding = false
     }
+
+    // Reset scroll
+    scroll.set({
+      left: 0,
+      top: 0,
+    })
   }
 
   const cancel = () => {
@@ -47,13 +70,14 @@
   }
 
   const startAdding = () => {
+    scroll.set({
+      left: 0,
+      top: 0,
+    })
     newRow = {}
     isAdding = true
     if (firstColumn) {
       $selectedCellId = `new-${firstColumn.name}`
-      setTimeout(() => {
-        $selectedCellAPI?.focus()
-      }, 100)
     }
   }
 
@@ -79,59 +103,61 @@
         on:mouseenter={() => ($hoveredRowId = "new")}
         on:mouseleave={() => ($hoveredRowId = null)}
       >
-        <SheetScrollWrapper scrollHorizontally={false} scrollVertically={false}>
-          <div
-            class="sticky-column"
-            style="flex: 0 0 {width}px"
-            class:scrolled={scrollLeft > 0}
+        <div
+          class="sticky-column"
+          style="flex: 0 0 {width}px"
+          class:scrolled={scrollLeft > 0}
+        >
+          <SheetCell
+            width={gutterWidth}
+            {rowHovered}
+            rowSelected={containsSelectedCell}
           >
-            <SheetCell
-              width={gutterWidth}
+            <div class="gutter">
+              <div class="number">1</div>
+              {#if $config.allowExpandRows}
+                <Icon
+                  name="Maximize"
+                  size="S"
+                  hoverable
+                  on:click={addViaModal}
+                />
+              {/if}
+            </div>
+          </SheetCell>
+          {#if $stickyColumn}
+            {@const cellId = `new-${$stickyColumn.name}`}
+            <DataCell
+              {cellId}
+              column={$stickyColumn}
+              row={newRow}
               {rowHovered}
+              selected={$selectedCellId === cellId}
               rowSelected={containsSelectedCell}
-            >
-              <div class="gutter">
-                <div class="number">1</div>
-                {#if $config.allowExpandRows}
-                  <Icon
-                    name="Maximize"
-                    size="S"
-                    hoverable
-                    on:click={addViaModal}
-                  />
-                {/if}
-              </div>
-            </SheetCell>
-            {#if $stickyColumn}
-              {@const cellId = `new-${$stickyColumn.name}`}
-              <DataCell
-                {cellId}
-                column={$stickyColumn}
-                row={newRow}
-                {rowHovered}
-                selected={$selectedCellId === cellId}
-                rowSelected={containsSelectedCell}
-                width={$stickyColumn.width}
-                {updateRow}
-              />
-            {/if}
-          </div>
-        </SheetScrollWrapper>
+              width={$stickyColumn.width}
+              {updateRow}
+              rowIdx={0}
+            />
+          {/if}
+        </div>
 
-        <SheetScrollWrapper scrollVertically={false}>
+        <SheetScrollWrapper scrollVertically={false} foo>
           <div class="row">
-            {#each $renderedColumns as column}
+            {#each $visibleColumns as column}
               {@const cellId = `new-${column.name}`}
-              <DataCell
-                {cellId}
-                {column}
-                row={newRow}
-                {rowHovered}
-                selected={$selectedCellId === cellId}
-                rowSelected={containsSelectedCell}
-                width={column.width}
-                {updateRow}
-              />
+              {#key cellId}
+                <DataCell
+                  {cellId}
+                  {column}
+                  row={newRow}
+                  {rowHovered}
+                  selected={$selectedCellId === cellId}
+                  rowSelected={containsSelectedCell}
+                  width={column.width}
+                  {updateRow}
+                  rowIdx={0}
+                />
+              {/key}
             {/each}
           </div>
         </SheetScrollWrapper>
@@ -149,8 +175,8 @@
     pointer-events: none;
     position: absolute;
     top: var(--row-height);
+    left: 0;
     transform: translateY(-100%);
-    z-index: 1;
     transition: transform 130ms ease-out;
     background: linear-gradient(
       to bottom,

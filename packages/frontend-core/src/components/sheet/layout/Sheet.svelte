@@ -75,6 +75,7 @@
   context = { ...context, ...createUserStores(context) }
   context = { ...context, ...createMenuStores(context) }
   context = { ...context, ...createPaginationStores(context) }
+  context = { ...context, ...context }
 
   // Reference some stores for local use
   const { isResizing, isReordering, ui, loaded, rowHeight } = context
@@ -125,13 +126,14 @@
           <HeaderRow />
           <SheetBody />
         </div>
-        {#if $config.allowAddRows}
-          <!--          <NewRow />-->
-          <NewRowTop />
-        {/if}
-        <ResizeOverlay />
-        <ScrollOverlay />
-        <MenuOverlay />
+        <div class="overlays">
+          {#if $config.allowAddRows}
+            <NewRowTop />
+          {/if}
+          <ResizeOverlay />
+          <ScrollOverlay />
+          <MenuOverlay />
+        </div>
       </div>
     </div>
   {/if}
@@ -214,5 +216,10 @@
   }
   .controls-right {
     gap: 12px;
+  }
+
+  /* Overlays */
+  .overlays {
+    z-index: 10;
   }
 </style>

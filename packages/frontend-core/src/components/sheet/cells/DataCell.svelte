@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
   import SheetCell from "./SheetCell.svelte"
   import { getCellRenderer } from "../lib/renderers"
 
@@ -17,30 +17,36 @@
   export let row
   export let cellId
   export let updateRow = rows.actions.updateRow
-  export let showPlaceholder = false
   export let invert = false
 
   let api
   let error
 
-  // Determine if the cell is editable
-  $: readonly = column.schema.autocolumn || (!$config.allowEditRows && row._id)
-
-  // Build cell API
-  $: cellAPI = {
-    ...api,
+  const cellAPI = {
+    focus: () => api?.focus(),
+    blur: () => api?.blur(),
+    onKeyDown: (...params) => api?.onKeyDown(...params),
     isReadonly: () => readonly,
     isRequired: () => !!column.schema.constraints?.presence,
+    validate: value => {
+      if (value === undefined) {
+        value = row[column.name]
+      }
+      if (cellAPI.isReadonly() && !(value == null || value === "")) {
+        // Ensure cell isn't readonly
+        error = "Auto columns can't be edited"
+      } else if (cellAPI.isRequired() && (value == null || value === "")) {
+        // Sanity check required fields
+        error = "Required field"
+      } else {
+        error = null
+      }
+      return error
+    },
     updateValue: value => {
-      error = null
       try {
-        if (cellAPI.isReadonly()) {
-          // Ensure cell isn't readonly
-          error = "Auto columns can't be edited"
-        } else if (cellAPI.isRequired() && (value == null || value === "")) {
-          // Sanity check required fields
-          error = "Required field"
-        } else {
+        cellAPI.validate(value)
+        if (!error) {
           updateRow(row._id, column.name, value)
         }
       } catch (err) {
@@ -49,34 +55,33 @@
     },
   }
 
+  // Determine if the cell is editable
+  $: readonly = column.schema.autocolumn || (!$config.allowEditRows && row._id)
+
   // Update selected cell API if selected
   $: {
     if (selected) {
       selectedCellAPI.set(cellAPI)
-    } else {
-      error = null
+    } else if (error) {
+      // error = null
     }
   }
 </script>
 
-<SheetCell
-  {rowSelected}
-  {rowHovered}
-  {rowIdx}
-  {selected}
-  {selectedUser}
-  {reorderSource}
-  {reorderTarget}
-  {error}
-  on:click={() => selectedCellId.set(cellId)}
-  on:contextmenu={e => menu.actions.open(cellId, e)}
-  width={column.width}
->
-  {#if !selected && showPlaceholder && (row[column.name] == null || row[column.name] === "")}
-    <div class="placeholder">
-      {column.name}
-    </div>
-  {:else}
+{#key error}
+  <SheetCell
+    {rowSelected}
+    {rowHovered}
+    {rowIdx}
+    {selected}
+    {selectedUser}
+    {reorderSource}
+    {reorderTarget}
+    {error}
+    on:click={() => selectedCellId.set(cellId)}
+    on:contextmenu={e => menu.actions.open(cellId, e)}
+    width={column.width}
+  >
     <svelte:component
       this={getCellRenderer(column)}
       bind:api
@@ -86,9 +91,10 @@
       onChange={cellAPI.updateValue}
       {readonly}
       {invert}
+      placeholder="error"
     />
-  {/if}
-</SheetCell>
+  </SheetCell>
+{/key}
 
 <style>
   .placeholder {

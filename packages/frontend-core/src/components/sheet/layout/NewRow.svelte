@@ -113,7 +113,6 @@
               rowSelected={containsSelectedCell}
               width={$stickyColumn.width}
               {updateRow}
-              showPlaceholder
               invert
             />
           {/if}
@@ -131,7 +130,6 @@
                 rowSelected={containsSelectedCell}
                 width={column.width}
                 {updateRow}
-                showPlaceholder
                 invert
               />
             {/each}

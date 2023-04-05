@@ -57,7 +57,6 @@
 
 <style>
   .menu {
-    z-index: 1;
     position: absolute;
     background: var(--cell-background);
     border: var(--cell-border);
@@ -65,5 +64,6 @@
     border-radius: 4px;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 0 32px 0 rgba(0, 0, 0, 0.1);
   }
 </style>

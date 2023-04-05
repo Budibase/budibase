@@ -160,16 +160,14 @@
   .sticky-column {
     display: flex;
     flex-direction: column;
+    position: relative;
+    border-right: var(--cell-border);
+    z-index: 3;
   }
 
   /* Add shadow when scrolled */
-  .sticky-column.scrolled :global(.cell:last-child:after) {
-    /*content: " ";*/
-    /*position: absolute;*/
-    /*width: 10px;*/
-    /*height: 100%;*/
-    /*left: 100%;*/
-    /*background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);*/
+  .sticky-column.scrolled {
+    box-shadow: 0 0 8px -2px rgba(0, 0, 0, 0.2);
   }
 
   /* Don't show borders between cells in the sticky column */
@@ -178,8 +176,7 @@
   }
 
   .header {
-    position: relative;
-    z-index: 3;
+    z-index: 1;
   }
   .header :global(.cell) {
     background: var(--spectrum-global-color-gray-100);
@@ -192,7 +189,6 @@
   }
   .content {
     position: relative;
-    z-index: 1;
     flex: 1 1 auto;
   }
 

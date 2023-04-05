@@ -40,11 +40,7 @@
   data-row={rowIdx}
 >
   <slot />
-  {#if selected && error}
-    <div class="label">
-      {error}
-    </div>
-  {:else if selectedUser && !selected}
+  {#if selectedUser && !selected}
     <div class="label">
       {selectedUser.label}
     </div>

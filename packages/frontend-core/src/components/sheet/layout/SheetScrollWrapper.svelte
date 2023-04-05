@@ -18,13 +18,20 @@
   export let scrollVertically = true
   export let scrollHorizontally = true
   export let wheelInteractive = true
+  export let foo = false
 
   $: hiddenWidths = calculateHiddenWidths($renderedColumns)
-  $: style = generateStyle($scroll, $rowHeight, hiddenWidths)
+  $: style = generateStyle($scroll, $rowHeight, hiddenWidths, foo)
 
-  const generateStyle = (scroll, rowHeight, hiddenWidths) => {
-    const offsetX = scrollHorizontally ? -1 * scroll.left + hiddenWidths : 0
-    const offsetY = scrollVertically ? -1 * (scroll.top % rowHeight) : 0
+  const generateStyle = (scroll, rowHeight, hiddenWidths, foo) => {
+    let offsetX, offsetY
+    if (!foo) {
+      offsetX = scrollHorizontally ? -1 * scroll.left + hiddenWidths : 0
+      offsetY = scrollVertically ? -1 * (scroll.top % rowHeight) : 0
+    } else {
+      offsetX = scrollHorizontally ? -1 * scroll.left : 0
+      offsetY = scrollVertically ? -1 * scroll.top : 0
+    }
     return `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
   }
 
@@ -63,8 +70,8 @@
 
     // Update state
     scroll.set({
-      left: newScrollLeft,
-      top: newScrollTop,
+      left: scrollHorizontally ? newScrollLeft : left,
+      top: scrollVertically ? newScrollTop : top,
     })
 
     // Hover row under cursor
