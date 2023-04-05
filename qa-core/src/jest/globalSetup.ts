@@ -1,10 +1,14 @@
 import { AccountInternalAPI } from "../account-api"
 import * as fixtures from "../internal-api/fixtures"
 import { BudibaseInternalAPI } from "../internal-api"
-import { DEFAULT_TENANT_ID } from "@budibase/backend-core"
+import { DEFAULT_TENANT_ID, logging } from "@budibase/backend-core"
 import { CreateAccountRequest } from "@budibase/types"
 import env from "../environment"
 import { APIRequestOpts } from "../types"
+
+// turn off or on context logging i.e. tenantId, appId etc
+// it's not applicable for the qa run
+logging.LOG_CONTEXT = false
 
 const accountsApi = new AccountInternalAPI({})
 const internalApi = new BudibaseInternalAPI({})
@@ -27,14 +31,16 @@ async function loginAsAdmin() {
   const password = env.BB_ADMIN_USER_PASSWORD!
   const tenantId = DEFAULT_TENANT_ID
   const [res, cookie] = await internalApi.auth.login(tenantId, username, password, API_OPTS)
+
   // @ts-ignore
-  global.AUTH_COOKIE = cookie
+  global.qa.authCookie = cookie
 }
 
 async function loginAsAccount(account: CreateAccountRequest) {
   const [res, cookie] = await internalApi.auth.login(account.tenantId, account.email, account.password, API_OPTS)
+
   // @ts-ignore
-  global.AUTH_COOKIE = cookie
+  global.qa.authCookie = cookie
 }
 
 async function setup() {
@@ -46,16 +52,16 @@ async function setup() {
   if (env.multiTenancy) {
     const account = await createAccount()
     // @ts-ignore
-    global.TENANT_ID = account.tenantId
+    global.qa.tenantId = account.tenantId
     await loginAsAccount(account)
   } else {
     // @ts-ignore
-    global.TENANT_ID = DEFAULT_TENANT_ID
+    global.qa.tenantId = DEFAULT_TENANT_ID
     await loginAsAdmin()
   }
 
   // @ts-ignore
-  console.log(`Tenant: ${global.TENANT_ID}`)
+  console.log(`Tenant: ${global.qa.tenantId}`)
   console.log("GLOBAL SETUP COMPLETE")
 }
 

@@ -1,16 +1,9 @@
-import { AccountInternalAPI } from "../account-api"
-import { BudibaseInternalAPI } from "../internal-api"
-import { APIRequestOpts } from "../types"
-
-const accountsApi = new AccountInternalAPI({})
-const internalApi = new BudibaseInternalAPI({})
-
-const API_OPTS: APIRequestOpts = { doExpect: false }
-
 async function teardown() {
-  console.log("\nGLOBAL SETUP STARTING")
-  const env = await internalApi.environment.getEnvironment(API_OPTS)
-  console.log("GLOBAL SETUP COMPLETE")
+  console.log("\nGLOBAL TEARDOWN STARTING")
+
+  // TODO: Delete account and apps after test run
+
+  console.log("GLOBAL TEARDOWN COMPLETE")
 }
 
-export default setup
+export default teardown

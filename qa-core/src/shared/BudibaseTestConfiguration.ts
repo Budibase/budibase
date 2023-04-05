@@ -22,9 +22,9 @@ export default class BudibaseTestConfiguration {
 
   async beforeAll() {
     // @ts-ignore
-    this.state.tenantId = global.TENANT_ID
+    this.state.tenantId = global.qa.tenantId
     // @ts-ignore
-    this.state.cookie = global.AUTH_COOKIE
+    this.state.cookie = global.qa.authCookie
   }
 
   async afterAll() {

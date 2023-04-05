@@ -3,8 +3,3 @@ export interface APIRequestOpts {
   // e.g. during global setup where jest is not available
   doExpect: boolean
 }
-
-export interface QAGlobal {
-  tenantId: string,
-  appIds: string[]
-}
