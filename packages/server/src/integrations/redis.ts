@@ -36,6 +36,7 @@ const SCHEMA: Integration = {
     db: {
       type: "number",
       required: false,
+      display: "DB",
     },
   },
   query: {
