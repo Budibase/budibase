@@ -87,9 +87,7 @@ jobs:
           node-version: 14.x
       - name: Install Pro
         run: yarn install:pro $BRANCH $BASE_BRANCH
-      - run: yarn
-      - run: yarn backend:bootstrap
-      - run: yarn backend:build
+      - run: yarn && yarn bootstrap && yarn build
       - run: |
           cd qa-core
           yarn setup
