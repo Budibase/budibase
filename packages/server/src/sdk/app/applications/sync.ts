@@ -83,8 +83,11 @@ async function syncUsersToAllApps(userIds: string[]) {
   const users = (await getGlobalUsers(userIds)) as User[]
   const finalUsers: (User | DeletedUser)[] = []
   for (let userId of userIds) {
-    if (!users.find(user => user._id === userId)) {
+    const user = users.find(user => user._id === userId)
+    if (!user) {
       finalUsers.push({ _id: userId, deleted: true })
+    } else {
+      finalUsers.push(user)
     }
   }
   const devAppIds = await dbCore.getDevAppIDs()
@@ -103,7 +106,7 @@ async function syncUsersToAllApps(userIds: string[]) {
   }
 }
 
-export function initUserGroupSync() {
+export function initUserGroupSync(updateCb?: () => void) {
   const types = [constants.DocumentType.USER, constants.DocumentType.GROUP]
   docUpdates.process(types, async update => {
     const docId = update.id
@@ -117,6 +120,10 @@ export function initUserGroupSync() {
     }
     if (userIds.length > 0) {
       await syncUsersToAllApps(userIds)
+    }
+    // used to tracking when updates have occurred
+    if (updateCb) {
+      updateCb()
     }
   })
 }
