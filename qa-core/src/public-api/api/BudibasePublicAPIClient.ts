@@ -16,14 +16,10 @@ class BudibasePublicAPIClient {
 
   constructor(state: State) {
     if (!env.BUDIBASE_URL) {
-      ("Must set BUDIBASE_URL env var")
+      throw new Error("Must set BUDIBASE_URL env var")
     }
     this.host = `${env.BUDIBASE_URL}/api/public/v1`
     this.state = state
-  }
-
-  setApiKey(apiKey: string) {
-    this.state.apiKey = apiKey
   }
 
   apiCall =
