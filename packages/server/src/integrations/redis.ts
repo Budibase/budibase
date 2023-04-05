@@ -6,6 +6,7 @@ interface RedisConfig {
   port: number
   username: string
   password?: string
+  db?: number
 }
 
 const SCHEMA: Integration = {
@@ -30,6 +31,10 @@ const SCHEMA: Integration = {
     },
     password: {
       type: "password",
+      required: false,
+    },
+    db: {
+      type: "number",
       required: false,
     },
   },
@@ -88,6 +93,7 @@ class RedisIntegration {
       port: this.config.port,
       username: this.config.username,
       password: this.config.password,
+      db: this.config.db,
     })
   }
 
