@@ -5,8 +5,11 @@ export interface AccountPlan {
 
 export enum PlanType {
   FREE = "free",
+  /** @deprecated */
   PRO = "pro",
+  /** @deprecated */
   TEAM = "team",
+  PREMIUM = "premium",
   BUSINESS = "business",
   ENTERPRISE = "enterprise",
 }

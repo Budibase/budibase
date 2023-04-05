@@ -54,13 +54,7 @@ export const isConstantQuota = (
   return quotaType === QuotaType.CONSTANT
 }
 
-export type PlanQuotas = {
-  [PlanType.FREE]: Quotas
-  [PlanType.PRO]: Quotas
-  [PlanType.TEAM]: Quotas
-  [PlanType.BUSINESS]: Quotas
-  [PlanType.ENTERPRISE]: Quotas
-}
+export type PlanQuotas = { [ key in PlanType]: Quotas | undefined }
 
 export type MonthlyQuotas = {
   [MonthlyQuotaName.QUERIES]: Quota
