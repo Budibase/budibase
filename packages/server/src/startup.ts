@@ -75,7 +75,35 @@ export async function startup(app?: any, server?: any) {
     }
   }
 
+  // monitor plugin directory if required
+  if (
+    env.SELF_HOSTED &&
+    !env.MULTI_TENANCY &&
+    env.PLUGINS_DIR &&
+    fs.existsSync(env.PLUGINS_DIR)
+  ) {
+    watch()
+  }
+
+  // check for version updates
+  await installation.checkInstallVersion()
+
+  // get the references to the queue promises, don't await as
+  // they will never end, unless the processing stops
+  let queuePromises = []
+  // configure events to use the pro audit log write
+  // can't integrate directly into backend-core due to cyclic issues
+  queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
+  queuePromises.push(automations.init())
+  queuePromises.push(initPro())
+  if (app) {
+    // bring routes online as final step once everything ready
+    await initRoutes(app)
+  }
+
   // check and create admin user if required
+  // this must be run after the api has been initialised due to
+  // the app user sync
   if (
     env.SELF_HOSTED &&
     !env.MULTI_TENANCY &&
@@ -105,31 +133,5 @@ export async function startup(app?: any, server?: any) {
         shutdown(server)
       }
     }
-  }
-
-  // monitor plugin directory if required
-  if (
-    env.SELF_HOSTED &&
-    !env.MULTI_TENANCY &&
-    env.PLUGINS_DIR &&
-    fs.existsSync(env.PLUGINS_DIR)
-  ) {
-    watch()
-  }
-
-  // check for version updates
-  await installation.checkInstallVersion()
-
-  // get the references to the queue promises, don't await as
-  // they will never end, unless the processing stops
-  let queuePromises = []
-  // configure events to use the pro audit log write
-  // can't integrate directly into backend-core due to cyclic issues
-  queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
-  queuePromises.push(automations.init())
-  queuePromises.push(initPro())
-  if (app) {
-    // bring routes online as final step once everything ready
-    await initRoutes(app)
   }
 }
