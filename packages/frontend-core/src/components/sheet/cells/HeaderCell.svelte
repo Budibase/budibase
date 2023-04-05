@@ -179,7 +179,6 @@
     display: flex;
   }
   .header-cell :global(.cell) {
-    background: var(--background);
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
   }

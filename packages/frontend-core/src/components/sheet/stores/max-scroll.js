@@ -1,4 +1,5 @@
 import { derived, get } from "svelte/store"
+import { tick } from "svelte"
 
 export const createMaxScrollStores = context => {
   const {
@@ -88,65 +89,68 @@ export const createMaxScrollStores = context => {
   })
 
   // Ensure the selected cell is visible
-  selectedCellRow.subscribe(row => {
-    if (!row) {
-      return
-    }
+  selectedCellId.subscribe(async $selectedCellId => {
+    await tick()
+    const $selectedCellRow = get(selectedCellRow)
     const $scroll = get(scroll)
     const $bounds = get(bounds)
     const $rowHeight = get(rowHeight)
-    const scrollBarOffset = 16
+    const verticalOffset = $rowHeight * 1.5
 
-    // Ensure row is not below bottom of screen
-    const rowYPos = row.__idx * $rowHeight
-    const bottomCutoff =
-      $scroll.top + $bounds.height - $rowHeight - scrollBarOffset
-    let delta = rowYPos - bottomCutoff
-    if (delta > 0) {
-      scroll.update(state => ({
-        ...state,
-        top: state.top + delta,
-      }))
-    }
-
-    // Ensure row is not above top of screen
-    else {
-      delta = $scroll.top - rowYPos
+    // Ensure vertical position is viewable
+    if ($selectedCellRow) {
+      // Ensure row is not below bottom of screen
+      const rowYPos = $selectedCellRow.__idx * $rowHeight
+      const bottomCutoff =
+        $scroll.top + $bounds.height - $rowHeight - verticalOffset
+      let delta = rowYPos - bottomCutoff
       if (delta > 0) {
         scroll.update(state => ({
           ...state,
-          top: Math.max(0, state.top - delta),
+          top: state.top + delta,
         }))
+      }
+
+      // Ensure row is not above top of screen
+      else {
+        const delta = $scroll.top - rowYPos + verticalOffset
+        if (delta > 0) {
+          scroll.update(state => ({
+            ...state,
+            top: Math.max(0, state.top - delta),
+          }))
+        }
       }
     }
 
+    // Ensure horizontal position is viewable
     // Check horizontal position of columns next
-    const $selectedCellId = get(selectedCellId)
     const $visibleColumns = get(visibleColumns)
     const columnName = $selectedCellId?.split("-")[1]
     const column = $visibleColumns.find(col => col.name === columnName)
+    const horizontalOffset = 24
     if (!column) {
       return
     }
 
     // Ensure column is not cutoff on left edge
-    delta = $scroll.left - column.left
+    let delta = $scroll.left - column.left + horizontalOffset
     if (delta > 0) {
       scroll.update(state => ({
         ...state,
-        left: state.left - delta,
+        left: Math.max(0, state.left - delta),
       }))
     }
 
     // Ensure column is not cutoff on right edge
     else {
       const rightEdge = column.left + column.width
-      const rightBound = $bounds.width + $scroll.left
+      const rightBound = $bounds.width + $scroll.left - horizontalOffset
       delta = rightEdge - rightBound
       if (delta > 0) {
         scroll.update(state => ({
           ...state,
-          left: state.left + delta + scrollBarOffset,
+          left: state.left + delta,
         }))
       }
     }

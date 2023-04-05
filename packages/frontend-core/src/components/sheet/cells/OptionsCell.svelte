@@ -92,7 +92,7 @@
     {/each}
   </div>
   {#if editable}
-    <div class="arrow">
+    <div class="arrow" on:click={open}>
       <Icon name="ChevronDown" />
     </div>
   {/if}

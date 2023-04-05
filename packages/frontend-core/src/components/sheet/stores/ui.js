@@ -8,7 +8,7 @@ export const createUIStores = context => {
   const selectedCellAPI = writable(null)
   const rowHeight = writable(36)
 
-  // Derive the row that contains the selected cell.
+  // Derive the row that contains the selected cell
   const selectedCellRow = derived(
     [selectedCellId, rowLookupMap, rows],
     ([$selectedCellId, $rowLookupMap, $rows]) => {

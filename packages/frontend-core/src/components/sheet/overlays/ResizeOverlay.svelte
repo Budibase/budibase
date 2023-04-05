@@ -51,7 +51,6 @@
   .resize-slider {
     position: absolute;
     top: 0;
-    z-index: 2;
     height: var(--row-height);
     opacity: 0;
     padding: 0 8px;
