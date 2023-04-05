@@ -29,10 +29,8 @@
     } catch (error) {
       const response = error.json
       if (error.handled && response?.errors) {
-        console.error("FIRST")
         errors = response.errors
       } else if (error.handled && response?.validationErrors) {
-        console.error(response.validationErrors)
         const mappedErrors = {}
         for (let field in response.validationErrors) {
           mappedErrors[
@@ -40,7 +38,6 @@
           ] = `${field} ${response.validationErrors[field][0]}`
         }
         errors = mappedErrors
-        console.log(errors)
       } else {
         notifications.error(`Failed to save row - ${error.message}`)
       }
