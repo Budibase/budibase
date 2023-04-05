@@ -8,6 +8,7 @@ import {
   roles,
 } from "@budibase/backend-core"
 import { User, ContextUser } from "@budibase/types"
+import { sdk as proSdk } from "@budibase/pro"
 import sdk from "../../"
 import { getGlobalUsers, updateAppRole } from "../../../utilities/global"
 import { generateUserMetadataID, InternalTables } from "../../../db/utils"
@@ -107,10 +108,15 @@ export function initUserGroupSync() {
   docUpdates.process(types, async update => {
     const docId = update.id
     const isGroup = docId.startsWith(constants.DocumentType.GROUP)
+    let userIds: string[]
     if (isGroup) {
-      // TODO: get the group, get users in the group then run the function
+      const group = await proSdk.groups.get(docId)
+      userIds = group.users?.map(user => user._id) || []
     } else {
-      await syncUsersToAllApps([docId])
+      userIds = [docId]
+    }
+    if (userIds.length > 0) {
+      await syncUsersToAllApps(userIds)
     }
   })
 }
