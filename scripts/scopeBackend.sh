@@ -12,5 +12,5 @@ done
 # Run the commands with the scope arguments
 for COMMAND in "$@"; do
   echo "Running: $COMMAND $SCOPE_ARGS"
-  lerna $COMMAND $SCOPE_ARGS
+  yarn $COMMAND $SCOPE_ARGS
 done
