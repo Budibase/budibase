@@ -9,6 +9,6 @@ export const run = async () => {
 
   // sync app count
   const tenantId = tenancy.getTenantId()
-  console.log(`[Tenant: ${tenantId}] Syncing app count: ${appCount}`)
+  console.log(`Syncing app count: ${appCount}`)
   await quotas.setUsage(appCount, StaticQuotaName.APPS, QuotaUsageType.STATIC)
 }

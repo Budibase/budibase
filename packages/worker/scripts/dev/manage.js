@@ -30,6 +30,7 @@ async function init() {
       DEPLOYMENT_ENVIRONMENT: "development",
       TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR",
       ENABLE_EMAIL_TEST_MODE: 1,
+      HTTP_LOGGING: 0,
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {
