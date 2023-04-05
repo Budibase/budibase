@@ -6,9 +6,12 @@ jest.mock("../../context", () => ({
 
 import { TenantResolutionStrategy } from "@budibase/types"
 import { addTenantToUrl, isUserInAppTenant, getTenantIDFromCtx } from "../"
-import { isMultiTenant, getTenantIDFromAppID } from "../../context"
+import {
+  isMultiTenant,
+  getTenantIDFromAppID,
+  DEFAULT_TENANT_ID,
+} from "../../context"
 import { any } from "joi"
-import { DEFAULT_TENANT_ID } from "../../../src/constants/misc"
 const mockedIsMultiTenant = isMultiTenant as jest.MockedFunction<
   typeof isMultiTenant
 >
@@ -71,13 +74,8 @@ describe("isUserInAppTenant", () => {
 })
 
 let mockOpts: any = {}
-// mock the `getTenantId` and `isMultiTenant` functions
 jest.mock("../../context", () => ({
   isMultiTenant: jest.fn(() => true),
-}))
-
-jest.mock("../../../src/constants/misc", () => ({
-  DEFAULT_TENANT_ID: "default",
 }))
 
 function createCtx(opts: {
@@ -85,6 +83,7 @@ function createCtx(opts: {
   headers?: string[]
   qsTenantId?: string
   userTenantId?: string
+  host?: string
 }) {
   const createdCtx: any = {
     originalUrl: opts.originalUrl || "budibase.com",
@@ -101,9 +100,15 @@ function createCtx(opts: {
   if (opts.userTenantId) {
     createdCtx.user = { tenantId: opts.userTenantId }
   }
+  if (opts.host) {
+    createdCtx.host = opts.host
+  }
 
   return createdCtx as any
 }
+jest.mock("../../../src/constants/misc", () => ({
+  DEFAULT_TENANT_ID: "default",
+}))
 describe("getTenantIDFromCtx", () => {
   describe("when tenant can be found", () => {
     it("returns the tenant ID from the user object", () => {
@@ -112,18 +117,19 @@ describe("getTenantIDFromCtx", () => {
     })
 
     it("returns the tenant ID from the header", () => {
-      const ctx = createCtx({ headers: ["TENANT_ID:budibase"] })
-      mockOpts = { includeStrategies: [TenantResolutionStrategy.HEADERS] }
+      const ctx = createCtx({ headers: ["TENANT_ID=budibase"] })
+      mockOpts = { includeStrategies: [TenantResolutionStrategy.HEADER] }
       expect(getTenantIDFromCtx(ctx, mockOpts)).toEqual("budibase")
     })
 
     it("returns the tenant ID from the query param", () => {
+      mockOpts = { includeStrategies: [TenantResolutionStrategy.QUERY] }
       const ctx = createCtx({ qsTenantId: "budibase" })
       expect(getTenantIDFromCtx(ctx, mockOpts)).toEqual("budibase")
     })
 
     it("returns the tenant ID from the subdomain", () => {
-      const ctx = createCtx({ host: "bb" })
+      const ctx = createCtx({ host: "bb.app.com" })
       mockOpts = { includeStrategies: [TenantResolutionStrategy.SUBDOMAIN] }
       expect(getTenantIDFromCtx(ctx, mockOpts)).toEqual("bb")
     })
@@ -137,21 +143,30 @@ describe("getTenantIDFromCtx", () => {
 
   describe("when tenant cannot be found", () => {
     it("throws a 403 error if allowNoTenant is false", () => {
-      mockCtx.user = null
-      mockCtx.request.headers = {}
-      mockCtx.request.query = {}
-      mockCtx.host = "budibase.app"
-      mockOpts.allowNoTenant = false
-      expect(() => getTenantIDFromCtx(mockCtx, mockOpts)).toThrowError(
+      const ctx = createCtx({})
+      mockOpts = {
+        allowNoTenant: false,
+        excludeStrategies: [
+          TenantResolutionStrategy.QUERY,
+          TenantResolutionStrategy.SUBDOMAIN,
+          TenantResolutionStrategy.PATH,
+        ],
+      }
+      expect(() => getTenantIDFromCtx(ctx, mockOpts)).rejects.toThrowError(
         "Tenant id not set"
       )
     })
 
     it("returns null if allowNoTenant is true", () => {
-      mockedIsMultiTenant.mockImplementation(() => false)
       const ctx = createCtx({})
-      mockOpts = { allowNoTenant: true }
-      console.log(mockOpts)
+      mockOpts = {
+        allowNoTenant: true,
+        excludeStrategies: [
+          TenantResolutionStrategy.QUERY,
+          TenantResolutionStrategy.SUBDOMAIN,
+          TenantResolutionStrategy.PATH,
+        ],
+      }
       expect(getTenantIDFromCtx(ctx, mockOpts)).toBeNull()
     })
   })
