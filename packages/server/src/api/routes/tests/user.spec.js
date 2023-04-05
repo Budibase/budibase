@@ -133,6 +133,7 @@ describe("/users", () => {
       expect(res.body.tableId).toBeDefined()
     })
   })
+
   describe("setFlag", () => {
     it("should throw an error if a flag is not provided", async () => {
       await config.createUser()
@@ -142,8 +143,9 @@ describe("/users", () => {
         .send({ value: "test" })
         .expect(400)
         .expect("Content-Type", /json/)
-      expect(res.body.message).toEqual("Must supply a 'flag' field in request body.")
-
+      expect(res.body.message).toEqual(
+        "Must supply a 'flag' field in request body."
+      )
     })
 
     it("should be able to set a flag on the user", async () => {
@@ -187,8 +189,9 @@ describe("/users", () => {
         .send({ value: "test" })
         .expect(400)
         .expect("Content-Type", /json/)
-      expect(res.body.message).toEqual("Must supply a 'flag' field in request body.")
-
+      expect(res.body.message).toEqual(
+        "Must supply a 'flag' field in request body."
+      )
     })
 
     it("should be able to set a flag on the user", async () => {
@@ -206,33 +209,37 @@ describe("/users", () => {
   describe("syncUser", () => {
     it("should sync the user", async () => {
       let user = await config.createUser()
-      await config.createApp('New App')
+      await config.createApp("New App")
       let res = await request
         .post(`/api/users/metadata/sync/${user._id}`)
         .set(config.defaultHeaders())
         .expect(200)
         .expect("Content-Type", /json/)
-      expect(res.body.message).toEqual('User synced.')
+      expect(res.body.message).toEqual("User synced.")
     })
 
-
     it("should sync the user when a previous user is specified", async () => {
-      const app1 = await config.createApp('App 1')
-      const app2 = await config.createApp('App 2')
+      const app1 = await config.createApp("App 1")
+      const app2 = await config.createApp("App 2")
 
       let user = await config.createUser({
         builder: false,
         admin: true,
-      roles: { [app1.appId]: 'ADMIN' }
-    })
+        roles: { [app1.appId]: "ADMIN" },
+      })
       let res = await request
         .post(`/api/users/metadata/sync/${user._id}`)
         .set(config.defaultHeaders())
-        .send({ previousUser: { ...user, roles: { ...user.roles, [app2.appId]: 'BASIC' } } })
+        .send({
+          previousUser: {
+            ...user,
+            roles: { ...user.roles, [app2.appId]: "BASIC" },
+          },
+        })
         .expect(200)
         .expect("Content-Type", /json/)
 
-      expect(res.body.message).toEqual('User synced.')
+      expect(res.body.message).toEqual("User synced.")
     })
   })
 })
