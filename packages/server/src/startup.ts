@@ -45,8 +45,10 @@ async function initPro() {
 }
 
 function shutdown(server?: any) {
-  server.close()
-  server.destroy()
+  if (server) {
+    server.close()
+    server.destroy()
+  }
 }
 
 export async function startup(app?: any, server?: any) {
@@ -69,39 +71,7 @@ export async function startup(app?: any, server?: any) {
       await migrations.migrate()
     } catch (e) {
       logging.logAlert("Error performing migrations. Exiting.", e)
-      shutdown()
-    }
-  }
-
-  // check and create admin user if required
-  if (
-    env.SELF_HOSTED &&
-    !env.MULTI_TENANCY &&
-    env.BB_ADMIN_USER_EMAIL &&
-    env.BB_ADMIN_USER_PASSWORD
-  ) {
-    const checklist = await getChecklist()
-    if (!checklist?.adminUser?.checked) {
-      try {
-        const tenantId = tenancy.getTenantId()
-        const user = await createAdminUser(
-          env.BB_ADMIN_USER_EMAIL,
-          env.BB_ADMIN_USER_PASSWORD,
-          tenantId
-        )
-        // Need to set up an API key for automated integration tests
-        if (env.isTest()) {
-          await generateApiKey(user._id)
-        }
-
-        console.log(
-          "Admin account automatically created for",
-          env.BB_ADMIN_USER_EMAIL
-        )
-      } catch (e) {
-        logging.logAlert("Error creating initial admin user. Exiting.", e)
-        shutdown()
-      }
+      shutdown(server)
     }
   }
 
@@ -129,5 +99,39 @@ export async function startup(app?: any, server?: any) {
   if (app) {
     // bring routes online as final step once everything ready
     await initRoutes(app)
+  }
+
+  // check and create admin user if required
+  // this must be run after the api has been initialised due to
+  // the app user sync
+  if (
+    env.SELF_HOSTED &&
+    !env.MULTI_TENANCY &&
+    env.BB_ADMIN_USER_EMAIL &&
+    env.BB_ADMIN_USER_PASSWORD
+  ) {
+    const checklist = await getChecklist()
+    if (!checklist?.adminUser?.checked) {
+      try {
+        const tenantId = tenancy.getTenantId()
+        const user = await createAdminUser(
+          env.BB_ADMIN_USER_EMAIL,
+          env.BB_ADMIN_USER_PASSWORD,
+          tenantId
+        )
+        // Need to set up an API key for automated integration tests
+        if (env.isTest()) {
+          await generateApiKey(user._id)
+        }
+
+        console.log(
+          "Admin account automatically created for",
+          env.BB_ADMIN_USER_EMAIL
+        )
+      } catch (e) {
+        logging.logAlert("Error creating initial admin user. Exiting.", e)
+        shutdown(server)
+      }
+    }
   }
 }
