@@ -195,16 +195,12 @@
   async function deleteColumn() {
     try {
       editableColumn.name = deleteColName
-      if (editableColumn.name === $tables.selected.primaryDisplay) {
-        notifications.error("You cannot delete the display column")
-      } else {
-        await tables.deleteField(editableColumn)
-        notifications.success(`Column ${editableColumn.name} deleted.`)
-        confirmDeleteDialog.hide()
-        hide()
-        deletion = false
-        dispatch("updatecolumns")
-      }
+      await tables.deleteField(editableColumn)
+      notifications.success(`Column ${editableColumn.name} deleted.`)
+      confirmDeleteDialog.hide()
+      hide()
+      deletion = false
+      dispatch("updatecolumns")
     } catch (error) {
       notifications.error(`Error deleting column: ${error.message}`)
     }
