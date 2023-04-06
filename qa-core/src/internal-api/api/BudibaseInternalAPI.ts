@@ -7,6 +7,7 @@ import ScreenAPI from "./apis/ScreenAPI"
 import SelfAPI from "./apis/SelfAPI"
 import TableAPI from "./apis/TableAPI"
 import UserAPI from "./apis/UserAPI"
+import DatasourcesAPI from "./apis/DatasourcesAPI"
 import BudibaseInternalAPIClient from "./BudibaseInternalAPIClient"
 import { State } from "../../types"
 
@@ -22,6 +23,7 @@ export default class BudibaseInternalAPI {
   self: SelfAPI
   tables: TableAPI
   users: UserAPI
+  datasources: DatasourcesAPI
 
   constructor(state: State) {
     this.client = new BudibaseInternalAPIClient(state)
@@ -35,5 +37,6 @@ export default class BudibaseInternalAPI {
     this.self = new SelfAPI(this.client)
     this.tables = new TableAPI(this.client)
     this.users = new UserAPI(this.client)
+    this.datasources = new DatasourcesAPI(this.client)
   }
 }

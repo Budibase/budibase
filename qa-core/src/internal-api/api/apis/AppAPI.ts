@@ -60,6 +60,7 @@ export default class AppAPI {
     const [response, json] = await this.client.post(`/applications`, { body })
     expect(response).toHaveStatusCode(200)
     expect(json._id).toBeDefined()
+    this.client.state.appId = json._id
     return json
   }
 
