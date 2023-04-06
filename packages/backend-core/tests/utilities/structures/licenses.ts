@@ -1,6 +1,6 @@
-import { AccountPlan, License, PlanType, Quotas } from "@budibase/types"
+import { PurchasedPlan, License, PlanType, Quotas } from "@budibase/types"
 
-const newPlan = (type: PlanType = PlanType.FREE): AccountPlan => {
+const newPlan = (type: PlanType = PlanType.FREE): PurchasedPlan => {
   return {
     type,
   }

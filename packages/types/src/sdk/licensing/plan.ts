@@ -1,8 +1,3 @@
-export interface AccountPlan {
-  type: PlanType
-  price?: Price
-}
-
 export enum PlanType {
   FREE = "free",
   /** @deprecated */
@@ -19,12 +14,26 @@ export enum PriceDuration {
   YEARLY = "yearly",
 }
 
-export interface Price {
+export interface AvailablePlan {
+  type: PlanType
+  maxUsers: number
+  prices: AvailablePrice[]
+}
+
+export interface AvailablePrice {
   amount: number
   amountMonthly: number
   currency: string
   duration: PriceDuration
   priceId: string
+}
+
+export interface PurchasedPlan {
+  type: PlanType
+  price?: PurchasedPrice
+}
+
+export interface PurchasedPrice extends AvailablePrice {
   dayPasses: number
   isPerUser: boolean
 }
