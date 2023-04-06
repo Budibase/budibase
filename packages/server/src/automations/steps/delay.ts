@@ -3,6 +3,7 @@ import {
   AutomationActionStepId,
   AutomationStepSchema,
   AutomationStepInput,
+  AutomationStepType,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -33,7 +34,7 @@ export const definition: AutomationStepSchema = {
       required: ["success"],
     },
   },
-  type: "LOGIC",
+  type: AutomationStepType.LOGIC,
 }
 
 export async function run({ inputs }: AutomationStepInput) {
