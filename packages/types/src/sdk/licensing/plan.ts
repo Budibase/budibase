@@ -17,6 +17,7 @@ export enum PriceDuration {
 export interface AvailablePlan {
   type: PlanType
   maxUsers: number
+  minUsers: number
   prices: AvailablePrice[]
 }
 
