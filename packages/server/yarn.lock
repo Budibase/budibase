@@ -1290,14 +1290,14 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.5.1":
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.5.1.tgz#94f4be07b08d8c61dc74bd9e86acaeba4eb7ef8c"
-  integrity sha512-Pl099USxugkHtgZvtHfnok0HRwZInIME1VqQet/NfLiN7UX8ZUp4a6F0rdovVwi54imPLez2PJrStMjKeyQAIQ==
+"@budibase/backend-core@2.5.2":
+  version "2.5.2"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.5.2.tgz#6c8397250648764c8b8f4eca6f8f374281f64267"
+  integrity sha512-A2DOzDpbaEtDYmWZ672p3LOUpfru8dtwdTRoaW3pG+5a60GsDKAn4mXu8EqTHYqHNxUJ90D4zLvwJfSNhUxvZQ==
   dependencies:
     "@budibase/nano" "10.1.2"
     "@budibase/pouchdb-replication-stream" "1.2.10"
-    "@budibase/types" "^2.5.1"
+    "@budibase/types" "^2.5.2"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -1429,14 +1429,14 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.5.1":
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.1.tgz#8af7fdccc4aaf677fbc0757e52366e42879d1784"
-  integrity sha512-WUPW3LKN4aqtI6GQWd/Fv9FYEM1yuAu0UnawdVLGFEmn1k180N5L/hC5uMu2dMc/RXS1ZZUJSUTzK2NloBZXRg==
+"@budibase/pro@2.5.2":
+  version "2.5.2"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.2.tgz#58b1b266d9ab940fd4a91f1556be59fa468d4376"
+  integrity sha512-+w0Uq3cycBUDJPEEoBSjBvJwyhGkIFuDof7MoA7q1ifd/3pvUofATtir+5s4nTO/7bbKB4zppawTShxevSkb/g==
   dependencies:
-    "@budibase/backend-core" "2.5.1"
+    "@budibase/backend-core" "2.5.2"
     "@budibase/string-templates" "2.3.20"
-    "@budibase/types" "2.5.1"
+    "@budibase/types" "2.5.2"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1475,10 +1475,10 @@
     lodash "^4.17.20"
     vm2 "^3.9.4"
 
-"@budibase/types@2.5.1", "@budibase/types@^2.5.1":
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.5.1.tgz#d4bf8ac4b65b1163ed6d2fc9c0b70bcfbc13e784"
-  integrity sha512-cJfobY3BZfaEpBszKEHO2OgNBDTXzuMnUeEyTsjq5Afjoj/xZUwYHTFRNwYIc66syxxd82/su1+P2k05TOatwA==
+"@budibase/types@2.5.2", "@budibase/types@^2.5.2":
+  version "2.5.2"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.5.2.tgz#6f560176f40a5e91729c3977d908e463578d7946"
+  integrity sha512-FRuN1XYkL8KxiVi2rIsPEO7asy+14FnjQ3PXFE6Kj1QUXS/gQaiPgsbD5qH2qHztKFEtRR9pZqOTdSY4DkFEPA==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
