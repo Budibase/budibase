@@ -29,12 +29,19 @@ export interface AvailablePrice {
   priceId: string
 }
 
+export enum PlanModel {
+  PER_USER = "perUser",
+  DAY_PASS = "dayPass",
+}
+
 export interface PurchasedPlan {
   type: PlanType
+  model: PlanModel
   price?: PurchasedPrice
 }
 
 export interface PurchasedPrice extends AvailablePrice {
-  dayPasses: number
+  dayPasses: number | undefined
+  /** @deprecated - now at the plan level via model */
   isPerUser: boolean
 }
