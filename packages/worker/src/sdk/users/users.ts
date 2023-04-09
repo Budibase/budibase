@@ -20,7 +20,6 @@ import {
 import {
   AccountMetadata,
   AllDocsResponse,
-  BulkUserResponse,
   CloudAccount,
   InviteUsersRequest,
   InviteUsersResponse,
@@ -29,9 +28,10 @@ import {
   PlatformUser,
   PlatformUserByEmail,
   RowResponse,
-  SearchUsersRequest,
   User,
   SaveUserOpts,
+  BulkUserCreated,
+  BulkUserDeleted,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
@@ -193,6 +193,8 @@ export async function isPreventPasswordActions(user: User) {
   return !!(account && isSSOAccount(account))
 }
 
+// TODO: The single save should re-use the bulk insert with a single
+// user so that we don't need to duplicate logic
 export const save = async (
   user: User,
   opts: SaveUserOpts = {}
@@ -239,56 +241,59 @@ export const save = async (
     }
   }
 
-  await validateUniqueUser(email, tenantId)
+  const change = dbUser ? 0 : 1 // no change if there is existing user
+  return pro.quotas.addUsers(change, async () => {
+    await validateUniqueUser(email, tenantId)
 
-  let builtUser = await buildUser(user, opts, tenantId, dbUser)
-  // don't allow a user to update its own roles/perms
-  if (opts.currentUserId && opts.currentUserId === dbUser?._id) {
-    builtUser.builder = dbUser.builder
-    builtUser.admin = dbUser.admin
-    builtUser.roles = dbUser.roles
-  }
+    let builtUser = await buildUser(user, opts, tenantId, dbUser)
+    // don't allow a user to update its own roles/perms
+    if (opts.currentUserId && opts.currentUserId === dbUser?._id) {
+      builtUser.builder = dbUser.builder
+      builtUser.admin = dbUser.admin
+      builtUser.roles = dbUser.roles
+    }
 
-  if (!dbUser && roles?.length) {
-    builtUser.roles = { ...roles }
-  }
+    if (!dbUser && roles?.length) {
+      builtUser.roles = { ...roles }
+    }
 
-  // make sure we set the _id field for a new user
-  // Also if this is a new user, associate groups with them
-  let groupPromises = []
-  if (!_id) {
-    _id = builtUser._id!
+    // make sure we set the _id field for a new user
+    // Also if this is a new user, associate groups with them
+    let groupPromises = []
+    if (!_id) {
+      _id = builtUser._id!
 
-    if (userGroups.length > 0) {
-      for (let groupId of userGroups) {
-        groupPromises.push(pro.groups.addUsers(groupId, [_id]))
+      if (userGroups.length > 0) {
+        for (let groupId of userGroups) {
+          groupPromises.push(pro.groups.addUsers(groupId, [_id]))
+        }
       }
     }
-  }
 
-  try {
-    // save the user to db
-    let response = await db.put(builtUser)
-    builtUser._rev = response.rev
+    try {
+      // save the user to db
+      let response = await db.put(builtUser)
+      builtUser._rev = response.rev
 
-    await eventHelpers.handleSaveEvents(builtUser, dbUser)
-    await platform.users.addUser(tenantId, builtUser._id!, builtUser.email)
-    await cache.user.invalidateUser(response.id)
+      await eventHelpers.handleSaveEvents(builtUser, dbUser)
+      await platform.users.addUser(tenantId, builtUser._id!, builtUser.email)
+      await cache.user.invalidateUser(response.id)
 
-    // let server know to sync user
-    await apps.syncUserInApps(_id, dbUser)
+      // let server know to sync user
+      await apps.syncUserInApps(_id, dbUser)
 
-    await Promise.all(groupPromises)
+      await Promise.all(groupPromises)
 
-    // finally returned the saved user from the db
-    return db.get(builtUser._id!)
-  } catch (err: any) {
-    if (err.status === 409) {
-      throw "User exists already"
-    } else {
-      throw err
+      // finally returned the saved user from the db
+      return db.get(builtUser._id!)
+    } catch (err: any) {
+      if (err.status === 409) {
+        throw "User exists already"
+      } else {
+        throw err
+      }
     }
-  }
+  })
 }
 
 const getExistingTenantUsers = async (emails: string[]): Promise<User[]> => {
@@ -374,7 +379,7 @@ const searchExistingEmails = async (emails: string[]) => {
 export const bulkCreate = async (
   newUsersRequested: User[],
   groups: string[]
-): Promise<BulkUserResponse["created"]> => {
+): Promise<BulkUserCreated> => {
   const tenantId = tenancy.getTenantId()
 
   let usersToSave: any[] = []
@@ -401,53 +406,55 @@ export const bulkCreate = async (
     newUsers.push(newUser)
   }
 
-  // create the promises array that will be called by bulkDocs
-  newUsers.forEach((user: any) => {
-    usersToSave.push(
-      buildUser(
-        user,
-        {
-          hashPassword: true,
-          requirePassword: user.requirePassword,
-        },
-        tenantId
+  return pro.quotas.addUsers(newUsers.length, async () => {
+    // create the promises array that will be called by bulkDocs
+    newUsers.forEach((user: any) => {
+      usersToSave.push(
+        buildUser(
+          user,
+          {
+            hashPassword: true,
+            requirePassword: user.requirePassword,
+          },
+          tenantId
+        )
       )
-    )
-  })
+    })
 
-  const usersToBulkSave = await Promise.all(usersToSave)
-  await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
+    const usersToBulkSave = await Promise.all(usersToSave)
+    await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
 
-  // Post-processing of bulk added users, e.g. events and cache operations
-  for (const user of usersToBulkSave) {
-    // TODO: Refactor to bulk insert users into the info db
-    // instead of relying on looping tenant creation
-    await platform.users.addUser(tenantId, user._id, user.email)
-    await eventHelpers.handleSaveEvents(user, undefined)
-    await apps.syncUserInApps(user._id)
-  }
+    // Post-processing of bulk added users, e.g. events and cache operations
+    for (const user of usersToBulkSave) {
+      // TODO: Refactor to bulk insert users into the info db
+      // instead of relying on looping tenant creation
+      await platform.users.addUser(tenantId, user._id, user.email)
+      await eventHelpers.handleSaveEvents(user, undefined)
+      await apps.syncUserInApps(user._id)
+    }
 
-  const saved = usersToBulkSave.map(user => {
+    const saved = usersToBulkSave.map(user => {
+      return {
+        _id: user._id,
+        email: user.email,
+      }
+    })
+
+    // now update the groups
+    if (Array.isArray(saved) && groups) {
+      const groupPromises = []
+      const createdUserIds = saved.map(user => user._id)
+      for (let groupId of groups) {
+        groupPromises.push(pro.groups.addUsers(groupId, createdUserIds))
+      }
+      await Promise.all(groupPromises)
+    }
+
     return {
-      _id: user._id,
-      email: user.email,
+      successful: saved,
+      unsuccessful,
     }
   })
-
-  // now update the groups
-  if (Array.isArray(saved) && groups) {
-    const groupPromises = []
-    const createdUserIds = saved.map(user => user._id)
-    for (let groupId of groups) {
-      groupPromises.push(pro.groups.addUsers(groupId, createdUserIds))
-    }
-    await Promise.all(groupPromises)
-  }
-
-  return {
-    successful: saved,
-    unsuccessful,
-  }
 }
 
 /**
@@ -472,10 +479,10 @@ const getAccountHolderFromUserIds = async (
 
 export const bulkDelete = async (
   userIds: string[]
-): Promise<BulkUserResponse["deleted"]> => {
+): Promise<BulkUserDeleted> => {
   const db = tenancy.getGlobalDB()
 
-  const response: BulkUserResponse["deleted"] = {
+  const response: BulkUserDeleted = {
     successful: [],
     unsuccessful: [],
   }
@@ -509,6 +516,8 @@ export const bulkDelete = async (
     _deleted: true,
   }))
   const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
+
+  await pro.quotas.removeUsers(toDelete.length)
   for (let user of usersToDelete) {
     await bulkDeleteProcessing(user)
   }
@@ -538,6 +547,8 @@ export const bulkDelete = async (
   return response
 }
 
+// TODO: The single delete should re-use the bulk delete with a single
+// user so that we don't need to duplicate logic
 export const destroy = async (id: string) => {
   const db = tenancy.getGlobalDB()
   const dbUser = (await db.get(id)) as User
@@ -560,6 +571,7 @@ export const destroy = async (id: string) => {
 
   await db.remove(userId, dbUser._rev)
 
+  await pro.quotas.removeUsers(1)
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "deletion" })
