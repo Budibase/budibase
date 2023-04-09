@@ -47,6 +47,7 @@ export enum MigrationName {
   TABLE_SETTINGS_LINKS_TO_ACTIONS = "table_settings_links_to_actions",
   // increment this number to re-activate this migration
   SYNC_QUOTAS = "sync_quotas_1",
+  SYNC_USERS = "sync_users",
 }
 
 export interface MigrationDefinition {

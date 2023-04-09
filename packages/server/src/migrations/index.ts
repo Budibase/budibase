@@ -11,6 +11,7 @@ import env from "../environment"
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
 import * as syncQuotas from "./functions/syncQuotas"
+import * as syncUsers from "./functions/usageQuotas/syncUsers"
 import * as appUrls from "./functions/appUrls"
 import * as tableSettings from "./functions/tableSettings"
 import * as backfill from "./functions/backfill"
@@ -79,6 +80,13 @@ export const buildMigrations = () => {
           ...definition,
           appOpts: { dev: true },
           fn: tableSettings.run,
+        })
+        break
+      }
+      case MigrationName.SYNC_USERS: {
+        serverMigrations.push({
+          ...definition,
+          fn: syncUsers.run,
         })
         break
       }
