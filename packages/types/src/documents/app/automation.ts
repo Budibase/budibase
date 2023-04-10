@@ -73,9 +73,13 @@ export interface Automation extends Document {
     steps: AutomationStep[]
     trigger: AutomationTrigger
   }
+  screenId?: string
+  uiTree?: any
   appId: string
   live?: boolean
   name: string
+  internal?: boolean
+  type?: string
 }
 
 interface BaseIOStructure {
@@ -115,6 +119,7 @@ export interface AutomationStepSchema {
     inputs: InputOutputBlock
     outputs: InputOutputBlock
   }
+  custom?: boolean
 }
 
 export interface AutomationStep extends AutomationStepSchema {

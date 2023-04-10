@@ -26,7 +26,7 @@
 
   const external = actions.reduce((acc, elm) => {
     const [k, v] = elm
-    if (!v.internal) {
+    if (!v.internal && !v.custom) {
       acc[k] = v
     }
     return acc
@@ -34,7 +34,7 @@
 
   const internal = actions.reduce((acc, elm) => {
     const [k, v] = elm
-    if (v.internal) {
+    if (v.internal || v.custom) {
       acc[k] = v
     }
     delete acc.LOOP
