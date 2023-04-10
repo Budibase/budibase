@@ -1,7 +1,14 @@
 import { QuotaUsage } from "../../documents"
 
 export interface GetLicenseRequest {
-  quotaUsage: QuotaUsage
+  // All fields should be optional to cater for
+  // historical versions of budibase
+  quotaUsage?: QuotaUsage
+  install: {
+    id: string,
+    tenantId: string,
+    version: string
+  }
 }
 
 export interface QuotaTriggeredRequest {
@@ -11,6 +18,5 @@ export interface QuotaTriggeredRequest {
 }
 
 export interface LicenseActivateRequest {
-  installationId: string
-  uniqueTenantId: string
+  installVersion?: string
 }
