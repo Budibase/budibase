@@ -2,6 +2,7 @@ import tk from "timekeeper"
 import _ from "lodash"
 import { mocks, structures } from "@budibase/backend-core/tests"
 import {
+  ScimCreateUserRequest,
   ScimGroupResponse,
   ScimUpdateRequest,
   ScimUserResponse,
@@ -176,7 +177,9 @@ describe("scim", () => {
           const response = await getScimUsers({
             params: {
               filter: encodeURI(
-                `emails[type eq "work"].value eq "${userToFetch?.emails[0].value}"`
+                `emails[type eq "work"].value eq "${
+                  userToFetch?.emails![0].value
+                }"`
               ),
             },
           })
@@ -258,6 +261,61 @@ describe("scim", () => {
           await postScimUser({ body })
 
           expect(events.user.created).toBeCalledTimes(1)
+        })
+
+        it("if the username is an email, the user name will be used as email", async () => {
+          const email = structures.generator.email()
+
+          const body: ScimCreateUserRequest = structures.scim.createUserRequest(
+            { username: email }
+          )
+          delete body.emails
+
+          await postScimUser({ body })
+
+          const user = await config.getUser(email)
+          expect(user).toBeDefined()
+          expect(user.email).toEqual(email)
+        })
+
+        it("if multiple emails are provided, the first primary one is used as email", async () => {
+          const email = structures.generator.email()
+
+          const body: ScimCreateUserRequest = {
+            ...structures.scim.createUserRequest(),
+            emails: [
+              {
+                primary: false,
+                type: "work",
+                value: structures.generator.email(),
+              },
+              {
+                primary: true,
+                type: "work",
+                value: email,
+              },
+              {
+                primary: true,
+                type: "work",
+                value: structures.generator.email(),
+              },
+            ],
+          }
+
+          await postScimUser({ body })
+
+          const user = await config.getUser(email)
+          expect(user).toBeDefined()
+          expect(user.email).toEqual(email)
+        })
+
+        it("if no email is provided and the user name is not an email, an exception is thrown", async () => {
+          const body: ScimCreateUserRequest = structures.scim.createUserRequest(
+            { username: structures.generator.name() }
+          )
+          delete body.emails
+
+          await postScimUser({ body }, { expect: 500 })
         })
       })
     })
@@ -392,21 +450,23 @@ describe("scim", () => {
       )
 
       it("supports updating unmapped fields", async () => {
+        const value = structures.generator.letter()
         const body: ScimUpdateRequest = {
           schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
           Operations: [
             {
               op: "Add",
               path: "preferredLanguage",
-              value: structures.generator.letter(),
+              value,
             },
           ],
         }
 
         const response = await patchScimUser({ id: user.id, body })
 
-        const expectedScimUser: ScimUserResponse = {
+        const expectedScimUser = {
           ...user,
+          preferredLanguage: value,
         }
         expect(response).toEqual(expectedScimUser)
 
