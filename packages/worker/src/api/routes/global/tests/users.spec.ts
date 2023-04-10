@@ -225,7 +225,9 @@ describe("/api/global/users", () => {
 
       const response = await config.api.users.saveUser(user, 400)
 
-      expect(response.body.message).toBe(`Email already taken: '${user.email}'`)
+      expect(response.body.message).toBe(
+        `Email already in use: '${user.email}'`
+      )
       expect(events.user.created).toBeCalledTimes(0)
     })
 
@@ -238,7 +240,7 @@ describe("/api/global/users", () => {
         const response = await config.api.users.saveUser(user, 400)
 
         expect(response.body.message).toBe(
-          `Email already taken: '${user.email}'`
+          `Email already in use: '${user.email}'`
         )
         expect(events.user.created).toBeCalledTimes(0)
       })
@@ -251,7 +253,9 @@ describe("/api/global/users", () => {
 
       const response = await config.api.users.saveUser(user, 400)
 
-      expect(response.body.message).toBe(`Email already taken: '${user.email}'`)
+      expect(response.body.message).toBe(
+        `Email already in use: '${user.email}'`
+      )
       expect(events.user.created).toBeCalledTimes(0)
     })
 
