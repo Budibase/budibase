@@ -6,7 +6,7 @@
   export let value
   export let schema
   export let onChange
-  export let selected = false
+  export let focused = false
   export let multi = false
   export let readonly = false
   export let api
@@ -16,11 +16,11 @@
   let focusedOptionIdx = null
 
   $: options = schema?.constraints?.inclusion || []
-  $: editable = selected && !readonly
+  $: editable = focused && !readonly
   $: values = Array.isArray(value) ? value : [value].filter(x => x != null)
   $: {
     // Close when deselected
-    if (!selected) {
+    if (!focused) {
       close()
     }
   }
@@ -180,7 +180,7 @@
     left: 0;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
+    box-shadow: 4px 4px 10px 2px rgba(0, 0, 0, 0.1);
     justify-content: flex-start;
     align-items: stretch;
     max-height: var(--max-cell-render-height);

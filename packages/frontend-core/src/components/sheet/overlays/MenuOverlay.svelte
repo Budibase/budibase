@@ -3,11 +3,11 @@
   import { getContext } from "svelte"
 
   const {
-    selectedCellRow,
+    focusedRow,
     menu,
     rows,
     columns,
-    selectedCellId,
+    focusedCellId,
     stickyColumn,
     config,
   } = getContext("sheet")
@@ -19,20 +19,20 @@
   }
 
   const deleteRow = () => {
-    rows.actions.deleteRows([$selectedCellRow])
+    rows.actions.deleteRows([$focusedRow])
     menu.actions.close()
     notifications.success("Deleted 1 row")
   }
 
   const duplicate = async () => {
-    let clone = { ...$selectedCellRow }
+    let clone = { ...$focusedRow }
     delete clone._id
     delete clone._rev
     delete clone.__idx
-    const newRow = await rows.actions.addRow(clone, $selectedCellRow.__idx + 1)
+    const newRow = await rows.actions.addRow(clone, $focusedRow.__idx + 1)
     if (newRow) {
       const column = $stickyColumn?.name || $columns[0].name
-      $selectedCellId = `${newRow._id}-${column}`
+      $focusedCellId = `${newRow._id}-${column}`
       menu.actions.close()
     }
   }

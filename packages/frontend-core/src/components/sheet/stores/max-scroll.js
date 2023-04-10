@@ -9,8 +9,8 @@ export const createMaxScrollStores = context => {
     bounds,
     rowHeight,
     scroll,
-    selectedCellRow,
-    selectedCellId,
+    focusedRow,
+    focusedCellId,
     gutterWidth,
   } = context
   const padding = 264
@@ -89,18 +89,18 @@ export const createMaxScrollStores = context => {
   })
 
   // Ensure the selected cell is visible
-  selectedCellId.subscribe(async $selectedCellId => {
+  focusedCellId.subscribe(async $focusedCellId => {
     await tick()
-    const $selectedCellRow = get(selectedCellRow)
+    const $focusedRow = get(focusedRow)
     const $scroll = get(scroll)
     const $bounds = get(bounds)
     const $rowHeight = get(rowHeight)
     const verticalOffset = $rowHeight * 1.5
 
     // Ensure vertical position is viewable
-    if ($selectedCellRow) {
+    if ($focusedRow) {
       // Ensure row is not below bottom of screen
-      const rowYPos = $selectedCellRow.__idx * $rowHeight
+      const rowYPos = $focusedRow.__idx * $rowHeight
       const bottomCutoff =
         $scroll.top + $bounds.height - $rowHeight - verticalOffset
       let delta = rowYPos - bottomCutoff
@@ -126,7 +126,7 @@ export const createMaxScrollStores = context => {
     // Ensure horizontal position is viewable
     // Check horizontal position of columns next
     const $visibleColumns = get(visibleColumns)
-    const columnName = $selectedCellId?.split("-")[1]
+    const columnName = $focusedCellId?.split("-")[1]
     const column = $visibleColumns.find(col => col.name === columnName)
     const horizontalOffset = 24
     if (!column) {

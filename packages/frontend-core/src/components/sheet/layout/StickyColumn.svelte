@@ -11,13 +11,13 @@
     selectedRows,
     stickyColumn,
     renderedRows,
-    selectedCellId,
+    focusedCellId,
     hoveredRowId,
     scroll,
     reorder,
     config,
     selectedCellMap,
-    selectedCellRow,
+    focusedRow,
     gutterWidth,
     dispatch,
   } = getContext("sheet")
@@ -90,7 +90,7 @@
       {#each $renderedRows as row, idx}
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
-        {@const containsSelectedRow = $selectedCellRow?._id === row._id}
+        {@const rowFocused = $focusedRow?._id === row._id}
         <div
           class="row"
           on:mouseenter={() => ($hoveredRowId = row._id)}
@@ -98,7 +98,8 @@
         >
           <SheetCell
             width={gutterWidth}
-            rowSelected={rowSelected || containsSelectedRow}
+            {rowSelected}
+            {rowFocused}
             {rowHovered}
           >
             <div class="gutter">
@@ -106,22 +107,19 @@
                 on:click={() => selectRow(row._id)}
                 class="checkbox"
                 class:visible={$config.allowSelectRows &&
-                  (rowSelected || rowHovered || containsSelectedRow)}
+                  (rowSelected || rowHovered || rowFocused)}
               >
                 <Checkbox value={rowSelected} />
               </div>
               <div
                 class="number"
                 class:visible={!$config.allowSelectRows ||
-                  !(rowSelected || rowHovered || containsSelectedRow)}
+                  !(rowSelected || rowHovered || rowFocused)}
               >
                 {row.__idx + 1}
               </div>
               {#if $config.allowExpandRows}
-                <div
-                  class="expand"
-                  class:visible={containsSelectedRow || rowHovered}
-                >
+                <div class="expand" class:visible={rowFocused || rowHovered}>
                   <Icon
                     name="Maximize"
                     hoverable
@@ -138,10 +136,11 @@
           {#if $stickyColumn}
             {@const cellId = `${row._id}-${$stickyColumn.name}`}
             <DataCell
-              rowSelected={rowSelected || containsSelectedRow}
+              {rowSelected}
               {rowHovered}
+              {rowFocused}
               rowIdx={idx}
-              selected={$selectedCellId === cellId}
+              focused={$focusedCellId === cellId}
               selectedUser={$selectedCellMap[cellId]}
               width={$stickyColumn.width}
               reorderTarget={$reorder.targetColumn === $stickyColumn.name}
@@ -162,12 +161,22 @@
     flex-direction: column;
     position: relative;
     border-right: var(--cell-border);
-    z-index: 3;
+    z-index: 2;
   }
 
-  /* Add shadow when scrolled */
+  /*Add shadow when scrolled */
+  .sticky-column.scrolled:after {
+    content: "";
+    width: 10px;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.05), transparent);
+    left: 100%;
+    top: 0;
+    position: absolute;
+    /*z-index: 1;*/
+  }
   .sticky-column.scrolled {
-    box-shadow: 0 0 8px -2px rgba(0, 0, 0, 0.2);
+    /*box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.1);*/
   }
 
   /* Don't show borders between cells in the sticky column */

@@ -32,8 +32,8 @@
     background: var(--background);
     border-bottom: var(--cell-border);
     position: relative;
-    z-index: 2;
     height: var(--row-height);
+    z-index: 1;
   }
   .row {
     display: flex;

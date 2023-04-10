@@ -2,7 +2,7 @@ import { get } from "svelte/store"
 import { io } from "socket.io-client"
 
 export const createWebsocket = context => {
-  const { rows, tableId, users, userId, selectedCellId } = context
+  const { rows, tableId, users, userId, focusedCellId } = context
 
   // Determine connection info
   const tls = location.protocol === "https:"
@@ -55,8 +55,8 @@ export const createWebsocket = context => {
   tableId.subscribe(connectToDataspace)
 
   // Notify selected cell changes
-  selectedCellId.subscribe($selectedCellId => {
-    socket.emit("select-cell", $selectedCellId)
+  focusedCellId.subscribe($focusedCellId => {
+    socket.emit("select-cell", $focusedCellId)
   })
 
   return () => socket?.disconnect()

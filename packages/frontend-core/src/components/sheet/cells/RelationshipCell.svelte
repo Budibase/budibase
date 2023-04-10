@@ -7,7 +7,7 @@
   export let value
   export let api
   export let readonly
-  export let selected
+  export let focused
   export let schema
   export let onChange
   export let invert = false
@@ -25,12 +25,12 @@
   let results
 
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
-  $: editable = selected && !readonly
+  $: editable = focused && !readonly
   $: results = getResults(searchResults, value)
   $: lookupMap = buildLookupMap(value, isOpen)
   $: search(searchString)
   $: {
-    if (!selected) {
+    if (!focused) {
       close()
     }
   }

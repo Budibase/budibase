@@ -25,7 +25,7 @@
 {#if !$isReordering}
   {#if $stickyColumn}
     <div
-      class="resize-slider sticky"
+      class="resize-slider"
       class:visible={column === $stickyColumn.name}
       on:mousedown={e => resize.actions.startResizing($stickyColumn, e)}
       on:dblclick={() => resize.actions.resetSize($stickyColumn)}
@@ -61,9 +61,6 @@
   .resize-slider.visible {
     cursor: col-resize;
     opacity: 1;
-  }
-  .resize-slider.sticky {
-    z-index: 3;
   }
   .resize-indicator {
     margin-left: -1px;

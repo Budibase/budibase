@@ -1,7 +1,7 @@
 import { writable, get } from "svelte/store"
 
 export const createMenuStores = context => {
-  const { bounds, selectedCellId, stickyColumn, rowHeight } = context
+  const { bounds, focusedCellId, stickyColumn, rowHeight } = context
   const menu = writable({
     x: 0,
     y: 0,
@@ -14,7 +14,7 @@ export const createMenuStores = context => {
     const $stickyColumn = get(stickyColumn)
     const $rowHeight = get(rowHeight)
     e.preventDefault()
-    selectedCellId.set(cellId)
+    focusedCellId.set(cellId)
     menu.set({
       left: e.clientX - $bounds.left + 44 + ($stickyColumn?.width || 0),
       top: e.clientY - $bounds.top + $rowHeight + 4,

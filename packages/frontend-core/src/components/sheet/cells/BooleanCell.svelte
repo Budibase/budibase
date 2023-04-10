@@ -3,12 +3,12 @@
   import { Checkbox } from "@budibase/bbui"
 
   export let value
-  export let selected = false
+  export let focused = false
   export let onChange
   export let readonly = false
   export let api
 
-  $: editable = selected && !readonly
+  $: editable = focused && !readonly
 
   const handleChange = e => {
     onChange(e.detail)

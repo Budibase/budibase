@@ -62,8 +62,8 @@ export const createUserStores = () => {
     ([$enrichedUsers, $userId]) => {
       let map = {}
       $enrichedUsers.forEach(user => {
-        if (user.selectedCellId && user.id !== $userId) {
-          map[user.selectedCellId] = user
+        if (user.focusedCellId && user.id !== $userId) {
+          map[user.focusedCellId] = user
         }
       })
       return map

@@ -2,23 +2,23 @@
   import { onMount } from "svelte"
 
   export let value
-  export let selected = false
+  export let focused = false
   export let onChange
   export let type = "text"
   export let readonly = false
   export let api
 
   let input
-  let focused = false
+  let active = false
 
-  $: editable = selected && !readonly
+  $: editable = focused && !readonly
 
   const handleChange = e => {
     onChange(e.target.value)
   }
 
   const onKeyDown = e => {
-    if (!focused) {
+    if (!active) {
       return false
     }
     if (e.key === "Enter") {
@@ -41,8 +41,8 @@
 {#if editable}
   <input
     bind:this={input}
-    on:focus={() => (focused = true)}
-    on:blur={() => (focused = false)}
+    on:focus={() => (active = true)}
+    on:blur={() => (active = false)}
     {type}
     value={value || ""}
     on:change={handleChange}

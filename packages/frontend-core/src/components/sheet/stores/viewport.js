@@ -77,10 +77,28 @@ export const createViewportStores = context => {
     []
   )
 
+  const hiddenColumnsWidth = derived(
+    [renderedColumns, visibleColumns],
+    ([$renderedColumns, $visibleColumns]) => {
+      const idx = $visibleColumns.findIndex(
+        col => col.name === $renderedColumns[0]?.name
+      )
+      let width = 0
+      if (idx > 0) {
+        for (let i = 0; i < idx; i++) {
+          width += $visibleColumns[i].width
+        }
+      }
+      return width
+    },
+    0
+  )
+
   return {
     scrolledRowCount,
     visualRowCapacity,
     renderedRows,
     renderedColumns,
+    hiddenColumnsWidth,
   }
 }

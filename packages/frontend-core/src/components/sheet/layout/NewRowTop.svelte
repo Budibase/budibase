@@ -4,11 +4,11 @@
   import { Icon, Button } from "@budibase/bbui"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
+  import { fly } from "svelte/transition"
 
   const {
-    renderedColumns,
     hoveredRowId,
-    selectedCellId,
+    focusedCellId,
     stickyColumn,
     gutterWidth,
     scroll,
@@ -19,7 +19,7 @@
     showHScrollbar,
     tableId,
     subscribe,
-    selectedCellAPI,
+    sheetAPI,
   } = getContext("sheet")
 
   let isAdding = false
@@ -28,33 +28,16 @@
 
   $: firstColumn = $stickyColumn || $visibleColumns[0]
   $: rowHovered = $hoveredRowId === "new"
-  $: containsSelectedCell = $selectedCellId?.startsWith("new-")
+  $: rowFocused = $focusedCellId?.startsWith("new-")
   $: width = gutterWidth + ($stickyColumn?.width || 0)
   $: scrollLeft = $scroll.left
   $: $tableId, (isAdding = false)
 
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-
   const addRow = async () => {
-    // Validate new row
-    let allColumns = []
-    if ($stickyColumn) {
-      allColumns.push($stickyColumn)
-    }
-    allColumns = allColumns.concat($visibleColumns)
-    for (let col of allColumns) {
-      $selectedCellId = `new-${col.name}`
-      await tick()
-      const error = $selectedCellAPI.validate()
-      if (error) {
-        return
-      }
-    }
-
     // Create row
     const savedRow = await rows.actions.addRow(newRow, 0)
     if (savedRow && firstColumn) {
-      $selectedCellId = `${savedRow._id}-${firstColumn.name}`
+      $focusedCellId = `${savedRow._id}-${firstColumn.name}`
       isAdding = false
     }
 
@@ -70,14 +53,10 @@
   }
 
   const startAdding = () => {
-    scroll.set({
-      left: 0,
-      top: 0,
-    })
     newRow = {}
     isAdding = true
     if (firstColumn) {
-      $selectedCellId = `new-${firstColumn.name}`
+      $focusedCellId = `new-${firstColumn.name}`
     }
   }
 
@@ -95,8 +74,8 @@
 </script>
 
 <!-- Only show new row functionality if we have any columns -->
-{#if firstColumn}
-  <div class="container" class:visible={isAdding}>
+{#if isAdding}
+  <div class="container" transition:fly={{ y: 20, duration: 130 }}>
     <div class="content" class:above-scrollbar={$showHScrollbar}>
       <div
         class="new-row"
@@ -108,11 +87,7 @@
           style="flex: 0 0 {width}px"
           class:scrolled={scrollLeft > 0}
         >
-          <SheetCell
-            width={gutterWidth}
-            {rowHovered}
-            rowSelected={containsSelectedCell}
-          >
+          <SheetCell width={gutterWidth} {rowHovered} {rowFocused}>
             <div class="gutter">
               <div class="number">1</div>
               {#if $config.allowExpandRows}
@@ -132,8 +107,8 @@
               column={$stickyColumn}
               row={newRow}
               {rowHovered}
-              selected={$selectedCellId === cellId}
-              rowSelected={containsSelectedCell}
+              focused={$focusedCellId === cellId}
+              {rowFocused}
               width={$stickyColumn.width}
               {updateRow}
               rowIdx={0}
@@ -151,8 +126,8 @@
                   {column}
                   row={newRow}
                   {rowHovered}
-                  selected={$selectedCellId === cellId}
-                  rowSelected={containsSelectedCell}
+                  focused={$focusedCellId === cellId}
+                  {rowFocused}
                   width={column.width}
                   {updateRow}
                   rowIdx={0}
@@ -176,21 +151,16 @@
     position: absolute;
     top: var(--row-height);
     left: 0;
-    transform: translateY(-100%);
-    transition: transform 130ms ease-out;
     background: linear-gradient(
       to bottom,
       var(--cell-background) 20%,
       transparent 100%
     );
     width: 100%;
-    padding-bottom: 64px;
+    padding-bottom: 100px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-  }
-  .container.visible {
-    transform: translateY(0);
   }
   .content {
     pointer-events: all;
@@ -216,6 +186,7 @@
   .sticky-column {
     display: flex;
     z-index: 1;
+    position: relative;
   }
   /* Don't show borders between cells in the sticky column */
   .sticky-column :global(.cell:not(:last-child)) {
@@ -228,13 +199,17 @@
   }
 
   /* Add shadow when scrolled */
-  .sticky.scrolled :global(.cell:last-child:after) {
-    content: " ";
-    position: absolute;
+  .sticky-column.scrolled {
+    /*box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.1);*/
+  }
+  .sticky-column.scrolled:after {
+    content: "";
     width: 10px;
     height: 100%;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.05), transparent);
     left: 100%;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);
+    top: 0;
+    position: absolute;
   }
 
   /* Styles for gutter */
@@ -252,7 +227,7 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
-    margin: 16px 0 0 16px;
+    margin: 24px 0 0 16px;
     pointer-events: all;
     align-self: flex-start;
   }
