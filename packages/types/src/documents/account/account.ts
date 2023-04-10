@@ -49,6 +49,8 @@ export interface Account extends CreateAccount {
   planType?: PlanType
   planTier?: number
   license?: License
+  installationId?: string
+  uniqueTenantId?: string
   stripeCustomerId?: string
   licenseKey?: string
   licenseKeyActivatedAt?: number
