@@ -42,8 +42,8 @@ export const definition: AutomationStepSchema = {
           description: "Whether the command was successful",
         },
       },
+      required: ["stdout"],
     },
-    required: ["stdout"],
   },
 }
 

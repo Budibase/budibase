@@ -91,7 +91,7 @@ function validateDatasource(schema: any) {
 }
 
 function validateAutomation(schema: any) {
-  const basePropsValidator = joi.object({
+  const basePropsValidator = joi.object().pattern(joi.string(), {
     type: joi
       .string()
       .allow(...Object.values(AutomationIOType))

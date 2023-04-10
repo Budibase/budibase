@@ -15,7 +15,8 @@ import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
 import * as loop from "./steps/loop"
 import env from "../environment"
-import { AutomationStepSchema, AutomationStepInput } from "@budibase/types"
+import { AutomationStepSchema, AutomationStepInput, PluginType, AutomationStep } from "@budibase/types"
+import { getPlugins } from "../api/controllers/plugin"
 
 const ACTION_IMPLS: Record<
   string,
@@ -38,7 +39,7 @@ const ACTION_IMPLS: Record<
   zapier: zapier.run,
   integromat: integromat.run,
 }
-export const ACTION_DEFINITIONS: Record<string, AutomationStepSchema> = {
+export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> = {
   SEND_EMAIL_SMTP: sendSmtpEmail.definition,
   CREATE_ROW: createRow.definition,
   UPDATE_ROW: updateRow.definition,
@@ -66,7 +67,22 @@ if (env.SELF_HOSTED) {
   // @ts-ignore
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   // @ts-ignore
-  ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
+  BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
+}
+
+export async function getActionDefinitions() {
+  const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
+  if (env.SELF_HOSTED) {
+    const plugins = await getPlugins(PluginType.AUTOMATION)
+    for (let plugin of plugins) {
+      const schema = plugin.schema.schema as AutomationStep
+      actionDefinitions[schema.stepId] = {
+        ...schema,
+        custom: true,
+      }
+    }
+  }
+  return actionDefinitions
 }
 
 /* istanbul ignore next */
