@@ -115,7 +115,9 @@ export async function queryViewRaw<T>(
   opts?: QueryViewOptions
 ): Promise<AllDocsResponse<T>> {
   try {
-    return db.query<T>(`database/${viewName}`, params)
+    const response = await db.query<T>(`database/${viewName}`, params)
+    // await to catch error
+    return response
   } catch (err: any) {
     const pouchNotFound = err && err.name === "not_found"
     const couchNotFound = err && err.status === 404
