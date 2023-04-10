@@ -1,8 +1,9 @@
 import { wait } from "../../utilities"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationIOType,
   AutomationStepInput,
+  AutomationStepSchema,
   AutomationStepType,
 } from "@budibase/types"
 
@@ -18,7 +19,7 @@ export const definition: AutomationStepSchema = {
     inputs: {
       properties: {
         time: {
-          type: "number",
+          type: AutomationIOType.NUMBER,
           title: "Delay in milliseconds",
         },
       },
@@ -27,7 +28,7 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the delay was successful",
         },
       },

@@ -41,8 +41,8 @@ export const definition: AutomationStepSchema = {
           description: "Whether the action was successful",
         },
       },
+      required: ["success"],
     },
-    required: ["success"],
   },
 }
 
