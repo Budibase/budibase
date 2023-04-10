@@ -1,15 +1,17 @@
 <script>
-  import { getContext, onMount } from "svelte"
+  import { getContext } from "svelte"
   import SheetCell from "./SheetCell.svelte"
   import { getCellRenderer } from "../lib/renderers"
+  import { derived, writable } from "svelte/store"
 
-  const { rows, selectedCellId, menu, selectedCellAPI, config } =
+  const { rows, focusedCellId, menu, sheetAPI, config, validation } =
     getContext("sheet")
 
   export let rowSelected
   export let rowHovered
+  export let rowFocused
   export let rowIdx
-  export let selected
+  export let focused
   export let selectedUser
   export let reorderSource
   export let reorderTarget
@@ -19,8 +21,36 @@
   export let updateRow = rows.actions.updateRow
   export let invert = false
 
+  const emptyError = writable(null)
+
   let api
-  let error
+
+  $: {
+    // Wipe error if row is unfocused
+    if (!rowFocused && $error) {
+      validation.actions.setError(cellId, null)
+    }
+  }
+
+  // Get the error for this cell if the row is focused
+  $: error = getErrorStore(rowFocused, cellId)
+
+  // Determine if the cell is editable
+  $: readonly = column.schema.autocolumn || (!$config.allowEditRows && row._id)
+
+  // Register this cell API if the row is focused
+  $: {
+    if (rowFocused) {
+      sheetAPI.actions.registerCellAPI(cellId, cellAPI)
+    }
+  }
+
+  const getErrorStore = (selected, cellId) => {
+    if (!selected) {
+      return emptyError
+    }
+    return derived(validation, $validation => $validation[cellId])
+  }
 
   const cellAPI = {
     focus: () => api?.focus(),
@@ -29,76 +59,54 @@
     isReadonly: () => readonly,
     isRequired: () => !!column.schema.constraints?.presence,
     validate: value => {
+      // Validate the current value if no new value is provided
       if (value === undefined) {
         value = row[column.name]
       }
+      let newError = null
       if (cellAPI.isReadonly() && !(value == null || value === "")) {
         // Ensure cell isn't readonly
-        error = "Auto columns can't be edited"
+        newError = "Auto columns can't be edited"
       } else if (cellAPI.isRequired() && (value == null || value === "")) {
         // Sanity check required fields
-        error = "Required field"
+        newError = "Required field"
       } else {
-        error = null
+        newError = null
       }
-      return error
+      validation.actions.setError(cellId, newError)
+      return newError
     },
     updateValue: value => {
-      try {
-        cellAPI.validate(value)
-        if (!error) {
-          updateRow(row._id, column.name, value)
-        }
-      } catch (err) {
-        error = err
+      cellAPI.validate(value)
+      if (!$error) {
+        updateRow(row._id, column.name, value)
       }
     },
-  }
-
-  // Determine if the cell is editable
-  $: readonly = column.schema.autocolumn || (!$config.allowEditRows && row._id)
-
-  // Update selected cell API if selected
-  $: {
-    if (selected) {
-      selectedCellAPI.set(cellAPI)
-    } else if (error) {
-      // error = null
-    }
   }
 </script>
 
-{#key error}
-  <SheetCell
-    {rowSelected}
-    {rowHovered}
-    {rowIdx}
-    {selected}
-    {selectedUser}
-    {reorderSource}
-    {reorderTarget}
-    {error}
-    on:click={() => selectedCellId.set(cellId)}
-    on:contextmenu={e => menu.actions.open(cellId, e)}
-    width={column.width}
-  >
-    <svelte:component
-      this={getCellRenderer(column)}
-      bind:api
-      value={row[column.name]}
-      schema={column.schema}
-      {selected}
-      onChange={cellAPI.updateValue}
-      {readonly}
-      {invert}
-      placeholder="error"
-    />
-  </SheetCell>
-{/key}
-
-<style>
-  .placeholder {
-    font-style: italic;
-    padding: var(--cell-padding);
-  }
-</style>
+<SheetCell
+  {rowSelected}
+  {rowHovered}
+  {rowFocused}
+  {rowIdx}
+  {focused}
+  {selectedUser}
+  {reorderSource}
+  {reorderTarget}
+  error={$error}
+  on:click={() => focusedCellId.set(cellId)}
+  on:contextmenu={e => menu.actions.open(cellId, e)}
+  width={column.width}
+>
+  <svelte:component
+    this={getCellRenderer(column)}
+    bind:api
+    value={row[column.name]}
+    schema={column.schema}
+    onChange={cellAPI.updateValue}
+    {focused}
+    {readonly}
+    {invert}
+  />
+</SheetCell>

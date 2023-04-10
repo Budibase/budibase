@@ -5,16 +5,16 @@
 
   const {
     rows,
-    selectedCellId,
+    focusedCellId,
     visibleColumns,
-    selectedCellRow,
+    focusedRow,
     stickyColumn,
     selectedCellAPI,
   } = getContext("sheet")
 
   const handleKeyDown = e => {
     // If nothing selected avoid processing further key presses
-    if (!$selectedCellId) {
+    if (!$focusedCellId) {
       if (e.key === "Tab") {
         selectFirstCell()
       }
@@ -72,15 +72,15 @@
     if (!firstColumn) {
       return
     }
-    selectedCellId.set(`${firstRow._id}-${firstColumn.name}`)
+    focusedCellId.set(`${firstRow._id}-${firstColumn.name}`)
   }
 
   const changeSelectedColumn = delta => {
-    if (!$selectedCellId) {
+    if (!$focusedCellId) {
       return
     }
     const cols = $visibleColumns
-    const split = $selectedCellId.split("-")
+    const split = $focusedCellId.split("-")
     const columnName = split[1]
     let newColumnName
     if (columnName === $stickyColumn?.name) {
@@ -95,24 +95,24 @@
       }
     }
     if (newColumnName) {
-      $selectedCellId = `${split[0]}-${newColumnName}`
+      $focusedCellId = `${split[0]}-${newColumnName}`
     }
   }
 
   const changeSelectedRow = delta => {
-    if (!$selectedCellRow) {
+    if (!$focusedRow) {
       return
     }
-    const newRow = $rows[$selectedCellRow.__idx + delta]
+    const newRow = $rows[$focusedRow.__idx + delta]
     if (newRow) {
-      const split = $selectedCellId.split("-")
-      $selectedCellId = `${newRow._id}-${split[1]}`
+      const split = $focusedCellId.split("-")
+      $focusedCellId = `${newRow._id}-${split[1]}`
     }
   }
 
   // Debounce to avoid holding down delete and spamming requests
   const deleteSelectedCell = debounce(() => {
-    if (!$selectedCellId) {
+    if (!$focusedCellId) {
       return
     }
     $selectedCellAPI.updateValue(null)

@@ -5,14 +5,13 @@
   const {
     rowHeight,
     scroll,
-    visibleColumns,
-    renderedColumns,
-    selectedCellId,
+    focusedCellId,
     renderedRows,
     maxScrollTop,
     maxScrollLeft,
     bounds,
     hoveredRowId,
+    hiddenColumnsWidth,
   } = getContext("sheet")
 
   export let scrollVertically = true
@@ -20,8 +19,7 @@
   export let wheelInteractive = true
   export let foo = false
 
-  $: hiddenWidths = calculateHiddenWidths($renderedColumns)
-  $: style = generateStyle($scroll, $rowHeight, hiddenWidths, foo)
+  $: style = generateStyle($scroll, $rowHeight, $hiddenColumnsWidth, foo)
 
   const generateStyle = (scroll, rowHeight, hiddenWidths, foo) => {
     let offsetX, offsetY
@@ -33,20 +31,6 @@
       offsetY = scrollVertically ? -1 * scroll.top : 0
     }
     return `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
-  }
-
-  // Calculates with total width of all columns currently not rendered
-  const calculateHiddenWidths = renderedColumns => {
-    const idx = $visibleColumns.findIndex(
-      col => col.name === renderedColumns[0]?.name
-    )
-    let width = 0
-    if (idx > 0) {
-      for (let i = 0; i < idx; i++) {
-        width += $visibleColumns[i].width
-      }
-    }
-    return width
   }
 
   // Handles a wheel even and updates the scroll offsets
@@ -84,7 +68,7 @@
 <div
   class="outer"
   on:wheel={wheelInteractive ? handleWheel : null}
-  on:click|self={() => ($selectedCellId = null)}
+  on:click|self={() => ($focusedCellId = null)}
 >
   <div {style}>
     <slot />

@@ -4,7 +4,7 @@
   import { Dropzone, notifications } from "@budibase/bbui"
 
   export let value
-  export let selected = false
+  export let focused = false
   export let onChange
   export let readonly = false
   export let api
@@ -15,9 +15,9 @@
 
   let isOpen = false
 
-  $: editable = selected && !readonly
+  $: editable = focused && !readonly
   $: {
-    if (!selected) {
+    if (!focused) {
       close()
     }
   }

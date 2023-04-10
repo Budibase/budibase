@@ -1,7 +1,8 @@
 <script>
   export let rowSelected = false
   export let rowHovered = false
-  export let selected = false
+  export let rowFocused = false
+  export let focused = false
   export let reorderSource = false
   export let reorderTarget = false
   export let width = ""
@@ -25,12 +26,13 @@
   class="cell"
   class:row-selected={rowSelected}
   class:row-hovered={rowHovered}
-  class:selected
+  class:row-focused={rowFocused}
+  class:focused
   class:selected-other={selectedUser != null}
   class:reorder-source={reorderSource}
   class:reorder-target={reorderTarget}
   class:center
-  class:error={error && selected}
+  class:error
   on:focus
   on:mousedown
   on:mouseup
@@ -39,8 +41,14 @@
   {style}
   data-row={rowIdx}
 >
+  {#if error}
+    <div class="label">
+      {error}
+    </div>
+  {/if}
   <slot />
-  {#if selectedUser && !selected}
+
+  {#if selectedUser && !focused}
     <div class="label">
       {selectedUser.label}
     </div>
@@ -64,9 +72,9 @@
     position: relative;
     width: 0;
   }
-  .cell.selected:after,
+  .cell.focused:after,
   .cell.error:after,
-  .cell.selected-other:not(.selected):after {
+  .cell.selected-other:not(.focused):after {
     content: " ";
     position: absolute;
     top: 0;
@@ -78,28 +86,32 @@
     border-radius: 2px;
     box-sizing: border-box;
   }
-  .cell.selected {
+  .cell:hover {
+    z-index: 1;
+  }
+  .cell.focused {
     z-index: 2;
   }
-  .cell.selected:after {
+  .cell.focused:after {
     border-color: var(--spectrum-global-color-blue-400);
   }
   .cell.error:after {
     border-color: var(--spectrum-global-color-red-400);
   }
-  .cell.selected-other:not(.selected) {
+  .cell.selected-other:not(.focused) {
     z-index: 1;
   }
-  .cell.selected-other:not(.selected):after {
+  .cell.selected-other:not(.focused):after {
     border-color: var(--spectrum-global-color-red-400);
   }
-  .cell:not(.selected) {
+  .cell:not(.focused) {
     user-select: none;
   }
   .cell:hover {
     cursor: default;
   }
-  .cell.row-selected {
+  .cell.row-selected,
+  .cell.row-focused {
     --cell-background: var(--spectrum-global-color-gray-75);
   }
   .cell.row-hovered {
@@ -126,10 +138,11 @@
   .label {
     position: absolute;
     bottom: 100%;
+    left: 0;
     margin: 0 0 -2px 0;
     padding: 1px 4px 3px 4px;
     background: var(--user-color);
-    border-radius: 2px 2px 0 0;
+    border-radius: 2px;
     display: none;
     color: white;
     font-size: 12px;
@@ -143,7 +156,7 @@
   .cell[data-row="0"] .label {
     bottom: auto;
     top: 100%;
-    border-radius: 0 0 2px 2px;
+    border-radius: 0 2px 2px 2px;
     padding: 2px 4px 2px 4px;
     margin: -2px 0 0 0;
   }
@@ -152,6 +165,8 @@
   }
   .error .label {
     background: var(--spectrum-global-color-red-400);
+  }
+  .error.focused .label {
     display: block;
   }
 </style>

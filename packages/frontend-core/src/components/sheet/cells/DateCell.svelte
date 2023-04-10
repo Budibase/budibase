@@ -5,7 +5,7 @@
   export let value
   export let schema
   export let onChange
-  export let selected = false
+  export let focused = false
   export let readonly = false
 
   // adding the 0- will turn a string like 00:00:00 into a valid ISO
@@ -18,7 +18,7 @@
     : dateOnly
     ? "MMM D YYYY"
     : "MMM D YYYY, HH:mm"
-  $: editable = selected && !readonly
+  $: editable = focused && !readonly
 </script>
 
 <div class="container">

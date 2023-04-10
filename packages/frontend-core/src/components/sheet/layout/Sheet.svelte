@@ -15,6 +15,8 @@
   import { createMenuStores } from "../stores/menu"
   import { createMaxScrollStores } from "../stores/max-scroll"
   import { createPaginationStores } from "../stores/pagination"
+  import { createSheetAPIStores } from "../stores/sheet-api"
+  import { createValidationStores } from "../stores/validation"
   import DeleteButton from "../controls/DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
@@ -63,11 +65,13 @@
     tableId: tableIdStore,
   }
   context = { ...context, ...createEventManagers() }
+  context = { ...context, ...createValidationStores(context) }
   context = { ...context, ...createBoundsStores(context) }
   context = { ...context, ...createScrollStores(context) }
   context = { ...context, ...createRowsStore(context) }
   context = { ...context, ...createColumnsStores(context) }
   context = { ...context, ...createUIStores(context) }
+  context = { ...context, ...createSheetAPIStores(context) }
   context = { ...context, ...createResizeStores(context) }
   context = { ...context, ...createViewportStores(context) }
   context = { ...context, ...createMaxScrollStores(context) }
@@ -75,7 +79,6 @@
   context = { ...context, ...createUserStores(context) }
   context = { ...context, ...createMenuStores(context) }
   context = { ...context, ...createPaginationStores(context) }
-  context = { ...context, ...context }
 
   // Reference some stores for local use
   const { isResizing, isReordering, ui, loaded, rowHeight } = context

@@ -3,7 +3,7 @@ import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 
 export const createRowsStore = context => {
-  const { tableId, API, scroll } = context
+  const { tableId, API, scroll, validation } = context
   const rows = writable([])
   const table = writable(null)
   const filter = writable([])
@@ -120,6 +120,21 @@ export const createRowsStore = context => {
     return index >= 0 ? get(enrichedRows)[index] : null
   }
 
+  // Handles validation errors from the rows API and updates local validation
+  // state, storing error messages against relevant cells
+  const handleValidationError = (rowId, error) => {
+    if (error?.json?.validationErrors) {
+      for (let column of Object.keys(error.json.validationErrors)) {
+        validation.actions.setError(
+          `${rowId}-${column}`,
+          `${column} ${error.json.validationErrors[column]}`
+        )
+      }
+    } else {
+      notifications.error(`Error saving row: ${error?.message}`)
+    }
+  }
+
   // Adds a new row
   const addRow = async (row, idx) => {
     try {
@@ -139,7 +154,7 @@ export const createRowsStore = context => {
       notifications.success("Row created successfully")
       return newRow
     } catch (error) {
-      notifications.error(`Error adding row: ${error?.message}`)
+      handleValidationError("new", error)
     }
   }
 
@@ -208,7 +223,7 @@ export const createRowsStore = context => {
     try {
       await API.saveRow(newRow)
     } catch (error) {
-      notifications.error(`Error saving row: ${error?.message}`)
+      handleValidationError(newRow._id, error)
 
       // Revert change
       rows.update(state => {

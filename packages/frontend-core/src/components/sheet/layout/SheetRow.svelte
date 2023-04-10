@@ -7,41 +7,47 @@
   export let invert = false
 
   const {
-    selectedCellId,
+    focusedCellId,
     reorder,
     selectedRows,
+    visibleColumns,
     renderedColumns,
     hoveredRowId,
     selectedCellMap,
-    selectedCellRow,
+    focusedRow,
+    hiddenColumnsWidth,
   } = getContext("sheet")
 
   $: rowSelected = !!$selectedRows[row._id]
   $: rowHovered = $hoveredRowId === row._id
-  $: containsSelectedCell = $selectedCellRow?._id === row._id
+  $: rowFocused = $focusedRow?._id === row._id
+  $: cols = rowFocused ? $visibleColumns : $renderedColumns
+  $: foo = `margin-left: ${-1 * $hiddenColumnsWidth}px;`
 </script>
 
 <div
   class="row"
+  style={rowFocused ? foo : null}
   on:focus
   on:mouseenter={() => ($hoveredRowId = row._id)}
   on:mouseleave={() => ($hoveredRowId = null)}
 >
-  {#each $renderedColumns as column (column.name)}
+  {#each cols as column (column.name)}
     {@const cellId = `${row._id}-${column.name}`}
     <DataCell
-      rowSelected={rowSelected || containsSelectedCell}
+      {rowSelected}
       {rowHovered}
-      rowIdx={idx}
-      selected={$selectedCellId === cellId}
-      selectedUser={$selectedCellMap[cellId]}
-      reorderSource={$reorder.sourceColumn === column.name}
-      reorderTarget={$reorder.targetColumn === column.name}
-      width={column.width}
+      {rowFocused}
       {cellId}
       {column}
       {row}
       {invert}
+      rowIdx={idx}
+      focused={$focusedCellId === cellId}
+      selectedUser={$selectedCellMap[cellId]}
+      reorderSource={$reorder.sourceColumn === column.name}
+      reorderTarget={$reorder.targetColumn === column.name}
+      width={column.width}
     />
   {/each}
 </div>
@@ -50,5 +56,6 @@
   .row {
     width: 0;
     display: flex;
+    height: var(--row-height);
   }
 </style>

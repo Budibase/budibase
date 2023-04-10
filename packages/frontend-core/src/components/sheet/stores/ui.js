@@ -2,17 +2,16 @@ import { writable, get, derived } from "svelte/store"
 
 export const createUIStores = context => {
   const { rows, rowLookupMap } = context
-  const selectedCellId = writable(null)
+  const focusedCellId = writable(null)
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
-  const selectedCellAPI = writable(null)
   const rowHeight = writable(36)
 
   // Derive the row that contains the selected cell
-  const selectedCellRow = derived(
-    [selectedCellId, rowLookupMap, rows],
-    ([$selectedCellId, $rowLookupMap, $rows]) => {
-      const rowId = $selectedCellId?.split("-")[0]
+  const focusedRow = derived(
+    [focusedCellId, rowLookupMap, rows],
+    ([$focusedCellId, $rowLookupMap, $rows]) => {
+      const rowId = $focusedCellId?.split("-")[0]
       const index = $rowLookupMap[rowId]
       return $rows[index]
     },
@@ -21,15 +20,15 @@ export const createUIStores = context => {
 
   // Ensure we clear invalid rows from state if they disappear
   rows.subscribe(() => {
-    const $selectedCellId = get(selectedCellId)
+    const $focusedCellId = get(focusedCellId)
     const $selectedRows = get(selectedRows)
     const $hoveredRowId = get(hoveredRowId)
     const hasRow = rows.actions.hasRow
 
     // Check selected cell
-    const selectedRowId = $selectedCellId?.split("-")[0]
+    const selectedRowId = $focusedCellId?.split("-")[0]
     if (selectedRowId && !hasRow(selectedRowId)) {
-      selectedCellId.set(null)
+      focusedCellId.set(null)
     }
 
     // Check hovered row
@@ -53,7 +52,7 @@ export const createUIStores = context => {
   })
 
   // Reset selected rows when selected cell changes
-  selectedCellId.subscribe(id => {
+  focusedCellId.subscribe(id => {
     if (id) {
       selectedRows.set({})
     }
@@ -62,37 +61,29 @@ export const createUIStores = context => {
   // Unset selected cell when rows are selected
   selectedRows.subscribe(rows => {
     if (Object.keys(rows || {}).length) {
-      selectedCellId.set(null)
+      focusedCellId.set(null)
     }
   })
 
   // Callback when leaving the sheet, deselecting all focussed or selected items
   const blur = () => {
-    selectedCellId.set(null)
+    focusedCellId.set(null)
     selectedRows.set({})
     hoveredRowId.set(null)
   }
 
-  // Remove selected cell API when no selected cell is present
-  selectedCellId.subscribe(cell => {
-    if (!cell && get(selectedCellAPI)) {
-      selectedCellAPI.set(null)
-    }
-  })
-
   // Remove hovered row when a cell is selected
-  selectedCellId.subscribe(cell => {
+  focusedCellId.subscribe(cell => {
     if (cell && get(hoveredRowId)) {
       hoveredRowId.set(null)
     }
   })
 
   return {
-    selectedCellId,
+    focusedCellId,
     selectedRows,
     hoveredRowId,
-    selectedCellRow,
-    selectedCellAPI,
+    focusedRow,
     rowHeight,
     ui: {
       actions: {
