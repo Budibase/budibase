@@ -2,7 +2,7 @@
   import TableFilterButton from "../TableFilterButton.svelte"
   import { getContext } from "svelte"
 
-  const { columns, config, filter, schema } = getContext("sheet")
+  const { columns, config, filter, table } = getContext("sheet")
 
   const onFilter = e => {
     filter.set(e.detail || [])
@@ -11,7 +11,7 @@
 
 {#key $config.tableId}
   <TableFilterButton
-    schema={$schema}
+    schema={$table?.schema}
     filters={$filter}
     on:change={onFilter}
     disabled={!$columns.length}
