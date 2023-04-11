@@ -16,13 +16,8 @@ const baseConfig: Config.InitialProjectOptions = {
     "@budibase/backend-core": "<rootDir>/../backend-core/src",
     "@budibase/shared-core": "<rootDir>/../shared-core/src",
     "@budibase/types": "<rootDir>/../types/src",
+    "@budibase/pro": "<rootDir>/../pro/packages/pro/src",
   },
-}
-
-// add pro sources if they exist
-if (fs.existsSync("../../../budibase-pro")) {
-  baseConfig.moduleNameMapper["@budibase/pro"] =
-    "<rootDir>/../../../budibase-pro/packages/pro/src"
 }
 
 const config: Config.InitialOptions = {
