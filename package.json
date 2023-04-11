@@ -23,7 +23,7 @@
   },
   "scripts": {
     "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
-    "bootstrap": "lerna bootstrap",
+    "bootstrap": "lerna bootstrap && cd packages/pro && lerna bootstrap && yarn setup",
     "postbootstrap": "lerna link && ./scripts/link-dependencies.sh",
     "build": "lerna run --stream build",
     "build:dev": "lerna run --stream prebuild && tsc --build --watch --preserveWatchOutput",
