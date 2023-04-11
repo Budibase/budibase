@@ -254,7 +254,9 @@ const maxFileSizeHandler = (value, rule) => {
 const maxUploadSizeHandler = (value, rule) => {
   const limit = parseType(rule.value, "number")
   return (
-    value == null || value.reduce((a, b) => a.size + b.size) / 1000000 <= limit
+    value == null ||
+    value.reduce((acc, currentItem) => acc + currentItem.size, 0) / 1000000 <=
+      limit
   )
 }
 
