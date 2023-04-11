@@ -1,19 +1,38 @@
 import { writable, get, derived } from "svelte/store"
 
-export const createUIStores = context => {
-  const { rows, rowLookupMap } = context
+export const createStores = () => {
   const focusedCellId = writable(null)
+  const focusedCellAPI = writable(null)
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
   const rowHeight = writable(36)
+  return {
+    focusedCellId,
+    focusedCellAPI,
+    selectedRows,
+    hoveredRowId,
+    rowHeight,
+  }
+}
+
+export const deriveStores = context => {
+  const { focusedCellId, selectedRows, hoveredRowId, rows, rowLookupMap } =
+    context
 
   // Derive the row that contains the selected cell
   const focusedRow = derived(
     [focusedCellId, rowLookupMap, rows],
     ([$focusedCellId, $rowLookupMap, $rows]) => {
       const rowId = $focusedCellId?.split("-")[0]
-      const index = $rowLookupMap[rowId]
-      return $rows[index]
+
+      if (rowId === "new") {
+        // Edge case for new row
+        return { _id: rowId }
+      } else {
+        // All normal rows
+        const index = $rowLookupMap[rowId]
+        return $rows[index]
+      }
     },
     null
   )
@@ -80,11 +99,7 @@ export const createUIStores = context => {
   })
 
   return {
-    focusedCellId,
-    selectedRows,
-    hoveredRowId,
     focusedRow,
-    rowHeight,
     ui: {
       actions: {
         blur,

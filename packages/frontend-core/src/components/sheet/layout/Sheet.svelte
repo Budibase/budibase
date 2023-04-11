@@ -3,20 +3,7 @@
   import { writable } from "svelte/store"
   import { createEventManagers } from "../lib/events"
   import { createAPIClient } from "../../../api"
-  import { createReorderStores } from "../stores/reorder"
-  import { createViewportStores } from "../stores/viewport"
-  import { createRowsStore } from "../stores/rows"
-  import { createColumnsStores } from "../stores/columns"
-  import { createScrollStores } from "../stores/scroll"
-  import { createBoundsStores } from "../stores/bounds"
-  import { createUIStores } from "../stores/ui"
-  import { createUserStores } from "../stores/users"
-  import { createResizeStores } from "../stores/resize"
-  import { createMenuStores } from "../stores/menu"
-  import { createMaxScrollStores } from "../stores/max-scroll"
-  import { createPaginationStores } from "../stores/pagination"
-  import { createSheetAPIStores } from "../stores/sheet-api"
-  import { createValidationStores } from "../stores/validation"
+  import { createStores } from "../stores"
   import DeleteButton from "../controls/DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
@@ -28,8 +15,11 @@
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
   import { clickOutside } from "@budibase/bbui"
   import SheetControls from "./SheetControls.svelte"
-  import NewRowTop from "./NewRowTop.svelte"
   import { MaxCellRenderHeight } from "../lib/constants"
+  import SortButton from "../controls/SortButton.svelte"
+  import AddColumnButton from "../controls/AddColumnButton.svelte"
+  import HideColumnsButton from "../controls/HideColumnsButton.svelte"
+  import AddRowButton from "../controls/AddRowButton.svelte"
 
   export let API
   export let tableId
@@ -56,7 +46,6 @@
   })
 
   // Build up spreadsheet context
-  // Stores are listed in order of dependency on each other
   let context = {
     API: API || createAPIClient(),
     rand,
@@ -65,20 +54,7 @@
     tableId: tableIdStore,
   }
   context = { ...context, ...createEventManagers() }
-  context = { ...context, ...createValidationStores(context) }
-  context = { ...context, ...createBoundsStores(context) }
-  context = { ...context, ...createScrollStores(context) }
-  context = { ...context, ...createRowsStore(context) }
-  context = { ...context, ...createColumnsStores(context) }
-  context = { ...context, ...createUIStores(context) }
-  context = { ...context, ...createSheetAPIStores(context) }
-  context = { ...context, ...createResizeStores(context) }
-  context = { ...context, ...createViewportStores(context) }
-  context = { ...context, ...createMaxScrollStores(context) }
-  context = { ...context, ...createReorderStores(context) }
-  context = { ...context, ...createUserStores(context) }
-  context = { ...context, ...createMenuStores(context) }
-  context = { ...context, ...createPaginationStores(context) }
+  context = { ...context, ...createStores(context) }
 
   // Reference some stores for local use
   const { isResizing, isReordering, ui, loaded, rowHeight } = context
@@ -113,8 +89,12 @@
 >
   <div class="controls">
     <div class="controls-left">
+      <AddRowButton />
+      <AddColumnButton />
       <SheetControls />
       <slot name="controls" />
+      <HideColumnsButton />
+      <SortButton />
     </div>
     <div class="controls-right">
       <DeleteButton />
@@ -130,9 +110,6 @@
           <SheetBody />
         </div>
         <div class="overlays">
-          {#if $config.allowAddRows}
-            <NewRowTop />
-          {/if}
           <ResizeOverlay />
           <ScrollOverlay />
           <MenuOverlay />

@@ -2,8 +2,7 @@ import { derived, get, writable } from "svelte/store"
 
 export const DefaultColumnWidth = 200
 
-export const createColumnsStores = context => {
-  const { table, gutterWidth } = context
+export const createStores = () => {
   const columns = writable([])
   const stickyColumn = writable(null)
 
@@ -35,6 +34,19 @@ export const createColumnsStores = context => {
     },
     []
   )
+
+  return {
+    columns: {
+      ...columns,
+      subscribe: enrichedColumns.subscribe,
+    },
+    stickyColumn,
+    visibleColumns,
+  }
+}
+
+export const deriveStores = context => {
+  const { table, gutterWidth, columns, stickyColumn } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
   table.subscribe($table => {
@@ -109,12 +121,5 @@ export const createColumnsStores = context => {
     })
   })
 
-  return {
-    columns: {
-      ...columns,
-      subscribe: enrichedColumns.subscribe,
-    },
-    stickyColumn,
-    visibleColumns,
-  }
+  return null
 }

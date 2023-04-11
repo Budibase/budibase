@@ -4,7 +4,7 @@
   import { getCellRenderer } from "../lib/renderers"
   import { derived, writable } from "svelte/store"
 
-  const { rows, focusedCellId, menu, sheetAPI, config, validation } =
+  const { rows, focusedCellId, focusedCellAPI, menu, config, validation } =
     getContext("sheet")
 
   export let rowSelected
@@ -25,13 +25,6 @@
 
   let api
 
-  $: {
-    // Wipe error if row is unfocused
-    if (!rowFocused && $error) {
-      validation.actions.setError(cellId, null)
-    }
-  }
-
   // Get the error for this cell if the row is focused
   $: error = getErrorStore(rowFocused, cellId)
 
@@ -40,8 +33,8 @@
 
   // Register this cell API if the row is focused
   $: {
-    if (rowFocused) {
-      sheetAPI.actions.registerCellAPI(cellId, cellAPI)
+    if (focused) {
+      focusedCellAPI.set(cellAPI)
     }
   }
 
@@ -57,30 +50,9 @@
     blur: () => api?.blur(),
     onKeyDown: (...params) => api?.onKeyDown(...params),
     isReadonly: () => readonly,
-    isRequired: () => !!column.schema.constraints?.presence,
-    validate: value => {
-      // Validate the current value if no new value is provided
-      if (value === undefined) {
-        value = row[column.name]
-      }
-      let newError = null
-      if (cellAPI.isReadonly() && !(value == null || value === "")) {
-        // Ensure cell isn't readonly
-        newError = "Auto columns can't be edited"
-      } else if (cellAPI.isRequired() && (value == null || value === "")) {
-        // Sanity check required fields
-        newError = "Required field"
-      } else {
-        newError = null
-      }
-      validation.actions.setError(cellId, newError)
-      return newError
-    },
     updateValue: value => {
-      cellAPI.validate(value)
-      if (!$error) {
-        updateRow(row._id, column.name, value)
-      }
+      validation.actions.setError(cellId, null)
+      updateRow(row._id, column.name, value)
     },
   }
 </script>

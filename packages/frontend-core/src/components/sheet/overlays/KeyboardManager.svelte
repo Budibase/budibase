@@ -1,7 +1,6 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { debounce } from "../../../utils/utils"
-  import { notifications } from "@budibase/bbui"
 
   const {
     rows,
@@ -9,7 +8,7 @@
     visibleColumns,
     focusedRow,
     stickyColumn,
-    selectedCellAPI,
+    focusedCellAPI,
   } = getContext("sheet")
 
   const handleKeyDown = e => {
@@ -22,7 +21,7 @@
     }
 
     // Always intercept certain key presses
-    const api = $selectedCellAPI
+    const api = $focusedCellAPI
     if (e.key === "Escape") {
       api?.blur?.()
     } else if (e.key === "Tab") {
@@ -112,17 +111,17 @@
 
   // Debounce to avoid holding down delete and spamming requests
   const deleteSelectedCell = debounce(() => {
-    if (!$focusedCellId) {
+    if ($focusedCellAPI?.isReadonly()) {
       return
     }
-    $selectedCellAPI.updateValue(null)
+    $focusedCellAPI.updateValue(null)
   }, 100)
 
   const focusSelectedCell = () => {
-    if ($selectedCellAPI?.isReadonly()) {
+    if ($focusedCellAPI?.isReadonly()) {
       return
     }
-    $selectedCellAPI?.focus?.()
+    $focusedCellAPI?.focus?.()
   }
 
   onMount(() => {

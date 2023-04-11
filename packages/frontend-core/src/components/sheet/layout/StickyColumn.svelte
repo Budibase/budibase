@@ -20,9 +20,9 @@
     focusedRow,
     gutterWidth,
     dispatch,
+    scrollLeft,
   } = getContext("sheet")
 
-  $: scrollLeft = $scroll.left
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
   $: width = gutterWidth + ($stickyColumn?.width || 0)
@@ -91,6 +91,7 @@
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
         {@const rowFocused = $focusedRow?._id === row._id}
+        {@const cellId = `${row._id}-${$stickyColumn.name}`}
         <div
           class="row"
           on:mouseenter={() => ($hoveredRowId = row._id)}
@@ -132,9 +133,7 @@
               {/if}
             </div>
           </SheetCell>
-
           {#if $stickyColumn}
-            {@const cellId = `${row._id}-${$stickyColumn.name}`}
             <DataCell
               {rowSelected}
               {rowHovered}
@@ -176,7 +175,7 @@
     /*z-index: 1;*/
   }
   .sticky-column.scrolled {
-    /*box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.1);*/
+    box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.1);
   }
 
   /* Don't show borders between cells in the sticky column */

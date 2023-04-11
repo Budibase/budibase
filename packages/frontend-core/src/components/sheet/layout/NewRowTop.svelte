@@ -1,7 +1,7 @@
 <script>
   import SheetCell from "../cells/SheetCell.svelte"
-  import { getContext, onMount, tick } from "svelte"
-  import { Icon, Button } from "@budibase/bbui"
+  import { getContext, onMount } from "svelte"
+  import { Icon, Button, clickOutside } from "@budibase/bbui"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
   import { fly } from "svelte/transition"
@@ -19,7 +19,7 @@
     showHScrollbar,
     tableId,
     subscribe,
-    sheetAPI,
+    scrollLeft,
   } = getContext("sheet")
 
   let isAdding = false
@@ -30,22 +30,24 @@
   $: rowHovered = $hoveredRowId === "new"
   $: rowFocused = $focusedCellId?.startsWith("new-")
   $: width = gutterWidth + ($stickyColumn?.width || 0)
-  $: scrollLeft = $scroll.left
   $: $tableId, (isAdding = false)
 
   const addRow = async () => {
     // Create row
     const savedRow = await rows.actions.addRow(newRow, 0)
-    if (savedRow && firstColumn) {
-      $focusedCellId = `${savedRow._id}-${firstColumn.name}`
-      isAdding = false
-    }
+    if (savedRow) {
+      // Select the first cell if possible
+      if (firstColumn) {
+        $focusedCellId = `${savedRow._id}-${firstColumn.name}`
+      }
 
-    // Reset scroll
-    scroll.set({
-      left: 0,
-      top: 0,
-    })
+      // Reset state
+      isAdding = false
+      scroll.set({
+        left: 0,
+        top: 0,
+      })
+    }
   }
 
   const cancel = () => {
@@ -151,16 +153,27 @@
     position: absolute;
     top: var(--row-height);
     left: 0;
-    background: linear-gradient(
-      to bottom,
-      var(--cell-background) 20%,
-      transparent 100%
-    );
+    /*background: linear-gradient(*/
+    /*  to bottom,*/
+    /*  var(--cell-background) 20%,*/
+    /*  transparent 100%*/
+    /*);*/
     width: 100%;
-    padding-bottom: 100px;
+    padding-bottom: 800px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+  }
+  .container:before {
+    position: absolute;
+    content: "";
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background: var(--cell-background);
+    opacity: 0.8;
+    z-index: -1;
   }
   .content {
     pointer-events: all;
@@ -227,7 +240,7 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
-    margin: 24px 0 0 16px;
+    margin: 24px 0 0 var(--gutter-width);
     pointer-events: all;
     align-self: flex-start;
   }

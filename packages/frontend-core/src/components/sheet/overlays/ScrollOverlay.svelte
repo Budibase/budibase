@@ -4,7 +4,6 @@
 
   const {
     scroll,
-    bounds,
     rowHeight,
     contentHeight,
     maxScrollTop,
@@ -13,6 +12,9 @@
     screenWidth,
     showHScrollbar,
     showVScrollbar,
+    scrollLeft,
+    scrollTop,
+    height,
   } = getContext("sheet")
 
   // Bar config
@@ -22,32 +24,27 @@
   let initialMouse
   let initialScroll
 
-  // Memoize store primitives to reduce reactive statement invalidations
-  $: scrollTop = $scroll.top
-  $: scrollLeft = $scroll.left
-  $: height = $bounds.height
-  $: width = $bounds.width
-
   // Calculate V scrollbar size and offset
   // Terminology is the same for both axes:
   //   renderX - the space available to render the bar in, edge to edge
   //   availX - the space available to render the bar in, until the edge
-  $: renderHeight = height - 2 * barOffset
-  $: barHeight = Math.max(50, (height / $contentHeight) * renderHeight)
+  $: renderHeight = $height - 2 * barOffset
+  $: barHeight = Math.max(50, ($height / $contentHeight) * renderHeight)
   $: availHeight = renderHeight - barHeight
-  $: barTop = barOffset + $rowHeight + availHeight * (scrollTop / $maxScrollTop)
+  $: barTop =
+    barOffset + $rowHeight + availHeight * ($scrollTop / $maxScrollTop)
 
   // Calculate H scrollbar size and offset
   $: renderWidth = $screenWidth - 2 * barOffset
   $: barWidth = Math.max(50, ($screenWidth / $contentWidth) * renderWidth)
   $: availWidth = renderWidth - barWidth
-  $: barLeft = barOffset + availWidth * (scrollLeft / $maxScrollLeft)
+  $: barLeft = barOffset + availWidth * ($scrollLeft / $maxScrollLeft)
 
   // V scrollbar drag handlers
   const startVDragging = e => {
     e.preventDefault()
     initialMouse = e.clientY
-    initialScroll = scrollTop
+    initialScroll = $scrollTop
     document.addEventListener("mousemove", moveVDragging)
     document.addEventListener("mouseup", stopVDragging)
   }
@@ -69,7 +66,7 @@
   const startHDragging = e => {
     e.preventDefault()
     initialMouse = e.clientX
-    initialScroll = scrollLeft
+    initialScroll = $scrollLeft
     document.addEventListener("mousemove", moveHDragging)
     document.addEventListener("mouseup", stopHDragging)
   }
