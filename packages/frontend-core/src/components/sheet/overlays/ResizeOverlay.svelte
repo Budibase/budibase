@@ -14,7 +14,7 @@
 
   $: cutoff = scrollLeft + gutterWidth + ($columns[0]?.width || 0)
   $: offset = gutterWidth + ($stickyColumn?.width || 0)
-  $: column = $resize.column
+  $: activeColumn = $resize.column
 
   const getStyle = (column, offset, scrollLeft) => {
     const left = offset + column.left + column.width - scrollLeft
@@ -26,7 +26,7 @@
   {#if $stickyColumn}
     <div
       class="resize-slider"
-      class:visible={column === $stickyColumn.name}
+      class:visible={activeColumn === $stickyColumn.name}
       on:mousedown={e => resize.actions.startResizing($stickyColumn, e)}
       on:dblclick={() => resize.actions.resetSize($stickyColumn)}
       style="left:{gutterWidth + $stickyColumn.width}px;"
@@ -37,10 +37,10 @@
   {#each $renderedColumns as column}
     <div
       class="resize-slider"
-      class:visible={column === column.name}
+      class:visible={activeColumn === column.name}
       on:mousedown={e => resize.actions.startResizing(column, e)}
       on:dblclick={() => resize.actions.resetSize(column)}
-      style={getStyle(column, offset, scrollLeft)}
+      style={getStyle(column, offset, $scrollLeft)}
     >
       <div class="resize-indicator" />
     </div>
