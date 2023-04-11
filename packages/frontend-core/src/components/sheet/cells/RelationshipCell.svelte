@@ -52,7 +52,6 @@
     if (!row?._id) {
       return false
     }
-    console.log(lookupMap)
     return lookupMap?.[row._id] === true
   }
 
