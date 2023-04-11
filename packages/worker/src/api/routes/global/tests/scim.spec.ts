@@ -399,53 +399,19 @@ describe("scim", () => {
       })
 
       it.each([false, "false", "False"])(
-        "can deactive an active user (sending %s)",
+        "deactivating an active user (sending %s) will delete it",
         async activeValue => {
           const body: ScimUpdateRequest = {
             schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
             Operations: [{ op: "Replace", path: "active", value: activeValue }],
           }
 
-          const response = await patchScimUser({ id: user.id, body })
+          await patchScimUser(
+            { id: user.id, body },
+            { expect: 204, skipContentTypeCheck: true }
+          )
 
-          const expectedScimUser: ScimUserResponse = {
-            ...user,
-            active: false,
-          }
-          expect(response).toEqual(expectedScimUser)
-
-          const persistedUser = await config.api.scimUsersAPI.find(user.id)
-          expect(persistedUser).toEqual(expectedScimUser)
-        }
-      )
-
-      it.each([true, "true", "True"])(
-        "can activate an inactive user (sending %s)",
-        async activeValue => {
-          // Deactivate user
-          await patchScimUser({
-            id: user.id,
-            body: {
-              schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-              Operations: [{ op: "Replace", path: "active", value: true }],
-            },
-          })
-
-          const body: ScimUpdateRequest = {
-            schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-            Operations: [{ op: "Replace", path: "active", value: activeValue }],
-          }
-
-          const response = await patchScimUser({ id: user.id, body })
-
-          const expectedScimUser: ScimUserResponse = {
-            ...user,
-            active: true,
-          }
-          expect(response).toEqual(expectedScimUser)
-
-          const persistedUser = await config.api.scimUsersAPI.find(user.id)
-          expect(persistedUser).toEqual(expectedScimUser)
+          await config.api.scimUsersAPI.find(user.id, { expect: 404 })
         }
       )
 
