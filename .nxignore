@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+
+**/dist/
+**/.routify/
+
+**/coverage/
+**/yarn-error.log
+
+**/prebuilds/
+**/build/
+
+packages/server/builder/*
+packages/server/client/*

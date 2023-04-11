@@ -78,8 +78,8 @@
       <Layout gap="S" noPadding>
         {#if loaded && ($organisation.google || $organisation.oidc)}
           <FancyForm>
-            <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} />
-            <GoogleButton />
+            <OIDCButton oidcIcon={$oidc.logo} oidcName={$oidc.name} samePage />
+            <GoogleButton samePage />
           </FancyForm>
         {/if}
         {#if !$organisation.isSSOEnforced}
