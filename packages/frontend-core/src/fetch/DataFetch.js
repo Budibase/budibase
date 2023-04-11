@@ -56,6 +56,7 @@ export default class DataFetch {
       pageNumber: 0,
       cursor: null,
       cursors: [],
+      resetKey: Math.random(),
     })
 
     // Merge options with their default values
@@ -185,6 +186,7 @@ export default class DataFetch {
       info: page.info,
       cursors: paginate && page.hasNextPage ? [null, page.cursor] : [null],
       error: page.error,
+      resetKey: Math.random(),
     }))
   }
 

@@ -47,7 +47,6 @@
     </div>
   {/if}
   <slot />
-
   {#if selectedUser && !focused}
     <div class="label">
       {selectedUser.label}
@@ -72,6 +71,8 @@
     position: relative;
     width: 0;
   }
+
+  /* Cell border */
   .cell.focused:after,
   .cell.error:after,
   .cell.selected-other:not(.focused):after {
@@ -86,7 +87,20 @@
     border-radius: 2px;
     box-sizing: border-box;
   }
-  .cell:hover {
+
+  /* Cell border for cells with labels */
+  .cell.error:after,
+  .cell.selected-other:not(.focused):after {
+    border-radius: 0 2px 2px 2px;
+  }
+  .cell[data-row="0"].error:after,
+  .cell[data-row="0"].selected-other:not(.focused):after {
+    border-radius: 2px 2px 2px 0;
+  }
+
+  /* Cell z-index */
+  .cell.error,
+  .cell.selected-other:not(.focused) {
     z-index: 1;
   }
   .cell.focused {
@@ -96,13 +110,7 @@
     border-color: var(--spectrum-global-color-blue-400);
   }
   .cell.error:after {
-    border-color: var(--spectrum-global-color-red-400);
-  }
-  .cell.selected-other:not(.focused) {
-    z-index: 1;
-  }
-  .cell.selected-other:not(.focused):after {
-    border-color: var(--spectrum-global-color-red-400);
+    border-color: var(--spectrum-global-color-red-500);
   }
   .cell:not(.focused) {
     user-select: none;
@@ -134,16 +142,15 @@
     height: calc(var(--row-height) + 2px);
   }
 
-  /* Other user email */
+  /* Label for additional text */
   .label {
     position: absolute;
     bottom: 100%;
     left: 0;
-    margin: 0 0 -2px 0;
     padding: 1px 4px 3px 4px;
     background: var(--user-color);
-    border-radius: 2px;
-    display: none;
+    border-radius: 2px 2px 0 0;
+    display: block;
     color: white;
     font-size: 12px;
     font-weight: 600;
@@ -158,15 +165,8 @@
     top: 100%;
     border-radius: 0 2px 2px 2px;
     padding: 2px 4px 2px 4px;
-    margin: -2px 0 0 0;
-  }
-  .cell:hover .label {
-    display: block;
   }
   .error .label {
-    background: var(--spectrum-global-color-red-400);
-  }
-  .error.focused .label {
-    display: block;
+    background: var(--spectrum-global-color-red-500);
   }
 </style>
