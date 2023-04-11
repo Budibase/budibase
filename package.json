@@ -33,8 +33,6 @@
     "deps:circular": "madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular",
     "release": "lerna publish ${RELEASE_VERSION_TYPE:-patch} --yes --force-publish && yarn release:pro",
     "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop --exact && yarn release:pro:develop",
-    "release:pro": "bash scripts/pro/release.sh",
-    "release:pro:develop": "bash scripts/pro/release.sh develop",
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
@@ -48,7 +46,6 @@
     "dev:server": "yarn run kill-server && lerna run --stream --parallel dev:builder --concurrency 1 --scope @budibase/backend-core --scope @budibase/worker --scope @budibase/server",
     "dev:built": "cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream --parallel dev:built",
     "test": "lerna run --stream test --stream",
-    "test:pro": "bash scripts/pro/test.sh",
     "lint:eslint": "eslint packages && eslint qa-core",
     "lint:prettier": "prettier --check \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\" && prettier --check \"qa-core/**/*.{js,ts,svelte}\"",
     "lint": "yarn run lint:eslint && yarn run lint:prettier",
@@ -84,7 +81,6 @@
     "mode:account": "yarn mode:cloud && yarn env:account:enable",
     "security:audit": "node scripts/audit.js",
     "postinstall": "husky install",
-    "install:pro": "bash scripts/pro/install.sh",
     "dep:clean": "yarn clean && yarn bootstrap"
   }
 }
