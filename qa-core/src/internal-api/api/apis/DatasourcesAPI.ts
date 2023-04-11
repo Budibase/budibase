@@ -35,7 +35,6 @@ export default class DatasourcesAPI {
   }
 
   async add(body: any): Promise<[Response, AddedDatasource]> {
-    //temporarily using a hard coded datasource to test 500 error
     const [response, json] = await this.client.post(`/datasources`, { body })
     expect(response).toHaveStatusCode(200)
     expect(json.datasource._id).toBeDefined()
@@ -73,6 +72,12 @@ export default class DatasourcesAPI {
 
   async getQuery(queryId: string): Promise<[Response, any]> {
     const [response, json] = await this.client.get(`/queries/${queryId}`)
+    expect(response).toHaveStatusCode(200)
+    return [response, json]
+  }
+
+  async getQueryPermissions(queryId: string): Promise<[Response, any]> {
+    const [response, json] = await this.client.get(`/permissions/${queryId}`)
     expect(response).toHaveStatusCode(200)
     return [response, json]
   }
