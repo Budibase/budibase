@@ -1,15 +1,10 @@
-// mock the `getTenantId` and `isMultiTenant` functions
-jest.mock("../../context", () => ({
-  getTenantId: jest.fn(() => "budibase"),
-  isMultiTenant: jest.fn(() => true),
-}))
-
 import { TenantResolutionStrategy } from "@budibase/types"
 import { addTenantToUrl, isUserInAppTenant, getTenantIDFromCtx } from "../"
 import {
   isMultiTenant,
   getTenantIDFromAppID,
   DEFAULT_TENANT_ID,
+  getTenantId,
 } from "../../context"
 import { any } from "joi"
 const mockedIsMultiTenant = isMultiTenant as jest.MockedFunction<
@@ -18,6 +13,11 @@ const mockedIsMultiTenant = isMultiTenant as jest.MockedFunction<
 const mockedGetTenantIDFromAppID = getTenantIDFromAppID as jest.MockedFunction<
   typeof getTenantIDFromAppID
 >
+// mock the `getTenantId` and `isMultiTenant` functions
+jest.mock("../../context", () => ({
+  getTenantId: jest.fn(() => "budibase"),
+  isMultiTenant: jest.fn(() => true),
+}))
 describe("addTenantToUrl", () => {
   it("should append tenantId parameter to the URL", () => {
     const url = "https://budibase.com"
