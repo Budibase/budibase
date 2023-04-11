@@ -80,6 +80,7 @@ export const deriveStores = context => {
 
   // Reset everything when table ID changes
   let unsubscribe = null
+  let lastResetKey = null
   tableId.subscribe($tableId => {
     // Unsub from previous fetch if one exists
     unsubscribe?.()
@@ -109,7 +110,8 @@ export const deriveStores = context => {
     // Subscribe to changes of this fetch model
     unsubscribe = newFetch.subscribe($fetch => {
       if ($fetch.loaded && !$fetch.loading) {
-        const resetRows = $fetch.pageNumber === 0
+        const resetRows = $fetch.resetKey !== lastResetKey
+        lastResetKey = $fetch.resetKey
 
         // Reset scroll state when data changes
         if (!get(instanceLoaded)) {
@@ -211,6 +213,7 @@ export const deriveStores = context => {
     }
   }
 
+  // Duplicates a row, inserting the duplicate row after the existing one
   const duplicateRow = async row => {
     let clone = { ...row }
     delete clone._id
@@ -313,10 +316,10 @@ export const deriveStores = context => {
         }
         return state.slice()
       })
-      rowChangeCache.update(state => ({
-        ...state,
-        [rowId]: null,
-      }))
+      rowChangeCache.update(state => {
+        delete state[rowId]
+        return state
+      })
     } catch (error) {
       handleValidationError(rowId, error)
     }
@@ -391,11 +394,11 @@ export const deriveStores = context => {
 
   // Wipe the row change cache when changing row
   previousFocusedRowId.subscribe(id => {
-    if (!get(inProgressChanges)[id]) {
-      rowChangeCache.update(state => ({
-        ...state,
-        [id]: null,
-      }))
+    if (id && !get(inProgressChanges)[id]) {
+      rowChangeCache.update(state => {
+        delete state[id]
+        return state
+      })
     }
   })
 
