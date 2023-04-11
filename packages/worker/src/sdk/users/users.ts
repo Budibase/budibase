@@ -15,6 +15,7 @@ import {
   ViewName,
   env as coreEnv,
   context,
+  EmailUnavailableError,
 } from "@budibase/backend-core"
 import {
   AccountMetadata,
@@ -156,7 +157,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   if (env.MULTI_TENANCY) {
     const tenantUser = await getPlatformUser(email)
     if (tenantUser != null && tenantUser.tenantId !== tenantId) {
-      throw `Unavailable`
+      throw new EmailUnavailableError(email)
     }
   }
 
@@ -164,7 +165,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const account = await accounts.getAccount(email)
     if (account && account.verified && account.tenantId !== tenantId) {
-      throw `Unavailable`
+      throw new EmailUnavailableError(email)
     }
   }
 }
@@ -233,7 +234,7 @@ export const save = async (
     // no id was specified - load from email instead
     dbUser = await usersCore.getGlobalUserByEmail(email)
     if (dbUser && dbUser._id !== _id) {
-      throw `Unavailable`
+      throw new EmailUnavailableError(email)
     }
   }
 
