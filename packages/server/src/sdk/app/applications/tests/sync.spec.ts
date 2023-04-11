@@ -58,4 +58,12 @@ describe("app user/group sync", () => {
     const metadata = await getUserMetadata()
     expect(metadata.find(data => data.email === email)).toBeDefined()
   })
+
+  it("should be able to sync a group", async () => {
+
+  })
+
+  it("should be able to remove user", async () => {
+
+  })
 })
