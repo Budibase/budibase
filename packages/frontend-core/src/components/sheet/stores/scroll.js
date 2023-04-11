@@ -1,5 +1,6 @@
 import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
+import { DefaultColumnWidth } from "./columns"
 
 export const createStores = () => {
   const scroll = writable({
@@ -145,7 +146,7 @@ export const deriveStores = context => {
     const $visibleColumns = get(visibleColumns)
     const columnName = $focusedCellId?.split("-")[1]
     const column = $visibleColumns.find(col => col.name === columnName)
-    const horizontalOffset = 24
+    const horizontalOffset = DefaultColumnWidth
     if (!column) {
       return
     }
