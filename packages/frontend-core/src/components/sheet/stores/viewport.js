@@ -1,13 +1,15 @@
 import { derived, get } from "svelte/store"
 
-export const createViewportStores = context => {
-  const { rowHeight, visibleColumns, rows, scroll, bounds } = context
-  const scrollTop = derived(scroll, $scroll => $scroll.top, 0)
-  const scrollLeft = derived(scroll, $scroll => $scroll.left, 0)
-
-  // Derive height and width as primitives to avoid wasted computation
-  const width = derived(bounds, $bounds => $bounds.width, 0)
-  const height = derived(bounds, $bounds => $bounds.height, 0)
+export const deriveStores = context => {
+  const {
+    rowHeight,
+    visibleColumns,
+    rows,
+    scrollTop,
+    scrollLeft,
+    width,
+    height,
+  } = context
 
   // Derive visible rows
   // Split into multiple stores containing primitives to optimise invalidation

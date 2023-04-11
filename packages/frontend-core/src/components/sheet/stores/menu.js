@@ -1,13 +1,19 @@
 import { writable, get } from "svelte/store"
 
-export const createMenuStores = context => {
-  const { bounds, focusedCellId, stickyColumn, rowHeight } = context
+export const createStores = () => {
   const menu = writable({
     x: 0,
     y: 0,
     visible: false,
     selectedRow: null,
   })
+  return {
+    menu,
+  }
+}
+
+export const deriveStores = context => {
+  const { menu, bounds, focusedCellId, stickyColumn, rowHeight } = context
 
   const open = (cellId, e) => {
     const $bounds = get(bounds)

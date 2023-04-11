@@ -1,6 +1,6 @@
 import { derived } from "svelte/store"
 
-export const createPaginationStores = context => {
+export const deriveStores = context => {
   const { scrolledRowCount, rows, visualRowCapacity } = context
 
   // Derive how many rows we have in total

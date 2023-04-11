@@ -1,6 +1,6 @@
 import { writable, get, derived } from "svelte/store"
 
-export const createUserStores = () => {
+export const createStores = () => {
   const users = writable([])
   const userId = writable(null)
 
@@ -55,10 +55,22 @@ export const createUserStores = () => {
     []
   )
 
+  return {
+    users: {
+      ...users,
+      subscribe: enrichedUsers.subscribe,
+    },
+    userId,
+  }
+}
+
+export const deriveStores = context => {
+  const { users, userId } = context
+
   // Generate a lookup map of cell ID to the user that has it selected, to make
   // lookups inside sheet cells extremely fast
   const selectedCellMap = derived(
-    [enrichedUsers, userId],
+    [users, userId],
     ([$enrichedUsers, $userId]) => {
       let map = {}
       $enrichedUsers.forEach(user => {
@@ -92,15 +104,12 @@ export const createUserStores = () => {
 
   return {
     users: {
-      ...enrichedUsers,
-      set: users.set,
-      update: users.update,
+      ...users,
       actions: {
         updateUser,
         removeUser,
       },
     },
     selectedCellMap,
-    userId,
   }
 }

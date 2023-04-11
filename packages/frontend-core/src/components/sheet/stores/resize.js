@@ -3,18 +3,26 @@ import { DefaultColumnWidth } from "./columns"
 
 export const MinColumnWidth = 100
 
-export const createResizeStores = context => {
-  const { columns, stickyColumn, ui } = context
-  const initialState = {
-    initialMouseX: null,
-    initialWidth: null,
-    column: null,
-    columnIdx: null,
-    width: 0,
-    left: 0,
-  }
+const initialState = {
+  initialMouseX: null,
+  initialWidth: null,
+  column: null,
+  columnIdx: null,
+  width: 0,
+  left: 0,
+}
+
+export const createStores = () => {
   const resize = writable(initialState)
   const isResizing = derived(resize, $resize => $resize.column != null, false)
+  return {
+    resize,
+    isResizing,
+  }
+}
+
+export const deriveStores = context => {
+  const { resize, columns, stickyColumn, ui } = context
 
   // Starts resizing a certain column
   const startResizing = (column, e) => {
@@ -105,6 +113,5 @@ export const createResizeStores = context => {
         resetSize,
       },
     },
-    isResizing,
   }
 }

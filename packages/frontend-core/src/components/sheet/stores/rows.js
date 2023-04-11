@@ -2,18 +2,16 @@ import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 
-export const createRowsStore = context => {
-  const { tableId, API, scroll, validation } = context
+const initialSortState = {
+  column: null,
+  order: "ascending",
+}
+
+export const createStores = () => {
   const rows = writable([])
   const table = writable(null)
   const filter = writable([])
   const loaded = writable(false)
-  const instanceLoaded = writable(false)
-  const fetch = writable(null)
-  const initialSortState = {
-    column: null,
-    order: "ascending",
-  }
   const sort = writable(initialSortState)
 
   // Enrich rows with an index property
@@ -40,6 +38,37 @@ export const createRowsStore = context => {
     },
     {}
   )
+
+  return {
+    rows: {
+      ...rows,
+      subscribe: enrichedRows.subscribe,
+    },
+    rowLookupMap,
+    table,
+    filter,
+    loaded,
+    sort,
+  }
+}
+
+export const deriveStores = context => {
+  const {
+    rows,
+    rowLookupMap,
+    table,
+    filter,
+    loaded,
+    sort,
+    tableId,
+    API,
+    scroll,
+    validation,
+    focusedCellId,
+    columns,
+  } = context
+  const instanceLoaded = writable(false)
+  const fetch = writable(null)
 
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}
@@ -117,19 +146,32 @@ export const createRowsStore = context => {
   // Gets a row by ID
   const getRow = id => {
     const index = get(rowLookupMap)[id]
-    return index >= 0 ? get(enrichedRows)[index] : null
+    return index >= 0 ? get(rows)[index] : null
   }
 
   // Handles validation errors from the rows API and updates local validation
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
     if (error?.json?.validationErrors) {
-      for (let column of Object.keys(error.json.validationErrors)) {
+      const keys = Object.keys(error.json.validationErrors)
+      const $columns = get(columns)
+      for (let column of keys) {
         validation.actions.setError(
           `${rowId}-${column}`,
           `${column} ${error.json.validationErrors[column]}`
         )
+
+        // Ensure the column is visible
+        const index = $columns.findIndex(x => x.name === column)
+        if (index !== -1 && !$columns[index].visible) {
+          columns.update(state => {
+            state[index].visible = true
+            return state.slice()
+          })
+        }
       }
+      // Focus the first cell with an error
+      focusedCellId.set(`${rowId}-${keys[0]}`)
     } else {
       notifications.error(`Error saving row: ${error?.message}`)
     }
@@ -299,7 +341,6 @@ export const createRowsStore = context => {
   return {
     rows: {
       ...rows,
-      subscribe: enrichedRows.subscribe,
       actions: {
         addRow,
         getRow,
@@ -312,10 +353,5 @@ export const createRowsStore = context => {
         refreshTableDefinition,
       },
     },
-    rowLookupMap,
-    table,
-    sort,
-    filter,
-    loaded,
   }
 }

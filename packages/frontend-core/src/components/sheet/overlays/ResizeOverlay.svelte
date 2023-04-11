@@ -9,9 +9,9 @@
     stickyColumn,
     isReordering,
     gutterWidth,
+    scrollLeft,
   } = getContext("sheet")
 
-  $: scrollLeft = $scroll.left
   $: cutoff = scrollLeft + gutterWidth + ($columns[0]?.width || 0)
   $: offset = gutterWidth + ($stickyColumn?.width || 0)
   $: column = $resize.column

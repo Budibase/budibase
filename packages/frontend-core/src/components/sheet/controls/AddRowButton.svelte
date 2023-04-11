@@ -2,15 +2,15 @@
   import { ActionButton } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { dispatch, columns, stickyColumn } = getContext("sheet")
+  const { dispatch, columns, stickyColumn, config } = getContext("sheet")
 </script>
 
 <ActionButton
-  icon="Add"
+  icon="TableRowAddBottom"
   quiet
   size="M"
-  on:click={() => dispatch("add-row-inline")}
-  disabled={!$columns.length && !$stickyColumn}
+  on:click={() => dispatch("add-row")}
+  disabled={!$config.allowAddRows || (!$columns.length && !$stickyColumn)}
 >
   Create row
 </ActionButton>

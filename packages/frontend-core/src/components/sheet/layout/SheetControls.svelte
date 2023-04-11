@@ -2,10 +2,5 @@
   import SortButton from "../controls/SortButton.svelte"
   import HideColumnsButton from "../controls/HideColumnsButton.svelte"
   import AddRowButton from "../controls/AddRowButton.svelte"
-  import RowHeightButton from "../controls/RowHeightButton.svelte"
+  import AddColumnButton from "../controls/AddColumnButton.svelte"
 </script>
-
-<AddRowButton />
-<HideColumnsButton />
-<SortButton />
-<RowHeightButton />
