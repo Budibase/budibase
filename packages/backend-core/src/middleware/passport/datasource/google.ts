@@ -78,17 +78,23 @@ export async function postAuth(
     ),
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, tokens: string[]) => {
+      const baseUrl = `/builder/app/${authStateCookie.appId}/data`
       // update the DB for the datasource with all the user info
       await doWithDB(authStateCookie.appId, async (db: Database) => {
-        const datasource = await db.get(authStateCookie.datasourceId)
+        let datasource
+        try {
+          datasource = await db.get(authStateCookie.datasourceId)
+        } catch (err: any) {
+          if (err.status === 404) {
+            ctx.redirect(baseUrl)
+          }
+        }
         if (!datasource.config) {
           datasource.config = {}
         }
         datasource.config.auth = { type: "google", ...tokens }
         await db.put(datasource)
-        ctx.redirect(
-          `/builder/app/${authStateCookie.appId}/data/datasource/${authStateCookie.datasourceId}`
-        )
+        ctx.redirect(`${baseUrl}/datasource/${authStateCookie.datasourceId}`)
       })
     }
   )(ctx, next)

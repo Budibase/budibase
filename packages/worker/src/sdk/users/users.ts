@@ -15,6 +15,8 @@ import {
   utils,
   ViewName,
   env as coreEnv,
+  context,
+  EmailUnavailableError,
 } from "@budibase/backend-core"
 import {
   AccountMetadata,
@@ -36,8 +38,6 @@ import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
 import * as pro from "@budibase/pro"
 import * as accountSdk from "../accounts"
-
-const PAGE_LIMIT = 8
 
 export const allUsers = async () => {
   const db = tenancy.getGlobalDB()
@@ -66,43 +66,6 @@ export const getUsersByAppAccess = async (appId?: string) => {
     opts
   )
   return response
-}
-
-export const paginatedUsers = async ({
-  page,
-  email,
-  appId,
-}: SearchUsersRequest = {}) => {
-  const db = tenancy.getGlobalDB()
-  // get one extra document, to have the next page
-  const opts: any = {
-    include_docs: true,
-    limit: PAGE_LIMIT + 1,
-  }
-  // add a startkey if the page was specified (anchor)
-  if (page) {
-    opts.startkey = page
-  }
-  // property specifies what to use for the page/anchor
-  let userList,
-    property = "_id",
-    getKey
-  if (appId) {
-    userList = await usersCore.searchGlobalUsersByApp(appId, opts)
-    getKey = (doc: any) => usersCore.getGlobalUserByAppPage(appId, doc)
-  } else if (email) {
-    userList = await usersCore.searchGlobalUsersByEmail(email, opts)
-    property = "email"
-  } else {
-    // no search, query allDocs
-    const response = await db.allDocs(dbUtils.getGlobalUserParams(null, opts))
-    userList = response.rows.map((row: any) => row.doc)
-  }
-  return dbUtils.pagination(userList, PAGE_LIMIT, {
-    paginate: true,
-    property,
-    getKey,
-  })
 }
 
 export async function getUserByEmail(email: string) {
@@ -196,7 +159,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   if (env.MULTI_TENANCY) {
     const tenantUser = await getPlatformUser(email)
     if (tenantUser != null && tenantUser.tenantId !== tenantId) {
-      throw `Unavailable`
+      throw new EmailUnavailableError(email)
     }
   }
 
@@ -204,7 +167,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const account = await accounts.getAccount(email)
     if (account && account.verified && account.tenantId !== tenantId) {
-      throw `Unavailable`
+      throw new EmailUnavailableError(email)
     }
   }
 }
@@ -273,7 +236,7 @@ export const save = async (
     // no id was specified - load from email instead
     dbUser = await usersCore.getGlobalUserByEmail(email)
     if (dbUser && dbUser._id !== _id) {
-      throw `Unavailable`
+      throw new EmailUnavailableError(email)
     }
   }
 
@@ -576,7 +539,7 @@ export const bulkDelete = async (
   return response
 }
 
-export const destroy = async (id: string, currentUser: any) => {
+export const destroy = async (id: string) => {
   const db = tenancy.getGlobalDB()
   const dbUser = (await db.get(id)) as User
   const userId = dbUser._id as string
@@ -586,7 +549,7 @@ export const destroy = async (id: string, currentUser: any) => {
     const email = dbUser.email
     const account = await accounts.getAccount(email)
     if (account) {
-      if (email === currentUser.email) {
+      if (dbUser.userId === context.getIdentity()!._id) {
         throw new HTTPError('Please visit "Account" to delete this user', 400)
       } else {
         throw new HTTPError("Account holder cannot be deleted", 400)
