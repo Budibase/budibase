@@ -9,7 +9,7 @@
       "@budibase/types": ["../types/src"],
       "@budibase/backend-core": ["../backend-core/src"],
       "@budibase/backend-core/*": ["../backend-core/*"],
-      "@budibase/pro": ["../../../budibase-pro/packages/pro/src"]
+      "@budibase/pro": ["../pro/packages/pro/src"]
     }
   },
   "ts-node": {
@@ -19,13 +19,8 @@
   "references": [
     { "path": "../types" },
     { "path": "../backend-core" },
-    { "path": "../../../budibase-pro/packages/pro" }
+    { "path": "../pro/packages/pro" }
   ],
-  "include": [
-    "src/**/*",
-    "package.json"
-  ],
-  "exclude": [
-    "dist"
-  ]
+  "include": ["src/**/*", "package.json"],
+  "exclude": ["dist"]
 }
