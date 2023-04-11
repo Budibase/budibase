@@ -43,6 +43,10 @@ export function baseGlobalDBName(tenantId: string | undefined | null) {
   }
 }
 
+export function getPlatformURL() {
+  return env.PLATFORM_URL
+}
+
 export function isMultiTenant() {
   return !!env.MULTI_TENANCY
 }
