@@ -16,7 +16,7 @@
   const getStyle = (width, selectedUser) => {
     let style = `flex: 0 0 ${width}px;`
     if (selectedUser) {
-      style += `--user-color:${selectedUser.color};`
+      style += `--cell-color:${selectedUser.color};`
     }
     return style
   }
@@ -70,6 +70,7 @@
     background: var(--cell-background);
     position: relative;
     width: 0;
+    --cell-color: transparent;
   }
 
   /* Cell border */
@@ -82,7 +83,7 @@
     left: 0;
     height: 100%;
     width: 100%;
-    border: 2px solid transparent;
+    border: 2px solid var(--cell-color);
     pointer-events: none;
     border-radius: 2px;
     box-sizing: border-box;
@@ -106,11 +107,11 @@
   .cell.focused {
     z-index: 2;
   }
-  .cell.focused:after {
-    border-color: var(--spectrum-global-color-blue-400);
+  .cell.focused {
+    --cell-color: var(--spectrum-global-color-blue-400);
   }
-  .cell.error:after {
-    border-color: var(--spectrum-global-color-red-500);
+  .cell.error {
+    --cell-color: var(--spectrum-global-color-red-500);
   }
   .cell:not(.focused) {
     user-select: none;

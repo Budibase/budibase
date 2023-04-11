@@ -190,7 +190,8 @@ export const deriveStores = context => {
   const addRow = async (row, idx, bubble = false) => {
     try {
       // Create row
-      const newRow = await API.saveRow({ ...row, tableId: get(tableId) })
+      let newRow = await API.saveRow({ ...row, tableId: get(tableId) })
+      newRow = await fetchRow(newRow._id)
 
       // Update state
       if (idx != null) {
@@ -202,6 +203,8 @@ export const deriveStores = context => {
       } else {
         handleNewRows([newRow])
       }
+
+      // Refresh row to ensure data is in the correct format
       notifications.success("Row created successfully")
       return newRow
     } catch (error) {
@@ -220,26 +223,14 @@ export const deriveStores = context => {
     delete clone._rev
     delete clone.__idx
     try {
-      const newRow = await addRow(clone, row.__idx + 1, true)
-
-      // We deliberately re-use the majority of the existing row as the API
-      // returns different metadata for relationships when saving a row compared
-      // to using the search endpoint. We always want data in the shape that the
-      // search endpoint returns it.
-      return {
-        ...row,
-        __idx: row.__idx + 1,
-        _id: newRow._id,
-        _rev: newRow._rev,
-      }
+      return await addRow(clone, row.__idx + 1, true)
     } catch (error) {
       handleValidationError(row._id, error)
     }
   }
 
-  // Refreshes a specific row, handling updates, addition or deletion
-  const refreshRow = async id => {
-    // Fetch row from the server again
+  // Fetches a row by ID using the search endpoint
+  const fetchRow = async id => {
     const res = await API.searchTable({
       tableId: get(tableId),
       limit: 1,
@@ -250,7 +241,13 @@ export const deriveStores = context => {
       },
       paginate: false,
     })
-    let newRow = res?.rows?.[0]
+    return res?.rows?.[0]
+  }
+
+  // Refreshes a specific row, handling updates, addition or deletion
+  const refreshRow = async id => {
+    // Fetch row from the server again
+    const newRow = await fetchRow(id)
 
     // Get index of row to check if it exists
     const $rows = get(rows)
@@ -331,6 +328,10 @@ export const deriveStores = context => {
 
   // Deletes an array of rows
   const deleteRows = async rowsToDelete => {
+    if (!rowsToDelete?.length) {
+      return
+    }
+
     // Actually delete rows
     rowsToDelete.forEach(row => {
       delete row.__idx
