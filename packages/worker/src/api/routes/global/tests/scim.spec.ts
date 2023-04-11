@@ -255,6 +255,45 @@ describe("scim", () => {
           )
         })
 
+        it("a new user can minim information", async () => {
+          const userData = {
+            externalId: structures.uuid(),
+            email: structures.generator.email(),
+            username: structures.generator.name(),
+            firstName: undefined,
+            lastName: undefined,
+          }
+          const body = structures.scim.createUserRequest(userData)
+
+          const response = await postScimUser({ body })
+
+          const expectedScimUser = {
+            schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            id: expect.any(String),
+            externalId: userData.externalId,
+            meta: {
+              resourceType: "User",
+              created: mocks.date.MOCK_DATE.toISOString(),
+              lastModified: mocks.date.MOCK_DATE.toISOString(),
+            },
+            userName: userData.username,
+            active: true,
+            emails: [
+              {
+                value: userData.email,
+                type: "work",
+                primary: true,
+              },
+            ],
+          }
+          expect(response).toEqual(expectedScimUser)
+
+          const persistedUsers = await config.api.scimUsersAPI.get()
+          expect(persistedUsers.Resources).toEqual(
+            expect.arrayContaining([expectedScimUser])
+          )
+        })
+
         it("an event is dispatched", async () => {
           const body = structures.scim.createUserRequest()
 
@@ -398,7 +437,7 @@ describe("scim", () => {
           name: {
             ...user.name,
             familyName: newFamilyName,
-            formatted: `${user.name.givenName} ${newFamilyName}`,
+            formatted: `${user.name!.givenName} ${newFamilyName}`,
           },
         }
         expect(response).toEqual(expectedScimUser)
