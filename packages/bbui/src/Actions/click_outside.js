@@ -32,7 +32,7 @@ const handleClick = event => {
   })
 }
 document.documentElement.addEventListener("click", handleClick, true)
-// document.documentElement.addEventListener("contextmenu", handleClick, true)
+document.documentElement.addEventListener("contextmenu", handleClick, true)
 
 /**
  * Adds or updates a click handler
