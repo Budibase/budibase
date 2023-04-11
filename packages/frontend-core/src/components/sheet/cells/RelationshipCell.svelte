@@ -24,6 +24,12 @@
   let lastSearchId
   let results
 
+  $: {
+    if (focused) {
+      console.log(value)
+    }
+  }
+
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
   $: results = getResults(searchResults, value)
@@ -52,6 +58,7 @@
     if (!row?._id) {
       return false
     }
+    console.log(lookupMap)
     return lookupMap?.[row._id] === true
   }
 
@@ -192,11 +199,7 @@
       }
       candidateIndex = null
     }
-
-    // Clear search state to allow finding a new row again
-    searchString = null
-    searchResults = []
-    lastSearchString = null
+    close()
   }
 
   onMount(() => {

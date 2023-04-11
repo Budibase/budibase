@@ -3,7 +3,7 @@
   import { debounce } from "../../../utils/utils"
 
   const {
-    rows,
+    enrichedRows,
     focusedCellId,
     visibleColumns,
     focusedRow,
@@ -63,7 +63,7 @@
   }
 
   const selectFirstCell = () => {
-    const firstRow = $rows[0]
+    const firstRow = $enrichedRows[0]
     if (!firstRow) {
       return
     }
@@ -102,7 +102,7 @@
     if (!$focusedRow) {
       return
     }
-    const newRow = $rows[$focusedRow.__idx + delta]
+    const newRow = $enrichedRows[$focusedRow.__idx + delta]
     if (newRow) {
       const split = $focusedCellId.split("-")
       $focusedCellId = `${newRow._id}-${split[1]}`

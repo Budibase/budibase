@@ -6,9 +6,29 @@ export const createStores = () => {
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
   const rowHeight = writable(36)
+  const previousFocusedRowId = writable(null)
+
+  // Derive the current focused row ID
+  const focusedRowId = derived(
+    focusedCellId,
+    $focusedCellId => {
+      return $focusedCellId?.split("-")[0]
+    },
+    null
+  )
+
+  // Remember the last focused row ID so that we can store the previous one
+  let lastFocusedRowId = null
+  focusedRowId.subscribe(id => {
+    previousFocusedRowId.set(lastFocusedRowId)
+    lastFocusedRowId = id
+  })
+
   return {
     focusedCellId,
     focusedCellAPI,
+    focusedRowId,
+    previousFocusedRowId,
     selectedRows,
     hoveredRowId,
     rowHeight,
@@ -16,13 +36,19 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { focusedCellId, selectedRows, hoveredRowId, rows, rowLookupMap } =
-    context
+  const {
+    rows,
+    focusedCellId,
+    selectedRows,
+    hoveredRowId,
+    enrichedRows,
+    rowLookupMap,
+  } = context
 
   // Derive the row that contains the selected cell
   const focusedRow = derived(
-    [focusedCellId, rowLookupMap, rows],
-    ([$focusedCellId, $rowLookupMap, $rows]) => {
+    [focusedCellId, rowLookupMap, enrichedRows],
+    ([$focusedCellId, $rowLookupMap, $enrichedRows]) => {
       const rowId = $focusedCellId?.split("-")[0]
 
       if (rowId === "new") {
@@ -31,7 +57,7 @@ export const deriveStores = context => {
       } else {
         // All normal rows
         const index = $rowLookupMap[rowId]
-        return $rows[index]
+        return $enrichedRows[index]
       }
     },
     null
