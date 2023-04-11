@@ -1290,14 +1290,14 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.4.44-alpha.9":
-  version "2.4.44-alpha.9"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.4.44-alpha.9.tgz#ea2f1ec39fe0a97172b00e551f9e3b51f860e53b"
-  integrity sha512-uuZEqeyXnVwyNDPSwI8gF8zCv26PWvhbLoEYXMQqNl9J9q5g4i/lNacfKs1x9JDPABHE93mtLL5eoTogzrqTIg==
+"@budibase/backend-core@2.4.44-alpha.12":
+  version "2.4.44-alpha.12"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.4.44-alpha.12.tgz#ac5617e6ccb844252fb998ea8daac2d635fe9b95"
+  integrity sha512-KB7WzDNYqdV3XEII4qyER6BXkkKPBA9UBZ+9QOHUsJgdDWyJjZQUXho5T4DOdFUNCsNrZ0MCMOZWNBG6W5bTXg==
   dependencies:
     "@budibase/nano" "10.1.2"
     "@budibase/pouchdb-replication-stream" "1.2.10"
-    "@budibase/types" "2.4.44-alpha.9"
+    "@budibase/types" "2.4.44-alpha.12"
     "@shopify/jest-koa-mocks" "5.0.1"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-cloudfront-sign "2.2.0"
@@ -1430,15 +1430,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.4.44-alpha.9":
-  version "2.4.44-alpha.9"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.4.44-alpha.9.tgz#f6a5bcfb607ebb2138762e53a04ad55cf6de6014"
-  integrity sha512-cPUXlt9XQ0DlwoR47wLiLGEQlib6vKW15cLkh0pkz57vHbr5T22Ix4G7vgKGPVr5kpaJVNVdYLxBZ3qy8hUnJQ==
+"@budibase/pro@2.4.44-alpha.12":
+  version "2.4.44-alpha.12"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.4.44-alpha.12.tgz#964c0f0fd0b9c2e7cfbb1a39a455d84ea6c927ba"
+  integrity sha512-C1VXMKGvdzu55rVbTad1SE37EXPA36OWzFQ1IC6YEl4cs7bR6x7e8yXmn2LBH7uk8qArmjMrYJPKSmIlSHYfcA==
   dependencies:
-    "@budibase/backend-core" "2.4.44-alpha.9"
+    "@budibase/backend-core" "2.4.44-alpha.12"
     "@budibase/shared-core" "2.4.44-alpha.1"
     "@budibase/string-templates" "2.4.44-alpha.1"
-    "@budibase/types" "2.4.44-alpha.9"
+    "@budibase/types" "2.4.44-alpha.12"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1491,10 +1491,10 @@
   resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.1.tgz#1679657aa180d9c59afa1dffa611bff0638bd933"
   integrity sha512-Sq+8HfM75EBMoOvKYFwELdlxmVN6wNZMofDjT/2G+9aF+Zfe5Tzw69C+unmdBgcGGjGCHEYWSz4mF0v8FPAGbg==
 
-"@budibase/types@2.4.44-alpha.9":
-  version "2.4.44-alpha.9"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.9.tgz#a64fad8252f196bcb2a5fbd53f89ff5a90745813"
-  integrity sha512-auXyD1A1MZ42KYMaQpnHBgXbR3O3t6oycYESwhbkIaTHw3f9ir3m8Sus5R1eMI7YqI8nWjB6y9tW6lZoIAd/Pg==
+"@budibase/types@2.4.44-alpha.12":
+  version "2.4.44-alpha.12"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.12.tgz#cb7ad803f81ae2fd57412ef744b7dc953227b755"
+  integrity sha512-BJz4HtMVxnRJ+PJdgkJkRiL9FVMZPMx5ReikWalJPb2cYrceNsyZy04avuedIBCnS5S+6HXhGi7Hezlnm4unQQ==
   dependencies:
     scim-patch "^0.7.0"
 

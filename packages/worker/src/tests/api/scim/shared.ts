@@ -4,6 +4,7 @@ import { TestAPI } from "../base"
 const defaultConfig = {
   expect: 200,
   setHeaders: true,
+  skipContentTypeCheck: false,
 }
 
 export type RequestSettings = typeof defaultConfig
@@ -27,7 +28,7 @@ export abstract class ScimTestAPI extends TestAPI {
       "application/scim+json; charset=utf-8"
     )
 
-    if (method !== "delete") {
+    if (method !== "delete" && !requestSettings?.skipContentTypeCheck) {
       request = request.expect("Content-Type", /json/)
     }
 
