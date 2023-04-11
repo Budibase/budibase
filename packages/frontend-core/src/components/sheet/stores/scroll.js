@@ -29,17 +29,17 @@ export const deriveStores = context => {
     focusedRow,
     focusedCellId,
     gutterWidth,
+    scrollTop,
+    scrollLeft,
+    width,
+    height,
   } = context
   const padding = 264
 
   // Memoize store primitives
-  const scrollTop = derived(scroll, $scroll => $scroll.top, 0)
-  const scrollLeft = derived(scroll, $scroll => $scroll.left, 0)
   const stickyColumnWidth = derived(stickyColumn, $col => $col?.width || 0, 0)
 
   // Derive vertical limits
-  const height = derived(bounds, $bounds => $bounds.height, 0)
-  const width = derived(bounds, $bounds => $bounds.width, 0)
   const contentHeight = derived(
     [rows, rowHeight],
     ([$rows, $rowHeight]) => $rows.length * $rowHeight + padding,

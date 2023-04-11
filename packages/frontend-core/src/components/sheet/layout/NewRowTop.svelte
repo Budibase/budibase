@@ -87,7 +87,7 @@
         <div
           class="sticky-column"
           style="flex: 0 0 {width}px"
-          class:scrolled={scrollLeft > 0}
+          class:scrolled={$scrollLeft > 0}
         >
           <SheetCell width={gutterWidth} {rowHovered} {rowFocused}>
             <div class="gutter">

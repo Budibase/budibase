@@ -57,7 +57,7 @@
 <div
   class="sticky-column"
   style="flex: 0 0 {width}px"
-  class:scrolled={scrollLeft > 0}
+  class:scrolled={$scrollLeft > 0}
 >
   <div class="header row">
     <SheetCell width={gutterWidth}>
@@ -159,23 +159,31 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    border-right: var(--cell-border);
     z-index: 2;
   }
 
-  /*Add shadow when scrolled */
-  .sticky-column.scrolled:after {
+  /* Add right border */
+  .sticky-column:before {
+    position: absolute;
     content: "";
-    width: 10px;
+    width: 0;
     height: 100%;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.05), transparent);
+    left: calc(100% - 1px);
+    top: 0;
+    border-left: var(--cell-border);
+  }
+
+  /* Add shadow when scrolled */
+  .sticky-column.scrolled:after {
+    position: absolute;
+    content: "";
+    width: 16px;
+    height: 100%;
     left: 100%;
     top: 0;
-    position: absolute;
-    /*z-index: 1;*/
-  }
-  .sticky-column.scrolled {
-    box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.1);
+    opacity: 1;
+    background: linear-gradient(to right, var(--drop-shadow), transparent);
+    z-index: -1;
   }
 
   /* Don't show borders between cells in the sticky column */

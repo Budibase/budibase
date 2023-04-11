@@ -110,12 +110,12 @@
   .cell:hover {
     cursor: default;
   }
-  .cell.row-selected,
+  .cell.row-hovered,
   .cell.row-focused {
-    --cell-background: var(--spectrum-global-color-gray-75);
-  }
-  .cell.row-hovered {
     --cell-background: var(--cell-background-hover);
+  }
+  .cell.row-selected {
+    --cell-background: var(--spectrum-global-color-blue-100);
   }
   .cell.center {
     justify-content: center;
