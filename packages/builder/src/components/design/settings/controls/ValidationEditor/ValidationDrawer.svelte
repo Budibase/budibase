@@ -65,6 +65,14 @@
       label: "Must not contain",
       value: "notContains",
     },
+    MaxFileSize: {
+      label: "Max file size (MB)",
+      value: "maxFileSize",
+    },
+    MaxUploadSize: {
+      label: "Max upload size (MB)",
+      value: "maxUploadSize",
+    },
   }
   const ConstraintMap = {
     ["string"]: [
@@ -94,7 +102,11 @@
       Constraints.Equal,
       Constraints.NotEqual,
     ],
-    ["attachment"]: [Constraints.Required],
+    ["attachment"]: [
+      Constraints.Required,
+      Constraints.MaxFileSize,
+      Constraints.MaxUploadSize,
+    ],
     ["link"]: [
       Constraints.Required,
       Constraints.Contains,
@@ -283,7 +295,7 @@
                     disabled={rule.constraint === "required"}
                     on:change={e => (rule.value = e.detail)}
                   />
-                {:else if rule.type !== "array" && ["maxLength", "minLength", "regex", "notRegex", "contains", "notContains"].includes(rule.constraint)}
+                {:else if rule.type !== "array" && ["maxUploadSize", "maxFileSize", "maxLength", "minLength", "regex", "notRegex", "contains", "notContains"].includes(rule.constraint)}
                   <!-- Certain constraints always need string values-->
                   <Input
                     bind:value={rule.value}
