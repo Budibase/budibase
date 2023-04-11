@@ -1,7 +1,7 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
 
-describe("Internal API - Data Sources: PostgresSQL", () => {
+describe("Internal API - Data Sources: MongoDB", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -12,18 +12,18 @@ describe("Internal API - Data Sources: PostgresSQL", () => {
     await config.afterAll()
   })
 
-  it("Create an app with a data source - PostgresSQL", async () => {
+  it("Create an app with a data source - MongoDB", async () => {
     // Create app
     await config.createApp()
 
     // Add data source
     const [dataSourceResponse, dataSourceJson] =
-      await config.api.datasources.add(fixtures.datasources.postgresSQL())
+      await config.api.datasources.add(fixtures.datasources.mongoDB())
 
     // Update data source
     const newDataSourceInfo = {
       ...dataSourceJson.datasource,
-      name: "PostgresSQL2",
+      name: "MongoDB2",
     }
     const [updatedDataSourceResponse, updatedDataSourceJson] =
       await config.api.datasources.update(newDataSourceInfo)
@@ -31,9 +31,13 @@ describe("Internal API - Data Sources: PostgresSQL", () => {
     const dataSourceQuery = {
       datasourceId: updatedDataSourceJson.datasource._id,
       fields: {
-        sql: "SELECT * FROM categories;",
+        extra: {
+          collection: "movies",
+          actionType: "find",
+        },
+        json: "",
       },
-      name: "Query 1",
+      name: "Test Query",
       parameters: {},
       queryVerb: "read",
       schema: {},
