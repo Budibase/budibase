@@ -13,6 +13,7 @@ export enum QuotaType {
 export enum StaticQuotaName {
   ROWS = "rows",
   APPS = "apps",
+  USERS = "users",
   USER_GROUPS = "userGroups",
   PLUGINS = "plugins",
 }
@@ -54,7 +55,13 @@ export const isConstantQuota = (
   return quotaType === QuotaType.CONSTANT
 }
 
-export type PlanQuotas = { [ key in PlanType]: Quotas | undefined }
+export interface Minimums {
+  users: number
+}
+
+export type PlanMinimums = { [key in PlanType]?: Minimums}
+
+export type PlanQuotas = { [key in PlanType]: Quotas | undefined }
 
 export type MonthlyQuotas = {
   [MonthlyQuotaName.QUERIES]: Quota
@@ -65,6 +72,7 @@ export type MonthlyQuotas = {
 export type StaticQuotas = {
   [StaticQuotaName.ROWS]: Quota
   [StaticQuotaName.APPS]: Quota
+  [StaticQuotaName.USERS]: Quota
   [StaticQuotaName.USER_GROUPS]: Quota
   [StaticQuotaName.PLUGINS]: Quota
 }
