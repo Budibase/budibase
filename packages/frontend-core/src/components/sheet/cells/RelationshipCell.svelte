@@ -24,12 +24,6 @@
   let lastSearchId
   let results
 
-  $: {
-    if (focused) {
-      console.log(value)
-    }
-  }
-
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
   $: results = getResults(searchResults, value)
