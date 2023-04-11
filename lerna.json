@@ -1,7 +1,21 @@
 {
   "version": "2.4.44-alpha.12",
   "npmClient": "yarn",
-  "packages": ["packages/*"],
+  "packages": [
+    "packages/backend-core",
+    "packages/bbui",
+    "packages/builder",
+    "packages/cli",
+    "packages/client",
+    "packages/frontend-core",
+    "packages/sdk",
+    "packages/server",
+    "packages/shared-core",
+    "packages/string-templates",
+    "packages/types",
+    "packages/worker",
+    "packages/pro/packages/pro"
+  ],
   "command": {
     "publish": {
       "ignoreChanges": [
