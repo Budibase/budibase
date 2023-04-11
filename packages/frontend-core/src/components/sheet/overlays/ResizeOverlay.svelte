@@ -12,7 +12,7 @@
     scrollLeft,
   } = getContext("sheet")
 
-  $: cutoff = scrollLeft + gutterWidth + ($columns[0]?.width || 0)
+  $: cutoff = $scrollLeft + gutterWidth + ($columns[0]?.width || 0)
   $: offset = gutterWidth + ($stickyColumn?.width || 0)
   $: activeColumn = $resize.column
 
