@@ -185,7 +185,7 @@ export const deriveStores = context => {
   }
 
   // Adds a new row
-  const addRow = async (row, idx) => {
+  const addRow = async (row, idx, bubble = false) => {
     try {
       // Create row
       const newRow = await API.saveRow({ ...row, tableId: get(tableId) })
@@ -203,7 +203,34 @@ export const deriveStores = context => {
       notifications.success("Row created successfully")
       return newRow
     } catch (error) {
-      handleValidationError("new", error)
+      if (bubble) {
+        throw error
+      } else {
+        handleValidationError("new", error)
+      }
+    }
+  }
+
+  const duplicateRow = async row => {
+    let clone = { ...row }
+    delete clone._id
+    delete clone._rev
+    delete clone.__idx
+    try {
+      const newRow = await addRow(clone, row.__idx + 1, true)
+
+      // We deliberately re-use the majority of the existing row as the API
+      // returns different metadata for relationships when saving a row compared
+      // to using the search endpoint. We always want data in the shape that the
+      // search endpoint returns it.
+      return {
+        ...row,
+        __idx: row.__idx + 1,
+        _id: newRow._id,
+        _rev: newRow._rev,
+      }
+    } catch (error) {
+      handleValidationError(row._id, error)
     }
   }
 
@@ -378,6 +405,7 @@ export const deriveStores = context => {
       ...rows,
       actions: {
         addRow,
+        duplicateRow,
         getRow,
         updateRow,
         deleteRows,

@@ -25,16 +25,12 @@
   }
 
   const duplicate = async () => {
-    let clone = { ...$focusedRow }
-    delete clone._id
-    delete clone._rev
-    delete clone.__idx
-    const newRow = await rows.actions.addRow(clone, $focusedRow.__idx + 1)
+    const newRow = await rows.actions.duplicateRow($focusedRow)
     if (newRow) {
       const column = $stickyColumn?.name || $columns[0].name
       $focusedCellId = `${newRow._id}-${column}`
-      menu.actions.close()
     }
+    menu.actions.close()
   }
 </script>
 
