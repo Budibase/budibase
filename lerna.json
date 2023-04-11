@@ -1,5 +1,5 @@
 {
-  "version": "2.4.44-alpha.9",
+  "version": "2.4.44-alpha.11",
   "npmClient": "yarn",
   "packages": ["packages/*"],
   "command": {
@@ -11,6 +11,9 @@
         "# We ignore every JSON file, except for built-in-modules, built-ins and plugins defined in babel-preset-env/data.",
         "@(!(built-in-modules|built-ins|plugins|package)).json"
       ]
+    },
+    "run": {
+      "loadEnvFiles": false
     }
   }
 }
