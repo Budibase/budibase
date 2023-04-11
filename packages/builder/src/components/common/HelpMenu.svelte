@@ -85,6 +85,9 @@
 </div>
 
 <style>
+  :global(.helpMenuPopoverOverride) {
+    max-height: none !important;
+  }
   .help {
     z-index: 2;
     position: absolute;

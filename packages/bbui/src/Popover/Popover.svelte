@@ -73,7 +73,7 @@
         anchor,
       }}
       on:keydown={handleEscape}
-      class="spectrum-Popover is-open"
+      class={`spectrum-Popover is-open ${$$props.class}`}
       role="presentation"
       style="height: {customHeight}"
       transition:fly|local={{ y: -20, duration: 200 }}
