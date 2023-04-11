@@ -13,18 +13,8 @@ export const createStores = () => {
   const filter = writable([])
   const loaded = writable(false)
   const sort = writable(initialSortState)
-
-  // Enrich rows with an index property
-  const enrichedRows = derived(
-    rows,
-    $rows => {
-      return $rows.map((row, idx) => ({
-        ...row,
-        __idx: idx,
-      }))
-    },
-    []
-  )
+  const rowChangeCache = writable({})
+  const inProgressChanges = writable({})
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(
@@ -40,15 +30,14 @@ export const createStores = () => {
   )
 
   return {
-    rows: {
-      ...rows,
-      subscribe: enrichedRows.subscribe,
-    },
+    rows,
     rowLookupMap,
     table,
     filter,
     loaded,
     sort,
+    rowChangeCache,
+    inProgressChanges,
   }
 }
 
@@ -66,12 +55,28 @@ export const deriveStores = context => {
     validation,
     focusedCellId,
     columns,
+    rowChangeCache,
+    inProgressChanges,
+    previousFocusedRowId,
   } = context
   const instanceLoaded = writable(false)
   const fetch = writable(null)
 
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}
+
+  // Enrich rows with an index property and any pending changes
+  const enrichedRows = derived(
+    [rows, rowChangeCache],
+    ([$rows, $rowChangeCache]) => {
+      return $rows.map((row, idx) => ({
+        ...row,
+        ...$rowChangeCache[row._id],
+        __idx: idx,
+      }))
+    },
+    []
+  )
 
   // Reset everything when table ID changes
   let unsubscribe = null
@@ -153,6 +158,7 @@ export const deriveStores = context => {
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
     if (error?.json?.validationErrors) {
+      // Normal validation error
       const keys = Object.keys(error.json.validationErrors)
       const $columns = get(columns)
       for (let column of keys) {
@@ -173,7 +179,8 @@ export const deriveStores = context => {
       // Focus the first cell with an error
       focusedCellId.set(`${rowId}-${keys[0]}`)
     } else {
-      notifications.error(`Error saving row: ${error?.message}`)
+      // Some other error - just update the current cell
+      validation.actions.setError(get(focusedCellId), error?.message || "Error")
     }
   }
 
@@ -254,25 +261,42 @@ export const deriveStores = context => {
     }
 
     // Immediately update state so that the change is reflected
-    let newRow = { ...row, [column]: value }
-    rows.update(state => {
-      state[index] = { ...newRow }
-      return state
-    })
+    rowChangeCache.update(state => ({
+      ...state,
+      [rowId]: {
+        ...state[rowId],
+        [column]: value,
+      },
+    }))
 
     // Save change
-    delete newRow.__idx
     try {
-      await API.saveRow(newRow)
-    } catch (error) {
-      handleValidationError(newRow._id, error)
+      inProgressChanges.update(state => ({
+        ...state,
+        [rowId]: true,
+      }))
+      const newRow = { ...row, ...get(rowChangeCache)[rowId] }
+      const saved = await API.saveRow(newRow)
 
-      // Revert change
+      // Update state after a successful change
       rows.update(state => {
-        state[index] = row
-        return state
+        state[index] = {
+          ...newRow,
+          _rev: saved._rev,
+        }
+        return state.slice()
       })
+      rowChangeCache.update(state => ({
+        ...state,
+        [rowId]: null,
+      }))
+    } catch (error) {
+      handleValidationError(rowId, error)
     }
+    inProgressChanges.update(state => ({
+      ...state,
+      [rowId]: false,
+    }))
   }
 
   // Deletes an array of rows
@@ -338,7 +362,18 @@ export const deriveStores = context => {
     return get(rowLookupMap)[id] != null
   }
 
+  // Wipe the row change cache when changing row
+  previousFocusedRowId.subscribe(id => {
+    if (!get(inProgressChanges)[id]) {
+      rowChangeCache.update(state => ({
+        ...state,
+        [id]: null,
+      }))
+    }
+  })
+
   return {
+    enrichedRows,
     rows: {
       ...rows,
       actions: {

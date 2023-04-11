@@ -1,4 +1,4 @@
-import { writable, get, derived } from "svelte/store"
+import { writable, get } from "svelte/store"
 
 export const createStores = () => {
   const validation = writable({})
@@ -24,29 +24,22 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { validation, focusedRow, columns, stickyColumn } = context
-  const focusedRowId = derived(focusedRow, $focusedRow => $focusedRow?._id)
+  const { validation, previousFocusedRowId, columns, stickyColumn } = context
 
-  // Store the row ID that was previously focused, so we can remove errors from
-  // it when we focus a new row
-  let previousFocusedRowId = null
-  focusedRowId.subscribe(id => {
-    // Remove validation errors from previous focused row
-    if (previousFocusedRowId) {
+  // Remove validation errors from previous focused row
+  previousFocusedRowId.subscribe(id => {
+    if (id) {
       const $columns = get(columns)
       const $stickyColumn = get(stickyColumn)
       validation.update(state => {
         $columns.forEach(column => {
-          state[`${previousFocusedRowId}-${column.name}`] = null
+          state[`${id}-${column.name}`] = null
         })
         if ($stickyColumn) {
-          state[`${previousFocusedRowId}-${$stickyColumn.name}`] = null
+          state[`${id}-${$stickyColumn.name}`] = null
         }
         return state
       })
     }
-
-    // Store row ID
-    previousFocusedRowId = id
   })
 }
