@@ -56,3 +56,11 @@ export interface RestConfig {
     }
   ]
 }
+
+export interface CreateDatasourceResponse {
+  datasource: Datasource
+}
+
+export interface UpdatedDatasourceResponse {
+  datasource: Datasource
+}

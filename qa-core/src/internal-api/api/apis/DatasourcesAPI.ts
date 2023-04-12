@@ -1,6 +1,9 @@
 import { Response } from "node-fetch"
-import { Datasource } from "@budibase/types"
-import { AddedDatasource } from "../../../types"
+import {
+  Datasource,
+  CreateDatasourceResponse,
+  UpdatedDatasourceResponse,
+} from "@budibase/types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 
 export default class DatasourcesAPI {
@@ -34,7 +37,7 @@ export default class DatasourcesAPI {
     return [response, json]
   }
 
-  async add(body: any): Promise<[Response, AddedDatasource]> {
+  async add(body: any): Promise<[Response, CreateDatasourceResponse]> {
     const [response, json] = await this.client.post(`/datasources`, { body })
     expect(response).toHaveStatusCode(200)
     expect(json.datasource._id).toBeDefined()
@@ -43,7 +46,7 @@ export default class DatasourcesAPI {
     return [response, json]
   }
 
-  async update(body: any): Promise<[Response, AddedDatasource]> {
+  async update(body: any): Promise<[Response, UpdatedDatasourceResponse]> {
     const [response, json] = await this.client.put(`/datasources/${body._id}`, {
       body,
     })
