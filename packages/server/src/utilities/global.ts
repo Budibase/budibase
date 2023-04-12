@@ -9,6 +9,7 @@ import {
 import env from "../environment"
 import { groups } from "@budibase/pro"
 import { UserCtx, ContextUser, User, UserGroup } from "@budibase/types"
+import { global } from "yargs"
 
 export function updateAppRole(
   user: ContextUser,
@@ -16,7 +17,7 @@ export function updateAppRole(
 ) {
   appId = appId || context.getAppId()
 
-  if (!user || !user.roles) {
+  if (!user || (!user.roles && !user.userGroups)) {
     return user
   }
   // if in an multi-tenancy environment make sure roles are never updated
@@ -27,7 +28,7 @@ export function updateAppRole(
     return user
   }
   // always use the deployed app
-  if (appId) {
+  if (appId && user.roles) {
     user.roleId = user.roles[dbCore.getProdAppID(appId)]
   }
   // if a role wasn't found then either set as admin (builder) or public (everyone else)
@@ -60,7 +61,7 @@ async function checkGroupRoles(
   return user
 }
 
-async function processUser(
+export async function processUser(
   user: ContextUser,
   opts: { appId?: string; groups?: UserGroup[] } = {}
 ) {
@@ -94,10 +95,12 @@ export async function getGlobalUser(userId: string) {
   return processUser(user, { appId })
 }
 
-export async function getGlobalUsers(userIds?: string[]) {
+export async function getGlobalUsers(
+  userIds?: string[],
+  opts?: { noProcessing?: boolean }
+) {
   const appId = context.getAppId()
   const db = tenancy.getGlobalDB()
-  const allGroups = await groups.fetch()
   let globalUsers
   if (userIds) {
     globalUsers = (await db.allDocs(getMultiIDParams(userIds))).rows.map(
@@ -123,11 +126,16 @@ export async function getGlobalUsers(userIds?: string[]) {
     return globalUsers
   }
 
-  // pass in the groups, meaning we don't actually need to retrieve them for
-  // each user individually
-  return Promise.all(
-    globalUsers.map(user => processUser(user, { groups: allGroups }))
-  )
+  if (opts?.noProcessing) {
+    return globalUsers
+  } else {
+    // pass in the groups, meaning we don't actually need to retrieve them for
+    // each user individually
+    const allGroups = await groups.fetch()
+    return Promise.all(
+      globalUsers.map(user => processUser(user, { groups: allGroups }))
+    )
+  }
 }
 
 export async function getGlobalUsersFromMetadata(users: ContextUser[]) {
