@@ -38,8 +38,13 @@ beforeAll(async () => {
   initUserGroupSync(updateCb)
 })
 
-async function createUser(email: string, roles: UserRoles) {
-  const user = await config.createUser({ email, roles })
+async function createUser(email: string, roles: UserRoles, builder?: boolean) {
+  const user = await config.createUser({
+    email,
+    roles,
+    builder: builder || false,
+    admin: false,
+  })
   await context.doInContext(config.appId!, async () => {
     await events.user.created(user)
   })
@@ -122,5 +127,10 @@ describe("app user/group sync", () => {
     }
     await removeUserFromGroup()
     await checkEmail(groupEmail, { notFound: true })
+  })
+
+  it("should be able to handle builder users", async () => {
+    await createUser("test3@test.com", {}, true)
+    await checkEmail("test3@test.com")
   })
 })
