@@ -241,6 +241,25 @@ const maxLengthHandler = (value, rule) => {
   return value == null || value.length <= limit
 }
 
+// Evaluates a max file size (MB) constraint
+const maxFileSizeHandler = (value, rule) => {
+  const limit = parseType(rule.value, "number")
+  return (
+    value == null ||
+    !value.some(attachment => attachment.size / 1000000 > limit)
+  )
+}
+
+// Evaluates a max total upload size (MB) constraint
+const maxUploadSizeHandler = (value, rule) => {
+  const limit = parseType(rule.value, "number")
+  return (
+    value == null ||
+    value.reduce((acc, currentItem) => acc + currentItem.size, 0) / 1000000 <=
+      limit
+  )
+}
+
 // Evaluates a min value constraint
 const minValueHandler = (value, rule) => {
   // Use same type as the value so that things can be compared
@@ -330,6 +349,8 @@ const handlerMap = {
   contains: containsHandler,
   notContains: notContainsHandler,
   json: jsonHandler,
+  maxFileSize: maxFileSizeHandler,
+  maxUploadSize: maxUploadSizeHandler,
 }
 
 /**

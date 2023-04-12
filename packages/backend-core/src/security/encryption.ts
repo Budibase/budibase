@@ -12,7 +12,7 @@ export enum SecretOption {
   ENCRYPTION = "encryption",
 }
 
-function getSecret(secretOption: SecretOption): string {
+export function getSecret(secretOption: SecretOption): string {
   let secret, secretName
   switch (secretOption) {
     case SecretOption.ENCRYPTION:
