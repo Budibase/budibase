@@ -189,7 +189,11 @@ spec:
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
 
-        image: budibase/worker:{{ .Values.globals.appVersion }}
+        {{ if .Values.globals.appVersion }}
+        image: budibase/worker:v{{ .Values.globals.appVersion }}
+        {{ else }}
+        image: budibase/worker:v{{ .Chart.AppVersion }}
+        {{ end }}
         imagePullPolicy: Always
         livenessProbe:
           httpGet:

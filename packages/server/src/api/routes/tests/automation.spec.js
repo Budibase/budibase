@@ -19,9 +19,12 @@ describe("/automations", () => {
 
   afterAll(setup.afterAll)
 
-  // For some reason this cannot be a beforeAll or the test "tests the automation successfully" fail
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(() => {
+    events.automation.deleted.mockClear()
   })
 
   describe("get definitions", () => {
