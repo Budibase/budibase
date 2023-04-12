@@ -1,4 +1,5 @@
 import { get, writable, derived } from "svelte/store"
+import { cloneDeep } from "lodash/fp"
 
 const reorderInitialState = {
   sourceColumn: null,
@@ -23,7 +24,8 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { reorder, columns, scroll, bounds, stickyColumn, ui } = context
+  const { reorder, columns, scroll, bounds, stickyColumn, ui, table, API } =
+    context
 
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (column, e) => {
@@ -88,10 +90,10 @@ export const deriveStores = context => {
   }
 
   // Callback when stopping reordering columns
-  const stopReordering = () => {
+  const stopReordering = async () => {
     // Swap position of columns
     let { sourceColumn, targetColumn } = get(reorder)
-    const $columns = get(columns)
+    let $columns = get(columns)
     let sourceIdx = $columns.findIndex(x => x.name === sourceColumn)
     let targetIdx = $columns.findIndex(x => x.name === targetColumn)
     targetIdx++
@@ -110,9 +112,12 @@ export const deriveStores = context => {
     // Remove event handlers
     document.removeEventListener("mousemove", onReorderMouseMove)
     document.removeEventListener("mouseup", stopReordering)
+
+    // Persist changes
+    await saveOrderChanges()
   }
 
-  const moveColumnLeft = column => {
+  const moveColumnLeft = async column => {
     const $columns = get(columns)
     const sourceIdx = $columns.findIndex(x => x.name === column)
     if (sourceIdx === 0) {
@@ -124,9 +129,12 @@ export const deriveStores = context => {
       state[sourceIdx - 1] = tmp
       return state.slice()
     })
+
+    // Persist changes
+    await saveOrderChanges()
   }
 
-  const moveColumnRight = column => {
+  const moveColumnRight = async column => {
     const $columns = get(columns)
     const sourceIdx = $columns.findIndex(x => x.name === column)
     if (sourceIdx === $columns.length - 1) {
@@ -138,6 +146,20 @@ export const deriveStores = context => {
       state[sourceIdx + 1] = tmp
       return state.slice()
     })
+
+    // Persist changes
+    await saveOrderChanges()
+  }
+
+  // Saves order changes as part of table metadata
+  const saveOrderChanges = async () => {
+    const $table = cloneDeep(get(table))
+    const $columns = get(columns)
+    $columns.forEach(column => {
+      $table.schema[column.name].order = column.order
+    })
+    const newTable = await API.saveTable($table)
+    table.set(newTable)
   }
 
   return {

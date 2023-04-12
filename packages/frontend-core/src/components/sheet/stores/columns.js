@@ -12,10 +12,11 @@ export const createStores = () => {
     columns,
     $columns => {
       let offset = 0
-      return $columns.map(column => {
+      return $columns.map((column, idx) => {
         const enriched = {
           ...column,
           left: offset,
+          order: idx,
         }
         if (column.visible) {
           offset += column.width
@@ -85,15 +86,27 @@ export const deriveStores = context => {
           }
           return {
             name: field,
-            width: existing?.width || DefaultColumnWidth,
+            width: existing?.width || schema[field].width || DefaultColumnWidth,
             schema: schema[field],
             visible: existing?.visible ?? true,
+            order: schema[field].order,
           }
         })
         .sort((a, b) => {
-          // Sort columns to put auto columns last
-          let autoColA = a.schema?.autocolumn
-          let autoColB = b.schema?.autocolumn
+          // Sort by order first
+          const orderA = a.order
+          const orderB = b.order
+          if (orderA != null && orderB != null) {
+            return orderA < orderB ? -1 : 1
+          } else if (orderA != null) {
+            return -1
+          } else if (orderB != null) {
+            return 1
+          }
+
+          // Then sort by auto columns
+          const autoColA = a.schema?.autocolumn
+          const autoColB = b.schema?.autocolumn
           if (autoColA === autoColB) {
             return 0
           }
@@ -115,7 +128,8 @@ export const deriveStores = context => {
     }
     stickyColumn.set({
       name: primaryDisplay,
-      width: existing?.width || DefaultColumnWidth,
+      width:
+        existing?.width || schema[primaryDisplay].width || DefaultColumnWidth,
       left: gutterWidth,
       schema: schema[primaryDisplay],
       idx: "sticky",
