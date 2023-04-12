@@ -255,6 +255,45 @@ describe("scim", () => {
           )
         })
 
+        it("a new user can minim information", async () => {
+          const userData = {
+            externalId: structures.uuid(),
+            email: structures.generator.email(),
+            username: structures.generator.name(),
+            firstName: undefined,
+            lastName: undefined,
+          }
+          const body = structures.scim.createUserRequest(userData)
+
+          const response = await postScimUser({ body })
+
+          const expectedScimUser = {
+            schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            id: expect.any(String),
+            externalId: userData.externalId,
+            meta: {
+              resourceType: "User",
+              created: mocks.date.MOCK_DATE.toISOString(),
+              lastModified: mocks.date.MOCK_DATE.toISOString(),
+            },
+            userName: userData.username,
+            active: true,
+            emails: [
+              {
+                value: userData.email,
+                type: "work",
+                primary: true,
+              },
+            ],
+          }
+          expect(response).toEqual(expectedScimUser)
+
+          const persistedUsers = await config.api.scimUsersAPI.get()
+          expect(persistedUsers.Resources).toEqual(
+            expect.arrayContaining([expectedScimUser])
+          )
+        })
+
         it("an event is dispatched", async () => {
           const body = structures.scim.createUserRequest()
 
@@ -317,6 +356,15 @@ describe("scim", () => {
 
           await postScimUser({ body }, { expect: 500 })
         })
+      })
+
+      it("creating an existing user name returns a conflict", async () => {
+        const body = structures.scim.createUserRequest()
+
+        await postScimUser({ body })
+
+        const res = await postScimUser({ body }, { expect: 409 })
+        expect((res as any).message).toBe("Email already in use")
       })
     })
 
@@ -389,7 +437,7 @@ describe("scim", () => {
           name: {
             ...user.name,
             familyName: newFamilyName,
-            formatted: `${user.name.givenName} ${newFamilyName}`,
+            formatted: `${user.name!.givenName} ${newFamilyName}`,
           },
         }
         expect(response).toEqual(expectedScimUser)
@@ -399,53 +447,19 @@ describe("scim", () => {
       })
 
       it.each([false, "false", "False"])(
-        "can deactive an active user (sending %s)",
+        "deactivating an active user (sending %s) will delete it",
         async activeValue => {
           const body: ScimUpdateRequest = {
             schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
             Operations: [{ op: "Replace", path: "active", value: activeValue }],
           }
 
-          const response = await patchScimUser({ id: user.id, body })
+          await patchScimUser(
+            { id: user.id, body },
+            { expect: 204, skipContentTypeCheck: true }
+          )
 
-          const expectedScimUser: ScimUserResponse = {
-            ...user,
-            active: false,
-          }
-          expect(response).toEqual(expectedScimUser)
-
-          const persistedUser = await config.api.scimUsersAPI.find(user.id)
-          expect(persistedUser).toEqual(expectedScimUser)
-        }
-      )
-
-      it.each([true, "true", "True"])(
-        "can activate an inactive user (sending %s)",
-        async activeValue => {
-          // Deactivate user
-          await patchScimUser({
-            id: user.id,
-            body: {
-              schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-              Operations: [{ op: "Replace", path: "active", value: true }],
-            },
-          })
-
-          const body: ScimUpdateRequest = {
-            schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-            Operations: [{ op: "Replace", path: "active", value: activeValue }],
-          }
-
-          const response = await patchScimUser({ id: user.id, body })
-
-          const expectedScimUser: ScimUserResponse = {
-            ...user,
-            active: true,
-          }
-          expect(response).toEqual(expectedScimUser)
-
-          const persistedUser = await config.api.scimUsersAPI.find(user.id)
-          expect(persistedUser).toEqual(expectedScimUser)
+          await config.api.scimUsersAPI.find(user.id, { expect: 404 })
         }
       )
 
