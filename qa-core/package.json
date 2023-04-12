@@ -9,47 +9,26 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "test": "env-cmd jest --runInBand",
-    "test:watch": "env-cmd jest --watch",
-    "test:debug": "DEBUG=1 jest",
+    "setup": "yarn && node scripts/createEnv.js",
+    "test": "jest --runInBand --json --outputFile=testResults.json",
+    "test:watch": "yarn run test --watch",
+    "test:debug": "DEBUG=1 yarn run test",
     "test:notify": "node scripts/testResultsWebhook",
-    "test:ci": "jest --runInBand --json --outputFile=testResults.json --testPathIgnorePatterns=\\\"\\/dataSources\\/\\\"",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "api:server:setup": "npm run docker:up && env-cmd ts-node ../packages/builder/ts/setup.ts",
-    "api:server:setup:ci": "env-cmd node ../packages/builder/setup.js",
-    "api:test:ci": "start-server-and-test api:server:setup:ci http://localhost:4100/builder test",
-    "api:test": "start-server-and-test api:server:setup http://localhost:4100/builder test",
-    "api:test:local": "env-cmd jest --runInBand --testPathIgnorePatterns=\\\"\\/dataSources\\/\\\"",
-    "api:test:nightly": "env-cmd jest --runInBand --outputFile=testResults.json"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "@budibase/types": "<rootDir>/../packages/types/src",
-      "@budibase/server": "<rootDir>/../packages/server/src",
-      "@budibase/backend-core": "<rootDir>/../packages/backend-core/src",
-      "@budibase/backend-core/(.*)": "<rootDir>/../packages/backend-core/$1"
-    },
-    "setupFiles": [
-      "./scripts/jestSetup.js"
-    ],
-    "setupFilesAfterEnv": [
-      "./src/jest.extends.ts"
-    ]
+    "test:smoke": "yarn run test --testPathIgnorePatterns=\\\"\\/dataSources\\/\\\"",
+    "test:ci": "start-server-and-test dev:built http://localhost:4001/health test:smoke",
+    "dev:built": "cd ../ && yarn dev:built"
   },
   "devDependencies": {
     "@budibase/types": "^2.3.17",
     "@types/jest": "29.0.0",
     "@types/node-fetch": "2.6.2",
     "chance": "1.1.8",
-    "env-cmd": "^10.1.0",
-    "jest": "28.1.1",
+    "dotenv": "16.0.1",
+    "jest": "29.0.0",
     "prettier": "2.7.1",
     "start-server-and-test": "1.14.0",
     "timekeeper": "2.2.0",
-    "ts-jest": "28.0.8",
+    "ts-jest": "29.0.0",
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
     "typescript": "4.7.3"

@@ -22,6 +22,18 @@ export function createTablesStore() {
     }))
   }
 
+  const fetchTable = async tableId => {
+    const table = await API.fetchTableDefinition(tableId)
+
+    store.update(state => {
+      const indexToUpdate = state.list.findIndex(t => t._id === table._id)
+      state.list[indexToUpdate] = table
+      return {
+        ...state,
+      }
+    })
+  }
+
   const select = tableId => {
     store.update(state => ({
       ...state,
@@ -126,6 +138,7 @@ export function createTablesStore() {
   return {
     subscribe: derivedStore.subscribe,
     fetch,
+    fetchTable,
     init: fetch,
     select,
     save,

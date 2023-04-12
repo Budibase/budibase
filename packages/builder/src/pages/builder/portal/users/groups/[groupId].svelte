@@ -14,7 +14,7 @@
   } from "@budibase/bbui"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "helpers/pagination"
-  import { users, apps, groups, auth } from "stores/portal"
+  import { users, apps, groups, auth, features } from "stores/portal"
   import { onMount, setContext } from "svelte"
   import { roles } from "stores/backend"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -24,18 +24,23 @@
   import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
   import RemoveUserTableRenderer from "./_components/RemoveUserTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
+  import ScimBanner from "../_components/SCIMBanner.svelte"
 
   export let groupId
 
-  const userSchema = {
+  $: userSchema = {
     email: {
       width: "1fr",
     },
-    _id: {
-      displayName: "",
-      width: "auto",
-      borderLeft: true,
-    },
+    ...(readonly
+      ? {}
+      : {
+          _id: {
+            displayName: "",
+            width: "auto",
+            borderLeft: true,
+          },
+        }),
   }
   const appSchema = {
     name: {
@@ -70,7 +75,9 @@
   let loaded = false
   let editModal, deleteModal
 
-  $: readonly = !$auth.isAdmin
+  const scimEnabled = $features.isScimEnabled
+
+  $: readonly = !$auth.isAdmin || scimEnabled
   $: page = $pageInfo.page
   $: fetchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
@@ -182,11 +189,15 @@
     <Layout noPadding gap="S">
       <div class="header">
         <Heading size="S">Users</Heading>
-        <div bind:this={popoverAnchor}>
-          <Button disabled={readonly} on:click={popover.show()} cta
-            >Add user</Button
-          >
-        </div>
+        {#if !scimEnabled}
+          <div bind:this={popoverAnchor}>
+            <Button disabled={readonly} on:click={popover.show()} cta
+              >Add user</Button
+            >
+          </div>
+        {:else}
+          <ScimBanner />
+        {/if}
         <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
           <UserGroupPicker
             bind:searchTerm

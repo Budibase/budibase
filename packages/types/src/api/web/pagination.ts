@@ -22,6 +22,6 @@ export interface PaginationRequest extends BasicPaginationRequest {
 }
 
 export interface PaginationResponse {
-  bookmark: string
+  bookmark: string | undefined
   hasNextPage: boolean
 }

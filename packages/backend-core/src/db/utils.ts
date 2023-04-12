@@ -166,8 +166,8 @@ export async function dbExists(dbName: any) {
   )
 }
 
-export function pagination(
-  data: any[],
+export function pagination<T>(
+  data: T[],
   pageSize: number,
   {
     paginate,
@@ -176,7 +176,7 @@ export function pagination(
   }: {
     paginate: boolean
     property: string
-    getKey?: (doc: any) => string | undefined
+    getKey?: (doc: T) => string | undefined
   } = {
     paginate: true,
     property: "_id",

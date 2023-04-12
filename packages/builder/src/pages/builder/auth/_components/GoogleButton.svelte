@@ -3,6 +3,7 @@
   import GoogleLogo from "assets/google-logo.png"
   import { auth, organisation } from "stores/portal"
 
+  export let samePage
   let show
 
   $: tenantId = $auth.tenantId
@@ -12,8 +13,14 @@
 {#if show}
   <FancyButton
     icon={GoogleLogo}
-    on:click={() =>
-      window.open(`/api/global/auth/${tenantId}/google`, "_blank")}
+    on:click={() => {
+      const url = `/api/global/auth/${tenantId}/google`
+      if (samePage) {
+        window.location = url
+      } else {
+        window.open(url, "_blank")
+      }
+    }}
   >
     Log in with Google
   </FancyButton>
