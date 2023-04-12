@@ -7,7 +7,7 @@
 </script>
 
 <div class="header">
-  <SheetScrollWrapper scrollVertically={false} wheelInteractive={false}>
+  <SheetScrollWrapper scrollHorizontally>
     <div class="row">
       {#each $renderedColumns as column, idx}
         <HeaderCell {column} {idx} />

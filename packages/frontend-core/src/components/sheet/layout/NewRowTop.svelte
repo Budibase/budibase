@@ -118,7 +118,7 @@
           {/if}
         </div>
 
-        <SheetScrollWrapper scrollVertically={false} foo>
+        <SheetScrollWrapper scrollHorizontally wheelInteractive foo>
           <div class="row">
             {#each $visibleColumns as column}
               {@const cellId = `new-${column.name}`}

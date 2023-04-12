@@ -21,6 +21,7 @@
   $: rowSelected = !!$selectedRows[row._id]
   $: rowHovered = $hoveredRowId === row._id
   $: rowFocused = $focusedRow?._id === row._id
+  $: reorderSource = $reorder.sourceColumn
   $: cols = rowFocused ? $visibleColumns : $renderedColumns
   $: foo = `margin-left: ${-1 * $hiddenColumnsWidth}px;`
 </script>
@@ -35,18 +36,16 @@
   {#each cols as column (column.name)}
     {@const cellId = `${row._id}-${column.name}`}
     <DataCell
-      {rowSelected}
-      {rowHovered}
-      {rowFocused}
       {cellId}
       {column}
       {row}
       {invert}
+      {rowFocused}
+      highlighted={rowHovered || rowFocused || reorderSource === column.name}
+      selected={rowSelected}
       rowIdx={idx}
       focused={$focusedCellId === cellId}
       selectedUser={$selectedCellMap[cellId]}
-      reorderSource={$reorder.sourceColumn === column.name}
-      reorderTarget={$reorder.targetColumn === column.name}
       width={column.width}
     />
   {/each}

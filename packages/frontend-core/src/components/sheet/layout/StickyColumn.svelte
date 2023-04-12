@@ -13,8 +13,6 @@
     renderedRows,
     focusedCellId,
     hoveredRowId,
-    scroll,
-    reorder,
     config,
     selectedCellMap,
     focusedRow,
@@ -86,7 +84,7 @@
   </div>
 
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
-    <SheetScrollWrapper scrollHorizontally={false}>
+    <SheetScrollWrapper scrollVertically wheelInteractive>
       {#each $renderedRows as row, idx}
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
@@ -99,9 +97,8 @@
         >
           <SheetCell
             width={gutterWidth}
-            {rowSelected}
-            {rowFocused}
-            {rowHovered}
+            highlighted={rowFocused || rowHovered}
+            selected={rowSelected}
           >
             <div class="gutter">
               <div
@@ -135,14 +132,12 @@
           </SheetCell>
           {#if $stickyColumn}
             <DataCell
-              {rowSelected}
-              {rowHovered}
-              {rowFocused}
+              selected={rowSelected}
+              highlighted={rowHovered || rowFocused}
               rowIdx={idx}
               focused={$focusedCellId === cellId}
               selectedUser={$selectedCellMap[cellId]}
               width={$stickyColumn.width}
-              reorderTarget={$reorder.targetColumn === $stickyColumn.name}
               column={$stickyColumn}
               {row}
               {cellId}

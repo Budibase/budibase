@@ -25,7 +25,7 @@
 </script>
 
 <div bind:this={body} class="sheet-body">
-  <SheetScrollWrapper>
+  <SheetScrollWrapper scrollHorizontally scrollVertically wheelInteractive>
     {#each $renderedRows as row, idx}
       <SheetRow {row} {idx} invert={idx >= inversionIdx} />
     {/each}

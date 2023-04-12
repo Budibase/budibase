@@ -1,15 +1,11 @@
 <script>
-  export let rowSelected = false
-  export let rowHovered = false
-  export let rowFocused = false
   export let focused = false
-  export let reorderSource = false
-  export let reorderTarget = false
+  export let selected = false
+  export let highlighted = false
   export let width = ""
-  export let center = false
   export let selectedUser = null
-  export let rowIdx
   export let error = null
+  export let rowIdx
 
   $: style = getStyle(width, selectedUser)
 
@@ -24,15 +20,11 @@
 
 <div
   class="cell"
-  class:row-selected={rowSelected}
-  class:row-hovered={rowHovered}
-  class:row-focused={rowFocused}
+  class:selected
+  class:highlighted
   class:focused
-  class:selected-other={selectedUser != null}
-  class:reorder-source={reorderSource}
-  class:reorder-target={reorderTarget}
-  class:center
   class:error
+  class:selected-other={selectedUser != null}
   on:focus
   on:mousedown
   on:mouseup
@@ -119,28 +111,12 @@
   .cell:hover {
     cursor: default;
   }
-  .cell.row-hovered,
-  .cell.row-focused {
+  .cell.highlighted,
+  .cell.focused {
     --cell-background: var(--cell-background-hover);
   }
-  .cell.row-selected {
+  .cell.selected {
     --cell-background: var(--spectrum-global-color-blue-100);
-  }
-  .cell.center {
-    justify-content: center;
-  }
-
-  /* Reorder styles */
-  .cell.reorder-source {
-    --cell-background: var(--spectrum-global-color-gray-100);
-  }
-  .cell.reorder-target:after {
-    content: " ";
-    position: absolute;
-    right: 0;
-    background: var(--spectrum-global-color-blue-400);
-    width: 2px;
-    height: calc(var(--row-height) + 2px);
   }
 
   /* Label for additional text */

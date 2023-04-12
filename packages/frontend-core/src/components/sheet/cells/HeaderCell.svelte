@@ -105,8 +105,6 @@
   class:sorted={sortedBy}
 >
   <SheetCell
-    reorderSource={$reorder.sourceColumn === column.name}
-    reorderTarget={$reorder.targetColumn === column.name}
     on:mousedown={onMouseDown}
     on:mouseup={onMouseUp}
     on:contextmenu={onContextMenu}
@@ -177,6 +175,9 @@
 <style>
   .header-cell {
     display: flex;
+  }
+  .header-cell.disabled {
+    pointer-events: none;
   }
   .header-cell :global(.cell) {
     padding: 0 var(--cell-padding);

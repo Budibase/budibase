@@ -28,7 +28,7 @@
       const parsed = JSON.parse(trimmed)
       onChange(parsed)
     } catch (error) {
-      console.log("error parsing")
+      // Swallow
     }
   }
 </script>
