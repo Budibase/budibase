@@ -1,4 +1,5 @@
-import { DBTestConfiguration, structures } from "../../../tests"
+import { structures } from "../../../tests"
+import { DBTestConfiguration } from "../../../tests/extra"
 import * as tenants from "../tenants"
 
 describe("tenants", () => {

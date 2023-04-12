@@ -24,7 +24,7 @@ describe("syncRows", () => {
 
       // app 1
       const app1 = config.app
-      await context.doInAppContext(app1.appId, async () => {
+      await context.doInAppContext(app1!.appId, async () => {
         await config.createTable()
         await config.createRow()
       })
@@ -43,7 +43,7 @@ describe("syncRows", () => {
       usageDoc = await quotas.getQuotaUsage()
       expect(usageDoc.usageQuota.rows).toEqual(3)
       expect(
-        usageDoc.apps?.[dbCore.getProdAppID(app1.appId)].usageQuota.rows
+        usageDoc.apps?.[dbCore.getProdAppID(app1!.appId)].usageQuota.rows
       ).toEqual(1)
       expect(
         usageDoc.apps?.[dbCore.getProdAppID(app2.appId)].usageQuota.rows
