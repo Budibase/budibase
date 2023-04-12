@@ -115,6 +115,8 @@ export const deriveStores = context => {
 
         // Reset scroll state when data changes
         if (!get(instanceLoaded)) {
+          table.set($fetch.definition)
+
           // Reset both top and left for a new table ID
           instanceLoaded.set(true)
           scroll.set({ top: 0, left: 0 })
@@ -122,9 +124,6 @@ export const deriveStores = context => {
           // Only reset top scroll position when resetting rows
           scroll.update(state => ({ ...state, top: 0 }))
         }
-
-        // Update table definition
-        table.set($fetch.definition)
 
         // Process new rows
         handleNewRows($fetch.rows, resetRows)
@@ -385,7 +384,8 @@ export const deriveStores = context => {
 
   // Refreshes the schema of the data fetch subscription
   const refreshTableDefinition = async () => {
-    return await get(fetch)?.refreshDefinition()
+    const definition = await API.fetchTableDefinition(get(tableId))
+    table.set(definition)
   }
 
   // Checks if we have a row with a certain ID
