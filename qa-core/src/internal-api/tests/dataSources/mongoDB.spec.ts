@@ -1,5 +1,6 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
+import { Query } from "@budibase/types"
 
 describe("Internal API - Data Sources: MongoDB", () => {
   const config = new TestConfiguration()
@@ -16,6 +17,9 @@ describe("Internal API - Data Sources: MongoDB", () => {
     // Create app
     await config.createApp()
 
+    // Get all integrations
+    await config.api.integrations.getAll()
+
     // Add data source
     const [dataSourceResponse, dataSourceJson] =
       await config.api.datasources.add(fixtures.datasources.mongoDB())
@@ -28,48 +32,38 @@ describe("Internal API - Data Sources: MongoDB", () => {
     const [updatedDataSourceResponse, updatedDataSourceJson] =
       await config.api.datasources.update(newDataSourceInfo)
 
-    const dataSourceQuery = {
-      datasourceId: updatedDataSourceJson.datasource._id,
-      fields: {
-        extra: {
-          collection: "movies",
-          actionType: "find",
-        },
-        json: "",
-      },
-      name: "Test Query",
-      parameters: {},
-      queryVerb: "read",
-      schema: {},
-      transformer: "return data",
-    }
     // Query data source
+    const [queryResponse, queryJson] = await config.api.queries.preview(
+      fixtures.queries.mongoDB(updatedDataSourceJson.datasource._id!)
+    )
 
-    const [queryResponse, queryJson] =
-      await config.api.datasources.previewQuery(dataSourceQuery)
+    expect(queryJson.rows.length).toBeGreaterThan(10)
+    expect(queryJson.schemaFields).toEqual(
+      fixtures.queries.expectedSchemaFields.mongoDB
+    )
 
     // Save query
-    const datasourcetoSave = {
-      ...dataSourceQuery,
+    const datasourcetoSave: Query = {
+      ...fixtures.queries.mongoDB(updatedDataSourceJson.datasource._id!),
       parameters: [],
     }
 
-    const [saveQueryResponse, saveQueryJson] =
-      await config.api.datasources.saveQuery(datasourcetoSave)
+    const [saveQueryResponse, saveQueryJson] = await config.api.queries.save(
+      datasourcetoSave
+    )
     // Get Query
-    const [getQueryResponse, getQueryJson] =
-      await config.api.datasources.getQuery(<string>saveQueryJson._id)
+    const [getQueryResponse, getQueryJson] = await config.api.queries.get(
+      <string>saveQueryJson._id
+    )
 
     // Get Query permissions
     const [getQueryPermissionsResponse, getQueryPermissionsJson] =
-      await config.api.datasources.getQueryPermissions(
-        <string>saveQueryJson._id
-      )
+      await config.api.permissions.getAll(saveQueryJson._id!)
 
     // Delete data source
     const deleteResponse = await config.api.datasources.delete(
-      <string>updatedDataSourceJson.datasource._id,
-      <string>updatedDataSourceJson.datasource._rev
+      updatedDataSourceJson.datasource._id!,
+      updatedDataSourceJson.datasource._rev!
     )
   })
 })

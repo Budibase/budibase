@@ -8,6 +8,9 @@ import SelfAPI from "./apis/SelfAPI"
 import TableAPI from "./apis/TableAPI"
 import UserAPI from "./apis/UserAPI"
 import DatasourcesAPI from "./apis/DatasourcesAPI"
+import IntegrationsAPI from "./apis/IntegrationsAPI"
+import QueriesAPI from "./apis/QueriesAPI"
+import PermissionsAPI from "./apis/PermissionsAPI"
 import BudibaseInternalAPIClient from "./BudibaseInternalAPIClient"
 import { State } from "../../types"
 
@@ -24,6 +27,9 @@ export default class BudibaseInternalAPI {
   tables: TableAPI
   users: UserAPI
   datasources: DatasourcesAPI
+  integrations: IntegrationsAPI
+  queries: QueriesAPI
+  permissions: PermissionsAPI
 
   constructor(state: State) {
     this.client = new BudibaseInternalAPIClient(state)
@@ -38,5 +44,8 @@ export default class BudibaseInternalAPI {
     this.tables = new TableAPI(this.client)
     this.users = new UserAPI(this.client)
     this.datasources = new DatasourcesAPI(this.client)
+    this.integrations = new IntegrationsAPI(this.client)
+    this.queries = new QueriesAPI(this.client)
+    this.permissions = new PermissionsAPI(this.client)
   }
 }

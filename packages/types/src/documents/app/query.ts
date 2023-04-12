@@ -42,3 +42,7 @@ export interface PaginationValues {
   page: string | number | null
   limit: number | null
 }
+
+export interface PreviewQueryRequest extends Omit<Query, "parameters"> {
+  parameters: {}
+}
