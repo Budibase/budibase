@@ -2,11 +2,7 @@
   import ImportButton from "../ImportButton.svelte"
   import { getContext } from "svelte"
 
-  const { rows, config } = getContext("sheet")
-
-  const refresh = () => {
-    rows.actions.refreshData()
-  }
+  const { rows, tableId } = getContext("sheet")
 </script>
 
-<ImportButton tableId={$config.tableId} on:importrows={refresh} />
+<ImportButton tableId={$tableId} on:importrows={rows.actions.refreshData} />
