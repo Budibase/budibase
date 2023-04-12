@@ -36,6 +36,8 @@ jobs:
           echo "Ref is not develop, you must run this job from develop."
           exit 1
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
