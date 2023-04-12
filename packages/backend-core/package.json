@@ -80,6 +80,7 @@
     "jest-serial-runner": "^1.2.1",
     "koa": "2.13.4",
     "nodemon": "2.0.16",
+    "pino": "7.11.0",
     "pino-pretty": "10.0.0",
     "pouchdb-adapter-memory": "7.2.2",
     "timekeeper": "2.2.0",
