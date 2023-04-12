@@ -2,7 +2,7 @@
   import ExportButton from "../ExportButton.svelte"
   import { getContext } from "svelte"
 
-  const { rows, columns, config, sort, selectedRows, filter } =
+  const { rows, columns, tableId, sort, selectedRows, filter } =
     getContext("sheet")
 
   $: disabled = !$rows.length || !$columns.length
@@ -11,7 +11,7 @@
 
 <ExportButton
   {disabled}
-  view={$config.tableId}
+  view={$tableId}
   filters={$filter}
   sorting={{
     sortColumn: $sort.column,
