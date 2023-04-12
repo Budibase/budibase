@@ -7,14 +7,12 @@
   const { rows, focusedCellId, focusedCellAPI, menu, config, validation } =
     getContext("sheet")
 
-  export let rowSelected
-  export let rowHovered
+  export let highlighted
+  export let selected
   export let rowFocused
   export let rowIdx
   export let focused
   export let selectedUser
-  export let reorderSource
-  export let reorderTarget
   export let column
   export let row
   export let cellId
@@ -58,14 +56,11 @@
 </script>
 
 <SheetCell
-  {rowSelected}
-  {rowHovered}
-  {rowFocused}
+  {highlighted}
+  {selected}
   {rowIdx}
   {focused}
   {selectedUser}
-  {reorderSource}
-  {reorderTarget}
   error={$error}
   on:click={() => focusedCellId.set(cellId)}
   on:contextmenu={e => menu.actions.open(cellId, e)}

@@ -3,10 +3,11 @@
   import { writable } from "svelte/store"
   import { createEventManagers } from "../lib/events"
   import { createAPIClient } from "../../../api"
-  import { createStores } from "../stores"
+  import { attachStores } from "../stores"
   import DeleteButton from "../controls/DeleteButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
+  import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
   import HeaderRow from "./HeaderRow.svelte"
   import ScrollOverlay from "../overlays/ScrollOverlay.svelte"
   import MenuOverlay from "../overlays/MenuOverlay.svelte"
@@ -54,7 +55,7 @@
     tableId: tableIdStore,
   }
   context = { ...context, ...createEventManagers() }
-  context = { ...context, ...createStores(context) }
+  context = attachStores(context)
 
   // Reference some stores for local use
   const { isResizing, isReordering, ui, loaded, rowHeight } = context
@@ -111,6 +112,7 @@
         </div>
         <div class="overlays">
           <ResizeOverlay />
+          <ReorderOverlay />
           <ScrollOverlay />
           <MenuOverlay />
         </div>
@@ -135,9 +137,9 @@
     --cell-background-hover: var(--spectrum-global-color-gray-100);
     --cell-padding: 10px;
     --cell-spacing: 4px;
+    --cell-border: 1px solid var(--spectrum-global-color-gray-200);
     --cell-font-size: 14px;
     --controls-height: 50px;
-    --cell-border: 1px solid var(--spectrum-global-color-gray-200);
   }
   .sheet,
   .sheet :global(*) {
@@ -161,7 +163,6 @@
   .sheet-data-outer {
     height: 0;
     flex-direction: column;
-    /*background: var(--spectrum-global-color-gray-75);*/
     background: var(--cell-background);
   }
   .sheet-data-inner {

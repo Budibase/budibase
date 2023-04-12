@@ -14,9 +14,9 @@
     hiddenColumnsWidth,
   } = getContext("sheet")
 
-  export let scrollVertically = true
-  export let scrollHorizontally = true
-  export let wheelInteractive = true
+  export let scrollVertically = false
+  export let scrollHorizontally = false
+  export let wheelInteractive = false
   export let foo = false
 
   $: style = generateStyle($scroll, $rowHeight, $hiddenColumnsWidth, foo)

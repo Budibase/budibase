@@ -26,18 +26,16 @@ const DependencyOrderedStores = [
   Pagination,
 ]
 
-export const createStores = context => {
-  let stores = {}
-
+export const attachStores = context => {
   // Atomic store creation
   for (let store of DependencyOrderedStores) {
-    stores = { ...stores, ...store.createStores?.({ ...context, ...stores }) }
+    context = { ...context, ...store.createStores?.(context) }
   }
 
   // Derived store creation
   for (let store of DependencyOrderedStores) {
-    stores = { ...stores, ...store.deriveStores?.({ ...context, ...stores }) }
+    context = { ...context, ...store.deriveStores?.(context) }
   }
 
-  return stores
+  return context
 }
