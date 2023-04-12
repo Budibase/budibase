@@ -38,7 +38,6 @@ export interface PurchasedPlan {
   type: PlanType
   model: PlanModel
   usesInvoicing: boolean
-  maxUsers: number
   minUsers: number
   price?: PurchasedPrice
 }
