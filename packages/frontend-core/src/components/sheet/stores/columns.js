@@ -103,6 +103,7 @@ export const deriveStores = context => {
 
     // Update sticky column
     if (!primaryDisplay) {
+      stickyColumn.set(null)
       return
     }
 
