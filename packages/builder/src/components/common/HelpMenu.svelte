@@ -14,7 +14,7 @@
 <div bind:this={popoverAnchor} class="help">
   <button class="openMenu" on:click={show}>Help</button>
   <Popover
-    class="helpMenuPopoverOverride"
+    maxHeight={1000}
     bind:show
     bind:hide
     anchor={popoverAnchor}
@@ -85,9 +85,6 @@
 </div>
 
 <style>
-  :global(.helpMenuPopoverOverride) {
-    max-height: none !important;
-  }
   .help {
     z-index: 2;
     position: absolute;
