@@ -86,7 +86,9 @@
     "install:pro": "bash scripts/pro/install.sh",
     "dep:clean": "yarn clean && yarn bootstrap"
   },
-  "workspaces": [
-    "packages/*"
-  ]
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  }
 }
