@@ -89,7 +89,7 @@
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
         {@const rowFocused = $focusedRow?._id === row._id}
-        {@const cellId = `${row._id}-${$stickyColumn.name}`}
+        {@const cellId = `${row._id}-${$stickyColumn?.name}`}
         <div
           class="row"
           on:mouseenter={() => ($hoveredRowId = row._id)}
