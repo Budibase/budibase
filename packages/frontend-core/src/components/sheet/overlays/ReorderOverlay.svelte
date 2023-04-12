@@ -10,15 +10,18 @@
     stickyColumn,
     rowHeight,
     renderedRows,
+    scrollLeft,
   } = getContext("sheet")
 
   $: targetColumn = $reorder.targetColumn
-  $: left = getLeft(targetColumn, $stickyColumn, $visibleColumns)
+  $: minLeft = gutterWidth + ($stickyColumn?.width || 0)
+  $: left = getLeft(targetColumn, $stickyColumn, $visibleColumns, $scrollLeft)
   $: height = $rowHeight * ($renderedRows.length + 1)
   $: style = `left:${left}px; height:${height}px;`
+  $: visible = $isReordering && left >= minLeft
 
-  const getLeft = (targetColumn, stickyColumn, visibleColumns) => {
-    let left = gutterWidth + (stickyColumn?.width || 0)
+  const getLeft = (targetColumn, stickyColumn, visibleColumns, scrollLeft) => {
+    let left = gutterWidth + (stickyColumn?.width || 0) - scrollLeft
 
     // If this is not the sticky column, add additional left space
     if (targetColumn !== stickyColumn?.name) {
@@ -33,7 +36,7 @@
   }
 </script>
 
-{#if $isReordering}
+{#if visible}
   <div class="reorder-wrapper">
     <SheetScrollWrapper scrollVertically>
       <div class="reorder-overlay" {style} />
