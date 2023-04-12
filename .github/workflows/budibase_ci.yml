@@ -65,21 +65,6 @@ jobs:
           name: codecov-umbrella
           verbose: true
 
-  test-pro:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
-        with:
-          node-version: 14.x
-      - run: yarn
-      - run: yarn bootstrap
-      - run: yarn test:pro
-
   integration-test:
     runs-on: ubuntu-latest
     steps:
