@@ -38,6 +38,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
