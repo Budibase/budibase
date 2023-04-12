@@ -10,7 +10,14 @@ export default function positionDropdown(element, opts) {
 
   // Updates the position of the dropdown
   const updatePosition = opts => {
-    const { anchor, align, maxHeight, maxWidth, useAnchorWidth, offset = 5 } = opts
+    const {
+      anchor,
+      align,
+      maxHeight,
+      maxWidth,
+      useAnchorWidth,
+      offset = 5,
+    } = opts
     if (!anchor) {
       return
     }
@@ -34,7 +41,8 @@ export default function positionDropdown(element, opts) {
       styles.maxHeight = maxHeight || 240
     } else {
       styles.top = anchorBounds.bottom + offset
-      styles.maxHeight = maxHeight || window.innerHeight - anchorBounds.bottom - 20
+      styles.maxHeight =
+        maxHeight || window.innerHeight - anchorBounds.bottom - 20
     }
 
     // Determine horizontal styles
