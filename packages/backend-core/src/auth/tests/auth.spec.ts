@@ -1,4 +1,5 @@
-import { structures, testEnv } from "../../../tests"
+import { structures } from "../../../tests"
+import { testEnv } from "../../../tests/extra"
 import * as auth from "../auth"
 import * as events from "../../events"
 
