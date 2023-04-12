@@ -20,9 +20,18 @@ import {
   auth,
   constants,
   env as coreEnv,
+  db as dbCore,
+  encryption,
+  utils,
 } from "@budibase/backend-core"
 import structures, { CSRF_TOKEN } from "./structures"
-import { SaveUserResponse, User, AuthToken } from "@budibase/types"
+import {
+  SaveUserResponse,
+  User,
+  AuthToken,
+  SCIMConfig,
+  ConfigType,
+} from "@budibase/types"
 import API from "./api"
 
 class TestConfiguration {
@@ -31,6 +40,7 @@ class TestConfiguration {
   api: API
   tenantId: string
   user?: User
+  apiKey?: string
   userPassword = "test"
 
   constructor(opts: { openServer: boolean } = { openServer: true }) {
@@ -47,6 +57,12 @@ class TestConfiguration {
     }
 
     this.api = new API(this)
+  }
+
+  async useNewTenant() {
+    this.tenantId = structures.tenant.id()
+
+    await this.beforeAll()
   }
 
   getRequest() {
@@ -201,6 +217,12 @@ class TestConfiguration {
     return { [constants.Header.API_KEY]: coreEnv.INTERNAL_API_KEY }
   }
 
+  bearerAPIHeaders() {
+    return {
+      [constants.Header.AUTHORIZATION]: `Bearer ${this.apiKey}`,
+    }
+  }
+
   adminOnlyResponse = () => {
     return { message: "Admin user only endpoint.", status: 403 }
   }
@@ -213,6 +235,20 @@ class TestConfiguration {
     })
     await context.doInTenant(this.tenantId!, async () => {
       this.user = await this.createUser(user)
+
+      const db = context.getGlobalDB()
+
+      const id = dbCore.generateDevInfoID(this.user._id)
+      // TODO: dry
+      this.apiKey = encryption.encrypt(
+        `${this.tenantId}${dbCore.SEPARATOR}${utils.newid()}`
+      )
+      const devInfo = {
+        _id: id,
+        userId: this.user._id,
+        apiKey: this.apiKey,
+      }
+      await db.put(devInfo)
     })
   }
 
@@ -304,6 +340,19 @@ class TestConfiguration {
       null,
       controllers.config.save
     )
+  }
+
+  // CONFIGS - SCIM
+
+  async setSCIMConfig(enabled: boolean) {
+    await this.deleteConfig(Config.SCIM)
+    const config: SCIMConfig = {
+      type: ConfigType.SCIM,
+      config: { enabled },
+    }
+
+    await this._req(config, null, controllers.config.save)
+    return config
   }
 }
 

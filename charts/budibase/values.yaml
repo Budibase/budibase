@@ -80,7 +80,6 @@ globals:
   enableAnalytics: "1"
   sentryDSN: ""
   posthogToken: "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
-  logLevel: info
   selfHosted: "1" # set to 0 for budibase cloud environment, set to 1 for self-hosted setup
   multiTenancy: "0" # set to 0 to disable multiple orgs, set to 1 to enable multiple orgs
   accountPortalUrl: ""
@@ -107,9 +106,6 @@ globals:
   smtp:
     enabled: false
 
-#  elasticApmEnabled:
-#  elasticApmSecretToken:
-#  elasticApmServerUrl:
 #  globalAgentHttpProxy:
 #  globalAgentHttpsProxy:
 #  globalAgentNoProxy:
@@ -137,6 +133,7 @@ services:
     port: 4002
     replicaCount: 1
     logLevel: info
+    httpLogging: 1
     resources: {}
 #    nodeDebug: "" # set the value of NODE_DEBUG
 #    annotations:
@@ -147,6 +144,8 @@ services:
   worker:
     port: 4003
     replicaCount: 1
+    logLevel: info
+    httpLogging: 1
     resources: {}
 #    annotations:
 #      co.elastic.logs/multiline.type: pattern

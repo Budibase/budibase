@@ -2,10 +2,6 @@ if (process.env.DD_APM_ENABLED) {
   require("./ddApm")
 }
 
-if (process.env.ELASTIC_APM_ENABLED) {
-  require("./elasticApm")
-}
-
 // need to load environment first
 import env from "./environment"
 import { Scope } from "@sentry/node"
@@ -31,10 +27,11 @@ import api from "./api"
 import * as redis from "./utilities/redis"
 const Sentry = require("@sentry/node")
 const koaSession = require("koa-session")
-const logger = require("koa-pino-logger")
 const { userAgent } = require("koa-useragent")
 
 import destroyable from "server-destroy"
+import { initPro } from "./initPro"
+import { handleScimBody } from "./middleware/handleScimBody"
 
 // configure events to use the pro audit log write
 // can't integrate directly into backend-core due to cyclic issues
@@ -54,10 +51,12 @@ const app: Application = new Koa()
 app.keys = ["secret", "key"]
 
 // set up top level koa middleware
+app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
+
 app.use(koaSession(app))
-app.use(middleware.logging)
-app.use(logger(logging.pinoSettings()))
+app.use(middleware.correlation)
+app.use(middleware.pino)
 app.use(userAgent)
 
 // authentication
@@ -108,6 +107,7 @@ const shutdown = () => {
 
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
+  await initPro()
   await redis.init()
 })
 

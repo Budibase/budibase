@@ -4,7 +4,6 @@ export enum UserStatus {
 }
 
 export enum Cookie {
-  CurrentApp = "budibase:currentapp",
   Auth = "budibase:auth",
   Init = "budibase:init",
   ACCOUNT_RETURN_URL = "budibase:account:returnurl",
@@ -23,6 +22,7 @@ export enum Header {
   TOKEN = "x-budibase-token",
   CSRF_TOKEN = "x-csrf-token",
   CORRELATION_ID = "x-budibase-correlation-id",
+  AUTHORIZATION = "authorization",
 }
 
 export enum GlobalRole {
@@ -39,6 +39,7 @@ export enum Config {
   GOOGLE = "google",
   OIDC = "oidc",
   OIDC_LOGOS = "logos_oidc",
+  SCIM = "scim",
 }
 
 export const MIN_VALID_DATE = new Date(-2147483647000)
