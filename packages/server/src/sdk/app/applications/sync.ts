@@ -7,15 +7,19 @@ import {
   logging,
   roles,
 } from "@budibase/backend-core"
-import { User, ContextUser } from "@budibase/types"
+import { User, ContextUser, UserGroup } from "@budibase/types"
 import { sdk as proSdk } from "@budibase/pro"
 import sdk from "../../"
-import { getGlobalUsers, updateAppRole } from "../../../utilities/global"
+import { getGlobalUsers, processUser } from "../../../utilities/global"
 import { generateUserMetadataID, InternalTables } from "../../../db/utils"
 
 type DeletedUser = { _id: string; deleted: boolean }
 
-async function syncUsersToApp(appId: string, users: (User | DeletedUser)[]) {
+async function syncUsersToApp(
+  appId: string,
+  users: (User | DeletedUser)[],
+  groups: UserGroup[]
+) {
   if (!(await dbCore.dbExists(appId))) {
     return
   }
@@ -31,7 +35,7 @@ async function syncUsersToApp(appId: string, users: (User | DeletedUser)[]) {
 
       // make sure role is correct
       if (!deletedUser) {
-        ctxUser = updateAppRole(ctxUser, { appId })
+        ctxUser = await processUser(ctxUser, { appId, groups })
       }
       let roleId = ctxUser.roleId
       if (roleId === roles.BUILTIN_ROLE_IDS.PUBLIC) {
@@ -80,7 +84,10 @@ async function syncUsersToApp(appId: string, users: (User | DeletedUser)[]) {
 
 async function syncUsersToAllApps(userIds: string[]) {
   // list of users, if one has been deleted it will be undefined in array
-  const users = (await getGlobalUsers(userIds)) as User[]
+  const users = (await getGlobalUsers(userIds, {
+    noProcessing: true,
+  })) as User[]
+  const groups = await proSdk.groups.fetch()
   const finalUsers: (User | DeletedUser)[] = []
   for (let userId of userIds) {
     const user = users.find(user => user._id === userId)
@@ -95,7 +102,7 @@ async function syncUsersToAllApps(userIds: string[]) {
   for (let devAppId of devAppIds) {
     const prodAppId = dbCore.getProdAppID(devAppId)
     for (let appId of [prodAppId, devAppId]) {
-      promises.push(syncUsersToApp(appId, finalUsers))
+      promises.push(syncUsersToApp(appId, finalUsers, groups))
     }
   }
   const resp = await Promise.allSettled(promises)
@@ -106,24 +113,32 @@ async function syncUsersToAllApps(userIds: string[]) {
   }
 }
 
-export function initUserGroupSync(updateCb?: () => void) {
+export function initUserGroupSync(updateCb?: (docId: string) => void) {
   const types = [constants.DocumentType.USER, constants.DocumentType.GROUP]
   docUpdates.process(types, async update => {
-    const docId = update.id
-    const isGroup = docId.startsWith(constants.DocumentType.GROUP)
-    let userIds: string[]
-    if (isGroup) {
-      const group = await proSdk.groups.get(docId)
-      userIds = group.users?.map(user => user._id) || []
-    } else {
-      userIds = [docId]
-    }
-    if (userIds.length > 0) {
-      await syncUsersToAllApps(userIds)
-    }
-    // used to tracking when updates have occurred
-    if (updateCb) {
-      updateCb()
+    try {
+      const docId = update.id
+      const isGroup = docId.startsWith(constants.DocumentType.GROUP)
+      let userIds: string[]
+      if (isGroup) {
+        const group = await proSdk.groups.get(docId)
+        userIds = group.users?.map(user => user._id) || []
+      } else {
+        userIds = [docId]
+      }
+      if (userIds.length > 0) {
+        await syncUsersToAllApps(userIds)
+      }
+      if (updateCb) {
+        updateCb(docId)
+      }
+    } catch (err: any) {
+      // if something not found - no changes to perform
+      if (err?.status === 404) {
+        return
+      } else {
+        logging.logAlert("Failed to perform user/group app sync", err)
+      }
     }
   })
 }
