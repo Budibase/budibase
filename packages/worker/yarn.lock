@@ -603,6 +603,18 @@
     lodash "^4.17.20"
     vm2 "^3.9.4"
 
+"@budibase/string-templates@2.4.44-alpha.17":
+  version "2.4.44-alpha.17"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.4.44-alpha.17.tgz#b29c524c1422f8350c811ab8cd7bd69f0ec2b57f"
+  integrity sha512-lXAbCl365YbhhjZWT4wSSK9mcTYTvuMGfVpwNX01d7C5lPmcNGY1gNd28T4m8sc+xVEZ8SrIWpMp0ABexQFcyg==
+  dependencies:
+    "@budibase/handlebars-helpers" "^0.11.8"
+    dayjs "^1.10.4"
+    handlebars "^4.7.6"
+    handlebars-utils "^1.0.6"
+    lodash "^4.17.20"
+    vm2 "^3.9.4"
+
 "@budibase/types@2.4.44-alpha.1":
   version "2.4.44-alpha.1"
   resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.1.tgz#1679657aa180d9c59afa1dffa611bff0638bd933"
@@ -9354,9 +9366,9 @@ verror@1.10.0:
     extsprintf "^1.2.0"
 
 vm2@^3.9.4:
-  version "3.9.14"
-  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.14.tgz#964042b474cf1e6e4f475a39144773cdb9deb734"
-  integrity sha512-HgvPHYHeQy8+QhzlFryvSteA4uQLBCOub02mgqdR+0bN/akRZ48TGB1v0aCv7ksyc0HXx16AZtMHKS38alc6TA==
+  version "3.9.16"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.16.tgz#0fbc2a265f7bf8b837cea6f4a908f88a3f93b8e6"
+  integrity sha512-3T9LscojNTxdOyG+e8gFeyBXkMlOBYDoF6dqZbj+MPVHi9x10UfiTAJIobuchRCp3QvC+inybTbMJIUrLsig0w==
   dependencies:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"
