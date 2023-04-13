@@ -140,8 +140,15 @@ export function createTablesStore() {
     if (index === -1) {
       return
     }
+
+    // This function has to merge state as there discrepancies with the table
+    // API endpoints. The table list endpoint and get table endpoint use the
+    // "type" property to mean different things.
     store.update(state => {
-      state.list[index] = table
+      state.list[index] = {
+        ...table,
+        type: state.list[index].type,
+      }
       return state
     })
   }
