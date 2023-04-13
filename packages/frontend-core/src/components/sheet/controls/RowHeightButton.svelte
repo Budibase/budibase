@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover } from "@budibase/bbui"
 
-  const { rowHeight } = getContext("sheet")
+  const { rowHeight, loaded } = getContext("sheet")
   const sizeOptions = [
     {
       label: "Small",
@@ -29,6 +29,7 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open}
+    disabled={!$loaded}
   >
     Row height
   </ActionButton>

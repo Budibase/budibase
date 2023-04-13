@@ -14,7 +14,7 @@
   import StickyColumn from "./StickyColumn.svelte"
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
-  import { clickOutside } from "@budibase/bbui"
+  import { clickOutside, ProgressCircle } from "@budibase/bbui"
   import {
     MaxCellRenderHeight,
     MaxCellRenderWidthOverflow,
@@ -119,6 +119,10 @@
         </div>
       </div>
     </div>
+  {:else}
+    <div class="sheet-loading">
+      <ProgressCircle />
+    </div>
   {/if}
   <KeyboardManager />
 </div>
@@ -132,6 +136,7 @@
     align-items: stretch;
     position: relative;
     overflow: hidden;
+    background: var(--cell-background);
 
     /* Variables */
     --cell-background: var(--spectrum-global-color-gray-50);
@@ -164,7 +169,6 @@
   .sheet-data-outer {
     height: 0;
     flex-direction: column;
-    background: var(--cell-background);
   }
   .sheet-data-inner {
     flex-direction: row;
@@ -187,6 +191,7 @@
     border-bottom: 2px solid var(--spectrum-global-color-gray-200);
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
+    background: var(--spectrum-global-color-gray-100);
   }
   .controls-left,
   .controls-right {
@@ -203,5 +208,14 @@
   /* Overlays */
   .overlays {
     z-index: 10;
+  }
+
+  /* Loading */
+  .sheet-loading {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
   }
 </style>

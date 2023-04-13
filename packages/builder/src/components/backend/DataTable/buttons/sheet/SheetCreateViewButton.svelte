@@ -3,11 +3,11 @@
   import { Modal, ActionButton } from "@budibase/bbui"
   import CreateViewModal from "../../modals/CreateViewModal.svelte"
 
-  const { rows, columns } = getContext("sheet")
+  const { rows, columns, loaded } = getContext("sheet")
 
   let modal
 
-  $: disabled = !$columns.length || !$rows.length
+  $: disabled = !$loaded || !$columns.length || !$rows.length
 </script>
 
 <ActionButton {disabled} icon="CollectionAdd" quiet on:click={modal.show}>
