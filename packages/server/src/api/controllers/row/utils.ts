@@ -5,7 +5,7 @@ import { context } from "@budibase/backend-core"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Row, Table } from "@budibase/types"
 import { Format } from "../view/exporters"
-import { Ctx } from "@budibase/types"
+import { UserCtx } from "@budibase/types"
 import sdk from "../../../sdk"
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
@@ -26,7 +26,7 @@ export async function getDatasourceAndQuery(json: any) {
   return makeExternalQuery(datasource, json)
 }
 
-export async function findRow(ctx: Ctx, tableId: string, rowId: string) {
+export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
   const db = context.getAppDB()
   let row
   // TODO remove special user case in future
