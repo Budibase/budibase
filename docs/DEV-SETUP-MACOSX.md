@@ -4,14 +4,14 @@
 
 Install instructions [here](https://brew.sh/)
 
-| **NOTE**: If you are working on a M1 Apple Silicon which is running Z shell, you could need to add 
-`eval $(/opt/homebrew/bin/brew shellenv)` line to your `.zshrc`. This will make your zsh to find the apps you install 
+| **NOTE**: If you are working on a M1 Apple Silicon which is running Z shell, you could need to add
+`eval $(/opt/homebrew/bin/brew shellenv)` line to your `.zshrc`. This will make your zsh to find the apps you install
 through brew.
-
 
 ### Install Node
 
 Budibase requires a recent version of node 14:
+
 ```
 brew install node npm
 node -v
@@ -22,12 +22,15 @@ node -v
 ```
 npm install -g yarn jest lerna
 ```
+
 ### Install Docker and Docker Compose
 
 ```
 brew install docker docker-compose
 ```
+
 ### Clone the repo
+
 ```
 git clone https://github.com/Budibase/budibase.git
 ```
@@ -38,7 +41,7 @@ This setup process was tested on Mac OSX 12 (Monterey) with version numbers show
 
 - Docker: 20.10.14
 - Docker-Compose: 2.6.0
-- Node: 14.20.1
+- Node: 14.21.3
 - Yarn: 1.22.19
 - Lerna: 5.1.4
 
@@ -48,10 +51,13 @@ This setup process was tested on Mac OSX 12 (Monterey) with version numbers show
 cd budibase
 yarn setup
 ```
+
 The yarn setup command runs several build steps i.e.
+
 ```
 node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev
 ```
+
 So this command will actually run the application in dev mode. It creates .env files under `./packages/server` and `./packages/worker` and runs docker containers for each service via docker-compose.
 
 The dev version will be available on port 10000 i.e.
@@ -62,4 +68,5 @@ http://127.0.0.1:10000/builder/admin
 [hosting/docker-compose-dev.yaml](../hosting/docker-compose.dev.yaml)
 
 ### Troubleshooting
-If there are errors with the `yarn setup` command, you can try installing nvm and node 14. This is the same as the instructions for Debian 11. 
+
+If there are errors with the `yarn setup` command, you can try installing nvm and node 14. This is the same as the instructions for Debian 11.
