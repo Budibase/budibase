@@ -10,7 +10,8 @@
   export let focused
   export let schema
   export let onChange
-  export let invert = false
+  export let invertX = false
+  export let invertY = false
 
   const { API } = getContext("sheet")
 
@@ -215,7 +216,7 @@
 </div>
 
 {#if isOpen}
-  <div class="dropdown" class:invert on:wheel|stopPropagation>
+  <div class="dropdown" class:invertX class:invertY on:wheel|stopPropagation>
     <div class="search">
       <Input autofocus quiet type="text" bind:value={searchString} />
     </div>
@@ -288,7 +289,7 @@
     top: 100%;
     left: 0;
     min-width: 100%;
-    max-width: calc(100% + 240px);
+    max-width: calc(100% + var(--max-cell-render-width-overflow));
     max-height: var(--max-cell-render-height);
     background: var(--cell-background);
     border: var(--cell-border);
@@ -298,9 +299,13 @@
     align-items: stretch;
     background-color: var(--cell-background-hover);
   }
-  .dropdown.invert {
+  .dropdown.invertY {
     transform: translateY(-100%);
     top: 0;
+  }
+  .dropdown.invertX {
+    left: auto;
+    right: 0;
   }
 
   .results {
@@ -323,7 +328,7 @@
     cursor: pointer;
   }
   .result .badge {
-    max-width: 340px;
+    max-width: calc(100% - 30px);
   }
 
   .search {

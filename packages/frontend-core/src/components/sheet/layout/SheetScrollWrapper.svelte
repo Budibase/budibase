@@ -70,7 +70,7 @@
   on:wheel={wheelInteractive ? handleWheel : null}
   on:click|self={() => ($focusedCellId = null)}
 >
-  <div {style}>
+  <div {style} class="inner">
     <slot />
   </div>
 </div>
@@ -79,5 +79,13 @@
   .outer {
     min-width: 100%;
     min-height: 100%;
+    height: 100%;
+    width: 100%;
+    max-height: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .inner {
+    position: absolute;
   }
 </style>

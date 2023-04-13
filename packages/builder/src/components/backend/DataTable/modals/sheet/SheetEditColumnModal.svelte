@@ -2,15 +2,12 @@
   import { getContext, onMount } from "svelte"
   import { Modal } from "@budibase/bbui"
   import CreateEditColumn from "../CreateEditColumn.svelte"
+  import { tables } from "stores/backend"
 
   const { rows, subscribe } = getContext("sheet")
 
   let editableColumn
   let editColumnModal
-
-  const updateColumns = () => {
-    rows.actions.refreshData()
-  }
 
   const editColumn = column => {
     editableColumn = column
@@ -23,7 +20,6 @@
 <Modal bind:this={editColumnModal}>
   <CreateEditColumn
     field={editableColumn}
-    on:updatecolumns={updateColumns}
-    onClosed={editColumnModal.hide}
+    on:updatecolumns={rows.actions.refreshData}
   />
 </Modal>

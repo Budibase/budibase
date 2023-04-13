@@ -39,7 +39,7 @@
     <Menu>
       <MenuItem
         icon="Delete"
-        disabled={!$config.allowEditRows}
+        disabled={!$config.allowDeleteRows}
         on:click={deleteRow}>Delete row</MenuItem
       >
       <MenuItem

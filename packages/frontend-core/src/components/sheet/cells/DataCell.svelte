@@ -17,7 +17,8 @@
   export let row
   export let cellId
   export let updateRow = rows.actions.updateRow
-  export let invert = false
+  export let invertX = false
+  export let invertY = false
 
   const emptyError = writable(null)
 
@@ -74,6 +75,7 @@
     onChange={cellAPI.updateValue}
     {focused}
     {readonly}
-    {invert}
+    {invertY}
+    {invertX}
   />
 </SheetCell>

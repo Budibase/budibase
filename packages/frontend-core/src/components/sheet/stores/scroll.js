@@ -1,6 +1,6 @@
 import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
-import { DefaultColumnWidth } from "./columns"
+import { SheetPadding } from "../lib/constants"
 
 export const createStores = () => {
   const scroll = writable({
@@ -35,7 +35,6 @@ export const deriveStores = context => {
     width,
     height,
   } = context
-  const padding = 264
 
   // Memoize store primitives
   const stickyColumnWidth = derived(stickyColumn, $col => $col?.width || 0, 0)
@@ -43,7 +42,7 @@ export const deriveStores = context => {
   // Derive vertical limits
   const contentHeight = derived(
     [rows, rowHeight],
-    ([$rows, $rowHeight]) => $rows.length * $rowHeight + padding,
+    ([$rows, $rowHeight]) => $rows.length * $rowHeight + SheetPadding,
     0
   )
   const maxScrollTop = derived(
@@ -56,7 +55,7 @@ export const deriveStores = context => {
   const contentWidth = derived(
     [visibleColumns, stickyColumnWidth],
     ([$visibleColumns, $stickyColumnWidth]) => {
-      let width = gutterWidth + padding + $stickyColumnWidth
+      let width = gutterWidth + SheetPadding + $stickyColumnWidth
       $visibleColumns.forEach(col => {
         width += col.width
       })
@@ -146,7 +145,7 @@ export const deriveStores = context => {
     const $visibleColumns = get(visibleColumns)
     const columnName = $focusedCellId?.split("-")[1]
     const column = $visibleColumns.find(col => col.name === columnName)
-    const horizontalOffset = DefaultColumnWidth
+    const horizontalOffset = 50
     if (!column) {
       return
     }

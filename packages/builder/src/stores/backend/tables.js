@@ -135,6 +135,17 @@ export function createTablesStore() {
     await save(draft)
   }
 
+  const updateTable = table => {
+    const index = get(store).list.findIndex(x => x._id === table._id)
+    if (index === -1) {
+      return
+    }
+    store.update(state => {
+      state.list[index] = table
+      return state
+    })
+  }
+
   return {
     subscribe: derivedStore.subscribe,
     fetch,
@@ -145,6 +156,7 @@ export function createTablesStore() {
     delete: deleteTable,
     saveField,
     deleteField,
+    updateTable,
   }
 }
 

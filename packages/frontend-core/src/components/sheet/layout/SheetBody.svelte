@@ -2,15 +2,11 @@
   import { getContext, onMount } from "svelte"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
   import SheetRow from "./SheetRow.svelte"
-  import { MaxCellRenderHeight } from "../lib/constants"
 
-  const { bounds, renderedRows, visualRowCapacity, rowHeight } =
+  const { bounds, renderedRows, rowVerticalInversionIndex } =
     getContext("sheet")
 
   let body
-
-  $: inversionIdx =
-    $visualRowCapacity - Math.ceil(MaxCellRenderHeight / $rowHeight) - 2
 
   onMount(() => {
     // Observe and record the height of the body
@@ -27,7 +23,7 @@
 <div bind:this={body} class="sheet-body">
   <SheetScrollWrapper scrollHorizontally scrollVertically wheelInteractive>
     {#each $renderedRows as row, idx}
-      <SheetRow {row} {idx} invert={idx >= inversionIdx} />
+      <SheetRow {row} {idx} invertY={idx >= $rowVerticalInversionIndex} />
     {/each}
   </SheetScrollWrapper>
 </div>
