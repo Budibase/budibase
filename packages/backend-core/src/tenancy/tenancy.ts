@@ -3,8 +3,8 @@ import {
   getTenantId,
   getTenantIDFromAppID,
   isMultiTenant,
+  getPlatformURL,
 } from "../context"
-import env from "../environment"
 import {
   BBContext,
   TenantResolutionStrategy,
@@ -93,7 +93,7 @@ export const getTenantIDFromCtx = (
   // subdomain
   if (isAllowed(TenantResolutionStrategy.SUBDOMAIN)) {
     // e.g. budibase.app or local.com:10000
-    const platformHost = new URL(env.PLATFORM_URL).host.split(":")[0]
+    const platformHost = new URL(getPlatformURL()).host.split(":")[0]
     // e.g. tenant.budibase.app or tenant.local.com
     const requestHost = ctx.host
     // parse the tenant id from the difference

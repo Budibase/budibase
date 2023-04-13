@@ -3,7 +3,6 @@
   "private": true,
   "devDependencies": {
     "@rollup/plugin-json": "^4.0.2",
-    "@types/supertest": "^2.0.12",
     "@typescript-eslint/parser": "5.45.0",
     "babel-eslint": "^10.0.3",
     "eslint": "^7.28.0",
@@ -23,11 +22,10 @@
   },
   "scripts": {
     "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
-    "bootstrap": "./scripts/bootstrap.sh",
-    "postbootstrap": "lerna link && ./scripts/link-dependencies.sh",
+    "bootstrap": "lerna link && ./scripts/link-dependencies.sh",
     "build": "lerna run --stream build",
     "build:dev": "lerna run --stream prebuild && tsc --build --watch --preserveWatchOutput",
-    "backend:bootstrap": "./scripts/scopeBackend.sh 'lerna bootstrap' && yarn run postbootstrap",
+    "backend:bootstrap": "./scripts/scopeBackend.sh && yarn run bootstrap",
     "backend:build": "./scripts/scopeBackend.sh 'lerna run --stream build'",
     "build:sdk": "lerna run --stream build:sdk",
     "deps:circular": "madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular",
@@ -82,5 +80,10 @@
     "security:audit": "node scripts/audit.js",
     "postinstall": "husky install",
     "dep:clean": "yarn clean && yarn bootstrap"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
   }
 }
