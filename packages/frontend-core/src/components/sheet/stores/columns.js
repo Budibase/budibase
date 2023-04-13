@@ -120,8 +120,7 @@ export const deriveStores = context => {
     }
     stickyColumn.set({
       name: primaryDisplay,
-      width:
-        existing?.width || schema[primaryDisplay].width || DefaultColumnWidth,
+      width: schema[primaryDisplay].width || DefaultColumnWidth,
       left: gutterWidth,
       schema: schema[primaryDisplay],
       idx: "sticky",

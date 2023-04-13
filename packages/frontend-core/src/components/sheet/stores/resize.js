@@ -99,18 +99,6 @@ export const deriveStores = context => {
 
   // Resets a column size back to default
   const resetSize = async column => {
-    // let columnIdx = get(columns).findIndex(col => col.name === column.name)
-    // if (columnIdx === -1) {
-    //   stickyColumn.update(state => ({
-    //     ...state,
-    //     width: DefaultColumnWidth,
-    //   }))
-    // } else {
-    //   columns.update(state => {
-    //     state[columnIdx].width = DefaultColumnWidth
-    //     return [...state]
-    //   })
-    // }
     await columns.actions.updateColumnWidth(column.name, DefaultColumnWidth)
   }
 
