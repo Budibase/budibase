@@ -1,23 +1,31 @@
 import { ScimCreateGroupRequest, ScimCreateUserRequest } from "@budibase/types"
 import { uuid } from "./common"
 import { generator } from "./generator"
+import _ from "lodash"
 
-export function createUserRequest(userData?: {
-  externalId?: string
-  email?: string
-  firstName?: string
-  lastName?: string
-  username?: string
-}) {
-  const {
-    externalId = uuid(),
-    email = generator.email(),
-    firstName = generator.first(),
-    lastName = generator.last(),
-    username = generator.name(),
-  } = userData || {}
+interface CreateUserRequestFields {
+  externalId: string
+  email: string
+  firstName: string
+  lastName: string
+  username: string
+}
 
-  const user: ScimCreateUserRequest = {
+export function createUserRequest(userData?: Partial<CreateUserRequestFields>) {
+  const defaultValues = {
+    externalId: uuid(),
+    email: generator.email(),
+    firstName: generator.first(),
+    lastName: generator.last(),
+    username: generator.name(),
+  }
+
+  const { externalId, email, firstName, lastName, username } = _.assign(
+    defaultValues,
+    userData
+  )
+
+  let user: ScimCreateUserRequest = {
     schemas: [
       "urn:ietf:params:scim:schemas:core:2.0:User",
       "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",
@@ -35,13 +43,17 @@ export function createUserRequest(userData?: {
     meta: {
       resourceType: "User",
     },
-    name: {
-      formatted: generator.name(),
-      familyName: lastName,
-      givenName: firstName,
-    },
     roles: [],
   }
+
+  if (firstName || lastName) {
+    user.name = {
+      formatted: [firstName, lastName].filter(s => s).join(" "),
+      familyName: lastName,
+      givenName: firstName,
+    }
+  }
+
   return user
 }
 

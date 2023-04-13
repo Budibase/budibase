@@ -5,5 +5,5 @@
     { "path": "./packages/server" },
     { "path": "./packages/worker" }
   ],
-  "files" :[]
+  "files": []
 }

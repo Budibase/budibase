@@ -1,6 +1,6 @@
 import * as app from "../app"
 import { getAppFileUrl } from "../app"
-import { testEnv } from "../../../../tests"
+import { testEnv } from "../../../../tests/extra"
 
 describe("app", () => {
   beforeEach(() => {
