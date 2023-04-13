@@ -99,9 +99,7 @@ export const runMigration = async (
           options.force[migrationType] &&
           options.force[migrationType].includes(migrationName)
         ) {
-          log(
-            `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Forcing`
-          )
+          log(`[Migration: ${migrationName}] [DB: ${dbName}] Forcing`)
         } else {
           // no force, exit
           return
@@ -111,7 +109,7 @@ export const runMigration = async (
       // check if the migration is not a no-op
       if (!options.noOp) {
         log(
-          `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Running ${lengthStatement}`
+          `[Migration: ${migrationName}] [DB: ${dbName}] Running ${lengthStatement}`
         )
 
         if (migration.preventRetry) {
@@ -131,9 +129,7 @@ export const runMigration = async (
           await migration.fn(db)
         }
 
-        log(
-          `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Complete`
-        )
+        log(`[Migration: ${migrationName}] [DB: ${dbName}] Complete`)
       }
 
       // mark as complete
@@ -141,7 +137,7 @@ export const runMigration = async (
       await db.put(doc)
     } catch (err) {
       console.error(
-        `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Error: `,
+        `[Migration: ${migrationName}] [DB: ${dbName}] Error: `,
         err
       )
       throw err

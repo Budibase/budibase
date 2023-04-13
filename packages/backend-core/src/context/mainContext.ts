@@ -2,7 +2,7 @@
 // store an app ID to pretend there is a context
 import env from "../environment"
 import Context from "./Context"
-import * as conversions from "../db/conversions"
+import * as conversions from "../docIds/conversions"
 import { getDB } from "../db/db"
 import {
   DocumentType,
@@ -43,8 +43,12 @@ export function baseGlobalDBName(tenantId: string | undefined | null) {
   }
 }
 
+export function getPlatformURL() {
+  return env.PLATFORM_URL
+}
+
 export function isMultiTenant() {
-  return env.MULTI_TENANCY
+  return !!env.MULTI_TENANCY
 }
 
 export function isTenantIdSet() {
@@ -214,6 +218,13 @@ export function doInEnvironmentContext(
   return newContext(updates, task)
 }
 
+export function doInScimContext(task: any) {
+  const updates: ContextMap = {
+    isScim: true,
+  }
+  return newContext(updates, task)
+}
+
 export function getEnvironmentVariables() {
   const context = Context.get()
   if (!context.environmentVariables) {
@@ -269,4 +280,10 @@ export function getDevAppDB(opts?: any): Database {
     throw new Error("Unable to retrieve dev DB - no app ID.")
   }
   return getDB(conversions.getDevelopmentAppID(appId), opts)
+}
+
+export function isScim(): boolean {
+  const context = Context.get()
+  const scimCall = context?.isScim
+  return !!scimCall
 }

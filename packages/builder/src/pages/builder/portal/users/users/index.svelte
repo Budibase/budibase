@@ -13,7 +13,14 @@
     Divider,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
-  import { users, groups, auth, licensing, organisation } from "stores/portal"
+  import {
+    users,
+    groups,
+    auth,
+    licensing,
+    organisation,
+    features,
+  } from "stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
@@ -28,6 +35,7 @@
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "api"
   import { OnboardingType } from "../../../../../constants"
+  import ScimBanner from "../_components/SCIMBanner.svelte"
 
   const fetch = fetchData({
     API,
@@ -53,7 +61,7 @@
   ]
   let userData = []
 
-  $: readonly = !$auth.isAdmin
+  $: readonly = !$auth.isAdmin || $features.isScimEnabled
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -230,14 +238,18 @@
   </Layout>
   <Divider />
   <div class="controls">
-    <ButtonGroup>
-      <Button disabled={readonly} on:click={createUserModal.show} cta>
-        Add users
-      </Button>
-      <Button disabled={readonly} on:click={importUsersModal.show} secondary>
-        Import
-      </Button>
-    </ButtonGroup>
+    {#if !readonly}
+      <ButtonGroup>
+        <Button disabled={readonly} on:click={createUserModal.show} cta>
+          Add users
+        </Button>
+        <Button disabled={readonly} on:click={importUsersModal.show} secondary>
+          Import
+        </Button>
+      </ButtonGroup>
+    {:else}
+      <ScimBanner />
+    {/if}
     <div class="controls-right">
       <Search bind:value={searchEmail} placeholder="Search" />
       {#if selectedRows.length > 0}

@@ -1,13 +1,18 @@
+import { join } from "path"
+
+let LOADED = false
+if (!LOADED) {
+  require("dotenv").config({
+    path: join(__dirname, "..", ".env"),
+  })
+  LOADED = true
+}
+
 const env = {
-  BUDIBASE_SERVER_URL: process.env.BUDIBASE_SERVER_URL,
-  BUDIBASE_ACCOUNT_URL: process.env.BUDIBASE_ACCOUNT_URL,
-  BUDIBASE_PUBLIC_API_KEY: process.env.BUDIBASE_PUBLIC_API_KEY,
-  BUDIBASE_ACCOUNTS_URL: process.env.BUDIBASE_ACCOUNTS_URL,
-  BUDIBASE_HOST: process.env.BUDIBASE_HOST,
-  _set(key: any, value: any) {
-    process.env[key] = value
-    module.exports[key] = value
-  },
+  BUDIBASE_URL: process.env.BUDIBASE_URL,
+  ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
+  BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
+  BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
 }
 
 export = env
