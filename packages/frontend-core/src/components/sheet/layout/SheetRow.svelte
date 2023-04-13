@@ -4,7 +4,7 @@
 
   export let row
   export let idx
-  export let invert = false
+  export let invertY = false
 
   const {
     focusedCellId,
@@ -16,6 +16,7 @@
     selectedCellMap,
     focusedRow,
     hiddenColumnsWidth,
+    columnHorizontalInversionIndex,
   } = getContext("sheet")
 
   $: rowSelected = !!$selectedRows[row._id]
@@ -28,18 +29,18 @@
 
 <div
   class="row"
-  style={rowFocused ? foo : null}
   on:focus
   on:mouseenter={() => ($hoveredRowId = row._id)}
   on:mouseleave={() => ($hoveredRowId = null)}
 >
-  {#each cols as column (column.name)}
+  {#each $renderedColumns as column, idx (column.name)}
     {@const cellId = `${row._id}-${column.name}`}
     <DataCell
       {cellId}
       {column}
       {row}
-      {invert}
+      {invertY}
+      invertX={idx >= $columnHorizontalInversionIndex}
       {rowFocused}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
       selected={rowSelected}

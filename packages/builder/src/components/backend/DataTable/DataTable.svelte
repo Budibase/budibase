@@ -21,7 +21,13 @@
 </script>
 
 <div class="wrapper">
-  <Sheet {API} tableId={id} allowAddRows={!isUsersTable}>
+  <Sheet
+    {API}
+    tableId={id}
+    allowAddRows={!isUsersTable}
+    allowDeleteRows={!isUsersTable}
+    on:updatetable={e => tables.updateTable(e.detail)}
+  >
     <svelte:fragment slot="controls">
       {#if isInternal}
         <SheetCreateViewButton />

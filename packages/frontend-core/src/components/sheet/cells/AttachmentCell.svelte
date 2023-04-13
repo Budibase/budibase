@@ -8,7 +8,8 @@
   export let onChange
   export let readonly = false
   export let api
-  export let invert = false
+  export let invertX = false
+  export let invertY = false
 
   const { API } = getContext("sheet")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
@@ -89,7 +90,7 @@
 </div>
 
 {#if isOpen}
-  <div class="dropzone" class:invert>
+  <div class="dropzone" class:invertX class:invertY>
     <Dropzone
       {value}
       compact
@@ -146,7 +147,11 @@
     box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
     padding: var(--cell-padding);
   }
-  .dropzone.invert {
+  .dropzone.invertX {
+    left: auto;
+    right: 0;
+  }
+  .dropzone.invertY {
     transform: translateY(-100%);
     top: 0;
   }

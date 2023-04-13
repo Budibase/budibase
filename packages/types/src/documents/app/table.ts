@@ -31,6 +31,8 @@ export interface FieldSchema {
   timeOnly?: boolean
   lastID?: number
   useRichText?: boolean | null
+  order?: number
+  width?: number
   meta?: {
     toTable: string
     toKey: string

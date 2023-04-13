@@ -121,6 +121,8 @@ export const deriveStores = context => {
           instanceLoaded.set(true)
           scroll.set({ top: 0, left: 0 })
         } else if (resetRows) {
+          table.set($fetch.definition)
+
           // Only reset top scroll position when resetting rows
           scroll.update(state => ({ ...state, top: 0 }))
         }

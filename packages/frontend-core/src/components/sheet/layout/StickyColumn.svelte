@@ -61,8 +61,8 @@
     <SheetCell width={gutterWidth}>
       <div class="gutter">
         <div class="checkbox visible">
-          {#if $config.allowSelectRows}
-            <div on:click={$config.allowSelectRows && selectAll}>
+          {#if $config.allowDeleteRows}
+            <div on:click={selectAll}>
               <Checkbox
                 value={rowCount && selectedRowCount === rowCount}
                 disabled={!$renderedRows.length}
@@ -104,14 +104,14 @@
               <div
                 on:click={() => selectRow(row._id)}
                 class="checkbox"
-                class:visible={$config.allowSelectRows &&
+                class:visible={$config.allowDeleteRows &&
                   (rowSelected || rowHovered || rowFocused)}
               >
                 <Checkbox value={rowSelected} />
               </div>
               <div
                 class="number"
-                class:visible={!$config.allowSelectRows ||
+                class:visible={!$config.allowDeleteRows ||
                   !(rowSelected || rowHovered || rowFocused)}
               >
                 {row.__idx + 1}

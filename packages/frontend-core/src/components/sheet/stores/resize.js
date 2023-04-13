@@ -23,7 +23,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { resize, columns, stickyColumn, ui, table, API, rows } = context
+  const { resize, columns, stickyColumn, ui } = context
 
   // Starts resizing a certain column
   const startResizing = (column, e) => {
@@ -93,41 +93,25 @@ export const deriveStores = context => {
 
     // Persist width if it changed
     if ($resize.width !== $resize.initialWidth) {
-      await saveNewColumnWidth($resize.column, $resize.width)
+      await columns.actions.updateColumnWidth($resize.column, $resize.width)
     }
   }
 
   // Resets a column size back to default
   const resetSize = async column => {
-    let columnIdx = get(columns).findIndex(col => col.name === column.name)
-    if (columnIdx === -1) {
-      stickyColumn.update(state => ({
-        ...state,
-        width: DefaultColumnWidth,
-      }))
-    } else {
-      columns.update(state => {
-        state[columnIdx].width = DefaultColumnWidth
-        return [...state]
-      })
-    }
-    await saveNewColumnWidth(column.name, DefaultColumnWidth)
-  }
-
-  // Saves a new column width as part of table metadata
-  const saveNewColumnWidth = async (columnName, width) => {
-    const $table = get(table)
-    const newDefinition = await API.saveTable({
-      ...$table,
-      schema: {
-        ...$table.schema,
-        [columnName]: {
-          ...$table.schema[columnName],
-          width,
-        },
-      },
-    })
-    table.set(newDefinition)
+    // let columnIdx = get(columns).findIndex(col => col.name === column.name)
+    // if (columnIdx === -1) {
+    //   stickyColumn.update(state => ({
+    //     ...state,
+    //     width: DefaultColumnWidth,
+    //   }))
+    // } else {
+    //   columns.update(state => {
+    //     state[columnIdx].width = DefaultColumnWidth
+    //     return [...state]
+    //   })
+    // }
+    await columns.actions.updateColumnWidth(column.name, DefaultColumnWidth)
   }
 
   return {

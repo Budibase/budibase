@@ -1,4 +1,9 @@
 import { derived, get } from "svelte/store"
+import {
+  MaxCellRenderHeight,
+  MaxCellRenderWidthOverflow,
+  ScrollBarSize,
+} from "../lib/constants"
 
 export const deriveStores = context => {
   const {
@@ -96,11 +101,41 @@ export const deriveStores = context => {
     0
   )
 
+  // Determine the row index at which we should start vertically inverting cell
+  // dropdowns
+  const rowVerticalInversionIndex = derived(
+    [visualRowCapacity, rowHeight],
+    ([$visualRowCapacity, $rowHeight]) => {
+      return (
+        $visualRowCapacity - Math.ceil(MaxCellRenderHeight / $rowHeight) - 2
+      )
+    }
+  )
+
+  // Determine the column index at which we should start horizontally inverting
+  // cell dropdowns
+  const columnHorizontalInversionIndex = derived(
+    [renderedColumns, scrollLeft, width],
+    ([$renderedColumns, $scrollLeft, $width]) => {
+      const cutoff = $width + $scrollLeft - ScrollBarSize * 3
+      let inversionIdx = $renderedColumns.length
+      for (let i = $renderedColumns.length - 1; i >= 0; i--, inversionIdx--) {
+        const rightEdge = $renderedColumns[i].left + $renderedColumns[i].width
+        if (rightEdge + MaxCellRenderWidthOverflow < cutoff) {
+          break
+        }
+      }
+      return inversionIdx
+    }
+  )
+
   return {
     scrolledRowCount,
     visualRowCapacity,
     renderedRows,
     renderedColumns,
     hiddenColumnsWidth,
+    rowVerticalInversionIndex,
+    columnHorizontalInversionIndex,
   }
 }

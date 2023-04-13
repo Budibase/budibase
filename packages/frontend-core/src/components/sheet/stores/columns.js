@@ -1,4 +1,5 @@
 import { derived, get, writable } from "svelte/store"
+import { cloneDeep } from "lodash/fp"
 
 export const DefaultColumnWidth = 200
 
@@ -16,7 +17,6 @@ export const createStores = () => {
         const enriched = {
           ...column,
           left: offset,
-          order: idx,
         }
         if (column.visible) {
           offset += column.width
@@ -47,7 +47,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { table, gutterWidth, columns, stickyColumn } = context
+  const { table, gutterWidth, columns, stickyColumn, API, dispatch } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
   table.subscribe($table => {
@@ -77,21 +77,13 @@ export const deriveStores = context => {
     // Update columns, removing extraneous columns and adding missing ones
     columns.set(
       fields
-        .map(field => {
-          // Check if there is an existing column with this name so we can keep
-          // the width setting
-          let existing = currentColumns.find(x => x.name === field)
-          if (!existing && currentStickyColumn?.name === field) {
-            existing = currentStickyColumn
-          }
-          return {
-            name: field,
-            width: existing?.width || schema[field].width || DefaultColumnWidth,
-            schema: schema[field],
-            visible: existing?.visible ?? true,
-            order: schema[field].order,
-          }
-        })
+        .map(field => ({
+          name: field,
+          width: schema[field].width || DefaultColumnWidth,
+          schema: schema[field],
+          visible: schema[field].visible ?? true,
+          order: schema[field].order,
+        }))
         .sort((a, b) => {
           // Sort by order first
           const orderA = a.order
@@ -136,5 +128,69 @@ export const deriveStores = context => {
     })
   })
 
-  return null
+  // Updates a columns width
+  const updateColumnWidth = async (columnName, width) => {
+    const $table = get(table)
+    await updateTable({
+      ...$table,
+      schema: {
+        ...$table.schema,
+        [columnName]: {
+          ...$table.schema[columnName],
+          width,
+        },
+      },
+    })
+  }
+
+  // Updates a columns visibility
+  const updateColumnVisibility = async (columnName, visible) => {
+    const $table = get(table)
+    await updateTable({
+      ...$table,
+      schema: {
+        ...$table.schema,
+        [columnName]: {
+          ...$table.schema[columnName],
+          visible,
+        },
+      },
+    })
+  }
+
+  // Updates the orders of columns
+  const updateColumnOrders = async newColumns => {
+    const $table = get(table)
+    const newSchema = cloneDeep($table.schema)
+    Object.keys(newSchema).forEach(column => {
+      const index = newColumns.indexOf(column)
+      if (index !== -1) {
+        newSchema[column].order = index
+      } else {
+        delete newSchema[column].order
+      }
+    })
+    await updateTable({
+      ...$table,
+      schema: newSchema,
+    })
+  }
+
+  // Updates the table definition
+  const updateTable = async newTable => {
+    table.set(newTable)
+    dispatch("updatetable", newTable)
+    await API.saveTable(newTable)
+  }
+
+  return {
+    columns: {
+      ...columns,
+      actions: {
+        updateColumnWidth,
+        updateColumnVisibility,
+        updateColumnOrders,
+      },
+    },
+  }
 }

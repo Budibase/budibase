@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { domDebounce } from "../../../utils/utils"
+  import { ScrollBarSize } from "../lib/constants"
 
   const {
     scroll,
@@ -17,9 +18,6 @@
     height,
   } = getContext("sheet")
 
-  // Bar config
-  const barOffset = 8
-
   // State for dragging bars
   let initialMouse
   let initialScroll
@@ -28,17 +26,17 @@
   // Terminology is the same for both axes:
   //   renderX - the space available to render the bar in, edge to edge
   //   availX - the space available to render the bar in, until the edge
-  $: renderHeight = $height - 2 * barOffset
+  $: renderHeight = $height - 2 * ScrollBarSize
   $: barHeight = Math.max(50, ($height / $contentHeight) * renderHeight)
   $: availHeight = renderHeight - barHeight
   $: barTop =
-    barOffset + $rowHeight + availHeight * ($scrollTop / $maxScrollTop)
+    ScrollBarSize + $rowHeight + availHeight * ($scrollTop / $maxScrollTop)
 
   // Calculate H scrollbar size and offset
-  $: renderWidth = $screenWidth - 2 * barOffset
+  $: renderWidth = $screenWidth - 2 * ScrollBarSize
   $: barWidth = Math.max(50, ($screenWidth / $contentWidth) * renderWidth)
   $: availWidth = renderWidth - barWidth
-  $: barLeft = barOffset + availWidth * ($scrollLeft / $maxScrollLeft)
+  $: barLeft = ScrollBarSize + availWidth * ($scrollLeft / $maxScrollLeft)
 
   // V scrollbar drag handlers
   const startVDragging = e => {
@@ -88,14 +86,14 @@
 {#if $showVScrollbar}
   <div
     class="v-scrollbar"
-    style="top:{barTop}px; height:{barHeight}px;right:{barOffset}px;"
+    style="--size:{ScrollBarSize}px; top:{barTop}px; height:{barHeight}px;"
     on:mousedown={startVDragging}
   />
 {/if}
 {#if $showHScrollbar}
   <div
     class="h-scrollbar"
-    style="left:{barLeft}px; width:{barWidth}px;bottom:{barOffset}px;"
+    style="--size:{ScrollBarSize}px; left:{barLeft}px; width:{barWidth}px;"
     on:mousedown={startHDragging}
   />
 {/if}
@@ -112,9 +110,11 @@
     opacity: 1;
   }
   .v-scrollbar {
-    width: 8px;
+    width: var(--size);
+    right: var(--size);
   }
   .h-scrollbar {
-    height: 8px;
+    height: var(--size);
+    bottom: var(--size);
   }
 </style>

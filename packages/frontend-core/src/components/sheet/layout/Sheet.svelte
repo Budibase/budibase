@@ -15,8 +15,10 @@
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
   import { clickOutside } from "@budibase/bbui"
-  import SheetControls from "./SheetControls.svelte"
-  import { MaxCellRenderHeight } from "../lib/constants"
+  import {
+    MaxCellRenderHeight,
+    MaxCellRenderWidthOverflow,
+  } from "../lib/constants"
   import SortButton from "../controls/SortButton.svelte"
   import AddColumnButton from "../controls/AddColumnButton.svelte"
   import HideColumnsButton from "../controls/HideColumnsButton.svelte"
@@ -25,11 +27,11 @@
   export let API
   export let tableId
   export let allowAddRows = true
-  export let allowSelectRows = true
   export let allowAddColumns = true
   export let allowEditColumns = true
   export let allowExpandRows = true
   export let allowEditRows = true
+  export let allowDeleteRows = true
 
   // Sheet constants
   const gutterWidth = 72
@@ -39,11 +41,11 @@
   const tableIdStore = writable(tableId)
   const config = writable({
     allowAddRows,
-    allowSelectRows,
     allowAddColumns,
     allowEditColumns,
     allowExpandRows,
     allowEditRows,
+    allowDeleteRows,
   })
 
   // Build up spreadsheet context
@@ -64,11 +66,11 @@
   $: tableIdStore.set(tableId)
   $: config.set({
     allowAddRows,
-    allowSelectRows,
     allowAddColumns,
     allowEditColumns,
     allowExpandRows,
     allowEditRows,
+    allowDeleteRows,
   })
 
   // Set context for children to consume
@@ -86,13 +88,12 @@
   id="sheet-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
-  style="--row-height:{$rowHeight}px; --gutter-width:{gutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px;"
+  style="--row-height:{$rowHeight}px; --gutter-width:{gutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px;"
 >
   <div class="controls">
     <div class="controls-left">
       <AddRowButton />
       <AddColumnButton />
-      <SheetControls />
       <slot name="controls" />
       <HideColumnsButton />
       <SortButton />

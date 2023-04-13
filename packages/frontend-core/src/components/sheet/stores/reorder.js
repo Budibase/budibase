@@ -24,19 +24,28 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { reorder, columns, scroll, bounds, stickyColumn, ui, table, API } =
-    context
+  const {
+    reorder,
+    columns,
+    visibleColumns,
+    scroll,
+    bounds,
+    stickyColumn,
+    ui,
+    table,
+    API,
+  } = context
 
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (column, e) => {
-    const $columns = get(columns)
+    const $visibleColumns = get(visibleColumns)
     const $bounds = get(bounds)
     const $scroll = get(scroll)
     const $stickyColumn = get(stickyColumn)
     ui.actions.blur()
 
     // Generate new breakpoints for the current columns
-    let breakpoints = $columns.map(col => ({
+    let breakpoints = $visibleColumns.map(col => ({
       x: col.left + col.width,
       column: col.name,
     }))
@@ -93,6 +102,22 @@ export const deriveStores = context => {
   const stopReordering = async () => {
     // Swap position of columns
     let { sourceColumn, targetColumn } = get(reorder)
+    moveColumn(sourceColumn, targetColumn)
+
+    // Reset state
+    reorder.set(reorderInitialState)
+
+    // Remove event handlers
+    document.removeEventListener("mousemove", onReorderMouseMove)
+    document.removeEventListener("mouseup", stopReordering)
+
+    // Save column changes
+    await saveOrderChanges()
+  }
+
+  // Moves a column after another columns.
+  // An undefined target column will move the source to index 0.
+  const moveColumn = (sourceColumn, targetColumn) => {
     let $columns = get(columns)
     let sourceIdx = $columns.findIndex(x => x.name === sourceColumn)
     let targetIdx = $columns.findIndex(x => x.name === targetColumn)
@@ -105,61 +130,31 @@ export const deriveStores = context => {
       state.splice(targetIdx, 0, removed[0])
       return state.slice()
     })
-
-    // Reset state
-    reorder.set(reorderInitialState)
-
-    // Remove event handlers
-    document.removeEventListener("mousemove", onReorderMouseMove)
-    document.removeEventListener("mouseup", stopReordering)
-
-    // Persist changes
-    await saveOrderChanges()
   }
 
+  // Moves a column one place left (as appears visually)
   const moveColumnLeft = async column => {
-    const $columns = get(columns)
-    const sourceIdx = $columns.findIndex(x => x.name === column)
-    if (sourceIdx === 0) {
-      return
-    }
-    columns.update(state => {
-      let tmp = state[sourceIdx]
-      state[sourceIdx] = state[sourceIdx - 1]
-      state[sourceIdx - 1] = tmp
-      return state.slice()
-    })
-
-    // Persist changes
+    const $visibleColumns = get(visibleColumns)
+    const sourceIdx = $visibleColumns.findIndex(x => x.name === column)
+    moveColumn(column, $visibleColumns[sourceIdx - 2]?.name)
     await saveOrderChanges()
   }
 
+  // Moves a column one place right (as appears visually)
   const moveColumnRight = async column => {
-    const $columns = get(columns)
-    const sourceIdx = $columns.findIndex(x => x.name === column)
-    if (sourceIdx === $columns.length - 1) {
+    const $visibleColumns = get(visibleColumns)
+    const sourceIdx = $visibleColumns.findIndex(x => x.name === column)
+    if (sourceIdx === $visibleColumns.length - 1) {
       return
     }
-    columns.update(state => {
-      let tmp = state[sourceIdx]
-      state[sourceIdx] = state[sourceIdx + 1]
-      state[sourceIdx + 1] = tmp
-      return state.slice()
-    })
-
-    // Persist changes
+    moveColumn(column, $visibleColumns[sourceIdx + 1]?.name)
     await saveOrderChanges()
   }
 
   // Saves order changes as part of table metadata
   const saveOrderChanges = async () => {
-    const $table = cloneDeep(get(table))
-    const $columns = get(columns)
-    $columns.forEach(column => {
-      $table.schema[column.name].order = column.order
-    })
-    const newTable = await API.saveTable($table)
-    table.set(newTable)
+    const newOrder = get(columns).map(column => column.name)
+    await columns.actions.updateColumnOrders(newOrder)
   }
 
   return {
