@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover, Toggle } from "@budibase/bbui"
 
-  const { columns } = getContext("sheet")
+  const { columns, loaded } = getContext("sheet")
 
   let open = false
   let anchor
@@ -46,7 +46,7 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open || anyHidden}
-    disabled={!$columns.length}
+    disabled={!$loaded || !$columns.length}
   >
     Hide columns
   </ActionButton>

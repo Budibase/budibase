@@ -2,7 +2,8 @@
   import { ActionButton } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { dispatch, columns, stickyColumn, config } = getContext("sheet")
+  const { dispatch, columns, stickyColumn, config, loaded } =
+    getContext("sheet")
 </script>
 
 <ActionButton
@@ -10,7 +11,9 @@
   quiet
   size="M"
   on:click={() => dispatch("add-row")}
-  disabled={!$config.allowAddRows || (!$columns.length && !$stickyColumn)}
+  disabled={!loaded ||
+    !$config.allowAddRows ||
+    (!$columns.length && !$stickyColumn)}
 >
   Create row
 </ActionButton>
