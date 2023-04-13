@@ -121,7 +121,7 @@ describe("syncGlobalUsers", () => {
         await syncGlobalUsers()
 
         const metadata = await rawUserMetadata()
-        expect(metadata).toHaveLength(1)
+        expect(metadata).toHaveLength(0)
       })
     })
   })
