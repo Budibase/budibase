@@ -1,5 +1,19 @@
 {
-  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "target": "es6",
+    "moduleResolution": "node",
+    "lib": ["es2020"],
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "sourceMap": true,
+    "declaration": true,
+    "types": ["node"],
+    "outDir": "dist",
+    "skipLibCheck": true
+  },
   "include": ["**/*.js", "**/*.ts", "package.json"],
   "exclude": [
     "node_modules",
