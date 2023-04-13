@@ -1,10 +1,12 @@
 <script>
   import { setContext } from "svelte"
   import { writable } from "svelte/store"
+  import { clickOutside, ProgressCircle } from "@budibase/bbui"
   import { createEventManagers } from "../lib/events"
   import { createAPIClient } from "../../../api"
   import { attachStores } from "../stores"
   import DeleteButton from "../controls/DeleteButton.svelte"
+  import BetaButton from "../controls/BetaButton.svelte"
   import SheetBody from "./SheetBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
@@ -14,15 +16,15 @@
   import StickyColumn from "./StickyColumn.svelte"
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
-  import { clickOutside, ProgressCircle } from "@budibase/bbui"
-  import {
-    MaxCellRenderHeight,
-    MaxCellRenderWidthOverflow,
-  } from "../lib/constants"
   import SortButton from "../controls/SortButton.svelte"
   import AddColumnButton from "../controls/AddColumnButton.svelte"
   import HideColumnsButton from "../controls/HideColumnsButton.svelte"
   import AddRowButton from "../controls/AddRowButton.svelte"
+  import {
+    MaxCellRenderHeight,
+    MaxCellRenderWidthOverflow,
+    GutterWidth,
+  } from "../lib/constants"
 
   export let API
   export let tableId
@@ -34,7 +36,6 @@
   export let allowDeleteRows = true
 
   // Sheet constants
-  const gutterWidth = 72
   const rand = Math.random()
 
   // State stores
@@ -52,7 +53,6 @@
   let context = {
     API: API || createAPIClient(),
     rand,
-    gutterWidth,
     config,
     tableId: tableIdStore,
   }
@@ -88,7 +88,7 @@
   id="sheet-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
-  style="--row-height:{$rowHeight}px; --gutter-width:{gutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px;"
+  style="--row-height:{$rowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px;"
 >
   <div class="controls">
     <div class="controls-left">
@@ -114,6 +114,7 @@
         <div class="overlays">
           <ResizeOverlay />
           <ReorderOverlay />
+          <BetaButton />
           <ScrollOverlay />
           <MenuOverlay />
         </div>

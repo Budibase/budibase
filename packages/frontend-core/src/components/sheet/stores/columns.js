@@ -1,7 +1,6 @@
 import { derived, get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-
-export const DefaultColumnWidth = 200
+import { GutterWidth, DefaultColumnWidth } from "../lib/constants"
 
 export const createStores = () => {
   const columns = writable([])
@@ -47,7 +46,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { table, gutterWidth, columns, stickyColumn, API, dispatch } = context
+  const { table, columns, stickyColumn, API, dispatch } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
   table.subscribe($table => {
@@ -121,7 +120,7 @@ export const deriveStores = context => {
     stickyColumn.set({
       name: primaryDisplay,
       width: schema[primaryDisplay].width || DefaultColumnWidth,
-      left: gutterWidth,
+      left: GutterWidth,
       schema: schema[primaryDisplay],
       idx: "sticky",
     })

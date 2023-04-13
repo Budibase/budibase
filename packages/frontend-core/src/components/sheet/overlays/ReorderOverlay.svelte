@@ -1,12 +1,12 @@
 <script>
   import { getContext } from "svelte"
   import SheetScrollWrapper from "../layout/SheetScrollWrapper.svelte"
+  import { GutterWidth } from "../lib/constants"
 
   const {
     isReordering,
     reorder,
     visibleColumns,
-    gutterWidth,
     stickyColumn,
     rowHeight,
     renderedRows,
@@ -14,14 +14,14 @@
   } = getContext("sheet")
 
   $: targetColumn = $reorder.targetColumn
-  $: minLeft = gutterWidth + ($stickyColumn?.width || 0)
+  $: minLeft = GutterWidth + ($stickyColumn?.width || 0)
   $: left = getLeft(targetColumn, $stickyColumn, $visibleColumns, $scrollLeft)
   $: height = $rowHeight * ($renderedRows.length + 1)
   $: style = `left:${left}px; height:${height}px;`
   $: visible = $isReordering && left >= minLeft
 
   const getLeft = (targetColumn, stickyColumn, visibleColumns, scrollLeft) => {
-    let left = gutterWidth + (stickyColumn?.width || 0) - scrollLeft
+    let left = GutterWidth + (stickyColumn?.width || 0) - scrollLeft
 
     // If this is not the sticky column, add additional left space
     if (targetColumn !== stickyColumn?.name) {
