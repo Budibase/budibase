@@ -1,11 +1,12 @@
 {
   "include": ["src/**/*"],
+
   "compilerOptions": {
     "allowJs": true,
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "dist",
     "esModuleInterop": true,
-    "types": ["node", "jest"]
+    "types": ["node"]
   }
 }
