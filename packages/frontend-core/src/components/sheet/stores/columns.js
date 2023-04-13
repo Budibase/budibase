@@ -13,7 +13,7 @@ export const createStores = () => {
     columns,
     $columns => {
       let offset = 0
-      return $columns.map((column, idx) => {
+      return $columns.map(column => {
         const enriched = {
           ...column,
           left: offset,
@@ -79,8 +79,8 @@ export const deriveStores = context => {
       fields
         .map(field => ({
           name: field,
-          width: schema[field].width || DefaultColumnWidth,
           schema: schema[field],
+          width: schema[field].width || DefaultColumnWidth,
           visible: schema[field].visible ?? true,
           order: schema[field].order,
         }))
@@ -127,58 +127,42 @@ export const deriveStores = context => {
     })
   })
 
-  // Updates a columns width
-  const updateColumnWidth = async (columnName, width) => {
+  // Persists column changes by saving metadata against table schema
+  const saveChanges = async () => {
+    const $columns = get(columns)
     const $table = get(table)
-    await updateTable({
-      ...$table,
-      schema: {
-        ...$table.schema,
-        [columnName]: {
-          ...$table.schema[columnName],
-          width,
-        },
-      },
-    })
-  }
-
-  // Updates a columns visibility
-  const updateColumnVisibility = async (columnName, visible) => {
-    const $table = get(table)
-    await updateTable({
-      ...$table,
-      schema: {
-        ...$table.schema,
-        [columnName]: {
-          ...$table.schema[columnName],
-          visible,
-        },
-      },
-    })
-  }
-
-  // Updates the orders of columns
-  const updateColumnOrders = async newColumns => {
-    const $table = get(table)
+    const $stickyColumn = get(stickyColumn)
     const newSchema = cloneDeep($table.schema)
+
+    // Build new updated table schema
     Object.keys(newSchema).forEach(column => {
-      const index = newColumns.indexOf(column)
+      // Respect order specified by columns
+      const index = $columns.findIndex(x => x.name === column)
       if (index !== -1) {
         newSchema[column].order = index
       } else {
         delete newSchema[column].order
       }
-    })
-    await updateTable({
-      ...$table,
-      schema: newSchema,
-    })
-  }
 
-  // Updates the table definition
-  const updateTable = async newTable => {
+      // Copy over metadata
+      if (column === $stickyColumn?.name) {
+        newSchema[column].visible = true
+        newSchema[column].width = $stickyColumn.width || DefaultColumnWidth
+      } else {
+        newSchema[column].visible = $columns[index]?.visible ?? true
+        newSchema[column].width = $columns[index]?.width || DefaultColumnWidth
+      }
+    })
+
+    // Update local state
+    const newTable = { ...$table, schema: newSchema }
     table.set(newTable)
+
+    // Broadcast event so that we can keep sync with external state
+    // (e.g. data section which maintains a list of table definitions)
     dispatch("updatetable", newTable)
+
+    // Update server
     await API.saveTable(newTable)
   }
 
@@ -186,9 +170,7 @@ export const deriveStores = context => {
     columns: {
       ...columns,
       actions: {
-        updateColumnWidth,
-        updateColumnVisibility,
-        updateColumnOrders,
+        saveChanges,
       },
     },
   }

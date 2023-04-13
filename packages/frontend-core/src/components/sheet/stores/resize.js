@@ -93,13 +93,25 @@ export const deriveStores = context => {
 
     // Persist width if it changed
     if ($resize.width !== $resize.initialWidth) {
-      await columns.actions.updateColumnWidth($resize.column, $resize.width)
+      await columns.actions.saveChanges()
     }
   }
 
   // Resets a column size back to default
   const resetSize = async column => {
-    await columns.actions.updateColumnWidth(column.name, DefaultColumnWidth)
+    if (column.name === get(stickyColumn)?.name) {
+      stickyColumn.update(state => ({
+        ...state,
+        width: DefaultColumnWidth,
+      }))
+    } else {
+      columns.update(state => {
+        const columnIdx = state.findIndex(x => x.name === column.name)
+        state[columnIdx].width = DefaultColumnWidth
+        return [...state]
+      })
+    }
+    await columns.actions.saveChanges()
   }
 
   return {

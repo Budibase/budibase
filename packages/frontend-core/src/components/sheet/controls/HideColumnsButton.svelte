@@ -15,6 +15,7 @@
       state[index].visible = visible
       return state.slice()
     })
+    columns.actions.saveChanges()
   }
 
   const showAll = () => {
@@ -24,6 +25,7 @@
         visible: true,
       }))
     })
+    columns.actions.saveChanges()
   }
 
   const hideAll = () => {
@@ -33,6 +35,7 @@
         visible: false,
       }))
     })
+    columns.actions.saveChanges()
   }
 </script>
 

@@ -112,7 +112,7 @@ export const deriveStores = context => {
     document.removeEventListener("mouseup", stopReordering)
 
     // Save column changes
-    await saveOrderChanges()
+    await columns.actions.saveChanges()
   }
 
   // Moves a column after another columns.
@@ -137,7 +137,7 @@ export const deriveStores = context => {
     const $visibleColumns = get(visibleColumns)
     const sourceIdx = $visibleColumns.findIndex(x => x.name === column)
     moveColumn(column, $visibleColumns[sourceIdx - 2]?.name)
-    await saveOrderChanges()
+    await columns.actions.saveChanges()
   }
 
   // Moves a column one place right (as appears visually)
@@ -148,13 +148,7 @@ export const deriveStores = context => {
       return
     }
     moveColumn(column, $visibleColumns[sourceIdx + 1]?.name)
-    await saveOrderChanges()
-  }
-
-  // Saves order changes as part of table metadata
-  const saveOrderChanges = async () => {
-    const newOrder = get(columns).map(column => column.name)
-    await columns.actions.updateColumnOrders(newOrder)
+    await columns.actions.saveChanges()
   }
 
   return {
