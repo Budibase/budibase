@@ -1,6 +1,5 @@
 import { writable, get, derived } from "svelte/store"
-import { DefaultColumnWidth } from "./columns"
-import { cloneDeep } from "lodash/fp"
+import { DefaultColumnWidth } from "../lib/constants"
 
 export const MinColumnWidth = 100
 

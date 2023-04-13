@@ -1,19 +1,18 @@
 <script>
   import { getContext } from "svelte"
+  import { GutterWidth } from "../lib/constants"
 
   const {
     columns,
     resize,
-    scroll,
     renderedColumns,
     stickyColumn,
     isReordering,
-    gutterWidth,
     scrollLeft,
   } = getContext("sheet")
 
-  $: cutoff = $scrollLeft + gutterWidth + ($columns[0]?.width || 0)
-  $: offset = gutterWidth + ($stickyColumn?.width || 0)
+  $: cutoff = $scrollLeft + GutterWidth + ($columns[0]?.width || 0)
+  $: offset = GutterWidth + ($stickyColumn?.width || 0)
   $: activeColumn = $resize.column
 
   const getStyle = (column, offset, scrollLeft) => {
@@ -29,7 +28,7 @@
       class:visible={activeColumn === $stickyColumn.name}
       on:mousedown={e => resize.actions.startResizing($stickyColumn, e)}
       on:dblclick={() => resize.actions.resetSize($stickyColumn)}
-      style="left:{gutterWidth + $stickyColumn.width}px;"
+      style="left:{GutterWidth + $stickyColumn.width}px;"
     >
       <div class="resize-indicator" />
     </div>

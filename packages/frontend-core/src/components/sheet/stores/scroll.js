@@ -1,6 +1,6 @@
 import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
-import { SheetPadding } from "../lib/constants"
+import { SheetPadding, GutterWidth } from "../lib/constants"
 
 export const createStores = () => {
   const scroll = writable({
@@ -29,7 +29,6 @@ export const deriveStores = context => {
     rowHeight,
     focusedRow,
     focusedCellId,
-    gutterWidth,
     scrollTop,
     scrollLeft,
     width,
@@ -55,7 +54,7 @@ export const deriveStores = context => {
   const contentWidth = derived(
     [visibleColumns, stickyColumnWidth],
     ([$visibleColumns, $stickyColumnWidth]) => {
-      let width = gutterWidth + SheetPadding + $stickyColumnWidth
+      let width = GutterWidth + SheetPadding + $stickyColumnWidth
       $visibleColumns.forEach(col => {
         width += col.width
       })
@@ -65,7 +64,7 @@ export const deriveStores = context => {
   )
   const screenWidth = derived(
     [width, stickyColumnWidth],
-    ([$width, $stickyColumnWidth]) => $width + gutterWidth + $stickyColumnWidth,
+    ([$width, $stickyColumnWidth]) => $width + GutterWidth + $stickyColumnWidth,
     0
   )
   const maxScrollLeft = derived(

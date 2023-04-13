@@ -5,6 +5,7 @@
   import DataCell from "../cells/DataCell.svelte"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
   import HeaderCell from "../cells/HeaderCell.svelte"
+  import { GutterWidth } from "../lib/constants"
 
   const {
     rows,
@@ -16,14 +17,13 @@
     config,
     selectedCellMap,
     focusedRow,
-    gutterWidth,
     dispatch,
     scrollLeft,
   } = getContext("sheet")
 
   $: rowCount = $rows.length
   $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
-  $: width = gutterWidth + ($stickyColumn?.width || 0)
+  $: width = GutterWidth + ($stickyColumn?.width || 0)
 
   const selectAll = () => {
     const allSelected = selectedRowCount === rowCount
@@ -58,7 +58,7 @@
   class:scrolled={$scrollLeft > 0}
 >
   <div class="header row">
-    <SheetCell width={gutterWidth}>
+    <SheetCell width={GutterWidth}>
       <div class="gutter">
         <div class="checkbox visible">
           {#if $config.allowDeleteRows}
@@ -96,7 +96,7 @@
           on:mouseleave={() => ($hoveredRowId = null)}
         >
           <SheetCell
-            width={gutterWidth}
+            width={GutterWidth}
             highlighted={rowFocused || rowHovered}
             selected={rowSelected}
           >

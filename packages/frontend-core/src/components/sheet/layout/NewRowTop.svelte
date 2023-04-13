@@ -1,16 +1,16 @@
 <script>
   import SheetCell from "../cells/SheetCell.svelte"
   import { getContext, onMount } from "svelte"
-  import { Icon, Button, clickOutside } from "@budibase/bbui"
+  import { Icon, Button } from "@budibase/bbui"
   import SheetScrollWrapper from "./SheetScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
   import { fly } from "svelte/transition"
+  import { GutterWidth } from "../lib/constants"
 
   const {
     hoveredRowId,
     focusedCellId,
     stickyColumn,
-    gutterWidth,
     scroll,
     config,
     dispatch,
@@ -29,7 +29,7 @@
   $: firstColumn = $stickyColumn || $visibleColumns[0]
   $: rowHovered = $hoveredRowId === "new"
   $: rowFocused = $focusedCellId?.startsWith("new-")
-  $: width = gutterWidth + ($stickyColumn?.width || 0)
+  $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $tableId, (isAdding = false)
 
   const addRow = async () => {
@@ -89,7 +89,7 @@
           style="flex: 0 0 {width}px"
           class:scrolled={$scrollLeft > 0}
         >
-          <SheetCell width={gutterWidth} {rowHovered} {rowFocused}>
+          <SheetCell width={GutterWidth} {rowHovered} {rowFocused}>
             <div class="gutter">
               <div class="number">1</div>
               {#if $config.allowExpandRows}
@@ -153,11 +153,6 @@
     position: absolute;
     top: var(--row-height);
     left: 0;
-    /*background: linear-gradient(*/
-    /*  to bottom,*/
-    /*  var(--cell-background) 20%,*/
-    /*  transparent 100%*/
-    /*);*/
     width: 100%;
     padding-bottom: 800px;
     display: flex;
