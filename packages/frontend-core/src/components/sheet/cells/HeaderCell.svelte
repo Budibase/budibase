@@ -18,9 +18,7 @@
     dispatch,
     config,
     ui,
-    table,
-    rows,
-    API,
+    columns,
   } = getContext("sheet")
 
   let anchor
@@ -83,15 +81,7 @@
   }
 
   const makeDisplayColumn = async () => {
-    const tableDefinition = $table
-    if (!tableDefinition) {
-      return
-    }
-    await API.saveTable({
-      ...tableDefinition,
-      primaryDisplay: column.name,
-    })
-    await rows.actions.refreshTableDefinition()
+    await columns.actions.changePrimaryDisplay(column.name)
     open = false
   }
 </script>

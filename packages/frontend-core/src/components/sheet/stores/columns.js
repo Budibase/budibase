@@ -126,6 +126,14 @@ export const deriveStores = context => {
     })
   })
 
+  // Updates the tables primary display column
+  const changePrimaryDisplay = async column => {
+    return await saveTable({
+      ...get(table),
+      primaryDisplay: column,
+    })
+  }
+
   // Persists column changes by saving metadata against table schema
   const saveChanges = async () => {
     const $columns = get(columns)
@@ -153,8 +161,11 @@ export const deriveStores = context => {
       }
     })
 
+    await saveTable({ ...$table, schema: newSchema })
+  }
+
+  const saveTable = async newTable => {
     // Update local state
-    const newTable = { ...$table, schema: newSchema }
     table.set(newTable)
 
     // Broadcast event so that we can keep sync with external state
@@ -170,6 +181,7 @@ export const deriveStores = context => {
       ...columns,
       actions: {
         saveChanges,
+        changePrimaryDisplay,
       },
     },
   }
