@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 if [[ -n $CI ]]
 then
@@ -7,6 +8,6 @@ then
   jest --coverage --runInBand --forceExit
 else
   # --maxWorkers performs better in development
-  echo "jest --coverage"
-  jest --coverage
+  echo "jest --coverage --forceExit"
+  jest --coverage --forceExit
 fi

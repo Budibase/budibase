@@ -15,7 +15,7 @@ import { getCouchInfo } from "./connections"
 import { directCouchCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { WriteStream, ReadStream } from "fs"
-import { newid } from "../../newid"
+import { newid } from "../../docIds/newid"
 
 function buildNano(couchInfo: { url: string; cookie: string }) {
   return Nano({

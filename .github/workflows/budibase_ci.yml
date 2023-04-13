@@ -56,7 +56,6 @@ jobs:
         run: yarn install:pro $BRANCH $BASE_BRANCH
       - run: yarn
       - run: yarn bootstrap
-      - run: yarn build:client
       - run: yarn test
       - uses: codecov/codecov-action@v3
         with:
@@ -80,14 +79,6 @@ jobs:
 
   integration-test:
     runs-on: ubuntu-latest
-    services:
-      couchdb:
-        image: ibmcom/couchdb3
-        env:
-          COUCHDB_PASSWORD: budibase
-          COUCHDB_USER: budibase
-        ports:
-          - 4567:5984
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14.x
@@ -96,10 +87,11 @@ jobs:
           node-version: 14.x
       - name: Install Pro
         run: yarn install:pro $BRANCH $BASE_BRANCH
-      - run: yarn
-      - run: yarn bootstrap
-      - run: yarn build
+      - run: yarn && yarn bootstrap && yarn build
       - run: |
           cd qa-core
-          yarn
-          yarn api:test:ci
+          yarn setup
+          yarn test:ci
+        env:
+          BB_ADMIN_USER_EMAIL: admin
+          BB_ADMIN_USER_PASSWORD: admin

@@ -58,7 +58,7 @@
         />
         {#if openBlocks[block.id]}
           <Divider noMargin />
-          {#if filteredResults?.[idx]?.outputs.iterations}
+          {#if filteredResults?.[idx]?.outputs?.iterations}
             <div style="display: flex; padding: 10px 10px 0px 12px;">
               <Icon name="Reuse" />
               <div style="margin-left: 10px;">

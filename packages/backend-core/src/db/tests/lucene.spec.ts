@@ -1,4 +1,4 @@
-import { newid } from "../../newid"
+import { newid } from "../../docIds/newid"
 import { getDB } from "../db"
 import { Database } from "@budibase/types"
 import { QueryBuilder, paginatedSearch, fullSearch } from "../lucene"
@@ -135,6 +135,106 @@ describe("lucene", () => {
       builder.setAllOr()
       const resp = await builder.run()
       expect(resp.rows.length).toBe(2)
+    })
+
+    describe("skip", () => {
+      const skipDbName = `db-${newid()}`
+      let docs: {
+        _id: string
+        property: string
+        array: string[]
+      }[]
+
+      beforeAll(async () => {
+        const db = getDB(skipDbName)
+
+        docs = Array(QueryBuilder.maxLimit * 2.5)
+          .fill(0)
+          .map((_, i) => ({
+            _id: i.toString().padStart(3, "0"),
+            property: `value_${i.toString().padStart(3, "0")}`,
+            array: [],
+          }))
+        await db.bulkDocs(docs)
+
+        await db.put({
+          _id: "_design/database",
+          indexes: {
+            [INDEX_NAME]: {
+              index: index,
+              analyzer: "standard",
+            },
+          },
+        })
+      })
+
+      it("should be able to apply skip", async () => {
+        const builder = new QueryBuilder(skipDbName, INDEX_NAME)
+        const firstResponse = await builder.run()
+        builder.setSkip(40)
+        const secondResponse = await builder.run()
+
+        // Return the default limit
+        expect(firstResponse.rows.length).toBe(50)
+        expect(secondResponse.rows.length).toBe(50)
+
+        // Should have the expected overlap
+        expect(firstResponse.rows.slice(40)).toEqual(
+          secondResponse.rows.slice(0, 10)
+        )
+      })
+
+      it("should handle limits", async () => {
+        const builder = new QueryBuilder(skipDbName, INDEX_NAME)
+        builder.setLimit(10)
+        builder.setSkip(50)
+        builder.setSort("_id")
+
+        const resp = await builder.run()
+        expect(resp.rows.length).toBe(10)
+        expect(resp.rows).toEqual(
+          docs.slice(50, 60).map(expect.objectContaining)
+        )
+      })
+
+      it("should be able to skip searching through multiple responses", async () => {
+        const builder = new QueryBuilder(skipDbName, INDEX_NAME)
+        // Skipping 2 max limits plus a little bit more
+        const skip = QueryBuilder.maxLimit * 2 + 37
+        builder.setSkip(skip)
+        builder.setSort("_id")
+        const resp = await builder.run()
+
+        expect(resp.rows.length).toBe(50)
+        expect(resp.rows).toEqual(
+          docs.slice(skip, skip + resp.rows.length).map(expect.objectContaining)
+        )
+      })
+
+      it("should not return results if skipping all docs", async () => {
+        const builder = new QueryBuilder(skipDbName, INDEX_NAME)
+        // Skipping 2 max limits plus a little bit more
+        const skip = docs.length + 1
+        builder.setSkip(skip)
+
+        const resp = await builder.run()
+
+        expect(resp.rows.length).toBe(0)
+      })
+
+      it("skip should respect with filters", async () => {
+        const builder = new QueryBuilder(skipDbName, INDEX_NAME)
+        builder.setLimit(10)
+        builder.setSkip(50)
+        builder.addString("property", "value_1")
+        builder.setSort("property")
+
+        const resp = await builder.run()
+        expect(resp.rows.length).toBe(10)
+        expect(resp.rows).toEqual(
+          docs.slice(150, 160).map(expect.objectContaining)
+        )
+      })
     })
   })
 

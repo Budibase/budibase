@@ -1,7 +1,8 @@
+import { DBTestConfiguration } from "../../../tests/extra"
 import {
   structures,
-  DBTestConfiguration,
   expectFunctionWasCalledTimesWith,
+  mocks,
 } from "../../../tests"
 import { Writethrough } from "../writethrough"
 import { getDB } from "../../db"
@@ -77,9 +78,9 @@ describe("writethrough", () => {
           expect.arrayContaining([current._rev, current._rev, newRev])
         )
         expectFunctionWasCalledTimesWith(
-          console.warn,
+          mocks.alerts.logWarn,
           2,
-          "bb-warn: Ignoring redlock conflict in write-through cache"
+          "Ignoring redlock conflict in write-through cache"
         )
 
         const output = await db.get(current._id)

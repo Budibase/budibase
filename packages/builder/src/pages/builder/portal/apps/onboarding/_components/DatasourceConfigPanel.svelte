@@ -1,12 +1,15 @@
 <script>
   import { Button, FancyForm, FancyInput, FancyCheckbox } from "@budibase/bbui"
+  import GoogleButton from "components/backend/DatasourceNavigator/_components/GoogleButton.svelte"
   import { capitalise } from "helpers/helpers"
   import PanelHeader from "./PanelHeader.svelte"
+  import { helpers } from "@budibase/shared-core"
 
   export let title = ""
   export let onBack = null
   export let onNext = () => {}
   export let fields = {}
+  export let type = ""
 
   let errors = {}
 
@@ -57,8 +60,9 @@
   }
 
   $: isValid = getIsValid(fields, errors, values)
+  $: isGoogle = helpers.isGoogleSheets(type)
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const parsedValues = {}
 
     Object.entries(values).forEach(([name, value]) => {
@@ -69,7 +73,10 @@
       }
     })
 
-    return onNext(parsedValues)
+    if (isGoogle) {
+      parsedValues.isGoogle = isGoogle
+    }
+    return await onNext(parsedValues)
   }
 </script>
 
@@ -99,7 +106,11 @@
       {/each}
     </FancyForm>
   </div>
-  <Button cta disabled={!isValid} on:click={handleNext}>Connect</Button>
+  {#if isGoogle}
+    <GoogleButton disabled={!isValid} preAuthStep={handleNext} samePage />
+  {:else}
+    <Button cta disabled={!isValid} on:click={handleNext}>Connect</Button>
+  {/if}
 </div>
 
 <style>
