@@ -97,3 +97,11 @@ export class InvalidAPIKeyError extends BudibaseError {
     )
   }
 }
+
+// USERS
+
+export class EmailUnavailableError extends Error {
+  constructor(email: string) {
+    super(`Email already in use: '${email}'`)
+  }
+}
