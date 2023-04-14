@@ -205,7 +205,7 @@
         <HideAutocolumnButton bind:hideAutocolumns />
         <ImportButton
           disabled={$tables.selected?._id === "ta_users"}
-          tableId={$tables.selected?._id}
+          table={$tables.selected}
           on:importrows={onImportData}
         />
         <ExportButton

@@ -13,6 +13,7 @@
   const dispatch = createEventDispatcher()
 
   export let tableId
+  export let tableType
   let rows = []
   let allValid = false
   let displayColumn = null
@@ -49,6 +50,7 @@
     <Label grey extraSmall>CSV or JSON file to import</Label>
     <TableDataImport
       {tableId}
+      {tableType}
       bind:rows
       bind:allValid
       bind:displayColumn

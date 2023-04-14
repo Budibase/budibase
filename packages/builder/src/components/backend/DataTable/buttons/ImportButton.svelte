@@ -2,7 +2,7 @@
   import { ActionButton, Modal } from "@budibase/bbui"
   import ImportModal from "../modals/ImportModal.svelte"
 
-  export let tableId
+  export let table
   export let disabled
 
   let modal
@@ -12,5 +12,5 @@
   Import
 </ActionButton>
 <Modal bind:this={modal}>
-  <ImportModal {tableId} on:importrows />
+  <ImportModal tableId={table?._id} tableType={table?.type} on:importrows />
 </Modal>

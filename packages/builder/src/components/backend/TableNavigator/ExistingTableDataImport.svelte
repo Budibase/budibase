@@ -16,6 +16,7 @@
   let invalidColumns = []
 
   export let tableId = null
+  export let tableType
   export let rows = []
   export let allValid = false
   export let identifierFields = []
@@ -161,14 +162,16 @@
       </div>
     {/each}
   </div>
-  <br />
-  <Toggle bind:value={updateExistingRows} thin text="Update existing rows" />
-  {#if updateExistingRows}
-    <Multiselect
-      label="Identifier field(s)"
-      options={Object.keys(validation)}
-      bind:value={identifierFields}
-    />
+  {#if tableType === "internal"}
+    <br />
+    <Toggle bind:value={updateExistingRows} thin text="Update existing rows" />
+    {#if updateExistingRows}
+      <Multiselect
+        label="Identifier field(s)"
+        options={Object.keys(validation)}
+        bind:value={identifierFields}
+      />
+    {/if}
   {/if}
   {#if invalidColumns.length > 0}
     <p class="spectrum-FieldLabel spectrum-FieldLabel--sizeM">
