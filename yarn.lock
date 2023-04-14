@@ -1486,15 +1486,14 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.4.44-alpha.25":
-  version "2.4.44-alpha.25"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.4.44-alpha.25.tgz#5579e1dbcf609b10a3fb8d11a30d9654597ef2e4"
-  integrity sha512-LbNCi2D6ZVXJo6nsU2g6zGMTBDY2d57oFi8PaBepZP1azHtBsGBwG0+tnGuNy7FxgtA7UMIOUkGpVH8k30MjlQ==
+"@budibase/pro@2.5.4":
+  version "2.5.4"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.4.tgz#9368117a41b276ec97d3994e3ec67d9f2570a5bc"
+  integrity sha512-xPNVlRFTcjpWn+oZCvrfgDd9SoslkUgJsS2Bnff+qDoWcTFz30KoOyZPAkSwXxX3Y8FmZRO9csl0AZa9TsUs7A==
   dependencies:
-    "@budibase/backend-core" "2.4.44-alpha.25"
-    "@budibase/shared-core" "2.4.44-alpha.1"
-    "@budibase/string-templates" "2.4.44-alpha.1"
-    "@budibase/types" "2.4.44-alpha.25"
+    "@budibase/backend-core" "2.5.4"
+    "@budibase/string-templates" "2.3.20"
+    "@budibase/types" "2.5.4"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1502,15 +1501,6 @@
     lru-cache "^7.14.1"
     memorystream "^0.3.1"
     node-fetch "^2.6.1"
-    scim-patch "^0.7.0"
-    scim2-parse-filter "^0.2.8"
-
-"@budibase/shared-core@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/shared-core/-/shared-core-2.4.44-alpha.1.tgz#3d499e40e7e6c646e13a87cd08e01ba116c2ff1d"
-  integrity sha512-cN8LaDczijtsfWUYiXC4sg9Z+US4020i3Mb8TwCbf8TQyA1b06U5PwPCp+GHVA/wDFqfwcpcE1GXf8GwVuYs7A==
-  dependencies:
-    "@budibase/types" "2.4.44-alpha.1"
 
 "@budibase/standard-components@^0.9.139":
   version "0.9.139"
@@ -1530,10 +1520,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.4.44-alpha.1.tgz#6c2aee594d16eac1f173c509e087a817dd3172f0"
-  integrity sha512-4gC2+0kccK0ilLnd0i/dmJzC0Ur7UgSAmV6zbzDDYNL4spU0qSy5VhBh7E3qKieg5RKMMzbpXLMWERpoPLlnqA==
+"@budibase/string-templates@2.3.20":
+  version "2.3.20"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.3.20.tgz#35f74b6f515e8127cc375ee0a4679b0a7c117588"
+  integrity sha512-wMKau3IzVF6M+dRu99aKV1yMdrrK5lghVm9qYtR1B163SMbHEwC8JmZFGPLIi1XsG0T+vw+xfcemfJ2zcATWwg==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
@@ -1541,11 +1531,6 @@
     handlebars-utils "^1.0.6"
     lodash "^4.17.20"
     vm2 "^3.9.4"
-
-"@budibase/types@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.1.tgz#1679657aa180d9c59afa1dffa611bff0638bd933"
-  integrity sha512-Sq+8HfM75EBMoOvKYFwELdlxmVN6wNZMofDjT/2G+9aF+Zfe5Tzw69C+unmdBgcGGjGCHEYWSz4mF0v8FPAGbg==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
@@ -21184,7 +21169,7 @@ scim-patch@^0.7.0:
     fast-deep-equal "3.1.3"
     scim2-parse-filter "0.2.8"
 
-scim2-parse-filter@0.2.8, scim2-parse-filter@^0.2.8:
+scim2-parse-filter@0.2.8:
   version "0.2.8"
   resolved "https://registry.yarnpkg.com/scim2-parse-filter/-/scim2-parse-filter-0.2.8.tgz#12e836514b9a55ae51218dd6e7fbea91daccfa4d"
   integrity sha512-1V+6FIMIiP+gDiFkC3dIw86KfoXhnQRXhfPaiQImeeFukpLtEkTtYq/Vmy1yDgHQcIHQxQQqOWyGLKX0FTvvaA==
@@ -23902,7 +23887,7 @@ vlq@^0.2.2:
   resolved "https://registry.yarnpkg.com/vlq/-/vlq-0.2.3.tgz#8f3e4328cf63b1540c0d67e1b2778386f8975b26"
   integrity sha512-DRibZL6DsNhIgYQ+wNdWDL2SL3bKPlVrRiBqV5yuMm++op8W4kGFtaQfCs4KEJn0wBZcHVHJ3eoywX8983k1ow==
 
-vm2@3.9.16, vm2@^3.9.11, vm2@^3.9.4:
+vm2@3.9.16, vm2@^3.9.11, vm2@^3.9.15, vm2@^3.9.4:
   version "3.9.16"
   resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.16.tgz#0fbc2a265f7bf8b837cea6f4a908f88a3f93b8e6"
   integrity sha512-3T9LscojNTxdOyG+e8gFeyBXkMlOBYDoF6dqZbj+MPVHi9x10UfiTAJIobuchRCp3QvC+inybTbMJIUrLsig0w==
