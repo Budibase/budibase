@@ -80,8 +80,18 @@
     open = false
   }
 
-  const makeDisplayColumn = async () => {
-    await columns.actions.changePrimaryDisplay(column.name)
+  const moveStart = () => {
+    reorder.actions.moveColumnToStart(column.name)
+    open = false
+  }
+
+  const moveEnd = () => {
+    reorder.actions.moveColumnToEnd(column.name)
+    open = false
+  }
+
+  const makeDisplayColumn = () => {
+    columns.actions.changePrimaryDisplay(column.name)
     open = false
   }
 </script>
@@ -141,23 +151,39 @@
   animate={false}
 >
   <Menu>
-    {#if $config.allowEditColumns}
-      <MenuItem icon="Edit" on:click={editColumn}>Edit column</MenuItem>
-    {/if}
-    <MenuItem icon="SortOrderUp" on:click={sortAscending}>Sort A-Z</MenuItem>
-    <MenuItem icon="SortOrderDown" on:click={sortDescending}>Sort Z-A</MenuItem>
-    <MenuItem disabled={!canMoveLeft} icon="ArrowLeft" on:click={moveLeft}>
-      Move left
-    </MenuItem>
-    <MenuItem disabled={!canMoveRight} icon="ArrowRight" on:click={moveRight}>
-      Move right
-    </MenuItem>
+    <MenuItem
+      icon="Edit"
+      on:click={editColumn}
+      disabled={!$config.allowEditColumns}>Edit column</MenuItem
+    >
     <MenuItem
       icon="Label"
       on:click={makeDisplayColumn}
-      disabled={column.idx === "sticky"}
+      disabled={column.idx === "sticky" || !$config.allowEditColumns}
     >
       Use as display column
+    </MenuItem>
+    <MenuItem icon="SortOrderUp" on:click={sortAscending}>Sort A-Z</MenuItem>
+    <MenuItem icon="SortOrderDown" on:click={sortDescending}>Sort Z-A</MenuItem>
+    <MenuItem
+      disabled={!canMoveLeft}
+      icon="ChevronDoubleLeft"
+      on:click={moveStart}
+    >
+      Move to start
+    </MenuItem>
+    <MenuItem disabled={!canMoveLeft} icon="ChevronLeft" on:click={moveLeft}>
+      Move left
+    </MenuItem>
+    <MenuItem disabled={!canMoveRight} icon="ChevronRight" on:click={moveRight}>
+      Move right
+    </MenuItem>
+    <MenuItem
+      disabled={!canMoveRight}
+      icon="ChevronDoubleRight"
+      on:click={moveEnd}
+    >
+      Move to end
     </MenuItem>
   </Menu>
 </Popover>
