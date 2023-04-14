@@ -146,7 +146,7 @@ export async function handleDataImport(
   user: any,
   table: any,
   rows: any,
-  identifierFields?: Array<string>
+  identifierFields: Array<string> = []
 ) {
   const schema: unknown = table.schema
 
@@ -158,6 +158,32 @@ export async function handleDataImport(
   const data = parse(rows, schema)
 
   let finalData: any = importToRows(data, table, user)
+
+  //Set IDs of finalData to match existing row if an update is expected
+  if (identifierFields.length > 0) {
+    const allDocs = await db.allDocs(
+      getRowParams(table._id, null, {
+        include_docs: true,
+      })
+    )
+    allDocs.rows
+      .map(existingRow => existingRow.doc)
+      .forEach((doc: any) => {
+        finalData.forEach((finalItem: any) => {
+          let match = true
+          for (const field of identifierFields) {
+            if (finalItem[field] !== doc[field]) {
+              match = false
+              break
+            }
+          }
+          if (match) {
+            finalItem._id = doc._id
+            finalItem._rev = doc._rev
+          }
+        })
+      })
+  }
 
   await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
     tableId: table._id,

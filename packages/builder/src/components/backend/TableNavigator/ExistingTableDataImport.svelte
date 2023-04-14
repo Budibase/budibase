@@ -14,11 +14,11 @@
   let validateHash = ""
   let schema = null
   let invalidColumns = []
-  let identifierFields = []
 
   export let tableId = null
   export let rows = []
   export let allValid = false
+  export let identifierFields = []
 
   const typeOptions = [
     {
