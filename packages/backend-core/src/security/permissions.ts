@@ -24,7 +24,7 @@ export enum PermissionType {
   QUERY = "query",
 }
 
-class Permission {
+export class Permission {
   type: PermissionType
   level: PermissionLevel
 
@@ -81,7 +81,7 @@ export enum BuiltinPermissionID {
   POWER = "power",
 }
 
-const BUILTIN_PERMISSIONS = {
+export const BUILTIN_PERMISSIONS = {
   PUBLIC: {
     _id: BuiltinPermissionID.PUBLIC,
     name: "Public",
