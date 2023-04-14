@@ -1,10 +1,8 @@
 {
-  "version": "2.4.44-alpha.20",
+  "version": "2.4.44-alpha.22",
   "npmClient": "yarn",
   "useWorkspaces": true,
-  "packages": [
-    "packages/*"
-  ],
+  "packages": ["packages/*"],
   "command": {
     "publish": {
       "ignoreChanges": [
