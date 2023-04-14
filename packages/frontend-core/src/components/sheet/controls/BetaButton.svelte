@@ -33,7 +33,7 @@
     transform: rotate(-20deg);
     background: linear-gradient(
       to top,
-      var(--cell-background) 10%,
+      var(--cell-background) 20%,
       transparent
     );
   }

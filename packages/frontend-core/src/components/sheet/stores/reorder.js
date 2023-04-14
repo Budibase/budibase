@@ -1,5 +1,4 @@
 import { get, writable, derived } from "svelte/store"
-import { cloneDeep } from "lodash/fp"
 
 const reorderInitialState = {
   sourceColumn: null,
@@ -24,17 +23,8 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const {
-    reorder,
-    columns,
-    visibleColumns,
-    scroll,
-    bounds,
-    stickyColumn,
-    ui,
-    table,
-    API,
-  } = context
+  const { reorder, columns, visibleColumns, scroll, bounds, stickyColumn, ui } =
+    context
 
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (column, e) => {
@@ -132,6 +122,17 @@ export const deriveStores = context => {
     })
   }
 
+  const moveColumnToStart = async column => {
+    moveColumn(column, null)
+    await columns.actions.saveChanges()
+  }
+
+  const moveColumnToEnd = async column => {
+    const $visibleColumns = get(visibleColumns)
+    moveColumn(column, $visibleColumns[$visibleColumns.length - 1]?.name)
+    await columns.actions.saveChanges()
+  }
+
   // Moves a column one place left (as appears visually)
   const moveColumnLeft = async column => {
     const $visibleColumns = get(visibleColumns)
@@ -159,6 +160,8 @@ export const deriveStores = context => {
         stopReordering,
         moveColumnLeft,
         moveColumnRight,
+        moveColumnToStart,
+        moveColumnToEnd,
       },
     },
   }
