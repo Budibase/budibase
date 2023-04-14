@@ -1,6 +1,6 @@
 {
   "name": "@budibase/types",
-  "version": "2.4.44-alpha.28",
+  "version": "2.4.44-alpha.29",
   "description": "Budibase types",
   "main": "dist/cjs/index.js",
   "types": "dist/mjs/index.d.ts",
@@ -32,5 +32,6 @@
   },
   "dependencies": {
     "scim-patch": "^0.7.0"
-  }
+  },
+  "gitHead": "ec99a79ea55d3395b83c801699eb8b462f905fe8"
 }

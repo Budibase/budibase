@@ -1,6 +1,6 @@
 {
   "name": "@budibase/sdk",
-  "version": "2.4.44-alpha.28",
+  "version": "2.4.44-alpha.29",
   "description": "Budibase Public API SDK",
   "author": "Budibase",
   "license": "MPL-2.0",
@@ -19,5 +19,6 @@
     "rollup": "^2.44.0",
     "rollup-plugin-polyfill-node": "^0.8.0",
     "rollup-plugin-terser": "^7.0.2"
-  }
+  },
+  "gitHead": "ec99a79ea55d3395b83c801699eb8b462f905fe8"
 }
