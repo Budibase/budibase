@@ -164,7 +164,12 @@
   </div>
   {#if tableType === "internal"}
     <br />
-    <Toggle bind:value={updateExistingRows} thin text="Update existing rows" />
+    <Toggle
+      bind:value={updateExistingRows}
+      on:change={() => (identifierFields = [])}
+      thin
+      text="Update existing rows"
+    />
     {#if updateExistingRows}
       <Multiselect
         label="Identifier field(s)"
