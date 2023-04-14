@@ -1,6 +1,6 @@
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { events, context, roles, constants } from "@budibase/backend-core"
-import { initUserGroupSync } from "../sync"
+import { init } from "../../../../events"
 import { rawUserMetadata } from "../../../users/utils"
 import EventEmitter from "events"
 import { UserGroup, UserMetadata, UserRoles, User } from "@budibase/types"
@@ -35,7 +35,7 @@ function waitForUpdate(opts: { group?: boolean }) {
 
 beforeAll(async () => {
   app = await config.init("syncApp")
-  initUserGroupSync(updateCb)
+  init(updateCb)
 })
 
 async function createUser(email: string, roles: UserRoles, builder?: boolean) {

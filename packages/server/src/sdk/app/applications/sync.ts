@@ -82,7 +82,7 @@ async function syncUsersToApp(
   })
 }
 
-async function syncUsersToAllApps(userIds: string[]) {
+export async function syncUsersToAllApps(userIds: string[]) {
   // list of users, if one has been deleted it will be undefined in array
   const users = (await getGlobalUsers(userIds, {
     noProcessing: true,
@@ -111,36 +111,6 @@ async function syncUsersToAllApps(userIds: string[]) {
     const reasons = failed.map(fail => (fail as PromiseRejectedResult).reason)
     logging.logAlert("Failed to sync users to apps", reasons)
   }
-}
-
-export function initUserGroupSync(updateCb?: (docId: string) => void) {
-  const types = [constants.DocumentType.USER, constants.DocumentType.GROUP]
-  docUpdates.process(types, async update => {
-    try {
-      const docId = update.id
-      const isGroup = docId.startsWith(constants.DocumentType.GROUP)
-      let userIds: string[]
-      if (isGroup) {
-        const group = await proSdk.groups.get(docId)
-        userIds = group.users?.map(user => user._id) || []
-      } else {
-        userIds = [docId]
-      }
-      if (userIds.length > 0) {
-        await syncUsersToAllApps(userIds)
-      }
-      if (updateCb) {
-        updateCb(docId)
-      }
-    } catch (err: any) {
-      // if something not found - no changes to perform
-      if (err?.status === 404) {
-        return
-      } else {
-        logging.logAlert("Failed to perform user/group app sync", err)
-      }
-    }
-  })
 }
 
 export async function syncApp(

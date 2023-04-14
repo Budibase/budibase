@@ -1,7 +1,8 @@
-import { Event, AuditedEventFriendlyName } from "@budibase/types"
+import { Event } from "@budibase/types"
 import { processors } from "./processors"
 import identification from "./identification"
 import * as backfill from "./backfill"
+import { publishAsyncEvent } from "./asyncEvents"
 
 export const publishEvent = async (
   event: Event,
@@ -12,6 +13,15 @@ export const publishEvent = async (
   const identity = await identification.getCurrentIdentity()
 
   const backfilling = await backfill.isBackfillingEvent(event)
+
+  // send off async events if required
+  await publishAsyncEvent({
+    event,
+    identity,
+    properties,
+    timestamp,
+  })
+
   // no backfill - send the event and exit
   if (!backfilling) {
     await processors.processEvent(event, identity, properties, timestamp)

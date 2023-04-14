@@ -12,7 +12,7 @@ export interface EventProcessor {
     properties: any,
     timestamp?: string | number
   ): Promise<void>
-  identify(identity: Identity, timestamp?: string | number): Promise<void>
-  identifyGroup(group: Group, timestamp?: string | number): Promise<void>
-  shutdown(): void
+  identify?(identity: Identity, timestamp?: string | number): Promise<void>
+  identifyGroup?(group: Group, timestamp?: string | number): Promise<void>
+  shutdown?(): void
 }
