@@ -186,7 +186,7 @@ export enum Event {
   AUDIT_LOGS_DOWNLOADED = "audit_log:downloaded",
 }
 
-export const DocumentUpdateEvents: Event[] = [
+export const AsyncEvents: Event[] = [
   Event.USER_CREATED,
   Event.USER_UPDATED,
   Event.USER_DELETED,
@@ -399,3 +399,9 @@ export interface BaseEvent {
 }
 
 export type TableExportFormat = "json" | "csv"
+
+export type DocUpdateEvent = {
+  id: string
+  tenantId: string
+  appId?: string
+}
