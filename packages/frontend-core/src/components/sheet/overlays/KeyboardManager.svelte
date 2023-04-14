@@ -11,11 +11,14 @@
     focusedCellAPI,
   } = getContext("sheet")
 
+  let copiedValue
+
+  // Global key listener which intercepts all key events
   const handleKeyDown = e => {
     // If nothing selected avoid processing further key presses
     if (!$focusedCellId) {
       if (e.key === "Tab") {
-        selectFirstCell()
+        focusFirstCell()
       }
       return
     }
@@ -26,7 +29,7 @@
       api?.blur?.()
     } else if (e.key === "Tab") {
       api?.blur?.()
-      changeSelectedColumn(1)
+      changeFocusedColumn(1)
     }
 
     // Pass the key event to the selected cell and let it decide whether to
@@ -40,29 +43,43 @@
     e.preventDefault()
 
     // Handle the key ourselves
-    switch (e.key) {
-      case "ArrowLeft":
-        changeSelectedColumn(-1)
-        break
-      case "ArrowRight":
-        changeSelectedColumn(1)
-        break
-      case "ArrowUp":
-        changeSelectedRow(-1)
-        break
-      case "ArrowDown":
-        changeSelectedRow(1)
-        break
-      case "Delete":
-        deleteSelectedCell()
-        break
-      case "Enter":
-        focusSelectedCell()
-        break
+    if (e.metaKey || e.ctrlKey) {
+      switch (e.key) {
+        case "c":
+          copy()
+          break
+        case "v":
+          paste()
+          break
+      }
+    } else {
+      switch (e.key) {
+        case "ArrowLeft":
+          changeFocusedColumn(-1)
+          break
+        case "ArrowRight":
+          changeFocusedColumn(1)
+          break
+        case "ArrowUp":
+          changeFocusedRow(-1)
+          break
+        case "ArrowDown":
+          changeFocusedRow(1)
+          break
+        case "Delete":
+          deleteSelectedCell()
+          break
+        case "Enter":
+          focusCell()
+          break
+        default:
+          startEnteringValue(e.key, e.which)
+      }
     }
   }
 
-  const selectFirstCell = () => {
+  // Focuses the first cell in the spreadsheet
+  const focusFirstCell = () => {
     const firstRow = $enrichedRows[0]
     if (!firstRow) {
       return
@@ -74,7 +91,8 @@
     focusedCellId.set(`${firstRow._id}-${firstColumn.name}`)
   }
 
-  const changeSelectedColumn = delta => {
+  // Changes the focused cell by moving it left or right to a different column
+  const changeFocusedColumn = delta => {
     if (!$focusedCellId) {
       return
     }
@@ -98,7 +116,8 @@
     }
   }
 
-  const changeSelectedRow = delta => {
+  // Changes the focused cell by moving it up or down to a new row
+  const changeFocusedRow = delta => {
     if (!$focusedRow) {
       return
     }
@@ -114,14 +133,48 @@
     if ($focusedCellAPI?.isReadonly()) {
       return
     }
-    $focusedCellAPI.updateValue(null)
+    $focusedCellAPI.setValue(null)
   }, 100)
 
-  const focusSelectedCell = () => {
+  // Focuses the current cell for editing
+  const focusCell = () => {
     if ($focusedCellAPI?.isReadonly()) {
       return
     }
     $focusedCellAPI?.focus?.()
+  }
+
+  // Copies the value from the current cell
+  const copy = () => {
+    copiedValue = $focusedCellAPI?.getValue()
+  }
+
+  // Pastes the copied value
+  const paste = () => {
+    if (copiedValue != null) {
+      $focusedCellAPI?.setValue(copiedValue)
+    }
+  }
+
+  // Utils to identify a key code
+  const keyCodeIsNumber = keyCode => keyCode >= 48 && keyCode <= 57
+  const keyCodeIsLetter = keyCode => keyCode >= 65 && keyCode <= 90
+
+  // Focuses the cell and starts entering a new value
+  const startEnteringValue = (key, keyCode) => {
+    if ($focusedCellAPI) {
+      const type = $focusedCellAPI.getType()
+      if (type === "number" && keyCodeIsNumber(keyCode)) {
+        $focusedCellAPI.setValue(parseInt(key))
+        $focusedCellAPI.focus()
+      } else if (
+        ["string", "barcodeqr", "longform"].includes(type) &&
+        (keyCodeIsLetter(keyCode) || keyCodeIsNumber(keyCode))
+      ) {
+        $focusedCellAPI.setValue(key)
+        $focusedCellAPI.focus()
+      }
+    }
   }
 
   onMount(() => {

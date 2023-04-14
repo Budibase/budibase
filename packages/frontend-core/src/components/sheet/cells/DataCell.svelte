@@ -49,7 +49,9 @@
     blur: () => api?.blur(),
     onKeyDown: (...params) => api?.onKeyDown(...params),
     isReadonly: () => readonly,
-    updateValue: value => {
+    getType: () => column.schema.type,
+    getValue: () => row[column.name],
+    setValue: value => {
       validation.actions.setError(cellId, null)
       updateRow(row._id, column.name, value)
     },
@@ -72,7 +74,7 @@
     bind:api
     value={row[column.name]}
     schema={column.schema}
-    onChange={cellAPI.updateValue}
+    onChange={cellAPI.setValue}
     {focused}
     {readonly}
     {invertY}
