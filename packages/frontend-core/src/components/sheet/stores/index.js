@@ -39,5 +39,10 @@ export const attachStores = context => {
     context = { ...context, ...store.deriveStores?.(context) }
   }
 
+  // Initialise any store logic
+  for (let store of DependencyOrderedStores) {
+    store.initialise?.(context)
+  }
+
   return context
 }
