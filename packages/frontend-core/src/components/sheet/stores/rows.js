@@ -88,7 +88,6 @@ export const deriveStores = context => {
     instanceLoaded.set(false)
 
     // Reset state
-    sort.set(initialSortState)
     filter.set([])
 
     // Create new fetch model
@@ -110,19 +109,25 @@ export const deriveStores = context => {
     // Subscribe to changes of this fetch model
     unsubscribe = newFetch.subscribe($fetch => {
       if ($fetch.loaded && !$fetch.loading) {
+        const $instanceLoaded = get(instanceLoaded)
         const resetRows = $fetch.resetKey !== lastResetKey
         lastResetKey = $fetch.resetKey
 
-        // Reset scroll state when data changes
-        if (!get(instanceLoaded)) {
+        // Reset state properties when dataset changes
+        if (!$instanceLoaded || resetRows) {
           table.set($fetch.definition)
+          sort.set({
+            column: $fetch.sortColumn,
+            order: $fetch.sortOrder,
+          })
+        }
 
+        // Reset scroll state when data changes
+        if (!$instanceLoaded) {
           // Reset both top and left for a new table ID
           instanceLoaded.set(true)
           scroll.set({ top: 0, left: 0 })
         } else if (resetRows) {
-          table.set($fetch.definition)
-
           // Only reset top scroll position when resetting rows
           scroll.update(state => ({ ...state, top: 0 }))
         }

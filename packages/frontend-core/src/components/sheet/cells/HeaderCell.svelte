@@ -163,8 +163,20 @@
     >
       Use as display column
     </MenuItem>
-    <MenuItem icon="SortOrderUp" on:click={sortAscending}>Sort A-Z</MenuItem>
-    <MenuItem icon="SortOrderDown" on:click={sortDescending}>Sort Z-A</MenuItem>
+    <MenuItem
+      icon="SortOrderUp"
+      on:click={sortAscending}
+      disabled={column.name === $sort.column && $sort.order === "ascending"}
+    >
+      Sort A-Z
+    </MenuItem>
+    <MenuItem
+      icon="SortOrderDown"
+      on:click={sortDescending}
+      disabled={column.name === $sort.column && $sort.order === "descending"}
+    >
+      Sort Z-A
+    </MenuItem>
     <MenuItem
       disabled={!canMoveLeft}
       icon="ChevronDoubleLeft"

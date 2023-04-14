@@ -76,7 +76,7 @@
 <Popover bind:open {anchor} align="left">
   <div class="content">
     <Select
-      placeholder="Default"
+      placeholder={null}
       value={$sort.column}
       options={columnOptions}
       autoWidth
