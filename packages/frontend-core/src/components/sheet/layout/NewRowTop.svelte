@@ -62,7 +62,7 @@
     }
   }
 
-  const updateRow = (rowId, columnName, val) => {
+  const updateValue = (rowId, columnName, val) => {
     touched = true
     newRow[columnName] = val
   }
@@ -112,7 +112,7 @@
               focused={$focusedCellId === cellId}
               {rowFocused}
               width={$stickyColumn.width}
-              {updateRow}
+              {updateValue}
               rowIdx={0}
             />
           {/if}
@@ -131,7 +131,7 @@
                   focused={$focusedCellId === cellId}
                   {rowFocused}
                   width={column.width}
-                  {updateRow}
+                  {updateValue}
                   rowIdx={0}
                 />
               {/key}

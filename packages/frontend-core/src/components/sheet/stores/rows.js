@@ -283,13 +283,25 @@ export const deriveStores = context => {
     get(fetch)?.getInitialData()
   }
 
-  // Updates a value of a row
-  const updateRow = async (rowId, column, value) => {
+  // Patches a row with some changes
+  const updateRow = async (rowId, changes) => {
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[rowId]
     const row = $rows[index]
-    if (index == null || row?.[column] === value) {
+    if (index == null || !Object.keys(changes || {}).length) {
+      return
+    }
+
+    // Abandon if no changes
+    let same = true
+    for (let column of Object.keys(changes)) {
+      if (row[column] !== changes[column]) {
+        same = false
+        break
+      }
+    }
+    if (same) {
       return
     }
 
@@ -298,7 +310,7 @@ export const deriveStores = context => {
       ...state,
       [rowId]: {
         ...state[rowId],
-        [column]: value,
+        ...changes,
       },
     }))
 
@@ -330,6 +342,11 @@ export const deriveStores = context => {
       ...state,
       [rowId]: false,
     }))
+  }
+
+  // Updates a value of a row
+  const updateValue = async (rowId, column, value) => {
+    return await updateRow(rowId, { [column]: value })
   }
 
   // Deletes an array of rows
@@ -418,6 +435,7 @@ export const deriveStores = context => {
         addRow,
         duplicateRow,
         getRow,
+        updateValue,
         updateRow,
         deleteRows,
         hasRow,

@@ -122,17 +122,6 @@ export const deriveStores = context => {
     })
   }
 
-  const moveColumnToStart = async column => {
-    moveColumn(column, null)
-    await columns.actions.saveChanges()
-  }
-
-  const moveColumnToEnd = async column => {
-    const $visibleColumns = get(visibleColumns)
-    moveColumn(column, $visibleColumns[$visibleColumns.length - 1]?.name)
-    await columns.actions.saveChanges()
-  }
-
   // Moves a column one place left (as appears visually)
   const moveColumnLeft = async column => {
     const $visibleColumns = get(visibleColumns)
@@ -160,8 +149,6 @@ export const deriveStores = context => {
         stopReordering,
         moveColumnLeft,
         moveColumnRight,
-        moveColumnToStart,
-        moveColumnToEnd,
       },
     },
   }

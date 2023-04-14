@@ -10,6 +10,7 @@ import * as UI from "./ui"
 import * as Users from "./users"
 import * as Validation from "./validation"
 import * as Viewport from "./viewport"
+import * as Clipboard from "./clipboard"
 
 const DependencyOrderedStores = [
   Bounds,
@@ -24,6 +25,7 @@ const DependencyOrderedStores = [
   Users,
   Menu,
   Pagination,
+  Clipboard,
 ]
 
 export const attachStores = context => {
