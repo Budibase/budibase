@@ -192,7 +192,7 @@
     border-bottom: 2px solid var(--spectrum-global-color-gray-200);
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--background);
   }
   .controls-left,
   .controls-right {
