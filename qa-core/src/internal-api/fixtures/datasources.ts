@@ -34,8 +34,6 @@ export const postgresSQL = () => {
     fetchSchema: true,
   }
 }
-
-// Add the data source for MariaDB to the this file in the same style as above
 export const mariaDB = () => {
   return {
     datasource: {
@@ -53,5 +51,21 @@ export const mariaDB = () => {
       },
     },
     fetchSchema: true,
+  }
+}
+
+export const restAPI = () => {
+  return {
+    datasource: {
+      name: "RestAPI",
+      source: "REST",
+      type: "datasource",
+      config: {
+        defaultHeaders: {},
+        rejectUnauthorized: true,
+        url: process.env.REST_API_BASE_URL,
+      },
+    },
+    fetchSchema: false,
   }
 }

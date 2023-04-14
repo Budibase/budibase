@@ -72,4 +72,52 @@ export const expectedSchemaFields = {
     postal_code: "string",
     region: "string",
   },
+  restAPI: {
+    abilities: "array",
+    base_experience: "number",
+    forms: "array",
+    game_indices: "array",
+    height: "number",
+    held_items: "array",
+    id: "number",
+    is_default: "string",
+    location_area_encounters: "string",
+    moves: "array",
+    name: "string",
+    order: "number",
+    past_types: "array",
+    species: "json",
+    sprites: "json",
+    stats: "array",
+    types: "array",
+    weight: "number",
+  },
+}
+
+const request = (datasourceId: string, fields: any, flags: any): any => {
+  return {
+    datasourceId: datasourceId,
+    fields: fields,
+    flags: flags,
+    name: "Query 1",
+    parameters: {},
+    queryVerb: "read",
+    schema: {},
+    transformer: "return data",
+  }
+}
+export const restAPI = (datasourceId: string): PreviewQueryRequest => {
+  const fields = {
+    authConfigId: null,
+    bodyType: "none",
+    disabledHeaders: {},
+    headers: {},
+    pagination: {},
+    path: `${process.env.REST_API_BASE_URL}/pokemon/ditto`,
+    queryString: "",
+  }
+  const flags = {
+    urlName: true,
+  }
+  return request(datasourceId, fields, flags)
 }
