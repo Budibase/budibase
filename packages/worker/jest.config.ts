@@ -16,9 +16,15 @@ const config: Config.InitialOptions = {
     "@budibase/backend-core/(.*)": "<rootDir>/../backend-core/$1",
     "@budibase/backend-core": "<rootDir>/../backend-core/src",
     "@budibase/types": "<rootDir>/../types/src",
-    "@budibase/pro/(.*)": "<rootDir>/../pro/packages/pro/$1",
-    "@budibase/pro": "<rootDir>/../pro/packages/pro/src",
   },
+}
+
+// add pro sources if they exist
+if (fs.existsSync("../pro/packages")) {
+  config.moduleNameMapper!["@budibase/pro/(.*)"] =
+    "<rootDir>/../pro/packages/pro/$1"
+  config.moduleNameMapper!["@budibase/pro"] =
+    "<rootDir>/../pro/packages/pro/src"
 }
 
 export default config
