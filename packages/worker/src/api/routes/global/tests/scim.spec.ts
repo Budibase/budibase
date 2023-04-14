@@ -600,6 +600,25 @@ describe("scim", () => {
             totalResults: 1,
           })
         })
+
+        it("can fetch groups excluding members", async () => {
+          const response = await getScimGroups({
+            params: { excludedAttributes: "members" },
+          })
+
+          expect(response).toEqual({
+            Resources: expect.arrayContaining(
+              groups.map(g => {
+                const { members, ...groupData } = g
+                return groupData
+              })
+            ),
+            itemsPerPage: 25,
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+            startIndex: 1,
+            totalResults: groupCount,
+          })
+        })
       })
     })
 
