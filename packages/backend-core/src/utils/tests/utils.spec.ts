@@ -1,4 +1,5 @@
-import { structures, DBTestConfiguration } from "../../../tests"
+import { structures } from "../../../tests"
+import { DBTestConfiguration } from "../../../tests/extra"
 import * as utils from "../../utils"
 import * as db from "../../db"
 import { Header } from "../../constants"

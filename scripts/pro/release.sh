@@ -88,8 +88,7 @@ yarn clean -y && yarn bootstrap
 
 # Commit and push changes
 git add packages/server/package.json
-git add packages/server/yarn.lock
 git add packages/worker/package.json
-git add packages/worker/yarn.lock
+git add yarn.lock
 git commit -m "Update pro version to $VERSION" -n
 git push
