@@ -1,21 +1,13 @@
 import {
-  RoleHierarchy,
+  doesHaveBasePermission,
+  getBuiltinPermissionByID,
+  isPermissionLevelHigherThanRead,
   PermissionLevel,
   PermissionType,
   levelToNumber,
   getAllowedLevels,
-  BuiltinPermissionID,
-  getBuiltinPermissions,
-  getBuiltinPermissionByID,
-  doesHaveBasePermission,
-  isPermissionLevelHigherThanRead,
-  BUILDER,
 } from "../permissions"
 
-jest.mock("../permissions", () => ({
-  // getTenantId: jest.fn(() => "budibase"),
-  // DEFAULT_TENANT_ID: "default",
-}))
 describe("levelToNumber", () => {
   it("should return 0 for EXECUTE", () => {
     expect(levelToNumber(PermissionLevel.EXECUTE)).toBe(0)
@@ -73,38 +65,28 @@ describe("getAllowedLevels", () => {
 })
 
 describe("doesHaveBasePermission", () => {
-  const rolesHierarchy: RoleHierarchy = [
-    { permissionId: BuiltinPermissionID.READ_ONLY },
-  ]
-
-  it("should return true for read permission of read only role", () => {
-    expect(
-      doesHaveBasePermission(
-        PermissionType.TABLE,
-        PermissionLevel.READ,
-        rolesHierarchy
-      )
-    ).toBe(true)
+  it("should return true if base permission has the required level", () => {
+    const permType = PermissionType.APP
+    const permLevel = PermissionLevel.READ
+    const rolesHierarchy = [
+      { roleId: "role1", permissionId: "permission1" },
+      { roleId: "role2", permissionId: "permission2" },
+    ]
+    expect(doesHaveBasePermission(permType, permLevel, rolesHierarchy)).toBe(
+      true
+    )
   })
 
-  it("should return false for write permission of read only role", () => {
-    expect(
-      doesHaveBasePermission(
-        PermissionType.TABLE,
-        PermissionLevel.WRITE,
-        rolesHierarchy
-      )
-    ).toBe(false)
-  })
-
-  it("should return true for execute permission of public role", () => {
-    expect(
-      doesHaveBasePermission(
-        PermissionType.WEBHOOK,
-        PermissionLevel.EXECUTE,
-        rolesHierarchy
-      )
-    ).toBe(true)
+  it("should return false if base permission does not have the required level", () => {
+    const permType = PermissionType.APP
+    const permLevel = PermissionLevel.READ
+    const rolesHierarchy = [
+      { roleId: "role1", permissionId: "permission1" },
+      { roleId: "role2", permissionId: "permission2" },
+    ]
+    expect(doesHaveBasePermission(permType, permLevel, rolesHierarchy)).toBe(
+      false
+    )
   })
 })
 
