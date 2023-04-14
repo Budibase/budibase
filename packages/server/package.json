@@ -115,11 +115,7 @@
     "to-json-schema": "0.2.5",
     "uuid": "3.3.2",
     "validate.js": "0.13.1",
-<<<<<<< HEAD
     "vm2": "3.9.16",
-=======
-    "vm2": "^3.9.15",
->>>>>>> f45da9ccfde1fedb83ec757e64fb972b510c67d6
     "worker-farm": "1.7.0",
     "xml2js": "0.5.0",
     "yargs": "13.2.4",
