@@ -585,6 +585,21 @@ describe("scim", () => {
             totalResults: groupCount,
           })
         })
+
+        it("can fetch groups using displayName filters", async () => {
+          const groupToFetch = _.sample(groups)
+          const response = await getScimGroups({
+            params: { filter: `displayName eq "${groupToFetch!.displayName}"` },
+          })
+
+          expect(response).toEqual({
+            Resources: [groupToFetch],
+            itemsPerPage: 1,
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+            startIndex: 1,
+            totalResults: 1,
+          })
+        })
       })
     })
 
