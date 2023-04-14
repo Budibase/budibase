@@ -58,9 +58,12 @@ export class ScimGroupsAPI extends ScimTestAPI {
     return res.body as ScimGroupResponse
   }
 
-  find = async (id: string, requestSettings?: Partial<RequestSettings>) => {
+  find = async (
+    id: string,
+    requestSettings?: Partial<RequestSettings> & { qs?: string }
+  ) => {
     const res = await this.call(
-      `/api/global/scim/v2/groups/${id}`,
+      `/api/global/scim/v2/groups/${id}?${requestSettings?.qs}`,
       "get",
       requestSettings
     )

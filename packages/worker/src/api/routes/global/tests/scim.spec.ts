@@ -715,6 +715,16 @@ describe("scim", () => {
           status: 404,
         })
       })
+
+      it("should allow excluding members", async () => {
+        const response = await findScimGroup(group.id, {
+          qs: "excludedAttributes=members",
+        })
+
+        const { members, ...expectedResponse } = group
+
+        expect(response).toEqual(expectedResponse)
+      })
     })
 
     describe("DELETE /api/global/scim/v2/groups/:id", () => {
