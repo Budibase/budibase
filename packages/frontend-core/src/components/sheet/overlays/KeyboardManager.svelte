@@ -9,15 +9,15 @@
     focusedRow,
     stickyColumn,
     focusedCellAPI,
+    clipboard,
   } = getContext("sheet")
-
-  let copiedValue
 
   // Global key listener which intercepts all key events
   const handleKeyDown = e => {
     // If nothing selected avoid processing further key presses
     if (!$focusedCellId) {
       if (e.key === "Tab") {
+        e.preventDefault()
         focusFirstCell()
       }
       return
@@ -46,10 +46,10 @@
     if (e.metaKey || e.ctrlKey) {
       switch (e.key) {
         case "c":
-          copy()
+          clipboard.actions.copy()
           break
         case "v":
-          paste()
+          clipboard.actions.paste()
           break
       }
     } else {
@@ -142,18 +142,6 @@
       return
     }
     $focusedCellAPI?.focus?.()
-  }
-
-  // Copies the value from the current cell
-  const copy = () => {
-    copiedValue = $focusedCellAPI?.getValue()
-  }
-
-  // Pastes the copied value
-  const paste = () => {
-    if (copiedValue != null) {
-      $focusedCellAPI?.setValue(copiedValue)
-    }
   }
 
   // Utils to identify a key code

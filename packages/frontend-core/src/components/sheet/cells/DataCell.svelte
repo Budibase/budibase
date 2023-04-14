@@ -16,7 +16,7 @@
   export let column
   export let row
   export let cellId
-  export let updateRow = rows.actions.updateRow
+  export let updateValue = rows.actions.updateValue
   export let invertX = false
   export let invertY = false
 
@@ -53,7 +53,7 @@
     getValue: () => row[column.name],
     setValue: value => {
       validation.actions.setError(cellId, null)
-      updateRow(row._id, column.name, value)
+      updateValue(row._id, column.name, value)
     },
   }
 </script>

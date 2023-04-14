@@ -10,6 +10,8 @@
     focusedCellId,
     stickyColumn,
     config,
+    copiedCell,
+    clipboard,
   } = getContext("sheet")
 
   $: style = makeStyle($menu)
@@ -38,15 +40,34 @@
   <div class="menu" {style} use:clickOutside={() => menu.actions.close()}>
     <Menu>
       <MenuItem
+        icon="Copy"
+        on:click={clipboard.actions.copyCell}
+        on:click={menu.actions.close}
+      >
+        Copy
+      </MenuItem>
+      <MenuItem
+        icon="Paste"
+        disabled={$copiedCell == null}
+        on:click={clipboard.actions.pasteCell}
+        on:click={menu.actions.close}
+      >
+        Paste
+      </MenuItem>
+      <MenuItem
         icon="Delete"
         disabled={!$config.allowDeleteRows}
-        on:click={deleteRow}>Delete row</MenuItem
+        on:click={deleteRow}
       >
+        Delete row
+      </MenuItem>
       <MenuItem
         icon="Duplicate"
         disabled={!$config.allowAddRows}
-        on:click={duplicate}>Duplicate row</MenuItem
+        on:click={duplicate}
       >
+        Duplicate row
+      </MenuItem>
     </Menu>
   </div>
 {/if}
