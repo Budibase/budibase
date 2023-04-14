@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "2.4.44-alpha.26",
+  "version": "2.5.4",
   "description": "Budibase Web Server",
   "main": "src/index.ts",
   "repository": {
@@ -45,12 +45,12 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@apidevtools/swagger-parser": "10.0.3",
-    "@budibase/backend-core": "2.4.44-alpha.26",
-    "@budibase/client": "2.4.44-alpha.26",
-    "@budibase/pro": "2.4.44-alpha.26",
-    "@budibase/shared-core": "2.4.44-alpha.26",
-    "@budibase/string-templates": "2.4.44-alpha.26",
-    "@budibase/types": "2.4.44-alpha.26",
+    "@budibase/backend-core": "^2.5.4",
+    "@budibase/client": "^2.5.4",
+    "@budibase/pro": "2.5.4",
+    "@budibase/shared-core": "^2.5.4",
+    "@budibase/string-templates": "^2.5.4",
+    "@budibase/types": "^2.5.4",
     "@bull-board/api": "3.7.0",
     "@bull-board/koa": "3.9.4",
     "@elastic/elasticsearch": "7.10.0",
@@ -115,7 +115,11 @@
     "to-json-schema": "0.2.5",
     "uuid": "3.3.2",
     "validate.js": "0.13.1",
+<<<<<<< HEAD
     "vm2": "3.9.16",
+=======
+    "vm2": "^3.9.15",
+>>>>>>> f45da9ccfde1fedb83ec757e64fb972b510c67d6
     "worker-farm": "1.7.0",
     "xml2js": "0.5.0",
     "yargs": "13.2.4",
