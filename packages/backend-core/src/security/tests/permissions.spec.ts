@@ -5,6 +5,7 @@ import {
   PermissionLevel,
   PermissionType,
   levelToNumber,
+  getAllowedLevels,
 } from "../permissions"
 
 describe("levelToNumber", () => {
@@ -28,12 +29,38 @@ describe("levelToNumber", () => {
     expect(levelToNumber("unknown" as PermissionLevel)).toBe(-1)
   })
 })
-describe("getBuiltinPermissionByID", () => {
-  it("should return the correct permission object", () => {
-    const id = "123"
-    const permission = { _id: id, name: "Test Permission" }
-    expect(getBuiltinPermissionByID(id)).toEqual(permission)
-    expect(getBuiltinPermissionByID("456")).toBeUndefined()
+describe("getAllowedLevels", () => {
+  it('should return ["execute"] for EXECUTE', () => {
+    expect(getAllowedLevels(PermissionLevel.EXECUTE)).toEqual([
+      PermissionLevel.EXECUTE,
+    ])
+  })
+
+  it('should return ["execute", "read"] for READ', () => {
+    expect(getAllowedLevels(PermissionLevel.READ)).toEqual([
+      PermissionLevel.EXECUTE,
+      PermissionLevel.READ,
+    ])
+  })
+
+  it('should return ["execute", "read", "write"] for WRITE', () => {
+    expect(getAllowedLevels(PermissionLevel.WRITE)).toEqual([
+      PermissionLevel.EXECUTE,
+      PermissionLevel.READ,
+      PermissionLevel.WRITE,
+    ])
+  })
+
+  it('should return ["execute", "read", "write"] for ADMIN', () => {
+    expect(getAllowedLevels(PermissionLevel.ADMIN)).toEqual([
+      PermissionLevel.EXECUTE,
+      PermissionLevel.READ,
+      PermissionLevel.WRITE,
+    ])
+  })
+
+  it("should return [] for an unknown permission level", () => {
+    expect(getAllowedLevels("unknown" as PermissionLevel)).toEqual([])
   })
 })
 
