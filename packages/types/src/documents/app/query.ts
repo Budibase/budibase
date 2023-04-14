@@ -45,4 +45,7 @@ export interface PaginationValues {
 
 export interface PreviewQueryRequest extends Omit<Query, "parameters"> {
   parameters: {}
+  flags?: {
+    urlName?: boolean
+  }
 }
