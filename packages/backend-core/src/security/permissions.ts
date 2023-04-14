@@ -34,7 +34,7 @@ class Permission {
   }
 }
 
-function levelToNumber(perm: PermissionLevel) {
+export function levelToNumber(perm: PermissionLevel) {
   switch (perm) {
     // not everything has execute privileges
     case PermissionLevel.EXECUTE:
