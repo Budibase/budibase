@@ -20,20 +20,8 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const {
-    scroll,
-    rows,
-    visibleColumns,
-    stickyColumn,
-    bounds,
-    rowHeight,
-    focusedRow,
-    focusedCellId,
-    scrollTop,
-    scrollLeft,
-    width,
-    height,
-  } = context
+  const { rows, visibleColumns, stickyColumn, rowHeight, width, height } =
+    context
 
   // Memoize store primitives
   const stickyColumnWidth = derived(stickyColumn, $col => $col?.width || 0, 0)
@@ -74,6 +62,45 @@ export const deriveStores = context => {
     },
     0
   )
+
+  // Derive whether to show scrollbars or not
+  const showVScrollbar = derived(
+    [contentHeight, height],
+    ([$contentHeight, $height]) => {
+      return $contentHeight > $height
+    }
+  )
+  const showHScrollbar = derived(
+    [contentWidth, screenWidth],
+    ([$contentWidth, $screenWidth]) => {
+      return $contentWidth > $screenWidth
+    }
+  )
+
+  return {
+    contentHeight,
+    contentWidth,
+    screenWidth,
+    maxScrollTop,
+    maxScrollLeft,
+    showHScrollbar,
+    showVScrollbar,
+  }
+}
+
+export const initialise = context => {
+  const {
+    focusedCellId,
+    focusedRow,
+    scroll,
+    bounds,
+    rowHeight,
+    visibleColumns,
+    scrollTop,
+    maxScrollTop,
+    scrollLeft,
+    maxScrollLeft,
+  } = context
 
   // Ensure scroll state never goes invalid, which can happen when changing
   // rows or tables
@@ -171,28 +198,4 @@ export const deriveStores = context => {
       }
     }
   })
-
-  // Derive whether to show scrollbars or not
-  const showVScrollbar = derived(
-    [contentHeight, height],
-    ([$contentHeight, $height]) => {
-      return $contentHeight > $height
-    }
-  )
-  const showHScrollbar = derived(
-    [contentWidth, screenWidth],
-    ([$contentWidth, $screenWidth]) => {
-      return $contentWidth > $screenWidth
-    }
-  )
-
-  return {
-    contentHeight,
-    contentWidth,
-    screenWidth,
-    maxScrollTop,
-    maxScrollLeft,
-    showHScrollbar,
-    showVScrollbar,
-  }
 }
