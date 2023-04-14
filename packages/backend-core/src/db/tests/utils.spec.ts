@@ -3,7 +3,7 @@ import {
   getProdAppID,
   isDevAppID,
   isProdAppID,
-} from "../conversions"
+} from "../../docIds/conversions"
 import { generateAppID } from "../utils"
 
 describe("utils", () => {
