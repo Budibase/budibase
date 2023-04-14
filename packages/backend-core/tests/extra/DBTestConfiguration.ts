@@ -1,5 +1,5 @@
-import "./mocks"
-import * as structures from "./structures"
+import "../core/utilities/mocks"
+import * as structures from "../core/utilities/structures"
 import * as testEnv from "./testEnv"
 import * as context from "../../src/context"
 

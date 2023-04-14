@@ -1,6 +1,6 @@
+import { DBTestConfiguration } from "../../../tests/extra"
 import {
   structures,
-  DBTestConfiguration,
   expectFunctionWasCalledTimesWith,
   mocks,
 } from "../../../tests"
