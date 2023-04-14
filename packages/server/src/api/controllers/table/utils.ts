@@ -142,7 +142,12 @@ export function importToRows(
   return finalData
 }
 
-export async function handleDataImport(user: any, table: any, rows: any) {
+export async function handleDataImport(
+  user: any,
+  table: any,
+  rows: any,
+  identifierFields?: Array<string>
+) {
   const schema: unknown = table.schema
 
   if (!rows || !isRows(rows) || !isSchema(schema)) {

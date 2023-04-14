@@ -1,5 +1,5 @@
 <script>
-  import { Select } from "@budibase/bbui"
+  import { Select, Toggle, Multiselect } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
@@ -9,10 +9,12 @@
   let fileType = null
 
   let loading = false
+  let updateExistingRows = false
   let validation = {}
   let validateHash = ""
   let schema = null
   let invalidColumns = []
+  let identifierFields = []
 
   export let tableId = null
   export let rows = []
@@ -159,6 +161,15 @@
       </div>
     {/each}
   </div>
+  <br />
+  <Toggle bind:value={updateExistingRows} thin text="Update existing rows" />
+  {#if updateExistingRows}
+    <Multiselect
+      label="Identifier field(s)"
+      options={Object.keys(validation)}
+      bind:value={identifierFields}
+    />
+  {/if}
   {#if invalidColumns.length > 0}
     <p class="spectrum-FieldLabel spectrum-FieldLabel--sizeM">
       The following columns are present in the data you wish to import, but do
