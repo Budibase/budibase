@@ -37,7 +37,7 @@ spec:
 {{ end }}
     spec:
       containers:
-      - image: budibase/proxy:{{ .Values.globals.appVersion }}
+      - image: budibase/proxy:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         name: proxy-service
         ports:

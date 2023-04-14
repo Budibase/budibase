@@ -1,4 +1,4 @@
-import { testEnv } from "../../../tests"
+import { testEnv } from "../../../tests/extra"
 import * as context from "../"
 import { DEFAULT_TENANT_ID } from "../../constants"
 
