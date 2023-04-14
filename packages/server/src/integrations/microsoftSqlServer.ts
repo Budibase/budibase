@@ -243,11 +243,13 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         if (typeof name !== "string") {
           continue
         }
+        const isAuto = !!autoColumns.find(col => col === name)
+        const required = !!requiredColumns.find(col => col === name)
         schema[name] = {
-          autocolumn: !!autoColumns.find(col => col === name),
+          autocolumn: isAuto,
           name: name,
           constraints: {
-            presence: requiredColumns.find(col => col === name),
+            presence: required && !isAuto,
           },
           ...convertSqlType(def.DATA_TYPE),
           externalType: def.DATA_TYPE,
