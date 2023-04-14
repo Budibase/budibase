@@ -55,7 +55,7 @@ export function levelToNumber(perm: PermissionLevel) {
  * @param {string} userPermLevel The permission level of the user.
  * @return {string[]} All the permission levels this user is allowed to carry out.
  */
-function getAllowedLevels(userPermLevel: PermissionLevel) {
+export function getAllowedLevels(userPermLevel: PermissionLevel): string[] {
   switch (userPermLevel) {
     case PermissionLevel.EXECUTE:
       return [PermissionLevel.EXECUTE]
@@ -64,9 +64,9 @@ function getAllowedLevels(userPermLevel: PermissionLevel) {
     case PermissionLevel.WRITE:
     case PermissionLevel.ADMIN:
       return [
+        PermissionLevel.EXECUTE,
         PermissionLevel.READ,
         PermissionLevel.WRITE,
-        PermissionLevel.EXECUTE,
       ]
     default:
       return []
