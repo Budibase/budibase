@@ -2,7 +2,7 @@ import { Response } from "node-fetch"
 import {
   Datasource,
   CreateDatasourceResponse,
-  UpdatedDatasourceResponse,
+  UpdateDatasourceResponse,
 } from "@budibase/types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 
@@ -46,7 +46,7 @@ export default class DatasourcesAPI {
     return [response, json]
   }
 
-  async update(body: any): Promise<[Response, UpdatedDatasourceResponse]> {
+  async update(body: any): Promise<[Response, UpdateDatasourceResponse]> {
     const [response, json] = await this.client.put(`/datasources/${body._id}`, {
       body,
     })
