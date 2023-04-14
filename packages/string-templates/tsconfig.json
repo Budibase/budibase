@@ -7,7 +7,6 @@
     "emitDeclarationOnly": true,
     "outDir": "dist",
     "esModuleInterop": true,
-    "types": ["node"],
-    "skipLibCheck": true
+    "types": ["node"]
   }
 }
