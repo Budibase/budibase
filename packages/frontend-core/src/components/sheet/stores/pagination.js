@@ -1,6 +1,6 @@
 import { derived } from "svelte/store"
 
-export const deriveStores = context => {
+export const initialise = context => {
   const { scrolledRowCount, rows, visualRowCapacity } = context
 
   // Derive how many rows we have in total
@@ -21,6 +21,4 @@ export const deriveStores = context => {
       rows.actions.loadNextPage()
     }
   })
-
-  return null
 }
