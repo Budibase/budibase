@@ -67,6 +67,7 @@
           changeFocusedRow(1)
           break
         case "Delete":
+        case "Backspace":
           deleteSelectedCell()
           break
         case "Enter":
