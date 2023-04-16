@@ -132,6 +132,9 @@
           </SheetCell>
           {#if $stickyColumn}
             <DataCell
+              {row}
+              {cellId}
+              {rowFocused}
               selected={rowSelected}
               highlighted={rowHovered || rowFocused}
               rowIdx={idx}
@@ -139,8 +142,6 @@
               selectedUser={$selectedCellMap[cellId]}
               width={$stickyColumn.width}
               column={$stickyColumn}
-              {row}
-              {cellId}
             />
           {/if}
         </div>

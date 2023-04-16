@@ -40,8 +40,8 @@
       {column}
       {row}
       {invertY}
-      invertX={idx >= $columnHorizontalInversionIndex}
       {rowFocused}
+      invertX={idx >= $columnHorizontalInversionIndex}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
       selected={rowSelected}
       rowIdx={idx}
