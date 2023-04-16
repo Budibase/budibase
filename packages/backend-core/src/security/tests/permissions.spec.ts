@@ -111,7 +111,7 @@ describe("isPermissionLevelHigherThanRead", () => {
 })
 
 describe("getBuiltinPermissions", () => {
-  test("returns a clone of the builtin permissions", () => {
+  it("returns a clone of the builtin permissions", () => {
     const builtins = getBuiltinPermissions()
     expect(builtins).toEqual(cloneDeep(BUILTIN_PERMISSIONS))
     expect(builtins).not.toBe(BUILTIN_PERMISSIONS)
@@ -119,7 +119,7 @@ describe("getBuiltinPermissions", () => {
 })
 
 describe("getBuiltinPermissionByID", () => {
-  test("returns correct permission object for valid ID", () => {
+  it("returns correct permission object for valid ID", () => {
     const expectedPermission = {
       _id: BuiltinPermissionID.PUBLIC,
       name: "Public",
