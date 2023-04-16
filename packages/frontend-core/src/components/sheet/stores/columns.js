@@ -48,6 +48,70 @@ export const createStores = () => {
 export const deriveStores = context => {
   const { table, columns, stickyColumn, API, dispatch } = context
 
+  // Updates the tables primary display column
+  const changePrimaryDisplay = async column => {
+    return await saveTable({
+      ...get(table),
+      primaryDisplay: column,
+    })
+  }
+
+  // Persists column changes by saving metadata against table schema
+  const saveChanges = async () => {
+    const $columns = get(columns)
+    const $table = get(table)
+    const $stickyColumn = get(stickyColumn)
+    const newSchema = cloneDeep($table.schema)
+
+    // Build new updated table schema
+    Object.keys(newSchema).forEach(column => {
+      // Respect order specified by columns
+      const index = $columns.findIndex(x => x.name === column)
+      if (index !== -1) {
+        newSchema[column].order = index
+      } else {
+        delete newSchema[column].order
+      }
+
+      // Copy over metadata
+      if (column === $stickyColumn?.name) {
+        newSchema[column].visible = true
+        newSchema[column].width = $stickyColumn.width || DefaultColumnWidth
+      } else {
+        newSchema[column].visible = $columns[index]?.visible ?? true
+        newSchema[column].width = $columns[index]?.width || DefaultColumnWidth
+      }
+    })
+
+    await saveTable({ ...$table, schema: newSchema })
+  }
+
+  const saveTable = async newTable => {
+    // Update local state
+    table.set(newTable)
+
+    // Broadcast event so that we can keep sync with external state
+    // (e.g. data section which maintains a list of table definitions)
+    dispatch("updatetable", newTable)
+
+    // Update server
+    await API.saveTable(newTable)
+  }
+
+  return {
+    columns: {
+      ...columns,
+      actions: {
+        saveChanges,
+        changePrimaryDisplay,
+      },
+    },
+  }
+}
+
+export const initialise = context => {
+  const { table, columns, stickyColumn } = context
+
   // Merge new schema fields with existing schema in order to preserve widths
   table.subscribe($table => {
     const schema = $table?.schema
@@ -125,64 +189,4 @@ export const deriveStores = context => {
       idx: "sticky",
     })
   })
-
-  // Updates the tables primary display column
-  const changePrimaryDisplay = async column => {
-    return await saveTable({
-      ...get(table),
-      primaryDisplay: column,
-    })
-  }
-
-  // Persists column changes by saving metadata against table schema
-  const saveChanges = async () => {
-    const $columns = get(columns)
-    const $table = get(table)
-    const $stickyColumn = get(stickyColumn)
-    const newSchema = cloneDeep($table.schema)
-
-    // Build new updated table schema
-    Object.keys(newSchema).forEach(column => {
-      // Respect order specified by columns
-      const index = $columns.findIndex(x => x.name === column)
-      if (index !== -1) {
-        newSchema[column].order = index
-      } else {
-        delete newSchema[column].order
-      }
-
-      // Copy over metadata
-      if (column === $stickyColumn?.name) {
-        newSchema[column].visible = true
-        newSchema[column].width = $stickyColumn.width || DefaultColumnWidth
-      } else {
-        newSchema[column].visible = $columns[index]?.visible ?? true
-        newSchema[column].width = $columns[index]?.width || DefaultColumnWidth
-      }
-    })
-
-    await saveTable({ ...$table, schema: newSchema })
-  }
-
-  const saveTable = async newTable => {
-    // Update local state
-    table.set(newTable)
-
-    // Broadcast event so that we can keep sync with external state
-    // (e.g. data section which maintains a list of table definitions)
-    dispatch("updatetable", newTable)
-
-    // Update server
-    await API.saveTable(newTable)
-  }
-
-  return {
-    columns: {
-      ...columns,
-      actions: {
-        saveChanges,
-        changePrimaryDisplay,
-      },
-    },
-  }
 }

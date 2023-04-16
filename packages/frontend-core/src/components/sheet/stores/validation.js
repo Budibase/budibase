@@ -23,7 +23,7 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const initialise = context => {
   const { validation, previousFocusedRowId, columns, stickyColumn } = context
 
   // Remove validation errors from previous focused row

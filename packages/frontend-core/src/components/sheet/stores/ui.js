@@ -17,13 +17,6 @@ export const createStores = () => {
     null
   )
 
-  // Remember the last focused row ID so that we can store the previous one
-  let lastFocusedRowId = null
-  focusedRowId.subscribe(id => {
-    previousFocusedRowId.set(lastFocusedRowId)
-    lastFocusedRowId = id
-  })
-
   return {
     focusedCellId,
     focusedCellAPI,
@@ -37,7 +30,6 @@ export const createStores = () => {
 
 export const deriveStores = context => {
   const {
-    rows,
     focusedCellId,
     selectedRows,
     hoveredRowId,
@@ -62,6 +54,33 @@ export const deriveStores = context => {
     },
     null
   )
+
+  // Callback when leaving the sheet, deselecting all focussed or selected items
+  const blur = () => {
+    focusedCellId.set(null)
+    selectedRows.set({})
+    hoveredRowId.set(null)
+  }
+
+  return {
+    focusedRow,
+    ui: {
+      actions: {
+        blur,
+      },
+    },
+  }
+}
+
+export const initialise = context => {
+  const {
+    focusedRowId,
+    previousFocusedRowId,
+    rows,
+    focusedCellId,
+    selectedRows,
+    hoveredRowId,
+  } = context
 
   // Ensure we clear invalid rows from state if they disappear
   rows.subscribe(() => {
@@ -96,6 +115,13 @@ export const deriveStores = context => {
     }
   })
 
+  // Remember the last focused row ID so that we can store the previous one
+  let lastFocusedRowId = null
+  focusedRowId.subscribe(id => {
+    previousFocusedRowId.set(lastFocusedRowId)
+    lastFocusedRowId = id
+  })
+
   // Reset selected rows when selected cell changes
   focusedCellId.subscribe(id => {
     if (id) {
@@ -110,26 +136,10 @@ export const deriveStores = context => {
     }
   })
 
-  // Callback when leaving the sheet, deselecting all focussed or selected items
-  const blur = () => {
-    focusedCellId.set(null)
-    selectedRows.set({})
-    hoveredRowId.set(null)
-  }
-
   // Remove hovered row when a cell is selected
   focusedCellId.subscribe(cell => {
     if (cell && get(hoveredRowId)) {
       hoveredRowId.set(null)
     }
   })
-
-  return {
-    focusedRow,
-    ui: {
-      actions: {
-        blur,
-      },
-    },
-  }
 }
