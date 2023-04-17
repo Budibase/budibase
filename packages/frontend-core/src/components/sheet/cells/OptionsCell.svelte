@@ -164,7 +164,6 @@
     user-select: none;
   }
   .arrow {
-    /*border-right: 2px solid var(--spectrum-global-color-blue-400);*/
     position: absolute;
     right: 0;
     top: 0;
@@ -202,7 +201,7 @@
     top: 0;
   }
   .option {
-    flex: 0 0 var(--row-height);
+    flex: 0 0 var(--default-row-height);
     padding: 0 var(--cell-padding);
     display: flex;
     flex-direction: row;

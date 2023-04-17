@@ -13,7 +13,8 @@
   export let invertX = false
   export let invertY = false
 
-  const { API } = getContext("sheet")
+  const { API, dispatch } = getContext("sheet")
+  const color = getColor(0)
 
   let isOpen = false
   let searchResults
@@ -23,11 +24,9 @@
   let primaryDisplay
   let candidateIndex
   let lastSearchId
-  let results
 
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
-  $: results = getResults(searchResults, value)
   $: lookupMap = buildLookupMap(value, isOpen)
   $: search(searchString)
   $: {
@@ -94,10 +93,12 @@
     }
 
     // Sort and process results
-    searchResults = results.rows?.map(row => ({
-      ...row,
-      primaryDisplay: row[primaryDisplay],
-    }))
+    searchResults = sortRows(
+      results.rows?.map(row => ({
+        ...row,
+        primaryDisplay: row[primaryDisplay],
+      }))
+    )
     candidateIndex = searchResults?.length ? 0 : null
     lastSearchString = searchString
   }, 250)
@@ -112,16 +113,8 @@
     })
   }
 
-  // Generates the list of results to show inside the dropdown
-  const getResults = (searchResults, value) => {
-    return searchString ? sortRows(searchResults) : sortRows(value)
-  }
-
   const open = async () => {
     isOpen = true
-
-    // Ensure results are properly reset
-    results = sortRows(value)
 
     // Fetch definition if required
     if (!definition) {
@@ -196,6 +189,14 @@
     close()
   }
 
+  const showRelationship = async id => {
+    const relatedRow = await API.fetchRow({
+      tableId: schema.tableId,
+      rowId: id,
+    })
+    dispatch("edit-row", relatedRow)
+  }
+
   onMount(() => {
     api = {
       focus: open,
@@ -205,74 +206,136 @@
   })
 </script>
 
-<div class="container" on:click={editable ? open : null} class:editable>
-  {#each value || [] as relationship, idx}
-    {#if relationship.primaryDisplay}
-      <div class="badge" style="--color: {getColor(idx)}">
-        {relationship.primaryDisplay}
-      </div>
-    {/if}
-  {/each}
-</div>
-
-{#if isOpen}
-  <div class="dropdown" class:invertX class:invertY on:wheel|stopPropagation>
-    <div class="search">
-      <Input autofocus quiet type="text" bind:value={searchString} />
-    </div>
-    {#if !lastSearchString}
-      {#if primaryDisplay}
-        <div class="info">
-          Search for {definition.name} rows by {primaryDisplay}
-        </div>
-      {/if}
-    {:else}
-      <div class="info">
-        {searchResults.length} row{searchResults.length === 1 ? "" : "s"} found
-      </div>
-    {/if}
-    {#if results?.length}
-      <div class="results">
-        {#each results as row, idx}
-          <div
-            class="result"
-            on:click={() => toggleRow(row)}
-            class:candidate={idx === candidateIndex}
-            on:mouseenter={() => (candidateIndex = idx)}
-          >
-            <div class="badge" style="--color: {getColor(idx)}">
-              {row.primaryDisplay}
-            </div>
-            {#if isRowSelected(row)}
+<div class="wrapper" class:editable class:focused style="--color:{color};">
+  <div class="container">
+    <div class="values" on:wheel={e => (focused ? e.stopPropagation() : null)}>
+      {#each value || [] as relationship, idx}
+        {#if relationship.primaryDisplay}
+          <div class="badge">
+            <span
+              on:click={focused
+                ? () => showRelationship(relationship._id)
+                : null}
+            >
+              {relationship.primaryDisplay}
+            </span>
+            {#if focused}
               <Icon
-                size="S"
-                name="Checkmark"
-                color="var(--spectrum-global-color-blue-400)"
+                name="Close"
+                size="XS"
+                hoverable
+                on:click={() => toggleRow(relationship)}
               />
             {/if}
           </div>
-        {/each}
-      </div>
-    {/if}
+        {/if}
+      {/each}
+      {#if focused}
+        <div class="add" on:click={open}>
+          <Icon name="Add" size="S" />
+        </div>
+      {/if}
+    </div>
   </div>
-{/if}
+
+  {#if isOpen}
+    <div class="dropdown" class:invertX class:invertY on:wheel|stopPropagation>
+      <div class="search">
+        <Input
+          autofocus
+          quiet
+          type="text"
+          bind:value={searchString}
+          placeholder={primaryDisplay ? `Search by ${primaryDisplay}` : null}
+        />
+      </div>
+      {#if searchResults}
+        <div class="info">
+          {searchResults.length} row{searchResults.length === 1 ? "" : "s"} found
+        </div>
+      {/if}
+
+      {#if searchResults?.length}
+        <div class="results">
+          {#each searchResults as row, idx}
+            <div
+              class="result"
+              on:click={() => toggleRow(row)}
+              class:candidate={idx === candidateIndex}
+              on:mouseenter={() => (candidateIndex = idx)}
+            >
+              <div class="badge">
+                {row.primaryDisplay}
+              </div>
+              {#if isRowSelected(row)}
+                <Icon
+                  size="S"
+                  name="Checkmark"
+                  color="var(--spectrum-global-color-blue-400)"
+                />
+              {/if}
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
+</div>
 
 <style>
-  .container {
-    align-self: stretch;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 0 var(--cell-padding);
+  .wrapper {
     flex: 1 1 auto;
-    width: 0;
-    gap: var(--cell-spacing);
+    align-self: flex-start;
+    min-height: var(--row-height);
+    max-height: var(--row-height);
     overflow: hidden;
+    --max-relationship-height: 94px;
   }
-  .container.editable:hover {
-    cursor: pointer;
+  .wrapper.focused {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--cell-background);
+    z-index: 1;
+    max-height: none;
+    overflow: visible;
   }
 
+  .container {
+    min-height: var(--row-height);
+    overflow: hidden;
+  }
+  .focused .container {
+    overflow-y: auto;
+    border-radius: 2px;
+    max-height: var(--max-relationship-height);
+  }
+  .focused .container:after {
+    content: " ";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    border: 2px solid var(--cell-color);
+    pointer-events: none;
+    border-radius: 2px;
+    box-sizing: border-box;
+  }
+
+  .values {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex: 1 1 auto;
+    gap: var(--cell-spacing);
+    grid-row-gap: 7px;
+    overflow: hidden;
+    padding: 7px var(--cell-padding);
+    flex-wrap: wrap;
+  }
   .badge {
     flex: 0 0 auto;
     padding: 2px var(--cell-padding);
@@ -282,6 +345,23 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: var(--cell-spacing);
+  }
+  .focused .badge span:hover {
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .add {
+    background: var(--spectrum-global-color-gray-200);
+    padding: 3px 4px;
+    border-radius: 4px;
+  }
+  .add:hover {
+    background: var(--spectrum-global-color-gray-300);
+    cursor: pointer;
   }
 
   .dropdown {
@@ -290,7 +370,10 @@
     left: 0;
     min-width: 100%;
     max-width: calc(100% + var(--max-cell-render-width-overflow));
-    max-height: var(--max-cell-render-height);
+    height: calc(
+      var(--max-cell-render-height) + var(--row-height) -
+        var(--max-relationship-height)
+    );
     background: var(--cell-background);
     border: var(--cell-border);
     box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
@@ -301,7 +384,7 @@
   }
   .dropdown.invertY {
     transform: translateY(-100%);
-    top: 0;
+    top: -1px;
   }
   .dropdown.invertX {
     left: auto;
@@ -317,7 +400,7 @@
   }
   .result {
     padding: 0 var(--cell-padding);
-    flex: 0 0 var(--row-height);
+    flex: 0 0 var(--default-row-height);
     display: flex;
     gap: var(--cell-spacing);
     justify-content: space-between;
@@ -332,7 +415,7 @@
   }
 
   .search {
-    flex: 0 0 calc(var(--row-height) - 1px);
+    flex: 0 0 calc(var(--default-row-height) - 1px);
     display: flex;
     align-items: center;
     margin: 0 var(--cell-padding);
@@ -342,6 +425,9 @@
     min-width: 0;
     width: 100%;
   }
+  .search :global(.spectrum-Textfield-input) {
+    font-size: 13px;
+  }
   .search :global(.spectrum-Form-item) {
     flex: 1 1 auto;
   }
@@ -349,8 +435,8 @@
   .info {
     color: var(--spectrum-global-color-gray-600);
     font-size: 12px;
-    padding: var(--cell-padding);
-    flex: 0 0 var(--row-height);
+    padding: 4px var(--cell-padding);
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     white-space: nowrap;
