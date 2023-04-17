@@ -216,13 +216,13 @@
         {#if relationship.primaryDisplay}
           <div class="badge">
             <span
-              on:click={focused
+              on:click={editable
                 ? () => showRelationship(relationship._id)
                 : null}
             >
               {relationship.primaryDisplay}
             </span>
-            {#if focused}
+            {#if editable}
               <Icon
                 name="Close"
                 size="XS"
@@ -233,7 +233,7 @@
           </div>
         {/if}
       {/each}
-      {#if focused}
+      {#if editable}
         <div class="add" on:click={open}>
           <Icon name="Add" size="S" />
         </div>
@@ -356,7 +356,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .focused .values .badge span:hover {
+  .editable .values .badge span:hover {
     cursor: pointer;
     text-decoration: underline;
   }
