@@ -7,7 +7,7 @@
     SmallRowHeight,
   } from "../lib/constants"
 
-  const { rowHeight, loaded } = getContext("sheet")
+  const { rowHeight, loaded, columns, table } = getContext("sheet")
   const sizeOptions = [
     {
       label: "Small",
@@ -25,6 +25,13 @@
 
   let open = false
   let anchor
+
+  const changeRowHeight = height => {
+    columns.actions.saveTable({
+      ...$table,
+      rowHeight: height,
+    })
+  }
 </script>
 
 <div bind:this={anchor}>
@@ -46,7 +53,7 @@
       <ActionButton
         quiet
         selected={$rowHeight === option.size}
-        on:click={() => rowHeight.set(option.size)}
+        on:click={() => changeRowHeight(option.size)}
       >
         {option.label}
       </ActionButton>
