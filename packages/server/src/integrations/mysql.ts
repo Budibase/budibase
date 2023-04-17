@@ -229,13 +229,15 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
           if (column.Key === "PRI" && primaryKeys.indexOf(column.Key) === -1) {
             primaryKeys.push(columnName)
           }
-          const constraints = {
-            presence: column.Null !== "YES",
-          }
+          const hasDefault = column.Default != null
           const isAuto: boolean =
             typeof column.Extra === "string" &&
             (column.Extra === "auto_increment" ||
               column.Extra.toLowerCase().includes("generated"))
+          const required = column.Null !== "YES"
+          const constraints = {
+            presence: required && !isAuto && !hasDefault,
+          }
           schema[columnName] = {
             name: columnName,
             autocolumn: isAuto,

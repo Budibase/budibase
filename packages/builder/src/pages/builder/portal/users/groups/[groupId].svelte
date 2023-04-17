@@ -75,8 +75,7 @@
   let loaded = false
   let editModal, deleteModal
 
-  const scimEnabled = $features.isScimEnabled
-
+  $: scimEnabled = $features.isScimEnabled
   $: readonly = !$auth.isAdmin || scimEnabled
   $: page = $pageInfo.page
   $: fetchUsers(page, searchTerm)

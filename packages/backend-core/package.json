@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "2.5.5-alpha.1",
+  "version": "2.5.6-alpha.1",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -24,7 +24,7 @@
   "dependencies": {
     "@budibase/nano": "10.1.2",
     "@budibase/pouchdb-replication-stream": "1.2.10",
-    "@budibase/types": "2.5.5-alpha.1",
+    "@budibase/types": "2.5.6-alpha.1",
     "@shopify/jest-koa-mocks": "5.0.1",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-cloudfront-sign": "2.2.0",
@@ -54,8 +54,7 @@
     "sanitize-s3-objectkey": "0.0.1",
     "semver": "7.3.7",
     "tar-fs": "2.1.1",
-    "uuid": "8.3.2",
-    "zlib": "1.0.5"
+    "uuid": "8.3.2"
   },
   "devDependencies": {
     "@jest/test-sequencer": "29.5.0",
