@@ -134,13 +134,13 @@
     bottom: 100%;
     left: 0;
     padding: 1px 4px 3px 4px;
+    margin: 0 0 -2px 0;
     background: var(--user-color);
-    border-radius: 2px 2px 0 0;
+    border-radius: 2px;
     display: block;
     color: white;
     font-size: 12px;
     font-weight: 600;
-    max-width: 100%;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -151,6 +151,7 @@
     top: 100%;
     border-radius: 0 2px 2px 2px;
     padding: 2px 4px 2px 4px;
+    margin: -2px 0 0 0;
   }
   .error .label {
     background: var(--spectrum-global-color-red-500);
