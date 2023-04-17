@@ -23,6 +23,6 @@
     { "path": "../shared-core" },
     { "path": "../../../budibase-pro/packages/pro" }
   ],
-  "include": ["src/**/*", "specs", "package.json"],
+  "include": ["src/**/*", "specs"],
   "exclude": ["node_modules", "dist"]
 }
