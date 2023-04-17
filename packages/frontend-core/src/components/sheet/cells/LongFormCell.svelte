@@ -56,6 +56,7 @@
     value={value || ""}
     on:change={handleChange}
     on:wheel|stopPropagation
+    spellcheck="false"
   />
 {:else}
   <div class="long-form-cell" on:click={editable ? open : null} class:editable>
@@ -68,19 +69,21 @@
 <style>
   .long-form-cell {
     flex: 1 1 auto;
-    padding: 0 var(--cell-padding);
+    padding: var(--cell-padding);
     align-self: stretch;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     overflow: hidden;
   }
   .long-form-cell.editable:hover {
     cursor: text;
   }
   .value {
+    display: -webkit-box;
+    -webkit-line-clamp: var(--content-lines);
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 19px;
   }
   textarea {
     padding: var(--cell-padding);
@@ -98,6 +101,7 @@
     z-index: 1;
     border-radius: 2px;
     resize: none;
+    line-height: 19px;
   }
   textarea.invertX {
     left: auto;

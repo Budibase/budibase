@@ -48,23 +48,42 @@
     on:change={handleChange}
   />
 {:else}
-  <div class="text-cell">
-    {value || ""}
+  <div class="text-cell" class:number={type === "number"}>
+    <div class="value">
+      {value || ""}
+    </div>
   </div>
 {/if}
 
 <style>
   .text-cell {
-    padding: 0 var(--cell-padding);
+    flex: 1 1 auto;
+    padding: var(--cell-padding);
+    align-self: stretch;
+    display: flex;
+    align-items: flex-start;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  }
+  .text-cell.editable:hover {
+    cursor: text;
+  }
+  .text-cell.number {
+    justify-content: flex-end;
+  }
+  .value {
+    display: -webkit-box;
+    -webkit-line-clamp: var(--content-lines);
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 19px;
+  }
+  .number .value {
+    -webkit-line-clamp: 1;
   }
   input {
     flex: 1 1 auto;
     border: none;
-    padding: 0;
-    margin: 0 var(--cell-padding);
+    padding: var(--cell-padding);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -75,5 +94,18 @@
   }
   input:focus {
     outline: none;
+  }
+  input[type="number"] {
+    text-align: right;
+  }
+
+  /* Hide arrows for number fields */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
   }
 </style>

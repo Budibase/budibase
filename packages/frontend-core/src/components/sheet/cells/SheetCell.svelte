@@ -7,6 +7,7 @@
   export let error = null
   export let rowIdx
   export let defaultHeight = false
+  export let center = false
 
   $: style = getStyle(width, selectedUser)
 
@@ -25,6 +26,7 @@
   class:highlighted
   class:focused
   class:error
+  class:center
   class:default-height={defaultHeight}
   class:selected-other={selectedUser != null}
   on:focus
@@ -57,7 +59,7 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: center;
+    align-items: flex-start;
     color: var(--spectrum-global-color-gray-800);
     font-size: var(--cell-font-size);
     gap: var(--cell-spacing);
@@ -68,6 +70,9 @@
   }
   .cell.default-height {
     height: var(--default-row-height);
+  }
+  .cell.center {
+    align-items: center;
   }
 
   /* Cell border */

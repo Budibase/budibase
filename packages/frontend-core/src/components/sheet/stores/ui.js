@@ -1,4 +1,9 @@
 import { writable, get, derived } from "svelte/store"
+import {
+  LargeRowHeight,
+  MediumRowHeight,
+  SmallRowHeight,
+} from "../lib/constants"
 
 export const createStores = () => {
   const focusedCellId = writable(null)
@@ -35,6 +40,7 @@ export const deriveStores = context => {
     hoveredRowId,
     enrichedRows,
     rowLookupMap,
+    rowHeight,
   } = context
 
   // Derive the row that contains the selected cell
@@ -62,8 +68,18 @@ export const deriveStores = context => {
     hoveredRowId.set(null)
   }
 
+  const contentLines = derived(rowHeight, $rowHeight => {
+    if ($rowHeight === LargeRowHeight) {
+      return 4
+    } else if ($rowHeight === MediumRowHeight) {
+      return 2
+    }
+    return 1
+  })
+
   return {
     focusedRow,
+    contentLines,
     ui: {
       actions: {
         blur,
