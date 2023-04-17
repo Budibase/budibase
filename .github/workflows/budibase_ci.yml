@@ -96,43 +96,9 @@ jobs:
       - name: Check submodule
         run: |
           cd packages/pro
-          git fetch
-          if ! git branch --contains HEAD | grep -q "develop"; then
-            echo "Current commit is not part of main branch" >&2
-            exit 1
-          fi
-
-  check-pro-submodule-working:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - name: Check submodule
-        run: |
-          cd packages/pro
           if ! git branch --contains $GITHUB_BASE_REF | grep -q chore/pro_as_submodule; then
             echo "Current commit is not part of main branch"
             exit 1
           else
             echo "All good, the submodule has been merged!"
-          fi
-
-  check-pro-submodule-failing:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - name: Check submodule
-        run: |
-          cd packages/pro
-          git fetch
-          if ! git branch --contains HEAD | grep -q "pro_as_submodule"; then
-            echo "Current commit is not part of main branch" >&2
-            exit 1
           fi
