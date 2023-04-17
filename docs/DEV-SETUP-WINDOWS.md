@@ -60,7 +60,7 @@ This setup process was tested on Windows 11 with version numbers show below. You
 
 - Docker: 20.10.7
 - Docker-Compose: 2.10.2
-- Node: v14.21.3
+- Node: v14.20.1
 - Yarn: 1.22.19
 - Lerna: 5.5.4
 
