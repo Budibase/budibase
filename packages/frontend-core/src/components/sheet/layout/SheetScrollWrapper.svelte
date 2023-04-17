@@ -17,19 +17,12 @@
   export let scrollVertically = false
   export let scrollHorizontally = false
   export let wheelInteractive = false
-  export let foo = false
 
-  $: style = generateStyle($scroll, $rowHeight, $hiddenColumnsWidth, foo)
+  $: style = generateStyle($scroll, $rowHeight, $hiddenColumnsWidth)
 
-  const generateStyle = (scroll, rowHeight, hiddenWidths, foo) => {
-    let offsetX, offsetY
-    if (!foo) {
-      offsetX = scrollHorizontally ? -1 * scroll.left + hiddenWidths : 0
-      offsetY = scrollVertically ? -1 * (scroll.top % rowHeight) : 0
-    } else {
-      offsetX = scrollHorizontally ? -1 * scroll.left : 0
-      offsetY = scrollVertically ? -1 * scroll.top : 0
-    }
+  const generateStyle = (scroll, rowHeight, hiddenWidths) => {
+    const offsetX = scrollHorizontally ? -1 * scroll.left + hiddenWidths : 0
+    const offsetY = scrollVertically ? -1 * (scroll.top % rowHeight) : 0
     return `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
   }
 

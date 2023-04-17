@@ -10,12 +10,10 @@
     focusedCellId,
     reorder,
     selectedRows,
-    visibleColumns,
     renderedColumns,
     hoveredRowId,
     selectedCellMap,
     focusedRow,
-    hiddenColumnsWidth,
     columnHorizontalInversionIndex,
   } = getContext("sheet")
 
@@ -23,8 +21,6 @@
   $: rowHovered = $hoveredRowId === row._id
   $: rowFocused = $focusedRow?._id === row._id
   $: reorderSource = $reorder.sourceColumn
-  $: cols = rowFocused ? $visibleColumns : $renderedColumns
-  $: foo = `margin-left: ${-1 * $hiddenColumnsWidth}px;`
 </script>
 
 <div
