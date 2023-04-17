@@ -107,8 +107,8 @@
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
-    align-items: center;
-    padding: 0 var(--cell-padding);
+    align-items: stretch;
+    padding: var(--cell-padding);
     flex-wrap: nowrap;
     gap: var(--cell-spacing);
     align-self: stretch;
@@ -134,8 +134,9 @@
     user-select: none;
   }
   img {
-    height: calc(var(--row-height) - 12px);
-    max-width: 64px;
+    height: auto;
+    /*height: calc(var(--row-height) - 12px);*/
+    /*max-width: 64px;*/
   }
   .dropzone {
     position: absolute;
