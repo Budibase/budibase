@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Set the submodule.recurse configuration value to true
+git config submodule.recurse true
