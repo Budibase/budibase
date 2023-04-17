@@ -6,6 +6,7 @@
   export let selectedUser = null
   export let error = null
   export let rowIdx
+  export let defaultHeight = false
 
   $: style = getStyle(width, selectedUser)
 
@@ -24,6 +25,7 @@
   class:highlighted
   class:focused
   class:error
+  class:default-height={defaultHeight}
   class:selected-other={selectedUser != null}
   on:focus
   on:mousedown
@@ -63,6 +65,9 @@
     position: relative;
     width: 0;
     --cell-color: transparent;
+  }
+  .cell.default-height {
+    height: var(--default-row-height);
   }
 
   /* Cell border */

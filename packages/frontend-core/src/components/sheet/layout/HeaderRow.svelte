@@ -21,7 +21,7 @@
     background: var(--background);
     border-bottom: var(--cell-border);
     position: relative;
-    height: var(--row-height);
+    height: var(--default-row-height);
     z-index: 1;
   }
   .row {
