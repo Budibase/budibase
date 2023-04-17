@@ -103,4 +103,3 @@ jobs:
           else
             echo "All good, the submodule has been merged!"
           fi
--
