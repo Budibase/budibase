@@ -99,7 +99,7 @@
 <div
   class="header-cell"
   class:open
-  style="flex: 0 0 {column.width}px"
+  style="flex: 0 0 {column.width}px;"
   bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
   class:sorted={sortedBy}
@@ -110,6 +110,7 @@
     on:contextmenu={onContextMenu}
     width={column.width}
     left={column.left}
+    defaultHeight
   >
     <Icon
       size="S"

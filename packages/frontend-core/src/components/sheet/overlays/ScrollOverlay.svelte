@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { domDebounce } from "../../../utils/utils"
-  import { ScrollBarSize } from "../lib/constants"
+  import { DefaultRowHeight, ScrollBarSize } from "../lib/constants"
 
   const {
     scroll,
@@ -30,7 +30,9 @@
   $: barHeight = Math.max(50, ($height / $contentHeight) * renderHeight)
   $: availHeight = renderHeight - barHeight
   $: barTop =
-    ScrollBarSize + $rowHeight + availHeight * ($scrollTop / $maxScrollTop)
+    ScrollBarSize +
+    DefaultRowHeight +
+    availHeight * ($scrollTop / $maxScrollTop)
 
   // Calculate H scrollbar size and offset
   $: renderWidth = $screenWidth - 2 * ScrollBarSize

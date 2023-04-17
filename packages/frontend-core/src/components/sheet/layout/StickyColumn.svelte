@@ -58,7 +58,7 @@
   class:scrolled={$scrollLeft > 0}
 >
   <div class="header row">
-    <SheetCell width={GutterWidth}>
+    <SheetCell width={GutterWidth} defaultHeight>
       <div class="gutter">
         <div class="checkbox visible">
           {#if $config.allowDeleteRows}
