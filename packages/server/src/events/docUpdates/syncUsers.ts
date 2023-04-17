@@ -1,12 +1,10 @@
-import { constants, docUpdates, logging } from "@budibase/backend-core"
+import { constants, logging } from "@budibase/backend-core"
 import { sdk as proSdk } from "@budibase/pro"
-import { DocUpdateEvent } from "@budibase/types"
-import { syncUsersToAllApps } from "../sdk/app/applications/sync"
+import { DocUpdateEvent, UserGroupSyncEvents } from "@budibase/types"
+import { syncUsersToAllApps } from "../../sdk/app/applications/sync"
+import { UpdateCallback } from "./processors"
 
-type UpdateCallback = (docId: string) => void
-
-function userGroupUpdates(updateCb?: UpdateCallback) {
-  const types = [constants.DocumentType.USER, constants.DocumentType.GROUP]
+export default function process(updateCb?: UpdateCallback) {
   const processor = async (update: DocUpdateEvent) => {
     try {
       const docId = update.id
@@ -33,10 +31,5 @@ function userGroupUpdates(updateCb?: UpdateCallback) {
       }
     }
   }
-  return { types, processor }
-}
-
-export function init(updateCb?: UpdateCallback) {
-  const processors = [userGroupUpdates(updateCb)]
-  docUpdates.init(processors)
+  return { events: UserGroupSyncEvents, processor }
 }

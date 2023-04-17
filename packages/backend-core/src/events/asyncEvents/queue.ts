@@ -12,7 +12,7 @@ export interface EventPayload {
 export let asyncEventQueue: BullQueue.Queue
 
 export function init() {
-  asyncEventQueue = createQueue<EventPayload>(JobQueue.DOC_UPDATE)
+  asyncEventQueue = createQueue<EventPayload>(JobQueue.SYSTEM_EVENT_QUEUE)
 }
 
 export async function shutdown() {
