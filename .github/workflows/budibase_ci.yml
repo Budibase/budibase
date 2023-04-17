@@ -113,7 +113,7 @@ jobs:
       - name: Check submodule
         run: |
           cd packages/pro
-          if ! git branch --contains $BRANCH | grep -q chore/pro_as_submodule; then
+          if ! git branch --contains $GITHUB_BASE_REF | grep -q chore/pro_as_submodule; then
             echo "Current commit is not part of main branch"
             exit 1
           else
