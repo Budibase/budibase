@@ -57,15 +57,15 @@
   }
 
   // Debounced function to search for rows based on the search string
-  const search = debounce(async searchString => {
+  const search = debounce(async (searchString, force = false) => {
     // Avoid update state at all if we've already handled the update and this is
     // a wasted search due to svelte reactivity
-    if (!searchString && !lastSearchString) {
+    if (!force && !searchString && !lastSearchString) {
       return
     }
 
     // Reset state if this search is invalid
-    if (!searchString || !schema?.tableId || !isOpen) {
+    if (!schema?.tableId || !isOpen) {
       lastSearchString = null
       candidateIndex = null
       searchResults = []
@@ -83,7 +83,7 @@
       limit: 20,
       query: {
         string: {
-          [`1:${primaryDisplay}`]: searchString,
+          [`1:${primaryDisplay}`]: searchString || "",
         },
       },
     })
@@ -118,6 +118,8 @@
 
   const open = async () => {
     isOpen = true
+    searchString = null
+    search(null, true)
 
     // Fetch definition if required
     if (!definition) {
@@ -200,6 +202,16 @@
     dispatch("edit-row", relatedRow)
   }
 
+  const readable = value => {
+    if (value == null) {
+      return ""
+    }
+    if (value instanceof Object) {
+      return JSON.stringify(value)
+    }
+    return value
+  }
+
   onMount(() => {
     api = {
       focus: open,
@@ -220,7 +232,7 @@
                 ? () => showRelationship(relationship._id)
                 : null}
             >
-              {relationship.primaryDisplay}
+              {readable(relationship.primaryDisplay)}
             </span>
             {#if editable}
               <Icon
@@ -267,7 +279,7 @@
             >
               <div class="badge">
                 <span>
-                  {row.primaryDisplay}
+                  {readable(row.primaryDisplay)}
                 </span>
               </div>
               {#if isRowSelected(row)}
