@@ -363,12 +363,12 @@
 
   .add {
     background: var(--spectrum-global-color-gray-200);
-    padding: 3px;
+    padding: 4px;
     border-radius: 4px;
   }
   .add :global(.spectrum-Icon) {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
   }
   .add:hover {
     background: var(--spectrum-global-color-gray-300);
