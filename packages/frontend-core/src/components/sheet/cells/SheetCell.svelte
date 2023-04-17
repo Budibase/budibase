@@ -121,11 +121,10 @@
   .cell:hover {
     cursor: default;
   }
-  .cell.highlighted,
-  .cell.focused {
+  .cell.highlighted:not(.focused) {
     --cell-background: var(--cell-background-hover);
   }
-  .cell.selected {
+  .cell.selected:not(.focused) {
     --cell-background: var(--spectrum-global-color-blue-100);
   }
 
