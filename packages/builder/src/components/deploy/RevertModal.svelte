@@ -1,3 +1,4 @@
+
 <script>
   import {
     Input,
@@ -44,8 +45,7 @@
     disabled={appName !== $store.name}
   >
     <span
-      >The changes you have made will be deleted and the application reverted
-      back to its production state.</span
+      >The changes you have made will be deleted and the application reverted back to its production state.</span
     >
     <span>Please enter your app name to continue.</span>
     <Input bind:value={appName} />

@@ -83,5 +83,8 @@
     "postinstall": "husky install",
     "install:pro": "bash scripts/pro/install.sh",
     "dep:clean": "yarn clean && yarn bootstrap"
+  },
+  "dependencies": {
+    "yarn": "^1.22.19"
   }
 }

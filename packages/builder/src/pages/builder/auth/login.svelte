@@ -141,12 +141,11 @@
         <Layout gap="XS" noPadding justifyItems="center">
           <div class="user-actions">
             <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
-              Forgot password?
+              Дибил?
             </ActionButton>
           </div>
         </Layout>
       {/if}
-
       {#if cloud}
         <Body size="xs" textAlign="center">
           By using Budibase Cloud

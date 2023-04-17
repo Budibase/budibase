@@ -30,7 +30,7 @@
       notifications.success("Email sent - please check your inbox")
     } catch (err) {
       submitted = false
-      notifications.error("Unable to send reset password link")
+      notifications.error("алё")
     }
   }
 
@@ -57,10 +57,7 @@
       </Heading>
     </span>
     <Layout gap="XS" noPadding>
-      <Body size="M">
-        No problem! Just enter your account's email address and we'll send you a
-        link to reset it.
-      </Body>
+      <Body size="M">Блин</Body>
     </Layout>
 
     <Layout gap="S" noPadding>

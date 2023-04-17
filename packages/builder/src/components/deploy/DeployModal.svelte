@@ -1,3 +1,11 @@
+
+
+
+
+
+
+
+
 <script>
   import {
     Button,
@@ -67,8 +75,7 @@
     confirmText="Publish"
     onConfirm={publishApp}
   >
-    The changes you have made will be published to the production version of the
-    application.
+    The changes you have made will be published to the production version of the application.
   </ModalContent>
 </Modal>
 
