@@ -1,132 +1,145 @@
 import { cloneDeep } from "lodash"
-import {
-  doesHaveBasePermission,
-  getBuiltinPermissionByID,
-  isPermissionLevelHigherThanRead,
-  PermissionLevel,
-  PermissionType,
-  levelToNumber,
-  getAllowedLevels,
-  BuiltinPermissionID,
-  getBuiltinPermissions,
-  BUILTIN_PERMISSIONS,
-  Permission,
-} from "../permissions"
+import * as permissions from "../permissions"
 import { BUILTIN_ROLE_IDS } from "../roles"
 
 describe("levelToNumber", () => {
   it("should return 0 for EXECUTE", () => {
-    expect(levelToNumber(PermissionLevel.EXECUTE)).toBe(0)
+    expect(permissions.levelToNumber(permissions.PermissionLevel.EXECUTE)).toBe(
+      0
+    )
   })
 
   it("should return 1 for READ", () => {
-    expect(levelToNumber(PermissionLevel.READ)).toBe(1)
+    expect(permissions.levelToNumber(permissions.PermissionLevel.READ)).toBe(1)
   })
 
   it("should return 2 for WRITE", () => {
-    expect(levelToNumber(PermissionLevel.WRITE)).toBe(2)
+    expect(permissions.levelToNumber(permissions.PermissionLevel.WRITE)).toBe(2)
   })
 
   it("should return 3 for ADMIN", () => {
-    expect(levelToNumber(PermissionLevel.ADMIN)).toBe(3)
+    expect(permissions.levelToNumber(permissions.PermissionLevel.ADMIN)).toBe(3)
   })
 
   it("should return -1 for an unknown permission level", () => {
-    expect(levelToNumber("unknown" as PermissionLevel)).toBe(-1)
+    expect(
+      permissions.levelToNumber("unknown" as permissions.PermissionLevel)
+    ).toBe(-1)
   })
 })
 describe("getAllowedLevels", () => {
   it('should return ["execute"] for EXECUTE', () => {
-    expect(getAllowedLevels(PermissionLevel.EXECUTE)).toEqual([
-      PermissionLevel.EXECUTE,
-    ])
+    expect(
+      permissions.getAllowedLevels(permissions.PermissionLevel.EXECUTE)
+    ).toEqual([permissions.PermissionLevel.EXECUTE])
   })
 
   it('should return ["execute", "read"] for READ', () => {
-    expect(getAllowedLevels(PermissionLevel.READ)).toEqual([
-      PermissionLevel.EXECUTE,
-      PermissionLevel.READ,
+    expect(
+      permissions.getAllowedLevels(permissions.PermissionLevel.READ)
+    ).toEqual([
+      permissions.PermissionLevel.EXECUTE,
+      permissions.PermissionLevel.READ,
     ])
   })
 
   it('should return ["execute", "read", "write"] for WRITE', () => {
-    expect(getAllowedLevels(PermissionLevel.WRITE)).toEqual([
-      PermissionLevel.EXECUTE,
-      PermissionLevel.READ,
-      PermissionLevel.WRITE,
+    expect(
+      permissions.getAllowedLevels(permissions.PermissionLevel.WRITE)
+    ).toEqual([
+      permissions.PermissionLevel.EXECUTE,
+      permissions.PermissionLevel.READ,
+      permissions.PermissionLevel.WRITE,
     ])
   })
 
   it('should return ["execute", "read", "write"] for ADMIN', () => {
-    expect(getAllowedLevels(PermissionLevel.ADMIN)).toEqual([
-      PermissionLevel.EXECUTE,
-      PermissionLevel.READ,
-      PermissionLevel.WRITE,
+    expect(
+      permissions.getAllowedLevels(permissions.PermissionLevel.ADMIN)
+    ).toEqual([
+      permissions.PermissionLevel.EXECUTE,
+      permissions.PermissionLevel.READ,
+      permissions.PermissionLevel.WRITE,
     ])
   })
 
   it("should return [] for an unknown permission level", () => {
-    expect(getAllowedLevels("unknown" as PermissionLevel)).toEqual([])
+    expect(
+      permissions.getAllowedLevels("unknown" as permissions.PermissionLevel)
+    ).toEqual([])
   })
 })
 
 describe("doesHaveBasePermission", () => {
   it("should return true if base permission has the required level", () => {
-    const permType = PermissionType.USER
-    const permLevel = PermissionLevel.READ
+    const permType = permissions.PermissionType.USER
+    const permLevel = permissions.PermissionLevel.READ
     const rolesHierarchy = [
       {
         roleId: BUILTIN_ROLE_IDS.ADMIN,
-        permissionId: BuiltinPermissionID.ADMIN,
+        permissionId: permissions.BuiltinPermissionID.ADMIN,
       },
     ]
-    expect(doesHaveBasePermission(permType, permLevel, rolesHierarchy)).toBe(
-      true
-    )
+    expect(
+      permissions.doesHaveBasePermission(permType, permLevel, rolesHierarchy)
+    ).toBe(true)
   })
 
   it("should return false if base permission does not have the required level", () => {
-    const permType = PermissionType.APP
-    const permLevel = PermissionLevel.READ
+    const permType = permissions.PermissionType.APP
+    const permLevel = permissions.PermissionLevel.READ
     const rolesHierarchy = [
       {
         roleId: BUILTIN_ROLE_IDS.PUBLIC,
-        permissionId: BuiltinPermissionID.PUBLIC,
+        permissionId: permissions.BuiltinPermissionID.PUBLIC,
       },
     ]
-    expect(doesHaveBasePermission(permType, permLevel, rolesHierarchy)).toBe(
-      false
-    )
+    expect(
+      permissions.doesHaveBasePermission(permType, permLevel, rolesHierarchy)
+    ).toBe(false)
   })
 })
 
 describe("isPermissionLevelHigherThanRead", () => {
   it("should return true if level is higher than read", () => {
-    expect(isPermissionLevelHigherThanRead(PermissionLevel.WRITE)).toBe(true)
+    expect(
+      permissions.isPermissionLevelHigherThanRead(
+        permissions.PermissionLevel.WRITE
+      )
+    ).toBe(true)
   })
 
   it("should return false if level is read or lower", () => {
-    expect(isPermissionLevelHigherThanRead(PermissionLevel.READ)).toBe(false)
+    expect(
+      permissions.isPermissionLevelHigherThanRead(
+        permissions.PermissionLevel.READ
+      )
+    ).toBe(false)
   })
 })
 
 describe("getBuiltinPermissions", () => {
   it("returns a clone of the builtin permissions", () => {
-    const builtins = getBuiltinPermissions()
-    expect(builtins).toEqual(cloneDeep(BUILTIN_PERMISSIONS))
-    expect(builtins).not.toBe(BUILTIN_PERMISSIONS)
+    const builtins = permissions.getBuiltinPermissions()
+    expect(builtins).toEqual(cloneDeep(permissions.BUILTIN_PERMISSIONS))
+    expect(builtins).not.toBe(permissions.BUILTIN_PERMISSIONS)
   })
 })
 
 describe("getBuiltinPermissionByID", () => {
   it("returns correct permission object for valid ID", () => {
     const expectedPermission = {
-      _id: BuiltinPermissionID.PUBLIC,
+      _id: permissions.BuiltinPermissionID.PUBLIC,
       name: "Public",
       permissions: [
-        new Permission(PermissionType.WEBHOOK, PermissionLevel.EXECUTE),
+        new permissions.Permission(
+          permissions.PermissionType.WEBHOOK,
+          permissions.PermissionLevel.EXECUTE
+        ),
       ],
     }
-    expect(getBuiltinPermissionByID("public")).toEqual(expectedPermission)
+    expect(permissions.getBuiltinPermissionByID("public")).toEqual(
+      expectedPermission
+    )
   })
 })
