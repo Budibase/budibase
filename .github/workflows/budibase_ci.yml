@@ -97,8 +97,7 @@ jobs:
         run: |
           cd packages/pro
           git fetch
-          git merge-base --is-ancestor HEAD develop
-          if ! git branch --contains HEAD | grep -q "develop"; then
+          if ! git branch --contains HEAD | grep -q "origin/develop"; then
             echo "Current commit is not part of main branch" >&2
             exit 1
           fi
@@ -115,8 +114,7 @@ jobs:
         run: |
           cd packages/pro
           git fetch
-          git merge-base --is-ancestor HEAD develop
-          if ! git branch --contains HEAD | grep -q "chore/pro_as_submodule"; then
+          if ! git branch --contains HEAD | grep -q "origin/chore/pro_as_submodule"; then
             echo "Current commit is not part of main branch" >&2
             exit 1
           fi
@@ -133,7 +131,6 @@ jobs:
         run: |
           cd packages/pro
           git fetch
-          git merge-base --is-ancestor HEAD develop
           if ! git branch --contains HEAD | grep -q "pro_as_submodule"; then
             echo "Current commit is not part of main branch" >&2
             exit 1
