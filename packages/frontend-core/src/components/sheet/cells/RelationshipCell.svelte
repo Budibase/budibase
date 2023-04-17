@@ -376,7 +376,7 @@
     top: 100%;
     left: 0;
     width: 100%;
-    height: calc(
+    max-height: calc(
       var(--max-cell-render-height) + var(--row-height) -
         var(--max-relationship-height)
     );
@@ -386,6 +386,7 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    padding: 0 0 8px 0;
   }
   .dropdown.invertY {
     transform: translateY(-100%);
@@ -428,7 +429,7 @@
     flex: 0 0 calc(var(--default-row-height) - 1px);
     display: flex;
     align-items: center;
-    margin: 0 var(--cell-padding);
+    margin: 4px var(--cell-padding);
     width: calc(100% - 2 * var(--cell-padding));
   }
   .search :global(.spectrum-Textfield) {
