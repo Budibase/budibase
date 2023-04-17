@@ -77,7 +77,13 @@
   })
 </script>
 
-<div class="container" class:multi class:editable class:open>
+<div
+  class="container"
+  class:multi
+  class:editable
+  class:open
+  on:click|self={editable ? open : null}
+>
   <div class="values" on:click={editable ? open : null}>
     {#each values as val}
       {@const color = getOptionColor(val)}
@@ -112,6 +118,7 @@
           class="option"
           on:click={() => toggleOption(option)}
           class:focused={focusedOptionIdx === idx}
+          on:mouseenter={() => (focusedOptionIdx = idx)}
         >
           <div class="badge text" style="--color: {color}">
             {option}
@@ -193,18 +200,18 @@
     );
   }
   .options {
-    min-width: 100%;
+    min-width: calc(100% + 2px);
     position: absolute;
     top: 100%;
-    left: 0;
+    left: -1px;
     display: flex;
     flex-direction: column;
-    box-shadow: 4px 4px 10px 2px rgba(0, 0, 0, 0.1);
     justify-content: flex-start;
     align-items: stretch;
     max-height: var(--max-cell-render-height);
     overflow-y: auto;
     border: var(--cell-border);
+    box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
   }
   .options.invertX {
     left: auto;
@@ -222,7 +229,7 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--cell-spacing);
-    background-color: var(--cell-background-hover);
+    background-color: var(--background);
   }
   .option:hover,
   .option.focused {

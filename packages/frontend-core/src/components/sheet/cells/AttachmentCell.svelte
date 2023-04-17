@@ -123,30 +123,24 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    height: calc(var(--row-height) - 12px);
-    padding: 0 8px;
-    color: var(--spectrum-global-color-gray-800);
+    padding: 0 10px;
+    color: var(--spectrum-global-color-gray-700);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     text-transform: uppercase;
     font-weight: 600;
-    font-size: 10px;
+    font-size: 12px;
     user-select: none;
-  }
-  img {
-    height: auto;
-    /*height: calc(var(--row-height) - 12px);*/
-    /*max-width: 64px;*/
   }
   .dropzone {
     position: absolute;
     top: 100%;
     left: 0;
     width: 320px;
-    background: var(--cell-background);
+    background: var(--background);
     border: var(--cell-border);
-    box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
     padding: var(--cell-padding);
+    box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
   }
   .dropzone.invertX {
     left: auto;
