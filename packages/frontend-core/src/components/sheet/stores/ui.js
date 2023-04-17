@@ -70,7 +70,7 @@ export const deriveStores = context => {
 
   const contentLines = derived(rowHeight, $rowHeight => {
     if ($rowHeight === LargeRowHeight) {
-      return 4
+      return 3
     } else if ($rowHeight === MediumRowHeight) {
       return 2
     }

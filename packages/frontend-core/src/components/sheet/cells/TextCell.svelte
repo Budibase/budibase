@@ -75,7 +75,7 @@
     -webkit-line-clamp: var(--content-lines);
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 19px;
+    line-height: 20px;
   }
   .number .value {
     -webkit-line-clamp: 1;
@@ -91,6 +91,7 @@
     font-size: var(--cell-font-size);
     font-family: var(--font-sans);
     color: inherit;
+    line-height: 20px;
   }
   input:focus {
     outline: none;

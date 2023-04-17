@@ -35,7 +35,7 @@
 
 <style>
   .boolean-cell {
-    padding: 0 var(--cell-padding);
+    padding: 2px var(--cell-padding);
     pointer-events: none;
   }
   .boolean-cell.editable {

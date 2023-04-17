@@ -4,7 +4,6 @@ export const MaxCellRenderWidthOverflow = 200
 export const ScrollBarSize = 8
 export const GutterWidth = 72
 export const DefaultColumnWidth = 200
-export const DefaultRelationshipColumnWidth = 360
 export const MinColumnWidth = 100
 export const SmallRowHeight = 36
 export const MediumRowHeight = 64

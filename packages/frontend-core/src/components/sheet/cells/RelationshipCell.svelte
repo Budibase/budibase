@@ -249,7 +249,7 @@
           placeholder={primaryDisplay ? `Search by ${primaryDisplay}` : null}
         />
       </div>
-      {#if searchResults}
+      {#if searchString && searchResults}
         <div class="info">
           {searchResults.length} row{searchResults.length === 1 ? "" : "s"} found
         </div>
@@ -265,7 +265,9 @@
               on:mouseenter={() => (candidateIndex = idx)}
             >
               <div class="badge">
-                {row.primaryDisplay}
+                <span>
+                  {row.primaryDisplay}
+                </span>
               </div>
               {#if isRowSelected(row)}
                 <Icon
@@ -342,13 +344,16 @@
     background: var(--color);
     border-radius: var(--cell-padding);
     user-select: none;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
     display: flex;
     align-items: center;
     gap: var(--cell-spacing);
     height: 20px;
+    max-width: 100%;
+  }
+  .badge span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .focused .badge span:hover {
     cursor: pointer;

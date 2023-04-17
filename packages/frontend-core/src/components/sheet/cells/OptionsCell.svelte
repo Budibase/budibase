@@ -83,7 +83,9 @@
       {@const color = getOptionColor(val)}
       {#if color}
         <div class="badge text" style="--color: {color}">
-          {val}
+          <span>
+            {val}
+          </span>
         </div>
       {:else}
         <div class="text">
@@ -131,9 +133,10 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: stretch;
+    align-items: flex-start;
     align-self: stretch;
     flex: 1 1 auto;
+    overflow: hidden;
   }
   .container.editable:hover {
     cursor: pointer;
@@ -142,12 +145,13 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: center;
+    align-items: flex-start;
     flex: 1 1 auto;
-    width: 0;
-    gap: var(--cell-spacing);
+    grid-column-gap: var(--cell-spacing);
+    grid-row-gap: var(--cell-padding);
     overflow: hidden;
-    padding: 0 var(--cell-padding);
+    padding: var(--cell-padding);
+    flex-wrap: wrap;
   }
   .text {
     overflow: hidden;
@@ -158,10 +162,20 @@
     flex: 0 0 auto;
   }
   .badge {
-    padding: 2px var(--cell-padding);
+    padding: 0 var(--cell-padding);
     background: var(--color);
     border-radius: var(--cell-padding);
     user-select: none;
+    display: flex;
+    align-items: center;
+    gap: var(--cell-spacing);
+    height: 20px;
+    max-width: 100%;
+  }
+  .badge span {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
   .arrow {
     position: absolute;
@@ -209,9 +223,6 @@
     align-items: center;
     gap: var(--cell-spacing);
     background-color: var(--cell-background-hover);
-  }
-  .option:first-child {
-    flex: 0 0 calc(var(--row-height) - 1px);
   }
   .option:hover,
   .option.focused {
