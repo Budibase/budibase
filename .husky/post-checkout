@@ -1,0 +1,4 @@
+# .husky/pre-commit
+# ...
+
+git config submodule.recurse true
