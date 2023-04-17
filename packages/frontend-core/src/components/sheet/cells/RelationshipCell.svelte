@@ -1,7 +1,7 @@
 <script>
   import { getColor } from "../lib/utils"
   import { onMount, getContext } from "svelte"
-  import { Icon, Input } from "@budibase/bbui"
+  import { Icon, Input, ProgressCircle } from "@budibase/bbui"
   import { debounce } from "../../../utils/utils"
 
   export let value
@@ -24,6 +24,7 @@
   let primaryDisplay
   let candidateIndex
   let lastSearchId
+  let searching = false
 
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
@@ -74,6 +75,7 @@
     // Search for results, using IDs to track invocations and ensure we're
     // handling the latest update
     lastSearchId = Math.random()
+    searching = true
     const thisSearchId = lastSearchId
     const results = await API.searchTable({
       paginate: false,
@@ -85,6 +87,7 @@
         },
       },
     })
+    searching = false
 
     // In case searching takes longer than our debounced update, abandon these
     // results
@@ -249,13 +252,11 @@
           placeholder={primaryDisplay ? `Search by ${primaryDisplay}` : null}
         />
       </div>
-      {#if searchString && searchResults}
-        <div class="info">
-          {searchResults.length} row{searchResults.length === 1 ? "" : "s"} found
+      {#if searching}
+        <div class="searching">
+          <ProgressCircle size="S" />
         </div>
-      {/if}
-
-      {#if searchResults?.length}
+      {:else if searchResults?.length}
         <div class="results">
           {#each searchResults as row, idx}
             <div
@@ -379,13 +380,12 @@
       var(--max-cell-render-height) + var(--row-height) -
         var(--max-relationship-height)
     );
-    background: var(--cell-background);
+    background: var(--background);
     border: var(--cell-border);
-    box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    background-color: var(--cell-background-hover);
   }
   .dropdown.invertY {
     transform: translateY(-100%);
@@ -396,6 +396,11 @@
     right: 0;
   }
 
+  .searching {
+    padding: var(--cell-padding);
+    display: flex;
+    justify-content: center;
+  }
   .results {
     overflow-y: auto;
     overflow-x: hidden;
@@ -435,17 +440,5 @@
   }
   .search :global(.spectrum-Form-item) {
     flex: 1 1 auto;
-  }
-
-  .info {
-    color: var(--spectrum-global-color-gray-600);
-    font-size: 12px;
-    padding: 4px var(--cell-padding);
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
   }
 </style>
