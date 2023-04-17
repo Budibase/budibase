@@ -45,6 +45,10 @@ function httpLogging() {
   return process.env.HTTP_LOGGING
 }
 
+function findVersion() {
+  return "0.0.1"
+}
+
 const environment = {
   isTest,
   isJest,
@@ -122,6 +126,7 @@ const environment = {
   ENABLE_SSO_MAINTENANCE_MODE: selfHosted
     ? process.env.ENABLE_SSO_MAINTENANCE_MODE
     : false,
+  VERSION: findVersion(),
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
