@@ -262,15 +262,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           column.identity_start ||
           column.identity_increment
         )
-        const constraints = {
-          presence: column.is_nullable === "NO",
-        }
-        const hasDefault =
+        const hasDefault = column.column_default != null
+        const hasNextVal =
           typeof column.column_default === "string" &&
           column.column_default.startsWith("nextval")
         const isGenerated =
           column.is_generated && column.is_generated !== "NEVER"
-        const isAuto: boolean = hasDefault || identity || isGenerated
+        const isAuto: boolean = hasNextVal || identity || isGenerated
+        const required = column.is_nullable === "NO"
+        const constraints = {
+          presence: required && !hasDefault && !isGenerated,
+        }
         tables[tableName].schema[columnName] = {
           autocolumn: isAuto,
           name: columnName,

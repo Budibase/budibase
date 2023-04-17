@@ -19,10 +19,10 @@ export interface ScimUserResponse extends ScimResource {
   }
   userName: string
   displayName?: string
-  name: {
-    formatted: string
-    familyName: string
-    givenName: string
+  name?: {
+    formatted?: string
+    familyName?: string
+    givenName?: string
   }
   active: BooleanString
   emails?: Emails
@@ -41,7 +41,7 @@ export interface ScimCreateUserRequest {
     resourceType: "User"
   }
   displayName?: string
-  name: {
+  name?: {
     formatted: string
     familyName: string
     givenName: string

@@ -255,6 +255,45 @@ describe("scim", () => {
           )
         })
 
+        it("a new user can minim information", async () => {
+          const userData = {
+            externalId: structures.uuid(),
+            email: structures.generator.email(),
+            username: structures.generator.name(),
+            firstName: undefined,
+            lastName: undefined,
+          }
+          const body = structures.scim.createUserRequest(userData)
+
+          const response = await postScimUser({ body })
+
+          const expectedScimUser = {
+            schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            id: expect.any(String),
+            externalId: userData.externalId,
+            meta: {
+              resourceType: "User",
+              created: mocks.date.MOCK_DATE.toISOString(),
+              lastModified: mocks.date.MOCK_DATE.toISOString(),
+            },
+            userName: userData.username,
+            active: true,
+            emails: [
+              {
+                value: userData.email,
+                type: "work",
+                primary: true,
+              },
+            ],
+          }
+          expect(response).toEqual(expectedScimUser)
+
+          const persistedUsers = await config.api.scimUsersAPI.get()
+          expect(persistedUsers.Resources).toEqual(
+            expect.arrayContaining([expectedScimUser])
+          )
+        })
+
         it("an event is dispatched", async () => {
           const body = structures.scim.createUserRequest()
 
@@ -398,7 +437,7 @@ describe("scim", () => {
           name: {
             ...user.name,
             familyName: newFamilyName,
-            formatted: `${user.name.givenName} ${newFamilyName}`,
+            formatted: `${user.name!.givenName} ${newFamilyName}`,
           },
         }
         expect(response).toEqual(expectedScimUser)
@@ -546,6 +585,59 @@ describe("scim", () => {
             totalResults: groupCount,
           })
         })
+
+        it("can fetch groups using displayName filters", async () => {
+          const groupToFetch = _.sample(groups)
+          const response = await getScimGroups({
+            params: { filter: `displayName eq "${groupToFetch!.displayName}"` },
+          })
+
+          expect(response).toEqual({
+            Resources: [groupToFetch],
+            itemsPerPage: 1,
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+            startIndex: 1,
+            totalResults: 1,
+          })
+        })
+
+        it("can fetch groups excluding members", async () => {
+          const response = await getScimGroups({
+            params: { excludedAttributes: "members" },
+          })
+
+          expect(response).toEqual({
+            Resources: expect.arrayContaining(
+              groups.map(g => {
+                const { members, ...groupData } = g
+                return groupData
+              })
+            ),
+            itemsPerPage: 25,
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+            startIndex: 1,
+            totalResults: groupCount,
+          })
+        })
+
+        it("can fetch groups excluding multiple fields", async () => {
+          const response = await getScimGroups({
+            params: { excludedAttributes: "members,displayName" },
+          })
+
+          expect(response).toEqual({
+            Resources: expect.arrayContaining(
+              groups.map(g => {
+                const { members, displayName, ...groupData } = g
+                return groupData
+              })
+            ),
+            itemsPerPage: 25,
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+            startIndex: 1,
+            totalResults: groupCount,
+          })
+        })
       })
     })
 
@@ -622,6 +714,16 @@ describe("scim", () => {
           message: "missing",
           status: 404,
         })
+      })
+
+      it("should allow excluding members", async () => {
+        const response = await findScimGroup(group.id, {
+          qs: "excludedAttributes=members",
+        })
+
+        const { members, ...expectedResponse } = group
+
+        expect(response).toEqual(expectedResponse)
       })
     })
 
