@@ -15,12 +15,12 @@
   }
 
   const goToBuilder = () => {
-    // if (app.lockedOther) {
-    //   notifications.error(
-    //     `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
-    //   )
-    //   return
-    // }
+    if (app.lockedOther) {
+      notifications.error(
+        `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
+      )
+      return
+    }
     $goto(`../../app/${app.devId}`)
   }
 

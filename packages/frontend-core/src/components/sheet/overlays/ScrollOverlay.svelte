@@ -5,7 +5,6 @@
 
   const {
     scroll,
-    rowHeight,
     contentHeight,
     maxScrollTop,
     contentWidth,

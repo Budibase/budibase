@@ -104,7 +104,6 @@
   }
 
   onMount(async () => {
-    return
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)

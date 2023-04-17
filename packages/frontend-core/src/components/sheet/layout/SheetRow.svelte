@@ -29,7 +29,7 @@
   on:mouseenter={() => ($hoveredRowId = row._id)}
   on:mouseleave={() => ($hoveredRowId = null)}
 >
-  {#each $renderedColumns as column, idx (column.name)}
+  {#each $renderedColumns as column, columnIdx (column.name)}
     {@const cellId = `${row._id}-${column.name}`}
     <DataCell
       {cellId}
@@ -37,7 +37,7 @@
       {row}
       {invertY}
       {rowFocused}
-      invertX={idx >= $columnHorizontalInversionIndex}
+      invertX={columnIdx >= $columnHorizontalInversionIndex}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
       selected={rowSelected}
       rowIdx={idx}

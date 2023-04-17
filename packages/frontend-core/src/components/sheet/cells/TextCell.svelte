@@ -64,9 +64,6 @@
     align-items: flex-start;
     overflow: hidden;
   }
-  .text-cell.editable:hover {
-    cursor: text;
-  }
   .text-cell.number {
     justify-content: flex-end;
   }
