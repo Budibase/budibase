@@ -41,7 +41,7 @@ This setup process was tested on Debian 11 (bullseye) with version numbers show 
 
 - Docker: 20.10.5
 - Docker-Compose: 1.29.2
-- Node: v14.21.3
+- Node: v14.20.1
 - Yarn: 1.22.19
 - Lerna: 5.1.4
 

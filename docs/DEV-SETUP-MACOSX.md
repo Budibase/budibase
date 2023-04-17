@@ -41,7 +41,7 @@ This setup process was tested on Mac OSX 12 (Monterey) with version numbers show
 
 - Docker: 20.10.14
 - Docker-Compose: 2.6.0
-- Node: 14.21.3
+- Node: 14.20.1
 - Yarn: 1.22.19
 - Lerna: 5.1.4
 
