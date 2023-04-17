@@ -45,10 +45,11 @@
       onChange(option === value ? null : option)
       close()
     } else {
-      if (values.includes(option)) {
-        onChange(values.filter(x => x !== option))
+      const sanitizedValues = values.filter(x => options.includes(x))
+      if (sanitizedValues.includes(option)) {
+        onChange(sanitizedValues.filter(x => x !== option))
       } else {
-        onChange([...values, option])
+        onChange([...sanitizedValues, option])
       }
     }
   }
