@@ -220,6 +220,13 @@
     justify-content: center;
     align-items: center;
   }
+  .checkbox :global(.spectrum-Checkbox) {
+    min-height: 0;
+    height: 20px;
+  }
+  .checkbox :global(.spectrum-Checkbox-box) {
+    margin: 3px 0 0 0;
+  }
   .number {
     color: var(--spectrum-global-color-gray-500);
   }

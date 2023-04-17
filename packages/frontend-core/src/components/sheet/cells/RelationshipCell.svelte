@@ -142,7 +142,7 @@
       if (candidateIndex == null) {
         candidateIndex = 0
       } else {
-        candidateIndex = Math.min(results.length - 1, candidateIndex + 1)
+        candidateIndex = Math.min(searchResults.length - 1, candidateIndex + 1)
       }
     } else if (e.key === "ArrowUp") {
       // Select previous result on up array
@@ -154,8 +154,8 @@
       }
     } else if (e.key === "Enter") {
       // Toggle the highlighted result on enter press
-      if (candidateIndex != null && results[candidateIndex] != null) {
-        toggleRow(results[candidateIndex])
+      if (candidateIndex != null && searchResults[candidateIndex] != null) {
+        toggleRow(searchResults[candidateIndex])
       }
     }
     return true
@@ -289,7 +289,7 @@
     min-height: var(--row-height);
     max-height: var(--row-height);
     overflow: hidden;
-    --max-relationship-height: 92px;
+    --max-relationship-height: 120px;
   }
   .wrapper.focused {
     position: absolute;
