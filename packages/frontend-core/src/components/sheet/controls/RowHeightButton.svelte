@@ -1,20 +1,21 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Popover } from "@budibase/bbui"
+  import { DefaultRowHeight } from "../lib/constants"
 
   const { rowHeight, loaded } = getContext("sheet")
   const sizeOptions = [
     {
       label: "Small",
-      size: 36,
+      size: DefaultRowHeight,
     },
     {
       label: "Medium",
-      size: 54,
+      size: 65,
     },
     {
       label: "Large",
-      size: 72,
+      size: 94,
     },
   ]
 

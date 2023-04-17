@@ -1,6 +1,16 @@
 import { derived, get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { GutterWidth, DefaultColumnWidth } from "../lib/constants"
+import {
+  GutterWidth,
+  DefaultColumnWidth,
+  DefaultRelationshipColumnWidth,
+} from "../lib/constants"
+
+export const getDefaultColumnWidth = column => {
+  return column?.schema?.type === "link"
+    ? DefaultRelationshipColumnWidth
+    : DefaultColumnWidth
+}
 
 export const createStores = () => {
   const columns = writable([])
@@ -76,10 +86,12 @@ export const deriveStores = context => {
       // Copy over metadata
       if (column === $stickyColumn?.name) {
         newSchema[column].visible = true
-        newSchema[column].width = $stickyColumn.width || DefaultColumnWidth
+        newSchema[column].width =
+          $stickyColumn.width || getDefaultColumnWidth($stickyColumn)
       } else {
         newSchema[column].visible = $columns[index]?.visible ?? true
-        newSchema[column].width = $columns[index]?.width || DefaultColumnWidth
+        newSchema[column].width =
+          $columns[index]?.width || getDefaultColumnWidth($columns[index])
       }
     })
 
@@ -143,7 +155,9 @@ export const initialise = context => {
         .map(field => ({
           name: field,
           schema: schema[field],
-          width: schema[field].width || DefaultColumnWidth,
+          width:
+            schema[field].width ||
+            getDefaultColumnWidth({ schema: schema[field].type }),
           visible: schema[field].visible ?? true,
           order: schema[field].order,
         }))
@@ -181,9 +195,12 @@ export const initialise = context => {
     if (!existing && currentStickyColumn?.name === primaryDisplay) {
       existing = currentStickyColumn
     }
+    const defaultWidth = getDefaultColumnWidth({
+      schema: schema[primaryDisplay],
+    })
     stickyColumn.set({
       name: primaryDisplay,
-      width: schema[primaryDisplay].width || DefaultColumnWidth,
+      width: schema[primaryDisplay].width || defaultWidth,
       left: GutterWidth,
       schema: schema[primaryDisplay],
       idx: "sticky",
