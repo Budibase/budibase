@@ -62,7 +62,8 @@
   context = attachStores(context)
 
   // Reference some stores for local use
-  const { isResizing, isReordering, ui, loaded, rowHeight } = context
+  const { isResizing, isReordering, ui, loaded, rowHeight, contentLines } =
+    context
 
   // Keep stores up to date
   $: tableIdStore.set(tableId)
@@ -90,7 +91,7 @@
   id="sheet-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px;"
+  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
 >
   <div class="controls">
     <div class="controls-left">
@@ -145,7 +146,7 @@
     /* Variables */
     --cell-background: var(--spectrum-global-color-gray-50);
     --cell-background-hover: var(--spectrum-global-color-gray-100);
-    --cell-padding: 10px;
+    --cell-padding: 8px;
     --cell-spacing: 4px;
     --cell-border: 1px solid var(--spectrum-global-color-gray-200);
     --cell-font-size: 14px;

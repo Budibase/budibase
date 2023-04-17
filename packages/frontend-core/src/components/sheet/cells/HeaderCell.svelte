@@ -111,6 +111,7 @@
     width={column.width}
     left={column.left}
     defaultHeight
+    center
   >
     <Icon
       size="S"

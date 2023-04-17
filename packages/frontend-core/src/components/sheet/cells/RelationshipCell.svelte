@@ -289,7 +289,7 @@
     min-height: var(--row-height);
     max-height: var(--row-height);
     overflow: hidden;
-    --max-relationship-height: 94px;
+    --max-relationship-height: 92px;
   }
   .wrapper.focused {
     position: absolute;
@@ -330,15 +330,15 @@
     justify-content: flex-start;
     align-items: flex-start;
     flex: 1 1 auto;
-    gap: var(--cell-spacing);
-    grid-row-gap: 7px;
+    grid-column-gap: var(--cell-spacing);
+    grid-row-gap: var(--cell-padding);
     overflow: hidden;
-    padding: 7px var(--cell-padding);
+    padding: var(--cell-padding);
     flex-wrap: wrap;
   }
   .badge {
     flex: 0 0 auto;
-    padding: 2px var(--cell-padding);
+    padding: 0 var(--cell-padding);
     background: var(--color);
     border-radius: var(--cell-padding);
     user-select: none;
@@ -348,6 +348,7 @@
     display: flex;
     align-items: center;
     gap: var(--cell-spacing);
+    height: 20px;
   }
   .focused .badge span:hover {
     cursor: pointer;
@@ -368,8 +369,7 @@
     position: absolute;
     top: 100%;
     left: 0;
-    min-width: 100%;
-    max-width: calc(100% + var(--max-cell-render-width-overflow));
+    width: 100%;
     height: calc(
       var(--max-cell-render-height) + var(--row-height) -
         var(--max-relationship-height)
