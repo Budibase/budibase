@@ -20,7 +20,7 @@ export default class DocumentUpdateProcessor implements EventProcessor {
     properties: any,
     timestamp?: string | number
   ) {
-    const tenantId = identity.tenantId
+    const tenantId = identity.realTenantId
     const docId = getDocumentId(event, properties)
     if (!tenantId || !docId) {
       return
