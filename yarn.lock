@@ -1486,15 +1486,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.5.5-alpha.1":
-  version "2.5.5-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.5-alpha.1.tgz#6d9476ce724bd3e405cb2e0198c4b83b168e65bc"
-  integrity sha512-fEuropk/0aH1+lELX6wdFa8UUpE+SMtlvBbsgNR2ulvLgLLPEYhI2gINlhiItMWWgTtxNtele3hOs1VWhn0o2A==
+"@budibase/pro@2.5.5-alpha.2":
+  version "2.5.5-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.5-alpha.2.tgz#dd3ec237997f1be5064ab931569c3621b7836b8b"
+  integrity sha512-pXB2BTA0/uXkZ3aCHjF06u/kxSx/mZ55T06nUAQR+64eXJ1D2BRKAqrkqjBnzXne9RGV/qEJtCu+xp8wNXII5A==
   dependencies:
-    "@budibase/backend-core" "2.5.5-alpha.1"
+    "@budibase/backend-core" "2.5.5-alpha.2"
     "@budibase/shared-core" "2.4.44-alpha.1"
     "@budibase/string-templates" "2.4.44-alpha.1"
-    "@budibase/types" "2.5.5-alpha.1"
+    "@budibase/types" "2.5.5-alpha.2"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -24705,8 +24705,3 @@ z-schema@^5.0.1:
     validator "^13.7.0"
   optionalDependencies:
     commander "^10.0.0"
-
-zlib@1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/zlib/-/zlib-1.0.5.tgz#6e7c972fc371c645a6afb03ab14769def114fcc0"
-  integrity sha512-40fpE2II+Cd3k8HWTWONfeKE2jL+P42iWJ1zzps5W51qcTsOUKM5Q5m2PFb0CLxlmFAaUuUdJGc3OfZy947v0w==
