@@ -13,17 +13,16 @@ export const publishEvent = async (
   const identity = await identification.getCurrentIdentity()
 
   const backfilling = await backfill.isBackfillingEvent(event)
-
-  // send off async events if required
-  await publishAsyncEvent({
-    event,
-    identity,
-    properties,
-    timestamp,
-  })
-
   // no backfill - send the event and exit
   if (!backfilling) {
+    // send off async events if required
+    await publishAsyncEvent({
+      event,
+      identity,
+      properties,
+      timestamp,
+    })
+    // now handle the main sync event processing pipeline
     await processors.processEvent(event, identity, properties, timestamp)
     return
   }

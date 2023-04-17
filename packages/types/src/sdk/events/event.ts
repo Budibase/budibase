@@ -1,4 +1,5 @@
 import { Hosting } from "../hosting"
+import { Group, Identity } from "./identification"
 
 export enum Event {
   // USER
@@ -186,7 +187,7 @@ export enum Event {
   AUDIT_LOGS_DOWNLOADED = "audit_log:downloaded",
 }
 
-export const AsyncEvents: Event[] = [
+export const UserGroupSyncEvents: Event[] = [
   Event.USER_CREATED,
   Event.USER_UPDATED,
   Event.USER_DELETED,
@@ -201,6 +202,8 @@ export const AsyncEvents: Event[] = [
   Event.USER_GROUP_USERS_REMOVED,
   Event.USER_GROUP_PERMISSIONS_EDITED,
 ]
+
+export const AsyncEvents: Event[] = [...UserGroupSyncEvents]
 
 // all events that are not audited have been added to this record as undefined, this means
 // that Typescript can protect us against new events being added and auditing of those
@@ -404,4 +407,16 @@ export type DocUpdateEvent = {
   id: string
   tenantId: string
   appId?: string
+}
+
+export interface EventProcessor {
+  processEvent(
+    event: Event,
+    identity: Identity,
+    properties: any,
+    timestamp?: string | number
+  ): Promise<void>
+  identify?(identity: Identity, timestamp?: string | number): Promise<void>
+  identifyGroup?(group: Group, timestamp?: string | number): Promise<void>
+  shutdown?(): void
 }
