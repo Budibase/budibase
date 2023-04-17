@@ -83,11 +83,6 @@
     "submodules:load": "git submodule init && git submodule update && yarn && yarn bootstrap",
     "submodules:unload": "git submodule deinit --all"
   },
-  "husky": {
-    "hooks": {
-      "post-checkout": "git config submodule.recurse true"
-    }
-  },
   "workspaces": {
     "packages": [
       "packages/backend-core",
