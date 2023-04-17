@@ -97,6 +97,7 @@ jobs:
         run: |
           cd packages/pro
           echo ${{ github.head_ref }}
+          echo $github.head_ref
           if ! git branch --contains ${{ github.head_ref }} | grep -q chore/pro_as_submodule; then
             echo "Current commit is not part of main branch"
             exit 1
