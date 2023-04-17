@@ -86,9 +86,7 @@
   let user
   let loaded = false
 
-  let scimEnabled = false
   $: scimEnabled = $features.isScimEnabled
-
   $: isSSO = !!user?.provider
   $: readonly = !$auth.isAdmin || scimEnabled
   $: privileged = user?.admin?.global || user?.builder?.global
