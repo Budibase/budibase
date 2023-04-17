@@ -1,0 +1,5 @@
+{
+  "hooks": {
+    "post-checkout": "git config submodule.recurse true"
+  }
+}
