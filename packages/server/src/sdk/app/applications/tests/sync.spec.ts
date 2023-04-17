@@ -20,6 +20,8 @@ function updateCb(docId: string) {
   }
 }
 
+init(updateCb)
+
 function waitForUpdate(opts: { group?: boolean }) {
   return new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -35,7 +37,6 @@ function waitForUpdate(opts: { group?: boolean }) {
 
 beforeAll(async () => {
   app = await config.init("syncApp")
-  init(updateCb)
 })
 
 async function createUser(email: string, roles: UserRoles, builder?: boolean) {
