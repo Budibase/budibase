@@ -1,6 +1,6 @@
 import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
-import { SheetPadding, GutterWidth } from "../lib/constants"
+import { SheetPadding, GutterWidth, DefaultRowHeight } from "../lib/constants"
 
 export const createStores = () => {
   const scroll = writable({
@@ -138,7 +138,7 @@ export const initialise = context => {
     const $scroll = get(scroll)
     const $bounds = get(bounds)
     const $rowHeight = get(rowHeight)
-    const verticalOffset = $rowHeight * 1.5
+    const verticalOffset = DefaultRowHeight * 1.5
 
     // Ensure vertical position is viewable
     if ($focusedRow) {

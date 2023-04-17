@@ -356,7 +356,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .focused .badge span:hover {
+  .focused .values .badge span:hover {
     cursor: pointer;
     text-decoration: underline;
   }
