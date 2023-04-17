@@ -3,7 +3,7 @@ USE main;
 CREATE TABLE Persons (
     PersonID int NOT NULL AUTO_INCREMENT,
     CreatedAt datetime,
-    Age float,
+    Age float DEFAULT 20 NOT NULL,
     LastName varchar(255),
     FirstName varchar(255),
     Address varchar(255),
