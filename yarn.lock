@@ -1485,15 +1485,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.4.44-alpha.22":
-  version "2.4.44-alpha.22"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.4.44-alpha.22.tgz#5709ae5261b95cc0e53a19905a62bce6bdb6d54a"
-  integrity sha512-DWRufe9tROX/bNqWo2wJ/G5g6zdph1y3wmK1C6p7eVNvuNBgddQojsr2hPHqKxaBo1XbnLvRJeyfja0sAmNrKA==
+"@budibase/pro@2.5.6-alpha.2":
+  version "2.5.6-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.6-alpha.2.tgz#9029a9748a1beb5733bb76326d9c9bebf4e5f326"
+  integrity sha512-55psh21TQmbPIV+7SZhNT3uogUsKhRmSrk2L6iQB31Tbywu8JDuXpbjaf8Zyi15QiZLslV+1Od47b9YfX97adg==
   dependencies:
-    "@budibase/backend-core" "2.4.44-alpha.22"
+    "@budibase/backend-core" "2.5.6-alpha.2"
     "@budibase/shared-core" "2.4.44-alpha.1"
     "@budibase/string-templates" "2.4.44-alpha.1"
-    "@budibase/types" "2.4.44-alpha.22"
+    "@budibase/types" "2.5.6-alpha.2"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -24261,6 +24261,14 @@ vm2@3.9.16:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"
 
+vm2@^3.9.15:
+  version "3.9.17"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.17.tgz#251b165ff8a0e034942b5181057305e39570aeab"
+  integrity sha512-AqwtCnZ/ERcX+AVj9vUsphY56YANXxRuqMb7GsDtAr0m0PcQX3u0Aj3KWiXM0YAHy7i6JEeHrwOnwXbGYgRpAw==
+  dependencies:
+    acorn "^8.7.0"
+    acorn-walk "^8.2.0"
+
 vm2@^3.9.4, vm2@^3.9.8:
   version "3.9.14"
   resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.14.tgz#964042b474cf1e6e4f475a39144773cdb9deb734"
@@ -25064,8 +25072,3 @@ z-schema@^5.0.1:
     validator "^13.7.0"
   optionalDependencies:
     commander "^9.4.1"
-
-zlib@1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/zlib/-/zlib-1.0.5.tgz#6e7c972fc371c645a6afb03ab14769def114fcc0"
-  integrity sha512-40fpE2II+Cd3k8HWTWONfeKE2jL+P42iWJ1zzps5W51qcTsOUKM5Q5m2PFb0CLxlmFAaUuUdJGc3OfZy947v0w==
