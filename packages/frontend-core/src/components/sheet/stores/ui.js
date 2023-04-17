@@ -1,8 +1,8 @@
 import { writable, get, derived } from "svelte/store"
 import {
+  DefaultRowHeight,
   LargeRowHeight,
   MediumRowHeight,
-  SmallRowHeight,
 } from "../lib/constants"
 
 export const createStores = () => {
@@ -10,7 +10,7 @@ export const createStores = () => {
   const focusedCellAPI = writable(null)
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
-  const rowHeight = writable(36)
+  const rowHeight = writable(DefaultRowHeight)
   const previousFocusedRowId = writable(null)
 
   // Derive the current focused row ID
@@ -96,6 +96,8 @@ export const initialise = context => {
     focusedCellId,
     selectedRows,
     hoveredRowId,
+    table,
+    rowHeight,
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
@@ -157,5 +159,10 @@ export const initialise = context => {
     if (cell && get(hoveredRowId)) {
       hoveredRowId.set(null)
     }
+  })
+
+  // Pull row height from table
+  table.subscribe($table => {
+    rowHeight.set($table?.rowHeight || DefaultRowHeight)
   })
 }

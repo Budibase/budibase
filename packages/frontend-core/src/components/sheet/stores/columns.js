@@ -103,6 +103,7 @@ export const deriveStores = context => {
       ...columns,
       actions: {
         saveChanges,
+        saveTable,
         changePrimaryDisplay,
       },
     },
