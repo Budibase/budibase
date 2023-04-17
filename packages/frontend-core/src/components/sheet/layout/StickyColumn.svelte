@@ -173,7 +173,7 @@
   .sticky-column.scrolled:after {
     position: absolute;
     content: "";
-    width: 16px;
+    width: 8px;
     height: 100%;
     left: 100%;
     top: 0;
