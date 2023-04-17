@@ -102,7 +102,16 @@ jobs:
             echo "Current commit is not part of main branch" >&2
             exit 1
           fi
-      - name: Check submodule working
+
+  check-pro-submodule-working:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - name: Check submodule
         run: |
           cd packages/pro
           git fetch
@@ -112,7 +121,15 @@ jobs:
             exit 1
           fi
 
-      - name: Check submodule failing
+  check-pro-submodule-failing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - name: Check submodule
         run: |
           cd packages/pro
           git fetch
