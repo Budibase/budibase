@@ -40,6 +40,11 @@
         return
       }
     }
+
+    // Avoid processing events sourced from modals
+    if (e.target?.closest?.(".spectrum-Modal")) {
+      return
+    }
     e.preventDefault()
 
     // Handle the key ourselves
