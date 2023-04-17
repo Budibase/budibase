@@ -20,6 +20,14 @@
     ui,
     columns,
   } = getContext("sheet")
+  const bannedDisplayColumnTypes = [
+    "link",
+    "array",
+    "attachment",
+    "boolean",
+    "formula",
+    "json",
+  ]
 
   let anchor
   let open = false
@@ -151,7 +159,9 @@
     <MenuItem
       icon="Label"
       on:click={makeDisplayColumn}
-      disabled={column.idx === "sticky" || !$config.allowEditColumns}
+      disabled={column.idx === "sticky" ||
+        !$config.allowEditColumns ||
+        bannedDisplayColumnTypes.includes(column.schema.type)}
     >
       Use as display column
     </MenuItem>
