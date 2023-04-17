@@ -183,9 +183,6 @@
     width: 100%;
     transition: margin-bottom 130ms ease-out;
   }
-  .new-row.visible {
-    margin-bottom: 0;
-  }
   .new-row :global(.cell) {
     --cell-background: var(--background) !important;
     border-bottom: none;

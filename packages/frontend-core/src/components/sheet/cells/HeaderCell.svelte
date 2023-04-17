@@ -80,16 +80,6 @@
     open = false
   }
 
-  const moveStart = () => {
-    reorder.actions.moveColumnToStart(column.name)
-    open = false
-  }
-
-  const moveEnd = () => {
-    reorder.actions.moveColumnToEnd(column.name)
-    open = false
-  }
-
   const makeDisplayColumn = () => {
     columns.actions.changePrimaryDisplay(column.name)
     open = false
