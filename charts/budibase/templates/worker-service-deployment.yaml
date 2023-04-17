@@ -188,8 +188,7 @@ spec:
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
-
-        image: budibase/worker:{{ .Values.globals.appVersion }}
+        image: budibase/worker:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         livenessProbe:
           httpGet:

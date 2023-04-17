@@ -1,5 +1,6 @@
 import * as plugins from "../plugins"
-import { structures, testEnv } from "../../../../tests"
+import { structures } from "../../../../tests"
+import { testEnv } from "../../../../tests/extra"
 
 describe("plugins", () => {
   describe("enrichPluginURLs", () => {
