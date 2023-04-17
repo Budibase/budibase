@@ -363,7 +363,7 @@
 
   .add {
     background: var(--spectrum-global-color-gray-200);
-    padding: 3px 4px;
+    padding: 2px;
     border-radius: 4px;
   }
   .add:hover {
