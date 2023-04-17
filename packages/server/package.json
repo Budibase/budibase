@@ -118,8 +118,7 @@
     "vm2": "3.9.16",
     "worker-farm": "1.7.0",
     "xml2js": "0.5.0",
-    "yargs": "13.2.4",
-    "zlib": "1.0.5"
+    "yargs": "13.2.4"
   },
   "devDependencies": {
     "@babel/core": "7.17.4",
