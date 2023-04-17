@@ -12,6 +12,7 @@
     config,
     copiedCell,
     clipboard,
+    dispatch,
   } = getContext("sheet")
 
   $: style = makeStyle($menu)
@@ -55,11 +56,12 @@
         Paste
       </MenuItem>
       <MenuItem
-        icon="Delete"
-        disabled={!$config.allowDeleteRows}
-        on:click={deleteRow}
+        icon="Maximize"
+        disabled={!$config.allowEditRows}
+        on:click={() => dispatch("edit-row", $focusedRow)}
+        on:click={menu.actions.close}
       >
-        Delete row
+        Edit row in modal
       </MenuItem>
       <MenuItem
         icon="Duplicate"
@@ -67,6 +69,13 @@
         on:click={duplicate}
       >
         Duplicate row
+      </MenuItem>
+      <MenuItem
+        icon="Delete"
+        disabled={!$config.allowDeleteRows}
+        on:click={deleteRow}
+      >
+        Delete row
       </MenuItem>
     </Menu>
   </div>
