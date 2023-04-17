@@ -84,3 +84,16 @@ jobs:
         env:
           BB_ADMIN_USER_EMAIL: admin
           BB_ADMIN_USER_PASSWORD: admin
+
+  check-pro-submodule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+      - name: Check submodule
+        run: |
+          cd packages/pro
+          git fetch
+          git merge-base --is-ancestor HEAD develop
