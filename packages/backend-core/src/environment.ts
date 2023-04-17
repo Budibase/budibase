@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "fs"
+
 function isTest() {
   return isCypress() || isJest()
 }
@@ -46,7 +48,32 @@ function httpLogging() {
 }
 
 function findVersion() {
-  return "0.0.1"
+  function findFileInAncestors(
+    fileName: string,
+    currentDir: string
+  ): string | null {
+    const filePath = `${currentDir}/${fileName}`
+    if (existsSync(filePath)) {
+      return filePath
+    }
+
+    const parentDir = `${currentDir}/..`
+    if (parentDir === currentDir) {
+      // reached root directory
+      return null
+    }
+
+    return findFileInAncestors(fileName, parentDir)
+  }
+
+  try {
+    const packageJsonFile = findFileInAncestors("package.json", process.cwd())
+    const content = readFileSync(packageJsonFile!, "utf-8")
+    const version = JSON.parse(content).version
+    return version
+  } catch {
+    throw new Error("Cannot find a valid version in its package.json")
+  }
 }
 
 const environment = {
