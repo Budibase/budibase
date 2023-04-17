@@ -83,7 +83,7 @@
     -webkit-line-clamp: var(--content-lines);
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 19px;
+    line-height: 20px;
   }
   textarea {
     padding: var(--cell-padding);
@@ -101,7 +101,7 @@
     z-index: 1;
     border-radius: 2px;
     resize: none;
-    line-height: 19px;
+    line-height: 20px;
   }
   textarea.invertX {
     left: auto;

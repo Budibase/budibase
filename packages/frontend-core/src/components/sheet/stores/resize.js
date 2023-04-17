@@ -1,6 +1,5 @@
 import { writable, get, derived } from "svelte/store"
-import { getDefaultColumnWidth } from "./columns"
-import { MinColumnWidth } from "../lib/constants"
+import { MinColumnWidth, DefaultColumnWidth } from "../lib/constants"
 
 const initialState = {
   initialMouseX: null,
@@ -98,16 +97,15 @@ export const deriveStores = context => {
   // Resets a column size back to default
   const resetSize = async column => {
     const $stickyColumn = get(stickyColumn)
-    const width = getDefaultColumnWidth(column)
     if (column.name === $stickyColumn?.name) {
       stickyColumn.update(state => ({
         ...state,
-        width,
+        width: DefaultColumnWidth,
       }))
     } else {
       columns.update(state => {
         const columnIdx = state.findIndex(x => x.name === column.name)
-        state[columnIdx].width = width
+        state[columnIdx].width = DefaultColumnWidth
         return [...state]
       })
     }

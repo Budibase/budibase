@@ -48,7 +48,7 @@
 
 <style>
   .container {
-    padding: 0 var(--cell-padding);
+    padding: var(--cell-padding);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -62,6 +62,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    line-height: 20px;
   }
   .picker {
     position: absolute;
