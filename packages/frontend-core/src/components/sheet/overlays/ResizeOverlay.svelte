@@ -50,7 +50,7 @@
   .resize-slider {
     position: absolute;
     top: 0;
-    height: var(--row-height);
+    height: var(--default-row-height);
     opacity: 0;
     padding: 0 8px;
     transform: translateX(-50%);
