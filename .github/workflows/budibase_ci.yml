@@ -93,12 +93,12 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          fetch-depth: 0
+          fetch-depth: 2
       - name: Check submodule
         run: |
           cd packages/pro
           git fetch
-          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/develop; then
+          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/chore/pro_as_submodule; then
             echo "Current commit has not been merged to develop"
             exit 1
           else
