@@ -1,6 +1,5 @@
 import { PermissionLevel } from "../permissions"
 import * as roles from "../roles"
-
 describe("Role", () => {
   describe("constructor", () => {
     it("it should initialize _id, name, and permissionId", () => {
@@ -135,6 +134,26 @@ describe("Role", () => {
       const roleId4 = "BASIC"
       const result2 = roles.lowerBuiltinRoleID(roleId3, roleId4)
       expect(result2).toBe(roleId3)
+    })
+  })
+
+  describe("getRole", () => {
+    test("returns undefined if roleId is undefined", async () => {
+      const result = await roles.getRole(undefined)
+      expect(result).toBeUndefined()
+    })
+
+    test("retrieves a built-in role if isBuiltin(roleId) is true", async () => {
+      const roleId = "BASIC"
+      const mockBuiltInRole = {
+        _id: roleId,
+        name: "Basic",
+        inherits: "PUBLIC",
+        permissionId: "write",
+        permissions: {},
+      }
+      const result = await roles.getRole(roleId)
+      expect(result).toEqual(mockBuiltInRole)
     })
   })
 })
