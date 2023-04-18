@@ -4,7 +4,7 @@
 
 <div class="beta-background" />
 <div class="beta">
-  Enjoying the spreadsheet?
+  Enjoying the grid?
   <Button size="M" cta>Give Feedback</Button>
 </div>
 
@@ -26,11 +26,11 @@
     z-index: 0;
     pointer-events: none;
     position: absolute;
-    bottom: -205px;
+    bottom: -230px;
     right: -105px;
     width: 1400px;
     height: 320px;
-    transform: rotate(-20deg);
+    transform: rotate(-22deg);
     background: linear-gradient(
       to top,
       var(--cell-background) 20%,
