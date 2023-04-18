@@ -1,7 +1,7 @@
-const { duplicateName } = require("../duplicate")
+import { expect, describe, it } from 'vitest'
+import { duplicateName } from '../duplicate'
 
 describe("duplicate", () => {
-  
   describe("duplicates a name ", () => {
     it("with a single existing", async () => {
       const names = ["foo"]

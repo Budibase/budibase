@@ -1,3 +1,4 @@
+import { expect, describe, it } from 'vitest'
 import { breakQueryString, buildQueryString } from "../data/utils"
 
 describe("check query string utils", () => {
