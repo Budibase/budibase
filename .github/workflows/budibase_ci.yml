@@ -96,11 +96,12 @@ jobs:
       - name: Check submodule
         run: |
           cd packages/pro
-          echo $(git branch -r)
+          echo $(git ls-remote --heads)
           git fetch --all
           echo $(git branch -r)
+          echo $(git ls-remote --heads)
           echo $(git log -n 1 --pretty=format:%H)
-          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/chore/pro_as_submodule; then
+          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) refs/heads/chore/pro_as_submodule; then
             echo "Current commit has not been merged to develop"
             exit 1
           else
