@@ -14,6 +14,8 @@
   import { get } from "svelte/store"
   import { onMount } from "svelte"
 
+  import { _ } from "../../../../lang/i18n"
+
   let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""
   $: multiTenancyEnabled = $admin.multiTenancy
   $: cloud = $admin.cloud
@@ -30,7 +32,9 @@
       await admin.init()
       $goto("../")
     } catch (error) {
-      notifications.error("Error setting organisation")
+      notifications.error(
+        $_("pages.builder.auth.org.notificationsErrorOrganization")
+      )
     }
   }
 
@@ -54,15 +58,22 @@
     <Layout>
       <Layout noPadding justifyItems="center">
         <img alt="logo" src={Logo} />
-        <Heading>Set Budibase organisation</Heading>
+        <Heading>{$_("pages.builder.auth.org.heading")}</Heading>
       </Layout>
       <Divider noGrid />
       <Layout gap="XS" noPadding>
-        <Body size="S" textAlign="center">Set organisation</Body>
-        <Input label="Organisation" bind:value={tenantId} />
+        <Body size="S" textAlign="center"
+          >{$_("pages.builder.auth.org.body")}</Body
+        >
+        <Input
+          label={$_("pages.builder.auth.org.label")}
+          bind:value={tenantId}
+        />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Button cta on:click={setOrg}>Set organisation</Button>
+        <Button cta on:click={setOrg}
+          >{$_("pages.builder.auth.org.button")}</Button
+        >
       </Layout>
     </Layout>
   </div>

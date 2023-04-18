@@ -4,6 +4,8 @@
   import { onMount } from "svelte"
   import { notifications } from "@budibase/bbui"
 
+  import { _ } from "../../../../lang/i18n"
+
   $: tenantSet = $auth.tenantSet
   $: multiTenancyEnabled = $admin.multiTenancy
 
@@ -22,7 +24,7 @@
       await admin.init()
       await auth.checkQueryString()
     } catch (error) {
-      notifications.error("Error getting checklist")
+      notifications.error($_("pages.builder.auth.index.notificationsError"))
     }
     loaded = true
   })

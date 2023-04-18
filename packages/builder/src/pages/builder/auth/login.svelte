@@ -19,6 +19,9 @@
   import { FancyForm, FancyInput } from "@budibase/bbui"
   import { onMount } from "svelte"
 
+  import { _, setupI18n, locale } from "../../../../lang/i18n"
+  import LocaleSelector from "../../../../src/components/LocaleSelector.svelte"
+
   let loaded = false
   let form
   let errors = {}
@@ -41,11 +44,17 @@
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
       } else {
-        notifications.success("Logged in successfully")
+        notifications.success(
+          $_("pages.builder.auth.login.notificationsSuccess")
+        )
         $goto("../portal")
       }
     } catch (err) {
-      notifications.error(err.message ? err.message : "Invalid credentials")
+      notifications.error(
+        err.message
+          ? err.message
+          : $_("pages.builder.auth.login.notificationsErrorInvalid")
+      )
     }
   }
 
@@ -57,7 +66,7 @@
     try {
       await organisation.init()
     } catch (error) {
-      notifications.error("Error getting org config")
+      notifications.error($_("pages.builder.auth.login.notificationsErrorOrg"))
     }
     loaded = true
   })
@@ -72,8 +81,13 @@
           <img alt="logo" src={$organisation.logoUrl || Logo} />
         {/if}
         <Heading size="M">
-          {$organisation.loginHeading || "Log in to Budibase"}
+          {$organisation.loginHeading ||
+            $_("pages.builder.auth.login.TestimonialPage.heading")}
         </Heading>
+        <LocaleSelector
+          value={$locale}
+          on:locale-changed={e => setupI18n({ withLocale: e.detail })}
+        />
       </Layout>
       <Layout gap="S" noPadding>
         {#if loaded && ($organisation.google || $organisation.oidc)}
@@ -86,7 +100,7 @@
           <Divider />
           <FancyForm bind:this={form}>
             <FancyInput
-              label="Your work email"
+              label={$_("pages.builder.auth.login.TestimonialPage.labelEmail")}
               value={formData.username}
               on:change={e => {
                 formData = {
@@ -97,7 +111,7 @@
               validate={() => {
                 let fieldError = {
                   username: !formData.username
-                    ? "Please enter a valid email"
+                    ? $_("pages.builder.auth.login.TestimonialPage.emailError")
                     : undefined,
                 }
                 errors = handleError({ ...errors, ...fieldError })
@@ -105,7 +119,9 @@
               error={errors.username}
             />
             <FancyInput
-              label="Password"
+              label={$_(
+                "pages.builder.auth.login.TestimonialPage.labelPassword"
+              )}
               value={formData.password}
               type="password"
               on:change={e => {
@@ -117,7 +133,9 @@
               validate={() => {
                 let fieldError = {
                   password: !formData.password
-                    ? "Please enter your password"
+                    ? $_(
+                        "pages.builder.auth.login.TestimonialPage.passwordError"
+                      )
                     : undefined,
                 }
                 errors = handleError({ ...errors, ...fieldError })
@@ -135,28 +153,32 @@
             disabled={Object.keys(errors).length > 0}
             on:click={login}
           >
-            {$organisation.loginButton || `Log in to ${company}`}
+            {$organisation.loginButton ||
+              `${$_(
+                "pages.builder.auth.login.TestimonialPage.login"
+              )} ${company}`}
           </Button>
         </Layout>
         <Layout gap="XS" noPadding justifyItems="center">
           <div class="user-actions">
             <ActionButton size="L" quiet on:click={() => $goto("./forgot")}>
-              Дибил?
+              {$_("pages.builder.auth.login.TestimonialPage.forgot")}
             </ActionButton>
           </div>
         </Layout>
       {/if}
+
       {#if cloud}
         <Body size="xs" textAlign="center">
-          By using Budibase Cloud
+          {$_("pages.builder.auth.login.TestimonialPage.LicenseAgreementPt1")}
           <br />
-          you are agreeing to our
+          {$_("pages.builder.auth.login.TestimonialPage.LicenseAgreementPt2")}
           <Link
             href="https://budibase.com/eula"
             target="_blank"
             secondary={true}
           >
-            License Agreement
+            {$_("pages.builder.auth.login.TestimonialPage.LicenseAgreementPt3")}
           </Link>
         </Body>
       {/if}

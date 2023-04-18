@@ -8,6 +8,8 @@
   import { onMount } from "svelte"
   import { handleError, passwordsMatch } from "./_components/utils"
 
+  import { _ } from "../../../../lang/i18n"
+
   const resetCode = $params["?code"]
   let form
   let formData = {}
@@ -32,13 +34,17 @@
         $goto("../portal/")
       } else {
         await auth.resetPassword(formData.password, resetCode)
-        notifications.success("Password reset successfully")
+        notifications.success(
+          $_("pages.builder.auth.reset.notificationsSuccess")
+        )
         // send them to login if reset successful
         $goto("./login")
       }
     } catch (err) {
       submitted = false
-      notifications.error("Unable to reset password")
+      notifications.error(
+        $_("pages.builder.auth.reset.notificationsErrorUnable")
+      )
     }
   }
 
@@ -47,7 +53,7 @@
       await auth.getSelf()
       await organisation.init()
     } catch (error) {
-      notifications.error("Error getting org config")
+      notifications.error($_("pages.builder.auth.reset.notificationsErrorOrg"))
     }
     loaded = true
   })
@@ -59,14 +65,17 @@
       <img alt="logo" src={$organisation.logoUrl || Logo} />
     {/if}
     <Layout gap="XS" noPadding>
-      <Heading size="M">Reset your password</Heading>
-      <Body size="M">Please enter the new password you'd like to use.</Body>
+      <Heading size="M"
+        >{$_("pages.builder.auth.reset.TestimonialPage.heading")}</Heading
+      >
+      <Body size="M">{$_("pages.builder.auth.reset.TestimonialPage.body")}</Body
+      >
     </Layout>
 
     <Layout gap="S" noPadding>
       <FancyForm bind:this={form}>
         <FancyInput
-          label="Password"
+          label={$_("pages.builder.auth.reset.TestimonialPage.labelPassword")}
           value={formData.password}
           type="password"
           on:change={e => {
@@ -79,7 +88,9 @@
             let fieldError = {}
 
             fieldError["password"] = !formData.password
-              ? "Please enter a password"
+              ? $_(
+                  "pages.builder.auth.reset.TestimonialPage.passwordErrorEnter"
+                )
               : undefined
 
             fieldError["confirmationPassword"] =
@@ -87,7 +98,9 @@
                 formData.password,
                 formData.confirmationPassword
               ) && formData.confirmationPassword
-                ? "Passwords must match"
+                ? $_(
+                    "pages.builder.auth.reset.TestimonialPage.passwordErrorMatch"
+                  )
                 : undefined
 
             errors = handleError({ ...errors, ...fieldError })
@@ -96,7 +109,7 @@
           disabled={submitted}
         />
         <FancyInput
-          label="Repeat Password"
+          label={$_("pages.builder.auth.reset.TestimonialPage.passwordRepeat")}
           value={formData.confirmationPassword}
           type="password"
           on:change={e => {
@@ -113,7 +126,11 @@
               ) && formData.password
 
             let fieldError = {
-              confirmationPassword: isValid ? "Passwords must match" : null,
+              confirmationPassword: isValid
+                ? $_(
+                    "pages.builder.auth.reset.TestimonialPage.passwordErrorMatch"
+                  )
+                : null,
             }
 
             errors = handleError({ ...errors, ...fieldError })
@@ -128,7 +145,8 @@
         disabled={Object.keys(errors).length > 0 ||
           (forceResetPassword ? false : !resetCode)}
         cta
-        on:click={reset}>Reset your password</Button
+        on:click={reset}
+        >{$_("pages.builder.auth.reset.TestimonialPage.heading")}</Button
       >
     </div>
   </Layout>

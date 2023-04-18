@@ -14,6 +14,8 @@
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { FancyForm, FancyInput } from "@budibase/bbui"
 
+  import { _ } from "../../../../lang/i18n"
+
   let email = ""
   let form
   let error
@@ -27,10 +29,14 @@
     submitted = true
     try {
       await auth.forgotPassword(email)
-      notifications.success("Email sent - please check your inbox")
+      notifications.success(
+        $_("pages.builder.auth.forgot.notificationsSuccess")
+      )
     } catch (err) {
       submitted = false
-      notifications.error("алё")
+      notifications.error(
+        $_("pages.builder.auth.forgot.notificationsErrorUnable")
+      )
     }
   }
 
@@ -38,7 +44,7 @@
     try {
       await organisation.init()
     } catch (error) {
-      notifications.error("Error getting org config")
+      notifications.error($_("pages.builder.auth.forgot.notificationsErrorOrg"))
     }
   })
 </script>
@@ -52,25 +58,27 @@
           <span class="back-chev" on:click={() => $goto("../")}>
             <Icon name="ChevronLeft" size="XL" />
           </span>
-          Forgot your password?
+          {$_("pages.builder.auth.forgot.TestimonialPage.heading")}
         </div>
       </Heading>
     </span>
     <Layout gap="XS" noPadding>
-      <Body size="M">Блин</Body>
+      <Body size="M">
+        {$_("pages.builder.auth.forgot.TestimonialPage.body")}
+      </Body>
     </Layout>
 
     <Layout gap="S" noPadding>
       <FancyForm bind:this={form}>
         <FancyInput
-          label="Email"
+          label={$_("pages.builder.auth.forgot.TestimonialPage.labelEmail")}
           value={email}
           on:change={e => {
             email = e.detail
           }}
           validate={() => {
             if (!email) {
-              return "Please enter your email"
+              return $_("pages.builder.auth.forgot.TestimonialPage.email")
             }
             return null
           }}
@@ -86,7 +94,7 @@
         cta
         on:click={forgot}
       >
-        Reset password
+        {$_("pages.builder.auth.forgot.TestimonialPage.button")}
       </Button>
     </div>
   </Layout>

@@ -9,6 +9,8 @@
   import { oidc, organisation, auth } from "stores/portal"
   import { onMount } from "svelte"
 
+  import { _ } from "../../../../../lang/i18n"
+
   $: show = $organisation.oidc
 
   let preDefinedIcons = {
@@ -23,7 +25,9 @@
     try {
       await oidc.init()
     } catch (error) {
-      notifications.error("Error getting OIDC config")
+      notifications.error(
+        $_("pages.builder.auth._components.OIDCButton.notificationsError")
+      )
     }
   })
 
@@ -41,6 +45,8 @@
         "_blank"
       )}
   >
-    {`Log in with ${$oidc.name || "OIDC"}`}
+    {`${$_("pages.builder.auth._components.OIDCButton.fancyButtonTxt")} ${
+      $oidc.name || "OIDC"
+    }`}
   </FancyButton>
 {/if}
