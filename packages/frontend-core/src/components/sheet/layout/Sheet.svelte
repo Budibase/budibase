@@ -29,8 +29,9 @@
   import RowHeightButton from "../controls/RowHeightButton.svelte"
   import { fade } from "svelte/transition"
 
-  export let API
-  export let tableId
+  export let API = null
+  export let tableId = null
+  export let schemaOverrides = null
   export let allowAddRows = true
   export let allowAddColumns = true
   export let allowEditColumns = true
@@ -43,6 +44,7 @@
 
   // State stores
   const tableIdStore = writable(tableId)
+  const schemaOverridesStore = writable(schemaOverrides)
   const config = writable({
     allowAddRows,
     allowAddColumns,
@@ -58,6 +60,7 @@
     rand,
     config,
     tableId: tableIdStore,
+    schemaOverrides: schemaOverridesStore,
   }
   context = { ...context, ...createEventManagers() }
   context = attachStores(context)
@@ -75,6 +78,7 @@
 
   // Keep stores up to date
   $: tableIdStore.set(tableId)
+  $: schemaOverridesStore.set(schemaOverrides)
   $: config.set({
     allowAddRows,
     allowAddColumns,

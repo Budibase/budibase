@@ -111,28 +111,45 @@ export const deriveStores = context => {
 }
 
 export const initialise = context => {
-  const { table, columns, stickyColumn } = context
+  const { table, columns, stickyColumn, schemaOverrides } = context
+
+  const schema = derived(
+    [table, schemaOverrides],
+    ([$table, $schemaOverrides]) => {
+      let newSchema = $table?.schema
+      if (!newSchema) {
+        return null
+      }
+      Object.keys($schemaOverrides || {}).forEach(field => {
+        if (newSchema[field]) {
+          newSchema[field] = {
+            ...newSchema[field],
+            ...$schemaOverrides[field],
+          }
+        }
+      })
+      return newSchema
+    }
+  )
 
   // Merge new schema fields with existing schema in order to preserve widths
-  table.subscribe($table => {
-    const schema = $table?.schema
-    if (!schema) {
+  schema.subscribe($schema => {
+    if (!$schema) {
       columns.set([])
       stickyColumn.set(null)
       return
     }
-    const currentColumns = get(columns)
-    const currentStickyColumn = get(stickyColumn)
+    const $table = get(table)
 
     // Find primary display
     let primaryDisplay
-    if ($table.primaryDisplay && schema[$table.primaryDisplay]) {
+    if ($table.primaryDisplay && $schema[$table.primaryDisplay]) {
       primaryDisplay = $table.primaryDisplay
     }
 
     // Get field list
     let fields = []
-    Object.keys(schema).forEach(field => {
+    Object.keys($schema).forEach(field => {
       if (field !== primaryDisplay) {
         fields.push(field)
       }
@@ -142,11 +159,12 @@ export const initialise = context => {
     columns.set(
       fields
         .map(field => ({
-          name: schema[field].name || field,
-          schema: schema[field],
-          width: schema[field].width || DefaultColumnWidth,
-          visible: schema[field].visible ?? true,
-          order: schema[field].order,
+          name: field,
+          label: $schema[field].name || field,
+          schema: $schema[field],
+          width: $schema[field].width || DefaultColumnWidth,
+          visible: $schema[field].visible ?? true,
+          order: $schema[field].order,
         }))
         .sort((a, b) => {
           // Sort by order first
@@ -175,19 +193,14 @@ export const initialise = context => {
       stickyColumn.set(null)
       return
     }
-
-    // Check if there is an existing column with this name so we can keep
-    // the width setting
-    let existing = currentColumns.find(x => x.name === primaryDisplay)
-    if (!existing && currentStickyColumn?.name === primaryDisplay) {
-      existing = currentStickyColumn
-    }
     stickyColumn.set({
       name: primaryDisplay,
-      width: schema[primaryDisplay].width || DefaultColumnWidth,
+      label: $schema[primaryDisplay].name || primaryDisplay,
+      schema: $schema[primaryDisplay],
+      width: $schema[primaryDisplay].width || DefaultColumnWidth,
+      visible: true,
+      order: 0,
       left: GutterWidth,
-      schema: schema[primaryDisplay],
-      idx: "sticky",
     })
   })
 }

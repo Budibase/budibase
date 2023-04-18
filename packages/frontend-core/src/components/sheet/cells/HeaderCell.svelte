@@ -117,7 +117,7 @@
       color={`var(--spectrum-global-color-gray-600)`}
     />
     <div class="name">
-      {column.name}
+      {column.label}
     </div>
     {#if sortedBy}
       <div class="sort-indicator">
@@ -154,8 +154,10 @@
     <MenuItem
       icon="Edit"
       on:click={editColumn}
-      disabled={!$config.allowEditColumns}>Edit column</MenuItem
+      disabled={!$config.allowEditColumns || column.schema.disabled}
     >
+      Edit column
+    </MenuItem>
     <MenuItem
       icon="Label"
       on:click={makeDisplayColumn}
