@@ -85,6 +85,7 @@
     "dep:clean": "yarn clean && yarn bootstrap"
   },
   "dependencies": {
+    "svelte-i18n": "^3.6.0",
     "yarn": "^1.22.19"
   }
 }

@@ -17,6 +17,8 @@
   } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
   const actionTypes = getAvailableActions()
@@ -168,7 +170,9 @@
               icon={"ArrowLeft"}
               on:click={toggleActionList}
             >
-              Back
+              {$_(
+                "components.design.settings.controls.ButtonActionEditor.ButtonActionDrawer.Back"
+              )}
             </ActionButton>
           </div>
         {/if}

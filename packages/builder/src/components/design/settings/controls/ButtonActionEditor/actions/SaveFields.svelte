@@ -3,12 +3,18 @@
   import { createEventDispatcher } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   const dispatch = createEventDispatcher()
 
   export let parameterFields
   export let schemaFields
-  export let fieldLabel = "Column"
-  export let valueLabel = "Value"
+  export let fieldLabel = $_(
+    "components.design.settings.controls.ButtonActionEditor.actions.SaveFields.Column"
+  )
+  export let valueLabel = $_(
+    "components.design.settings.controls.ButtonActionEditor.actions.SaveFields.Value"
+  )
   export let bindings = []
 
   let fields = Object.entries(parameterFields || {})
@@ -62,7 +68,9 @@
     {/if}
     <Label small>{valueLabel}</Label>
     <DrawerBindableInput
-      title={`Value for "${field[0]}"`}
+      title={`${$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.SaveFields.Value_for"
+      )} "${field[0]}"`}
       value={field[1]}
       {bindings}
       on:change={event => updateFieldValue(idx, event.detail)}
@@ -76,7 +84,9 @@
   {/each}
   <div style="margin-top: 10px">
     <Button icon="AddCircle" secondary on:click={addField}>
-      Add
+      {$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.SaveFields.Add"
+      )}
       {fieldLabel}
     </Button>
   </div>

@@ -2,6 +2,8 @@
   import { Body, Label, Input } from "@budibase/bbui"
   import { onMount } from "svelte"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let parameters
 
   onMount(() => {
@@ -12,13 +14,32 @@
 </script>
 
 <div class="root">
-  <Body size="S">Enter the message you wish to display to the user.</Body>
+  <Body size="S"
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.PromptUser.Enter_message"
+    )}</Body
+  >
   <div class="params">
-    <Label small>Title</Label>
-    <Input placeholder="Prompt User" bind:value={parameters.customTitleText} />
-    <Label small>Message</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.PromptUser.Title"
+      )}</Label
+    >
     <Input
-      placeholder="Are you sure you want to continue?"
+      placeholder={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.PromptUser.Prompt User"
+      )}
+      bind:value={parameters.customTitleText}
+    />
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.PromptUser.Message"
+      )}</Label
+    >
+    <Input
+      placeholder={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.PromptUser.want_continue?"
+      )}
       bind:value={parameters.confirmText}
     />
   </div>

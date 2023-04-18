@@ -3,6 +3,8 @@
   import { selectedScreen } from "builderStore"
   import { findAllMatchingComponents } from "builderStore/componentUtils"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let parameters
 
   $: sidePanelOptions = getSidePanelOptions($selectedScreen)
@@ -20,7 +22,11 @@
 </script>
 
 <div class="root">
-  <Label small>Side Panel</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.OpenSidePanel.Side Panel"
+    )}</Label
+  >
   <Select bind:value={parameters.id} options={sidePanelOptions} />
 </div>
 

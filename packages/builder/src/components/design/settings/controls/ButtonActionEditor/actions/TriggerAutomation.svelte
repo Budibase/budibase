@@ -4,6 +4,8 @@
   import SaveFields from "./SaveFields.svelte"
   import { TriggerStepID } from "constants/backend/automations"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let parameters = {}
   export let bindings = []
 
@@ -67,7 +69,11 @@
         value={AUTOMATION_STATUS.NEW}
         bind:group={automationStatus}
       />
-      <Label small>Create a new automation</Label>
+      <Label small
+        >{$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.TriggerAutomation.Create_automation"
+        )}</Label
+      >
     </div>
     <div class="radio-container" on:click={hasAutomations ? setExisting : null}>
       <input
@@ -76,17 +82,27 @@
         bind:group={automationStatus}
         disabled={!hasAutomations}
       />
-      <Label small grey={!hasAutomations}>Use an existing automation</Label>
+      <Label small grey={!hasAutomations}
+        >{$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.TriggerAutomation.Use_automation"
+        )}</Label
+      >
     </div>
   </div>
 
   <div class="params">
-    <Label small>Automation</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.TriggerAutomation.Automation"
+      )}</Label
+    >
 
     {#if automationStatus === AUTOMATION_STATUS.EXISTING}
       <Select
         bind:value={parameters.automationId}
-        placeholder="Choose automation"
+        placeholder={$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.TriggerAutomation.Choose_automation"
+        )}
         options={automations}
         getOptionLabel={x => x.name}
         getOptionValue={x => x._id}
@@ -94,22 +110,32 @@
     {:else}
       <Input
         bind:value={parameters.newAutomationName}
-        placeholder="Enter automation name"
+        placeholder={$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.TriggerAutomation.Enter_name"
+        )}
       />
     {/if}
 
     <Label small />
     <Checkbox
-      text="Do not display default notification"
+      text={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.TriggerAutomation.not_display"
+      )}
       bind:value={parameters.notificationOverride}
     />
     <br />
     <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
 
     {#if parameters.confirm}
-      <Label small>Confirm text</Label>
+      <Label small
+        >{$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.TriggerAutomation.Confirm_text"
+        )}</Label
+      >
       <Input
-        placeholder="Are you sure you want to trigger this automation?"
+        placeholder={$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.TriggerAutomation.want_trigger"
+        )}
         bind:value={parameters.confirmText}
       />
     {/if}
@@ -120,7 +146,9 @@
       <SaveFields
         schemaFields={selectedSchema}
         parameterFields={parameters.fields}
-        fieldLabel="Field"
+        fieldLabel={$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.TriggerAutomation.Field"
+        )}
         on:change={onFieldsChanged}
         {bindings}
       />

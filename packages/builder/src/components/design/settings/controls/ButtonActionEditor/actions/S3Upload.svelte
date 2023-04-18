@@ -3,6 +3,8 @@
   import { currentAsset } from "builderStore"
   import { findAllMatchingComponents } from "builderStore/componentUtils"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let parameters
 
   $: components = findAllMatchingComponents($currentAsset?.props, component =>
@@ -11,7 +13,11 @@
 </script>
 
 <div class="root">
-  <Label small>S3 Upload Component</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.S3Upload.Upload_Component"
+    )}</Label
+  >
   <Select
     bind:value={parameters.componentId}
     options={components}

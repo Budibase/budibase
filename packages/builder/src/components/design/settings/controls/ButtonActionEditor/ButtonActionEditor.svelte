@@ -6,6 +6,8 @@
   import { automationStore } from "builderStore"
   import { cloneDeep } from "lodash/fp"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   const dispatch = createEventDispatcher()
 
   export let key

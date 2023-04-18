@@ -9,16 +9,22 @@
   } from "builderStore/dataBinding"
   import { findComponent } from "builderStore/componentUtils"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let parameters
   export let bindings = []
 
   const typeOptions = [
     {
-      label: "Set value",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.UpdateFieldValue.Set_value"
+      ),
       value: "set",
     },
     {
-      label: "Reset to default value",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.UpdateFieldValue.Reset_value"
+      ),
       value: "reset",
     },
   ]
@@ -40,23 +46,39 @@
 </script>
 
 <div class="root">
-  <Label small>Form</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.UpdateFieldValue.Form"
+    )}</Label
+  >
   <Select
     bind:value={parameters.componentId}
     options={actionProviders}
     getOptionLabel={x => x._instanceName}
     getOptionValue={x => x._id}
   />
-  <Label small>Type</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.UpdateFieldValue.Type"
+    )}</Label
+  >
   <Select
     placeholder={null}
     bind:value={parameters.type}
     options={typeOptions}
   />
-  <Label small>Field</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.UpdateFieldValue.Field"
+    )}</Label
+  >
   <Combobox bind:value={parameters.field} options={fieldOptions} />
   {#if parameters.type === "set"}
-    <Label small>Value</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.UpdateFieldValue.Value"
+      )}</Label
+    >
     <DrawerBindableInput
       {bindings}
       value={parameters.value}

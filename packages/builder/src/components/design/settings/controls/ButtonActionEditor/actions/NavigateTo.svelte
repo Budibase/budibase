@@ -5,6 +5,8 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let parameters
   export let bindings = []
 
@@ -14,11 +16,15 @@
 
   const typeOptions = [
     {
-      label: "Screen",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.NavigateTO.Screen"
+      ),
       value: "screen",
     },
     {
-      label: "URL",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.NavigateTO.URL"
+      ),
       value: "url",
     },
   ]
@@ -31,7 +37,11 @@
 </script>
 
 <div class="root">
-  <Label small>Destination</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.NavigateTO.Destination"
+    )}</Label
+  >
   <Select
     placeholder={null}
     bind:value={parameters.type}
@@ -40,7 +50,9 @@
   />
   {#if parameters.type === "screen"}
     <DrawerBindableCombobox
-      title="Destination"
+      title={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.NavigateTO.Destination"
+      )}
       placeholder="/screen"
       value={parameters.url}
       on:change={value => (parameters.url = value.detail)}
@@ -49,17 +61,29 @@
       appendBindingsAsOptions={false}
     />
     <div />
-    <Checkbox text="Open screen in modal" bind:value={parameters.peek} />
+    <Checkbox
+      text={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.NavigateTO.Destination"
+      )}
+      bind:value={parameters.peek}
+    />
   {:else}
     <DrawerBindableInput
-      title="Destination"
+      title={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.NavigateTO.Destination"
+      )}
       placeholder="/url"
       value={parameters.url}
       on:change={value => (parameters.url = value.detail)}
       {bindings}
     />
     <div />
-    <Checkbox text="New Tab" bind:value={parameters.externalNewTab} />
+    <Checkbox
+      text={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.NavigateTO.New_Tab"
+      )}
+      bind:value={parameters.externalNewTab}
+    />
   {/if}
 </div>
 

@@ -2,6 +2,8 @@
   import { Label, Body, Layout } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let parameters
   export let bindings = []
 </script>
@@ -9,13 +11,20 @@
 <div class="root">
   <Layout noPadding gap="M">
     <Body size="S">
-      Please enter the URL you would like to be redirected to after logging out.
-      If you don't enter a value, you'll be redirected to the login screen.
+      {$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.LogOut.enter_URL"
+      )}
     </Body>
     <div class="content">
-      <Label small>Redirect URL</Label>
+      <Label small
+        >{$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.LogOut.Redirect_URL"
+        )}</Label
+      >
       <DrawerBindableInput
-        title="Return URL"
+        title={$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.LogOut.Return_URL"
+        )}
         value={parameters.redirectUrl}
         on:change={value => (parameters.redirectUrl = value.detail)}
         {bindings}
