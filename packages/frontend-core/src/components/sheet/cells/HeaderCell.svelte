@@ -161,7 +161,7 @@
     <MenuItem
       icon="Label"
       on:click={makeDisplayColumn}
-      disabled={column.idx === "sticky" ||
+      disabled={idx === "sticky" ||
         !$config.allowEditColumns ||
         bannedDisplayColumnTypes.includes(column.schema.type)}
     >
