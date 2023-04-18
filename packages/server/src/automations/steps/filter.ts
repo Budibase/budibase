@@ -2,6 +2,8 @@ import {
   AutomationActionStepId,
   AutomationStepSchema,
   AutomationStepInput,
+  AutomationStepType,
+  AutomationIOType,
 } from "@budibase/types"
 
 export const FilterConditions = {
@@ -24,7 +26,7 @@ export const definition: AutomationStepSchema = {
   icon: "Branch2",
   description:
     "Conditionally halt automations which do not meet certain conditions",
-  type: "LOGIC",
+  type: AutomationStepType.LOGIC,
   internal: true,
   stepId: AutomationActionStepId.FILTER,
   inputs: {
@@ -34,17 +36,17 @@ export const definition: AutomationStepSchema = {
     inputs: {
       properties: {
         field: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Reference Value",
         },
         condition: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Condition",
           enum: Object.values(FilterConditions),
           pretty: Object.values(PrettyFilterConditions),
         },
         value: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Comparison Value",
         },
       },
@@ -53,11 +55,11 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the action was successful",
         },
         result: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the logic block passed",
         },
       },

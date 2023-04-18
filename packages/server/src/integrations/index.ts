@@ -14,11 +14,11 @@ import firebase from "./firebase"
 import redis from "./redis"
 import snowflake from "./snowflake"
 import oracle from "./oracle"
-import { getPlugins } from "../api/controllers/plugin"
 import { SourceName, Integration, PluginType } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
 import { cloneDeep } from "lodash"
+import sdk from "../sdk"
 
 const DEFINITIONS: { [key: string]: Integration } = {
   [SourceName.POSTGRES]: postgres.schema,
@@ -79,7 +79,7 @@ export async function getDefinition(source: SourceName): Promise<Integration> {
 export async function getDefinitions() {
   const pluginSchemas: { [key: string]: Integration } = {}
   if (env.SELF_HOSTED) {
-    const plugins = await getPlugins(PluginType.DATASOURCE)
+    const plugins = await sdk.plugins.fetch(PluginType.DATASOURCE)
     // extract the actual schema from each custom
     for (let plugin of plugins) {
       const sourceId = plugin.name
@@ -103,7 +103,7 @@ export async function getIntegration(integration: string) {
     return INTEGRATIONS[integration]
   }
   if (env.SELF_HOSTED) {
-    const plugins = await getPlugins(PluginType.DATASOURCE)
+    const plugins = await sdk.plugins.fetch(PluginType.DATASOURCE)
     for (let plugin of plugins) {
       if (plugin.name === integration) {
         // need to use commonJS require due to its dynamic runtime nature
