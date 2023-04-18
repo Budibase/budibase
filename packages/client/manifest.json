@@ -5085,6 +5085,12 @@
         "defaultValue": "426px"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No data"
+      },
+      {
         "section": true,
         "name": "Cards",
         "settings": [
