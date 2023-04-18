@@ -16,6 +16,7 @@
   export let showDeleteButton
   export let rowId
   export let actionUrl
+  export let noRowsMessage = "We couldn't find a row to display"
 
   const { fetchDatasourceSchema } = getContext("sdk")
 
@@ -89,7 +90,7 @@
         bind:id={repeaterId}
         props={{
           dataProvider,
-          noRowsMessage: "We couldn't find a row to display",
+          noRowsMessage,
           direction: "column",
           hAlign: "center",
         }}

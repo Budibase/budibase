@@ -4966,6 +4966,17 @@
         "defaultValue": "spectrum--medium"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "We couldn't find a row to display",
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "Create",
+          "invert": true
+        }
+      },
+      {
         "section": true,
         "name": "Fields",
         "settings": [
