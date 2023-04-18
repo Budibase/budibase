@@ -25,7 +25,7 @@
         text={table.name}
         selected={$isActive("./table/:tableId") &&
           $tables.selected?._id === table._id}
-        on:click={() => $goto(`./table/${table._id}`)}
+        on:click={() => tables.select(table._id)}
       >
         {#if table._id !== TableNames.USERS}
           <EditTablePopover {table} />
