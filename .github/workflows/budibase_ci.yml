@@ -58,12 +58,27 @@ jobs:
           node-version: 14.x
       - run: yarn
       - run: yarn bootstrap
-      - run: yarn test
+      - run: yarn test --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           name: codecov-umbrella
           verbose: true
+
+  test-pro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - run: yarn
+      - run: yarn bootstrap
+      - run: yarn test --scope=@budibase/pro
 
   integration-test:
     runs-on: ubuntu-latest
