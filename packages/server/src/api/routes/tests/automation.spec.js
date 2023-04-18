@@ -7,7 +7,7 @@ const {
 const setup = require("./utilities")
 const { basicAutomation, newAutomation, automationTrigger, automationStep } = setup.structures
 const MAX_RETRIES = 4
-const { TRIGGER_DEFINITIONS, ACTION_DEFINITIONS } = require("../../../automations")
+const { TRIGGER_DEFINITIONS, BUILTIN_ACTION_DEFINITIONS } = require("../../../automations")
 const { events } = require("@budibase/backend-core")
 
 
@@ -55,7 +55,7 @@ describe("/automations", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-      let definitionsLength = Object.keys(ACTION_DEFINITIONS).length
+      let definitionsLength = Object.keys(BUILTIN_ACTION_DEFINITIONS).length
       definitionsLength-- // OUTGOING_WEBHOOK is deprecated
 
       expect(Object.keys(res.body.action).length).toBeGreaterThanOrEqual(definitionsLength)

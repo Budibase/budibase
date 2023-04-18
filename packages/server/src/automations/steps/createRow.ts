@@ -3,8 +3,11 @@ import { cleanUpRow, getError } from "../automationUtils"
 import { buildCtx } from "./utils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationCustomIOType,
+  AutomationIOType,
   AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -12,7 +15,7 @@ export const definition: AutomationStepSchema = {
   tagline: "Create a {{inputs.enriched.table.name}} row",
   icon: "TableRowAddBottom",
   description: "Add a row to your database",
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   internal: true,
   stepId: AutomationActionStepId.CREATE_ROW,
   inputs: {},
@@ -20,14 +23,14 @@ export const definition: AutomationStepSchema = {
     inputs: {
       properties: {
         row: {
-          type: "object",
+          type: AutomationIOType.OBJECT,
           properties: {
             tableId: {
-              type: "string",
-              customType: "table",
+              type: AutomationIOType.STRING,
+              customType: AutomationCustomIOType.TABLE,
             },
           },
-          customType: "row",
+          customType: AutomationCustomIOType.ROW,
           title: "Table",
           required: ["tableId"],
         },
@@ -37,24 +40,24 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         row: {
-          type: "object",
-          customType: "row",
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.ROW,
           description: "The new row",
         },
         response: {
-          type: "object",
+          type: AutomationIOType.OBJECT,
           description: "The response from the table",
         },
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the row creation was successful",
         },
         id: {
-          type: "string",
+          type: AutomationIOType.STRING,
           description: "The identifier of the new row",
         },
         revision: {
-          type: "string",
+          type: AutomationIOType.STRING,
           description: "The revision of the new row",
         },
       },

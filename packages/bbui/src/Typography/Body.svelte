@@ -9,6 +9,7 @@
 </script>
 
 <p
+  data-testid="typography-body"
   style={`
     ${weight ? `font-weight:${weight};` : ""}
     ${textAlign ? `text-align:${textAlign};` : ""}
