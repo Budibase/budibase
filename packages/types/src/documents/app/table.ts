@@ -79,6 +79,7 @@ export interface Table extends Document {
   indexes?: { [key: string]: any }
   rows?: { [key: string]: any }
   created?: boolean
+  rowHeight?: number
 }
 
 export interface TableRequest extends Table {
