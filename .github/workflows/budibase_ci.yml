@@ -98,7 +98,7 @@ jobs:
         run: |
           cd packages/pro
           git fetch
-          echo $(git log)
+          echo $(git log -n 5 --pretty=format:%H)
           echo $(git branch --contains fa3583ac3eedcb546612e8c696982dda7fae492c)
           if ! git branch --contains $(git log -n 1 --pretty=format:%H) | grep -q "origin/chore/pro_as_submodule"; then
             echo "Current commit is not part of main branch"
