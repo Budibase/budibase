@@ -2043,7 +2043,7 @@
                     "Error_duplicating": "Error duplicating screen",
                     "Deleted_screen": "Deleted screen successfully",
                     "Error_deleting": "Error deleting screen",
-                    "Paste inside": "Paste inside",
+                    "Paste_inside": "Paste inside",
                     "Duplicate": "Duplicate",
                     "Delete": "Delete",
                     "Confirm_Deletion": "Confirm Deletion",
@@ -2053,6 +2053,7 @@
                   "ScreenListPanel": {
                     "Add_screen": "Add screen",
                     "Search": "Search",
+                    "All_screens":"All screens",
                     "screens_filters": "There aren't any screens matching the current filters"
                   },
                   "ScreenRoleModal": {
@@ -2082,7 +2083,7 @@
                     "Default": "Default",
                     "Detach_layout": "Detach custom layout",
                     "screen_uses": "This screen uses a custom layout, which is deprecated",
-                    "View components": "View components"
+                    "View_components": "View components"
                   },
                   "ScreenWizard": {
                     "Error_screens": "Error creating screens"
@@ -2098,6 +2099,7 @@
                     "Button": "Button"
                   },
                   "ThemeinfoPanel": {
+                    "Theme": "Theme",
                     "theme_set": "Your theme is set across all the screens within your app."
                   },
                   "ThemeSettingsPanel": {
@@ -2141,6 +2143,7 @@
             "menuItemProfile": "My profile",
             "menuItemUpdatePassword": "Update password",
             "menuItemDeveloper": "Open developer mode",
+            "Log_out":"Log out",
             "menuHeading": "Hey",
             "menuBodyPt1": "Welcome to the",
             "menuBodyPt2": "portal. Below you'll find the list of apps that you have access to.",
@@ -2244,10 +2247,7 @@
           "LockedFeature": {
             "Upgrade": "Upgrade",
             "View_Plans": "View Plans"
-          },
-          "Logo": {
-            "alt": "Budibase Logo"
-          },
+          }, 
           "UpgradeButton": {
             "Upgrade": "Upgrade"
           },
@@ -2272,7 +2272,7 @@
               "Error_getting_audit_logs": "Error getting audit logs",
               "Error_downloading_logs": "Error downloading logs",
               "Copied": "Copied",
-              "title": "AidotLogs",
+              "title": "Audit Logs",
               "planType": "Business plan",
               "description": "View all events that have occurred in your Budibase installation",
               "placeholderUsers": "All users",

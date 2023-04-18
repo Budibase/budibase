@@ -9,6 +9,8 @@
   import RoleIndicator from "./RoleIndicator.svelte"
   import { RoleUtils } from "@budibase/frontend-core"
 
+  import { _ } from "lang/i18n"
+
   let searchString
   let accessRole = "all"
   let showNewScreenModal
@@ -31,9 +33,15 @@
 
 <Panel title="Screens" borderRight>
   <Layout paddingX="L" paddingY="XL" gap="S">
-    <Button on:click={showNewScreenModal} cta>Add screen</Button>
+    <Button on:click={showNewScreenModal} cta
+      >{$_(
+        "pages.builder.app.application.design.screenId.screens._components.ScreenListPanel.Add_screen"
+      )}</Button
+    >
     <Search
-      placeholder="Search"
+      placeholder={$_(
+        "pages.builder.app.application.design.screenId.screens._components.ScreenListPanel.Search"
+      )}
       value={searchString}
       on:change={e => (searchString = e.detail)}
     />
@@ -48,7 +56,15 @@
         }
         return RoleUtils.getRoleColour(role._id)
       }}
-      options={[{ name: "All screens", _id: "all" }, ...$roles]}
+      options={[
+        {
+          name: $_(
+            "pages.builder.app.application.design.screenId.screens._components.ScreenListPanel.All_screens"
+          ),
+          _id: "all",
+        },
+        ...$roles,
+      ]}
     />
   </Layout>
   {#each filteredScreens as screen (screen._id)}
@@ -67,7 +83,9 @@
   {#if !filteredScreens?.length}
     <Layout paddingY="" paddingX="L">
       <Body size="S">
-        There aren't any screens matching the current filters
+        {$_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenListPanel.screens_filters"
+        )}
       </Body>
     </Layout>
   {/if}

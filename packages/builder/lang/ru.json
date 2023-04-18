@@ -2027,7 +2027,7 @@
                       "Error_duplicating": "Ошибка дублирования экрана",
                       "Deleted_screen": "Экран успешно удален",
                       "Error_deleting": "Ошибка удаления экрана",
-                      "Paste inside": "Вставить внутрь",
+                      "Paste_inside": "Вставить внутрь",
                       "Duplicate": "Дублировать",
                       "Delete": "Удалить",
                       "Confirm_Deletion": "Подтвердите удаление",
@@ -2037,6 +2037,7 @@
                     "ScreenListPanel": {
                       "Add_screen": "Добавить экран",
                       "Search": "Поиск",
+                      "All_screens":"Все экраны",
                       "screens_filters": "Нет ни одного экрана, соответствующего текущим фильтрам"
                     },
                     "ScreenRoleModal": {
@@ -2054,7 +2055,7 @@
                       "URL_use": "Этот URL уже используется для этой роли",
                       "Access": "Доступ",
                       "role_use": "Эта роль уже используется для этого URL",
-                      "On_load": "Экран загрузки",
+                      "On_load": "Во время загрузки экрана",
                       "Navigation": "Навигация",
                       "Show_navigation": "Показать навигацию",
                       "Width": "Ширина",
@@ -2066,7 +2067,7 @@
                       "Default": "По умолчанию",
                       "Detach_layout": "Отвязать пользовательский макет",
                       "screen_uses": "На этом экране используется пользовательский макет, который устарел",
-                      "View components": "Посмотреть компоненты"
+                      "View_components": "Посмотреть компоненты"
                     },
                     "ScreenWizard": {
                       "Error_screens": "Ошибка создания экранов"
@@ -2082,6 +2083,7 @@
                       "Button": "Кнопка"
                     },
                     "ThemeinfoPanel": {
+                      "Theme": "Тема",
                       "theme_set": "Ваша тема выставлена на всех экранаэ приложения."
                     },
                     "ThemeSettingsPanel": {
@@ -2103,15 +2105,10 @@
                 "Detail": "ЗАПУСТИМ ПРИЛОЖЕНИЕ",
                 "Button": "Создайте первый экран"
               }
-            },
-            "_fallback": {},
-            "_layout": {
-              "getPackage": {
-                "notiofications_error": "Ошибка инициализации приложения:"
-              },
-              "onMount": {
-                "notiofications_error": "Ошибка синхронизации с базой данных"
-              },
+            }, 
+            "_layout": { 
+              "notiofications_error": "Ошибка инициализации приложения:" , 
+              "notiofications_error_mount": "Ошибка синхронизации с базой данных" ,
               "Exit": "Выйти из портала",
               "Overview": "Обзор",
               "Access": "Доступ",
@@ -2120,23 +2117,20 @@
               "URL": "Имя и URL",
               "Version": "Версия",
               "WentWrong": "Что-то пошло не так: "
-            },
-            "index": {}
-          },
-          "_layout": {},
-          "index": {}
+            }
+          }
         },
-        "apps": {
-          "_layout": {},
+        "apps": { 
           "index": {
             "notificationsError": "Ошибка загрузки приложений",
             "Page": {
               "menuItemProfile": "Мой профиль",
               "menuItemUpdatePassword": "Обновить пароль",
               "menuItemDeveloper": "Открыть режим разработчика",
-              "menuHeading": "Привет, ",
-              "menuBodyPt1": "Добро пожаловать на портал",
-              "menuBodyPt2": ". Ниже вы найдете список приложений, к которым у вас есть доступ.",
+              "Log_out":"Выйти",
+              "menuHeading": "Привет",
+              "menuBodyPt1": "Добро пожаловать на",
+              "menuBodyPt2": "портал. Ниже вы найдете список приложений, к которым у вас есть доступ.",
               "menuHeadingOffline": "На данный момент, ваши приложения выключены.",
               "menuLayout": "Пожалуйста, свяжитесь с владельцем аккаунта, чтобы включить их.",
               "menuHeadingApps": "Приложения",
@@ -2218,7 +2212,7 @@
             "notificationsErrorInvalid": "Неверные учетные данные",
             "notificationsErrorConfig": "Ошибка получения конфига приглашения",
             "TestimonialPage": {
-              "heading": "Присоединиться",
+              "heading": "Присоединиться к",
               "body": "Создайте аккаунт, чтобы получить доступ к своим приложениям!",
               "labelEmail": "Email",
               "labelFirstName": "Имя",
@@ -2237,10 +2231,7 @@
             "LockedFeature": {
               "Upgrade": "Улучшить",
               "View_Plans": "Посмотреть тарифы"
-            },
-            "Logo": {
-              "alt": "Логотип Budibase"
-            },
+            }, 
             "UpgradeButton": {
               "Upgrade": "Улучшить"
             },
@@ -2265,7 +2256,7 @@
                 "Error_getting_audit_logs": "Ошибка получения логов аудита",
                 "Error_downloading_logs": "Ошибка скачивания логов",
                 "Copied": "Скопированно",
-                "title": "AidotLogs",
+                "title": "Журналы проверок",
                 "planType": "Тариф для бизнеса",
                 "description": "Посмотреть все, что произошло при установке Budibase",
                 "placeholderUsers": "Все пользователи",
@@ -2275,8 +2266,7 @@
                 "placeholderEvents": "Все события",
                 "labelEvents": "События",
                 "placeholderDatePicker": "Выберите временной промежуток",
-                "Search": "Найти",
-                "Audit_Log": "Лог аудита"
+                "Search": "Найти"
               }
             },
             "upgrade": {

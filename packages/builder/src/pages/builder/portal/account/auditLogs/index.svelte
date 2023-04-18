@@ -28,6 +28,8 @@
   import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
   import { cloneDeep } from "lodash"
 
+  import { _ } from "lang/i18n"
+
   const schema = {
     date: { width: "0.8fr" },
     user: { width: "0.5fr" },
@@ -118,7 +120,11 @@
       await users.search({ userPage, email: search })
       userPageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
-      notifications.error("Error getting user list")
+      notifications.error(
+        $_(
+          "pages.builder.portal.account.auditLogs.index.Error_getting_user_list"
+        )
+      )
     }
   }
 
@@ -156,7 +162,11 @@
         $auditLogs.logs.bookmark
       )
     } catch (error) {
-      notifications.error(`Error getting audit logs - ${error}`)
+      notifications.error(
+        `${$_(
+          "pages.builder.portal.account.auditLogs.index.Error_getting_audit_logs"
+        )} - ${error}`
+      )
     }
   }
 
@@ -211,7 +221,11 @@
         events: selectedEvents,
       })
     } catch (error) {
-      notifications.error(`Error downloading logs: ` + error.message)
+      notifications.error(
+        `${$_(
+          "pages.builder.portal.account.auditLogs.index.Error_downloading_logs"
+        )}: ` + error.message
+      )
     }
   }
 
@@ -221,7 +235,9 @@
 
   const copyToClipboard = async value => {
     await Helpers.copyToClipboard(value)
-    notifications.success("Copied")
+    notifications.success(
+      $_("pages.builder.portal.account.auditLogs.index.Copied")
+    )
   }
 
   function cleanupMetadata(log) {
@@ -245,9 +261,9 @@
 </script>
 
 <LockedFeature
-  title={"Audit Logs"}
-  planType={"Business plan"}
-  description={"View all events that have occurred in your Budibase installation"}
+  title={$_("pages.builder.portal.account.auditLogs.index.title")}
+  planType={$_("pages.builder.portal.account.auditLogs.index.planType")}
+  description={$_("pages.builder.portal.account.auditLogs.index.description")}
   enabled={$licensing.auditLogsEnabled}
   upgradeButtonClick={async () => {
     $licensing.goToUpgradePage()
@@ -258,8 +274,10 @@
       <Multiselect
         bind:fetchTerm={userSearchTerm}
         useFetch
-        placeholder="All users"
-        label="Users"
+        placeholder={$_(
+          "pages.builder.portal.account.auditLogs.index.placeholderUsers"
+        )}
+        label={$_("pages.builder.portal.account.auditLogs.index.labelUsers")}
         autocomplete
         bind:value={selectedUsers}
         getOptionValue={user => user._id}
@@ -270,8 +288,10 @@
     <div class="select">
       <Multiselect
         autocomplete
-        placeholder="All apps"
-        label="Apps"
+        placeholder={$_(
+          "pages.builder.portal.account.auditLogs.index.placeholderApps"
+        )}
+        label={$_("pages.builder.portal.account.auditLogs.index.labelApps")}
         getOptionValue={app => app.instance._id}
         getOptionLabel={app => app.name}
         options={sortedApps}
@@ -285,8 +305,10 @@
         getOptionValue={event => event.id}
         getOptionLabel={event => event.label}
         options={sortedEvents}
-        placeholder="All events"
-        label="Events"
+        placeholder={$_(
+          "pages.builder.portal.account.auditLogs.index.placeholderEvents"
+        )}
+        label={$_("pages.builder.portal.account.auditLogs.index.labelEvents")}
         bind:value={selectedEvents}
       />
     </div>
@@ -294,7 +316,9 @@
     <div class="date-picker">
       <DatePicker
         value={[startDate, endDate]}
-        placeholder="Choose date range"
+        placeholder={$_(
+          "pages.builder.portal.account.auditLogs.index.placeholderDatePicker"
+        )}
         range={true}
         on:change={e => {
           if (e.detail[0]?.length === 1) {
@@ -311,7 +335,10 @@
       />
     </div>
     <div class="freeSearch">
-      <Search placeholder="Search" on:change={e => debounce(e.detail)} />
+      <Search
+        placeholder={$_("pages.builder.portal.account.auditLogs.index.Search")}
+        on:change={e => debounce(e.detail)}
+      />
     </div>
 
     <div class="">
@@ -350,7 +377,7 @@
     }}
   >
     <div class="side-panel-header">
-      Audit Log
+      {$_("pages.builder.portal.account.auditLogs.index.title")}
       <div class="side-panel-icons">
         <Icon
           size="S"

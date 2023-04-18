@@ -4,6 +4,8 @@
   import { get } from "svelte/store"
   import { store } from "builderStore"
 
+  import { _ } from "lang/i18n"
+
   export let onConfirm
   export let onCancel
   export let screenUrl
@@ -25,7 +27,9 @@
     touched = true
     screenUrl = sanitizeUrl(screenUrl)
     if (routeExists(screenUrl)) {
-      error = "This URL is already taken for this access role"
+      error = $_(
+        "pages.builder.app.application.design.screenId.screens._components.ScreenDetailsModal.URL_taken"
+      )
     } else {
       error = null
     }
@@ -51,15 +55,21 @@
 
 <ModalContent
   size="M"
-  title={"Screen details"}
+  title={$_(
+    "pages.builder.app.application.design.screenId.screens._components.ScreenDetailsModal.Screen_details"
+  )}
   {confirmText}
   onConfirm={confirmScreenDetails}
   {onCancel}
-  cancelText={"Back"}
+  cancelText={$_(
+    "pages.builder.app.application.design.screenId.screens._components.ScreenDetailsModal.Back"
+  )}
   disabled={!screenUrl || error || !touched}
 >
   <Input
-    label="Enter a URL for the new screen"
+    label={$_(
+      "pages.builder.app.application.design.screenId.screens._components.ScreenDetailsModal.Enter_URL"
+    )}
     {error}
     bind:value={screenUrl}
     on:change={routeChanged}

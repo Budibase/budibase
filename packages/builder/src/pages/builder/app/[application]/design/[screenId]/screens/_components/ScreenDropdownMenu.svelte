@@ -13,6 +13,8 @@
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { makeComponentUnique } from "builderStore/componentUtils"
 
+  import { _ } from "lang/i18n"
+
   export let screenId
 
   let confirmDeleteDialog
@@ -25,7 +27,11 @@
     try {
       store.actions.components.paste(screen.props, mode, screen)
     } catch (error) {
-      notifications.error("Error saving component")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.Error_saving"
+        )
+      )
     }
   }
 
@@ -49,16 +55,28 @@
       // Create the screen
       await store.actions.screens.save(duplicateScreen)
     } catch (error) {
-      notifications.error("Error duplicating screen")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.Error_duplicating"
+        )
+      )
     }
   }
 
   const deleteScreen = async () => {
     try {
       await store.actions.screens.delete(screen)
-      notifications.success("Deleted screen successfully.")
+      notifications.success(
+        $_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.Deleted_screen"
+        )
+      )
     } catch (err) {
-      notifications.error("Error deleting screen")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.Error_deleting"
+        )
+      )
     }
   }
 </script>
@@ -72,17 +90,33 @@
     on:click={() => pasteComponent("inside")}
     disabled={noPaste}
   >
-    Paste inside
+    {$_(
+      "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.Paste_inside"
+    )}
   </MenuItem>
-  <MenuItem icon="Duplicate" on:click={duplicateScreen}>Duplicate</MenuItem>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem icon="Duplicate" on:click={duplicateScreen}
+    >{$_(
+      "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.Duplicate"
+    )}</MenuItem
+  >
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
+    >{$_(
+      "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.Delete"
+    )}</MenuItem
+  >
 </ActionMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  title="Confirm Deletion"
-  body={"Are you sure you wish to delete this screen?"}
-  okText="Delete screen"
+  title={$_(
+    "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.Confirm_Deletion"
+  )}
+  body={$_(
+    "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.wish_delete"
+  )}
+  okText={$_(
+    "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.Delete_screen"
+  )}
   onOk={deleteScreen}
 />
 
@@ -91,7 +125,9 @@
     onConfirm={createDuplicateScreen}
     screenUrl={screen?.routing.route}
     screenRole={screen?.routing.roleId}
-    confirmText="Duplicate"
+    confirmText={$_(
+      "pages.builder.app.application.design.screenId.screens._components.ScreenDropdownMenu.Duplicate"
+    )}
   />
 </Modal>
 

@@ -12,6 +12,8 @@
   import { Roles } from "constants/backend"
   import { capitalise } from "helpers"
 
+  import { _ } from "lang/i18n"
+
   let pendingScreen
 
   // Modal refs
@@ -75,7 +77,11 @@
         }
       }
     } catch (error) {
-      notifications.error("Error creating screens")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenWizard.Error_screens"
+        )
+      )
     }
   }
 

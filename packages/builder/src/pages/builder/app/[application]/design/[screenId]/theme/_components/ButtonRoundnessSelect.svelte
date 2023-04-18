@@ -2,6 +2,8 @@
   import { createEventDispatcher } from "svelte"
   import { Slider, Button } from "@budibase/bbui"
 
+  import { _ } from "lang/i18n"
+
   export let customTheme
 
   const dispatch = createEventDispatcher()
@@ -17,7 +19,11 @@
 <div class="container">
   <Slider min={0} max={3} step={1} value={index} on:change={onChange} />
   <div class="button" style="--radius: {customTheme.buttonBorderRadius};">
-    <Button primary>Button</Button>
+    <Button primary
+      >{$_(
+        "pages.builder.app.application.design.screenId.theme._components.AppThemeSelect.Button"
+      )}</Button
+    >
   </div>
 </div>
 

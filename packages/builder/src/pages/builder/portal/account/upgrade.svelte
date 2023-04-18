@@ -18,6 +18,8 @@
   import { API } from "api"
   import { onMount } from "svelte"
 
+  import { _ } from "lang/i18n"
+
   $: license = $auth.user.license
   $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
@@ -42,7 +44,9 @@
       await API.activateLicenseKey({ licenseKey })
       await auth.getSelf()
       await setLicenseInfo()
-      notifications.success("Successfully activated")
+      notifications.success(
+        $_("pages.builder.portal.account.upgrade.Successfully_activated")
+      )
     } catch (e) {
       notifications.error(e.message)
     }
@@ -56,7 +60,9 @@
       // reset the form
       licenseKey = ""
       licenseKeyDisabled = false
-      notifications.success("Successfully deleted")
+      notifications.success(
+        $_("pages.builder.portal.account.upgrade.Successfully_deleted")
+      )
     } catch (e) {
       notifications.error(e.message)
     }
