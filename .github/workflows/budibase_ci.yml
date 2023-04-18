@@ -91,16 +91,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          submodules: recursive
+          submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          fetch-depth: 0
       - name: Check submodule
         run: |
           cd packages/pro
-          echo $(git ls-remote --heads)
-          git remote update
-          git fetch --depth=10000
-          echo $(git branch -r)
-          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/chore/pro_as_submodule; then
+          git fetch
+          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/develop; then
             echo "Current commit has not been merged to develop"
             exit 1
           else
