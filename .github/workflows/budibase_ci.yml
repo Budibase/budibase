@@ -97,6 +97,7 @@ jobs:
         run: |
           cd packages/pro
           echo $(git ls-remote --heads)
+          git remote update
           git fetch --depth=10000
           echo $(git branch -r)
           if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/chore/pro_as_submodule; then
