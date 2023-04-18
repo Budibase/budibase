@@ -2,7 +2,7 @@
   import { ActionButton } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  const { config, dispatch, loaded } = getContext("sheet")
+  const { config, dispatch } = getContext("sheet")
 </script>
 
 <ActionButton
@@ -10,7 +10,7 @@
   quiet
   size="M"
   on:click={() => dispatch("add-column")}
-  disabled={!$loaded || !$config.allowAddColumns}
+  disabled={!$config.allowAddColumns}
 >
   Create column
 </ActionButton>

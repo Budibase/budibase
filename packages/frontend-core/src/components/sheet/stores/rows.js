@@ -11,6 +11,7 @@ export const createStores = () => {
   const rows = writable([])
   const table = writable(null)
   const filter = writable([])
+  const loading = writable(false)
   const loaded = writable(false)
   const sort = writable(initialSortState)
   const rowChangeCache = writable({})
@@ -29,12 +30,23 @@ export const createStores = () => {
     {}
   )
 
+  // Mark loaded as true if we've ever stopped loading
+  let hasStartedLoading = false
+  loading.subscribe($loading => {
+    if ($loading) {
+      hasStartedLoading = true
+    } else if (hasStartedLoading) {
+      loaded.set(true)
+    }
+  })
+
   return {
     rows,
     rowLookupMap,
     table,
     filter,
     loaded,
+    loading,
     sort,
     rowChangeCache,
     inProgressChanges,
@@ -47,7 +59,7 @@ export const deriveStores = context => {
     rowLookupMap,
     table,
     filter,
-    loaded,
+    loading,
     sort,
     tableId,
     API,
@@ -86,6 +98,7 @@ export const deriveStores = context => {
     unsubscribe?.()
     fetch.set(null)
     instanceLoaded.set(false)
+    loading.set(true)
 
     // Reset state
     filter.set([])
@@ -136,7 +149,7 @@ export const deriveStores = context => {
         handleNewRows($fetch.rows, resetRows)
 
         // Notify that we're loaded
-        loaded.set(true)
+        loading.set(false)
       }
     })
 

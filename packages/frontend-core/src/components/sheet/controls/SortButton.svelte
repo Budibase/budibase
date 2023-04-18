@@ -67,7 +67,7 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open || $sort.column}
-    disabled={!$loaded || !columnOptions.length}
+    disabled={!columnOptions.length}
   >
     Sort
   </ActionButton>

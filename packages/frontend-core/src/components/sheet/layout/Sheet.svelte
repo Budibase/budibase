@@ -27,6 +27,7 @@
     DefaultRowHeight,
   } from "../lib/constants"
   import RowHeightButton from "../controls/RowHeightButton.svelte"
+  import { fade } from "svelte/transition"
 
   export let API
   export let tableId
@@ -62,8 +63,15 @@
   context = attachStores(context)
 
   // Reference some stores for local use
-  const { isResizing, isReordering, ui, loaded, rowHeight, contentLines } =
-    context
+  const {
+    isResizing,
+    isReordering,
+    ui,
+    loaded,
+    loading,
+    rowHeight,
+    contentLines,
+  } = context
 
   // Keep stores up to date
   $: tableIdStore.set(tableId)
@@ -124,8 +132,9 @@
         </div>
       </div>
     </div>
-  {:else}
-    <div class="sheet-loading">
+  {/if}
+  {#if $loading}
+    <div in:fade|local={{ duration: 130 }} class="sheet-loading">
       <ProgressCircle />
     </div>
   {/if}
@@ -222,5 +231,16 @@
     height: 100%;
     display: grid;
     place-items: center;
+    z-index: 10;
+  }
+  .sheet-loading:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--background);
+    opacity: 0.6;
   }
 </style>

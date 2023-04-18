@@ -41,7 +41,6 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open}
-    disabled={!$loaded}
   >
     Row height
   </ActionButton>
