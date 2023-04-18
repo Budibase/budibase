@@ -16,7 +16,7 @@
   export let detailFields
   export let detailTitle
 
-  export let noRowsMessage = "No data"
+  export let noRowsMessage
 
   const stateKey = generate()
 
@@ -107,7 +107,7 @@
           dataProvider: `{{ literal ${safe(listDataProviderId)} }}`,
           direction: "column",
           gap: "S",
-          noRowsMessage,
+          noRowsMessage: noRowsMessage || "No data",
         }}
       >
         <BlockComponent
