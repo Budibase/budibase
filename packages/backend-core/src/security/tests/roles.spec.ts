@@ -156,4 +156,43 @@ describe("Role", () => {
       expect(result).toEqual(mockBuiltInRole)
     })
   })
+
+  describe("getUserRoleHierarchy", () => {
+    it("returns public user role if userRoleId is undefined", async () => {
+      const result = await roles.getUserRoleHierarchy()
+      expect(result).toEqual(["PUBLIC"])
+    })
+
+    it("returns all user roles if userRoleId is admin", async () => {
+      const result = await roles.getUserRoleHierarchy("ADMIN")
+      expect(result).toEqual(["ADMIN", "POWER", "BASIC", "PUBLIC"])
+    })
+
+    it("returns hierarchy of user roles for a valid userRoleId", async () => {
+      const result = await roles.getUserRoleHierarchy("BASIC")
+      expect(result).toEqual(["BASIC", "PUBLIC"])
+    })
+
+    it("returns hierarchy of user roles with role objects if opts.idOnly is false", async () => {
+      const result = await roles.getUserRoleHierarchy("BASIC", {
+        idOnly: false,
+      })
+      expect(result).toEqual([
+        {
+          _id: "BASIC",
+          name: "Basic",
+          inherits: "PUBLIC",
+          permissionId: "write",
+          permissions: {},
+        },
+        {
+          _id: "PUBLIC",
+          name: "Public",
+          inherits: null,
+          permissionId: "public",
+          permissions: {},
+        },
+      ])
+    })
+  })
 })
