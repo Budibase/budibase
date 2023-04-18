@@ -4547,6 +4547,12 @@
         "key": "paginate"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No rows found"
+      },
+      {
         "section": true,
         "name": "Cards",
         "settings": [
