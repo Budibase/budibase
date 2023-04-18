@@ -11,8 +11,8 @@
 <style>
   .beta {
     position: absolute;
-    bottom: 40px;
-    right: 40px;
+    bottom: 32px;
+    right: 32px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -29,7 +29,7 @@
     bottom: -205px;
     right: -105px;
     width: 1400px;
-    height: 360px;
+    height: 320px;
     transform: rotate(-20deg);
     background: linear-gradient(
       to top,
