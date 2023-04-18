@@ -7,7 +7,7 @@
     SmallRowHeight,
   } from "../lib/constants"
 
-  const { rowHeight, loaded, columns, table } = getContext("sheet")
+  const { rowHeight, columns, table } = getContext("sheet")
   const sizeOptions = [
     {
       label: "Small",
