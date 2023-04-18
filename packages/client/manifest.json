@@ -3662,6 +3662,12 @@
         "info": "Row selection is only compatible with internal or SQL tables"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No rows found"
+      },
+      {
         "section": true,
         "name": "On Row Click",
         "settings": [
@@ -4374,6 +4380,12 @@
             "label": "Filtering",
             "key": "filter",
             "nested": true
+          },
+          {
+            "type": "text",
+            "label": "Empty text",
+            "key": "noRowsMessage",
+            "defaultValue": "No rows found"
           },
           {
             "type": "searchfield",
