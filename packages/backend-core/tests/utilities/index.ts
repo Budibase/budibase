@@ -3,7 +3,7 @@ export * as structures from "./structures"
 export { generator } from "./structures"
 export * as testEnv from "./testEnv"
 export * as testContainerUtils from "./testContainerUtils"
-
+export * as utils from "./utils"
 export * from "./jestUtils"
 
 export { default as DBTestConfiguration } from "./DBTestConfiguration"
