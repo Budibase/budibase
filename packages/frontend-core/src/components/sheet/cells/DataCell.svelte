@@ -30,7 +30,7 @@
   // Determine if the cell is editable
   $: readonly =
     column.schema.autocolumn ||
-    column.schema.readonly ||
+    column.schema.disabled ||
     (!$config.allowEditRows && row._id)
 
   // Register this cell API if the row is focused

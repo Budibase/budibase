@@ -16,6 +16,14 @@
   import SheetRelationshipButton from "components/backend/DataTable/buttons/sheet/SheetRelationshipButton.svelte"
   import SheetEditColumnModal from "components/backend/DataTable/modals/sheet/SheetEditColumnModal.svelte"
 
+  const userSchemaOverrides = {
+    firstName: { name: "First name", disabled: true },
+    lastName: { name: "Last name", disabled: true },
+    email: { name: "Email", disabled: true },
+    roleId: { name: "Role", disabled: true },
+    status: { name: "Status", disabled: true },
+  }
+
   $: id = $tables.selected?._id
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.type !== "external"
@@ -27,6 +35,7 @@
     tableId={id}
     allowAddRows={!isUsersTable}
     allowDeleteRows={!isUsersTable}
+    schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     on:updatetable={e => tables.updateTable(e.detail)}
   >
     <svelte:fragment slot="controls">
