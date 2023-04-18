@@ -10,7 +10,7 @@ export const createWebsocket = context => {
   const host = location.hostname
   const port = location.port || (tls ? 443 : 80)
   const socket = io(`${proto}//${host}:${port}`, {
-    path: "/socket/dataspace",
+    path: "/socket/spreadsheet",
     // Cap reconnection attempts to 3 (total of 15 seconds before giving up)
     reconnectionAttempts: 3,
     // Delay reconnection attempt by 5 seconds
@@ -20,12 +20,12 @@ export const createWebsocket = context => {
     timeout: 4000,
   })
 
-  const connectToDataspace = tableId => {
+  const connectToTable = tableId => {
     if (!socket.connected) {
       return
     }
-    // Identify which dataspace we are editing
-    socket.emit("select-dataspace", tableId, response => {
+    // Identify which table we are editing
+    socket.emit("select-table", tableId, response => {
       // handle initial connection info
       users.set(response.users)
       userId.set(response.id)
@@ -34,7 +34,7 @@ export const createWebsocket = context => {
 
   // Event handlers
   socket.on("connect", () => {
-    connectToDataspace(get(tableId))
+    connectToTable(get(tableId))
   })
   socket.on("row-update", data => {
     if (data.id) {
@@ -52,7 +52,7 @@ export const createWebsocket = context => {
   })
 
   // Change websocket connection when dataspace changes
-  tableId.subscribe(connectToDataspace)
+  tableId.subscribe(connectToTable)
 
   // Notify selected cell changes
   focusedCellId.subscribe($focusedCellId => {

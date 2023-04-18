@@ -4,19 +4,19 @@ import { permissions } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 
-export default class DataspaceSocket extends Socket {
+export default class SpreadsheetSocket extends Socket {
   constructor(app: Koa, server: http.Server) {
-    super(app, server, "/socket/dataspace", [authorized(permissions.BUILDER)])
+    super(app, server, "/socket/spreadsheet", [authorized(permissions.BUILDER)])
 
     this.io.on("connection", socket => {
       const user = socket.data.user
-      console.log(`Dataspace user connected: ${user?.id}`)
+      console.log(`Spreadsheet user connected: ${user?.id}`)
 
       // Socket state
       let currentRoom: string
 
-      // Initial identification of connected dataspace
-      socket.on("select-dataspace", async (tableId, callback) => {
+      // Initial identification of connected spreadsheet
+      socket.on("select-table", async (tableId, callback) => {
         // Leave current room
         if (currentRoom) {
           socket.to(currentRoom).emit("user-disconnect", socket.data.user)
