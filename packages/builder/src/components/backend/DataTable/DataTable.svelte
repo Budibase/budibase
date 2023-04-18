@@ -39,9 +39,7 @@
       {#if !isInternal}
         <SheetRelationshipButton />
       {/if}
-      {#if !isUsersTable}
-        <SheetImportButton />
-      {/if}
+      <SheetImportButton disabled={isUsersTable} />
       <SheetExportButton />
       <SheetFilterButton />
       <SheetAddColumnModal />
