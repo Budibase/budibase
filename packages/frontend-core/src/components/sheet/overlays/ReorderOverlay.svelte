@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import SheetScrollWrapper from "../layout/SheetScrollWrapper.svelte"
-  import { GutterWidth } from "../lib/constants"
+  import { DefaultRowHeight, GutterWidth } from "../lib/constants"
 
   const {
     isReordering,
@@ -16,7 +16,7 @@
   $: targetColumn = $reorder.targetColumn
   $: minLeft = GutterWidth + ($stickyColumn?.width || 0)
   $: left = getLeft(targetColumn, $stickyColumn, $visibleColumns, $scrollLeft)
-  $: height = $rowHeight * ($renderedRows.length + 1)
+  $: height = $rowHeight * $renderedRows.length + DefaultRowHeight
   $: style = `left:${left}px; height:${height}px;`
   $: visible = $isReordering && left >= minLeft
 
