@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover, Select } from "@budibase/bbui"
 
-  const { sort, visibleColumns, stickyColumn, loaded } = getContext("sheet")
+  const { sort, visibleColumns, stickyColumn } = getContext("sheet")
   const orderOptions = [
     { label: "A-Z", value: "ascending" },
     { label: "Z-A", value: "descending" },

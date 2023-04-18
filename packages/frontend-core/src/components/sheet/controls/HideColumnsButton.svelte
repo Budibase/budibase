@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover, Toggle } from "@budibase/bbui"
 
-  const { columns, loaded } = getContext("sheet")
+  const { columns } = getContext("sheet")
 
   let open = false
   let anchor
