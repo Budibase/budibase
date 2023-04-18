@@ -251,6 +251,11 @@
         </div>
       {/if}
     </div>
+    {#if value?.length}
+      <div class="count">
+        {value?.length || 0}
+      </div>
+    {/if}
   </div>
 
   {#if isOpen}
@@ -320,6 +325,8 @@
   .container {
     min-height: var(--row-height);
     overflow: hidden;
+    display: flex;
+    align-items: flex-start;
   }
   .focused .container {
     overflow-y: auto;
@@ -350,6 +357,22 @@
     overflow: hidden;
     padding: var(--cell-padding);
     flex-wrap: wrap;
+  }
+  .count {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: var(--spectrum-global-color-gray-500);
+    padding: var(--cell-padding) var(--cell-padding) var(--cell-padding) 20px;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      var(--cell-background) 40%
+    );
+  }
+  .wrapper:hover:not(.focused) .count {
+    display: block;
   }
   .badge {
     flex: 0 0 auto;

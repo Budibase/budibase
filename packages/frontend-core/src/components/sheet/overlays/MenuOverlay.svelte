@@ -90,6 +90,6 @@
     border-radius: 4px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 32px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
   }
 </style>
