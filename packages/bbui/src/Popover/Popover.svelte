@@ -14,6 +14,7 @@
   export let align = "right"
   export let portalTarget
   export let maxWidth
+  export let maxHeight
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
@@ -64,6 +65,7 @@
       use:positionDropdown={{
         anchor,
         align,
+        maxHeight,
         maxWidth,
         useAnchorWidth,
         offset,

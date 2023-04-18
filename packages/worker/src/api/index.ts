@@ -1,6 +1,6 @@
 import Router from "@koa/router"
 const compress = require("koa-compress")
-const zlib = require("zlib")
+import zlib from "zlib"
 import { routes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
 import { auth, middleware } from "@budibase/backend-core"
