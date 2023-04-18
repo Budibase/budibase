@@ -97,12 +97,8 @@ jobs:
         run: |
           cd packages/pro
           echo $(git ls-remote --heads)
-          git fetch --all
+          git fetch origin
           echo $(git branch -r)
-          echo $(git ls-remote --heads)
-          echo $(git log -n 1 --pretty=format:%H)
-          echo $(git log -n 1 origin/chore/pro_as_submodule)
-          echo $(git log -n 1 chore/pro_as_submodule)
           if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/chore/pro_as_submodule; then
             echo "Current commit has not been merged to develop"
             exit 1
