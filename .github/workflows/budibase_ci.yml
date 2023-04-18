@@ -93,7 +93,7 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          fetch-depth: 2
+          fetch-depth: 0
       - name: Check submodule
         run: |
           cd packages/pro
