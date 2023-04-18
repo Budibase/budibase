@@ -5,6 +5,17 @@ import * as correlation from "../correlation"
 import { IdentityType } from "@budibase/types"
 import { LOG_CONTEXT } from "../index"
 
+// CORE LOGGERS - for disabling
+
+const BUILT_INS = {
+  log: console.log,
+  error: console.error,
+  info: console.info,
+  warn: console.warn,
+  trace: console.trace,
+  debug: console.debug,
+}
+
 // LOGGER
 
 const pinoOptions: LoggerOptions = {
@@ -30,6 +41,15 @@ if (env.isDev()) {
 }
 
 export const logger = pino(pinoOptions)
+
+export function disableLogger() {
+  console.log = BUILT_INS.log
+  console.error = BUILT_INS.error
+  console.info = BUILT_INS.info
+  console.warn = BUILT_INS.warn
+  console.trace = BUILT_INS.trace
+  console.debug = BUILT_INS.debug
+}
 
 // CONSOLE OVERRIDES
 
@@ -166,5 +186,3 @@ const getIdentity = () => {
   }
   return identity
 }
-
-export default logger

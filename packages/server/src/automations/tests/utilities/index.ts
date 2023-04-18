@@ -1,6 +1,6 @@
 import TestConfig from "../../../tests/utilities/TestConfiguration"
 import { context } from "@budibase/backend-core"
-import { ACTION_DEFINITIONS, getAction } from "../../actions"
+import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../../actions"
 import emitter from "../../../events/index"
 import env from "../../../environment"
 
@@ -57,4 +57,4 @@ export async function runStep(stepId: string, inputs: any, stepContext?: any) {
 }
 
 export const apiKey = "test"
-export const actions = ACTION_DEFINITIONS
+export const actions = BUILTIN_ACTION_DEFINITIONS
