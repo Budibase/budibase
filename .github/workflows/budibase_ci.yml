@@ -98,8 +98,8 @@ jobs:
         run: |
           cd packages/pro
           git fetch
-          echo $GITHUB_SHA
-          if ! git merge-base --is-ancestor $GITHUB_SHA origin/chore/pro_as_submodule; then
+          echo $(git log -n 1 --pretty=format:%H)
+          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/chore/pro_as_submodule; then
             echo "Current commit has not been merged to develop"
             exit 1
           else
