@@ -46,6 +46,7 @@
     {type}
     value={value || ""}
     on:change={handleChange}
+    spellcheck="false"
   />
 {:else}
   <div class="text-cell" class:number={type === "number"}>
