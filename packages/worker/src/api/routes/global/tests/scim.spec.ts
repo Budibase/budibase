@@ -585,6 +585,59 @@ describe("scim", () => {
             totalResults: groupCount,
           })
         })
+
+        it("can fetch groups using displayName filters", async () => {
+          const groupToFetch = _.sample(groups)
+          const response = await getScimGroups({
+            params: { filter: `displayName eq "${groupToFetch!.displayName}"` },
+          })
+
+          expect(response).toEqual({
+            Resources: [groupToFetch],
+            itemsPerPage: 1,
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+            startIndex: 1,
+            totalResults: 1,
+          })
+        })
+
+        it("can fetch groups excluding members", async () => {
+          const response = await getScimGroups({
+            params: { excludedAttributes: "members" },
+          })
+
+          expect(response).toEqual({
+            Resources: expect.arrayContaining(
+              groups.map(g => {
+                const { members, ...groupData } = g
+                return groupData
+              })
+            ),
+            itemsPerPage: 25,
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+            startIndex: 1,
+            totalResults: groupCount,
+          })
+        })
+
+        it("can fetch groups excluding multiple fields", async () => {
+          const response = await getScimGroups({
+            params: { excludedAttributes: "members,displayName" },
+          })
+
+          expect(response).toEqual({
+            Resources: expect.arrayContaining(
+              groups.map(g => {
+                const { members, displayName, ...groupData } = g
+                return groupData
+              })
+            ),
+            itemsPerPage: 25,
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+            startIndex: 1,
+            totalResults: groupCount,
+          })
+        })
       })
     })
 
@@ -661,6 +714,16 @@ describe("scim", () => {
           message: "missing",
           status: 404,
         })
+      })
+
+      it("should allow excluding members", async () => {
+        const response = await findScimGroup(group.id, {
+          qs: "excludedAttributes=members",
+        })
+
+        const { members, ...expectedResponse } = group
+
+        expect(response).toEqual(expectedResponse)
       })
     })
 

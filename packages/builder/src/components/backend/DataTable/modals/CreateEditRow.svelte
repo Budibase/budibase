@@ -27,21 +27,19 @@
       notifications.success("Row saved successfully")
       dispatch("updaterows")
     } catch (error) {
-      if (error.handled) {
-        const response = error.json
-        if (response?.errors) {
-          errors = response.errors
-        } else if (response?.validationErrors) {
-          const mappedErrors = {}
-          for (let field in response.validationErrors) {
-            mappedErrors[
-              field
-            ] = `${field} ${response.validationErrors[field][0]}`
-          }
-          errors = mappedErrors
+      const response = error.json
+      if (error.handled && response?.errors) {
+        errors = response.errors
+      } else if (error.handled && response?.validationErrors) {
+        const mappedErrors = {}
+        for (let field in response.validationErrors) {
+          mappedErrors[
+            field
+          ] = `${field} ${response.validationErrors[field][0]}`
         }
+        errors = mappedErrors
       } else {
-        notifications.error("Failed to save row")
+        notifications.error(`Failed to save row - ${error.message}`)
       }
       // Prevent modal closing if there were errors
       return false
