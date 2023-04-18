@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DEV-SETUP-WINDOWS.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "docs/DEV-SETUP-WINDOWS.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h2">
+        <a href="#dev-environment-on-windows-1011-wsl2">Dev Environment on Windows 10/11 (WSL2)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-wsl-with-ubuntu-lts">Install WSL with Ubuntu LTS</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-docker-in-windows">Install Docker in windows</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-nvm-and-node-14">Install NVM &amp;amp; Node 14</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-npm-requirements">Install npm requirements</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#clone-the-repo">Clone the repo</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#check-versions">Check Versions</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#build">Build</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#working-with-the-code">Working with the code</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="dev-environment-on-windows-1011-wsl2">
+  <h2>
+    <a href="#dev-environment-on-windows-1011-wsl2" name="dev-environment-on-windows-1011-wsl2" class="pilcrow"></a>
+Dev Environment on Windows 10/11 (WSL2)
+  </h2>
+</div>
+<div class="pilwrap" id="install-wsl-with-ubuntu-lts">
+  <h3>
+    <a href="#install-wsl-with-ubuntu-lts" name="install-wsl-with-ubuntu-lts" class="pilcrow"></a>
+Install WSL with Ubuntu LTS
+  </h3>
+</div>
+<p>Enable WSL 2 on Windows 10/11 for docker support.</p>
+<pre><code>wsl --set-default-version 2
+</code></pre>
+<p>Install Ubuntu LTS.</p>
+<pre><code>wsl --install Ubuntu
+</code></pre>
+<p>Or follow the instruction here:
+https://learn.microsoft.com/en-us/windows/wsl/install</p>
+<div class="pilwrap" id="install-docker-in-windows">
+  <h3>
+    <a href="#install-docker-in-windows" name="install-docker-in-windows" class="pilcrow"></a>
+Install Docker in windows
+  </h3>
+</div>
+<p>Download the installer from docker and install it.</p>
+<p>Check this url for more detailed instructions:
+https://docs.docker.com/desktop/install/windows-install/</p>
+<p>You should follow the next steps from within the Ubuntu terminal.</p>
+<div class="pilwrap" id="install-nvm-and-node-14">
+  <h3>
+    <a href="#install-nvm-and-node-14" name="install-nvm-and-node-14" class="pilcrow"></a>
+Install NVM &amp; Node 14
+  </h3>
+</div>
+<p>NVM documentation: https://github.com/nvm-sh/nvm#installing-and-updating</p>
+<p>Install NVM</p>
+<pre><code>curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+</code></pre>
+<p>Install Node 14</p>
+<pre><code>nvm install 14
+</code></pre>
+<div class="pilwrap" id="install-npm-requirements">
+  <h3>
+    <a href="#install-npm-requirements" name="install-npm-requirements" class="pilcrow"></a>
+Install npm requirements
+  </h3>
+</div>
+<pre><code>npm install -g yarn jest lerna
+</code></pre>
+<div class="pilwrap" id="clone-the-repo">
+  <h3>
+    <a href="#clone-the-repo" name="clone-the-repo" class="pilcrow"></a>
+Clone the repo
+  </h3>
+</div>
+<pre><code>git clone https://github.com/Budibase/budibase.git
+</code></pre>
+<div class="pilwrap" id="check-versions">
+  <h3>
+    <a href="#check-versions" name="check-versions" class="pilcrow"></a>
+Check Versions
+  </h3>
+</div>
+<p>This setup process was tested on Windows 11 with version numbers show below. Your mileage may vary using anything else.</p>
+<ul>
+<li>Docker: 20.10.7</li>
+<li>Docker-Compose: 2.10.2</li>
+<li>Node: v14.20.1</li>
+<li>Yarn: 1.22.19</li>
+<li>Lerna: 5.5.4</li>
+</ul>
+<div class="pilwrap" id="build">
+  <h3>
+    <a href="#build" name="build" class="pilcrow"></a>
+Build
+  </h3>
+</div>
+<pre><code>cd budibase
+yarn setup
+</code></pre>
+<p>The yarn setup command runs several build steps i.e.</p>
+<pre><code>node ./hosting/scripts/setup.js &amp;&amp; yarn &amp;&amp; yarn bootstrap &amp;&amp; yarn build &amp;&amp; yarn dev
+</code></pre>
+<p>So this command will actually run the application in dev mode. It creates .env files under <code>./packages/server</code> and <code>./packages/worker</code> and runs docker containers for each service via docker-compose.</p>
+<p>The dev version will be available on port 10000 i.e.</p>
+<p>http://127.0.0.1:10000/builder/admin</p>
+<div class="pilwrap" id="working-with-the-code">
+  <h3>
+    <a href="#working-with-the-code" name="working-with-the-code" class="pilcrow"></a>
+Working with the code
+  </h3>
+</div>
+<p>Here are the instructions to work on the application from within Visual Studio Code (in Windows) through the WSL. All the commands and files are within the Ubuntu system and it should run as if you were working on a Linux machine.</p>
+<p>https://code.visualstudio.com/docs/remote/wsl</p>
+<p>Note you will be able to run the application from within the WSL terminal and you will be able to access the application from the a browser in Windows.</p>
+</div>
+  </div>
+</body>
+</html>

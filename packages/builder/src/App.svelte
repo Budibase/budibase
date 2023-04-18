@@ -4,16 +4,25 @@
   import { NotificationDisplay, BannerDisplay } from "@budibase/bbui"
   import { parse, stringify } from "qs"
   import LicensingOverlays from "components/portal/licensing/LicensingOverlays.svelte"
-
+  import { setupI18n, isLocaleLoaded, locale } from "../lang/i18n"
   const queryHandler = { parse, stringify }
+
+  $: if (!$isLocaleLoaded) {
+    setupI18n({ withLocale: "ru" })
+  }
 </script>
 
-<div class="banner-container" />
-<BannerDisplay />
-<NotificationDisplay />
-<LicensingOverlays />
-<Router {routes} config={{ queryHandler }} />
-<div class="modal-container" />
+{#if $isLocaleLoaded}
+  <div class="banner-container" />
+
+  <BannerDisplay />
+  <NotificationDisplay />
+  <LicensingOverlays />
+  <Router {routes} config={{ queryHandler }} />
+  <div class="modal-container" />
+{:else}
+  <p>Loading...</p>
+{/if}
 
 <style>
   .modal-container {

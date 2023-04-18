@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>pinVersions.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "scripts/pinVersions.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>pinVersions.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">"fs"</span>)
+<span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">"path"</span>)
+
+<span class="hljs-keyword">const</span> MONOREPO_ROOT = <span class="hljs-string">"packages"</span>
+
+<span class="hljs-keyword">const</span> packages = getPackages()
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getPackages</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">if</span> (fs.existsSync(MONOREPO_ROOT)) {
+    <span class="hljs-keyword">return</span> fs.readdirSync(MONOREPO_ROOT).map(<span class="hljs-function"><span class="hljs-params">pkg</span> =&gt;</span> path.join(MONOREPO_ROOT, pkg))
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-keyword">return</span> [<span class="hljs-string">"./"</span>]
+  }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">pinDeps</span>(<span class="hljs-params">dependencies</span>) </span>{
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> dependency <span class="hljs-keyword">in</span> dependencies) {
+    <span class="hljs-keyword">if</span> (dependency.startsWith(<span class="hljs-string">"@budibase"</span>)) {
+      dependencies[dependency] = dependencies[dependency].replace(<span class="hljs-string">"^"</span>, <span class="hljs-string">""</span>)
+    }
+  }
+  <span class="hljs-keyword">return</span> dependencies
+}
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>iterate over the monorepo packages</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> pkgPath <span class="hljs-keyword">of</span> packages) {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>only directories</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">if</span> (fs.statSync(pkgPath).isDirectory()) {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>get the package JSON file</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">const</span> pkgJsonPath = path.join(pkgPath, <span class="hljs-string">"package.json"</span>)
+    <span class="hljs-keyword">if</span> (!fs.existsSync(pkgJsonPath)) {
+      <span class="hljs-keyword">continue</span>
+    }
+    <span class="hljs-keyword">const</span> pkgJson = <span class="hljs-built_in">JSON</span>.parse(fs.readFileSync(pkgJsonPath))
+    
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>find any budibase dependencies, and pin them</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    pkgJson.dependencies = pinDeps(pkgJson.dependencies)
+    pkgJson.devDependencies = pinDeps(pkgJson.devDependencies)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>update the package JSON files</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    fs.writeFileSync(pkgJsonPath, <span class="hljs-built_in">JSON</span>.stringify(pkgJson, <span class="hljs-literal">null</span>, <span class="hljs-number">2</span>))
+  }
+}
+
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Pinned dev versions for budibase packages successfully."</span>)
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

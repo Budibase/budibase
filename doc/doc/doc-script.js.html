@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>doc-script.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "doc/doc-script.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#resscript.js">res/script.js</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#maketree">makeTree</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#treescrolled">treeScrolled</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#nodeclicked">nodeClicked</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#nodehtml">nodeHtml</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#toggletree">toggleTree</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#wireuptabs">wireUpTabs</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#switchtab">switchTab</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#window.onload">window.onload</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="resscript.js">
+  <h1>
+    <a href="#resscript.js" name="resscript.js" class="pilcrow"></a>
+res/script.js
+  </h1>
+</div>
+<p>This is the script file that gets copied into the output. It mainly manages the display
+of the folder tree. The idea of this script file is to be minimal and standalone. So
+that means no jQuery.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Use localStorage to store data about the tree's state: whether or not
+the tree is visible and which directories are expanded. Unless the state</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">var</span> sidebarVisible = (<span class="hljs-built_in">window</span>.localStorage &amp;&amp; <span class="hljs-built_in">window</span>.localStorage.docker_showSidebar) ?
+                        <span class="hljs-built_in">window</span>.localStorage.docker_showSidebar == <span class="hljs-string">'yes'</span> :
+                        defaultSidebar;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="dox">
+<div class="summary">
+<div class="pilwrap" id="maketree">
+  <h2>
+    <a href="#maketree" name="maketree" class="pilcrow"></a>
+makeTree
+  </h2>
+</div>
+</div>
+<div class="body">
+<p>Consructs the folder tree view</p>
+</div>
+<div class="details">
+<div class="dox_tag_title">Params</div>
+<div class="dox_tag_detail">
+<span class="dox_tag_name">treeData</span>
+<span class="dox_type">object</span>
+<span>Folder structure as in <a href="../src/docker.js.html#docker.prototype.queuefile.html">queueFile</a>
+</span>
+</div>
+<div class="dox_tag_detail">
+<span class="dox_tag_name">root</span>
+<span class="dox_type">string</span>
+<span>Path from current file to root (ie <code>'../../'</code> etc.)
+</span>
+</div>
+<div class="dox_tag_detail">
+<span class="dox_tag_name">filename</span>
+<span class="dox_type">string</span>
+<span>The current file name
+</span>
+</div>
+</div>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">makeTree</span>(<span class="hljs-params">treeData, root, filename</span>) </span>{
+  <span class="hljs-keyword">var</span> treeNode = <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'tree'</span>);
+  <span class="hljs-keyword">var</span> treeHandle = <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'sidebar-toggle'</span>);
+  treeHandle.addEventListener(<span class="hljs-string">'click'</span>, toggleTree, <span class="hljs-literal">false</span>);
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Build the html and add it to the container.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  treeNode.innerHTML = nodeHtml(<span class="hljs-string">''</span>, treeData, <span class="hljs-string">''</span>, root);
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Root folder (whole tree) should always be open</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  treeNode.childNodes[<span class="hljs-number">0</span>].className += <span class="hljs-string">' open'</span>;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>Attach click event handler</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  treeNode.addEventListener(<span class="hljs-string">'click'</span>, nodeClicked, <span class="hljs-literal">false</span>);
+
+  <span class="hljs-keyword">if</span> (sidebarVisible) <span class="hljs-built_in">document</span>.body.className += <span class="hljs-string">' sidebar'</span>;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>Restore scroll position from localStorage if set. And attach scroll handler</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">window</span>.localStorage &amp;&amp; <span class="hljs-built_in">window</span>.localStorage.docker_treeScroll) treeNode.scrollTop = <span class="hljs-built_in">window</span>.localStorage.docker_treeScroll;
+  treeNode.onscroll = treeScrolled;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>Only set a class to allow CSS transitions after the tree state has been painted</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  setTimeout(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{ <span class="hljs-built_in">document</span>.body.className += <span class="hljs-string">' slidey'</span>; }, <span class="hljs-number">100</span>);
+}
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="dox">
+<div class="summary">
+<div class="pilwrap" id="treescrolled">
+  <h2>
+    <a href="#treescrolled" name="treescrolled" class="pilcrow"></a>
+treeScrolled
+  </h2>
+</div>
+</div>
+<div class="body">
+<p>Called when the tree is scrolled. Stores the scroll position in localStorage
+so it can be restored on the next pageview.</p>
+</div>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">treeScrolled</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">var</span> tree = <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'tree'</span>);
+  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">window</span>.localStorage) <span class="hljs-built_in">window</span>.localStorage.docker_treeScroll = tree.scrollTop;
+}
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="dox">
+<div class="summary">
+<div class="pilwrap" id="nodeclicked">
+  <h2>
+    <a href="#nodeclicked" name="nodeclicked" class="pilcrow"></a>
+nodeClicked
+  </h2>
+</div>
+</div>
+<div class="body">
+<p>Called when a directory is clicked. Toggles open state of the directory</p>
+</div>
+<div class="details">
+<div class="dox_tag_title">Params</div>
+<div class="dox_tag_detail">
+<span class="dox_tag_name">e</span>
+<span class="dox_type">Event</span>
+<span>The click event
+</span>
+</div>
+</div>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">nodeClicked</span>(<span class="hljs-params">e</span>) </span>{
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<p>Find the target</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">var</span> t = e.target;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12"></a>
+</div>
+<p>If the click target is actually a file (rather than a directory), ignore it</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">if</span> (t.tagName.toLowerCase() !== <span class="hljs-string">'div'</span> || t.className === <span class="hljs-string">'children'</span>) <span class="hljs-keyword">return</span>;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13"></a>
+</div>
+<p>Recurse upwards until we find the actual directory node</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">while</span> (t &amp;&amp; t.className.substring(<span class="hljs-number">0</span>, <span class="hljs-number">3</span>) != <span class="hljs-string">'dir'</span>) t = t.parentNode;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14"></a>
+</div>
+<p>If we're at the root node, then do nothing (we don't allow collapsing of the whole tree)</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">if</span> (!t || t.parentNode.id == <span class="hljs-string">'tree'</span>) <span class="hljs-keyword">return</span>;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15"></a>
+</div>
+<p>Find the path and toggle the state, saving the state in the localStorage variable</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">var</span> path = t.getAttribute(<span class="hljs-string">'rel'</span>);
+  <span class="hljs-keyword">if</span> (t.className.indexOf(<span class="hljs-string">'open'</span>) !== <span class="hljs-number">-1</span>) {
+    t.className = t.className.replace(<span class="hljs-regexp">/\s*open/g</span>, <span class="hljs-string">''</span>);
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">window</span>.localStorage) <span class="hljs-built_in">window</span>.localStorage.removeItem(<span class="hljs-string">'docker_openPath:'</span> + path);
+  } <span class="hljs-keyword">else</span> {
+    t.className += <span class="hljs-string">' open'</span>;
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">window</span>.localStorage) <span class="hljs-built_in">window</span>.localStorage[<span class="hljs-string">'docker_openPath:'</span> + path] = <span class="hljs-string">'yes'</span>;
+  }
+}
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="dox">
+<div class="summary">
+<div class="pilwrap" id="nodehtml">
+  <h2>
+    <a href="#nodehtml" name="nodehtml" class="pilcrow"></a>
+nodeHtml
+  </h2>
+</div>
+</div>
+<div class="body">
+<p>Constructs the markup for a directory in the tree</p>
+</div>
+<div class="details">
+<div class="dox_tag_title">Params</div>
+<div class="dox_tag_detail">
+<span class="dox_tag_name">nodename</span>
+<span class="dox_type">string</span>
+<span>The node name.
+</span>
+</div>
+<div class="dox_tag_detail">
+<span class="dox_tag_name">node</span>
+<span class="dox_type">object</span>
+<span>Node object of same format as whole tree.
+</span>
+</div>
+<div class="dox_tag_detail">
+<span class="dox_tag_name">path</span>
+<span class="dox_type">string</span>
+<span>The path form the base to this node
+</span>
+</div>
+<div class="dox_tag_detail">
+<span class="dox_tag_name">root</span>
+<span class="dox_type">string</span>
+<span>Relative path from current page to root
+</span>
+</div>
+</div>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">nodeHtml</span>(<span class="hljs-params">nodename, node, path, root</span>) </span>{
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17"></a>
+</div>
+<p>Firstly, figure out whether or not the directory is expanded from localStorage</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">var</span> isOpen = <span class="hljs-built_in">window</span>.localStorage &amp;&amp; <span class="hljs-built_in">window</span>.localStorage[<span class="hljs-string">'docker_openPath:'</span> + path] == <span class="hljs-string">'yes'</span>;
+  <span class="hljs-keyword">var</span> out = <span class="hljs-string">'&lt;div class="dir'</span> + (isOpen ? <span class="hljs-string">' open'</span> : <span class="hljs-string">''</span>) + <span class="hljs-string">'" rel="'</span> + path + <span class="hljs-string">'"&gt;'</span>;
+  out += <span class="hljs-string">'&lt;div class="nodename"&gt;'</span> + nodename + <span class="hljs-string">'&lt;/div&gt;'</span>;
+  out += <span class="hljs-string">'&lt;div class="children"&gt;'</span>;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18"></a>
+</div>
+<p>Loop through all child directories first</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">if</span> (node.dirs) {
+    <span class="hljs-keyword">var</span> dirs = [];
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i <span class="hljs-keyword">in</span> node.dirs) {
+      <span class="hljs-keyword">if</span> (node.dirs.hasOwnProperty(i)) dirs.push({ <span class="hljs-attr">name</span>: i, <span class="hljs-attr">html</span>: nodeHtml(i, node.dirs[i], path + i + <span class="hljs-string">'/'</span>, root) });
+    }
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19"></a>
+</div>
+<p>Have to store them in an array first and then sort them alphabetically here</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    dirs.sort(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">a, b</span>) </span>{ <span class="hljs-keyword">return</span> (a.name &gt; b.name) ? <span class="hljs-number">1</span> : (a.name == b.name) ? <span class="hljs-number">0</span> : <span class="hljs-number">-1</span>; });
+
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> k = <span class="hljs-number">0</span>; k &lt; dirs.length; k += <span class="hljs-number">1</span>) out += dirs[k].html;
+  }
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-20" id="section-20"></a>
+</div>
+<p>Now loop through all the child files alphabetically</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">if</span> (node.files) {
+    node.files.sort();
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> j = <span class="hljs-number">0</span>; j &lt; node.files.length; j += <span class="hljs-number">1</span>) {
+      out += <span class="hljs-string">'&lt;a class="file" href="'</span> + root + path + node.files[j] + <span class="hljs-string">'.html"&gt;'</span> + node.files[j] + <span class="hljs-string">'&lt;/a&gt;'</span>;
+    }
+  }
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-21" id="section-21"></a>
+</div>
+<p>Close things off</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  out += <span class="hljs-string">'&lt;/div&gt;&lt;/div&gt;'</span>;
+
+  <span class="hljs-keyword">return</span> out;
+}
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="dox">
+<div class="summary">
+<div class="pilwrap" id="toggletree">
+  <h2>
+    <a href="#toggletree" name="toggletree" class="pilcrow"></a>
+toggleTree
+  </h2>
+</div>
+</div>
+<div class="body">
+<p>Toggles the visibility of the folder tree</p>
+</div>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">toggleTree</span>(<span class="hljs-params"></span>) </span>{
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-23" id="section-23"></a>
+</div>
+<p>Do the actual toggling by modifying the class on the body element. That way we can get some nice CSS transitions going.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">if</span> (sidebarVisible) {
+    <span class="hljs-built_in">document</span>.body.className = <span class="hljs-built_in">document</span>.body.className.replace(<span class="hljs-regexp">/\s*sidebar/g</span>, <span class="hljs-string">''</span>);
+    sidebarVisible = <span class="hljs-literal">false</span>;
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-built_in">document</span>.body.className += <span class="hljs-string">' sidebar'</span>;
+    sidebarVisible = <span class="hljs-literal">true</span>;
+  }
+  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">window</span>.localStorage) {
+    <span class="hljs-keyword">if</span> (sidebarVisible) {
+      <span class="hljs-built_in">window</span>.localStorage.docker_showSidebar = <span class="hljs-string">'yes'</span>;
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-built_in">window</span>.localStorage.docker_showSidebar = <span class="hljs-string">'no'</span>;
+    }
+  }
+}
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="dox">
+<div class="summary">
+<div class="pilwrap" id="wireuptabs">
+  <h2>
+    <a href="#wireuptabs" name="wireuptabs" class="pilcrow"></a>
+wireUpTabs
+  </h2>
+</div>
+</div>
+<div class="body">
+<p>Wires up events on the sidebar tabe</p>
+</div>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">wireUpTabs</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">var</span> tabEl = <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'sidebar_switch'</span>);
+  <span class="hljs-keyword">var</span> children = tabEl.childNodes;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-25" id="section-25"></a>
+</div>
+<p>Each tab has a class corresponding of the id of its tab pane</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, l = children.length; i &lt; l; i += <span class="hljs-number">1</span>) {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-26" id="section-26"></a>
+</div>
+<p>Ignore text nodes</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">if</span> (children[i].nodeType !== <span class="hljs-number">1</span>) <span class="hljs-keyword">continue</span>;
+    children[i].addEventListener(<span class="hljs-string">'click'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">c</span>) </span>{
+      <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{ switchTab(c); };
+    }(children[i].className));
+  }
+}
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="dox">
+<div class="summary">
+<div class="pilwrap" id="switchtab">
+  <h2>
+    <a href="#switchtab" name="switchtab" class="pilcrow"></a>
+switchTab
+  </h2>
+</div>
+</div>
+<div class="body">
+<p>Switches tabs in the sidebar</p>
+</div>
+<div class="details">
+<div class="dox_tag_title">Params</div>
+<div class="dox_tag_detail">
+<span class="dox_tag_name">tab</span>
+<span class="dox_type">string</span>
+<span>The ID of the tab to switch to
+</span>
+</div>
+</div>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">switchTab</span>(<span class="hljs-params">tab</span>) </span>{
+  <span class="hljs-keyword">var</span> tabEl = <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'sidebar_switch'</span>);
+  <span class="hljs-keyword">var</span> children = tabEl.childNodes;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-28" id="section-28"></a>
+</div>
+<p>Easiest way to go through tabs without any kind of selector is just to look at the tab bar</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, l = children.length; i &lt; l; i += <span class="hljs-number">1</span>) {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-29" id="section-29"></a>
+</div>
+<p>Ignore text nodes</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">if</span> (children[i].nodeType !== <span class="hljs-number">1</span>) <span class="hljs-keyword">continue</span>;
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-30" id="section-30"></a>
+</div>
+<p>Figure out what tab pane this tab button corresponts to</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">    <span class="hljs-keyword">var</span> t = children[i].className.replace(<span class="hljs-regexp">/\s.*$/</span>, <span class="hljs-string">''</span>);
+    <span class="hljs-keyword">if</span> (t === tab) {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-31" id="section-31"></a>
+</div>
+<p>Show the tab pane, select the tab button</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">      <span class="hljs-built_in">document</span>.getElementById(t).style.display = <span class="hljs-string">'block'</span>;
+      <span class="hljs-keyword">if</span> (children[i].className.indexOf(<span class="hljs-string">'selected'</span>) === <span class="hljs-number">-1</span>) children[i].className += <span class="hljs-string">' selected'</span>;
+    } <span class="hljs-keyword">else</span> {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-32" id="section-32"></a>
+</div>
+<p>Hide the tab pane, deselect the tab button</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">      <span class="hljs-built_in">document</span>.getElementById(t).style.display = <span class="hljs-string">'none'</span>;
+      children[i].className = children[i].className.replace(<span class="hljs-regexp">/\sselected/</span>, <span class="hljs-string">''</span>);
+    }
+  }
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-33" id="section-33"></a>
+</div>
+<p>Store the last open tab in localStorage</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">window</span>.localStorage) <span class="hljs-built_in">window</span>.localStorage.docker_sidebarTab = tab;
+}
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="dox">
+<div class="summary">
+<div class="pilwrap" id="window.onload">
+  <h2>
+    <a href="#window.onload" name="window.onload" class="pilcrow"></a>
+window.onload
+  </h2>
+</div>
+</div>
+<div class="body">
+<p>When the document is ready, make the sidebar and all that jazz</p>
+</div>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">init</span>) </span>{
+  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">window</span>.addEventListener) {
+    <span class="hljs-built_in">window</span>.addEventListener(<span class="hljs-string">'DOMContentLoaded'</span>, init);
+  } <span class="hljs-keyword">else</span> { <span class="hljs-comment">// IE8 and below</span>
+    <span class="hljs-built_in">window</span>.onload = init;
+  }
+}(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+  makeTree(tree, relativeDir, thisFile);
+  wireUpTabs();
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-35" id="section-35"></a>
+</div>
+<p>Switch to the last viewed sidebar tab if stored, otherwise default to folder tree</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">window</span>.localStorage &amp;&amp; <span class="hljs-built_in">window</span>.localStorage.docker_sidebarTab) {
+    switchTab(<span class="hljs-built_in">window</span>.localStorage.docker_sidebarTab);
+  } <span class="hljs-keyword">else</span> {
+    switchTab(<span class="hljs-string">'tree'</span>);
+  }
+}));
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

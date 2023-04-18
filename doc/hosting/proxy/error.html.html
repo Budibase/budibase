@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>error.html</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "hosting/proxy/error.html";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>error.html</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">"en"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">"UTF-8"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Budibase<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"viewport"</span> <span class="hljs-attr">content</span>=<span class="hljs-string">"width=device-width,initial-scale=1"</span>&gt;</span>  
+  <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">checkStatusButton</span>(<span class="hljs-params"></span>) </span>{
+      <span class="hljs-keyword">if</span> (<span class="hljs-built_in">window</span>.location.href.includes(<span class="hljs-string">"budibase.app"</span>)) {
+        <span class="hljs-keyword">var</span> button = <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">"statusButton"</span>)
+        button.removeAttribute(<span class="hljs-string">"hidden"</span>)
+      }
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">goToStatus</span>(<span class="hljs-params"></span>) </span>{
+      <span class="hljs-built_in">window</span>.location.href = <span class="hljs-string">"https://status.budibase.com"</span>;
+    }
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">goHome</span>(<span class="hljs-params"></span>) </span>{
+      <span class="hljs-built_in">window</span>.location.href = <span class="hljs-built_in">window</span>.location.origin;
+    }
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getStatus</span>(<span class="hljs-params"></span>) </span>{
+      <span class="hljs-keyword">var</span> http = <span class="hljs-keyword">new</span> XMLHttpRequest()
+      <span class="hljs-keyword">var</span> url = <span class="hljs-built_in">window</span>.location.href
+      http.open(<span class="hljs-string">'GET'</span>, url, <span class="hljs-literal">true</span>)
+      http.send()
+      http.onreadystatechange = <span class="hljs-function">(<span class="hljs-params">e</span>) =&gt;</span> {
+        <span class="hljs-keyword">var</span> status = http.status
+        <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">"status"</span>).innerHTML = status
+
+        <span class="hljs-keyword">var</span> message
+        <span class="hljs-keyword">if</span> (status === <span class="hljs-number">502</span>) {
+          message = <span class="hljs-string">"Bad gateway. Please try again later."</span>
+        } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (status === <span class="hljs-number">503</span>) {
+          message = <span class="hljs-string">"Service Unavailable. Please try again later."</span>
+        } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (status === <span class="hljs-number">504</span>) {
+          message = <span class="hljs-string">"Gateway timeout. Please try again later."</span>
+        } <span class="hljs-keyword">else</span> {
+          message = <span class="hljs-string">"Please try again later."</span>
+        }
+
+        <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">"message"</span>).innerHTML = message
+      }
+    }
+
+    <span class="hljs-built_in">window</span>.onload = <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+      checkStatusButton()
+      getStatus()
+    };
+   
+  </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">style</span>&gt;</span><span class="css">
+
+    <span class="hljs-selector-pseudo">:root</span> {
+      <span class="hljs-attribute">--spectrum-global-color-gray-600</span>: <span class="hljs-built_in">rgb</span>(<span class="hljs-number">144</span>,<span class="hljs-number">144</span>,<span class="hljs-number">144</span>);
+      <span class="hljs-attribute">--spectrum-global-color-gray-900</span>: <span class="hljs-built_in">rgb</span>(<span class="hljs-number">255</span>,<span class="hljs-number">255</span>,<span class="hljs-number">255</span>);
+      <span class="hljs-attribute">--spectrum-global-color-gray-800</span>: <span class="hljs-built_in">rgb</span>(<span class="hljs-number">227</span>,<span class="hljs-number">227</span>,<span class="hljs-number">227</span>);
+      <span class="hljs-attribute">--spectrum-global-color-static-blue-600</span>: <span class="hljs-built_in">rgb</span>(<span class="hljs-number">20</span>,<span class="hljs-number">115</span>,<span class="hljs-number">230</span>);
+      <span class="hljs-attribute">--spectrum-global-color-static-blue-hover</span>: <span class="hljs-built_in">rgb</span>(	<span class="hljs-number">18</span>, <span class="hljs-number">103</span>, <span class="hljs-number">207</span>);
+    }
+
+    <span class="hljs-selector-tag">html</span>, <span class="hljs-selector-tag">body</span> {
+      <span class="hljs-attribute">background-color</span>: <span class="hljs-number">#1a1a1a</span>;
+      <span class="hljs-attribute">padding</span>: <span class="hljs-number">0</span>;
+      <span class="hljs-attribute">margin</span>: <span class="hljs-number">0</span>;
+      <span class="hljs-attribute">overflow</span>: hidden;
+      <span class="hljs-attribute">color</span>: <span class="hljs-number">#e7e7e7</span>;
+      <span class="hljs-attribute">font-family</span>: <span class="hljs-string">'Roboto'</span>, sans-serif;
+    } 
+    <span class="hljs-selector-tag">button</span> {
+      <span class="hljs-attribute">color</span>: <span class="hljs-number">#e7e7e7</span>;
+      <span class="hljs-attribute">font-family</span>: <span class="hljs-string">'Roboto'</span>, sans-serif;
+      <span class="hljs-attribute">border</span>: none;
+      <span class="hljs-attribute">font-size</span>: <span class="hljs-number">15px</span>;
+      <span class="hljs-attribute">border-radius</span>: <span class="hljs-number">15px</span>;
+      <span class="hljs-attribute">padding</span>: <span class="hljs-number">8px</span> <span class="hljs-number">22px</span>;
+    }
+    <span class="hljs-selector-tag">button</span><span class="hljs-selector-pseudo">:hover</span> {
+      <span class="hljs-attribute">cursor</span>: pointer;
+    }
+    <span class="hljs-selector-class">.main</span> {
+      <span class="hljs-attribute">height</span>: <span class="hljs-number">100vh</span>;
+      <span class="hljs-attribute">display</span>: flex;
+      <span class="hljs-attribute">flex-direction</span>: row;
+      <span class="hljs-attribute">align-items</span>: center;
+      <span class="hljs-attribute">justify-content</span>: center;
+    }
+    <span class="hljs-selector-class">.info</span> {
+      <span class="hljs-attribute">display</span>: flex;
+      <span class="hljs-attribute">flex-direction</span>: column;
+      <span class="hljs-attribute">align-items</span>: left;
+    }
+
+    <span class="hljs-keyword">@media</span> <span class="hljs-keyword">only</span> screen <span class="hljs-keyword">and</span> (<span class="hljs-attribute">max-width:</span> <span class="hljs-number">600px</span>) {
+      <span class="hljs-selector-class">.info</span> {
+        <span class="hljs-attribute">align-items</span>: center;
+      }
+    }
+
+    <span class="hljs-selector-class">.status</span> {
+      <span class="hljs-attribute">color</span>: <span class="hljs-built_in">var</span>(--spectrum-global-color-gray-<span class="hljs-number">600</span>)
+    }
+    <span class="hljs-selector-class">.title</span> {
+      <span class="hljs-attribute">font-weight</span>: <span class="hljs-number">400</span>;
+      <span class="hljs-attribute">color</span>: <span class="hljs-built_in">var</span>(--spectrum-global-color-gray-<span class="hljs-number">900</span>)
+    }
+    <span class="hljs-selector-class">.message</span> {
+      <span class="hljs-attribute">font-weight</span>: <span class="hljs-number">200</span>;
+      <span class="hljs-attribute">color</span>: <span class="hljs-built_in">var</span>(--spectrum-global-color-gray-<span class="hljs-number">800</span>)
+    }
+    <span class="hljs-selector-class">.buttons</span> {
+      <span class="hljs-attribute">display</span>: flex;
+      <span class="hljs-attribute">flex-direction</span>: row;
+      <span class="hljs-attribute">margin-top</span>: <span class="hljs-number">15px</span>;
+    }
+    <span class="hljs-selector-class">.homeButton</span> {
+      <span class="hljs-attribute">background-color</span>: <span class="hljs-built_in">var</span>(--spectrum-global-color-static-blue-<span class="hljs-number">600</span>);
+    }
+    <span class="hljs-selector-class">.homeButton</span><span class="hljs-selector-pseudo">:hover</span> {
+      <span class="hljs-attribute">background-color</span>: <span class="hljs-built_in">var</span>(--spectrum-global-color-static-blue-hover);
+    }
+    <span class="hljs-selector-class">.statusButton</span> {
+      <span class="hljs-attribute">background-color</span>: transparent;
+      <span class="hljs-attribute">margin-left</span>: <span class="hljs-number">20px</span>;
+      <span class="hljs-attribute">border</span>: none;
+    }
+    <span class="hljs-selector-class">.hero</span> {
+      <span class="hljs-attribute">height</span>: <span class="hljs-number">160px</span>;
+      <span class="hljs-attribute">width</span>: <span class="hljs-number">160px</span>;
+      <span class="hljs-attribute">margin-right</span>: <span class="hljs-number">80px</span>;
+    }
+    <span class="hljs-selector-class">.content</span> {
+      <span class="hljs-attribute">display</span>: flex;
+      <span class="hljs-attribute">flex-direction</span>: row;
+      <span class="hljs-attribute">align-items</span>: flex-end;
+      <span class="hljs-attribute">justify-content</span>: center;
+    }
+
+    <span class="hljs-keyword">@media</span> <span class="hljs-keyword">only</span> screen <span class="hljs-keyword">and</span> (<span class="hljs-attribute">max-width:</span> <span class="hljs-number">600px</span>) {
+      <span class="hljs-selector-class">.content</span> {
+        <span class="hljs-attribute">flex-direction</span>: column;
+      }
+    }
+  </span><span class="hljs-tag">&lt;/<span class="hljs-name">style</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">""</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"main"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"content"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"hero"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"https://raw.githubusercontent.com/Budibase/budibase/master/packages/builder/assets/bb-space-man.svg"</span> <span class="hljs-attr">alt</span>=<span class="hljs-string">"Budibase Logo"</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"info"</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">h4</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"status"</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"status"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">h4</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">h1</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"title"</span>&gt;</span>
+              Houston we have a problem!
+            <span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">h3</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"message"</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"message"</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">h3</span>&gt;</span>
+          <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"buttons"</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"homeButton"</span> <span class="hljs-attr">onclick</span>=<span class="hljs-string">goHome()</span>&gt;</span>Return home<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span> 
+            <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"statusButton"</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"statusButton"</span> <span class="hljs-attr">hidden</span>=<span class="hljs-string">"true"</span> <span class="hljs-attr">onclick</span>=<span class="hljs-string">goToStatus()</span>&gt;</span>Check out status<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span> 
+          <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

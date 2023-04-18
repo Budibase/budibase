@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>template.json</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "hosting/digitalocean/template.json";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>template.json</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="json">{
+  <span class="hljs-attr">"variables"</span>: {
+    <span class="hljs-attr">"token"</span>: <span class="hljs-string">"{{env `DIGITALOCEAN_TOKEN`}}"</span>,
+    <span class="hljs-attr">"image_name"</span>: <span class="hljs-string">"budibase-marketplace-snapshot-{{timestamp}}"</span>,
+    <span class="hljs-attr">"apt_packages"</span>: <span class="hljs-string">"jq"</span>
+  },
+  <span class="hljs-attr">"builders"</span>: [
+    {
+      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"digitalocean"</span>,
+      <span class="hljs-attr">"api_token"</span>: <span class="hljs-string">"{{user `token`}}"</span>,
+      <span class="hljs-attr">"image"</span>: <span class="hljs-string">"docker-20-04"</span>,
+      <span class="hljs-attr">"region"</span>: <span class="hljs-string">"lon1"</span>,
+      <span class="hljs-attr">"size"</span>: <span class="hljs-string">"s-1vcpu-1gb"</span>,
+      <span class="hljs-attr">"ssh_username"</span>: <span class="hljs-string">"root"</span>,
+      <span class="hljs-attr">"snapshot_name"</span>: <span class="hljs-string">"{{user `image_name`}}"</span>
+    }
+  ],
+  <span class="hljs-attr">"provisioners"</span>: [
+    {
+      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"shell"</span>,
+      <span class="hljs-attr">"inline"</span>: [
+        <span class="hljs-string">"cloud-init status --wait"</span>
+      ]
+    },
+    {
+      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"file"</span>,
+      <span class="hljs-attr">"source"</span>: <span class="hljs-string">"files/etc/"</span>,
+      <span class="hljs-attr">"destination"</span>: <span class="hljs-string">"/etc/"</span>
+    },
+    {
+      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"file"</span>,
+      <span class="hljs-attr">"source"</span>: <span class="hljs-string">"files/var/"</span>,
+      <span class="hljs-attr">"destination"</span>: <span class="hljs-string">"/var/"</span>
+    },
+    {
+      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"shell"</span>,
+      <span class="hljs-attr">"environment_vars"</span>: [
+        <span class="hljs-string">"DEBIAN_FRONTEND=noninteractive"</span>,
+        <span class="hljs-string">"LC_ALL=C"</span>,
+        <span class="hljs-string">"LANG=en_US.UTF-8"</span>,
+        <span class="hljs-string">"LC_CTYPE=en_US.UTF-8"</span>
+      ],
+      <span class="hljs-attr">"inline"</span>: [
+        <span class="hljs-string">"apt -qqy update"</span>,
+        <span class="hljs-string">"apt -qqy -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' full-upgrade"</span>,
+        <span class="hljs-string">"apt -qqy -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' install {{user `apt_packages`}}"</span>
+      ]
+    },
+    {
+      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"shell"</span>,
+      <span class="hljs-attr">"environment_vars"</span>: [
+        <span class="hljs-string">"application_name={{user `application_name`}}"</span>,
+        <span class="hljs-string">"application_version={{user `application_version`}}"</span>,
+        <span class="hljs-string">"DEBIAN_FRONTEND=noninteractive"</span>,
+        <span class="hljs-string">"LC_ALL=C"</span>,
+        <span class="hljs-string">"LANG=en_US.UTF-8"</span>,
+        <span class="hljs-string">"LC_CTYPE=en_US.UTF-8"</span>
+      ],
+      <span class="hljs-attr">"scripts"</span>: [
+        <span class="hljs-string">"scripts/90-cleanup.sh"</span>,
+        <span class="hljs-string">"scripts/99-img_check.sh"</span>
+      ]
+    }
+  ]
+}
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

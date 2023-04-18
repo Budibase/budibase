@@ -3,6 +3,7 @@
   import GoogleLogo from "assets/google-logo.png"
   import { auth, organisation } from "stores/portal"
 
+  import { _ } from "../../../../../lang/i18n"
   let show
 
   $: tenantId = $auth.tenantId
@@ -15,6 +16,6 @@
     on:click={() =>
       window.open(`/api/global/auth/${tenantId}/google`, "_blank")}
   >
-    Log in with Google
+    {$_("pages.builder.auth._components.GoogleButton.login")}
   </FancyButton>
 {/if}

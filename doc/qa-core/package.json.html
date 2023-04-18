@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>package.json</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "qa-core/package.json";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>package.json</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="json">{
+  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"@budibase/qa-core"</span>,
+  <span class="hljs-attr">"email"</span>: <span class="hljs-string">"hi@budibase.com"</span>,
+  <span class="hljs-attr">"version"</span>: <span class="hljs-string">"0.0.1"</span>,
+  <span class="hljs-attr">"main"</span>: <span class="hljs-string">"index.js"</span>,
+  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Budibase Integration Test Suite"</span>,
+  <span class="hljs-attr">"repository"</span>: {
+    <span class="hljs-attr">"type"</span>: <span class="hljs-string">"git"</span>,
+    <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://github.com/Budibase/budibase.git"</span>
+  },
+  <span class="hljs-attr">"scripts"</span>: {
+    <span class="hljs-attr">"test"</span>: <span class="hljs-string">"env-cmd jest --runInBand"</span>,
+    <span class="hljs-attr">"test:watch"</span>: <span class="hljs-string">"env-cmd jest --watch"</span>,
+    <span class="hljs-attr">"test:debug"</span>: <span class="hljs-string">"DEBUG=1 jest"</span>,
+    <span class="hljs-attr">"test:notify"</span>: <span class="hljs-string">"node scripts/testResultsWebhook"</span>,
+    <span class="hljs-attr">"test:ci"</span>: <span class="hljs-string">"jest --runInBand --json --outputFile=testResults.json --testPathIgnorePatterns=\\\"\\/dataSources\\/\\\""</span>,
+    <span class="hljs-attr">"docker:up"</span>: <span class="hljs-string">"docker-compose up -d"</span>,
+    <span class="hljs-attr">"docker:down"</span>: <span class="hljs-string">"docker-compose down"</span>,
+    <span class="hljs-attr">"api:server:setup"</span>: <span class="hljs-string">"npm run docker:up &amp;&amp; env-cmd ts-node ../packages/builder/ts/setup.ts"</span>,
+    <span class="hljs-attr">"api:server:setup:ci"</span>: <span class="hljs-string">"env-cmd node ../packages/builder/setup.js"</span>,
+    <span class="hljs-attr">"api:test"</span>: <span class="hljs-string">"jest --runInBand --json --outputFile=testResults.json"</span>,
+    <span class="hljs-attr">"api:test:ci"</span>: <span class="hljs-string">"start-server-and-test api:server:setup:ci http://localhost:4100/builder test"</span>,
+    <span class="hljs-attr">"api:test:local"</span>: <span class="hljs-string">"start-server-and-test api:server:setup http://localhost:4100/builder test"</span>
+  },
+  <span class="hljs-attr">"jest"</span>: {
+    <span class="hljs-attr">"preset"</span>: <span class="hljs-string">"ts-jest"</span>,
+    <span class="hljs-attr">"testEnvironment"</span>: <span class="hljs-string">"node"</span>,
+    <span class="hljs-attr">"moduleNameMapper"</span>: {
+      <span class="hljs-attr">"@budibase/types"</span>: <span class="hljs-string">"&lt;rootDir&gt;/../packages/types/src"</span>,
+      <span class="hljs-attr">"@budibase/server"</span>: <span class="hljs-string">"&lt;rootDir&gt;/../packages/server/src"</span>,
+      <span class="hljs-attr">"@budibase/backend-core"</span>: <span class="hljs-string">"&lt;rootDir&gt;/../packages/backend-core/src"</span>,
+      <span class="hljs-attr">"@budibase/backend-core/(.*)"</span>: <span class="hljs-string">"&lt;rootDir&gt;/../packages/backend-core/$1"</span>
+    },
+    <span class="hljs-attr">"setupFiles"</span>: [
+      <span class="hljs-string">"./scripts/jestSetup.js"</span>
+    ],
+    <span class="hljs-attr">"setupFilesAfterEnv"</span>: [
+      <span class="hljs-string">"./src/jest.extends.ts"</span>
+    ]
+  },
+  <span class="hljs-attr">"devDependencies"</span>: {
+    <span class="hljs-attr">"@budibase/types"</span>: <span class="hljs-string">"^2.3.17"</span>,
+    <span class="hljs-attr">"@types/jest"</span>: <span class="hljs-string">"29.0.0"</span>,
+    <span class="hljs-attr">"@types/node-fetch"</span>: <span class="hljs-string">"2.6.2"</span>,
+    <span class="hljs-attr">"chance"</span>: <span class="hljs-string">"1.1.8"</span>,
+    <span class="hljs-attr">"env-cmd"</span>: <span class="hljs-string">"^10.1.0"</span>,
+    <span class="hljs-attr">"jest"</span>: <span class="hljs-string">"28.1.1"</span>,
+    <span class="hljs-attr">"prettier"</span>: <span class="hljs-string">"2.7.1"</span>,
+    <span class="hljs-attr">"start-server-and-test"</span>: <span class="hljs-string">"1.14.0"</span>,
+    <span class="hljs-attr">"timekeeper"</span>: <span class="hljs-string">"2.2.0"</span>,
+    <span class="hljs-attr">"ts-jest"</span>: <span class="hljs-string">"28.0.8"</span>,
+    <span class="hljs-attr">"ts-node"</span>: <span class="hljs-string">"10.8.1"</span>,
+    <span class="hljs-attr">"tsconfig-paths"</span>: <span class="hljs-string">"4.0.0"</span>,
+    <span class="hljs-attr">"typescript"</span>: <span class="hljs-string">"4.7.3"</span>
+  },
+  <span class="hljs-attr">"dependencies"</span>: {
+    <span class="hljs-attr">"@budibase/backend-core"</span>: <span class="hljs-string">"^2.3.17"</span>,
+    <span class="hljs-attr">"form-data"</span>: <span class="hljs-string">"^4.0.0"</span>,
+    <span class="hljs-attr">"node-fetch"</span>: <span class="hljs-string">"2"</span>
+  }
+}
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

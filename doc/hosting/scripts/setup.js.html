@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>setup.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "hosting/scripts/setup.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>setup.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-meta">#!/usr/bin/env node</span>
+
+<span class="hljs-keyword">const</span> os = <span class="hljs-built_in">require</span>(<span class="hljs-string">"os"</span>)
+<span class="hljs-keyword">const</span> exec = <span class="hljs-built_in">require</span>(<span class="hljs-string">"child_process"</span>).exec
+<span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">"fs"</span>)
+<span class="hljs-keyword">const</span> platform = os.platform()
+
+<span class="hljs-keyword">const</span> windows = platform === <span class="hljs-string">"win32"</span>
+<span class="hljs-keyword">const</span> mac = platform === <span class="hljs-string">"darwin"</span>
+<span class="hljs-keyword">const</span> linux = platform === <span class="hljs-string">"linux"</span>
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">execute</span>(<span class="hljs-params">command</span>) </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function"><span class="hljs-params">resolve</span> =&gt;</span> {
+    exec(command, (err, stdout) =&gt; resolve(linux ? !!stdout : <span class="hljs-literal">true</span>))
+  })
+}
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">commandExistsUnix</span>(<span class="hljs-params">command</span>) </span>{
+  <span class="hljs-keyword">const</span> unixCmd = <span class="hljs-string">`command -v <span class="hljs-subst">${command}</span> 2&gt;/dev/null &amp;&amp; { echo &gt;&amp;1 <span class="hljs-subst">${command}</span>; exit 0; }`</span>
+  <span class="hljs-keyword">return</span> execute(command)
+}
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">commandExistsWindows</span>(<span class="hljs-params">command</span>) </span>{
+  <span class="hljs-keyword">if</span> (<span class="hljs-regexp">/[\x00-\x1f&lt;&gt;:"|?*]/</span>.test(command)) {
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>
+  }
+  <span class="hljs-keyword">return</span> execute(<span class="hljs-string">`where <span class="hljs-subst">${command}</span>`</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">commandExists</span>(<span class="hljs-params">command</span>) </span>{
+  <span class="hljs-keyword">return</span> windows ? commandExistsWindows(command) : commandExistsUnix(command)
+}
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">init</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">const</span> docker = commandExists(<span class="hljs-string">"docker"</span>)
+  <span class="hljs-keyword">const</span> dockerCompose = commandExists(<span class="hljs-string">"docker-compose"</span>)
+  <span class="hljs-keyword">if</span> (docker &amp;&amp; dockerCompose) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Docker installed - continuing."</span>)
+    <span class="hljs-keyword">return</span>
+  }
+  <span class="hljs-keyword">if</span> (mac) {
+    <span class="hljs-built_in">console</span>.log(
+      <span class="hljs-string">"Please install docker by visiting: https://docs.docker.com/docker-for-mac/install/"</span>
+    )
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (windows) {
+    <span class="hljs-built_in">console</span>.log(
+      <span class="hljs-string">"Please install docker by visiting: https://docs.docker.com/docker-for-windows/install/"</span>
+    )
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (linux) {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Beginning automated linux installation."</span>)
+    <span class="hljs-keyword">await</span> execute(<span class="hljs-string">`./hosting/scripts/linux/get-docker.sh`</span>)
+    <span class="hljs-keyword">await</span> execute(<span class="hljs-string">`./hosting/scripts/linux/get-docker-compose.sh`</span>)
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-built_in">console</span>.error(
+      <span class="hljs-string">"Platform unknown - please look online for information about installing docker for our OS."</span>
+    )
+  }
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Once installation complete please re-run the setup script."</span>)
+  process.exit(<span class="hljs-number">-1</span>)
+}
+init()
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

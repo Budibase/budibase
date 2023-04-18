@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>README.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "hosting/dependencies/README.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#docker-image-for-running-budibase-tests">Docker Image for Running Budibase Tests</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#overview">Overview</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#usage">Usage</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#build-the-image">Build the Image</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#install-node">Install Node</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#install-docker">Install Docker</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#get-the-code">Get the Code</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#setup-node">Setup Node</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#build-image">Build Image</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="docker-image-for-running-budibase-tests">
+  <h1>
+    <a href="#docker-image-for-running-budibase-tests" name="docker-image-for-running-budibase-tests" class="pilcrow"></a>
+Docker Image for Running Budibase Tests
+  </h1>
+</div>
+<div class="pilwrap" id="overview">
+  <h2>
+    <a href="#overview" name="overview" class="pilcrow"></a>
+Overview
+  </h2>
+</div>
+<p>This image contains the basic setup for running</p>
+<div class="pilwrap" id="usage">
+  <h2>
+    <a href="#usage" name="usage" class="pilcrow"></a>
+Usage
+  </h2>
+</div>
+<ul>
+<li>Build the Image</li>
+<li>Run the Container</li>
+</ul>
+<div class="pilwrap" id="build-the-image">
+  <h3>
+    <a href="#build-the-image" name="build-the-image" class="pilcrow"></a>
+Build the Image
+  </h3>
+</div>
+<p>The guidance below is based on building the Budibase single image on Debian 11 and AlmaLinux 8. If you use another distro or OS you will need to amend the commands to suit.</p>
+<div class="pilwrap" id="install-node">
+  <h4>
+    <a href="#install-node" name="install-node" class="pilcrow"></a>
+Install Node
+  </h4>
+</div>
+<p>Budibase requires a more recent version of node (14+) than is available in the base Debian repos so:</p>
+<pre><code>curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
+apt install -y nodejs
+node -v
+</code></pre>
+<p>Install yarn and lerna:</p>
+<pre><code>npm install -g yarn jest lerna
+</code></pre>
+<div class="pilwrap" id="install-docker">
+  <h4>
+    <a href="#install-docker" name="install-docker" class="pilcrow"></a>
+Install Docker
+  </h4>
+</div>
+<pre><code>apt install -y docker.io
+</code></pre>
+<p>Check the versions of each installed version. This process was tested with the version numbers below so YMMV using anything else:</p>
+<ul>
+<li>Docker: 20.10.5</li>
+<li>node: 16.15.1</li>
+<li>yarn: 1.22.19</li>
+<li>lerna: 5.1.4</li>
+</ul>
+<div class="pilwrap" id="get-the-code">
+  <h4>
+    <a href="#get-the-code" name="get-the-code" class="pilcrow"></a>
+Get the Code
+  </h4>
+</div>
+<p>Clone the Budibase repo</p>
+<pre><code>git clone https://github.com/Budibase/budibase.git
+cd budibase
+</code></pre>
+<div class="pilwrap" id="setup-node">
+  <h4>
+    <a href="#setup-node" name="setup-node" class="pilcrow"></a>
+Setup Node
+  </h4>
+</div>
+<p>Node setup:</p>
+<pre><code>node ./hosting/scripts/setup.js
+yarn
+yarn bootstrap
+yarn build
+</code></pre>
+<div class="pilwrap" id="build-image">
+  <h4>
+    <a href="#build-image" name="build-image" class="pilcrow"></a>
+Build Image
+  </h4>
+</div>
+<p>The following yarn command does some prep and then runs the docker build command:</p>
+<pre><code>yarn build:docker:dependencies
+</code></pre>
+</div>
+  </div>
+</body>
+</html>

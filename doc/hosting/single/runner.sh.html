@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>runner.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "hosting/single/runner.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>runner.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-meta">#!/bin/bash</span>
+<span class="hljs-built_in">declare</span> -a ENV_VARS=(<span class="hljs-string">"COUCHDB_USER"</span> <span class="hljs-string">"COUCHDB_PASSWORD"</span> <span class="hljs-string">"DATA_DIR"</span> <span class="hljs-string">"MINIO_ACCESS_KEY"</span> <span class="hljs-string">"MINIO_SECRET_KEY"</span> <span class="hljs-string">"INTERNAL_API_KEY"</span> <span class="hljs-string">"JWT_SECRET"</span> <span class="hljs-string">"REDIS_PASSWORD"</span>)
+<span class="hljs-built_in">declare</span> -a DOCKER_VARS=(<span class="hljs-string">"APP_PORT"</span> <span class="hljs-string">"APPS_URL"</span> <span class="hljs-string">"ARCHITECTURE"</span> <span class="hljs-string">"BUDIBASE_ENVIRONMENT"</span> <span class="hljs-string">"CLUSTER_PORT"</span> <span class="hljs-string">"DEPLOYMENT_ENVIRONMENT"</span> <span class="hljs-string">"MINIO_URL"</span> <span class="hljs-string">"NODE_ENV"</span> <span class="hljs-string">"POSTHOG_TOKEN"</span> <span class="hljs-string">"REDIS_URL"</span> <span class="hljs-string">"SELF_HOSTED"</span> <span class="hljs-string">"WORKER_PORT"</span> <span class="hljs-string">"WORKER_URL"</span> <span class="hljs-string">"TENANT_FEATURE_FLAGS"</span> <span class="hljs-string">"ACCOUNT_PORTAL_URL"</span>)
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Check the env vars set in Dockerfile have come through, AAS seems to drop them</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">[[ -z <span class="hljs-string">"<span class="hljs-variable">${APP_PORT}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> APP_PORT=4001
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${ARCHITECTURE}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> ARCHITECTURE=amd
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${BUDIBASE_ENVIRONMENT}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> BUDIBASE_ENVIRONMENT=PRODUCTION
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${CLUSTER_PORT}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> CLUSTER_PORT=80
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${DEPLOYMENT_ENVIRONMENT}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> DEPLOYMENT_ENVIRONMENT=docker
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${MINIO_URL}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> MINIO_URL=http://localhost:9000
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${NODE_ENV}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> NODE_ENV=production
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${POSTHOG_TOKEN}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${TENANT_FEATURE_FLAGS}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> TENANT_FEATURE_FLAGS=<span class="hljs-string">"*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"</span>
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${ACCOUNT_PORTAL_URL}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> ACCOUNT_PORTAL_URL=https://account.budibase.app
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${REDIS_URL}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> REDIS_URL=localhost:6379
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${SELF_HOSTED}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> SELF_HOSTED=1
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${WORKER_PORT}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> WORKER_PORT=4002
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${WORKER_URL}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> WORKER_URL=http://localhost:4002
+[[ -z <span class="hljs-string">"<span class="hljs-variable">${APPS_URL}</span>"</span> ]] &amp;&amp; <span class="hljs-built_in">export</span> APPS_URL=http://localhost:4001
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>export CUSTOM_DOMAIN=budi001.custom.com</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Azure App Service customisations</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-keyword">if</span> [[ <span class="hljs-string">"<span class="hljs-variable">${TARGETBUILD}</span>"</span> = <span class="hljs-string">"aas"</span> ]]; <span class="hljs-keyword">then</span>
+    DATA_DIR=/home
+    WEBSITES_ENABLE_APP_SERVICE_STORAGE=<span class="hljs-literal">true</span>
+    /etc/init.d/ssh start
+<span class="hljs-keyword">else</span>
+    DATA_DIR=<span class="hljs-variable">${DATA_DIR:-/data}</span>
+<span class="hljs-keyword">fi</span>
+mkdir -p <span class="hljs-variable">${DATA_DIR}</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Mount NFS or GCP Filestore if env vars exist for it</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-keyword">if</span> [[ ! -z <span class="hljs-variable">${FILESHARE_IP}</span> &amp;&amp; ! -z <span class="hljs-variable">${FILESHARE_NAME}</span> ]]; <span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"Mounting NFS share"</span>
+    apt update &amp;&amp; apt install -y nfs-common nfs-kernel-server
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"Mount file share <span class="hljs-variable">${FILESHARE_IP}</span>:/<span class="hljs-variable">${FILESHARE_NAME}</span> to <span class="hljs-variable">${DATA_DIR}</span>"</span>
+    mount -o nolock <span class="hljs-variable">${FILESHARE_IP}</span>:/<span class="hljs-variable">${FILESHARE_NAME}</span> <span class="hljs-variable">${DATA_DIR}</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"Mounting result: $?"</span>
+<span class="hljs-keyword">fi</span>
+
+<span class="hljs-keyword">if</span> [ -f <span class="hljs-string">"<span class="hljs-variable">${DATA_DIR}</span>/.env"</span> ]; <span class="hljs-keyword">then</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>Read in the .env file and export the variables</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    <span class="hljs-keyword">for</span> LINE <span class="hljs-keyword">in</span> $(cat <span class="hljs-variable">${DATA_DIR}</span>/.env); <span class="hljs-keyword">do</span> <span class="hljs-built_in">export</span> <span class="hljs-variable">$LINE</span>; <span class="hljs-keyword">done</span>
+<span class="hljs-keyword">fi</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>randomise any unset environment variables</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-keyword">for</span> ENV_VAR <span class="hljs-keyword">in</span> <span class="hljs-string">"<span class="hljs-variable">${ENV_VARS[@]}</span>"</span>
+<span class="hljs-keyword">do</span>
+    temp=$(<span class="hljs-built_in">eval</span> <span class="hljs-string">"echo \$<span class="hljs-variable">$ENV_VAR</span>"</span>)
+    <span class="hljs-keyword">if</span> [[ -z <span class="hljs-string">"<span class="hljs-variable">${temp}</span>"</span> ]]; <span class="hljs-keyword">then</span>
+        <span class="hljs-built_in">eval</span> <span class="hljs-string">"export <span class="hljs-variable">$ENV_VAR</span>=<span class="hljs-variable">$(uuidgen | sed -e 's/-//g')</span>"</span>
+    <span class="hljs-keyword">fi</span>
+<span class="hljs-keyword">done</span>
+<span class="hljs-keyword">if</span> [[ -z <span class="hljs-string">"<span class="hljs-variable">${COUCH_DB_URL}</span>"</span> ]]; <span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">export</span> COUCH_DB_URL=http://<span class="hljs-variable">$COUCHDB_USER</span>:<span class="hljs-variable">$COUCHDB_PASSWORD</span>@localhost:5984
+<span class="hljs-keyword">fi</span>
+<span class="hljs-keyword">if</span> [ ! -f <span class="hljs-string">"<span class="hljs-variable">${DATA_DIR}</span>/.env"</span> ]; <span class="hljs-keyword">then</span>
+    touch <span class="hljs-variable">${DATA_DIR}</span>/.env
+    <span class="hljs-keyword">for</span> ENV_VAR <span class="hljs-keyword">in</span> <span class="hljs-string">"<span class="hljs-variable">${ENV_VARS[@]}</span>"</span>
+    <span class="hljs-keyword">do</span>
+        temp=$(<span class="hljs-built_in">eval</span> <span class="hljs-string">"echo \$<span class="hljs-variable">$ENV_VAR</span>"</span>)
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"<span class="hljs-variable">$ENV_VAR</span>=<span class="hljs-variable">$temp</span>"</span> &gt;&gt; <span class="hljs-variable">${DATA_DIR}</span>/.env
+    <span class="hljs-keyword">done</span>
+    <span class="hljs-keyword">for</span> ENV_VAR <span class="hljs-keyword">in</span> <span class="hljs-string">"<span class="hljs-variable">${DOCKER_VARS[@]}</span>"</span>
+    <span class="hljs-keyword">do</span>
+        temp=$(<span class="hljs-built_in">eval</span> <span class="hljs-string">"echo \$<span class="hljs-variable">$ENV_VAR</span>"</span>)
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"<span class="hljs-variable">$ENV_VAR</span>=<span class="hljs-variable">$temp</span>"</span> &gt;&gt; <span class="hljs-variable">${DATA_DIR}</span>/.env
+    <span class="hljs-keyword">done</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"COUCH_DB_URL=<span class="hljs-variable">${COUCH_DB_URL}</span>"</span> &gt;&gt; <span class="hljs-variable">${DATA_DIR}</span>/.env
+<span class="hljs-keyword">fi</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>Read in the .env file and export the variables</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-keyword">for</span> LINE <span class="hljs-keyword">in</span> $(cat <span class="hljs-variable">${DATA_DIR}</span>/.env); <span class="hljs-keyword">do</span> <span class="hljs-built_in">export</span> <span class="hljs-variable">$LINE</span>; <span class="hljs-keyword">done</span>
+ln -s <span class="hljs-variable">${DATA_DIR}</span>/.env /app/.env
+ln -s <span class="hljs-variable">${DATA_DIR}</span>/.env /worker/.env
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>make these directories in runner, incase of mount</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">mkdir -p <span class="hljs-variable">${DATA_DIR}</span>/minio
+chown -R couchdb:couchdb <span class="hljs-variable">${DATA_DIR}</span>/couch
+redis-server --requirepass <span class="hljs-variable">$REDIS_PASSWORD</span> &gt; /dev/stdout 2&gt;&amp;1 &amp;
+/bbcouch-runner.sh &amp;
+/minio/minio server --console-address <span class="hljs-string">":9001"</span> <span class="hljs-variable">${DATA_DIR}</span>/minio &gt; /dev/stdout 2&gt;&amp;1 &amp;
+/etc/init.d/nginx restart
+<span class="hljs-keyword">if</span> [[ ! -z <span class="hljs-string">"<span class="hljs-variable">${CUSTOM_DOMAIN}</span>"</span> ]]; <span class="hljs-keyword">then</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<p>Add monthly cron job to renew certbot certificate</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    <span class="hljs-built_in">echo</span> -n <span class="hljs-string">"* * 2 * * root exec /app/letsencrypt/certificate-renew.sh <span class="hljs-variable">${CUSTOM_DOMAIN}</span>"</span> &gt;&gt; /etc/cron.d/certificate-renew
+    chmod +x /etc/cron.d/certificate-renew
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<p>Request the certbot certificate</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    /app/letsencrypt/certificate-request.sh <span class="hljs-variable">${CUSTOM_DOMAIN}</span>
+    /etc/init.d/nginx restart
+<span class="hljs-keyword">fi</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12"></a>
+</div>
+<p>wait for backend services to start</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">sleep 10
+
+<span class="hljs-built_in">pushd</span> app
+pm2 start -l /dev/stdout --name app <span class="hljs-string">"yarn run:docker"</span>
+<span class="hljs-built_in">popd</span>
+<span class="hljs-built_in">pushd</span> worker
+pm2 start -l /dev/stdout --name worker <span class="hljs-string">"yarn run:docker"</span>
+<span class="hljs-built_in">popd</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"end of runner.sh, sleeping ..."</span>
+sleep infinity
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>README.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "hosting/single/README.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#docker-single-image-for-budibase">Docker Single Image for Budibase</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#overview">Overview</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#usage">Usage</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#amend-environment-variables">Amend Environment Variables</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#build-requirements">Build Requirements</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#build-the-image">Build the Image</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#install-node">Install Node</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#install-docker">Install Docker</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#get-the-code">Get the Code</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#setup-node">Setup Node</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#build-image">Build Image</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#azure-app-services">Azure App Services</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#run-the-container">Run the Container</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#podman">Podman</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#check">Check</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#support">Support</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="docker-single-image-for-budibase">
+  <h1>
+    <a href="#docker-single-image-for-budibase" name="docker-single-image-for-budibase" class="pilcrow"></a>
+Docker Single Image for Budibase
+  </h1>
+</div>
+<div class="pilwrap" id="overview">
+  <h2>
+    <a href="#overview" name="overview" class="pilcrow"></a>
+Overview
+  </h2>
+</div>
+<p>As an alternative to running several docker containers via docker-compose, the files under ./hosting/single can be used to build a docker image containing all of the Budibase components (minio, couch, clouseau etc).
+We call this the 'single image' container as the Dockerfile adds all the components to a single docker image.</p>
+<div class="pilwrap" id="usage">
+  <h2>
+    <a href="#usage" name="usage" class="pilcrow"></a>
+Usage
+  </h2>
+</div>
+<ul>
+<li>Amend Environment Variables</li>
+<li>Build Requirements</li>
+<li>Build the Image</li>
+<li>Run the Container</li>
+</ul>
+<div class="pilwrap" id="amend-environment-variables">
+  <h3>
+    <a href="#amend-environment-variables" name="amend-environment-variables" class="pilcrow"></a>
+Amend Environment Variables
+  </h3>
+</div>
+<p>Edit the Dockerfile in this directory amending the environment variables to suit your usage. Pay particular attention to changing passwords.
+The CUSTOM_DOMAIN variable will be used to request a certificate from LetsEncrypt and if successful you can point traffic to port 443. If you choose to use the CUSTOM_DOMAIN variable ensure that the DNS for your custom domain points to the public IP address where you are running Budibase - otherwise the certificate issuance will fail.
+If you have other arrangements for a proxy in front of the single image container you can omit the CUSTOM_DOMAIN environment variable and the request to LetsEncrypt will be skipped. You can then point traffic to port 80.</p>
+<div class="pilwrap" id="build-requirements">
+  <h3>
+    <a href="#build-requirements" name="build-requirements" class="pilcrow"></a>
+Build Requirements
+  </h3>
+</div>
+<p>We would suggest building the image with 6GB of RAM and 20GB of free disk space for build artifacts. The resulting image size will use approx 2GB of disk space.</p>
+<div class="pilwrap" id="build-the-image">
+  <h3>
+    <a href="#build-the-image" name="build-the-image" class="pilcrow"></a>
+Build the Image
+  </h3>
+</div>
+<p>The guidance below is based on building the Budibase single image on Debian 11 and AlmaLinux 8. If you use another distro or OS you will need to amend the commands to suit.</p>
+<div class="pilwrap" id="install-node">
+  <h4>
+    <a href="#install-node" name="install-node" class="pilcrow"></a>
+Install Node
+  </h4>
+</div>
+<p>Budibase requires a more recent version of node (14+) than is available in the base Debian repos so:</p>
+<pre><code>curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
+apt install -y nodejs
+node -v
+</code></pre>
+<p>Install yarn and lerna:</p>
+<pre><code>npm install -g yarn jest lerna
+</code></pre>
+<div class="pilwrap" id="install-docker">
+  <h4>
+    <a href="#install-docker" name="install-docker" class="pilcrow"></a>
+Install Docker
+  </h4>
+</div>
+<pre><code>apt install -y docker.io
+</code></pre>
+<p>Check the versions of each installed version. This process was tested with the version numbers below so YMMV using anything else:</p>
+<ul>
+<li>Docker: 20.10.5</li>
+<li>node: 16.15.1</li>
+<li>yarn: 1.22.19</li>
+<li>lerna: 5.1.4</li>
+</ul>
+<div class="pilwrap" id="get-the-code">
+  <h4>
+    <a href="#get-the-code" name="get-the-code" class="pilcrow"></a>
+Get the Code
+  </h4>
+</div>
+<p>Clone the Budibase repo</p>
+<pre><code>git clone https://github.com/Budibase/budibase.git
+cd budibase
+</code></pre>
+<div class="pilwrap" id="setup-node">
+  <h4>
+    <a href="#setup-node" name="setup-node" class="pilcrow"></a>
+Setup Node
+  </h4>
+</div>
+<p>Node setup:</p>
+<pre><code>node ./hosting/scripts/setup.js
+yarn
+yarn bootstrap
+yarn build
+</code></pre>
+<div class="pilwrap" id="build-image">
+  <h4>
+    <a href="#build-image" name="build-image" class="pilcrow"></a>
+Build Image
+  </h4>
+</div>
+<p>The following yarn command does some prep and then runs the docker build command:</p>
+<pre><code>yarn build:docker:single
+</code></pre>
+<p>If the docker build step fails try running that step again manually with:</p>
+<pre><code>docker build --build-arg TARGETARCH=amd --no-cache -t budibase:latest -f ./hosting/single/Dockerfile .
+</code></pre>
+<div class="pilwrap" id="azure-app-services">
+  <h4>
+    <a href="#azure-app-services" name="azure-app-services" class="pilcrow"></a>
+Azure App Services
+  </h4>
+</div>
+<p>Azure have some specific requirements for running a container in their App Service. Specifically, installation of SSH to port 2222 and data storage under /home. If you would like to build a budibase container for Azure App Service add the build argument shown below setting it to 'aas'. You can remove the CUSTOM_DOMAIN env variable from the Dockerfile too as Azure terminate SSL before requests reach the container.</p>
+<pre><code>docker build --build-arg TARGETARCH=amd --build-arg TARGETBUILD=aas -t budibase:latest -f ./hosting/single/Dockerfile .
+</code></pre>
+<div class="pilwrap" id="run-the-container">
+  <h3>
+    <a href="#run-the-container" name="run-the-container" class="pilcrow"></a>
+Run the Container
+  </h3>
+</div>
+<pre><code>docker run -d -p 80:80 -p 443:443 --name budibase budibase:latest
+</code></pre>
+<p>Where:</p>
+<ul>
+<li>-d runs the container in detached mode</li>
+<li>-p forwards ports from your host to the ports inside the container. If you are already using port 80 on your host for something else you can try running with an alternative port e.g. <code>-p 8080:80</code></li>
+<li>--name is the name for the container as shown in <code>docker ps</code> and can be used with other docker commands e.g. <code>docker restart budibase</code></li>
+</ul>
+<p>When the container runs you should be able to access the container over http at your host address e.g. http://1.2.3.4/ or using your custom domain e.g. https://my.custom.domain/</p>
+<p>When the Budibase UI appears you will be prompted to create an account to get started.</p>
+<div class="pilwrap" id="podman">
+  <h3>
+    <a href="#podman" name="podman" class="pilcrow"></a>
+Podman
+  </h3>
+</div>
+<p>The single image container builds fine when using podman in place of docker. You may be prompted for the registry to use for the CouchDB image and the HEALTHCHECK parameter is not OCI compliant so is ignored.</p>
+<div class="pilwrap" id="check">
+  <h3>
+    <a href="#check" name="check" class="pilcrow"></a>
+Check
+  </h3>
+</div>
+<p>There are many things that could go wrong so if your container is not building or running as expected please check the following before opening a support issue.
+Verify the healthcheck status of the container:</p>
+<pre><code>docker ps
+</code></pre>
+<p>Check the container logs:</p>
+<pre><code>docker logs budibase
+</code></pre>
+<div class="pilwrap" id="support">
+  <h3>
+    <a href="#support" name="support" class="pilcrow"></a>
+Support
+  </h3>
+</div>
+<p>This single image build is still a work-in-progress so if you open an issue please provide the following information:</p>
+<ul>
+<li>The OS and OS version you are building on</li>
+<li>The versions you are using of docker, docker-compose, yarn, node, lerna</li>
+<li>For build errors please provide zipped output</li>
+<li>For container errors please provide zipped container logs</li>
+</ul>
+</div>
+  </div>
+</body>
+</html>

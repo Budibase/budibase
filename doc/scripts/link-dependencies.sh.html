@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>link-dependencies.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "scripts/link-dependencies.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>link-dependencies.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking backend-core"</span>
+<span class="hljs-built_in">cd</span> packages/backend-core
+yarn unlink
+yarn link
+<span class="hljs-built_in">cd</span> -
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking string-templates"</span>
+<span class="hljs-built_in">cd</span> packages/string-templates
+yarn unlink
+yarn link
+<span class="hljs-built_in">cd</span> -
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking types"</span>
+<span class="hljs-built_in">cd</span> packages/types
+yarn unlink
+yarn link
+<span class="hljs-built_in">cd</span> -
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking bbui"</span>
+<span class="hljs-built_in">cd</span> packages/bbui
+yarn unlink
+yarn link
+<span class="hljs-built_in">cd</span> -
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking frontend-core"</span>
+<span class="hljs-built_in">cd</span> packages/frontend-core
+yarn unlink
+yarn link
+<span class="hljs-built_in">cd</span> -
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking shared-core"</span>
+<span class="hljs-built_in">cd</span> packages/shared-core
+yarn unlink
+yarn link
+<span class="hljs-built_in">cd</span> -
+
+<span class="hljs-keyword">if</span> [ -d <span class="hljs-string">"../budibase-pro"</span> ]; <span class="hljs-keyword">then</span>
+  <span class="hljs-built_in">cd</span> ../budibase-pro
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Bootstrapping budibase-pro"</span>
+  yarn bootstrap
+
+  <span class="hljs-built_in">cd</span> packages/pro
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking pro"</span>
+  yarn unlink
+  yarn link
+
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking backend-core to pro"</span>
+  yarn link <span class="hljs-string">'@budibase/backend-core'</span>
+
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking types to pro"</span>
+  yarn link <span class="hljs-string">'@budibase/types'</span>
+
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking string-templates to pro"</span>
+  yarn link <span class="hljs-string">'@budibase/string-templates'</span>
+
+  <span class="hljs-built_in">cd</span> ../../../budibase
+
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking pro to worker"</span>
+  <span class="hljs-built_in">cd</span> packages/worker &amp;&amp; yarn link <span class="hljs-string">'@budibase/pro'</span>
+  <span class="hljs-built_in">cd</span> -
+
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking pro to server"</span>
+  <span class="hljs-built_in">cd</span> packages/server &amp;&amp; yarn link <span class="hljs-string">'@budibase/pro'</span>
+  <span class="hljs-built_in">cd</span> -
+<span class="hljs-keyword">fi</span>
+
+<span class="hljs-keyword">if</span> [ -d <span class="hljs-string">"../account-portal"</span> ]; <span class="hljs-keyword">then</span>
+  <span class="hljs-built_in">cd</span> ../account-portal
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Bootstrapping account-portal"</span>
+  yarn bootstrap
+  
+  <span class="hljs-built_in">cd</span> packages/server
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking backend-core to account-portal"</span>
+  yarn link <span class="hljs-string">"@budibase/backend-core"</span>
+
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking string-templates to account-portal"</span>
+  yarn link <span class="hljs-string">"@budibase/string-templates"</span>
+
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking types to account-portal"</span>
+  yarn link <span class="hljs-string">"@budibase/types"</span>
+
+  <span class="hljs-keyword">if</span> [ -d <span class="hljs-string">"../../../budibase-pro"</span> ]; <span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking pro to account-portal"</span>
+    yarn link <span class="hljs-string">"@budibase/pro"</span>
+  <span class="hljs-keyword">fi</span>
+
+  <span class="hljs-built_in">cd</span> ../ui
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking bbui to account-portal"</span>
+  yarn link <span class="hljs-string">"@budibase/bbui"</span>
+
+   <span class="hljs-built_in">echo</span> <span class="hljs-string">"Linking frontend-core to account-portal"</span>
+    yarn link <span class="hljs-string">"@budibase/frontend-core"</span>
+<span class="hljs-keyword">fi</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

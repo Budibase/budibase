@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>envoy.yaml</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "hosting/envoy.yaml";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>envoy.yaml</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">static_resources:</span>
+  <span class="hljs-attr">listeners:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">main_listener</span>
+    <span class="hljs-attr">address:</span>
+      <span class="hljs-attr">socket_address:</span> <span class="hljs-string">{</span> <span class="hljs-attr">address:</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span><span class="hljs-string">,</span> <span class="hljs-attr">port_value:</span> <span class="hljs-number">9999</span> <span class="hljs-string">}</span>
+    <span class="hljs-attr">filter_chains:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">filters:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">envoy.filters.network.http_connection_manager</span>
+        <span class="hljs-attr">typed_config:</span>
+          <span class="hljs-string">"@type"</span><span class="hljs-string">:</span> <span class="hljs-string">type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager</span>
+          <span class="hljs-attr">stat_prefix:</span> <span class="hljs-string">ingress</span>
+          <span class="hljs-attr">codec_type:</span> <span class="hljs-string">auto</span>
+          <span class="hljs-attr">route_config:</span>
+            <span class="hljs-attr">name:</span> <span class="hljs-string">local_route</span>
+            <span class="hljs-attr">virtual_hosts:</span>
+            <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">local_services</span>
+              <span class="hljs-attr">domains:</span> <span class="hljs-string">["*"]</span>
+              <span class="hljs-attr">routes:</span>
+              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/app/"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">app-service</span>
+                  <span class="hljs-attr">prefix_rewrite:</span> <span class="hljs-string">"/"</span>
+
+              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">path:</span> <span class="hljs-string">"/v1/update"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">watchtower-service</span>
+
+              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/builder/"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">app-service</span>
+
+              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/builder"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">app-service</span>
+              
+              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/app_"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">app-service</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>special cases for worker admin (deprecated), global and system API</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/api/global/"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">worker-service</span>
+
+              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/api/admin/"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">worker-service</span>
+
+              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/api/system/"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">worker-service</span>
+
+              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">path:</span> <span class="hljs-string">"/"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">app-service</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>special case for when API requests are made, can just forward, not to minio</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/api/"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">app-service</span>
+                  <span class="hljs-attr">timeout:</span> <span class="hljs-string">120s</span>
+
+              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/worker/"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span> 
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">worker-service</span>
+                  <span class="hljs-attr">prefix_rewrite:</span> <span class="hljs-string">"/"</span>
+
+              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/db/"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">couchdb-service</span>
+                  <span class="hljs-attr">prefix_rewrite:</span> <span class="hljs-string">"/"</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>minio is on the default route because this works
+best, minio + AWS SDK doesn't handle path proxy</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">              <span class="hljs-bullet">-</span> <span class="hljs-attr">match:</span> <span class="hljs-string">{</span> <span class="hljs-attr">prefix:</span> <span class="hljs-string">"/"</span> <span class="hljs-string">}</span>
+                <span class="hljs-attr">route:</span>
+                  <span class="hljs-attr">cluster:</span> <span class="hljs-string">minio-service</span>
+
+          <span class="hljs-attr">http_filters:</span>
+          <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">envoy.filters.http.router</span>
+
+  <span class="hljs-attr">clusters:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">app-service</span>
+    <span class="hljs-attr">connect_timeout:</span> <span class="hljs-number">0.</span><span class="hljs-string">25s</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">strict_dns</span>
+    <span class="hljs-attr">lb_policy:</span> <span class="hljs-string">round_robin</span>
+    <span class="hljs-attr">load_assignment:</span>
+      <span class="hljs-attr">cluster_name:</span> <span class="hljs-string">app-service</span>
+      <span class="hljs-attr">endpoints:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">lb_endpoints:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">endpoint:</span>
+            <span class="hljs-attr">address:</span>
+              <span class="hljs-attr">socket_address:</span> 
+                <span class="hljs-attr">address:</span> <span class="hljs-string">app-service</span>
+                <span class="hljs-attr">port_value:</span> <span class="hljs-number">4002</span>
+
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">minio-service</span>
+    <span class="hljs-attr">connect_timeout:</span> <span class="hljs-number">0.</span><span class="hljs-string">25s</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">strict_dns</span>
+    <span class="hljs-attr">lb_policy:</span> <span class="hljs-string">round_robin</span>
+    <span class="hljs-attr">load_assignment:</span>
+      <span class="hljs-attr">cluster_name:</span> <span class="hljs-string">minio-service</span>
+      <span class="hljs-attr">endpoints:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">lb_endpoints:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">endpoint:</span>
+            <span class="hljs-attr">address:</span>
+              <span class="hljs-attr">socket_address:</span>
+                <span class="hljs-attr">address:</span> <span class="hljs-string">minio-service</span>
+                <span class="hljs-attr">port_value:</span> <span class="hljs-number">9000</span>
+
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">worker-service</span>
+    <span class="hljs-attr">connect_timeout:</span> <span class="hljs-number">0.</span><span class="hljs-string">25s</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">strict_dns</span>
+    <span class="hljs-attr">lb_policy:</span> <span class="hljs-string">round_robin</span>
+    <span class="hljs-attr">load_assignment:</span>
+      <span class="hljs-attr">cluster_name:</span> <span class="hljs-string">worker-service</span>
+      <span class="hljs-attr">endpoints:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">lb_endpoints:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">endpoint:</span>
+            <span class="hljs-attr">address:</span>
+              <span class="hljs-attr">socket_address:</span> 
+                <span class="hljs-attr">address:</span> <span class="hljs-string">worker-service</span>
+                <span class="hljs-attr">port_value:</span> <span class="hljs-number">4003</span>
+
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">couchdb-service</span>
+    <span class="hljs-attr">connect_timeout:</span> <span class="hljs-number">0.</span><span class="hljs-string">25s</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">strict_dns</span>
+    <span class="hljs-attr">lb_policy:</span> <span class="hljs-string">round_robin</span>
+    <span class="hljs-attr">load_assignment:</span>
+      <span class="hljs-attr">cluster_name:</span> <span class="hljs-string">couchdb-service</span>
+      <span class="hljs-attr">endpoints:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">lb_endpoints:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">endpoint:</span>
+            <span class="hljs-attr">address:</span>
+              <span class="hljs-attr">socket_address:</span>
+                <span class="hljs-attr">address:</span> <span class="hljs-string">couchdb-service</span>
+                <span class="hljs-attr">port_value:</span> <span class="hljs-number">5984</span>
+
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">watchtower-service</span>
+    <span class="hljs-attr">connect_timeout:</span> <span class="hljs-number">0.</span><span class="hljs-string">25s</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">strict_dns</span>
+    <span class="hljs-attr">lb_policy:</span> <span class="hljs-string">round_robin</span>
+    <span class="hljs-attr">load_assignment:</span>
+      <span class="hljs-attr">cluster_name:</span> <span class="hljs-string">watchtower-service</span>
+      <span class="hljs-attr">endpoints:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">lb_endpoints:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">endpoint:</span>
+            <span class="hljs-attr">address:</span>
+              <span class="hljs-attr">socket_address:</span> 
+                <span class="hljs-attr">address:</span> <span class="hljs-string">watchtower-service</span>
+                <span class="hljs-attr">port_value:</span> <span class="hljs-number">8080</span>
+
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>next.config.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "examples/nextjs-api-sales/next.config.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>next.config.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">const</span> { join } = <span class="hljs-built_in">require</span>(<span class="hljs-string">"path"</span>)
+<span class="hljs-comment">/** <span class="hljs-doctag">@type <span class="hljs-type">{import('next').NextConfig}</span> </span>*/</span>
+<span class="hljs-keyword">const</span> nextConfig = {
+  <span class="hljs-attr">reactStrictMode</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">sassOptions</span>: {
+    <span class="hljs-attr">includePaths</span>: [join(__dirname, <span class="hljs-string">"styles"</span>)],
+  },
+  <span class="hljs-attr">serverRuntimeConfig</span>: {
+    <span class="hljs-attr">apiKey</span>:
+      <span class="hljs-string">"bf4d86af933b5ac0af0fdbe4bf7d89ff-f929752a1eeaafb00f4b5e3325097d51a44fe4b39f22ed857923409cc75414b379323a25ebfb4916"</span>,
+    <span class="hljs-attr">appName</span>: <span class="hljs-string">"sales"</span>,
+    <span class="hljs-attr">host</span>: <span class="hljs-string">"http://localhost:10000"</span>,
+  },
+}
+
+<span class="hljs-built_in">module</span>.exports = nextConfig
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

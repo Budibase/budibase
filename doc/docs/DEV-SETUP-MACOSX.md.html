@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DEV-SETUP-MACOSX.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "docs/DEV-SETUP-MACOSX.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h2">
+        <a href="#dev-environment-on-mac-osx-12-monterey">Dev Environment on MAC OSX 12 (Monterey)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-homebrew">Install Homebrew</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-node">Install Node</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-npm-requirements">Install npm requirements</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-docker-and-docker-compose">Install Docker and Docker Compose</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#clone-the-repo">Clone the repo</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#check-versions">Check Versions</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#build">Build</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#troubleshooting">Troubleshooting</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="dev-environment-on-mac-osx-12-monterey">
+  <h2>
+    <a href="#dev-environment-on-mac-osx-12-monterey" name="dev-environment-on-mac-osx-12-monterey" class="pilcrow"></a>
+Dev Environment on MAC OSX 12 (Monterey)
+  </h2>
+</div>
+<div class="pilwrap" id="install-homebrew">
+  <h3>
+    <a href="#install-homebrew" name="install-homebrew" class="pilcrow"></a>
+Install Homebrew
+  </h3>
+</div>
+<p>Install instructions <a href="https://brew.sh/">here</a></p>
+<p>| <strong>NOTE</strong>: If you are working on a M1 Apple Silicon which is running Z shell, you could need to add
+<code>eval $(/opt/homebrew/bin/brew shellenv)</code> line to your <code>.zshrc</code>. This will make your zsh to find the apps you install
+through brew.</p>
+<div class="pilwrap" id="install-node">
+  <h3>
+    <a href="#install-node" name="install-node" class="pilcrow"></a>
+Install Node
+  </h3>
+</div>
+<p>Budibase requires a recent version of node 14:</p>
+<pre><code>brew install node npm
+node -v
+</code></pre>
+<div class="pilwrap" id="install-npm-requirements">
+  <h3>
+    <a href="#install-npm-requirements" name="install-npm-requirements" class="pilcrow"></a>
+Install npm requirements
+  </h3>
+</div>
+<pre><code>npm install -g yarn jest lerna
+</code></pre>
+<div class="pilwrap" id="install-docker-and-docker-compose">
+  <h3>
+    <a href="#install-docker-and-docker-compose" name="install-docker-and-docker-compose" class="pilcrow"></a>
+Install Docker and Docker Compose
+  </h3>
+</div>
+<pre><code>brew install docker docker-compose
+</code></pre>
+<div class="pilwrap" id="clone-the-repo">
+  <h3>
+    <a href="#clone-the-repo" name="clone-the-repo" class="pilcrow"></a>
+Clone the repo
+  </h3>
+</div>
+<pre><code>git clone https://github.com/Budibase/budibase.git
+</code></pre>
+<div class="pilwrap" id="check-versions">
+  <h3>
+    <a href="#check-versions" name="check-versions" class="pilcrow"></a>
+Check Versions
+  </h3>
+</div>
+<p>This setup process was tested on Mac OSX 12 (Monterey) with version numbers shown below. Your mileage may vary using anything else.</p>
+<ul>
+<li>Docker: 20.10.14</li>
+<li>Docker-Compose: 2.6.0</li>
+<li>Node: 14.20.1</li>
+<li>Yarn: 1.22.19</li>
+<li>Lerna: 5.1.4</li>
+</ul>
+<div class="pilwrap" id="build">
+  <h3>
+    <a href="#build" name="build" class="pilcrow"></a>
+Build
+  </h3>
+</div>
+<pre><code>cd budibase
+yarn setup
+</code></pre>
+<p>The yarn setup command runs several build steps i.e.</p>
+<pre><code>node ./hosting/scripts/setup.js &amp;&amp; yarn &amp;&amp; yarn bootstrap &amp;&amp; yarn build &amp;&amp; yarn dev
+</code></pre>
+<p>So this command will actually run the application in dev mode. It creates .env files under <code>./packages/server</code> and <code>./packages/worker</code> and runs docker containers for each service via docker-compose.</p>
+<p>The dev version will be available on port 10000 i.e.</p>
+<p>http://127.0.0.1:10000/builder/admin</p>
+<p>| <strong>NOTE</strong>: If you are working on a M1 Apple Silicon, you will need to uncomment <code># platform: linux/amd64</code> line in
+<a href="../hosting/docker-compose.dev.yaml.html">hosting/docker-compose-dev.yaml</a></p>
+<div class="pilwrap" id="troubleshooting">
+  <h3>
+    <a href="#troubleshooting" name="troubleshooting" class="pilcrow"></a>
+Troubleshooting
+  </h3>
+</div>
+<p>If there are errors with the <code>yarn setup</code> command, you can try installing nvm and node 14. This is the same as the instructions for Debian 11.</p>
+</div>
+  </div>
+</body>
+</html>

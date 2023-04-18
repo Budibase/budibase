@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>tsconfig.json</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "qa-core/tsconfig.json";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>tsconfig.json</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="json">{
+  <span class="hljs-attr">"compilerOptions"</span>: {
+    <span class="hljs-attr">"target"</span>: <span class="hljs-string">"es6"</span>,
+    <span class="hljs-attr">"module"</span>: <span class="hljs-string">"commonjs"</span>,
+    <span class="hljs-attr">"lib"</span>: [<span class="hljs-string">"es2020"</span>],
+    <span class="hljs-attr">"allowJs"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"strict"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"noImplicitAny"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"esModuleInterop"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"resolveJsonModule"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"incremental"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"types"</span>: [<span class="hljs-string">"node"</span>, <span class="hljs-string">"jest"</span>],
+    <span class="hljs-attr">"outDir"</span>: <span class="hljs-string">"dist"</span>,
+    <span class="hljs-attr">"skipLibCheck"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"paths"</span>: {
+      <span class="hljs-attr">"@budibase/types"</span>: [<span class="hljs-string">"../packages/types/src"</span>],
+      <span class="hljs-attr">"@budibase/backend-core"</span>: [<span class="hljs-string">"../packages/backend-core/src"</span>],
+      <span class="hljs-attr">"@budibase/backend-core/*"</span>: [<span class="hljs-string">"../packages/backend-core/*"</span>],
+      <span class="hljs-attr">"@budibase/server/*"</span>: [<span class="hljs-string">"../packages/server/src/*"</span>],
+    }
+  },
+  <span class="hljs-attr">"ts-node"</span>: {
+    <span class="hljs-attr">"require"</span>: [<span class="hljs-string">"tsconfig-paths/register"</span>]
+  },
+  <span class="hljs-attr">"references"</span>: [
+    { <span class="hljs-attr">"path"</span>: <span class="hljs-string">"../packages/types"</span> },
+    { <span class="hljs-attr">"path"</span>: <span class="hljs-string">"../packages/backend-core"</span> },
+  ],
+  <span class="hljs-attr">"include"</span>: [
+    <span class="hljs-string">"src/**/*"</span>,
+    <span class="hljs-string">"package.json"</span>
+  ],
+  <span class="hljs-attr">"exclude"</span>: [
+    <span class="hljs-string">"node_modules"</span>,
+    <span class="hljs-string">"dist"</span>
+  ]
+}
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

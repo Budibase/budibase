@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DEV-SETUP-DEBIAN.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "docs/DEV-SETUP-DEBIAN.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h2">
+        <a href="#dev-environment-on-debian-11">Dev Environment on Debian 11</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-nvm-and-node-14">Install NVM &amp;amp; Node 14</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-npm-requirements">Install npm requirements</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#install-docker-and-docker-compose">Install Docker and Docker Compose</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#clone-the-repo">Clone the repo</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#check-versions">Check Versions</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#build">Build</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#file-descriptor-issues-with-vite-and-chrome-in-linux">File descriptor issues with Vite and Chrome in Linux</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="dev-environment-on-debian-11">
+  <h2>
+    <a href="#dev-environment-on-debian-11" name="dev-environment-on-debian-11" class="pilcrow"></a>
+Dev Environment on Debian 11
+  </h2>
+</div>
+<div class="pilwrap" id="install-nvm-and-node-14">
+  <h3>
+    <a href="#install-nvm-and-node-14" name="install-nvm-and-node-14" class="pilcrow"></a>
+Install NVM &amp; Node 14
+  </h3>
+</div>
+<p>NVM documentation: https://github.com/nvm-sh/nvm#installing-and-updating</p>
+<p>Install NVM</p>
+<pre><code>curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+</code></pre>
+<p>Install Node 14</p>
+<pre><code>nvm install 14
+</code></pre>
+<div class="pilwrap" id="install-npm-requirements">
+  <h3>
+    <a href="#install-npm-requirements" name="install-npm-requirements" class="pilcrow"></a>
+Install npm requirements
+  </h3>
+</div>
+<pre><code>npm install -g yarn jest lerna
+</code></pre>
+<div class="pilwrap" id="install-docker-and-docker-compose">
+  <h3>
+    <a href="#install-docker-and-docker-compose" name="install-docker-and-docker-compose" class="pilcrow"></a>
+Install Docker and Docker Compose
+  </h3>
+</div>
+<pre><code>apt install docker.io
+pip3 install docker-compose
+</code></pre>
+<div class="pilwrap" id="clone-the-repo">
+  <h3>
+    <a href="#clone-the-repo" name="clone-the-repo" class="pilcrow"></a>
+Clone the repo
+  </h3>
+</div>
+<pre><code>git clone https://github.com/Budibase/budibase.git
+</code></pre>
+<div class="pilwrap" id="check-versions">
+  <h3>
+    <a href="#check-versions" name="check-versions" class="pilcrow"></a>
+Check Versions
+  </h3>
+</div>
+<p>This setup process was tested on Debian 11 (bullseye) with version numbers show below. Your mileage may vary using anything else.</p>
+<ul>
+<li>Docker: 20.10.5</li>
+<li>Docker-Compose: 1.29.2</li>
+<li>Node: v14.20.1</li>
+<li>Yarn: 1.22.19</li>
+<li>Lerna: 5.1.4</li>
+</ul>
+<div class="pilwrap" id="build">
+  <h3>
+    <a href="#build" name="build" class="pilcrow"></a>
+Build
+  </h3>
+</div>
+<pre><code>cd budibase
+yarn setup
+</code></pre>
+<p>The yarn setup command runs several build steps i.e.</p>
+<pre><code>node ./hosting/scripts/setup.js &amp;&amp; yarn &amp;&amp; yarn bootstrap &amp;&amp; yarn build &amp;&amp; yarn dev
+</code></pre>
+<p>So this command will actually run the application in dev mode. It creates .env files under <code>./packages/server</code> and <code>./packages/worker</code> and runs docker containers for each service via docker-compose.</p>
+<p>The dev version will be available on port 10000 i.e.</p>
+<p>http://127.0.0.1:10000/builder/admin</p>
+<div class="pilwrap" id="file-descriptor-issues-with-vite-and-chrome-in-linux">
+  <h3>
+    <a href="#file-descriptor-issues-with-vite-and-chrome-in-linux" name="file-descriptor-issues-with-vite-and-chrome-in-linux" class="pilcrow"></a>
+File descriptor issues with Vite and Chrome in Linux
+  </h3>
+</div>
+<p>If your dev environment stalls forever, with some network requests stuck in flight, it's likely that Chrome is trying to open more file descriptors than your system allows.
+To fix this, apply the following tweaks.</p>
+<p>Debian based distros:
+Add <code>* - nofile 65536</code> to <code>/etc/security/limits.conf</code>.</p>
+<p>Arch:
+Add <code>DefaultLimitNOFILE=65536</code> to <code>/etc/systemd/system.conf</code>.</p>
+</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>.eslintrc.json</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="doc-style.css" />
+  <script src="doc-filelist.js"></script>
+  <script>
+    var relativeDir = "";
+    var thisFile = ".eslintrc.json";
+    var defaultSidebar = true;
+  </script>
+  <script src="doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>.eslintrc.json</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="json">{
+  <span class="hljs-attr">"env"</span>: {
+    <span class="hljs-attr">"browser"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"es6"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"jest"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"node"</span>: <span class="hljs-literal">true</span>
+  },
+  <span class="hljs-attr">"parser"</span>: <span class="hljs-string">"babel-eslint"</span>,
+  <span class="hljs-attr">"parserOptions"</span>: {
+    <span class="hljs-attr">"ecmaVersion"</span>: <span class="hljs-number">2019</span>,
+    <span class="hljs-attr">"sourceType"</span>: <span class="hljs-string">"module"</span>,
+    <span class="hljs-attr">"allowImportExportEverywhere"</span>: <span class="hljs-literal">true</span>
+  },
+  <span class="hljs-attr">"ignorePatterns"</span>: [
+    <span class="hljs-string">"node_modules"</span>,
+    <span class="hljs-string">"dist"</span>,
+    <span class="hljs-string">"public"</span>,
+    <span class="hljs-string">"*.spec.js"</span>,
+    <span class="hljs-string">"bundle.js"</span>
+  ],
+  <span class="hljs-attr">"plugins"</span>: [<span class="hljs-string">"svelte3"</span>],
+  <span class="hljs-attr">"extends"</span>: [<span class="hljs-string">"eslint:recommended"</span>],
+  <span class="hljs-attr">"overrides"</span>: [
+    {
+      <span class="hljs-attr">"files"</span>: [<span class="hljs-string">"*.svelte"</span>],
+      <span class="hljs-attr">"processor"</span>: <span class="hljs-string">"svelte3/svelte3"</span>
+    },
+    {
+      <span class="hljs-attr">"files"</span>: [<span class="hljs-string">"**/*.ts"</span>],
+      <span class="hljs-attr">"parser"</span>: <span class="hljs-string">"@typescript-eslint/parser"</span>,
+      <span class="hljs-attr">"plugins"</span>: [],
+      <span class="hljs-attr">"extends"</span>: [
+        <span class="hljs-string">"eslint:recommended"</span>
+      ],
+      <span class="hljs-attr">"rules"</span>: {
+        <span class="hljs-attr">"no-unused-vars"</span>: <span class="hljs-string">"off"</span>,
+        <span class="hljs-attr">"no-inner-declarations"</span>: <span class="hljs-string">"off"</span>,
+        <span class="hljs-attr">"no-case-declarations"</span>: <span class="hljs-string">"off"</span>,
+        <span class="hljs-attr">"no-useless-escape"</span>: <span class="hljs-string">"off"</span>,
+        <span class="hljs-attr">"no-undef"</span>: <span class="hljs-string">"off"</span>,
+        <span class="hljs-attr">"no-prototype-builtins"</span>: <span class="hljs-string">"off"</span>
+      }
+    }
+  ],
+  <span class="hljs-attr">"rules"</span>: {
+    <span class="hljs-attr">"no-self-assign"</span>: <span class="hljs-string">"off"</span>
+  },
+  <span class="hljs-attr">"globals"</span>: {
+    <span class="hljs-attr">"GeolocationPositionError"</span>: <span class="hljs-literal">true</span>
+  }
+}
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

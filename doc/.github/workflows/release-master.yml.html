@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>release-master.yml</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = ".github/workflows/release-master.yml";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>release-master.yml</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">name:</span> <span class="hljs-string">Budibase</span> <span class="hljs-string">Release</span>
+<span class="hljs-attr">concurrency:</span> <span class="hljs-string">release</span>
+
+<span class="hljs-attr">on:</span>
+ <span class="hljs-attr">push:</span>
+    <span class="hljs-attr">branches:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">master</span>
+    <span class="hljs-attr">paths:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">'.aws/**'</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">'.github/**'</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">'charts/**'</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">'packages/**'</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">'scripts/**'</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">'package.json'</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">'yarn.lock'</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">'package.json'</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">'yarn.lock'</span>
+ <span class="hljs-attr">workflow_dispatch:</span>
+  <span class="hljs-attr">inputs:</span>
+    <span class="hljs-attr">versioning:</span>
+      <span class="hljs-attr">type:</span> <span class="hljs-string">choice</span>
+      <span class="hljs-attr">description:</span> <span class="hljs-string">"Versioning type: patch, minor, major"</span>
+      <span class="hljs-attr">default:</span> <span class="hljs-string">patch</span>
+      <span class="hljs-attr">options:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">patch</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">minor</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-string">major</span>
+      <span class="hljs-attr">required:</span> <span class="hljs-literal">true</span>
+
+<span class="hljs-attr">env:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Posthog token used by ui at build time</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">POSTHOG_TOKEN:</span> <span class="hljs-string">phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU</span>
+  <span class="hljs-attr">INTERCOM_TOKEN:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.INTERCOM_TOKEN</span> <span class="hljs-string">}}</span>
+  <span class="hljs-attr">SENTRY_DSN:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.SENTRY_DSN</span> <span class="hljs-string">}}</span>
+  <span class="hljs-attr">PERSONAL_ACCESS_TOKEN :</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.PERSONAL_ACCESS_TOKEN</span> <span class="hljs-string">}}</span>
+
+<span class="hljs-attr">jobs:</span>
+  <span class="hljs-attr">release-images:</span>
+    <span class="hljs-attr">runs-on:</span> <span class="hljs-string">ubuntu-latest</span>
+    <span class="hljs-attr">steps:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Fail</span> <span class="hljs-string">if</span> <span class="hljs-string">branch</span> <span class="hljs-string">is</span> <span class="hljs-string">not</span> <span class="hljs-string">master</span>
+        <span class="hljs-attr">if:</span> <span class="hljs-string">github.ref</span> <span class="hljs-string">!=</span> <span class="hljs-string">'refs/heads/master'</span> 
+        <span class="hljs-attr">run:</span> <span class="hljs-string">| 
+          echo "Ref is not master, you must run this job from master."
+          exit 1
+</span>      <span class="hljs-bullet">-</span> <span class="hljs-attr">uses:</span> <span class="hljs-string">actions/checkout@v2</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">uses:</span> <span class="hljs-string">actions/setup-node@v1</span>
+        <span class="hljs-attr">with:</span>
+          <span class="hljs-attr">node-version:</span> <span class="hljs-number">14.</span><span class="hljs-string">x</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Install</span> <span class="hljs-string">Pro</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">yarn</span> <span class="hljs-string">install:pro</span> <span class="hljs-string">master</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">run:</span> <span class="hljs-string">yarn</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">run:</span> <span class="hljs-string">yarn</span> <span class="hljs-string">bootstrap</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">run:</span> <span class="hljs-string">yarn</span> <span class="hljs-string">lint</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">run:</span> <span class="hljs-string">yarn</span> <span class="hljs-string">build</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">run:</span> <span class="hljs-string">yarn</span> <span class="hljs-string">build:sdk</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Publish</span> <span class="hljs-string">budibase</span> <span class="hljs-string">packages</span> <span class="hljs-string">to</span> <span class="hljs-string">NPM</span>
+        <span class="hljs-attr">env:</span>
+          <span class="hljs-attr">NPM_TOKEN:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.NPM_TOKEN</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">RELEASE_VERSION_TYPE:</span> <span class="hljs-string">${{</span> <span class="hljs-string">github.event.inputs.versioning</span> <span class="hljs-string">}}</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">|</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">          <span class="hljs-string">git</span> <span class="hljs-string">config</span> <span class="hljs-string">--global</span> <span class="hljs-string">user.name</span> <span class="hljs-string">"Budibase Release Bot"</span>
+          <span class="hljs-string">git</span> <span class="hljs-string">config</span> <span class="hljs-string">--global</span> <span class="hljs-string">user.email</span> <span class="hljs-string">"&lt;&gt;"</span>
+          <span class="hljs-string">echo</span> <span class="hljs-string">//registry.npmjs.org/:_authToken=${NPM_TOKEN}</span> <span class="hljs-string">&gt;&gt;</span> <span class="hljs-string">.npmrc</span>
+          <span class="hljs-string">yarn</span> <span class="hljs-string">release</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">'Get Previous tag'</span>
+        <span class="hljs-attr">id:</span> <span class="hljs-string">previoustag</span>
+        <span class="hljs-attr">uses:</span> <span class="hljs-string">"WyriHaximus/github-action-get-previous-tag@v1"</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Build/release</span> <span class="hljs-string">Docker</span> <span class="hljs-string">images</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">| 
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          yarn build
+          yarn build:docker
+</span>        <span class="hljs-attr">env:</span>
+          <span class="hljs-attr">DOCKER_USER:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.DOCKER_USERNAME</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">DOCKER_PASSWORD:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.DOCKER_API_KEY</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">BUDIBASE_RELEASE_VERSION:</span> <span class="hljs-string">${{</span> <span class="hljs-string">steps.previoustag.outputs.tag</span> <span class="hljs-string">}}</span>
+
+  <span class="hljs-attr">release-helm-chart:</span>
+    <span class="hljs-attr">needs:</span> <span class="hljs-string">[release-images]</span>
+    <span class="hljs-attr">runs-on:</span> <span class="hljs-string">ubuntu-latest</span>
+    <span class="hljs-attr">steps:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">uses:</span> <span class="hljs-string">actions/checkout@v2</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Setup</span> <span class="hljs-string">Helm</span>
+        <span class="hljs-attr">uses:</span> <span class="hljs-string">azure/setup-helm@v1</span>
+        <span class="hljs-attr">id:</span> <span class="hljs-string">helm-install</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Get</span> <span class="hljs-string">the</span> <span class="hljs-string">latest</span> <span class="hljs-string">budibase</span> <span class="hljs-string">release</span> <span class="hljs-string">version</span>
+        <span class="hljs-attr">id:</span> <span class="hljs-string">version</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">|
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" &gt;&gt; $GITHUB_ENV
+</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>due to helm repo index issue: https://github.com/helm/helm/issues/7363
+we need to create new package in a different dir, merge the index and move the package back</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Build</span> <span class="hljs-string">and</span> <span class="hljs-string">release</span> <span class="hljs-string">helm</span> <span class="hljs-string">chart</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">|
+          git config user.name "Budibase Helm Bot"
+          git config user.email "&lt;&gt;"
+          git reset --hard
+          git pull
+          mkdir sync
+          echo "Packaging chart to sync dir"
+          helm package charts/budibase --version 0.0.0-master --app-version "$RELEASE_VERSION" --destination sync
+          echo "Packaging successful"
+          git checkout gh-pages
+          echo "Indexing helm repo"         
+          helm repo index --merge docs/index.yaml sync
+          mv -f sync/* docs
+          rm -rf sync
+          echo "Pushing new helm release"
+          git add -A
+          git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
+          git push
+</span>
+  <span class="hljs-attr">deploy-to-legacy-preprod-env:</span>
+    <span class="hljs-attr">needs:</span> <span class="hljs-string">[release-images]</span>
+    <span class="hljs-attr">uses:</span> <span class="hljs-string">./.github/workflows/deploy-preprod.yml</span>
+    <span class="hljs-attr">secrets:</span> <span class="hljs-string">inherit</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Trigger deploy to new EKS preprod environment</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">trigger-deploy-to-preprod-env:</span>
+    <span class="hljs-attr">needs:</span> <span class="hljs-string">[release-helm-chart]</span>
+    <span class="hljs-attr">runs-on:</span> <span class="hljs-string">ubuntu-latest</span>
+    <span class="hljs-attr">steps:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">uses:</span> <span class="hljs-string">actions/checkout@v2</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Get</span> <span class="hljs-string">the</span> <span class="hljs-string">latest</span> <span class="hljs-string">budibase</span> <span class="hljs-string">release</span> <span class="hljs-string">version</span>
+        <span class="hljs-attr">id:</span> <span class="hljs-string">version</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">|
+          git pull
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" &gt;&gt; $GITHUB_ENV
+</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">uses:</span> <span class="hljs-string">passeidireto/trigger-external-workflow-action@main</span>
+        <span class="hljs-attr">env:</span>
+          <span class="hljs-attr">PAYLOAD_VERSION:</span> <span class="hljs-string">${{</span> <span class="hljs-string">env.RELEASE_VERSION</span> <span class="hljs-string">}}</span>
+        <span class="hljs-attr">with:</span>
+          <span class="hljs-attr">repository:</span> <span class="hljs-string">budibase/budibase-deploys</span>
+          <span class="hljs-attr">event:</span> <span class="hljs-string">budicloud-preprod-deploy</span>
+          <span class="hljs-attr">github_pat:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.GH_ACCESS_TOKEN</span> <span class="hljs-string">}}</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

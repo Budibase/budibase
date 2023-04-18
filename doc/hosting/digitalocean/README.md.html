@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>README.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "hosting/digitalocean/README.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#budibase-digitalocean-one-click">Budibase DigitalOcean One Click</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#prerequisites">Prerequisites</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#building">Building</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#uploading-to-marketplace">Uploading to Marketplace</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="budibase-digitalocean-one-click">
+  <h1>
+    <a href="#budibase-digitalocean-one-click" name="budibase-digitalocean-one-click" class="pilcrow"></a>
+Budibase DigitalOcean One Click
+  </h1>
+</div>
+<p>You will find in this directory configuration for packaging and creating a snapshot for the Budibase 1 click Digitalocean build. We use this configuration to have an immutable and reproducible build package for Digitalocean, that rarely needs updated.</p>
+<div class="pilwrap" id="prerequisites">
+  <h2>
+    <a href="#prerequisites" name="prerequisites" class="pilcrow"></a>
+Prerequisites
+  </h2>
+</div>
+<p>You must install Hashicorps <code>packer</code> to build the snapshot for digitalocean. Follow the instructions to install packer <a href="https://learn.hashicorp.com/tutorials/packer/get-started-install-cli">here</a></p>
+<p>You must have the <code>DIGITALOCEAN_TOKEN</code> environment variable set, so that packer can reach out to the digitalocean API for build information.</p>
+<div class="pilwrap" id="building">
+  <h2>
+    <a href="#building" name="building" class="pilcrow"></a>
+Building
+  </h2>
+</div>
+<p>Just run the following command:</p>
+<pre><code>yarn build:digitalocean
+</code></pre>
+<div class="pilwrap" id="uploading-to-marketplace">
+  <h2>
+    <a href="#uploading-to-marketplace" name="uploading-to-marketplace" class="pilcrow"></a>
+Uploading to Marketplace
+  </h2>
+</div>
+<p>You can upload the snapshot to the Digitalocean vendor portal at the following link (Requires vendor account):</p>
+<p>https://marketplace.digitalocean.com/vendorportal</p>
+</div>
+  </div>
+</body>
+</html>

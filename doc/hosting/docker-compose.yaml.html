@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>docker-compose.yaml</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "hosting/docker-compose.yaml";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>docker-compose.yaml</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">version:</span> <span class="hljs-string">"3"</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>optional ports are specified throughout for more advanced use cases.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+<span class="hljs-attr">services:</span>
+  <span class="hljs-attr">app-service:</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">unless-stopped</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">budibase.docker.scarf.sh/budibase/apps</span>
+    <span class="hljs-attr">container_name:</span> <span class="hljs-string">bbapps</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-attr">SELF_HOSTED:</span> <span class="hljs-number">1</span>
+      <span class="hljs-attr">COUCH_DB_URL:</span> <span class="hljs-string">http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984</span>
+      <span class="hljs-attr">WORKER_URL:</span> <span class="hljs-string">http://worker-service:4003</span>
+      <span class="hljs-attr">MINIO_URL:</span> <span class="hljs-string">http://minio-service:9000</span>
+      <span class="hljs-attr">MINIO_ACCESS_KEY:</span> <span class="hljs-string">${MINIO_ACCESS_KEY}</span>
+      <span class="hljs-attr">MINIO_SECRET_KEY:</span> <span class="hljs-string">${MINIO_SECRET_KEY}</span>
+      <span class="hljs-attr">INTERNAL_API_KEY:</span> <span class="hljs-string">${INTERNAL_API_KEY}</span>
+      <span class="hljs-attr">BUDIBASE_ENVIRONMENT:</span> <span class="hljs-string">${BUDIBASE_ENVIRONMENT}</span>
+      <span class="hljs-attr">PORT:</span> <span class="hljs-number">4002</span>
+      <span class="hljs-attr">API_ENCRYPTION_KEY:</span> <span class="hljs-string">${API_ENCRYPTION_KEY}</span>
+      <span class="hljs-attr">JWT_SECRET:</span> <span class="hljs-string">${JWT_SECRET}</span>
+      <span class="hljs-attr">LOG_LEVEL:</span> <span class="hljs-string">info</span>
+      <span class="hljs-attr">SENTRY_DSN:</span> <span class="hljs-string">https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131</span>
+      <span class="hljs-attr">ENABLE_ANALYTICS:</span> <span class="hljs-string">"true"</span>
+      <span class="hljs-attr">REDIS_URL:</span> <span class="hljs-string">redis-service:6379</span>
+      <span class="hljs-attr">REDIS_PASSWORD:</span> <span class="hljs-string">${REDIS_PASSWORD}</span>
+      <span class="hljs-attr">BB_ADMIN_USER_EMAIL:</span> <span class="hljs-string">${BB_ADMIN_USER_EMAIL}</span>
+      <span class="hljs-attr">BB_ADMIN_USER_PASSWORD:</span> <span class="hljs-string">${BB_ADMIN_USER_PASSWORD}</span>
+      <span class="hljs-attr">PLUGINS_DIR:</span> <span class="hljs-string">${PLUGINS_DIR}</span>
+    <span class="hljs-attr">depends_on:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">worker-service</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">redis-service</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>volumes:
+- /some/path/to/plugins:/plugins</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+  <span class="hljs-attr">worker-service:</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">unless-stopped</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">budibase.docker.scarf.sh/budibase/worker</span>
+    <span class="hljs-attr">container_name:</span> <span class="hljs-string">bbworker</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-attr">SELF_HOSTED:</span> <span class="hljs-number">1</span>
+      <span class="hljs-attr">PORT:</span> <span class="hljs-number">4003</span>
+      <span class="hljs-attr">CLUSTER_PORT:</span> <span class="hljs-string">${MAIN_PORT}</span>
+      <span class="hljs-attr">API_ENCRYPTION_KEY:</span> <span class="hljs-string">${API_ENCRYPTION_KEY}</span>
+      <span class="hljs-attr">JWT_SECRET:</span> <span class="hljs-string">${JWT_SECRET}</span>
+      <span class="hljs-attr">MINIO_ACCESS_KEY:</span> <span class="hljs-string">${MINIO_ACCESS_KEY}</span>
+      <span class="hljs-attr">MINIO_SECRET_KEY:</span> <span class="hljs-string">${MINIO_SECRET_KEY}</span>
+      <span class="hljs-attr">MINIO_URL:</span> <span class="hljs-string">http://minio-service:9000</span>
+      <span class="hljs-attr">APPS_URL:</span> <span class="hljs-string">http://app-service:4002</span>
+      <span class="hljs-attr">COUCH_DB_USERNAME:</span> <span class="hljs-string">${COUCH_DB_USER}</span>
+      <span class="hljs-attr">COUCH_DB_PASSWORD:</span> <span class="hljs-string">${COUCH_DB_PASSWORD}</span>
+      <span class="hljs-attr">COUCH_DB_URL:</span> <span class="hljs-string">http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984</span>
+      <span class="hljs-attr">SENTRY_DSN:</span> <span class="hljs-string">https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131</span>
+      <span class="hljs-attr">INTERNAL_API_KEY:</span> <span class="hljs-string">${INTERNAL_API_KEY}</span>
+      <span class="hljs-attr">REDIS_URL:</span> <span class="hljs-string">redis-service:6379</span>
+      <span class="hljs-attr">REDIS_PASSWORD:</span> <span class="hljs-string">${REDIS_PASSWORD}</span>
+    <span class="hljs-attr">depends_on:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">redis-service</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">minio-service</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">couch-init</span>
+
+  <span class="hljs-attr">minio-service:</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">unless-stopped</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">minio/minio</span>
+    <span class="hljs-attr">volumes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">minio_data:/data</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-attr">MINIO_ACCESS_KEY:</span> <span class="hljs-string">${MINIO_ACCESS_KEY}</span>
+      <span class="hljs-attr">MINIO_SECRET_KEY:</span> <span class="hljs-string">${MINIO_SECRET_KEY}</span>
+      <span class="hljs-attr">MINIO_BROWSER:</span> <span class="hljs-string">"off"</span>
+    <span class="hljs-attr">command:</span> <span class="hljs-string">server</span> <span class="hljs-string">/data</span> <span class="hljs-string">--console-address</span> <span class="hljs-string">":9001"</span>
+    <span class="hljs-attr">healthcheck:</span>
+      <span class="hljs-attr">test:</span> <span class="hljs-string">["CMD",</span> <span class="hljs-string">"curl"</span><span class="hljs-string">,</span> <span class="hljs-string">"-f"</span><span class="hljs-string">,</span> <span class="hljs-string">"http://localhost:9000/minio/health/live"</span><span class="hljs-string">]</span>
+      <span class="hljs-attr">interval:</span> <span class="hljs-string">30s</span>
+      <span class="hljs-attr">timeout:</span> <span class="hljs-string">20s</span>
+      <span class="hljs-attr">retries:</span> <span class="hljs-number">3</span>
+
+  <span class="hljs-attr">proxy-service:</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">unless-stopped</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"${MAIN_PORT}:10000"</span>
+    <span class="hljs-attr">container_name:</span> <span class="hljs-string">bbproxy</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">budibase/proxy</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">PROXY_RATE_LIMIT_API_PER_SECOND=20</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">APPS_UPSTREAM_URL=http://app-service:4002</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">WORKER_UPSTREAM_URL=http://worker-service:4003</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">MINIO_UPSTREAM_URL=http://minio-service:9000</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">COUCHDB_UPSTREAM_URL=http://couchdb-service:5984</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">WATCHTOWER_UPSTREAM_URL=http://watchtower-service:8080</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">RESOLVER=127.0.0.11</span>
+    <span class="hljs-attr">depends_on:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">minio-service</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">worker-service</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">app-service</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">couchdb-service</span>
+
+  <span class="hljs-attr">couchdb-service:</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">unless-stopped</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">ibmcom/couchdb3</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">COUCHDB_USER=${COUCH_DB_USER}</span>
+    <span class="hljs-attr">volumes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">couchdb3_data:/opt/couchdb/data</span>
+
+  <span class="hljs-attr">couch-init:</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">curlimages/curl</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-attr">PUT_CALL:</span> <span class="hljs-string">"curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"</span>
+    <span class="hljs-attr">depends_on:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">couchdb-service</span>
+    <span class="hljs-attr">command:</span> <span class="hljs-string">["sh","-c","sleep</span> <span class="hljs-number">10</span> <span class="hljs-string">&amp;&amp;</span> <span class="hljs-string">$${PUT_CALL}/_users</span> <span class="hljs-string">&amp;&amp;</span> <span class="hljs-string">$${PUT_CALL}/_replicator;</span> <span class="hljs-string">fg;"]</span>
+
+  <span class="hljs-attr">redis-service:</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">unless-stopped</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">redis</span>
+    <span class="hljs-attr">command:</span> <span class="hljs-string">redis-server</span> <span class="hljs-string">--requirepass</span> <span class="hljs-string">${REDIS_PASSWORD}</span>
+    <span class="hljs-attr">volumes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">redis_data:/data</span>
+
+  <span class="hljs-attr">watchtower-service:</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">always</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">containrrr/watchtower</span>
+    <span class="hljs-attr">volumes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">/var/run/docker.sock:/var/run/docker.sock</span>
+    <span class="hljs-attr">command:</span> <span class="hljs-string">--debug</span> <span class="hljs-string">--http-api-update</span> <span class="hljs-string">bbapps</span> <span class="hljs-string">bbworker</span> <span class="hljs-string">bbproxy</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">WATCHTOWER_HTTP_API=true</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">WATCHTOWER_HTTP_API_TOKEN=budibase</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">WATCHTOWER_CLEANUP=true</span>
+    <span class="hljs-attr">labels:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"com.centurylinklabs.watchtower.enable=false"</span>
+
+<span class="hljs-attr">volumes:</span>
+  <span class="hljs-attr">couchdb3_data:</span>
+    <span class="hljs-attr">driver:</span> <span class="hljs-string">local</span>
+  <span class="hljs-attr">minio_data:</span>
+    <span class="hljs-attr">driver:</span> <span class="hljs-string">local</span>
+  <span class="hljs-attr">redis_data:</span>
+    <span class="hljs-attr">driver:</span> <span class="hljs-string">local</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

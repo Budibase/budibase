@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>deploy-cloud.yaml</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = ".github/workflows/deploy-cloud.yaml";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>deploy-cloud.yaml</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">name:</span> <span class="hljs-string">Budibase</span> <span class="hljs-string">Deploy</span> <span class="hljs-string">Production</span>
+
+<span class="hljs-attr">on:</span>
+ <span class="hljs-attr">workflow_dispatch:</span>
+  <span class="hljs-attr">inputs:</span>
+    <span class="hljs-attr">version:</span>
+      <span class="hljs-attr">description:</span> <span class="hljs-string">Budibase</span> <span class="hljs-string">release</span> <span class="hljs-string">version.</span> <span class="hljs-string">For</span> <span class="hljs-string">example</span> <span class="hljs-bullet">-</span> <span class="hljs-number">1.0</span><span class="hljs-number">.0</span>
+      <span class="hljs-attr">required:</span> <span class="hljs-literal">false</span>
+
+<span class="hljs-attr">jobs:</span>
+  <span class="hljs-attr">release:</span>
+    <span class="hljs-attr">runs-on:</span> <span class="hljs-string">ubuntu-latest</span>
+
+    <span class="hljs-attr">steps:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Fail</span> <span class="hljs-string">if</span> <span class="hljs-string">branch</span> <span class="hljs-string">is</span> <span class="hljs-string">not</span> <span class="hljs-string">master</span>
+        <span class="hljs-attr">if:</span> <span class="hljs-string">github.ref</span> <span class="hljs-string">!=</span> <span class="hljs-string">'refs/heads/master'</span> 
+        <span class="hljs-attr">run:</span> <span class="hljs-string">| 
+          echo "Ref is not master, you must run this job from master."
+          exit 1
+</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">uses:</span> <span class="hljs-string">actions/checkout@v2</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Pull</span> <span class="hljs-string">values.yaml</span> <span class="hljs-string">from</span> <span class="hljs-string">budibase-infra</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">| 
+          curl -H "Authorization: token ${{ secrets.GH_ACCESS_TOKEN }}" \
+          -H 'Accept: application/vnd.github.v3.raw' \
+          -o values.production.yaml \
+          -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.yaml
+          wc -l values.production.yaml
+</span>      
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Get</span> <span class="hljs-string">the</span> <span class="hljs-string">latest</span> <span class="hljs-string">budibase</span> <span class="hljs-string">release</span> <span class="hljs-string">version</span>
+        <span class="hljs-attr">id:</span> <span class="hljs-string">version</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">| 
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            release_version=$(cat lerna.json | jq -r '.version')
+          else
+            release_version=${{ github.event.inputs.version }}
+          fi
+          echo "RELEASE_VERSION=$release_version" &gt;&gt; $GITHUB_ENV
+</span>      
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Configure</span> <span class="hljs-string">AWS</span> <span class="hljs-string">Credentials</span>
+        <span class="hljs-attr">uses:</span> <span class="hljs-string">aws-actions/configure-aws-credentials@v1</span>
+        <span class="hljs-attr">with:</span>
+          <span class="hljs-attr">aws-access-key-id:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.AWS_ACCESS_KEY_ID</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">aws-secret-access-key:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.AWS_SECRET_ACCESS_KEY</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">aws-region:</span> <span class="hljs-string">eu-west-1</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Deploy</span> <span class="hljs-string">to</span> <span class="hljs-string">EKS</span>
+        <span class="hljs-attr">uses:</span> <span class="hljs-string">craftech-io/eks-helm-deploy-action@v1</span>
+        <span class="hljs-attr">with:</span>
+          <span class="hljs-attr">aws-access-key-id:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.AWS_ACCESS__KEY_ID</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">aws-secret-access-key:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.AWS_SECRET_ACCESS_KEY</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">aws-region:</span> <span class="hljs-string">eu-west-1</span>
+          <span class="hljs-attr">cluster-name:</span> <span class="hljs-string">budibase-eks-production</span>
+          <span class="hljs-attr">config-files:</span> <span class="hljs-string">values.production.yaml</span>
+          <span class="hljs-attr">chart-path:</span> <span class="hljs-string">charts/budibase</span>
+          <span class="hljs-attr">namespace:</span> <span class="hljs-string">budibase</span>
+          <span class="hljs-attr">values:</span> <span class="hljs-string">globals.appVersion=v${{</span> <span class="hljs-string">env.RELEASE_VERSION</span> <span class="hljs-string">}},services.couchdb.url=${{</span> <span class="hljs-string">secrets.PRODUCTION_COUCHDB_URL</span> <span class="hljs-string">}},services.couchdb.password=${{</span> <span class="hljs-string">secrets.PRODUCTION_COUCHDB_PASSWORD</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">name:</span> <span class="hljs-string">budibase-prod</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Discord</span> <span class="hljs-string">Webhook</span> <span class="hljs-string">Action</span>
+        <span class="hljs-attr">uses:</span> <span class="hljs-string">tsickert/discord-webhook@v4.0.0</span>
+        <span class="hljs-attr">with:</span>
+          <span class="hljs-attr">webhook-url:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.PROD_DEPLOY_WEBHOOK_URL</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">content:</span> <span class="hljs-string">"Production Deployment Complete: $<span class="hljs-template-variable">{{ env.RELEASE_VERSION }}</span> deployed to Budibase Cloud."</span>
+          <span class="hljs-attr">embed-title:</span> <span class="hljs-string">${{</span> <span class="hljs-string">env.RELEASE_VERSION</span> <span class="hljs-string">}}</span>
+
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

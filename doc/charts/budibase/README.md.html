@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>README.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "charts/budibase/README.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#budibase">Budibase</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#tldr">TL;DR;</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#introduction">Introduction</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#prerequisites">Prerequisites</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#installing-the-chart">Installing the Chart</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#uninstalling-the-chart">Uninstalling the Chart</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="budibase">
+  <h1>
+    <a href="#budibase" name="budibase" class="pilcrow"></a>
+Budibase
+  </h1>
+</div>
+<p><a href="https://budibase.com/">Budibase</a> Budibase is an open source low-code platform, helping thousands of teams build apps for their workplace in minutes.</p>
+<div class="pilwrap" id="tldr">
+  <h2>
+    <a href="#tldr" name="tldr" class="pilcrow"></a>
+TL;DR;
+  </h2>
+</div>
+<pre><code class="console"><span class="hljs-meta">$</span><span class="bash"> <span class="hljs-built_in">cd</span> chart</span>
+<span class="hljs-meta">$</span><span class="bash"> helm install budibase .</span>
+</code></pre>
+<div class="pilwrap" id="introduction">
+  <h2>
+    <a href="#introduction" name="introduction" class="pilcrow"></a>
+Introduction
+  </h2>
+</div>
+<p>This chart bootstraps a <a href="https://budibase.com/">Budibase</a> deployment on a <a href="http://kubernetes.io">Kubernetes</a> cluster using the <a href="https://helm.sh">Helm</a> package manager.</p>
+<div class="pilwrap" id="prerequisites">
+  <h2>
+    <a href="#prerequisites" name="prerequisites" class="pilcrow"></a>
+Prerequisites
+  </h2>
+</div>
+<ul>
+<li>helm v3 or above</li>
+<li>Kubernetes 1.4+</li>
+<li>PV provisioner support in the underlying infrastructure (with persistence storage enabled)</li>
+</ul>
+<div class="pilwrap" id="installing-the-chart">
+  <h2>
+    <a href="#installing-the-chart" name="installing-the-chart" class="pilcrow"></a>
+Installing the Chart
+  </h2>
+</div>
+<p>To install the chart with the release name <code>budi-release</code>:</p>
+<pre><code class="console"><span class="hljs-meta">$</span><span class="bash"> helm install budi-release .</span>
+</code></pre>
+<p>The command deploys Budibase on the Kubernetes cluster in the default configuration. The <a href="#configuration.html">configuration</a> section lists the parameters that can be configured during installation.</p>
+<blockquote>
+<p><strong>Tip</strong>: List all releases using <code>helm list</code></p>
+</blockquote>
+<div class="pilwrap" id="uninstalling-the-chart">
+  <h2>
+    <a href="#uninstalling-the-chart" name="uninstalling-the-chart" class="pilcrow"></a>
+Uninstalling the Chart
+  </h2>
+</div>
+<p>To uninstall/delete the <code>my-release</code> deployment:</p>
+<pre><code class="console"><span class="hljs-meta">$</span><span class="bash"> helm delete my-release</span>
+</code></pre>
+</div>
+  </div>
+</body>
+</html>

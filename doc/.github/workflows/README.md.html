@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>README.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = ".github/workflows/README.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#budibase-ci-pipelines">Budibase CI Pipelines</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#all-ci-pipelines">All CI Pipelines</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#note">Note</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#standard-ci-build-job-budibase_ci.yml">Standard CI Build Job (budibase_ci.yml)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#release-develop-job-release-develop.yml">Release Develop Job (release-develop.yml)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#release-job-release.yml">Release Job (release.yml)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#release-selfhost-job-release-selfhost.yml">Release Selfhost Job (release-selfhost.yml)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#deploy-release-deploy-release.yml">Deploy Release (deploy-release.yml)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#deploy-preprod-deploy-preprod.yml">Deploy Preprod (deploy-preprod.yml)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#deploy-production-deploy-cloud.yml">Deploy Production (deploy-cloud.yml)</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#common-workflows">Common Workflows</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#deploy-changes-to-production-release">Deploy Changes to Production (Release)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#deploy-changes-to-production-hotfix">Deploy Changes to Production (Hotfix)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#rollback-a-bad-cloud-deployment">Rollback A Bad Cloud Deployment</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#pro">Pro</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#installing-pro">Installing Pro</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#branch-and-base_branch-arguments">BRANCH and BASE_BRANCH arguments</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#releasing-pro">Releasing Pro</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#command-argument">COMMAND argument</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="budibase-ci-pipelines">
+  <h1>
+    <a href="#budibase-ci-pipelines" name="budibase-ci-pipelines" class="pilcrow"></a>
+Budibase CI Pipelines
+  </h1>
+</div>
+<p>Welcome to the budibase CI pipelines directory. This document details what each of the CI pipelines are for, and come common combinations.</p>
+<div class="pilwrap" id="all-ci-pipelines">
+  <h2>
+    <a href="#all-ci-pipelines" name="all-ci-pipelines" class="pilcrow"></a>
+All CI Pipelines
+  </h2>
+</div>
+<div class="pilwrap" id="note">
+  <h3>
+    <a href="#note" name="note" class="pilcrow"></a>
+Note
+  </h3>
+</div>
+<ul>
+<li>When running workflow dispatch jobs, ensure you always run them off the <code>master</code> branch. It defaults to <code>develop</code>, so double check before running any jobs. The exception to this case is the <code>deploy-release</code> job which requires the develop branch.</li>
+</ul>
+<div class="pilwrap" id="standard-ci-build-job-budibase_ci.yml">
+  <h3>
+    <a href="#standard-ci-build-job-budibase_ci.yml" name="standard-ci-build-job-budibase_ci.yml" class="pilcrow"></a>
+Standard CI Build Job (budibase_ci.yml)
+  </h3>
+</div>
+<p>Triggers:</p>
+<ul>
+<li>PR or push to develop</li>
+<li>PR or push to master</li>
+</ul>
+<p>The standard CI Build job is what runs when you raise a PR to develop or master.</p>
+<ul>
+<li>Installs all dependencies,</li>
+<li>builds the project</li>
+<li>run the unit tests</li>
+<li>Generate test coverage metrics with codecov</li>
+<li>Run the cypress tests</li>
+</ul>
+<div class="pilwrap" id="release-develop-job-release-develop.yml">
+  <h3>
+    <a href="#release-develop-job-release-develop.yml" name="release-develop-job-release-develop.yml" class="pilcrow"></a>
+Release Develop Job (release-develop.yml)
+  </h3>
+</div>
+<p>Triggers:</p>
+<ul>
+<li>Push to develop</li>
+</ul>
+<p>The job responsible for building, tagging and pushing docker images out to the test and release environments.</p>
+<ul>
+<li>Installs all dependencies</li>
+<li>builds the project</li>
+<li>run the unit tests</li>
+<li>publish the budibase JS packages under a prerelease tag to NPM</li>
+<li>build, tag and push docker images under the <code>develop</code> tag to docker hub</li>
+</ul>
+<p>These images will then be pulled by the test and release environments, updating the latest automatically. Discord notifications are sent to the #infra channel when this occurs.</p>
+<div class="pilwrap" id="release-job-release.yml">
+  <h3>
+    <a href="#release-job-release.yml" name="release-job-release.yml" class="pilcrow"></a>
+Release Job (release.yml)
+  </h3>
+</div>
+<p>Triggers:</p>
+<ul>
+<li>Push to master</li>
+</ul>
+<p>This job is responsible for building and pushing the latest code to NPM and docker hub, so that it can be deployed.</p>
+<ul>
+<li>Installs all dependencies</li>
+<li>builds the project</li>
+<li>run the unit tests</li>
+<li>publish the budibase JS packages under a release tag to NPM (always incremented by patch versions)</li>
+<li>build, tag and push docker images under the <code>v.x.x.x</code> (the tag of the NPM release) tag to docker hub</li>
+</ul>
+<div class="pilwrap" id="release-selfhost-job-release-selfhost.yml">
+  <h3>
+    <a href="#release-selfhost-job-release-selfhost.yml" name="release-selfhost-job-release-selfhost.yml" class="pilcrow"></a>
+Release Selfhost Job (release-selfhost.yml)
+  </h3>
+</div>
+<p>Triggers:</p>
+<ul>
+<li>Manual Workflow Dispatch Trigger</li>
+</ul>
+<p>This job is responsible for delivering the latest version of budibase to those that are self-hosting.</p>
+<p>This job relies on the release job to have run first, so the latest image is pushed to dockerhub. This job then will pull the latest version from <code>lerna.json</code> and try to find an image in dockerhub corresponding to that version. For example, if the version in <code>lerna.json</code> is <code>1.0.0</code>:</p>
+<ul>
+<li>Pull the images for all budibase services tagged <code>v1.0.0</code> from dockerhub</li>
+<li>Tag these images as <code>latest</code></li>
+<li>Push them back to dockerhub. This now means anyone who pulls <code>latest</code> (self hosters using docker-compose) will get the latest version.</li>
+<li>Build and release the budibase helm chart for kubernetes users</li>
+<li>Perform a github release with the latest version. You can see previous releases here (https://github.com/Budibase/budibase/releases)</li>
+</ul>
+<div class="pilwrap" id="deploy-release-deploy-release.yml">
+  <h3>
+    <a href="#deploy-release-deploy-release.yml" name="deploy-release-deploy-release.yml" class="pilcrow"></a>
+Deploy Release (deploy-release.yml)
+  </h3>
+</div>
+<p>Triggers:</p>
+<ul>
+<li>Manual Workflow Dispatch Trigger</li>
+</ul>
+<p>This job is responsible for deploying to our release, cloud kubernetes environment. You must run the release job first, to ensure that the latest images have been built and pushed to docker hub. After kicking off this job, the following will occur:</p>
+<ul>
+<li>Checks out the release branch</li>
+<li>Pulls the latest <code>values.yaml</code> from budibase infra, a private repo containing budibases infrastructure configuration</li>
+<li>Gets the latest budibase version from <code>lerna.json</code>, if it hasn't been specified in the workflow when you kicked it off</li>
+<li>Configures AWS Credentials</li>
+<li>Deploys the helm chart in the budibase repo to our preproduction EKS cluster, injecting the <code>values.yaml</code> we pulled from budibase-infra</li>
+<li>Fires off a discord webhook in the #infra channel to show that the deployment completely successfully.</li>
+</ul>
+<div class="pilwrap" id="deploy-preprod-deploy-preprod.yml">
+  <h3>
+    <a href="#deploy-preprod-deploy-preprod.yml" name="deploy-preprod-deploy-preprod.yml" class="pilcrow"></a>
+Deploy Preprod (deploy-preprod.yml)
+  </h3>
+</div>
+<p>Triggers:</p>
+<ul>
+<li>Manual Workflow Dispatch Trigger</li>
+</ul>
+<p>This job is responsible for deploying to our preprod, cloud kubernetes environment. You must run the release job first, to ensure that the latest images have been built and pushed to docker hub. After kicking off this job, the following will occur:</p>
+<ul>
+<li>Checks out the master branch</li>
+<li>Pulls the latest <code>values.yaml</code> from budibase infra, a private repo containing budibases infrastructure configuration</li>
+<li>Gets the latest budibase version from <code>lerna.json</code>, if it hasn't been specified in the workflow when you kicked it off</li>
+<li>Configures AWS Credentials</li>
+<li>Deploys the helm chart in the budibase repo to our preprod EKS cluster, injecting the <code>values.yaml</code> we pulled from budibase-infra</li>
+<li>Fires off a discord webhook in the #infra channel to show that the deployment completely successfully.</li>
+</ul>
+<div class="pilwrap" id="deploy-production-deploy-cloud.yml">
+  <h3>
+    <a href="#deploy-production-deploy-cloud.yml" name="deploy-production-deploy-cloud.yml" class="pilcrow"></a>
+Deploy Production (deploy-cloud.yml)
+  </h3>
+</div>
+<p>Triggers:</p>
+<ul>
+<li>Manual Workflow Dispatch Trigger</li>
+</ul>
+<p>This job is responsible for deploying to our production, cloud kubernetes environment. You must run the release job first, to ensure that the latest images have been built and pushed to docker hub. You can also manually enter a version number for this job, so you can perform rollbacks or upgrade to a specific version. After kicking off this job, the following will occur:</p>
+<ul>
+<li>Checks out the master branch</li>
+<li>Pulls the latest <code>values.yaml</code> from budibase infra, a private repo containing budibases infrastructure configuration</li>
+<li>Gets the latest budibase version from <code>lerna.json</code>, if it hasn't been specified in the workflow when you kicked it off</li>
+<li>Configures AWS Credentials</li>
+<li>Deploys the helm chart in the budibase repo to our production EKS cluster, injecting the <code>values.yaml</code> we pulled from budibase-infra</li>
+<li>Fires off a discord webhook in the #infra channel to show that the deployment completely successfully.</li>
+</ul>
+<div class="pilwrap" id="common-workflows">
+  <h2>
+    <a href="#common-workflows" name="common-workflows" class="pilcrow"></a>
+Common Workflows
+  </h2>
+</div>
+<div class="pilwrap" id="deploy-changes-to-production-release">
+  <h3>
+    <a href="#deploy-changes-to-production-release" name="deploy-changes-to-production-release" class="pilcrow"></a>
+Deploy Changes to Production (Release)
+  </h3>
+</div>
+<ul>
+<li>Merge <code>develop</code> into <code>master</code></li>
+<li>Wait for budibase CI job and release job to run</li>
+<li>Run cloud deploy job</li>
+<li>Run release selfhost job</li>
+</ul>
+<div class="pilwrap" id="deploy-changes-to-production-hotfix">
+  <h3>
+    <a href="#deploy-changes-to-production-hotfix" name="deploy-changes-to-production-hotfix" class="pilcrow"></a>
+Deploy Changes to Production (Hotfix)
+  </h3>
+</div>
+<ul>
+<li>Branch off <code>master</code></li>
+<li>Perform your hotfix</li>
+<li>Merge back into <code>master</code></li>
+<li>Wait for budibase CI job and release job to run</li>
+<li>Run cloud deploy job</li>
+<li>Run release selfhost job</li>
+</ul>
+<div class="pilwrap" id="rollback-a-bad-cloud-deployment">
+  <h3>
+    <a href="#rollback-a-bad-cloud-deployment" name="rollback-a-bad-cloud-deployment" class="pilcrow"></a>
+Rollback A Bad Cloud Deployment
+  </h3>
+</div>
+<ul>
+<li>Kick off cloud deploy job</li>
+<li>Ensure you are running off master</li>
+<li>Enter the version number of the last known good version of budibase. For example <code>1.0.0</code></li>
+</ul>
+<div class="pilwrap" id="pro">
+  <h2>
+    <a href="#pro" name="pro" class="pilcrow"></a>
+Pro
+  </h2>
+</div>
+<p>| <strong>NOTE</strong>: When developing for both pro / budibase repositories, your branch names need to match, or else the correct pro doesn't get run within your CI job.</p>
+<div class="pilwrap" id="installing-pro">
+  <h3>
+    <a href="#installing-pro" name="installing-pro" class="pilcrow"></a>
+Installing Pro
+  </h3>
+</div>
+<p>The pro package is always installed from source in our CI jobs.</p>
+<p>This is done to prevent pro needing to be published prior to CI runs in budiabse. This is required for two reasons:</p>
+<ul>
+<li>To reduce developer need to manually bump versions, i.e:
+<ul>
+<li>release pro, bump pro dep in budibase, now ci can run successfully</li>
+</ul>
+</li>
+<li>The cyclic dependency on backend-core, i.e:
+<ul>
+<li>pro depends on backend-core</li>
+<li>server depends on pro</li>
+<li>backend-core lives in the monorepo, so it can't be released independently to be used in pro</li>
+<li>therefore the only option is to pull pro from source and release it as a part of the monorepo release, as if it were a mono package</li>
+</ul>
+</li>
+</ul>
+<p>The install is performed using the same steps as local development, via the <code>yarn bootstrap</code> command, see the <a href="../../docs/CONTRIBUTING.md#pro.html">Contributing Guide#Pro</a></p>
+<p>The branch to install pro from can vary depending on ref of the commit that triggered the budibase CI job. This is done to enable branches which have changes in both the monorepo and the pro repo to have their CI pass successfully.</p>
+<p>This is done using the <a href="../../scripts/pro/install.sh.html">pro/install.sh</a> script. The script will:</p>
+<ul>
+<li>Clone pro to it's default branch (<code>develop</code>)</li>
+<li>Check if the clone worked, on forked versions of budibase this will fail due to no access
+<ul>
+<li>This is fine as the <code>yarn</code> command will install the version from NPM</li>
+<li>Community PRs should never touch pro so this will always work</li>
+</ul>
+</li>
+<li>Checkout the <code>BRANCH</code> argument, if this fails fallback to <code>BASE_BRANCH</code>
+<ul>
+<li>This enables the more complex case of a feature branch being merged to another feature branch, e.g.
+<ul>
+<li>I am working on a branch <code>epic/stonks</code> which exists on budibase and pro.</li>
+<li>I want to merge a change to this branch in budibase from <code>feature/stonks-ui</code>, which only exists in budibase</li>
+<li>The base branch ensures that <code>epic/stonks</code> in pro will still be checked out for the CI run, rather than falling back to <code>develop</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Run <code>yarn setup</code> to build and install dependencies
+<ul>
+<li><code>yarn</code></li>
+<li><code>yarn bootstrap</code></li>
+<li><code>yarn build</code>
+<ul>
+<li>The will build .ts files, and also update the <code>main</code> and <code>types</code> of <code>package.json</code> to point to <code>dist</code> rather than src</li>
+<li>The build command will only ever work in CI, it is prevented in local dev</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="pilwrap" id="branch-and-base_branch-arguments">
+  <h4>
+    <a href="#branch-and-base_branch-arguments" name="branch-and-base_branch-arguments" class="pilcrow"></a>
+<code>BRANCH</code> and <code>BASE_BRANCH</code> arguments
+  </h4>
+</div>
+<p>These arguments are supplied by the various budibase build and release pipelines</p>
+<ul>
+<li><code>budibase_ci</code>
+<ul>
+<li><code>BRANCH: ${{ github.event.pull_request.head.ref }}</code> -&gt; The branch being merged</li>
+<li><code>BASE_BRANCH: ${{ github.event.pull_request.base.ref}}</code> -&gt; The base branch</li>
+</ul>
+</li>
+<li><code>release-develop</code>
+<ul>
+<li><code>BRANCH: develop</code> -&gt; always use the <code>develop</code> branch in pro</li>
+</ul>
+</li>
+<li><code>release</code>
+<ul>
+<li><code>BRANCH: master</code> -&gt; always use the <code>master</code> branch in pro</li>
+</ul>
+</li>
+</ul>
+<div class="pilwrap" id="releasing-pro">
+  <h3>
+    <a href="#releasing-pro" name="releasing-pro" class="pilcrow"></a>
+Releasing Pro
+  </h3>
+</div>
+<p>After budibase dependencies have been released we will release the new version of pro to match the release version of budibase dependencies. This is to ensure that we are always keeping the version of <code>backend-core</code> in sync in the pro package and in budibase packages. Without this we could run into scenarios where different versions are being used when installed via <code>yarn</code> inside the docker images, creating very difficult to debug cases.</p>
+<p>Pro is released using the <a href="../../scripts/pro/release.sh.html">pro/release.sh</a> script. The script will:</p>
+<ul>
+<li>Inspect the <code>VERSION</code> from the <code>lerna.json</code> file in budibase</li>
+<li>Determine whether to use the <code>latest</code> or <code>develop</code> tag based on the command argument</li>
+<li>Go to pro directory
+<ul>
+<li>install npm creds</li>
+<li>update the version of <code>backend-core</code> to be <code>VERSION</code>, the version just released by lerna</li>
+<li>publish to npm. Uses a <code>lerna publish</code> command, pro itself is a mono repo.
+<ul>
+<li>force the version to be the same as <code>VERSION</code> to keep pro and budibase in sync</li>
+</ul>
+</li>
+<li>reverts the changes to <code>main</code> and <code>types</code> in <code>package.json</code> that were made by the build step, to point back to source</li>
+<li>commit &amp; push: <code>Prep next development iteration</code></li>
+</ul>
+</li>
+<li>Go to budibase
+<ul>
+<li>Update to the new version of pro in <code>server</code> and <code>worker</code> so the latest pro version is used in the docker builds</li>
+<li>commit &amp; push: <code>Update pro version to $VERSION</code></li>
+</ul>
+</li>
+</ul>
+<div class="pilwrap" id="command-argument">
+  <h4>
+    <a href="#command-argument" name="command-argument" class="pilcrow"></a>
+<code>COMMAND</code> argument
+  </h4>
+</div>
+<p>This argument is supplied by the existing <code>release</code> and <code>release:develop</code> budibase commands, which invoke the pro release</p>
+<ul>
+<li><code>release</code> will supply no command and default to use <code>latest</code></li>
+<li><code>release:develop</code> will supply <code>develop</code></li>
+</ul>
+</div>
+  </div>
+</body>
+</html>

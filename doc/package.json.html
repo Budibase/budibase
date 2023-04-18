@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>package.json</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="doc-style.css" />
+  <script src="doc-filelist.js"></script>
+  <script>
+    var relativeDir = "";
+    var thisFile = "package.json";
+    var defaultSidebar = true;
+  </script>
+  <script src="doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>package.json</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="json">{
+  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"root"</span>,
+  <span class="hljs-attr">"private"</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">"devDependencies"</span>: {
+    <span class="hljs-attr">"@rollup/plugin-commonjs"</span>: <span class="hljs-string">"^24.0.1"</span>,
+    <span class="hljs-attr">"@rollup/plugin-json"</span>: <span class="hljs-string">"^4.0.2"</span>,
+    <span class="hljs-attr">"@roxi/routify"</span>: <span class="hljs-string">"^2.18.11"</span>,
+    <span class="hljs-attr">"@types/supertest"</span>: <span class="hljs-string">"^2.0.12"</span>,
+    <span class="hljs-attr">"@typescript-eslint/parser"</span>: <span class="hljs-string">"5.45.0"</span>,
+    <span class="hljs-attr">"babel-eslint"</span>: <span class="hljs-string">"^10.0.3"</span>,
+    <span class="hljs-attr">"eslint"</span>: <span class="hljs-string">"^7.28.0"</span>,
+    <span class="hljs-attr">"eslint-plugin-cypress"</span>: <span class="hljs-string">"^2.11.3"</span>,
+    <span class="hljs-attr">"eslint-plugin-svelte3"</span>: <span class="hljs-string">"^3.2.0"</span>,
+    <span class="hljs-attr">"husky"</span>: <span class="hljs-string">"^7.0.1"</span>,
+    <span class="hljs-attr">"js-yaml"</span>: <span class="hljs-string">"^4.1.0"</span>,
+    <span class="hljs-attr">"kill-port"</span>: <span class="hljs-string">"^1.6.1"</span>,
+    <span class="hljs-attr">"lerna"</span>: <span class="hljs-string">"3.14.1"</span>,
+    <span class="hljs-attr">"madge"</span>: <span class="hljs-string">"^6.0.0"</span>,
+    <span class="hljs-attr">"npm-run-all"</span>: <span class="hljs-string">"^4.1.5"</span>,
+    <span class="hljs-attr">"prettier"</span>: <span class="hljs-string">"^2.3.1"</span>,
+    <span class="hljs-attr">"prettier-plugin-svelte"</span>: <span class="hljs-string">"^2.3.0"</span>,
+    <span class="hljs-attr">"rimraf"</span>: <span class="hljs-string">"^3.0.2"</span>,
+    <span class="hljs-attr">"rollup-plugin-replace"</span>: <span class="hljs-string">"^2.2.0"</span>,
+    <span class="hljs-attr">"svelte"</span>: <span class="hljs-string">"^3.38.2"</span>,
+    <span class="hljs-attr">"typescript"</span>: <span class="hljs-string">"4.7.3"</span>
+  },
+  <span class="hljs-attr">"scripts"</span>: {
+    <span class="hljs-attr">"setup"</span>: <span class="hljs-string">"node ./hosting/scripts/setup.js &amp;&amp; yarn &amp;&amp; yarn bootstrap &amp;&amp; yarn build &amp;&amp; yarn dev"</span>,
+    <span class="hljs-attr">"bootstrap"</span>: <span class="hljs-string">"lerna bootstrap &amp;&amp; lerna link &amp;&amp; ./scripts/link-dependencies.sh"</span>,
+    <span class="hljs-attr">"build"</span>: <span class="hljs-string">"lerna run build"</span>,
+    <span class="hljs-attr">"build:dev"</span>: <span class="hljs-string">"lerna run prebuild &amp;&amp; tsc --build --watch --preserveWatchOutput"</span>,
+    <span class="hljs-attr">"build:backend"</span>: <span class="hljs-string">"lerna run build --ignore @budibase/client --ignore @budibase/bbui --ignore @budibase/builder --ignore @budibase/cli"</span>,
+    <span class="hljs-attr">"build:sdk"</span>: <span class="hljs-string">"lerna run build:sdk"</span>,
+    <span class="hljs-attr">"deps:circular"</span>: <span class="hljs-string">"madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular"</span>,
+    <span class="hljs-attr">"release"</span>: <span class="hljs-string">"lerna publish ${RELEASE_VERSION_TYPE:-patch} --yes --force-publish &amp;&amp; yarn release:pro"</span>,
+    <span class="hljs-attr">"release:develop"</span>: <span class="hljs-string">"lerna publish prerelease --yes --force-publish --dist-tag develop --exact &amp;&amp; yarn release:pro:develop"</span>,
+    <span class="hljs-attr">"release:pro"</span>: <span class="hljs-string">"bash scripts/pro/release.sh"</span>,
+    <span class="hljs-attr">"release:pro:develop"</span>: <span class="hljs-string">"bash scripts/pro/release.sh develop"</span>,
+    <span class="hljs-attr">"restore"</span>: <span class="hljs-string">"yarn run clean &amp;&amp; yarn run bootstrap &amp;&amp; yarn run build"</span>,
+    <span class="hljs-attr">"nuke"</span>: <span class="hljs-string">"yarn run nuke:packages &amp;&amp; yarn run nuke:docker"</span>,
+    <span class="hljs-attr">"nuke:packages"</span>: <span class="hljs-string">"yarn run restore"</span>,
+    <span class="hljs-attr">"nuke:docker"</span>: <span class="hljs-string">"lerna run --parallel dev:stack:nuke"</span>,
+    <span class="hljs-attr">"clean"</span>: <span class="hljs-string">"lerna clean"</span>,
+    <span class="hljs-attr">"kill-builder"</span>: <span class="hljs-string">"kill-port 3000"</span>,
+    <span class="hljs-attr">"kill-server"</span>: <span class="hljs-string">"kill-port 4001 4002"</span>,
+    <span class="hljs-attr">"kill-all"</span>: <span class="hljs-string">"yarn run kill-builder &amp;&amp; yarn run kill-server"</span>,
+    <span class="hljs-attr">"dev"</span>: <span class="hljs-string">"yarn run kill-all &amp;&amp; lerna link &amp;&amp; lerna run --parallel dev:builder --concurrency 1"</span>,
+    <span class="hljs-attr">"dev:noserver"</span>: <span class="hljs-string">"yarn run kill-builder &amp;&amp; lerna link &amp;&amp; lerna run dev:stack:up &amp;&amp; lerna run --parallel dev:builder --concurrency 1 --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker"</span>,
+    <span class="hljs-attr">"dev:server"</span>: <span class="hljs-string">"yarn run kill-server &amp;&amp; lerna run --parallel dev:builder --concurrency 1 --scope @budibase/backend-core --scope @budibase/worker --scope @budibase/server"</span>,
+    <span class="hljs-attr">"test"</span>: <span class="hljs-string">"lerna run test --stream"</span>,
+    <span class="hljs-attr">"test:pro"</span>: <span class="hljs-string">"bash scripts/pro/test.sh"</span>,
+    <span class="hljs-attr">"lint:eslint"</span>: <span class="hljs-string">"eslint packages &amp;&amp; eslint qa-core"</span>,
+    <span class="hljs-attr">"lint:prettier"</span>: <span class="hljs-string">"prettier --check \"packages/**/*.{js,ts,svelte}\" &amp;&amp; prettier --write \"examples/**/*.{js,ts,svelte}\" &amp;&amp; prettier --check \"qa-core/**/*.{js,ts,svelte}\""</span>,
+    <span class="hljs-attr">"lint"</span>: <span class="hljs-string">"yarn run lint:eslint &amp;&amp; yarn run lint:prettier"</span>,
+    <span class="hljs-attr">"lint:fix:eslint"</span>: <span class="hljs-string">"eslint --fix packages qa-core"</span>,
+    <span class="hljs-attr">"lint:fix:prettier"</span>: <span class="hljs-string">"prettier --write \"packages/**/*.{js,ts,svelte}\" &amp;&amp; prettier --write \"examples/**/*.{js,ts,svelte}\" &amp;&amp; prettier --write \"qa-core/**/*.{js,ts,svelte}\""</span>,
+    <span class="hljs-attr">"lint:fix"</span>: <span class="hljs-string">"yarn run lint:fix:prettier &amp;&amp; yarn run lint:fix:eslint"</span>,
+    <span class="hljs-attr">"build:specs"</span>: <span class="hljs-string">"lerna run specs"</span>,
+    <span class="hljs-attr">"build:docker"</span>: <span class="hljs-string">"lerna run build:docker &amp;&amp; npm run build:docker:proxy &amp;&amp; cd hosting/scripts/linux/ &amp;&amp; ./release-to-docker-hub.sh $BUDIBASE_RELEASE_VERSION &amp;&amp; cd -"</span>,
+    <span class="hljs-attr">"build:docker:pre"</span>: <span class="hljs-string">"lerna run build &amp;&amp; lerna run predocker"</span>,
+    <span class="hljs-attr">"build:docker:proxy"</span>: <span class="hljs-string">"docker build hosting/proxy -t proxy-service"</span>,
+    <span class="hljs-attr">"build:docker:selfhost"</span>: <span class="hljs-string">"lerna run build:docker &amp;&amp; cd hosting/scripts/linux/ &amp;&amp; ./release-to-docker-hub.sh latest &amp;&amp; cd -"</span>,
+    <span class="hljs-attr">"build:docker:develop"</span>: <span class="hljs-string">"node scripts/pinVersions &amp;&amp; lerna run build:docker &amp;&amp; npm run build:docker:proxy &amp;&amp; cd hosting/scripts/linux/ &amp;&amp; ./release-to-docker-hub.sh develop &amp;&amp; cd -"</span>,
+    <span class="hljs-attr">"build:docker:airgap"</span>: <span class="hljs-string">"node hosting/scripts/airgapped/airgappedDockerBuild"</span>,
+    <span class="hljs-attr">"build:digitalocean"</span>: <span class="hljs-string">"cd hosting/digitalocean &amp;&amp; ./build.sh &amp;&amp; cd -"</span>,
+    <span class="hljs-attr">"build:docker:single:multiarch"</span>: <span class="hljs-string">"docker buildx build --platform linux/arm64,linux/amd64 -f hosting/single/Dockerfile -t budibase:latest ."</span>,
+    <span class="hljs-attr">"build:docker:single:image"</span>: <span class="hljs-string">"docker build -f hosting/single/Dockerfile -t budibase:latest ."</span>,
+    <span class="hljs-attr">"build:docker:single"</span>: <span class="hljs-string">"npm run build:docker:pre &amp;&amp; npm run build:docker:single:image"</span>,
+    <span class="hljs-attr">"build:docker:dependencies"</span>: <span class="hljs-string">"docker build -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest ./hosting"</span>,
+    <span class="hljs-attr">"publish:docker:couch"</span>: <span class="hljs-string">"docker buildx build --platform linux/arm64,linux/amd64 -f hosting/couchdb/Dockerfile -t budibase/couchdb:latest -t budibase/couchdb:v3.2.1 --push ./hosting/couchdb"</span>,
+    <span class="hljs-attr">"publish:docker:dependencies"</span>: <span class="hljs-string">"docker buildx build --platform linux/arm64,linux/amd64 -f hosting/dependencies/Dockerfile -t budibase/dependencies:latest -t budibase/dependencies:v3.2.1 --push ./hosting"</span>,
+    <span class="hljs-attr">"build:docs"</span>: <span class="hljs-string">"lerna run build:docs"</span>,
+    <span class="hljs-attr">"release:helm"</span>: <span class="hljs-string">"node scripts/releaseHelmChart"</span>,
+    <span class="hljs-attr">"env:multi:enable"</span>: <span class="hljs-string">"lerna run env:multi:enable"</span>,
+    <span class="hljs-attr">"env:multi:disable"</span>: <span class="hljs-string">"lerna run env:multi:disable"</span>,
+    <span class="hljs-attr">"env:selfhost:enable"</span>: <span class="hljs-string">"lerna run env:selfhost:enable"</span>,
+    <span class="hljs-attr">"env:selfhost:disable"</span>: <span class="hljs-string">"lerna run env:selfhost:disable"</span>,
+    <span class="hljs-attr">"env:localdomain:enable"</span>: <span class="hljs-string">"./scripts/localdomain.sh enable"</span>,
+    <span class="hljs-attr">"env:localdomain:disable"</span>: <span class="hljs-string">"./scripts/localdomain.sh disable"</span>,
+    <span class="hljs-attr">"env:account:enable"</span>: <span class="hljs-string">"lerna run env:account:enable"</span>,
+    <span class="hljs-attr">"env:account:disable"</span>: <span class="hljs-string">"lerna run env:account:disable"</span>,
+    <span class="hljs-attr">"mode:self"</span>: <span class="hljs-string">"yarn env:selfhost:enable &amp;&amp; yarn env:multi:disable &amp;&amp; yarn env:account:disable"</span>,
+    <span class="hljs-attr">"mode:cloud"</span>: <span class="hljs-string">"yarn env:selfhost:disable &amp;&amp; yarn env:multi:enable &amp;&amp; yarn env:account:disable"</span>,
+    <span class="hljs-attr">"mode:account"</span>: <span class="hljs-string">"yarn mode:cloud &amp;&amp; yarn env:account:enable"</span>,
+    <span class="hljs-attr">"security:audit"</span>: <span class="hljs-string">"node scripts/audit.js"</span>,
+    <span class="hljs-attr">"postinstall"</span>: <span class="hljs-string">"husky install"</span>,
+    <span class="hljs-attr">"install:pro"</span>: <span class="hljs-string">"bash scripts/pro/install.sh"</span>,
+    <span class="hljs-attr">"dep:clean"</span>: <span class="hljs-string">"yarn clean &amp;&amp; yarn bootstrap"</span>
+  },
+  <span class="hljs-attr">"dependencies"</span>: {
+    <span class="hljs-attr">"@rollup/plugin-node-resolve"</span>: <span class="hljs-string">"^15.0.2"</span>,
+    <span class="hljs-attr">"commonjs"</span>: <span class="hljs-string">"0.0.1"</span>,
+    <span class="hljs-attr">"concurrently"</span>: <span class="hljs-string">"^8.0.1"</span>,
+    <span class="hljs-attr">"docker-compose"</span>: <span class="hljs-string">"^0.23.19"</span>,
+    <span class="hljs-attr">"svelte-i18n"</span>: <span class="hljs-string">"^3.6.0"</span>
+  }
+}
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

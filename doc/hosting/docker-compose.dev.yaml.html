@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>docker-compose.dev.yaml</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "hosting/docker-compose.dev.yaml";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>docker-compose.dev.yaml</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">version:</span> <span class="hljs-string">"3"</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>optional ports are specified throughout for more advanced use cases.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+<span class="hljs-attr">services:</span>
+  <span class="hljs-attr">minio-service:</span>
+    <span class="hljs-attr">container_name:</span> <span class="hljs-string">budi-minio-dev</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">on-failure</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">minio/minio</span>
+    <span class="hljs-attr">volumes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">minio_data:/data</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"${MINIO_PORT}:9000"</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"9001:9001"</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-attr">MINIO_ACCESS_KEY:</span> <span class="hljs-string">${MINIO_ACCESS_KEY}</span>
+      <span class="hljs-attr">MINIO_SECRET_KEY:</span> <span class="hljs-string">${MINIO_SECRET_KEY}</span>
+    <span class="hljs-attr">command:</span> <span class="hljs-string">server</span> <span class="hljs-string">/data</span> <span class="hljs-string">--console-address</span> <span class="hljs-string">":9001"</span>
+    <span class="hljs-attr">healthcheck:</span>
+      <span class="hljs-attr">test:</span> <span class="hljs-string">["CMD",</span> <span class="hljs-string">"curl"</span><span class="hljs-string">,</span> <span class="hljs-string">"-f"</span><span class="hljs-string">,</span> <span class="hljs-string">"http://localhost:9000/minio/health/live"</span><span class="hljs-string">]</span>
+      <span class="hljs-attr">interval:</span> <span class="hljs-string">30s</span>
+      <span class="hljs-attr">timeout:</span> <span class="hljs-string">20s</span>
+      <span class="hljs-attr">retries:</span> <span class="hljs-number">3</span>
+
+  <span class="hljs-attr">proxy-service:</span>
+    <span class="hljs-attr">container_name:</span> <span class="hljs-string">budi-nginx-dev</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">on-failure</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">budibase/proxy:latest</span>
+    <span class="hljs-attr">volumes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">./nginx.dev.conf:/etc/nginx/templates/nginx.conf.template</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">./proxy/error.html:/usr/share/nginx/html/error.html</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"${MAIN_PORT}:10000"</span>
+    <span class="hljs-attr">depends_on:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">minio-service</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">couchdb-service</span>
+    <span class="hljs-attr">extra_hosts:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"host.docker.internal:host-gateway"</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">PROXY_ADDRESS=host.docker.internal</span>
+
+  <span class="hljs-attr">couchdb-service:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>platform: linux/amd64</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">    <span class="hljs-attr">container_name:</span> <span class="hljs-string">budi-couchdb3-dev</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">on-failure</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">budibase/couchdb</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">COUCHDB_USER=${COUCH_DB_USER}</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"${COUCH_DB_PORT}:5984"</span>
+    <span class="hljs-attr">volumes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">couchdb_data:/data</span>
+
+  <span class="hljs-attr">redis-service:</span>
+    <span class="hljs-attr">container_name:</span> <span class="hljs-string">budi-redis-dev</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">on-failure</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">redis</span>
+    <span class="hljs-attr">command:</span> <span class="hljs-string">redis-server</span> <span class="hljs-string">--requirepass</span> <span class="hljs-string">${REDIS_PASSWORD}</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"${REDIS_PORT}:6379"</span>
+    <span class="hljs-attr">volumes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">redis_data:/data</span>
+
+<span class="hljs-attr">volumes:</span>
+  <span class="hljs-attr">couchdb_data:</span>
+    <span class="hljs-attr">driver:</span> <span class="hljs-string">local</span>
+  <span class="hljs-attr">minio_data:</span>
+    <span class="hljs-attr">driver:</span> <span class="hljs-string">local</span>
+  <span class="hljs-attr">redis_data:</span>
+    <span class="hljs-attr">driver:</span> <span class="hljs-string">local</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

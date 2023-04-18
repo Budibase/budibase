@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>10-listen-on-ipv6-by-default.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "hosting/proxy/10-listen-on-ipv6-by-default.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>10-listen-on-ipv6-by-default.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-meta">#!/bin/sh
+</span></pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>vim:sw=4:ts=4:et</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">
+<span class="hljs-built_in">set</span> -e
+
+ME=$(basename <span class="hljs-variable">$0</span>)
+NGINX_CONF_FILE=<span class="hljs-string">"/etc/nginx/nginx.conf"</span>
+DEFAULT_CONF_FILE=<span class="hljs-string">"/etc/nginx/conf.d/default.conf"</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>check if we have ipv6 available</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-keyword">if</span> [ ! -f <span class="hljs-string">"/proc/net/if_inet6"</span> ]; <span class="hljs-keyword">then</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>ipv6 not available so delete lines from nginx conf</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    <span class="hljs-keyword">if</span> [ -f <span class="hljs-string">"<span class="hljs-variable">$NGINX_CONF_FILE</span>"</span> ]; <span class="hljs-keyword">then</span>
+        sed -i <span class="hljs-string">'/listen  \[::\]/d'</span> <span class="hljs-variable">$NGINX_CONF_FILE</span>
+    <span class="hljs-keyword">fi</span>
+    <span class="hljs-keyword">if</span> [ -f <span class="hljs-string">"<span class="hljs-variable">$DEFAULT_CONF_FILE</span>"</span> ]; <span class="hljs-keyword">then</span>
+        sed -i <span class="hljs-string">'/listen  \[::\]/d'</span> <span class="hljs-variable">$DEFAULT_CONF_FILE</span>
+    <span class="hljs-keyword">fi</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"<span class="hljs-variable">$ME</span>: info: ipv6 not available so delete lines from nginx conf"</span>
+<span class="hljs-keyword">else</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"<span class="hljs-variable">$ME</span>: info: ipv6 is available so no need to delete lines from nginx conf"</span>
+<span class="hljs-keyword">fi</span>
+
+<span class="hljs-built_in">exit</span> 0
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>audit.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "scripts/audit.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>audit.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">"fs"</span>)
+<span class="hljs-keyword">const</span> { join } = <span class="hljs-built_in">require</span>(<span class="hljs-string">"path"</span>)
+<span class="hljs-keyword">const</span> { spawnSync } =<span class="hljs-built_in">require</span>(<span class="hljs-string">"child_process"</span>)
+
+<span class="hljs-keyword">const</span> DONT_RUN_PKG = [<span class="hljs-string">"bbui"</span>]
+<span class="hljs-keyword">const</span> PACKAGES_PATH = join(__dirname, <span class="hljs-string">".."</span>, <span class="hljs-string">"packages"</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getPackages</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">return</span> fs.readdirSync(PACKAGES_PATH)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">deleteFile</span>(<span class="hljs-params">path</span>) </span>{
+  <span class="hljs-keyword">try</span> {
+    fs.unlinkSync(path)
+  } <span class="hljs-keyword">catch</span> (err) {
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>don't error, it just doesn't exist</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">  }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">removeModules</span>(<span class="hljs-params">path</span>) </span>{
+  <span class="hljs-keyword">if</span> (fs.existsSync(path)) {
+    fs.rmdirSync(path, { <span class="hljs-attr">recursive</span>: <span class="hljs-literal">true</span> })
+  }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">executeInPackage</span>(<span class="hljs-params">packageName</span>) </span>{
+  <span class="hljs-keyword">if</span> (DONT_RUN_PKG.includes(packageName)) {
+    <span class="hljs-keyword">return</span>
+  }
+  <span class="hljs-keyword">const</span> dir = join(PACKAGES_PATH, packageName)
+  <span class="hljs-keyword">if</span> (!fs.existsSync(join(dir, <span class="hljs-string">"package.json"</span>))) {
+    <span class="hljs-built_in">console</span>.error(<span class="hljs-string">`SKIPPING <span class="hljs-subst">${packageName}</span> directory, no package.json`</span>)
+    <span class="hljs-keyword">return</span>
+  }
+  <span class="hljs-keyword">const</span> packageLockLoc = join(dir, <span class="hljs-string">"package-lock.json"</span>)
+  <span class="hljs-keyword">const</span> modulesLoc = join(dir, <span class="hljs-string">"node_modules"</span>)
+  deleteFile(join(dir, <span class="hljs-string">"yarn.lock"</span>))
+  deleteFile(packageLockLoc)
+  removeModules(modulesLoc)
+  <span class="hljs-keyword">const</span> opts = { <span class="hljs-attr">cwd</span>: dir, <span class="hljs-attr">stdio</span>: <span class="hljs-string">"inherit"</span>, <span class="hljs-attr">shell</span>: <span class="hljs-literal">true</span> }
+  spawnSync(<span class="hljs-string">"npm"</span>, [<span class="hljs-string">"i"</span>, <span class="hljs-string">"--package-lock-only"</span>], opts)
+  spawnSync(<span class="hljs-string">"npm"</span>, [<span class="hljs-string">"audit"</span>, <span class="hljs-string">"fix"</span>], opts)
+  spawnSync(<span class="hljs-string">"yarn"</span>, [<span class="hljs-string">"import"</span>], opts)
+  deleteFile(packageLockLoc)
+  removeModules(modulesLoc)
+}
+
+<span class="hljs-keyword">const</span> packages = getPackages()
+<span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> pkg <span class="hljs-keyword">of</span> packages) {
+  executeInPackage(pkg)
+}
+
+spawnSync(<span class="hljs-string">"yarn"</span>, [<span class="hljs-string">"bootstrap"</span>], { <span class="hljs-attr">cwd</span>: join(__dirname, <span class="hljs-string">".."</span>), <span class="hljs-attr">stdio</span>: <span class="hljs-string">"inherit"</span>, <span class="hljs-attr">shell</span>: <span class="hljs-literal">true</span> })
+
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

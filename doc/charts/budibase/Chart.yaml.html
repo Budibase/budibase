@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chart.yaml</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "charts/budibase/Chart.yaml";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>Chart.yaml</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">apiVersion:</span> <span class="hljs-string">v2</span>
+<span class="hljs-attr">name:</span> <span class="hljs-string">budibase</span>
+<span class="hljs-attr">description:</span> <span class="hljs-string">&gt;-
+  Budibase is an open source low-code platform, helping thousands of teams build
+  apps for their workplace in minutes.
+</span><span class="hljs-attr">keywords:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">low-code</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">database</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">cluster</span>
+<span class="hljs-attr">sources:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">https://github.com/Budibase/budibase</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">https://budibase.com</span>
+<span class="hljs-attr">type:</span> <span class="hljs-string">application</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>populates on packaging</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">version:</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>populates on packaging</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">appVersion:</span> <span class="hljs-number">0.0</span><span class="hljs-number">.0</span>
+<span class="hljs-attr">dependencies:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">couchdb</span>
+    <span class="hljs-attr">version:</span> <span class="hljs-number">3.3</span><span class="hljs-number">.4</span>
+    <span class="hljs-attr">repository:</span> <span class="hljs-string">https://apache.github.io/couchdb-helm</span>
+    <span class="hljs-attr">condition:</span> <span class="hljs-string">services.couchdb.enabled</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">ingress-nginx</span>
+    <span class="hljs-attr">version:</span> <span class="hljs-number">4.0</span><span class="hljs-number">.13</span>
+    <span class="hljs-attr">repository:</span> <span class="hljs-string">https://kubernetes.github.io/ingress-nginx</span>
+    <span class="hljs-attr">condition:</span> <span class="hljs-string">ingress.nginx</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

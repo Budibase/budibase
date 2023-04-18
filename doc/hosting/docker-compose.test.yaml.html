@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>docker-compose.test.yaml</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "hosting/docker-compose.test.yaml";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>docker-compose.test.yaml</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">version:</span> <span class="hljs-string">"3"</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>optional ports are specified throughout for more advanced use cases.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+<span class="hljs-attr">services:</span>
+  <span class="hljs-attr">minio-service:</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">on-failure</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Last version that supports the &quot;fs&quot; backend</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">    <span class="hljs-attr">image:</span> <span class="hljs-string">minio/minio:RELEASE.2022-10-24T18-35-07Z</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"9000"</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"9001"</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-attr">MINIO_ACCESS_KEY:</span> <span class="hljs-string">${MINIO_ACCESS_KEY}</span>
+      <span class="hljs-attr">MINIO_SECRET_KEY:</span> <span class="hljs-string">${MINIO_SECRET_KEY}</span>
+    <span class="hljs-attr">command:</span> <span class="hljs-string">server</span> <span class="hljs-string">/data</span> <span class="hljs-string">--console-address</span> <span class="hljs-string">":9001"</span>
+    <span class="hljs-attr">healthcheck:</span>
+      <span class="hljs-attr">test:</span> <span class="hljs-string">["CMD",</span> <span class="hljs-string">"curl"</span><span class="hljs-string">,</span> <span class="hljs-string">"-f"</span><span class="hljs-string">,</span> <span class="hljs-string">"http://localhost:9000/minio/health/live"</span><span class="hljs-string">]</span>
+      <span class="hljs-attr">interval:</span> <span class="hljs-string">30s</span>
+      <span class="hljs-attr">timeout:</span> <span class="hljs-string">20s</span>
+      <span class="hljs-attr">retries:</span> <span class="hljs-number">3</span>
+
+  <span class="hljs-attr">couchdb-service:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>platform: linux/amd64</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">    <span class="hljs-attr">restart:</span> <span class="hljs-string">on-failure</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">budibase/couchdb</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">COUCHDB_USER=${COUCH_DB_USER}</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"5984"</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"4369"</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"9100"</span>
+    <span class="hljs-attr">healthcheck:</span>
+      <span class="hljs-attr">test:</span> <span class="hljs-string">["CMD",</span> <span class="hljs-string">"curl"</span><span class="hljs-string">,</span> <span class="hljs-string">"-f"</span><span class="hljs-string">,</span> <span class="hljs-string">"http://localhost:5984/_up"</span><span class="hljs-string">]</span>
+      <span class="hljs-attr">interval:</span> <span class="hljs-string">30s</span>
+      <span class="hljs-attr">timeout:</span> <span class="hljs-string">20s</span>
+      <span class="hljs-attr">retries:</span> <span class="hljs-number">3</span>
+
+  <span class="hljs-attr">redis-service:</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">on-failure</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">redis</span>
+    <span class="hljs-attr">command:</span> <span class="hljs-string">redis-server</span> <span class="hljs-string">--requirepass</span> <span class="hljs-string">${REDIS_PASSWORD}</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">"6379"</span>
+    <span class="hljs-attr">healthcheck:</span>
+      <span class="hljs-attr">test:</span> <span class="hljs-string">["CMD",</span> <span class="hljs-string">"redis-cli"</span><span class="hljs-string">,</span> <span class="hljs-string">"ping"</span><span class="hljs-string">]</span>
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

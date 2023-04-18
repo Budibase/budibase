@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>cla.yml</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = ".github/workflows/cla.yml";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>cla.yml</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">name:</span> <span class="hljs-string">"CLA Assistant"</span>
+<span class="hljs-attr">on:</span>
+  <span class="hljs-attr">issue_comment:</span>
+    <span class="hljs-attr">types:</span> <span class="hljs-string">[created]</span>
+  <span class="hljs-attr">pull_request_target:</span>
+    <span class="hljs-attr">types:</span> <span class="hljs-string">[opened,closed,synchronize]</span>
+
+<span class="hljs-attr">jobs:</span>
+  <span class="hljs-attr">CLAssistant:</span>
+    <span class="hljs-attr">runs-on:</span> <span class="hljs-string">ubuntu-latest</span>
+    <span class="hljs-attr">steps:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">"CLA Assistant"</span>
+        <span class="hljs-attr">if:</span> <span class="hljs-string">(github.event.comment.body</span> <span class="hljs-string">==</span> <span class="hljs-string">'recheck'</span> <span class="hljs-string">||</span> <span class="hljs-string">github.event.comment.body</span> <span class="hljs-string">==</span> <span class="hljs-string">'I have read the CLA Document and I hereby sign the CLA'</span><span class="hljs-string">)</span> <span class="hljs-string">||</span> <span class="hljs-string">github.event_name</span> <span class="hljs-string">==</span> <span class="hljs-string">'pull_request_target'</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Beta Release</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">        <span class="hljs-attr">uses:</span> <span class="hljs-string">cla-assistant/github-action@v2.1.2-beta</span>
+        <span class="hljs-attr">env:</span>
+          <span class="hljs-attr">GITHUB_TOKEN:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.GITHUB_TOKEN</span> <span class="hljs-string">}}</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>the below token should have repo scope and must be manually added by you in the repository's secret</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">          <span class="hljs-attr">PERSONAL_ACCESS_TOKEN :</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.PERSONAL_ACCESS_TOKEN</span> <span class="hljs-string">}}</span>
+        <span class="hljs-attr">with:</span>
+          <span class="hljs-attr">path-to-signatures:</span> <span class="hljs-string">'.github/cla/signatures.json'</span>
+          <span class="hljs-attr">path-to-document:</span> <span class="hljs-string">'https://github.com/budibase/budibase/blob/next/.github/cla/individual-cla.md'</span> <span class="hljs-comment"># e.g. a CLA or a DCO document</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>branch should not be protected</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">          <span class="hljs-attr">branch:</span> <span class="hljs-string">'next'</span>
+          <span class="hljs-attr">allowlist:</span> <span class="hljs-string">user1,bot*</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>below are the optional inputs - If the optional inputs are not given, then default values will be taken
+remote-organization-name: enter the remote organization name where the signatures should be stored (Default is storing the signatures in the same repository)
+remote-repository-name:  enter the  remote repository name where the signatures should be stored (Default is storing the signatures in the same repository)
+create-file-commit-message: 'For example: Creating file for storing CLA Signatures'
+signed-commit-message: 'For example: $contributorName has signed the CLA in #$pullRequestNo'</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">          <span class="hljs-attr">custom-notsigned-prcomment:</span> <span class="hljs-string">'&lt;br/&gt;&lt;br/&gt;Thank you for your submission - we really appreciate it ❤️. Like many open-source projects, we ask that $you sign a [Contributor License Agreement](https://github.com/budibase/budibase/blob/next/.github/cla/individual-cla.md) before we can accept your contribution.&lt;br/&gt;&lt;br/&gt;You can sign the CLA by just posting a Pull Request Comment, the same as the text below.&lt;br/&gt;&lt;br/&gt;If you are contributing on behalf of a company, your company should contact us to sign a [Corporate Contributor License Agreement](https://github.com/budibase/budibase/blob/next/.github/cla/corporate-cla.md), via community@budibase.com.'</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>custom-pr-sign-comment: 'The signature to be committed in order to sign the CLA'
+custom-allsigned-prcomment: 'pull request comment when all contributors has signed, defaults to <strong>CLA Assistant Lite bot</strong> All Contributors have signed the CLA.'
+lock-pullrequest-aftermerge: false - if you don't want this bot to automatically lock the pull request after merging (default - true)
+use-dco-flag: true - If you are using DCO instead of CLA</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"></pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

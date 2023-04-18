@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>README.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "qa-core/README.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#qa-core-api-tests">QA Core API Tests</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#auto-setup">Auto Setup</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#setup-server-only">Setup Server Only</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#run-tests">Run Tests</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="qa-core-api-tests">
+  <h1>
+    <a href="#qa-core-api-tests" name="qa-core-api-tests" class="pilcrow"></a>
+QA Core API Tests
+  </h1>
+</div>
+<p>The QA Core API tests are a jest suite that run directly against the budibase backend APIs.</p>
+<div class="pilwrap" id="auto-setup">
+  <h2>
+    <a href="#auto-setup" name="auto-setup" class="pilcrow"></a>
+Auto Setup
+  </h2>
+</div>
+<p>You can run the whole test suite with one command, that spins up the budibase server and runs the jest tests:</p>
+<p><code>yarn api:test</code></p>
+<div class="pilwrap" id="setup-server-only">
+  <h2>
+    <a href="#setup-server-only" name="setup-server-only" class="pilcrow"></a>
+Setup Server Only
+  </h2>
+</div>
+<p>You can also just stand up the budibase server alone.</p>
+<p><code>yarn api:server:setup</code></p>
+<div class="pilwrap" id="run-tests">
+  <h2>
+    <a href="#run-tests" name="run-tests" class="pilcrow"></a>
+Run Tests
+  </h2>
+</div>
+<p>If you configured the server using the previous command, you can run the whole test suite by using:</p>
+<p><code>yarn test</code></p>
+<p>for watch mode, where the tests will run on every change:</p>
+<p><code>yarn test:watch</code></p>
+<p>To run tests locally against a cloud service you can use the command:
+<code>yarn run api:test:local</code></p>
+<p>To run the tests in CI, it assumes the correct environment variables are set, and the server is already running. Use the command:
+<code>yarn run api:test:ci</code></p>
+<p>To run the nightly tests against the QA environment, use the command:
+<code>yarn run api:test:nightly</code></p>
+</div>
+  </div>
+</body>
+</html>

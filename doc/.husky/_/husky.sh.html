@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>husky.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = ".husky/_/husky.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>husky.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-meta">#!/bin/sh</span>
+<span class="hljs-keyword">if</span> [ -z <span class="hljs-string">"<span class="hljs-variable">$husky_skip_init</span>"</span> ]; <span class="hljs-keyword">then</span>
+  <span class="hljs-function"><span class="hljs-title">debug</span></span> () {
+    <span class="hljs-keyword">if</span> [ <span class="hljs-string">"<span class="hljs-variable">$HUSKY_DEBUG</span>"</span> = <span class="hljs-string">"1"</span> ]; <span class="hljs-keyword">then</span>
+      <span class="hljs-built_in">echo</span> <span class="hljs-string">"husky (debug) - <span class="hljs-variable">$1</span>"</span>
+    <span class="hljs-keyword">fi</span>
+  }
+
+  <span class="hljs-built_in">readonly</span> hook_name=<span class="hljs-string">"<span class="hljs-variable">$(basename "$0")</span>"</span>
+  debug <span class="hljs-string">"starting <span class="hljs-variable">$hook_name</span>..."</span>
+
+  <span class="hljs-keyword">if</span> [ <span class="hljs-string">"<span class="hljs-variable">$HUSKY</span>"</span> = <span class="hljs-string">"0"</span> ]; <span class="hljs-keyword">then</span>
+    debug <span class="hljs-string">"HUSKY env variable is set to 0, skipping hook"</span>
+    <span class="hljs-built_in">exit</span> 0
+  <span class="hljs-keyword">fi</span>
+
+  <span class="hljs-keyword">if</span> [ -f ~/.huskyrc ]; <span class="hljs-keyword">then</span>
+    debug <span class="hljs-string">"sourcing ~/.huskyrc"</span>
+    . ~/.huskyrc
+  <span class="hljs-keyword">fi</span>
+
+  <span class="hljs-built_in">export</span> <span class="hljs-built_in">readonly</span> husky_skip_init=1
+  sh -e <span class="hljs-string">"<span class="hljs-variable">$0</span>"</span> <span class="hljs-string">"<span class="hljs-variable">$@</span>"</span>
+  exitCode=<span class="hljs-string">"$?"</span>
+
+  <span class="hljs-keyword">if</span> [ <span class="hljs-variable">$exitCode</span> != 0 ]; <span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"husky - <span class="hljs-variable">$hook_name</span> hook exited with code <span class="hljs-variable">$exitCode</span> (error)"</span>
+  <span class="hljs-keyword">fi</span>
+
+  <span class="hljs-built_in">exit</span> <span class="hljs-variable">$exitCode</span>
+<span class="hljs-keyword">fi</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

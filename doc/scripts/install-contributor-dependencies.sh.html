@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>install-contributor-dependencies.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "scripts/install-contributor-dependencies.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>install-contributor-dependencies.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-keyword">function</span> getDistro {
+    <span class="hljs-keyword">if</span> [ -f /etc/os-release ]; <span class="hljs-keyword">then</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>freedesktop.org and systemd</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    . /etc/os-release
+    OS=<span class="hljs-variable">$NAME</span>
+    VER=<span class="hljs-variable">$VERSION_ID</span>
+<span class="hljs-keyword">elif</span> <span class="hljs-built_in">type</span> lsb_release &gt;/dev/null 2&gt;&amp;1; <span class="hljs-keyword">then</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>linuxbase.org</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    OS=$(lsb_release -si)
+    VER=$(lsb_release -sr)
+<span class="hljs-keyword">elif</span> [ -f /etc/lsb-release ]; <span class="hljs-keyword">then</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>For some versions of Debian/Ubuntu without lsb_release command</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    . /etc/lsb-release
+    OS=<span class="hljs-variable">$DISTRIB_ID</span>
+    VER=<span class="hljs-variable">$DISTRIB_RELEASE</span>
+<span class="hljs-keyword">elif</span> [ -f /etc/debian_version ]; <span class="hljs-keyword">then</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Older Debian/Ubuntu/etc.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    OS=Debian
+    VER=$(cat /etc/debian_version)
+<span class="hljs-keyword">elif</span> [ -f /etc/SuSe-release ]; <span class="hljs-keyword">then</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>Older SuSE/etc.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    :
+<span class="hljs-keyword">elif</span> [ -f /etc/redhat-release ]; <span class="hljs-keyword">then</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>Older Red Hat, CentOS, etc.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    VER=$( cat /etc/redhat-release | cut -d<span class="hljs-string">" "</span> -f3 | cut -d <span class="hljs-string">"."</span> -f1)
+    d=$( cat /etc/redhat-release | cut -d<span class="hljs-string">" "</span> -f1 | cut -d <span class="hljs-string">"."</span> -f1)
+    <span class="hljs-keyword">if</span> [[ <span class="hljs-variable">$d</span> == <span class="hljs-string">"CentOS"</span> ]]; <span class="hljs-keyword">then</span>
+      OS=<span class="hljs-string">"CentOS Linux"</span>
+    <span class="hljs-keyword">fi</span>
+<span class="hljs-keyword">else</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>Fall back to uname, e.g. &quot;Linux <version>&quot;, also works for BSD, etc.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    OS=$(uname -s)
+    VER=$(uname -r)
+<span class="hljs-keyword">fi</span>
+}
+
+getDistro
+
+<span class="hljs-keyword">if</span> [[ <span class="hljs-variable">$OS</span> == <span class="hljs-string">"Darwin"</span> ]];
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"This script is not setup for your machine type:"</span> <span class="hljs-variable">$OS</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"Please use the manual steps described in https://github.com/Budibase/budibase/blob/develop/docs/CONTRIBUTING.md#getting-started-for-contributors"</span>
+    <span class="hljs-built_in">exit</span> 1
+<span class="hljs-keyword">fi</span>
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>Install brew</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-keyword">if</span> ! <span class="hljs-built_in">command</span> -v brew &amp;&gt; /dev/null
+<span class="hljs-keyword">then</span>
+    /bin/bash -c <span class="hljs-string">"<span class="hljs-variable">$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)</span>"</span>
+<span class="hljs-keyword">fi</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<p>Install and setup asdf</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-keyword">if</span> ! <span class="hljs-built_in">command</span> -v asdf &amp;&gt; /dev/null
+<span class="hljs-keyword">then</span>
+    brew install asdf
+
+    <span class="hljs-keyword">if</span> <span class="hljs-built_in">test</span> -f ~/.bashrc; <span class="hljs-keyword">then</span>
+        <span class="hljs-built_in">echo</span> -e <span class="hljs-string">"\n. <span class="hljs-variable">$(brew --prefix asdf)</span>/asdf.sh"</span> &gt;&gt; ~/.bashrc
+    <span class="hljs-keyword">fi</span>
+
+    <span class="hljs-keyword">if</span> <span class="hljs-built_in">test</span> -f ~/.zshrc; <span class="hljs-keyword">then</span>
+        <span class="hljs-built_in">echo</span> -e <span class="hljs-string">"\n. <span class="hljs-variable">$(brew --prefix asdf)</span>/asdf.sh"</span> &gt;&gt; ~/.zshrc
+    <span class="hljs-keyword">fi</span>
+<span class="hljs-keyword">fi</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<p>Install ASDF Plugins</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">asdf plugin add nodejs
+asdf plugin add python
+
+asdf install
+
+npm install -g yarn
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

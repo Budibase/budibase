@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>release-selfhost.yml</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = ".github/workflows/release-selfhost.yml";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>release-selfhost.yml</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">name:</span> <span class="hljs-string">Budibase</span> <span class="hljs-string">Release</span> <span class="hljs-string">Selfhost</span>
+
+<span class="hljs-attr">on:</span>
+ <span class="hljs-attr">workflow_dispatch:</span>
+
+<span class="hljs-attr">jobs:</span>
+  <span class="hljs-attr">release:</span>
+    <span class="hljs-attr">runs-on:</span> <span class="hljs-string">ubuntu-latest</span>
+
+    <span class="hljs-attr">steps:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Fail</span> <span class="hljs-string">if</span> <span class="hljs-string">branch</span> <span class="hljs-string">is</span> <span class="hljs-string">not</span> <span class="hljs-string">master</span>
+        <span class="hljs-attr">if:</span> <span class="hljs-string">github.ref</span> <span class="hljs-string">!=</span> <span class="hljs-string">'refs/heads/master'</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">|
+          echo "Ref is not master, you must run this job from master."
+          exit 1
+</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">uses:</span> <span class="hljs-string">actions/checkout@v2</span>
+        <span class="hljs-attr">with:</span> 
+          <span class="hljs-attr">fetch_depth:</span> <span class="hljs-number">0</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Use</span> <span class="hljs-string">Node.js</span> <span class="hljs-number">14.</span><span class="hljs-string">x</span>
+        <span class="hljs-attr">uses:</span> <span class="hljs-string">actions/setup-node@v1</span>
+        <span class="hljs-attr">with:</span>
+          <span class="hljs-attr">node-version:</span> <span class="hljs-number">14.</span><span class="hljs-string">x</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Get</span> <span class="hljs-string">the</span> <span class="hljs-string">latest</span> <span class="hljs-string">budibase</span> <span class="hljs-string">release</span> <span class="hljs-string">version</span>
+        <span class="hljs-attr">id:</span> <span class="hljs-string">version</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">|
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" &gt;&gt; $GITHUB_ENV
+</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Tag</span> <span class="hljs-string">and</span> <span class="hljs-string">release</span> <span class="hljs-string">Docker</span> <span class="hljs-string">images</span> <span class="hljs-string">(Self</span> <span class="hljs-string">Host)</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">| 
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+</span>
+          <span class="hljs-string">release_tag=v${{</span> <span class="hljs-string">env.RELEASE_VERSION</span> <span class="hljs-string">}}</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Pull apps and worker images</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">          <span class="hljs-string">docker</span> <span class="hljs-string">pull</span> <span class="hljs-string">budibase/apps:$release_tag</span>
+          <span class="hljs-string">docker</span> <span class="hljs-string">pull</span> <span class="hljs-string">budibase/worker:$release_tag</span>
+          <span class="hljs-string">docker</span> <span class="hljs-string">pull</span> <span class="hljs-string">budibase/proxy:$release_tag</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>Tag apps and worker images</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">          <span class="hljs-string">docker</span> <span class="hljs-string">tag</span> <span class="hljs-string">budibase/apps:$release_tag</span> <span class="hljs-string">budibase/apps:$SELFHOST_TAG</span>
+          <span class="hljs-string">docker</span> <span class="hljs-string">tag</span> <span class="hljs-string">budibase/worker:$release_tag</span> <span class="hljs-string">budibase/worker:$SELFHOST_TAG</span>
+          <span class="hljs-string">docker</span> <span class="hljs-string">tag</span> <span class="hljs-string">budibase/proxy:$release_tag</span> <span class="hljs-string">budibase/proxy:$SELFHOST_TAG</span>
+          
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Push images</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">          <span class="hljs-string">docker</span> <span class="hljs-string">push</span> <span class="hljs-string">budibase/apps:$SELFHOST_TAG</span>
+          <span class="hljs-string">docker</span> <span class="hljs-string">push</span> <span class="hljs-string">budibase/worker:$SELFHOST_TAG</span>
+          <span class="hljs-string">docker</span> <span class="hljs-string">push</span> <span class="hljs-string">budibase/proxy:$SELFHOST_TAG</span>
+        <span class="hljs-attr">env:</span>
+          <span class="hljs-attr">DOCKER_USER:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.DOCKER_USERNAME</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">DOCKER_PASSWORD:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.DOCKER_API_KEY</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">SELFHOST_TAG:</span> <span class="hljs-string">latest</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Bootstrap</span> <span class="hljs-string">and</span> <span class="hljs-string">build</span> <span class="hljs-string">(CLI)</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">|
+          yarn
+          yarn bootstrap
+          yarn build
+</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Build</span> <span class="hljs-string">OpenAPI</span> <span class="hljs-string">spec</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">|
+          pushd packages/server
+          yarn
+          yarn specs
+          popd
+</span>      
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Setup</span> <span class="hljs-string">Helm</span> 
+        <span class="hljs-attr">uses:</span> <span class="hljs-string">azure/setup-helm@v1</span>
+        <span class="hljs-attr">id:</span> <span class="hljs-string">helm-install</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>due to helm repo index issue: https://github.com/helm/helm/issues/7363
+we need to create new package in a different dir, merge the index and move the package back</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Build</span> <span class="hljs-string">and</span> <span class="hljs-string">release</span> <span class="hljs-string">helm</span> <span class="hljs-string">chart</span>
+        <span class="hljs-attr">run:</span> <span class="hljs-string">| 
+          git config user.name "Budibase Helm Bot"
+          git config user.email "&lt;&gt;"
+          git reset --hard
+          git pull
+          mkdir sync
+          echo "Packaging chart to sync dir"
+          helm package charts/budibase --version "$RELEASE_VERSION" --app-version "$RELEASE_VERSION" --destination sync
+          echo "Packaging successful"
+          git checkout gh-pages
+          echo "Indexing helm repo"
+          helm repo index --merge docs/index.yaml sync
+          mv -f sync/* docs
+          rm -rf sync
+          echo "Pushing new helm release"
+          git add -A
+          git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
+          git push
+</span>        <span class="hljs-attr">env:</span>
+          <span class="hljs-attr">GITHUB_TOKEN:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.GITHUB_TOKEN</span> <span class="hljs-string">}}</span>
+
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Perform</span> <span class="hljs-string">Github</span> <span class="hljs-string">Release</span>
+        <span class="hljs-attr">uses:</span> <span class="hljs-string">softprops/action-gh-release@v1</span>
+        <span class="hljs-attr">with:</span>
+          <span class="hljs-attr">name:</span> <span class="hljs-string">v${{</span> <span class="hljs-string">env.RELEASE_VERSION</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">tag_name:</span> <span class="hljs-string">v${{</span> <span class="hljs-string">env.RELEASE_VERSION</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">generate_release_notes:</span> <span class="hljs-literal">true</span>
+          <span class="hljs-attr">files:</span> <span class="hljs-string">|
+            packages/cli/build/cli-win.exe
+            packages/cli/build/cli-linux
+            packages/cli/build/cli-macos 
+            packages/server/specs/openapi.yaml
+            packages/server/specs/openapi.json
+</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Discord</span> <span class="hljs-string">Webhook</span> <span class="hljs-string">Action</span>
+        <span class="hljs-attr">uses:</span> <span class="hljs-string">tsickert/discord-webhook@v4.0.0</span>
+        <span class="hljs-attr">with:</span>
+          <span class="hljs-attr">webhook-url:</span> <span class="hljs-string">${{</span> <span class="hljs-string">secrets.PROD_DEPLOY_WEBHOOK_URL</span> <span class="hljs-string">}}</span>
+          <span class="hljs-attr">content:</span> <span class="hljs-string">"Self Host Deployment Complete: $<span class="hljs-template-variable">{{ env.RELEASE_VERSION }}</span> deployed to Self Host."</span>
+          <span class="hljs-attr">embed-title:</span> <span class="hljs-string">${{</span> <span class="hljs-string">env.RELEASE_VERSION</span> <span class="hljs-string">}}</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

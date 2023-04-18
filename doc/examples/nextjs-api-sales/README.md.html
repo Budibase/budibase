@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>README.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "examples/nextjs-api-sales/README.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#budibase-api-+-next.js-example">Budibase API + Next.js example</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#pre-requisites">Pre-requisites</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#getting-started">Getting Started</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#accessing-the-app">Accessing the app</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#attribution">Attribution</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="budibase-api-+-next.js-example">
+  <h1>
+    <a href="#budibase-api-+-next.js-example" name="budibase-api-+-next.js-example" class="pilcrow"></a>
+Budibase API + Next.js example
+  </h1>
+</div>
+<p>This is an example of how Budibase can be used as a backend for a Postgres database for a Next.js sales app. You will
+need to follow the walk-through that has been published in the Budibase docs to set up your Budibase app for this example.</p>
+<div class="pilwrap" id="pre-requisites">
+  <h2>
+    <a href="#pre-requisites" name="pre-requisites" class="pilcrow"></a>
+Pre-requisites
+  </h2>
+</div>
+<p>To use this example you will need:</p>
+<ol>
+<li><a href="https://www.docker.com/">Docker</a></li>
+<li><a href="https://docs.docker.com/compose/">Docker Compose</a></li>
+<li><a href="https://nodejs.org/en/">Node.js</a></li>
+<li>A self-hosted Budibase installation</li>
+</ol>
+<div class="pilwrap" id="getting-started">
+  <h2>
+    <a href="#getting-started" name="getting-started" class="pilcrow"></a>
+Getting Started
+  </h2>
+</div>
+<p>The first step is to set up the database - you can do this by going to the <code>db/</code> directory and running the command:</p>
+<pre><code class="bash">docker-compose up
+</code></pre>
+<p>The next step is to follow the example walk-through and set up a Budibase app as it describes. Once you've done
+this you can configure the settings in <code>next.config.js</code>, specifically the <code>apiKey</code>, <code>host</code> and <code>appName</code>.</p>
+<p>Finally, you can start the dev server with the following command:</p>
+<pre><code class="bash">npm run dev
+<span class="hljs-comment"># or</span>
+yarn dev
+</code></pre>
+<div class="pilwrap" id="accessing-the-app">
+  <h2>
+    <a href="#accessing-the-app" name="accessing-the-app" class="pilcrow"></a>
+Accessing the app
+  </h2>
+</div>
+<p>Open <a href="http://localhost:3001">http://localhost:3001</a> with your browser to see the sales app.</p>
+<p>Look in the API routes (<code>pages/api/sales.ts</code> and <code>pages/api/salespeople.ts</code>) to see how this is integrated with Budibase.
+There is also a utility file where some core functions and types have been defined, in <code>utilities/index.ts</code>.</p>
+<div class="pilwrap" id="attribution">
+  <h2>
+    <a href="#attribution" name="attribution" class="pilcrow"></a>
+Attribution
+  </h2>
+</div>
+<p>This example was set up using <a href="https://nextjs.org/">Next.js</a> and bootstrapped with <a href="https://github.com/vercel/next.js/tree/canary/packages/create-next-app"><code>create-next-app</code></a>.</p>
+</div>
+  </div>
+</body>
+</html>

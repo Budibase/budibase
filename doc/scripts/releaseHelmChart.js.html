@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>releaseHelmChart.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "scripts/releaseHelmChart.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>releaseHelmChart.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">const</span> yaml = <span class="hljs-built_in">require</span>(<span class="hljs-string">"js-yaml"</span>) 
+<span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">"fs"</span>)
+<span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">"path"</span>)
+
+<span class="hljs-keyword">const</span> UpgradeTypes = {
+	<span class="hljs-attr">MAJOR</span>: <span class="hljs-string">"major"</span>,
+	<span class="hljs-attr">MINOR</span>: <span class="hljs-string">"minor"</span>,
+	<span class="hljs-attr">PATCH</span>: <span class="hljs-string">"patch"</span>
+}
+
+<span class="hljs-keyword">const</span> CHART_PATH = path.join(__dirname, <span class="hljs-string">"../"</span>, <span class="hljs-string">"charts"</span>, <span class="hljs-string">"budibase"</span>, <span class="hljs-string">"Chart.yaml"</span>)
+<span class="hljs-keyword">const</span> UPGRADE_VERSION = process.env.BUDIBASE_RELEASE_VERSION
+<span class="hljs-keyword">const</span> UPGRADE_TYPE = process.env.HELM_CHART_UPGRADE_TYPE || UpgradeTypes.PATCH
+
+<span class="hljs-keyword">if</span> (!UPGRADE_VERSION) {
+	<span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">"BUDIBASE_RELEASE_VERSION env var must be set."</span>)
+}
+
+<span class="hljs-keyword">try</span> {
+	<span class="hljs-keyword">const</span> chartFile = fs.readFileSync(CHART_PATH, <span class="hljs-string">"utf-8"</span>)
+	<span class="hljs-keyword">const</span> chart = yaml.load(chartFile)
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Upgrade app version in chart to match budibase release version</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">	chart.appVersion = UPGRADE_VERSION
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>semantically version the chart</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">	<span class="hljs-keyword">const</span> [major, minor, patch] = chart.version.split(<span class="hljs-string">"."</span>)
+	<span class="hljs-keyword">const</span> newPatch = <span class="hljs-built_in">parseInt</span>(patch) + <span class="hljs-number">1</span>
+	chart.version = [major, minor, newPatch].join(<span class="hljs-string">"."</span>)
+	<span class="hljs-keyword">const</span> updatedChartYaml = yaml.dump(chart)
+	fs.writeFileSync(CHART_PATH, updatedChartYaml)
+} <span class="hljs-keyword">catch</span> (err) {
+	<span class="hljs-built_in">console</span>.error(<span class="hljs-string">"Error releasing helm chart"</span>)
+	<span class="hljs-keyword">throw</span> err
+}
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

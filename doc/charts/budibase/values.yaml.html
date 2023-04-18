@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>values.yaml</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "charts/budibase/values.yaml";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#if-defined-storageclassname">If defined, storageClassName: </a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#if-set-to-storageclassname-which-disables-dynamic-provisioning">If set to &amp;quot;-&amp;quot;, storageClassName: &amp;quot;&amp;quot;, which disables dynamic provisioning</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#if-undefined-the-default-or-set-to-null-no-storageclassname-spec-is">If undefined (the default) or set to null, no storageClassName spec is</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#set-choosing-the-default-provisioner">set, choosing the default provisioner.</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#if-defined-storageclassname-1">If defined, storageClassName: </a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#if-set-to-storageclassname-which-disables-dynamic-provisioning-1">If set to &amp;quot;-&amp;quot;, storageClassName: &amp;quot;&amp;quot;, which disables dynamic provisioning</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#if-undefined-the-default-or-set-to-null-no-storageclassname-spec-is-1">If undefined (the default) or set to null, no storageClassName spec is</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#set-choosing-the-default-provisioner-1">set, choosing the default provisioner.</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#clustersize-is-the-initial-size-of-the-couchdb-cluster">clusterSize is the initial size of the CouchDB cluster.</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#when-enabled-will-deploy-a-networkpolicy-that-allows-couchdb-pods-to">When enabled, will deploy a networkpolicy that allows CouchDB pods to</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#communicate-with-each-other-for-clustering-and-ingress-on-port-5984">communicate with each other for clustering and ingress on port 5984</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#the-storage-volume-used-by-each-pod-in-the-statefulset.if-a">The storage volume used by each Pod in the StatefulSet. If a</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#persistentvolume-is-not-enabled-the-pods-will-use-emptydir-ephemeral">persistentVolume is not enabled, the Pods will use emptyDir ephemeral</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#local-storage.setting-the-storageclass-attribute-to-disables-dynamic">local storage. Setting the storageClass attribute to &amp;quot;-&amp;quot; disables dynamic</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#provisioning-of-persistent-volumes-leaving-it-unset-will-invoke-the-default">provisioning of Persistent Volumes; leaving it unset will invoke the default</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#provisioner">provisioner.</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#the-couchdb-image">The CouchDB image</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#experimental-integration-with-lucene-powered-fulltext-search">Experimental integration with Lucene-powered fulltext search</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#couchdb-is-happy-to-spin-up-cluster-nodes-in-parallel-but-if-you-encounter">CouchDB is happy to spin up cluster nodes in parallel, but if you encounter</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#problems-you-can-try-setting-podmanagementpolicy-to-the-statefulset-default">problems you can try setting podManagementPolicy to the StatefulSet default</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#orderedready">OrderedReady</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#optional-pod-annotations">Optional pod annotations</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#optional-tolerations">Optional tolerations</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#an-ingress-resource-can-provide-name-based-virtual-hosting-and-tls">An Ingress resource can provide name-based virtual hosting and TLS</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#termination-among-other-things-for-couchdb-deployments-which-are-accessed">termination among other things for CouchDB deployments which are accessed</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#from-outside-the-kubernetes-cluster">from outside the Kubernetes cluster.</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#ref-https-kubernetes.iodocsconceptsservices-networkingingress">ref: https://kubernetes.io/docs/concepts/services-networking/ingress/</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#optional-resource-requests-and-limits-for-the-couchdb-container">Optional resource requests and limits for the CouchDB container</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#ref-http-kubernetes.iodocsuser-guidecompute-resources">ref: http://kubernetes.io/docs/user-guide/compute-resources/</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#erlangflags-is-a-map-that-is-passed-to-the-erlang-vm-as-flags-using-the">erlangFlags is a map that is passed to the Erlang VM as flags using the</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#erl_flags-env.name-and-setcookie-flags-are-minimally-required-to">ERL_FLAGS env. name and setcookie flags are minimally required to</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#establish-connectivity-between-cluster-nodes">establish connectivity between cluster nodes.</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#ref-http-erlang.orgdocmanerl.htmlinit_flags">ref: http://erlang.org/doc/man/erl.html#init_flags</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#couchdbconfig-will-override-default-couchdb-configuration-settings">couchdbConfig will override default CouchDB configuration settings.</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#the-contents-of-this-map-are-reformatted-into-a.ini-file-laid-down">The contents of this map are reformatted into a .ini file laid down</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#by-a-configmap-object">by a ConfigMap object.</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#ref-http-docs.couchdb.orgenlatestconfigindex.html">ref: http://docs.couchdb.org/en/latest/config/index.html</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#configure-liveness-and-readiness-probe-values">Configure liveness and readiness probe values</a>
+      </div>
+
+      <div class="heading h1">
+        <a href="#ref-https-kubernetes.iodocstasksconfigure-pod-containerconfigure-liveness-readiness-probesconfigure-probes">Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>values.yaml</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+<p>Default values for budibase.
+This is a YAML-formatted file.
+Declare variables to be passed into your templates.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+<span class="hljs-attr">image:</span>
+  <span class="hljs-attr">pullPolicy:</span> <span class="hljs-string">IfNotPresent</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Overrides the image tag whose default is the chart appVersion.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">tag:</span> <span class="hljs-string">""</span>
+
+<span class="hljs-attr">imagePullSecrets:</span> <span class="hljs-string">[]</span>
+<span class="hljs-attr">nameOverride:</span> <span class="hljs-string">""</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>fullnameOverride: &quot;&quot;</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+<span class="hljs-attr">serviceAccount:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Specifies whether a service account should be created</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">create:</span> <span class="hljs-literal">true</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Annotations to add to the service account</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">annotations:</span> <span class="hljs-string">{}</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>The name of the service account to use.
+If not set and create is true, a name is generated using the fullname template</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">name:</span> <span class="hljs-string">""</span>
+
+<span class="hljs-attr">podAnnotations:</span> <span class="hljs-string">{}</span>
+
+<span class="hljs-attr">podSecurityContext:</span>
+  <span class="hljs-string">{}</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7"></a>
+</div>
+<p>fsGroup: 2000</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+<span class="hljs-attr">securityContext:</span>
+  <span class="hljs-string">{}</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8"></a>
+</div>
+<p>capabilities:
+drop:</p>
+<ul>
+<li>ALL
+readOnlyRootFilesystem: true
+runAsNonRoot: true
+runAsUser: 1000</li>
+</ul>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+<span class="hljs-attr">service:</span>
+  <span class="hljs-attr">type:</span> <span class="hljs-string">ClusterIP</span>
+  <span class="hljs-attr">port:</span> <span class="hljs-number">10000</span>
+
+<span class="hljs-attr">ingress:</span>
+  <span class="hljs-attr">enabled:</span> <span class="hljs-literal">true</span>
+  <span class="hljs-attr">aws:</span> <span class="hljs-literal">false</span>
+  <span class="hljs-attr">nginx:</span> <span class="hljs-literal">true</span>
+  <span class="hljs-attr">certificateArn:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">className:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">annotations:</span>
+    <span class="hljs-attr">kubernetes.io/ingress.class:</span> <span class="hljs-string">nginx</span>
+    <span class="hljs-attr">nginx.ingress.kubernetes.io/client-max-body-size:</span> <span class="hljs-string">150M</span>
+    <span class="hljs-attr">nginx.ingress.kubernetes.io/proxy-body-size:</span> <span class="hljs-string">50m</span>
+  <span class="hljs-attr">hosts:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">host:</span> <span class="hljs-comment"># change if using custom domain</span>
+      <span class="hljs-attr">paths:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">path:</span> <span class="hljs-string">/</span>
+          <span class="hljs-attr">pathType:</span> <span class="hljs-string">Prefix</span>
+          <span class="hljs-attr">backend:</span>
+            <span class="hljs-attr">service:</span>
+              <span class="hljs-attr">name:</span> <span class="hljs-string">proxy-service</span>
+              <span class="hljs-attr">port:</span>
+                <span class="hljs-attr">number:</span> <span class="hljs-number">10000</span>
+
+<span class="hljs-attr">autoscaling:</span>
+  <span class="hljs-attr">enabled:</span> <span class="hljs-literal">false</span>
+  <span class="hljs-attr">minReplicas:</span> <span class="hljs-number">1</span>
+  <span class="hljs-attr">maxReplicas:</span> <span class="hljs-number">100</span>
+  <span class="hljs-attr">targetCPUUtilizationPercentage:</span> <span class="hljs-number">80</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9"></a>
+</div>
+<p>targetMemoryUtilizationPercentage: 80</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+<span class="hljs-attr">nodeSelector:</span> <span class="hljs-string">{}</span>
+
+<span class="hljs-attr">tolerations:</span> <span class="hljs-string">[]</span>
+
+<span class="hljs-attr">affinity:</span> <span class="hljs-string">{}</span>
+
+<span class="hljs-attr">globals:</span>
+  <span class="hljs-attr">appVersion:</span> <span class="hljs-string">"latest"</span>
+  <span class="hljs-attr">budibaseEnv:</span> <span class="hljs-string">PRODUCTION</span>
+  <span class="hljs-attr">tenantFeatureFlags:</span> <span class="hljs-string">"*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"</span>
+  <span class="hljs-attr">enableAnalytics:</span> <span class="hljs-string">"1"</span>
+  <span class="hljs-attr">sentryDSN:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">posthogToken:</span> <span class="hljs-string">"phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"</span>
+  <span class="hljs-attr">logLevel:</span> <span class="hljs-string">info</span>
+  <span class="hljs-attr">selfHosted:</span> <span class="hljs-string">"1"</span> <span class="hljs-comment"># set to 0 for budibase cloud environment, set to 1 for self-hosted setup</span>
+  <span class="hljs-attr">multiTenancy:</span> <span class="hljs-string">"0"</span> <span class="hljs-comment"># set to 0 to disable multiple orgs, set to 1 to enable multiple orgs</span>
+  <span class="hljs-attr">accountPortalUrl:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">accountPortalApiKey:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">cookieDomain:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">platformUrl:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">httpMigrations:</span> <span class="hljs-string">"0"</span>
+  <span class="hljs-attr">google:</span>
+    <span class="hljs-attr">clientId:</span> <span class="hljs-string">""</span>
+    <span class="hljs-attr">secret:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">automationMaxIterations:</span> <span class="hljs-string">"200"</span>
+
+  <span class="hljs-attr">createSecrets:</span> <span class="hljs-literal">true</span> <span class="hljs-comment"># creates an internal API key, JWT secrets and redis password for you</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10"></a>
+</div>
+<p>if createSecrets is set to false, you can hard-code your secrets here</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">apiEncryptionKey:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">internalApiKey:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">jwtSecret:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">cdnUrl:</span> <span class="hljs-string">""</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11"></a>
+</div>
+<p>fallback values used during live rotation</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">internalApiKeyFallback:</span> <span class="hljs-string">""</span>
+  <span class="hljs-attr">jwtSecretFallback:</span> <span class="hljs-string">""</span>
+
+  <span class="hljs-attr">smtp:</span>
+    <span class="hljs-attr">enabled:</span> <span class="hljs-literal">false</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12"></a>
+</div>
+<p>elasticApmEnabled:
+elasticApmSecretToken:
+elasticApmServerUrl:
+globalAgentHttpProxy:
+globalAgentHttpsProxy:
+globalAgentNoProxy:</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+<span class="hljs-attr">services:</span>
+  <span class="hljs-attr">budibaseVersion:</span> <span class="hljs-string">latest</span>
+  <span class="hljs-attr">dns:</span> <span class="hljs-string">cluster.local</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13"></a>
+</div>
+<p>tlsRejectUnauthorized: 0</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+  <span class="hljs-attr">proxy:</span>
+    <span class="hljs-attr">port:</span> <span class="hljs-number">10000</span>
+    <span class="hljs-attr">replicaCount:</span> <span class="hljs-number">1</span>
+    <span class="hljs-attr">upstreams:</span>
+      <span class="hljs-attr">apps:</span> <span class="hljs-string">'http://app-service.<span class="hljs-template-variable">{{ .Release.Namespace }}</span>.svc.<span class="hljs-template-variable">{{ .Values.services.dns }}</span>:<span class="hljs-template-variable">{{ .Values.services.apps.port }}</span>'</span>
+      <span class="hljs-attr">worker:</span> <span class="hljs-string">'http://worker-service.<span class="hljs-template-variable">{{ .Release.Namespace }}</span>.svc.<span class="hljs-template-variable">{{ .Values.services.dns }}</span>:<span class="hljs-template-variable">{{ .Values.services.worker.port }}</span>'</span>
+      <span class="hljs-attr">minio:</span> <span class="hljs-string">'http://minio-service.<span class="hljs-template-variable">{{ .Release.Namespace }}</span>.svc.<span class="hljs-template-variable">{{ .Values.services.dns }}</span>:<span class="hljs-template-variable">{{ .Values.services.objectStore.port }}</span>'</span>
+      <span class="hljs-attr">couchdb:</span> <span class="hljs-string">'http://<span class="hljs-template-variable">{{ .Release.Name }}</span>-svc-couchdb:<span class="hljs-template-variable">{{ .Values.services.couchdb.port }}</span>'</span>
+    <span class="hljs-attr">resources:</span> <span class="hljs-string">{}</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14"></a>
+</div>
+<p>annotations:
+co.elastic.logs/module: nginx
+co.elastic.logs/fileset.stdout: access
+co.elastic.logs/fileset.stderr: error</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+  <span class="hljs-attr">apps:</span>
+    <span class="hljs-attr">port:</span> <span class="hljs-number">4002</span>
+    <span class="hljs-attr">replicaCount:</span> <span class="hljs-number">1</span>
+    <span class="hljs-attr">logLevel:</span> <span class="hljs-string">info</span>
+    <span class="hljs-attr">resources:</span> <span class="hljs-string">{}</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15"></a>
+</div>
+<p>nodeDebug: &quot;&quot; # set the value of NODE_DEBUG
+annotations:
+co.elastic.logs/multiline.type: pattern
+co.elastic.logs/multiline.pattern: '^[[:space:]]'
+co.elastic.logs/multiline.negate: false
+co.elastic.logs/multiline.match: after</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">worker:</span>
+    <span class="hljs-attr">port:</span> <span class="hljs-number">4003</span>
+    <span class="hljs-attr">replicaCount:</span> <span class="hljs-number">1</span>
+    <span class="hljs-attr">resources:</span> <span class="hljs-string">{}</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16"></a>
+</div>
+<p>annotations:
+co.elastic.logs/multiline.type: pattern
+co.elastic.logs/multiline.pattern: '^[[:space:]]'
+co.elastic.logs/multiline.negate: false
+co.elastic.logs/multiline.match: after</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+  <span class="hljs-attr">couchdb:</span>
+    <span class="hljs-attr">enabled:</span> <span class="hljs-literal">true</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17"></a>
+</div>
+<p>url: &quot;&quot; # only change if pointing to existing couch server
+user: &quot;&quot; # only change if pointing to existing couch server
+password: &quot;&quot; # only change if pointing to existing couch server</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">    <span class="hljs-attr">port:</span> <span class="hljs-number">5984</span>
+    <span class="hljs-attr">backup:</span>
+      <span class="hljs-attr">enabled:</span> <span class="hljs-literal">false</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18"></a>
+</div>
+<p>target couchDB instance to back up to</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">      <span class="hljs-attr">target:</span> <span class="hljs-string">""</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19"></a>
+</div>
+<p>backup interval in seconds</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">      <span class="hljs-attr">interval:</span> <span class="hljs-string">""</span>
+      <span class="hljs-attr">resources:</span> <span class="hljs-string">{}</span>
+
+  <span class="hljs-attr">redis:</span>
+    <span class="hljs-attr">enabled:</span> <span class="hljs-literal">true</span> <span class="hljs-comment"># disable if using external redis</span>
+    <span class="hljs-attr">port:</span> <span class="hljs-number">6379</span>
+    <span class="hljs-attr">replicaCount:</span> <span class="hljs-number">1</span>
+    <span class="hljs-attr">url:</span> <span class="hljs-string">""</span> <span class="hljs-comment"># only change if pointing to existing redis cluster and enabled: false</span>
+    <span class="hljs-attr">password:</span> <span class="hljs-string">"budibase"</span> <span class="hljs-comment"># recommended to override if using built-in redis</span>
+    <span class="hljs-attr">storage:</span> <span class="hljs-string">100Mi</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="if-defined-storageclassname">
+  <h1>
+    <a href="#if-defined-storageclassname" name="if-defined-storageclassname" class="pilcrow"></a>
+If defined, storageClassName: <storageClass>
+  </h1>
+</div>
+<div class="pilwrap" id="if-set-to-storageclassname-which-disables-dynamic-provisioning">
+  <h1>
+    <a href="#if-set-to-storageclassname-which-disables-dynamic-provisioning" name="if-set-to-storageclassname-which-disables-dynamic-provisioning" class="pilcrow"></a>
+If set to &quot;-&quot;, storageClassName: &quot;&quot;, which disables dynamic provisioning
+  </h1>
+</div>
+<div class="pilwrap" id="if-undefined-the-default-or-set-to-null-no-storageclassname-spec-is">
+  <h1>
+    <a href="#if-undefined-the-default-or-set-to-null-no-storageclassname-spec-is" name="if-undefined-the-default-or-set-to-null-no-storageclassname-spec-is" class="pilcrow"></a>
+If undefined (the default) or set to null, no storageClassName spec is
+  </h1>
+</div>
+<div class="pilwrap" id="set-choosing-the-default-provisioner">
+  <h1>
+    <a href="#set-choosing-the-default-provisioner" name="set-choosing-the-default-provisioner" class="pilcrow"></a>
+set, choosing the default provisioner.
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">    <span class="hljs-attr">storageClass:</span> <span class="hljs-string">""</span>
+    <span class="hljs-attr">resources:</span> <span class="hljs-string">{}</span>
+
+  <span class="hljs-attr">objectStore:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-21" id="section-21"></a>
+</div>
+<p>Set to false if using another object store such as S3</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">    <span class="hljs-attr">minio:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">browser:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">port:</span> <span class="hljs-number">9000</span>
+    <span class="hljs-attr">replicaCount:</span> <span class="hljs-number">1</span>
+    <span class="hljs-attr">accessKey:</span> <span class="hljs-string">""</span> <span class="hljs-comment"># AWS_ACCESS_KEY if using S3 or existing minio access key</span>
+    <span class="hljs-attr">secretKey:</span> <span class="hljs-string">""</span> <span class="hljs-comment"># AWS_SECRET_ACCESS_KEY if using S3 or existing minio secret</span>
+    <span class="hljs-attr">region:</span> <span class="hljs-string">""</span> <span class="hljs-comment"># AWS_REGION if using S3 or existing minio secret</span>
+    <span class="hljs-attr">url:</span> <span class="hljs-string">"http://minio-service:9000"</span> <span class="hljs-comment"># only change if pointing to existing minio cluster or S3 and minio: false</span>
+    <span class="hljs-attr">storage:</span> <span class="hljs-string">100Mi</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="if-defined-storageclassname-1">
+  <h1>
+    <a href="#if-defined-storageclassname-1" name="if-defined-storageclassname-1" class="pilcrow"></a>
+If defined, storageClassName: <storageClass>
+  </h1>
+</div>
+<div class="pilwrap" id="if-set-to-storageclassname-which-disables-dynamic-provisioning-1">
+  <h1>
+    <a href="#if-set-to-storageclassname-which-disables-dynamic-provisioning-1" name="if-set-to-storageclassname-which-disables-dynamic-provisioning-1" class="pilcrow"></a>
+If set to &quot;-&quot;, storageClassName: &quot;&quot;, which disables dynamic provisioning
+  </h1>
+</div>
+<div class="pilwrap" id="if-undefined-the-default-or-set-to-null-no-storageclassname-spec-is-1">
+  <h1>
+    <a href="#if-undefined-the-default-or-set-to-null-no-storageclassname-spec-is-1" name="if-undefined-the-default-or-set-to-null-no-storageclassname-spec-is-1" class="pilcrow"></a>
+If undefined (the default) or set to null, no storageClassName spec is
+  </h1>
+</div>
+<div class="pilwrap" id="set-choosing-the-default-provisioner-1">
+  <h1>
+    <a href="#set-choosing-the-default-provisioner-1" name="set-choosing-the-default-provisioner-1" class="pilcrow"></a>
+set, choosing the default provisioner.
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">    <span class="hljs-attr">storageClass:</span> <span class="hljs-string">""</span>
+    <span class="hljs-attr">resources:</span> <span class="hljs-string">{}</span>
+    <span class="hljs-attr">cloudfront:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-23" id="section-23"></a>
+</div>
+<p>Set the url of a distribution to enable cloudfront</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">      <span class="hljs-attr">cdn:</span> <span class="hljs-string">""</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-24" id="section-24"></a>
+</div>
+<p>ID of public key stored in cloudfront</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">      <span class="hljs-attr">publicKeyId:</span> <span class="hljs-string">""</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-25" id="section-25"></a>
+</div>
+<p>Base64 encoded private key for the above public key</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">      <span class="hljs-attr">privateKey64:</span> <span class="hljs-string">""</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-26" id="section-26"></a>
+</div>
+<p>Override values in couchDB subchart</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml"><span class="hljs-attr">couchdb:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="clustersize-is-the-initial-size-of-the-couchdb-cluster">
+  <h1>
+    <a href="#clustersize-is-the-initial-size-of-the-couchdb-cluster" name="clustersize-is-the-initial-size-of-the-couchdb-cluster" class="pilcrow"></a>
+clusterSize is the initial size of the CouchDB cluster.
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">clusterSize:</span> <span class="hljs-number">3</span>
+  <span class="hljs-attr">allowAdminParty:</span> <span class="hljs-literal">false</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-28" id="section-28"></a>
+</div>
+<p>Secret Management</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">createAdminSecret:</span> <span class="hljs-literal">true</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-29" id="section-29"></a>
+</div>
+<p>adminUsername: budibase
+adminPassword: budibase
+adminHash: -pbkdf2-this_is_not_necessarily_secure_either
+cookieAuthSecret: admin</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="when-enabled-will-deploy-a-networkpolicy-that-allows-couchdb-pods-to">
+  <h1>
+    <a href="#when-enabled-will-deploy-a-networkpolicy-that-allows-couchdb-pods-to" name="when-enabled-will-deploy-a-networkpolicy-that-allows-couchdb-pods-to" class="pilcrow"></a>
+When enabled, will deploy a networkpolicy that allows CouchDB pods to
+  </h1>
+</div>
+<div class="pilwrap" id="communicate-with-each-other-for-clustering-and-ingress-on-port-5984">
+  <h1>
+    <a href="#communicate-with-each-other-for-clustering-and-ingress-on-port-5984" name="communicate-with-each-other-for-clustering-and-ingress-on-port-5984" class="pilcrow"></a>
+communicate with each other for clustering and ingress on port 5984
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">networkPolicy:</span>
+    <span class="hljs-attr">enabled:</span> <span class="hljs-literal">true</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-31" id="section-31"></a>
+</div>
+<p>Use a service account</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">serviceAccount:</span>
+    <span class="hljs-attr">enabled:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">create:</span> <span class="hljs-literal">true</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-32" id="section-32"></a>
+</div>
+<p>name:
+imagePullSecrets:</p>
+<ul>
+<li>name: myimagepullsecret</li>
+</ul>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="the-storage-volume-used-by-each-pod-in-the-statefulset.if-a">
+  <h1>
+    <a href="#the-storage-volume-used-by-each-pod-in-the-statefulset.if-a" name="the-storage-volume-used-by-each-pod-in-the-statefulset.if-a" class="pilcrow"></a>
+The storage volume used by each Pod in the StatefulSet. If a
+  </h1>
+</div>
+<div class="pilwrap" id="persistentvolume-is-not-enabled-the-pods-will-use-emptydir-ephemeral">
+  <h1>
+    <a href="#persistentvolume-is-not-enabled-the-pods-will-use-emptydir-ephemeral" name="persistentvolume-is-not-enabled-the-pods-will-use-emptydir-ephemeral" class="pilcrow"></a>
+persistentVolume is not enabled, the Pods will use <code>emptyDir</code> ephemeral
+  </h1>
+</div>
+<div class="pilwrap" id="local-storage.setting-the-storageclass-attribute-to-disables-dynamic">
+  <h1>
+    <a href="#local-storage.setting-the-storageclass-attribute-to-disables-dynamic" name="local-storage.setting-the-storageclass-attribute-to-disables-dynamic" class="pilcrow"></a>
+local storage. Setting the storageClass attribute to &quot;-&quot; disables dynamic
+  </h1>
+</div>
+<div class="pilwrap" id="provisioning-of-persistent-volumes-leaving-it-unset-will-invoke-the-default">
+  <h1>
+    <a href="#provisioning-of-persistent-volumes-leaving-it-unset-will-invoke-the-default" name="provisioning-of-persistent-volumes-leaving-it-unset-will-invoke-the-default" class="pilcrow"></a>
+provisioning of Persistent Volumes; leaving it unset will invoke the default
+  </h1>
+</div>
+<div class="pilwrap" id="provisioner">
+  <h1>
+    <a href="#provisioner" name="provisioner" class="pilcrow"></a>
+provisioner.
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">persistentVolume:</span>
+    <span class="hljs-attr">enabled:</span> <span class="hljs-literal">false</span>
+    <span class="hljs-attr">accessModes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">ReadWriteOnce</span>
+    <span class="hljs-attr">size:</span> <span class="hljs-string">10Gi</span>
+    <span class="hljs-attr">storageClass:</span> <span class="hljs-string">""</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="the-couchdb-image">
+  <h1>
+    <a href="#the-couchdb-image" name="the-couchdb-image" class="pilcrow"></a>
+The CouchDB image
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">image:</span>
+    <span class="hljs-attr">repository:</span> <span class="hljs-string">couchdb</span>
+    <span class="hljs-attr">tag:</span> <span class="hljs-number">3.1</span><span class="hljs-number">.1</span>
+    <span class="hljs-attr">pullPolicy:</span> <span class="hljs-string">IfNotPresent</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="experimental-integration-with-lucene-powered-fulltext-search">
+  <h1>
+    <a href="#experimental-integration-with-lucene-powered-fulltext-search" name="experimental-integration-with-lucene-powered-fulltext-search" class="pilcrow"></a>
+Experimental integration with Lucene-powered fulltext search
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">enableSearch:</span> <span class="hljs-literal">true</span>
+  <span class="hljs-attr">searchImage:</span>
+    <span class="hljs-attr">repository:</span> <span class="hljs-string">kocolosk/couchdb-search</span>
+    <span class="hljs-attr">tag:</span> <span class="hljs-number">0.2</span><span class="hljs-number">.0</span>
+    <span class="hljs-attr">pullPolicy:</span> <span class="hljs-string">IfNotPresent</span>
+
+  <span class="hljs-attr">initImage:</span>
+    <span class="hljs-attr">repository:</span> <span class="hljs-string">busybox</span>
+    <span class="hljs-attr">tag:</span> <span class="hljs-string">latest</span>
+    <span class="hljs-attr">pullPolicy:</span> <span class="hljs-string">Always</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="couchdb-is-happy-to-spin-up-cluster-nodes-in-parallel-but-if-you-encounter">
+  <h1>
+    <a href="#couchdb-is-happy-to-spin-up-cluster-nodes-in-parallel-but-if-you-encounter" name="couchdb-is-happy-to-spin-up-cluster-nodes-in-parallel-but-if-you-encounter" class="pilcrow"></a>
+CouchDB is happy to spin up cluster nodes in parallel, but if you encounter
+  </h1>
+</div>
+<div class="pilwrap" id="problems-you-can-try-setting-podmanagementpolicy-to-the-statefulset-default">
+  <h1>
+    <a href="#problems-you-can-try-setting-podmanagementpolicy-to-the-statefulset-default" name="problems-you-can-try-setting-podmanagementpolicy-to-the-statefulset-default" class="pilcrow"></a>
+problems you can try setting podManagementPolicy to the StatefulSet default
+  </h1>
+</div>
+<div class="pilwrap" id="orderedready">
+  <h1>
+    <a href="#orderedready" name="orderedready" class="pilcrow"></a>
+<code>OrderedReady</code>
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">podManagementPolicy:</span> <span class="hljs-string">Parallel</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="optional-pod-annotations">
+  <h1>
+    <a href="#optional-pod-annotations" name="optional-pod-annotations" class="pilcrow"></a>
+Optional pod annotations
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">annotations:</span> <span class="hljs-string">{}</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="optional-tolerations">
+  <h1>
+    <a href="#optional-tolerations" name="optional-tolerations" class="pilcrow"></a>
+Optional tolerations
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">tolerations:</span> <span class="hljs-string">[]</span>
+
+  <span class="hljs-attr">affinity:</span> <span class="hljs-string">{}</span>
+
+  <span class="hljs-attr">service:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-39" id="section-39"></a>
+</div>
+<p>annotations:</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">    <span class="hljs-attr">enabled:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">type:</span> <span class="hljs-string">ClusterIP</span>
+    <span class="hljs-attr">externalPort:</span> <span class="hljs-number">5984</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="an-ingress-resource-can-provide-name-based-virtual-hosting-and-tls">
+  <h1>
+    <a href="#an-ingress-resource-can-provide-name-based-virtual-hosting-and-tls" name="an-ingress-resource-can-provide-name-based-virtual-hosting-and-tls" class="pilcrow"></a>
+An Ingress resource can provide name-based virtual hosting and TLS
+  </h1>
+</div>
+<div class="pilwrap" id="termination-among-other-things-for-couchdb-deployments-which-are-accessed">
+  <h1>
+    <a href="#termination-among-other-things-for-couchdb-deployments-which-are-accessed" name="termination-among-other-things-for-couchdb-deployments-which-are-accessed" class="pilcrow"></a>
+termination among other things for CouchDB deployments which are accessed
+  </h1>
+</div>
+<div class="pilwrap" id="from-outside-the-kubernetes-cluster">
+  <h1>
+    <a href="#from-outside-the-kubernetes-cluster" name="from-outside-the-kubernetes-cluster" class="pilcrow"></a>
+from outside the Kubernetes cluster.
+  </h1>
+</div>
+<div class="pilwrap" id="ref-https-kubernetes.iodocsconceptsservices-networkingingress">
+  <h1>
+    <a href="#ref-https-kubernetes.iodocsconceptsservices-networkingingress" name="ref-https-kubernetes.iodocsconceptsservices-networkingingress" class="pilcrow"></a>
+ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">ingress:</span>
+    <span class="hljs-attr">enabled:</span> <span class="hljs-literal">false</span>
+    <span class="hljs-attr">hosts:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">chart-example.local</span>
+    <span class="hljs-attr">path:</span> <span class="hljs-string">/</span>
+    <span class="hljs-attr">annotations:</span>
+      <span class="hljs-string">[]</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-41" id="section-41"></a>
+</div>
+<p>kubernetes.io/ingress.class: nginx
+kubernetes.io/tls-acme: &quot;true&quot;</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">    <span class="hljs-attr">tls:</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-42" id="section-42"></a>
+</div>
+<p>Secrets must be manually created in the namespace.</p>
+<ul>
+<li>secretName: chart-example-tls
+hosts:
+<ul>
+<li>chart-example.local</li>
+</ul>
+</li>
+</ul>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="optional-resource-requests-and-limits-for-the-couchdb-container">
+  <h1>
+    <a href="#optional-resource-requests-and-limits-for-the-couchdb-container" name="optional-resource-requests-and-limits-for-the-couchdb-container" class="pilcrow"></a>
+Optional resource requests and limits for the CouchDB container
+  </h1>
+</div>
+<div class="pilwrap" id="ref-http-kubernetes.iodocsuser-guidecompute-resources">
+  <h1>
+    <a href="#ref-http-kubernetes.iodocsuser-guidecompute-resources" name="ref-http-kubernetes.iodocsuser-guidecompute-resources" class="pilcrow"></a>
+ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">resources:</span>
+    <span class="hljs-string">{}</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-44" id="section-44"></a>
+</div>
+<p>requests:
+cpu: 100m
+memory: 128Mi
+limits:
+cpu: 56
+memory: 256Gi</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="erlangflags-is-a-map-that-is-passed-to-the-erlang-vm-as-flags-using-the">
+  <h1>
+    <a href="#erlangflags-is-a-map-that-is-passed-to-the-erlang-vm-as-flags-using-the" name="erlangflags-is-a-map-that-is-passed-to-the-erlang-vm-as-flags-using-the" class="pilcrow"></a>
+erlangFlags is a map that is passed to the Erlang VM as flags using the
+  </h1>
+</div>
+<div class="pilwrap" id="erl_flags-env.name-and-setcookie-flags-are-minimally-required-to">
+  <h1>
+    <a href="#erl_flags-env.name-and-setcookie-flags-are-minimally-required-to" name="erl_flags-env.name-and-setcookie-flags-are-minimally-required-to" class="pilcrow"></a>
+ERL_FLAGS env. <code>name</code> and <code>setcookie</code> flags are minimally required to
+  </h1>
+</div>
+<div class="pilwrap" id="establish-connectivity-between-cluster-nodes">
+  <h1>
+    <a href="#establish-connectivity-between-cluster-nodes" name="establish-connectivity-between-cluster-nodes" class="pilcrow"></a>
+establish connectivity between cluster nodes.
+  </h1>
+</div>
+<div class="pilwrap" id="ref-http-erlang.orgdocmanerl.htmlinit_flags">
+  <h1>
+    <a href="#ref-http-erlang.orgdocmanerl.htmlinit_flags" name="ref-http-erlang.orgdocmanerl.htmlinit_flags" class="pilcrow"></a>
+ref: http://erlang.org/doc/man/erl.html#init_flags
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">erlangFlags:</span>
+    <span class="hljs-attr">name:</span> <span class="hljs-string">couchdb</span>
+    <span class="hljs-attr">setcookie:</span> <span class="hljs-string">monster</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="couchdbconfig-will-override-default-couchdb-configuration-settings">
+  <h1>
+    <a href="#couchdbconfig-will-override-default-couchdb-configuration-settings" name="couchdbconfig-will-override-default-couchdb-configuration-settings" class="pilcrow"></a>
+couchdbConfig will override default CouchDB configuration settings.
+  </h1>
+</div>
+<div class="pilwrap" id="the-contents-of-this-map-are-reformatted-into-a.ini-file-laid-down">
+  <h1>
+    <a href="#the-contents-of-this-map-are-reformatted-into-a.ini-file-laid-down" name="the-contents-of-this-map-are-reformatted-into-a.ini-file-laid-down" class="pilcrow"></a>
+The contents of this map are reformatted into a .ini file laid down
+  </h1>
+</div>
+<div class="pilwrap" id="by-a-configmap-object">
+  <h1>
+    <a href="#by-a-configmap-object" name="by-a-configmap-object" class="pilcrow"></a>
+by a ConfigMap object.
+  </h1>
+</div>
+<div class="pilwrap" id="ref-http-docs.couchdb.orgenlatestconfigindex.html">
+  <h1>
+    <a href="#ref-http-docs.couchdb.orgenlatestconfigindex.html" name="ref-http-docs.couchdb.orgenlatestconfigindex.html" class="pilcrow"></a>
+ref: http://docs.couchdb.org/en/latest/config/index.html
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">couchdbConfig:</span>
+    <span class="hljs-attr">couchdb:</span>
+      <span class="hljs-attr">uuid:</span> <span class="hljs-string">budibase-couchdb</span> <span class="hljs-comment"># REQUIRED: Unique identifier for this CouchDB server instance</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-47" id="section-47"></a>
+</div>
+<p>cluster:
+q: 8 # Create 8 shards for each database</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">    <span class="hljs-attr">chttpd:</span>
+      <span class="hljs-attr">bind_address:</span> <span class="hljs-string">any</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-48" id="section-48"></a>
+</div>
+<p>chttpd.require_valid_user disables all the anonymous requests to the port
+5984 when is set to true.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">      <span class="hljs-attr">require_valid_user:</span> <span class="hljs-literal">false</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-49" id="section-49"></a>
+</div>
+<p>Kubernetes local cluster domain.
+This is used to generate FQDNs for peers when joining the CouchDB cluster.</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">dns:</span>
+    <span class="hljs-attr">clusterDomainSuffix:</span> <span class="hljs-string">cluster.local</span>
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap" id="configure-liveness-and-readiness-probe-values">
+  <h1>
+    <a href="#configure-liveness-and-readiness-probe-values" name="configure-liveness-and-readiness-probe-values" class="pilcrow"></a>
+Configure liveness and readiness probe values
+  </h1>
+</div>
+<div class="pilwrap" id="ref-https-kubernetes.iodocstasksconfigure-pod-containerconfigure-liveness-readiness-probesconfigure-probes">
+  <h1>
+    <a href="#ref-https-kubernetes.iodocstasksconfigure-pod-containerconfigure-liveness-readiness-probesconfigure-probes" name="ref-https-kubernetes.iodocstasksconfigure-pod-containerconfigure-liveness-readiness-probesconfigure-probes" class="pilcrow"></a>
+Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  </h1>
+</div>
+<p>FOR COUCHDB</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="yaml">  <span class="hljs-attr">livenessProbe:</span>
+    <span class="hljs-attr">enabled:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">failureThreshold:</span> <span class="hljs-number">3</span>
+    <span class="hljs-attr">initialDelaySeconds:</span> <span class="hljs-number">0</span>
+    <span class="hljs-attr">periodSeconds:</span> <span class="hljs-number">10</span>
+    <span class="hljs-attr">successThreshold:</span> <span class="hljs-number">1</span>
+    <span class="hljs-attr">timeoutSeconds:</span> <span class="hljs-number">1</span>
+  <span class="hljs-attr">readinessProbe:</span>
+    <span class="hljs-attr">enabled:</span> <span class="hljs-literal">true</span>
+    <span class="hljs-attr">failureThreshold:</span> <span class="hljs-number">3</span>
+    <span class="hljs-attr">initialDelaySeconds:</span> <span class="hljs-number">0</span>
+    <span class="hljs-attr">periodSeconds:</span> <span class="hljs-number">10</span>
+    <span class="hljs-attr">successThreshold:</span> <span class="hljs-number">1</span>
+    <span class="hljs-attr">timeoutSeconds:</span> <span class="hljs-number">1</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

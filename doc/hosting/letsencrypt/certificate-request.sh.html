@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>certificate-request.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "hosting/letsencrypt/certificate-request.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>certificate-request.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-meta">#!/bin/bash</span>
+CUSTOM_DOMAIN=<span class="hljs-string">"<span class="hljs-variable">$1</span>"</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Request from Lets Encrypt</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">certbot certonly --webroot --webroot-path=<span class="hljs-string">"/var/www/html"</span> \
+    --register-unsafely-without-email \
+    --domains <span class="hljs-variable">$CUSTOM_DOMAIN</span> \
+    --rsa-key-size 4096 \
+    --agree-tos \
+    --force-renewal
+
+<span class="hljs-keyword">if</span> (($? != 0)); <span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"ERROR: certbot request failed for <span class="hljs-variable">$CUSTOM_DOMAIN</span> use http on port 80 - exiting"</span>
+    <span class="hljs-built_in">exit</span> 1
+<span class="hljs-keyword">else</span>
+    cp /app/letsencrypt/options-ssl-nginx.conf /etc/letsencrypt/options-ssl-nginx.conf
+    cp /app/letsencrypt/ssl-dhparams.pem /etc/letsencrypt/ssl-dhparams.pem
+    cp /app/letsencrypt/nginx-ssl.conf /etc/nginx/sites-available/nginx-ssl.conf
+    sed -i <span class="hljs-string">"s/CUSTOM_DOMAIN/<span class="hljs-variable">$CUSTOM_DOMAIN</span>/g"</span> /etc/nginx/sites-available/nginx-ssl.conf
+    ln -s /etc/nginx/sites-available/nginx-ssl.conf /etc/nginx/sites-enabled/nginx-ssl.conf
+
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"INFO: restart nginx after certbot request"</span>
+    /etc/init.d/nginx restart
+<span class="hljs-keyword">fi</span>
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

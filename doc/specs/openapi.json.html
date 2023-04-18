@@ -1,0 +1,2840 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>openapi.json</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "specs/openapi.json";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>openapi.json</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="json">{
+  <span class="hljs-attr">"openapi"</span>: <span class="hljs-string">"3.0.0"</span>,
+  <span class="hljs-attr">"info"</span>: {
+    <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Budibase API"</span>,
+    <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The public API for Budibase apps and its services."</span>,
+    <span class="hljs-attr">"version"</span>: <span class="hljs-string">"1.0.0"</span>
+  },
+  <span class="hljs-attr">"servers"</span>: [
+    {
+      <span class="hljs-attr">"url"</span>: <span class="hljs-string">"https://budibase.app/api/public/v1"</span>,
+      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Budibase Cloud API"</span>
+    },
+    {
+      <span class="hljs-attr">"url"</span>: <span class="hljs-string">"{protocol}://{hostname}/api/public/v1"</span>,
+      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Budibase self hosted API"</span>,
+      <span class="hljs-attr">"variables"</span>: {
+        <span class="hljs-attr">"protocol"</span>: {
+          <span class="hljs-attr">"default"</span>: <span class="hljs-string">"http"</span>,
+          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Whether HTTP or HTTPS should be used to communicate with your Budibase instance."</span>
+        },
+        <span class="hljs-attr">"hostname"</span>: {
+          <span class="hljs-attr">"default"</span>: <span class="hljs-string">"localhost:10000"</span>,
+          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The URL of your Budibase instance."</span>
+        }
+      }
+    }
+  ],
+  <span class="hljs-attr">"components"</span>: {
+    <span class="hljs-attr">"parameters"</span>: {
+      <span class="hljs-attr">"tableId"</span>: {
+        <span class="hljs-attr">"in"</span>: <span class="hljs-string">"path"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"tableId"</span>,
+        <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the table which this request is targeting."</span>,
+        <span class="hljs-attr">"schema"</span>: {
+          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+        }
+      },
+      <span class="hljs-attr">"rowId"</span>: {
+        <span class="hljs-attr">"in"</span>: <span class="hljs-string">"path"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"rowId"</span>,
+        <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the row which this request is targeting."</span>,
+        <span class="hljs-attr">"schema"</span>: {
+          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+        }
+      },
+      <span class="hljs-attr">"appId"</span>: {
+        <span class="hljs-attr">"in"</span>: <span class="hljs-string">"header"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"x-budibase-app-id"</span>,
+        <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the app which this request is targeting."</span>,
+        <span class="hljs-attr">"schema"</span>: {
+          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+        }
+      },
+      <span class="hljs-attr">"appIdUrl"</span>: {
+        <span class="hljs-attr">"in"</span>: <span class="hljs-string">"path"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"appId"</span>,
+        <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the app which this request is targeting."</span>,
+        <span class="hljs-attr">"schema"</span>: {
+          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+        }
+      },
+      <span class="hljs-attr">"queryId"</span>: {
+        <span class="hljs-attr">"in"</span>: <span class="hljs-string">"path"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"queryId"</span>,
+        <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the query which this request is targeting."</span>,
+        <span class="hljs-attr">"schema"</span>: {
+          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+        }
+      },
+      <span class="hljs-attr">"userId"</span>: {
+        <span class="hljs-attr">"in"</span>: <span class="hljs-string">"path"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"userId"</span>,
+        <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the user which this request is targeting."</span>,
+        <span class="hljs-attr">"schema"</span>: {
+          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+        }
+      }
+    },
+    <span class="hljs-attr">"examples"</span>: {
+      <span class="hljs-attr">"application"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"app_metadata"</span>,
+            <span class="hljs-attr">"appId"</span>: <span class="hljs-string">"app_dev_957b12f943d348faa61db7e18e088d0f"</span>,
+            <span class="hljs-attr">"version"</span>: <span class="hljs-string">"1.0.58-alpha.0"</span>,
+            <span class="hljs-attr">"name"</span>: <span class="hljs-string">"App name"</span>,
+            <span class="hljs-attr">"url"</span>: <span class="hljs-string">"/app-url"</span>,
+            <span class="hljs-attr">"tenantId"</span>: <span class="hljs-string">"default"</span>,
+            <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-string">"2022-02-22T13:00:54.035Z"</span>,
+            <span class="hljs-attr">"createdAt"</span>: <span class="hljs-string">"2022-02-11T18:02:26.961Z"</span>,
+            <span class="hljs-attr">"status"</span>: <span class="hljs-string">"development"</span>
+          }
+        }
+      },
+      <span class="hljs-attr">"applications"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: [
+            {
+              <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"app_metadata"</span>,
+              <span class="hljs-attr">"appId"</span>: <span class="hljs-string">"app_dev_957b12f943d348faa61db7e18e088d0f"</span>,
+              <span class="hljs-attr">"version"</span>: <span class="hljs-string">"1.0.58-alpha.0"</span>,
+              <span class="hljs-attr">"name"</span>: <span class="hljs-string">"App name"</span>,
+              <span class="hljs-attr">"url"</span>: <span class="hljs-string">"/app-url"</span>,
+              <span class="hljs-attr">"tenantId"</span>: <span class="hljs-string">"default"</span>,
+              <span class="hljs-attr">"updatedAt"</span>: <span class="hljs-string">"2022-02-22T13:00:54.035Z"</span>,
+              <span class="hljs-attr">"createdAt"</span>: <span class="hljs-string">"2022-02-11T18:02:26.961Z"</span>,
+              <span class="hljs-attr">"status"</span>: <span class="hljs-string">"development"</span>
+            }
+          ]
+        }
+      },
+      <span class="hljs-attr">"deploymentOutput"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ef12381f934b4f129675cdbb76eff3c2"</span>,
+            <span class="hljs-attr">"status"</span>: <span class="hljs-string">"SUCCESS"</span>,
+            <span class="hljs-attr">"appUrl"</span>: <span class="hljs-string">"/app-url"</span>
+          }
+        }
+      },
+      <span class="hljs-attr">"inputRow"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4"</span>,
+          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"row"</span>,
+          <span class="hljs-attr">"tableId"</span>: <span class="hljs-string">"ta_5b1649e42a5b41dea4ef7742a36a7a70"</span>,
+          <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Mike"</span>,
+          <span class="hljs-attr">"age"</span>: <span class="hljs-number">30</span>,
+          <span class="hljs-attr">"relationship"</span>: [
+            <span class="hljs-string">"ro_ta_..."</span>
+          ]
+        }
+      },
+      <span class="hljs-attr">"row"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4"</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"row"</span>,
+            <span class="hljs-attr">"tableId"</span>: <span class="hljs-string">"ta_5b1649e42a5b41dea4ef7742a36a7a70"</span>,
+            <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Mike"</span>,
+            <span class="hljs-attr">"age"</span>: <span class="hljs-number">30</span>,
+            <span class="hljs-attr">"relationship"</span>: [
+              {
+                <span class="hljs-attr">"primaryDisplay"</span>: <span class="hljs-string">"Joe"</span>,
+                <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ro_ta_..."</span>
+              }
+            ]
+          }
+        }
+      },
+      <span class="hljs-attr">"enrichedRow"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4"</span>,
+            <span class="hljs-attr">"name"</span>: <span class="hljs-string">"eg"</span>,
+            <span class="hljs-attr">"tableId"</span>: <span class="hljs-string">"ta_5b1649e42a5b41dea4ef7742a36a7a70"</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"row"</span>,
+            <span class="hljs-attr">"relationship"</span>: [
+              {
+                <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ro_ta_users_us_8f3d717147d74d759d8cef5b6712062f"</span>,
+                <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Joe"</span>,
+                <span class="hljs-attr">"tableId"</span>: <span class="hljs-string">"ta_users"</span>,
+                <span class="hljs-attr">"internal"</span>: [
+                  {
+                    <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4"</span>,
+                    <span class="hljs-attr">"primaryDisplay"</span>: <span class="hljs-string">"eg"</span>
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      <span class="hljs-attr">"rows"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: [
+            {
+              <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4"</span>,
+              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"row"</span>,
+              <span class="hljs-attr">"tableId"</span>: <span class="hljs-string">"ta_5b1649e42a5b41dea4ef7742a36a7a70"</span>,
+              <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Mike"</span>,
+              <span class="hljs-attr">"age"</span>: <span class="hljs-number">30</span>,
+              <span class="hljs-attr">"relationship"</span>: [
+                {
+                  <span class="hljs-attr">"primaryDisplay"</span>: <span class="hljs-string">"Joe"</span>,
+                  <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ro_ta_..."</span>
+                }
+              ]
+            }
+          ],
+          <span class="hljs-attr">"hasNextPage"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"bookmark"</span>: <span class="hljs-number">10</span>
+        }
+      },
+      <span class="hljs-attr">"table"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ta_5b1649e42a5b41dea4ef7742a36a7a70"</span>,
+            <span class="hljs-attr">"name"</span>: <span class="hljs-string">"People"</span>,
+            <span class="hljs-attr">"schema"</span>: {
+              <span class="hljs-attr">"name"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                <span class="hljs-attr">"name"</span>: <span class="hljs-string">"name"</span>
+              },
+              <span class="hljs-attr">"age"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"number"</span>,
+                <span class="hljs-attr">"name"</span>: <span class="hljs-string">"age"</span>
+              },
+              <span class="hljs-attr">"relationship"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"link"</span>,
+                <span class="hljs-attr">"name"</span>: <span class="hljs-string">"relationship"</span>,
+                <span class="hljs-attr">"tableId"</span>: <span class="hljs-string">"ta_..."</span>,
+                <span class="hljs-attr">"fieldName"</span>: <span class="hljs-string">"relatedColumn"</span>,
+                <span class="hljs-attr">"relationshipType"</span>: <span class="hljs-string">"many-to-many"</span>
+              }
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"tables"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: [
+            {
+              <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ta_5b1649e42a5b41dea4ef7742a36a7a70"</span>,
+              <span class="hljs-attr">"name"</span>: <span class="hljs-string">"People"</span>,
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"name"</span>: {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"name"</span>
+                },
+                <span class="hljs-attr">"age"</span>: {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"number"</span>,
+                  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"age"</span>
+                },
+                <span class="hljs-attr">"relationship"</span>: {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"link"</span>,
+                  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"relationship"</span>,
+                  <span class="hljs-attr">"tableId"</span>: <span class="hljs-string">"ta_..."</span>,
+                  <span class="hljs-attr">"fieldName"</span>: <span class="hljs-string">"relatedColumn"</span>,
+                  <span class="hljs-attr">"relationshipType"</span>: <span class="hljs-string">"many-to-many"</span>
+                }
+              }
+            }
+          ]
+        }
+      },
+      <span class="hljs-attr">"query"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e"</span>,
+            <span class="hljs-attr">"datasourceId"</span>: <span class="hljs-string">"datasource_plus_4d8be0c506b9465daf4bf84d890fdab6"</span>,
+            <span class="hljs-attr">"parameters"</span>: [],
+            <span class="hljs-attr">"fields"</span>: {
+              <span class="hljs-attr">"sql"</span>: <span class="hljs-string">"select * from persons"</span>
+            },
+            <span class="hljs-attr">"queryVerb"</span>: <span class="hljs-string">"read"</span>,
+            <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Help"</span>,
+            <span class="hljs-attr">"schema"</span>: {
+              <span class="hljs-attr">"personid"</span>: {
+                <span class="hljs-attr">"name"</span>: <span class="hljs-string">"personid"</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"lastname"</span>: {
+                <span class="hljs-attr">"name"</span>: <span class="hljs-string">"lastname"</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"firstname"</span>: {
+                <span class="hljs-attr">"name"</span>: <span class="hljs-string">"firstname"</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"address"</span>: {
+                <span class="hljs-attr">"name"</span>: <span class="hljs-string">"address"</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"city"</span>: {
+                <span class="hljs-attr">"name"</span>: <span class="hljs-string">"city"</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              }
+            },
+            <span class="hljs-attr">"transformer"</span>: <span class="hljs-string">"return data"</span>,
+            <span class="hljs-attr">"readable"</span>: <span class="hljs-literal">true</span>
+          }
+        }
+      },
+      <span class="hljs-attr">"queries"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: [
+            {
+              <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e"</span>,
+              <span class="hljs-attr">"datasourceId"</span>: <span class="hljs-string">"datasource_plus_4d8be0c506b9465daf4bf84d890fdab6"</span>,
+              <span class="hljs-attr">"parameters"</span>: [],
+              <span class="hljs-attr">"fields"</span>: {
+                <span class="hljs-attr">"sql"</span>: <span class="hljs-string">"select * from persons"</span>
+              },
+              <span class="hljs-attr">"queryVerb"</span>: <span class="hljs-string">"read"</span>,
+              <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Help"</span>,
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"personid"</span>: {
+                  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"personid"</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"lastname"</span>: {
+                  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"lastname"</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"firstname"</span>: {
+                  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"firstname"</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"address"</span>: {
+                  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"address"</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"city"</span>: {
+                  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"city"</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                }
+              },
+              <span class="hljs-attr">"transformer"</span>: <span class="hljs-string">"return data"</span>,
+              <span class="hljs-attr">"readable"</span>: <span class="hljs-literal">true</span>
+            }
+          ]
+        }
+      },
+      <span class="hljs-attr">"restResponse"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: [
+            {
+              <span class="hljs-attr">"value"</span>: <span class="hljs-string">"&lt;html lang='en-GB'&gt;&lt;/html&gt;"</span>
+            }
+          ],
+          <span class="hljs-attr">"pagination"</span>: {
+            <span class="hljs-attr">"cursor"</span>: <span class="hljs-string">"2"</span>
+          },
+          <span class="hljs-attr">"raw"</span>: <span class="hljs-string">"&lt;html lang='en-GB'&gt;&lt;/html&gt;"</span>,
+          <span class="hljs-attr">"headers"</span>: {
+            <span class="hljs-attr">"content-type"</span>: <span class="hljs-string">"text/html; charset=ISO-8859-1"</span>
+          }
+        }
+      },
+      <span class="hljs-attr">"sqlResponse"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: [
+            {
+              <span class="hljs-attr">"personid"</span>: <span class="hljs-number">1</span>,
+              <span class="hljs-attr">"lastname"</span>: <span class="hljs-string">"Hughes"</span>,
+              <span class="hljs-attr">"firstname"</span>: <span class="hljs-string">"Mike"</span>,
+              <span class="hljs-attr">"address"</span>: <span class="hljs-string">"123 Fake Street"</span>,
+              <span class="hljs-attr">"city"</span>: <span class="hljs-string">"Belfast"</span>
+            },
+            {
+              <span class="hljs-attr">"personid"</span>: <span class="hljs-number">2</span>,
+              <span class="hljs-attr">"lastname"</span>: <span class="hljs-string">"Smith"</span>,
+              <span class="hljs-attr">"firstname"</span>: <span class="hljs-string">"John"</span>,
+              <span class="hljs-attr">"address"</span>: <span class="hljs-string">"64 Updown Road"</span>,
+              <span class="hljs-attr">"city"</span>: <span class="hljs-string">"Dublin"</span>
+            }
+          ]
+        }
+      },
+      <span class="hljs-attr">"user"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"us_693a73206518477283a8d5ae31103252"</span>,
+            <span class="hljs-attr">"email"</span>: <span class="hljs-string">"test@test.com"</span>,
+            <span class="hljs-attr">"roles"</span>: {
+              <span class="hljs-attr">"app_957b12f943d348faa61db7e18e088d0f"</span>: <span class="hljs-string">"BASIC"</span>
+            },
+            <span class="hljs-attr">"builder"</span>: {
+              <span class="hljs-attr">"global"</span>: <span class="hljs-literal">false</span>
+            },
+            <span class="hljs-attr">"admin"</span>: {
+              <span class="hljs-attr">"global"</span>: <span class="hljs-literal">true</span>
+            },
+            <span class="hljs-attr">"tenantId"</span>: <span class="hljs-string">"default"</span>,
+            <span class="hljs-attr">"status"</span>: <span class="hljs-string">"active"</span>,
+            <span class="hljs-attr">"budibaseAccess"</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-attr">"csrfToken"</span>: <span class="hljs-string">"9c70291d-7137-48f9-9166-99ab5473a3d4"</span>,
+            <span class="hljs-attr">"userId"</span>: <span class="hljs-string">"us_693a73206518477283a8d5ae31103252"</span>,
+            <span class="hljs-attr">"roleId"</span>: <span class="hljs-string">"ADMIN"</span>,
+            <span class="hljs-attr">"role"</span>: {
+              <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ADMIN"</span>,
+              <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Admin"</span>,
+              <span class="hljs-attr">"permissionId"</span>: <span class="hljs-string">"admin"</span>,
+              <span class="hljs-attr">"inherits"</span>: <span class="hljs-string">"POWER"</span>
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"users"</span>: {
+        <span class="hljs-attr">"value"</span>: {
+          <span class="hljs-attr">"data"</span>: [
+            {
+              <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"us_693a73206518477283a8d5ae31103252"</span>,
+              <span class="hljs-attr">"email"</span>: <span class="hljs-string">"test@test.com"</span>,
+              <span class="hljs-attr">"roles"</span>: {
+                <span class="hljs-attr">"app_957b12f943d348faa61db7e18e088d0f"</span>: <span class="hljs-string">"BASIC"</span>
+              },
+              <span class="hljs-attr">"builder"</span>: {
+                <span class="hljs-attr">"global"</span>: <span class="hljs-literal">false</span>
+              },
+              <span class="hljs-attr">"admin"</span>: {
+                <span class="hljs-attr">"global"</span>: <span class="hljs-literal">true</span>
+              },
+              <span class="hljs-attr">"tenantId"</span>: <span class="hljs-string">"default"</span>,
+              <span class="hljs-attr">"status"</span>: <span class="hljs-string">"active"</span>,
+              <span class="hljs-attr">"budibaseAccess"</span>: <span class="hljs-literal">true</span>,
+              <span class="hljs-attr">"csrfToken"</span>: <span class="hljs-string">"9c70291d-7137-48f9-9166-99ab5473a3d4"</span>,
+              <span class="hljs-attr">"userId"</span>: <span class="hljs-string">"us_693a73206518477283a8d5ae31103252"</span>,
+              <span class="hljs-attr">"roleId"</span>: <span class="hljs-string">"ADMIN"</span>,
+              <span class="hljs-attr">"role"</span>: {
+                <span class="hljs-attr">"_id"</span>: <span class="hljs-string">"ADMIN"</span>,
+                <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Admin"</span>,
+                <span class="hljs-attr">"permissionId"</span>: <span class="hljs-string">"admin"</span>,
+                <span class="hljs-attr">"inherits"</span>: <span class="hljs-string">"POWER"</span>
+              }
+            }
+          ]
+        }
+      },
+      <span class="hljs-attr">"metrics"</span>: {
+        <span class="hljs-attr">"value"</span>: <span class="hljs-string">"# HELP budibase_os_uptime Time in seconds that the host operating system has been up.\n# TYPE budibase_os_uptime counter\nbudibase_os_uptime 54958\n# HELP budibase_os_free_mem Bytes of memory free for usage on the host operating system.\n# TYPE budibase_os_free_mem gauge\nbudibase_os_free_mem 804507648\n# HELP budibase_os_total_mem Total bytes of memory on the host operating system.\n# TYPE budibase_os_total_mem gauge\nbudibase_os_total_mem 16742404096\n# HELP budibase_os_used_mem Total bytes of memory in use on the host operating system.\n# TYPE budibase_os_used_mem gauge\nbudibase_os_used_mem 15937896448\n# HELP budibase_os_load1 Host operating system load average.\n# TYPE budibase_os_load1 gauge\nbudibase_os_load1 1.91\n# HELP budibase_os_load5 Host operating system load average.\n# TYPE budibase_os_load5 gauge\nbudibase_os_load5 1.75\n# HELP budibase_os_load15 Host operating system load average.\n# TYPE budibase_os_load15 gauge\nbudibase_os_load15 1.56\n# HELP budibase_tenant_user_count The number of users created.\n# TYPE budibase_tenant_user_count gauge\nbudibase_tenant_user_count 1\n# HELP budibase_tenant_app_count The number of apps created by a user.\n# TYPE budibase_tenant_app_count gauge\nbudibase_tenant_app_count 2\n# HELP budibase_tenant_production_app_count The number of apps a user has published.\n# TYPE budibase_tenant_production_app_count gauge\nbudibase_tenant_production_app_count 1\n# HELP budibase_tenant_dev_app_count The number of apps a user has unpublished in development.\n# TYPE budibase_tenant_dev_app_count gauge\nbudibase_tenant_dev_app_count 1\n# HELP budibase_tenant_db_count The number of couchdb databases including global tables such as _users.\n# TYPE budibase_tenant_db_count gauge\nbudibase_tenant_db_count 3\n# HELP budibase_quota_usage_apps The number of apps created.\n# TYPE budibase_quota_usage_apps gauge\nbudibase_quota_usage_apps 1\n# HELP budibase_quota_limit_apps The limit on the number of apps that can be created.\n# TYPE budibase_quota_limit_apps gauge\nbudibase_quota_limit_apps 9007199254740991\n# HELP budibase_quota_usage_rows The number of database rows used from the quota.\n# TYPE budibase_quota_usage_rows gauge\nbudibase_quota_usage_rows 0\n# HELP budibase_quota_limit_rows The limit on the number of rows that can be created.\n# TYPE budibase_quota_limit_rows gauge\nbudibase_quota_limit_rows 9007199254740991\n# HELP budibase_quota_usage_plugins The number of plugins in use.\n# TYPE budibase_quota_usage_plugins gauge\nbudibase_quota_usage_plugins 0\n# HELP budibase_quota_limit_plugins The limit on the number of plugins that can be created.\n# TYPE budibase_quota_limit_plugins gauge\nbudibase_quota_limit_plugins 9007199254740991\n# HELP budibase_quota_usage_user_groups The number of user groups created.\n# TYPE budibase_quota_usage_user_groups gauge\nbudibase_quota_usage_user_groups 0\n# HELP budibase_quota_limit_user_groups The limit on the number of user groups that can be created.\n# TYPE budibase_quota_limit_user_groups gauge\nbudibase_quota_limit_user_groups 9007199254740991\n# HELP budibase_quota_usage_queries The number of queries used in the current month.\n# TYPE budibase_quota_usage_queries gauge\nbudibase_quota_usage_queries 0\n# HELP budibase_quota_limit_queries The limit on the number of queries for the current month.\n# TYPE budibase_quota_limit_queries gauge\nbudibase_quota_limit_queries 9007199254740991\n# HELP budibase_quota_usage_automations The number of automations used in the current month.\n# TYPE budibase_quota_usage_automations gauge\nbudibase_quota_usage_automations 0\n# HELP budibase_quota_limit_automations The limit on the number of automations that can be created.\n# TYPE budibase_quota_limit_automations gauge\nbudibase_quota_limit_automations 9007199254740991\n"</span>
+      }
+    },
+    <span class="hljs-attr">"securitySchemes"</span>: {
+      <span class="hljs-attr">"ApiKeyAuth"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"apiKey"</span>,
+        <span class="hljs-attr">"in"</span>: <span class="hljs-string">"header"</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"x-budibase-api-key"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Your individual API key, this will provide access based on the configured RBAC settings of your user."</span>
+      }
+    },
+    <span class="hljs-attr">"schemas"</span>: {
+      <span class="hljs-attr">"application"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"name"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the app."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          },
+          <span class="hljs-attr">"url"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The URL by which the app is accessed, this must be URL encoded."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"name"</span>
+        ]
+      },
+      <span class="hljs-attr">"applicationOutput"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"name"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the app."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"url"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The URL by which the app is accessed, this must be URL encoded."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"_id"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the app."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"status"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The status of the app, stating it if is the development or published version."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                <span class="hljs-attr">"enum"</span>: [
+                  <span class="hljs-string">"development"</span>,
+                  <span class="hljs-string">"published"</span>
+                ]
+              },
+              <span class="hljs-attr">"createdAt"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"States when the app was created, will be constant. Stored in ISO format."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"updatedAt"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"States the last time the app was updated - stored in ISO format."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"version"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"States the version of the Budibase client this app is currently based on."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"tenantId"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"In a multi-tenant environment this will state the tenant this app is within."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"lockedBy"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The user this app is currently being built by."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>
+              }
+            },
+            <span class="hljs-attr">"required"</span>: [
+              <span class="hljs-string">"_id"</span>,
+              <span class="hljs-string">"name"</span>,
+              <span class="hljs-string">"url"</span>,
+              <span class="hljs-string">"status"</span>,
+              <span class="hljs-string">"createdAt"</span>,
+              <span class="hljs-string">"updatedAt"</span>,
+              <span class="hljs-string">"version"</span>
+            ]
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ]
+      },
+      <span class="hljs-attr">"applicationSearch"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"array"</span>,
+            <span class="hljs-attr">"items"</span>: {
+              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+              <span class="hljs-attr">"properties"</span>: {
+                <span class="hljs-attr">"name"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the app."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"url"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The URL by which the app is accessed, this must be URL encoded."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"_id"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the app."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"status"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The status of the app, stating it if is the development or published version."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                  <span class="hljs-attr">"enum"</span>: [
+                    <span class="hljs-string">"development"</span>,
+                    <span class="hljs-string">"published"</span>
+                  ]
+                },
+                <span class="hljs-attr">"createdAt"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"States when the app was created, will be constant. Stored in ISO format."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"updatedAt"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"States the last time the app was updated - stored in ISO format."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"version"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"States the version of the Budibase client this app is currently based on."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"tenantId"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"In a multi-tenant environment this will state the tenant this app is within."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"lockedBy"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The user this app is currently being built by."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>
+                }
+              },
+              <span class="hljs-attr">"required"</span>: [
+                <span class="hljs-string">"_id"</span>,
+                <span class="hljs-string">"name"</span>,
+                <span class="hljs-string">"url"</span>,
+                <span class="hljs-string">"status"</span>,
+                <span class="hljs-string">"createdAt"</span>,
+                <span class="hljs-string">"updatedAt"</span>,
+                <span class="hljs-string">"version"</span>
+              ]
+            }
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ]
+      },
+      <span class="hljs-attr">"deploymentOutput"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"_id"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the app."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"status"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Status of the deployment, whether it succeeded or failed"</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                <span class="hljs-attr">"enum"</span>: [
+                  <span class="hljs-string">"SUCCESS"</span>,
+                  <span class="hljs-string">"FAILURE"</span>
+                ]
+              },
+              <span class="hljs-attr">"appUrl"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The URL of the published app"</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              }
+            },
+            <span class="hljs-attr">"required"</span>: [
+              <span class="hljs-string">"_id"</span>,
+              <span class="hljs-string">"status"</span>,
+              <span class="hljs-string">"appUrl"</span>
+            ]
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ]
+      },
+      <span class="hljs-attr">"row"</span>: {
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The row to be created/updated, based on the table schema."</span>,
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"additionalProperties"</span>: {
+          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Key value properties of any type, depending on the table schema."</span>
+        }
+      },
+      <span class="hljs-attr">"searchOutput"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ],
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"An array of rows, these will each contain an _id field which can be used to update or delete them."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"array"</span>,
+            <span class="hljs-attr">"items"</span>: {
+              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>
+            }
+          },
+          <span class="hljs-attr">"bookmark"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If pagination in use, this should be provided."</span>,
+            <span class="hljs-attr">"oneOf"</span>: [
+              {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"integer"</span>
+              }
+            ]
+          },
+          <span class="hljs-attr">"hasNextPage"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If pagination in use, this will determine if there is another page to fetch."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+          }
+        }
+      },
+      <span class="hljs-attr">"rowOutput"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The row to be created/updated, based on the table schema."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"additionalProperties"</span>: {
+              <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Key value properties of any type, depending on the table schema."</span>
+            },
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"_id"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the row."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"tableId"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the table this row comes from."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              }
+            },
+            <span class="hljs-attr">"required"</span>: [
+              <span class="hljs-string">"tableId"</span>,
+              <span class="hljs-string">"_id"</span>
+            ]
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ]
+      },
+      <span class="hljs-attr">"table"</span>: {
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The table to be created/updated."</span>,
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"name"</span>,
+          <span class="hljs-string">"schema"</span>
+        ],
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"name"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the table."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          },
+          <span class="hljs-attr">"primaryDisplay"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column which should be used in relationship tags when relating to this table."</span>
+          },
+          <span class="hljs-attr">"schema"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"additionalProperties"</span>: {
+              <span class="hljs-attr">"oneOf"</span>: [
+                {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                  <span class="hljs-attr">"properties"</span>: {
+                    <span class="hljs-attr">"type"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"enum"</span>: [
+                        <span class="hljs-string">"link"</span>
+                      ],
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A relationship column."</span>
+                    },
+                    <span class="hljs-attr">"constraints"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A constraint can be applied to the column which will be validated against when a row is saved."</span>,
+                      <span class="hljs-attr">"properties"</span>: {
+                        <span class="hljs-attr">"type"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"enum"</span>: [
+                            <span class="hljs-string">"string"</span>,
+                            <span class="hljs-string">"number"</span>,
+                            <span class="hljs-string">"object"</span>,
+                            <span class="hljs-string">"boolean"</span>
+                          ]
+                        },
+                        <span class="hljs-attr">"presence"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is required or not."</span>
+                        }
+                      }
+                    },
+                    <span class="hljs-attr">"name"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column."</span>
+                    },
+                    <span class="hljs-attr">"autocolumn"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is automatically generated."</span>
+                    },
+                    <span class="hljs-attr">"fieldName"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column which a relationship column is related to in another table."</span>
+                    },
+                    <span class="hljs-attr">"tableId"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the table which a relationship column is related to."</span>
+                    },
+                    <span class="hljs-attr">"relationshipType"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"enum"</span>: [
+                        <span class="hljs-string">"one-to-many"</span>,
+                        <span class="hljs-string">"many-to-one"</span>,
+                        <span class="hljs-string">"many-to-many"</span>
+                      ],
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines the type of relationship that this column will be used for."</span>
+                    },
+                    <span class="hljs-attr">"through"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that contains many to many relationships this defines the table the relationships are linked through."</span>
+                    },
+                    <span class="hljs-attr">"foreignKey"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that contains a one to many relationship this defines the foreign key."</span>
+                    },
+                    <span class="hljs-attr">"throughFrom"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that utilises a through table, this defines the primary key in the through table for this table."</span>
+                    },
+                    <span class="hljs-attr">"throughTo"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table."</span>
+                    }
+                  }
+                },
+                {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                  <span class="hljs-attr">"properties"</span>: {
+                    <span class="hljs-attr">"type"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"enum"</span>: [
+                        <span class="hljs-string">"formula"</span>
+                      ],
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A formula column."</span>
+                    },
+                    <span class="hljs-attr">"constraints"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A constraint can be applied to the column which will be validated against when a row is saved."</span>,
+                      <span class="hljs-attr">"properties"</span>: {
+                        <span class="hljs-attr">"type"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"enum"</span>: [
+                            <span class="hljs-string">"string"</span>,
+                            <span class="hljs-string">"number"</span>,
+                            <span class="hljs-string">"object"</span>,
+                            <span class="hljs-string">"boolean"</span>
+                          ]
+                        },
+                        <span class="hljs-attr">"presence"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is required or not."</span>
+                        }
+                      }
+                    },
+                    <span class="hljs-attr">"name"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column."</span>
+                    },
+                    <span class="hljs-attr">"autocolumn"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is automatically generated."</span>
+                    },
+                    <span class="hljs-attr">"formula"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format."</span>
+                    },
+                    <span class="hljs-attr">"formulaType"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"enum"</span>: [
+                        <span class="hljs-string">"static"</span>,
+                        <span class="hljs-string">"dynamic"</span>
+                      ],
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether this is a static or dynamic formula."</span>
+                    }
+                  }
+                },
+                {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                  <span class="hljs-attr">"properties"</span>: {
+                    <span class="hljs-attr">"type"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"enum"</span>: [
+                        <span class="hljs-string">"string"</span>,
+                        <span class="hljs-string">"longform"</span>,
+                        <span class="hljs-string">"options"</span>,
+                        <span class="hljs-string">"number"</span>,
+                        <span class="hljs-string">"boolean"</span>,
+                        <span class="hljs-string">"array"</span>,
+                        <span class="hljs-string">"datetime"</span>,
+                        <span class="hljs-string">"attachment"</span>,
+                        <span class="hljs-string">"link"</span>,
+                        <span class="hljs-string">"formula"</span>,
+                        <span class="hljs-string">"auto"</span>,
+                        <span class="hljs-string">"json"</span>,
+                        <span class="hljs-string">"internal"</span>,
+                        <span class="hljs-string">"barcodeqr"</span>
+                      ],
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines the type of the column, most explain themselves, a link column is a relationship."</span>
+                    },
+                    <span class="hljs-attr">"constraints"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A constraint can be applied to the column which will be validated against when a row is saved."</span>,
+                      <span class="hljs-attr">"properties"</span>: {
+                        <span class="hljs-attr">"type"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"enum"</span>: [
+                            <span class="hljs-string">"string"</span>,
+                            <span class="hljs-string">"number"</span>,
+                            <span class="hljs-string">"object"</span>,
+                            <span class="hljs-string">"boolean"</span>
+                          ]
+                        },
+                        <span class="hljs-attr">"presence"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is required or not."</span>
+                        }
+                      }
+                    },
+                    <span class="hljs-attr">"name"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column."</span>
+                    },
+                    <span class="hljs-attr">"autocolumn"</span>: {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is automatically generated."</span>
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"tableOutput"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The table to be created/updated."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"required"</span>: [
+              <span class="hljs-string">"name"</span>,
+              <span class="hljs-string">"schema"</span>,
+              <span class="hljs-string">"_id"</span>
+            ],
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"name"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the table."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"primaryDisplay"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column which should be used in relationship tags when relating to this table."</span>
+              },
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"additionalProperties"</span>: {
+                  <span class="hljs-attr">"oneOf"</span>: [
+                    {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                      <span class="hljs-attr">"properties"</span>: {
+                        <span class="hljs-attr">"type"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"enum"</span>: [
+                            <span class="hljs-string">"link"</span>
+                          ],
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A relationship column."</span>
+                        },
+                        <span class="hljs-attr">"constraints"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A constraint can be applied to the column which will be validated against when a row is saved."</span>,
+                          <span class="hljs-attr">"properties"</span>: {
+                            <span class="hljs-attr">"type"</span>: {
+                              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                              <span class="hljs-attr">"enum"</span>: [
+                                <span class="hljs-string">"string"</span>,
+                                <span class="hljs-string">"number"</span>,
+                                <span class="hljs-string">"object"</span>,
+                                <span class="hljs-string">"boolean"</span>
+                              ]
+                            },
+                            <span class="hljs-attr">"presence"</span>: {
+                              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                              <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is required or not."</span>
+                            }
+                          }
+                        },
+                        <span class="hljs-attr">"name"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column."</span>
+                        },
+                        <span class="hljs-attr">"autocolumn"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is automatically generated."</span>
+                        },
+                        <span class="hljs-attr">"fieldName"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column which a relationship column is related to in another table."</span>
+                        },
+                        <span class="hljs-attr">"tableId"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the table which a relationship column is related to."</span>
+                        },
+                        <span class="hljs-attr">"relationshipType"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"enum"</span>: [
+                            <span class="hljs-string">"one-to-many"</span>,
+                            <span class="hljs-string">"many-to-one"</span>,
+                            <span class="hljs-string">"many-to-many"</span>
+                          ],
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines the type of relationship that this column will be used for."</span>
+                        },
+                        <span class="hljs-attr">"through"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that contains many to many relationships this defines the table the relationships are linked through."</span>
+                        },
+                        <span class="hljs-attr">"foreignKey"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that contains a one to many relationship this defines the foreign key."</span>
+                        },
+                        <span class="hljs-attr">"throughFrom"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that utilises a through table, this defines the primary key in the through table for this table."</span>
+                        },
+                        <span class="hljs-attr">"throughTo"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table."</span>
+                        }
+                      }
+                    },
+                    {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                      <span class="hljs-attr">"properties"</span>: {
+                        <span class="hljs-attr">"type"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"enum"</span>: [
+                            <span class="hljs-string">"formula"</span>
+                          ],
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A formula column."</span>
+                        },
+                        <span class="hljs-attr">"constraints"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A constraint can be applied to the column which will be validated against when a row is saved."</span>,
+                          <span class="hljs-attr">"properties"</span>: {
+                            <span class="hljs-attr">"type"</span>: {
+                              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                              <span class="hljs-attr">"enum"</span>: [
+                                <span class="hljs-string">"string"</span>,
+                                <span class="hljs-string">"number"</span>,
+                                <span class="hljs-string">"object"</span>,
+                                <span class="hljs-string">"boolean"</span>
+                              ]
+                            },
+                            <span class="hljs-attr">"presence"</span>: {
+                              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                              <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is required or not."</span>
+                            }
+                          }
+                        },
+                        <span class="hljs-attr">"name"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column."</span>
+                        },
+                        <span class="hljs-attr">"autocolumn"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is automatically generated."</span>
+                        },
+                        <span class="hljs-attr">"formula"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format."</span>
+                        },
+                        <span class="hljs-attr">"formulaType"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"enum"</span>: [
+                            <span class="hljs-string">"static"</span>,
+                            <span class="hljs-string">"dynamic"</span>
+                          ],
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether this is a static or dynamic formula."</span>
+                        }
+                      }
+                    },
+                    {
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                      <span class="hljs-attr">"properties"</span>: {
+                        <span class="hljs-attr">"type"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"enum"</span>: [
+                            <span class="hljs-string">"string"</span>,
+                            <span class="hljs-string">"longform"</span>,
+                            <span class="hljs-string">"options"</span>,
+                            <span class="hljs-string">"number"</span>,
+                            <span class="hljs-string">"boolean"</span>,
+                            <span class="hljs-string">"array"</span>,
+                            <span class="hljs-string">"datetime"</span>,
+                            <span class="hljs-string">"attachment"</span>,
+                            <span class="hljs-string">"link"</span>,
+                            <span class="hljs-string">"formula"</span>,
+                            <span class="hljs-string">"auto"</span>,
+                            <span class="hljs-string">"json"</span>,
+                            <span class="hljs-string">"internal"</span>,
+                            <span class="hljs-string">"barcodeqr"</span>
+                          ],
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines the type of the column, most explain themselves, a link column is a relationship."</span>
+                        },
+                        <span class="hljs-attr">"constraints"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A constraint can be applied to the column which will be validated against when a row is saved."</span>,
+                          <span class="hljs-attr">"properties"</span>: {
+                            <span class="hljs-attr">"type"</span>: {
+                              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                              <span class="hljs-attr">"enum"</span>: [
+                                <span class="hljs-string">"string"</span>,
+                                <span class="hljs-string">"number"</span>,
+                                <span class="hljs-string">"object"</span>,
+                                <span class="hljs-string">"boolean"</span>
+                              ]
+                            },
+                            <span class="hljs-attr">"presence"</span>: {
+                              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                              <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is required or not."</span>
+                            }
+                          }
+                        },
+                        <span class="hljs-attr">"name"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column."</span>
+                        },
+                        <span class="hljs-attr">"autocolumn"</span>: {
+                          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is automatically generated."</span>
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              <span class="hljs-attr">"_id"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the table."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ]
+      },
+      <span class="hljs-attr">"tableSearch"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"array"</span>,
+            <span class="hljs-attr">"items"</span>: {
+              <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The table to be created/updated."</span>,
+              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+              <span class="hljs-attr">"required"</span>: [
+                <span class="hljs-string">"name"</span>,
+                <span class="hljs-string">"schema"</span>,
+                <span class="hljs-string">"_id"</span>
+              ],
+              <span class="hljs-attr">"properties"</span>: {
+                <span class="hljs-attr">"name"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the table."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"primaryDisplay"</span>: {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column which should be used in relationship tags when relating to this table."</span>
+                },
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                  <span class="hljs-attr">"additionalProperties"</span>: {
+                    <span class="hljs-attr">"oneOf"</span>: [
+                      {
+                        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                        <span class="hljs-attr">"properties"</span>: {
+                          <span class="hljs-attr">"type"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"enum"</span>: [
+                              <span class="hljs-string">"link"</span>
+                            ],
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A relationship column."</span>
+                          },
+                          <span class="hljs-attr">"constraints"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A constraint can be applied to the column which will be validated against when a row is saved."</span>,
+                            <span class="hljs-attr">"properties"</span>: {
+                              <span class="hljs-attr">"type"</span>: {
+                                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                                <span class="hljs-attr">"enum"</span>: [
+                                  <span class="hljs-string">"string"</span>,
+                                  <span class="hljs-string">"number"</span>,
+                                  <span class="hljs-string">"object"</span>,
+                                  <span class="hljs-string">"boolean"</span>
+                                ]
+                              },
+                              <span class="hljs-attr">"presence"</span>: {
+                                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is required or not."</span>
+                              }
+                            }
+                          },
+                          <span class="hljs-attr">"name"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column."</span>
+                          },
+                          <span class="hljs-attr">"autocolumn"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is automatically generated."</span>
+                          },
+                          <span class="hljs-attr">"fieldName"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column which a relationship column is related to in another table."</span>
+                          },
+                          <span class="hljs-attr">"tableId"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the table which a relationship column is related to."</span>
+                          },
+                          <span class="hljs-attr">"relationshipType"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"enum"</span>: [
+                              <span class="hljs-string">"one-to-many"</span>,
+                              <span class="hljs-string">"many-to-one"</span>,
+                              <span class="hljs-string">"many-to-many"</span>
+                            ],
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines the type of relationship that this column will be used for."</span>
+                          },
+                          <span class="hljs-attr">"through"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that contains many to many relationships this defines the table the relationships are linked through."</span>
+                          },
+                          <span class="hljs-attr">"foreignKey"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that contains a one to many relationship this defines the foreign key."</span>
+                          },
+                          <span class="hljs-attr">"throughFrom"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that utilises a through table, this defines the primary key in the through table for this table."</span>
+                          },
+                          <span class="hljs-attr">"throughTo"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table."</span>
+                          }
+                        }
+                      },
+                      {
+                        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                        <span class="hljs-attr">"properties"</span>: {
+                          <span class="hljs-attr">"type"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"enum"</span>: [
+                              <span class="hljs-string">"formula"</span>
+                            ],
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A formula column."</span>
+                          },
+                          <span class="hljs-attr">"constraints"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A constraint can be applied to the column which will be validated against when a row is saved."</span>,
+                            <span class="hljs-attr">"properties"</span>: {
+                              <span class="hljs-attr">"type"</span>: {
+                                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                                <span class="hljs-attr">"enum"</span>: [
+                                  <span class="hljs-string">"string"</span>,
+                                  <span class="hljs-string">"number"</span>,
+                                  <span class="hljs-string">"object"</span>,
+                                  <span class="hljs-string">"boolean"</span>
+                                ]
+                              },
+                              <span class="hljs-attr">"presence"</span>: {
+                                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is required or not."</span>
+                              }
+                            }
+                          },
+                          <span class="hljs-attr">"name"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column."</span>
+                          },
+                          <span class="hljs-attr">"autocolumn"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is automatically generated."</span>
+                          },
+                          <span class="hljs-attr">"formula"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format."</span>
+                          },
+                          <span class="hljs-attr">"formulaType"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"enum"</span>: [
+                              <span class="hljs-string">"static"</span>,
+                              <span class="hljs-string">"dynamic"</span>
+                            ],
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether this is a static or dynamic formula."</span>
+                          }
+                        }
+                      },
+                      {
+                        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                        <span class="hljs-attr">"properties"</span>: {
+                          <span class="hljs-attr">"type"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"enum"</span>: [
+                              <span class="hljs-string">"string"</span>,
+                              <span class="hljs-string">"longform"</span>,
+                              <span class="hljs-string">"options"</span>,
+                              <span class="hljs-string">"number"</span>,
+                              <span class="hljs-string">"boolean"</span>,
+                              <span class="hljs-string">"array"</span>,
+                              <span class="hljs-string">"datetime"</span>,
+                              <span class="hljs-string">"attachment"</span>,
+                              <span class="hljs-string">"link"</span>,
+                              <span class="hljs-string">"formula"</span>,
+                              <span class="hljs-string">"auto"</span>,
+                              <span class="hljs-string">"json"</span>,
+                              <span class="hljs-string">"internal"</span>,
+                              <span class="hljs-string">"barcodeqr"</span>
+                            ],
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines the type of the column, most explain themselves, a link column is a relationship."</span>
+                          },
+                          <span class="hljs-attr">"constraints"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A constraint can be applied to the column which will be validated against when a row is saved."</span>,
+                            <span class="hljs-attr">"properties"</span>: {
+                              <span class="hljs-attr">"type"</span>: {
+                                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                                <span class="hljs-attr">"enum"</span>: [
+                                  <span class="hljs-string">"string"</span>,
+                                  <span class="hljs-string">"number"</span>,
+                                  <span class="hljs-string">"object"</span>,
+                                  <span class="hljs-string">"boolean"</span>
+                                ]
+                              },
+                              <span class="hljs-attr">"presence"</span>: {
+                                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is required or not."</span>
+                              }
+                            }
+                          },
+                          <span class="hljs-attr">"name"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column."</span>
+                          },
+                          <span class="hljs-attr">"autocolumn"</span>: {
+                            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column is automatically generated."</span>
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                <span class="hljs-attr">"_id"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the table."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                }
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ]
+      },
+      <span class="hljs-attr">"executeQuery"</span>: {
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The parameters required for executing a query."</span>,
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"parameters"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"This contains the required parameters for the query, this depends on query type, setup and bindings."</span>,
+            <span class="hljs-attr">"additionalProperties"</span>: {
+              <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Key value properties of any type, depending on the query output schema."</span>
+            }
+          },
+          <span class="hljs-attr">"pagination"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"For supported query types (currently on REST) pagination can be performed using these properties."</span>,
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"page"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The page which has been returned from a previous query."</span>
+              },
+              <span class="hljs-attr">"limit"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"number"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The number of rows to return per page."</span>
+              }
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"executeQueryOutput"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The data response from the query."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"array"</span>,
+            <span class="hljs-attr">"items"</span>: {
+              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>
+            }
+          },
+          <span class="hljs-attr">"extra"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Extra information that is not part of the main data, e.g. headers."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"headers"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If carrying out a REST request, this will contain the response headers."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>
+              },
+              <span class="hljs-attr">"raw"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The raw query response, as a string."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              }
+            }
+          },
+          <span class="hljs-attr">"pagination"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If pagination is supported, this will contain the bookmark/anchor information for it."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ]
+      },
+      <span class="hljs-attr">"query"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"_id"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the query."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          },
+          <span class="hljs-attr">"datasourceId"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the datasource the query belongs to."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          },
+          <span class="hljs-attr">"parameters"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The bindings which are required to perform this query."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"array"</span>,
+            <span class="hljs-attr">"items"</span>: {
+              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+            }
+          },
+          <span class="hljs-attr">"fields"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The fields that are used to perform this query, e.g. the sql statement"</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>
+          },
+          <span class="hljs-attr">"queryVerb"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The verb that describes this query."</span>,
+            <span class="hljs-attr">"enum"</span>: [
+              <span class="hljs-string">"create"</span>,
+              <span class="hljs-string">"read"</span>,
+              <span class="hljs-string">"update"</span>,
+              <span class="hljs-string">"delete"</span>
+            ]
+          },
+          <span class="hljs-attr">"name"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the query."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          },
+          <span class="hljs-attr">"schema"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The schema of the data returned when the query is executed."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>
+          },
+          <span class="hljs-attr">"transformer"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The JavaScript transformer function, applied after the query responds with data."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          },
+          <span class="hljs-attr">"readable"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Whether the query has readable data."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"name"</span>,
+          <span class="hljs-string">"schema"</span>,
+          <span class="hljs-string">"_id"</span>
+        ]
+      },
+      <span class="hljs-attr">"querySearch"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"array"</span>,
+            <span class="hljs-attr">"items"</span>: {
+              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+              <span class="hljs-attr">"properties"</span>: {
+                <span class="hljs-attr">"_id"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the query."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"datasourceId"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the datasource the query belongs to."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"parameters"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The bindings which are required to perform this query."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"array"</span>,
+                  <span class="hljs-attr">"items"</span>: {
+                    <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                  }
+                },
+                <span class="hljs-attr">"fields"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The fields that are used to perform this query, e.g. the sql statement"</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>
+                },
+                <span class="hljs-attr">"queryVerb"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The verb that describes this query."</span>,
+                  <span class="hljs-attr">"enum"</span>: [
+                    <span class="hljs-string">"create"</span>,
+                    <span class="hljs-string">"read"</span>,
+                    <span class="hljs-string">"update"</span>,
+                    <span class="hljs-string">"delete"</span>
+                  ]
+                },
+                <span class="hljs-attr">"name"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the query."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The schema of the data returned when the query is executed."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>
+                },
+                <span class="hljs-attr">"transformer"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The JavaScript transformer function, applied after the query responds with data."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"readable"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Whether the query has readable data."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+                }
+              },
+              <span class="hljs-attr">"required"</span>: [
+                <span class="hljs-string">"name"</span>,
+                <span class="hljs-string">"schema"</span>,
+                <span class="hljs-string">"_id"</span>
+              ]
+            }
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ]
+      },
+      <span class="hljs-attr">"user"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"email"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The email address of the user, this must be unique."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          },
+          <span class="hljs-attr">"password"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          },
+          <span class="hljs-attr">"status"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The status of the user, if they are active."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+            <span class="hljs-attr">"enum"</span>: [
+              <span class="hljs-string">"active"</span>
+            ]
+          },
+          <span class="hljs-attr">"firstName"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The first name of the user"</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          },
+          <span class="hljs-attr">"lastName"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The last name of the user"</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+          },
+          <span class="hljs-attr">"forceResetPassword"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If set to true forces the user to reset their password on first login."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+          },
+          <span class="hljs-attr">"builder"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Describes if the user is a builder user or not."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"global"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If set to true the user will be able to build any app in the system."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+              }
+            }
+          },
+          <span class="hljs-attr">"admin"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Describes if the user is an admin user or not."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"global"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If set to true the user will be able to administrate the system."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+              }
+            }
+          },
+          <span class="hljs-attr">"roles"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Contains the roles of the user per app (assuming they are not a builder user)."</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"additionalProperties"</span>: {
+              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+              <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A map of app ID (production app ID, minus the _dev component) to a role ID, e.g. ADMIN."</span>
+            }
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"email"</span>,
+          <span class="hljs-string">"roles"</span>
+        ]
+      },
+      <span class="hljs-attr">"userOutput"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"email"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The email address of the user, this must be unique."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"password"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"status"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The status of the user, if they are active."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                <span class="hljs-attr">"enum"</span>: [
+                  <span class="hljs-string">"active"</span>
+                ]
+              },
+              <span class="hljs-attr">"firstName"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The first name of the user"</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"lastName"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The last name of the user"</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              <span class="hljs-attr">"forceResetPassword"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If set to true forces the user to reset their password on first login."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+              },
+              <span class="hljs-attr">"builder"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Describes if the user is a builder user or not."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"properties"</span>: {
+                  <span class="hljs-attr">"global"</span>: {
+                    <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If set to true the user will be able to build any app in the system."</span>,
+                    <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+                  }
+                }
+              },
+              <span class="hljs-attr">"admin"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Describes if the user is an admin user or not."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"properties"</span>: {
+                  <span class="hljs-attr">"global"</span>: {
+                    <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If set to true the user will be able to administrate the system."</span>,
+                    <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+                  }
+                }
+              },
+              <span class="hljs-attr">"roles"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Contains the roles of the user per app (assuming they are not a builder user)."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"additionalProperties"</span>: {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A map of app ID (production app ID, minus the _dev component) to a role ID, e.g. ADMIN."</span>
+                }
+              },
+              <span class="hljs-attr">"_id"</span>: {
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the user."</span>,
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              }
+            },
+            <span class="hljs-attr">"required"</span>: [
+              <span class="hljs-string">"email"</span>,
+              <span class="hljs-string">"roles"</span>,
+              <span class="hljs-string">"_id"</span>
+            ]
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ]
+      },
+      <span class="hljs-attr">"userSearch"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"data"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"array"</span>,
+            <span class="hljs-attr">"items"</span>: {
+              <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+              <span class="hljs-attr">"properties"</span>: {
+                <span class="hljs-attr">"email"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The email address of the user, this must be unique."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"password"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"status"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The status of the user, if they are active."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                  <span class="hljs-attr">"enum"</span>: [
+                    <span class="hljs-string">"active"</span>
+                  ]
+                },
+                <span class="hljs-attr">"firstName"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The first name of the user"</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"lastName"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The last name of the user"</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"forceResetPassword"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If set to true forces the user to reset their password on first login."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+                },
+                <span class="hljs-attr">"builder"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Describes if the user is a builder user or not."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                  <span class="hljs-attr">"properties"</span>: {
+                    <span class="hljs-attr">"global"</span>: {
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If set to true the user will be able to build any app in the system."</span>,
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+                    }
+                  }
+                },
+                <span class="hljs-attr">"admin"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Describes if the user is an admin user or not."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                  <span class="hljs-attr">"properties"</span>: {
+                    <span class="hljs-attr">"global"</span>: {
+                      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If set to true the user will be able to administrate the system."</span>,
+                      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>
+                    }
+                  }
+                },
+                <span class="hljs-attr">"roles"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Contains the roles of the user per app (assuming they are not a builder user)."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                  <span class="hljs-attr">"additionalProperties"</span>: {
+                    <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                    <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A map of app ID (production app ID, minus the _dev component) to a role ID, e.g. ADMIN."</span>
+                  }
+                },
+                <span class="hljs-attr">"_id"</span>: {
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The ID of the user."</span>,
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                }
+              },
+              <span class="hljs-attr">"required"</span>: [
+                <span class="hljs-string">"email"</span>,
+                <span class="hljs-string">"roles"</span>,
+                <span class="hljs-string">"_id"</span>
+              ]
+            }
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"data"</span>
+        ]
+      },
+      <span class="hljs-attr">"rowSearch"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"query"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"allOr"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used."</span>
+              },
+              <span class="hljs-attr">"string"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"example"</span>: {
+                  <span class="hljs-attr">"columnName1"</span>: <span class="hljs-string">"value"</span>,
+                  <span class="hljs-attr">"columnName2"</span>: <span class="hljs-string">"value"</span>
+                },
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A map of field name to the string to search for, this will look for rows that have a value starting with the string value."</span>,
+                <span class="hljs-attr">"additionalProperties"</span>: {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                  <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The value to search for in the column."</span>
+                }
+              },
+              <span class="hljs-attr">"fuzzy"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A fuzzy search, only supported by internal tables."</span>
+              },
+              <span class="hljs-attr">"range"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Searches within a range, the format of this must be in the format of an object with a \"low\" and \"high\" property."</span>,
+                <span class="hljs-attr">"example"</span>: {
+                  <span class="hljs-attr">"columnName1"</span>: {
+                    <span class="hljs-attr">"low"</span>: <span class="hljs-number">10</span>,
+                    <span class="hljs-attr">"high"</span>: <span class="hljs-number">20</span>
+                  }
+                }
+              },
+              <span class="hljs-attr">"equal"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Searches for rows that have a column value that is exactly the value set."</span>
+              },
+              <span class="hljs-attr">"notEqual"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Searches for any row which does not contain the specified column value."</span>
+              },
+              <span class="hljs-attr">"empty"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value."</span>,
+                <span class="hljs-attr">"example"</span>: {
+                  <span class="hljs-attr">"columnName1"</span>: <span class="hljs-string">""</span>
+                }
+              },
+              <span class="hljs-attr">"notEmpty"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Searches for rows which have the specified column."</span>
+              },
+              <span class="hljs-attr">"oneOf"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -&gt; [value1, value2]."</span>
+              }
+            }
+          },
+          <span class="hljs-attr">"paginate"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"boolean"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Enables pagination, by default this is disabled."</span>
+          },
+          <span class="hljs-attr">"bookmark"</span>: {
+            <span class="hljs-attr">"oneOf"</span>: [
+              {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+              },
+              {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"integer"</span>
+              }
+            ],
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"If retrieving another page, the bookmark from the previous request must be supplied."</span>
+          },
+          <span class="hljs-attr">"limit"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"integer"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The maximum number of rows to return, useful when paginating, for internal tables this will be limited to 1000, for SQL tables it will be 5000."</span>
+          },
+          <span class="hljs-attr">"sort"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A set of parameters describing the sort behaviour of the search."</span>,
+            <span class="hljs-attr">"properties"</span>: {
+              <span class="hljs-attr">"order"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                <span class="hljs-attr">"enum"</span>: [
+                  <span class="hljs-string">"ascending"</span>,
+                  <span class="hljs-string">"descending"</span>
+                ],
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The order of the sort, by default this is ascending."</span>
+              },
+              <span class="hljs-attr">"column"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name of the column by which the rows will be sorted."</span>
+              },
+              <span class="hljs-attr">"type"</span>: {
+                <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+                <span class="hljs-attr">"enum"</span>: [
+                  <span class="hljs-string">"string"</span>,
+                  <span class="hljs-string">"number"</span>
+                ],
+                <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Defines whether the column should be treated as a string or as numbers when sorting."</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"query"</span>
+        ]
+      },
+      <span class="hljs-attr">"nameSearch"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+        <span class="hljs-attr">"properties"</span>: {
+          <span class="hljs-attr">"name"</span>: {
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The name to be used when searching - this will be used in a case insensitive starts with match."</span>
+          }
+        },
+        <span class="hljs-attr">"required"</span>: [
+          <span class="hljs-string">"name"</span>
+        ]
+      }
+    }
+  },
+  <span class="hljs-attr">"security"</span>: [
+    {
+      <span class="hljs-attr">"ApiKeyAuth"</span>: []
+    }
+  ],
+  <span class="hljs-attr">"paths"</span>: {
+    <span class="hljs-attr">"/applications"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"appCreate"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Create an application"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"applications"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/application"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the created application."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/applicationOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"application"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/application"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/applications/{appId}"</span>: {
+      <span class="hljs-attr">"put"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"appUpdate"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Update an application"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"applications"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appIdUrl"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/application"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the updated application."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/applicationOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"application"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/application"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"delete"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"appDestroy"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Delete an application"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"applications"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appIdUrl"</span>
+          }
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the deleted application."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/applicationOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"application"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/application"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"get"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"appGetById"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Retrieve an application"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"applications"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appIdUrl"</span>
+          }
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the retrieved application."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/applicationOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"application"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/application"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/applications/{appId}/unpublish"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"appUnpublish"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Unpublish an application"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"applications"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appIdUrl"</span>
+          }
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"204"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The app was published successfully."</span>
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/applications/{appId}/publish"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"appPublish"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Unpublish an application"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"applications"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appIdUrl"</span>
+          }
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the deployment object."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/deploymentOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"deployment"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/deploymentOutput"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/applications/search"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"appSearch"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Search for applications"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Based on application properties (currently only name) search for applications."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"applications"</span>
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/nameSearch"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the applications that were found based on the search parameters."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/applicationSearch"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"applications"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/applications"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/metrics"</span>: {
+      <span class="hljs-attr">"get"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"metricsGet"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Retrieve Budibase tenant metrics"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Output metrics in OpenMetrics format compatible with Prometheus"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"metrics"</span>
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns tenant metrics."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"text/plain"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"metrics"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/metrics"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/queries/{queryId}"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"queryExecute"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Execute a query"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Queries which have been created within a Budibase app can be executed using this,"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"queries"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/queryId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/executeQuery"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the result of the query execution."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/executeQueryOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"REST"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/restResponse"</span>
+                  },
+                  <span class="hljs-attr">"SQL"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/sqlResponse"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/queries/search"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"querySearch"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Search for queries"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Based on query properties (currently only name) search for queries."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"queries"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/nameSearch"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the queries found based on the search parameters."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/querySearch"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"queries"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/queries"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/tables/{tableId}/rows"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"rowCreate"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Create a row"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Creates a row within the specified table."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"rows"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/tableId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/row"</span>
+              },
+              <span class="hljs-attr">"examples"</span>: {
+                <span class="hljs-attr">"row"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/inputRow"</span>
+                }
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the created row, including the ID which has been generated for it. This can be found in the Budibase portal, viewed under the developer information."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/rowOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"row"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/row"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/tables/{tableId}/rows/{rowId}"</span>: {
+      <span class="hljs-attr">"put"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"rowUpdate"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Update a row"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Updates a row within the specified table."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"rows"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/tableId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/rowId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/row"</span>
+              },
+              <span class="hljs-attr">"examples"</span>: {
+                <span class="hljs-attr">"row"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/inputRow"</span>
+                }
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the created row, including the ID which has been generated for it."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/rowOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"row"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/row"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"delete"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"rowDestroy"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Delete a row"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Deletes a row within the specified table."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"rows"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/tableId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/rowId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the deleted row, including the ID which has been generated for it."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/rowOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"row"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/row"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"get"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"rowGetById"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Retrieve a row"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"This gets a single row, it will be enriched with the full related rows, rather than the squashed \"primaryDisplay\" format returned by the search endpoint."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"rows"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/tableId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/rowId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the retrieved row."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/rowOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"enrichedRow"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/enrichedRow"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/tables/{tableId}/rows/search"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"rowSearch"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Search for rows"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"rows"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/tableId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/rowSearch"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The response will contain an array of rows that match the search parameters."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/searchOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"search"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/rows"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/tables"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"tableCreate"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Create a table"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Create a table, this could be internal or external."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"tables"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/table"</span>
+              },
+              <span class="hljs-attr">"examples"</span>: {
+                <span class="hljs-attr">"table"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/table"</span>
+                }
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the created table, including the ID which has been generated for it. This can be internal or external datasources."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/tableOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"table"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/table"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/tables/{tableId}"</span>: {
+      <span class="hljs-attr">"put"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"tableUpdate"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Update a table"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Update a table, this could be internal or external."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"tables"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/tableId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/table"</span>
+              },
+              <span class="hljs-attr">"examples"</span>: {
+                <span class="hljs-attr">"table"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/table"</span>
+                }
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the updated table."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/tableOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"table"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/table"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"delete"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"tableDestroy"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Delete a table"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Delete a table, this could be internal or external."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"tables"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/tableId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the deleted table."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/tableOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"table"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/table"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"get"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"tableGetById"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Retrieve a table"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Lookup a table, this could be internal or external."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"tables"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/tableId"</span>
+          },
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the retrieved table."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/tableOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"table"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/table"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/tables/search"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"tableSearch"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Search for tables"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Based on table properties (currently only name) search for tables. This could be an internal or an external table."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"tables"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/appId"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/nameSearch"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the found tables, based on the search parameters."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/tableSearch"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"tables"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/tables"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/users"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"userCreate"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Create a user"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"users"</span>
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/user"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the created user."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/userOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"user"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/user"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/users/{userId}"</span>: {
+      <span class="hljs-attr">"put"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"userUpdate"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Update a user"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"users"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/userId"</span>
+          }
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/user"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the updated user."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/userOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"user"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/user"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"delete"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"userDestroy"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Delete a user"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"users"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/userId"</span>
+          }
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the deleted user."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/userOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"user"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/user"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      <span class="hljs-attr">"get"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"userGetById"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Retrieve a user"</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"users"</span>
+        ],
+        <span class="hljs-attr">"parameters"</span>: [
+          {
+            <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/parameters/userId"</span>
+          }
+        ],
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the retrieved user."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/userOutput"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"user"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/user"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    <span class="hljs-attr">"/users/search"</span>: {
+      <span class="hljs-attr">"post"</span>: {
+        <span class="hljs-attr">"operationId"</span>: <span class="hljs-string">"userSearch"</span>,
+        <span class="hljs-attr">"summary"</span>: <span class="hljs-string">"Search for users"</span>,
+        <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Based on user properties (currently only name) search for users."</span>,
+        <span class="hljs-attr">"tags"</span>: [
+          <span class="hljs-string">"users"</span>
+        ],
+        <span class="hljs-attr">"requestBody"</span>: {
+          <span class="hljs-attr">"required"</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">"content"</span>: {
+            <span class="hljs-attr">"application/json"</span>: {
+              <span class="hljs-attr">"schema"</span>: {
+                <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/nameSearch"</span>
+              }
+            }
+          }
+        },
+        <span class="hljs-attr">"responses"</span>: {
+          <span class="hljs-attr">"200"</span>: {
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"Returns the found users based on search parameters."</span>,
+            <span class="hljs-attr">"content"</span>: {
+              <span class="hljs-attr">"application/json"</span>: {
+                <span class="hljs-attr">"schema"</span>: {
+                  <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/schemas/userSearch"</span>
+                },
+                <span class="hljs-attr">"examples"</span>: {
+                  <span class="hljs-attr">"users"</span>: {
+                    <span class="hljs-attr">"$ref"</span>: <span class="hljs-string">"#/components/examples/users"</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  <span class="hljs-attr">"tags"</span>: []
+}
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

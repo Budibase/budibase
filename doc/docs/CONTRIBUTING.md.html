@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CONTRIBUTING.md</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../doc-style.css" />
+  <script src="../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../";
+    var thisFile = "docs/CONTRIBUTING.md";
+    var defaultSidebar = true;
+  </script>
+  <script src="../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+      <div class="heading h1">
+        <a href="#contributing">Contributing</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#table-of-contents">Table of contents</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#not-sure-where-to-start">Not Sure Where to Start?</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#contributor-license-agreement-cla">Contributor License Agreement (CLA)</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#glossary-of-terms">Glossary of Terms</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#client">Client</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#app">App</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#database">Database</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#table">Table</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#view">View</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#page">Page</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#screen">Screen</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#component">Component</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#component-library">Component Library</a>
+      </div>
+
+      <div class="heading h2">
+        <a href="#contributing-to-budibase">Contributing to Budibase</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#getting-started-for-contributors">Getting Started For Contributors</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#1.prerequisites">1. Prerequisites</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#using-asdf-recommended">Using asdf (recommended)</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#using-nvm-and-pyenv">Using NVM and pyenv</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#2.clone-this-repository">2. Clone this repository</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#3.install-and-build">3. Install and Build</a>
+      </div>
+
+      <div class="heading h5">
+        <a href="#quick-method">Quick method</a>
+      </div>
+
+      <div class="heading h5">
+        <a href="#manual-method">Manual method</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#4.running">4. Running</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#5.debugging-using-vs-code">5. Debugging using VS Code</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#6.cleanup">6. Cleanup</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#backend">Backend</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#data-storage">Data Storage</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#development-modes">Development Modes</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#self-hosted">Self Hosted</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#cloud">Cloud</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#cloud-and-account">Cloud &amp;amp; Account</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#ci">CI</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#pro">Pro</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#troubleshooting">Troubleshooting</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#running-tests">Running tests</a>
+      </div>
+
+      <div class="heading h4">
+        <a href="#end-to-end-tests">End-to-end Tests</a>
+      </div>
+
+      <div class="heading h3">
+        <a href="#other-useful-information">Other Useful Information</a>
+      </div>
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="docs markdown"><div class="pilwrap" id="contributing">
+  <h1>
+    <a href="#contributing" name="contributing" class="pilcrow"></a>
+Contributing
+  </h1>
+</div>
+<p>From opening a bug report to creating a pull request: every contribution is appreciated and welcome. If you're planning to implement a new feature or change the api please <a href="https://github.com/Budibase/budibase/issues/new/choose">create an issue</a> first. This way we can ensure that your precious work is not in vain.</p>
+<div class="pilwrap" id="table-of-contents">
+  <h2>
+    <a href="#table-of-contents" name="table-of-contents" class="pilcrow"></a>
+Table of contents
+  </h2>
+</div>
+<ul>
+<li><a href="#not-sure-where-to-start.html">Where to start</a></li>
+<li><a href="#contributor-license-agreement-cla.html">Contributor Licence Agreement</a></li>
+<li><a href="#glossary-of-terms.html">Glossary of Terms</a></li>
+<li><a href="#contributing-to-budibase.html">Contributing to Budibase</a></li>
+</ul>
+<div class="pilwrap" id="not-sure-where-to-start">
+  <h2>
+    <a href="#not-sure-where-to-start" name="not-sure-where-to-start" class="pilcrow"></a>
+Not Sure Where to Start?
+  </h2>
+</div>
+<p>Budibase is a low-code web application builder that creates svelte-based web applications.</p>
+<p>Budibase is a monorepo managed by <a href="https://github.com/lerna/lerna">lerna</a>. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up budibase.</p>
+<ul>
+<li>
+<p><strong>packages/builder</strong> - contains code for the budibase builder client side svelte application.</p>
+</li>
+<li>
+<p><strong>packages/client</strong> - A module that runs in the browser responsible for reading JSON definition and creating living, breathing web apps from it.</p>
+</li>
+<li>
+<p><strong>packages/server</strong> - The budibase server. This <a href="https://koajs.com/">Koa</a> app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.</p>
+</li>
+<li>
+<p><strong>packages/worker</strong> - This <a href="https://koajs.com/">Koa</a> app is responsible for providing global apis for managing your budibase installation. Authentication, Users, Email, Org and Auth configs are all provided by the worker.</p>
+</li>
+</ul>
+<div class="pilwrap" id="contributor-license-agreement-cla">
+  <h2>
+    <a href="#contributor-license-agreement-cla" name="contributor-license-agreement-cla" class="pilcrow"></a>
+Contributor License Agreement (CLA)
+  </h2>
+</div>
+<p>In order to accept your pull request, we need you to submit a CLA. You only need to do this once. If you are submitting a pull request for the first time, just submit a Pull Request and our CLA Bot will give you instructions on how to sign the CLA before merging your Pull Request.</p>
+<p>All contributors must sign an <a href="https://github.com/budibase/budibase/blob/next/.github/cla/individual-cla.md">Individual Contributor License Agreement</a>.</p>
+<p>If contributing on behalf of your company, your company must sign a <a href="https://github.com/budibase/budibase/blob/next/.github/cla/corporate-cla.md">Corporate Contributor License Agreement</a>. If so, please contact us via community@budibase.com.</p>
+<p>If for any reason, your first contribution is in a PR created by other contributor, please just add a comment to the PR
+with the following text to agree our CLA: &quot;I have read the CLA Document and I hereby sign the CLA&quot;.</p>
+<div class="pilwrap" id="glossary-of-terms">
+  <h2>
+    <a href="#glossary-of-terms" name="glossary-of-terms" class="pilcrow"></a>
+Glossary of Terms
+  </h2>
+</div>
+<p>To understand the budibase API, it can be helpful to understand the top level entities that make up Budibase.</p>
+<div class="pilwrap" id="client">
+  <h3>
+    <a href="#client" name="client" class="pilcrow"></a>
+Client
+  </h3>
+</div>
+<p>A client represents a single budibase customer. Each budibase client will have 1 or more budibase servers. Every client is assigned a unique ID.</p>
+<div class="pilwrap" id="app">
+  <h3>
+    <a href="#app" name="app" class="pilcrow"></a>
+App
+  </h3>
+</div>
+<p>A client can have one or more budibase applications. Budibase applications would be things like &quot;Developer Inventory Management&quot; or &quot;Goat Herder CRM&quot;. Think of a budibase application as a tree.</p>
+<div class="pilwrap" id="database">
+  <h3>
+    <a href="#database" name="database" class="pilcrow"></a>
+Database
+  </h3>
+</div>
+<p>An App can have one or more databases. Keeping with our <a href="https://en.wikipedia.org/wiki/Dendrology">dendrology</a> analogy - think of an database as a branch on the tree. Databases are used to keep data separate for different instances of your app. For example, if you had a CRM app, you may create a database for your US office, and a database for your Australian office. Databases allow us to support <a href="https://www.gartner.com/en/information-technology/glossary/multitenancy">multitenancy</a> in budibase applications.</p>
+<div class="pilwrap" id="table">
+  <h3>
+    <a href="#table" name="table" class="pilcrow"></a>
+Table
+  </h3>
+</div>
+<p>Tables in budibase are almost akin to tables in relational databases. A table may be a &quot;Car&quot; or an &quot;Employee&quot;. They are the main building blocks for the creation and management of backend data in budibase.</p>
+<div class="pilwrap" id="view">
+  <h3>
+    <a href="#view" name="view" class="pilcrow"></a>
+View
+  </h3>
+</div>
+<p>A View is an advanced feature in budibase that allows you to write a custom query using <a href="https://pouchdb.com/guides/queries.html">MapReduce</a> queries. Views enable powerful query functionality and calculations, allowing you to do more with your data.</p>
+<div class="pilwrap" id="page">
+  <h3>
+    <a href="#page" name="page" class="pilcrow"></a>
+Page
+  </h3>
+</div>
+<p>A page in budibase is actually a single, self contained svelte web app. There are only 2 pages in budibase. The <strong>login</strong> page and the <strong>main</strong> page.</p>
+<div class="pilwrap" id="screen">
+  <h3>
+    <a href="#screen" name="screen" class="pilcrow"></a>
+Screen
+  </h3>
+</div>
+<p>A screen is a component within a single page. Generally, screens represent client side routes, and can be switched without refreshing the page.</p>
+<div class="pilwrap" id="component">
+  <h3>
+    <a href="#component" name="component" class="pilcrow"></a>
+Component
+  </h3>
+</div>
+<p>A component is the basic frontend building block of a budibase app.</p>
+<div class="pilwrap" id="component-library">
+  <h3>
+    <a href="#component-library" name="component-library" class="pilcrow"></a>
+Component Library
+  </h3>
+</div>
+<p>Component libraries are collections of components as well as the definition of their props contained in a file called <code>components.json</code>.</p>
+<div class="pilwrap" id="contributing-to-budibase">
+  <h2>
+    <a href="#contributing-to-budibase" name="contributing-to-budibase" class="pilcrow"></a>
+Contributing to Budibase
+  </h2>
+</div>
+<ul>
+<li>
+<p>Please maintain the existing code style.</p>
+</li>
+<li>
+<p>Please try to keep your commits small and focused.</p>
+</li>
+<li>
+<p>Please write tests.</p>
+</li>
+<li>
+<p>If the project diverges from your branch, please rebase instead of merging. This makes the commit graph easier to read.</p>
+</li>
+<li>
+<p>Once your work is completed, please raise a PR against the <code>develop</code> branch with some information about what has changed and why.</p>
+</li>
+</ul>
+<div class="pilwrap" id="getting-started-for-contributors">
+  <h3>
+    <a href="#getting-started-for-contributors" name="getting-started-for-contributors" class="pilcrow"></a>
+Getting Started For Contributors
+  </h3>
+</div>
+<div class="pilwrap" id="1.prerequisites">
+  <h4>
+    <a href="#1.prerequisites" name="1.prerequisites" class="pilcrow"></a>
+1. Prerequisites
+  </h4>
+</div>
+<ul>
+<li>NodeJS version <code>14.x.x</code></li>
+<li>Python version <code>3.x</code></li>
+</ul>
+<div class="pilwrap" id="using-asdf-recommended">
+  <h3>
+    <a href="#using-asdf-recommended" name="using-asdf-recommended" class="pilcrow"></a>
+Using asdf (recommended)
+  </h3>
+</div>
+<p>Asdf is a package manager that allows managing multiple dependencies.</p>
+<p>You can install them following any of the steps described below:</p>
+<ul>
+<li>Install using script (only for mac users):</li>
+</ul>
+<p><code>./scripts/install-contributor-dependencies.sh</code></p>
+<ul>
+<li>
+<p>Or, manually:</p>
+<ul>
+<li>Installation steps: https://asdf-vm.com/guide/getting-started.html</li>
+<li>asdf plugin add nodejs</li>
+<li>asdf plugin add python</li>
+<li>npm install -g yarn</li>
+</ul>
+</li>
+</ul>
+<div class="pilwrap" id="using-nvm-and-pyenv">
+  <h3>
+    <a href="#using-nvm-and-pyenv" name="using-nvm-and-pyenv" class="pilcrow"></a>
+Using NVM and pyenv
+  </h3>
+</div>
+<ul>
+<li>
+<p>NVM:</p>
+<ul>
+<li>Install: https://github.com/nvm-sh/nvm#installing-and-updating</li>
+<li>Setup: <code>nvm use</code></li>
+</ul>
+</li>
+<li>
+<p>Pyenv:</p>
+<ul>
+<li>Install: https://github.com/pyenv/pyenv#installation</li>
+<li>Setup: <code>pyenv install -v 3.7.2</code></li>
+</ul>
+</li>
+<li>
+<p><em>yarn -</em> <code>npm install -g yarn</code></p>
+</li>
+</ul>
+<div class="pilwrap" id="2.clone-this-repository">
+  <h4>
+    <a href="#2.clone-this-repository" name="2.clone-this-repository" class="pilcrow"></a>
+2. Clone this repository
+  </h4>
+</div>
+<p><code>git clone https://github.com/Budibase/budibase.git</code></p>
+<p>then <code>cd</code> into your local copy.</p>
+<div class="pilwrap" id="3.install-and-build">
+  <h4>
+    <a href="#3.install-and-build" name="3.install-and-build" class="pilcrow"></a>
+3. Install and Build
+  </h4>
+</div>
+<p>| <strong>NOTE</strong>: On Windows, all yarn commands must be executed on a bash shell (e.g. git bash)</p>
+<p>To develop the Budibase platform you'll need <a href="https://www.docker.com/">Docker</a> and <a href="https://docs.docker.com/compose/">Docker Compose</a> installed.</p>
+<div class="pilwrap" id="quick-method">
+  <h5>
+    <a href="#quick-method" name="quick-method" class="pilcrow"></a>
+Quick method
+  </h5>
+</div>
+<p><code>yarn setup</code> will check that all necessary components are installed and setup the repo for usage.</p>
+<div class="pilwrap" id="manual-method">
+  <h5>
+    <a href="#manual-method" name="manual-method" class="pilcrow"></a>
+Manual method
+  </h5>
+</div>
+<p>The following commands can be executed to manually get Budibase up and running (assuming Docker/Docker Compose has been installed).</p>
+<p><code>yarn</code> to install project dependencies</p>
+<p><code>yarn bootstrap</code> will install all budibase modules and symlink them together using lerna.</p>
+<p><code>yarn build</code> will build all budibase packages.</p>
+<div class="pilwrap" id="4.running">
+  <h4>
+    <a href="#4.running" name="4.running" class="pilcrow"></a>
+4. Running
+  </h4>
+</div>
+<p>To run the budibase server and builder in dev mode (i.e. with live reloading):</p>
+<ol>
+<li>Open a new console</li>
+<li><code>yarn dev</code> (from root)</li>
+<li>Access the builder on http://localhost:10000/builder</li>
+</ol>
+<p>This will enable watch mode for both the builder app, server, client library and any component libraries.</p>
+<div class="pilwrap" id="5.debugging-using-vs-code">
+  <h4>
+    <a href="#5.debugging-using-vs-code" name="5.debugging-using-vs-code" class="pilcrow"></a>
+5. Debugging using VS Code
+  </h4>
+</div>
+<p>To debug the budibase server and worker a VS Code launch configuration has been provided.</p>
+<p>Visit the debug window and select <code>Budibase Server</code> or <code>Budibase Worker</code> to debug the respective component.
+Alternatively to start both components simultaneously select <code>Start Budibase</code>.</p>
+<p>In addition to the above, the remaining budibase components may be run in dev mode using: <code>yarn dev:noserver</code>.</p>
+<div class="pilwrap" id="6.cleanup">
+  <h4>
+    <a href="#6.cleanup" name="6.cleanup" class="pilcrow"></a>
+6. Cleanup
+  </h4>
+</div>
+<p>If you wish to delete all the apps created in development and reset the environment then run the following:</p>
+<ol>
+<li><code>yarn nuke:docker</code> will wipe all the Budibase services</li>
+<li><code>yarn dev</code> will restart all the services</li>
+</ol>
+<div class="pilwrap" id="backend">
+  <h3>
+    <a href="#backend" name="backend" class="pilcrow"></a>
+Backend
+  </h3>
+</div>
+<p>For the backend we run <a href="https://redis.io/">Redis</a>, <a href="https://couchdb.apache.org/">CouchDB</a>, <a href="https://min.io/">MinIO</a> and <a href="https://www.nginx.com/">NGINX</a> in Docker compose. This means that to develop Budibase you will need Docker and Docker compose installed. The backend services are then run separately as Node services with nodemon so that they can be debugged outside of Docker.</p>
+<div class="pilwrap" id="data-storage">
+  <h3>
+    <a href="#data-storage" name="data-storage" class="pilcrow"></a>
+Data Storage
+  </h3>
+</div>
+<p>When you are running locally, budibase stores data on disk using docker volumes. The volumes and the types of data associated with each are:</p>
+<ul>
+<li><code>redis_data</code>
+<ul>
+<li>Sessions, email tokens</li>
+</ul>
+</li>
+<li><code>couchdb3_data</code>
+<ul>
+<li>Global and app databases</li>
+</ul>
+</li>
+<li><code>minio_data</code>
+<ul>
+<li>App manifest, budibase client, static assets</li>
+</ul>
+</li>
+</ul>
+<div class="pilwrap" id="development-modes">
+  <h3>
+    <a href="#development-modes" name="development-modes" class="pilcrow"></a>
+Development Modes
+  </h3>
+</div>
+<p>A combination of environment variables controls the mode budibase runs in.</p>
+<p>| <strong>NOTE</strong>: You need to clean your browser cookies when you change between different modes.</p>
+<p>Yarn commands can be used to mimic the different modes as described in the sections below:</p>
+<div class="pilwrap" id="self-hosted">
+  <h4>
+    <a href="#self-hosted" name="self-hosted" class="pilcrow"></a>
+Self Hosted
+  </h4>
+</div>
+<p>The default mode. A single tenant installation with no usage restrictions.</p>
+<p>To enable this mode, use:</p>
+<pre><code>yarn mode:self
+</code></pre>
+<div class="pilwrap" id="cloud">
+  <h4>
+    <a href="#cloud" name="cloud" class="pilcrow"></a>
+Cloud
+  </h4>
+</div>
+<p>The cloud mode, with account portal turned off.</p>
+<p>To enable this mode, use:</p>
+<pre><code>yarn mode:cloud
+</code></pre>
+<div class="pilwrap" id="cloud-and-account">
+  <h4>
+    <a href="#cloud-and-account" name="cloud-and-account" class="pilcrow"></a>
+Cloud &amp; Account
+  </h4>
+</div>
+<p>The cloud mode, with account portal turned on. This is a replica of the mode that runs at https://budibase.app</p>
+<p>To enable this mode, use:</p>
+<pre><code>yarn mode:account
+</code></pre>
+<div class="pilwrap" id="ci">
+  <h3>
+    <a href="#ci" name="ci" class="pilcrow"></a>
+CI
+  </h3>
+</div>
+<p>An overview of the CI pipelines can be found <a href="../.github/workflows/README.md.html">here</a></p>
+<div class="pilwrap" id="pro">
+  <h3>
+    <a href="#pro" name="pro" class="pilcrow"></a>
+Pro
+  </h3>
+</div>
+<p>@budibase/pro is the closed source package that supports licensed features in budibase. By default the package will be pulled from NPM and will not normally need to be touched in local development. If you require to update code inside the pro package it can be cloned to the same root level as budibase, e.g.</p>
+<pre><code>.
+|_ budibase
+|_ budibase-pro
+</code></pre>
+<p>Note that only budibase maintainers will be able to access the pro repo.</p>
+<p>The <code>yarn bootstrap</code> command can be used to replace the NPM supplied dependency with the local source aware version. This is achieved using the <code>yarn link</code> command. To see specifically how dependencies are linked see <a href="../scripts/link-dependencies.sh.html">scripts/link-dependencies.sh</a>. The same link script is used to link dependencies to account-portal in local dev.</p>
+<div class="pilwrap" id="troubleshooting">
+  <h3>
+    <a href="#troubleshooting" name="troubleshooting" class="pilcrow"></a>
+Troubleshooting
+  </h3>
+</div>
+<p>Sometimes, things go wrong. This can be due to incompatible updates on the budibase platform. To clear down your development environment and start again follow <strong>Step 6. Cleanup</strong>, then proceed from <strong>Step 3. Install and Build</strong> in the setup guide above to create a fresh Budibase installation.</p>
+<div class="pilwrap" id="running-tests">
+  <h3>
+    <a href="#running-tests" name="running-tests" class="pilcrow"></a>
+Running tests
+  </h3>
+</div>
+<div class="pilwrap" id="end-to-end-tests">
+  <h4>
+    <a href="#end-to-end-tests" name="end-to-end-tests" class="pilcrow"></a>
+End-to-end Tests
+  </h4>
+</div>
+<p>Budibase uses Cypress to run a number of E2E tests. To run the tests execute the following command in the root folder:</p>
+<pre><code>yarn test:e2e
+</code></pre>
+<p>Or if you are in the builder you can run <code>yarn cy:test</code>.</p>
+<div class="pilwrap" id="other-useful-information">
+  <h3>
+    <a href="#other-useful-information" name="other-useful-information" class="pilcrow"></a>
+Other Useful Information
+  </h3>
+</div>
+<ul>
+<li>
+<p>The contributors are listed in <a href="https://github.com/Budibase/budibase/blob/master/.github/AUTHORS.md">AUTHORS.md</a> (add yourself).</p>
+</li>
+<li>
+<p>This project uses a modified version of the MPLv2 license, see <a href="https://github.com/budibase/server/blob/master/LICENSE">LICENSE</a>.</p>
+</li>
+<li>
+<p>We use the <a href="https://rfc.zeromq.org/spec:42/C4/">C4 (Collective Code Construction Contract)</a> process for contributions.
+Please read this if you are unfamiliar with it.</p>
+</li>
+</ul>
+</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>build-target-paths.sh</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "hosting/scripts/build-target-paths.sh";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>build-target-paths.sh</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-variable">${TARGETBUILD}</span> &gt; /buildtarget.txt
+<span class="hljs-keyword">if</span> [[ <span class="hljs-string">"<span class="hljs-variable">${TARGETBUILD}</span>"</span> = <span class="hljs-string">"aas"</span> ]]; <span class="hljs-keyword">then</span>
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Azure AppService uses /home for persisent data &amp; SSH on port 2222</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="sh">    DATA_DIR=/home
+    WEBSITES_ENABLE_APP_SERVICE_STORAGE=<span class="hljs-literal">true</span>
+    mkdir -p <span class="hljs-variable">$DATA_DIR</span>/{search,minio,couch}
+    mkdir -p <span class="hljs-variable">$DATA_DIR</span>/couch/{dbs,views}
+    chown -R couchdb:couchdb <span class="hljs-variable">$DATA_DIR</span>/couch/
+    apt update
+    apt-get install -y openssh-server
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"root:Docker!"</span> | chpasswd
+    mkdir -p /tmp
+    chmod +x /tmp/ssh_setup.sh \
+        &amp;&amp; (sleep 1;/tmp/ssh_setup.sh 2&gt;&amp;1 &gt; /dev/null)
+    cp /etc/sshd_config /etc/ssh/sshd_config
+    /etc/init.d/ssh restart
+    sed -i <span class="hljs-string">"s#DATA_DIR#/home#g"</span> /opt/clouseau/clouseau.ini
+    sed -i <span class="hljs-string">"s#DATA_DIR#/home#g"</span> /opt/couchdb/etc/local.ini
+<span class="hljs-keyword">else</span>
+    sed -i <span class="hljs-string">"s#DATA_DIR#/data#g"</span> /opt/clouseau/clouseau.ini
+    sed -i <span class="hljs-string">"s#DATA_DIR#/data#g"</span> /opt/couchdb/etc/local.ini
+<span class="hljs-keyword">fi</span>
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>
