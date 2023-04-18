@@ -1,3 +1,4 @@
+import { expect, describe, it } from "vitest"
 import { breakQueryString, buildQueryString } from "../data/utils"
 
 describe("check query string utils", () => {
@@ -26,11 +27,15 @@ describe("check query string utils", () => {
 
   it("should be able to build with a binding", () => {
     const queryString = buildQueryString(obj2)
-    expect(queryString).toBe("key1={{ binding.awd }}&key2={{ binding.sed }}%20%20")
+    expect(queryString).toBe(
+      "key1={{ binding.awd }}&key2={{ binding.sed }}%20%20"
+    )
   })
 
   it("should be able to break with a binding", () => {
-    const broken = breakQueryString("key1={{ binding.awd }}&key2={{ binding.sed }}%20%20")
+    const broken = breakQueryString(
+      "key1={{ binding.awd }}&key2={{ binding.sed }}%20%20"
+    )
     expect(broken.key1).toBe(obj2.key1)
     expect(broken.key2).toBe(obj2.key2)
   })
