@@ -49,6 +49,7 @@ import {
   SearchFilters,
   UserRoles,
 } from "@budibase/types"
+import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
 
 type DefaultUserValues = {
   globalUserId: string
@@ -304,6 +305,33 @@ class TestConfiguration {
       ...resp,
       globalId,
     }
+  }
+
+  async createGroup(roleId: string = BUILTIN_ROLE_IDS.BASIC) {
+    return context.doInTenant(this.tenantId!, async () => {
+      const baseGroup = structures.userGroups.userGroup()
+      baseGroup.roles = {
+        [this.prodAppId]: roleId,
+      }
+      const { id, rev } = await pro.sdk.groups.save(baseGroup)
+      return {
+        _id: id,
+        _rev: rev,
+        ...baseGroup,
+      }
+    })
+  }
+
+  async addUserToGroup(groupId: string, userId: string) {
+    return context.doInTenant(this.tenantId!, async () => {
+      await pro.sdk.groups.addUsers(groupId, [userId])
+    })
+  }
+
+  async removeUserFromGroup(groupId: string, userId: string) {
+    return context.doInTenant(this.tenantId!, async () => {
+      await pro.sdk.groups.removeUsers(groupId, [userId])
+    })
   }
 
   async login({ roleId, userId, builder, prodApp = false }: any = {}) {
