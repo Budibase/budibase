@@ -12,7 +12,7 @@ const TypeIconMap = {
   barcodeqr: "Camera",
   longform: "TextAlignLeft",
   array: "Dropdown",
-  number: "Text",
+  number: "123",
   boolean: "Boolean",
   attachment: "AppleFiles",
   link: "Link",
