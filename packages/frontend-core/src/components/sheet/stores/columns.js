@@ -142,7 +142,7 @@ export const initialise = context => {
     columns.set(
       fields
         .map(field => ({
-          name: field,
+          name: schema[field].name || field,
           schema: schema[field],
           width: schema[field].width || DefaultColumnWidth,
           visible: schema[field].visible ?? true,

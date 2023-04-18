@@ -6,7 +6,8 @@
   import { API } from "api"
 
   import SheetAddColumnModal from "components/backend/DataTable/modals/sheet/SheetCreateColumnModal.svelte"
-  import SheetAddRowModal from "components/backend/DataTable/modals/sheet/SheetCreateRowModal.svelte"
+  import SheetCreateEditRowModal from "components/backend/DataTable/modals/sheet/SheetCreateEditRowModal.svelte"
+  import SheetEditUserModal from "components/backend/DataTable/modals/sheet/SheetEditUserModal.svelte"
   import SheetCreateViewButton from "components/backend/DataTable/buttons/sheet/SheetCreateViewButton.svelte"
   import SheetImportButton from "components/backend/DataTable/buttons/sheet/SheetImportButton.svelte"
   import SheetExportButton from "components/backend/DataTable/buttons/sheet/SheetExportButton.svelte"
@@ -44,7 +45,11 @@
       <SheetFilterButton />
       <SheetAddColumnModal />
       <SheetEditColumnModal />
-      <SheetAddRowModal />
+      {#if isUsersTable}
+        <SheetEditUserModal />
+      {:else}
+        <SheetCreateEditRowModal />
+      {/if}
     </svelte:fragment>
   </Sheet>
 </div>

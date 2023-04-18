@@ -28,7 +28,10 @@
   $: error = getErrorStore(rowFocused, cellId)
 
   // Determine if the cell is editable
-  $: readonly = column.schema.autocolumn || (!$config.allowEditRows && row._id)
+  $: readonly =
+    column.schema.autocolumn ||
+    column.schema.readonly ||
+    (!$config.allowEditRows && row._id)
 
   // Register this cell API if the row is focused
   $: {
