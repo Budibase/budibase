@@ -1,3 +1,20 @@
+<script context="module">
+  // We can create a module level cache for all relationship cells to avoid
+  // having to fetch the table definition one time for each cell
+  let primaryDisplayCache = {}
+
+  const getPrimaryDisplayForTableId = async (API, tableId) => {
+    if (primaryDisplayCache[tableId]) {
+      return primaryDisplayCache[tableId]
+    }
+    const definition = await API.fetchTableDefinition(tableId)
+    const primaryDisplay =
+      definition?.primaryDisplay || definition?.schema?.[0]?.name
+    primaryDisplayCache[tableId] = primaryDisplay
+    return primaryDisplay
+  }
+</script>
+
 <script>
   import { getColor } from "../lib/utils"
   import { onMount, getContext } from "svelte"
@@ -20,7 +37,6 @@
   let searchResults
   let searchString
   let lastSearchString
-  let definition
   let primaryDisplay
   let candidateIndex
   let lastSearchId
@@ -29,7 +45,7 @@
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
   $: lookupMap = buildLookupMap(value, isOpen)
-  $: search(searchString)
+  $: debouncedSearch(searchString)
   $: {
     if (!focused) {
       close()
@@ -56,8 +72,8 @@
     return lookupMap?.[row._id] === true
   }
 
-  // Debounced function to search for rows based on the search string
-  const search = debounce(async (searchString, force = false) => {
+  // Search for rows based on the search string
+  const search = async (searchString, force = false) => {
     // Avoid update state at all if we've already handled the update and this is
     // a wasted search due to svelte reactivity
     if (!force && !searchString && !lastSearchString) {
@@ -104,7 +120,10 @@
     )
     candidateIndex = searchResults?.length ? 0 : null
     lastSearchString = searchString
-  }, 250)
+  }
+
+  // Debounced version of searching
+  const debouncedSearch = debounce(search, 250)
 
   // Alphabetically sorts rows by their primary display column
   const sortRows = rows => {
@@ -118,15 +137,15 @@
 
   const open = async () => {
     isOpen = true
-    searchString = null
-    search(null, true)
 
-    // Fetch definition if required
-    if (!definition) {
-      definition = await API.fetchTableDefinition(schema.tableId)
-      primaryDisplay =
-        definition?.primaryDisplay || definition?.schema?.[0]?.name
+    // Find the primary display for the related table
+    if (!primaryDisplay) {
+      searching = true
+      primaryDisplay = await getPrimaryDisplayForTableId(API, schema.tableId)
     }
+
+    // Show initial list of results
+    await search(null, true)
   }
 
   const close = () => {
