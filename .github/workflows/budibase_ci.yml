@@ -91,9 +91,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          submodules: true
+          submodules: recursive
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          fetch-depth: 0
       - name: Check submodule
         run: |
           cd packages/pro
