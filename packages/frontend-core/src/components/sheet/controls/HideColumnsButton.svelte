@@ -46,7 +46,7 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open || anyHidden}
-    disabled={!$loaded || !$columns.length}
+    disabled={!$columns.length}
   >
     Hide columns
   </ActionButton>
