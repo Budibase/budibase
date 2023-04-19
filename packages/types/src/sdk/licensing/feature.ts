@@ -10,4 +10,4 @@ export enum Feature {
   SCIM = "scim",
 }
 
-export type PlanFeatures = { [ key in PlanType]: Feature[] | undefined }
+export type PlanFeatures = { [key in PlanType]: Feature[] | undefined }

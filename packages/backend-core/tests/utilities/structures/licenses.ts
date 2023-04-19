@@ -1,4 +1,10 @@
-import { License, PlanModel, PlanType, PurchasedPlan, Quotas } from "@budibase/types"
+import {
+  License,
+  PlanModel,
+  PlanType,
+  PurchasedPlan,
+  Quotas,
+} from "@budibase/types"
 
 const newPlan = (type: PlanType = PlanType.FREE): PurchasedPlan => {
   return {

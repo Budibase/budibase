@@ -131,7 +131,7 @@ export async function queryViewRaw<T>(
   }
 }
 
-export const queryView = async <T> (
+export const queryView = async <T>(
   viewName: ViewName,
   params: DatabaseQueryOpts,
   db: Database,
