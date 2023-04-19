@@ -27,73 +27,75 @@ export function quotas(): Quotas {
         queries: {
           name: "Queries",
           value: 1,
-          triggers: []
+          triggers: [],
         },
         automations: {
           name: "Queries",
           value: 1,
-          triggers: []
+          triggers: [],
         },
         dayPasses: {
           name: "Queries",
           value: 1,
-          triggers: []
-        }
+          triggers: [],
+        },
       },
       static: {
         rows: {
           name: "Rows",
           value: 1,
-          triggers: []
+          triggers: [],
         },
         apps: {
           name: "Apps",
           value: 1,
-          triggers: []
+          triggers: [],
         },
         users: {
           name: "Users",
           value: 1,
-          triggers: []
+          triggers: [],
         },
         userGroups: {
           name: "User Groups",
           value: 1,
-          triggers: []
+          triggers: [],
         },
         plugins: {
           name: "Plugins",
           value: 1,
-          triggers: []
-        }
-      }
+          triggers: [],
+        },
+      },
     },
     constant: {
       automationLogRetentionDays: {
         name: "Automation Logs",
         value: 1,
-        triggers: []
+        triggers: [],
       },
       appBackupRetentionDays: {
         name: "Backups",
         value: 1,
-        triggers: []
-      }
-    }
+        triggers: [],
+      },
+    },
   }
 }
 
-export function billing(opts: { customer?: Customer, subscription?: Subscription } = {}): Billing {
+export function billing(
+  opts: { customer?: Customer; subscription?: Subscription } = {}
+): Billing {
   return {
     customer: opts.customer || customer(),
-    subscription: opts.subscription || subscription()
+    subscription: opts.subscription || subscription(),
   }
 }
 
 export function customer(): Customer {
   return {
     balance: 0,
-    currency: "usd"
+    currency: "usd",
   }
 }
 
@@ -108,21 +110,23 @@ export function subscription(): Subscription {
     duration: PriceDuration.MONTHLY,
     pastDueAt: undefined,
     quantity: 0,
-    status: "active"
+    status: "active",
   }
 }
 
-export const license = (opts: {
-  quotas?: Quotas
-  plan?: PurchasedPlan
-  planType?: PlanType
-  features?: Feature[]
-  billing?: Billing
-} = {}): License => {
+export const license = (
+  opts: {
+    quotas?: Quotas
+    plan?: PurchasedPlan
+    planType?: PlanType
+    features?: Feature[]
+    billing?: Billing
+  } = {}
+): License => {
   return {
     features: opts.features || [],
     quotas: opts.quotas || quotas(),
     plan: opts.plan || plan(opts.planType),
-    billing: opts.billing || billing()
+    billing: opts.billing || billing(),
   }
 }

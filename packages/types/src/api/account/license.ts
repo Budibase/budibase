@@ -5,8 +5,8 @@ export interface GetLicenseRequest {
   // historical versions of budibase
   quotaUsage?: QuotaUsage
   install: {
-    id: string,
-    tenantId: string,
+    id: string
+    tenantId: string
     version: string
   }
 }

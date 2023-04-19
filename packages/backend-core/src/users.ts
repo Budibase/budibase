@@ -244,7 +244,7 @@ export const paginatedUsers = async ({
 export async function getUserCount() {
   const response = await queryGlobalViewRaw(ViewName.USER_BY_EMAIL, {
     limit: 0, // to be as fast as possible - we just want the total rows count
-    include_docs: false
+    include_docs: false,
   })
   return response.total_rows
 }

@@ -1,10 +1,4 @@
-import {
-  Feature,
-  Hosting,
-  License,
-  PlanType,
-  Quotas,
-} from "../../sdk"
+import { Feature, Hosting, License, PlanType, Quotas } from "../../sdk"
 import { QuotaUsage } from "../global"
 
 export interface CreateAccount {
