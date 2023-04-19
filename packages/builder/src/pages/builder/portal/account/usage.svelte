@@ -110,8 +110,8 @@
     if (cancelAt) {
       textRows.push({ message: "Subscription has been cancelled" })
       textRows.push({
-        message: `${getDaysRemaining(cancelAt * 1000)} days remaining`,
-        tooltip: new Date(cancelAt * 1000),
+        message: `${getDaysRemaining(cancelAt)} days remaining`,
+        tooltip: new Date(cancelAt),
       })
     }
   }

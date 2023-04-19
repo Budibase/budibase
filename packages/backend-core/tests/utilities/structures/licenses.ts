@@ -101,7 +101,7 @@ export function customer(): Customer {
 
 export function subscription(): Subscription {
   return {
-    amount: 0,
+    amount: 10000,
     cancelAt: undefined,
     currency: "usd",
     currentPeriodEnd: 0,
