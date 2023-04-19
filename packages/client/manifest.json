@@ -4462,10 +4462,8 @@
             ]
           },
           {
-            "label": "On click",
             "type": "event",
             "label": "On click",
-            "labelHidden": true,
             "key": "onClickTitleButton",
             "nested": true,
             "dependsOn": {
