@@ -221,27 +221,6 @@ export function isClient(ctx: Ctx) {
   return ctx.headers[Header.TYPE] === "client"
 }
 
-async function getBuilders() {
-  const builders = await queryGlobalView(ViewName.USER_BY_BUILDERS, {
-    include_docs: false,
-  })
-
-  if (!builders) {
-    return []
-  }
-
-  if (Array.isArray(builders)) {
-    return builders
-  } else {
-    return [builders]
-  }
-}
-
-export async function getBuildersCount() {
-  const builders = await getBuilders()
-  return builders.length
-}
-
 export function timeout(timeMs: number) {
   return new Promise(resolve => setTimeout(resolve, timeMs))
 }
