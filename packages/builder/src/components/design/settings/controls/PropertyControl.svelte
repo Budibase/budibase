@@ -81,7 +81,9 @@
   class:highlighted={highlighted && nullishValue}
 >
   {#if label && !labelHidden}
-    <Label size="M">{label}</Label>
+    <div class="label">
+      <Label size="M">{label}</Label>
+    </div>
   {/if}
   <div id={`${key}-prop-control`} class="control">
     <svelte:component
@@ -109,7 +111,7 @@
     position: relative;
     display: grid;
     grid-template-columns: 90px 1fr;
-    align-items: center;
+    align-items: start;
     transition: background 130ms ease-out, border-color 130ms ease-out;
     border-left: 4px solid transparent;
     margin: 0 calc(-1 * var(--spacing-xl));
@@ -122,6 +124,9 @@
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-static-red-600);
+  }
+  .label {
+    margin-top: 8px;
   }
   .control {
     position: relative;
