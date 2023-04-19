@@ -1,31 +1,32 @@
 import {
+  Datasource,
+  FieldSchema,
+  FieldType,
   FilterType,
   IncludeRelationship,
   Operation,
   PaginationJson,
   RelationshipsJson,
+  RelationshipTypes,
+  Row,
   SearchFilters,
   SortJson,
-  Datasource,
-  FieldSchema,
-  Row,
-  Table,
-  RelationshipTypes,
-  FieldType,
   SortType,
+  Table,
 } from "@budibase/types"
 import {
+  breakExternalTableId,
   breakRowIdField,
+  convertRowId,
   generateRowIdField,
   isRowId,
-  convertRowId,
+  isSQL,
 } from "../../../integrations/utils"
 import { getDatasourceAndQuery } from "./utils"
 import { FieldTypes } from "../../../constants"
-import { breakExternalTableId, isSQL } from "../../../integrations/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
-import { processFormulas, processDates } from "../../../utilities/rowProcessor"
+import { processDates, processFormulas } from "../../../utilities/rowProcessor"
 import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 
@@ -382,10 +383,17 @@ export class ExternalRequest {
       }
       const display = linkedTable.primaryDisplay
       for (let key of Object.keys(row[relationship.column])) {
-        const related: Row = row[relationship.column][key]
+        let relatedRow: Row = row[relationship.column][key]
+        // add this row as context for the relationship
+        for (let col of Object.values(linkedTable.schema)) {
+          if (col.type === FieldType.LINK && col.tableId === table._id) {
+            relatedRow[col.name] = [row]
+          }
+        }
+        relatedRow = processFormulas(linkedTable, relatedRow)
         row[relationship.column][key] = {
-          primaryDisplay: display ? related[display] : undefined,
-          _id: related._id,
+          primaryDisplay: display ? relatedRow[display] : undefined,
+          _id: relatedRow._id,
         }
       }
     }
