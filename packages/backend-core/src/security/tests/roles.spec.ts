@@ -195,6 +195,44 @@ describe("Role", () => {
       expect(result).toEqual(expect.arrayContaining(arrayExpected))
     })
   })
+  describe("checkForRoleResourceArray", () => {
+    it("returns the original rolePerms object when resource ID is already an array", () => {
+      const rolePerms = {
+        resource1: [PermissionLevel.READ, PermissionLevel.WRITE],
+        resource2: [PermissionLevel.READ],
+      }
+      const result = roles.checkForRoleResourceArray(rolePerms, "resource1")
+      expect(result).toEqual(rolePerms)
+    })
+
+    it("creates an array for the resource ID when it does not exist in rolePerms", () => {
+      const rolePerms = {
+        resource1: [PermissionLevel.READ, PermissionLevel.WRITE],
+        resource2: [PermissionLevel.READ],
+      }
+      const result = roles.checkForRoleResourceArray(rolePerms, "resource3")
+      expect(result).toEqual({
+        resource1: [PermissionLevel.READ, PermissionLevel.WRITE],
+        resource2: [PermissionLevel.READ],
+        resource3: [],
+      })
+    })
+
+    it("does not add READ permission when WRITE permission is already present", () => {
+      const rolePerms = {
+        resource1: [PermissionLevel.READ, PermissionLevel.WRITE],
+      }
+      const result = roles.checkForRoleResourceArray(rolePerms, "resource1")
+      expect(result).toEqual({
+        resource1: [PermissionLevel.READ, PermissionLevel.WRITE],
+      })
+    })
+
+    it("returns an empty object when rolePerms is falsy", () => {
+      const result = roles.checkForRoleResourceArray(undefined, "resource1")
+      expect(result).toBeUndefined()
+    })
+  })
   describe("getAllRoles", () => {
     it("should return all roles for an app if appId is provided", async () => {
       const appId = "123"
