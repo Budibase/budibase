@@ -5,4 +5,5 @@ export interface License {
   quotas: Quotas
   plan: PurchasedPlan
   billing?: Billing
+  testClockId?: string
 }

@@ -37,6 +37,8 @@ export enum PlanModel {
 export interface PurchasedPlan {
   type: PlanType
   model: PlanModel
+  usesInvoicing: boolean
+  minUsers: number
   price?: PurchasedPrice
 }
 
