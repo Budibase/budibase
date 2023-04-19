@@ -1,4 +1,7 @@
 import {
+  AutomationCustomIOType,
+  AutomationIOType,
+  AutomationStepType,
   AutomationTriggerSchema,
   AutomationTriggerStepId,
 } from "@budibase/types"
@@ -15,8 +18,8 @@ export const definition: AutomationTriggerSchema = {
     inputs: {
       properties: {
         tableId: {
-          type: "string",
-          customType: "table",
+          type: AutomationIOType.STRING,
+          customType: AutomationCustomIOType.TABLE,
           title: "Table",
         },
       },
@@ -25,13 +28,13 @@ export const definition: AutomationTriggerSchema = {
     outputs: {
       properties: {
         row: {
-          type: "object",
-          customType: "row",
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.ROW,
           description: "The row that was deleted",
         },
       },
       required: ["row"],
     },
   },
-  type: "TRIGGER",
+  type: AutomationStepType.TRIGGER,
 }
