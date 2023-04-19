@@ -4,12 +4,14 @@ import {
   AutomationActionStepId,
   AutomationStepSchema,
   AutomationStepInput,
+  AutomationStepType,
+  AutomationIOType,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
   name: "Zapier Webhook",
   stepId: AutomationActionStepId.zapier,
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   internal: false,
   description: "Trigger a Zapier Zap via webhooks",
   tagline: "Trigger a Zapier Zap",
@@ -19,27 +21,27 @@ export const definition: AutomationStepSchema = {
     inputs: {
       properties: {
         url: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Webhook URL",
         },
         value1: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Payload Value 1",
         },
         value2: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Payload Value 2",
         },
         value3: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Payload Value 3",
         },
         value4: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Payload Value 4",
         },
         value5: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Payload Value 5",
         },
       },
@@ -48,11 +50,11 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         httpStatus: {
-          type: "number",
+          type: AutomationIOType.NUMBER,
           description: "The HTTP status code of the request",
         },
         response: {
-          type: "string",
+          type: AutomationIOType.STRING,
           description: "The response from Zapier",
         },
       },

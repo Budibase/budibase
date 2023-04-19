@@ -5,6 +5,7 @@ import { join } from "path"
 import { objectStore } from "@budibase/backend-core"
 
 const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
+const AUTOMATION_PATH = join(budibaseTempDir(), "automation")
 
 export const getPluginMetadata = async (path: string) => {
   let metadata: any = {}
@@ -33,12 +34,12 @@ export const getPluginMetadata = async (path: string) => {
   return { metadata, directory: path }
 }
 
-export const getDatasourcePlugin = async (plugin: Plugin) => {
+async function getPluginImpl(path: string, plugin: Plugin) {
   const hash = plugin.schema?.hash
-  if (!fs.existsSync(DATASOURCE_PATH)) {
-    fs.mkdirSync(DATASOURCE_PATH)
+  if (!fs.existsSync(path)) {
+    fs.mkdirSync(path)
   }
-  const filename = join(DATASOURCE_PATH, plugin.name)
+  const filename = join(path, plugin.name)
   const metadataName = `${filename}.bbmetadata`
   if (fs.existsSync(filename)) {
     const currentHash = fs.readFileSync(metadataName, "utf8")
@@ -61,4 +62,12 @@ export const getDatasourcePlugin = async (plugin: Plugin) => {
   fs.writeFileSync(metadataName, hash)
 
   return require(filename)
+}
+
+export const getDatasourcePlugin = async (plugin: Plugin) => {
+  return getPluginImpl(DATASOURCE_PATH, plugin)
+}
+
+export const getAutomationPlugin = async (plugin: Plugin) => {
+  return getPluginImpl(AUTOMATION_PATH, plugin)
 }
