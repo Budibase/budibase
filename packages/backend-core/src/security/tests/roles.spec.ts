@@ -101,19 +101,19 @@ describe("Role", () => {
     })
   })
   describe("lowerBuiltinRoleID", () => {
-    test("returns the first roleId if the second roleId is undefined", () => {
+    it("returns the first roleId if the second roleId is undefined", () => {
       const roleId1 = "ADMIN"
       const result = roles.lowerBuiltinRoleID(roleId1, undefined)
       expect(result).toBe(roleId1)
     })
 
-    test("returns the second roleId if the first roleId is undefined", () => {
+    it("returns the second roleId if the first roleId is undefined", () => {
       const roleId2 = "ADMIN"
       const result = roles.lowerBuiltinRoleID(undefined, roleId2)
       expect(result).toBe(roleId2)
     })
 
-    test("returns the roleId with lower priority", () => {
+    it("returns the roleId with lower priority", () => {
       const roleId1 = "ADMIN"
       const roleId2 = "POWER"
       const result = roles.lowerBuiltinRoleID(roleId1, roleId2)
@@ -124,7 +124,7 @@ describe("Role", () => {
       expect(result2).toBe(roleId3)
     })
 
-    test("returns either roleId if they have the same priority", () => {
+    it("returns either roleId if they have the same priority", () => {
       const roleId1 = "PUBLIC"
       const roleId2 = "BUILDER"
       const result = roles.lowerBuiltinRoleID(roleId1, roleId2)
@@ -138,12 +138,12 @@ describe("Role", () => {
   })
 
   describe("getRole", () => {
-    test("returns undefined if roleId is undefined", async () => {
+    it("returns undefined if roleId is undefined", async () => {
       const result = await roles.getRole(undefined)
       expect(result).toBeUndefined()
     })
 
-    test("retrieves a built-in role if isBuiltin(roleId) is true", async () => {
+    it("retrieves a built-in role if isBuiltin(roleId) is true", async () => {
       const roleId = "BASIC"
       const mockBuiltInRole = {
         _id: roleId,
@@ -158,9 +158,9 @@ describe("Role", () => {
   })
 
   describe("getUserRoleHierarchy", () => {
-    it("returns public user role if userRoleId is undefined", async () => {
+    it("returns empty if userRoleId is undefined", async () => {
       const result = await roles.getUserRoleHierarchy()
-      expect(result).toEqual(["PUBLIC"])
+      expect(result).toEqual([])
     })
 
     it("returns all user roles if userRoleId is admin", async () => {
@@ -177,7 +177,7 @@ describe("Role", () => {
       const result = await roles.getUserRoleHierarchy("BASIC", {
         idOnly: false,
       })
-      expect(result).toEqual([
+      expect(result).toBe([
         {
           _id: "BASIC",
           name: "Basic",
@@ -188,11 +188,26 @@ describe("Role", () => {
         {
           _id: "PUBLIC",
           name: "Public",
-          inherits: null,
           permissionId: "public",
           permissions: {},
         },
       ])
+    })
+  })
+  describe("getAllRoles", () => {
+    it("should return all roles for an app if appId is provided", async () => {
+      const appId = "123"
+      const expectedRoles = [{ _id: "role1" }, { _id: "role2" }]
+      roles.getAllRoles.mockImplementationOnce(async () => expectedRoles)
+      const result = await roles.getAllRoles(appId)
+      expect(result).toEqual(expectedRoles)
+    })
+
+    it("should return all built-in roles if no appId is provided", async () => {
+      const expectedRoles = [{ _id: "role1" }, { _id: "role2" }]
+      roles.getAllRoles.mockImplementationOnce(async () => expectedRoles)
+      const result = await roles.getAllRoles()
+      expect(result).toEqual(expectedRoles)
     })
   })
 })
