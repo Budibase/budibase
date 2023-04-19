@@ -4,8 +4,14 @@
 
 <div class="beta-background" />
 <div class="beta">
-  Enjoying the grid?
-  <Button size="M" cta>Give Feedback</Button>
+  Enjoying the Grid?
+  <Button
+    size="M"
+    cta
+    on:click={() => window.open("https://t.maze.co/156382627", "_blank")}
+  >
+    Give Feedback
+  </Button>
 </div>
 
 <style>
