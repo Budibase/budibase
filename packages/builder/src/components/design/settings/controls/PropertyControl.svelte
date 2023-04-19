@@ -126,7 +126,8 @@
     border-color: var(--spectrum-global-color-static-red-600);
   }
   .label {
-    margin-top: 8px;
+    margin-top: 16px;
+    transform: translateY(-50%);
   }
   .control {
     position: relative;
