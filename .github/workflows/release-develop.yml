@@ -1,21 +1,21 @@
 name: Budibase Prerelease
 concurrency: release-prerelease
 
-on: 
- push:
+on:
+  push:
     branches:
       - develop
     paths:
-      - '.aws/**'
-      - '.github/**'
-      - 'charts/**'
-      - 'packages/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'yarn.lock'
-      - 'package.json'
-      - 'yarn.lock'
- workflow_dispatch:
+      - ".aws/**"
+      - ".github/**"
+      - "charts/**"
+      - "packages/**"
+      - "scripts/**"
+      - "package.json"
+      - "yarn.lock"
+      - "package.json"
+      - "yarn.lock"
+  workflow_dispatch:
 
 env:
   # Posthog token used by ui at build time
@@ -24,35 +24,35 @@ env:
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   FEATURE_PREVIEW_URL: https://budirelease.live
-      
+
 jobs:
   release-images:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
 
     steps:
       - name: Fail if branch is not develop
-        if: github.ref != 'refs/heads/develop' 
-        run: | 
+        if: github.ref != 'refs/heads/develop'
+        run: |
           echo "Ref is not develop, you must run this job from develop."
           exit 1
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
 
-      - name: Install Pro
-        run: yarn install:pro develop
-
-      - run: yarn 
+      - run: yarn
       - run: yarn bootstrap
       - run: yarn build
       - run: yarn build:sdk
-#      - run: yarn test
+      #      - run: yarn test
 
       - name: Publish budibase packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: | 
+        run: |
           # setup the username and email.
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
@@ -60,7 +60,7 @@ jobs:
           yarn release:develop
 
       - name: Build/release Docker images
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build:docker:develop
         env:
