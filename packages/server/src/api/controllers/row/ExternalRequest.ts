@@ -391,8 +391,9 @@ export class ExternalRequest {
           }
         }
         relatedRow = processFormulas(linkedTable, relatedRow)
+        const relatedDisplay = display ? relatedRow[display] : undefined
         row[relationship.column][key] = {
-          primaryDisplay: display ? relatedRow[display] : undefined,
+          primaryDisplay: relatedDisplay || "Invalid display column",
           _id: relatedRow._id,
         }
       }
