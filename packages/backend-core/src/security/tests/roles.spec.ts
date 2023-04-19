@@ -177,7 +177,7 @@ describe("Role", () => {
       const result = await roles.getUserRoleHierarchy("BASIC", {
         idOnly: false,
       })
-      expect(result).toBe([
+      const arrayExpected = [
         {
           _id: "BASIC",
           name: "Basic",
@@ -191,7 +191,8 @@ describe("Role", () => {
           permissionId: "public",
           permissions: {},
         },
-      ])
+      ]
+      expect(result).toEqual(expect.arrayContaining(arrayExpected))
     })
   })
   describe("getAllRoles", () => {
