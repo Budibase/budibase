@@ -58,6 +58,7 @@ jobs:
           node-version: 14.x
       - run: yarn
       - run: yarn bootstrap
+      - run: yarn build
       - run: yarn test --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:

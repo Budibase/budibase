@@ -3,23 +3,23 @@ import { API } from "api"
 import { auth } from "stores/portal"
 import { banner } from "@budibase/bbui"
 
-export function createAdminStore() {
-  const DEFAULT_CONFIG = {
-    loaded: false,
-    multiTenancy: false,
-    cloud: false,
-    isDev: false,
-    disableAccountPortal: false,
-    accountPortalUrl: "",
-    importComplete: false,
-    checklist: {
-      apps: { checked: false },
-      smtp: { checked: false },
-      adminUser: { checked: false },
-      sso: { checked: false },
-    },
-  }
+export const DEFAULT_CONFIG = {
+  loaded: false,
+  multiTenancy: false,
+  cloud: false,
+  isDev: false,
+  disableAccountPortal: false,
+  accountPortalUrl: "",
+  importComplete: false,
+  checklist: {
+    apps: { checked: false },
+    smtp: { checked: false },
+    adminUser: { checked: false },
+    sso: { checked: false },
+  },
+}
 
+export function createAdminStore() {
   const admin = writable(DEFAULT_CONFIG)
 
   async function init() {
