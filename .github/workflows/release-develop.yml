@@ -44,9 +44,9 @@ jobs:
           node-version: 14.x
 
       - run: yarn
-      - run: yarn bootstrap
-      - run: yarn build
-      - run: yarn build:sdk
+      # - run: yarn bootstrap
+      # - run: yarn build
+      # - run: yarn build:sdk
       #      - run: yarn test
 
       - name: Publish budibase packages to NPM
@@ -57,7 +57,7 @@ jobs:
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
-          yarn release:develop
+          yarn yarn release:pro:develop
 
       - name: Build/release Docker images
         run: |
