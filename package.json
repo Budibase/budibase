@@ -32,7 +32,7 @@
     "release": "lerna publish ${RELEASE_VERSION_TYPE:-patch} --yes --force-publish && yarn release:pro",
     "release:develop": "git submodule deinit --all --force && lerna publish prerelease --yes --force-publish --dist-tag develop --exact && yarn release:pro:develop",
     "release:pro": "bash scripts/pro/release.sh",
-    "release:pro:develop": "submodules:load && yarn build --scope @budibase/backend-core && bash scripts/pro/release.sh develop",
+    "release:pro:develop": "yarn submodules:load && yarn build --scope @budibase/backend-core && bash scripts/pro/release.sh develop",
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
