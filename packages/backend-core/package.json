@@ -15,8 +15,6 @@
     "prebuild": "rimraf dist/",
     "prepack": "cp package.json dist",
     "build": "tsc -p tsconfig.build.json",
-    "build:pro": "../../scripts/pro/build.sh",
-    "postbuild": "yarn run build:pro",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
