@@ -10,7 +10,7 @@ export const createWebsocket = context => {
   const host = location.hostname
   const port = location.port || (tls ? 443 : 80)
   const socket = io(`${proto}//${host}:${port}`, {
-    path: "/socket/spreadsheet",
+    path: "/socket/grid",
     // Cap reconnection attempts to 3 (total of 15 seconds before giving up)
     reconnectionAttempts: 3,
     // Delay reconnection attempt by 5 seconds
@@ -48,10 +48,10 @@ export const createWebsocket = context => {
     users.actions.removeUser(user)
   })
   socket.on("connect_error", err => {
-    console.log("Failed to connect to websocket:", err.message)
+    console.log("Failed to connect to grid websocket:", err.message)
   })
 
-  // Change websocket connection when dataspace changes
+  // Change websocket connection when table changes
   tableId.subscribe(connectToTable)
 
   // Notify selected cell changes
