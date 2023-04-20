@@ -1,6 +1,0 @@
-{
-  "version": "0.0.999-alpha.9",
-  "scripts": {
-    "postversion": "git push --tags && git push && echo \"Successfully pushed version and tag $npm_package_version!\""
-  }
-}
