@@ -28,6 +28,7 @@
   import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
   import { convertToJS } from "@budibase/string-templates"
   import { admin } from "stores/portal"
+  import { _ } from "../../../../lang/i18n"
 
   const dispatch = createEventDispatcher()
 
@@ -215,14 +216,19 @@
               selectedCategory = null
             }}
           >
-            Back
+            {$_("components.common.bindings.BindingPanel.Back")}
           </ActionButton>
         </div>
       {/if}
 
       {#if !selectedCategory}
-        <div class="heading">Search</div>
-        <Search placeholder="Search" bind:value={search} />
+        <div class="heading">
+          {$_("components.common.bindings.BindingPanel.Search")}
+        </div>
+        <Search
+          placeholder={$_("components.common.bindings.BindingPanel.Search")}
+          bind:value={search}
+        />
       {/if}
 
       {#if !selectedCategory && !search}
@@ -297,7 +303,9 @@
 
         {#if selectedCategory === "Helpers" || search}
           {#if filteredHelpers?.length}
-            <div class="heading">Helpers</div>
+            <div class="heading">
+              {$_("components.common.bindings.BindingPanel.Helpers")}
+            </div>
             <ul class="helpers">
               {#each filteredHelpers as helper}
                 <li
@@ -326,7 +334,11 @@
                 >
                   <span class="binding__label">{helper.displayText}</span>
                   <span class="binding__typeWrap">
-                    <span class="binding__type">function</span>
+                    <span class="binding__type"
+                      >{$_(
+                        "components.common.bindings.BindingPanel.function"
+                      )}</span
+                    >
                   </span>
                 </li>
               {/each}
@@ -344,13 +356,15 @@
             bind:getCaretPosition
             value={hbsValue}
             on:change={onChangeHBSValue}
-            placeholder="Add text, or click the objects on the left to add them to the textbox."
+            placeholder={$_("components.common.bindings.BindingPanel.Add_text")}
           />
           {#if !valid}
             <p class="syntax-error">
-              Current Handlebars syntax is invalid, please check the guide
-              <a href="https://handlebarsjs.com/guide/">here</a>
-              for more details.
+              {$_("components.common.bindings.BindingPanel.Current_Handlebars")}
+              <a href="https://handlebarsjs.com/guide/"
+                >{$_("components.common.bindings.BindingPanel.here")}</a
+              >
+              {$_("components.common.bindings.BindingPanel.details")}.
             </p>
           {/if}
           {#if $admin.isDev && allowJS}
@@ -372,8 +386,9 @@
                 hints={codeMirrorHints}
               />
               <Body size="S">
-                JavaScript expressions are executed as functions, so ensure that
-                your expression returns a value.
+                {$_(
+                  "components.common.bindings.BindingPanel.JavaScript_expressions"
+                )}
               </Body>
             </Layout>
           </div>

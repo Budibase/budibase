@@ -4,6 +4,7 @@
   import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import { _ } from "../../../../lang/i18n"
 
   const dispatch = createEventDispatcher()
 
@@ -29,7 +30,7 @@
 
 <div class="block-field">
   <Select
-    label="Query"
+    label={$_("components.automation.SetupPanel.QueryParamSelector.Query")}
     on:change={onChangeQuery}
     value={value.queryId}
     options={$queries.list}

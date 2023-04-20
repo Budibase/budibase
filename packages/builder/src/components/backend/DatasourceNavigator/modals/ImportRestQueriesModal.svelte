@@ -13,6 +13,7 @@
   } from "@budibase/bbui"
   import { datasources, queries } from "stores/backend"
   import { writable } from "svelte/store"
+  import { _ } from "../../../../../lang/i18n"
 
   export let navigateDatasource = false
   export let datasourceId
@@ -48,7 +49,11 @@
       const dataString = await getData()
 
       if (!datasourceId && !createDatasource) {
-        throw new Error("No datasource id")
+        throw new Error(
+          $_(
+            "components.backend.DatasourceNavigation.modals.ImportRestQueriesModal.No_datasource"
+          )
+        )
       }
 
       const body = {
@@ -69,10 +74,18 @@
         $goto(`./datasource/${datasourceId}`)
       }
 
-      notifications.success(`Imported successfully.`)
+      notifications.success(
+        `${$_(
+          "components.backend.DatasourceNavigation.modals.ImportRestQueriesModal.Imported_successfully"
+        )}`
+      )
       return true
     } catch (error) {
-      notifications.error("Error importing queries")
+      notifications.error(
+        $_(
+          "components.backend.DatasourceNavigation.modals.ImportRestQueriesModal.Error_importing"
+        )
+      )
       return false
     }
   }
@@ -81,14 +94,22 @@
 <ModalContent
   onConfirm={() => importQueries()}
   {onCancel}
-  confirmText={"Import"}
+  confirmText={$_(
+    "components.backend.DatasourceNavigation.modals.ImportRestQueriesModal.Import"
+  )}
   cancelText="Back"
   size="L"
 >
   <Layout noPadding>
-    <Heading size="S">Import</Heading>
+    <Heading size="S"
+      >{$_(
+        "components.backend.DatasourceNavigation.modals.ImportRestQueriesModal.Import"
+      )}</Heading
+    >
     <Body size="XS"
-      >Import your rest collection using one of the options below</Body
+      >{$_(
+        "components.backend.DatasourceNavigation.modals.ImportRestQueriesModal.Import_collection"
+      )}</Body
     >
     <Tabs selected="File">
       <!-- Commenting until nginx csp issue resolved -->
@@ -100,7 +121,11 @@
           placeholder="e.g. https://petstore.swagger.io/v2/swagger.json"
         />
       </Tab> -->
-      <Tab title="File">
+      <Tab
+        title={$_(
+          "components.backend.DatasourceNavigation.modals.ImportRestQueriesModal.File"
+        )}
+      >
         <Dropzone
           gallery={false}
           value={$data.file ? [$data.file] : []}
@@ -119,11 +144,17 @@
           maximum={1}
         />
       </Tab>
-      <Tab title="Raw Text">
+      <Tab
+        title={$_(
+          "components.backend.DatasourceNavigation.modals.ImportRestQueriesModal.Raw_Text"
+        )}
+      >
         <TextArea
           bind:value={$data.raw}
           on:change={() => (lastTouched = "raw")}
-          label={"Paste raw text"}
+          label={$_(
+            "components.backend.DatasourceNavigation.modals.ImportRestQueriesModal.Paste_text"
+          )}
           placeholder={'e.g. curl --location --request GET "https://example.com"'}
         />
       </Tab>

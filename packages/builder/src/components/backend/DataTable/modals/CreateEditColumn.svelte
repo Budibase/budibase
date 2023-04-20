@@ -33,6 +33,7 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import { getContext } from "svelte"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -184,7 +185,11 @@
       dispatch("updatecolumns")
     } catch (err) {
       console.log(err)
-      notifications.error(`Error saving column: ${err.message}`)
+      notifications.error(
+        `${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Error_saving"
+        )}: ${err.message}`
+      )
     }
   }
 
@@ -196,17 +201,31 @@
     try {
       editableColumn.name = deleteColName
       if (editableColumn.name === $tables.selected.primaryDisplay) {
-        notifications.error("You cannot delete the display column")
+        notifications.error(
+          $_(
+            "components.backend.DataTable.modals.CreateEditColumn.cannot_delete"
+          )
+        )
       } else {
         await tables.deleteField(editableColumn)
-        notifications.success(`Column ${editableColumn.name} deleted.`)
+        notifications.success(
+          `${$_(
+            "components.backend.DataTable.modals.CreateEditColumn.Column"
+          )} ${editableColumn.name} ${$_(
+            "components.backend.DataTable.modals.CreateEditColumn.deleted"
+          )}.`
+        )
         confirmDeleteDialog.hide()
         hide()
         deletion = false
         dispatch("updatecolumns")
       }
     } catch (error) {
-      notifications.error(`Error deleting column: ${error.message}`)
+      notifications.error(
+        `${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Error_deleting"
+        )}: ${error.message}`
+      )
     }
   }
 
@@ -274,18 +293,66 @@
       linkName = truncate(linkTable.name, { length: 14 })
     return [
       {
-        name: `Many ${thisName} rows → many ${linkName} rows`,
-        alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
+        name: `${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Many"
+        )} ${thisName} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )} → ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Many"
+        )} ${linkName} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )}`,
+        alt: `${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Many"
+        )} ${table.name} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )} → ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Many"
+        )} ${linkTable.name} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )}`,
         value: RelationshipTypes.MANY_TO_MANY,
       },
       {
-        name: `One ${linkName} row → many ${thisName} rows`,
-        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
+        name: `${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.One"
+        )} ${linkName} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )} → ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Many"
+        )} ${thisName} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )}`,
+        alt: `${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.One"
+        )} ${linkTable.name} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )} → ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Many"
+        )} ${table.name} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )}`,
         value: RelationshipTypes.ONE_TO_MANY,
       },
       {
-        name: `One ${thisName} row → many ${linkName} rows`,
-        alt: `One ${table.name} rows → many ${linkTable.name} rows`,
+        name: `${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.One"
+        )} ${thisName} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )} → ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Many"
+        )} ${linkName} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )}`,
+        alt: `${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.One"
+        )} ${table.name} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )} → ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Many"
+        )} ${linkTable.name} ${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rows"
+        )}`,
         value: RelationshipTypes.MANY_TO_ONE,
       },
     ]
@@ -305,7 +372,12 @@
     } else if (!external) {
       return [
         ...Object.values(fieldDefinitions),
-        { name: "Auto Column", type: AUTO_TYPE },
+        {
+          name: $_(
+            "components.backend.DataTable.modals.CreateEditColumn.Auto_Column"
+          ),
+          type: AUTO_TYPE,
+        },
       ]
     } else {
       let fields = [
@@ -364,19 +436,27 @@
     }
     const newError = {}
     if (!external && fieldInfo.name?.startsWith("_")) {
-      newError.name = `Column name cannot start with an underscore.`
+      newError.name = `${$_(
+        "components.backend.DataTable.modals.CreateEditColumn.Column_cannot"
+      )}.`
     } else if (fieldInfo.name && !fieldInfo.name.match(/^[_a-zA-Z0-9\s]*$/g)) {
-      newError.name = `Illegal character; must be alpha-numeric.`
+      newError.name = `${$_(
+        "components.backend.DataTable.modals.CreateEditColumn.Illegal_character"
+      )}.`
     } else if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
-      newError.name = `${PROHIBITED_COLUMN_NAMES.join(
-        ", "
-      )} are not allowed as column names`
+      newError.name = `${PROHIBITED_COLUMN_NAMES.join(", ")} ${$_(
+        "components.backend.DataTable.modals.CreateEditColumn.column_names"
+      )}`
     } else if (inUse($tables.selected, fieldInfo.name, originalName)) {
-      newError.name = `Column name already in use.`
+      newError.name = `${$_(
+        "components.backend.DataTable.modals.CreateEditColumn.Column_already"
+      )}`
     }
 
     if (fieldInfo.type == "auto" && !fieldInfo.subtype) {
-      newError.subtype = `Auto Column requires a type`
+      newError.subtype = `${$_(
+        "components.backend.DataTable.modals.CreateEditColumn.Column_requires"
+      )}`
     }
 
     if (fieldInfo.fieldName && fieldInfo.tableId) {
@@ -384,7 +464,9 @@
         tbl => tbl._id === fieldInfo.tableId
       )
       if (inUse(relatedTable, fieldInfo.fieldName) && !originalName) {
-        newError.relatedName = `Column name already in use in table ${relatedTable.name}`
+        newError.relatedName = `${$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Column_already_table"
+        )} ${relatedTable.name}`
       }
     }
     return newError
@@ -392,14 +474,18 @@
 </script>
 
 <ModalContent
-  title={originalName ? "Edit Column" : "Create Column"}
-  confirmText="Save Column"
+  title={originalName
+    ? $_("components.backend.DataTable.modals.CreateEditColumn.Edit_Column")
+    : $_("components.backend.DataTable.modals.CreateEditColumn.Create_Column")}
+  confirmText={$_(
+    "components.backend.DataTable.modals.CreateEditColumn.Save_Column"
+  )}
   onConfirm={saveColumn}
   onCancel={cancelEdit}
   disabled={invalid}
 >
   <Input
-    label="Name"
+    label={$_("components.backend.DataTable.modals.CreateEditColumn.Name")}
     bind:value={editableColumn.name}
     disabled={uneditable ||
       (linkEditDisabled && editableColumn.type === LINK_TYPE)}
@@ -408,7 +494,7 @@
 
   <Select
     disabled={!typeEnabled}
-    label="Type"
+    label={$_("components.backend.DataTable.modals.CreateEditColumn.Type")}
     bind:value={editableColumn.type}
     on:change={handleTypeChange}
     options={getAllowedTypes()}
@@ -430,7 +516,9 @@
           on:change={onChangeRequired}
           disabled={primaryDisplay}
           thin
-          text="Required"
+          text={$_(
+            "components.backend.DataTable.modals.CreateEditColumn.Required"
+          )}
         />
       {/if}
       {#if canBeDisplay}
@@ -438,7 +526,9 @@
           bind:value={primaryDisplay}
           on:change={onChangePrimaryDisplay}
           thin
-          text="Use as table display column"
+          text={$_(
+            "components.backend.DataTable.modals.CreateEditColumn.display_column"
+          )}
         />
       {/if}
     </div>
@@ -447,39 +537,47 @@
   {#if editableColumn.type === "string"}
     <Input
       type="number"
-      label="Max Length"
+      label={$_(
+        "components.backend.DataTable.modals.CreateEditColumn.Max_Length"
+      )}
       bind:value={editableColumn.constraints.length.maximum}
     />
   {:else if editableColumn.type === "options"}
     <ValuesList
-      label="Options (one per line)"
+      label={$_("components.backend.DataTable.modals.CreateEditColumn.Options")}
       bind:values={editableColumn.constraints.inclusion}
     />
   {:else if editableColumn.type === "longform"}
     <div>
       <Label
         size="M"
-        tooltip="Rich text includes support for images, links, tables, lists and more"
+        tooltip={$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Rich_text"
+        )}
       >
-        Formatting
+        {$_("components.backend.DataTable.modals.CreateEditColumn.Formatting")}
       </Label>
       <Toggle
         bind:value={editableColumn.useRichText}
-        text="Enable rich text support (markdown)"
+        text={$_(
+          "components.backend.DataTable.modals.CreateEditColumn.rich_text"
+        )}
       />
     </div>
   {:else if editableColumn.type === "array"}
     <ValuesList
-      label="Options (one per line)"
+      label={$_("components.backend.DataTable.modals.CreateEditColumn.Options")}
       bind:values={editableColumn.constraints.inclusion}
     />
   {:else if editableColumn.type === "datetime" && !editableColumn.autocolumn}
     <DatePicker
-      label="Earliest"
+      label={$_(
+        "components.backend.DataTable.modals.CreateEditColumn.Earliest"
+      )}
       bind:value={editableColumn.constraints.datetime.earliest}
     />
     <DatePicker
-      label="Latest"
+      label={$_("components.backend.DataTable.modals.CreateEditColumn.Latest")}
       bind:value={editableColumn.constraints.datetime.latest}
     />
     {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
@@ -487,30 +585,40 @@
         <Label
           tooltip={isCreating
             ? null
-            : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
+            : $_(
+                "components.backend.DataTable.modals.CreateEditColumn.not_changing"
+              )}
         >
-          Time zones
+          {$_(
+            "components.backend.DataTable.modals.CreateEditColumn.Time zones"
+          )}
         </Label>
         <Toggle
           bind:value={editableColumn.ignoreTimezones}
-          text="Ignore time zones"
+          text={$_(
+            "components.backend.DataTable.modals.CreateEditColumn.time_zones"
+          )}
         />
       </div>
     {/if}
   {:else if editableColumn.type === "number" && !editableColumn.autocolumn}
     <Input
       type="number"
-      label="Min Value"
+      label={$_(
+        "components.backend.DataTable.modals.CreateEditColumn.Min_Value"
+      )}
       bind:value={editableColumn.constraints.numericality.greaterThanOrEqualTo}
     />
     <Input
       type="number"
-      label="Max Value"
+      label={$_(
+        "components.backend.DataTable.modals.CreateEditColumn.Max_Value"
+      )}
       bind:value={editableColumn.constraints.numericality.lessThanOrEqualTo}
     />
   {:else if editableColumn.type === "link"}
     <Select
-      label="Table"
+      label={$_("components.backend.DataTable.modals.CreateEditColumn.Table")}
       disabled={linkEditDisabled}
       bind:value={editableColumn.tableId}
       options={tableOptions}
@@ -520,7 +628,9 @@
     {#if relationshipOptions && relationshipOptions.length > 0}
       <RadioGroup
         disabled={linkEditDisabled}
-        label="Define the relationship"
+        label={$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Define_relationship"
+        )}
         bind:value={editableColumn.relationshipType}
         options={relationshipOptions}
         getOptionLabel={option => option.name}
@@ -530,28 +640,43 @@
     {/if}
     <Input
       disabled={linkEditDisabled}
-      label={`Column name in other table`}
+      label={`${$_(
+        "components.backend.DataTable.modals.CreateEditColumn.Column_name"
+      )}`}
       bind:value={editableColumn.fieldName}
       error={errors.relatedName}
     />
   {:else if editableColumn.type === FORMULA_TYPE}
     {#if !table.sql}
       <Select
-        label="Formula type"
+        label={$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Formula_type"
+        )}
         bind:value={editableColumn.formulaType}
         options={[
-          { label: "Dynamic", value: "dynamic" },
-          { label: "Static", value: "static" },
+          {
+            label: $_(
+              "components.backend.DataTable.modals.CreateEditColumn.Dynamic"
+            ),
+            value: "dynamic",
+          },
+          {
+            label: $_(
+              "components.backend.DataTable.modals.CreateEditColumn.Static"
+            ),
+            value: "static",
+          },
         ]}
         getOptionLabel={option => option.label}
         getOptionValue={option => option.value}
-        tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
-         while static formula are calculated when the row is saved."
+        tooltip={$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Dynamic_formula"
+        )}
       />
     {/if}
     <ModalBindableInput
-      title="Formula"
-      label="Formula"
+      title={$_("components.backend.DataTable.modals.CreateEditColumn.Formula")}
+      label={$_("components.backend.DataTable.modals.CreateEditColumn.Formula")}
       value={editableColumn.formula}
       on:change={e => {
         editableColumn = {
@@ -564,12 +689,16 @@
     />
   {:else if editableColumn.type === JSON_TYPE}
     <Button primary text on:click={openJsonSchemaEditor}
-      >Open schema editor</Button
+      >{$_(
+        "components.backend.DataTable.modals.CreateEditColumn.schema_editor"
+      )}</Button
     >
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
     <Select
-      label="Auto column type"
+      label={$_(
+        "components.backend.DataTable.modals.CreateEditColumn.Auto_type"
+      )}
       value={editableColumn.subtype}
       on:change={e => (editableColumn.subtype = e.detail)}
       options={Object.entries(autoColumnOptions)}
@@ -582,7 +711,11 @@
 
   <div slot="footer">
     {#if !uneditable && originalName != null}
-      <Button warning text on:click={confirmDelete}>Delete</Button>
+      <Button warning text on:click={confirmDelete}
+        >{$_(
+          "components.backend.DataTable.modals.CreateEditColumn.Delete"
+        )}</Button
+      >
     {/if}
   </div>
 </ModalContent>
@@ -598,16 +731,20 @@
 </Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Column"
+  okText={$_(
+    "components.backend.DataTable.modals.CreateEditColumn.Delete_Column"
+  )}
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
-  title="Confirm Deletion"
+  title={$_(
+    "components.backend.DataTable.modals.CreateEditColumn.ConfirmDeletion"
+  )}
   disabled={deleteColName !== originalName}
 >
   <p>
-    Are you sure you wish to delete the column <b>{originalName}?</b>
-    Your data will be deleted and this action cannot be undone - enter the column
-    name to confirm.
+    {$_("components.backend.DataTable.modals.CreateEditColumn.wish_delete")}
+    <b>{originalName}?</b>
+    {$_("components.backend.DataTable.modals.CreateEditColumn.data_deleted")}
   </p>
   <Input bind:value={deleteColName} placeholder={originalName} />
 </ConfirmDialog>

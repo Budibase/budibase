@@ -4,6 +4,8 @@ import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { selectedAutomation } from "builderStore"
 
+import { _ } from "../../../../lang/i18n"
+
 const initialAutomationState = {
   automations: [],
   testResults: null,
@@ -147,7 +149,7 @@ const automationActions = store => ({
       testData,
     })
     if (!result?.trigger && !result?.steps?.length) {
-      throw "Something went wrong testing your automation"
+      throw $_("builderStore.store.automation.index.Something_wrong")
     }
     store.update(state => {
       state.testResults = result

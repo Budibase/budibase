@@ -1,6 +1,7 @@
 import { FIELDS } from "constants/backend"
 import { tables } from "stores/backend"
 import { get as svelteGet } from "svelte/store"
+import { _ } from "../../../../lang/i18n"
 
 // currently supported level of relationship depth (server side)
 const MAX_DEPTH = 1
@@ -35,7 +36,10 @@ export function getBindings({
     ) {
       continue
     }
-    category = category == null ? `${table.name} Fields` : category
+    category =
+      category == null
+        ? `${table.name} ${$_("components.backend.DataTable.formula.Fields")}`
+        : category
     if (isRelationship && depth < MAX_DEPTH) {
       const relatedTable = svelteGet(tables).list.find(
         table => table._id === schema.tableId
@@ -44,7 +48,9 @@ export function getBindings({
         getBindings({
           table: relatedTable,
           path: column,
-          category: `${column} Relationships`,
+          category: `${column} ${$_(
+            "components.backend.DataTable.formula.Relationships"
+          )}`,
           depth: depth + 1,
         })
       )
@@ -65,10 +71,13 @@ export function getBindings({
     const description =
       path == null
         ? undefined
-        : `Update the "0" with the index of relationships or use array helpers`
+        : `${$_("components.backend.DataTable.formula.Update")}`
     bindings.push({
       label: label,
-      type: field.name === FIELDS.LINK.name ? "Array" : field.name,
+      type:
+        field.name === FIELDS.LINK.name
+          ? $_("components.backend.DataTable.formula.Array")
+          : field.name,
       category,
       path: label,
       description,

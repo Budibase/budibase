@@ -1,6 +1,7 @@
 <script>
   import { Label } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
   export let bindings = []
@@ -8,12 +9,19 @@
 
 <div class="root">
   <span>
-    You can optionally navigate to another screen after closing the screen
-    modal.
+    {$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.CloseScreenModal.can_navigate"
+    )}
   </span>
-  <Label small>Screen</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.CloseScreenModal.Screen"
+    )}</Label
+  >
   <DrawerBindableInput
-    title="Destination URL"
+    title={$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.CloseScreenModal.Destination_URL"
+    )}
     placeholder="/screen"
     value={parameters.url}
     on:change={value => (parameters.url = value.detail)}

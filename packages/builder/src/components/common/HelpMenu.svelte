@@ -3,6 +3,7 @@
   import { Popover, Heading, Body } from "@budibase/bbui"
   import { licensing } from "stores/portal"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
+  import { _ } from "../../../lang/i18n"
 
   $: isPremiumUser = $licensing.license && !$licensing.isFreePlan
 
@@ -12,7 +13,9 @@
 </script>
 
 <div bind:this={popoverAnchor} class="help">
-  <button class="openMenu" on:click={show}>Help</button>
+  <button class="openMenu" on:click={show}
+    >{$_("components.common.HelpMenu.Help")}</button
+  >
   <Popover
     class="helpMenuPopoverOverride"
     bind:show
@@ -21,7 +24,9 @@
   >
     <nav class="helpMenu">
       <div class="header">
-        <Heading size="XS">Help resources</Heading>
+        <Heading size="XS"
+          >{$_("components.common.HelpMenu.Help_resources")}</Heading
+        >
         <button on:click={hide} class="closeButton">
           <FontAwesomeIcon name="fa-solid fa-xmark" />
         </button>
@@ -31,7 +36,7 @@
         <div class="icon">
           <FontAwesomeIcon name="fa-solid fa-book" />
         </div>
-        <Body size="S">Help docs</Body>
+        <Body size="S">{$_("components.common.HelpMenu.Help_docs")}</Body>
       </a>
       <div class="divider" />
       <a
@@ -41,21 +46,23 @@
         <div class="icon">
           <FontAwesomeIcon name="fa-brands fa-github" />
         </div>
-        <Body size="S">Discussions</Body>
+        <Body size="S">{$_("components.common.HelpMenu.Discussions")}</Body>
       </a>
       <div class="divider" />
       <a target="_blank" href="https://discord.com/invite/ZepTmGbtfF">
         <div class="icon">
           <FontAwesomeIcon name="fa-brands fa-discord" />
         </div>
-        <Body size="S">Discord</Body>
+        <Body size="S">{$_("components.common.HelpMenu.Discord")}</Body>
       </a>
       <div class="divider" />
       <a target="_blank" href="https://vimeo.com/showcase/budibase-university">
         <div class="icon">
           <FontAwesomeIcon name="fa-solid fa-play" />
         </div>
-        <Body size="S">Budibase University</Body>
+        <Body size="S"
+          >{$_("components.common.HelpMenu.Budibase_University")}</Body
+        >
       </a>
       <div class="divider" />
       {#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING)}
@@ -68,14 +75,16 @@
             <div class="icon">
               <FontAwesomeIcon name="fa-solid fa-envelope" />
             </div>
-            <Body size="S">Email support</Body>
+            <Body size="S"
+              >{$_("components.common.HelpMenu.Email_support")}</Body
+            >
           </div>
           {#if !isPremiumUser}
             <div class="premiumBadge">
               <div class="icon">
                 <FontAwesomeIcon name="fa-solid fa-lock" />
               </div>
-              <Body size="XS">Premium</Body>
+              <Body size="XS">{$_("components.common.HelpMenu.Premium")}</Body>
             </div>
           {/if}
         </a>

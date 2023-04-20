@@ -4,6 +4,7 @@
   import WebhookDisplay from "./WebhookDisplay.svelte"
   import { ModalContent } from "@budibase/bbui"
   import { onMount, onDestroy } from "svelte"
+  import { _ } from "../../../../lang/i18n"
 
   const POLL_RATE_MS = 2500
 
@@ -20,7 +21,9 @@
       try {
         await automationStore.actions.save(automation)
       } catch (error) {
-        notifications.error("Error saving automation")
+        notifications.error(
+          $_("components.automation.Shared.CreateWebhookModal.Error_saving")
+        )
       }
     }
     interval = setInterval(async () => {
@@ -34,7 +37,9 @@
           finished = true
         }
       } catch (error) {
-        notifications.error("Error getting automations list")
+        notifications.error(
+          $_("components.automation.Shared.CreateWebhookModal.Error_getting")
+        )
       }
     }, POLL_RATE_MS)
     schemaURL = automation?.definition?.trigger?.inputs.schemaUrl
@@ -46,25 +51,24 @@
 </script>
 
 <ModalContent
-  title="Webhook Setup"
-  confirmText="Finished"
+  title={$_("components.automation.Shared.CreateWebhookModal.Webhook_Setup")}
+  confirmText={$_("components.automation.Shared.CreateWebhookModal.Finished")}
   showConfirmButton={finished}
-  cancelText="Skip"
+  cancelText={$_("components.automation.Shared.CreateWebhookModal.Skip")}
 >
   <p>
-    Webhooks are for receiving data. To make them easier please use the URL
-    shown below and send a
+    {$_("components.automation.Shared.CreateWebhookModal.receiving_data")}
     <code>POST</code>
-    request to it from your other application. If you're unable to do this now then
-    you can skip this step, however we will not be able to configure bindings for
-    your later actions!
+    {$_("components.automation.Shared.CreateWebhookModal.request")}
   </p>
   <WebhookDisplay value={schemaURL} />
   {#if finished}
     <p class="finished-text">
-      Request received! We found
+      {$_("components.automation.Shared.CreateWebhookModal.Request_received")}
       {propCount}
-      bindable value{propCount > 1 ? "s" : ""}.
+      {$_(
+        "components.automation.Shared.CreateWebhookModal.vindable_value"
+      )}{propCount > 1 ? "s" : ""}.
     </p>
   {/if}
   <a
@@ -73,7 +77,11 @@
     href="https://docs.budibase.com/docs/trigger"
   >
     <Icon name="InfoOutline" />
-    <span>Learn about webhooks</span>
+    <span
+      >{$_(
+        "components.automation.Shared.CreateWebhookModal.Learn_webhooks"
+      )}</span
+    >
   </a>
 </ModalContent>
 

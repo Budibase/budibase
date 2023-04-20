@@ -138,7 +138,8 @@
           "Save": "Save",
           "Array": "Array",
           "String": "String",
-          "Webhook": "Set Up Webhook"
+          "Webhook": "Set Up Webhook",
+          "Bindings": "Bindings"
         },
         "CodeEditorModal": {
           "Edit_Code": "Edit Code"
@@ -314,6 +315,8 @@
               "Authentication": "Authentication",
               "Create_authentication": "Create an authentication config that can be shared with queries",
               "Variables": "Variables",
+              "Variable": "Variable",
+              "Name": "Name",
               "Variables_enable": "Variables enable you to store and re-use values in queries, with the choice of a static value such as a token using static variables, or a value from a query response using dynamic variables",
               "Static": "Static",
               "Dynamic": "Dynamic",
@@ -516,7 +519,9 @@
             "Save_Row": "Save Row",
             "Delete": "Delete"
           },
+
           "CreateEditUser": {
+            "Username": "Username",
             "Email_required": "Email is required",
             "Role_required": "Role is required",
             "User_successfully": "User saved successfully",
@@ -725,6 +730,7 @@
           "EditViewPopover": {
             "View_renamed": "View renamed successfully",
             "View_deleted": "View deleted",
+            "Error_deleting": "Error deleting view",
             "Edit": "Edit",
             "Delete": "Delete",
             "Edit_View": "Edit View",
@@ -2172,7 +2178,7 @@
           "TestimonialPage": {
             "heading": "Forgot your password?",
             "body": "No problem! Just enter your account's email address and we'll send you a link to reset it.",
-            "labelEmail":"Email",
+            "labelEmail": "Email",
             "email": "Please enter your email",
             "button": "Reset password"
           }

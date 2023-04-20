@@ -7,6 +7,7 @@
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
+  import { _ } from "../../../../lang/i18n"
 
   export let panel = ServerBindingPanel
   export let value = ""
@@ -51,7 +52,7 @@
 <Modal bind:this={bindingModal}>
   <ModalContent {title} onConfirm={saveBinding} disabled={!valid} size="XL">
     <Body extraSmall grey>
-      Add the objects on the left to enrich your text.
+      {$_("components.common.bindings.ModalBindableInput.Add")}
     </Body>
     <div class="panel-wrapper">
       <svelte:component

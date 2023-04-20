@@ -7,6 +7,7 @@
     getSchemaForTable,
   } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
+  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
   export let bindings = []
@@ -73,20 +74,32 @@
 
 <div class="root">
   <Body size="S">
-    Choose the datasource that provides the row you would like to duplicate.
+    {$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.DuplicateRow.Choose_datasource"
+    )}
     <br />
-    You can always add or override fields manually.
+    {$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.DuplicateRow.add_override"
+    )}
   </Body>
 
   <div class="params">
-    <Label small>Datasource</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.DuplicateRow.Datasource"
+      )}</Label
+    >
     <Select
       bind:value={parameters.providerId}
       options={providerOptions}
       placeholder="None"
     />
 
-    <Label small>Duplicate to Table</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.DuplicateRow.Duplicate_Table"
+      )}</Label
+    >
     <Select
       bind:value={parameters.tableId}
       options={tableOptions}
@@ -96,16 +109,29 @@
 
     <Label small />
     <Checkbox
-      text="Do not display default notification"
+      text={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.DuplicateRow.not_display"
+      )}
       bind:value={parameters.notificationOverride}
     />
     <br />
-    <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
+    <Checkbox
+      text={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.DuplicateRow.Require_confirmation"
+      )}
+      bind:value={parameters.confirm}
+    />
 
     {#if parameters.confirm}
-      <Label small>Confirm text</Label>
+      <Label small
+        >{$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.DuplicateRow.Confirm_text"
+        )}</Label
+      >
       <Input
-        placeholder="Are you sure you want to duplicate this row?"
+        placeholder={$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.DuplicateRow.want_duplicate"
+        )}
         bind:value={parameters.confirmText}
       />
     {/if}

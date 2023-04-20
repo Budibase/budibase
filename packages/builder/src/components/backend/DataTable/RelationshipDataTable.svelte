@@ -3,6 +3,7 @@
   import Table from "./Table.svelte"
   import { tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
+  import { _ } from "../../../../lang/i18n"
 
   export let tableId
   export let rowId
@@ -35,7 +36,9 @@
       })
     } catch (error) {
       row = null
-      notifications.error("Error fetching relationship data")
+      notifications.error(
+        $_("components.backend.DataTable.RelationshipDataTable.Error_fetching")
+      )
     }
   }
 </script>

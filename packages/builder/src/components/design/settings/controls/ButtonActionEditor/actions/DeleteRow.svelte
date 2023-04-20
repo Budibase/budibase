@@ -2,6 +2,7 @@
   import { Select, Label, Checkbox, Input } from "@budibase/bbui"
   import { tables } from "stores/backend"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
   export let bindings = []
@@ -10,7 +11,11 @@
 </script>
 
 <div class="root">
-  <Label>Table</Label>
+  <Label
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.DeleteRow.Table"
+    )}</Label
+  >
   <Select
     bind:value={parameters.tableId}
     options={tableOptions}
@@ -18,26 +23,45 @@
     getOptionValue={table => table._id}
   />
 
-  <Label small>Row ID</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.DeleteRow.Row ID"
+    )}</Label
+  >
   <DrawerBindableInput
     {bindings}
-    title="Row ID to delete"
+    title={$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.DeleteRow.Row_delete"
+    )}
     value={parameters.rowId}
     on:change={value => (parameters.rowId = value.detail)}
   />
 
   <Label small />
   <Checkbox
-    text="Do not display default notification"
+    text={$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.DeleteRow.notification"
+    )}
     bind:value={parameters.notificationOverride}
   />
   <br />
-  <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
+  <Checkbox
+    text={$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.DeleteRow.Require_confirmation"
+    )}
+    bind:value={parameters.confirm}
+  />
 
   {#if parameters.confirm}
-    <Label small>Confirm text</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.DeleteRow.Confirm_text"
+      )}</Label
+    >
     <Input
-      placeholder="Are you sure you want to delete this row?"
+      placeholder={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.DeleteRow.want_delete"
+      )}
       bind:value={parameters.confirmText}
     />
   {/if}

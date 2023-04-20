@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte"
   import { Button } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let selectedRows
   export let deleteRows
@@ -20,17 +21,19 @@
 </script>
 
 <Button icon="Delete" size="s" warning quiet on:click={modal.show}>
-  Delete
+  {$_("components.backend.DataTable.buttons.DeleteRowsButton.Delete")}
   {selectedRows.length}
   {text}
 </Button>
 <ConfirmDialog
   bind:this={modal}
-  okText="Delete"
+  okText={$_("components.backend.DataTable.buttons.DeleteRowsButton.Delete")}
   onOk={confirmDeletion}
-  title="Confirm Deletion"
+  title={$_(
+    "components.backend.DataTable.buttons.DeleteRowsButton.Confirm_Deletion"
+  )}
 >
-  Are you sure you want to delete
+  {$_("components.backend.DataTable.buttons.DeleteRowsButton.want_delete")}
   {selectedRows.length}
   {text}?
 </ConfirmDialog>

@@ -1,16 +1,33 @@
 import { RelationshipTypes } from "constants/backend"
+import { _ } from "../../../../lang/i18n"
 
-const typeMismatch = "Column type of the foreign key must match the primary key"
-const columnBeingUsed = "Column name cannot be an existing column"
-const mustBeDifferentTables = "From/to/through tables must be different"
-const primaryKeyNotSet = "Please pick the primary key"
-const throughNotNullable =
-  "Ensure non-key columns are nullable or auto-generated"
-const noRelationshipType = "Please specify a relationship type"
-const tableNotSet = "Please specify a table"
-const foreignKeyNotSet = "Please pick a foreign key"
-const relationshipAlreadyExists =
-  "A relationship between these tables already exists"
+const typeMismatch = $_(
+  "components.backend.Datasource.relationshipErrors.foreign_match_primary"
+)
+const columnBeingUsed = $_(
+  "components.backend.Datasource.relationshipErrors.Column-name"
+)
+const mustBeDifferentTables = $_(
+  "components.backend.Datasource.relationshipErrors.different"
+)
+const primaryKeyNotSet = $_(
+  "components.backend.Datasource.relationshipErrors.primary"
+)
+const throughNotNullable = $_(
+  "components.backend.Datasource.relationshipErrors.Ensure"
+)
+const noRelationshipType = $_(
+  "components.backend.Datasource.relationshipErrors.specify_relationship"
+)
+const tableNotSet = $_(
+  "components.backend.Datasource.relationshipErrors.specify_table"
+)
+const foreignKeyNotSet = $_(
+  "components.backend.Datasource.relationshipErrors.pick_foreign"
+)
+const relationshipAlreadyExists = $_(
+  "components.backend.Datasource.relationshipErrors.relationship_tables"
+)
 
 function isColumnNameBeingUsed(table, columnName, originalName) {
   if (!table || !columnName || columnName === originalName) {

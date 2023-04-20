@@ -10,6 +10,7 @@
   import ManageAccessButton from "./buttons/ManageAccessButton.svelte"
   import HideAutocolumnButton from "./buttons/HideAutocolumnButton.svelte"
   import { notifications } from "@budibase/bbui"
+  import { _ } from "../../../../lang/i18n"
 
   export let view = {}
 
@@ -44,7 +45,9 @@
         groupBy,
       })
     } catch (error) {
-      notifications.error("Error fetching view data")
+      notifications.error(
+        $_("components.backend.DataTable.ViewDataTable.Error_fetching")
+      )
     }
     loading = false
   }

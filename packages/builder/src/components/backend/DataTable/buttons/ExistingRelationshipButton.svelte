@@ -3,6 +3,7 @@
   import CreateEditRelationship from "../../Datasources/CreateEditRelationship.svelte"
   import { datasources } from "../../../../stores/backend"
   import { createEventDispatcher } from "svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let table
   const dispatch = createEventDispatcher()
@@ -20,10 +21,18 @@
     try {
       // Create datasource
       await datasources.save(datasource)
-      notifications.success(`Relationship information saved.`)
+      notifications.success(
+        `${$_(
+          "components.backend.DataTable.buttons.ExistingRelationshipButton.information_saved"
+        )}`
+      )
       dispatch("updatecolumns")
     } catch (err) {
-      notifications.error(`Error saving relationship info: ${err}`)
+      notifications.error(
+        `${$_(
+          "components.backend.DataTable.buttons.ExistingRelationshipButton.Error_saving"
+        )} ${err}`
+      )
     }
   }
 </script>
@@ -37,7 +46,9 @@
       quiet
       on:click={modal.show}
     >
-      Define existing relationship
+      {$_(
+        "components.backend.DataTable.buttons.ExistingRelationshipButton.Define_relationship"
+      )}
     </ActionButton>
   </div>
   <Modal bind:this={modal}>

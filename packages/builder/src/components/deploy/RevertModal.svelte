@@ -8,6 +8,7 @@
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import { API } from "api"
+  import { _ } from "../../../lang/i18n"
 
   let revertModal
   let appName
@@ -21,9 +22,11 @@
       // Reset frontend state after revert
       const applicationPkg = await API.fetchAppPackage(appId)
       await store.actions.initialise(applicationPkg)
-      notifications.info("Changes reverted successfully")
+      notifications.info($_("components.deploy.RevertModal.Changes_reverted"))
     } catch (error) {
-      notifications.error(`Error reverting changes: ${error}`)
+      notifications.error(
+        `${$_("components.deploy.RevertModal.Error_reverting")} ${error}`
+      )
     }
   }
 </script>
@@ -32,22 +35,19 @@
   quiet
   icon="Revert"
   size="M"
-  tooltip="Revert changes"
+  tooltip={$_("components.deploy.RevertModal.Revert_changes")}
   on:click={revertModal.show}
 />
 
 <Modal bind:this={revertModal}>
   <ModalContent
-    title="Revert Changes"
-    confirmText="Revert"
+    title={$_("components.deploy.RevertModal.Revert_changes")}
+    confirmText={$_("components.deploy.RevertModal.Revert")}
     onConfirm={revert}
     disabled={appName !== $store.name}
   >
-    <span
-      >The changes you have made will be deleted and the application reverted
-      back to its production state.</span
-    >
-    <span>Please enter your app name to continue.</span>
+    <span>{$_("components.deploy.RevertModal.Changes_deleted")}</span>
+    <span>{$_("components.deploy.RevertModal.enter_name")}</span>
     <Input bind:value={appName} />
   </ModalContent>
 </Modal>

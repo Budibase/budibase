@@ -6,6 +6,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import UpdateDatasourceModal from "components/backend/DatasourceNavigator/modals/UpdateDatasourceModal.svelte"
   import { BUDIBASE_DATASOURCE_TYPE } from "constants/backend"
+  import { _ } from "../../../../../lang/i18n"
 
   export let datasource
 
@@ -16,12 +17,20 @@
     try {
       const isSelected = datasource.selected || datasource.containsSelected
       await datasources.delete(datasource)
-      notifications.success("Datasource deleted")
+      notifications.success(
+        $_(
+          "components.backend.DatasourceNavigation.popovers.EditDatasourcePopover.Datasource_deleted"
+        )
+      )
       if (isSelected) {
         $goto("./datasource")
       }
     } catch (error) {
-      notifications.error("Error deleting datasource")
+      notifications.error(
+        $_(
+          "components.backend.DatasourceNavigation.popovers.EditDatasourcePopover.Error_deleting"
+        )
+      )
     }
   }
 </script>
@@ -31,20 +40,36 @@
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
   {#if datasource.type !== BUDIBASE_DATASOURCE_TYPE}
-    <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}>Edit</MenuItem>
+    <MenuItem icon="Edit" on:click={updateDatasourceDialog.show}
+      >{$_(
+        "components.backend.DatasourceNavigation.popovers.EditDatasourcePopover.Edit"
+      )}</MenuItem
+    >
   {/if}
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
+    >{$_(
+      "components.backend.DatasourceNavigation.popovers.EditDatasourcePopover.Delete"
+    )}</MenuItem
+  >
 </ActionMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Datasource"
+  okText={$_(
+    "components.backend.DatasourceNavigation.popovers.EditDatasourcePopover.Delete_Datasource"
+  )}
   onOk={deleteDatasource}
-  title="Confirm Deletion"
+  title={$_(
+    "components.backend.DatasourceNavigation.popovers.EditDatasourcePopover.Confirm_Deletion"
+  )}
 >
-  Are you sure you wish to delete the datasource
+  {$_(
+    "components.backend.DatasourceNavigation.popovers.EditDatasourcePopover.wish_delete"
+  )}
   <i>{datasource.name}?</i>
-  This action cannot be undone.
+  {$_(
+    "components.backend.DatasourceNavigation.popovers.EditDatasourcePopover.undone"
+  )}
 </ConfirmDialog>
 <UpdateDatasourceModal {datasource} bind:this={updateDatasourceDialog} />
 

@@ -2,18 +2,19 @@
   import { Select, Label, notifications, ModalContent } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
   import { FIELDS } from "constants/backend"
+  import { _ } from "../../../../../lang/i18n"
 
   const CALCULATIONS = [
     {
-      name: "Statistics",
+      name: $_("components.backend.DataTable.modals.CalculateModal.Statistics"),
       key: "stats",
     },
     {
-      name: "Count",
+      name: $_("components.backend.DataTable.modals.CalculateModal.Count"),
       key: "count",
     },
     {
-      name: "Sum",
+      name: $_("components.backend.DataTable.modals.CalculateModal.Sum"),
       key: "sum",
     },
   ]
@@ -39,21 +40,28 @@
   function saveView() {
     try {
       views.save(view)
-      notifications.success(`View ${view.name} saved`)
+      notifications.success(
+        `${$_("components.backend.DataTable.modals.CalculateModal.View")} ${
+          view.name
+        } ${$_("components.backend.DataTable.modals.CalculateModal.saved")}`
+      )
     } catch (error) {
-      notifications.error("Error saving view")
+      notifications.error(
+        $_("components.backend.DataTable.modals.CalculateModal.Error_saving")
+      )
     }
   }
 </script>
 
 <ModalContent
-  title="Calculate"
-  confirmText="Save"
+  title={$_("components.backend.DataTable.modals.CalculateModal.Calculate")}
+  confirmText={$_("components.backend.DataTable.modals.CalculateModal.Save")}
   onConfirm={saveView}
   disabled={!view.field}
 >
   <div class="input-group-row">
-    <Label>The</Label>
+    <Label>{$_("components.backend.DataTable.modals.CalculateModal.The")}</Label
+    >
     <Select
       bind:value={view.calculation}
       options={CALCULATIONS}
@@ -61,7 +69,9 @@
       getOptionValue={x => x.key}
     />
     {#if view.calculation}
-      <Label>Of</Label>
+      <Label
+        >{$_("components.backend.DataTable.modals.CalculateModal.Of")}</Label
+      >
       <Select bind:value={view.field} options={fields} />
     {/if}
   </div>

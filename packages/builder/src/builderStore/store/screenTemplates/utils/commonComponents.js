@@ -1,5 +1,6 @@
 import { Component } from "./Component"
 import { getSchemaForDatasource } from "../../../dataBinding"
+import { _ } from "../../../../../lang/i18n"
 
 const fieldTypeToComponentMap = {
   string: "stringfield",
@@ -41,7 +42,7 @@ export function makeDatasourceFormComponents(datasource) {
         })
       if (fieldType === "options") {
         component.customProps({
-          placeholder: "Choose an option",
+          placeholder: $_("builderStore.store.screenTemplates.utils.commomComponents.Choose_option"),
           optionsType: "select",
           optionsSource: "schema",
         })
@@ -51,14 +52,14 @@ export function makeDatasourceFormComponents(datasource) {
         })
       } else if (fieldType === "array") {
         component.customProps({
-          placeholder: "Choose an option",
+          placeholder: $_("builderStore.store.screenTemplates.utils.commomComponents.Choose_option"),
           optionsSource: "schema",
         })
       } else if (fieldType === "link") {
         let placeholder =
           fieldSchema.relationshipType === "one-to-many"
-            ? "Choose an option"
-            : "Choose some options"
+            ? $_("builderStore.store.screenTemplates.utils.commomComponents.Choose_option")
+            : $_("builderStore.store.screenTemplates.utils.commomComponents.Choose_options")
         component.customProps({ placeholder })
       } else if (fieldType === "boolean") {
         component.customProps({ text: field, label: "" })

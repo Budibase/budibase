@@ -14,6 +14,7 @@
   import { onMount, createEventDispatcher } from "svelte"
   import { FIELDS } from "constants/backend"
   import { generate } from "builderStore/schemaGenerator"
+  import { _ } from "../../../../../lang/i18n"
 
   export let schema = {}
   export let json
@@ -24,11 +25,26 @@
   let fieldKeys = [],
     fieldTypes = []
   let keyValueOptions = [
-    { label: "String", value: FIELDS.STRING.type },
-    { label: "Number", value: FIELDS.NUMBER.type },
-    { label: "Boolean", value: FIELDS.BOOLEAN.type },
-    { label: "Object", value: FIELDS.JSON.type },
-    { label: "Array", value: FIELDS.ARRAY.type },
+    {
+      label: $_("components.backend.DataTable.modals.JSONSchemaModal.String"),
+      value: FIELDS.STRING.type,
+    },
+    {
+      label: $_("components.backend.DataTable.modals.JSONSchemaModal.Number"),
+      value: FIELDS.NUMBER.type,
+    },
+    {
+      label: $_("components.backend.DataTable.modals.JSONSchemaModal.Boolean"),
+      value: FIELDS.BOOLEAN.type,
+    },
+    {
+      label: $_("components.backend.DataTable.modals.JSONSchemaModal.Object"),
+      value: FIELDS.JSON.type,
+    },
+    {
+      label: $_("components.backend.DataTable.modals.JSONSchemaModal.Array"),
+      value: FIELDS.ARRAY.type,
+    },
   ]
   let invalid = false
 
@@ -101,14 +117,16 @@
 </script>
 
 <ModalContent
-  title={"JSON Schema Editor"}
-  confirmText="Save Column"
+  title={$_("components.backend.DataTable.modals.JSONSchemaModal.JSON_Editor")}
+  confirmText={$_(
+    "components.backend.DataTable.modals.JSONSchemaModal.Save_Column"
+  )}
   onConfirm={saveSchema}
   bind:disabled={invalid}
   size="L"
 >
   <Tabs selected={mode} noPadding>
-    <Tab title="Form">
+    <Tab title={$_("components.backend.DataTable.modals.JSONSchemaModal.Form")}>
       {#each Array(fieldCount) as _, i}
         <div class="horizontal">
           <Input outline label="Key" bind:value={fieldKeys[i]} />
@@ -123,14 +141,19 @@
         </div>
       {/each}
       <div class:add-field-btn={fieldCount !== 0}>
-        <Button primary text on:click={() => fieldCount++}>Add Field</Button>
+        <Button primary text on:click={() => fieldCount++}
+          >{$_(
+            "components.backend.DataTable.modals.JSONSchemaModal.Add_Field"
+          )}</Button
+        >
       </div>
     </Tab>
     <Tab title="JSON">
       <Layout noPadding gap="XS">
         <Body size="S">
-          Provide a sample JSON blob here to automatically determine your
-          schema.
+          {$_(
+            "components.backend.DataTable.modals.JSONSchemaModal.sample_JSON"
+          )}
         </Body>
         <Editor mode="json" on:change={onJsonUpdate} value={json} />
       </Layout>

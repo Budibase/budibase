@@ -11,6 +11,7 @@
     checkIncomingDeploymentStatus,
     DeploymentStatus,
   } from "components/deploy/utils"
+  import { _ } from "../../../lang/i18n"
 
   const DATE_OPTIONS = {
     fullDate: {
@@ -55,7 +56,9 @@
       deployments = newDeployments
     } catch (err) {
       clearInterval(poll)
-      notifications.error("Error fetching deployment overview")
+      notifications.error(
+        $_("components.deploy.DeploymentHistory.Error_fetching")
+      )
     }
   }
 
@@ -76,11 +79,17 @@
 {#if deployments.length > 0}
   <section class="deployment-history" in:slide>
     <header>
-      <Heading>Deployment History</Heading>
+      <Heading
+        >{$_("components.deploy.DeploymentHistory.Deployment_History")}</Heading
+      >
       <div class="deploy-div">
         {#if deployments.some(deployment => deployment.status === DeploymentStatus.SUCCESS)}
-          <a target="_blank" href={deploymentUrl}> View Your Deployed App → </a>
-          <Button primary on:click={() => modal.show()}>View webhooks</Button>
+          <a target="_blank" href={deploymentUrl}>
+            {$_("components.deploy.DeploymentHistory.Deployed_App")} →
+          </a>
+          <Button primary on:click={() => modal.show()}
+            >{$_("components.deploy.DeploymentHistory.View_webhoosk")}</Button
+          >
         {/if}
       </div>
     </header>
@@ -121,7 +130,7 @@
 </Modal>
 <Modal bind:this={errorReasonModal} width="30%">
   <ModalContent
-    title="Deployment Error"
+    title={$_("components.deploy.DeploymentHistory.Deployment_Error")}
     confirmText="OK"
     showCancelButton={false}
   >

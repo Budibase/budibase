@@ -1,6 +1,7 @@
 <script>
   import { Input, Select, Button } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
+  import { _ } from "../../../../lang/i18n"
 
   const dispatch = createEventDispatcher()
 
@@ -15,23 +16,23 @@
 
   const typeOptions = [
     {
-      label: "Text",
+      label: $_("components.automation.SetupPanel.SchemaSetup.Text"),
       value: "string",
     },
     {
-      label: "Number",
+      label: $_("components.automation.SetupPanel.SchemaSetup.Number"),
       value: "number",
     },
     {
-      label: "Boolean",
+      label: $_("components.automation.SetupPanel.SchemaSetup.Boolean"),
       value: "boolean",
     },
     {
-      label: "DateTime",
+      label: $_("components.automation.SetupPanel.SchemaSetup.DateTime"),
       value: "datetime",
     },
     {
-      label: "Array",
+      label: $_("components.automation.SetupPanel.SchemaSetup.Array"),
       value: "array",
     },
   ]
@@ -72,7 +73,9 @@
       <Input
         value={field.name}
         secondary
-        placeholder="Enter field name"
+        placeholder={$_(
+          "components.automation.SetupPanel.SchemaSetup.Enter_name"
+        )}
         on:change={fieldNameChanged(field.name)}
         updateOnChange={false}
       />
@@ -90,7 +93,9 @@
       />
     </div>
   {/each}
-  <Button quiet secondary icon="Add" on:click={addField}>Add field</Button>
+  <Button quiet secondary icon="Add" on:click={addField}
+    >{$_("components.automation.SetupPanel.SchemaSetup.Add_field")}</Button
+  >
 </div>
 
 <style>

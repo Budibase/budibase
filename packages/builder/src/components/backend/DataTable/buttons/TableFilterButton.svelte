@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte"
   import { ActionButton, Modal, ModalContent } from "@budibase/bbui"
   import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let schema
   export let filters
@@ -24,12 +25,14 @@
   on:click={modal.show}
   active={tempValue?.length > 0}
 >
-  Filter
+  {$_("components.backend.DataTable.buttons.TableFilterButton.Filter")}
 </ActionButton>
 <Modal bind:this={modal}>
   <ModalContent
-    title="Filter"
-    confirmText="Save"
+    title={$_("components.backend.DataTable.buttons.TableFilterButton.Filter")}
+    confirmText={$_(
+      "components.backend.DataTable.buttons.TableFilterButton.Save"
+    )}
     size="XL"
     onConfirm={() => dispatch("change", tempValue)}
   >

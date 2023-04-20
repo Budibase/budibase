@@ -15,6 +15,7 @@
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
   import { automationHistoryStore } from "builderStore"
+  import { _ } from "../../../../../lang/i18n"
 
   export let automation
 
@@ -36,7 +37,11 @@
     try {
       await automationStore.actions.delete($selectedAutomation)
     } catch (error) {
-      notifications.error("Error deleting automation")
+      notifications.error(
+        $_(
+          "components.automation.AutomationBuilder.FlowChart.FlowChart.Error_deleting"
+        )
+      )
     }
   }
 </script>
@@ -58,14 +63,20 @@
             testDataModal.show()
           }}
           icon="MultipleCheck"
-          size="M">Run test</ActionButton
+          size="M"
+          >{$_(
+            "components.automation.AutomationBuilder.FlowChart.FlowChart.Run_test"
+          )}</ActionButton
         >
         <ActionButton
           disabled={!$automationStore.testResults}
           on:click={() => {
             $automationStore.showTestPanel = true
           }}
-          size="M">Test Details</ActionButton
+          size="M"
+          >{$_(
+            "components.automation.AutomationBuilder.FlowChart.FlowChart.Test_Details"
+          )}</ActionButton
         >
       </div>
     </div>
@@ -91,9 +102,9 @@
   onOk={deleteAutomation}
   title="Confirm Deletion"
 >
-  Are you sure you wish to delete the automation
+  {$_("components.automation.AutomationBuilder.FlowChart.you wish_delete")}
   <i>{automation.name}?</i>
-  This action cannot be undone.
+  {$_("components.automation.AutomationBuilder.FlowChart.FlowChart.undone")}
 </ConfirmDialog>
 
 <Modal bind:this={testDataModal} width="30%">

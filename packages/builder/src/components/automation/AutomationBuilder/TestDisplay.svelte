@@ -2,6 +2,7 @@
   import { Icon, Divider, Tabs, Tab, TextArea, Label } from "@budibase/bbui"
   import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
   import { ActionStepID } from "constants/backend/automations"
+  import { _ } from "../../../../lang/i18n"
 
   export let automation
   export let testResults
@@ -63,7 +64,10 @@
               <Icon name="Reuse" />
               <div style="margin-left: 10px;">
                 <Label>
-                  This loop ran {filteredResults?.[idx]?.outputs.iterations} times.</Label
+                  {$_(
+                    "components.automation.AutomationBuilder.TestDisplay.This_ran"
+                  )}
+                  {filteredResults?.[idx]?.outputs.iterations} times.</Label
                 >
               </div>
             </div>
@@ -71,18 +75,36 @@
 
           <div class="tabs">
             <Tabs noHorizPadding selected="Input">
-              <Tab title="Input">
+              <Tab
+                title={$_(
+                  "components.automation.AutomationBuilder.TestDisplay.Input"
+                )}
+              >
                 <TextArea
                   minHeight="160px"
                   disabled
-                  value={textArea(filteredResults?.[idx]?.inputs, "No input")}
+                  value={textArea(
+                    filteredResults?.[idx]?.inputs,
+                    $_(
+                      "components.automation.AutomationBuilder.TestDisplay.Np_input"
+                    )
+                  )}
                 />
               </Tab>
-              <Tab title="Output">
+              <Tab
+                title={$_(
+                  "components.automation.AutomationBuilder.TestDisplay.Output"
+                )}
+              >
                 <TextArea
                   minHeight="160px"
                   disabled
-                  value={textArea(filteredResults?.[idx]?.outputs, "No output")}
+                  value={textArea(
+                    filteredResults?.[idx]?.outputs,
+                    $_(
+                      "components.automation.AutomationBuilder.TestDisplay.No output"
+                    )
+                  )}
                 />
               </Tab>
             </Tabs>

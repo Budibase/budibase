@@ -2,6 +2,7 @@
   import { Body, Table, BoldRenderer, CodeRenderer } from "@budibase/bbui"
   import { queries as queriesStore } from "stores/backend"
   import { goto } from "@roxi/routify"
+  import { _ } from "../../../../../../../lang/i18n"
 
   export let datasource
   export let queries
@@ -50,5 +51,11 @@
     ]}
   />
 {:else}
-  <Body size="S"><i>No dynamic variables specified.</i></Body>
+  <Body size="S"
+    ><i
+      >{$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.variables.ViewDynamicVariables.No_variables"
+      )}</i
+    ></Body
+  >
 {/if}

@@ -2,6 +2,7 @@
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { tables, datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
+  import { _ } from "../../../../../lang/i18n"
 
   export let datasource
 
@@ -10,7 +11,9 @@
   $: valid = name && name.length > 0 && !datasource?.entities?.[name]
   $: error =
     !submitted && name && datasource?.entities?.[name]
-      ? "Table name already in use."
+      ? $_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.CreateExternalTableModal.Table_name"
+        )
       : null
 
   function buildDefaultTable(tableName, datasourceId) {
@@ -36,20 +39,39 @@
       $goto(`../../table/${table._id}`)
     } catch (error) {
       notifications.error(
-        `Error saving table - ${error?.message || "unknown error"}`
+        `${$_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.CreateExternalTableModal.Error_saving"
+        )} - ${
+          error?.message ||
+          $_(
+            "components.backend.DatasourceNavigation.TableIntegrationMenu.CreateExternalTableModal.unknown error"
+          )
+        }`
       )
     }
   }
 </script>
 
 <ModalContent
-  title="Create new table"
-  confirmText="Create"
+  title={$_(
+    "components.backend.DatasourceNavigation.TableIntegrationMenu.CreateExternalTableModal.Create_table"
+  )}
+  confirmText={$_(
+    "components.backend.DatasourceNavigation.TableIntegrationMenu.CreateExternalTableModal.Create"
+  )}
   onConfirm={saveTable}
   disabled={!valid}
 >
   <Body
-    >Provide a name for your new table; you can add columns once it is created.</Body
+    >{$_(
+      "components.backend.DatasourceNavigation.TableIntegrationMenu.CreateExternalTableModal.Provide_name"
+    )}</Body
   >
-  <Input label="Table Name" bind:error bind:value={name} />
+  <Input
+    label={$_(
+      "components.backend.DatasourceNavigation.TableIntegrationMenu.CreateExternalTableModal.Table Name"
+    )}
+    bind:error
+    bind:value={name}
+  />
 </ModalContent>

@@ -4,6 +4,7 @@
   import { onMount } from "svelte"
   import WebhookDisplay from "../automation/Shared/WebhookDisplay.svelte"
   import { TriggerStepID } from "constants/backend/automations"
+  import { _ } from "../../../lang/i18n"
 
   let webhookUrls = []
 
@@ -24,11 +25,11 @@
 </script>
 
 <ModalContent
-  title="Webhook Endpoints"
+  title={$_("components.deploy.CreateWebhookDeploymentModal.Webhook_Endpoints")}
   confirmText="OK"
   showCancelButton={false}
 >
-  <p>See below the list of deployed webhook URLs.</p>
+  <p>{$_("components.deploy.CreateWebhookDeploymentModal.deployed_webhook")}</p>
   {#each webhookUrls as webhookUrl}
     <div>
       <h5>{webhookUrl.type} - {webhookUrl.name}</h5>
@@ -36,7 +37,7 @@
     </div>
   {/each}
   {#if webhookUrls.length === 0}
-    <h5>No webhooks found.</h5>
+    <h5>{$_("components.deploy.CreateWebhookDeploymentModal.No_webhooks")}</h5>
   {/if}
   <a
     slot="footer"
@@ -44,7 +45,11 @@
     href="https://docs.budibase.com/docs/trigger"
   >
     <i class="ri-information-line" />
-    <span>Learn about webhooks</span>
+    <span
+      >{$_(
+        "components.deploy.CreateWebhookDeploymentModal.Learn_webhooks"
+      )}</span
+    >
   </a>
 </ModalContent>
 

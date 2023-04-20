@@ -3,6 +3,7 @@
   import { roles } from "stores/backend"
   import { Constants, RoleUtils } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
+  import { _ } from "../../../lang/i18n"
 
   export let value
   export let error
@@ -31,7 +32,7 @@
         ...newRoles,
         {
           _id: RemoveID,
-          name: "Remove",
+          name: $_("components.common.RoleSelect.Remove"),
         },
       ]
     }

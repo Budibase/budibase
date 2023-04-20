@@ -18,12 +18,13 @@
   import { datasources, queries, tables, views } from "stores/backend"
   import { getContext } from "svelte"
   import { Constants } from "@budibase/frontend-core"
+  import { _ } from "../../../lang/i18n"
 
   const modalContext = getContext(Context.Modal)
   const commands = [
     {
       type: "Access",
-      name: "Invite users and manage app access",
+      name: $_("components.commandPalette.commandPalette.Invite_users"),
       description: "",
       icon: "User",
       action: () =>
@@ -31,62 +32,62 @@
     },
     {
       type: "Navigate",
-      name: "Portal",
+      name: $_("components.commandPalette.commandPalette.Portal"),
       description: "",
       icon: "Compass",
       action: () => $goto("../../portal"),
     },
     {
       type: "Navigate",
-      name: "Data",
+      name: $_("components.commandPalette.commandPalette.Data"),
       description: "",
       icon: "Compass",
       action: () => $goto("./data"),
     },
     {
       type: "Navigate",
-      name: "Design",
+      name: $_("components.commandPalette.commandPalette.Design"),
       description: "",
       icon: "Compass",
       action: () => $goto("./design"),
     },
     {
       type: "Navigate",
-      name: "Automations",
+      name: $_("components.commandPalette.commandPalette.Automations"),
       description: "",
       icon: "Compass",
       action: () => $goto("./automate"),
     },
     {
       type: "Publish",
-      name: "App",
-      description: "Deploy your application",
+      name: $_("components.commandPalette.commandPalette.App"),
+      description: $_("components.commandPalette.commandPalette.Deploy"),
       icon: "Box",
       action: deployApp,
     },
     {
       type: "Preview",
-      name: "App",
+      name: $_("components.commandPalette.commandPalette.App"),
       description: "",
       icon: "Play",
       action: () => window.open(`/${$store.appId}`),
     },
     {
       type: "Preview",
-      name: "Published App",
+      name: $_("components.commandPalette.commandPalette.Published_App"),
       icon: "Play",
       action: () => window.open(`/app${$store.url}`),
     },
     {
       type: "Support",
-      name: "Raise Github Discussion",
+      name: $_("components.commandPalette.commandPalette.Discussion"),
       icon: "Help",
       action: () =>
         window.open(`https://github.com/Budibase/budibase/discussions/new`),
     },
     {
       type: "Support",
-      name: "Raise A Bug",
+      name: $_("components.commandPalette.commandPalette.Bug"),
       icon: "Bug",
       action: () =>
         window.open(
@@ -209,9 +210,13 @@
   async function deployApp() {
     try {
       await API.deployAppChanges()
-      notifications.success("Application published successfully")
+      notifications.success(
+        $_("components.commandPalette.commandPalette.Application_published")
+      )
     } catch (error) {
-      notifications.error("Error publishing app")
+      notifications.error(
+        $_("components.commandPalette.commandPalette.Error_publishing")
+      )
     }
   }
 
@@ -234,7 +239,13 @@
   <div class="content">
     <div class="title">
       <Icon size="XL" name="Search" />
-      <Input bind:value={search} quiet placeholder="Search for command" />
+      <Input
+        bind:value={search}
+        quiet
+        placeholder={$_(
+          "components.commandPalette.commandPalette.Search_command"
+        )}
+      />
     </div>
     <div class="commands">
       {#each categories as [name, results], catIdx}

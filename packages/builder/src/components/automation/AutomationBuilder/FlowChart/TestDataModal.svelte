@@ -10,6 +10,7 @@
   import { automationStore, selectedAutomation } from "builderStore"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
+  import { _ } from "../../../../../lang/i18n"
 
   let failedParse = null
   let trigger = {}
@@ -43,7 +44,9 @@
       failedParse = null
       automationStore.actions.addTestDataToAutomation(obj)
     } catch (e) {
-      failedParse = "Invalid JSON"
+      failedParse = $_(
+        "components.automation.AutomationBuilder.FlowChart.TestDataModal.Invalid_JSON"
+      )
     }
   }
 
@@ -52,18 +55,28 @@
       await automationStore.actions.test($selectedAutomation, testData)
       $automationStore.showTestPanel = true
     } catch (error) {
-      notifications.error("Error testing automation")
+      notifications.error(
+        $_(
+          "components.automation.AutomationBuilder.FlowChart.TestDataModal.Error_testing"
+        )
+      )
     }
   }
 </script>
 
 <ModalContent
-  title="Add test data"
-  confirmText="Test"
+  title={$_(
+    "components.automation.AutomationBuilder.FlowChart.TestDataModal.Add_data"
+  )}
+  confirmText={$_(
+    "components.automation.AutomationBuilder.FlowChart.TestDataModal.Test"
+  )}
   showConfirmButton={true}
   disabled={isError}
   onConfirm={testAutomation}
-  cancelText="Cancel"
+  cancelText={$_(
+    "components.automation.AutomationBuilder.FlowChart.TestDataModal.Cancel"
+  )}
 >
   <Tabs selected="Form" quiet>
     <Tab icon="Form" title="Form">

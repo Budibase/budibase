@@ -9,6 +9,7 @@
   import download from "downloadjs"
   import { API } from "api"
   import { Constants, LuceneUtils } from "@budibase/frontend-core"
+  import { _ } from "../../../../../lang/i18n"
 
   const FORMATS = [
     {
@@ -20,7 +21,7 @@
       key: "json",
     },
     {
-      name: "JSON with Schema",
+      name: $_("components.backend.DataTable.modals.ExportModal.JSON_Schema"),
       key: "jsonWithSchema",
     },
   ]
@@ -69,7 +70,9 @@
         ...filterDisplayConfig,
         {
           Field: sorting.sortColumn,
-          Operation: "Order By",
+          Operation: $_(
+            "components.backend.DataTable.modals.ExportModal.Order_By"
+          ),
           "Field Value": sorting.sortOrder,
         },
       ]
@@ -80,15 +83,17 @@
   const displaySchema = {
     Field: {
       type: "string",
-      fieldName: "Field",
+      fieldName: $_("components.backend.DataTable.modals.ExportModal.Field"),
     },
     Operation: {
       type: "string",
-      fieldName: "Operation",
+      fieldName: $_(
+        "components.backend.DataTable.modals.ExportModal.Operation"
+      ),
     },
     "Field Value": {
       type: "string",
-      fieldName: "Value",
+      fieldName: $_("components.backend.DataTable.modals.ExportModal.Value"),
     },
   }
 
@@ -100,7 +105,13 @@
       })
       download(data, `export.${exportFormat === "csv" ? "csv" : "json"}`)
     } catch (error) {
-      notifications.error(`Unable to export ${exportFormat.toUpperCase()} data`)
+      notifications.error(
+        `${$_(
+          "components.backend.DataTable.modals.ExportModal.Unable_export"
+        )} ${exportFormat.toUpperCase()} ${$_(
+          "components.backend.DataTable.modals.ExportModal.data"
+        )}`
+      )
     }
   }
 
@@ -131,22 +142,28 @@
 </script>
 
 <ModalContent
-  title="Export Data"
-  confirmText="Export"
+  title={$_("components.backend.DataTable.modals.ExportModal.Export_Data")}
+  confirmText={$_("components.backend.DataTable.modals.ExportModal.Export")}
   onConfirm={exportRows}
   size={filters?.length || sorting ? "M" : "S"}
 >
   {#if selectedRows?.length}
     <Body size="S">
       <strong>{selectedRows?.length}</strong>
-      {`row${selectedRows?.length > 1 ? "s" : ""} will be exported`}
+      {`${$_("components.backend.DataTable.modals.ExportModal.row")} ${
+        selectedRows?.length > 1 ? "s" : ""
+      } ${$_("components.backend.DataTable.modals.ExportModal.will_exported")}`}
     </Body>
   {:else if filters || (sorting?.sortOrder && sorting?.sortColumn)}
     <Body size="S">
       {#if !filters}
-        Exporting <strong>all</strong> rows
+        {$_("components.backend.DataTable.modals.ExportModal.Exporting")}
+        <strong
+          >{$_("components.backend.DataTable.modals.ExportModal.all")}</strong
+        >
+        {$_("components.backend.DataTable.modals.ExportModal.rows")}
       {:else}
-        Filters applied
+        {$_("components.backend.DataTable.modals.ExportModal.Filters_applied")}
       {/if}
     </Body>
 
@@ -167,12 +184,16 @@
     </div>
   {:else}
     <Body size="S">
-      Exporting <strong>all</strong> rows
+      {$_("components.backend.DataTable.modals.ExportModal.Exporting")}
+      <strong
+        >{$_("components.backend.DataTable.modals.ExportModal.all")}</strong
+      >
+      {$_("components.backend.DataTable.modals.ExportModal.rows")}
     </Body>
   {/if}
 
   <Select
-    label="Format"
+    label={$_("components.backend.DataTable.modals.ExportModal.Format")}
     bind:value={exportFormat}
     options={FORMATS}
     placeholder={null}

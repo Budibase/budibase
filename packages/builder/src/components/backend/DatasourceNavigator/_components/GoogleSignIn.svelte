@@ -1,4 +1,6 @@
 <script>
+  import { _ } from "../../../../../lang/i18n"
+
   export let width = 100
   export let height = 100
 </script>
@@ -14,7 +16,11 @@
 >
   <!-- Generator: Sketch 3.3.3 (12081) - http://www.bohemiancoding.com/sketch -->
   <title>btn_google_dark_normal_ios</title>
-  <desc>Created with Sketch.</desc>
+  <desc
+    >{$_(
+      "components.backend.DatasourceNavigation._components.GoogleSignIn.Created"
+    )}</desc
+  >
   <defs>
     <filter
       x="-50%"

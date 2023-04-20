@@ -3,6 +3,7 @@
   import { currentAsset, store } from "builderStore"
   import { getActionProviderComponents } from "builderStore/dataBinding"
   import { onMount } from "svelte"
+  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
 
@@ -14,19 +15,27 @@
 
   const typeOptions = [
     {
-      label: "Next step",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ChangeFromStep.Next_step"
+      ),
       value: "next",
     },
     {
-      label: "Previous step",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ChangeFromStep.Previous_step"
+      ),
       value: "prev",
     },
     {
-      label: "First step",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ChangeFromStep.First_step"
+      ),
       value: "first",
     },
     {
-      label: "Specific step",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ChangeFromStep.Specific_step"
+      ),
       value: "specific",
     },
   ]
@@ -39,7 +48,11 @@
 </script>
 
 <div class="root">
-  <Label small>Form</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.ChangeFromStep.Form"
+    )}</Label
+  >
   <Select
     placeholder={null}
     bind:value={parameters.componentId}
@@ -47,10 +60,18 @@
     getOptionLabel={x => x._instanceName}
     getOptionValue={x => x._id}
   />
-  <Label small>Step</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.ChangeFromStep.Step"
+    )}</Label
+  >
   <Select bind:value={parameters.type} options={typeOptions} />
   {#if parameters.type === "specific"}
-    <Label small>Number</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ChangeFromStep.Number"
+      )}</Label
+    >
     <Stepper bind:value={parameters.number} />
   {/if}
 </div>

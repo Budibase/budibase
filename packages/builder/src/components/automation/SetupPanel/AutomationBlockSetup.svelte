@@ -34,6 +34,7 @@
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
+  import { _ } from "../../../../lang/i18n"
 
   export let block
   export let testData
@@ -104,7 +105,9 @@
         await automationStore.actions.updateBlockInputs(block, data)
       }
     } catch (error) {
-      notifications.error("Error saving automation")
+      notifications.error(
+        $_("components.automation.SetupPanel.AutomationBlockSetup.Error_saving")
+      )
     }
   })
 
@@ -143,7 +146,9 @@
         schema = {
           currentItem: {
             type: "string",
-            description: "the item currently being executed",
+            description: $_(
+              "components.automation.SetupPanel.AutomationBlockSetup.item_executed"
+            ),
           },
         }
       }
@@ -235,7 +240,9 @@
       {#if key !== "fields"}
         <Label
           tooltip={value.title === "Binding / Value"
-            ? "If using the String input type, please use a comma or newline separated string"
+            ? $_(
+                "components.automation.SetupPanel.AutomationBlockSetup.String_input"
+              )
             : null}>{value.title || (key === "row" ? "Table" : key)}</Label
         >
       {/if}
@@ -253,10 +260,14 @@
           options={Object.keys(table?.schema || {})}
         />
       {:else if value.customType === "filters"}
-        <ActionButton on:click={drawer.show}>Define filters</ActionButton>
+        <ActionButton on:click={drawer.show}
+          >{$_(
+            "components.automation.SetupPanel.AutomationBlockSetup.Define_filters"
+          )}</ActionButton
+        >
         <Drawer bind:this={drawer} {fillWidth} title="Filtering">
           <Button cta slot="buttons" on:click={() => saveFilters(key)}>
-            Save
+            {$_("components.automation.SetupPanel.AutomationBlockSetup.Save")}
           </Button>
           <FilterDrawer
             slot="body"
@@ -378,8 +389,13 @@
           on:change={e => onChange(e, key)}
           autoWidth
           value={inputData[key]}
-          options={["Array", "String"]}
-          defaultValue={"Array"}
+          options={[
+            $_("components.automation.SetupPanel.AutomationBlockSetup.Array"),
+            $_("components.automation.SetupPanel.AutomationBlockSetup.String"),
+          ]}
+          defaultValue={$_(
+            "components.automation.SetupPanel.AutomationBlockSetup.Array"
+          )}
         />
       {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
         {#if isTestModal}
@@ -417,7 +433,11 @@
 </Modal>
 
 {#if stepId === TriggerStepID.WEBHOOK}
-  <Button secondary on:click={() => webhookModal.show()}>Set Up Webhook</Button>
+  <Button secondary on:click={() => webhookModal.show()}
+    >{$_(
+      "components.automation.SetupPanel.AutomationBlockSetup.Webhook"
+    )}</Button
+  >
 {/if}
 
 <style>

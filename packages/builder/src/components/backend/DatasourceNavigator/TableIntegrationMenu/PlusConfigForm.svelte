@@ -17,13 +17,18 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { goto } from "@roxi/routify"
   import ValuesList from "components/common/ValuesList.svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let datasource
   export let save
 
   let tableSchema = {
     name: {},
-    primary: { displayName: "Primary Key" },
+    primary: {
+      displayName: $_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Primary_Key"
+      ),
+    },
   }
   let relationshipSchema = {
     tables: {},
@@ -71,10 +76,17 @@
       if (!tableId || typeof tableId !== "string") {
         return null
       }
-      return plusTables.find(table => table._id === tableId)?.name || "Unknown"
+      return (
+        plusTables.find(table => table._id === tableId)?.name ||
+        $_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Unknown"
+        )
+      )
     }
     if (!toCol || !fromCol) {
-      return "Cannot build name"
+      return $_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Cannot_name"
+      )
     }
     const fromTableName = getTableName(toCol.tableId)
     const toTableName = getTableName(fromCol.tableId)
@@ -92,13 +104,19 @@
   async function updateDatasourceSchema() {
     try {
       await datasources.updateSchema(datasource, specificTables)
-      notifications.success(`Datasource ${name} tables updated successfully.`)
+      notifications.success(
+        `${$_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Datasource"
+        )} ${name} ${$_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.tables_updated"
+        )}.`
+      )
       await tables.fetch()
     } catch (error) {
       notifications.error(
-        `Error updating datasource schema ${
-          error?.message ? `: ${error.message}` : ""
-        }`
+        `${$_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Error_updating"
+        )} ${error?.message ? `: ${error.message}` : ""}`
       )
     }
   }
@@ -123,7 +141,9 @@
         relationship.from,
         relationship.to
       ),
-      columns: `${relationship.from?.name} to ${relationship.to?.name}`,
+      columns: `${relationship.from?.name} ${$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.to"
+      )} ${relationship.to?.name}`,
       from: relationship.from,
       to: relationship.to,
     }))
@@ -147,11 +167,15 @@
 
 <ConfirmDialog
   bind:this={confirmDialog}
-  okText="Fetch tables"
+  okText={$_(
+    "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Fetch_tables"
+  )}
   onOk={updateDatasourceSchema}
   onCancel={() => confirmDialog.hide()}
   warning={false}
-  title="Confirm table fetch"
+  title={$_(
+    "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Confirm_fetch"
+  )}
 >
   <Toggle
     bind:value={requireSpecificTables}
@@ -160,37 +184,52 @@
       specificTables = null
     }}
     thin
-    text="Fetch listed tables only (one per line)"
+    text={$_(
+      "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Fetch"
+    )}
   />
   {#if requireSpecificTables}
     <ValuesList label="" bind:values={specificTables} />
   {/if}
   <br />
   <Body>
-    If you have fetched tables from this database before, this action may
-    overwrite any changes you made after your initial fetch.
+    {$_(
+      "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.fetched_tables"
+    )}
   </Body>
 </ConfirmDialog>
 
 <Divider />
 <div class="query-header">
-  <Heading size="S">Tables</Heading>
+  <Heading size="S"
+    >{$_(
+      "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Tables"
+    )}</Heading
+  >
   <div class="table-buttons">
     <Button secondary on:click={() => confirmDialog.show()}>
-      Fetch tables
+      {$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Fetch_tables"
+      )}
     </Button>
-    <Button cta icon="Add" on:click={createNewTable}>New table</Button>
+    <Button cta icon="Add" on:click={createNewTable}
+      >{$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.New_table"
+      )}</Button
+    >
   </div>
 </div>
 <Body>
-  This datasource can determine tables automatically. Budibase can fetch your
-  tables directly from the database and you can use them without having to write
-  any queries at all.
+  {$_(
+    "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.datasource_determine"
+  )}
 </Body>
 {#if schemaError}
   <InlineAlert
     type="error"
-    header="Error fetching tables"
+    header={$_(
+      "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Error_fetching"
+    )}
     message={schemaError}
     onConfirm={datasources.removeSchemaError}
   />
@@ -206,18 +245,32 @@
     customRenderers={[{ column: "primary", component: ArrayRenderer }]}
   />
 {:else}
-  <Body size="S"><i>No tables found.</i></Body>
+  <Body size="S"
+    ><i
+      >{$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.No_tables"
+      )}</i
+    ></Body
+  >
 {/if}
 {#if integration.relationships !== false}
   <Divider />
   <div class="query-header">
-    <Heading size="S">Relationships</Heading>
+    <Heading size="S"
+      >{$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Relationships"
+      )}</Heading
+    >
     <Button primary on:click={() => openRelationshipModal()}>
-      Define relationship
+      {$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.Define_relationship"
+      )}
     </Button>
   </div>
   <Body>
-    Tell budibase how your tables are related to get even more smart features.
+    {$_(
+      "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.tables_related"
+    )}
   </Body>
   {#if relationshipInfo && relationshipInfo.length > 0}
     <Table
@@ -229,7 +282,13 @@
       allowSelectRows={false}
     />
   {:else}
-    <Body size="S"><i>No relationships configured.</i></Body>
+    <Body size="S"
+      ><i
+        >{$_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.PlusConfigForm.No_relationships"
+        )}.</i
+      ></Body
+    >
   {/if}
 {/if}
 

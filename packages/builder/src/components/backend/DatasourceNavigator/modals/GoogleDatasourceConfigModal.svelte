@@ -6,6 +6,7 @@
   import { saveDatasource as save } from "builderStore/datasource"
   import { organisation } from "stores/portal"
   import { onMount } from "svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let integration
   export let modal
@@ -20,26 +21,39 @@
 </script>
 
 <ModalContent
-  title={`Connect to ${IntegrationNames[datasource.type]}`}
+  title={`${$_(
+    "components.backend.DatasourceNavigation.modals.GoogleDatasourceConfig.Connect_to"
+  )} ${IntegrationNames[datasource.type]}`}
   onCancel={() => modal.show()}
-  cancelText="Back"
+  cancelText={$_(
+    "components.backend.DatasourceNavigation.modals.GoogleDatasourceConfig.Back"
+  )}
   size="L"
 >
   <!-- check true and false directly, don't render until flag is set -->
   {#if isGoogleConfigured === true}
     <Layout noPadding>
       <Body size="S"
-        >Authenticate with your google account to use the {IntegrationNames[
-          datasource.type
-        ]} integration.</Body
+        >{$_(
+          "components.backend.DatasourceNavigation.modals.GoogleDatasourceConfig.Authenticate_google"
+        )}
+        {IntegrationNames[datasource.type]}
+        {$_(
+          "components.backend.DatasourceNavigation.modals.GoogleDatasourceConfig.integration"
+        )}</Body
       >
     </Layout>
     <GoogleButton preAuthStep={() => save(datasource, true)} />
   {:else if isGoogleConfigured === false}
     <Body size="S"
-      >Google authentication is not enabled, please complete Google SSO
-      configuration.</Body
+      >{$_(
+        "components.backend.DatasourceNavigation.modals.GoogleDatasourceConfig.Google_authentication"
+      )}</Body
     >
-    <Link href="/builder/portal/settings/auth">Configure Google SSO</Link>
+    <Link href="/builder/portal/settings/auth"
+      >{$_(
+        "components.backend.DatasourceNavigation.modals.GoogleDatasourceConfig.Google_SSO"
+      )}</Link
+    >
   {/if}
 </ModalContent>

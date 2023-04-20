@@ -19,6 +19,7 @@
   import { goto } from "@roxi/routify"
   import ImportRestQueriesModal from "./ImportRestQueriesModal.svelte"
   import DatasourceCard from "../_components/DatasourceCard.svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let modal
   let integrations = {}
@@ -78,7 +79,11 @@
         const resp = await createRestDatasource(integration)
         $goto(`./datasource/${resp._id}`)
       } catch (error) {
-        notifications.error("Error creating datasource")
+        notifications.error(
+          $_(
+            "components.backend.DatasourceNavigation.modals.CreateDatasouceModal.Error_creating"
+          )
+        )
       }
     } else {
       externalDatasourceModal.show()
@@ -96,7 +101,11 @@
         ...integrationList,
       }
     } catch (error) {
-      notifications.error("Error fetching integrations")
+      notifications.error(
+        $_(
+          "components.backend.DatasourceNavigation.modals.CreateDatasouceModal.Error_fetching"
+        )
+      )
     }
     integrations = newIntegrations
   }
@@ -150,10 +159,16 @@
 <Modal bind:this={modal}>
   <ModalContent
     disabled={!Object.keys(integration).length}
-    title="Add datasource"
-    confirmText="Continue"
+    title={$_(
+      "components.backend.DatasourceNavigation.modals.CreateDatasouceModal.Add_datasource"
+    )}
+    confirmText={$_(
+      "components.backend.DatasourceNavigation.modals.CreateDatasouceModal.Continue"
+    )}
     showSecondaryButton={showImportButton}
-    secondaryButtonText="Import"
+    secondaryButtonText={$_(
+      "components.backend.DatasourceNavigation.modals.CreateDatasouceModal.Import"
+    )}
     secondaryAction={() => showImportModal()}
     showCancelButton={false}
     size="M"
@@ -162,7 +177,11 @@
     }}
   >
     <Layout noPadding gap="XS">
-      <Body size="S">Get started with Budibase DB</Body>
+      <Body size="S"
+        >{$_(
+          "components.backend.DatasourceNavigation.modals.CreateDatasouceModal.Budibase_DB_start"
+        )}</Body
+      >
       <div
         class:selected={integration.type === IntegrationTypes.INTERNAL}
         on:click={() => selectIntegration(IntegrationTypes.INTERNAL)}
@@ -171,15 +190,27 @@
         <div class="item-body with-type">
           <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
           <div class="text">
-            <Heading size="XXS">Budibase DB</Heading>
-            <Detail size="S" class="type">Non-relational</Detail>
+            <Heading size="XXS"
+              >{$_(
+                "components.backend.DatasourceNavigation.modals.CreateDatasouceModal.Budibase_DB"
+              )}</Heading
+            >
+            <Detail size="S" class="type"
+              >{$_(
+                "components.backend.DatasourceNavigation.modals.CreateDatasouceModal.Non-relational"
+              )}</Detail
+            >
           </div>
         </div>
       </div>
     </Layout>
 
     <Layout noPadding gap="XS">
-      <Body size="S">Connect to an external datasource</Body>
+      <Body size="S"
+        >{$_(
+          "components.backend.DatasourceNavigation.modals.CreateDatasouceModal.external_datasource"
+        )}</Body
+      >
       <div class="item-list">
         {#each sortedIntegrations.filter(([key, val]) => key !== IntegrationTypes.INTERNAL && !val.custom) as [integrationType, schema]}
           <DatasourceCard
@@ -194,7 +225,11 @@
 
     {#if customIntegrations.length > 0}
       <Layout noPadding gap="XS">
-        <Body size="S">Custom datasource</Body>
+        <Body size="S"
+          >{$_(
+            "components.backend.DatasourceNavigation.modals.CreateDatasouceModal.Custom_datasource"
+          )}</Body
+        >
         <div class="item-list">
           {#each customIntegrations as [integrationType, schema]}
             <DatasourceCard

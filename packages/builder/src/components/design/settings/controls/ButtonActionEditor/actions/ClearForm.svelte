@@ -2,6 +2,7 @@
   import { Select, Label } from "@budibase/bbui"
   import { currentAsset, store } from "builderStore"
   import { getActionProviderComponents } from "builderStore/dataBinding"
+  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
 
@@ -13,7 +14,11 @@
 </script>
 
 <div class="root">
-  <Label small>Form</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.ClearForm.Form"
+    )}</Label
+  >
   <Select
     bind:value={parameters.componentId}
     options={actionProviders}

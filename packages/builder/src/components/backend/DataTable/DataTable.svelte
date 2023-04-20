@@ -23,6 +23,7 @@
   } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "api"
+  import { _ } from "../../../../lang/i18n"
 
   let hideAutocolumns = true
   let filters
@@ -58,7 +59,10 @@
 
   const showError = error => {
     if (error) {
-      notifications.error(error?.message || "Unable to fetch data.")
+      notifications.error(
+        error?.message ||
+          $_("components.backend.DataTable.DataTable.Unable_fetch")
+      )
     }
   }
 
@@ -74,7 +78,7 @@
       tempSchema._rev = {
         type: "internal",
         editable: false,
-        displayName: "Revision",
+        displayName: $_("components.backend.DataTable.DataTable.Revision"),
         autocolumn: true,
       }
     }
@@ -181,7 +185,7 @@
         {#if !isUsersTable}
           <CreateRowButton
             on:updaterows={onUpdateRows}
-            title={"Create row"}
+            title={$_("components.backend.DataTable.DataTable.Create_row")}
             modalContentComponent={CreateEditRow}
             disabled={!hasCols}
             highlighted={$fetch.loaded && hasCols && !hasRows}
@@ -229,16 +233,22 @@
     <div slot="placeholder">
       <Layout gap="S">
         {#if !hasCols}
-          <Heading>Let's create some columns</Heading>
+          <Heading
+            >{$_(
+              "components.backend.DataTable.DataTable.create_columns"
+            )}</Heading
+          >
           <Body>
-            Start building out your table structure<br />
-            by adding some columns
+            {$_("components.backend.DataTable.DataTable.Start_building")}<br />
+            {$_("components.backend.DataTable.DataTable.adding_columns")}
           </Body>
         {:else}
-          <Heading>Now let's add a row</Heading>
+          <Heading
+            >{$_("components.backend.DataTable.DataTable.Now_row")}</Heading
+          >
           <Body>
-            Add some data to your table<br />
-            by adding some rows
+            {$_("components.backend.DataTable.DataTable.Add_data")}<br />
+            {$_("components.backend.DataTable.DataTable.by_adding")}
           </Body>
         {/if}
       </Layout>

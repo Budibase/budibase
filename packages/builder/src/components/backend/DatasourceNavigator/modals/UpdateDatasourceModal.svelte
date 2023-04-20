@@ -2,6 +2,7 @@
   import { datasources } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import { Input, ModalContent, Modal } from "@budibase/bbui"
+  import { _ } from "../../../../../lang/i18n"
 
   let error = ""
   let modal
@@ -21,7 +22,11 @@
   function checkValid(evt) {
     const datasourceName = evt.target.value
     if ($datasources?.list.some(ds => ds.name === datasourceName)) {
-      error = `Datasource with name ${datasourceName} already exists. Please choose another name.`
+      error = `${$_(
+        "components.backend.DatasourceNavigation.modals.UpdateDatasourceModal.Datasource_name"
+      )} ${datasourceName} ${$_(
+        "components.backend.DatasourceNavigation.modals.UpdateDatasourceModal.another_name"
+      )}`
       return
     }
     error = ""
@@ -33,21 +38,33 @@
       name,
     }
     await datasources.save(updatedDatasource)
-    notifications.success(`Datasource ${name} updated successfully.`)
+    notifications.success(
+      `${$_(
+        "components.backend.DatasourceNavigation.modals.UpdateDatasourceModal.Datasource"
+      )} ${name} ${$_(
+        "components.backend.DatasourceNavigation.modals.UpdateDatasourceModal.Updated_successfully"
+      )}`
+    )
     hide()
   }
 </script>
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent
-    title="Edit Datasource"
+    title={$_(
+      "components.backend.DatasourceNavigation.modals.UpdateDatasourceModal.Edit_Datasource"
+    )}
     size="L"
-    confirmText="Save"
+    confirmText={$_(
+      "components.backend.DatasourceNavigation.modals.UpdateDatasourceModal.Save"
+    )}
     onConfirm={updateDatasource}
     disabled={error || !name || !datasource?.type}
   >
     <Input
-      label="Datasource Name"
+      label={$_(
+        "components.backend.DatasourceNavigation.modals.UpdateDatasourceModal.Datasource_Name"
+      )}
       on:input={checkValid}
       bind:value={name}
       {error}

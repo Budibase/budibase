@@ -12,6 +12,7 @@
     Modal,
     ModalContent,
   } from "@budibase/bbui"
+  import { _ } from "../../../../../lang/i18n"
 
   export let view
 
@@ -28,7 +29,11 @@
       originalName,
       ...updatedView,
     })
-    notifications.success("View renamed successfully")
+    notifications.success(
+      $_(
+        "components.backend.TableNavigation.popovers.EditViewPopover.View_renamed"
+      )
+    )
   }
 
   async function deleteView() {
@@ -38,12 +43,20 @@
       const name = view.name
       const id = view.tableId
       await views.delete(name)
-      notifications.success("View deleted")
+      notifications.success(
+        $_(
+          "components.backend.TableNavigation.popovers.EditViewPopover.View_deleted"
+        )
+      )
       if (isSelected) {
         $goto(`./table/${id}`)
       }
     } catch (error) {
-      notifications.error("Error deleting view")
+      notifications.error(
+        $_(
+          "components.backend.TableNavigation.popovers.EditViewPopover.Error_deleting"
+        )
+      )
     }
   }
 
@@ -57,18 +70,48 @@
   <div slot="control" class="icon open-popover">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem icon="Edit" on:click={editorModal.show}
+    >{$_(
+      "components.backend.TableNavigation.popovers.EditViewPopover.Edit"
+    )}</MenuItem
+  >
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
+    >{$_(
+      "components.backend.TableNavigation.popovers.EditViewPopover.Delete"
+    )}</MenuItem
+  >
 </ActionMenu>
 <Modal bind:this={editorModal} on:show={initForm}>
-  <ModalContent title="Edit View" onConfirm={save} confirmText="Save">
-    <Input label="View Name" thin bind:value={updatedName} />
+  <ModalContent
+    title={$_(
+      "components.backend.TableNavigation.popovers.EditViewPopover.Edit_View"
+    )}
+    onConfirm={save}
+    confirmText={$_(
+      "components.backend.TableNavigation.popovers.EditViewPopover.Save"
+    )}
+  >
+    <Input
+      label={$_(
+        "components.backend.TableNavigation.popovers.EditViewPopover.View_Name"
+      )}
+      thin
+      bind:value={updatedName}
+    />
   </ModalContent>
 </Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  body={`Are you sure you wish to delete the view '${view.name}'? Your data will be deleted and this action cannot be undone.`}
-  okText="Delete View"
+  body={`${$_(
+    "components.backend.TableNavigation.popovers.EditViewPopover.wish_delete"
+  )} '${view.name}'? ${$_(
+    "components.backend.TableNavigation.popovers.EditViewPopover.undone"
+  )}.`}
+  okText={$_(
+    "components.backend.TableNavigation.popovers.EditViewPopover.Delete_View"
+  )}
   onOk={deleteView}
-  title="Confirm Deletion"
+  title={$_(
+    "components.backend.TableNavigation.popovers.EditViewPopover.Confirm_Deletion"
+  )}
 />

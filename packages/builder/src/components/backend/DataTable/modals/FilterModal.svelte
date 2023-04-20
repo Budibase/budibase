@@ -11,53 +11,54 @@
     Icon,
   } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
+  import { _ } from "../../../../../lang/i18n"
 
   const CONDITIONS = [
     {
-      name: "Equals",
+      name: $_("components.backend.DataTable.modals.FilterModal.Equals"),
       key: "EQUALS",
     },
     {
-      name: "Not Equals",
+      name: $_("components.backend.DataTable.modals.FilterModal.Not_Equals"),
       key: "NOT_EQUALS",
     },
     {
-      name: "Less Than",
+      name: $_("components.backend.DataTable.modals.FilterModal.Less_Than"),
       key: "LT",
     },
     {
-      name: "Less Than Or Equal",
+      name: $_("components.backend.DataTable.modals.FilterModal.Less_Equal"),
       key: "LTE",
     },
     {
-      name: "More Than",
+      name: $_("components.backend.DataTable.modals.FilterModal.More_Than"),
       key: "MT",
     },
     {
-      name: "More Than Or Equal",
+      name: $_("components.backend.DataTable.modals.FilterModal.More_Equal"),
       key: "MTE",
     },
     {
-      name: "Contains",
+      name: $_("components.backend.DataTable.modals.FilterModal.Contains"),
       key: "CONTAINS",
     },
     {
-      name: "Is Not Empty",
+      name: $_("components.backend.DataTable.modals.FilterModal.Not_Empty"),
       key: "NOT_EMPTY",
     },
     {
-      name: "Is Empty",
+      name: $_("components.backend.DataTable.modals.FilterModal.Is_Empty"),
       key: "EMPTY",
     },
   ]
 
   const CONJUNCTIONS = [
     {
-      name: "Or",
+      name: $_("components.backend.DataTable.modals.FilterModal.Or"),
       key: "OR",
     },
     {
-      name: "And",
+      name: $_("components.backend.DataTable.modals.FilterModal.And"),
       key: "AND",
     },
   ]
@@ -73,9 +74,15 @@
   function saveView() {
     try {
       views.save(view)
-      notifications.success(`View ${view.name} saved`)
+      notifications.success(
+        `${$_("components.backend.DataTable.modals.FilterModal.View")} ${
+          view.name
+        } ${$_("components.backend.DataTable.modals.FilterModal.saved")}`
+      )
     } catch (error) {
-      notifications.error("Error saving view")
+      notifications.error(
+        $_("components.backend.DataTable.modals.FilterModal.Error_saving")
+      )
     }
   }
 
@@ -132,7 +139,11 @@
     <div class="input-group-row">
       {#each view.filters as filter, idx}
         {#if idx === 0}
-          <Label>Where</Label>
+          <Label
+            >{$_(
+              "components.backend.DataTable.modals.FilterModal.Where"
+            )}</Label
+          >
         {:else}
           <Select
             bind:value={filter.conjunction}
@@ -186,10 +197,18 @@
       {/each}
     </div>
   {:else}
-    <Body size="S">Add a filter to get started.</Body>
+    <Body size="S"
+      >{$_(
+        "components.backend.DataTable.modals.FilterModal.Add_Filter_started"
+      )}</Body
+    >
   {/if}
   <div slot="footer">
-    <Button secondary on:click={addFilter}>Add Filter</Button>
+    <Button secondary on:click={addFilter}
+      >{$_(
+        "components.backend.DataTable.modals.FilterModal.Add_Filter"
+      )}</Button
+    >
   </div>
 </ModalContent>
 

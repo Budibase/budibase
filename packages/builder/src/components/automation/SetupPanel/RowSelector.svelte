@@ -6,6 +6,7 @@
   import { createEventDispatcher } from "svelte"
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
+  import { _ } from "../../../../lang/i18n"
 
   const dispatch = createEventDispatcher()
 
@@ -160,7 +161,9 @@
                 <div class="checkbox-field">
                   <Checkbox
                     value={meta.fields?.[field]?.clearRelationships}
-                    text={"Clear relationships if empty?"}
+                    text={$_(
+                      "components.automation.SetupPanel.RowSelector.Clear"
+                    )}
                     size={"S"}
                     on:change={e => onChangeSetting(e, field)}
                   />

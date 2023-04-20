@@ -2,6 +2,7 @@
   import { Select, ModalContent, notifications } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
   import { FIELDS } from "constants/backend"
+  import { _ } from "../../../../../lang/i18n"
 
   export let view = {}
 
@@ -21,13 +22,23 @@
   function saveView() {
     try {
       views.save(view)
-      notifications.success(`View ${view.name} saved`)
+      notifications.success(
+        `${$_("components.backend.DataTable.modals.GroupByModal.View")} ${
+          view.name
+        } ${$_("components.backend.DataTable.modals.GroupByModal.saved")}`
+      )
     } catch (error) {
-      notifications.error("Error saving view")
+      notifications.error(
+        $_("components.backend.DataTable.modals.GroupByModal.Error_saving")
+      )
     }
   }
 </script>
 
-<ModalContent title="Group By" confirmText="Save" onConfirm={saveView}>
+<ModalContent
+  title={$_("components.backend.DataTable.modals.GroupByModal.Group By")}
+  confirmText={$_("components.backend.DataTable.modals.GroupByModal.Save")}
+  onConfirm={saveView}
+>
   <Select bind:value={view.groupBy} options={fields} />
 </ModalContent>

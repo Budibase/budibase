@@ -1,6 +1,7 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import { _ } from "../../../lang/i18n"
 
   export let store
 
@@ -30,14 +31,14 @@
     hoverable
     on:click={store.undo}
     disabled={!$store.canUndo}
-    tooltip="Undo latest change"
+    tooltip={$_("components.common.UndoRedoControl.Undo_change")}
   />
   <Icon
     name="Redo"
     hoverable
     on:click={store.redo}
     disabled={!$store.canRedo}
-    tooltip="Redo latest undo"
+    tooltip={$_("components.common.UndoRedoControl.Redo_change")}
   />
 </div>
 

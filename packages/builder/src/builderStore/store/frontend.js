@@ -37,6 +37,7 @@ import {
 } from "builderStore/dataBinding"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { getComponentFieldOptions } from "helpers/formFields"
+import { _ } from "../../../lang/i18n"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -654,7 +655,7 @@ export const getFrontendStore = () => {
             hover: {},
             active: {},
           },
-          _instanceName: `New ${definition.friendlyName || definition.name}`,
+          _instanceName: `${$_("builderStore.store.frontend.New")} ${definition.friendlyName || definition.name}`,
           ...presetProps,
         }
 
@@ -680,7 +681,7 @@ export const getFrontendStore = () => {
             component._component.endsWith("/formstep")
           )
           extras.step = formSteps.length + 1
-          extras._instanceName = `Step ${formSteps.length + 1}`
+          extras._instanceName = `${$_("builderStore.store.frontend.Step")} ${formSteps.length + 1}`
         }
         return {
           ...cloneDeep(instance),

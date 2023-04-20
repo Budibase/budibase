@@ -3,6 +3,7 @@
   import { FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
+  import { _ } from "../../../../lang/i18n"
 
   let error = null
   let fileName = null
@@ -19,31 +20,35 @@
 
   const typeOptions = [
     {
-      label: "Text",
+      label: $_("components.backend.TableNavigation.TableDataImport.Text"),
       value: FIELDS.STRING.type,
     },
     {
-      label: "Number",
+      label: $_("components.backend.TableNavigation.TableDataImport.Number"),
       value: FIELDS.NUMBER.type,
     },
     {
-      label: "Date",
+      label: $_("components.backend.TableNavigation.TableDataImport.Date"),
       value: FIELDS.DATETIME.type,
     },
     {
-      label: "Options",
+      label: $_("components.backend.TableNavigation.TableDataImport.Options"),
       value: FIELDS.OPTIONS.type,
     },
     {
-      label: "Multi-select",
+      label: $_(
+        "components.backend.TableNavigation.TableDataImport.Multi-select"
+      ),
       value: FIELDS.ARRAY.type,
     },
     {
-      label: "Barcode/QR",
+      label: $_(
+        "components.backend.TableNavigation.TableDataImport.Barcode/QR"
+      ),
       value: FIELDS.BARCODEQR.type,
     },
     {
-      label: "Long Form Text",
+      label: $_("components.backend.TableNavigation.TableDataImport.Long_Text"),
       value: FIELDS.LONGFORM.type,
     },
   ]
@@ -111,13 +116,13 @@
   />
   <label for="file-upload" class:uploaded={rows.length > 0}>
     {#if loading}
-      loading...
+      {$_("components.backend.TableNavigation.TableDataImport.loading...")}
     {:else if error}
-      error: {error}
+      {$_("components.backend.TableNavigation.TableDataImport.error")} {error}
     {:else if fileName}
       {fileName}
     {:else}
-      Upload
+      {$_("components.backend.TableNavigation.TableDataImport.Upload")}
     {/if}
   </label>
 </div>
@@ -140,7 +145,9 @@
             ? "fieldStatusSuccess"
             : "fieldStatusFailure"}
         >
-          {validation[column.name] ? "Success" : "Failure"}
+          {validation[column.name]
+            ? $_("components.backend.TableNavigation.TableDataImport.Success")
+            : $_("components.backend.TableNavigation.TableDataImport.Failure")}
         </span>
         <i
           class={`omit-button ri-close-circle-fill ${
@@ -156,7 +163,9 @@
   </div>
   <div class="display-column">
     <Select
-      label="Display Column"
+      label={$_(
+        "components.backend.TableNavigation.TableDataImport.Display Column"
+      )}
       bind:value={displayColumn}
       options={Object.keys(schema)}
       sort

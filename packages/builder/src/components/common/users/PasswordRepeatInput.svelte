@@ -4,6 +4,7 @@
     createValidationStore,
     requiredValidator,
   } from "../../../helpers/validation"
+  import { _ } from "../../../../lang/i18n"
 
   export let password
   export let error
@@ -13,7 +14,7 @@
     requiredValidator
   )
   // eslint-disable-next-line no-unused-vars
-  const [repeatPassword, _, repeatTouched] = createValidationStore(
+  const [repeatPassword, repeatTouched] = createValidationStore(
     "",
     requiredValidator
   )
@@ -28,17 +29,17 @@
 
 <Layout gap="XS" noPadding>
   <Input
-    label="Password"
+    label={$_("components.common.users.PasswordRepeatInput.Password")}
     type="password"
     error={$firstTouched && $passwordError}
     bind:value={$firstPassword}
   />
   <Input
-    label="Repeat Password"
+    label={$_("components.common.users.PasswordRepeatInput.Repeat_Password")}
     type="password"
     error={$repeatTouched &&
       $firstPassword !== $repeatPassword &&
-      "Passwords must match"}
+      $_("components.common.users.PasswordRepeatInput.Passwords_match")}
     bind:value={$repeatPassword}
   />
 </Layout>

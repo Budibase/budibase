@@ -4,6 +4,7 @@
   import NavItem from "components/common/NavItem.svelte"
   import EditAutomationPopover from "./EditAutomationPopover.svelte"
   import { notifications } from "@budibase/bbui"
+  import { _ } from "../../../../lang/i18n"
 
   $: selectedAutomationId = $selectedAutomation?._id
 
@@ -11,7 +12,9 @@
     try {
       await automationStore.actions.fetch()
     } catch (error) {
-      notifications.error("Error getting automations list")
+      notifications.error(
+        $_("components.automation.AutomationPanel.AutomationList.Error_getting")
+      )
     }
   })
 

@@ -13,6 +13,7 @@
   import { auth, apps } from "stores/portal"
   import { processStringSync } from "@budibase/string-templates"
   import { API } from "api"
+  import { _ } from "../../../lang/i18n"
 
   export let app
   export let buttonSize = "M"
@@ -29,7 +30,9 @@
   }`
 
   $: lockedByHeading =
-    lockedBy && lockedByYou ? "Locked by you" : `Locked by ${lockIdentifer}`
+    lockedBy && lockedByYou
+      ? $_("components.common.AppLockModal.Locked_you")
+      : `${$_("components.common.AppLockModal.Locked_by")} ${lockIdentifer}`
 
   const getExpiryDuration = app => {
     if (!app?.lockedBy?.lockedAt) {
@@ -46,12 +49,16 @@
       try {
         await API.releaseAppLock(app.devId)
         await apps.load()
-        notifications.success("Lock released successfully")
+        notifications.success(
+          $_("components.common.AppLockModal.Lock_released")
+        )
       } catch (err) {
-        notifications.error("Error releasing lock")
+        notifications.error(
+          $_("components.common.AppLockModal.Error_releasing")
+        )
       }
     } else {
-      notifications.error("No application is selected")
+      notifications.error($_("components.common.AppLockModal.No_application"))
     }
     processing = false
   }
@@ -79,13 +86,16 @@
   >
     <Layout noPadding>
       <Body size="S">
-        Apps are locked to prevent work being lost from overlapping changes
-        between your team.
+        {$_("components.common.AppLockModal.Apps_locked")}
       </Body>
       {#if lockedByYou && getExpiryDuration(app) > 0}
         <span class="lock-expiry-body">
           {processStringSync(
-            "This lock will expire in {{ duration time 'millisecond' }} from now.",
+            `${$_(
+              "components.common.AppLockModal.lock_expire"
+            )} {{ duration time 'millisecond' }} ${$_(
+              "components.common.AppLockModal.from_now"
+            )}.`,
             {
               time: getExpiryDuration(app),
             }
@@ -103,7 +113,9 @@
             }}
           >
             <span class="cancel"
-              >{lockedBy && !lockedByYou ? "Done" : "Cancel"}</span
+              >{lockedBy && !lockedByYou
+                ? $_("components.common.AppLockModal.Done")
+                : $_("components.common.AppLockModal.Cancel")}</span
             >
           </Button>
           {#if lockedByYou}
@@ -118,7 +130,9 @@
               {#if processing}
                 <ProgressCircle overBackground={true} size="S" />
               {:else}
-                <span class="unlock">Release Lock</span>
+                <span class="unlock"
+                  >{$_("components.common.AppLockModal.Release_Lock")}</span
+                >
               {/if}
             </Button>
           {/if}

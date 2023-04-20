@@ -2,6 +2,7 @@
   import { Icon, Divider } from "@budibase/bbui"
   import TestDisplay from "./TestDisplay.svelte"
   import { automationStore } from "builderStore"
+  import { _ } from "../../../../lang/i18n"
 
   export let automation
 </script>
@@ -9,7 +10,9 @@
 <div class="title">
   <div class="title-text">
     <Icon name="MultipleCheck" />
-    <div style="padding-left: var(--spacing-l)">Test Details</div>
+    <div style="padding-left: var(--spacing-l)">
+      {$_("components.automation.AutomationBuilder.TestPanel.Test_Details")}
+    </div>
   </div>
   <div style="padding-right: var(--spacing-xl)">
     <Icon

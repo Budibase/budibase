@@ -11,6 +11,7 @@
     Label,
   } from "@budibase/bbui"
   import { TriggerStepID } from "constants/backend/automations"
+  import { _ } from "../../../../lang/i18n"
 
   export let webhookModal
 
@@ -20,7 +21,11 @@
   let triggerVal
 
   $: nameError =
-    nameTouched && !name ? "Please specify a name for the automation." : null
+    nameTouched && !name
+      ? $_(
+          "components.automation.AutomationPanel.CreateAutomationModal.specify"
+        )
+      : null
   $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
 
   async function createAutomation() {
@@ -34,9 +39,19 @@
       if (triggerVal.stepId === TriggerStepID.WEBHOOK) {
         webhookModal.show()
       }
-      notifications.success(`Automation ${name} created`)
+      notifications.success(
+        `${$_(
+          "components.automation.AutomationPanel.CreateAutomationModal.Automation"
+        )} ${name} ${$_(
+          "components.automation.AutomationPanel.CreateAutomationModal.created"
+        )}`
+      )
     } catch (error) {
-      notifications.error("Error creating automation")
+      notifications.error(
+        $_(
+          "components.automation.AutomationPanel.CreateAutomationModal.Error_creating"
+        )
+      )
     }
   }
 
@@ -47,19 +62,31 @@
 </script>
 
 <ModalContent
-  title="Create Automation"
-  confirmText="Save"
+  title={$_(
+    "components.automation.AutomationPanel.CreateAutomationModal.Create_Automation"
+  )}
+  confirmText={$_(
+    "components.automation.AutomationPanel.CreateAutomationModal.Save"
+  )}
   size="M"
   onConfirm={createAutomation}
   disabled={!selectedTrigger || !name}
 >
   <InlineAlert
-    header="You must publish your app to activate your automations."
-    message="To test your automation before publishing, you can use the 'Run Test' functionality on the next screen."
+    header={$_(
+      "components.automation.AutomationPanel.CreateAutomationModal.must_publish"
+    )}
+    message={$_(
+      "components.automation.AutomationPanel.CreateAutomationModal.test_automation"
+    )}
   />
   <Body size="S">
-    Please name your automation, then select a trigger.<br />
-    Every automation must start with a trigger.
+    {$_(
+      "components.automation.AutomationPanel.CreateAutomationModal.name_automation"
+    )}<br />
+    {$_(
+      "components.automation.AutomationPanel.CreateAutomationModal.automation_start"
+    )}
   </Body>
   <Input
     bind:value={name}
@@ -69,7 +96,11 @@
   />
 
   <Layout noPadding gap="XS">
-    <Label size="S">Trigger</Label>
+    <Label size="S"
+      >{$_(
+        "components.automation.AutomationPanel.CreateAutomationModal.Devil_Trigger"
+      )}</Label
+    >
     <div class="item-list">
       {#each triggers as [idx, trigger]}
         <div

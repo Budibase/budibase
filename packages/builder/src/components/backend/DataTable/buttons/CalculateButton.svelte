@@ -1,6 +1,7 @@
 <script>
   import { Modal, ActionButton } from "@budibase/bbui"
   import CalculateModal from "../modals/CalculateModal.svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let view = {}
 
@@ -14,7 +15,7 @@
   on:click={modal.show}
   active={view.field && view.calculation}
 >
-  Calculate
+  {$_("components.backend.DataTable.buttons.CaltulcateButton.Calculate")}
 </ActionButton>
 <Modal bind:this={modal}>
   <CalculateModal {view} />

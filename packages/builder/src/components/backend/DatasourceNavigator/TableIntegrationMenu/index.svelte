@@ -3,6 +3,7 @@
   import { onMount } from "svelte"
   import { API } from "api"
   import ICONS from "../icons"
+  import { _ } from "../../../../../lang/i18n"
 
   export let integration = {}
   let integrations = []
@@ -14,7 +15,11 @@
       otherIntegrations = await API.getIntegrations()
     } catch (error) {
       otherIntegrations = {}
-      notifications.error("Error getting integrations")
+      notifications.error(
+        $_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.index.Error_getting"
+        )
+      )
     }
     integrations = {
       [INTERNAL]: { datasource: {}, name: "INTERNAL/CSV" },

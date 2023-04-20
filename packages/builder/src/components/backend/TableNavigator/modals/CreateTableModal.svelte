@@ -17,6 +17,7 @@
     BUDIBASE_DATASOURCE_TYPE,
   } from "constants/backend"
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
+  import { _ } from "../../../../../lang/i18n"
 
   $: tableNames = $tables.list.map(table => table.name)
   $: selectedSource = $datasources.list.find(
@@ -31,7 +32,13 @@
   export let name
   export let beforeSave = async () => {}
   export let afterSave = async table => {
-    notifications.success(`Table ${name} created successfully.`)
+    notifications.success(
+      `${$_(
+        "components.backend.TableNavigation.modal.CreateTableModal.Table"
+      )} ${name} ${$_(
+        "components.backend.TableNavigation.modal.CreateTableModal.created_successfully"
+      )}.`
+    )
 
     // Navigate to new table
     const currentUrl = $url()
@@ -67,7 +74,11 @@
   function checkValid(evt) {
     const tableName = evt.target.value
     if (tableNames.includes(tableName)) {
-      error = `Table with name ${tableName} already exists. Please choose another name.`
+      error = `${$_(
+        "components.backend.TableNavigation.modal.CreateTableModal.Table_name"
+      )} ${tableName} ${$_(
+        "components.backend.TableNavigation.modal.CreateTableModal.already_exists"
+      )}`
       return
     }
     error = ""
@@ -102,8 +113,12 @@
 </script>
 
 <ModalContent
-  title="Create Table"
-  confirmText="Create"
+  title={$_(
+    "components.backend.TableNavigation.modal.CreateTableModal.Create Table"
+  )}
+  confirmText={$_(
+    "components.backend.TableNavigation.modal.CreateTableModal.Create"
+  )}
   onConfirm={saveTable}
   disabled={error ||
     !name ||
@@ -111,22 +126,53 @@
 >
   <Input
     thin
-    label="Table Name"
+    label={$_(
+      "components.backend.TableNavigation.modal.CreateTableModal.Table_Name"
+    )}
     on:input={checkValid}
     bind:value={name}
     {error}
   />
   <div class="autocolumns">
-    <Label extraSmall grey>Auto Columns</Label>
+    <Label extraSmall grey
+      >{$_(
+        "components.backend.TableNavigation.modal.CreateTableModal.Auto_Columns"
+      )}</Label
+    >
     <div class="toggles">
       <div class="toggle-1">
-        <Toggle text="Created by" bind:value={autoColumns.createdBy.enabled} />
-        <Toggle text="Created at" bind:value={autoColumns.createdAt.enabled} />
-        <Toggle text="Auto ID" bind:value={autoColumns.autoID.enabled} />
+        <Toggle
+          text={$_(
+            "components.backend.TableNavigation.modal.CreateTableModal.Created_by"
+          )}
+          bind:value={autoColumns.createdBy.enabled}
+        />
+        <Toggle
+          text={$_(
+            "components.backend.TableNavigation.modal.CreateTableModal.Created_at"
+          )}
+          bind:value={autoColumns.createdAt.enabled}
+        />
+        <Toggle
+          text={$_(
+            "components.backend.TableNavigation.modal.CreateTableModal.Auto_ID"
+          )}
+          bind:value={autoColumns.autoID.enabled}
+        />
       </div>
       <div class="toggle-2">
-        <Toggle text="Updated by" bind:value={autoColumns.updatedBy.enabled} />
-        <Toggle text="Updated at" bind:value={autoColumns.updatedAt.enabled} />
+        <Toggle
+          text={$_(
+            "components.backend.TableNavigation.modal.CreateTableModal.Updated_by"
+          )}
+          bind:value={autoColumns.updatedBy.enabled}
+        />
+        <Toggle
+          text={$_(
+            "components.backend.TableNavigation.modal.CreateTableModal.Updated_at"
+          )}
+          bind:value={autoColumns.updatedAt.enabled}
+        />
       </div>
     </div>
     <Divider />
@@ -134,7 +180,9 @@
   <div>
     <Layout gap="XS" noPadding>
       <Label grey extraSmall
-        >Create a Table from a CSV or JSON file (Optional)</Label
+        >{$_(
+          "components.backend.TableNavigation.modal.CreateTableModal.Create_Table"
+        )}</Label
       >
       <TableDataImport bind:rows bind:schema bind:allValid bind:displayColumn />
     </Layout>

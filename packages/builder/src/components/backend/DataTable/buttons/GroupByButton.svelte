@@ -1,6 +1,7 @@
 <script>
   import { Modal, Button } from "@budibase/bbui"
   import GroupByModal from "../modals/GroupByModal.svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let view = {}
 
@@ -15,7 +16,7 @@
   active={!!view.groupBy}
   on:click={modal.show}
 >
-  Group by
+  {$_("components.backend.DataTable.buttons.GroupByButton.Group_by")}
 </Button>
 <Modal bind:this={modal}>
   <GroupByModal {view} />

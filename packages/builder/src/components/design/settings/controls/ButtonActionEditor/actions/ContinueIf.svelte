@@ -2,26 +2,36 @@
   import { Select, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let parameters
   export let bindings
 
   const typeOptions = [
     {
-      label: "Continue if",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.Continuelf.Continue_if"
+      ),
       value: "continue",
     },
     {
-      label: "Stop if",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.Continuelf.Stop_if"
+      ),
       value: "stop",
     },
   ]
   const operatorOptions = [
     {
-      label: "Equals",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.Continuelf.Equals"
+      ),
       value: "equal",
     },
     {
-      label: "Not equals",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.Continuelf.Not_equals"
+      ),
       value: "notEqual",
     },
   ]
@@ -38,8 +48,9 @@
 
 <div class="root">
   <Body size="S">
-    Configure a condition to be evaluated which can stop further actions from
-    being executed.
+    {$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.Continuelf.Configure_condition"
+    )}
   </Body>
   <Select
     bind:value={parameters.type}
@@ -47,7 +58,9 @@
     placeholder={null}
   />
   <DrawerBindableInput
-    placeholder="Value"
+    placeholder={$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.Continuelf.Value"
+    )}
     value={parameters.value}
     on:change={e => (parameters.value = e.detail)}
     {bindings}
@@ -58,7 +71,9 @@
     placeholder={null}
   />
   <DrawerBindableInput
-    placeholder="Reference value"
+    placeholder={$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.Continuelf.Reference_value"
+    )}
     bind:value={parameters.referenceValue}
     on:change={e => (parameters.referenceValue = e.detail)}
     {bindings}

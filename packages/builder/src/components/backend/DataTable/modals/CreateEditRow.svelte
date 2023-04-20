@@ -6,6 +6,7 @@
   import { API } from "api"
   import { ModalContent } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
+  import { _ } from "../../../../../lang/i18n"
 
   const FORMULA_TYPE = FIELDS.FORMULA.type
 
@@ -24,7 +25,9 @@
     errors = []
     try {
       await API.saveRow({ ...row, tableId: table._id })
-      notifications.success("Row saved successfully")
+      notifications.success(
+        $_("components.backend.DataTable.modals.CreateEditRow.Row_saved")
+      )
       dispatch("updaterows")
     } catch (error) {
       if (error.handled) {
@@ -41,7 +44,9 @@
           errors = mappedErrors
         }
       } else {
-        notifications.error("Failed to save row")
+        notifications.error(
+          $_("components.backend.DataTable.modals.CreateEditRow.Failed_save")
+        )
       }
       // Prevent modal closing if there were errors
       return false
@@ -51,13 +56,19 @@
 
 <span class="modal-wrap">
   <ModalContent
-    title={creating ? "Create Row" : "Edit Row"}
-    confirmText={creating ? "Create Row" : "Save Row"}
+    title={creating
+      ? $_("components.backend.DataTable.modals.CreateEditRow.Create_Row")
+      : $_("components.backend.DataTable.modals.CreateEditRow.Edit_Row")}
+    confirmText={creating
+      ? $_("components.backend.DataTable.modals.CreateEditRow.Create_Row")
+      : $_("components.backend.DataTable.modals.CreateEditRow.Save_Row")}
     onConfirm={saveRow}
     showCancelButton={creating}
     showSecondaryButton={!creating}
     secondaryButtonWarning={!creating}
-    secondaryButtonText="Delete"
+    secondaryButtonText={$_(
+      "components.backend.DataTable.modals.CreateEditRow.Delete"
+    )}
     secondaryAction={() => {
       dispatch("deleteRows", row)
     }}

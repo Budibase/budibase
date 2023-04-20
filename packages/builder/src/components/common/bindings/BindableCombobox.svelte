@@ -6,6 +6,7 @@
   } from "builderStore/dataBinding"
   import { createEventDispatcher } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
+  import { _ } from "../../../../lang/i18n"
 
   export let value = ""
   export let bindings = []

@@ -18,6 +18,7 @@
   } from "builderStore/dataBinding"
   import { environment, licensing, auth } from "stores/portal"
   import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
+  import { _ } from "../../../../../../../lang/i18n"
 
   export let configs
   export let currentConfig
@@ -128,19 +129,27 @@
           configs.find(
             c => c.name === form.name && c.name !== currentConfig?.name
           ) !== undefined
-            ? "Name must be unique"
+            ? $_(
+                "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Name_unique"
+              )
             : null
       }
       // Name required
       else {
-        errors.name = "Name is required"
+        errors.name = $_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Name_required"
+        )
       }
       return !!errors.name
     }
 
     // TYPE
     const typeError = () => {
-      errors.type = form.type ? null : "Type is required"
+      errors.type = form.type
+        ? null
+        : $_(
+            "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Type_required"
+          )
       return !!errors.type
     }
 
@@ -148,17 +157,25 @@
     const basicAuthErrors = () => {
       errors.basic.username = form.basic.username
         ? null
-        : "Username is required"
+        : $_(
+            "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Username_required"
+          )
       errors.basic.password = form.basic.password
         ? null
-        : "Password is required"
+        : $_(
+            "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Password_required"
+          )
 
       return !!(errors.basic.username || errors.basic.password || commonError)
     }
 
     // BEARER TOKEN
     const bearerTokenErrors = () => {
-      errors.bearer.token = form.bearer.token ? null : "Token is required"
+      errors.bearer.token = form.bearer.token
+        ? null
+        : $_(
+            "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Token_required"
+          )
       return !!(errors.bearer.token || commonError)
     }
 
@@ -178,7 +195,11 @@
       form.basic[formFieldkey] = `{{ env.${data.name} }}`
       createVariableModal.hide()
     } catch (err) {
-      notifications.error(`Failed to create variable: ${err.message}`)
+      notifications.error(
+        `${$_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Failed_create"
+        )} ${err.message}`
+      )
     }
   }
 
@@ -203,31 +224,52 @@
 </script>
 
 <ModalContent
-  title={currentConfig ? "Update Authentication" : "Add Authentication"}
+  title={currentConfig
+    ? $_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Update_Authentication"
+      )
+    : $_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Add_Authentication"
+      )}
   onConfirm={onConfirmInternal}
-  confirmText={currentConfig ? "Update" : "Add"}
+  confirmText={currentConfig
+    ? $_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Update"
+      )
+    : $_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Add"
+      )}
   disabled={hasErrors || !hasChanged}
-  cancelText={"Cancel"}
+  cancelText={$_(
+    "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Cancel"
+  )}
   size="M"
   showSecondaryButton={!!currentConfig}
-  secondaryButtonText={"Remove"}
+  secondaryButtonText={$_(
+    "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Remove"
+  )}
   secondaryAction={onRemove}
   secondaryButtonWarning={true}
 >
   <Layout gap="S">
     <Body size="S">
-      The authorization header will be automatically generated when you send the
-      request.
+      {$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.authorization"
+      )}
     </Body>
     <Input
-      label="Name"
+      label={$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Name"
+      )}
       bind:value={form.name}
       on:change={onFieldChange}
       on:blur={() => (blurred.name = true)}
       error={blurred.name ? errors.name : null}
     />
     <Select
-      label="Type"
+      label={$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Type"
+      )}
       bind:value={form.type}
       on:change={onFieldChange}
       options={AUTH_TYPE_LABELS}
@@ -236,7 +278,9 @@
     />
     {#if form.type === AUTH_TYPES.BASIC}
       <EnvDropdown
-        label="Username"
+        label={$_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Username"
+        )}
         bind:value={form.basic.username}
         on:change={onFieldChange}
         on:blur={() => (blurred.basic.username = true)}
@@ -247,7 +291,9 @@
         {handleUpgradePanel}
       />
       <EnvDropdown
-        label="Password"
+        label={$_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Password"
+        )}
         type="password"
         bind:value={form.basic.password}
         on:change={onFieldChange}
@@ -261,7 +307,9 @@
     {/if}
     {#if form.type === AUTH_TYPES.BEARER}
       <BindableCombobox
-        label="Token"
+        label={$_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationModal.Token"
+        )}
         value={form.bearer.token}
         bindings={[
           ...getAuthBindings(),

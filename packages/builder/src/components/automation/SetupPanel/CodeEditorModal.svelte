@@ -1,6 +1,6 @@
 <script>
   import { Button, Modal, ModalContent } from "@budibase/bbui"
-
+  import { _ } from "../../../../lang/i18n"
   let modal
 
   export const show = () => {
@@ -23,7 +23,9 @@
     </div>
   </ModalContent>
 </Modal>
-<Button primary on:click={show}>Edit Code</Button>
+<Button primary on:click={show}
+  >{$_("components.automation.SetupPanel.CodeEditorModal.Edit_Code")}</Button
+>
 
 <style>
   .container :global(section > header) {

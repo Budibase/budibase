@@ -19,6 +19,7 @@
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { ActionStepID, TriggerStepID } from "constants/backend/automations"
   import { permissions } from "stores/backend"
+  import { _ } from "../../../../../lang/i18n"
 
   export let block
   export let testDataModal
@@ -77,7 +78,11 @@
     try {
       await automationStore.actions.deleteAutomationBlock(loopBlock)
     } catch (error) {
-      notifications.error("Error saving automation")
+      notifications.error(
+        $_(
+          "components.automation.AutomationBuilder.FlowChart.FlowItem.Error_saving"
+        )
+      )
     }
   }
 
@@ -92,7 +97,11 @@
       }
       await automationStore.actions.deleteAutomationBlock(block)
     } catch (error) {
-      notifications.error("Error saving automation")
+      notifications.error(
+        $_(
+          "components.automation.AutomationBuilder.FlowChart.FlowItem.Error_saving"
+        )
+      )
     }
   }
 
@@ -137,7 +146,11 @@
             <use xlink:href="#spectrum-icon-18-Reuse" />
           </svg>
           <div class="iconAlign">
-            <Detail size="S">Looping</Detail>
+            <Detail size="S"
+              >{$_(
+                "components.automation.AutomationBuilder.FlowChart.FlowItem.Looping"
+              )}</Detail
+            >
           </div>
         </div>
 
@@ -186,16 +199,33 @@
             <div class="block-options">
               {#if !loopBlock}
                 <ActionButton on:click={() => addLooping()} icon="Reuse">
-                  Add Looping
+                  {$_(
+                    "components.automation.AutomationBuilder.FlowChart.FlowItem.Add_Looping"
+                  )}
                 </ActionButton>
               {/if}
               {#if showBindingPicker}
                 <Select
                   on:change={toggleRowControl}
-                  defaultValue="Use values"
+                  defaultValue={$_(
+                    "components.automation.AutomationBuilder.FlowChart.FlowItem.Use_values"
+                  )}
                   autoWidth
-                  value={block.rowControl ? "Use bindings" : "Use values"}
-                  options={["Use values", "Use bindings"]}
+                  value={block.rowControl
+                    ? $_(
+                        "components.automation.AutomationBuilder.FlowChart.FlowItem.Use_bindings"
+                      )
+                    : $_(
+                        "components.automation.AutomationBuilder.FlowChart.FlowItem.Use_values"
+                      )}
+                  options={[
+                    $_(
+                      "components.automation.AutomationBuilder.FlowChart.FlowItem.Using_values"
+                    ),
+                    $_(
+                      "components.automation.AutomationBuilder.FlowChart.FlowItem.Use_bindings"
+                    ),
+                  ]}
                   placeholder={null}
                 />
               {/if}
@@ -208,7 +238,11 @@
         {/if}
 
         {#if isAppAction}
-          <Label>Role</Label>
+          <Label
+            >{$_(
+              "components.automation.AutomationBuilder.FlowChart.FlowItem.Role"
+            )}</Label
+          >
           <RoleSelect bind:value={role} />
         {/if}
         <AutomationBlockSetup
@@ -218,7 +252,9 @@
         />
         {#if lastStep}
           <Button on:click={() => testDataModal.show()} cta>
-            Finish and test automation
+            {$_(
+              "components.automation.AutomationBuilder.FlowChart.FlowItem.Finish_automation"
+            )}
           </Button>
         {/if}
       </Layout>

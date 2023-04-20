@@ -2,6 +2,8 @@
   import { Button, Select, Input, Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { flags } from "stores/backend"
+  import { _ } from "../../../../lang/i18n"
+
   const dispatch = createEventDispatcher()
 
   export let value
@@ -19,19 +21,19 @@
 
   const CRON_EXPRESSIONS = [
     {
-      label: "Every Minute",
+      label: $_("components.automation.SetupPanel.CronBuilder.Every_Minute"),
       value: "* * * * *",
     },
     {
-      label: "Every Hour",
+      label: $_("components.automation.SetupPanel.CronBuilder.Every_Hour"),
       value: "0 * * * *",
     },
     {
-      label: "Every Morning at 8AM",
+      label: $_("components.automation.SetupPanel.CronBuilder.Every_Morning"),
       value: "0 8 * * *",
     },
     {
-      label: "Every Night at Midnight",
+      label: $_("components.automation.SetupPanel.CronBuilder.Every_Night"),
       value: "0 0 * * *",
     },
   ]
@@ -39,7 +41,7 @@
   onMount(() => {
     if (!$flags.cloud) {
       CRON_EXPRESSIONS.push({
-        label: "Every Budibase Reboot",
+        label: $_("components.automation.SetupPanel.CronBuilder.Every_Reboot"),
         value: "@reboot",
       })
     }
@@ -54,11 +56,16 @@
     updateOnChange={false}
   />
   {#if touched && !value}
-    <Label><div class="error">Please specify a CRON expression</div></Label>
+    <Label
+      ><div class="error">
+        {$_("components.automation.SetupPanel.CronBuilder.expression")}
+      </div></Label
+    >
   {/if}
   <div class="presets">
     <Button on:click={() => (presets = !presets)}
-      >{presets ? "Hide" : "Show"} Presets</Button
+      >{presets ? "Hide" : "Show"}
+      {$_("components.automation.SetupPanel.CronBuilder.Presets")}</Button
     >
     {#if presets}
       <Select
@@ -66,7 +73,7 @@
         {value}
         secondary
         extraThin
-        label="Presets"
+        label={$_("components.automation.SetupPanel.CronBuilder.Presets")}
         options={CRON_EXPRESSIONS}
       />
     {/if}

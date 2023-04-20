@@ -1,6 +1,7 @@
 <script>
   import { ActionButton, Modal } from "@budibase/bbui"
   import ExportModal from "../modals/ExportModal.svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let view
   export let filters
@@ -18,7 +19,7 @@
   quiet
   on:click={modal.show}
 >
-  Export
+  {$_("components.backend.DataTable.buttons.ExporButton.Export")}
 </ActionButton>
 <Modal bind:this={modal}>
   <ExportModal {view} {filters} {sorting} {selectedRows} />

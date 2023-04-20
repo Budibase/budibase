@@ -3,6 +3,7 @@
   import { Icon, Body, Detail, StatusLight } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let block
   export let open
@@ -68,11 +69,32 @@
       {/if}
       <div class="iconAlign">
         {#if isTrigger}
-          <Body size="XS"><b>Trigger</b></Body>
-          <Body size="XS">When this happens:</Body>
+          <Body size="XS"
+            ><b
+              >{$_(
+                "components.automation.AutomationBuilder.FlowChart.FlowItemHeader.Trigger"
+              )}</b
+            ></Body
+          >
+          <Body size="XS"
+            >{$_(
+              "components.automation.AutomationBuilder.FlowChart.FlowItemHeader.happens"
+            )}</Body
+          >
         {:else}
-          <Body size="XS"><b>Step {idx}</b></Body>
-          <Body size="XS">Do this:</Body>
+          <Body size="XS"
+            ><b
+              >{$_(
+                "components.automation.AutomationBuilder.FlowChart.FlowItemHeader.Step"
+              )}
+              {idx}</b
+            ></Body
+          >
+          <Body size="XS"
+            >{$_(
+              "components.automation.AutomationBuilder.FlowChart.FlowItemHeader.Do_this"
+            )}</Body
+          >
         {/if}
         <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
       </div>

@@ -1,6 +1,7 @@
 import sanitizeUrl from "./utils/sanitizeUrl"
 import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
+import { _ } from "../../../../lang/i18n"
 
 export default function (tables) {
   return tables.map(table => {
@@ -33,17 +34,17 @@ const generateTableBlock = table => {
       rowCount: 8,
       clickBehaviour: "details",
       showTitleButton: true,
-      titleButtonText: "Create row",
+      titleButtonText: $_("builderStore.store.screenTemplates.rowListScreen.Create_row"),
       titleButtonClickBehaviour: "new",
     })
-    .instanceName(`${table.name} - Table block`)
+    .instanceName(`${table.name} - ${$_("builderStore.store.screenTemplates.rowListScreen.Table block")}`)
   return tableBlock
 }
 
 const createScreen = table => {
   return new Screen()
     .route(rowListUrl(table))
-    .instanceName(`${table.name} - List`)
+    .instanceName(`${table.name} - ${$_("builderStore.store.screenTemplates.rowListScreen.List")}`)
     .addChild(generateTableBlock(table))
     .json()
 }

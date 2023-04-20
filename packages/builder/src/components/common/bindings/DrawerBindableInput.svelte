@@ -7,6 +7,7 @@
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
+  import { _ } from "../../../../lang/i18n"
 
   export let panel = ClientBindingPanel
   export let value = ""
@@ -65,10 +66,10 @@
 </div>
 <Drawer {fillWidth} bind:this={bindingDrawer} {title} left={drawerLeft}>
   <svelte:fragment slot="description">
-    Add the objects on the left to enrich your text.
+    {$_("components.common.bindings.DrawerBindableInput.Add")}
   </svelte:fragment>
   <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
-    Save
+    {$_("components.common.bindings.DrawerBindableInput.Save")}
   </Button>
   <svelte:component
     this={panel}

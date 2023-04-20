@@ -17,6 +17,7 @@
   } from "constants"
   import RoleCell from "./cells/RoleCell.svelte"
   import { createEventDispatcher } from "svelte"
+  import { _ } from "../../../../lang/i18n"
 
   export let schema = {}
   export let data = []
@@ -66,19 +67,29 @@
         }
       })
       if (schema.email) {
-        schema.email.displayName = "Email"
+        schema.email.displayName = $_(
+          "components.backend.DataTable.Table.Email"
+        )
       }
       if (schema.roleId) {
-        schema.roleId.displayName = "Role"
+        schema.roleId.displayName = $_(
+          "components.backend.DataTable.Table.Role"
+        )
       }
       if (schema.firstName) {
-        schema.firstName.displayName = "First Name"
+        schema.firstName.displayName = $_(
+          "components.backend.DataTable.Table.First_Name"
+        )
       }
       if (schema.lastName) {
-        schema.lastName.displayName = "Last Name"
+        schema.lastName.displayName = $_(
+          "components.backend.DataTable.Table.Last_Name"
+        )
       }
       if (schema.status) {
-        schema.status.displayName = "Status"
+        schema.status.displayName = $_(
+          "components.backend.DataTable.Table.Status"
+        )
       }
     }
   }
@@ -103,9 +114,15 @@
       const deletedRowIds = targetRows.map(row => row._id)
       data = data.filter(row => deletedRowIds.indexOf(row._id))
 
-      notifications.success(`Successfully deleted ${targetRows.length} rows`)
+      notifications.success(
+        `${$_("components.backend.DataTable.Table.Successfully_deketed")} ${
+          targetRows.length
+        } ${$_("components.backend.DataTable.Table.Role")}`
+      )
     } catch (error) {
-      notifications.error("Error deleting rows")
+      notifications.error(
+        $_("components.backend.DataTable.Table.Error_deleting")
+      )
     }
   }
 
@@ -189,7 +206,7 @@
 
 <ConfirmDialog
   bind:this={confirmDelete}
-  okText="Delete"
+  okText={$_("components.backend.DataTable.Table.Delete")}
   onOk={async () => {
     if (editableRow) {
       await deleteRows([editableRow])
@@ -199,9 +216,9 @@
   onCancel={async () => {
     editRow(editableRow)
   }}
-  title="Confirm Deletion"
+  title={$_("components.backend.DataTable.Table.Confirm_Deletion")}
 >
-  Are you sure you want to delete this row?
+  {$_("components.backend.DataTable.Table.want_delete")}
 </ConfirmDialog>
 
 <Modal bind:this={editColumnModal}>

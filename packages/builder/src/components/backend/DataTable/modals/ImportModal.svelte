@@ -9,6 +9,7 @@
   import TableDataImport from "../../TableNavigator/ExistingTableDataImport.svelte"
   import { API } from "api"
   import { createEventDispatcher } from "svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   const dispatch = createEventDispatcher()
 
@@ -23,9 +24,13 @@
         tableId,
         rows,
       })
-      notifications.success("Rows successfully imported")
+      notifications.success(
+        $_("components.backend.DataTable.modals.ImportModal.Rows_imported")
+      )
     } catch (error) {
-      notifications.error("Unable to import data")
+      notifications.error(
+        $_("components.backend.DataTable.modals.ImportModal.Unable_data")
+      )
     }
 
     // Always refresh rows just to be sure
@@ -34,17 +39,18 @@
 </script>
 
 <ModalContent
-  title="Import Data"
-  confirmText="Import"
+  title={$_("components.backend.DataTable.modals.ImportModal.Import_Data")}
+  confirmText={$_("components.backend.DataTable.modals.ImportModal.Import")}
   onConfirm={importData}
   disabled={!allValid}
 >
   <Body size="S">
-    Import rows to an existing table from a CSV or JSON file. Only columns from
-    the file which exist in the table will be imported.
+    {$_("components.backend.DataTable.modals.ImportModal.Import_rows")}
   </Body>
   <Layout gap="XS" noPadding>
-    <Label grey extraSmall>CSV or JSON file to import</Label>
+    <Label grey extraSmall
+      >{$_("components.backend.DataTable.modals.ImportModal.import")}</Label
+    >
     <TableDataImport {tableId} bind:rows bind:allValid bind:displayColumn />
   </Layout>
 </ModalContent>

@@ -4,6 +4,7 @@
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import { licensing } from "stores/portal"
   import { Content, SideNav, SideNavItem } from "components/portal/page"
+  import { _ } from "../../../lang/i18n"
 
   export let templates
 
@@ -53,7 +54,7 @@
     <SideNav>
       <SideNavItem
         on:click={() => (selectedCategory = null)}
-        text="All"
+        text={$_("components.common.TemplateDisplay.All")}
         active={selectedCategory == null}
       />
       {#each categories as category}
@@ -86,7 +87,7 @@
                       creationModal.show()
                     }}
                   >
-                    Use template
+                    {$_("components.common.TemplateDisplay.Use_template")}
                   </Button>
                 {/if}
                 <a
@@ -95,7 +96,7 @@
                   class="overlay-preview-link spectrum-Button spectrum-Button--sizeM spectrum-Button--secondary"
                   on:click|stopPropagation
                 >
-                  Details
+                  {$_("components.common.TemplateDisplay.Details")}
                 </a>
               </TemplateCard>
             {/each}

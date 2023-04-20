@@ -1,5 +1,6 @@
 import { API } from "api"
 import { FIELDS } from "constants/backend"
+import { _ } from "../../../../lang/i18n"
 
 const BYTES_IN_MB = 1000000
 const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
@@ -25,7 +26,7 @@ export const parseFile = e => {
     const file = Array.from(e.target.files)[0]
 
     if (file.size >= FILE_SIZE_LIMIT) {
-      reject("file too large")
+      reject($_("components.backend.TableNavigation.unitls.file_large"))
       return
     }
 
@@ -49,7 +50,9 @@ export const parseFile = e => {
             resolveRows(rows)
           })
           .catch(() => {
-            reject("can't convert csv to json")
+            reject(
+              $_("components.backend.TableNavigation.unitls.can't_convert")
+            )
           })
       } else if (file.type === "application/json") {
         const parsedFileData = JSON.parse(fileData)
@@ -59,10 +62,10 @@ export const parseFile = e => {
         } else if (typeof parsedFileData === "object") {
           resolveRows(parsedFileData.rows, parsedFileData.schema)
         } else {
-          reject("invalid json format")
+          reject($_("components.backend.TableNavigation.unitls.invalid_format"))
         }
       } else {
-        reject("invalid file type")
+        reject($_("components.backend.TableNavigation.unitls.invalid_type"))
       }
     })
 

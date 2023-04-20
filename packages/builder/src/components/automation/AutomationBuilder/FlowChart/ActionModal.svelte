@@ -10,13 +10,16 @@
   import { automationStore } from "builderStore"
   import { admin } from "stores/portal"
   import { externalActions } from "./ExternalActions"
+  import { _ } from "../../../../../lang/i18n"
 
   export let blockIdx
 
   const disabled = {
     SEND_EMAIL_SMTP: {
       disabled: !$admin.checklist.smtp.checked,
-      message: "Please configure SMTP",
+      message: $_(
+        "components.automation.AutomationBuilder.FlowChart.ActionModal.configure"
+      ),
     },
   }
 
@@ -55,20 +58,32 @@
       )
       await automationStore.actions.addBlockToAutomation(newBlock, blockIdx + 1)
     } catch (error) {
-      notifications.error("Error saving automation")
+      notifications.error(
+        $_(
+          "components.automation.AutomationBuilder.FlowChart.ActionModal.Error_saving"
+        )
+      )
     }
   }
 </script>
 
 <ModalContent
-  title="Add automation step"
-  confirmText="Save"
+  title={$_(
+    "components.automation.AutomationBuilder.FlowChart.ActionModal.Add_step"
+  )}
+  confirmText={$_(
+    "components.automation.AutomationBuilder.FlowChart.ActionModal.Save"
+  )}
   size="M"
   disabled={!selectedAction}
   onConfirm={addBlockToAutomation}
 >
   <Layout noPadding gap="XS">
-    <Detail size="S">Apps</Detail>
+    <Detail size="S"
+      >{$_(
+        "components.automation.AutomationBuilder.FlowChart.ActionModal.Apps"
+      )}</Detail
+    >
     <div class="item-list">
       {#each Object.entries(external) as [idx, action]}
         <div

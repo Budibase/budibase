@@ -10,6 +10,7 @@
   import { store } from "builderStore"
   import { API } from "api"
   import clientPackage from "@budibase/client/package.json"
+  import { _ } from "../../../lang/i18n"
 
   export function show() {
     updateModal.show()
@@ -35,7 +36,7 @@
       const pkg = await API.fetchAppPackage(appId)
       await store.actions.initialise(pkg)
     } catch (error) {
-      notifications.error("Error fetching app package")
+      notifications.error($_("components.deploy.VersionModal.Error_fetching"))
     }
   }
 
@@ -46,10 +47,14 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App updated successfully to version ${clientPackage.version}`
+        `${$_("components.deploy.VersionModal.App_updated")} ${
+          clientPackage.version
+        }`
       )
     } catch (err) {
-      notifications.error(`Error updating app: ${err}`)
+      notifications.error(
+        `${$_("components.deploy.VersionModal.Error_updating")}: ${err}`
+      )
     }
     updateModal.hide()
   }
@@ -61,10 +66,14 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App reverted successfully to version ${$store.revertableVersion}`
+        `${$_("components.deploy.VersionModal.App_reverted")} ${
+          $store.revertableVersion
+        }`
       )
     } catch (err) {
-      notifications.error(`Error reverting app: ${err}`)
+      notifications.error(
+        `${$_("components.deploy.VersionModal.Error_reverting")}: ${err}`
+      )
     }
     updateModal.hide()
   }
@@ -72,14 +81,16 @@
 
 {#if !hideIcon && updateAvailable}
   <StatusLight hoverable on:click={updateModal.show} notice>
-    Update available
+    {$_("components.deploy.VersionModal.Update_available")}
   </StatusLight>
 {/if}
 <Modal bind:this={updateModal}>
   <ModalContent
-    title="App version"
+    title={$_("components.deploy.VersionModal.App_version")}
     confirmText="Update"
-    cancelText={updateAvailable ? "Cancel" : "Close"}
+    cancelText={updateAvailable
+      ? $_("components.deploy.VersionModal.Cancel")
+      : $_("components.deploy.VersionModal.Close")}
     onConfirm={update}
     showConfirmButton={updateAvailable}
   >
@@ -90,21 +101,25 @@
     </div>
     {#if updateAvailable}
       <Body size="S">
-        This app is currently using version <b>{$store.version}</b>, but version
-        <b>{clientPackage.version}</b> is available. Updates can contain new features,
-        performance improvements and bug fixes.
+        {$_("components.deploy.VersionModal.app_using")}
+        <b>{$store.version}</b>, {$_(
+          "components.deploy.VersionModal.but_version"
+        )}
+        <b>{clientPackage.version}</b>
+        {$_("components.deploy.VersionModal.Updates_features")}
+        {$_("components.deploy.VersionModal.performance_improvements")}
       </Body>
     {:else}
       <Body size="S">
-        This app is currently using version <b>{$store.version}</b> which is the
-        latest version available.
+        {$_("components.deploy.VersionModal.app_using")} <b>{$store.version}</b>
+        {$_("components.deploy.VersionModal.latest_version")}
       </Body>
     {/if}
     {#if revertAvailable}
       <Body size="S">
-        You can revert this app to version
+        {$_("components.deploy.VersionModal.revert_app")}
         <b>{$store.revertableVersion}</b>
-        if you're experiencing issues with the current version.
+        {$_("components.deploy.VersionModal.issues_varsion")}
       </Body>
     {/if}
   </ModalContent>

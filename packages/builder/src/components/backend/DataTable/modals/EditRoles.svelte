@@ -5,13 +5,19 @@
   import { notifications } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { roles } from "stores/backend"
+  import { _ } from "../../../../../lang/i18n"
 
   const BASE_ROLE = { _id: "", inherits: "BASIC", permissionId: "write" }
 
   let basePermissions = []
   let selectedRole = BASE_ROLE
   let errors = []
-  let builtInRoles = ["Admin", "Power", "Basic", "Public"]
+  let builtInRoles = [
+    $_("components.backend.DataTable.modals.EditRoles.Admin"),
+    $_("components.backend.DataTable.modals.EditRoles.Power"),
+    $_("components.backend.DataTable.modals.EditRoles.Basic"),
+    $_("components.backend.DataTable.modals.EditRoles.Public"),
+  ]
   // Don't allow editing of public role
   $: editableRoles = $roles.filter(role => role._id !== "PUBLIC")
   $: selectedRoleId = selectedRole._id
@@ -36,7 +42,9 @@
     try {
       basePermissions = await API.getBasePermissions()
     } catch (error) {
-      notifications.error("Error fetching base permission options")
+      notifications.error(
+        $_("components.backend.DataTable.modals.EditRoles.Error_fetching")
+      )
       basePermissions = []
     }
   }
@@ -71,10 +79,16 @@
 
     // Validation
     if (!selectedRole.name || selectedRole.name.trim() === "") {
-      errors.push({ message: "Please enter a role name" })
+      errors.push({
+        message: $_("components.backend.DataTable.modals.EditRoles.enter_role"),
+      })
     }
     if (!selectedRole.permissionId) {
-      errors.push({ message: "Please choose permissions" })
+      errors.push({
+        message: $_(
+          "components.backend.DataTable.modals.EditRoles.choose_permissions"
+        ),
+      })
     }
     if (errors.length) {
       return false
@@ -83,9 +97,13 @@
     // Save/create the role
     try {
       await roles.save(selectedRole)
-      notifications.success("Role saved successfully")
+      notifications.success(
+        $_("components.backend.DataTable.modals.EditRoles.Role_saved")
+      )
     } catch (error) {
-      notifications.error("Error saving role")
+      notifications.error(
+        $_("components.backend.DataTable.modals.EditRoles.Error_saving")
+      )
       return false
     }
   }
@@ -95,9 +113,13 @@
     try {
       await roles.delete(selectedRole)
       changeRole()
-      notifications.success("Role deleted successfully")
+      notifications.success(
+        $_("components.backend.DataTable.modals.EditRoles.Role_deleted")
+      )
     } catch (error) {
-      notifications.error("Error deleting role")
+      notifications.error(
+        $_("components.backend.DataTable.modals.EditRoles.Error_deleting")
+      )
     }
   }
 
@@ -105,8 +127,10 @@
 </script>
 
 <ModalContent
-  title="Edit Roles"
-  confirmText={isCreating ? "Create" : "Save"}
+  title={$_("components.backend.DataTable.modals.EditRoles.Edit_Roles")}
+  confirmText={isCreating
+    ? $_("components.backend.DataTable.modals.EditRoles.Create")
+    : $_("components.backend.DataTable.modals.EditRoles.Save")}
   onConfirm={saveRole}
   disabled={!valid || !hasUniqueRoleName}
 >
@@ -116,23 +140,27 @@
   <Select
     thin
     secondary
-    label="Role"
+    label={$_("components.backend.DataTable.modals.EditRoles.Role")}
     value={selectedRoleId}
     on:change={changeRole}
     options={editableRoles}
-    placeholder="Create new role"
+    placeholder={$_(
+      "components.backend.DataTable.modals.EditRoles.Create_role"
+    )}
     getOptionValue={role => role._id}
     getOptionLabel={role => role.name}
   />
   {#if selectedRole}
     <Input
-      label="Name"
+      label={$_("components.backend.DataTable.modals.EditRoles.Name")}
       bind:value={selectedRole.name}
       disabled={shouldDisableRoleInput}
-      error={!hasUniqueRoleName ? "Select a unique role name." : null}
+      error={!hasUniqueRoleName
+        ? $_("components.backend.DataTable.modals.EditRoles.unique_name")
+        : null}
     />
     <Select
-      label="Inherits Role"
+      label={$_("components.backend.DataTable.modals.EditRoles.Ingerits_Role")}
       bind:value={selectedRole.inherits}
       options={selectedRole._id === "BASIC" ? $roles : otherRoles}
       getOptionValue={role => role._id}
@@ -140,7 +168,9 @@
       disabled={shouldDisableRoleInput}
     />
     <Select
-      label="Base Permissions"
+      label={$_(
+        "components.backend.DataTable.modals.EditRoles.Base_Permissions"
+      )}
       bind:value={selectedRole.permissionId}
       options={basePermissions}
       getOptionValue={x => x._id}
@@ -150,7 +180,9 @@
   {/if}
   <div slot="footer">
     {#if !isCreating && !builtInRoles.includes(selectedRole.name)}
-      <Button warning on:click={deleteRole}>Delete</Button>
+      <Button warning on:click={deleteRole}
+        >{$_("components.backend.DataTable.modals.EditRoles.Delete")}</Button
+      >
     {/if}
   </div>
 </ModalContent>

@@ -1,5 +1,6 @@
 <script>
   import { ActionButton } from "@budibase/bbui"
+  import { _ } from "../../../../../lang/i18n"
 
   export let hideAutocolumns
 
@@ -15,5 +16,5 @@
   quiet
   on:click={hideOrUnhide}
 >
-  Auto columns
+  {$_("components.backend.DataTable.buttons.HideAutocolumnButton.Auto_columns")}
 </ActionButton>

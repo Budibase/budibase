@@ -12,6 +12,7 @@
   import { Helpers } from "@budibase/bbui"
   import { RelationshipErrorChecker } from "./relationshipErrors"
   import { onMount } from "svelte"
+  import { _ } from "../../../../lang/i18n"
 
   export let save
   export let datasource
@@ -23,11 +24,15 @@
 
   const relationshipTypes = [
     {
-      label: "One to Many",
+      label: $_(
+        "components.backend.Datasource.CreateEditRelationship.One to Many"
+      ),
       value: RelationshipTypes.MANY_TO_ONE,
     },
     {
-      label: "Many to Many",
+      label: $_(
+        "components.backend.Datasource.CreateEditRelationship.Many to Many"
+      ),
       value: RelationshipTypes.MANY_TO_MANY,
     },
   ]
@@ -320,13 +325,17 @@
 </script>
 
 <ModalContent
-  title="Define Relationship"
-  confirmText="Save"
+  title={$_(
+    "components.backend.Datasource.CreateEditRelationship.Define_Relationship"
+  )}
+  confirmText={$_("components.backend.Datasource.CreateEditRelationship.Save")}
   onConfirm={saveRelationship}
   disabled={!valid}
 >
   <Select
-    label="Relationship type"
+    label={$_(
+      "components.backend.Datasource.CreateEditRelationship.Relationship_type"
+    )}
     options={relationshipTypes}
     bind:value={relationshipType}
     bind:error={errors.relationshipType}
@@ -336,11 +345,17 @@
       })}
   />
   <div class="headings">
-    <Detail>Tables</Detail>
+    <Detail
+      >{$_(
+        "components.backend.Datasource.CreateEditRelationship.Tables"
+      )}</Detail
+    >
   </div>
   {#if !selectedFromTable}
     <Select
-      label="Select from table"
+      label={$_(
+        "components.backend.Datasource.CreateEditRelationship.Select_from_table"
+      )}
       options={tableOptions}
       bind:value={fromId}
       bind:error={errors.fromTable}
@@ -354,7 +369,9 @@
   {/if}
   {#if isManyToOne && fromId}
     <Select
-      label={`Primary Key (${getTable(fromId).name})`}
+      label={`${$_(
+        "components.backend.Datasource.CreateEditRelationship.Primary_Key"
+      )} (${getTable(fromId).name})`}
       options={Object.keys(getTable(fromId).schema)}
       bind:value={fromPrimary}
       bind:error={errors.fromPrimary}
@@ -362,7 +379,9 @@
     />
   {/if}
   <Select
-    label={"Select to table"}
+    label={$_(
+      "components.backend.Datasource.CreateEditRelationship.Select_to_table"
+    )}
     options={tableOptions}
     bind:value={toId}
     bind:error={errors.toTable}
@@ -375,7 +394,7 @@
   />
   {#if isManyToMany}
     <Select
-      label={"Through"}
+      label={$_("components.backend.Datasource.CreateEditRelationship.Through")}
       options={tableOptions}
       bind:value={throughId}
       bind:error={errors.throughTable}
@@ -387,14 +406,18 @@
     />
     {#if fromId && toId && throughId}
       <Select
-        label={`Foreign Key (${getTable(fromId)?.name})`}
+        label={`${$_(
+          "components.backend.Datasource.CreateEditRelationship.Foreign_Key"
+        )} (${getTable(fromId)?.name})`}
         options={Object.keys(getTable(throughId)?.schema)}
         bind:value={throughToKey}
         bind:error={errors.throughToKey}
         on:change={changed}
       />
       <Select
-        label={`Foreign Key (${getTable(toId)?.name})`}
+        label={`${$_(
+          "components.backend.Datasource.CreateEditRelationship.Foreign_Key"
+        )} (${getTable(toId)?.name})`}
         options={Object.keys(getTable(throughId)?.schema)}
         bind:value={throughFromKey}
         bind:error={errors.throughFromKey}
@@ -403,7 +426,9 @@
     {/if}
   {:else if isManyToOne && toId}
     <Select
-      label={`Foreign Key (${getTable(toId)?.name})`}
+      label={`${$_(
+        "components.backend.Datasource.CreateEditRelationship.Foreign_Key"
+      )} (${getTable(toId)?.name})`}
       options={Object.keys(getTable(toId)?.schema)}
       bind:value={fromForeign}
       bind:error={errors.fromForeign}
@@ -411,27 +436,38 @@
     />
   {/if}
   <div class="headings">
-    <Detail>Column names</Detail>
+    <Detail
+      >{$_(
+        "components.backend.Datasource.CreateEditRelationship.Column_names"
+      )}</Detail
+    >
   </div>
   <Body>
-    Budibase manages SQL relationships as a new column in the table, please
-    provide a name for these columns.
+    {$_(
+      "components.backend.Datasource.CreateEditRelationship.Budibase_manages"
+    )}
   </Body>
   <Input
-    label="From table column"
+    label={$_(
+      "components.backend.Datasource.CreateEditRelationship.From_column"
+    )}
     bind:value={fromColumn}
     bind:error={errors.fromColumn}
     on:change={changed}
   />
   <Input
-    label="To table column"
+    label={$_("components.backend.Datasource.CreateEditRelationship.To_colum")}
     bind:value={toColumn}
     bind:error={errors.toColumn}
     on:change={changed}
   />
   <div slot="footer">
     {#if originalFromColumnName != null}
-      <Button warning text on:click={deleteRelationship}>Delete</Button>
+      <Button warning text on:click={deleteRelationship}
+        >{$_(
+          "components.backend.Datasource.CreateEditRelationship.Delete"
+        )}</Button
+      >
     {/if}
   </div>
 </ModalContent>

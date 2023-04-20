@@ -13,6 +13,7 @@
   import { store } from "builderStore"
   import TourWrap from "../portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "../portal/onboarding/tours.js"
+  import { _ } from "../../../lang/i18n"
 
   let publishModal
   let asyncModal
@@ -41,7 +42,7 @@
       publishCompleteModal.show()
     } catch (error) {
       analytics.captureException(error)
-      notifications.error("Error publishing app")
+      notifications.error($_("components.deploy.DeployModal.Error_publishing"))
     }
   }
 
@@ -58,17 +59,16 @@
 
 <TourWrap tourStepKey={TOUR_STEP_KEYS.BUILDER_APP_PUBLISH}>
   <Button cta on:click={publishModal.show} id={"builder-app-publish-button"}>
-    Publish
+    {$_("components.deploy.DeployModal.Publish")}
   </Button>
 </TourWrap>
 <Modal bind:this={publishModal}>
   <ModalContent
-    title="Publish to production"
-    confirmText="Publish"
+    title={$_("components.deploy.DeployModal.Publish_production")}
+    confirmText={$_("components.deploy.DeployModal.Publish")}
     onConfirm={publishApp}
   >
-    The changes you have made will be published to the production version of the
-    application.
+    {$_("components.deploy.DeployModal.changes_published")}
   </ModalContent>
 </Modal>
 
@@ -97,7 +97,9 @@
       >
         <use xlink:href="#spectrum-icon-18-GlobeCheck" />
       </svg>
-      <span class="app-published-header-text">App Published!</span>
+      <span class="app-published-header-text"
+        >{$_("components.deploy.DeployModal.App Published")}!</span
+      >
     </div>
     <CopyInput value={publishedUrl} label="You can view your app at:" />
   </ModalContent>

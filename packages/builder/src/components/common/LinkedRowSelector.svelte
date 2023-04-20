@@ -3,6 +3,7 @@
   import { API } from "api"
   import { Select, Label, Multiselect } from "@budibase/bbui"
   import { capitalise } from "../../helpers"
+  import { _ } from "../../../lang/i18n"
 
   export let schema
   export let linkedRows = []
@@ -34,9 +35,9 @@
 {#if linkedTable.primaryDisplay == null}
   <Label extraSmall grey>{label}</Label>
   <Label small black>
-    Please choose a display column for the
+    {$_("components.common.LinkedRowSelector.choose_display")}
     <b>{linkedTable.name}</b>
-    table.
+    {$_("components.common.LinkedRowSelector.table")}.
   </Label>
 {:else if schema.relationshipType === "one-to-many"}
   <Select

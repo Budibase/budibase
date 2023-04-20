@@ -3,6 +3,7 @@
   import { FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
+  import { _ } from "../../../../lang/i18n"
 
   let error = null
   let fileName = null
@@ -20,31 +21,45 @@
 
   const typeOptions = [
     {
-      label: "Text",
+      label: $_(
+        "components.backend.TableNavigation.ExistiongTableDataImport.Text"
+      ),
       value: FIELDS.STRING.type,
     },
     {
-      label: "Number",
+      label: $_(
+        "components.backend.TableNavigation.ExistiongTableDataImport.Number"
+      ),
       value: FIELDS.NUMBER.type,
     },
     {
-      label: "Date",
+      label: $_(
+        "components.backend.TableNavigation.ExistiongTableDataImport.Date"
+      ),
       value: FIELDS.DATETIME.type,
     },
     {
-      label: "Options",
+      label: $_(
+        "components.backend.TableNavigation.ExistiongTableDataImport.Options"
+      ),
       value: FIELDS.OPTIONS.type,
     },
     {
-      label: "Multi-select",
+      label: $_(
+        "components.backend.TableNavigation.ExistiongTableDataImport.Multi-select"
+      ),
       value: FIELDS.ARRAY.type,
     },
     {
-      label: "Barcode/QR",
+      label: $_(
+        "components.backend.TableNavigation.ExistiongTableDataImport.Barcode/QR"
+      ),
       value: FIELDS.BARCODEQR.type,
     },
     {
-      label: "Long Form Text",
+      label: $_(
+        "components.backend.TableNavigation.ExistiongTableDataImport.Long_Text"
+      ),
       value: FIELDS.LONGFORM.type,
     },
   ]
@@ -124,18 +139,25 @@
   />
   <label for="file-upload" class:uploaded={rows.length > 0}>
     {#if loading}
-      loading...
+      {$_(
+        "components.backend.TableNavigation.ExistiongTableDataImport.loading..."
+      )}
     {:else if error}
-      error: {error}
+      {$_("components.backend.TableNavigation.ExistiongTableDataImport.error")}
+      {error}
     {:else if fileName}
       {fileName}
     {:else}
-      Upload
+      {$_("components.backend.TableNavigation.ExistiongTableDataImport.Upload")}
     {/if}
   </label>
 </div>
 {#if fileName && Object.keys(validation).length === 0}
-  <p>No valid fields, try another file</p>
+  <p>
+    {$_(
+      "components.backend.TableNavigation.ExistiongTableDataImport.No_fields"
+    )}
+  </p>
 {:else if rows.length > 0 && !error}
   <div class="schema-fields">
     {#each Object.keys(validation) as name}
@@ -154,15 +176,22 @@
             ? "fieldStatusSuccess"
             : "fieldStatusFailure"}
         >
-          {validation[name] ? "Success" : "Failure"}
+          {validation[name]
+            ? $_(
+                "components.backend.TableNavigation.ExistiongTableDataImport.Success"
+              )
+            : $_(
+                "components.backend.TableNavigation.ExistiongTableDataImport.Failure"
+              )}
         </span>
       </div>
     {/each}
   </div>
   {#if invalidColumns.length > 0}
     <p class="spectrum-FieldLabel spectrum-FieldLabel--sizeM">
-      The following columns are present in the data you wish to import, but do
-      not match the schema of this table and will be ignored.
+      {$_(
+        "components.backend.TableNavigation.ExistiongTableDataImport.data_import"
+      )}
     </p>
     <ul class="ignoredList">
       {#each invalidColumns as column}

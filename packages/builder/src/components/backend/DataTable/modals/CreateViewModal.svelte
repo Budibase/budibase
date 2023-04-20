@@ -3,6 +3,7 @@
   import { goto } from "@roxi/routify"
   import { views as viewsStore } from "stores/backend"
   import { tables } from "stores/backend"
+  import { _ } from "../../../../../lang/i18n"
 
   let name
   let field
@@ -12,7 +13,11 @@
   const saveView = async () => {
     name = name?.trim()
     if (views.includes(name)) {
-      notifications.error(`View exists with name ${name}`)
+      notifications.error(
+        `${$_(
+          "components.backend.DataTable.modals.CreateViewModal.exists_name"
+        )} ${name}`
+      )
       return
     }
     try {
@@ -21,18 +26,32 @@
         tableId: $tables.selected._id,
         field,
       })
-      notifications.success(`View ${name} created`)
+      notifications.success(
+        `${$_(
+          "components.backend.DataTable.modals.CreateViewModal.View"
+        )} ${name} ${$_(
+          "components.backend.DataTable.modals.CreateViewModal.created"
+        )}`
+      )
       $goto(`../../view/${encodeURIComponent(name)}`)
     } catch (error) {
-      notifications.error("Error creating view")
+      notifications.error(
+        $_("components.backend.DataTable.modals.CreateViewModal.Error_creating")
+      )
     }
   }
 </script>
 
 <ModalContent
-  title="Create View"
-  confirmText="Create View"
+  title={$_("components.backend.DataTable.modals.CreateViewModal.Create_View")}
+  confirmText={$_(
+    "components.backend.DataTable.modals.CreateViewModal.Create_View"
+  )}
   onConfirm={saveView}
 >
-  <Input label="View Name" thin bind:value={name} />
+  <Input
+    label={$_("components.backend.DataTable.modals.CreateViewModal.View_Name")}
+    thin
+    bind:value={name}
+  />
 </ModalContent>

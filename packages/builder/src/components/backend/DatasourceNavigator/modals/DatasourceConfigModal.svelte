@@ -6,6 +6,7 @@
   import cloneDeep from "lodash/cloneDeepWith"
   import { saveDatasource as save } from "builderStore/datasource"
   import { onMount } from "svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let integration
   export let modal
@@ -25,9 +26,18 @@
       }
       const resp = await save(datasource, skipFetch)
       $goto(`./datasource/${resp._id}`)
-      notifications.success(`Datasource updated successfully.`)
+      notifications.success(
+        `${$_(
+          "components.backend.DatasourceNavigation.modals.DatasourceConfigModal.Datasource_updated"
+        )}`
+      )
     } catch (err) {
-      notifications.error(err?.message ?? "Error saving datasource")
+      notifications.error(
+        err?.message ??
+          $_(
+            "components.backend.DatasourceNavigation.modals.DatasourceConfigModal.Error_saving"
+          )
+      )
       // prevent the modal from closing
       return false
     }
@@ -39,15 +49,27 @@
 </script>
 
 <ModalContent
-  title={`Connect to ${name}`}
+  title={`${$_(
+    "components.backend.DatasourceNavigation.modals.DatasourceConfigModal.Connect_to"
+  )} ${name}`}
   onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
   confirmText={datasource.plus
-    ? "Save and fetch tables"
-    : "Save and continue to query"}
-  cancelText="Back"
+    ? $_(
+        "components.backend.DatasourceNavigation.modals.DatasourceConfigModal.tables"
+      )
+    : $_(
+        "components.backend.DatasourceNavigation.modals.DatasourceConfigModal.query"
+      )}
+  cancelText={$_(
+    "components.backend.DatasourceNavigation.modals.DatasourceConfigModal.Back"
+  )}
   showSecondaryButton={datasource.plus}
-  secondaryButtonText={datasource.plus ? "Skip table fetch" : undefined}
+  secondaryButtonText={datasource.plus
+    ? $_(
+        "components.backend.DatasourceNavigation.modals.DatasourceConfigModal.Skip"
+      )
+    : undefined}
   secondaryAction={() => {
     skipFetch = true
     saveDatasource()
@@ -58,7 +80,9 @@
 >
   <Layout noPadding>
     <Body size="XS"
-      >Connect your database to Budibase using the config below.
+      >{$_(
+        "components.backend.DatasourceNavigation.modals.DatasourceConfigModal.Connect_database"
+      )}
     </Body>
   </Layout>
   <IntegrationConfigForm

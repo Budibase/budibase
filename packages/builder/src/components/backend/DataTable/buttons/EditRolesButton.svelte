@@ -1,13 +1,14 @@
 <script>
   import { Button, Modal } from "@budibase/bbui"
   import EditRolesModal from "../modals/EditRoles.svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   let modal
 </script>
 
 <div>
   <Button icon="UsersLock" primary size="S" quiet on:click={modal.show}>
-    Edit roles
+    {$_("components.backend.DataTable.buttons.EditRolesButton.Edit_roles")}
   </Button>
 </div>
 <Modal bind:this={modal}>

@@ -21,6 +21,7 @@
   import { store } from "builderStore"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
+  import { _ } from "../../../lang/i18n"
 
   export let application
 
@@ -45,7 +46,7 @@
       const pending = checkIncomingDeploymentStatus(deployments, newDeployments)
       if (pending.length) {
         notifications.warning(
-          "Deployment has been queued and will be processed shortly"
+          $_("components.deploy.AppAction.Deployment_queued")
         )
       }
     }
@@ -57,7 +58,7 @@
       reviewPendingDeployments(deployments, newDeployments)
       return newDeployments
     } catch (err) {
-      notifications.error("Error fetching deployment overview")
+      notifications.error($_("components.deploy.AppAction.Error_fetching"))
     }
   }
 
@@ -90,9 +91,9 @@
     try {
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
-      notifications.success("App unpublished successfully")
+      notifications.success($_("components.deploy.AppAction.App_unpublished"))
     } catch (err) {
-      notifications.error("Error unpublishing app")
+      notifications.error($_("components.deploy.AppAction.Error_unpublishing"))
     }
   }
 
@@ -101,7 +102,7 @@
       await apps.load()
       deployments = await fetchDeployments()
     } catch (err) {
-      notifications.error("Error refreshing app")
+      notifications.error($_("components.deploy.AppAction.Error_refreshing"))
     }
   }
 
@@ -127,7 +128,7 @@
             quiet
             icon="Globe"
             size="M"
-            tooltip="Your published app"
+            tooltip={$_("components.deploy.AppAction.Your_app")}
             on:click={publishPopover.show()}
           />
         </div>
@@ -140,11 +141,17 @@
         >
           <div class="popover-content">
             <Layout noPadding gap="M">
-              <Heading size="XS">Your published app</Heading>
+              <Heading size="XS"
+                >{$_("components.deploy.AppAction.Your_app")}</Heading
+              >
               <Body size="S">
                 <span class="publish-popover-message">
                   {processStringSync(
-                    "Last published {{ duration time 'millisecond' }} ago",
+                    `${$_(
+                      "components.deploy.AppAction.Last_published"
+                    )} {{ duration time 'millisecond' }} ${$_(
+                      "components.deploy.AppAction.ago"
+                    )}`,
                     {
                       time:
                         new Date().getTime() -
@@ -160,9 +167,11 @@
                   disabled={!isPublished}
                   on:click={unpublishApp}
                 >
-                  Unpublish
+                  {$_("components.deploy.AppAction.Unpublish")}
                 </Button>
-                <Button cta on:click={viewApp}>View app</Button>
+                <Button cta on:click={viewApp}
+                  >{$_("components.deploy.AppAction.View_app")}</Button
+                >
               </div>
             </Layout>
           </div>
@@ -175,7 +184,7 @@
         quiet
         icon="GlobeStrike"
         size="M"
-        tooltip="Your app has not been published yet"
+        tooltip={$_("components.deploy.AppAction.app_published")}
         disabled
       />
     {/if}
@@ -197,7 +206,7 @@
             })
           }}
         >
-          Users
+          {$_("components.deploy.AppAction.Users")}
         </ActionButton>
       </span>
     </TourWrap>
@@ -206,15 +215,18 @@
 
 <ConfirmDialog
   bind:this={unpublishModal}
-  title="Confirm unpublish"
-  okText="Unpublish app"
+  title={$_("components.deploy.AppAction.Confirm_unpublish")}
+  okText={$_("components.deploy.AppAction.Unpublish_app")}
   onOk={confirmUnpublishApp}
 >
-  Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
+  {$_("components.deploy.AppAction.you want_unpublish")}
+  <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
 <div class="buttons">
-  <Button on:click={previewApp} secondary>Preview</Button>
+  <Button on:click={previewApp} secondary
+    >{$_("components.deploy.AppAction.Preview")}</Button
+  >
   <DeployModal onOk={completePublish} />
 </div>
 

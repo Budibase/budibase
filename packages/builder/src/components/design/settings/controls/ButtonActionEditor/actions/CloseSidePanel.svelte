@@ -1,4 +1,12 @@
-<div class="root">This action doesn't require any settings.</div>
+<script>
+  import { _ } from "../../../../../../../lang/i18n"
+</script>
+
+<div class="root">
+  {$_(
+    "components.design.settings.controls.ButtonActionEditor.actions.CloseSidePanel.action_settings"
+  )}
+</div>
 
 <style>
   .root {

@@ -5,6 +5,7 @@ import {
   FIELDS,
   isAutoColumnUserRelationship,
 } from "../constants/backend"
+import { _ } from "../../lang/i18n"
 
 export function getAutoColumnInformation(enabled = true) {
   let info = {}
@@ -37,7 +38,7 @@ export function buildAutoColumn(tableName, name, subtype) {
       break
   }
   if (Object.values(AUTO_COLUMN_SUB_TYPES).indexOf(subtype) === -1) {
-    throw "Cannot build auto column with supplied subtype"
+    throw $_("builderStore.utils.Cannot_build")
   }
   const base = {
     name,

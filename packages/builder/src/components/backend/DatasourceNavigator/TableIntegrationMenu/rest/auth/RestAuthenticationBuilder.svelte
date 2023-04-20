@@ -3,6 +3,7 @@
   import AuthTypeRenderer from "./AuthTypeRenderer.svelte"
   import RestAuthenticationModal from "./RestAuthenticationModal.svelte"
   import { Helpers } from "@budibase/bbui"
+  import { _ } from "../../../../../../../lang/i18n"
 
   export let configs = []
 
@@ -59,7 +60,9 @@
   {/if}
   <div>
     <ActionButton on:click={() => openConfigModal()} icon="Add"
-      >Add authentication</ActionButton
+      >{$_(
+        "components.backend.DatasourceNavigation.TableIntegrationMenu.rest.auth.RestAuthenicationBuilder.Add_authentication"
+      )}</ActionButton
     >
   </div>
 </Layout>

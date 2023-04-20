@@ -2,6 +2,7 @@
   import GoogleLogo from "assets/google-logo.png"
   import { store } from "builderStore"
   import { auth } from "stores/portal"
+  import { _ } from "../../../../../lang/i18n"
 
   export let preAuthStep
   export let datasource
@@ -32,7 +33,11 @@
   }}
 >
   <img src={GoogleLogo} alt="google icon" />
-  <p>Sign in with Google</p>
+  <p>
+    {$_(
+      "components.backend.DatasourceNavigation._components.GoogleButton.Sign_Google"
+    )}
+  </p>
 </button>
 
 <style>

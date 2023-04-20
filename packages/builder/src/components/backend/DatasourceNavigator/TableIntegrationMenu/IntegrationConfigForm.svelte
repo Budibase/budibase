@@ -18,6 +18,7 @@
   import { createEventDispatcher, onMount } from "svelte"
   import { environment, licensing, auth } from "stores/portal"
   import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
+  import { _ } from "../../../../../lang/i18n"
 
   export let datasource
   export let schema
@@ -94,7 +95,11 @@
       config[selectedKey] = `{{ env.${data.name} }}`
       createVariableModal.hide()
     } catch (err) {
-      notifications.error(`Failed to create variable: ${err.message}`)
+      notifications.error(
+        `${$_(
+          "components.backend.DatasourceNavigation.TableIntegrationMenu.IntegrationConfigForm.Failed_create"
+        )}: ${err.message}`
+      )
     }
   }
 
@@ -124,7 +129,11 @@
   <Layout noPadding gap="S">
     {#if !creating}
       <div class="form-row">
-        <Label>Name</Label>
+        <Label
+          >{$_(
+            "components.backend.DatasourceNavigation.TableIntegrationMenu.IntegrationConfigForm.Name"
+          )}</Label
+        >
         <Input on:change bind:value={datasource.name} />
       </div>
     {/if}
@@ -133,7 +142,9 @@
         <div class="form-row ssl">
           <Label>{getDisplayName(configKey)}</Label>
           <Button secondary thin outline on:click={addButton.addEntry()}
-            >Add</Button
+            >{$_(
+              "components.backend.DatasourceNavigation.TableIntegrationMenu.IntegrationConfigForm.Add"
+            )}</Button
           >
         </div>
         <KeyValueBuilder

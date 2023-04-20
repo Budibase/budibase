@@ -2,6 +2,7 @@
   import { automationStore } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import { Icon, Input, ModalContent, Modal } from "@budibase/bbui"
+  import { _ } from "../../../../lang/i18n"
 
   export let automation
   export let onCancel = undefined
@@ -25,17 +26,29 @@
         name,
       }
       await automationStore.actions.save(updatedAutomation)
-      notifications.success(`Automation ${name} updated successfully`)
+      notifications.success(
+        `${$_(
+          "components.automation.AutomationPanel.UpdateAutomationModal.Automation"
+        )} ${name} ${$_(
+          "components.automation.AutomationPanel.UpdateAutomationModal.updated"
+        )}`
+      )
       hide()
     } catch (error) {
-      notifications.error("Error saving automation")
+      notifications.error(
+        $_(
+          "components.automation.AutomationPanel.UpdateAutomationModal.Error_saving"
+        )
+      )
     }
   }
 
   function checkValid(evt) {
     name = evt.target.value
     if (!name) {
-      error = "Name is required"
+      error = $_(
+        "components.automation.AutomationPanel.UpdateAutomationModal.Name_required"
+      )
       return
     }
     error = ""
@@ -44,20 +57,35 @@
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent
-    title="Edit Automation"
-    confirmText="Save"
+    title={$_(
+      "components.automation.AutomationPanel.UpdateAutomationModal.Edit_Automation"
+    )}
+    confirmText={$_(
+      "components.automation.AutomationPanel.UpdateAutomationModal.Save"
+    )}
     size="L"
     onConfirm={saveAutomation}
     disabled={error}
   >
-    <Input bind:value={name} label="Name" on:input={checkValid} {error} />
+    <Input
+      bind:value={name}
+      label={$_(
+        "components.automation.AutomationPanel.UpdateAutomationModal.Name"
+      )}
+      on:input={checkValid}
+      {error}
+    />
     <a
       slot="footer"
       target="_blank"
       href="https://docs.budibase.com/docs/automation-steps"
     >
       <Icon name="InfoOutline" />
-      <span>Learn about automations</span>
+      <span
+        >{$_(
+          "components.automation.AutomationPanel.UpdateAutomationModal.automations"
+        )}</span
+      >
     </a>
   </ModalContent>
 </Modal>
