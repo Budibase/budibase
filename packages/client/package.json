@@ -19,11 +19,6 @@
     "dev:builder": "rollup -cw"
   },
   "dependencies": {
-    "@budibase/bbui": "latest",
-    "@budibase/frontend-core": "latest",
-    "@budibase/shared-core": "latest",
-    "@budibase/string-templates": "latest",
-    "@budibase/types": "latest",
     "@spectrum-css/button": "^3.0.3",
     "@spectrum-css/card": "^3.0.3",
     "@spectrum-css/divider": "^1.0.3",
