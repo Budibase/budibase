@@ -29,9 +29,9 @@
     "outputPath": "build"
   },
   "dependencies": {
-    "@budibase/backend-core": "latest",
-    "@budibase/string-templates": "latest",
-    "@budibase/types": "latest",
+    "@budibase/backend-core": "0.0.1",
+    "@budibase/string-templates": "0.0.1",
+    "@budibase/types": "0.0.1",
     "axios": "0.21.2",
     "download": "8.0.0",
     "find-free-port": "^2.0.0",
