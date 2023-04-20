@@ -1386,45 +1386,6 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.5.5", "@budibase/backend-core@latest":
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.5.5.tgz#d1ae36564de447674a157790b1e8ebff5f42748c"
-  integrity sha512-mGQSK6wc4M6+KVpfsbcfijjOJaWreGnd0muLFrUYsogliglWDXeCTfdEXFMkhCyKEe+3TWeVkxVKzss6zSG+Mw==
-  dependencies:
-    "@budibase/nano" "10.1.2"
-    "@budibase/pouchdb-replication-stream" "1.2.10"
-    "@budibase/types" "^2.5.5"
-    "@shopify/jest-koa-mocks" "5.0.1"
-    "@techpass/passport-openidconnect" "0.3.2"
-    aws-cloudfront-sign "2.2.0"
-    aws-sdk "2.1030.0"
-    bcrypt "5.0.1"
-    bcryptjs "2.4.3"
-    bull "4.10.1"
-    correlation-id "4.0.0"
-    dotenv "16.0.1"
-    emitter-listener "1.1.2"
-    ioredis "4.28.0"
-    joi "17.6.0"
-    jsonwebtoken "9.0.0"
-    koa-passport "4.1.4"
-    lodash "4.17.21"
-    lodash.isarguments "3.1.0"
-    node-fetch "2.6.7"
-    passport-google-oauth "2.0.0"
-    passport-jwt "4.0.0"
-    passport-local "1.0.0"
-    passport-oauth2-refresh "^2.1.0"
-    posthog-node "1.3.0"
-    pouchdb "7.3.0"
-    pouchdb-find "7.2.2"
-    redlock "4.2.0"
-    sanitize-s3-objectkey "0.0.1"
-    semver "7.3.7"
-    tar-fs "2.1.1"
-    uuid "8.3.2"
-    zlib "1.0.5"
-
 "@budibase/bbui@^0.9.139":
   version "0.9.190"
   resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.190.tgz#e1ec400ac90f556bfbc80fc23a04506f1585ea81"
@@ -1474,104 +1435,6 @@
     dayjs "^1.10.4"
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
-
-"@budibase/bbui@^2.5.5", "@budibase/bbui@latest":
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-2.5.5.tgz#860ab3f6cc1f8ada1f2cca1e8969e8390047800d"
-  integrity sha512-54kkCjOspcH25rybZ5+p1v6PfnyKouE7mQw73VFFh1AKSd+VORfLkMpwUm0w+Dsuoi1hBCA0k1eNLDY3md0+hg==
-  dependencies:
-    "@adobe/spectrum-css-workflow-icons" "1.2.1"
-    "@budibase/shared-core" "^2.5.5"
-    "@budibase/string-templates" "^2.5.5"
-    "@spectrum-css/accordion" "3.0.24"
-    "@spectrum-css/actionbutton" "1.0.1"
-    "@spectrum-css/actiongroup" "1.0.1"
-    "@spectrum-css/avatar" "3.0.2"
-    "@spectrum-css/button" "3.0.1"
-    "@spectrum-css/buttongroup" "3.0.2"
-    "@spectrum-css/checkbox" "3.0.2"
-    "@spectrum-css/dialog" "3.0.1"
-    "@spectrum-css/divider" "1.0.3"
-    "@spectrum-css/dropzone" "3.0.2"
-    "@spectrum-css/fieldgroup" "3.0.2"
-    "@spectrum-css/fieldlabel" "3.0.1"
-    "@spectrum-css/icon" "3.0.1"
-    "@spectrum-css/illustratedmessage" "3.0.2"
-    "@spectrum-css/inlinealert" "2.0.1"
-    "@spectrum-css/inputgroup" "3.0.2"
-    "@spectrum-css/label" "2.0.10"
-    "@spectrum-css/link" "3.1.1"
-    "@spectrum-css/menu" "3.0.1"
-    "@spectrum-css/modal" "3.0.1"
-    "@spectrum-css/pagination" "3.0.3"
-    "@spectrum-css/picker" "1.0.1"
-    "@spectrum-css/popover" "3.0.1"
-    "@spectrum-css/progressbar" "1.0.2"
-    "@spectrum-css/progresscircle" "1.0.2"
-    "@spectrum-css/radio" "3.0.2"
-    "@spectrum-css/search" "3.0.2"
-    "@spectrum-css/sidenav" "3.0.2"
-    "@spectrum-css/slider" "3.0.1"
-    "@spectrum-css/statuslight" "3.0.2"
-    "@spectrum-css/stepper" "3.0.3"
-    "@spectrum-css/switch" "1.0.2"
-    "@spectrum-css/table" "3.0.1"
-    "@spectrum-css/tabs" "3.2.12"
-    "@spectrum-css/tags" "3.0.2"
-    "@spectrum-css/textfield" "3.0.1"
-    "@spectrum-css/toast" "3.0.1"
-    "@spectrum-css/tooltip" "3.0.3"
-    "@spectrum-css/treeview" "3.0.2"
-    "@spectrum-css/typography" "3.0.1"
-    "@spectrum-css/underlay" "2.0.9"
-    "@spectrum-css/vars" "3.0.1"
-    dayjs "^1.10.4"
-    easymde "^2.16.1"
-    svelte-flatpickr "^3.2.3"
-    svelte-portal "^1.0.0"
-
-"@budibase/client@latest":
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-2.5.5.tgz#2647c34ab1ca50bcdd41bb48a3cd5afc8d53566a"
-  integrity sha512-PyyYTD8juGyGsQI2lyTymqIvBH3nflkuTv+XE1UrjVSrK5DJsW3e9/UiUWcDhOgX9Sq3Q3D8JMMGfSriwBEdLg==
-  dependencies:
-    "@budibase/bbui" "^2.5.5"
-    "@budibase/frontend-core" "^2.5.5"
-    "@budibase/shared-core" "^2.5.5"
-    "@budibase/string-templates" "^2.5.5"
-    "@budibase/types" "^2.5.5"
-    "@spectrum-css/button" "^3.0.3"
-    "@spectrum-css/card" "^3.0.3"
-    "@spectrum-css/divider" "^1.0.3"
-    "@spectrum-css/link" "^3.1.3"
-    "@spectrum-css/page" "^3.0.1"
-    "@spectrum-css/tag" "^3.1.4"
-    "@spectrum-css/typography" "^3.0.2"
-    "@spectrum-css/vars" "^3.0.1"
-    apexcharts "^3.22.1"
-    dayjs "^1.10.5"
-    downloadjs "1.4.7"
-    html5-qrcode "^2.2.1"
-    leaflet "^1.7.1"
-    regexparam "^1.3.0"
-    sanitize-html "^2.7.0"
-    screenfull "^6.0.1"
-    shortid "^2.2.15"
-    socket.io-client "^4.5.1"
-    svelte "^3.49.0"
-    svelte-apexcharts "^1.0.2"
-    svelte-flatpickr "^3.1.0"
-    svelte-spa-router "^3.0.5"
-
-"@budibase/frontend-core@^2.5.5", "@budibase/frontend-core@latest":
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-2.5.5.tgz#58f81e95c849b12d39cab3b8ac64c1d6ee37952b"
-  integrity sha512-U1xRQIFxeGiRJREEft5E3VwbW0KSJNRAww3Jd9WGhKXZIWIiIruwW1jeyX0ISFdIJqtOVt0Vow9s9DKcoroMew==
-  dependencies:
-    "@budibase/bbui" "^2.5.5"
-    "@budibase/shared-core" "^2.5.5"
-    lodash "^4.17.21"
-    svelte "^3.46.2"
 
 "@budibase/handlebars-helpers@^0.11.8":
   version "0.11.8"
@@ -1623,36 +1486,6 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@latest":
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.5.tgz#8aa44b99baa8763d85f0ba3db92a178259dcf13e"
-  integrity sha512-dOUWWZGbFIumTfCQPmNSaTqlkLD6O/SK6H7IYY8FP67eMrLRZUanO3l0XgbjDiOdFIS1Hw5vvjHmunP0hQdLyw==
-  dependencies:
-    "@budibase/backend-core" "2.5.5"
-    "@budibase/string-templates" "2.3.20"
-    "@budibase/types" "2.5.5"
-    "@koa/router" "8.0.8"
-    bull "4.10.1"
-    joi "17.6.0"
-    jsonwebtoken "8.5.1"
-    lru-cache "^7.14.1"
-    memorystream "^0.3.1"
-    node-fetch "^2.6.1"
-
-"@budibase/shared-core@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/shared-core/-/shared-core-2.4.44-alpha.1.tgz#3d499e40e7e6c646e13a87cd08e01ba116c2ff1d"
-  integrity sha512-cN8LaDczijtsfWUYiXC4sg9Z+US4020i3Mb8TwCbf8TQyA1b06U5PwPCp+GHVA/wDFqfwcpcE1GXf8GwVuYs7A==
-  dependencies:
-    "@budibase/types" "2.4.44-alpha.1"
-
-"@budibase/shared-core@^2.5.5", "@budibase/shared-core@latest":
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/@budibase/shared-core/-/shared-core-2.5.5.tgz#8cd61edd27ad0e75f47a1cfaff724e5ad7f22844"
-  integrity sha512-JQZHqVsOntSg2LXxyGZLntn9jS83R77c9MklQ9zESDVcAqxMFVVc0UNpaaW+MaTkMWfbdPFqnZAYP30mkZGe2g==
-  dependencies:
-    "@budibase/types" "^2.5.5"
-
 "@budibase/standard-components@^0.9.139":
   version "0.9.139"
   resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.139.tgz#cf8e2b759ae863e469e50272b3ca87f2827e66e3"
@@ -1670,52 +1503,6 @@
     dayjs "^1.10.5"
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
-
-"@budibase/string-templates@2.3.20":
-  version "2.3.20"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.3.20.tgz#35f74b6f515e8127cc375ee0a4679b0a7c117588"
-  integrity sha512-wMKau3IzVF6M+dRu99aKV1yMdrrK5lghVm9qYtR1B163SMbHEwC8JmZFGPLIi1XsG0T+vw+xfcemfJ2zcATWwg==
-  dependencies:
-    "@budibase/handlebars-helpers" "^0.11.8"
-    dayjs "^1.10.4"
-    handlebars "^4.7.6"
-    handlebars-utils "^1.0.6"
-    lodash "^4.17.20"
-    vm2 "^3.9.4"
-
-"@budibase/string-templates@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.4.44-alpha.1.tgz#6c2aee594d16eac1f173c509e087a817dd3172f0"
-  integrity sha512-4gC2+0kccK0ilLnd0i/dmJzC0Ur7UgSAmV6zbzDDYNL4spU0qSy5VhBh7E3qKieg5RKMMzbpXLMWERpoPLlnqA==
-  dependencies:
-    "@budibase/handlebars-helpers" "^0.11.8"
-    dayjs "^1.10.4"
-    handlebars "^4.7.6"
-    handlebars-utils "^1.0.6"
-    lodash "^4.17.20"
-    vm2 "^3.9.4"
-
-"@budibase/string-templates@^2.5.5", "@budibase/string-templates@latest":
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.5.5.tgz#2cd506ca6612319713ec6407279bcbf8a9bb9fb2"
-  integrity sha512-7OyMlndEh3r5obT6SoZGQvg5aq033U1DnYJAzumcAKY4T/9ATHBUAGbJeVD/lFXEj9KcEIfd2A8JPXjxkrDDeQ==
-  dependencies:
-    "@budibase/handlebars-helpers" "^0.11.8"
-    dayjs "^1.10.4"
-    handlebars "^4.7.6"
-    handlebars-utils "^1.0.6"
-    lodash "^4.17.20"
-    vm2 "^3.9.15"
-
-"@budibase/types@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.1.tgz#1679657aa180d9c59afa1dffa611bff0638bd933"
-  integrity sha512-Sq+8HfM75EBMoOvKYFwELdlxmVN6wNZMofDjT/2G+9aF+Zfe5Tzw69C+unmdBgcGGjGCHEYWSz4mF0v8FPAGbg==
-
-"@budibase/types@2.5.5", "@budibase/types@^2.5.5", "@budibase/types@latest":
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.5.5.tgz#aca40d7e160e400b9a814fbaa7ad04d10dcf9672"
-  integrity sha512-caKRxeCfnXzMFCc2lfDhKREl4VsDqnAnT55339NHQFTpDrTFboY0bG6h6osNan5CQCafNCLtS32bz597frGT9A==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
@@ -7990,13 +7777,6 @@ cli-cursor@3.1.0, cli-cursor@^3.1.0:
   dependencies:
     restore-cursor "^3.1.0"
 
-cli-progress@3.11.2:
-  version "3.11.2"
-  resolved "https://registry.yarnpkg.com/cli-progress/-/cli-progress-3.11.2.tgz#f8c89bd157e74f3f2c43bcfb3505670b4d48fc77"
-  integrity sha512-lCPoS6ncgX4+rJu5bS3F/iCz17kZ9MPZ6dpuTtI0KXKABkhyXIdYB3Inby1OpaGti3YlI3EeEkM9AuWpelJrVA==
-  dependencies:
-    string-width "^4.2.3"
-
 cli-spinners@2.6.1:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/cli-spinners/-/cli-spinners-2.6.1.tgz#adc954ebe281c37a6319bfa401e6dd2488ffb70d"
@@ -8285,11 +8065,6 @@ commander@6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-6.2.0.tgz#b990bfb8ac030aedc6d11bc04d1488ffef56db75"
   integrity sha512-zP4jEKbe8SHzKJYQmq8Y9gYjtO/POJLgIdKgV7B9qNmABVFVc+ctqSX6iXh4mCpJfRBOabiZ2YKPg8ciDw6C+Q==
-
-commander@7.1.0:
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-7.1.0.tgz#f2eaecf131f10e36e07d894698226e36ae0eb5ff"
-  integrity sha512-pRxBna3MJe6HKnBGsDyMv8ETbptw3axEdYHoqNh7gu5oDcew8fs0xnivZGm06Ogk8zGAJ9VX+OPEr2GXEQK4dg==
 
 commander@^10.0.0:
   version "10.0.0"
@@ -9085,7 +8860,7 @@ dateformat@^4.5.1, dateformat@^4.6.3:
   resolved "https://registry.yarnpkg.com/dateformat/-/dateformat-4.6.3.tgz#556fa6497e5217fedb78821424f8a1c22fa3f4b5"
   integrity sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==
 
-dayjs@^1.10.4, dayjs@^1.10.5, dayjs@^1.11.2, dayjs@^1.11.7:
+dayjs@^1.10.4, dayjs@^1.10.5, dayjs@^1.11.2:
   version "1.11.7"
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.7.tgz#4b296922642f70999544d1144a2c25730fce63e2"
   integrity sha512-+Yw9U6YO5TQohxLcIkrXBeY73WP3ejHWVvx8XCk3gxvQDCTEmS48ZrSZCKciI7Bhl/uCMyxYtE9UqRILmFphkQ==
@@ -9730,13 +9505,6 @@ dir-glob@^3.0.1:
   integrity sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==
   dependencies:
     path-type "^4.0.0"
-
-docker-compose@0.23.12:
-  version "0.23.12"
-  resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.23.12.tgz#fa883b98be08f6926143d06bf9e522ef7ed3210c"
-  integrity sha512-KFbSMqQBuHjTGZGmYDOCO0L4SaML3BsWTId5oSUyaBa22vALuFHNv+UdDWs3HcMylHWKsxCbLB7hnM/nCosWZw==
-  dependencies:
-    yaml "^1.10.2"
 
 docker-compose@0.23.17:
   version "0.23.17"
@@ -24645,7 +24413,7 @@ vlq@^0.2.2:
   resolved "https://registry.yarnpkg.com/vlq/-/vlq-0.2.3.tgz#8f3e4328cf63b1540c0d67e1b2778386f8975b26"
   integrity sha512-DRibZL6DsNhIgYQ+wNdWDL2SL3bKPlVrRiBqV5yuMm++op8W4kGFtaQfCs4KEJn0wBZcHVHJ3eoywX8983k1ow==
 
-vm2@3.9.16, vm2@^3.9.11, vm2@^3.9.15, vm2@^3.9.4:
+vm2@3.9.16, vm2@^3.9.11, vm2@^3.9.15:
   version "3.9.16"
   resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.16.tgz#0fbc2a265f7bf8b837cea6f4a908f88a3f93b8e6"
   integrity sha512-3T9LscojNTxdOyG+e8gFeyBXkMlOBYDoF6dqZbj+MPVHi9x10UfiTAJIobuchRCp3QvC+inybTbMJIUrLsig0w==
@@ -25498,8 +25266,3 @@ z-schema@^5.0.1:
     validator "^13.7.0"
   optionalDependencies:
     commander "^10.0.0"
-
-zlib@1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/zlib/-/zlib-1.0.5.tgz#6e7c972fc371c645a6afb03ab14769def114fcc0"
-  integrity sha512-40fpE2II+Cd3k8HWTWONfeKE2jL+P42iWJ1zzps5W51qcTsOUKM5Q5m2PFb0CLxlmFAaUuUdJGc3OfZy947v0w==
