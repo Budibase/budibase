@@ -38,6 +38,8 @@
   ],
   "dependencies": {
     "@adobe/spectrum-css-workflow-icons": "1.2.1",
+    "@budibase/shared-core": "latest",
+    "@budibase/string-templates": "latest",
     "@spectrum-css/accordion": "3.0.24",
     "@spectrum-css/actionbutton": "1.0.1",
     "@spectrum-css/actiongroup": "1.0.1",
