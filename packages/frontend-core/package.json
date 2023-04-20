@@ -1,14 +1,13 @@
 {
   "name": "@budibase/frontend-core",
-  "version": "2.5.6-alpha.6",
+  "version": "0.0.1",
   "description": "Budibase frontend core libraries used in builder and client",
   "author": "Budibase",
   "license": "MPL-2.0",
   "svelte": "src/index.js",
   "dependencies": {
-    "@budibase/bbui": "2.5.6-alpha.6",
-    "@budibase/shared-core": "2.5.6-alpha.6",
-    "dayjs": "^1.11.7",
+    "@budibase/bbui": "latest",
+    "@budibase/shared-core": "latest",
     "lodash": "^4.17.21",
     "socket.io-client": "^4.6.1",
     "svelte": "^3.46.2"
