@@ -81,8 +81,7 @@
     "postinstall": "husky install",
     "dep:clean": "yarn clean -y && yarn bootstrap",
     "submodules:load": "git submodule init && git submodule update && yarn && yarn bootstrap",
-    "submodules:unload": "git submodule deinit --all && yarn && yarn bootstrap",
-    "postversion": "git push --tags && git push && echo \"Successfully pushed version and tag $npm_package_version!\""
+    "submodules:unload": "git submodule deinit --all && yarn && yarn bootstrap"
   },
   "workspaces": {
     "packages": [
