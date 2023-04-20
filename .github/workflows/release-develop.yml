@@ -57,8 +57,8 @@ jobs:
             | sed 's/[",]//g')
           echo "Setting version $version"
           yarn lerna exec "yarn version --no-git-tag-version --new-version=$version"
-          yarn
           node scripts/updateVersions.js $version
+          yarn
       - run: yarn bootstrap
       - run: yarn build
       - run: yarn build:sdk
