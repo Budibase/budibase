@@ -30,7 +30,7 @@
     "build:sdk": "lerna run --stream build:sdk",
     "deps:circular": "madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular",
     "release": "lerna publish ${RELEASE_VERSION_TYPE:-patch} --yes --force-publish",
-    "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop --exact",
+    "release:develop": "npm publish",
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
