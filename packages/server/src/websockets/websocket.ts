@@ -48,7 +48,10 @@ export default class Socket {
         // Needed for koa-useragent middleware
         headers: socket.request.headers,
         header: socket.request.headers,
-        path: "/socket/grid",
+
+        // We don't really care about the path since it will never contain
+        // an app ID
+        path: "/socket",
       }
 
       // Run all koa middlewares
