@@ -17,7 +17,6 @@ on:
       - "package.json"
       - "yarn.lock"
   workflow_dispatch:
-  
 
 jobs:
   tag-prerelease:
@@ -37,6 +36,6 @@ jobs:
       - name: Tag prerelease
         run: |
           # setup the username and email.
-          git config --global user.name "Budibase Staging Release Bot"
-          git config --global user.email "<>"
+          git config --global user.name "adrinr"
+          git config --global user.email "adria@budibase.com"
           ./scripts/bumpLernaVersion.sh
