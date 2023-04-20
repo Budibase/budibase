@@ -67,7 +67,7 @@ lerna publish $VERSION --yes --force-publish --dist-tag $TAG
 #############################################
 
 # Go to budibase repo root
-cd ../budibase
+cd -
 
 # Update pro version in packages/server/package.json
 cd packages/server
