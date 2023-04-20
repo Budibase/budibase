@@ -38,4 +38,4 @@ jobs:
           # setup the username and email.
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
-          yarn version --prerelease --cwd="./versions"
+          lerna version prerelease --yes"
