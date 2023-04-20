@@ -22,6 +22,7 @@ export const getValidOperatorsForType = (
     Op.Empty,
     Op.NotEmpty,
     Op.In,
+    Op.Contains,
   ]
   const numOps = [
     Op.Equals,
