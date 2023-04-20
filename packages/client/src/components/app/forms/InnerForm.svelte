@@ -221,9 +221,17 @@
       return fieldInfo
     },
     validate: () => {
-      return fields
-        .filter(field => get(field).step === get(currentStep))
-        .every(field => get(field).fieldApi.validate())
+      const stepFields = fields.filter(
+        field => get(field).step === get(currentStep)
+      )
+      // We want to validate every field (even if validation fails early) to
+      // ensure that all fields are populated with errors if invalid
+      let valid = true
+      stepFields.forEach(field => {
+        const fieldValid = get(field).fieldApi.validate()
+        valid = valid && fieldValid
+      })
+      return valid
     },
     reset: () => {
       // Reset the form by resetting each individual field
@@ -275,7 +283,7 @@
 
       // Skip if the value is the same
       if (!skipCheck && fieldState.value === value) {
-        return false
+        return true
       }
 
       // Update field state
