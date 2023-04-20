@@ -46,5 +46,8 @@
   --spectrum-alias-highlight-active: rgba(169, 177, 193, 0.1);
   --spectrum-alias-background-color-hover-overlay: rgba(169, 177, 193, 0.1);
 
+  /* Custom additions */
   --modal-background: var(--spectrum-global-color-gray-50);
+  --drop-shadow: rgba(0, 0, 0, 0.15) !important;
+  --spectrum-global-color-blue-100: rgb(56, 65, 84) !important;
 }
