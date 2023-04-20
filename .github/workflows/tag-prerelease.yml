@@ -1,0 +1,38 @@
+name: Tag prerelease
+concurrency: release-prerelease
+
+on:
+  push:
+    branches:
+      - develop
+      - chore/pipeline_npm_version_updates
+    paths:
+      - ".aws/**"
+      - ".github/**"
+      - "charts/**"
+      - "packages/**"
+      - "scripts/**"
+      - "package.json"
+      - "yarn.lock"
+      - "package.json"
+      - "yarn.lock"
+  workflow_dispatch:
+
+jobs:
+  tag-prerelease:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fail if branch is not develop
+        if: github.ref != 'refs/heads/develop'
+        run: |
+          echo "Ref is not develop, you must run this job from develop."
+          exit 1
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Tag prerelease
+        run: |
+          yarn version --prerelease --cwd="./versions"
