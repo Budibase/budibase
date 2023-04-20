@@ -309,7 +309,7 @@ export class QueryBuilder<T> {
         return null
       }
       if (!Array.isArray(value)) {
-        return `${key}:/.*${value?.toLowerCase()}.*/`
+        return `${key}:${value}`
       }
       let statement = `${builder.preprocess(value[0], { escape: true })}`
       for (let i = 1; i < value.length; i++) {
@@ -318,6 +318,18 @@ export class QueryBuilder<T> {
         })}`
       }
       return `${key}:(${statement})`
+    }
+
+    const fuzzy = (key: string, value: any) => {
+      if (!value) {
+        return null
+      }
+      value = builder.preprocess(value, {
+        escape: true,
+        lowercase: true,
+        type: "fuzzy",
+      })
+      return `${key}:/.*${value}.*/`
     }
 
     const notContains = (key: string, value: any) => {
@@ -408,17 +420,7 @@ export class QueryBuilder<T> {
       })
     }
     if (this.#query.fuzzy) {
-      build(this.#query.fuzzy, (key: string, value: any) => {
-        if (!value) {
-          return null
-        }
-        value = builder.preprocess(value, {
-          escape: true,
-          lowercase: true,
-          type: "fuzzy",
-        })
-        return `${key}:${value}~`
-      })
+      build(this.#query.fuzzy, fuzzy)
     }
     if (this.#query.equal) {
       build(this.#query.equal, equal)

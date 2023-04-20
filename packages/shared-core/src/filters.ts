@@ -22,7 +22,6 @@ export const getValidOperatorsForType = (
     Op.Empty,
     Op.NotEmpty,
     Op.In,
-    Op.Contains,
   ]
   const numOps = [
     Op.Equals,
@@ -55,13 +54,8 @@ export const getValidOperatorsForType = (
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
   }
 
-  // Filter out "like" for internal tables
-  const externalTable = datasource?.tableId?.includes("datasource_plus")
-  if (datasource?.type === "table" && !externalTable) {
-    ops = ops.filter(x => x !== Op.Like)
-  }
-
   // Only allow equal/not equal for _id in SQL tables
+  const externalTable = datasource?.tableId?.includes("datasource_plus")
   if (field === "_id" && externalTable) {
     ops = [Op.Equals, Op.NotEquals, Op.In]
   }
