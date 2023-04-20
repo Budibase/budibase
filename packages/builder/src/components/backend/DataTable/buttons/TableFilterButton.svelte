@@ -18,10 +18,11 @@
 
 <ActionButton
   icon="Filter"
+  size="S"
   quiet
   {disabled}
   on:click={modal.show}
-  selected={tempValue?.length > 0}
+  active={tempValue?.length > 0}
 >
   Filter
 </ActionButton>

@@ -20,13 +20,12 @@
 
   const dispatch = createEventDispatcher()
 
-  $: arrayValue = Array.isArray(value) ? value : [value].filter(x => !!x)
-  $: selectedLookupMap = getSelectedLookupMap(arrayValue)
+  $: selectedLookupMap = getSelectedLookupMap(value)
   $: optionLookupMap = getOptionLookupMap(options)
 
-  $: fieldText = getFieldText(arrayValue, optionLookupMap, placeholder)
+  $: fieldText = getFieldText(value, optionLookupMap, placeholder)
   $: isOptionSelected = optionValue => selectedLookupMap[optionValue] === true
-  $: toggleOption = makeToggleOption(selectedLookupMap, arrayValue)
+  $: toggleOption = makeToggleOption(selectedLookupMap, value)
 
   const getFieldText = (value, map, placeholder) => {
     if (Array.isArray(value) && value.length > 0) {
@@ -85,7 +84,7 @@
   {readonly}
   {fieldText}
   {options}
-  isPlaceholder={!arrayValue.length}
+  isPlaceholder={!value?.length}
   {autocomplete}
   bind:fetchTerm
   {useFetch}

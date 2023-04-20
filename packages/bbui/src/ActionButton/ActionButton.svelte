@@ -71,7 +71,7 @@
     {/if}
     {#if icon}
       <svg
-        class="spectrum-Icon spectrum-Icon--sizeS"
+        class="spectrum-Icon spectrum-Icon--size{size}"
         focusable="false"
         aria-hidden="true"
         aria-label={icon}
