@@ -29,6 +29,7 @@
   export let cardButtonText
   export let cardButtonOnClick
   export let linkColumn
+  export let noRowsMessage
 
   const { fetchDatasourceSchema } = getContext("sdk")
 
@@ -180,7 +181,7 @@
             hAlign: "stretch",
             vAlign: "top",
             gap: "M",
-            noRowsMessage: "No rows found",
+            noRowsMessage: noRowsMessage || "No rows found",
           }}
           styles={{
             custom: `display: grid;\ngrid-template-columns: repeat(auto-fill, minmax(min(${cardWidth}px, 100%), 1fr));`,
