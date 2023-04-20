@@ -8,23 +8,14 @@
     "paths": {
       "@budibase/types": ["../types/src"],
       "@budibase/backend-core": ["../backend-core/src"],
-      "@budibase/backend-core/*": ["../backend-core/*"],
+      "@budibase/backend-core/*": ["../backend-core/*"]
     }
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"],
     "swc": true
   },
-  "references": [
-    { "path": "../types" },
-    { "path": "../backend-core" },
-  ],
-  "include": [
-    "src/**/*",
-    "package.json"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+
+  "include": ["src/**/*", "package.json"],
+  "exclude": ["node_modules", "dist"]
 }
