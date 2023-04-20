@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import {
     Body,
     Button,
@@ -32,8 +33,18 @@
   const { getValidOperatorsForType } = LuceneUtils
   const KeyedFieldRegex = /\d[0-9]*:/g
   const behaviourOptions = [
-    { value: "and", label: "Match all filters" },
-    { value: "or", label: "Match any filter" },
+    {
+      value: "and",
+      label: $_(
+        "components.design.settings.controls.FilterEditor.FilterDrawer.Match_all"
+      ),
+    },
+    {
+      value: "or",
+      label: $_(
+        "components.design.settings.controls.FilterEditor.FilterDrawer.Match_any"
+      ),
+    },
   ]
 
   let rawFilters
@@ -174,11 +185,17 @@
   <div class="container">
     <Layout noPadding>
       {#if !rawFilters?.length}
-        <Body size="S">Add your first filter expression.</Body>
+        <Body size="S"
+          >{$_(
+            "components.design.settings.controls.FilterEditor.FilterDrawer.Add_first"
+          )}</Body
+        >
       {:else}
         <div class="fields">
           <Select
-            label="Behaviour"
+            label={$_(
+              "components.design.settings.controls.FilterEditor.FilterDrawer.Behaviour"
+            )}
             value={matchAny ? "or" : "and"}
             options={behaviourOptions}
             getOptionLabel={opt => opt.label}
@@ -189,7 +206,11 @@
         </div>
         <div>
           <div class="filter-label">
-            <Label>Filters</Label>
+            <Label
+              >{$_(
+                "components.design.settings.controls.FilterEditor.FilterDrawer.Filters"
+              )}</Label
+            >
           </div>
           <div class="fields">
             {#each rawFilters as filter, idx}
@@ -197,7 +218,9 @@
                 bind:value={filter.field}
                 options={fieldOptions}
                 on:change={() => onFieldChange(filter)}
-                placeholder="Column"
+                placeholder={$_(
+                  "components.design.settings.controls.FilterEditor.FilterDrawer.Column"
+                )}
               />
               <Select
                 disabled={!filter.field}
@@ -220,9 +243,13 @@
               {#if filter.field && filter.valueType === "Binding"}
                 <DrawerBindableInput
                   disabled={filter.noValue}
-                  title={`Value for "${filter.field}"`}
+                  title={`${$_(
+                    "components.design.settings.controls.FilterEditor.FilterDrawer.Value for"
+                  )} "${filter.field}"`}
                   value={filter.value}
-                  placeholder="Value"
+                  placeholder={$_(
+                    "components.design.settings.controls.FilterEditor.FilterDrawer.Value"
+                  )}
                   {panel}
                   {bindings}
                   on:change={event => (filter.value = event.detail)}
@@ -246,8 +273,18 @@
                 <Combobox
                   disabled={filter.noValue}
                   options={[
-                    { label: "True", value: "true" },
-                    { label: "False", value: "false" },
+                    {
+                      label: $_(
+                        "components.design.settings.controls.FilterEditor.FilterDrawer.True"
+                      ),
+                      value: "true",
+                    },
+                    {
+                      label: $_(
+                        "components.design.settings.controls.FilterEditor.FilterDrawer.False"
+                      ),
+                      value: "false",
+                    },
                   ]}
                   bind:value={filter.value}
                 />
@@ -279,7 +316,9 @@
       {/if}
       <div class="bottom">
         <Button icon="AddCircle" size="M" secondary on:click={addFilter}>
-          Add filter
+          {$_(
+            "components.design.settings.controls.FilterEditor.FilterDrawer.Add Filter"
+          )}
         </Button>
       </div>
     </Layout>

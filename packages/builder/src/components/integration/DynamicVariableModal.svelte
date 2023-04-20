@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { Input, ModalContent, Modal, Body } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
@@ -30,7 +31,10 @@
   $: allVariableNames = (datasource?.config?.dynamicVariables || []).map(
     variable => variable.name
   )
-  $: error = name && !valid ? "Variable name is already in use." : null
+  $: error =
+    name && !valid
+      ? $_("components.integration.DynamicVariableModal.Variable_name_use")
+      : null
 
   async function saveVariable() {
     const copiedName = name,
@@ -44,15 +48,19 @@
 
 <Modal bind:this={modal}>
   <ModalContent
-    title="Add dynamic variable"
-    confirmText="Save"
+    title={$_("components.integration.DynamicVariableModal.Add_variable")}
+    confirmText={$_("components.integration.DynamicVariableModal.Save")}
     onConfirm={saveVariable}
     disabled={!valid}
   >
     <Body size="S"
-      >Specify a name for your new dynamic variable, this must be unique across
-      your datasource.</Body
+      >{$_("components.integration.DynamicVariableModal.Specify_nmae")}</Body
     >
-    <Input label="Variable name" bind:value={name} on:input {error} />
+    <Input
+      label={$_("components.integration.DynamicVariableModal.Variable_name")}
+      bind:value={name}
+      on:input
+      {error}
+    />
   </ModalContent>
 </Modal>

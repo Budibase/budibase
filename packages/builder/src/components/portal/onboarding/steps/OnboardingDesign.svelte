@@ -1,10 +1,15 @@
+<script>
+  import { _ } from "../../../../../lang/i18n"
+</script>
+
 <div>
-  After setting up your data, Design is where you build the screens for your
-  app:
+  {$_("components.portal.onboarding.steps.OnboardingDesign.After")}
   <ul class="feature-list">
-    <li>Add screens</li>
-    <li>Add components</li>
-    <li>Choose your theme</li>
-    <li>Edit navigation</li>
+    <li>{$_("components.portal.onboarding.steps.OnboardingDesign.screens")}</li>
+    <li>
+      {$_("components.portal.onboarding.steps.OnboardingDesign.components")}
+    </li>
+    <li>{$_("components.portal.onboarding.steps.OnboardingDesign.Choose")}</li>
+    <li>{$_("components.portal.onboarding.steps.OnboardingDesign.Edit")}</li>
   </ul>
 </div>

@@ -1,3 +1,4 @@
+import { _ } from "../../../../lang/i18n"
 import { capitalise } from "helpers"
 import { object, string, number } from "yup"
 import { writable, get } from "svelte/store"
@@ -55,7 +56,10 @@ export const createValidationStore = () => {
       await obj.validate(values, { abortEarly: false })
     } catch (error) {
       if (!error.inner) {
-        notifications.error("Unexpected validation error", error)
+        notifications.error(
+          $_("helpers.validation.yup.index.Unexpected"),
+          error
+        )
         validationError = true
       } else {
         error.inner.forEach(err => {

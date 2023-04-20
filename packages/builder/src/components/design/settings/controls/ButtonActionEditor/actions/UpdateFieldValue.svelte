@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label, Combobox } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
@@ -8,8 +9,6 @@
     buildFormSchema,
   } from "builderStore/dataBinding"
   import { findComponent } from "builderStore/componentUtils"
-
-  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
   export let bindings = []

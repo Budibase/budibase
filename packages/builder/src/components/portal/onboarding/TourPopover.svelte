@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../lang/i18n"
   import { Popover, Layout, Heading, Body, Button } from "@budibase/bbui"
   import { store } from "builderStore"
   import { TOURS } from "./tours.js"
@@ -64,7 +65,7 @@
         }))
         navigateStep(target)
       } else {
-        console.log("Could not retrieve step")
+        console.log($_("components.portal.onboarding.TourPopover.Could"))
       }
     } else {
       if (typeof tourStep.onComplete === "function") {
@@ -84,7 +85,7 @@
         }))
         navigateStep(target)
       } else {
-        console.log("Could not retrieve step")
+        console.log($_("components.portal.onboarding.TourPopover.Could"))
       }
     }
   }
@@ -135,11 +136,17 @@
                   on:click={previousStep}
                   disabled={tourStepIdx == 0}
                 >
-                  <div>Back</div>
+                  <div>
+                    {$_("components.portal.onboarding.TourPopover.Back")}
+                  </div>
                 </Button>
               {/if}
               <Button cta on:click={nextStep}>
-                <div>{lastStep ? "Finish" : "Next"}</div>
+                <div>
+                  {lastStep
+                    ? $_("components.portal.onboarding.TourPopover.Finish")
+                    : $_("components.portal.onboarding.TourPopover.Next")}
+                </div>
               </Button>
             </div>
           </div>

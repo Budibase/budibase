@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import {
@@ -16,8 +17,6 @@
     makeStateBinding,
   } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
-
-  import { _ } from "../../../../../../lang/i18n"
 
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"

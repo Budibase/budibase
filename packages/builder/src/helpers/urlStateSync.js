@@ -1,3 +1,4 @@
+import { _ } from "../../lang/i18n"
 import { get } from "svelte/store"
 import { isChangingPage } from "@roxi/routify"
 
@@ -26,7 +27,7 @@ export const syncURLToState = options => {
     !routify.redirect?.subscribe ||
     !routify.page?.subscribe
   ) {
-    console.warn("syncURLToState invoked with missing parameters")
+    console.warn($_("helpers.urlStateSync.syncURLToState"))
     return
   }
 
@@ -65,13 +66,18 @@ export const syncURLToState = options => {
         params = res.params
       }
     }
-    log("Navigating to", url, "with params", params)
+    log(
+      $_("helpers.urlStateSync.Navigating"),
+      url,
+      $_("helpers.urlStateSync.with_params"),
+      params
+    )
     cachedGoto(url, params)
   }
 
   // Redirect to a certain URL
   const redirectUrl = url => {
-    log("Redirecting to", url)
+    log($_("helpers.urlStateSync.Redirecting_to"), url)
     cachedRedirect(url)
   }
 
@@ -90,7 +96,7 @@ export const syncURLToState = options => {
     // Check if new value is valid
     if (validate && fallbackUrl) {
       if (!validate(urlValue)) {
-        log("Invalid URL param!", urlValue)
+        log($_("helpers.urlStateSync.Invalid_URL"), urlValue)
         redirectUrl(fallbackUrl)
         return
       }
@@ -122,7 +128,7 @@ export const syncURLToState = options => {
       log(`url.${urlParam} (${urlValue}) <= state.${stateKey} (${stateValue})`)
       if (validate && fallbackUrl) {
         if (!validate(stateValue)) {
-          log("Invalid state param!", stateValue)
+          log($_("helpers.urlStateSync.Invalid_state"), stateValue)
           redirectUrl(fallbackUrl)
           return
         }

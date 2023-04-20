@@ -1,3 +1,4 @@
+import { _ } from "../../../../lang/i18n"
 import { ExpiringKeys } from "./constants"
 import { temporalStore } from "builderStore"
 import { admin, auth, licensing } from "stores/portal"
@@ -13,7 +14,7 @@ const defaultCacheFn = key => {
 const upgradeAction = key => {
   return defaultNavigateAction(
     key,
-    "Upgrade Plan",
+    $_("components.portal.licensing.licensingBanners.Upgrade_plan"),
     `${get(admin).accountPortalUrl}/portal/upgrade`
   )
 }
@@ -21,7 +22,7 @@ const upgradeAction = key => {
 const billingAction = key => {
   return defaultNavigateAction(
     key,
-    "Billing",
+    $_("components.portal.licensing.licensingBanners.Billing"),
     `${get(admin).accountPortalUrl}/portal/billing`
   )
 }
@@ -62,14 +63,20 @@ const buildUsageInfoBanner = (
     },
     message: customMessage
       ? customMessage
-      : `You have used ${displayPercent}% of your monthly usage of ${metricLabel} with ${
-          appLicensing.quotaResetDaysRemaining
-        } day${
-          appLicensing.quotaResetDaysRemaining == 1 ? "" : "s"
-        } remaining. ${
+      : `${$_(
+          "components.portal.licensing.licensingBanners.You"
+        )} ${displayPercent}% ${$_(
+          "components.portal.licensing.licensingBanners.of"
+        )} ${metricLabel} ${$_(
+          "components.portal.licensing.licensingBanners.with"
+        )} ${appLicensing.quotaResetDaysRemaining} ${$_(
+          "components.portal.licensing.licensingBanners.day"
+        )}${appLicensing.quotaResetDaysRemaining == 1 ? "" : "s"} ${$_(
+          "components.portal.licensing.licensingBanners.remaining"
+        )} ${
           appAuth.user.accountPortalAccess
             ? ""
-            : "Please contact your account holder to upgrade"
+            : $_("components.portal.licensing.licensingBanners.Please_contact")
         }`,
     criteria: () => {
       return appLicensing?.usageMetrics[metricKey] >= percentageThreshold
@@ -95,10 +102,12 @@ const buildDayPassBanner = () => {
       criteria: () => {
         return true
       },
-      message: `Your apps are currently offline. You have exceeded your plans limit for Day Passes. ${
+      message: `${$_(
+        "components.portal.licensing.licensingBanners.Your_apps"
+      )} ${
         appAuth.user.accountPortalAccess
           ? ""
-          : "Please contact your account holder to upgrade."
+          : $_("components.portal.licensing.licensingBanners.Please_contact")
       }`,
       ...upgradeAction(),
       showCloseButton: false,
@@ -107,19 +116,21 @@ const buildDayPassBanner = () => {
 
   return buildUsageInfoBanner(
     "dayPasses",
-    "Day Passes",
+    $_("components.portal.licensing.licensingBanners.Day_passes"),
     ExpiringKeys.LICENSING_DAYPASS_WARNING_BANNER,
     90,
-    `You have used ${
+    `${$_("components.portal.licensing.licensingBanners.You")} ${
       appLicensing?.usageMetrics["dayPasses"]
-    }% of your monthly usage of Day Passes with ${
+    }% ${$_("components.portal.licensing.licensingBanners.of_your")} ${
       appLicensing?.quotaResetDaysRemaining
-    } day${
+    } ${$_("components.portal.licensing.licensingBanners.day")}${
       get(licensing).quotaResetDaysRemaining == 1 ? "" : "s"
-    } remaining. All apps will be taken offline if this limit is reached. ${
+    } ${$_("components.portal.licensing.licensingBanners.remaining")} ${$_(
+      "components.portal.licensing.licensingBanners.All_apps"
+    )} ${
       appAuth.user.accountPortalAccess
         ? ""
-        : "Please contact your account holder to upgrade."
+        : $_("components.portal.licensing.licensingBanners.Please_contact")
     }`
   )
 }
@@ -131,10 +142,12 @@ const buildPaymentFailedBanner = () => {
     criteria: () => {
       return get(licensing)?.accountPastDue && !get(licensing).isFreePlan
     },
-    message: `Payment Failed - Please update your billing details or your account will be downgraded in 
-    ${get(licensing)?.pastDueDaysRemaining} day${
-      get(licensing)?.pastDueDaysRemaining == 1 ? "" : "s"
-    }`,
+    message: `${$_(
+      "components.portal.licensing.licensingBanners.Payment_failed"
+    )} 
+    ${get(licensing)?.pastDueDaysRemaining} ${$_(
+      "components.portal.licensing.licensingBanners.day"
+    )}${get(licensing)?.pastDueDaysRemaining == 1 ? "" : "s"}`,
     ...billingAction(),
     showCloseButton: false,
     tooltip: get(licensing).pastDueEndDate,
@@ -147,19 +160,19 @@ export const getBanners = () => {
     buildDayPassBanner(ExpiringKeys.LICENSING_DAYPASS_WARNING_BANNER),
     buildUsageInfoBanner(
       "rows",
-      "Rows",
+      $_("components.portal.licensing.licensingBanners.Rows"),
       ExpiringKeys.LICENSING_ROWS_WARNING_BANNER,
       90
     ),
     buildUsageInfoBanner(
       "automations",
-      "Automations",
+      $_("components.portal.licensing.licensingBanners.Automation"),
       ExpiringKeys.LICENSING_AUTOMATIONS_WARNING_BANNER,
       90
     ),
     buildUsageInfoBanner(
       "queries",
-      "Queries",
+      $_("components.portal.licensing.licensingBanners.Queries"),
       ExpiringKeys.LICENSING_QUERIES_WARNING_BANNER,
       90
     ),

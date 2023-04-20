@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { datasources } from "stores/backend"
   import { redirect } from "@roxi/routify"
   import { onMount } from "svelte"
@@ -14,8 +15,10 @@
 </script>
 
 {#if !$datasources.list?.length}
-  <i>Connect your first datasource to start building.</i>
-{:else}<i>Select a datasource to edit</i>{/if}
+  <i>{$_("pages.builder.app.application.data.datasource.index.Connect_your")}</i
+  >
+{:else}<i>{$_("pages.builder.app.application.data.datasource.index.Select")}</i
+  >{/if}
 
 <style>
   i {

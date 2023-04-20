@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../lang/i18n"
   import { ActionButton } from "@budibase/bbui"
 
   const eject = () => {
@@ -9,5 +10,9 @@
 </script>
 
 <div>
-  <ActionButton secondary on:click={eject}>Eject block</ActionButton>
+  <ActionButton secondary on:click={eject}
+    >{$_(
+      "components.design.settings.controls.EjectBlockButton.Eject_block"
+    )}</ActionButton
+  >
 </div>

@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import Editor from "./QueryEditor.svelte"
   import FieldsBuilder from "./QueryFieldsBuilder.svelte"
   import {
@@ -75,7 +76,7 @@
     {#if schema.type === QueryTypes.SQL}
       <Editor
         editorHeight={height}
-        label="Query"
+        label={$_("components.integration.index.Query")}
         mode="sql"
         on:change={updateQuery}
         readOnly={!editable}
@@ -85,7 +86,7 @@
     {:else if shouldDisplayJsonBox}
       <Editor
         editorHeight={height}
-        label="Query"
+        label={$_("components.integration.index.Query")}
         mode="json"
         on:change={updateQuery}
         readOnly={!editable}
@@ -115,7 +116,7 @@
                   value: "{\n\t\n}",
                 },
               ]
-            }}>Add stage</Button
+            }}>{$_("components.integration.index.Add_stage")}</Button
           >
         </div>
         <br />
@@ -126,7 +127,8 @@
               <Divider noMargin />
               <div class="blockSection">
                 <div class="block-options">
-                  Stage {index + 1}
+                  {$_("components.integration.index.Stage")}
+                  {index + 1}
                   <div class="block-actions">
                     <div style="margin-right: 24px;">
                       {#if index > 0}

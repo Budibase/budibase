@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { Label, notifications, Select } from "@budibase/bbui"
   import { permissions, roles } from "stores/backend"
   import { Constants } from "@budibase/frontend-core"
@@ -24,7 +25,9 @@
         }
       }
     } catch (error) {
-      notifications.error("Error updating role")
+      notifications.error(
+        $_("components.integration.AccessLevelSelect.Error_updating")
+      )
     }
   }
 

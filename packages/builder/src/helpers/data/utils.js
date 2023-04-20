@@ -1,3 +1,4 @@
+import { _ } from "../../../lang/i18n"
 import { IntegrationTypes } from "constants/backend"
 import { findHBSBlocks } from "@budibase/string-templates"
 
@@ -51,7 +52,7 @@ export function buildQueryString(obj) {
       let count = 0
       const bindingMarkers = {}
       bindings.forEach(binding => {
-        const marker = `BINDING...${count++}`
+        const marker = `${$_("helpers.data.utils.BINDING")}${count++}`
         value = value.replace(binding, marker)
         bindingMarkers[marker] = binding
       })

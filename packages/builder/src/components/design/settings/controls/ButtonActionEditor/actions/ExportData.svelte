@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Label, Select, Body, Multiselect } from "@budibase/bbui"
   import {
     findAllMatchingComponents,
@@ -10,8 +11,6 @@
     getDatasourceForProvider,
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
-
-  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
 

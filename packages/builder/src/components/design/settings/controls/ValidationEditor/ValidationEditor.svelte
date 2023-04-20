@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import { Button, ActionButton, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import ValidationDrawer from "./ValidationDrawer.svelte"
@@ -17,12 +18,27 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Configure validation</ActionButton>
-<Drawer bind:this={drawer} title="Validation Rules">
+<ActionButton on:click={drawer.show}
+  >{$_(
+    "components.design.settings.controls.ValidationEditor.ValidationEditor.Configure_validation"
+  )}</ActionButton
+>
+<Drawer
+  bind:this={drawer}
+  title={$_(
+    "components.design.settings.controls.ValidationEditor.ValidationDrawer.Validation_Rules"
+  )}
+>
   <svelte:fragment slot="description">
-    Configure validation rules for this field.
+    {$_(
+      "components.design.settings.controls.ValidationEditor.ValidationDrawer.Configure_validation_rules"
+    )}
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={save}>Save</Button>
+  <Button cta slot="buttons" on:click={save}
+    >{$_(
+      "components.design.settings.controls.ValidationEditor.ValidationDrawer.Save"
+    )}</Button
+  >
   <ValidationDrawer
     slot="body"
     bind:rules={value}

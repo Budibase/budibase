@@ -1,9 +1,8 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label } from "@budibase/bbui"
   import { currentAsset, store } from "builderStore"
   import { getActionProviderComponents } from "builderStore/dataBinding"
-
-  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
 

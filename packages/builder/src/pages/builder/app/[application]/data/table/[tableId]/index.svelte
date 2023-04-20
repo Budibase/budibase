@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../lang/i18n"
   import TableDataTable from "components/backend/DataTable/DataTable.svelte"
   import { tables, database } from "stores/backend"
   import { Banner } from "@budibase/bbui"
@@ -34,15 +35,20 @@
   {#if duplicates?.length}
     <div class="alert-wrap">
       <Banner type="warning" showCloseButton={false}>
-        {`Schema Invalid - There are duplicate auto column types defined in this schema.
-      Please delete the duplicate entries where appropriate: -
+        {`${$_(
+          "pages.builder.app.application.data.table.tableId.index.Schema_Invalid"
+        )}
       ${invalidColumnText.join(", ")}`}
       </Banner>
     </div>
   {/if}
   <TableDataTable />
 {:else}
-  <i>Create your first table to start building</i>
+  <i
+    >{$_(
+      "pages.builder.app.application.data.table.tableId.index.Create_your_first"
+    )}</i
+  >
 {/if}
 
 <style>

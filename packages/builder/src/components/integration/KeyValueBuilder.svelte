@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import {
     Icon,
     ActionButton,
@@ -92,7 +93,7 @@
       <Label {tooltip}>{keyHeading || keyPlaceholder}</Label>
       <Label>{valueHeading || valuePlaceholder}</Label>
       {#if toggle}
-        <Label>Active</Label>
+        <Label>{$_("components.integration.KeyValueBuilder.Active")}</Label>
       {/if}
     </div>
   {/if}
@@ -159,7 +160,9 @@
 {#if !readOnly && !noAddButton}
   <div>
     <ActionButton icon="Add" secondary thin outline on:click={addEntry}
-      >Add{name ? ` ${lowercase(name)}` : ""}</ActionButton
+      >{$_("components.integration.KeyValueBuilder.Add")}{name
+        ? ` ${lowercase(name)}`
+        : ""}</ActionButton
     >
   </div>
 {/if}

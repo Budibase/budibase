@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../lang/i18n"
   import {
     Button,
     Heading,
@@ -38,12 +39,16 @@
       delete adminUser.confirmationPassword
       // Save the admin user
       await API.createAdminUser(adminUser)
-      notifications.success("Admin user created")
+      notifications.success(
+        $_("pages.builder.admin.index.save.notiofications_success")
+      )
       await admin.init()
       $goto("../portal")
     } catch (error) {
       submitted = false
-      notifications.error("Failed to create admin user")
+      notifications.error(
+        $_("pages.builder.admin.index.save.notiofications_error")
+      )
     }
   }
 
@@ -52,7 +57,9 @@
       try {
         await admin.checkImportComplete()
       } catch (error) {
-        notifications.error("Error checking import status")
+        notifications.error(
+          $_("pages.builder.admin.index.onMount.notiofications_error")
+        )
       }
     }
   })
@@ -66,13 +73,17 @@
   <Layout gap="M" noPadding>
     <Layout justifyItems="center" noPadding>
       <img alt="logo" src={Logo} />
-      <Heading size="M">Create an admin user</Heading>
-      <Body>The admin user has access to everything in Budibase.</Body>
+      <Heading size="M"
+        >{$_("pages.builder.admin.index.TestimonialPage.Heading")}</Heading
+      >
+      <Body>{$_("pages.builder.admin.index.TestimonialPage.Body")}</Body>
     </Layout>
     <Layout gap="S" noPadding>
       <FancyForm bind:this={form}>
         <FancyInput
-          label="Email"
+          label={$_(
+            "pages.builder.admin.index.TestimonialPage.FancyInput.labelEmail"
+          )}
           value={formData.email}
           on:change={e => {
             formData = {
@@ -82,7 +93,11 @@
           }}
           validate={() => {
             let fieldError = {
-              email: !formData.email ? "Please enter a valid email" : undefined,
+              email: !formData.email
+                ? $_(
+                    "pages.builder.admin.index.TestimonialPage.FancyInput.labelErrorEmail"
+                  )
+                : undefined,
             }
             errors = handleError({ ...errors, ...fieldError })
           }}
@@ -90,7 +105,9 @@
           error={errors.email}
         />
         <FancyInput
-          label="Password"
+          label={$_(
+            "pages.builder.admin.index.TestimonialPage.FancyInput.labelPassword"
+          )}
           value={formData.password}
           type="password"
           on:change={e => {
@@ -103,7 +120,9 @@
             let fieldError = {}
 
             fieldError["password"] = !formData.password
-              ? "Please enter a password"
+              ? $_(
+                  "pages.builder.admin.index.TestimonialPage.FancyInput.labelErrorPassword"
+                )
               : undefined
 
             fieldError["confirmationPassword"] =
@@ -111,7 +130,9 @@
                 formData.password,
                 formData.confirmationPassword
               ) && formData.confirmationPassword
-                ? "Passwords must match"
+                ? $_(
+                    "pages.builder.admin.index.TestimonialPage.FancyInput.PasswordMustMatch"
+                  )
                 : undefined
 
             errors = handleError({ ...errors, ...fieldError })
@@ -120,7 +141,9 @@
           disabled={submitted}
         />
         <FancyInput
-          label="Repeat Password"
+          label={$_(
+            "pages.builder.admin.index.TestimonialPage.FancyInput.labelRepeatPassword"
+          )}
           value={formData.confirmationPassword}
           type="password"
           on:change={e => {
@@ -136,7 +159,9 @@
                   formData.password,
                   formData.confirmationPassword
                 ) && formData.password
-                  ? "Passwords must match"
+                  ? $_(
+                      "pages.builder.admin.index.TestimonialPage.FancyInput.PasswordMustMatch"
+                    )
                   : undefined,
             }
             errors = handleError({ ...errors, ...fieldError })
@@ -153,7 +178,7 @@
         disabled={Object.keys(errors).length > 0 || submitted}
         on:click={save}
       >
-        Create super admin user
+        {$_("pages.builder.admin.index.TestimonialPage.Button")}
       </Button>
     </Layout>
     <Layout gap="XS" noPadding justifyItems="center">
@@ -165,7 +190,7 @@
               modal.show()
             }}
           >
-            Import from cloud
+            {$_("pages.builder.admin.index.TestimonialPage.Import")}
           </ActionButton>
         {/if}
       </div>

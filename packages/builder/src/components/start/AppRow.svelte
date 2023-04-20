@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { Heading, Body, Button, Icon, notifications } from "@budibase/bbui"
   import AppLockModal from "../common/AppLockModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
@@ -17,7 +18,9 @@
   const goToBuilder = () => {
     if (app.lockedOther) {
       notifications.error(
-        `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
+        `${$_("components.start.AppRow.App_locked_by")} ${
+          app.lockedBy.email
+        }. $$_("components.start.AppRow.Please_allow")}.`
       )
       return
     }
@@ -32,7 +35,11 @@
 <div class="app-row" on:click={handleDefaultClick}>
   <div class="title">
     <div class="app-icon">
-      <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
+      <Icon
+        size="L"
+        name={app.icon?.name || $_("components.start.AppRow.Apps")}
+        color={app.icon?.color}
+      />
     </div>
     <div class="name">
       <Heading size="S">
@@ -47,20 +54,31 @@
         time: new Date().getTime() - new Date(app.updatedAt).getTime(),
       })}
     {:else}
-      Never updated
+      {$_("components.start.AppRow.Never_updated")}
     {/if}
   </div>
 
   <div class="title app-status" class:deployed={app.deployed}>
-    <Icon size="L" name={app.deployed ? "GlobeCheck" : "GlobeStrike"} />
-    <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
+    <Icon
+      size="L"
+      name={app.deployed
+        ? $_("components.start.AppRow.GlobeCheck")
+        : $_("components.start.AppRow.GlobeStrike")}
+    />
+    <Body size="S"
+      >{app.deployed
+        ? $_("components.start.AppRow.Published")
+        : $_("components.start.AppRow.Unpublished")}</Body
+    >
   </div>
 
   <div class="app-row-actions">
     <AppLockModal {app} buttonSize="M" />
-    <Button size="S" secondary on:click={goToOverview}>Manage</Button>
+    <Button size="S" secondary on:click={goToOverview}
+      >{$_("components.start.AppRow.Manage")}</Button
+    >
     <Button size="S" primary disabled={app.lockedOther} on:click={goToBuilder}>
-      Edit
+      {$_("components.start.AppRow.Edit")}
     </Button>
   </div>
 </div>

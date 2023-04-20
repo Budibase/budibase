@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { Body, ProgressBar, Heading, Icon, Link } from "@budibase/bbui"
   import { admin, auth } from "../../stores/portal"
   import { onMount } from "svelte"
@@ -74,11 +75,14 @@
     {/if}
     {#if showWarning}
       <Body size="S">
-        To get more {usage.name.toLowerCase()}
+        {$_("components.usage.Usage.To_get_more")}
+        {usage.name.toLowerCase()}
         {#if accountPortalAccess}
-          <Link href={upgradeUrl}>upgrade your plan</Link>
+          <Link href={upgradeUrl}
+            >{$_("components.start.UpdateAppModal.upgrade_your_plan")}</Link
+          >
         {:else}
-          contact your account holder
+          {$_("components.start.UpdateAppModal.contact_your_holder")}
         {/if}
       </Body>
     {/if}

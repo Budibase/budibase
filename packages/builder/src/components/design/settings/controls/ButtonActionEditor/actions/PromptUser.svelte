@@ -1,8 +1,7 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Body, Label, Input } from "@budibase/bbui"
   import { onMount } from "svelte"
-
-  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
 

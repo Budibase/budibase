@@ -1,9 +1,8 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Label, ActionButton, Button, Select, Input } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-
-  import { _ } from "../../../../../../../lang/i18n"
 
   const dispatch = createEventDispatcher()
 

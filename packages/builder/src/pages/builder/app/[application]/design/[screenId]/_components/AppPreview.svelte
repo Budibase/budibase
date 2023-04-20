@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../lang/i18n"
   import { get } from "svelte/store"
   import { onMount, onDestroy } from "svelte"
   import {
@@ -40,10 +41,18 @@
   }
 
   const placeholderScreen = new Screen()
-    .name("Screen Placeholder")
+    .name(
+      $_(
+        "pages.builder.app.application.design.screenId._components.AppPreview.Screen_Placeholder"
+      )
+    )
     .route("/")
     .component("@budibase/standard-components/screenslot")
-    .instanceName("Content Placeholder")
+    .instanceName(
+      $_(
+        "pages.builder.app.application.design.screenId._components.AppPreview.Content_Placeholder"
+      )
+    )
     .normalStyle({ flex: "1 1 auto" })
     .json()
 
@@ -129,7 +138,12 @@
     try {
       await handleBudibaseEvent(message)
     } catch (error) {
-      notifications.error(error || "Error handling event from app preview")
+      notifications.error(
+        error ||
+          $_(
+            "pages.builder.app.application.design.screenId._components.AppPreview.Error_handling"
+          )
+      )
     }
 
     // Reply that the event has been completed
@@ -149,7 +163,11 @@
     } else if (type === MessageTypes.ERROR) {
       // Catch any app errors
       loading = false
-      error = event.error || "An unknown error occurred"
+      error =
+        event.error ||
+        $_(
+          "pages.builder.app.application.design.screenId._components.AppPreview.An_unknown"
+        )
     } else if (type === "select-component" && data.id) {
       $store.selectedComponentId = data.id
       if (!$isActive("./components")) {
@@ -224,7 +242,11 @@
       const { componentId, parentType } = data
       await store.actions.components.addParent(componentId, parentType)
     } else {
-      console.warn(`Client sent unknown event type: ${type}`)
+      console.warn(
+        `${$_(
+          "pages.builder.app.application.design.screenId._components.AppPreview.Client_sent"
+        )} ${type}`
+      )
     }
   }
 
@@ -237,7 +259,11 @@
     try {
       await store.actions.components.delete({ _id: idToDelete })
     } catch (error) {
-      notifications.error("Error deleting component")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId._components.AppPreview.Error_deleting"
+        )
+      )
     }
     idToDelete = null
   }
@@ -256,11 +282,21 @@
   }
 
   onMount(() => {
-    window.addEventListener("message", receiveMessage)
+    window.addEventListener(
+      $_(
+        "pages.builder.app.application.design.screenId._components.AppPreview.message"
+      ),
+      receiveMessage
+    )
   })
 
   onDestroy(() => {
-    window.removeEventListener("message", receiveMessage)
+    window.removeEventListener(
+      $_(
+        "pages.builder.app.application.design.screenId._components.AppPreview.message"
+      ),
+      receiveMessage
+    )
   })
 </script>
 
@@ -273,7 +309,11 @@
     <div class="center error">
       <Layout justifyItems="center" gap="S">
         {@html ErrorSVG}
-        <Heading size="L">App preview failed to load</Heading>
+        <Heading size="L"
+          >{$_(
+            "pages.builder.app.application.design.screenId._components.AppPreview.App_preview"
+          )}</Heading
+        >
         <Body size="S">{error}</Body>
       </Layout>
     </div>
@@ -296,9 +336,15 @@
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  title="Confirm Deletion"
-  body={`Are you sure you want to delete this component?`}
-  okText="Delete component"
+  title={$_(
+    "pages.builder.app.application.design.screenId._components.AppPreview.Confirm_Deletion"
+  )}
+  body={`${$_(
+    "pages.builder.app.application.design.screenId._components.AppPreview.Are_you_sure"
+  )}`}
+  okText={$_(
+    "pages.builder.app.application.design.screenId._components.AppPreview.Delete_component"
+  )}
   onOk={deleteComponent}
   onCancel={cancelDeleteComponent}
 />

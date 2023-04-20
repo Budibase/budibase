@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { tables } from "stores/backend"
@@ -7,8 +8,6 @@
     getSchemaForTable,
   } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
-
-  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
   export let bindings = []

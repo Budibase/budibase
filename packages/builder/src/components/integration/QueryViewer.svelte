@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { goto } from "@roxi/routify"
   import {
     Icon,
@@ -80,7 +81,7 @@
       const response = await queries.preview(query)
       if (response.rows.length === 0) {
         notifications.info(
-          "Query results empty. Please execute a query with results to create your schema."
+          $_("components.integration.QueryViewer.Query_results")
         )
         return
       }
@@ -95,9 +96,15 @@
       }
       fields = response.schema
       currentTab = "JSON"
-      notifications.success("Query executed successfully")
+      notifications.success(
+        $_("components.integration.QueryViewer.Query_executed")
+      )
     } catch (error) {
-      notifications.error(`Query Error: ${error.message}`)
+      notifications.error(
+        `${$_("components.integration.QueryViewer.Query_Error")}: ${
+          error.message
+        }`
+      )
     }
   }
 
@@ -105,31 +112,39 @@
     try {
       const { _id } = await queries.save(query.datasourceId, query)
       saveId = _id
-      notifications.success(`Query saved successfully`)
+      notifications.success(
+        `${$_("components.integration.QueryViewer.Query_saved")}`
+      )
 
       // Go to the correct URL if we just created a new query
       if (!query._rev) {
         $goto(`../../${_id}`)
       }
     } catch (error) {
-      notifications.error("Error saving query")
+      notifications.error(
+        $_("components.integration.QueryViewer.Error saving query")
+      )
     }
   }
 </script>
 
 <div class="wrapper">
   <Layout gap="S" noPadding>
-    <Heading size="M">Query {integrationInfo?.friendlyName}</Heading>
+    <Heading size="M"
+      >{$_("components.integration.QueryViewer.Query")}
+      {integrationInfo?.friendlyName}</Heading
+    >
     <Divider />
-    <Heading size="S">Config</Heading>
+    <Heading size="S">{$_("components.integration.QueryViewer.Config")}</Heading
+    >
     <div class="config">
       <div class="config-field">
-        <Label>Query Name</Label>
+        <Label>{$_("components.integration.QueryViewer.Query_Name")}</Label>
         <Input bind:value={query.name} />
       </div>
       {#if queryConfig}
         <div class="config-field">
-          <Label>Function</Label>
+          <Label>{$_("components.integration.QueryViewer.Function")}</Label>
           <Select
             bind:value={query.queryVerb}
             on:change={resetDependentFields}
@@ -139,7 +154,11 @@
           />
         </div>
         <div class="config-field">
-          <AccessLevelSelect {saveId} {query} label="Access Level" />
+          <AccessLevelSelect
+            {saveId}
+            {query}
+            label={$_("components.integration.QueryViewer.Access_Level")}
+          />
         </div>
         {#if integrationInfo?.extra && query.queryVerb}
           <ExtraQueryConfig
@@ -167,8 +186,12 @@
     {#if shouldShowQueryConfig}
       <Divider />
       <div class="config">
-        <Heading size="S">Fields</Heading>
-        <Body size="S">Fill in the fields specific to this query.</Body>
+        <Heading size="S"
+          >{$_("components.integration.QueryViewer.Fields")}</Heading
+        >
+        <Body size="S"
+          >{$_("components.integration.QueryViewer.Fill_fields")}</Body
+        >
         <IntegrationQueryEditor
           {datasource}
           {query}
@@ -180,7 +203,9 @@
       </div>
       <div class="config">
         <div class="help-heading">
-          <Heading size="S">Transformer</Heading>
+          <Heading size="S"
+            >{$_("components.integration.QueryViewer.Transformer")}</Heading
+          >
           <Icon
             on:click={() => window.open(transformerDocs)}
             hoverable
@@ -189,7 +214,7 @@
           />
         </div>
         <Body size="S"
-          >Add a JavaScript function to transform the query result.</Body
+          >{$_("components.integration.QueryViewer.Add_JavaScript")}</Body
         >
         <CodeMirrorEditor
           height={200}
@@ -201,17 +226,20 @@
         <Divider />
       </div>
       <div class="viewer-controls">
-        <Heading size="S">Results</Heading>
+        <Heading size="S"
+          >{$_("components.integration.QueryViewer.Results")}</Heading
+        >
         <ButtonGroup gap="XS">
           <Button cta disabled={queryInvalid} on:click={saveQuery}>
-            Save Query
+            {$_("components.integration.QueryViewer.Save Query")}
           </Button>
-          <Button secondary on:click={previewQuery}>Run Query</Button>
+          <Button secondary on:click={previewQuery}
+            >{$_("components.integration.QueryViewer.Run_Query")}</Button
+          >
         </ButtonGroup>
       </div>
       <Body size="S">
-        Below, you can preview the results from your query and change the
-        schema.
+        {$_("components.integration.QueryViewer.preview_results")}
       </Body>
       <section class="viewer">
         {#if data}

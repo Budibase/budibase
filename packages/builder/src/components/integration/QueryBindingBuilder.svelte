@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { Body, Heading, Icon, Input, Layout } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
@@ -26,28 +27,29 @@
 
 <Layout noPadding={bindable} gap="S">
   <div class="controls" class:height={!bindable}>
-    <Heading size="XS">Bindings</Heading>
+    <Heading size="XS"
+      >{$_("components.integration.QueryBindingsBuilder.Bindings")}</Heading
+    >
   </div>
   <Body size="S">
     {#if !bindable}
-      Bindings come in two parts: the binding name, and a default/fallback
-      value. These bindings can be used as Handlebars expressions throughout the
-      query.
+      {$_("components.integration.QueryBindingsBuilder.Bindings_come")}
     {:else}
-      Enter a value for each binding. The default values will be used for any
-      values left blank.
+      {$_("components.integration.QueryBindingsBuilder.Enter_value")}
     {/if}
   </Body>
   <div class="bindings" class:bindable>
     {#each queryBindings as binding, idx}
       <Input
-        placeholder="Binding Name"
+        placeholder={$_(
+          "components.integration.QueryBindingsBuilder.Binding_name"
+        )}
         thin
         disabled={bindable}
         bind:value={binding.name}
       />
       <Input
-        placeholder="Default"
+        placeholder={$_("components.integration.QueryBindingsBuilder.Default")}
         thin
         disabled={bindable}
         on:change={evt => onBindingChange(binding.name, evt.detail)}
@@ -55,8 +57,10 @@
       />
       {#if bindable}
         <DrawerBindableInput
-          title={`Query binding "${binding.name}"`}
-          placeholder="Value"
+          title={`${$_(
+            "components.integration.QueryBindingsBuilder.Query_binding"
+          )} "${binding.name}"`}
+          placeholder={$_("components.integration.QueryBindingsBuilder.Value")}
           thin
           on:change={evt => onBindingChange(binding.name, evt.detail)}
           value={runtimeToReadableBinding(

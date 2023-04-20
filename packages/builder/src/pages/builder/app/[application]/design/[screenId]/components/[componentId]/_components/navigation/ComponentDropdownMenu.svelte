@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import { store } from "builderStore"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
 
@@ -30,7 +31,9 @@
     keyBind="!BackAndroid"
     on:click={() => keyboardEvent("Delete")}
   >
-    Delete
+    {$_(
+      "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentDropDownMenu.Delete"
+    )}
   </MenuItem>
   {#if isBlock}
     <MenuItem
@@ -38,7 +41,9 @@
       keyBind="Ctrl+E"
       on:click={() => keyboardEvent("e", true)}
     >
-      Eject block
+      {$_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentDropDownMenu.Eject_block"
+      )}
     </MenuItem>
   {/if}
   <MenuItem
@@ -46,35 +51,45 @@
     keyBind="Ctrl+!ArrowUp"
     on:click={() => keyboardEvent("ArrowUp", true)}
   >
-    Move up
+    {$_(
+      "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentDropDownMenu.Move_up"
+    )}
   </MenuItem>
   <MenuItem
     icon="ChevronDown"
     keyBind="Ctrl+!ArrowDown"
     on:click={() => keyboardEvent("ArrowDown", true)}
   >
-    Move down
+    {$_(
+      "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentDropDownMenu.Move_down"
+    )}
   </MenuItem>
   <MenuItem
     icon="Duplicate"
     keyBind="Ctrl+D"
     on:click={() => keyboardEvent("d", true)}
   >
-    Duplicate
+    {$_(
+      "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentDropDownMenu.Duplicate"
+    )}
   </MenuItem>
   <MenuItem
     icon="Cut"
     keyBind="Ctrl+X"
     on:click={() => keyboardEvent("x", true)}
   >
-    Cut
+    {$_(
+      "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentDropDownMenu.Cut"
+    )}
   </MenuItem>
   <MenuItem
     icon="Copy"
     keyBind="Ctrl+C"
     on:click={() => keyboardEvent("c", true)}
   >
-    Copy
+    {$_(
+      "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentDropDownMenu.Copy"
+    )}
   </MenuItem>
   <MenuItem
     icon="LayersSendToBack"
@@ -82,7 +97,9 @@
     on:click={() => keyboardEvent("v", true)}
     disabled={noPaste}
   >
-    Paste
+    {$_(
+      "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentDropDownMenu.Paste"
+    )}
   </MenuItem>
 </ActionMenu>
 

@@ -1,10 +1,9 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label, Input, Checkbox } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
   import { TriggerStepID } from "constants/backend/automations"
-
-  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters = {}
   export let bindings = []

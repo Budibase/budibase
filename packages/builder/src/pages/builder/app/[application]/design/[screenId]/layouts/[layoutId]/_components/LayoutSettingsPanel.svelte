@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../lang/i18n"
   import Panel from "components/design/Panel.svelte"
   import { store, selectedLayout } from "builderStore"
   import { Layout, Body, Button, Banner, notifications } from "@budibase/bbui"
@@ -31,23 +32,35 @@
 
     // Copy new component structure
     store.actions.components.copy(container)
-    notifications.success("Components copied successfully")
+    notifications.success(
+      $_(
+        "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutSettingsPanel.Components_copied"
+      )
+    )
   }
 </script>
 
 <Panel title={$selectedLayout?.name} icon="Experience" borderLeft>
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Banner type="warning" showCloseButton={false}>
-      Custom layouts are being deprecated. They will be removed in a future
-      release.
+      {$_(
+        "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutSettingsPanel.layouts_deprecated"
+      )}
     </Banner>
     <Body size="S">
-      You can save the content of this layout by pressing the button below.
+      {$_(
+        "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutSettingsPanel.save_content"
+      )}
     </Body>
     <Body size="S">
-      This will copy all components inside your layout, which you can then paste
-      into a screen.
+      {$_(
+        "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutSettingsPanel.copy_components"
+      )}
     </Body>
-    <Button cta on:click={copyLayout}>Copy components</Button>
+    <Button cta on:click={copyLayout}
+      >{$_(
+        "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutSettingsPanel.Copy_components"
+      )}</Button
+    >
   </Layout>
 </Panel>

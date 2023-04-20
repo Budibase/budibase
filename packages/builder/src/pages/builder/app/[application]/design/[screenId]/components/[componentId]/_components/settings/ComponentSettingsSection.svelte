@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import { isEmpty } from "lodash/fp"
   import { Input, DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
@@ -58,7 +59,11 @@
         })
       }
     } catch (error) {
-      notifications.error("Error updating component prop")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.components.componentId._components.settings.ComponentSettingsSection.Error_updating"
+        )
+      )
     }
   }
 

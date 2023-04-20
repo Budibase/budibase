@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../lang/i18n"
   import { goto } from "@roxi/routify"
   import {
     Button,
@@ -23,7 +24,11 @@
 
   const querySchema = {
     name: {},
-    queryVerb: { displayName: "Method" },
+    queryVerb: {
+      displayName: $_(
+        "pages.builder.app.application.data.datasource.datasourceId.index.Method"
+      ),
+    },
   }
 
   let importQueriesModal
@@ -53,10 +58,20 @@
         await tables.fetch()
       }
       await datasources.fetch()
-      notifications.success(`Datasource ${name} updated successfully.`)
+      notifications.success(
+        `${$_(
+          "pages.builder.app.application.data.datasource.datasourceId.index.Datasource"
+        )} ${name} ${$_(
+          "pages.builder.app.application.data.datasource.datasourceId.index.updated_successfully"
+        )}.`
+      )
       baseDatasource = cloneDeep(datasource)
     } catch (err) {
-      notifications.error(`Error saving datasource: ${err}`)
+      notifications.error(
+        `${$_(
+          "pages.builder.app.application.data.datasource.datasourceId.index.Error_saving"
+        )}: ${err}`
+      )
     }
   }
 
@@ -93,9 +108,15 @@
       </Layout>
       <Divider />
       <div class="config-header">
-        <Heading size="S">Configuration</Heading>
+        <Heading size="S"
+          >{$_(
+            "pages.builder.app.application.data.datasource.datasourceId.index.Configuration"
+          )}</Heading
+        >
         <Button disabled={!changed || !isValid} cta on:click={saveDatasource}>
-          Save
+          {$_(
+            "pages.builder.app.application.data.datasource.datasourceId.index.Save"
+          )}
         </Button>
       </div>
       <IntegrationConfigForm
@@ -109,11 +130,17 @@
       {/if}
       <Divider />
       <div class="query-header">
-        <Heading size="S">Queries</Heading>
+        <Heading size="S"
+          >{$_(
+            "pages.builder.app.application.data.datasource.datasourceId.index.Queries"
+          )}</Heading
+        >
         <div class="query-buttons">
           {#if datasource?.source === IntegrationTypes.REST}
             <Button secondary on:click={() => importQueriesModal.show()}>
-              Import
+              {$_(
+                "pages.builder.app.application.data.datasource.datasourceId.index.Import"
+              )}
             </Button>
           {/if}
           <Button
@@ -121,14 +148,16 @@
             icon="Add"
             on:click={() => $goto(`../../query/new/${datasource._id}`)}
           >
-            Add query
+            {$_(
+              "pages.builder.app.application.data.datasource.datasourceId.index.Add_query"
+            )}
           </Button>
         </div>
       </div>
       <Body size="S">
-        To build an app using a datasource, you must first query the data. A
-        query is a request for data or information from a datasource, for
-        example a database table.
+        {$_(
+          "pages.builder.app.application.data.datasource.datasourceId.index.Body"
+        )}
       </Body>
       {#if queryList && queryList.length > 0}
         <div class="query-list">

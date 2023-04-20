@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../lang/i18n"
   import { notifications, ModalContent, Dropzone, Body } from "@budibase/bbui"
   import { API } from "api"
   import { admin } from "stores/portal"
@@ -17,27 +18,38 @@
       // Create App
       await API.importApps(data)
       await admin.checkImportComplete()
-      notifications.success("Import complete, please finish registration!")
+      notifications.success(
+        $_(
+          "pages.builder.admin._components.ImportAppsModal.notiofications_success"
+        )
+      )
     } catch (error) {
-      notifications.error("Failed to import apps")
+      notifications.error(
+        $_(
+          "pages.builder.admin._components.ImportAppsModal.notiofications_error"
+        )
+      )
     }
     submitting = false
   }
 </script>
 
 <ModalContent
-  title="Import apps"
-  confirmText="Import apps"
+  title={$_(
+    "pages.builder.admin._components.ImportAppsModal.ModalContent_title"
+  )}
+  confirmText={$_(
+    "pages.builder.admin._components.ImportAppsModal.ModalContent_confirmText"
+  )}
   onConfirm={importApps}
   disabled={!value.file}
 >
   <Body>
-    Please upload the file that was exported from your Cloud environment to get
-    started
+    {$_("pages.builder.admin._components.ImportAppsModal.Body")}
   </Body>
   <Dropzone
     gallery={false}
-    label="File to import"
+    label={$_("pages.builder.admin._components.ImportAppsModal.DropZone_label")}
     value={[value.file]}
     on:change={e => {
       value.file = e.detail?.[0]

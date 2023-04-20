@@ -1,11 +1,16 @@
+import { _ } from "../../../../../../../../../../../lang/i18n"
 import { Input, Select } from "@budibase/bbui"
 import ColorPicker from "components/design/settings/controls/ColorPicker.svelte"
 
 export const margin = {
-  label: "Margin",
+  label: $_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Margin"
+  ),
   settings: [
     {
-      label: "Top",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Top"
+      ),
       key: "margin-top",
       control: Select,
       placeholder: "None",
@@ -20,12 +25,19 @@ export const margin = {
         { label: "64px", value: "64px" },
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
-        { label: "Auto", value: "auto" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
+          ),
+          value: "auto",
+        },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: "Right",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Right"
+      ),
       key: "margin-right",
       control: Select,
       placeholder: "None",
@@ -40,12 +52,19 @@ export const margin = {
         { label: "64px", value: "64px" },
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
-        { label: "Auto", value: "auto" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
+          ),
+          value: "auto",
+        },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: "Bottom",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Bottom"
+      ),
       key: "margin-bottom",
       control: Select,
       placeholder: "None",
@@ -60,12 +79,19 @@ export const margin = {
         { label: "64px", value: "64px" },
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
-        { label: "Auto", value: "auto" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
+          ),
+          value: "auto",
+        },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: "Left",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Left"
+      ),
       key: "margin-left",
       control: Select,
       placeholder: "None",
@@ -80,7 +106,12 @@ export const margin = {
         { label: "64px", value: "64px" },
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
-        { label: "Auto", value: "auto" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
+          ),
+          value: "auto",
+        },
         { label: "100%", value: "100%" },
       ],
     },
@@ -88,10 +119,14 @@ export const margin = {
 }
 
 export const padding = {
-  label: "Padding",
+  label: $_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Padding"
+  ),
   settings: [
     {
-      label: "Top",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Top"
+      ),
       key: "padding-top",
       control: Select,
       placeholder: "None",
@@ -106,12 +141,19 @@ export const padding = {
         { label: "64px", value: "64px" },
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
-        { label: "Auto", value: "auto" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
+          ),
+          value: "auto",
+        },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: "Right",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Right"
+      ),
       key: "padding-right",
       control: Select,
       placeholder: "None",
@@ -126,12 +168,19 @@ export const padding = {
         { label: "64px", value: "64px" },
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
-        { label: "Auto", value: "auto" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
+          ),
+          value: "auto",
+        },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: "Bottom",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Bottom"
+      ),
       key: "padding-bottom",
       control: Select,
       placeholder: "None",
@@ -146,12 +195,19 @@ export const padding = {
         { label: "64px", value: "64px" },
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
-        { label: "Auto", value: "auto" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
+          ),
+          value: "auto",
+        },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: "Left",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Left"
+      ),
       key: "padding-left",
       control: Select,
       placeholder: "None",
@@ -166,7 +222,12 @@ export const padding = {
         { label: "64px", value: "64px" },
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
-        { label: "Auto", value: "auto" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
+          ),
+          value: "auto",
+        },
         { label: "100%", value: "100%" },
       ],
     },
@@ -174,33 +235,49 @@ export const padding = {
 }
 
 export const size = {
-  label: "Size",
+  label: $_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Size"
+  ),
   settings: [
     {
-      label: "Width",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Width"
+      ),
       key: "width",
       control: Input,
-      placeholder: "Auto",
+      placeholder: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
+      ),
     },
     {
-      label: "Height",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Height"
+      ),
       key: "height",
       control: Input,
-      placeholder: "Auto",
+      placeholder: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
+      ),
     },
   ],
 }
 
 export const background = {
-  label: "Background",
+  label: $_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Background"
+  ),
   settings: [
     {
-      label: "Color",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Color"
+      ),
       key: "background",
       control: ColorPicker,
     },
     {
-      label: "Gradient",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Gradient"
+      ),
       key: "background-image",
       control: Select,
       options: [
@@ -280,67 +357,135 @@ export const background = {
 }
 
 export const border = {
-  label: "Border",
+  label: $_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Border"
+  ),
   settings: [
     {
-      label: "Color",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Color"
+      ),
       key: "border-color",
       control: ColorPicker,
     },
     {
-      label: "Width",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Width"
+      ),
       key: "border-width",
       control: Select,
       column: "1 / 2",
       placeholder: "None",
       options: [
-        { label: "Small", value: "1px" },
-        { label: "Medium", value: "2px" },
-        { label: "Large", value: "4px" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Small"
+          ),
+          value: "1px",
+        },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Medium"
+          ),
+          value: "2px",
+        },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Large"
+          ),
+          value: "4px",
+        },
       ],
     },
     {
-      label: "Style",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Style"
+      ),
       key: "border-style",
       control: Select,
       column: "2 / 3",
       placeholder: "None",
       options: [
-        { label: "Solid", value: "solid" },
-        { label: "Dotted", value: "dotted" },
-        { label: "Dashed", value: "dashed" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Solid"
+          ),
+          value: "solid",
+        },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Dotted"
+          ),
+          value: "dotted",
+        },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Dashed"
+          ),
+          value: "dashed",
+        },
       ],
     },
     {
-      label: "Radius",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Radius"
+      ),
       key: "border-radius",
       control: Select,
       placeholder: "None",
       options: [
-        { label: "Small", value: "0.25rem" },
-        { label: "Medium", value: "0.5rem" },
-        { label: "Large", value: "1rem" },
-        { label: "Round", value: "100%" },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Small"
+          ),
+          value: "0.25rem",
+        },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Medium"
+          ),
+          value: "0.5rem",
+        },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Large"
+          ),
+          value: "1rem",
+        },
+        {
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Round"
+          ),
+          value: "100%",
+        },
       ],
     },
     {
-      label: "Shadow",
+      label: $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Shadow"
+      ),
       key: "box-shadow",
       control: Select,
       placeholder: "None",
       options: [
         {
-          label: "Small",
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Small"
+          ),
           value:
             "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
         },
         {
-          label: "Medium",
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Medium"
+          ),
           value:
             "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
         },
         {
-          label: "Large",
+          label: $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Large"
+          ),
           value:
             "0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
         },

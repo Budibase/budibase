@@ -1,13 +1,18 @@
+import { _ } from "../../../../lang/i18n"
 import { store } from "builderStore/index"
 import { get } from "svelte/store"
 
 const registerNode = async (node, tourStepKey) => {
   if (!node) {
-    console.log("Tour Handler - an anchor node is required")
+    console.log($_("components.portal.onboarding.tourHandler.First"))
   }
 
   if (!get(store).tourKey) {
-    console.log("Tour Handler - No active tour ", tourStepKey, node)
+    console.log(
+      $_("components.portal.onboarding.tourHandler.Second"),
+      tourStepKey,
+      node
+    )
     return
   }
 

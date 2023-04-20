@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../lang/i18n"
   import {
     Button,
     Icon,
@@ -70,13 +71,23 @@
               >
                 <Icon name="DragHandle" size="XL" />
               </div>
-              <Input bind:value={link.text} placeholder="Text" />
+              <Input
+                bind:value={link.text}
+                placeholder={$_(
+                  "pages.builder.app.application.design.screenId.navigation._components.NavigationLinksDrawer.Text"
+                )}
+              />
               <Combobox
                 bind:value={link.url}
                 placeholder="URL"
                 options={urlOptions}
               />
-              <RoleSelect bind:value={link.roleId} placeholder="Minimum role" />
+              <RoleSelect
+                bind:value={link.roleId}
+                placeholder={$_(
+                  "pages.builder.app.application.design.screenId.navigation._components.NavigationLinksDrawer.Minimum_role"
+                )}
+              />
               <Icon
                 name="Close"
                 hoverable
@@ -88,7 +99,11 @@
         </div>
       {/if}
       <div>
-        <Button secondary icon="Add" on:click={addLink}>Add Link</Button>
+        <Button secondary icon="Add" on:click={addLink}
+          >{$_(
+            "pages.builder.app.application.design.screenId.navigation._components.NavigationLinksDrawer.Add_Link"
+          )}</Button
+        >
       </div>
     </Layout>
   </div>

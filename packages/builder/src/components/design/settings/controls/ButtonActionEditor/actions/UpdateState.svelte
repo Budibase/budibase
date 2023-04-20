@@ -1,10 +1,9 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label, Combobox, Checkbox, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { getAllStateVariables } from "builderStore/dataBinding"
-
-  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
   export let bindings = []

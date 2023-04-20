@@ -1,4 +1,6 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
+
   import { Select, Layout, Input, Checkbox } from "@budibase/bbui"
   import { datasources, integrations, queries } from "stores/backend"
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
@@ -7,8 +9,6 @@
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
   } from "constants/backend"
-
-  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
   export let bindings = []

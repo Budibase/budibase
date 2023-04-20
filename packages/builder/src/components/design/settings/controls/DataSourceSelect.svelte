@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../lang/i18n"
   import { getContextProviderComponents } from "builderStore/dataBinding"
   import {
     Button,
@@ -33,7 +34,9 @@
   let drawer
   let tmpQueryParams
 
-  $: text = value?.label ?? "Choose an option"
+  $: text =
+    value?.label ??
+    $_("components.design.settings.controls.DataSourceSelect.Choose_option")
   $: tables = $tablesStore.list.map(m => ({
     label: m.name,
     tableId: m._id,
@@ -170,8 +173,17 @@
   />
   {#if value?.type === "query"}
     <i class="ri-settings-5-line" on:click={openQueryParamsDrawer} />
-    <Drawer title={"Query Bindings"} bind:this={drawer}>
-      <Button slot="buttons" cta on:click={saveQueryParams}>Save</Button>
+    <Drawer
+      title={$_(
+        "components.design.settings.controls.DataSourceSelect.Query_Bindings"
+      )}
+      bind:this={drawer}
+    >
+      <Button slot="buttons" cta on:click={saveQueryParams}
+        >{$_(
+          "components.design.settings.controls.DataSourceSelect.Save"
+        )}</Button
+      >
       <DrawerContent slot="body">
         <Layout noPadding gap="XS">
           {#if getQueryParams(value).length > 0}
@@ -196,7 +208,11 @@
 <Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
     <div class="title">
-      <Heading size="XS">Tables</Heading>
+      <Heading size="XS"
+        >{$_(
+          "components.design.settings.controls.DataSourceSelect.Tables"
+        )}</Heading
+      >
     </div>
     <ul>
       {#each tables as table}
@@ -206,7 +222,11 @@
     {#if views?.length}
       <Divider />
       <div class="title">
-        <Heading size="XS">Views</Heading>
+        <Heading size="XS"
+          >{$_(
+            "components.design.settings.controls.DataSourceSelect.Views"
+          )}</Heading
+        >
       </div>
       <ul>
         {#each views as view}
@@ -217,7 +237,11 @@
     {#if queries?.length}
       <Divider />
       <div class="title">
-        <Heading size="XS">Queries</Heading>
+        <Heading size="XS"
+          >{$_(
+            "components.design.settings.controls.DataSourceSelect.Queries"
+          )}</Heading
+        >
       </div>
       <ul>
         {#each queries as query}
@@ -233,7 +257,11 @@
     {#if links?.length}
       <Divider />
       <div class="title">
-        <Heading size="XS">Relationships</Heading>
+        <Heading size="XS"
+          >{$_(
+            "components.design.settings.controls.DataSourceSelect.Relationship"
+          )}</Heading
+        >
       </div>
       <ul>
         {#each links as link}
@@ -244,7 +272,11 @@
     {#if fields?.length}
       <Divider />
       <div class="title">
-        <Heading size="XS">Fields</Heading>
+        <Heading size="XS"
+          >{$_(
+            "components.design.settings.controls.DataSourceSelect.Feilds"
+          )}</Heading
+        >
       </div>
       <ul>
         {#each fields as field}
@@ -255,7 +287,11 @@
     {#if jsonArrays?.length}
       <Divider />
       <div class="title">
-        <Heading size="XS">JSON Arrays</Heading>
+        <Heading size="XS"
+          >{$_(
+            "components.design.settings.controls.DataSourceSelect.JSON_Arrays"
+          )}</Heading
+        >
       </div>
       <ul>
         {#each jsonArrays as field}
@@ -266,7 +302,11 @@
     {#if showDataProviders && dataProviders?.length}
       <Divider />
       <div class="title">
-        <Heading size="XS">Data Providers</Heading>
+        <Heading size="XS"
+          >{$_(
+            "components.design.settings.controls.DataSourceSelect.Data_Providers"
+          )}</Heading
+        >
       </div>
       <ul>
         {#each dataProviders as provider}
@@ -282,7 +322,11 @@
     {#if otherSources?.length}
       <Divider />
       <div class="title">
-        <Heading size="XS">Other</Heading>
+        <Heading size="XS"
+          >{$_(
+            "components.design.settings.controls.DataSourceSelect.Other"
+          )}</Heading
+        >
       </div>
       <ul>
         {#each otherSources as source}

@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import {
     Button,
     Body,
@@ -205,7 +206,11 @@
                   <Select disabled placeholder=" " />
                 {/if}
               {/if}
-              <div>IF</div>
+              <div>
+                {$_(
+                  "pages.builder.app.application.design.screenId.components.componentId._components.settings.ConditionalUIDrawer.IF"
+                )}
+              </div>
               <DrawerBindableInput
                 {bindings}
                 placeholder="Value"
@@ -263,11 +268,17 @@
           {/each}
         </div>
       {:else}
-        <Body size="S">Add your first condition to get started.</Body>
+        <Body size="S"
+          >{$_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.ConditionalUIDrawer.first_condition"
+          )}</Body
+        >
       {/if}
       <div>
         <Button secondary icon="Add" on:click={addCondition}>
-          Add condition
+          {$_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.settings.ConditionalUIDrawer.Add_condition"
+          )}
         </Button>
       </div>
     </Layout>

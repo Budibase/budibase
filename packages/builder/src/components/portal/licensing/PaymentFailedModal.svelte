@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../lang/i18n"
   import { Modal, ModalContent, Body, TooltipWrapper } from "@budibase/bbui"
   import { auth, admin, licensing } from "stores/portal"
   import { onMount } from "svelte"
@@ -9,7 +10,9 @@
   let paymentFailedModal
   let pastDueEndDate
 
-  const paymentFailedTitle = "Payment failed"
+  const paymentFailedTitle = $_(
+    "components.portal.licensing.PaymentFailedModal.Payment_failed"
+  )
   $: accountUrl = $admin.accountPortalUrl
   $: billingUrl = `${accountUrl}/portal/billing`
 
@@ -33,21 +36,22 @@
     <ModalContent
       title={paymentFailedTitle}
       size="M"
-      confirmText="Billing"
+      confirmText={$_("components.portal.licensing.PaymentFailedModal.Billing")}
       onConfirm={() => {
         window.location.href = billingUrl
       }}
     >
-      <Body>The payment for your subscription has failed</Body>
+      <Body>{$_("components.portal.licensing.PaymentFailedModal.The")}</Body>
       <Body>
-        Please update your billing details before your account gets downgraded
-        to the free plan
+        {$_("components.portal.licensing.PaymentFailedModal.Please_update")}
       </Body>
       <Body weight={800}>
         <div class="tooltip-root">
-          {`${$licensing.pastDueDaysRemaining} day${
-            $licensing.pastDueDaysRemaining == 1 ? "" : "s"
-          } remaining`}
+          {`${$licensing.pastDueDaysRemaining} ${$_(
+            "components.portal.licensing.licensingBanners.day"
+          )}${$licensing.pastDueDaysRemaining == 1 ? "" : "s"} ${$_(
+            "components.portal.licensing.licensingBanners.remaining"
+          )}`}
           <span class="tooltip">
             <TooltipWrapper tooltip={pastDueEndDate} size="S" />
           </span>
@@ -56,12 +60,15 @@
     </ModalContent>
   {:else}
     <ModalContent title={paymentFailedTitle} size="M" showCancelButton={false}>
-      <Body>The payment for your subscription has failed</Body>
+      <Body>{$_("components.portal.licensing.PaymentFailedModal.The")}</Body>
       <Body>
-        Please upgrade your billing details before your account gets downgraded
-        to the free plan
+        {$_("components.portal.licensing.PaymentFailedModal.Please_update")}
       </Body>
-      <Body>Please contact your account holder.</Body>
+      <Body
+        >{$_(
+          "components.portal.licensing.PaymentFailedModal.Please_contact"
+        )}</Body
+      >
       <Body weight={800}>
         <div class="tooltip-root">
           {`${$licensing.pastDueDaysRemaining} day${

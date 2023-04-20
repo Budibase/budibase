@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import {
     DetailSummary,
     ActionButton,
@@ -24,7 +25,11 @@
     try {
       await store.actions.components.updateConditions(tempValue)
     } catch (error) {
-      notifications.error("Error updating conditions")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.components.componentId._components.settings.ConditionalUISection.Error_updating"
+        )
+      )
     }
     drawer.hide()
   }
@@ -38,14 +43,24 @@
 <DetailSummary name={"Conditions"} collapsible={false}>
   <div class="conditionCount">{conditionText}</div>
   <div>
-    <ActionButton on:click={openDrawer}>Configure conditions</ActionButton>
+    <ActionButton on:click={openDrawer}
+      >{$_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.ConditionalUISection.Configure_conditions"
+      )}</ActionButton
+    >
   </div>
 </DetailSummary>
 <Drawer bind:this={drawer} title="Conditions">
   <svelte:fragment slot="description">
-    Show, hide and update components in response to conditions being met.
+    {$_(
+      "pages.builder.app.application.design.screenId.components.componentId._components.settings.ConditionalUISection.Show"
+    )}
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={() => save()}>Save</Button>
+  <Button cta slot="buttons" on:click={() => save()}
+    >{$_(
+      "pages.builder.app.application.design.screenId.components.componentId._components.settings.ConditionalUISection.Save"
+    )}</Button
+  >
   <ConditionalUIDrawer slot="body" bind:conditions={tempValue} {bindings} />
 </Drawer>
 

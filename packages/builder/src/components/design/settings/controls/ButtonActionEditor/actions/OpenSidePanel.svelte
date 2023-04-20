@@ -1,9 +1,8 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label } from "@budibase/bbui"
   import { selectedScreen } from "builderStore"
   import { findAllMatchingComponents } from "builderStore/componentUtils"
-
-  import { _ } from "../../../../../../../lang/i18n"
 
   export let parameters
 

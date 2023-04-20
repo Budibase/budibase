@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../lang/i18n"
   import ViewDataTable from "components/backend/DataTable/ViewDataTable.svelte"
   import { views, database } from "stores/backend"
 
@@ -7,7 +8,11 @@
 
 {#if $database._id && selectedView}
   <ViewDataTable view={selectedView} />
-{:else}<i>Create your first table to start building</i>{/if}
+{:else}<i
+    >{$_(
+      "pages.builder.app.application.data.view.viewName.index.Create_your_first"
+    )}</i
+  >{/if}
 
 <style>
   i {

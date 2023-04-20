@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { ModalContent, Body, notifications, CopyInput } from "@budibase/bbui"
   import { auth } from "stores/portal"
   import { onMount } from "svelte"
@@ -8,9 +9,9 @@
   async function generateAPIKey() {
     try {
       apiKey = await auth.generateAPIKey()
-      notifications.success("New API key generated")
+      notifications.success($_("components.settings.APIKeyModal.New_API"))
     } catch (err) {
-      notifications.error("Unable to generate new API key")
+      notifications.error($_("components.settings.APIKeyModal.Unable"))
     }
     // need to return false to keep modal open
     return false
@@ -20,19 +21,19 @@
     try {
       apiKey = await auth.fetchAPIKey()
     } catch (err) {
-      notifications.error("Unable to fetch API key")
+      notifications.error($_("components.settings.APIKeyModal.Unable_fetch"))
     }
   })
 </script>
 
 <ModalContent
-  title="API Key"
+  title={$_("components.settings.APIKeyModal.API_Key")}
   showSecondaryButton
-  secondaryButtonText="Regenerate key"
+  secondaryButtonText={$_("components.settings.APIKeyModal.Regenerate")}
   secondaryAction={generateAPIKey}
   showCancelButton={false}
-  confirmText="Close"
+  confirmText={$_("components.settings.APIKeyModal.Close")}
 >
-  <Body size="S">Your API key for accessing the Budibase public API:</Body>
+  <Body size="S">{$_("components.settings.APIKeyModal.Your_API")}:</Body>
   <CopyInput bind:value={apiKey} />
 </ModalContent>

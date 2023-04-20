@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import { Button, Layout } from "@budibase/bbui"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
@@ -11,7 +12,9 @@
 <div class="data">
   <Panel title="Sources" borderRight>
     <Layout paddingX="L" paddingY="XL" gap="S">
-      <Button cta on:click={modal.show}>Add source</Button>
+      <Button cta on:click={modal.show}
+        >{$_("pages.builder.app.application.data._layout.Add source")}</Button
+      >
       <CreateDatasourceModal bind:modal />
       <DatasourceNavigator />
     </Layout>

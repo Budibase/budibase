@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import Panel from "components/design/Panel.svelte"
   import { store, selectedComponent, selectedScreen } from "builderStore"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
@@ -26,7 +27,11 @@
     $store.selectedComponentId
   )
   $: isScreen = $selectedComponent?._id === $selectedScreen?.props._id
-  $: title = isScreen ? "Screen" : $selectedComponent?._instanceName
+  $: title = isScreen
+    ? $_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.ComponentSettingsPanel.Screen"
+      )
+    : $selectedComponent?._instanceName
 
   let section = "settings"
   const tabs = ["settings", "styles", "conditions"]

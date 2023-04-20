@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../lang/i18n"
   import { Button, Heading, Body, Layout, Modal, Divider } from "@budibase/bbui"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
@@ -27,16 +28,28 @@
     <Layout gap="XS" noPadding>
       <header>
         <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
-        <Heading size="M">Sample Data</Heading>
+        <Heading size="M"
+          >{$_(
+            "pages.builder.app.application.data.datasource.datasource_internal_bb_default.index.Heading"
+          )}</Heading
+        >
       </header>
       <Body size="M">
-        A little something to get you up and running!
+        {$_(
+          "pages.builder.app.application.data.datasource.datasource_internal_bb_default.index.A_tittle"
+        )}
         <br />
-        If you have no need for this datasource, feel free to delete it.
+        {$_(
+          "pages.builder.app.application.data.datasource.datasource_internal_bb_default.index.If_you_have"
+        )}
       </Body>
     </Layout>
     <Divider />
-    <Heading size="S">Tables</Heading>
+    <Heading size="S"
+      >{$_(
+        "pages.builder.app.application.data.datasource.datasource_internal_bb_default.index.Tables"
+      )}</Heading
+    >
     <div class="table-list">
       <!-- {JSON.stringify($tables.list.map(source => source.sourceId))} -->
       {#each internalTablesBySourceId as table}
@@ -46,13 +59,22 @@
         >
           <Body size="S">{table.name}</Body>
           {#if table.primaryDisplay}
-            <Body size="S">Display column: {table.primaryDisplay}</Body>
+            <Body size="S"
+              >{$_(
+                "pages.builder.app.application.data.datasource.datasource_internal_bb_default.index.Display column:"
+              )}
+              {table.primaryDisplay}</Body
+            >
           {/if}
         </div>
       {/each}
     </div>
     <div>
-      <Button cta on:click={modal.show}>Create new table</Button>
+      <Button cta on:click={modal.show}
+        >{$_(
+          "pages.builder.app.application.data.datasource.datasource_internal_bb_default.index.Create_new_table"
+        )}</Button
+      >
     </div>
   </Layout>
 </section>

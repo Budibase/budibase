@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../lang/i18n"
   import {
     ModalContent,
     Button,
@@ -28,7 +29,9 @@
     try {
       await environment.deleteVariable(name)
       modalContext.hide()
-      notifications.success("Environment variable deleted")
+      notifications.success(
+        $_("components.portal.environment.CreateEditVariableModal.deleted")
+      )
     } catch (err) {
       notifications.error(err.message)
     }
@@ -41,9 +44,15 @@
         production: productionValue,
         development: developmentValue,
       })
-      notifications.success("Environment variable saved")
+      notifications.success(
+        $_("components.portal.environment.CreateEditVariableModal.saved")
+      )
     } catch (err) {
-      notifications.error(`Error saving environment variable - ${err.message}`)
+      notifications.error(
+        `${$_(
+          "components.portal.environment.CreateEditVariableModal.Error"
+        )} - ${err.message}`
+      )
     }
   }
 </script>
@@ -51,19 +60,26 @@
 <ModalContent
   disabled={HasSpacesRegex.test(name)}
   onConfirm={() => saveVariable()}
-  title={!row ? "Add new environment variable" : "Edit environment variable"}
+  title={!row
+    ? $_("components.portal.environment.CreateEditVariableModal.Add")
+    : $_("components.portal.environment.CreateEditVariableModal.Edit")}
 >
   <Input
     disabled={row}
     label="Name"
     bind:value={name}
-    error={HasSpacesRegex.test(name) && "Must not include spaces"}
+    error={HasSpacesRegex.test(name) &&
+      $_("components.portal.environment.CreateEditVariableModal.Must")}
   />
   <div>
-    <Heading size="XS">Production</Heading>
+    <Heading size="XS"
+      >{$_(
+        "components.portal.environment.CreateEditVariableModal.Production"
+      )}</Heading
+    >
     <Input
       type="password"
-      label="Value"
+      label={$_("components.portal.environment.CreateEditVariableModal.Value")}
       on:change={e => {
         productionValue = e.detail
         if (useProductionValue) {
@@ -75,7 +91,11 @@
     />
   </div>
   <div>
-    <Heading size="XS">Development</Heading>
+    <Heading size="XS"
+      >{$_(
+        "components.portal.environment.CreateEditVariableModal.Development"
+      )}</Heading
+    >
     <Input
       type="password"
       on:change={e => {
@@ -86,12 +106,19 @@
       value={useProductionValue ? productionValue : developmentValue}
       autocomplete="new-password"
     />
-    <Checkbox bind:value={useProductionValue} text="Use production value" />
+    <Checkbox
+      bind:value={useProductionValue}
+      text={$_("components.portal.environment.CreateEditVariableModal.Use")}
+    />
   </div>
 
   <div class="footer" slot="footer">
     {#if row}
-      <Button on:click={deleteDialog.show} warning>Delete</Button>
+      <Button on:click={deleteDialog.show} warning
+        >{$_(
+          "components.portal.environment.CreateEditVariableModal.Del"
+        )}</Button
+      >
     {/if}
   </div>
 </ModalContent>
@@ -101,10 +128,10 @@
   onOk={() => {
     deleteVariable(row.name)
   }}
-  okText="Delete Environment Variable"
-  title="Confirm Deletion"
+  okText={$_("components.portal.environment.CreateEditVariableModal.Delete")}
+  title={$_("components.portal.environment.CreateEditVariableModal.Confirm")}
 >
-  Are you sure you wish to delete the environment variable
+  {$_("components.portal.environment.CreateEditVariableModal.Are")}
   <i>{row.name}?</i>
-  This action cannot be undone.
+  {$_("components.portal.environment.CreateEditVariableModal.This")}
 </ConfirmDialog>

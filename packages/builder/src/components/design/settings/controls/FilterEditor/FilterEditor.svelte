@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import { notifications, ActionButton, Button, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import {
@@ -23,14 +24,31 @@
 
   async function saveFilter() {
     dispatch("change", tempValue)
-    notifications.success("Filters saved")
+    notifications.success(
+      $_(
+        "components.design.settings.controls.FilterEditor.FilterEditor.Filters_saved"
+      )
+    )
     drawer.hide()
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Define filters</ActionButton>
-<Drawer bind:this={drawer} title="Filtering">
-  <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
+<ActionButton on:click={drawer.show}
+  >{$_(
+    "components.design.settings.controls.FilterEditor.FilterEditor.Define_filters"
+  )}</ActionButton
+>
+<Drawer
+  bind:this={drawer}
+  title={$_(
+    "components.design.settings.controls.FilterEditor.FilterEditor.Filtering"
+  )}
+>
+  <Button cta slot="buttons" on:click={saveFilter}
+    >{$_(
+      "components.design.settings.controls.FilterEditor.FilterEditor.Save"
+    )}</Button
+  >
   <FilterDrawer
     slot="body"
     filters={value}
