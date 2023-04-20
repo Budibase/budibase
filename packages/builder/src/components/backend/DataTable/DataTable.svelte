@@ -2,19 +2,18 @@
   import { tables } from "stores/backend"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
-  import { Sheet } from "@budibase/frontend-core"
+  import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
-
-  import SheetAddColumnModal from "components/backend/DataTable/modals/sheet/SheetCreateColumnModal.svelte"
-  import SheetCreateEditRowModal from "components/backend/DataTable/modals/sheet/SheetCreateEditRowModal.svelte"
-  import SheetEditUserModal from "components/backend/DataTable/modals/sheet/SheetEditUserModal.svelte"
-  import SheetCreateViewButton from "components/backend/DataTable/buttons/sheet/SheetCreateViewButton.svelte"
-  import SheetImportButton from "components/backend/DataTable/buttons/sheet/SheetImportButton.svelte"
-  import SheetExportButton from "components/backend/DataTable/buttons/sheet/SheetExportButton.svelte"
-  import SheetFilterButton from "components/backend/DataTable/buttons/sheet/SheetFilterButton.svelte"
-  import SheetManageAccessButton from "components/backend/DataTable/buttons/sheet/SheetManageAccessButton.svelte"
-  import SheetRelationshipButton from "components/backend/DataTable/buttons/sheet/SheetRelationshipButton.svelte"
-  import SheetEditColumnModal from "components/backend/DataTable/modals/sheet/SheetEditColumnModal.svelte"
+  import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
+  import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
+  import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
+  import GridCreateViewButton from "components/backend/DataTable/buttons/grid/GridCreateViewButton.svelte"
+  import GridImportButton from "components/backend/DataTable/buttons/grid/GridImportButton.svelte"
+  import GridExportButton from "components/backend/DataTable/buttons/grid/GridExportButton.svelte"
+  import GridFilterButton from "components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
+  import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
+  import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
+  import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
 
   const userSchemaOverrides = {
     firstName: { name: "First name", disabled: true },
@@ -30,7 +29,7 @@
 </script>
 
 <div class="wrapper">
-  <Sheet
+  <Grid
     {API}
     tableId={id}
     allowAddRows={!isUsersTable}
@@ -40,27 +39,27 @@
   >
     <svelte:fragment slot="controls">
       {#if isInternal}
-        <SheetCreateViewButton />
+        <GridCreateViewButton />
       {/if}
-      <SheetManageAccessButton />
+      <GridManageAccessButton />
       {#if isUsersTable}
         <EditRolesButton />
       {/if}
       {#if !isInternal}
-        <SheetRelationshipButton />
+        <GridRelationshipButton />
       {/if}
-      <SheetImportButton disabled={isUsersTable} />
-      <SheetExportButton />
-      <SheetFilterButton />
-      <SheetAddColumnModal />
-      <SheetEditColumnModal />
+      <GridImportButton disabled={isUsersTable} />
+      <GridExportButton />
+      <GridFilterButton />
+      <GridAddColumnModal />
+      <GridEditColumnModal />
       {#if isUsersTable}
-        <SheetEditUserModal />
+        <GridEditUserModal />
       {:else}
-        <SheetCreateEditRowModal />
+        <GridCreateEditRowModal />
       {/if}
     </svelte:fragment>
-  </Sheet>
+  </Grid>
 </div>
 
 <style>
