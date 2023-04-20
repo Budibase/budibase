@@ -111,10 +111,10 @@ export async function doInContext(appId: string, task: any): Promise<any> {
   )
 }
 
-export async function doInTenant(
+export async function doInTenant<T>(
   tenantId: string | null,
-  task: any
-): Promise<any> {
+  task: () => T
+): Promise<T> {
   // make sure default always selected in single tenancy
   if (!env.MULTI_TENANCY) {
     tenantId = tenantId || DEFAULT_TENANT_ID

@@ -415,8 +415,8 @@ export const inviteAccept = async (
     })
 
     ctx.body = {
-      _id: user._id,
-      _rev: user._rev,
+      _id: user._id!,
+      _rev: user._rev!,
       email: user.email,
     }
   } catch (err: any) {
