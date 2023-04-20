@@ -5,7 +5,6 @@
     notifications,
     Layout,
     Body,
-    Modal,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { API } from "api"
@@ -15,7 +14,6 @@
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { passwordsMatch, handleError } from "../auth/_components/utils"
 
-  let modal
   let form
   let errors = {}
   let formData = {}
