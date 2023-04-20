@@ -37,6 +37,10 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
+    "@budibase/backend-core": "latest",
+    "@budibase/pro": "latest",
+    "@budibase/string-templates": "latest",
+    "@budibase/types": "latest",
     "@koa/router": "8.0.8",
     "@sentry/node": "6.17.7",
     "@techpass/passport-openidconnect": "0.3.2",

@@ -19,6 +19,9 @@
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "dev:builder": "yarn prebuild && concurrently \"tsc -p tsconfig.build.json --watch\" \"tsc -p tsconfig-cjs.build.json --watch\""
   },
+  "dependencies": {
+    "@budibase/types": "latest"
+  },
   "devDependencies": {
     "concurrently": "^7.6.0",
     "rimraf": "3.0.2",
