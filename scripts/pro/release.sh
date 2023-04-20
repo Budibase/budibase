@@ -34,7 +34,7 @@ echo "Releasing tag $TAG"
 #############################################
 
 # Go to pro repo root
-cd ../budibase-pro
+cd ./packages/pro
 
 # Install NPM credentials
 echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
