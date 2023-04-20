@@ -17,6 +17,7 @@ on:
       - "package.json"
       - "yarn.lock"
   workflow_dispatch:
+  
 
 jobs:
   tag-prerelease:
