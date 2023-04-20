@@ -309,7 +309,7 @@ export class QueryBuilder<T> {
         return null
       }
       if (!Array.isArray(value)) {
-        return `${key}:/${value?.toLowerCase()}/`
+        return `${key}:/.*${value?.toLowerCase()}.*/`
       }
       let statement = `${builder.preprocess(value[0], { escape: true })}`
       for (let i = 1; i < value.length; i++) {
