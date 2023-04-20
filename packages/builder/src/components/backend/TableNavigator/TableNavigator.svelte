@@ -13,13 +13,6 @@
   $: sortedTables = $tables.list
     .filter(table => table.sourceId === sourceId)
     .sort(alphabetical)
-
-  const selectTable = tableId => {
-    tables.select(tableId)
-    if (!$isActive("./table/:tableId")) {
-      $goto(`./table/${tableId}`)
-    }
-  }
 </script>
 
 {#if $database?._id}
@@ -32,7 +25,7 @@
         text={table.name}
         selected={$isActive("./table/:tableId") &&
           $tables.selected?._id === table._id}
-        on:click={() => selectTable(table._id)}
+        on:click={() => $goto(`./table/${table._id}`)}
       >
         {#if table._id !== TableNames.USERS}
           <EditTablePopover {table} />

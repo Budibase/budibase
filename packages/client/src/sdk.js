@@ -12,7 +12,6 @@ import {
   environmentStore,
   sidePanelStore,
   dndIsDragging,
-  confirmationStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -36,7 +35,6 @@ export default {
   sidePanelStore,
   dndIsDragging,
   currentRole,
-  confirmationStore,
   styleable,
   linkable,
   getAction,

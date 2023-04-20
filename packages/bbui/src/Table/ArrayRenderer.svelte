@@ -5,9 +5,8 @@
 
   const displayLimit = 5
 
-  $: arrayValue = Array.isArray(value) ? value : [value].filter(x => !!x)
-  $: badges = arrayValue.slice(0, displayLimit)
-  $: leftover = arrayValue.length - badges.length
+  $: badges = Array.isArray(value) ? value.slice(0, displayLimit) : []
+  $: leftover = (value?.length ?? 0) - badges.length
 </script>
 
 {#each badges as badge}

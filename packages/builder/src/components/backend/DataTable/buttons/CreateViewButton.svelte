@@ -1,21 +1,21 @@
 <script>
   import { Modal, ActionButton } from "@budibase/bbui"
-  import CalculateModal from "../modals/CalculateModal.svelte"
+  import CreateViewModal from "../modals/CreateViewModal.svelte"
 
-  export let view = {}
+  export let disabled = false
 
   let modal
 </script>
 
 <ActionButton
-  icon="Calculator"
+  {disabled}
+  icon="CollectionAdd"
   size="S"
   quiet
   on:click={modal.show}
-  active={view.field && view.calculation}
 >
-  Calculate
+  Create view
 </ActionButton>
 <Modal bind:this={modal}>
-  <CalculateModal {view} />
+  <CreateViewModal />
 </Modal>

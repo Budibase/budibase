@@ -95,7 +95,7 @@
 
 <svelte:head>
   {#if $builderStore.usedPlugins?.length}
-    {#each $builderStore.usedPlugins as plugin (plugin.hash)}
+    {#each $builderStore.usedPlugins as plugin}
       <script src={`${plugin.jsUrl}`}></script>
     {/each}
   {/if}

@@ -6,9 +6,6 @@ let clickHandlers = []
  */
 const handleClick = event => {
   // Ignore click if this is an ignored class
-  if (event.target.closest('[data-ignore-click-outside="true"]')) {
-    return
-  }
   for (let className of ignoredClasses) {
     if (event.target.closest(className)) {
       return
@@ -32,7 +29,6 @@ const handleClick = event => {
   })
 }
 document.documentElement.addEventListener("click", handleClick, true)
-document.documentElement.addEventListener("contextmenu", handleClick, true)
 
 /**
  * Adds or updates a click handler
