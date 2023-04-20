@@ -18,7 +18,7 @@
   import { API } from "api"
   import { onMount } from "svelte"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../lang/i18n"
 
   $: license = $auth.user.license
   $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
@@ -72,10 +72,14 @@
     try {
       await API.refreshLicense()
       await auth.getSelf()
-      notifications.success("Refreshed license")
+      notifications.success(
+        $_("pages.builder.portal.account.upgrade.Refreshed_license")
+      )
     } catch (err) {
       console.error(err)
-      notifications.error("Error refreshing license")
+      notifications.error(
+        $_("pages.builder.portal.account.upgrade.Error_refreshing_license")
+      )
     }
   }
 
@@ -105,27 +109,42 @@
   />
   <Layout noPadding>
     <Layout gap="XS" noPadding>
-      <Heading size="M">Upgrade</Heading>
+      <Heading size="M"
+        >{$_("pages.builder.portal.account.upgrade.Upgrade")}</Heading
+      >
       <Body size="M">
         {#if license.plan.type === "free"}
-          Upgrade your Budibase installation to unlock additional features. To
-          subscribe to a plan visit your
-          <Link size="L" href={upgradeUrl}>account</Link>.
+          {$_("pages.builder.portal.account.upgrade.Upgrade_your_Budibase")}
+          <Link size="L" href={upgradeUrl}
+            >{$_("pages.builder.portal.account.upgrade.account")}</Link
+          >.
         {:else}
-          To manage your plan visit your
-          <Link size="L" href={upgradeUrl}>account</Link>
+          {$_(
+            "pages.builder.portal.account.upgrade.To_manage_your_plan_visit_your"
+          )}
+          <Link size="L" href={upgradeUrl}
+            >{$_("pages.builder.portal.account.upgrade.account")}</Link
+          >
         {/if}
       </Body>
     </Layout>
     <Divider />
     <Layout gap="XS" noPadding>
-      <Heading size="S">Activate</Heading>
-      <Body size="S">Enter your license key below to activate your plan</Body>
+      <Heading size="S"
+        >{$_("pages.builder.portal.account.upgrade.Activate")}</Heading
+      >
+      <Body size="S"
+        >{$_(
+          "pages.builder.portal.account.upgrade.Enter_your_license_key"
+        )}</Body
+      >
     </Layout>
     <Layout noPadding>
       <div class="fields">
         <div class="field">
-          <Label size="L">License key</Label>
+          <Label size="L"
+            >{$_("pages.builder.portal.account.upgrade.License_key")}</Label
+          >
           <Input
             thin
             bind:value={licenseKey}
@@ -136,30 +155,45 @@
       </div>
       <ButtonGroup>
         <Button cta on:click={activate} disabled={activateDisabled}>
-          Activate
+          {$_("pages.builder.portal.account.upgrade.Activate")}
         </Button>
         {#if licenseInfo?.licenseKey}
           <Button warning on:click={() => deleteLicenseKeyModal.show()}>
-            Delete
+            {$_("pages.builder.portal.account.upgrade.DeleteButton")}
           </Button>
         {/if}
       </ButtonGroup>
     </Layout>
     <Divider />
     <Layout gap="XS" noPadding>
-      <Heading size="S">Plan</Heading>
+      <Heading size="S"
+        >{$_("pages.builder.portal.account.upgrade.Plan")}</Heading
+      >
       <Layout noPadding gap="XXS">
-        <Body size="S">You are currently on the {license.plan.type} plan</Body>
+        <Body size="S"
+          >{$_("pages.builder.portal.account.upgrade.You_are_currently_on_the")}
+          {license.plan.type}
+          {$_("pages.builder.portal.account.upgrade.plan")}</Body
+        >
         <Body size="XS">
-          {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
-            time:
-              new Date().getTime() - new Date(license.refreshedAt).getTime(),
-          })}
+          {processStringSync(
+            `${$_(
+              "pages.builder.portal.account.upgrade.Updated"
+            )} {{ duration time 'millisecond' }} ${$_(
+              "pages.builder.portal.account.upgrade.ago"
+            )}`,
+            {
+              time:
+                new Date().getTime() - new Date(license.refreshedAt).getTime(),
+            }
+          )}
         </Body>
       </Layout>
     </Layout>
     <div>
-      <Button secondary on:click={refresh}>Refresh</Button>
+      <Button secondary on:click={refresh}
+        >{$_("pages.builder.portal.account.upgrade.Refresh")}</Button
+      >
     </div>
   </Layout>
 {/if}

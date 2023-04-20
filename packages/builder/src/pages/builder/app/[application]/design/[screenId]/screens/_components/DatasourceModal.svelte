@@ -13,7 +13,7 @@
   import { IntegrationNames } from "constants"
   import { onMount } from "svelte"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 
   export let onCancel
   export let onConfirm

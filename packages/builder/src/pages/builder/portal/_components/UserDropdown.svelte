@@ -7,7 +7,7 @@
   import ThemeModal from "components/settings/ThemeModal.svelte"
   import APIKeyModal from "components/settings/APIKeyModal.svelte"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../lang/i18n"
 
   let themeModal
   let profileModal

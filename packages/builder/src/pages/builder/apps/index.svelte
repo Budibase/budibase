@@ -23,7 +23,7 @@
   import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../lang/i18n"
 
   let loaded = false
   let userInfoModal

@@ -2,6 +2,8 @@
   import { Body, ModalContent, Table } from "@budibase/bbui"
   import { onMount } from "svelte"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let inviteUsersResponse
 
   let hasSuccess
@@ -13,17 +15,25 @@
 
   const setTitle = () => {
     if (hasSuccess) {
-      title = "Users invited!"
+      title = $_(
+        "pages.builder.portal.users.users._components.InvitedModal.Users_invited"
+      )
     } else if (hasFailure) {
-      title = "Oops!"
+      title = $_(
+        "pages.builder.portal.users.users._components.InvitedModal.Oops"
+      )
     }
   }
 
   const setFailureMessage = () => {
     if (hasSuccess) {
-      failureMessage = "However there was a problem inviting some users."
+      failureMessage = $_(
+        "pages.builder.portal.users.users._components.InvitedModal.problem_inviting"
+      )
     } else {
-      failureMessage = "There was a problem inviting users."
+      failureMessage = $_(
+        "pages.builder.portal.users.users._components.InvitedModal.was_problem"
+      )
     }
   }
 
@@ -50,11 +60,19 @@
   }
 </script>
 
-<ModalContent size="M" showCancelButton={false} {title} confirmText="Done">
+<ModalContent
+  size="M"
+  showCancelButton={false}
+  {title}
+  confirmText={$_(
+    "pages.builder.portal.users.users._components.InvitedModal.Done"
+  )}
+>
   {#if hasSuccess}
     <Body size="XS">
-      Your users should now receive an email invite to get access to their
-      Budibase account
+      {$_(
+        "pages.builder.portal.users.users._components.InvitedModal.receive_invite"
+      )}
     </Body>
   {/if}
   {#if hasFailure}

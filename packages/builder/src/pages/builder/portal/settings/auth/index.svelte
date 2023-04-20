@@ -27,6 +27,7 @@
   import { onMount } from "svelte"
   import { API } from "api"
   import { organisation, admin, licensing } from "stores/portal"
+  import { _ } from "../../../../../../lang/i18n"
 
   const ConfigTypes = {
     Google: "google",
@@ -47,17 +48,23 @@
   $: googleCallbackTooltip = $admin.cloud
     ? null
     : googleCallbackReadonly
-    ? "Visit the organisation page to update the platform URL"
-    : "Leave blank to use the default callback URL"
+    ? $_("pages.builder.portal.settings.auth.index.Visit_organisation")
+    : $_("pages.builder.portal.settings.auth.index.Leave_blank")
   $: googleSheetsCallbackUrl = `${$organisation.platformUrl}/api/global/auth/datasource/google/callback`
 
   $: GoogleConfigFields = {
     Google: [
-      { name: "clientID", label: "Client ID" },
-      { name: "clientSecret", label: "Client secret" },
+      {
+        name: "clientID",
+        label: $_("pages.builder.portal.settings.auth.index.Client_ID"),
+      },
+      {
+        name: "clientSecret",
+        label: $_("pages.builder.portal.settings.auth.index.Client_secret"),
+      },
       {
         name: "callbackURL",
-        label: "Callback URL",
+        label: $_("pages.builder.portal.settings.auth.index.Callback_URL"),
         readonly: googleCallbackReadonly,
         tooltip: googleCallbackTooltip,
         placeholder: $organisation.googleCallbackUrl,
@@ -65,7 +72,7 @@
       },
       {
         name: "sheetsURL",
-        label: "Sheets URL",
+        label: $_("pages.builder.portal.settings.auth.index.Sheets_URL"),
         readonly: googleCallbackReadonly,
         tooltip: googleCallbackTooltip,
         placeholder: googleSheetsCallbackUrl,
@@ -76,16 +83,25 @@
 
   $: OIDCConfigFields = {
     Oidc: [
-      { name: "configUrl", label: "Config URL" },
-      { name: "clientID", label: "Client ID" },
-      { name: "clientSecret", label: "Client Secret" },
+      {
+        name: "configUrl",
+        label: $_("pages.builder.portal.settings.auth.index.Config_URL"),
+      },
+      {
+        name: "clientID",
+        label: $_("pages.builder.portal.settings.auth.index.Client_ID"),
+      },
+      {
+        name: "clientSecret",
+        label: $_("pages.builder.portal.settings.auth.index.Client_secret"),
+      },
       {
         name: "callbackURL",
         readonly: true,
         tooltip: $admin.cloud
           ? null
-          : "Vist the organisation page to update the platform URL",
-        label: "Callback URL",
+          : $_("pages.builder.portal.settings.auth.index.Vist_organisation"),
+        label: $_("pages.builder.portal.settings.auth.index.Callback_URL"),
         placeholder: $organisation.oidcCallbackUrl,
         copyButton: true,
       },
@@ -119,7 +135,7 @@
       icon: OidcLogoPng,
     },
     {
-      label: "Upload your own",
+      label: $_("pages.builder.portal.settings.auth.index.Upload_own"),
       value: "Upload",
     },
   ]
@@ -197,7 +213,9 @@
   async function saveOIDC() {
     if (!oidcComplete) {
       notifications.error(
-        `Please fill in all required ${ConfigTypes.OIDC} fields`
+        `${$_("pages.builder.portal.settings.auth.index.Please_required")} ${
+          ConfigTypes.OIDC
+        } ${$_("pages.builder.portal.settings.auth.index.fields")}`
       )
       return
     }
@@ -218,7 +236,9 @@
       providers[res.type]._rev = res._rev
       providers[res.type]._id = res._id
       await saveOIDCLogo()
-      notifications.success(`Settings saved`)
+      notifications.success(
+        `${$_("pages.builder.portal.settings.auth.index.Settings_saved")}`
+      )
     } catch (e) {
       notifications.error(e.message)
       return
@@ -232,7 +252,9 @@
   async function saveGoogle() {
     if (!googleComplete) {
       notifications.error(
-        `Please fill in all required ${ConfigTypes.Google} fields`
+        `${$_("pages.builder.portal.settings.auth.index.Please_required")} ${
+          ConfigTypes.Google
+        } ${$_("pages.builder.portal.settings.auth.index.fields")}`
       )
       return
     }
@@ -243,7 +265,9 @@
       const res = await saveConfig(google)
       providers[res.type]._rev = res._rev
       providers[res.type]._id = res._id
-      notifications.success(`Settings saved`)
+      notifications.success(
+        `${$_("pages.builder.portal.settings.auth.index.Settings_saved")}`
+      )
     } catch (e) {
       notifications.error(e.message)
       return
@@ -270,14 +294,16 @@
 
   const copyToClipboard = async value => {
     await Helpers.copyToClipboard(value)
-    notifications.success("Copied")
+    notifications.success($_("pages.builder.portal.settings.auth.index.Copied"))
   }
 
   onMount(async () => {
     try {
       await organisation.init()
     } catch (error) {
-      notifications.error("Error getting org config")
+      notifications.error(
+        $_("pages.builder.portal.settings.auth.index.Error_config")
+      )
     }
 
     // Fetch Google config
@@ -285,7 +311,9 @@
     try {
       googleDoc = await API.getConfig(ConfigTypes.Google)
     } catch (error) {
-      notifications.error("Error fetching Google OAuth config")
+      notifications.error(
+        $_("pages.builder.portal.settings.auth.index.Error_fetching")
+      )
     }
     if (!googleDoc?._id) {
       providers.google = {
@@ -310,7 +338,9 @@
     try {
       oidcLogos = await API.getOIDCLogos()
     } catch (error) {
-      notifications.error("Error fetching OIDC logos")
+      notifications.error(
+        $_("pages.builder.portal.settings.auth.index.Error_OIDC")
+      )
     }
     if (oidcLogos?.config) {
       const logoKeys = Object.keys(oidcLogos.config)
@@ -332,7 +362,9 @@
     try {
       oidcDoc = await API.getConfig(ConfigTypes.OIDC)
     } catch (error) {
-      notifications.error("Error fetching OIDC config")
+      notifications.error(
+        $_("pages.builder.portal.settings.auth.index.Error_fetching_OIDC")
+      )
     }
     if (!oidcDoc?._id) {
       providers.oidc = {
@@ -348,14 +380,18 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading size="M">Authentication</Heading>
-    <Body>Add additional authentication methods from the options below</Body>
+    <Heading size="M"
+      >{$_("pages.builder.portal.settings.auth.index.Authentication")}</Heading
+    >
+    <Body>{$_("pages.builder.portal.settings.auth.index.Add_options")}</Body>
   </Layout>
   <Divider />
   <Layout noPadding gap="XS">
-    <Heading size="S">Single Sign-On URL</Heading>
+    <Heading size="S"
+      >{$_("pages.builder.portal.settings.auth.index.Single_URL")}</Heading
+    >
     <Body size="S">
-      Use the following link to access your configured identity provider.
+      {$_("pages.builder.portal.settings.auth.index.Use_link")}
     </Body>
     <Body size="S">
       <div class="sso-link">
@@ -373,11 +409,19 @@
     <div class="provider-title">
       <div class="enforce-sso-heading-container">
         <div class="enforce-sso-title">
-          <Heading size="S">Enforce Single Sign-On</Heading>
+          <Heading size="S"
+            >{$_(
+              "pages.builder.portal.settings.auth.index.Enforce_Single"
+            )}</Heading
+          >
         </div>
         {#if !$licensing.enforceableSSO}
           <Tags>
-            <Tag icon="LockClosed">Enterprise plan</Tag>
+            <Tag icon="LockClosed"
+              >{$_(
+                "pages.builder.portal.settings.auth.index.Enterprise_plan"
+              )}</Tag
+            >
           </Tags>
         {/if}
       </div>
@@ -386,12 +430,13 @@
       {/if}
     </div>
     <Body size="S">
-      Require SSO authentication for all users. It is recommended to read the
-      help <Link
+      {$_("pages.builder.portal.settings.auth.index.Require_SSO")}
+      <Link
         size="M"
         href={"https://docs.budibase.com/docs/authentication-and-sso"}
-        >documentation</Link
-      > before enabling this feature.
+        >{$_("pages.builder.portal.settings.auth.index.documentation")}</Link
+      >
+      {$_("pages.builder.portal.settings.auth.index.feature")}
     </Body>
   </Layout>
   {#if providers.google}
@@ -404,12 +449,11 @@
         </div>
       </Heading>
       <Body size="S">
-        To allow users to authenticate using their Google accounts, fill out the
-        fields below. Read the <Link
-          size="M"
-          href={"https://docs.budibase.com/docs/sso-with-google"}
-          >documentation</Link
-        > for more information.
+        {$_("pages.builder.portal.settings.auth.index.users_authenticate")}
+        <Link size="M" href={"https://docs.budibase.com/docs/sso-with-google"}
+          >{$_("pages.builder.portal.settings.auth.index.documentation")}</Link
+        >
+        {$_("pages.builder.portal.settings.auth.index.for_information")}
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
@@ -436,7 +480,9 @@
         </div>
       {/each}
       <div class="form-row">
-        <Label size="L">Activated</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.auth.index.Activated")}</Label
+        >
         <Toggle text="" bind:value={providers.google.config.activated} />
       </div>
     </Layout>
@@ -446,7 +492,7 @@
         cta
         on:click={() => saveGoogle()}
       >
-        Save
+        {$_("pages.builder.portal.settings.auth.index.Save")}
       </Button>
     </div>
   {/if}
@@ -456,11 +502,15 @@
       <Heading size="S">
         <div class="provider-title">
           <OidcLogo />
-          <span>OpenID Connect</span>
+          <span
+            >{$_(
+              "pages.builder.portal.settings.auth.index.OpenID_Connect"
+            )}</span
+          >
         </div>
       </Heading>
       <Body size="S">
-        To allow users to authenticate using OIDC, fill out the fields below.
+        {$_("pages.builder.portal.settings.auth.index.users_authenticate_OIDC")}
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
@@ -489,14 +539,18 @@
     </Layout>
     <Layout gap="XS" noPadding>
       <Body size="S">
-        To customize your login button, fill out the fields below.
+        {$_("pages.builder.portal.settings.auth.index.customize_login")}
       </Body>
       <div class="form-row">
-        <Label size="L">Name</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.auth.index.Name")}</Label
+        >
         <Input bind:value={providers.oidc.config.configs[0].name} />
       </div>
       <div class="form-row">
-        <Label size="L">Icon</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.auth.index.Icon")}</Label
+        >
         <Select
           label=""
           bind:value={providers.oidc.config.configs[0].logo}
@@ -512,7 +566,9 @@
         bind:this={fileinput}
       />
       <div class="form-row">
-        <Label size="L">Activated</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.auth.index.Activated")}</Label
+        >
         <Toggle
           text=""
           bind:value={providers.oidc.config.configs[0].activated}
@@ -522,7 +578,11 @@
 
     <Layout gap="XS" noPadding>
       <div class="provider-title">
-        <Heading size="S">Authentication scopes</Heading>
+        <Heading size="S"
+          >{$_(
+            "pages.builder.portal.settings.auth.index.Authentication_scopes"
+          )}</Heading
+        >
         <Button
           secondary
           size="S"
@@ -530,18 +590,19 @@
             providers.oidc.config.configs[0]["scopes"] = [...defaultScopes]
           }}
         >
-          Restore Defaults
+          {$_("pages.builder.portal.settings.auth.index.Restore_Defaults")}
         </Button>
       </div>
       <Body size="S">
-        Changes to your authentication scopes will only take effect when you
-        next log in.
+        {$_("pages.builder.portal.settings.auth.index.Changes_authentication")}
       </Body>
     </Layout>
 
     <Layout gap="XS" noPadding>
       <div class="form-row">
-        <Label size="L">Auth Scopes</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.auth.index.Auth_Scopes")}</Label
+        >
         <Input
           error={scopesFields[0].error}
           placeholder={"New Scope"}
@@ -563,11 +624,14 @@
               let update = scopesFields[0].inputText.trim()
 
               if (HasSpacesRegex.test(update)) {
-                scopesFields[0].error =
-                  "Auth scopes cannot contain spaces, double quotes or backslashes"
+                scopesFields[0].error = $_(
+                  "pages.builder.portal.settings.auth.index.Auth_scopes"
+                )
                 return
               } else if (scopes.indexOf(update) > -1) {
-                scopesFields[0].error = "Auth scope already exists"
+                scopesFields[0].error = $_(
+                  "pages.builder.portal.settings.auth.index.Auth_exists"
+                )
                 return
               } else if (!update.length) {
                 scopesFields[0].inputText = null
@@ -608,7 +672,7 @@
     </Layout>
     <div>
       <Button disabled={oidcSaveButtonDisabled} cta on:click={() => saveOIDC()}>
-        Save
+        {$_("pages.builder.portal.settings.auth.index.Save")}
       </Button>
     </div>
   {/if}

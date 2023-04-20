@@ -10,6 +10,8 @@
   import { emailValidator } from "helpers/validation"
   import { Constants } from "@budibase/frontend-core"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
   const MAX_USERS_UPLOAD_LIMIT = 1000
@@ -26,7 +28,9 @@
   const validEmails = userEmails => {
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
       notifications.error(
-        `Max limit for upload is 1000 users. Please reduce file size and try again.`
+        s`${$_(
+          "pages.builder.portal.users.users._components.ImportUsersModal.Max_limit"
+        )}`
       )
       return false
     }
@@ -37,9 +41,9 @@
     if (!invalidEmails.length) return true
 
     notifications.error(
-      `Error, please check the following email${
-        invalidEmails.length > 1 ? "s" : ""
-      }: ${invalidEmails.join(", ")}`
+      `${$_(
+        "pages.builder.portal.users.users._components.ImportUsersModal.check_email"
+      )}${invalidEmails.length > 1 ? "s" : ""}: ${invalidEmails.join(", ")}`
     )
 
     return false
@@ -49,9 +53,13 @@
     const fileArray = Array.from(evt.target.files)
     if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
       notifications.error(
-        `Files cannot exceed ${
-          FILE_SIZE_LIMIT / BYTES_IN_MB
-        }MB. Please try again with smaller files.`
+        `${$_(
+          "pages.builder.portal.users.users._components.ImportUsersModal.Files_exceed"
+        )} ${FILE_SIZE_LIMIT / BYTES_IN_MB}${$_(
+          "pages.builder.portal.users.users._components.ImportUsersModal.MB"
+        )} ${$_(
+          "pages.builder.portal.users.users._components.ImportUsersModal.try_again"
+        )}`
       )
       return
     }
@@ -70,19 +78,31 @@
 
 <ModalContent
   size="M"
-  title="Import users"
-  confirmText="Done"
-  cancelText="Cancel"
+  title={$_(
+    "pages.builder.portal.users.users._components.ImportUsersModal.Import_users"
+  )}
+  confirmText={$_(
+    "pages.builder.portal.users.users._components.ImportUsersModal.Done"
+  )}
+  cancelText={$_(
+    "pages.builder.portal.users.users._components.ImportUsersModal.Cancel"
+  )}
   showCloseIcon={false}
   onConfirm={() => createUsersFromCsv({ userEmails, usersRole, userGroups })}
   disabled={!userEmails.length || !validEmails(userEmails) || !usersRole}
 >
-  <Body size="S">Import your users email addresses from a CSV file</Body>
+  <Body size="S"
+    >{$_(
+      "pages.builder.portal.users.users._components.ImportUsersModal.Import_email"
+    )}</Body
+  >
 
   <div class="dropzone">
     <input id="file-upload" accept=".csv" type="file" on:change={handleFile} />
     <label for="file-upload" class:uploaded={files[0]}>
-      {#if files[0]}{files[0].name}{:else}Upload{/if}
+      {#if files[0]}{files[0].name}{:else}{$_(
+          "pages.builder.portal.users.users._components.ImportUsersModal.Upload"
+        )}{/if}
     </label>
   </div>
 
@@ -94,8 +114,12 @@
   {#if $licensing.groupsEnabled}
     <Multiselect
       bind:value={userGroups}
-      placeholder="No groups"
-      label="Groups"
+      placeholder={$_(
+        "pages.builder.portal.users.users._components.ImportUsersModal.No_groups"
+      )}
+      label={$_(
+        "pages.builder.portal.users.users._components.ImportUsersModal.Groups"
+      )}
       options={$groups}
       getOptionLabel={option => option.name}
       getOptionValue={option => option._id}

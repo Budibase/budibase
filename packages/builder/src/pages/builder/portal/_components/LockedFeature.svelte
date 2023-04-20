@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import { auth, admin } from "stores/portal"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../lang/i18n"
 
   export let title
   export let planType

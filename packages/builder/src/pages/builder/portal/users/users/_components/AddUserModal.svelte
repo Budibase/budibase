@@ -12,6 +12,8 @@
   import { Constants } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let showOnboardingTypeModal
 
   const password = Math.random().toString(36).substring(2, 22)
@@ -57,7 +59,9 @@
         userData[index].error = res
       }
     } else {
-      userData[index].error = "Please enter an email address"
+      userData[index].error = $_(
+        "pages.builder.portal.users.users._components.AppUserModal.enter_email"
+      )
     }
     return userData[index].error == null
   }
@@ -77,15 +81,25 @@
 <ModalContent
   {onConfirm}
   size="M"
-  title="Add new users"
-  confirmText="Add users"
+  title={$_(
+    "pages.builder.portal.users.users._components.AppUserModal.Add_new_users"
+  )}
+  confirmText={$_(
+    "pages.builder.portal.users.users._components.AppUserModal.Add_users"
+  )}
   confirmDisabled={disabled}
-  cancelText="Cancel"
+  cancelText={$_(
+    "pages.builder.portal.users.users._components.AppUserModal.Cancel"
+  )}
   showCloseIcon={false}
   disabled={hasError || !userData.length}
 >
   <Layout noPadding gap="XS">
-    <Label>Email address</Label>
+    <Label
+      >{$_(
+        "pages.builder.portal.users.users._components.AppUserModal.Adress"
+      )}</Label
+    >
     {#each userData as input, index}
       <div
         style="display: flex;
@@ -113,15 +127,23 @@
       </div>
     {/each}
     <div>
-      <ActionButton on:click={addNewInput} icon="Add">Add email</ActionButton>
+      <ActionButton on:click={addNewInput} icon="Add"
+        >{$_(
+          "pages.builder.portal.users.users._components.AppUserModal.Add_email"
+        )}</ActionButton
+      >
     </div>
   </Layout>
 
   {#if $licensing.groupsEnabled}
     <Multiselect
       bind:value={userGroups}
-      placeholder="No groups"
-      label="Groups"
+      placeholder={$_(
+        "pages.builder.portal.users.users._components.AppUserModal.No_groups"
+      )}
+      label={$_(
+        "pages.builder.portal.users.users._components.AppUserModal.Groups"
+      )}
       options={$groups}
       getOptionLabel={option => option.name}
       getOptionValue={option => option._id}

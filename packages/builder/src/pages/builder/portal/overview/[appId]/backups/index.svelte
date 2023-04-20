@@ -25,6 +25,8 @@
   import { BackupTrigger, BackupType } from "constants/backend/backups"
   import { onMount } from "svelte"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   let loading = true
   let backupData = null
   let pageInfo = createPaginationStore()
@@ -33,19 +35,27 @@
   let endDate = null
   let filters = [
     {
-      label: "Manual backup",
+      label: $_(
+        "pages.builder.portal.overview.appId.backups.index.Manual_backup"
+      ),
       value: { type: BackupType.BACKUP, trigger: BackupTrigger.MANUAL },
     },
     {
-      label: "Published backup",
+      label: $_(
+        "pages.builder.portal.overview.appId.backups.index.Published_backup"
+      ),
       value: { type: BackupType.BACKUP, trigger: BackupTrigger.PUBLISH },
     },
     {
-      label: "Pre-restore backup",
+      label: $_(
+        "pages.builder.portal.overview.appId.backups.index.Pre-restore_backup"
+      ),
       value: { type: BackupType.BACKUP, trigger: BackupTrigger.RESTORING },
     },
     {
-      label: "Manual restore",
+      label: $_(
+        "pages.builder.portal.overview.appId.backups.index.Manual_restore"
+      ),
       value: { type: BackupType.RESTORE, trigger: BackupTrigger.MANUAL },
     },
   ]
@@ -56,23 +66,27 @@
 
   let schema = {
     type: {
-      displayName: "Type",
+      displayName: $_("pages.builder.portal.overview.appId.backups.index.Type"),
       width: "auto",
     },
     createdAt: {
-      displayName: "Date",
+      displayName: $_("pages.builder.portal.overview.appId.backups.index.Date"),
       width: "auto",
     },
     appSize: {
-      displayName: "App size",
+      displayName: $_(
+        "pages.builder.portal.overview.appId.backups.index.Manual_restApp_sizeore"
+      ),
       width: "auto",
     },
     createdBy: {
-      displayName: "User",
+      displayName: $_("pages.builder.portal.overview.appId.backups.index.User"),
       width: "auto",
     },
     status: {
-      displayName: "Status",
+      displayName: $_(
+        "pages.builder.portal.overview.appId.backups.index.Status"
+      ),
       width: "auto",
     },
     actions: {
@@ -122,7 +136,9 @@
       await fetchBackups(filterOpt, page)
       notifications.success(response.message)
     } catch {
-      notifications.error("Unable to create backup")
+      notifications.error(
+        $_("pages.builder.portal.overview.appId.backups.index.Unable_backup")
+      )
     }
   }
 
@@ -173,20 +189,36 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <div class="title">
-      <Heading>Backups</Heading>
+      <Heading
+        >{$_(
+          "pages.builder.portal.overview.appId.backups.index.Backups"
+        )}</Heading
+      >
       {#if !$licensing.backupsEnabled}
         <Tags>
-          <Tag icon="LockClosed">Pro plan</Tag>
+          <Tag icon="LockClosed"
+            >{$_(
+              "pages.builder.portal.overview.appId.backups.index.Pro_plan"
+            )}</Tag
+          >
         </Tags>
       {/if}
     </div>
-    <Body>Back up your apps and restore them to their previous state</Body>
+    <Body
+      >{$_(
+        "pages.builder.portal.overview.appId.backups.index.Back_state"
+      )}</Body
+    >
   </Layout>
   <Divider />
 
   {#if !$licensing.backupsEnabled}
     {#if !$auth.accountPortalAccess && $admin.cloud}
-      <Body>Contact your account holder to upgrade your plan.</Body>
+      <Body
+        >{$_(
+          "pages.builder.portal.overview.appId.backups.index.Contact_plan"
+        )}</Body
+      >
     {/if}
     <div class="pro-buttons">
       {#if $auth.accountPortalAccess}
@@ -195,7 +227,7 @@
           disabled={!$auth.accountPortalAccess && $admin.cloud}
           on:click={$licensing.goToUpgradePage()}
         >
-          Upgrade
+          {$_("pages.builder.portal.overview.appId.backups.index.Upgrade")}
         </Button>
       {/if}
       <Button
@@ -204,7 +236,7 @@
           window.open("https://budibase.com/pricing/", "_blank")
         }}
       >
-        View plans
+        {$_("pages.builder.portal.overview.appId.backups.index.View_plans")}
       </Button>
     </div>
   {:else if !backupData?.length && !loading && !filterOpt && !startDate}
@@ -212,12 +244,22 @@
       <Layout noPadding gap="S" justifyItems="center">
         <img height="130px" src={BackupsDefault} alt="BackupsDefault" />
         <Layout noPadding gap="XS">
-          <Heading>You have no backups yet</Heading>
-          <Body>You can manually back up your app any time</Body>
+          <Heading
+            >{$_(
+              "pages.builder.portal.overview.appId.backups.index.no_backups"
+            )}</Heading
+          >
+          <Body
+            >{$_(
+              "pages.builder.portal.overview.appId.backups.index.back_any_time"
+            )}</Body
+          >
         </Layout>
         <div>
           <Button cta disabled={loading} on:click={createManualBackup}>
-            Create backup
+            {$_(
+              "pages.builder.portal.overview.appId.backups.index.Create_backup"
+            )}
           </Button>
         </div>
       </Layout>
@@ -228,8 +270,12 @@
         <div class="search">
           <div class="select">
             <Select
-              placeholder="All"
-              label="Type"
+              placeholder={$_(
+                "pages.builder.portal.overview.appId.backups.index.All"
+              )}
+              label={$_(
+                "pages.builder.portal.overview.appId.backups.index.Type"
+              )}
               options={filters}
               getOptionValue={filter => filter.value}
               getOptionLabel={filter => filter.label}
@@ -238,7 +284,9 @@
           </div>
           <DatePicker
             range={true}
-            label="Date Range"
+            label={$_(
+              "pages.builder.portal.overview.appId.backups.index.Date_Range"
+            )}
             on:change={e => {
               if (e.detail[0].length > 1) {
                 startDate = e.detail[0][0].toISOString()
@@ -249,7 +297,9 @@
         </div>
         <div>
           <Button cta disabled={loading} on:click={createManualBackup}
-            >Create new backup</Button
+            >{$_(
+              "pages.builder.portal.overview.appId.backups.index.Create_new_backup"
+            )}</Button
           >
         </div>
       </div>
@@ -262,7 +312,9 @@
           allowEditRows={false}
           data={backupData}
           {customRenderers}
-          placeholderText="No backups found"
+          placeholderText={$_(
+            "pages.builder.portal.overview.appId.backups.index.No_found"
+          )}
           border={false}
           on:buttonclick={handleButtonClick}
         />

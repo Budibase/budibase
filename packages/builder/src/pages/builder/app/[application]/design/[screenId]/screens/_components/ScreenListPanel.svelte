@@ -9,7 +9,7 @@
   import RoleIndicator from "./RoleIndicator.svelte"
   import { RoleUtils } from "@budibase/frontend-core"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 
   let searchString
   let accessRole = "all"

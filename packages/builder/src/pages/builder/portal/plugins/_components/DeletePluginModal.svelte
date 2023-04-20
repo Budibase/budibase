@@ -3,6 +3,8 @@
   import { plugins } from "stores/portal"
   import { createEventDispatcher } from "svelte"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   export let plugin
 
   let dispatch = createEventDispatcher()
@@ -11,11 +13,21 @@
     try {
       const name = plugin.name
       await plugins.deletePlugin(plugin._id)
-      notifications.success(`Plugin ${name} deleted successfully`)
+      notifications.success(
+        `${$_(
+          "pages.builder.portal.plugins._components.DeletePluginModal.Plugin"
+        )} ${name} ${$_(
+          "pages.builder.portal.plugins._components.DeletePluginModal.deleted_successfully"
+        )}`
+      )
       dispatch("deleted")
     } catch (error) {
       const msg = error?.message ? error.message : JSON.stringify(error)
-      notifications.error(`Error deleting plugin: ${msg}`)
+      notifications.error(
+        `${$_(
+          "pages.builder.portal.plugins._components.DeletePluginModal.Error_deleting"
+        )}: ${msg}`
+      )
     }
   }
 </script>
@@ -23,12 +35,21 @@
 <ModalContent
   warning
   onConfirm={deletePlugin}
-  title="Delete Plugin"
-  confirmText="Delete plugin"
-  cancelText="Cancel"
+  title={$_(
+    "pages.builder.portal.plugins._components.DeletePluginModal.Delete_Plugin"
+  )}
+  confirmText={$_(
+    "pages.builder.portal.plugins._components.DeletePluginModal.Delete_plugin"
+  )}
+  cancelText={$_(
+    "pages.builder.portal.plugins._components.DeletePluginModal.Cancel"
+  )}
   showCloseIcon={false}
 >
   <Body>
-    Are you sure you want to delete <strong>{plugin?.name}</strong>?
+    {$_(
+      "pages.builder.portal.plugins._components.DeletePluginModal.want_delete"
+    )}
+    <strong>{plugin?.name}</strong>?
   </Body>
 </ModalContent>

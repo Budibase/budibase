@@ -28,7 +28,7 @@
   import AppColumnRenderer from "./_components/AppColumnRenderer.svelte"
   import { cloneDeep } from "lodash"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../lang/i18n"
 
   const schema = {
     date: { width: "0.8fr" },

@@ -4,6 +4,8 @@
   import { environment } from "stores/portal"
   import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let row
 
   let editVariableModal
@@ -15,7 +17,11 @@
   }
 </script>
 
-<ActionButton size="S" on:click={editVariableModal.show}>Edit</ActionButton>
+<ActionButton size="S" on:click={editVariableModal.show}
+  >{$_(
+    "pages.builder.portal.settings.enviroment._components.EditVariableColumn.Edit"
+  )}</ActionButton
+>
 
 <Modal bind:this={editVariableModal}>
   <CreateEditVariableModal {row} {save} />
@@ -26,10 +32,18 @@
   onOk={async () => {
     await environment.deleteVariable(row.name)
   }}
-  okText="Delete Environment Variable"
-  title="Confirm Deletion"
+  okText={$_(
+    "pages.builder.portal.settings.enviroment._components.EditVariableColumn.Delete_Environment"
+  )}
+  title={$_(
+    "pages.builder.portal.settings.enviroment._components.EditVariableColumn.Confirm_Deletion"
+  )}
 >
-  Are you sure you wish to delete the environment variable
+  {$_(
+    "pages.builder.portal.settings.enviroment._components.EditVariableColumn.delete_environment"
+  )}
   <i>{row.name}?</i>
-  This action cannot be undone.
+  {$_(
+    "pages.builder.portal.settings.enviroment._components.EditVariableColumn.action_undone"
+  )}
 </ConfirmDialog>

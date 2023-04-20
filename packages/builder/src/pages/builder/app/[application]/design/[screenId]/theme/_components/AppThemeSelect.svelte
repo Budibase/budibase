@@ -3,7 +3,7 @@
   import { store } from "builderStore"
   import { Constants } from "@budibase/frontend-core"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 
   const onChangeTheme = async theme => {
     try {

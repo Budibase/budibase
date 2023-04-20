@@ -17,6 +17,8 @@
   import { API } from "api"
   import { cloneDeep } from "lodash/fp"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   const ConfigTypes = {
     SMTP: "smtp",
   }
@@ -58,10 +60,15 @@
       smtpConfig._rev = savedConfig._rev
       smtpConfig._id = savedConfig._id
       await admin.getChecklist()
-      notifications.success(`Settings saved`)
+      notifications.success(
+        $_("pages.builder.portal.settings.email.index.Settings_saved")
+      )
     } catch (error) {
       notifications.error(
-        `Failed to save email settings, reason: ${error?.message || "Unknown"}`
+        `${$_("pages.builder.portal.settings.email.index.Failed_save")}: ${
+          error?.message ||
+          $_("pages.builder.portal.settings.email.index.Unknown")
+        }`
       )
     }
   }
@@ -80,10 +87,15 @@
         },
       }
       await admin.getChecklist()
-      notifications.success(`Settings cleared`)
+      notifications.success(
+        `${$_("pages.builder.portal.settings.email.index.Settings_cleared")}`
+      )
     } catch (error) {
       notifications.error(
-        `Failed to clear email settings, reason: ${error?.message || "Unknown"}`
+        `${$_("pages.builder.portal.settings.email.index.Failed_clear")}: ${
+          error?.message ||
+          $_("pages.builder.portal.settings.email.index.Unknown")
+        }`
       )
     }
   }
@@ -116,7 +128,9 @@
         }
       }
     } catch (error) {
-      notifications.error("Error fetching SMTP config")
+      notifications.error(
+        $_("pages.builder.portal.settings.email.index.Error_fetching")
+      )
     }
   }
 
@@ -126,24 +140,29 @@
 <Layout noPadding>
   <Layout noPadding gap="XS">
     <Heading size="M">Email</Heading>
-    <Body>Add your SMTP details to send automated emails from Budibase</Body>
+    <Body>{$_("pages.builder.portal.settings.email.index.Add_SMTP")}</Body>
   </Layout>
   <Divider />
   {#if smtpConfig}
     <Layout gap="XS" noPadding>
       <Heading size="S">SMTP</Heading>
       <Body size="S">
-        To allow your app to benefit from automated auth emails, add your SMTP
-        details below.
+        {$_("pages.builder.portal.settings.email.index.app_benefit")}
       </Body>
     </Layout>
     <Layout gap="XS" noPadding>
       <div class="form-row">
-        <Label size="L">Host</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.email.index.Host")}</Label
+        >
         <Input bind:value={smtpConfig.config.host} />
       </div>
       <div class="form-row">
-        <Label size="L">Security type</Label>
+        <Label size="L"
+          >{$_(
+            "pages.builder.portal.settings.email.index.Security_type"
+          )}</Label
+        >
         <Select
           bind:value={smtpConfig.config.secure}
           options={[
@@ -153,44 +172,59 @@
         />
       </div>
       <div class="form-row">
-        <Label size="L">Port</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.email.index.Host")}</Label
+        >
         <Input type="number" bind:value={smtpConfig.config.port} />
       </div>
       <div class="form-row">
-        <Label size="L">From email address</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.email.index.Port")}</Label
+        >
         <Input type="email" bind:value={smtpConfig.config.from} />
       </div>
       <div class="form-row">
-        <Label size="L">Require sign in</Label>
+        <Label size="L"
+          >{$_(
+            "pages.builder.portal.settings.email.index.Require_sign_in"
+          )}</Label
+        >
         <Checkbox bind:value={requireAuth} />
       </div>
       {#if requireAuth}
         <div class="form-row">
-          <Label size="L">User</Label>
+          <Label size="L"
+            >{$_("pages.builder.portal.settings.email.index.User")}</Label
+          >
           <Input bind:value={smtpConfig.config.auth.user} />
         </div>
         <div class="form-row">
-          <Label size="L">Password</Label>
+          <Label size="L"
+            >{$_("pages.builder.portal.settings.email.index.Password")}</Label
+          >
           <Input type="password" bind:value={smtpConfig.config.auth.pass} />
         </div>
       {/if}
     </Layout>
     <div class="spectrum-ButtonGroup spectrum-Settings-buttonGroup">
-      <Button cta on:click={saveSmtp}>Save</Button>
+      <Button cta on:click={saveSmtp}
+        >{$_("pages.builder.portal.settings.email.index.Save")}</Button
+      >
       <Button
         secondary
         on:click={deleteSmtp}
         disabled={!$admin.checklist.smtp.checked}
       >
-        Reset
+        {$_("pages.builder.portal.settings.email.index.Reset")}
       </Button>
     </div>
     <Divider />
     <Layout gap="XS" noPadding>
-      <Heading size="S">Templates</Heading>
+      <Heading size="S"
+        >{$_("pages.builder.portal.settings.email.index.Templates")}</Heading
+      >
       <Body size="S">
-        Budibase comes out of the box with ready-made email templates to help
-        with user onboarding.
+        {$_("pages.builder.portal.settings.email.index.ready-made_email")}
       </Body>
     </Layout>
     <Table

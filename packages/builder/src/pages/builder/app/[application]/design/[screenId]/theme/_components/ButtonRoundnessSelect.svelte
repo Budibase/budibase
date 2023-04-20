@@ -2,7 +2,7 @@
   import { createEventDispatcher } from "svelte"
   import { Slider, Button } from "@budibase/bbui"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 
   export let customTheme
 

@@ -4,6 +4,8 @@
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
 
+  import { _ } from "../../../../../lang/i18n."
+
   // Don't block loading if we've already hydrated state
   let loaded = $apps.length > 0
 
@@ -17,7 +19,9 @@
       ])
 
       if ($templates?.length === 0) {
-        notifications.error("There was a problem loading quick start templates")
+        notifications.error(
+          $_("pages.builder.portal.apps._layout.problem_loading")
+        )
       }
 
       // Go to new app page if no apps exists
@@ -25,7 +29,7 @@
         $redirect("./onboarding")
       }
     } catch (error) {
-      notifications.error("Error loading apps and templates")
+      notifications.error($_("pages.builder.portal.apps._layout.Error_loading"))
     }
     loaded = true
   })

@@ -12,7 +12,7 @@
   import { Roles } from "constants/backend"
   import { capitalise } from "helpers"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 
   let pendingScreen
 

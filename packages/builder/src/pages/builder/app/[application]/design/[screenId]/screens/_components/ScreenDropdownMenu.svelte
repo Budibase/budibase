@@ -13,7 +13,7 @@
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { makeComponentUnique } from "builderStore/componentUtils"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 
   export let screenId
 

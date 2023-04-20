@@ -2,7 +2,7 @@
   import Panel from "components/design/Panel.svelte"
   import { Body, Layout } from "@budibase/bbui"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 </script>
 
 <Panel

@@ -33,6 +33,8 @@
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   // Keep URL and state in sync for selected screen ID
   const stopSyncing = syncURLToState({
     urlParam: "appId",
@@ -61,7 +63,9 @@
       await store.actions.initialise(pkg)
       await API.syncApp(appId)
     } catch (error) {
-      notifications.error("Error initialising app overview")
+      notifications.error(
+        $_("pages.builder.portal.overview.appId._layout.Error_initialising")
+      )
       $goto("../../")
     }
   }
@@ -80,7 +84,11 @@
     if (appLocked && !lockedByYou) {
       const identifier = app?.lockedBy?.firstName || app?.lockedBy?.email
       notifications.warning(
-        `App locked by ${identifier}. Please allow lock to expire or have them unlock this app.`
+        `${$_(
+          "pages.builder.portal.overview.appId._layout.App_locked"
+        )} ${identifier}. ${$_(
+          "pages.builder.portal.overview.appId._layout.allow"
+        )}`
       )
       return
     }
@@ -94,17 +102,23 @@
 
   const copyAppId = async () => {
     await Helpers.copyToClipboard(app.prodId)
-    notifications.success("App ID copied to clipboard")
+    notifications.success(
+      $_("pages.builder.portal.overview.appId._layout.ID_copied")
+    )
   }
 
   const deleteApp = async () => {
     try {
       await API.deleteApp(app?.devId)
       apps.load()
-      notifications.success("App deleted successfully")
+      notifications.success(
+        $_("pages.builder.portal.overview.appId._layout.App_deleted")
+      )
       $goto("../../")
     } catch (err) {
-      notifications.error("Error deleting app")
+      notifications.error(
+        $_("pages.builder.portal.overview.appId._layout.Error_deleting")
+      )
     }
   }
 
@@ -118,7 +132,10 @@
   <Page>
     <Layout noPadding gap="L">
       <Breadcrumbs>
-        <Breadcrumb url={$url("../")} text="Apps" />
+        <Breadcrumb
+          url={$url("../")}
+          text={$_("pages.builder.portal.overview.appId._layout.Apps")}
+        />
         <Breadcrumb text={app?.name} />
       </Breadcrumbs>
       <Header title={app?.name} wrap={false}>
@@ -141,7 +158,7 @@
               disabled={!isPublished}
               on:click={viewApp}
             >
-              View
+              {$_("pages.builder.portal.overview.appId._layout.View")}
             </Button>
           </span>
           <span class="desktop">
@@ -151,7 +168,7 @@
               disabled={appLocked && !lockedByYou}
               on:click={editApp}
             >
-              Edit
+              {$_("pages.builder.portal.overview.appId._layout.Edit")}
             </Button>
           </span>
           <ActionMenu align="right">
@@ -160,7 +177,7 @@
             </span>
             <span class="mobile">
               <MenuItem icon="Globe" disabled={!isPublished} on:click={viewApp}>
-                View
+                {$_("pages.builder.portal.overview.appId._layout.View")}
               </MenuItem>
             </span>
             <span class="mobile">
@@ -169,27 +186,33 @@
                 disabled={appLocked && !lockedByYou}
                 on:click={editApp}
               >
-                Edit
+                {$_("pages.builder.portal.overview.appId._layout.Edit")}
               </MenuItem>
             </span>
             <MenuItem
               on:click={() => exportApp({ published: false })}
               icon="DownloadFromCloud"
             >
-              Export latest
+              {$_("pages.builder.portal.overview.appId._layout.Export_latest")}
             </MenuItem>
             {#if isPublished}
               <MenuItem
                 on:click={() => exportApp({ published: true })}
                 icon="DownloadFromCloudOutline"
               >
-                Export published
+                {$_(
+                  "pages.builder.portal.overview.appId._layout.Export_published"
+                )}
               </MenuItem>
-              <MenuItem on:click={copyAppId} icon="Copy">Copy app ID</MenuItem>
+              <MenuItem on:click={copyAppId} icon="Copy"
+                >{$_(
+                  "pages.builder.portal.overview.appId._layout.Copy_ID"
+                )}</MenuItem
+              >
             {/if}
             {#if !isPublished}
               <MenuItem on:click={deletionModal.show} icon="Delete">
-                Delete
+                {$_("pages.builder.portal.overview.appId._layout.Delete")}
               </MenuItem>
             {/if}
           </ActionMenu>
@@ -198,32 +221,34 @@
       <Content showMobileNav>
         <SideNav slot="side-nav">
           <SideNavItem
-            text="Overview"
+            text={$_("pages.builder.portal.overview.appId._layout.Overview")}
             url={$url("./overview")}
             active={$isActive("./overview")}
           />
           <SideNavItem
-            text="Access"
+            text={$_("pages.builder.portal.overview.appId._layout.Access")}
             url={$url("./access")}
             active={$isActive("./access")}
           />
           <SideNavItem
-            text="Automation History"
+            text={$_(
+              "pages.builder.portal.overview.appId._layout.Automation_History"
+            )}
             url={$url("./automation-history")}
             active={$isActive("./automation-history")}
           />
           <SideNavItem
-            text="Backups"
+            text={$_("pages.builder.portal.overview.appId._layout.Backups")}
             url={$url("./backups")}
             active={$isActive("./backups")}
           />
           <SideNavItem
-            text="Name and URL"
+            text={$_("pages.builder.portal.overview.appId._layout.Name_URL")}
             url={$url("./name-and-url")}
             active={$isActive("./name-and-url")}
           />
           <SideNavItem
-            text="Version"
+            text={$_("pages.builder.portal.overview.appId._layout.Version")}
             url={$url("./version")}
             active={$isActive("./version")}
           />
@@ -238,15 +263,16 @@
   </Modal>
   <ConfirmDialog
     bind:this={deletionModal}
-    title="Delete app"
-    okText="Delete"
+    title={$_("pages.builder.portal.overview.appId._layout.Delete_app")}
+    okText={$_("pages.builder.portal.overview.appId._layout.Delete")}
     onOk={deleteApp}
     onCancel={() => (deletionConfirmationAppName = null)}
     disabled={deletionConfirmationAppName !== app?.name}
   >
-    Are you sure you want to delete <b>{app?.name}</b>?
+    {$_("pages.builder.portal.overview.appId._layout.want_delete")}
+    <b>{app?.name}</b>?
     <br />
-    Please enter the app name below to confirm.
+    {$_("pages.builder.portal.overview.appId._layout.app_name")}
     <br /><br />
     <Input bind:value={deletionConfirmationAppName} placeholder={app?.name} />
   </ConfirmDialog>

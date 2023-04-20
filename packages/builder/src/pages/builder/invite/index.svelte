@@ -8,7 +8,7 @@
   import { onMount } from "svelte"
   import { handleError, passwordsMatch } from "../auth/_components/utils"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../lang/i18n"
 
   const inviteCode = $params["?code"]
   let form

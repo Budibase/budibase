@@ -20,6 +20,8 @@
   import { Constants } from "@budibase/frontend-core"
   import Portal from "svelte-portal"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   const ERROR = "error",
     SUCCESS = "success",
     STOPPED = "stopped"
@@ -40,25 +42,87 @@
   $: fetchLogs(automationId, status, page, timeRange)
 
   const timeOptions = [
-    { value: "90-d", label: "Past 90 days" },
-    { value: "30-d", label: "Past 30 days" },
-    { value: "1-w", label: "Past week" },
-    { value: "1-d", label: "Past day" },
-    { value: "1-h", label: "Past 1 hour" },
-    { value: "15-m", label: "Past 15 mins" },
-    { value: "5-m", label: "Past 5 mins" },
+    {
+      value: "90-d",
+      label: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.90_days"
+      ),
+    },
+    {
+      value: "30-d",
+      label: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.30_days"
+      ),
+    },
+    {
+      value: "1-w",
+      label: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.week"
+      ),
+    },
+    {
+      value: "1-d",
+      label: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.day"
+      ),
+    },
+    {
+      value: "1-h",
+      label: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.hour"
+      ),
+    },
+    {
+      value: "15-m",
+      label: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.15_mins"
+      ),
+    },
+    {
+      value: "5-m",
+      label: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.5_mins"
+      ),
+    },
   ]
 
   const statusOptions = [
-    { value: SUCCESS, label: "Success" },
-    { value: ERROR, label: "Error" },
-    { value: STOPPED, label: "Stopped" },
+    {
+      value: SUCCESS,
+      label: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.Success"
+      ),
+    },
+    {
+      value: ERROR,
+      label: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.Error"
+      ),
+    },
+    {
+      value: STOPPED,
+      label: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.Stopped"
+      ),
+    },
   ]
 
   const runHistorySchema = {
-    status: { displayName: "Status" },
-    automationName: { displayName: "Automation" },
-    createdAt: { displayName: "Time" },
+    status: {
+      displayName: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.Status"
+      ),
+    },
+    automationName: {
+      displayName: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.Automation"
+      ),
+    },
+    createdAt: {
+      displayName: $_(
+        "pages.builder.portal.overview.appId.automation-history.index.Time"
+      ),
+    },
   }
 
   const customRenderers = [
@@ -149,8 +213,16 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading>Automation History</Heading>
-    <Body>View the automations your app has executed</Body>
+    <Heading
+      >{$_(
+        "pages.builder.portal.overview.appId.automation-history.index.Automation_History"
+      )}</Heading
+    >
+    <Body
+      >{$_(
+        "pages.builder.portal.overview.appId.automation-history.index.View_executed"
+      )}</Body
+    >
   </Layout>
   <Divider />
 
@@ -158,24 +230,36 @@
     <div class="search">
       <div class="select">
         <Select
-          placeholder="All"
-          label="Status"
+          placeholder={$_(
+            "pages.builder.portal.overview.appId.automation-history.index.All"
+          )}
+          label={$_(
+            "pages.builder.portal.overview.appId.automation-history.index.Status"
+          )}
           bind:value={status}
           options={statusOptions}
         />
       </div>
       <div class="select">
         <Select
-          placeholder="All"
-          label="Automation"
+          placeholder={$_(
+            "pages.builder.portal.overview.appId.automation-history.index.All"
+          )}
+          label={$_(
+            "pages.builder.portal.overview.appId.automation-history.index.Automation"
+          )}
           bind:value={automationId}
           options={automationOptions}
         />
       </div>
       <div class="select">
         <Select
-          placeholder="All"
-          label="Date range"
+          placeholder={$_(
+            "pages.builder.portal.overview.appId.automation-history.index.All"
+          )}
+          label={$_(
+            "pages.builder.portal.overview.appId.automation-history.index.Date_range"
+          )}
           bind:value={timeRange}
           options={timeOptions}
           isOptionEnabled={x => {
@@ -193,7 +277,9 @@
     </div>
     {#if (licensePlan?.type !== Constants.PlanType.ENTERPRISE && $auth.user.accountPortalAccess) || !$admin.cloud}
       <Button secondary on:click={$licensing.goToUpgradePage()}>
-        Get more history
+        {$_(
+          "pages.builder.portal.overview.appId.automation-history.index.Get_history"
+        )}
       </Button>
     {/if}
   </div>
@@ -208,7 +294,9 @@
         allowEditRows={false}
         data={runHistory}
         {customRenderers}
-        placeholderText="No history found"
+        placeholderText={$_(
+          "pages.builder.portal.overview.appId.automation-history.index.No_found"
+        )}
         border={false}
       />
       <div class="pagination">

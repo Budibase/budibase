@@ -2,7 +2,7 @@
   import { ActionButton } from "@budibase/bbui"
   import { getContext } from "svelte"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../lang/i18n"
 
   export let row
   const auditLogs = getContext("auditLogs")

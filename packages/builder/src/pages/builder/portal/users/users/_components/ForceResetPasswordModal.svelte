@@ -3,6 +3,8 @@
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { users } from "stores/portal"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   const dispatch = createEventDispatcher()
 
   export let user
@@ -16,10 +18,18 @@
         password,
         forceResetPassword: true,
       })
-      notifications.success("Password reset successfully")
+      notifications.success(
+        $_(
+          "pages.builder.portal.users.users._components.ForceReserPasswordModal.Password_reset"
+        )
+      )
       dispatch("update")
     } catch (error) {
-      notifications.error("Error resetting password")
+      notifications.error(
+        $_(
+          "pages.builder.portal.users.users._components.ForceReserPasswordModal.Error_resetting"
+        )
+      )
     }
   }
 </script>
@@ -27,15 +37,21 @@
 <ModalContent
   onConfirm={resetPassword}
   size="M"
-  title="Force Reset User Password"
-  confirmText="Reset password"
-  cancelText="Cancel"
+  title={$_(
+    "pages.builder.portal.users.users._components.ForceReserPasswordModal.Force_Reset"
+  )}
+  confirmText={$_(
+    "pages.builder.portal.users.users._components.ForceReserPasswordModal.Reset_password"
+  )}
+  cancelText={$_(
+    "pages.builder.portal.users.users._components.ForceReserPasswordModal.Cancel"
+  )}
   showCloseIcon={false}
 >
   <Body noPadding
-    >Before you reset the users password, do not forget to copy the new
-    password. The user will need this to login. Once the user has logged in they
-    will be asked to create a new password that is more secure.</Body
+    >{$_(
+      "pages.builder.portal.users.users._components.ForceReserPasswordModal.Before_reset"
+    )}</Body
   >
   <Input disabled label="Password" value={password} />
 </ModalContent>

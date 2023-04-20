@@ -25,7 +25,7 @@
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../lang/i18n"
 
   export let application
 

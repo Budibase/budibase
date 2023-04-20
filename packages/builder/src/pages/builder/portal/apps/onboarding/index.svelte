@@ -19,6 +19,8 @@
   import Spinner from "components/common/Spinner.svelte"
   import { helpers } from "@budibase/shared-core"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   let name = "My first app"
   let url = "my-first-app"
   let stage = "name"
@@ -91,7 +93,9 @@
 
       plusIntegrations = newPlusIntegrations
     } catch (e) {
-      notifications.error("There was a problem communicating with the server.")
+      notifications.error(
+        $_("pages.builder.portal.apps.onboarding.index.problem")
+      )
     } finally {
       integrationsLoading = false
     }
@@ -99,7 +103,9 @@
 
   const goToApp = () => {
     $goto(`/builder/app/${appId}`)
-    notifications.success(`App created successfully`)
+    notifications.success(
+      $_("pages.builder.portal.apps.onboarding.index.success")
+    )
   }
 
   const handleCreateApp = async ({
@@ -133,14 +139,16 @@
     } catch (e) {
       console.log(e)
       creationLoading = false
-      notifications.error("There was a problem creating your app")
+      notifications.error(
+        $_("pages.builder.portal.apps.onboarding.index.problem_app")
+      )
     }
   }
 </script>
 
 <Modal bind:this={uploadModal}>
   <CreateTableModal
-    name="Your Data"
+    name={$_("pages.builder.portal.apps.onboarding.index.Your_Data")}
     beforeSave={createApp}
     afterSave={goToApp}
   />
@@ -151,10 +159,7 @@
     <NamePanel bind:name bind:url onNext={() => (stage = "data")} />
   {:else if googleComplete}
     <div class="centered">
-      <Body
-        >Please login to your Google account in the new tab which as opened to
-        continue.</Body
-      >
+      <Body>{$_("pages.builder.portal.apps.onboarding.index.login")}</Body>
     </div>
   {:else if integrationsLoading || creationLoading}
     <div class="centered">
@@ -172,7 +177,9 @@
                 src={"https://i.imgur.com/Xhdt1YP.png"}
               />
             </div>
-            Budibase Sample data
+            {$_(
+              "pages.builder.portal.apps.onboarding.index.Budibase_Sample_data"
+            )}
           </div>
         </FancyButton>
       </div>
@@ -182,7 +189,7 @@
             <div class="dataButtonIcon">
               <FontAwesomeIcon name="fa-solid fa-file-arrow-up" />
             </div>
-            Upload data (CSV or JSON)
+            {$_("pages.builder.portal.apps.onboarding.index.Upload_data")}
           </div>
         </FancyButton>
       </div>
@@ -212,7 +219,7 @@
       }}
     />
   {:else}
-    <p>There was an problem. Please refresh the page and try again.</p>
+    <p>{$_("pages.builder.portal.apps.onboarding.index.problem_refresh")}</p>
   {/if}
   <div slot="right">
     <ExampleApp {name} showData={stage !== "name"} />

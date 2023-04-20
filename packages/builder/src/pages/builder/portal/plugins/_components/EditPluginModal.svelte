@@ -10,6 +10,8 @@
   import { getContext } from "svelte"
   import DeletePluginModal from "./DeletePluginModal.svelte"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   export let plugin
 
   const modalContext = getContext(Context.Modal)
@@ -21,22 +23,36 @@
 
 <ModalContent
   size="M"
-  title="Plugin details"
+  title={$_(
+    "pages.builder.portal.plugins._components.EditPluginModal.Plugin_details"
+  )}
   showConfirmButton={false}
   showCancelButton={false}
 >
   <div class="details-row">
-    <Label size="M">Name</Label>
+    <Label size="M"
+      >{$_(
+        "pages.builder.portal.plugins._components.EditPluginModal.Name"
+      )}</Label
+    >
     <Input disabled value={plugin.name} />
   </div>
 
   <div class="details-row">
-    <Label size="M">Friendly name</Label>
+    <Label size="M"
+      >{$_(
+        "pages.builder.portal.plugins._components.EditPluginModal.Friendly_name"
+      )}</Label
+    >
     <Input disabled value={friendlyName} />
   </div>
 
   <div class="details-row">
-    <Label size="M">Type</Label>
+    <Label size="M"
+      >{$_(
+        "pages.builder.portal.plugins._components.EditPluginModal.Type"
+      )}</Label
+    >
     <Input
       disabled
       value={plugin.schema.type.charAt(0).toUpperCase() +
@@ -44,24 +60,44 @@
     />
   </div>
   <div class="details-row">
-    <Label size="M">Source</Label>
+    <Label size="M"
+      >{$_(
+        "pages.builder.portal.plugins._components.EditPluginModal.Source"
+      )}</Label
+    >
     <Input disabled value={plugin.source || "N/A"} />
   </div>
   <div class="details-row">
-    <Label size="M">Version</Label>
+    <Label size="M"
+      >{$_(
+        "pages.builder.portal.plugins._components.EditPluginModal.Version"
+      )}</Label
+    >
     <Input disabled value={plugin.version} />
   </div>
   <div class="details-row">
-    <Label size="M">License</Label>
+    <Label size="M"
+      >{$_(
+        "pages.builder.portal.plugins._components.EditPluginModal.License"
+      )}</Label
+    >
     <Input disabled value={plugin.package.license} />
   </div>
   <div class="details-row">
-    <Label size="M">Author</Label>
+    <Label size="M"
+      >{$_(
+        "pages.builder.portal.plugins._components.EditPluginModal.Author"
+      )}</Label
+    >
     <Input disabled value={plugin.package.author || "N/A"} />
   </div>
 
   <div class="footer" slot="footer">
-    <Button on:click={deleteModal.show} warning>Delete</Button>
+    <Button on:click={deleteModal.show} warning
+      >{$_(
+        "pages.builder.portal.plugins._components.EditPluginModal.Delete"
+      )}</Button
+    >
   </div>
 </ModalContent>
 

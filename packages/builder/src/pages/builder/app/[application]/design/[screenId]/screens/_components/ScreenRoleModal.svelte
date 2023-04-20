@@ -6,7 +6,7 @@
   import { store } from "builderStore"
   import { onMount } from "svelte"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 
   export let onConfirm
   export let onCancel

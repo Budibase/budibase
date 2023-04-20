@@ -4,7 +4,7 @@
   import blankScreenPreview from "./blankScreenPreview.png"
   import listScreenPreview from "./listScreenPreview.png"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 
   export let onConfirm
   export let onCancel

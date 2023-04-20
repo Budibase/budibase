@@ -11,6 +11,8 @@
   import CreateRestoreModal from "./CreateRestoreModal.svelte"
   import { createEventDispatcher } from "svelte"
 
+  import { _ } from "../../../../../../../../lang/i18n"
+
   export let row
 
   let deleteDialog
@@ -45,9 +47,21 @@
     </div>
 
     {#if row.type !== "restore"}
-      <MenuItem on:click={restoreDialog.show} icon="Revert">Restore</MenuItem>
-      <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
-      <MenuItem on:click={downloadExport} icon="Download">Download</MenuItem>
+      <MenuItem on:click={restoreDialog.show} icon="Revert"
+        >{$_(
+          "pages.builder.portal.overview.appId.backups._components.ActionsRenderer.Restore"
+        )}</MenuItem
+      >
+      <MenuItem on:click={deleteDialog.show} icon="Delete"
+        >{$_(
+          "pages.builder.portal.overview.appId.backups._components.ActionsRenderer.Delete"
+        )}</MenuItem
+      >
+      <MenuItem on:click={downloadExport} icon="Download"
+        >{$_(
+          "pages.builder.portal.overview.appId.backups._components.ActionsRenderer.Download"
+        )}</MenuItem
+      >
     {/if}
   </ActionMenu>
 </div>
@@ -58,21 +72,35 @@
 
 <ConfirmDialog
   bind:this={deleteDialog}
-  okText="Delete Backup"
+  okText={$_(
+    "pages.builder.portal.overview.appId.backups._components.ActionsRenderer.Delete_backup"
+  )}
   onOk={onClickDelete}
-  title="Confirm Deletion"
+  title={$_(
+    "pages.builder.portal.overview.appId.backups._components.ActionsRenderer.Confirm_Deletion"
+  )}
 >
-  Are you sure you wish to delete this backup? This action cannot be undone.
+  {$_(
+    "pages.builder.portal.overview.appId.backups._components.ActionsRenderer.delete_backup"
+  )}
 </ConfirmDialog>
 
 <ConfirmDialog
   bind:this={restoreDialog}
-  okText="Continue"
+  okText={$_(
+    "pages.builder.portal.overview.appId.backups._components.ActionsRenderer.Continue"
+  )}
   onOk={restoreBackupModal?.show}
-  title="Confirm restore"
+  title={$_(
+    "pages.builder.portal.overview.appId.backups._components.ActionsRenderer.Confirm_restore"
+  )}
   warning={false}
 >
-  <Heading size="S">Backup</Heading>
+  <Heading size="S"
+    >{$_(
+      "pages.builder.portal.overview.appId.backups._components.ActionsRenderer.Backup"
+    )}</Heading
+  >
   <Body size="S">{new Date(row.timestamp).toLocaleString()}</Body>
 </ConfirmDialog>
 

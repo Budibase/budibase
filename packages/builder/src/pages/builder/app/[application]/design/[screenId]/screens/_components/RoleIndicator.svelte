@@ -4,7 +4,7 @@
   import { roles } from "stores/backend"
   import { Roles } from "constants/backend"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 
   export let roleId
 

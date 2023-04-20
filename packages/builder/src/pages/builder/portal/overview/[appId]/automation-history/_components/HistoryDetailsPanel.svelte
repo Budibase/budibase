@@ -13,6 +13,8 @@
   import { goto } from "@roxi/routify"
   import { automationStore } from "builderStore"
 
+  import { _ } from "../../../../../../../../lang/i18n"
+
   export let history
   export let appId
   export let close
@@ -37,8 +39,12 @@
       <div class="cron-error">
         <InlineAlert
           type="error"
-          header="CRON automation disabled"
-          message="Fix the error and re-publish your app to re-activate."
+          header={$_(
+            "pages.builder.portal.overview.appId.automation-history._components.HistoryDetailsPanel.CRON_disabled"
+          )}
+          message={$_(
+            "pages.builder.portal.overview.appId.automation-history._components.HistoryDetailsPanel.Fix_error"
+          )}
         />
       </div>
     {/if}
@@ -50,7 +56,9 @@
             $goto(`../../../../app/${appId}/automate/${history.automationId}`)
           }}
         >
-          Edit automation
+          {$_(
+            "pages.builder.portal.overview.appId.automation-history._components.HistoryDetailsPanel.Edit_automation"
+          )}
         </Button>
       </div>
     {/if}
@@ -61,7 +69,11 @@
     {/key}
   </Layout>
 {:else}
-  <Body>No details found</Body>
+  <Body
+    >{$_(
+      "pages.builder.portal.overview.appId.automation-history._components.HistoryDetailsPanel.No_details"
+    )}</Body
+  >
 {/if}
 
 <style>

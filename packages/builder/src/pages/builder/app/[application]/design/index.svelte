@@ -7,7 +7,7 @@
   import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
   import { Roles } from "constants/backend"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../lang/i18n"
 
   let loaded = false
 

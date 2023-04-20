@@ -20,7 +20,7 @@
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "builderStore/dataBinding"
 
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../../../../../lang/i18n"
 
   $: bindings = getBindableProperties($selectedScreen, null)
 

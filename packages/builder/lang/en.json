@@ -31,8 +31,7 @@
     "utils": {
       "Cannot_build": "Cannot build auto column with supplied subtype"
     }
-  },
-
+  }, 
   "components": {
     "automation": {
       "AutomationBuilder": {
@@ -2308,6 +2307,10 @@
             "Refresh": "Refresh"
           },
           "usage": {
+            "Queries":"Queries" , 
+            "Automations":"Automations", 
+            "Rows":"Rows", 
+            "Day_Passes":"Day Passes",
             "Subscription_has_been_cancelled": "Subscription has been cancelled",
             "days_remaining": "days remaining",
             "Upgrade": "Upgrade",
@@ -2317,6 +2320,7 @@
             "Get_information": "Get information about your current usage within Budibase",
             "To_upgrade": "To upgrade your plan and usage limits visit your",
             "account": "account",
+            "YOUR_PLAN":"YOUR CURRENT PLAN",
             "Contact_your_account": "Contact your account holder to upgrade your plan",
             "Monthly_limits": "Monthly limits",
             "Resets_in": "Resets in",
@@ -2337,44 +2341,32 @@
                 "Connect": "Connect"
               },
               "ExampleApp": {
-                "rows": [
-                  {
+                "rows": {
+                  "1":{
                     "firstName": "Julie",
-                    "lastName": "Jimenez",
-                    "email": "julie.jimenez@example.com",
+                    "lastName": "Jimenez", 
                     "address": "4250 New Street",
-                    "city": "Stevenage",
-                    "postcode": "EE32 3SE",
-                    "phone": "01754 13523"
+                    "city": "Stevenage"
                   },
-                  {
+                  "2": {
                     "firstName": "Mandy",
-                    "lastName": "Clark",
-                    "email": "mandy.clark@example.com",
+                    "lastName": "Clark", 
                     "address": "8632 North Street",
-                    "city": "Hereford",
-                    "postcode": "GT81 7DG",
-                    "phone": "016973 32814"
+                    "city": "Hereford"
                   },
-                  {
+                  "3": {
                     "firstName": "Holly",
-                    "lastName": "Carroll",
-                    "email": "holly.carroll@example.com",
+                    "lastName": "Carroll", 
                     "address": "5976 Springfield Road",
-                    "city": "Edinburgh",
-                    "postcode": "Y4 2LH",
-                    "phone": "016977 73053"
+                    "city": "Edinburgh"
                   },
-                  {
+                  "4": {
                     "firstName": "Francis",
-                    "lastName": "Castro",
-                    "email": "francis.castro@example.com",
+                    "lastName": "Castro", 
                     "address": "3970 High Street",
-                    "city": "Wells",
-                    "postcode": "X12 6QA",
-                    "phone": "017684 23551"
+                    "city": "Wells"
                   }
-                ],
+                },
                 "Home": "Home",
                 "FIRST_NAME": "FIRST NAME",
                 "LAST_NAME": "LAST NAME",
@@ -2389,66 +2381,68 @@
                 "City": "City",
                 "Postcode": "Postcode",
                 "Phone": "Phone"
+              },
+              "NamePanel": {
+                "Name_must_be_provided": "Name must be provided",
+                "No_special_characters_are_allowed": "No special characters are allowed",
+                "URL_must_be provided": "URL must be provided",
+                "Invalid_URL": "Invalid URL",
+                "Build_your_first_app": "Build your first app",
+                "Name_your_app": "Name your app and set the URL",
+                "Name": "Name",
+                "URL": "URL",
+                "Lets_go": "Lets go!"
               }
             },
-            "NamePanel": {
-              "Name_must_be_provided": "Name must be provided",
-              "No_special_characters_are_allowed": "No special characters are allowed",
-              "URL_must_be provided": "URL must be provided",
-              "Invalid_URL": "Invalid URL",
-              "Build_your_first_app": "Build your first app",
-              "Name_your_app": "Name your app and set the URL",
-              "Name": "Name",
-              "URL": "URL",
-              "Lets_go": "Lets go!"
+            "index": {
+              "problem": "There was a problem communicating with the server",
+              "success": "App created successfully",
+              "problem_app": "There was a problem creating your app",
+              "Your_Data": "Your Data",
+              "login": "Please login to your Google account in the new tab which as opened to continue.",
+              "Budibase_Sample_data": "Budibase Sample data",
+              "Upload_data": "Upload data (CSV or JSON)",
+              "problem_refresh": "There was an problem. Please refresh the page and try again"
             }
           },
+          "_layout": {
+            "problem_loading": "There was a problem loading quick start templates",
+            "Error_loading": "Error loading apps and templates"
+          },
+          "create": {
+            "Create_new_app": "Create new app",
+            "Import_app": "Import app",
+            "Start_from_scratch": "Start from scratch"
+          },
           "index": {
-            "problem": "There was a problem communicating with the server",
-            "success": "App created successfully",
-            "problem_app": "There was a problem creating your app",
-            "Your_Data": "Your Data",
-            "login": "Please login to your Google account in the new tab which as opened to continue.",
-            "Budibase_Sample_data": "Budibase Sample data",
-            "Upload_data": "Upload data (CSV or JSON)",
-            "problem_refresh": "There was an problem. Please refresh the page and try again"
+            "Welcome": "Welcome",
+            "back": "back",
+            "Automation_error": "Automation error",
+            "Apps_exported_successfully": "Apps exported successfully",
+            "Error_exporting_apps": "Error exporting apps",
+            "Error_creating":"Error creating app",
+            "URL_invalid": "Your Template URL is invalid. Please try another",
+            "Error_info": "Error getting init info",
+            "View_errors": "View errors",
+            "View_error": "View error",
+            "Manage_apps": "Manage your apps and get a head start with templates",
+            "Create_app": "Create new app",
+            "View_templates": "View templates",
+            "Import_app": "Import app",
+            "Sort_name": "Sort by name",
+            "Sort_updated": "Sort by recently updated",
+            "Sort_status": "Sort by status",
+            "Search": "Search",
+            "Creating_Budibase": "Creating your Budibase app from your selected template...",
+            "Continue": "Continue",
+            "Download_apps": "Download all apps",
+            "Do_not_share": "Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys"
+          },
+          "templates": {
+            "Apps":"Apps",
+            "Templates": "Templates"
           }
-        },
-        "_layout": {
-          "problem_loading": "There was a problem loading quick start templates",
-          "Error_loading": "Error loading apps and templates"
-        },
-        "create": {
-          "Create_new_app": "Create new app",
-          "Import_app": "Import app",
-          "Start_from_scratch": "Start from scratch"
-        },
-        "index": {
-          "Welcome": "Welcome",
-          "back": "back",
-          "Automation_error": "Automation error",
-          "Apps_exported_successfully": "Apps exported successfully",
-          "Error_exporting_apps": "Error exporting apps",
-          "URL_invalid": "Your Template URL is invalid. Please try another",
-          "Error_info": "Error getting init info",
-          "View_errors": "View errors",
-          "View_error": "View error",
-          "Manage_apps": "Manage your apps and get a head start with templates",
-          "Create_app": "Create new app",
-          "View_templates": "View templates",
-          "Import_app": "Import app",
-          "Sort_name": "Sort by name",
-          "Sort_updated": "Sort by recently updated",
-          "Sort_status": "Sort by status",
-          "Search": "Search",
-          "Creating_Budibase": "Creating your Budibase app from your selected template...",
-          "Continue": "Continue",
-          "Download_apps": "Download all apps",
-          "Do_not_share": "Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys"
-        },
-        "templates": {
-          "Templates": "Templates"
-        },
+        }, 
         "overview": {
           "appId": {
             "access": {
@@ -2458,7 +2452,7 @@
                   "Done": "Done",
                   "Cancel": "Cancel",
                   "Access": "Access",
-                  "Add more": "Add more"
+                  "Add_more": "Add more"
                 }
               },
               "index": {
@@ -2479,6 +2473,11 @@
                   "Fix_error": "Fix the error and re-publish your app to re-activate",
                   "Edit_automation": "Edit automation",
                   "No_details": "No details found"
+                },
+                "StatusRenderer":{
+                  "Error":"Error",
+                  "Stopped":"Stopped",
+                  "Success":"Success"
                 }
               },
               "index": {
@@ -2509,23 +2508,20 @@
                   "Restore": "Restore",
                   "Delete": "Delete",
                   "Download": "Download",
+                  "Delete_backup":"Delete Backup",
+                  "Confirm_Deletion":"Confirm Deletion",
                   "delete_backup": "Are you sure you wish to delete this backup? This action cannot be undone.",
                   "Continue": "Continue",
                   "Confirm_restore": "Confirm restore",
                   "Backup": "Backup"
                 },
                 "CreateRestoreModal": {
-                  "Backup": "Backup",
+                  "Backup": "'s Backup",
                   "Restore_Backup": "Restore Backup",
                   "Back_version": "Back up your current version",
                   "Confirm_Restore": "Confirm Restore",
                   "Create_backup": "Create a backup of your current app to allow you to roll back after restoring this backup",
                   "Backup_name": "Backup name"
-                },
-                "TypeRenderer": {
-                  "undefined": "undefined",
-                  "published": "published",
-                  "pre-restore": "pre-restore"
                 }
               },
               "index": {
@@ -2598,11 +2594,12 @@
               "Last_published": "Last published",
               "ago": "ago",
               "Unpublish": "Unpublish",
-              "Last Edited": "Last Edited",
+              "Last_Edited": "Last Edited",
               "You": "You",
               "Last_edited": "Last edited",
-              "New version": "New version",
-              "is available": "is available",
+              "Version":"Version",
+              "New_version": "New version",
+              "is_available": "is available",
               "Update": "Update",
               "latest": "You're running the latest",
               "Access": "Access",
@@ -2679,11 +2676,14 @@
               "Friendly_name": "Friendly name",
               "Type": "Type",
               "Source": "Source",
+              "Version": "Version",
+              "License": "License",
               "Author": "Author",
               "Delete": "Delete"
             }
           },
           "index": {
+            "Type":"Type",
             "All_plugins": "All plugins",
             "Components": "Components",
             "Datasources": "Datasources",
@@ -2695,16 +2695,16 @@
           }
         },
         "settings": {
-          "index": {
+          "auth":{
+            "index": {
             "Visit_organisation": "Visit the organisation page to update the platform URL",
             "Leave_blank": "Leave blank to use the default callback URL",
             "Client_ID": "Client ID",
             "Client_secret": "Client secret",
-            "Callback URL": "Callback URL",
-            "Sheets URL": "Sheets URL",
-            "Config URL": "Config URL",
-            "Client ID": "Client ID",
-            "Client Secret": "Client Secret",
+            "Callback_URL": "Callback URL",
+            "Sheets_URL": "Sheets URL",
+            "Config_URL": "Config URL", 
+            "Client_Secret": "Client Secret",
             "Vist_organisation": "Vist the organisation page to update the platform URL",
             "Upload_own": "Upload your own",
             "Please_required": "Please fill in all required",
@@ -2740,312 +2740,322 @@
             "Auth_scopes": "Auth scopes cannot contain spaces, double quotes or backslashes",
             "Auth_exists": "Auth scope already exists",
             "openid": "openid"
-          }
-        },
-        "email": {
-          "_layout": {
-            "Error_fetching": "Error fetching email templates"
+            }
           },
-          "[template]": {
-            "Template_saved": "Template saved",
-            "Failed_update": "Failed to update template settings",
-            "Email": "Email",
-            "Change_email": "Change the email template here. Add dynamic content by using the bindings menu on the right",
-            "Edit": "Edit",
-            "Bindings": "Bindings",
-            "Template_Bindings": "Template Bindings",
-            "Common_Bindings": "Common Bindings",
-            "Preview": "Preview",
+          "email": {
+            "_layout": {
+              "Error_fetching": "Error fetching email templates"
+            },
+            "[template]": {
+              "Template_saved": "Template saved",
+              "Failed_update": "Failed to update template settings",
+              "Email": "Email",
+              "Change_email": "Change the email template here. Add dynamic content by using the bindings menu on the right",
+              "Edit": "Edit",
+              "Bindings": "Bindings",
+              "Templates":"Templates",
+              "Template_Bindings": "Template Bindings",
+              "Common":"Common",
+              "Common_Bindings": "Common Bindings",
+              "Preview": "Preview",
+              "Save": "Save"
+            },
+            "index": {
+              "Settings_saved": "Settings saved",
+              "Failed_save": "Failed to save email settings, reason",
+              "Unknown": "Unknown",
+              "Settings_cleared": "Settings cleared",
+              "Failed_clear": "Failed to clear email settings, reason",
+              "Error_fetching": "Error fetching SMTP config",
+              "Email": "Email",
+              "Add_SMTP": "Add your SMTP details to send automated emails from Budibase",
+              "app_benefit": "To allow your app to benefit from automated auth emails, add your SMTP details below",
+              "Host": "Host",
+              "Security_type": "Security type",
+              "Port": "Port",
+              "Require_sign_in": "Require sign in",
+              "User": "User",
+              "Password": "Password",
+              "Save": "Save",
+              "Reset": "Reset",
+              "Templates": "Templates",
+              "ready-made_email": "Budibase comes out of the box with ready-made email templates to help with user onboarding"
+            }
+          },
+          "enviroment": {
+            "_components": {
+              "EditVariableColumn": {
+                "Edit": "Edit",
+                "Delete_Environment": "Delete Environment Variable",
+                "Confirm_Deletion": "Confirm Deletion",
+                "delete_environment": "Are you sure you wish to delete the environment variable",
+                "action_undone": "This action cannot be undone"
+              }
+            },
+            "index": {
+              "Error_environment": "Error loading environment variables",
+              "Error_saving": "Error saving variable",
+              "Environment_Variables": "Environment Variables",
+              "Business_plan": "Business plan",
+              "Add_manage_environment": "Add and manage environment variables for development and production",
+              "Budibase_encryption": "Your Budibase installation does not have a key for encryption, please update your app service's environment variables to contain an 'ENCRYPTION_KEY' value",
+              "No_encryption": "No encryption key found",
+              "Add_Variable": "Add Variable"
+            }
+          },
+          "branding": {
+            "Error_uploading": "Error uploading logo",
+            "Error_favicon": "Error uploading favicon",
+            "Branding_updated": "Branding settings updated",
+            "Branding_failed": "Branding updated failed",
+            "Branding": "Branding",
+            "Business": "Business",
+            "Pro": "Pro",
+            "Remove_branding": "Remove all Budibase branding and use your own",
+            "Logo": "Logo", 
+            "File_large": "File too large. 20mb limit",
+            "Favicon": "Favicon",
+            "Upload_image": "Upload image",
+            "Title": "Title",
+            "Remove_brand": "Remove Budibase brand from emails",
+            "Login_page": "Login page",
+            "Header": "Header",
+            "Button": "Button",
+            "Remove_testimonials": "Remove customer testimonials",
+            "Application_previews": "Application previews",
+            "Customise_tags": "Customise the meta tags on your app preview",
+            "Image_URL": "Image URL",
+            "Description": "Description",
+            "Upgrade": "Upgrade",
             "Save": "Save"
           },
-          "index": {
-            "Settings saved": "Settings saved",
-            "Failed_save": "Failed to save email settings, reason",
-            "Unknown": "Unknown",
-            "Settings_cleared": "Settings cleared",
-            "Failed_clear": "Failed to clear email settings, reason",
-            "Error_fetching": "Error fetching SMTP config",
-            "Email": "Email",
-            "Add_SMTP": "Add your SMTP details to send automated emails from Budibase",
-            "app_benefit": "To allow your app to benefit from automated auth emails, add your SMTP details below",
-            "Host": "Host",
-            "Security_type": "Security type",
-            "Port": "Port",
-            "Require_sign_in": "Require sign in",
-            "User": "User",
-            "Password": "Password",
-            "Save": "Save",
-            "Reset": "Reset",
-            "Templates": "Templates",
-            "ready-made_email": "Budibase comes out of the box with ready-made email templates to help with user onboarding"
-          }
-        },
-        "enviroment": {
-          "_components": {
-            "EditVariableColumn": {
-              "Edit": "Edit",
-              "Delete_Environment": "Delete Environment Variable",
-              "Confirm Deletion": "Confirm Deletion",
-              "delete_environment": "Are you sure you wish to delete the environment variable",
-              "action_undone": "This action cannot be undone"
-            }
+          "organisation": {
+            "Error_saving": "Error saving org config",
+            "Organisation": "Organisation",
+            "Edit_manage ": "Edit and manage all of your organisation settings",
+            "Org_name": "Org. name",
+            "Update_URL": "Update the Platform URL to match your Budibase web URL. This keeps email templates and authentication configs up to date",
+            "Platform_URL": "Platform URL",
+            "Analytics": "Analytics",
+            "Save": "Save"
           },
-          "index": {
-            "Error_environment": "Error loading environment variables",
-            "Error_saving": "Error saving variable",
-            "Environment_Variables": "Environment Variables",
-            "Business_plan": "Business plan",
-            "Add_manage_environment": "Add and manage environment variables for development and production",
-            "Budibase_encryption": "Your Budibase installation does not have a key for encryption, please update your app service's environment variables to contain an 'ENCRYPTION_KEY' value",
-            "No_encryption": "No encryption key found",
-            "Add_Variable": "Add Variable"
+          "version": {
+            "Updating_budibase": "Updating budibase",
+            "Bearer_budibase": "Bearer budibase",
+            "installation_date": "Your budibase installation is up to date",
+            "Error_installing": "`Error installing budibase update",
+            "Error_getting": "Error getting Budibase version",
+            "Error_latest": "Error getting the latest Budibase version",
+            "Version": "Version",
+            "Keep_installation": "Keep your budibase installation up to date to take advantage of the latest features, security updates and much more",
+            "Current_version": "Current version",
+            "Latest_version": "Latest version",
+            "version_released": "This version was released on",
+            "at": "at",
+            "Update_Budibase": "Update Budibase",
+            "Update": "Update",
+            "update_latest_version?": "Are you sure you want to update your budibase installation to the  latest version?"
           }
-        },
-        "branding": {
-          "Error_uploading": "Error uploading logo",
-          "Error_favicon": "Error uploading favicon",
-          "Branding_updated": "Branding settings updated",
-          "Branding_failed": "Branding updated failed",
-          "Branding": "Branding",
-          "Business": "Business",
-          "Pro": "Pro",
-          "Remove_branding": "Remove all Budibase branding and use your own",
-          "Logo": "Logo",
-          "File_large": "File too large. 20mb limit",
-          "Favicon": "Favicon",
-          "Upload_image": "Upload image",
-          "Title": "Title",
-          "Remove_brand": "Remove Budibase brand from emails",
-          "Login_page": "Login page",
-          "Header": "Header",
-          "Button": "Button",
-          "Remove_testimonials": "Remove customer testimonials",
-          "Application_previews": "Application previews",
-          "Customise_tags": "Customise the meta tags on your app preview",
-          "Image_URL": "Image URL",
-          "Description": "Description",
-          "Upgrade": "Upgrade",
-          "Save": "Save"
-        },
-        "organisation": {
-          "Error_saving": "Error saving org config",
-          "Organisation": "Organisation",
-          "Edit_manage ": "Edit and manage all of your organisation settings",
-          "Org_name": "Org. name",
-          "Update_URL": "Update the Platform URL to match your Budibase web URL. This keeps email templates and authentication configs up to date",
-          "Platform_URL": "Platform URL",
-          "Analytics": "Analytics",
-          "Save": "Save"
-        },
-        "version": {
-          "Updating_budibase": "Updating budibase",
-          "Bearer_budibase": "Bearer budibase",
-          "installation_date": "Your budibase installation is up to date",
-          "Error_installing": "`Error installing budibase update",
-          "Error_getting": "Error getting Budibase version",
-          "Error_latest": "Error getting the latest Budibase version",
-          "Version": "Version",
-          "Keep_installation": "Keep your budibase installation up to date to take advantage of the latest features, security updates and much more",
-          "Current_version": "Current version",
-          "Latest_version": "Latest version",
-          "version_released": "This version was released on",
-          "at": "at",
-          "Update_Budibase": "Update Budibase",
-          "Update": "Update",
-          "update_latest_version?": "Are you sure you want to update your budibase installation to the  latest version?"
-        }
-      },
-      "users": {
-        "groups": {
-          "_components": {
-            "AppAddModal": {
-              "Add_group": "Add app to group",
-              "Confirm": "Confirm",
-              "Next": "Next",
-              "Back": "Back",
-              "Select_roles": "Select an app to assign roles for members of",
-              "Select_role": "Select the role that all members of",
-              "will_for": "will have for"
-            },
-            "CreateEditGroupModal": {
-              "Edit_group": "Edit group",
-              "Create_group": "Create group",
-              "Name": "Name",
-              "Icon": "Icon",
-              "Color": "Color"
-            },
-            "RemoveUserTableRenderer": {
-              "Remove": "Remove"
-            }
-          },
-          "[groupId]": {
-            "Error_getting": "Error getting user list",
-            "User_deleted": "User group deleted successfully",
-            "Failed_delete": "Failed to delete user group",
-            "Failed_save": "Failed to save user group",
-            "Error_fetching": "Error fetching user group data",
-            "Groups": "Groups",
-            "Edit": "Edit",
-            "Delete": "Delete",
-            "Users": "Users",
-            "Add_user": "Add user",
-            "user_doesn't_have": "This user group doesn't have any users",
-            "Apps": "Apps",
-            "group_access": "This group doesn't have access to any apps",
-            "Delete_group": "Delete user group",
-            "delete ": "Are you sure you wish to delete"
-          },
-          "index": {
-            "group_created": "User group created successfully",
-            "Failed_save_group": "Failed to save group",
-            "Error_getting_groups": "Error getting user groups",
-            "Pro plan": "Pro plan",
-            "Easily_assign": "Easily assign and manage your users' access with groups",
-            "Contact_account": "Contact your account holder to upgrade your plan",
-            "Add_group": "Add group",
-            "Upgrade": "Upgrade",
-            "View_Plans": "View Plans",
-            "Search": "Search"
-          }
-        },
+        }, 
         "users": {
-          "_components": {
-            "AppUserModal": {
-              "enter_email": "Please enter an email address",
-              "Add_new_users": "Add new users",
-              "Add_users": "Add users",
-              "Cancel": "Cancel",
-              "Add_email": "Add email",
-              "No_groups": "No groups",
-              "Groups": "Groups"
+          "groups": {
+            "_components": {
+              "AppAddModal": {
+                "Add_group": "Add app to group",
+                "Confirm": "Confirm",
+                "Next": "Next",
+                "Back": "Back",
+                "Select_roles": "Select an app to assign roles for members of",
+                "Select_role": "Select the role that all members of",
+                "will_for": "will have for"
+              },
+              "CreateEditGroupModal": {
+                "Edit_group": "Edit group",
+                "Create_group": "Create group",
+                "Save":"Save",
+                "Name": "Name",
+                "Icon": "Icon",
+                "Color": "Color"
+              },
+              "RemoveUserTableRenderer": {
+                "Remove": "Remove"
+              }
             },
-            "DeleteUserModal": {
-              "User": "User",
-              "deleted": "deleted",
-              "Error_deleting": "Error deleting user",
-              "Delete_User": "Delete User",
-              "Cancel": "Cancel",
-              "want_delete": "Are you sure you want to delete"
+            "[groupId]": {
+              "Error_getting": "Error getting user list",
+              "User_deleted": "User group deleted successfully",
+              "Failed_delete": "Failed to delete user group",
+              "Failed_save": "Failed to save user group",
+              "Error_fetching": "Error fetching user group data",
+              "Groups": "Groups",
+              "Edit": "Edit",
+              "Delete": "Delete",
+              "Users": "Users",
+              "Add_user": "Add user",
+              "user_doesn't_have": "This user group doesn't have any users",
+              "Apps": "Apps",
+              "group_access": "This group doesn't have access to any apps",
+              "Delete_group": "Delete user group",
+              "delete ": "Are you sure you wish to delete"
             },
-            "DeletionFailureModal": {
-              "users_deleted": "users deleted",
-              "Oops": "Oops",
-              "problem_deleting": "However there was a problem deleting some users",
-              "was_problem": "There was a problem deleting some users",
-              "Close": "Close"
-            },
-            "ForceReserPasswordModal": {
-              "Password_reset": "Password reset successfully",
-              "Error_resetting": "Error resetting password",
-              "Force_Reset": "Force Reset User Password",
-              "Reset_password": "Reset password",
-              "Cancel": "Cancel",
-              "Before_reset": "Before you reset the users password, do not forget to copy the new password. The user will need this to login. Once the user has logged in they will be asked to create a new password that is more secure"
-            },
-            "ImportUsersModal": {
-              "Max_limit": "Max limit for upload is 1000 users. Please reduce file size and try again",
-              "check_email": "Error, please check the following email",
-              "Files_exceed": "Files cannot exceed",
-              "MB": "MB",
-              "try_again": "Please try again with smaller files",
-              "Import_users": "Import users",
-              "Done": "Done",
-              "Cancel": "Cancel",
-              "Import_email": "Import your users email addresses from a CSV file",
-              "Upload": "Upload",
-              "No_groups": "No groups",
-              "Groups": "Groups"
-            },
-            "InvitedModal": {
-              "Users_invited": "Users invited",
-              "Oops": "Oops",
-              "problem_inviting": "However there was a problem inviting some users",
-              "was_problem": "There was a problem inviting users",
-              "Done": "Done",
-              "receive_invite": "Your users should now receive an email invite to get access to their Budibase account"
-            },
-            "OnboardingTypeModal": {
-              "Choose_onboarding": "Choose your onboarding",
-              "Done": "Done",
-              "Cancel": "Cancel",
-              "Send_invites": "Send email invites",
-              "Generate_passwords": "Generate passwords for each user"
-            },
-            "PasswordModal": {
-              "Users_created": "Users created",
-              "Oops": "Oops",
-              "problem_creating": "However there was a problem creating some users",
-              "was_problem": "There was a problem creating some users",
-              "Done": "Done",
-              "Cancel": "Cancel",
-              "can_accessed": "All your new users can be accessed through the autogenerated passwords. Take note of these passwords or download the CSV file",
-              "Passwords_CSV": "Passwords CSV"
-            },
-            "RemoveGroupTableRenderer": {
-              "Remove": "Remove"
-            },
-            "RoleTableRenderer": {
-              "has_access": "Only has access to published apps",
-              "Access_app": "Access to the app builder",
-              "Full_access": "Full access",
-              "Not_available": "Not available"
-            },
-            "TagsTableRenderer": {
-              "more": "more"
-            },
-            "UpdateRolesModal": {
-              "No_Access": "No Access",
-              "Role_updated": "Role updated",
-              "Failed_update": "Failed to update role",
-              "Update_Role": "Update App Role",
-              "Update_role": "Update role",
-              "Cancel": "Cancel",
-              "Update": "Update",
-              "role for": "role for",
-              "Role": "Role"
+            "index": {
+              "group_created": "User group created successfully",
+              "Failed_save_group": "Failed to save group",
+              "Error_getting_groups": "Error getting user groups",
+              "Groups":"Groups",
+              "Pro_plan": "Pro plan",
+              "Easily_assign": "Easily assign and manage your users' access with groups",
+              "Contact_account": "Contact your account holder to upgrade your plan",
+              "Add_group": "Add group",
+              "Upgrade": "Upgrade",
+              "View_Plans": "View Plans",
+              "Search": "Search"
             }
           },
-          "[userId]": {
-            "Error_updating": "Error updating user",
-            "Error_getting": "Error getting user groups",
-            "Users": "Users",
-            "Force_reset": "Force password reset",
-            "Delete": "Delete",
-            "Details": "Details",
-            "Email": "Email",
-            "First_name": "First name",
-            "Last name": "Last name",
-            "Role": "Role",
-            "Groups": "Groups",
-            "Add_group": "Add to group",
-            "groups": "This user is not in any groups",
-            "Apps": "Apps",
-            "admin_access": "This user's role grants admin access to all apps",
-            "user_access": "This user doesn't have access to any apps"
-          },
-          "index": {
-            "Error_inviting": "Error inviting user",
-            "Duplicated": "Duplicated! There is no new users to add",
-            "created_user": "Successfully created user",
-            "Error_creating": "Error creating user",
-            "cannot_delete": "You cannot delete yourself",
-            "Successfully_deleted": "Successfully deleted",
-            "rows": "rows",
-            "Error_deleting": "Error deleting rows",
-            "Error_fetching": "Error fetching user group data",
-            "Users": "Users",
-            "Add_users_control": "Add users and control who gets access to your published apps",
-            "Add_users": "Add users",
-            "Import": "Import"
+          "users": {
+            "_components": {
+              "AppUserModal": {
+                "enter_email": "Please enter an email address",
+                "Add_new_users": "Add new users",
+                "Add_users": "Add users",
+                "Cancel": "Cancel",
+                "Adress":"Email address",
+                "Add_email": "Add email",
+                "No_groups": "No groups",
+                "Groups": "Groups"
+              },
+              "AppRoleRenderer":{
+                "Custom":"Custom role"
+              },
+              "DeleteUserModal": {
+                "User": "User",
+                "deleted": "deleted",
+                "Error_deleting": "Error deleting user",
+                "Delete_User": "Delete User",
+                "Cancel": "Cancel",
+                "want_delete": "Are you sure you want to delete"
+              },
+              "DeletionFailureModal": {
+                "users_deleted": "users deleted",
+                "Oops": "Oops",
+                "problem_deleting": "However there was a problem deleting some users",
+                "was_problem": "There was a problem deleting some users",
+                "Close": "Close"
+              },
+              "ForceReserPasswordModal": {
+                "Password_reset": "Password reset successfully",
+                "Error_resetting": "Error resetting password",
+                "Force_Reset": "Force Reset User Password",
+                "Reset_password": "Reset password",
+                "Cancel": "Cancel",
+                "Before_reset": "Before you reset the users password, do not forget to copy the new password. The user will need this to login. Once the user has logged in they will be asked to create a new password that is more secure"
+              },
+              "ImportUsersModal": {
+                "Max_limit": "Max limit for upload is 1000 users. Please reduce file size and try again",
+                "check_email": "Error, please check the following email",
+                "Files_exceed": "Files cannot exceed",
+                "MB": "MB",
+                "try_again": "Please try again with smaller files",
+                "Import_users": "Import users",
+                "Done": "Done",
+                "Cancel": "Cancel",
+                "Import_email": "Import your users email addresses from a CSV file",
+                "Upload": "Upload",
+                "No_groups": "No groups",
+                "Groups": "Groups"
+              },
+              "InvitedModal": {
+                "Users_invited": "Users invited",
+                "Oops": "Oops",
+                "problem_inviting": "However there was a problem inviting some users",
+                "was_problem": "There was a problem inviting users",
+                "Done": "Done",
+                "receive_invite": "Your users should now receive an email invite to get access to their Budibase account"
+              },
+              "OnboardingTypeModal": {
+                "Choose_onboarding": "Choose your onboarding",
+                "Done": "Done",
+                "Cancel": "Cancel",
+                "Send_invites": "Send email invites",
+                "Generate_passwords": "Generate passwords for each user"
+              },
+              "PasswordModal": {
+                "Users_created": "Users created",
+                "Oops": "Oops",
+                "problem_creating": "However there was a problem creating some users",
+                "was_problem": "There was a problem creating some users",
+                "Done": "Done",
+                "Cancel": "Cancel",
+                "can_accessed": "All your new users can be accessed through the autogenerated passwords. Take note of these passwords or download the CSV file",
+                "Passwords_CSV": "Passwords CSV"
+              },
+              "RemoveGroupTableRenderer": {
+                "Remove": "Remove"
+              },
+              "RoleTableRenderer": {
+                "has_access": "Only has access to published apps",
+                "Access_app": "Access to the app builder",
+                "Full_access": "Full access",
+                "Not_available": "Not available"
+              },
+              "TagsTableRenderer": {
+                "more": "more"
+              },
+              "UpdateRolesModal": {
+                "No_Access": "No Access",
+                "Role_updated": "Role updated",
+                "Failed_update": "Failed to update role",
+                "Update_Role": "Update App Role",
+                "Update_role": "Update role",
+                "Cancel": "Cancel",
+                "Update": "Update",
+                "role_for": "'s role for",
+                "Role": "Role"
+              }
+            },
+            "[userId]": {
+              "Error_updating": "Error updating user",
+              "Error_getting": "Error getting user groups",
+              "Users": "Users",
+              "Force_reset": "Force password reset",
+              "Delete": "Delete",
+              "Details": "Details",
+              "Email": "Email",
+              "First_name": "First name",
+              "Last_name": "Last name",
+              "Role": "Role",
+              "Groups": "Groups",
+              "Add_group": "Add to group",
+              "groups": "This user is not in any groups",
+              "Apps": "Apps",
+              "admin_access": "This user's role grants admin access to all apps",
+              "user_access": "This user doesn't have access to any apps"
+            },
+            "index": {
+              "Error_inviting": "Error inviting user",
+              "Duplicated": "Duplicated! There is no new users to add",
+              "created_user": "Successfully created user",
+              "Error_creating": "Error creating user",
+              "cannot_delete": "You cannot delete yourself",
+              "Successfully_deleted": "Successfully deleted",
+              "rows": "rows",
+              "Error_deleting": "Error deleting rows",
+              "Error_fetching": "Error fetching user group data",
+              "Users": "Users",
+              "Add_users_control": "Add users and control who gets access to your published apps",
+              "Add_users": "Add users",
+              "Import": "Import",
+              "Search":"Search"
+            }
           }
+        },
+        "_layout": {
+          "Error_getting": "Error getting org config"
         }
-      },
-      "_layout": {
-        "Error_getting": "Error getting org config"
-      }
+      } 
     },
     "index": {
-      "Error setting org": "Error setting org"
+      "Error_setting_org": "Error setting org"
     }
   }
 }

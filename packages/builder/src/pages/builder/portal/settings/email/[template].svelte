@@ -15,6 +15,8 @@
   import TemplateBindings from "./_components/TemplateBindings.svelte"
   import { Breadcrumbs, Breadcrumb } from "components/portal/page"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   // this is the email purpose
   export let template
 
@@ -35,9 +37,13 @@
     try {
       // Save your template config
       await email.templates.save(selectedTemplate)
-      notifications.success("Template saved")
+      notifications.success(
+        $_("pages.builder.portal.settings.email.[template].Template_saved")
+      )
     } catch (error) {
-      notifications.error("Failed to update template settings")
+      notifications.error(
+        $_("pages.builder.portal.settings.email.[template].Failed_update")
+      )
     }
   }
 
@@ -81,14 +87,13 @@
     <Body>
       {description}
       <br />
-      Change the email template here. Add dynamic content by using the bindings menu
-      on the right.
+      {$_("pages.builder.portal.settings.email.[template].Change_email")}
     </Body>
   </Layout>
 
   <div>
     <Tabs noHorizPadding selected="Edit" on:select={fixMountBug}>
-      <Tab title="Edit">
+      <Tab title={$_("pages.builder.portal.settings.email.[template].Edit")}>
         <div class="template-editor">
           <div class="template-text-editor">
             <Editor
@@ -102,19 +107,40 @@
             />
           </div>
           <div class="bindings-editor">
-            <Heading size="XS">Bindings</Heading>
+            <Heading size="XS"
+              >{$_(
+                "pages.builder.portal.settings.email.[template].Bindings"
+              )}</Heading
+            >
             {#if mounted}
-              <Tabs noHorizPadding selected="Template">
-                <Tab title="Template">
+              <Tabs
+                noHorizPadding
+                selected={$_(
+                  "pages.builder.portal.settings.email.[template].Templates"
+                )}
+              >
+                <Tab
+                  title={$_(
+                    "pages.builder.portal.settings.email.[template].Templates"
+                  )}
+                >
                   <TemplateBindings
-                    title="Template Bindings"
+                    title={$_(
+                      "pages.builder.portal.settings.email.[template].Template_Bindings"
+                    )}
                     bindings={templateBindings}
                     onBindingClick={setTemplateBinding}
                   />
                 </Tab>
-                <Tab title="Common">
+                <Tab
+                  title={$_(
+                    "pages.builder.portal.settings.email.[template].Common"
+                  )}
+                >
                   <TemplateBindings
-                    title="Common Bindings"
+                    title={$_(
+                      "pages.builder.portal.settings.email.[template].Common_Bindings"
+                    )}
                     bindings={$email?.definitions?.bindings?.common}
                     onBindingClick={setTemplateBinding}
                   />
@@ -124,7 +150,7 @@
           </div>
         </div>
       </Tab>
-      <Tab title="Preview">
+      <Tab title={$_("pages.builder.portal.settings.email.[template].Preview")}>
         <div class="preview">
           <iframe title="preview" srcdoc={previewContent} />
         </div>
@@ -133,7 +159,9 @@
   </div>
 
   <div>
-    <Button cta on:click={saveTemplate}>Save</Button>
+    <Button cta on:click={saveTemplate}
+      >{$_("pages.builder.portal.settings.email.[template].Save")}</Button
+    >
   </div>
 </Layout>
 

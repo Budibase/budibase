@@ -3,7 +3,7 @@
   import { goto } from "@roxi/routify"
   import { auth, admin, licensing } from "stores/portal"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
-  import { _ } from "lang/i18n"
+  import { _ } from "../../../../../lang/i18n"
 </script>
 
 {#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING) && !$licensing.isEnterprisePlan}

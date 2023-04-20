@@ -5,6 +5,8 @@
   import PanelHeader from "./PanelHeader.svelte"
   import { helpers } from "@budibase/shared-core"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let title = ""
   export let onBack = null
   export let onNext = () => {}
@@ -23,7 +25,9 @@
     }
 
     if (name === "rejectUnauthorized") {
-      return "Reject Unauthorized"
+      return $_(
+        "pages.builder.portal.apps.onboarding._components.DatasourceConfigPanel.Reject_Unauthorized"
+      )
     }
 
     return capitalise(name)
@@ -45,7 +49,9 @@
 
   const validateRequired = value => {
     if (value.length < 1) {
-      return "Required field"
+      return $_(
+        "pages.builder.portal.apps.onboarding._components.DatasourceConfigPanel.Required_field"
+      )
     }
   }
 
@@ -83,7 +89,9 @@
 <div>
   <PanelHeader
     {title}
-    subtitle="Fill in the required fields to fetch your tables"
+    subtitle={$_(
+      "pages.builder.portal.apps.onboarding._components.DatasourceConfigPanel.Fill_in"
+    )}
     {onBack}
   />
   <div class="form">
@@ -109,7 +117,11 @@
   {#if isGoogle}
     <GoogleButton disabled={!isValid} preAuthStep={handleNext} />
   {:else}
-    <Button cta disabled={!isValid} on:click={handleNext}>Connect</Button>
+    <Button cta disabled={!isValid} on:click={handleNext}
+      >{$_(
+        "pages.builder.portal.apps.onboarding._components.DatasourceConfigPanel.Connect"
+      )}</Button
+    >
   {/if}
 </div>
 
