@@ -37,14 +37,6 @@ export function createAdminStore() {
     })
   }
 
-  async function checkImportComplete() {
-    const result = await API.checkImportComplete()
-    admin.update(store => {
-      store.importComplete = result ? result.imported : false
-      return store
-    })
-  }
-
   async function getEnvironment() {
     const environment = await API.getEnvironment()
     admin.update(store => {
@@ -92,7 +84,6 @@ export function createAdminStore() {
   return {
     subscribe: admin.subscribe,
     init,
-    checkImportComplete,
     unload,
     getChecklist,
   }
