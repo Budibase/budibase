@@ -1,4 +1,4 @@
-import { generator, uuid } from "."
+import { generator, uuid, quotas } from "."
 import * as db from "../../../src/db/utils"
 import {
   Account,
@@ -28,6 +28,7 @@ export const account = (): Account => {
     name: generator.name(),
     size: "10+",
     profession: "Software Engineer",
+    quotaUsage: quotas.usage()
   }
 }
 
