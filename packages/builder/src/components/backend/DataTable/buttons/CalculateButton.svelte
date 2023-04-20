@@ -9,7 +9,6 @@
 
 <ActionButton
   icon="Calculator"
-  size="S"
   quiet
   on:click={modal.show}
   active={view.field && view.calculation}

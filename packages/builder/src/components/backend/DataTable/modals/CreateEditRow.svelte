@@ -23,9 +23,9 @@
   async function saveRow() {
     errors = []
     try {
-      await API.saveRow({ ...row, tableId: table._id })
+      const res = await API.saveRow({ ...row, tableId: table._id })
       notifications.success("Row saved successfully")
-      dispatch("updaterows")
+      dispatch("updaterows", res._id)
     } catch (error) {
       const response = error.json
       if (error.handled && response?.errors) {
