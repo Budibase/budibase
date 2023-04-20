@@ -3662,6 +3662,12 @@
         "info": "Row selection is only compatible with internal or SQL tables"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No rows found"
+      },
+      {
         "section": true,
         "name": "On Row Click",
         "settings": [
@@ -4376,6 +4382,12 @@
             "nested": true
           },
           {
+            "type": "text",
+            "label": "Empty text",
+            "key": "noRowsMessage",
+            "defaultValue": "No rows found"
+          },
+          {
             "type": "searchfield",
             "label": "Search fields",
             "key": "searchColumns",
@@ -4531,6 +4543,12 @@
         "type": "boolean",
         "label": "Paginate",
         "key": "paginate"
+      },
+      {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No rows found"
       },
       {
         "section": true,
@@ -4946,6 +4964,17 @@
         "defaultValue": "spectrum--medium"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "We couldn't find a row to display",
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "Create",
+          "invert": true
+        }
+      },
+      {
         "section": true,
         "name": "Fields",
         "settings": [
@@ -5063,6 +5092,12 @@
         "label": "Height",
         "key": "height",
         "defaultValue": "426px"
+      },
+      {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No data"
       },
       {
         "section": true,
