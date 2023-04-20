@@ -2,7 +2,6 @@ import { quotas } from "@budibase/pro"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTable } from "../../../integrations/utils"
-import { gridSocket } from "../../../websockets"
 import { Ctx } from "@budibase/types"
 import * as utils from "./utils"
 
@@ -48,9 +47,6 @@ export async function patch(ctx: any): Promise<any> {
       ctx.eventEmitter.emitRow(`row:update`, appId, row, table)
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
-
-    // Notify websocket change
-    gridSocket?.emit("row-update", { id: row._id })
   } catch (err) {
     ctx.throw(400, err)
   }
@@ -73,9 +69,6 @@ export const save = async (ctx: any) => {
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
   ctx.message = `${table.name} saved successfully`
   ctx.body = row
-
-  // Notify websocket change
-  gridSocket?.emit("row-update", { id: row._id })
 }
 export async function fetchView(ctx: any) {
   const tableId = getTableId(ctx)
@@ -114,8 +107,6 @@ export async function destroy(ctx: any) {
     response = rows
     for (let row of rows) {
       ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-      // Notify websocket change
-      gridSocket?.emit("row-update", { id: row._id })
     }
   } else {
     let resp = await quotas.addQuery(() => pickApi(tableId).destroy(ctx), {
@@ -125,8 +116,6 @@ export async function destroy(ctx: any) {
     response = resp.response
     row = resp.row
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-    // Notify websocket change
-    gridSocket?.emit("row-update", { id: row._id })
   }
   ctx.status = 200
   // for automations include the row that was deleted
