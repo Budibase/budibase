@@ -1,4 +1,5 @@
 import { writable, get } from "svelte/store"
+import { GutterWidth } from "../lib/constants"
 
 export const createStores = () => {
   const menu = writable({
@@ -22,8 +23,9 @@ export const deriveStores = context => {
     e.preventDefault()
     focusedCellId.set(cellId)
     menu.set({
-      left: e.clientX - $bounds.left + 44 + ($stickyColumn?.width || 0),
-      top: e.clientY - $bounds.top + $rowHeight + 4,
+      left:
+        e.clientX - $bounds.left + GutterWidth + ($stickyColumn?.width || 0),
+      top: e.clientY - $bounds.top + $rowHeight,
       visible: true,
     })
   }

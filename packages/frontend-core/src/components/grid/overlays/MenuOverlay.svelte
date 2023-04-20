@@ -42,7 +42,7 @@
     <Menu>
       <MenuItem
         icon="Copy"
-        on:click={clipboard.actions.copyCell}
+        on:click={clipboard.actions.copy}
         on:click={menu.actions.close}
       >
         Copy
@@ -50,7 +50,7 @@
       <MenuItem
         icon="Paste"
         disabled={$copiedCell == null}
-        on:click={clipboard.actions.pasteCell}
+        on:click={clipboard.actions.paste}
         on:click={menu.actions.close}
       >
         Paste
@@ -85,7 +85,7 @@
   .menu {
     position: absolute;
     background: var(--cell-background);
-    border: var(--cell-border);
+    border: 1px solid var(--spectrum-global-color-gray-300);
     width: 180px;
     border-radius: 4px;
     display: flex;
