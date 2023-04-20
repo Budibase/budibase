@@ -38,8 +38,4 @@ jobs:
           # setup the username and email.
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
-          lerna version prerelease --force-publish --no-push --y
-          git add lerna.json
-          git commit -m 'Update version'
-          git push
-          git push --tags
+          ./scripts/bumpLernaVersion.sh
