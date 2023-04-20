@@ -1,5 +1,4 @@
 import env from "../../environment"
-import * as apps from "../../utilities/appService"
 import * as eventHelpers from "./events"
 import {
   accounts,
@@ -30,9 +29,9 @@ import {
   PlatformUser,
   PlatformUserByEmail,
   RowResponse,
-  SearchUsersRequest,
   User,
   SaveUserOpts,
+  Account,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
@@ -90,7 +89,8 @@ const buildUser = async (
     requirePassword: true,
   },
   tenantId: string,
-  dbUser?: any
+  dbUser?: any,
+  account?: Account
 ): Promise<User> => {
   let { password, _id } = user
 
@@ -101,7 +101,7 @@ const buildUser = async (
 
   let hashedPassword
   if (password) {
-    if (await isPreventPasswordActions(user)) {
+    if (await isPreventPasswordActions(user, account)) {
       throw new HTTPError("Password change is disabled for this user", 400)
     }
     hashedPassword = opts.hashPassword ? await utils.hash(password) : password
@@ -172,7 +172,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   }
 }
 
-export async function isPreventPasswordActions(user: User) {
+export async function isPreventPasswordActions(user: User, account?: Account) {
   // when in maintenance mode we allow sso users with the admin role
   // to perform any password action - this prevents lockout
   if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE && user.admin?.global) {
@@ -190,8 +190,10 @@ export async function isPreventPasswordActions(user: User) {
   }
 
   // Check account sso
-  const account = await accountSdk.api.getAccount(user.email)
-  return !!(account && isSSOAccount(account))
+  if (!account) {
+    account = await accountSdk.api.getAccountByTenantId(tenancy.getTenantId())
+  }
+  return !!(account && account.email === user.email && isSSOAccount(account))
 }
 
 export const save = async (
@@ -275,9 +277,6 @@ export const save = async (
     await eventHelpers.handleSaveEvents(builtUser, dbUser)
     await platform.users.addUser(tenantId, builtUser._id!, builtUser.email)
     await cache.user.invalidateUser(response.id)
-
-    // let server know to sync user
-    await apps.syncUserInApps(_id, dbUser)
 
     await Promise.all(groupPromises)
 
@@ -402,6 +401,7 @@ export const bulkCreate = async (
     newUsers.push(newUser)
   }
 
+  const account = await accountSdk.api.getAccountByTenantId(tenantId)
   // create the promises array that will be called by bulkDocs
   newUsers.forEach((user: any) => {
     usersToSave.push(
@@ -411,7 +411,9 @@ export const bulkCreate = async (
           hashPassword: true,
           requirePassword: user.requirePassword,
         },
-        tenantId
+        tenantId,
+        undefined, // no dbUser
+        account
       )
     )
   })
@@ -425,7 +427,6 @@ export const bulkCreate = async (
     // instead of relying on looping tenant creation
     await platform.users.addUser(tenantId, user._id, user.email)
     await eventHelpers.handleSaveEvents(user, undefined)
-    await apps.syncUserInApps(user._id)
   }
 
   const saved = usersToBulkSave.map(user => {
@@ -564,8 +565,6 @@ export const destroy = async (id: string) => {
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "deletion" })
-  // let server know to sync user
-  await apps.syncUserInApps(userId, dbUser)
 }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
@@ -574,8 +573,6 @@ const bulkDeleteProcessing = async (dbUser: User) => {
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "bulk-deletion" })
-  // let server know to sync user
-  await apps.syncUserInApps(userId, dbUser)
 }
 
 export const invite = async (

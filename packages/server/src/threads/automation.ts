@@ -27,8 +27,8 @@ import { processObject } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
-const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
-const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
+const FILTER_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.FILTER.stepId
+const LOOP_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 

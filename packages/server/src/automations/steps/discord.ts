@@ -4,6 +4,8 @@ import {
   AutomationActionStepId,
   AutomationStepSchema,
   AutomationStepInput,
+  AutomationStepType,
+  AutomationIOType,
 } from "@budibase/types"
 
 const DEFAULT_USERNAME = "Budibase Automate"
@@ -15,26 +17,26 @@ export const definition: AutomationStepSchema = {
   description: "Send a message to a Discord server",
   icon: "ri-discord-line",
   stepId: AutomationActionStepId.discord,
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   internal: false,
   inputs: {},
   schema: {
     inputs: {
       properties: {
         url: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Discord Webhook URL",
         },
         username: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Bot Name",
         },
         avatar_url: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Bot Avatar URL",
         },
         content: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Message",
         },
       },
@@ -43,15 +45,15 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         httpStatus: {
-          type: "number",
+          type: AutomationIOType.NUMBER,
           description: "The HTTP status code of the request",
         },
         response: {
-          type: "string",
+          type: AutomationIOType.STRING,
           description: "The response from the Discord Webhook",
         },
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the message sent successfully",
         },
       },

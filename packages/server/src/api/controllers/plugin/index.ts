@@ -1,30 +1,10 @@
-import { npmUpload, urlUpload, githubUpload, fileUpload } from "./uploaders"
-import {
-  plugins as pluginCore,
-  db as dbCore,
-  tenancy,
-  objectStore,
-} from "@budibase/backend-core"
-import { PluginType, FileType, PluginSource, Plugin } from "@budibase/types"
+import { npmUpload, urlUpload, githubUpload } from "./uploaders"
+import { plugins as pluginCore } from "@budibase/backend-core"
+import { PluginType, FileType, PluginSource } from "@budibase/types"
 import env from "../../../environment"
 import { ClientAppSocket } from "../../../websocket"
+import sdk from "../../../sdk"
 import { sdk as pro } from "@budibase/pro"
-
-export async function getPlugins(type?: PluginType) {
-  const db = tenancy.getGlobalDB()
-  const response = await db.allDocs(
-    dbCore.getPluginParams(null, {
-      include_docs: true,
-    })
-  )
-  let plugins = response.rows.map((row: any) => row.doc) as Plugin[]
-  plugins = objectStore.enrichPluginURLs(plugins)
-  if (type) {
-    return plugins.filter((plugin: Plugin) => plugin.schema?.type === type)
-  } else {
-    return plugins
-  }
-}
 
 export async function upload(ctx: any) {
   const plugins: FileType[] =
@@ -35,7 +15,7 @@ export async function upload(ctx: any) {
     let docs = []
     // can do single or multiple plugins
     for (let plugin of plugins) {
-      const doc = await processUploadedPlugin(plugin, PluginSource.FILE)
+      const doc = await sdk.plugins.processUploaded(plugin, PluginSource.FILE)
       docs.push(doc)
     }
     ctx.body = {
@@ -105,7 +85,7 @@ export async function create(ctx: any) {
 }
 
 export async function fetch(ctx: any) {
-  ctx.body = await getPlugins()
+  ctx.body = await sdk.plugins.fetch()
 }
 
 export async function destroy(ctx: any) {
@@ -118,21 +98,4 @@ export async function destroy(ctx: any) {
   } catch (err: any) {
     ctx.throw(400, err.message)
   }
-}
-
-export async function processUploadedPlugin(
-  plugin: FileType,
-  source?: PluginSource
-) {
-  const { metadata, directory } = await fileUpload(plugin)
-  pluginCore.validate(metadata?.schema)
-
-  // Only allow components in cloud
-  if (!env.SELF_HOSTED && metadata?.schema?.type !== PluginType.COMPONENT) {
-    throw new Error("Only component plugins are supported outside of self-host")
-  }
-
-  const doc = await pro.plugins.storePlugin(metadata, directory, source)
-  ClientAppSocket.emit("plugin-update", { name: doc.name, hash: doc.hash })
-  return doc
 }
