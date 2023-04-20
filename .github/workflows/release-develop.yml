@@ -57,7 +57,7 @@ jobs:
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
-          yarn yarn release:pro:develop
+          yarn release:pro:develop
 
       - name: Build/release Docker images
         run: |
