@@ -46,15 +46,12 @@ jq '.dependencies."@budibase/backend-core"="'$VERSION'"' package.json > package.
 jq '.dependencies."@budibase/types"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
 
 # Go back to pro repo root
-cd -
+cd ../..
 
 # Update lockfile with new dependency versions
 yarn clean -y && yarn bootstrap
 
-# Commit and push
-git add packages/pro/yarn.lock
-git commit -m "Update dependency versions to $VERSION" -n
-git push
+
 
 #############################################
 #                  PUBLISH                  #
