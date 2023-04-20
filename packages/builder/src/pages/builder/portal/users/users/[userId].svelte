@@ -32,6 +32,8 @@
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   export let userId
 
   const groupSchema = {
@@ -161,7 +163,9 @@
       await users.save({ ...user, firstName: evt.target.value })
       await fetchUser()
     } catch (error) {
-      notifications.error("Error updating user")
+      notifications.error(
+        $_("pages.builder.portal.users.users.[userId].Error_updating")
+      )
     }
   }
 
@@ -170,7 +174,9 @@
       await users.save({ ...user, lastName: evt.target.value })
       await fetchUser()
     } catch (error) {
-      notifications.error("Error updating user")
+      notifications.error(
+        $_("pages.builder.portal.users.users.[userId].Error_updating")
+      )
     }
   }
 
@@ -196,7 +202,9 @@
       await users.save({ ...user, ...detail })
       await fetchUser()
     } catch (error) {
-      notifications.error("Error updating user")
+      notifications.error(
+        $_("pages.builder.portal.users.users.[userId].Error_updating")
+      )
     }
   }
 
@@ -219,7 +227,9 @@
       await Promise.all([fetchUser(), groups.actions.init(), roles.fetch()])
       loaded = true
     } catch (error) {
-      notifications.error("Error getting user groups")
+      notifications.error(
+        $_("pages.builder.portal.users.users.[userId].Error_getting")
+      )
     }
   })
 </script>
@@ -227,7 +237,10 @@
 {#if loaded}
   <Layout gap="L" noPadding>
     <Breadcrumbs>
-      <Breadcrumb url={$url("./")} text="Users" />
+      <Breadcrumb
+        url={$url("./")}
+        text={$_("pages.builder.portal.users.users.[userId].Users")}
+      />
       <Breadcrumb text={user?.email} />
     </Breadcrumbs>
 
@@ -249,25 +262,31 @@
             </span>
             {#if !isSSO}
               <MenuItem on:click={resetPasswordModal.show} icon="Refresh">
-                Force password reset
+                {$_("pages.builder.portal.users.users.[userId].Force_reset")}
               </MenuItem>
             {/if}
             <MenuItem on:click={deleteModal.show} icon="Delete">
-              Delete
+              {$_("pages.builder.portal.users.users.[userId].Delete")}
             </MenuItem>
           </ActionMenu>
         </div>
       {/if}
     </div>
     <Layout noPadding gap="S">
-      <Heading size="S">Details</Heading>
+      <Heading size="S"
+        >{$_("pages.builder.portal.users.users.[userId].Details")}</Heading
+      >
       <div class="fields">
         <div class="field">
-          <Label size="L">Email</Label>
+          <Label size="L"
+            >{$_("pages.builder.portal.users.users.[userId].Email")}</Label
+          >
           <Input disabled value={user?.email} />
         </div>
         <div class="field">
-          <Label size="L">First name</Label>
+          <Label size="L"
+            >{$_("pages.builder.portal.users.users.[userId].First_name")}</Label
+          >
           <Input
             disabled={readonly}
             value={user?.firstName}
@@ -275,7 +294,9 @@
           />
         </div>
         <div class="field">
-          <Label size="L">Last name</Label>
+          <Label size="L"
+            >{$_("pages.builder.portal.users.users.[userId].Last_name")}</Label
+          >
           <Input
             disabled={readonly}
             value={user?.lastName}
@@ -285,7 +306,9 @@
         <!-- don't let a user remove the privileges that let them be here -->
         {#if userId !== $auth.user._id}
           <div class="field">
-            <Label size="L">Role</Label>
+            <Label size="L"
+              >{$_("pages.builder.portal.users.users.[userId].Role")}</Label
+            >
             <Select
               disabled={readonly}
               value={globalRole}
@@ -301,10 +324,12 @@
       <!-- User groups -->
       <Layout gap="S" noPadding>
         <div class="tableTitle">
-          <Heading size="S">Groups</Heading>
+          <Heading size="S"
+            >{$_("pages.builder.portal.users.users.[userId].Groups")}</Heading
+          >
           <div bind:this={popoverAnchor}>
             <Button disabled={readonly} on:click={popover.show()} secondary>
-              Add to group
+              {$_("pages.builder.portal.users.users.[userId].Add_group")}
             </Button>
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
@@ -329,17 +354,21 @@
           on:click={e => $goto(`../groups/${e.detail._id}`)}
         >
           <div class="placeholder" slot="placeholder">
-            <Heading size="S">This user is not in any groups</Heading>
+            <Heading size="S"
+              >{$_("pages.builder.portal.users.users.[userId].groups")}</Heading
+            >
           </div>
         </Table>
       </Layout>
     {/if}
 
     <Layout gap="S" noPadding>
-      <Heading size="S">Apps</Heading>
+      <Heading size="S"
+        >{$_("pages.builder.portal.users.users.[userId].Apps")}</Heading
+      >
       {#if privileged}
         <Banner showCloseButton={false}>
-          This user's role grants admin access to all apps
+          {$_("pages.builder.portal.users.users.[userId].admin_access")}
         </Banner>
       {:else}
         <Table
@@ -352,7 +381,7 @@
         >
           <div class="placeholder" slot="placeholder">
             <Heading size="S">
-              This user doesn't have access to any apps
+              {$_("pages.builder.portal.users.users.[userId].user_access")}
             </Heading>
           </div>
         </Table>

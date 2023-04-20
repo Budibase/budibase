@@ -3,6 +3,8 @@
   import PanelHeader from "./PanelHeader.svelte"
   import { APP_URL_REGEX } from "constants"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let name = ""
   export let url = ""
   export let onNext = () => {}
@@ -15,41 +17,57 @@
 
   const validateName = name => {
     if (name.length < 1) {
-      return "Name must be provided"
+      return $_(
+        "pages.builder.portal.apps.onboarding._components.NamePanel.Name_must_be_provided"
+      )
     }
     if (!nameRegex.test(name)) {
-      return "No special characters are allowed"
+      return $_(
+        "pages.builder.portal.apps.onboarding._components.NamePanel.No_special_characters_are_allowed"
+      )
     }
   }
 
   const validateUrl = url => {
     if (url.length < 1) {
-      return "URL must be provided"
+      return $_(
+        "pages.builder.portal.apps.onboarding._components.NamePanel.URL_must_be_provided"
+      )
     }
 
     if (!APP_URL_REGEX.test(url)) {
-      return "Invalid URL"
+      return $_(
+        "pages.builder.portal.apps.onboarding._components.NamePanel.Invalid_URL"
+      )
     }
   }
 </script>
 
 <div>
   <PanelHeader
-    title="Build your first app"
-    subtitle="Name your app and set the URL"
+    title={$_(
+      "pages.builder.portal.apps.onboarding._components.NamePanel.Build_your_first_app"
+    )}
+    subtitle={$_(
+      "pages.builder.portal.apps.onboarding._components.NamePanel.Name_your_app"
+    )}
   />
   <FancyForm>
     <FancyInput
       bind:value={name}
       bind:error={nameError}
       validate={validateName}
-      label="Name"
+      label={$_(
+        "pages.builder.portal.apps.onboarding._components.NamePanel.Name"
+      )}
     />
     <FancyInput
       bind:value={url}
       bind:error={urlError}
       validate={validateUrl}
-      label="URL"
+      label={$_(
+        "pages.builder.portal.apps.onboarding._components.NamePanel.URL"
+      )}
     />
   </FancyForm>
   {#if url}
@@ -57,7 +75,11 @@
   {:else}
     <p>‎</p>
   {/if}
-  <Button size="L" cta disabled={!isValid} on:click={onNext}>Lets go!</Button>
+  <Button size="L" cta disabled={!isValid} on:click={onNext}
+    >{$_(
+      "pages.builder.portal.apps.onboarding._components.NamePanel.Lets_go"
+    )}</Button
+  >
 </div>
 
 <style>

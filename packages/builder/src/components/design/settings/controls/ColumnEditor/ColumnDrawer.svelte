@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import {
     Button,
     Icon,
@@ -91,8 +92,16 @@
         <Layout noPadding gap="XS">
           <div class="column">
             <div />
-            <Label size="L">Column</Label>
-            <Label size="L">Label</Label>
+            <Label size="L"
+              >{$_(
+                "components.design.settings.controls.ColumnEditor.ColumnDrawer.Column"
+              )}</Label
+            >
+            <Label size="L"
+              >{$_(
+                "components.design.settings.controls.ColumnEditor.ColumnDrawer.Label"
+              )}</Label
+            >
             <div />
             <div />
           </div>
@@ -119,11 +128,18 @@
                 </div>
                 <Select
                   bind:value={column.name}
-                  placeholder="Column"
+                  placeholder={$_(
+                    "components.design.settings.controls.ColumnEditor.ColumnDrawer.Column"
+                  )}
                   options={getRemainingColumnOptions(column.name)}
                   on:change={e => (column.displayName = e.detail)}
                 />
-                <Input bind:value={column.displayName} placeholder="Label" />
+                <Input
+                  bind:value={column.displayName}
+                  placeholder={$_(
+                    "components.design.settings.controls.ColumnEditor.ColumnDrawer.Label"
+                  )}
+                />
                 {#if allowCellEditing}
                   <CellEditor bind:column />
                 {/if}
@@ -142,22 +158,35 @@
         <div class="column">
           <div class="wide">
             <Body size="S">
-              By default, all table columns will automatically be shown.
+              {$_(
+                "components.design.settings.controls.ColumnEditor.ColumnDrawer.columns_shown"
+              )}
               <br />
-              You can manually control which columns are included in your table,
-              and their appearance, by adding them below.
+              {$_(
+                "components.design.settings.controls.ColumnEditor.ColumnDrawer.control_columns"
+              )}
             </Body>
           </div>
         </div>
       {/if}
       <div class="column">
         <div class="buttons wide">
-          <Button secondary icon="Add" on:click={addColumn}>Add column</Button>
+          <Button secondary icon="Add" on:click={addColumn}
+            >{$_(
+              "components.design.settings.controls.ColumnEditor.ColumnDrawer.Add_column"
+            )}</Button
+          >
           <Button secondary quiet on:click={addAllColumns}>
-            Add all columns
+            {$_(
+              "components.design.settings.controls.ColumnEditor.ColumnDrawer.Add_all_columns"
+            )}
           </Button>
           {#if columns?.length}
-            <Button secondary quiet on:click={reset}>Reset columns</Button>
+            <Button secondary quiet on:click={reset}
+              >{$_(
+                "components.design.settings.controls.ColumnEditor.ColumnDrawer.Reset_columns"
+              )}</Button
+            >
           {/if}
         </div>
       </div>

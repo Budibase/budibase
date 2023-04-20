@@ -1,3 +1,4 @@
+import { _ } from "../../../lang/i18n"
 import { breakQueryString, buildQueryString } from "../data/utils"
 
 describe("check query string utils", () => {

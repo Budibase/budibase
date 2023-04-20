@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import {
     Icon,
     Heading,
@@ -69,7 +70,11 @@
       return
     }
     if (!prodAppId) {
-      console.log("Application id required")
+      console.log(
+        $_(
+          "pages.builder.app.application._components.BuilderSidePanel.console_log_1"
+        )
+      )
       return
     }
     await usersFetch.update({
@@ -106,7 +111,11 @@
 
   const updateAppUser = async (user, role) => {
     if (!prodAppId) {
-      notifications.error("Application id must be specified")
+      notifications.error(
+        $_(
+          "pages.builder.app.application._components.BuilderSidePanel.notiofications_error_1"
+        )
+      )
       return
     }
     const update = await users.get(user._id)
@@ -122,7 +131,11 @@
 
   const onUpdateUser = async (user, role) => {
     if (!user) {
-      notifications.error("A user must be specified")
+      notifications.error(
+        $_(
+          "pages.builder.app.application._components.BuilderSidePanel.notiofications_error_2"
+        )
+      )
       return
     }
     try {
@@ -132,13 +145,21 @@
       await updateAppUser(user, role)
     } catch (error) {
       console.error(error)
-      notifications.error("User could not be updated")
+      notifications.error(
+        $_(
+          "pages.builder.app.application._components.BuilderSidePanel.notiofications_error_3"
+        )
+      )
     }
   }
 
   const updateAppGroup = async (target, role) => {
     if (!prodAppId) {
-      notifications.error("Application id must be specified")
+      notifications.error(
+        $_(
+          "pages.builder.app.application._components.BuilderSidePanel.notiofications_error_4"
+        )
+      )
       return
     }
 
@@ -154,13 +175,21 @@
 
   const onUpdateGroup = async (group, role) => {
     if (!group) {
-      notifications.error("A group must be specified")
+      notifications.error(
+        $_(
+          "pages.builder.app.application._components.BuilderSidePanel.notiofications_error_5"
+        )
+      )
       return
     }
     try {
       await updateAppGroup(group, role)
     } catch {
-      notifications.error("Group update failed")
+      notifications.error(
+        $_(
+          "pages.builder.app.application._components.BuilderSidePanel.notiofications_error_6"
+        )
+      )
     }
   }
 
@@ -260,7 +289,11 @@
 
   async function inviteUser() {
     if (!queryIsEmail) {
-      notifications.error("Email is not valid")
+      notifications.error(
+        $_(
+          "pages.builder.app.application._components.BuilderSidePanel.notiofications_error_7"
+        )
+      )
       return
     }
     const newUserEmail = query + ""
@@ -284,15 +317,27 @@
       if (newUser) {
         notifications.success(
           userInviteResponse.created
-            ? "User created successfully"
-            : "User invite successful"
+            ? $_(
+                "pages.builder.app.application._components.BuilderSidePanel.userInviteResponse_1"
+              )
+            : $_(
+                "pages.builder.app.application._components.BuilderSidePanel.userInviteResponse_2"
+              )
         )
       } else {
-        throw new Error("User invite failed")
+        throw new Error(
+          $_(
+            "pages.builder.app.application._components.BuilderSidePanel.NewError"
+          )
+        )
       }
     } catch (error) {
       console.error(error.message)
-      notifications.error("Error inviting user")
+      notifications.error(
+        $_(
+          "pages.builder.app.application._components.BuilderSidePanel.notiofications_error_8"
+        )
+      )
     }
     inviting = false
     return userInviteResponse
@@ -357,21 +402,35 @@
 
   const userTitle = user => {
     if (user.admin?.global) {
-      return "Admin"
+      return $_(
+        "pages.builder.app.application._components.BuilderSidePanel.Admin"
+      )
     } else if (user.builder?.global) {
-      return "Developer"
+      return $_(
+        "pages.builder.app.application._components.BuilderSidePanel.Developer"
+      )
     } else {
-      return "App user"
+      return $_(
+        "pages.builder.app.application._components.BuilderSidePanel.App_User"
+      )
     }
   }
 
   const getRoleFooter = user => {
     if (user.group) {
       const role = $roles.find(role => role._id === user.role)
-      return `This user has been given ${role?.name} access from the ${user.group} group`
+      return `${$_(
+        "pages.builder.app.application._components.BuilderSidePanel.getRoleFooter.has_been"
+      )} ${role?.name} ${$_(
+        "pages.builder.app.application._components.BuilderSidePanel.getRoleFooter.access"
+      )} ${user.group} ${$_(
+        "pages.builder.app.application._components.BuilderSidePanel.getRoleFooter.group"
+      )}`
     }
     if (user.isBuilderOrAdmin) {
-      return "This user's role grants admin access to all apps"
+      return $_(
+        "pages.builder.app.application._components.BuilderSidePanel.getRoleFooter.isBuilderAdmin"
+      )
     }
     return null
   }
@@ -392,7 +451,11 @@
     : () => {}}
 >
   <div class="builder-side-panel-header">
-    <Heading size="S">Users</Heading>
+    <Heading size="S"
+      >{$_(
+        "pages.builder.app.application._components.BuilderSidePanel.Users"
+      )}</Heading
+    >
     <Icon
       color="var(--spectrum-global-color-gray-600)"
       name="RailRightClose"
@@ -408,7 +471,9 @@
   <div class="search" class:focused={searchFocus}>
     <span class="search-input">
       <Input
-        placeholder={"Add users and groups to your app"}
+        placeholder={$_(
+          "pages.builder.app.application._components.BuilderSidePanel.input_placeholder"
+        )}
         autocomplete="off"
         disabled={inviting}
         value={query}
@@ -432,7 +497,15 @@
         userOnboardResponse = null
       }}
     >
-      <Icon name={query ? "Close" : "Search"} />
+      <Icon
+        name={query
+          ? $_(
+              "pages.builder.app.application._components.BuilderSidePanel.Close"
+            )
+          : $_(
+              "pages.builder.app.application._components.BuilderSidePanel.Search"
+            )}
+      />
     </span>
   </div>
 
@@ -440,9 +513,15 @@
     {#if promptInvite && !userOnboardResponse}
       <Layout gap="S" paddingX="XL">
         <div class="invite-header">
-          <Heading size="XS">No user found</Heading>
+          <Heading size="XS"
+            >{$_(
+              "pages.builder.app.application._components.BuilderSidePanel.No_user_found"
+            )}</Heading
+          >
           <div class="invite-directions">
-            Add a valid email to invite a new user
+            {$_(
+              "pages.builder.app.application._components.BuilderSidePanel.Add_a_valid"
+            )}
           </div>
         </div>
         <div class="invite-form">
@@ -452,7 +531,9 @@
             disabled={!queryIsEmail || inviting}
             on:click={onInviteUser}
           >
-            Add user
+            {$_(
+              "pages.builder.app.application._components.BuilderSidePanel.Add_user"
+            )}
           </ActionButton>
         </div>
       </Layout>
@@ -463,8 +544,16 @@
         {#if filteredInvites?.length}
           <Layout noPadding gap="XS">
             <div class="auth-entity-header">
-              <div class="auth-entity-title">Pending invites</div>
-              <div class="auth-entity-access-title">Access</div>
+              <div class="auth-entity-title">
+                {$_(
+                  "pages.builder.app.application._components.BuilderSidePanel.Pending_invites"
+                )}
+              </div>
+              <div class="auth-entity-access-title">
+                {$_(
+                  "pages.builder.app.application._components.BuilderSidePanel.Access"
+                )}
+              </div>
             </div>
             {#each filteredInvites as invite}
               <div class="auth-entity">
@@ -498,8 +587,16 @@
         {#if $licensing.groupsEnabled && filteredGroups?.length}
           <Layout noPadding gap="XS">
             <div class="auth-entity-header">
-              <div class="auth-entity-title">Groups</div>
-              <div class="auth-entity-access-title">Access</div>
+              <div class="auth-entity-title">
+                {$_(
+                  "pages.builder.app.application._components.BuilderSidePanel.Groups"
+                )}
+              </div>
+              <div class="auth-entity-access-title">
+                {$_(
+                  "pages.builder.app.application._components.BuilderSidePanel.Access"
+                )}
+              </div>
             </div>
             {#each filteredGroups as group}
               <div
@@ -549,8 +646,16 @@
         {#if filteredUsers?.length}
           <div class="auth-entity-section">
             <div class="auth-entity-header ">
-              <div class="auth-entity-title">Users</div>
-              <div class="auth-entity-access-title">Access</div>
+              <div class="auth-entity-title">
+                {$_(
+                  "pages.builder.app.application._components.BuilderSidePanel.Users"
+                )}
+              </div>
+              <div class="auth-entity-access-title">
+                {$_(
+                  "pages.builder.app.application._components.BuilderSidePanel.Access"
+                )}
+              </div>
             </div>
             {#each allUsers as user}
               <div class="auth-entity">
@@ -593,16 +698,23 @@
     {#if userOnboardResponse?.created}
       <Layout gap="S" paddingX="XL">
         <div class="invite-header">
-          <Heading size="XS">User added!</Heading>
+          <Heading size="XS"
+            >{$_(
+              "pages.builder.app.application._components.BuilderSidePanel.User_added"
+            )}</Heading
+          >
           <div class="invite-directions">
-            Email invites are not available without SMTP configuration. Here is
-            the password that has been generated for this user.
+            {$_(
+              "pages.builder.app.application._components.BuilderSidePanel.Email_invites"
+            )}
           </div>
         </div>
         <div>
           <CopyInput
             value={userOnboardResponse.successful[0]?.password}
-            label="Password"
+            label={$_(
+              "pages.builder.app.application._components.BuilderSidePanel.labelPassword"
+            )}
           />
         </div>
       </Layout>

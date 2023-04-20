@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../lang/i18n"
   import { createEventDispatcher } from "svelte"
   import { ActionButton, Body, Icon, Modal, ModalContent } from "@budibase/bbui"
 
@@ -10,19 +11,25 @@
   let modal
   let layoutMap = {
     mainSidebar: {
-      name: "Main with Sidebar",
+      name: $_(
+        "components.design.settings.controls.SectionSelect.Main_Sidebar"
+      ),
       icon: "ColumnTwoB",
     },
     sidebarMain: {
-      name: "Sidebar with Main",
+      name: $_(
+        "components.design.settings.controls.SectionSelect.Sidebar_ Main"
+      ),
       icon: "ColumnTwoC",
     },
     twoColumns: {
-      name: "Two columns",
+      name: $_("components.design.settings.controls.SectionSelect.Two_columns"),
       icon: "ColumnTwoA",
     },
     threeColumns: {
-      name: "Three columns",
+      name: $_(
+        "components.design.settings.controls.SectionSelect.Three_columns"
+      ),
       icon: "ViewColumn",
     },
   }
@@ -33,7 +40,9 @@
   <ModalContent
     onConfirm={() => dispatch("change", selected)}
     size="L"
-    title="Select layout"
+    title={$_(
+      "components.design.settings.controls.SectionSelect.Select_layout"
+    )}
   >
     <div class="container">
       {#each Object.entries(layoutMap) as [key, value]}

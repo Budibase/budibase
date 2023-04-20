@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { writable, get as svelteGet } from "svelte/store"
   import {
     notifications,
@@ -48,7 +49,9 @@
 
     $values.name = resolveAppName(
       template,
-      !$auth.user?.firstName ? "My app" : defaultAppName
+      !$auth.user?.firstName
+        ? $_("components.start.CreateAppModal.My_app")
+        : defaultAppName
     )
     nameToUrl($values.name)
     await setupValidation()
@@ -142,9 +145,9 @@
         try {
           await store.actions.screens.save(defaultScreenTemplate)
         } catch (err) {
-          console.error("Could not create a default application screen", err)
+          console.error($_("components.start.CreateAppModal.Could_not"), err)
           notifications.warning(
-            "Encountered an issue creating the default screen."
+            $_("components.start.CreateAppModal.Encountred")
           )
         }
       }
@@ -153,14 +156,16 @@
     } catch (error) {
       creating = false
       console.error(error)
-      notifications.error("Error creating app")
+      notifications.error($_("components.start.CreateAppModal.Error_creating"))
     }
   }
 </script>
 
 <ModalContent
-  title={"Create your app"}
-  confirmText={template?.fromFile ? "Import app" : "Create app"}
+  title={$_("components.start.CreateAppModal.Create_your")}
+  confirmText={template?.fromFile
+    ? $_("components.start.CreateAppModal.Import_app")
+    : $_("components.start.CreateAppModal.Create_app")}
   onConfirm={createNewApp}
   disabled={!$validation.valid}
 >
@@ -177,7 +182,7 @@
     <Dropzone
       error={$validation.touched.file && $validation.errors.file}
       gallery={false}
-      label="File to import"
+      label={$_("components.start.CreateAppModal.File_import")}
       value={[$values.file]}
       on:change={e => {
         $values.file = e.detail?.[0]
@@ -216,7 +221,7 @@
   {#if !template && !template?.fromFile}
     <span>
       <Toggle
-        text="Include sample data"
+        text={$_("components.start.CreateAppModal.Include")}
         bind:value={includeSampleDB}
         disabled={creating}
       />

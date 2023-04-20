@@ -2,6 +2,8 @@
   import { ModalContent, Body, Layout, Icon } from "@budibase/bbui"
   import { OnboardingType } from "../../../../../../constants"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let chooseCreationType
 
   let selectedOnboardingType
@@ -9,9 +11,15 @@
 
 <ModalContent
   size="M"
-  title="Choose your onboarding"
-  confirmText="Done"
-  cancelText="Cancel"
+  title={$_(
+    "pages.builder.portal.users.users._components.OnboardingTypeModal.Choose_onboarding"
+  )}
+  confirmText={$_(
+    "pages.builder.portal.users.users._components.OnboardingTypeModal.Done"
+  )}
+  cancelText={$_(
+    "pages.builder.portal.users.users._components.OnboardingTypeModal.Cancel"
+  )}
   showCloseIcon={false}
   onConfirm={() => chooseCreationType(selectedOnboardingType)}
   disabled={!selectedOnboardingType}
@@ -27,7 +35,11 @@
       <div class="content onboarding-type-wrap">
         <Icon name="WebPage" />
         <div class="onboarding-type-text">
-          <Body size="S">Send email invites</Body>
+          <Body size="S"
+            >{$_(
+              "pages.builder.portal.users.users._components.OnboardingTypeModal.Send_invites"
+            )}</Body
+          >
         </div>
       </div>
       <div style="color: var(--spectrum-global-color-green-600); float: right">
@@ -49,7 +61,11 @@
       <div class="content onboarding-type-wrap">
         <Icon name="Key" />
         <div class="onboarding-type-text">
-          <Body size="S">Generate passwords for each user</Body>
+          <Body size="S"
+            >{$_(
+              "pages.builder.portal.users.users._components.OnboardingTypeModal.Generate_passwords"
+            )}</Body
+          >
         </div>
       </div>
       <div style="color: var(--spectrum-global-color-green-600); float: right">

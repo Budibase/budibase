@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import { ActionButton, Button, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import OptionsDrawer from "./OptionsDrawer.svelte"
@@ -24,11 +25,21 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Define Options</ActionButton>
+<ActionButton on:click={drawer.show}
+  >{$_(
+    "components.design.settings.controls.OptionEditor.OptionsEditor.Define_Options"
+  )}</ActionButton
+>
 <Drawer bind:this={drawer} title="Options">
   <svelte:fragment slot="description">
-    Define the options for this picker.
+    {$_(
+      "components.design.settings.controls.OptionEditor.OptionsEditor.Define_options"
+    )}
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={saveOptions}>Save</Button>
+  <Button cta slot="buttons" on:click={saveOptions}
+    >{$_(
+      "components.design.settings.controls.OptionEditor.OptionsDrawer.Save"
+    )}</Button
+  >
   <OptionsDrawer bind:options={tempValue} slot="body" />
 </Drawer>

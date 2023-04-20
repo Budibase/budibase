@@ -7,6 +7,8 @@
     IconPicker,
   } from "@budibase/bbui"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let group
   export let saveGroup
 </script>
@@ -14,13 +16,30 @@
 <ModalContent
   onConfirm={() => saveGroup(group)}
   size="M"
-  title={group?._rev ? "Edit group" : "Create group"}
-  confirmText="Save"
+  title={group?._rev
+    ? $_(
+        "pages.builder.portal.users.groups._components.CreateEditGroupModal.Edit_group"
+      )
+    : $_(
+        "pages.builder.portal.users.groups._components.CreateEditGroupModal.Create_group"
+      )}
+  confirmText={$_(
+    "pages.builder.portal.users.groups._components.CreateEditGroupModal.Save"
+  )}
 >
-  <Input bind:value={group.name} label="Name" />
+  <Input
+    bind:value={group.name}
+    label={$_(
+      "pages.builder.portal.users.groups._components.CreateEditGroupModal.Name"
+    )}
+  />
   <div class="modal-format">
     <div class="modal-inner">
-      <Body size="XS">Icon</Body>
+      <Body size="XS"
+        >{$_(
+          "pages.builder.portal.users.groups._components.CreateEditGroupModal.Icon"
+        )}</Body
+      >
       <div class="modal-spacing">
         <IconPicker
           bind:value={group.icon}
@@ -29,7 +48,11 @@
       </div>
     </div>
     <div class="modal-inner">
-      <Body size="XS">Color</Body>
+      <Body size="XS"
+        >{$_(
+          "pages.builder.portal.users.groups._components.CreateEditGroupModal.Color"
+        )}</Body
+      >
       <div class="modal-spacing">
         <ColorPicker
           bind:value={group.color}

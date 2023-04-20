@@ -1,5 +1,8 @@
 <script>
   import { Tag, Tags } from "@budibase/bbui"
+
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let value
 
   const displayLimit = 5
@@ -17,7 +20,12 @@
       </Tag>
     {/each}
     {#if leftover}
-      <Tag>+{leftover} more</Tag>
+      <Tag
+        >+{leftover}
+        {$_(
+          "pages.builder.portal.users.users._components.TagsTableRenderer.more"
+        )}</Tag
+      >
     {/if}
   </Tags>
 </div>

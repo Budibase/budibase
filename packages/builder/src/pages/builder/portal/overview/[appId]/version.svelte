@@ -4,6 +4,8 @@
   import clientPackage from "@budibase/client/package.json"
   import VersionModal from "components/deploy/VersionModal.svelte"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   let versionModal
 
   $: updateAvailable = clientPackage.version !== $store.version
@@ -11,28 +13,40 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading>Version</Heading>
-    <Body>See the current version of your app and check for updates</Body>
+    <Heading
+      >{$_("pages.builder.portal.overview.appId.version.Version")}</Heading
+    >
+    <Body
+      >{$_("pages.builder.portal.overview.appId.version.current_version")}</Body
+    >
   </Layout>
   <Divider />
   {#if updateAvailable}
     <Body>
-      The app is currently using version <strong>{$store.version}</strong>
-      but version <strong>{clientPackage.version}</strong> is available.
+      {$_("pages.builder.portal.overview.appId.version.currently_using")}
+      <strong>{$store.version}</strong>
+      {$_("pages.builder.portal.overview.appId.version.but_version")}
+      <strong>{clientPackage.version}</strong>
+      {$_("pages.builder.portal.overview.appId.version.is_available")}
       <br />
-      Updates can contain new features, performance improvements and bug fixes.
+      {$_("pages.builder.portal.overview.appId.version.Updates_fixes")}
     </Body>
     <div>
-      <Button cta on:click={versionModal.show}>Update app</Button>
+      <Button cta on:click={versionModal.show}
+        >{$_("pages.builder.portal.overview.appId.version.Update_app")}</Button
+      >
     </div>
   {:else}
     <Body>
-      The app is currently using version <strong>{$store.version}</strong>.
+      {$_("pages.builder.portal.overview.appId.version.version")}
+      <strong>{$store.version}</strong>.
       <br />
-      You're running the latest!
+      {$_("pages.builder.portal.overview.appId.version.latest!")}
     </Body>
     <div>
-      <Button secondary on:click={versionModal.show}>Revert app</Button>
+      <Button secondary on:click={versionModal.show}
+        >{$_("pages.builder.portal.overview.appId.version.Revert_app")}</Button
+      >
     </div>
   {/if}
 </Layout>

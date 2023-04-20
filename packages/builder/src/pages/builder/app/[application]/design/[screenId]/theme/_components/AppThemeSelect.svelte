@@ -3,11 +3,17 @@
   import { store } from "builderStore"
   import { Constants } from "@budibase/frontend-core"
 
+  import { _ } from "../../../../../../../../../lang/i18n"
+
   const onChangeTheme = async theme => {
     try {
       await store.actions.theme.save(`spectrum--${theme}`)
     } catch (error) {
-      notifications.error("Error updating theme")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.theme._components.AppThemeSelect.Error_updating"
+        )
+      )
     }
   }
 </script>

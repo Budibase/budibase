@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { goto, params } from "@roxi/routify"
   import { datasources, flags, integrations, queries } from "stores/backend"
   import { environment } from "stores/portal"
@@ -173,7 +174,9 @@
       const { _id } = await queries.save(toSave.datasourceId, toSave)
       saveId = _id
       query = getSelectedQuery()
-      notifications.success(`Request saved successfully`)
+      notifications.success(
+        `${$_("components.integration.RestQueryViewer.Request_saved")}`
+      )
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)
         datasource = await datasources.save(datasource)
@@ -189,7 +192,9 @@
         $goto(`../../${_id}`)
       }
     } catch (err) {
-      notifications.error(`Error saving query`)
+      notifications.error(
+        `${$_("components.integration.RestQueryViewer.Error_saving")}`
+      )
     }
   }
 
@@ -197,14 +202,20 @@
     try {
       response = await queries.preview(buildQuery())
       if (response.rows.length === 0) {
-        notifications.info("Request did not return any data")
+        notifications.info($_("components.integration.RestQueryViewer.Request"))
       } else {
         response.info = response.info || { code: 200 }
         schema = response.schema
-        notifications.success("Request sent successfully")
+        notifications.success(
+          $_("components.integration.RestQueryViewer.Request_successfully")
+        )
       }
     } catch (error) {
-      notifications.error(`Query Error: ${error.message}`)
+      notifications.error(
+        `${$_("components.integration.RestQueryViewer.Query Error")}: ${
+          error.message
+        }`
+      )
     }
   }
 
@@ -236,7 +247,7 @@
 
   const schemaMenuItems = [
     {
-      text: "Create dynamic variable",
+      text: $_("components.integration.RestQueryViewer.Create_variable"),
       onClick: input => {
         varBinding = `{{ data.0.[${input.name}] }}`
         addVariableModal.show()
@@ -245,7 +256,7 @@
   ]
   const responseHeadersMenuItems = [
     {
-      text: "Create dynamic variable",
+      text: $_("components.integration.RestQueryViewer.Create_variable"),
       onClick: input => {
         varBinding = `{{ info.headers.[${input.name}] }}`
         addVariableModal.show()
@@ -300,7 +311,9 @@
     try {
       await flags.updateFlag(flag, value)
     } catch (error) {
-      notifications.error("Error updating flag")
+      notifications.error(
+        $_("components.integration.RestQueryViewer.Error_updating")
+      )
     }
   }
 
@@ -360,14 +373,20 @@
       // Clear any unsaved changes to the datasource
       await datasources.init()
     } catch (error) {
-      notifications.error("Error getting datasources")
+      notifications.error(
+        $_("components.integration.RestQueryViewer.Error_getting")
+      )
     }
 
     try {
       // load the environment variables
       await environment.loadVariables()
     } catch (error) {
-      notifications.error(`Error getting environment variables - ${error}`)
+      notifications.error(
+        `${$_(
+          "components.integration.RestQueryViewer.Error_getting_environment"
+        )} - ${error}`
+      )
     }
 
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
@@ -457,7 +476,11 @@
             on:save={saveQuery}
           />
           <div class="access">
-            <Label>Access level</Label>
+            <Label
+              >{$_(
+                "components.integration.RestQueryViewer.Access_level"
+              )}</Label
+            >
             <AccessLevelSelect {query} {saveId} />
           </div>
         </div>
@@ -478,26 +501,32 @@
               placeholder="http://www.api.com/endpoint"
             />
           </div>
-          <Button primary disabled={!url} on:click={runQuery}>Send</Button>
+          <Button primary disabled={!url} on:click={runQuery}
+            >{$_("components.integration.RestQueryViewer.Send")}</Button
+          >
           <Button
             disabled={!query.name}
             cta
             on:click={saveQuery}
             tooltip={!hasSchema
-              ? "Saving a query before sending will mean no schema is generated"
+              ? $_("components.integration.RestQueryViewer.Saving_query")
               : null}
             >Save
           </Button>
         </div>
         <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
-          <Tab title="Bindings">
+          <Tab title={$_("components.integration.RestQueryViewer.Bindings")}>
             <KeyValueBuilder
               bind:object={requestBindings}
-              tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
+              tooltip={$_("components.integration.RestQueryViewer.Set_name")}
               name="binding"
               headings
-              keyPlaceholder="Binding name"
-              valuePlaceholder="Default"
+              keyPlaceholder={$_(
+                "components.integration.RestQueryViewer.Binding_name"
+              )}
+              valuePlaceholder={$_(
+                "components.integration.RestQueryViewer.Default"
+              )}
               bindings={[
                 ...restBindings,
                 ...globalDynamicRequestBindings,
@@ -506,7 +535,7 @@
               bindingDrawerLeft="260px"
             />
           </Tab>
-          <Tab title="Params">
+          <Tab title={$_("components.integration.RestQueryViewer.Params")}>
             {#key breakQs}
               <KeyValueBuilder
                 on:change={paramsChanged}
@@ -518,7 +547,7 @@
               />
             {/key}
           </Tab>
-          <Tab title="Headers">
+          <Tab title={$_("components.integration.RestQueryViewer.Headers")}>
             <KeyValueBuilder
               bind:object={query.fields.headers}
               bind:activity={enabledHeaders}
@@ -529,7 +558,7 @@
               bindingDrawerLeft="260px"
             />
           </Tab>
-          <Tab title="Body">
+          <Tab title={$_("components.integration.RestQueryViewer.Body")}>
             <RadioGroup
               bind:value={query.fields.bodyType}
               options={isGet ? [bodyTypes[0]] : bodyTypes}
@@ -539,43 +568,53 @@
             />
             <RestBodyInput bind:bodyType={query.fields.bodyType} bind:query />
           </Tab>
-          <Tab title="Pagination">
+          <Tab title={$_("components.integration.RestQueryViewer.Pagination")}>
             <div class="pagination">
               <Select
-                label="Pagination type"
+                label={$_(
+                  "components.integration.RestQueryViewer.Pagination_type"
+                )}
                 bind:value={query.fields.pagination.type}
                 options={PaginationTypes}
-                placeholder="None"
+                placeholder={$_("components.integration.RestQueryViewer.None")}
               />
               {#if query.fields.pagination.type}
                 <Select
-                  label="Pagination parameters location"
+                  label={$_(
+                    "components.integration.RestQueryViewer.Pagination_parameters"
+                  )}
                   bind:value={query.fields.pagination.location}
                   options={PaginationLocations}
-                  placeholer="Choose where to send pagination parameters"
+                  placeholer={$_(
+                    "components.integration.RestQueryViewer.Choose_send"
+                  )}
                 />
                 <Input
                   label={query.fields.pagination.type === "page"
-                    ? "Page number parameter name "
-                    : "Request cursor parameter name"}
+                    ? $_("components.integration.RestQueryViewer.Page_number")
+                    : $_(
+                        "components.integration.RestQueryViewer.Request_cursor"
+                      )}
                   bind:value={query.fields.pagination.pageParam}
                 />
                 <Input
                   label={query.fields.pagination.type === "page"
-                    ? "Page size parameter name"
-                    : "Request limit parameter name"}
+                    ? $_("components.integration.RestQueryViewer.Page_size")
+                    : $_("components.integration.RestQueryViewer.Request_body")}
                   bind:value={query.fields.pagination.sizeParam}
                 />
                 {#if query.fields.pagination.type === "cursor"}
                   <Input
-                    label="Response body parameter name for cursor"
+                    label={$_(
+                      "components.integration.RestQueryViewer.Response_body"
+                    )}
                     bind:value={query.fields.pagination.responseParam}
                   />
                 {/if}
               {/if}
             </div>
           </Tab>
-          <Tab title="Transformer">
+          <Tab title={$_("components.integration.RestQueryViewer.Transformer")}>
             <Layout noPadding>
               {#if !$flags.queryTransformerBanner}
                 <Banner
@@ -584,7 +623,7 @@
                     window.open("https://docs.budibase.com/docs/transformers")}
                   on:change={() => updateFlag("queryTransformerBanner", true)}
                 >
-                  Add a JavaScript function to transform the query result.
+                  {$_("components.integration.RestQueryViewer.Add_JavaScript")}
                 </Banner>
               {/if}
               <CodeMirrorEditor
@@ -601,9 +640,9 @@
             <!-- spacer -->
             <div class="auth-select">
               <Select
-                label="Auth"
+                label={$_("components.integration.RestQueryViewer.Auth")}
                 labelPosition="left"
-                placeholder="None"
+                placeholder={$_("components.integration.RestQueryViewer.None")}
                 bind:value={authConfigId}
                 options={authConfigs}
               />
@@ -616,18 +655,24 @@
       <Layout paddingY="S" gap="S">
         <Divider />
         {#if !response && Object.keys(schema).length === 0}
-          <Heading size="M">Response</Heading>
+          <Heading size="M"
+            >{$_("components.integration.RestQueryViewer.Response")}</Heading
+          >
           <div class="placeholder">
             <div class="placeholder-internal">
               <img alt="placeholder" src={Placeholder} />
               <Body size="XS" textAlign="center"
-                >{"enter a url in the textbox above and click send to get a response".toUpperCase()}</Body
+                >{$_(
+                  "components.integration.RestQueryViewer.enter_url"
+                ).toUpperCase()}</Body
               >
             </div>
           </div>
         {:else}
           <Tabs
-            selected={!response ? "Schema" : "JSON"}
+            selected={!response
+              ? $_("components.integration.RestQueryViewer.Schema")
+              : "JSON"}
             quiet
             noPadding
             noHorizPadding
@@ -640,7 +685,7 @@
               </Tab>
             {/if}
             {#if schema || response}
-              <Tab title="Schema">
+              <Tab title={$_("components.integration.RestQueryViewer.Schema")}>
                 <KeyValueBuilder
                   bind:object={schema}
                   name="schema"
@@ -653,10 +698,10 @@
               </Tab>
             {/if}
             {#if response}
-              <Tab title="Raw">
+              <Tab title={$_("components.integration.RestQueryViewer.Raw")}>
                 <TextArea disabled value={response.extra?.raw} height="300" />
               </Tab>
-              <Tab title="Headers">
+              <Tab title={$_("components.integration.RestQueryViewer.Headers")}>
                 <KeyValueBuilder
                   object={response.extra?.headers}
                   readOnly
@@ -664,7 +709,7 @@
                   showMenu={true}
                 />
               </Tab>
-              <Tab title="Preview">
+              <Tab title={$_("components.integration.RestQueryViewer.Preview")}>
                 <div class="table">
                   {#if response}
                     <Table
@@ -679,18 +724,27 @@
               </Tab>
             {/if}
             {#if showVariablesTab}
-              <Tab title="Dynamic Variables">
+              <Tab
+                title={$_(
+                  "components.integration.RestQueryViewer.Dynamic_Variables"
+                )}
+              >
                 <Layout noPadding gap="S">
                   <Body size="S">
-                    Create dynamic variables based on response body or headers
-                    from this query.
+                    {$_(
+                      "components.integration.RestQueryViewer.Create_variables"
+                    )}
                   </Body>
                   <KeyValueBuilder
                     bind:object={dynamicVariables}
                     name="Variable"
                     headings
-                    keyHeading="Name"
-                    keyPlaceholder="Variable name"
+                    keyHeading={$_(
+                      "components.integration.RestQueryViewer.Name"
+                    )}
+                    keyPlaceholder={$_(
+                      "components.integration.RestQueryViewer.Variable_name"
+                    )}
                     valueHeading={`Value`}
                     valuePlaceholder={`{{ value }}`}
                     readOnly={variablesReadOnly}
@@ -701,17 +755,20 @@
             {#if response}
               <div class="stats">
                 <Label size="L">
-                  Status: <span class={responseSuccess ? "green" : "red"}
+                  {$_("components.integration.RestQueryViewer.Status")}:
+                  <span class={responseSuccess ? "green" : "red"}
                     >{response?.info.code}</span
                   >
                 </Label>
                 <Label size="L">
-                  Time: <span class={responseSuccess ? "green" : "red"}
+                  {$_("components.integration.RestQueryViewer.Time")}:
+                  <span class={responseSuccess ? "green" : "red"}
                     >{response?.info.time}</span
                   >
                 </Label>
                 <Label size="L">
-                  Size: <span class={responseSuccess ? "green" : "red"}
+                  {$_("components.integration.RestQueryViewer.Size")}:
+                  <span class={responseSuccess ? "green" : "red"}
                     >{response?.info.size}</span
                   >
                 </Label>

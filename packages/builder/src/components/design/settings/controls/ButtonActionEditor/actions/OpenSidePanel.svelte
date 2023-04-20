@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label } from "@budibase/bbui"
   import { selectedScreen } from "builderStore"
   import { findAllMatchingComponents } from "builderStore/componentUtils"
@@ -20,7 +21,11 @@
 </script>
 
 <div class="root">
-  <Label small>Side Panel</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.OpenSidePanel.Side Panel"
+    )}</Label
+  >
   <Select bind:value={parameters.id} options={sidePanelOptions} />
 </div>
 

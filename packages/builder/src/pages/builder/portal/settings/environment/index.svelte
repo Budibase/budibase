@@ -13,6 +13,8 @@
   import EditVariableColumn from "./_components/EditVariableColumn.svelte"
   import LockedFeature from "../../_components/LockedFeature.svelte"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   let modal
 
   const customRenderers = [{ column: "edit", component: EditVariableColumn }]
@@ -26,7 +28,9 @@
       await environment.loadVariables()
     } catch (error) {
       notifications.error(
-        `Error loading environment variables: ${error.message}`
+        `${$_(
+          "pages.builder.portal.settings.enviroment.index.Error_environment"
+        )}: ${error.message}`
       )
     }
   })
@@ -52,15 +56,23 @@
       await environment.createVariable(data)
       modal.hide()
     } catch (err) {
-      notifications.error(`Error saving variable: ${err.message}`)
+      notifications.error(
+        `${$_(
+          "pages.builder.portal.settings.enviroment.index.Error_saving"
+        )}: ${err.message}`
+      )
     }
   }
 </script>
 
 <LockedFeature
-  title={"Environment Variables"}
-  planType={"Business plan"}
-  description={"Add and manage environment variables for development and production"}
+  title={$_(
+    "pages.builder.portal.settings.enviroment.index.Environment_Variables"
+  )}
+  planType={$_("pages.builder.portal.settings.enviroment.index.Business_plan")}
+  description={$_(
+    "pages.builder.portal.settings.enviroment.index.Add_manage_environment"
+  )}
   enabled={$licensing.environmentVariablesEnabled}
   upgradeButtonClick={async () => {
     await environment.upgradePanelOpened()
@@ -69,14 +81,20 @@
 >
   {#if noEncryptionKey}
     <InlineAlert
-      message="Your Budibase installation does not have a key for encryption, please update your app service's environment variables to contain an 'ENCRYPTION_KEY' value."
-      header="No encryption key found"
+      message={$_(
+        "pages.builder.portal.settings.enviroment.index.Budibase_encryption"
+      )}
+      header={$_(
+        "pages.builder.portal.settings.enviroment.index.No_encryption"
+      )}
       type="error"
     />
   {/if}
   <div>
     <Button on:click={modal.show} cta disabled={noEncryptionKey}
-      >Add Variable</Button
+      >{$_(
+        "pages.builder.portal.settings.enviroment.index.Add_Variable"
+      )}</Button
     >
   </div>
   <Layout noPadding>

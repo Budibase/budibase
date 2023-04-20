@@ -18,13 +18,17 @@
   import { fetchData } from "@budibase/frontend-core"
   import EditableRoleRenderer from "./_components/EditableRoleRenderer.svelte"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   const userSchema = {
     email: {
       type: "string",
       width: "1fr",
     },
     role: {
-      displayName: "Access",
+      displayName: $_(
+        "pages.builder.portal.overview.appId.access.index.Access"
+      ),
       width: "150px",
       borderLeft: true,
     },
@@ -35,7 +39,9 @@
       width: "1fr",
     },
     role: {
-      displayName: "Access",
+      displayName: $_(
+        "pages.builder.portal.overview.appId.access.index.Access"
+      ),
       width: "150px",
       borderLeft: true,
     },
@@ -183,16 +189,30 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading>Access</Heading>
-    <Body>Assign users to your app and set their access</Body>
+    <Heading
+      >{$_("pages.builder.portal.overview.appId.access.index.Access")}</Heading
+    >
+    <Body
+      >{$_(
+        "pages.builder.portal.overview.appId.access.index.Assign_users"
+      )}</Body
+    >
   </Layout>
   <Divider />
   <Layout noPadding gap="L">
     {#if $usersFetch.loaded}
       <Layout noPadding gap="S">
         <div class="title">
-          <Heading size="S">Users</Heading>
-          <Button cta on:click={showUsersModal}>Assign user</Button>
+          <Heading size="S"
+            >{$_(
+              "pages.builder.portal.overview.appId.access.index.Users"
+            )}</Heading
+          >
+          <Button cta on:click={showUsersModal}
+            >{$_(
+              "pages.builder.portal.overview.appId.access.index.Assign_user"
+            )}</Button
+          >
         </div>
         <Table
           customPlaceholder
@@ -202,7 +222,11 @@
           {customRenderers}
         >
           <div class="placeholder" slot="placeholder">
-            <Heading size="S">You have no users assigned yet</Heading>
+            <Heading size="S"
+              >{$_(
+                "pages.builder.portal.overview.appId.access.index.no_users"
+              )}</Heading
+            >
           </div>
         </Table>
         <div class="pagination">
@@ -220,8 +244,16 @@
     {#if $usersFetch.loaded && $licensing.groupsEnabled}
       <Layout noPadding gap="S">
         <div class="title">
-          <Heading size="S">Groups</Heading>
-          <Button cta on:click={showGroupsModal}>Assign group</Button>
+          <Heading size="S"
+            >{$_(
+              "pages.builder.portal.overview.appId.access.index.Groups"
+            )}</Heading
+          >
+          <Button cta on:click={showGroupsModal}
+            >{$_(
+              "pages.builder.portal.overview.appId.access.index.Assign_group"
+            )}</Button
+          >
         </div>
         <Table
           customPlaceholder
@@ -231,7 +263,11 @@
           {customRenderers}
         >
           <div class="placeholder" slot="placeholder">
-            <Heading size="S">You have no groups assigned yet</Heading>
+            <Heading size="S"
+              >{$_(
+                "pages.builder.portal.overview.appId.access.index.no_groups"
+              )}</Heading
+            >
           </div>
         </Table>
       </Layout>

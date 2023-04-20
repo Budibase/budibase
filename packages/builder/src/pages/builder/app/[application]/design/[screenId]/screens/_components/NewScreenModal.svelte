@@ -4,6 +4,8 @@
   import blankScreenPreview from "./blankScreenPreview.png"
   import listScreenPreview from "./listScreenPreview.png"
 
+  import { _ } from "../../../../../../../../../lang/i18n"
+
   export let onConfirm
   export let onCancel
 
@@ -19,9 +21,15 @@
 
 <div>
   <ModalContent
-    title="Add screens"
-    confirmText="Continue"
-    cancelText="Cancel"
+    title={$_(
+      "pages.builder.app.application.design.screenId.screens._components.NewScreenModal.Add_screens"
+    )}
+    confirmText={$_(
+      "pages.builder.app.application.design.screenId.screens._components.NewScreenModal.Continue"
+    )}
+    cancelText={$_(
+      "pages.builder.app.application.design.screenId.screens._components.NewScreenModal.Cancel"
+    )}
     onConfirm={confirmScreenSelection}
     {onCancel}
     disabled={!selectedScreenMode}
@@ -42,8 +50,16 @@
             src={blankScreenPreview}
           />
           <div class="screen-type-text">
-            <Heading size="XS">Blank screen</Heading>
-            <Body size="S">Add an empty blank screen</Body>
+            <Heading size="XS"
+              >{$_(
+                "pages.builder.app.application.design.screenId.screens._components.NewScreenModal.Blank_screen"
+              )}</Heading
+            >
+            <Body size="S"
+              >{$_(
+                "pages.builder.app.application.design.screenId.screens._components.NewScreenModal.Add_blank"
+              )}</Body
+            >
           </div>
         </div>
         <div
@@ -60,7 +76,11 @@
       </div>
 
       <div class="listViewTitle">
-        <Heading size="XS">Quickly create a screen from your data</Heading>
+        <Heading size="XS"
+          >{$_(
+            "pages.builder.app.application.design.screenId.screens._components.NewScreenModal.Quickly_create"
+          )}</Heading
+        >
       </div>
 
       <div
@@ -79,10 +99,15 @@
             src={listScreenPreview}
           />
           <div class="screen-type-text">
-            <Heading size="XS">List view</Heading>
+            <Heading size="XS"
+              >{$_(
+                "pages.builder.app.application.design.screenId.screens._components.NewScreenModal.List_view"
+              )}</Heading
+            >
             <Body size="S">
-              Create, edit and view your data in a list view screen with side
-              panel
+              {$_(
+                "pages.builder.app.application.design.screenId.screens._components.NewScreenModal.Create"
+              )}
             </Body>
           </div>
         </div>

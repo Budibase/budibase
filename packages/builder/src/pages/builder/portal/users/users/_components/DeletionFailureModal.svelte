@@ -2,6 +2,8 @@
   import { Body, ModalContent, Table } from "@budibase/bbui"
   import { onMount } from "svelte"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let deleteUsersResponse
 
   let successCount
@@ -12,17 +14,25 @@
 
   const setTitle = () => {
     if (successCount) {
-      title = `${successCount} users deleted`
+      title = `${successCount} ${$_(
+        "pages.builder.portal.users.users._components.DeletionFailureModal.users_deleted"
+      )} `
     } else {
-      title = "Oops!"
+      title = $_(
+        "pages.builder.portal.users.users._components.DeletionFailureModal.Oops"
+      )
     }
   }
 
   const setMessage = () => {
     if (successCount) {
-      message = "However there was a problem deleting some users."
+      message = $_(
+        "pages.builder.portal.users.users._components.DeletionFailureModal.problem_deleting"
+      )
     } else {
-      message = "There was a problem deleting some users."
+      message = $_(
+        "pages.builder.portal.users.users._components.DeletionFailureModal.was_problem"
+      )
     }
   }
 
@@ -52,7 +62,9 @@
 <ModalContent
   size="M"
   {title}
-  confirmText="Close"
+  confirmText={$_(
+    "pages.builder.portal.users.users._components.DeletionFailureModal.Close"
+  )}
   showCloseIcon={false}
   showCancelButton={false}
 >

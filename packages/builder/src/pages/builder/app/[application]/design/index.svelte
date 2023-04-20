@@ -7,6 +7,8 @@
   import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
   import { Roles } from "constants/backend"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   let loaded = false
 
   const createFirstScreen = async () => {
@@ -16,11 +18,24 @@
     screen.routing.homeScreen = true
     try {
       const savedScreen = await store.actions.screens.save(screen)
-      notifications.success("Screen created successfully")
+      notifications.success(
+        $_(
+          "pages.builder.app.application.design.index.createFirstScreen.notiofications_success"
+        )
+      )
       $redirect(`./${savedScreen._id}`)
     } catch (err) {
-      console.error("Could not create screen", err)
-      notifications.error("Error creating screen")
+      console.error(
+        $_(
+          "pages.builder.app.application.design.index.createFirstScreen.console_error"
+        ),
+        err
+      )
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.index.createFirstScreen.notiofications_error"
+        )
+      )
     }
   }
 
@@ -40,10 +55,12 @@
     <Layout gap="S" justifyItems="center">
       <img class="img-size" alt="logo" src={Logo} />
       <div class="new-screen-text">
-        <Detail size="L">LET’S BRING THIS APP TO LIFE</Detail>
+        <Detail size="L"
+          >{$_("pages.builder.app.application.design.index.Detail")}</Detail
+        >
       </div>
       <Button on:click={createFirstScreen} size="M" cta icon="Add">
-        Create first screen
+        {$_("pages.builder.app.application.design.index.Button")}
       </Button>
     </Layout>
   </div>

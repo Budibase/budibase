@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { writable, get as svelteGet } from "svelte/store"
   import {
     notifications,
@@ -56,7 +57,7 @@
       })
     } catch (error) {
       console.error(error)
-      notifications.error("Error updating app")
+      notifications.error($_("components.start.UpdateAppModal.Error_updating"))
     }
   }
 
@@ -97,8 +98,8 @@
 </script>
 
 <ModalContent
-  title="Edit name and URL"
-  confirmText="Save"
+  title={$_("components.start.UpdateAppModal.Edit_name")}
+  confirmText={$_("components.start.UpdateAppModal.Save")}
   onConfirm={updateApp}
   disabled={!$validation.valid}
 >
@@ -107,10 +108,10 @@
     error={$validation.touched.name && $validation.errors.name}
     on:blur={() => ($validation.touched.name = true)}
     on:change={nameToUrl($values.name)}
-    label="Name"
+    label={$_("components.start.UpdateAppModal.Name")}
   />
   <Layout noPadding gap="XS">
-    <Label>Icon</Label>
+    <Label>{$_("components.start.UpdateAppModal.Icon")}</Label>
     <EditableIcon
       {app}
       size="XL"
@@ -124,7 +125,7 @@
     error={$validation.touched.url && $validation.errors.url}
     on:blur={() => ($validation.touched.url = true)}
     on:change={tidyUrl($values.url)}
-    label="URL"
+    label={$_("components.start.UpdateAppModal.URL")}
     placeholder={$values.url
       ? $values.url
       : `/${resolveAppUrl(null, $values.name)}`}

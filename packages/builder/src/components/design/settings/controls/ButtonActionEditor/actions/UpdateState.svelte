@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label, Combobox, Checkbox, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
@@ -10,11 +11,15 @@
   const keyOptions = getAllStateVariables()
   const typeOptions = [
     {
-      label: "Set value",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.UpdateState.Set_value"
+      ),
       value: "set",
     },
     {
-      label: "Delete value",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.UpdateState.Delete_value"
+      ),
       value: "delete",
     },
   ]
@@ -27,27 +32,45 @@
 </script>
 
 <div class="root">
-  <Label small>Type</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.UpdateState.Type"
+    )}</Label
+  >
   <Select
     placeholder={null}
     bind:value={parameters.type}
     options={typeOptions}
   />
-  <Label small>Key</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.UpdateState.Key"
+    )}</Label
+  >
   <Combobox bind:value={parameters.key} options={keyOptions} />
   {#if parameters.type === "set"}
-    <Label small>Value</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.UpdateState.Value"
+      )}</Label
+    >
     <DrawerBindableInput
       {bindings}
       value={parameters.value}
       on:change={e => (parameters.value = e.detail)}
     />
     <div />
-    <Checkbox bind:value={parameters.persist} text="Persist this value" />
+    <Checkbox
+      bind:value={parameters.persist}
+      text={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.UpdateState.Persist_value"
+      )}
+    />
     <div />
     <Body size="XS">
-      Persisted values will remain even after reloading the page or closing the
-      browser.
+      {$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.UpdateState.Persisted_values"
+      )}
     </Body>
   {/if}
 </div>

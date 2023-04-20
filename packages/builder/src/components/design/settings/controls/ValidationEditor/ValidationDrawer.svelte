@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import {
     Button,
     Icon,
@@ -22,47 +23,69 @@
 
   const Constraints = {
     Required: {
-      label: "Required",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Required"
+      ),
       value: "required",
     },
     MinLength: {
-      label: "Min length",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Min_length"
+      ),
       value: "minLength",
     },
     MaxLength: {
-      label: "Max length",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Max_length"
+      ),
       value: "maxLength",
     },
     MaxValue: {
-      label: "Max value",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Max_value"
+      ),
       value: "maxValue",
     },
     MinValue: {
-      label: "Min value",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Min_value"
+      ),
       value: "minValue",
     },
     Equal: {
-      label: "Must equal",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Must_equal"
+      ),
       value: "equal",
     },
     NotEqual: {
-      label: "Must not equal",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Must_not_equal"
+      ),
       value: "notEqual",
     },
     Regex: {
-      label: "Must match regex",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Must_match_regex"
+      ),
       value: "regex",
     },
     NotRegex: {
-      label: "Must not match regex",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Must_not_match_regex"
+      ),
       value: "notRegex",
     },
     Contains: {
-      label: "Must contain",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Must_contain"
+      ),
       value: "contains",
     },
     NotContains: {
-      label: "Must not contain",
+      label: $_(
+        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Must_not_contain"
+      ),
       value: "notContains",
     },
   }
@@ -151,7 +174,9 @@
     ) {
       rules.push({
         constraint: "required",
-        error: "Required field",
+        error: $_(
+          "components.design.settings.controls.ValidationEditor.ValidationDrawer.Required_field"
+        ),
       })
     }
 
@@ -161,7 +186,11 @@
       rules.push({
         constraint: "maxLength",
         value: length,
-        error: `Maximum ${length} characters`,
+        error: `${$_(
+          "components.design.settings.controls.ValidationEditor.ValidationDrawer.Maximum"
+        )} ${length} ${$_(
+          "components.design.settings.controls.ValidationEditor.ValidationDrawer.characters"
+        )}`,
       })
     }
 
@@ -171,7 +200,9 @@
       rules.push({
         constraint: "minValue",
         value: min,
-        error: `Minimum value is ${min}`,
+        error: `${$_(
+          "components.design.settings.controls.ValidationEditor.ValidationDrawer.Minimun_value"
+        )} ${min}`,
       })
     }
     if (exists(constraints.numericality?.lessThanOrEqualTo)) {
@@ -179,7 +210,9 @@
       rules.push({
         constraint: "maxValue",
         value: max,
-        error: `Maximum value is ${max}`,
+        error: `${$_(
+          "components.design.settings.controls.ValidationEditor.ValidationDrawer.Maximum_value"
+        )} ${max}`,
       })
     }
 
@@ -217,13 +250,19 @@
   <div class="container">
     <Layout noPadding gap="M">
       <Layout noPadding gap={schemaRules?.length ? "S" : "XS"}>
-        <Heading size="XS">Schema validation rules</Heading>
+        <Heading size="XS"
+          >{$_(
+            "components.design.settings.controls.ValidationEditor.ValidationDrawer.Schema_validation"
+          )}</Heading
+        >
         {#if schemaRules?.length}
           <div class="links">
             {#each schemaRules as rule}
               <div class="rule schema">
                 <Select
-                  placeholder="Constraint"
+                  placeholder={$_(
+                    "components.design.settings.controls.ValidationEditor.ValidationDrawer.Constraint"
+                  )}
                   value={rule.constraint}
                   options={constraintOptions}
                   disabled
@@ -231,17 +270,28 @@
                 <Select
                   placeholder={null}
                   value="Value"
-                  options={["Binding", "Value"]}
+                  options={[
+                    $_(
+                      "components.design.settings.controls.ValidationEditor.ValidationDrawer.Binding"
+                    ),
+                    $_(
+                      "components.design.settings.controls.ValidationEditor.ValidationDrawer.Value"
+                    ),
+                  ]}
                   disabled
                 />
                 <DrawerBindableInput
-                  placeholder="Constraint value"
+                  placeholder={$_(
+                    "components.design.settings.controls.ValidationEditor.ValidationDrawer.Constraint_value"
+                  )}
                   value={rule.value}
                   {bindings}
                   disabled
                 />
                 <DrawerBindableInput
-                  placeholder="Error message"
+                  placeholder={$_(
+                    "components.design.settings.controls.ValidationEditor.ValidationDrawer.Error_message"
+                  )}
                   value={rule.error}
                   {bindings}
                   disabled
@@ -252,12 +302,18 @@
           </div>
         {:else}
           <Body size="S">
-            There are no built-in validation rules from the schema.
+            {$_(
+              "components.design.settings.controls.ValidationEditor.ValidationDrawer.no_rules"
+            )}
           </Body>
         {/if}
       </Layout>
       <Layout noPadding gap="S">
-        <Heading size="XS">Custom validation rules</Heading>
+        <Heading size="XS"
+          >{$_(
+            "components.design.settings.controls.ValidationEditor.ValidationDrawer.Custom_rules"
+          )}</Heading
+        >
         {#if rules?.length}
           <div class="links">
             {#each rules as rule (rule.id)}
@@ -265,19 +321,30 @@
                 <Select
                   bind:value={rule.constraint}
                   options={constraintOptions}
-                  placeholder="Constraint"
+                  placeholder={$_(
+                    "components.design.settings.controls.ValidationEditor.ValidationDrawer.Constraint"
+                  )}
                 />
                 <Select
                   disabled={rule.constraint === "required"}
                   placeholder={null}
                   bind:value={rule.valueType}
-                  options={["Binding", "Value"]}
+                  options={[
+                    $_(
+                      "components.design.settings.controls.ValidationEditor.ValidationDrawer.Binding"
+                    ),
+                    $_(
+                      "components.design.settings.controls.ValidationEditor.ValidationDrawer.Value"
+                    ),
+                  ]}
                 />
 
                 {#if rule.valueType === "Binding"}
                   <!-- Bindings always get a bindable input -->
                   <DrawerBindableInput
-                    placeholder="Constraint value"
+                    placeholder={$_(
+                      "components.design.settings.controls.ValidationEditor.ValidationDrawer.Constraint_value"
+                    )}
                     value={rule.value}
                     {bindings}
                     disabled={rule.constraint === "required"}
@@ -287,7 +354,9 @@
                   <!-- Certain constraints always need string values-->
                   <Input
                     bind:value={rule.value}
-                    placeholder="Constraint value"
+                    placeholder={$_(
+                      "components.design.settings.controls.ValidationEditor.ValidationDrawer.Constraint_value"
+                    )}
                   />
                 {:else}
                   <!-- Otherwise we render a component based on the type -->
@@ -295,7 +364,9 @@
                     <Input
                       disabled={rule.constraint === "required"}
                       bind:value={rule.value}
-                      placeholder="Constraint value"
+                      placeholder={$_(
+                        "components.design.settings.controls.ValidationEditor.ValidationDrawer.Constraint_value"
+                      )}
                     />
                   {:else if rule.type === "array"}
                     <Select
@@ -313,8 +384,18 @@
                     <Select
                       disabled={rule.constraint === "required"}
                       options={[
-                        { label: "True", value: "true" },
-                        { label: "False", value: "false" },
+                        {
+                          label: $_(
+                            "components.design.settings.controls.ValidationEditor.ValidationDrawer.True"
+                          ),
+                          value: "true",
+                        },
+                        {
+                          label: $_(
+                            "components.design.settings.controls.ValidationEditor.ValidationDrawer.False"
+                          ),
+                          value: "false",
+                        },
                       ]}
                       bind:value={rule.value}
                     />
@@ -329,7 +410,9 @@
                   {/if}
                 {/if}
                 <DrawerBindableInput
-                  placeholder="Error message"
+                  placeholder={$_(
+                    "components.design.settings.controls.ValidationEditor.ValidationDrawer.Error_message"
+                  )}
                   value={rule.error}
                   {bindings}
                   on:change={e => (rule.error = e.detail)}
@@ -351,7 +434,11 @@
           </div>
         {/if}
         <div class="button">
-          <Button secondary icon="Add" on:click={addRule}>Add Rule</Button>
+          <Button secondary icon="Add" on:click={addRule}
+            >{$_(
+              "components.design.settings.controls.ValidationEditor.ValidationDrawer.Add_Rule"
+            )}</Button
+          >
         </div>
       </Layout>
     </Layout>

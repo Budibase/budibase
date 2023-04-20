@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import { onMount } from "svelte"
   import { selectedComponent, selectedScreen, store } from "builderStore"
   import { findComponent } from "builderStore/componentUtils"
@@ -90,7 +91,12 @@
       }
       return await handler(component)
     } catch (error) {
-      notifications.error(error || "Error handling key press")
+      notifications.error(
+        error ||
+          $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentKeyHandler.Error_handling"
+          )
+      )
     }
   }
 
@@ -139,15 +145,27 @@
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  title="Confirm Deletion"
-  body={`Are you sure you want to delete "${componentToDelete?._instanceName}"?`}
-  okText="Delete Component"
+  title={$_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentKeyHandler.Confirm_Deletion"
+  )}
+  body={`${$_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentKeyHandler.Are_you_sure"
+  )} "${componentToDelete?._instanceName}"?`}
+  okText={$_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentKeyHandler.Delete_Component"
+  )}
   onOk={() => store.actions.components.delete(componentToDelete)}
 />
 <ConfirmDialog
   bind:this={confirmEjectDialog}
-  title="Eject block"
-  body={`Ejecting a block breaks it down into multiple components and cannot be undone. Are you sure you want to eject "${componentToEject?._instanceName}"?`}
+  title={$_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentKeyHandler.Eject_block"
+  )}
+  body={`${$_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentKeyHandler.Ejecting_a_block"
+  )} "${componentToEject?._instanceName}"?`}
   onOk={() => store.actions.components.requestEjectBlock(componentToEject?._id)}
-  okText="Eject block"
+  okText={$_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentKeyHandler.Eject_block"
+  )}
 />

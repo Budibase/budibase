@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { Body, Heading, Layout } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { getUserBindings } from "builderStore/dataBinding"
@@ -15,26 +16,31 @@
 
 <Layout noPadding={bindable} gap="S">
   <div class="controls" class:height={!bindable}>
-    <Heading size="XS">Bindings</Heading>
+    <Heading size="XS"
+      >{$_(
+        "components.integration.QueryViewerBindingBuilder.Bindings"
+      )}</Heading
+    >
   </div>
   <Body size="S">
     {#if !bindable}
-      Bindings come in two parts: the binding name, and a default/fallback
-      value. These bindings can be used as Handlebars expressions throughout the
-      query.
+      {$_("components.integration.QueryViewerBindingBuilder.Bindings_come")}
     {:else}
-      Enter a value for each binding. The default values will be used for any
-      values left blank.
+      {$_("components.integration.QueryViewerBindingBuilder.Enter_value")}
     {/if}
   </Body>
   <div class="bindings" class:bindable>
     <KeyValueBuilder
       bind:object={internalBindings}
-      tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
+      tooltip={$_("components.integration.QueryViewerBindingBuilder.Set_name")}
       name="binding"
       headings
-      keyPlaceholder="Binding name"
-      valuePlaceholder="Default"
+      keyPlaceholder={$_(
+        "components.integration.QueryViewerBindingBuilder.Binding_name"
+      )}
+      valuePlaceholder={$_(
+        "components.integration.QueryViewerBindingBuilder.Default"
+      )}
       bindings={[...userBindings]}
       bindingDrawerLeft="260px"
       allowHelpers={false}

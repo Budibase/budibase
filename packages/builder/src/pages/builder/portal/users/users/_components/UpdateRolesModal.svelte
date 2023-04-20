@@ -3,6 +3,8 @@
   import { Body, Select, ModalContent, notifications } from "@budibase/bbui"
   import { users } from "stores/portal"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let app
   export let user
 
@@ -16,7 +18,12 @@
     .map(role => ({ value: role._id, label: role.name }))
 
   if (!user?.builder?.global) {
-    options.push({ value: NO_ACCESS, label: "No Access" })
+    options.push({
+      value: NO_ACCESS,
+      label: $_(
+        "pages.builder.portal.users.users._components.UpdateRolesModal.No_Access"
+      ),
+    })
   }
   let selectedRole = user?.roles?.[app?._id]
 
@@ -42,31 +49,50 @@
           },
         })
       }
-      notifications.success("Role updated")
+      notifications.success(
+        $_(
+          "pages.builder.portal.users.users._components.UpdateRolesModal.Role_updated"
+        )
+      )
       dispatch("update")
     } catch (error) {
-      notifications.error("Failed to update role")
+      notifications.error(
+        $_(
+          "pages.builder.portal.users.users._components.UpdateRolesModal.Failed_update"
+        )
+      )
     }
   }
 </script>
 
 <ModalContent
   onConfirm={updateUserRoles}
-  title="Update App Role"
-  confirmText="Update role"
-  cancelText="Cancel"
+  title={$_(
+    "pages.builder.portal.users.users._components.UpdateRolesModal.Update_Role"
+  )}
+  confirmText={$_(
+    "pages.builder.portal.users.users._components.UpdateRolesModal.Update_role"
+  )}
+  cancelText={$_(
+    "pages.builder.portal.users.users._components.UpdateRolesModal.Cancel"
+  )}
   size="M"
   showCloseIcon={false}
 >
   <Body>
-    Update {user.email}'s role for <strong>{app.name}</strong>.
+    {$_("pages.builder.portal.users.users._components.UpdateRolesModal.Update")}
+    {user.email}{$_(
+      "pages.builder.portal.users.users._components.UpdateRolesModal.role_for"
+    )} <strong>{app.name}</strong>.
   </Body>
   <Select
     placeholder={null}
     bind:value={selectedRole}
     on:change
     {options}
-    label="Role"
+    label={$_(
+      "pages.builder.portal.users.users._components.UpdateRolesModal.Role"
+    )}
     getOptionLabel={role => role.label}
     getOptionValue={role => role.value}
   />

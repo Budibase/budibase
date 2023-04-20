@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label, Checkbox } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
@@ -8,19 +9,27 @@
 
   const types = [
     {
-      label: "Success",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ShowNotification.Success"
+      ),
       value: "success",
     },
     {
-      label: "Warning",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ShowNotification.Warning"
+      ),
       value: "warning",
     },
     {
-      label: "Error",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ShowNotification.Error"
+      ),
       value: "error",
     },
     {
-      label: "Info",
+      label: $_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ShowNotification.Info"
+      ),
       value: "info",
     },
   ]
@@ -36,16 +45,29 @@
 </script>
 
 <div class="root">
-  <Label>Type</Label>
+  <Label
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.ShowNotification.Type"
+    )}</Label
+  >
   <Select bind:value={parameters.type} options={types} placeholder={null} />
-  <Label>Message</Label>
+  <Label
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.ShowNotification.Message"
+    )}</Label
+  >
   <DrawerBindableInput
     {bindings}
     value={parameters.message}
     on:change={e => (parameters.message = e.detail)}
   />
   <Label />
-  <Checkbox text="Auto dismiss" bind:value={parameters.autoDismiss} />
+  <Checkbox
+    text={$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.ShowNotification.Auto_dismiss"
+    )}
+    bind:value={parameters.autoDismiss}
+  />
 </div>
 
 <style>

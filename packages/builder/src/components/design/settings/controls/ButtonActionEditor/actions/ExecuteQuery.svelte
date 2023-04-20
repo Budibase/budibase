@@ -1,4 +1,6 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
+
   import { Select, Layout, Input, Checkbox } from "@budibase/bbui"
   import { datasources, integrations, queries } from "stores/backend"
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
@@ -37,7 +39,9 @@
 
 <Layout gap="XS" noPadding>
   <Select
-    label="Datasource"
+    label={$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.ExecuteQuery.Datasource"
+    )}
     bind:value={parameters.datasourceId}
     options={executeQueryDatasources}
     getOptionLabel={source => source.name}
@@ -46,7 +50,9 @@
 
   {#if parameters.datasourceId}
     <Select
-      label="Query"
+      label={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ExecuteQuery.Query"
+      )}
       bind:value={parameters.queryId}
       options={$queries.list.filter(
         query => query.datasourceId === datasource._id
@@ -55,17 +61,28 @@
       getOptionValue={query => query._id}
     />
     <Checkbox
-      text="Do not display default notification"
+      text={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ExecuteQuery.not_display"
+      )}
       bind:value={parameters.notificationOverride}
     />
     <br />
     {#if parameters.queryId}
-      <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
+      <Checkbox
+        text={$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.ExecuteQuery.Require_confirmation"
+        )}
+        bind:value={parameters.confirm}
+      />
 
       {#if parameters.confirm}
         <Input
-          label="Confirm text"
-          placeholder="Are you sure you want to execute this query?"
+          label={$_(
+            "components.design.settings.controls.ButtonActionEditor.actions.ExecuteQuery.Confirm_text"
+          )}
+          placeholder={$_(
+            "components.design.settings.controls.ButtonActionEditor.actions.ExecuteQuery.want_execute"
+          )}
           bind:value={parameters.confirmText}
         />
       {/if}

@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import { setContext } from "svelte"
   import { dndStore } from "./dndStore"
   import { notifications } from "@budibase/bbui"
@@ -58,7 +59,11 @@
       await dndStore.actions.drop()
     } catch (error) {
       console.error(error)
-      notifications.error("Error saving component")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentScrollWallpaper.Error_saving"
+        )
+      )
     }
   }
 </script>

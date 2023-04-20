@@ -1,4 +1,5 @@
 // TODO: Convert to yup based validators
+import { _ } from "../../../lang/i18n"
 
 export function emailValidator(value) {
   return (
@@ -6,13 +7,13 @@ export function emailValidator(value) {
       !!value.match(
         /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
       )) ||
-    "Please enter a valid email"
+    $_("helpers.validation.validators.Please")
   )
 }
 
 export function requiredValidator(value) {
   return (
     (value !== undefined && value !== null && value !== "") ||
-    "This field is required"
+    $_("helpers.validation.validators.This")
   )
 }

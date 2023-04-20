@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { tables } from "stores/backend"
@@ -73,20 +74,33 @@
 
 <div class="root">
   <Body size="S">
-    Choosing a Datasource will automatically use the data it provides, but it's
-    optional.<br />
-    You can always add or override fields manually.
+    {$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.SaveRow.Choosing_Datasource"
+    )}<br />
+    {$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.SaveRow.add_override"
+    )}
   </Body>
 
   <div class="params">
-    <Label small>Datasource</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.SaveRow.Datasource"
+      )}</Label
+    >
     <Select
       bind:value={parameters.providerId}
       options={providerOptions}
-      placeholder="None"
+      placeholder={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.SaveRow.None"
+      )}
     />
 
-    <Label small>Table</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.SaveRow.Table"
+      )}</Label
+    >
     <Select
       bind:value={parameters.tableId}
       options={tableOptions}
@@ -96,16 +110,29 @@
 
     <Label small />
     <Checkbox
-      text="Do not display default notification"
+      text={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.SaveRow.not_display"
+      )}
       bind:value={parameters.notificationOverride}
     />
     <br />
-    <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
+    <Checkbox
+      text={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.SaveRow.Require_confirmation"
+      )}
+      bind:value={parameters.confirm}
+    />
 
     {#if parameters.confirm}
-      <Label small>Confirm text</Label>
+      <Label small
+        >{$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.SaveRow.Confirm text"
+        )}</Label
+      >
       <Input
-        placeholder="Are you sure you want to save this row?"
+        placeholder={$_(
+          "components.design.settings.controls.ButtonActionEditor.actions.SaveRow.want_save"
+        )}
         bind:value={parameters.confirmText}
       />
     {/if}

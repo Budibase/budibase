@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { ModalContent, Body, notifications } from "@budibase/bbui"
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import { auth } from "stores/portal"
@@ -9,19 +10,21 @@
   const updatePassword = async () => {
     try {
       await auth.updateSelf({ password })
-      notifications.success("Password changed successfully")
+      notifications.success(
+        $_("components.settings.ChangePassword.Password_changed")
+      )
     } catch (error) {
-      notifications.error("Failed to update password")
+      notifications.error($_("components.settings.ChangePassword.Failed"))
     }
   }
 </script>
 
 <ModalContent
-  title="Update password"
-  confirmText="Update password"
+  title={$_("components.settings.ChangePassword.Update_password")}
+  confirmText={$_("components.settings.ChangePassword.Update_password")}
   onConfirm={updatePassword}
   disabled={error || !password}
 >
-  <Body size="S">Enter your new password below.</Body>
+  <Body size="S">{$_("components.settings.ChangePassword.Enter")}.</Body>
   <PasswordRepeatInput bind:password bind:error />
 </ModalContent>

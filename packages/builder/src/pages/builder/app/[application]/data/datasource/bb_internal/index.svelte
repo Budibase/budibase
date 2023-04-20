@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../lang/i18n"
   import { Button, Heading, Body, Layout, Modal, Divider } from "@budibase/bbui"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
@@ -28,15 +29,24 @@
     <Layout gap="XS" noPadding>
       <header>
         <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
-        <Heading size="M">Budibase Internal</Heading>
+        <Heading size="M"
+          >{$_(
+            "pages.builder.app.application.data.datasource.bb_internal.index.Budibase_Internal"
+          )}</Heading
+        >
       </header>
       <Body size="M">
-        Budibase internal tables are part of your app, so the data will be
-        stored in your apps context.
+        {$_(
+          "pages.builder.app.application.data.datasource.bb_internal.index.Body"
+        )}
       </Body>
     </Layout>
     <Divider />
-    <Heading size="S">Tables</Heading>
+    <Heading size="S"
+      >{$_(
+        "pages.builder.app.application.data.datasource.bb_internal.index.Tables"
+      )}</Heading
+    >
     <div class="table-list">
       {#each internalTablesBySourceId as table}
         <div
@@ -45,13 +55,22 @@
         >
           <Body size="S">{table.name}</Body>
           {#if table.primaryDisplay}
-            <Body size="S">Display column: {table.primaryDisplay}</Body>
+            <Body size="S"
+              >{$_(
+                "pages.builder.app.application.data.datasource.bb_internal.index.Display column:"
+              )}
+              {table.primaryDisplay}</Body
+            >
           {/if}
         </div>
       {/each}
     </div>
     <div>
-      <Button cta on:click={modal.show}>Create new table</Button>
+      <Button cta on:click={modal.show}
+        >{$_(
+          "pages.builder.app.application.data.datasource.bb_internal.index.Create_new_table"
+        )}</Button
+      >
     </div>
   </Layout>
 </section>

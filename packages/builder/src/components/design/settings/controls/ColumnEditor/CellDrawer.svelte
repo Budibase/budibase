@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import {
     Input,
     Select,
@@ -16,29 +17,61 @@
 <DrawerContent>
   <div class="container">
     <Layout noPadding gap="S">
-      <Input bind:value={column.width} label="Width" placeholder="Auto" />
+      <Input
+        bind:value={column.width}
+        label={$_(
+          "components.design.settings.controls.ColumnEditor.BasicColumnEditor.Width"
+        )}
+        placeholder={$_(
+          "components.design.settings.controls.ColumnEditor.BasicColumnEditor.Auto"
+        )}
+      />
       <Select
-        label="Alignment"
+        label={$_(
+          "components.design.settings.controls.ColumnEditor.BasicColumnEditor.Aligment"
+        )}
         bind:value={column.align}
-        options={["Left", "Center", "Right"]}
-        placeholder="Default"
+        options={[
+          $_(
+            "components.design.settings.controls.ColumnEditor.BasicColumnEditor.Left"
+          ),
+          $_(
+            "components.design.settings.controls.ColumnEditor.BasicColumnEditor.Center"
+          ),
+          $_(
+            "components.design.settings.controls.ColumnEditor.BasicColumnEditor.Right"
+          ),
+        ]}
+        placeholder={$_(
+          "components.design.settings.controls.ColumnEditor.BasicColumnEditor.Default"
+        )}
       />
       <DrawerBindableInput
-        label="Value"
+        label={$_(
+          "components.design.settings.controls.ColumnEditor.CellDrawer.Value"
+        )}
         value={column.template}
         on:change={e => (column.template = e.detail)}
         placeholder={`{{ Value }}`}
         bindings={[
           {
-            readableBinding: "Value",
+            readableBinding: $_(
+              "components.design.settings.controls.ColumnEditor.CellDrawer.Value"
+            ),
             runtimeBinding: "[value]",
-            category: `Column: ${column.name}`,
+            category: `${$_(
+              "components.design.settings.controls.ColumnEditor.CellDrawer.Column"
+            )}: ${column.name}`,
             icon: "TableColumnMerge",
           },
         ]}
       />
       <Layout noPadding gap="XS">
-        <Label>Background color</Label>
+        <Label
+          >{$_(
+            "components.design.settings.controls.ColumnEditor.CellDrawer.Background_color"
+          )}</Label
+        >
         <ColorPicker
           value={column.background}
           on:change={e => (column.background = e.detail)}
@@ -47,7 +80,11 @@
         />
       </Layout>
       <Layout noPadding gap="XS">
-        <Label>Text color</Label>
+        <Label
+          >{$_(
+            "components.design.settings.controls.ColumnEditor.CellDrawer.Text_color"
+          )}</Label
+        >
         <ColorPicker
           value={column.color}
           on:change={e => (column.color = e.detail)}

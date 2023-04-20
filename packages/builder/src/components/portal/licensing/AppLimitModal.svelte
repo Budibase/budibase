@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../lang/i18n"
   import { Modal, ModalContent, Body } from "@budibase/bbui"
   import { auth, admin } from "stores/portal"
 
@@ -20,10 +21,12 @@
 
 <Modal bind:this={appLimitModal} on:hide={onDismiss}>
   <ModalContent
-    title="Upgrade to get more apps "
+    title={$_("components.portal.licensing.AppLimitModal.Upgrade_to")}
     size="M"
     showCancelButton={false}
-    confirmText={$auth.user.accountPortalAccess ? "Upgrade" : "Confirm"}
+    confirmText={$auth.user.accountPortalAccess
+      ? $_("components.portal.licensing.AppLimitModal.Upgrade")
+      : $_("components.portal.licensing.AppLimitModal.Confirm")}
     onConfirm={$auth.user.accountPortalAccess
       ? () => {
           window.location.href = upgradeUrl
@@ -31,11 +34,13 @@
       : null}
   >
     <Body>
-      You are currently on our <span class="free-plan">Free plan</span>. Upgrade
-      to our Pro plan to get unlimited apps and additional features.
+      {$_("components.portal.licensing.AppLimitModal.You")}<span
+        class="free-plan"
+        >{$_("components.portal.licensing.AppLimitModal.Free")}</span
+      >. {$_("components.portal.licensing.AppLimitModal.Pro")}
     </Body>
     {#if !$auth.user.accountPortalAccess}
-      <Body>Please contact the account holder to upgrade.</Body>
+      <Body>{$_("components.portal.licensing.AppLimitModal.Please")}</Body>
     {/if}
   </ModalContent>
 </Modal>

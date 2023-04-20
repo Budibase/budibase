@@ -1,10 +1,14 @@
+<script>
+  import { _ } from "../../../../../lang/i18n"
+</script>
+
 <div>
-  In this section you can manage the data for your app:
+  {$_("components.portal.onboarding.steps.OnboardingData.In_this")}
   <ul class="feature-list">
-    <li>Connect data sources</li>
-    <li>Edit data</li>
-    <li>Manage read & write access</li>
-    <li>Create views</li>
-    <li>Add bindings</li>
+    <li>{$_("components.portal.onboarding.steps.OnboardingData.Connect")}</li>
+    <li>{$_("components.portal.onboarding.steps.OnboardingData.Edit")}</li>
+    <li>{$_("components.portal.onboarding.steps.OnboardingData.Manage")}</li>
+    <li>{$_("components.portal.onboarding.steps.OnboardingData.Create")}</li>
+    <li>{$_("components.portal.onboarding.steps.OnboardingData.Add")}</li>
   </ul>
 </div>

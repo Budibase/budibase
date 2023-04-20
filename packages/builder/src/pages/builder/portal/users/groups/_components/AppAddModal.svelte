@@ -4,6 +4,8 @@
   import { roles } from "stores/backend"
   import RoleSelect from "components/common/RoleSelect.svelte"
 
+  import { _ } from "../../../../../../../lang/i18n"
+
   export let group
 
   $: appOptions = $apps.map(app => ({
@@ -31,21 +33,34 @@
 <ModalContent
   onConfirm={appSelected}
   size="M"
-  title="Add app to group"
-  confirmText={selectingRole ? "Confirm" : "Next"}
+  title={$_(
+    "pages.builder.portal.users.groups._components.AppAddModal.Add_group"
+  )}
+  confirmText={selectingRole
+    ? $_("pages.builder.portal.users.groups._components.AppAddModal.Confirm")
+    : $_("pages.builder.portal.users.groups._components.AppAddModal.Next")}
   showSecondaryButton={selectingRole}
-  secondaryButtonText="Back"
+  secondaryButtonText={$_(
+    "pages.builder.portal.users.groups._components.AppAddModal.Back"
+  )}
   secondaryAction={() => (selectingRole = false)}
   disabled={confirmDisabled}
 >
   {#if !selectingRole}
     <Body
-      >Select an app to assign roles for members of <i>"{group.name}"</i></Body
+      >{$_(
+        "pages.builder.portal.users.groups._components.AppAddModal.Select_roles"
+      )}
+      <i>"{group.name}"</i></Body
     >
     <Select bind:value={selectedApp} options={appOptions} />
   {:else}
     <Body
-      >Select the role that all members of "<i>{group.name}</i>" will have for
+      >{$_(
+        "pages.builder.portal.users.groups._components.AppAddModal.Select_role"
+      )} "<i>{group.name}</i>" {$_(
+        "pages.builder.portal.users.groups._components.AppAddModal.will_for"
+      )}
       <i>"{selectedApp.name}"</i></Body
     >
     <RoleSelect allowPublic={false} bind:value={selectedRoleId} />

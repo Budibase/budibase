@@ -9,6 +9,8 @@
   import UserDropdown from "./_components/UserDropdown.svelte"
   import HelpMenu from "components/common/HelpMenu.svelte"
 
+  import { _ } from "../../../../lang/i18n"
+
   let loaded = false
   let mobileMenuVisible = false
   let activeTab = "Apps"
@@ -40,7 +42,7 @@
           // We need to load apps to know if we need to show onboarding fullscreen
           await Promise.all([apps.load(), organisation.init()])
         } catch (error) {
-          notifications.error("Error getting org config")
+          notifications.error($_("pages.builder.portal._layout.Error_getting"))
         }
         loaded = true
       }

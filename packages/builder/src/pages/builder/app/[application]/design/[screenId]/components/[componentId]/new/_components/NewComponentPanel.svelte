@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import Panel from "components/design/Panel.svelte"
   import { goto } from "@roxi/routify"
   import { Layout, Search, Icon, Body, notifications } from "@budibase/bbui"
@@ -167,7 +168,12 @@
     try {
       await store.actions.components.create(component)
     } catch (error) {
-      notifications.error(error || "Error creating component")
+      notifications.error(
+        error ||
+          $_(
+            "pages.builder.app.application.design.screenId.components.componentId.new._components.NewComponentPanel.Error_updating"
+          )
+      )
     }
   }
 
@@ -211,7 +217,9 @@
 
 <div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
   <Panel
-    title="Add component"
+    title={$_(
+      "pages.builder.app.application.design.screenId.components.componentId.new._components.NewComponentPanel.Add_component"
+    )}
     showCloseButton
     onClickCloseButton={() => $goto("../")}
     borderLeft
@@ -219,7 +227,9 @@
   >
     <Layout paddingX="L" paddingY="XL" gap="S">
       <Search
-        placeholder="Search"
+        placeholder={$_(
+          "pages.builder.app.application.design.screenId.components.componentId.new._components.NewComponentPanel.Search"
+        )}
         value={searchString}
         on:change={e => (searchString = e.detail)}
         bind:inputRef={searchRef}
@@ -247,7 +257,9 @@
         {/each}
       {:else}
         <Body size="S">
-          There aren't any components matching the current filter
+          {$_(
+            "pages.builder.app.application.design.screenId.components.componentId.new._components.NewComponentPanel.component_filter"
+          )}
         </Body>
       {/if}
     </Layout>

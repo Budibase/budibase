@@ -8,6 +8,8 @@
   import { apps, templates, licensing } from "stores/portal"
   import { Breadcrumbs, Breadcrumb, Header } from "components/portal/page"
 
+  import { _ } from "../../../../../lang/i18n"
+
   let template
   let creationModal = false
   let appLimitModal
@@ -46,15 +48,17 @@
     <Layout noPadding gap="L">
       <Breadcrumbs>
         <Breadcrumb url={$url("./")} text="Apps" />
-        <Breadcrumb text="Create new app" />
+        <Breadcrumb
+          text={$_("pages.builder.portal.apps.create.Create_new_app")}
+        />
       </Breadcrumbs>
-      <Header title={"Create new app"}>
+      <Header title={$_("pages.builder.portal.apps.create.Create_new_app")}>
         <div slot="buttons">
           <Button size="M" secondary on:click={initiateAppImport}>
-            Import app
+            {$_("pages.builder.portal.apps.create.Import_app")}
           </Button>
           <Button size="M" cta on:click={initiateAppCreation}>
-            Start from scratch
+            {$_("pages.builder.portal.apps.create.Start_from_scratch")}
           </Button>
         </div>
       </Header>

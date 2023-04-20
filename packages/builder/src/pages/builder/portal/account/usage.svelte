@@ -14,6 +14,8 @@
   import { Constants } from "@budibase/frontend-core"
   import { DashCard, Usage } from "components/usage"
 
+  import { _ } from "../../../../../lang/i18n"
+
   let staticUsage = []
   let monthlyUsage = []
   let cancelAt
@@ -25,8 +27,13 @@
   const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
   const manageUrl = `${$admin.accountPortalUrl}/portal/billing`
 
-  const WARN_USAGE = ["Queries", "Automations", "Rows", "Day Passes"]
-  const EXCLUDE_QUOTAS = ["Queries"]
+  const WARN_USAGE = [
+    $_("pages.builder.portal.account.usage.Queries"),
+    $_("pages.builder.portal.account.usage.Automations"),
+    $_("pages.builder.portal.account.usage.Rows"),
+    $_("pages.builder.portal.account.usage.Day_Passes"),
+  ]
+  const EXCLUDE_QUOTAS = [$_("pages.builder.portal.account.usage.Queries")]
 
   $: quotaUsage = $licensing.quotaUsage
   $: license = $auth.user?.license
@@ -108,9 +115,15 @@
     textRows = []
 
     if (cancelAt) {
-      textRows.push({ message: "Subscription has been cancelled" })
       textRows.push({
-        message: `${getDaysRemaining(cancelAt * 1000)} days remaining`,
+        message: $_(
+          "pages.builder.portal.account.usage.Subscription_has_been_cancelled"
+        ),
+      })
+      textRows.push({
+        message: `${getDaysRemaining(cancelAt * 1000)} ${$_(
+          "pages.builder.portal.account.usage.days_remaining"
+        )}`,
         tooltip: new Date(cancelAt * 1000),
       })
     }
@@ -136,14 +149,14 @@
 
   const setPrimaryActionText = () => {
     if (license?.plan.type === Constants.PlanType.FREE) {
-      primaryActionText = "Upgrade"
+      primaryActionText = $_("pages.builder.portal.account.usage.Upgrade")
       return
     }
 
     if (cancelAt) {
-      primaryActionText = "Renew"
+      primaryActionText = $_("pages.builder.portal.account.usage.Renew")
     } else {
-      primaryActionText = "Manage"
+      primaryActionText = $_("pages.builder.portal.account.usage.Manage")
     }
   }
 
@@ -180,23 +193,27 @@
 {#if loaded}
   <Layout noPadding>
     <Layout noPadding gap="XS">
-      <Heading>Usage</Heading>
+      <Heading>{$_("pages.builder.portal.account.usage.Usage")}</Heading>
       <Body>
-        <div>Get information about your current usage within Budibase</div>
+        <div>{$_("pages.builder.portal.account.usage.Get_information")}</div>
       </Body>
     </Layout>
     <Divider />
     {#if canManagePlan}
       <Body>
-        To upgrade your plan and usage limits visit your
-        <Link size="L" on:click={goToAccountPortal}>account</Link>.
+        {$_("pages.builder.portal.account.usage.To_upgrade")}
+        <Link size="L" on:click={goToAccountPortal}
+          >{$_("pages.builder.portal.account.usage.account")}</Link
+        >.
       </Body>
     {:else}
-      <Body>Contact your account holder to upgrade your plan.</Body>
+      <Body
+        >{$_("pages.builder.portal.account.usage.Contact_your_account")}</Body
+      >
     {/if}
 
     <DashCard
-      description="YOUR CURRENT PLAN"
+      description={$_("pages.builder.portal.account.usage.YOUR_PLAN")}
       title={planTitle()}
       {primaryActionText}
       primaryAction={accountPortalAccess ? goToAccountPortal : undefined}
@@ -217,11 +234,17 @@
           <div class="column">
             <Layout noPadding gap="M">
               <Layout gap="XS" noPadding>
-                <Heading size="S">Monthly limits</Heading>
+                <Heading size="S"
+                  >{$_(
+                    "pages.builder.portal.account.usage.Monthly_limits"
+                  )}</Heading
+                >
                 <div class="detail">
                   <TooltipWrapper tooltip={new Date(quotaReset)}>
                     <Detail size="M">
-                      Resets in {daysRemainingInMonth} days
+                      {$_("pages.builder.portal.account.usage.Resets_in")}
+                      {daysRemainingInMonth}
+                      {$_("pages.builder.portal.account.usage.days")}
                     </Detail>
                   </TooltipWrapper>
                 </div>

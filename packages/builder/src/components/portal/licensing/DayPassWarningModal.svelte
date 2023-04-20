@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../lang/i18n"
   import { Modal, ModalContent, Body, TooltipWrapper } from "@budibase/bbui"
   import { licensing, auth, admin } from "stores/portal"
 
@@ -18,12 +19,12 @@
       : $licensing.usageMetrics?.dayPasses
   $: dayPassesTitle =
     dayPassesUsed >= 100
-      ? "You have run out of Day Passes"
-      : "You are almost out of Day Passes"
+      ? $_("components.portal.licensing.DayPassWarningModal.You_have")
+      : $_("components.portal.licensing.DayPassWarningModal.You_are")
   $: dayPassesBody =
     dayPassesUsed >= 100
-      ? "Upgrade your account to bring your apps back online."
-      : "Upgrade your account to prevent your apps from going offline."
+      ? $_("components.portal.licensing.DayPassWarningModal.Online")
+      : $_("components.portal.licensing.DayPassWarningModal.Offline")
 
   export function show() {
     dayPassModal.show()
@@ -45,10 +46,14 @@
       }}
     >
       <Body>
-        You have used <span class="daypass_percent">{dayPassesUsed}%</span> of
-        your plans Day Passes with {daysRemaining} day{daysRemaining == 1
-          ? ""
-          : "s"} remaining.
+        {$_("components.portal.licensing.DayPassWarningModal.used")}
+        <span class="daypass_percent">{dayPassesUsed}%</span>
+        {$_("components.portal.licensing.DayPassWarningModal.of")}
+        {daysRemaining}
+        {$_(
+          "components.portal.licensing.DayPassWarningModal.day"
+        )}{daysRemaining == 1 ? "" : "s"}
+        {$_("components.portal.licensing.DayPassWarningModal.remaining")}
         <span class="tooltip">
           <TooltipWrapper tooltip={quotaResetDate} size="S" />
         </span>
@@ -58,15 +63,20 @@
   {:else}
     <ModalContent title={dayPassesTitle} size="M" showCancelButton={false}>
       <Body>
-        You have used <span class="daypass_percent">{dayPassesUsed}%</span> of
-        your plans Day Passes with {daysRemaining} day{daysRemaining == 1
-          ? ""
-          : "s"} remaining.
+        {$_("components.portal.licensing.DayPassWarningModal.used")}
+        <span class="daypass_percent">{dayPassesUsed}%</span>
+        {$_("components.portal.licensing.DayPassWarningModal.of")}
+        {daysRemaining}
+        {$_(
+          "components.portal.licensing.DayPassWarningModal.day"
+        )}{daysRemaining == 1 ? "" : "s"}
+        {$_("components.portal.licensing.DayPassWarningModal.remaining")}
         <span class="tooltip">
           <TooltipWrapper tooltip={quotaResetDate} size="S" />
         </span>
       </Body>
-      <Body>Please contact your account holder to upgrade.</Body>
+      <Body>{$_("components.portal.licensing.DayPassWarningModal.Please")}</Body
+      >
     </ModalContent>
   {/if}
 </Modal>

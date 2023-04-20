@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import {
     DetailSummary,
     ActionButton,
@@ -37,26 +38,42 @@
       const value = readableToRuntimeBinding(bindings, tempValue)
       await store.actions.components.updateCustomStyle(value)
     } catch (error) {
-      notifications.error("Error updating custom style")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.components.componentId._components.settings.CustomStyleSection.Error_updating"
+        )
+      )
     }
     drawer.hide()
   }
 </script>
 
 <DetailSummary
-  name={`Custom CSS${componentInstance?._styles?.custom ? " *" : ""}`}
+  name={`${$_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.settings.CustomStyleSection.Custom_CSS"
+  )}${componentInstance?._styles?.custom ? " *" : ""}`}
   collapsible={false}
 >
   <div>
-    <ActionButton on:click={openDrawer}>Edit custom CSS</ActionButton>
+    <ActionButton on:click={openDrawer}
+      >{$_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.CustomStyleSection.Edit_custom"
+      )}</ActionButton
+    >
   </div>
 </DetailSummary>
 {#key componentInstance?._id}
   <Drawer bind:this={drawer} title="Custom CSS">
     <svelte:fragment slot="description">
-      Custom CSS overrides all other component styles.
+      {$_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.CustomStyleSection.Custom"
+      )}
     </svelte:fragment>
-    <Button cta slot="buttons" on:click={save}>Save</Button>
+    <Button cta slot="buttons" on:click={save}
+      >{$_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.settings.CustomStyleSection.Save"
+      )}</Button
+    >
     <svelte:component
       this={ClientBindingPanel}
       slot="body"

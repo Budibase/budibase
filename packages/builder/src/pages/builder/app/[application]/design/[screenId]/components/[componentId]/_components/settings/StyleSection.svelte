@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import { DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
@@ -27,7 +28,11 @@
     try {
       await store.actions.components.updateStyle(key, val)
     } catch (error) {
-      notifications.error("Error updating style")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.components.componentId._components.settings.StyleSection.Error_updating"
+        )
+      )
     }
   }
 </script>

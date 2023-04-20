@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Label, Select, Body, Multiselect } from "@budibase/bbui"
   import {
     findAllMatchingComponents,
@@ -59,24 +60,41 @@
 
 <div class="root">
   <Body size="S">
-    Choose the table component that you would like to export your row selection
-    from.
+    {$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.ExportData.Choose_table"
+    )}
     <br />
-    Please ensure you have enabled row selection in the table settings.
+    {$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.ExportData.row_selection"
+    )}
   </Body>
 
   <div class="params">
-    <Label small>Table</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ExportData.Table"
+      )}</Label
+    >
     <Select
       bind:value={parameters.tableComponentId}
       options={componentOptions}
       on:change={() => (parameters.columns = [])}
     />
-    <Label small>Export as</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ExportData.Export_as"
+      )}</Label
+    >
     <Select bind:value={parameters.type} options={FORMATS} />
-    <Label small>Export columns</Label>
+    <Label small
+      >{$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ExportData.Export_columns"
+      )}</Label
+    >
     <Multiselect
-      placeholder="All columns"
+      placeholder={$_(
+        "components.design.settings.controls.ButtonActionEditor.actions.ExportData.All_columns"
+      )}
       bind:value={parameters.columns}
       options={columnOptions}
     />

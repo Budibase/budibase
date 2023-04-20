@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import {
@@ -168,7 +169,9 @@
               icon={"ArrowLeft"}
               on:click={toggleActionList}
             >
-              Back
+              {$_(
+                "components.design.settings.controls.ButtonActionEditor.ButtonActionDrawer.Back"
+              )}
             </ActionButton>
           </div>
         {/if}

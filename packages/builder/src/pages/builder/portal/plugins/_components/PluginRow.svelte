@@ -10,6 +10,8 @@
   } from "@budibase/bbui"
   import DeletePluginModal from "../_components/DeletePluginModal.svelte"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   export let plugin
 
   let detailsModal
@@ -61,22 +63,32 @@
 <Modal bind:this={detailsModal}>
   <ModalContent
     size="M"
-    title="Plugin details"
+    title={$_(
+      "pages.builder.portal.plugins._components.PluginRow.Plugin_details"
+    )}
     showConfirmButton={false}
     showCancelButton={false}
   >
     <div class="details-row">
-      <Label size="M">Name</Label>
+      <Label size="M"
+        >{$_("pages.builder.portal.plugins._components.PluginRow.Name")}</Label
+      >
       <Input disabled value={plugin.name} />
     </div>
 
     <div class="details-row">
-      <Label size="M">Friendly name</Label>
+      <Label size="M"
+        >{$_(
+          "pages.builder.portal.plugins._components.PluginRow.Friendly_name"
+        )}</Label
+      >
       <Input disabled value={friendlyName} />
     </div>
 
     <div class="details-row">
-      <Label size="M">Type</Label>
+      <Label size="M"
+        >{$_("pages.builder.portal.plugins._components.PluginRow.Type")}</Label
+      >
       <Input
         disabled
         value={plugin.schema.type.charAt(0).toUpperCase() +
@@ -84,24 +96,44 @@
       />
     </div>
     <div class="details-row">
-      <Label size="M">Source</Label>
+      <Label size="M"
+        >{$_(
+          "pages.builder.portal.plugins._components.PluginRow.Source"
+        )}</Label
+      >
       <Input disabled value={plugin.source || "N/A"} />
     </div>
     <div class="details-row">
-      <Label size="M">Version</Label>
+      <Label size="M"
+        >{$_(
+          "pages.builder.portal.plugins._components.PluginRow.Version"
+        )}</Label
+      >
       <Input disabled value={plugin.version} />
     </div>
     <div class="details-row">
-      <Label size="M">License</Label>
+      <Label size="M"
+        >{$_(
+          "pages.builder.portal.plugins._components.PluginRow.License"
+        )}</Label
+      >
       <Input disabled value={plugin.package.license} />
     </div>
     <div class="details-row">
-      <Label size="M">Author</Label>
+      <Label size="M"
+        >{$_(
+          "pages.builder.portal.plugins._components.PluginRow.Author"
+        )}</Label
+      >
       <Input disabled value={plugin.package.author || "N/A"} />
     </div>
 
     <div class="footer" slot="footer">
-      <Button on:click={deleteModal.show()} warning>Delete</Button>
+      <Button on:click={deleteModal.show()} warning
+        >{$_(
+          "pages.builder.portal.plugins._components.PluginRow.Delete"
+        )}</Button
+      >
     </div>
   </ModalContent>
 

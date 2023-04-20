@@ -25,6 +25,8 @@
   import RemoveUserTableRenderer from "./_components/RemoveUserTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   export let groupId
 
   const userSchema = {
@@ -106,17 +108,23 @@
       await users.search({ page, email: search })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
-      notifications.error("Error getting user list")
+      notifications.error(
+        $_("pages.builder.portal.users.groups.[groupId].Error_getting")
+      )
     }
   }
 
   async function deleteGroup() {
     try {
       await groups.actions.delete(group)
-      notifications.success("User group deleted successfully")
+      notifications.success(
+        $_("pages.builder.portal.users.groups.[groupId].User_deleted")
+      )
       $goto("./")
     } catch (error) {
-      notifications.error(`Failed to delete user group`)
+      notifications.error(
+        $_("pages.builder.portal.users.groups.[groupId].Failed_delete")
+      )
     }
   }
 
@@ -124,7 +132,9 @@
     try {
       await groups.actions.save(group)
     } catch (error) {
-      notifications.error(`Failed to save user group`)
+      notifications.error(
+        $_("pages.builder.portal.users.groups.[groupId].Failed_save")
+      )
     }
   }
 
@@ -149,7 +159,9 @@
       await Promise.all([groups.actions.init(), roles.fetch()])
       loaded = true
     } catch (error) {
-      notifications.error("Error fetching user group data")
+      notifications.error(
+        $_("pages.builder.portal.users.groups.[groupId].Error_fetching")
+      )
     }
   })
 </script>
@@ -157,7 +169,10 @@
 {#if loaded}
   <Layout noPadding gap="L">
     <Breadcrumbs>
-      <Breadcrumb url={$url("./")} text="Groups" />
+      <Breadcrumb
+        url={$url("./")}
+        text={$_("pages.builder.portal.users.groups.[groupId].Groups")}
+      />
       <Breadcrumb text={group?.name} />
     </Breadcrumbs>
 
@@ -170,10 +185,10 @@
             <Icon hoverable name="More" />
           </span>
           <MenuItem icon="Refresh" on:click={() => editModal.show()}>
-            Edit
+            {$_("pages.builder.portal.users.groups.[groupId].Edit")}
           </MenuItem>
           <MenuItem icon="Delete" on:click={() => deleteModal.show()}>
-            Delete
+            {$_("pages.builder.portal.users.groups.[groupId].Delete")}
           </MenuItem>
         </ActionMenu>
       {/if}
@@ -181,10 +196,12 @@
 
     <Layout noPadding gap="S">
       <div class="header">
-        <Heading size="S">Users</Heading>
+        <Heading size="S">
+          {$_("pages.builder.portal.users.groups.[groupId].Users")}</Heading
+        >
         <div bind:this={popoverAnchor}>
-          <Button disabled={readonly} on:click={popover.show()} cta
-            >Add user</Button
+          <Button disabled={readonly} on:click={popover.show()} cta>
+            {$_("pages.builder.portal.users.groups.[groupId].Add_user")}</Button
           >
         </div>
         <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
@@ -208,13 +225,19 @@
         on:click={e => $goto(`../users/${e.detail._id}`)}
       >
         <div class="placeholder" slot="placeholder">
-          <Heading size="S">This user group doesn't have any users</Heading>
+          <Heading size="S"
+            >{$_(
+              "pages.builder.portal.users.groups.[groupId].user_doesn't_have"
+            )}</Heading
+          >
         </div>
       </Table>
     </Layout>
 
     <Layout noPadding gap="S">
-      <Heading size="S">Apps</Heading>
+      <Heading size="S"
+        >{$_("pages.builder.portal.users.groups.[groupId].Apps")}</Heading
+      >
       <Table
         schema={appSchema}
         data={groupApps}
@@ -224,7 +247,11 @@
         on:click={e => $goto(`../../overview/${e.detail.devId}`)}
       >
         <div class="placeholder" slot="placeholder">
-          <Heading size="S">This group doesn't have access to any apps</Heading>
+          <Heading size="S"
+            >{$_(
+              "pages.builder.portal.users.groups.[groupId].group_access"
+            )}</Heading
+          >
         </div>
       </Table>
     </Layout>
@@ -237,11 +264,12 @@
 
 <ConfirmDialog
   bind:this={deleteModal}
-  title="Delete user group"
-  okText="Delete user group"
+  title={$_("pages.builder.portal.users.groups.[groupId].Delete_group")}
+  okText={$_("pages.builder.portal.users.groups.[groupId].Delete_group")}
   onOk={deleteGroup}
 >
-  Are you sure you wish to delete <b>{group?.name}?</b>
+  {$_("pages.builder.portal.users.groups.[groupId].delete")}
+  <b>{group?.name}?</b>
 </ConfirmDialog>
 
 <style>

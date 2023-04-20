@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import {
     Icon,
     Button,
@@ -32,16 +33,38 @@
   <div class="container">
     <Layout noPadding gap="S">
       {#if !options.length}
-        <Body size="S">Add an option to get started.</Body>
+        <Body size="S"
+          >{$_(
+            "components.design.settings.controls.OptionEditor.OptionsDrawer.Add_option"
+          )}</Body
+        >
       {/if}
       {#if options?.length}
         <div class="options">
-          <Label>Label</Label>
-          <Label>Value</Label>
+          <Label
+            >{$_(
+              "components.design.settings.controls.OptionEditor.OptionsDrawer.Label"
+            )}</Label
+          >
+          <Label
+            >{$_(
+              "components.design.settings.controls.OptionEditor.OptionsDrawer.Value"
+            )}</Label
+          >
           <div />
           {#each options as option (option.id)}
-            <Input placeholder="Label" bind:value={option.label} />
-            <Input placeholder="Value" bind:value={option.value} />
+            <Input
+              placeholder={$_(
+                "components.design.settings.controls.OptionEditor.OptionsDrawer.Label"
+              )}
+              bind:value={option.label}
+            />
+            <Input
+              placeholder={$_(
+                "components.design.settings.controls.OptionEditor.OptionsDrawer.Value"
+              )}
+              bind:value={option.value}
+            />
             <Icon
               name="Close"
               hoverable
@@ -53,7 +76,9 @@
       {/if}
       <div>
         <Button icon="AddCircle" size="M" on:click={addOption} secondary>
-          Add Option
+          {$_(
+            "components.design.settings.controls.OptionEditor.OptionsDrawer.Add_Option"
+          )}
         </Button>
       </div>
     </Layout>

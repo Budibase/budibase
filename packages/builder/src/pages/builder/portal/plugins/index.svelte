@@ -17,6 +17,8 @@
   import PluginNameRenderer from "./_components/PluginNameRenderer.svelte"
   import EditPluginRenderer from "./_components/EditPluginRenderer.svelte"
 
+  import { _ } from "../../../../../lang/i18n"
+
   const schema = {
     name: {
       width: "2fr",
@@ -27,7 +29,7 @@
     },
     "schema.type": {
       width: "1fr",
-      displayName: "Type",
+      displayName: $_("pages.builder.portal.plugins.index.Type"),
       capitalise: true,
       minWidth: "120px",
     },
@@ -46,12 +48,21 @@
   let searchTerm = ""
   let filter = "all"
   let filterOptions = [
-    { label: "All plugins", value: "all" },
-    { label: "Components", value: "component" },
+    {
+      label: $_("pages.builder.portal.plugins.index.All_plugins"),
+      value: "all",
+    },
+    {
+      label: $_("pages.builder.portal.plugins.index.Components"),
+      value: "component",
+    },
   ]
 
   if (!$admin.cloud) {
-    filterOptions.push({ label: "Datasources", value: "datasource" })
+    filterOptions.push({
+      label: $_("pages.builder.portal.plugins.index.Datasources"),
+      value: "datasource",
+    })
   }
 
   $: filteredPlugins = $plugins
@@ -73,14 +84,18 @@
 <Page narrow>
   <Layout noPadding>
     <Layout gap="XS" noPadding>
-      <Heading size="M">Plugins</Heading>
-      <Body>Add your own custom datasources and components</Body>
+      <Heading size="M"
+        >{$_("pages.builder.portal.plugins.index.Plugins")}</Heading
+      >
+      <Body>{$_("pages.builder.portal.plugins.index.own_datasources")}</Body>
     </Layout>
     <Divider />
 
     <div class="controls">
       <div>
-        <Button on:click={modal.show} cta>Add plugin</Button>
+        <Button on:click={modal.show} cta
+          >{$_("pages.builder.portal.plugins.index.Add_plugin")}</Button
+        >
         <div class="secondaryButton">
           <Button
             on:click={() =>
@@ -89,7 +104,7 @@
                 .focus()}
             secondary
           >
-            GitHub repo
+            {$_("pages.builder.portal.plugins.index.GitHub_repo")}
           </Button>
         </div>
       </div>
@@ -103,7 +118,10 @@
               autoWidth
             />
           </div>
-          <Search bind:value={searchTerm} placeholder="Search" />
+          <Search
+            bind:value={searchTerm}
+            placeholder={$_("pages.builder.portal.plugins.index.Search")}
+          />
         </div>
       {/if}
     </div>

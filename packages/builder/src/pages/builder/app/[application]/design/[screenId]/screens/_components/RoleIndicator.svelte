@@ -4,6 +4,8 @@
   import { roles } from "stores/backend"
   import { Roles } from "constants/backend"
 
+  import { _ } from "../../../../../../../../../lang/i18n"
+
   export let roleId
 
   let showTooltip = false
@@ -12,8 +14,14 @@
   $: role = $roles.find(role => role._id === roleId)
   $: tooltip =
     roleId === Roles.PUBLIC
-      ? "This screen is open to the public"
-      : `Requires at least ${role?.name} access`
+      ? $_(
+          "pages.builder.app.application.design.screenId.screens._components.RoleIndicator.screen_open"
+        )
+      : `${$_(
+          "pages.builder.app.application.design.screenId.screens._components.RoleIndicator.Requires_least"
+        )} ${role?.name} ${$_(
+          "pages.builder.app.application.design.screenId.screens._components.RoleIndicator.access"
+        )}`
 </script>
 
 <div

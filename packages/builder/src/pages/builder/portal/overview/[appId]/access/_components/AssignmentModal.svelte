@@ -12,6 +12,8 @@
   import { API } from "api"
   import { createEventDispatcher } from "svelte"
 
+  import { _ } from "../../../../../../../../lang/i18n"
+
   export let app
   export let appUsers = []
   export let showUsers = false
@@ -144,9 +146,15 @@
 
 <ModalContent
   size="M"
-  title="Assign access to your app"
-  confirmText="Done"
-  cancelText="Cancel"
+  title={$_(
+    "pages.builder.portal.overview.appId.access._components.AssigmentModal.Assign_app"
+  )}
+  confirmText={$_(
+    "pages.builder.portal.overview.appId.access._components.AssigmentModal.Done"
+  )}
+  cancelText={$_(
+    "pages.builder.portal.overview.appId.access._components.AssigmentModal.Cancel"
+  )}
   onConfirm={() => addData(data)}
   showCloseIcon={false}
   disabled={!valid}
@@ -163,7 +171,9 @@
               secondaryOptions={$roles.filter(
                 x => x._id !== Constants.Roles.PUBLIC
               )}
-              secondaryPlaceholder="Access"
+              secondaryPlaceholder={$_(
+                "pages.builder.portal.overview.appId.access._components.AssigmentModal.Access"
+              )}
               bind:primaryValue={input.id}
               bind:secondaryValue={input.role}
               bind:searchTerm={search}
@@ -190,7 +200,11 @@
     </Layout>
   {/if}
   <div>
-    <ActionButton on:click={addNewInput} icon="Add">Add more</ActionButton>
+    <ActionButton on:click={addNewInput} icon="Add"
+      >{$_(
+        "pages.builder.portal.overview.appId.access._components.AssigmentModal.Add_more"
+      )}</ActionButton
+    >
   </div>
 </ModalContent>
 

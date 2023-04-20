@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import {
     ModalContent,
     Icon,
@@ -53,15 +54,19 @@
         icon: { name, color },
       })
     } catch (error) {
-      notifications.error("Error updating app")
+      notifications.error($_("components.start.ChooseIconModal.Error_updating"))
     }
   }
 </script>
 
-<ModalContent title="Edit Icon" confirmText="Save" onConfirm={save}>
+<ModalContent
+  title={$_("components.start.ChooseIconModal.Edit_Icon")}
+  confirmText={$_("components.start.ChooseIconModal.Save")}
+  onConfirm={save}
+>
   <div class="scrollable-icons">
     <div class="title-spacing">
-      <Label>Select an icon</Label>
+      <Label>{$_("components.start.ChooseIconModal.Select_an_icon")}</Label>
     </div>
     <div class="grid">
       {#each iconsList as item}
@@ -77,7 +82,7 @@
   </div>
   <div class="color-selection">
     <div>
-      <Label>Select a color</Label>
+      <Label>{$_("components.start.ChooseIconModal.Select_color")}</Label>
     </div>
     <div class="color-selection-item">
       <ColorPicker bind:value={color} on:change={e => (color = e.detail)} />

@@ -4,11 +4,13 @@
   import { onMount } from "svelte"
   import { notifications } from "@budibase/bbui"
 
+  import { _ } from "../../lang/i18n"
+
   onMount(async () => {
     try {
       await auth.checkQueryString()
     } catch (error) {
-      notifications.error("Error setting org")
+      notifications.error($_("pages.index.Error_setting_org"))
     }
     $redirect(`./builder`)
   })

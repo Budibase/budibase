@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { onMount } from "svelte"
   import { tables } from "stores/backend"
   import { redirect } from "@roxi/routify"
@@ -14,8 +15,9 @@
 </script>
 
 {#if !$tables.list?.length}
-  <i>Create your first table to start building</i>
-{:else}<i>Select a table to edit</i>{/if}
+  <i>{$_("pages.builder.app.application.data.table.index.Create_your_first")}</i
+  >
+{:else}<i>{$_("pages.builder.app.application.data.table.index.Select")}</i>{/if}
 
 <style>
   i {

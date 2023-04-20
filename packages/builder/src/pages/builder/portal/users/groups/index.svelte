@@ -22,6 +22,8 @@
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
   import { goto } from "@roxi/routify"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   const DefaultGroup = {
     name: "",
     icon: "UserGroup",
@@ -61,12 +63,16 @@
     try {
       group = await groups.actions.save(group)
       $goto(`./${group._id}`)
-      notifications.success(`User group created successfully`)
+      notifications.success(
+        $_("pages.builder.portal.users.groups.index.group_created")
+      )
     } catch (error) {
       if (error.status === 400) {
         notifications.error(error.message)
       } else {
-        notifications.error(`Failed to save group`)
+        notifications.error(
+          $_("pages.builder.portal.users.groups.index.Failed_save_group")
+        )
       }
     }
   }
@@ -82,7 +88,9 @@
       await licensing.init()
       await groups.actions.init()
     } catch (error) {
-      notifications.error("Error getting user groups")
+      notifications.error(
+        $_("pages.builder.portal.users.groups.index.Error_getting_groups")
+      )
     }
   })
 </script>
@@ -90,25 +98,29 @@
 <Layout noPadding gap="M">
   <Layout gap="XS" noPadding>
     <div class="title">
-      <Heading size="M">Groups</Heading>
+      <Heading size="M"
+        >{$_("pages.builder.portal.users.groups.index.Groups")}</Heading
+      >
       {#if !$licensing.groupsEnabled}
         <Tags>
-          <Tag icon="LockClosed">Pro plan</Tag>
+          <Tag icon="LockClosed"
+            >{$_("pages.builder.portal.users.groups.index.Pro_plan")}</Tag
+          >
         </Tags>
       {/if}
     </div>
-    <Body>Easily assign and manage your users' access with groups</Body>
+    <Body>{$_("pages.builder.portal.users.groups.index.Easily_assign")}</Body>
   </Layout>
   <Divider />
   {#if !$auth.accountPortalAccess && !$licensing.groupsEnabled && $admin.cloud}
-    <Body>Contact your account holder to upgrade your plan.</Body>
+    <Body>{$_("pages.builder.portal.users.groups.index.Contact_account")}</Body>
   {/if}
   <div class="controls">
     <ButtonGroup>
       {#if $licensing.groupsEnabled}
         <!--Show the group create button-->
         <Button disabled={readonly} cta on:click={showCreateGroupModal}>
-          Add group
+          {$_("pages.builder.portal.users.groups.index.Add_group")}
         </Button>
       {:else}
         <Button
@@ -116,7 +128,7 @@
           disabled={!$auth.accountPortalAccess && $admin.cloud}
           on:click={$licensing.goToUpgradePage()}
         >
-          Upgrade
+          {$_("pages.builder.portal.users.groups.index.Upgrade")}
         </Button>
         <!--Show the view plans button-->
         <Button
@@ -125,13 +137,16 @@
             window.open("https://budibase.com/pricing/", "_blank")
           }}
         >
-          View Plans
+          {$_("pages.builder.portal.users.groups.index.View_Plans")}
         </Button>
       {/if}
     </ButtonGroup>
     {#if $licensing.groupsEnabled}
       <div class="controls-right">
-        <Search bind:value={searchString} placeholder="Search" />
+        <Search
+          bind:value={searchString}
+          placeholder={$_("pages.builder.portal.users.groups.index.Search")}
+        />
       </div>
     {/if}
   </div>

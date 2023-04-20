@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import { Button, ActionButton, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import ColumnDrawer from "./ColumnDrawer.svelte"
@@ -75,12 +76,28 @@
   }
 </script>
 
-<ActionButton on:click={open}>Configure columns</ActionButton>
-<Drawer bind:this={drawer} title="{subject} Columns">
+<ActionButton on:click={open}
+  >{$_(
+    "components.design.settings.controls.ColumnEditor.ColumnEditor.Configure_columns"
+  )}</ActionButton
+>
+<Drawer
+  bind:this={drawer}
+  title="{subject} {$_(
+    'components.design.settings.controls.ColumnEditor.ColumnEditor.Columns'
+  )}"
+>
   <svelte:fragment slot="description">
-    Configure the columns in your {subject.toLowerCase()}.
+    {$_(
+      "components.design.settings.controls.ColumnEditor.ColumnEditor.Configure_columnsr"
+    )}
+    {subject.toLowerCase()}.
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={save}>Save</Button>
+  <Button cta slot="buttons" on:click={save}
+    >{$_(
+      "components.design.settings.controls.ColumnEditor.ColumnEditor.Save"
+    )}</Button
+  >
   <ColumnDrawer
     slot="body"
     bind:columns={boundValue}

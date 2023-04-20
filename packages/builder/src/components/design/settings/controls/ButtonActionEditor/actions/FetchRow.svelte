@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label } from "@budibase/bbui"
   import { tables } from "stores/backend"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
@@ -10,7 +11,11 @@
 </script>
 
 <div class="root">
-  <Label>Table</Label>
+  <Label
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.FetchRow.Table"
+    )}</Label
+  >
   <Select
     bind:value={parameters.tableId}
     options={tableOptions}
@@ -18,10 +23,16 @@
     getOptionValue={table => table._id}
   />
 
-  <Label small>Row ID</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.FetchRow.Row_ID"
+    )}</Label
+  >
   <DrawerBindableInput
     {bindings}
-    title="Row ID to Fetch"
+    title={$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.FetchRow.Row_Fetch"
+    )}
     value={parameters.rowId}
     on:change={value => (parameters.rowId = value.detail)}
   />

@@ -20,6 +20,8 @@
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "builderStore/dataBinding"
 
+  import { _ } from "../../../../../../../../../lang/i18n"
+
   $: bindings = getBindableProperties($selectedScreen, null)
 
   let errors = {}
@@ -72,7 +74,11 @@
       await store.actions.screens.updateSetting(get(selectedScreen), key, value)
     } catch (error) {
       console.log(error)
-      notifications.error("Error saving screen settings")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Error_saving"
+        )
+      )
     }
   }
 
@@ -81,12 +87,16 @@
       key: "routing.homeScreen",
       control: Checkbox,
       props: {
-        text: "Set as home screen",
+        text: $_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Set_home"
+        ),
       },
     },
     {
       key: "routing.route",
-      label: "Route",
+      label: $_(
+        "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Route"
+      ),
       control: Input,
       parser: val => {
         if (!val.startsWith("/")) {
@@ -97,44 +107,76 @@
       validate: route => {
         const existingRoute = get(selectedScreen).routing.route
         if (route !== existingRoute && routeTaken(route)) {
-          return "That URL is already in use for this role"
+          return $_(
+            "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.URL_use"
+          )
         }
         return null
       },
     },
     {
       key: "routing.roleId",
-      label: "Access",
+      label: $_(
+        "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Access"
+      ),
       control: RoleSelect,
       validate: role => {
         const existingRole = get(selectedScreen).routing.roleId
         if (role !== existingRole && roleTaken(role)) {
-          return "That role is already in use for this URL"
+          return $_(
+            "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.role_use"
+          )
         }
         return null
       },
     },
     {
       key: "onLoad",
-      label: "On screen load",
+      label: $_(
+        "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.On_load"
+      ),
       control: ButtonActionEditor,
     },
     {
       key: "showNavigation",
-      label: "Navigation",
+      label: $_(
+        "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Navigation"
+      ),
       control: Toggle,
       props: {
-        text: "Show navigation",
+        text: $_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Show_navigation"
+        ),
         disabled: !!$selectedScreen.layoutId,
       },
     },
     {
       key: "width",
-      label: "Width",
+      label: $_(
+        "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Width"
+      ),
       control: Select,
       props: {
-        options: ["Extra small", "Small", "Medium", "Large", "Max"],
-        placeholder: "Default",
+        options: [
+          $_(
+            "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Extra_small"
+          ),
+          $_(
+            "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Small"
+          ),
+          $_(
+            "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Medium"
+          ),
+          $_(
+            "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Large"
+          ),
+          $_(
+            "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Max"
+          ),
+        ],
+        placeholder: $_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Width"
+        ),
         disabled: !!$selectedScreen.layoutId,
       },
     },
@@ -154,11 +196,15 @@
     {#if $selectedScreen.layoutId}
       <Banner
         type="warning"
-        extraButtonText="Detach custom layout"
+        extraButtonText={$_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.Detach_layout"
+        )}
         extraButtonAction={removeCustomLayout}
         showCloseButton={false}
       >
-        This screen uses a custom layout, which is deprecated
+        {$_(
+          "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.screen_uses"
+        )}
       </Banner>
     {/if}
     {#each screenSettings as setting (setting.key)}
@@ -173,7 +219,9 @@
       />
     {/each}
     <Button secondary on:click={() => $goto("../components")}>
-      View components
+      {$_(
+        "pages.builder.app.application.design.screenId.screens._components.ScreenSettingsPanel.View_components"
+      )}
     </Button>
   </Layout>
 </Panel>

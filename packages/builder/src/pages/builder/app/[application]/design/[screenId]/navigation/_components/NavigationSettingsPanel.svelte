@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../lang/i18n"
   import Panel from "components/design/Panel.svelte"
   import {
     Layout,
@@ -21,7 +22,11 @@
       navigation[key] = value
       await store.actions.navigation.save(navigation)
     } catch (error) {
-      notifications.error("Error updating navigation settings")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.navigation._components.NavigationSettingsPanel.Error_updating"
+        )
+      )
     }
   }
 </script>
@@ -30,7 +35,11 @@
   <Layout paddingX="L" paddingY="XL" gap="S">
     <NavigationLinksEditor />
     <Layout noPadding gap="XS">
-      <Label>Position</Label>
+      <Label
+        >{$_(
+          "pages.builder.app.application.design.screenId.navigation._components.NavigationSettingsPanel.Position"
+        )}</Label
+      >
       <ActionGroup quiet>
         <ActionButton
           selected={$store.navigation.navigation === "Top"}
@@ -48,7 +57,9 @@
     </Layout>
     {#if $store.navigation.navigation === "Top"}
       <Checkbox
-        text="Sticky header"
+        text={$_(
+          "pages.builder.app.application.design.screenId.navigation._components.NavigationSettingsPanel.Sticky_header"
+        )}
         value={$store.navigation.sticky}
         on:change={e => update("sticky", e.detail)}
       />
@@ -70,7 +81,9 @@
         <Input
           value={$store.navigation.logoUrl}
           on:change={e => update("logoUrl", e.detail)}
-          placeholder="Add logo URL"
+          placeholder={$_(
+            "pages.builder.app.application.design.screenId.navigation._components.NavigationSettingsPanel.Add_logo"
+          )}
           updateOnChange={false}
         />
       {/if}
@@ -85,13 +98,19 @@
         <Input
           value={$store.navigation.title}
           on:change={e => update("title", e.detail)}
-          placeholder="Add title"
+          placeholder={$_(
+            "pages.builder.app.application.design.screenId.navigation._components.NavigationSettingsPanel.Add_title"
+          )}
           updateOnChange={false}
         />
       {/if}
     </Layout>
     <Layout noPadding gap="XS">
-      <Label>Background color</Label>
+      <Label
+        >{$_(
+          "pages.builder.app.application.design.screenId.navigation._components.NavigationSettingsPanel.Background_color"
+        )}r</Label
+      >
       <ColorPicker
         spectrumTheme={$store.theme}
         value={$store.navigation.navBackground || DefaultAppTheme.navBackground}
@@ -99,7 +118,11 @@
       />
     </Layout>
     <Layout noPadding gap="XS">
-      <Label>Text color</Label>
+      <Label
+        >{$_(
+          "pages.builder.app.application.design.screenId.navigation._components.NavigationSettingsPanel.Text_color"
+        )}</Label
+      >
       <ColorPicker
         spectrumTheme={$store.theme}
         value={$store.navigation.navTextColor || DefaultAppTheme.navTextColor}

@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import { ActionButton, Button, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { notifications } from "@budibase/bbui"
@@ -32,7 +33,11 @@
     }
 
     dispatch("change", tmpValue)
-    notifications.success("Component actions saved.")
+    notifications.success(
+      $_(
+        "components.design.settings.controls.ButtonActionEditor.ButtonActionEditor.Component_saved"
+      )
+    )
     drawer.hide()
   }
 
@@ -60,7 +65,11 @@
       parameters.automationId = automation._id
       delete parameters.newAutomationName
     } catch (error) {
-      notifications.error("Error creating automation")
+      notifications.error(
+        $_(
+          "components.design.settings.controls.ButtonActionEditor.ButtonActionEditor.Error_creating"
+        )
+      )
     }
   }
 
@@ -71,13 +80,28 @@
 </script>
 
 <div class="action-count">{actionText}</div>
-<ActionButton on:click={openDrawer}>Define actions</ActionButton>
+<ActionButton on:click={openDrawer}
+  >{$_(
+    "components.design.settings.controls.ButtonActionEditor.ButtonActionEditor.Define_actions"
+  )}</ActionButton
+>
 
-<Drawer bind:this={drawer} title={"Actions"}>
+<Drawer
+  bind:this={drawer}
+  title={$_(
+    "components.design.settings.controls.ButtonActionEditor.ButtonActionEditor.Actions"
+  )}
+>
   <svelte:fragment slot="description">
-    Define what actions to run.
+    {$_(
+      "components.design.settings.controls.ButtonActionEditor.ButtonActionEditor.Define"
+    )}
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={saveEventData}>Save</Button>
+  <Button cta slot="buttons" on:click={saveEventData}
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.ButtonActionEditor.Save"
+    )}</Button
+  >
   <ButtonActionDrawer
     slot="body"
     bind:actions={tmpValue}

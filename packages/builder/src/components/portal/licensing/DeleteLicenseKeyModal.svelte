@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../lang/i18n"
   import { Modal, ModalContent, Body } from "@budibase/bbui"
 
   let modal
@@ -22,8 +23,12 @@
     confirmText={"Confirm"}
     {onConfirm}
   >
-    <Body size="S">Are you sure you want to delete this license key?</Body>
-    <Body size="S">This license key cannot be re-activated.</Body>
+    <Body size="S"
+      >{$_("components.portal.licensing.DeleteLicenseKeyModal.Are")}</Body
+    >
+    <Body size="S"
+      >{$_("components.portal.licensing.DeleteLicenseKeyModal.This")}</Body
+    >
   </ModalContent>
 </Modal>
 

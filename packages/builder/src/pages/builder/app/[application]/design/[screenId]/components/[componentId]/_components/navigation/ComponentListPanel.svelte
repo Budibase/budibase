@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import Panel from "components/design/Panel.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore } from "./dndStore.js"
@@ -17,20 +18,36 @@
       await dndStore.actions.drop()
     } catch (error) {
       console.error(error)
-      notifications.error("Error saving component")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentListPanel.Error_saving"
+        )
+      )
     }
   }
 </script>
 
-<Panel title="Components" showExpandIcon borderRight>
+<Panel
+  title={$_(
+    "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentListPanel.Components"
+  )}
+  showExpandIcon
+  borderRight
+>
   <div class="add-component">
-    <Button on:click={() => $goto("./new")} cta>Add component</Button>
+    <Button on:click={() => $goto("./new")} cta
+      >{$_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentListPanel.Add_component"
+      )}</Button
+    >
   </div>
   <ComponentScrollWrapper>
     <ul>
       <li>
         <NavItem
-          text="Screen"
+          text={$_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentListPanel.Screen"
+          )}
           indentLevel={0}
           selected={$store.selectedComponentId === $selectedScreen?.props._id}
           opened

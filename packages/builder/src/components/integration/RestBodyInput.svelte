@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../lang/i18n"
   import { Body } from "@budibase/bbui"
   import { RawRestBodyTypes } from "constants/backend"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
@@ -62,7 +63,9 @@
 <div class="margin">
   {#if bodyType === RawRestBodyTypes.NONE}
     <div class="none">
-      <Body size="S" weight="800">THE REQUEST DOES NOT HAVE A BODY</Body>
+      <Body size="S" weight="800"
+        >{$_("components.integration.RestBodyInput.REQUEST")}</Body
+      >
     </div>
   {:else if objectTypes.includes(bodyType)}
     <KeyValueBuilder bind:object={json} name="param" headings />

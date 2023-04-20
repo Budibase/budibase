@@ -22,6 +22,8 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   let appEditor
   let unpublishModal
   let deployments
@@ -69,9 +71,13 @@
     try {
       await API.unpublishApp(app.prodId)
       await apps.load()
-      notifications.success("App unpublished successfully")
+      notifications.success(
+        $_("pages.builder.portal.overview.appId.overview.App_unpublished")
+      )
     } catch (err) {
-      notifications.error("Error unpublishing app")
+      notifications.error(
+        $_("pages.builder.portal.overview.appId.overview.Error_unpublishing")
+      )
     }
   }
 
@@ -80,7 +86,7 @@
       const pending = checkIncomingDeploymentStatus(deployments, newDeployments)
       if (pending.length) {
         notifications.warning(
-          "Deployment has been queued and will be processed shortly"
+          $_("pages.builder.portal.overview.appId.overview.Deployment_shortly")
         )
       }
     }
@@ -92,7 +98,9 @@
       return newDeployments
     } catch (err) {
       console.log(err)
-      notifications.error("Error fetching deployment history")
+      notifications.error(
+        $_("pages.builder.portal.overview.appId.overview.Error_fetching")
+      )
     }
   }
 
@@ -104,22 +112,36 @@
 <div class="overview-tab">
   <Layout noPadding gap="XL">
     <div class="top">
-      <DashCard title={"App Status"}>
+      <DashCard
+        title={$_("pages.builder.portal.overview.appId.overview.App_Status")}
+      >
         <div class="status-content">
           <div class="status-display">
             {#if isPublished}
               <Icon name="GlobeCheck" size="XL" disabled={false} />
-              <span>Published</span>
+              <span
+                >{$_(
+                  "pages.builder.portal.overview.appId.overview.Published"
+                )}</span
+              >
             {:else}
               <Icon name="GlobeStrike" size="XL" disabled={true} />
-              <span class="disabled">Unpublished</span>
+              <span class="disabled"
+                >{$_(
+                  "pages.builder.portal.overview.appId.overview.Unpublished"
+                )}</span
+              >
             {/if}
           </div>
 
           <div class="status-text">
             {#if deployments?.length}
               {processStringSync(
-                "Last published {{ duration time 'millisecond' }} ago",
+                `${$_(
+                  "pages.builder.portal.overview.appId.overview.Last_published"
+                )} {{ duration time 'millisecond' }} ${$_(
+                  "pages.builder.portal.overview.appId.overview.ago"
+                )}`,
                 {
                   time:
                     new Date().getTime() -
@@ -127,7 +149,11 @@
                 }
               )}
               {#if isPublished}
-                - <Link on:click={unpublishModal.show}>Unpublish</Link>
+                - <Link on:click={unpublishModal.show}
+                  >{$_(
+                    "pages.builder.portal.overview.appId.overview.Unpublish"
+                  )}</Link
+                >
               {/if}
             {/if}
             {#if !deployments?.length}
@@ -143,14 +169,20 @@
               {#if appEditor}
                 <Avatar size="M" initials={getInitials(appEditor)} />
                 <div class="editor-name">
-                  {appEditor._id === $auth.user._id ? "You" : appEditorText}
+                  {appEditor._id === $auth.user._id
+                    ? $_("pages.builder.portal.overview.appId.overview.You")
+                    : appEditorText}
                 </div>
               {/if}
             </div>
             <div class="last-edit-text">
               {#if app}
                 {processStringSync(
-                  "Last edited {{ duration time 'millisecond' }} ago",
+                  `${$_(
+                    "pages.builder.portal.overview.appId.overview.Last_Edited"
+                  )} {{ duration time 'millisecond' }} ${$_(
+                    "pages.builder.portal.overview.appId.overview.ago"
+                  )}`,
                   {
                     time:
                       new Date().getTime() - new Date(app?.updatedAt).getTime(),
@@ -162,7 +194,7 @@
         </DashCard>
       {/if}
       <DashCard
-        title={"Version"}
+        title={$_("pages.builder.portal.overview.appId.overview.Version")}
         showIcon={true}
         action={() => {
           $goto("./version")
@@ -172,24 +204,28 @@
           <Heading size="XS">{$store.version}</Heading>
           {#if updateAvailable}
             <div class="version-status">
-              New version <strong>{clientPackage.version}</strong> is available
+              {$_("pages.builder.portal.overview.appId.overview.New_version")}
+              <strong>{clientPackage.version}</strong>
+              {$_("pages.builder.portal.overview.appId.overview.is_available")}
               -
               <Link
                 on:click={() => {
                   $goto("./version")
                 }}
               >
-                Update
+                {$_("pages.builder.portal.overview.appId.overview.Update")}
               </Link>
             </div>
           {:else}
-            <div class="version-status">You're running the latest!</div>
+            <div class="version-status">
+              {$_("pages.builder.portal.overview.appId.overview.latest")}
+            </div>
           {/if}
         </div>
       </DashCard>
       {#if $appUsersFetch.loaded}
         <DashCard
-          title={"Access"}
+          title={$_("pages.builder.portal.overview.appId.overview.Access")}
           showIcon={true}
           action={() => {
             $goto("./access")
@@ -207,7 +243,16 @@
                     </div>
                     <div class="text">
                       {appUsers.length}
-                      {appUsers.length > 1 ? "users" : "user"} assigned
+                      {appUsers.length > 1
+                        ? $_(
+                            "pages.builder.portal.overview.appId.overview.users"
+                          )
+                        : $_(
+                            "pages.builder.portal.overview.appId.overview.user"
+                          )}
+                      {$_(
+                        "pages.builder.portal.overview.appId.overview.assigned"
+                      )}
                     </div>
                   </div>
                 {/if}
@@ -219,8 +264,18 @@
                       {/each}
                     </div>
                     <div class="text">
-                      {appGroups.length} user
-                      {appGroups.length > 1 ? "groups" : "group"} assigned
+                      {appGroups.length}
+                      {$_("pages.builder.portal.overview.appId.overview.user")}
+                      {appGroups.length > 1
+                        ? $_(
+                            "pages.builder.portal.overview.appId.overview.groups"
+                          )
+                        : $_(
+                            "pages.builder.portal.overview.appId.overview.group"
+                          )}
+                      {$_(
+                        "pages.builder.portal.overview.appId.overview.assigned"
+                      )}
                     </div>
                   </div>
                 {/if}
@@ -228,9 +283,15 @@
             </Layout>
           {:else}
             <Layout noPadding gap="S">
-              <Body>No users</Body>
+              <Body
+                >{$_(
+                  "pages.builder.portal.overview.appId.overview.No_users"
+                )}</Body
+              >
               <div class="users-text">
-                No users have been assigned to this app
+                {$_(
+                  "pages.builder.portal.overview.appId.overview.No_users_app"
+                )}
               </div>
             </Layout>
           {/if}
@@ -240,7 +301,9 @@
     {#if false}
       <div class="bottom">
         <DashCard
-          title={"Automation History"}
+          title={$_(
+            "pages.builder.portal.overview.appId.overview.Automation_History"
+          )}
           action={() => {
             $goto("../automation-history")
           }}
@@ -251,26 +314,28 @@
                 <Heading size="XL">0</Heading>
                 <div class="metric-info">
                   <Icon name="CheckmarkCircle" />
-                  Success
+                  {$_("pages.builder.portal.overview.appId.overview.Success")}
                 </div>
               </div>
               <div class="failed">
                 <Heading size="XL">0</Heading>
                 <div class="metric-info">
                   <Icon name="Alert" />
-                  Error
+                  {$_("pages.builder.portal.overview.appId.overview.Error")}
                 </div>
               </div>
             </div>
           </div>
         </DashCard>
         <DashCard
-          title={"Backups"}
+          title={$_("pages.builder.portal.overview.appId.overview.Backups")}
           action={() => {
             $goto("../backups")
           }}
         >
-          <div class="backups-content">test</div>
+          <div class="backups-content">
+            {$_("pages.builder.portal.overview.appId.overview.test")}
+          </div>
         </DashCard>
       </div>
     {/if}
@@ -279,11 +344,12 @@
 
 <ConfirmDialog
   bind:this={unpublishModal}
-  title="Confirm unpublish"
-  okText="Unpublish app"
+  title={$_("pages.builder.portal.overview.appId.overview.Confirm_unpublish")}
+  okText={$_("pages.builder.portal.overview.appId.overview.Unpublish_app")}
   onOk={confirmUnpublishApp}
 >
-  Are you sure you want to unpublish the app <b>{app?.name}</b>?
+  {$_("pages.builder.portal.overview.appId.overview.unpublish_app")}
+  <b>{app?.name}</b>?
 </ConfirmDialog>
 
 <style>

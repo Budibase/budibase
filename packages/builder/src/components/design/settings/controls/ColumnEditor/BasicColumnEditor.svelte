@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import ColumnEditor from "./ColumnEditor.svelte"
 </script>
 
@@ -6,5 +7,7 @@
   {...$$props}
   on:change
   allowCellEditing={false}
-  subject="Dynamic Filter"
+  subject={$_(
+    "components.design.settings.controls.ColumnEditor.BasicColumnEditor.Dynamic_Filter"
+  )}
 />

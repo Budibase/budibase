@@ -27,6 +27,8 @@
   import { AppStatus } from "constants"
   import Logo from "assets/bb-space-man.svg"
 
+  import { _ } from "../../../../../lang/i18n"
+
   let sortBy = "name"
   let template
   let creationModal
@@ -39,7 +41,9 @@
   let accessFilterList = null
   let confirmDownloadDialog
 
-  $: welcomeHeader = `Welcome ${$auth?.user?.firstName || "back"}`
+  $: welcomeHeader = `${$_("pages.builder.portal.apps.index.Welcome")} ${
+    $auth?.user?.firstName || $_("pages.builder.portal.apps.index.back")
+  }`
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(
     app =>
@@ -108,7 +112,9 @@
   const automationErrorMessage = appId => {
     const app = enrichedApps.find(app => app.devId === appId)
     const errors = automationErrors[appId]
-    return `${app.name} - Automation error (${errorCount(errors)})`
+    return `${app.name} - ${$_(
+      "pages.builder.portal.apps.index.Automation_error"
+    )} (${errorCount(errors)})`
   }
 
   const initiateAppCreation = async () => {
@@ -126,9 +132,13 @@
   const initiateAppsExport = () => {
     try {
       window.location = `/api/cloud/export`
-      notifications.success("Apps exported successfully")
+      notifications.success(
+        $_("pages.builder.portal.apps.index.Apps_exported_successfully")
+      )
     } catch (err) {
-      notifications.error(`Error exporting apps: ${err}`)
+      notifications.error(
+        `${$_("pages.builder.portal.apps.index.Error_exporting_apps")}: ${err}`
+      )
     }
   }
 
@@ -172,7 +182,7 @@
       await auth.setInitInfo({})
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
-      notifications.error("Error creating app")
+      notifications.error($_("pages.builder.portal.apps.index.Error_creating"))
     }
   }
 
@@ -190,7 +200,7 @@
       }
       autoCreateApp()
     } else {
-      notifications.error("Your Template URL is invalid. Please try another.")
+      notifications.error($_("pages.builder.portal.apps.index.URL_invalid"))
     }
   }
 
@@ -204,7 +214,7 @@
         createAppFromTemplateUrl(initInfo.init_template)
       }
     } catch (error) {
-      notifications.error("Error getting init info")
+      notifications.error($_("pages.builder.portal.apps.index.Error_info"))
     }
   })
 </script>
@@ -220,8 +230,8 @@
           type="error"
           icon="Alert"
           actionMessage={errorCount(automationErrors[appId]) > 1
-            ? "View errors"
-            : "View error"}
+            ? $_("pages.builder.portal.apps.index.View_errors")
+            : $_("pages.builder.portal.apps.index.View_error")}
           on:dismiss={async () => {
             await automationStore.actions.clearLogErrors({ appId })
             await apps.load()
@@ -234,7 +244,7 @@
           <Layout noPadding gap="XS">
             <Heading size="L">{welcomeHeader}</Heading>
             <Body size="M">
-              Manage your apps and get a head start with templates
+              {$_("pages.builder.portal.apps.index.Manage_apps")}
             </Body>
           </Layout>
         </div>
@@ -245,7 +255,7 @@
           <div class="title">
             <div class="buttons">
               <Button size="M" cta on:click={initiateAppCreation}>
-                Create new app
+                {$_("pages.builder.portal.apps.index.Create_app")}
               </Button>
               {#if $apps?.length > 0}
                 <Button
@@ -253,12 +263,12 @@
                   secondary
                   on:click={$goto("/builder/portal/apps/templates")}
                 >
-                  View templates
+                  {$_("pages.builder.portal.apps.index.View_templates")}
                 </Button>
               {/if}
               {#if !$apps?.length}
                 <Button size="L" quiet secondary on:click={initiateAppImport}>
-                  Import app
+                  {$_("pages.builder.portal.apps.index.Import_app")}
                 </Button>
               {/if}
             </div>
@@ -276,12 +286,24 @@
                   bind:value={sortBy}
                   placeholder={null}
                   options={[
-                    { label: "Sort by name", value: "name" },
-                    { label: "Sort by recently updated", value: "updated" },
-                    { label: "Sort by status", value: "status" },
+                    {
+                      label: $_("pages.builder.portal.apps.index.Sort_name"),
+                      value: "name",
+                    },
+                    {
+                      label: $_("pages.builder.portal.apps.index.Sort_updated"),
+                      value: "updated",
+                    },
+                    {
+                      label: $_("pages.builder.portal.apps.index.Sort_status"),
+                      value: "status",
+                    },
                   ]}
                 />
-                <Search placeholder="Search" bind:value={searchTerm} />
+                <Search
+                  placeholder={$_("pages.builder.portal.apps.index.Search")}
+                  bind:value={searchTerm}
+                />
               </div>
             {/if}
           </div>
@@ -297,7 +319,7 @@
       {#if creatingFromTemplate}
         <div class="empty-wrapper">
           <img class="img-logo img-size" alt="logo" src={Logo} />
-          <p>Creating your Budibase app from your selected template...</p>
+          <p>{$_("pages.builder.portal.apps.index.Creating_Budibase")}</p>
           <Spinner size="10" />
         </div>
       {/if}
@@ -318,14 +340,12 @@
 
 <ConfirmDialog
   bind:this={confirmDownloadDialog}
-  okText="Continue"
+  okText={$_("pages.builder.portal.apps.index.Continue")}
   onOk={initiateAppsExport}
   warning={false}
-  title="Download all apps"
+  title={$_("pages.builder.portal.apps.index.Download_apps")}
 >
-  <InlineAlert
-    header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
-  />
+  <InlineAlert header={$_("pages.builder.portal.apps.index.Do_not_share")} />
 </ConfirmDialog>
 
 <style>

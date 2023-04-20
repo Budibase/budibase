@@ -1,7 +1,10 @@
+<script>
+  import { _ } from "../../../../../lang/i18n"
+</script>
+
 <div>
-  Once you’re happy with your app you can publish it to production!
+  {$_("components.portal.onboarding.steps.OnboardingPublish.Once")}
   <p>
-    After publishing, any changes you make will not take affect until you next
-    publish.
+    {$_("components.portal.onboarding.steps.OnboardingPublish.After")}
   </p>
 </div>

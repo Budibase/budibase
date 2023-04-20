@@ -7,6 +7,8 @@
   import ThemeModal from "components/settings/ThemeModal.svelte"
   import APIKeyModal from "components/settings/APIKeyModal.svelte"
 
+  import { _ } from "../../../../../lang/i18n"
+
   let themeModal
   let profileModal
   let updatePasswordModal
@@ -27,21 +29,25 @@
     <Icon size="XL" name="ChevronDown" />
   </div>
   <MenuItem icon="UserEdit" on:click={() => profileModal.show()}>
-    My profile
+    {$_("pages.builder.portal._components.UserDropdown.My_profile")}
   </MenuItem>
-  <MenuItem icon="Moon" on:click={() => themeModal.show()}>Theme</MenuItem>
+  <MenuItem icon="Moon" on:click={() => themeModal.show()}
+    >{$_("pages.builder.portal._components.UserDropdown.Theme")}</MenuItem
+  >
   {#if !$auth.isSSO}
     <MenuItem icon="LockClosed" on:click={() => updatePasswordModal.show()}>
-      Update password
+      {$_("pages.builder.portal._components.UserDropdown.Update_password")}
     </MenuItem>
   {/if}
   <MenuItem icon="Key" on:click={() => apiKeyModal.show()}>
-    View API key
+    {$_("pages.builder.portal._components.UserDropdown.View_API_key")}
   </MenuItem>
   <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
-    Close developer mode
+    {$_("pages.builder.portal._components.UserDropdown.Close_developer_mode")}
   </MenuItem>
-  <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
+  <MenuItem icon="LogOut" on:click={logout}
+    >{$_("pages.builder.portal._components.UserDropdown.Log_out")}</MenuItem
+  >
 </ActionMenu>
 
 <Modal bind:this={themeModal}>

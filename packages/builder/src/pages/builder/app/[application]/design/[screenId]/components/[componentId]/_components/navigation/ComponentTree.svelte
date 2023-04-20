@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import { store } from "builderStore"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
@@ -75,7 +76,12 @@
     try {
       await dndStore.actions.drop()
     } catch (error) {
-      notifications.error(error || "Error saving component")
+      notifications.error(
+        error ||
+          $_(
+            "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ComponentTree.Error_saving"
+          )
+      )
     }
   }
 

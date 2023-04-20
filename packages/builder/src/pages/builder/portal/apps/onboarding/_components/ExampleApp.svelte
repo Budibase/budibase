@@ -1,41 +1,74 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   export let name = ""
   export let showData = false
 
   const rows = [
     {
-      firstName: "Julie",
-      lastName: "Jimenez",
+      firstName: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.1.firstName"
+      ),
+      lastName: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.1.lastName"
+      ),
       email: "julie.jimenez@example.com",
-      address: "4250 New Street",
-      city: "Stevenage",
+      address: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.1.address"
+      ),
+      city: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.1.city"
+      ),
       postcode: "EE32 3SE",
       phone: "01754 13523",
     },
     {
-      firstName: "Mandy",
-      lastName: "Clark",
+      firstName: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.2.firstName"
+      ),
+      lastName: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.2.lastName"
+      ),
       email: "mandy.clark@example.com",
-      address: "8632 North Street",
-      city: "Hereford",
+      address: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.2.address"
+      ),
+      city: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.2.city"
+      ),
       postcode: "GT81 7DG",
       phone: "016973 32814",
     },
     {
-      firstName: "Holly",
-      lastName: "Carroll",
+      firstName: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.3.firstName"
+      ),
+      lastName: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.3.lastName"
+      ),
       email: "holly.carroll@example.com",
-      address: "5976 Springfield Road",
-      city: "Edinburgh",
+      address: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.3.address"
+      ),
+      city: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.3.city"
+      ),
       postcode: "Y4 2LH",
       phone: "016977 73053",
     },
     {
-      firstName: "Francis",
-      lastName: "Castro",
+      firstName: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.4.firstName"
+      ),
+      lastName: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.4.lastName"
+      ),
       email: "francis.castro@example.com",
-      address: "3970 High Street",
-      city: "Wells",
+      address: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.4.address"
+      ),
+      city: $_(
+        "pages.builder.portal.apps.onboarding._components.ExampleApp.rows.4.city"
+      ),
       postcode: "X12 6QA",
       phone: "017684 23551",
     },
@@ -48,17 +81,47 @@
       <img alt="Budibase Logo" src={"https://i.imgur.com/Xhdt1YP.png"} />
       <h1>{name}</h1>
     </div>
-    <div class="nav">Home</div>
+    <div class="nav">
+      {$_("pages.builder.portal.apps.onboarding._components.ExampleApp.Home")}
+    </div>
     <table class={`table ${showData ? "tableVisible" : ""}`}>
       <thead>
         <tr>
-          <th>FIRST NAME</th>
-          <th>LAST NAME</th>
-          <th>EMAIL</th>
-          <th>ADDRESS</th>
-          <th>CITY</th>
-          <th>POSTCODE</th>
-          <th>PHONE</th>
+          <th
+            >{$_(
+              "pages.builder.portal.apps.onboarding._components.ExampleApp.FIRST_NAME"
+            )}</th
+          >
+          <th
+            >{$_(
+              "pages.builder.portal.apps.onboarding._components.ExampleApp.LAST_NAME"
+            )}</th
+          >
+          <th
+            >{$_(
+              "pages.builder.portal.apps.onboarding._components.ExampleApp.EMAIL"
+            )}</th
+          >
+          <th
+            >{$_(
+              "pages.builder.portal.apps.onboarding._components.ExampleApp.ADDRESS"
+            )}</th
+          >
+          <th
+            >{$_(
+              "pages.builder.portal.apps.onboarding._components.ExampleApp.CITY"
+            )}</th
+          >
+          <th
+            >{$_(
+              "pages.builder.portal.apps.onboarding._components.ExampleApp.POSTCODE"
+            )}</th
+          >
+          <th
+            >{$_(
+              "pages.builder.portal.apps.onboarding._components.ExampleApp.PHONE"
+            )}</th
+          >
         </tr>
       </thead>
       <tbody>
@@ -74,7 +137,11 @@
     <div class={`sidePanel ${showData ? "sidePanelVisible" : ""}`}>
       <h2>{rows[0].firstName}</h2>
       <div class="field">
-        <label for="exampleLastName">lastName</label>
+        <label for="exampleLastName"
+          >{$_(
+            "pages.builder.portal.apps.onboarding._components.ExampleApp.lastName"
+          )}</label
+        >
         <input
           id="exampleLastName"
           tabIndex="-1"
@@ -84,12 +151,20 @@
       </div>
 
       <div class="field">
-        <label for="exampleEmail">Email</label>
+        <label for="exampleEmail"
+          >{$_(
+            "pages.builder.portal.apps.onboarding._components.ExampleApp.Email"
+          )}</label
+        >
         <input id="exampleEmail" tabIndex="-1" readonly value={rows[0].email} />
       </div>
 
       <div class="field">
-        <label for="exampleAddress">Address</label>
+        <label for="exampleAddress"
+          >{$_(
+            "pages.builder.portal.apps.onboarding._components.ExampleApp.Address"
+          )}</label
+        >
         <input
           id="exampleAddress"
           tabIndex="-1"
@@ -99,12 +174,20 @@
       </div>
 
       <div class="field">
-        <label for="exampleCity">City</label>
+        <label for="exampleCity"
+          >{$_(
+            "pages.builder.portal.apps.onboarding._components.ExampleApp.City"
+          )}</label
+        >
         <input id="exampleCity" tabIndex="-1" readonly value={rows[0].city} />
       </div>
 
       <div class="field">
-        <label for="examplePostcode">Postcode</label>
+        <label for="examplePostcode"
+          >{$_(
+            "pages.builder.portal.apps.onboarding._components.ExampleApp.Postcode"
+          )}</label
+        >
         <input
           id="examplePostcode"
           tabIndex="-1"
@@ -114,7 +197,11 @@
       </div>
 
       <div class="field">
-        <label for="examplePhone">Phone</label>
+        <label for="examplePhone"
+          >{$_(
+            "pages.builder.portal.apps.onboarding._components.ExampleApp.Phone"
+          )}</label
+        >
         <input id="examplePhone" tabIndex="-1" readonly value={rows[0].phone} />
       </div>
     </div>

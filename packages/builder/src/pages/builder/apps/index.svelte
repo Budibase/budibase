@@ -23,6 +23,8 @@
   import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"
 
+  import { _ } from "../../../../lang/i18n"
+
   let loaded = false
   let userInfoModal
   let changePasswordModal
@@ -33,7 +35,7 @@
       await apps.load()
       await groups.actions.init()
     } catch (error) {
-      notifications.error("Error loading apps")
+      notifications.error($_("pages.builder.apps.index.notificationsError"))
     }
     loaded = true
   })
@@ -104,32 +106,36 @@
                 <Icon size="XL" name="ChevronDown" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
-                My profile
+                {$_("pages.builder.apps.index.Page.menuItemProfile")}
               </MenuItem>
               <MenuItem
                 icon="LockClosed"
                 on:click={() => changePasswordModal.show()}
               >
-                Update password
+                {$_("pages.builder.apps.index.Page.menuItemUpdatePassword")}
               </MenuItem>
               {#if $auth.isBuilder}
                 <MenuItem
                   icon="UserDeveloper"
                   on:click={() => $goto("../portal")}
                 >
-                  Open developer mode
+                  {$_("pages.builder.apps.index.Page.menuItemDeveloper")}
                 </MenuItem>
               {/if}
-              <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
+              <MenuItem icon="LogOut" on:click={logout}
+                >{$_("pages.builder.apps.index.Page.Log_out")}</MenuItem
+              >
             </ActionMenu>
           </div>
           <Layout noPadding gap="XS">
             <Heading size="M">
-              Hey {$auth.user.firstName || $auth.user.email}
+              {$_("pages.builder.apps.index.Page.menuHeading")}
+              {$auth.user.firstName || $auth.user.email}
             </Heading>
             <Body>
-              Welcome to the {$organisation.company} portal. Below you'll find the
-              list of apps that you have access to.
+              {$_("pages.builder.apps.index.Page.menuBodyPt1")}
+              {$organisation.company}
+              {$_("pages.builder.apps.index.Page.menuBodyPt2")}
             </Body>
           </Layout>
           <Divider />
@@ -138,13 +144,15 @@
               <Layout gap="S" justifyItems="center">
                 <img class="spaceman" alt="spaceman" src={Spaceman} />
                 <Heading size="M">
-                  {"Your apps are currently offline."}
+                  {$_("pages.builder.apps.index.Page.menuHeadingOffline")}
                 </Heading>
-                Please contact the account holder to get them back online.
+                {$_("pages.builder.apps.index.Page.menuLayout")}
               </Layout>
             </div>
           {:else if userApps.length}
-            <Heading>Apps</Heading>
+            <Heading
+              >{$_("pages.builder.apps.index.Page.menuHeadingApps")}</Heading
+            >
             <div class="group">
               <Layout gap="S" noPadding>
                 {#each userApps as app, idx (app.appId)}
@@ -155,7 +163,11 @@
                       <Body size="S">
                         {#if app.updatedAt}
                           {processStringSync(
-                            "Updated {{ duration time 'millisecond' }} ago",
+                            `${$_(
+                              "pages.builder.apps.index.Page.menuTimeHeadingPt1"
+                            )} {{ duration time 'millisecond' }} ${$_(
+                              "pages.builder.apps.index.Page.menuTimeHeadingPt2"
+                            )}`,
                             {
                               time:
                                 new Date().getTime() -
@@ -163,7 +175,7 @@
                             }
                           )}
                         {:else}
-                          Never updated
+                          {$_("pages.builder.apps.index.Page.menuTimeNoUpdate")}
                         {/if}
                       </Body>
                     </div>
@@ -174,9 +186,9 @@
             </div>
           {:else}
             <Layout gap="XS" noPadding>
-              <Heading size="S">You don't have access to any apps yet.</Heading>
+              <Heading size="S">{$_("pages.builder.apps.index.Page.menuLayoutHeading")}</Heading>
               <Body size="S">
-                The apps you have access to will be listed here.
+                {$_("pages.builder.apps.index.Page.menuLayoutBody")}
               </Body>
             </Layout>
           {/if}

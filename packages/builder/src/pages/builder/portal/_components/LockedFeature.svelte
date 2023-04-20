@@ -10,6 +10,8 @@
   } from "@budibase/bbui"
   import { auth, admin } from "stores/portal"
 
+  import { _ } from "../../../../../lang/i18n"
+
   export let title
   export let planType
   export let description
@@ -40,7 +42,7 @@
         disabled={!$auth.accountPortalAccess && $admin.cloud}
         on:click={async () => upgradeButtonClick()}
       >
-        Upgrade
+        {$_("pages.builder.portal._components.LockedFeature.Upgrade")}
       </Button>
       <!--Show the view plans button-->
       <Button
@@ -49,7 +51,7 @@
           window.open("https://budibase.com/pricing/", "_blank")
         }}
       >
-        View Plans
+        {$_("pages.builder.portal._components.LockedFeature.View_Plans")}
       </Button>
     </div>
   {/if}

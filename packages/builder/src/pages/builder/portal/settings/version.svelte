@@ -15,6 +15,8 @@
   import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   let version
   let loaded = false
   let githubVersion
@@ -32,16 +34,24 @@
 
   async function updateBudibase() {
     try {
-      notifications.info("Updating budibase..")
+      notifications.info(
+        $_("pages.builder.portal.settings.version.Updating_budibase")
+      )
       await fetch("/v1/update", {
         headers: {
-          Authorization: "Bearer budibase",
+          Authorization: $_(
+            "pages.builder.portal.settings.version.Bearer_budibase"
+          ),
         },
       })
-      notifications.success("Your budibase installation is up to date.")
+      notifications.success(
+        $_("pages.builder.portal.settings.version.installation_date")
+      )
       getVersion()
     } catch (err) {
-      notifications.error(`Error installing budibase update ${err}`)
+      notifications.error(
+        `${$_("pages.builder.portal.settings.version.Error_installing")} ${err}`
+      )
     }
   }
 
@@ -49,7 +59,9 @@
     try {
       version = await API.getBudibaseVersion()
     } catch (error) {
-      notifications.error("Error getting Budibase version")
+      notifications.error(
+        $_("pages.builder.portal.settings.version.Error_getting")
+      )
       version = null
     }
   }
@@ -77,7 +89,9 @@
         needsUpdate = true
       }
     } catch (error) {
-      notifications.error("Error getting the latest Budibase version")
+      notifications.error(
+        $_("pages.builder.portal.settings.version.Error_latest")
+      )
       githubVersion = null
     }
   }
@@ -92,42 +106,51 @@
 {#if $auth.isAdmin}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
-      <Heading size="M">Version</Heading>
+      <Heading size="M"
+        >{$_("pages.builder.portal.settings.version.Version")}</Heading
+      >
       <Body>
-        Keep your budibase installation up to date to take advantage of the
-        latest features, security updates and much more
+        {$_("pages.builder.portal.settings.version.Keep_installation")}
       </Body>
     </Layout>
     <Divider />
     {#if loaded}
       <Layout noPadding gap="XS">
-        <Label size="L">Current version</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.version.Current_version")}</Label
+        >
         <Heading size="S">
           {version || "-"}
         </Heading>
         <Divider />
-        <Label size="L">Latest version</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.version.Latest_version")}</Label
+        >
         <Heading size="S">
           {githubVersion}
         </Heading>
         <Label size="L"
-          >This version was released on {githubPublishedDate} at {githubPublishedTime}</Label
+          >{$_("pages.builder.portal.settings.version.version_released")}
+          {githubPublishedDate}
+          {$_("pages.builder.portal.settings.version.at")}
+          {githubPublishedTime}</Label
         >
       </Layout>
       <Divider />
       <div>
         <Button cta on:click={updateModal.show} disabled={!needsUpdate}
-          >Update Budibase</Button
+          >{$_("pages.builder.portal.settings.version.Update_Budibase")}</Button
         >
         <Modal bind:this={updateModal}>
           <ModalContent
-            title="Update Budibase"
-            confirmText="Update"
+            title={$_("pages.builder.portal.settings.version.Update_Budibase")}
+            confirmText={$_("pages.builder.portal.settings.version.Update")}
             onConfirm={updateBudibase}
           >
             <span
-              >Are you sure you want to update your budibase installation to the
-              latest version?</span
+              >{$_(
+                "pages.builder.portal.settings.version.update_latest_version?"
+              )}</span
             >
           </ModalContent>
         </Modal>

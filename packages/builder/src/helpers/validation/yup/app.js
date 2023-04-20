@@ -1,3 +1,4 @@
+import { _ } from "../../../../lang/i18n"
 import { string, mixed } from "yup"
 import { APP_NAME_REGEX, APP_URL_REGEX } from "constants"
 
@@ -6,14 +7,11 @@ export const name = (validation, { apps, currentApp } = { apps: [] }) => {
     "name",
     string()
       .trim()
-      .required("Your application must have a name")
-      .matches(
-        APP_NAME_REGEX,
-        "App name must be letters, numbers and spaces only"
-      )
+      .required($_("helpers.validation.yup.app.Your_must_have_name"))
+      .matches(APP_NAME_REGEX, $_("helpers.validation.yup.app.App_name"))
       .test(
         "non-existing-app-name",
-        "Another app with the same name already exists",
+        $_("helpers.validation.yup.app.Another_same_name"),
         value => {
           if (!value) {
             // exit early, above validator will fail
@@ -37,11 +35,11 @@ export const url = (validation, { apps, currentApp } = { apps: [] }) => {
     string()
       .trim()
       .nullable()
-      .required("Your application must have a url")
+      .required($_("helpers.validation.yup.app.Your_must_have_url"))
       .matches(APP_URL_REGEX, "Please enter a valid url")
       .test(
         "non-existing-app-url",
-        "Another app with the same URL already exists",
+        $_("helpers.validation.yup.app.Another_same_URL"),
         value => {
           if (!value) {
             return true
@@ -55,7 +53,7 @@ export const url = (validation, { apps, currentApp } = { apps: [] }) => {
             .some(appUrl => appUrl?.toLowerCase() === value.toLowerCase())
         }
       )
-      .test("valid-url", "Not a valid URL", value => {
+      .test("valid-url", $_("helpers.validation.yup.app.Not_valid"), value => {
         // url is nullable
         if (!value) {
           return true
@@ -76,7 +74,7 @@ export const file = (validation, { template } = {}) => {
   validation.addValidator(
     "file",
     templateToUse?.fromFile
-      ? mixed().required("Please choose a file to import")
+      ? mixed().required($_("helpers.validation.yup.app.Please_choose"))
       : null
   )
 }

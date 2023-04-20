@@ -8,6 +8,8 @@
   import { onMount } from "svelte"
   import { handleError, passwordsMatch } from "../auth/_components/utils"
 
+  import { _ } from "../../../../lang/i18n"
+
   const inviteCode = $params["?code"]
   let form
   let formData = {}
@@ -26,7 +28,9 @@
     try {
       const { password, firstName, lastName } = formData
       await users.acceptInvite(inviteCode, password, firstName, lastName)
-      notifications.success("Invitation accepted successfully")
+      notifications.success(
+        $_("pages.builder.invite.index.notificationsSuccess")
+      )
       await login()
     } catch (error) {
       notifications.error(error.message)
@@ -56,10 +60,14 @@
         username: formData.email.trim(),
         password: formData.password.trim(),
       })
-      notifications.success("Logged in successfully")
+      notifications.success($_("pages.builder.invite.index.loginSuccess"))
       $goto("../portal")
     } catch (err) {
-      notifications.error(err.message ? err.message : "Invalid credentials") //not likely, considering.
+      notifications.error(
+        err.message
+          ? err.message
+          : $_("pages.builder.invite.index.notificationsErrorInvalid")
+      ) //not likely, considering.
     }
   }
 
@@ -69,7 +77,9 @@
       await getInvite()
       loaded = true
     } catch (error) {
-      notifications.error("Error getting invite config")
+      notifications.error(
+        $_("pages.builder.invite.index.notificationsErrorConfig")
+      )
     }
   })
 </script>
@@ -79,20 +89,27 @@
     <Layout gap="M" noPadding>
       <img alt="logo" src={$organisation.logoUrl || Logo} />
       <Layout gap="XS" noPadding>
-        <Heading size="M">Join {company}</Heading>
-        <Body size="M">Create your account to access your budibase apps!</Body>
+        <Heading size="M"
+          >{$_("pages.builder.invite.index.TestimonialPage.heading")}
+          {company}</Heading
+        >
+        <Body size="M"
+          >{$_("pages.builder.invite.index.TestimonialPage.body")}</Body
+        >
       </Layout>
 
       <Layout gap="S" noPadding>
         <FancyForm bind:this={form}>
           <FancyInput
-            label="Email"
+            label={$_("pages.builder.invite.index.TestimonialPage.labelEmail")}
             value={formData.email}
             disabled={true}
             error={errors.email}
           />
           <FancyInput
-            label="First name"
+            label={$_(
+              "pages.builder.invite.index.TestimonialPage.labelFirstName"
+            )}
             value={formData.firstName}
             on:change={e => {
               formData = {
@@ -103,7 +120,9 @@
             validate={() => {
               let fieldError = {
                 firstName: !formData.firstName
-                  ? "Please enter your first name"
+                  ? $_(
+                      "pages.builder.invite.index.TestimonialPage.labelFirstNameError"
+                    )
                   : undefined,
               }
 
@@ -113,7 +132,9 @@
             disabled={onboarding}
           />
           <FancyInput
-            label="Last name (optional)"
+            label={$_(
+              "pages.builder.invite.index.TestimonialPage.labelLastName"
+            )}
             value={formData.lastName}
             on:change={e => {
               formData = {
@@ -125,7 +146,9 @@
           />
           {#if !$organisation.isSSOEnforced}
             <FancyInput
-              label="Password"
+              label={$_(
+                "pages.builder.invite.index.TestimonialPage.labelPassword"
+              )}
               value={formData.password}
               type="password"
               on:change={e => {
@@ -138,7 +161,9 @@
                 let fieldError = {}
 
                 fieldError["password"] = !formData.password
-                  ? "Please enter a password"
+                  ? $_(
+                      "pages.builder.invite.index.TestimonialPage.passwordErrorEnter"
+                    )
                   : undefined
 
                 fieldError["confirmationPassword"] =
@@ -146,7 +171,9 @@
                     formData.password,
                     formData.confirmationPassword
                   ) && formData.confirmationPassword
-                    ? "Passwords must match"
+                    ? $_(
+                        "pages.builder.invite.index.TestimonialPage.passwordErrorMatch"
+                      )
                     : undefined
 
                 errors = handleError({ ...errors, ...fieldError })
@@ -155,7 +182,9 @@
               disabled={onboarding}
             />
             <FancyInput
-              label="Repeat password"
+              label={$_(
+                "pages.builder.invite.index.TestimonialPage.passwordRepeat"
+              )}
               value={formData.confirmationPassword}
               type="password"
               on:change={e => {
@@ -171,7 +200,9 @@
                       formData.password,
                       formData.confirmationPassword
                     ) && formData.password
-                      ? "Passwords must match"
+                      ? $_(
+                          "pages.builder.invite.index.TestimonialPage.passwordErrorMatch"
+                        )
                       : undefined,
                 }
 
@@ -190,7 +221,7 @@
           cta
           on:click={acceptInvite}
         >
-          Create account
+          {$_("pages.builder.invite.index.TestimonialPage.button")}
         </Button>
       </div>
     </Layout>

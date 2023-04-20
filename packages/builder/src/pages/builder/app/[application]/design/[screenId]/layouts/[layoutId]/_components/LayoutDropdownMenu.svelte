@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../lang/i18n"
   import { store } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -11,9 +12,18 @@
   const deleteLayout = async () => {
     try {
       await store.actions.layouts.delete(layout)
-      notifications.success("Layout deleted successfully")
+      notifications.success(
+        $_(
+          "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutDropdownMenu.Layout_deleted"
+        )
+      )
     } catch (err) {
-      notifications.error(err?.message || "Error deleting layout")
+      notifications.error(
+        err?.message ||
+          $_(
+            "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutDropdownMenu.Error_deleting"
+          )
+      )
     }
   }
 </script>
@@ -22,14 +32,24 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}
+    >{$_(
+      "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutDropdownMenu.Delete"
+    )}</MenuItem
+  >
 </ActionMenu>
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  title="Confirm Deletion"
-  body={"Are you sure you wish to delete this layout?"}
-  okText="Delete layout"
+  title={$_(
+    "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutDropdownMenu.Confirm_Deletion"
+  )}
+  body={$_(
+    "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutDropdownMenu.wish_delete"
+  )}
+  okText={$_(
+    "pages.builder.app.application.design.screenId.layouts.layoutsId._components.LayoutDropdownMenu.Delete_layout"
+  )}
   onOk={deleteLayout}
 />
 

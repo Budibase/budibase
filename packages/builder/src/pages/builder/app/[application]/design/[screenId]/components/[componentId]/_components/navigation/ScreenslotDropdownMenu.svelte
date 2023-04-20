@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../../../../../lang/i18n"
   import { store } from "builderStore"
   import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
 
@@ -21,7 +22,11 @@
     try {
       store.actions.components.paste(component, mode)
     } catch (error) {
-      notifications.error("Error saving component")
+      notifications.error(
+        $_(
+          "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ScreenslotDropdownMenu.Error_saving"
+        )
+      )
     }
   }
 </script>
@@ -36,7 +41,9 @@
       keyBind="Ctrl+C"
       on:click={() => storeComponentForCopy(false)}
     >
-      Copy
+      {$_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ScreenslotDropdownMenu.Copy"
+      )}
     </MenuItem>
     <MenuItem
       icon="LayersSendToBack"
@@ -44,7 +51,9 @@
       on:click={() => pasteComponent("inside")}
       disabled={noPaste}
     >
-      Paste
+      {$_(
+        "pages.builder.app.application.design.screenId.components.componentId._components.navigation.ScreenslotDropdownMenu.Paste"
+      )}
     </MenuItem>
   </ActionMenu>
 {/if}

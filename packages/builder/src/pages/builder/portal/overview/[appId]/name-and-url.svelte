@@ -13,6 +13,8 @@
   import { overview } from "stores/portal"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   let updatingModal
 
   $: app = $overview.selectedApp
@@ -22,18 +24,30 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading>Name and URL</Heading>
-    <Body>Edit your app's name and URL</Body>
+    <Heading
+      >{$_(
+        "pages.builder.portal.overview.appId.name-and-url.Name_URL"
+      )}</Heading
+    >
+    <Body
+      >{$_(
+        "pages.builder.portal.overview.appId.name-and-url.Edit_name_URL"
+      )}</Body
+    >
   </Layout>
   <Divider />
 
   <Layout noPadding gap="XXS">
-    <Label size="L">Name</Label>
+    <Label size="L"
+      >{$_("pages.builder.portal.overview.appId.name-and-url.Name")}</Label
+    >
     <Body>{app?.name}</Body>
   </Layout>
 
   <Layout noPadding gap="XS">
-    <Label size="L">Icon</Label>
+    <Label size="L"
+      >{$_("pages.builder.portal.overview.appId.name-and-url.Icon")}</Label
+    >
     <div class="icon">
       <Icon
         size="L"
@@ -44,7 +58,9 @@
   </Layout>
 
   <Layout noPadding gap="XXS">
-    <Label size="L">URL</Label>
+    <Label size="L"
+      >{$_("pages.builder.portal.overview.appId.name-and-url.URL")}</Label
+    >
     <Body>{appUrl}</Body>
   </Layout>
 
@@ -56,11 +72,11 @@
       }}
       disabled={appDeployed}
       tooltip={appDeployed
-        ? "You must unpublish your app to make changes to these settings"
+        ? $_("pages.builder.portal.overview.appId.name-and-url.must_unpublish")
         : null}
       icon={appDeployed ? "HelpOutline" : null}
     >
-      Edit
+      {$_("pages.builder.portal.overview.appId.name-and-url.Edit")}
     </Button>
   </div>
 </Layout>

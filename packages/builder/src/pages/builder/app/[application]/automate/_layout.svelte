@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import { Heading, Body, Layout, Button, Modal } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "builderStore"
   import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
@@ -48,10 +49,16 @@
             >
               <use xlink:href="#spectrum-icon-18-WorkflowAdd" />
             </svg>
-            <Heading size="M">You have no automations</Heading>
-            <Body size="M">Let's fix that. Call the bots!</Body>
+            <Heading size="M"
+              >{$_(
+                "pages.builder.app.application.automate._layout.Heading"
+              )}</Heading
+            >
+            <Body size="M"
+              >{$_("pages.builder.app.application.automate._layout.Body")}</Body
+            >
             <Button on:click={() => modal.show()} size="M" cta>
-              Create automation
+              {$_("pages.builder.app.application.automate._layout.Button")}
             </Button>
           </Layout>
         </div>

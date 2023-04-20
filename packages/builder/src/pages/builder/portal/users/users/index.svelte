@@ -29,6 +29,8 @@
   import { API } from "api"
   import { OnboardingType } from "../../../../../constants"
 
+  import { _ } from "../../../../../../lang/i18n"
+
   const fetch = fetchData({
     API,
     datasource: {
@@ -131,7 +133,9 @@
       inviteUsersResponse = await users.invite(payload)
       inviteConfirmationModal.show()
     } catch (error) {
-      notifications.error("Error inviting user")
+      notifications.error(
+        $_("pages.builder.portal.users.users.index.Error_inviting")
+      )
     }
   }
 
@@ -152,7 +156,9 @@
     }
 
     if (!newUsers.length)
-      notifications.info("Duplicated! There is no new users to add.")
+      notifications.info(
+        $_("pages.builder.portal.users.users.index.Duplicated")
+      )
     return { ...userData, users: newUsers }
   }
 
@@ -180,12 +186,16 @@
   async function createUsers() {
     try {
       bulkSaveResponse = await users.create(await removingDuplicities(userData))
-      notifications.success("Successfully created user")
+      notifications.success(
+        $_("pages.builder.portal.users.users.index.created_user")
+      )
       await groups.actions.init()
       passwordModal.show()
       await fetch.refresh()
     } catch (error) {
-      notifications.error("Error creating user")
+      notifications.error(
+        $_("pages.builder.portal.users.users.index.Error_creating")
+      )
     }
   }
 
@@ -201,15 +211,23 @@
     try {
       let ids = selectedRows.map(user => user._id)
       if (ids.includes(get(auth).user._id)) {
-        notifications.error("You cannot delete yourself")
+        notifications.error(
+          $_("pages.builder.portal.users.users.index.cannot_delete")
+        )
         return
       }
       await users.bulkDelete(ids)
-      notifications.success(`Successfully deleted ${selectedRows.length} rows`)
+      notifications.success(
+        `${$_("pages.builder.portal.users.users.index.Successfully_deleted")} ${
+          selectedRows.length
+        } ${$_("pages.builder.portal.users.users.index.rows")}`
+      )
       selectedRows = []
       await fetch.refresh()
     } catch (error) {
-      notifications.error("Error deleting rows")
+      notifications.error(
+        $_("pages.builder.portal.users.users.index.Error_deleting")
+      )
     }
   }
 
@@ -218,24 +236,27 @@
       await groups.actions.init()
       groupsLoaded = true
     } catch (error) {
-      notifications.error("Error fetching user group data")
+      notifications.error(
+        $_("pages.builder.portal.users.users.index.Error_fetching")
+      )
     }
   })
 </script>
 
 <Layout noPadding gap="M">
   <Layout gap="XS" noPadding>
-    <Heading>Users</Heading>
-    <Body>Add users and control who gets access to your published apps</Body>
+    <Heading>{$_("pages.builder.portal.users.users.index.Users")}</Heading>
+    <Body>{$_("pages.builder.portal.users.users.index.Add_users_control")}</Body
+    >
   </Layout>
   <Divider />
   <div class="controls">
     <ButtonGroup>
       <Button disabled={readonly} on:click={createUserModal.show} cta>
-        Add users
+        {$_("pages.builder.portal.users.users.index.Add_users")}
       </Button>
       <Button disabled={readonly} on:click={importUsersModal.show} secondary>
-        Import
+        {$_("pages.builder.portal.users.users.index.Import")}
       </Button>
     </ButtonGroup>
     <div class="controls-right">

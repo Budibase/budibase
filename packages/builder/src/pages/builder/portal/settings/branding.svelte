@@ -19,6 +19,8 @@
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
 
+  import { _ } from "../../../../../lang/i18n"
+
   const imageExtensions = [
     ".png",
     ".tiff",
@@ -105,7 +107,9 @@
       data.append("file", file)
       response = await API.uploadLogo(data)
     } catch (error) {
-      notifications.error("Error uploading logo")
+      notifications.error(
+        $_("pages.builder.portal.settings.branding.Error_uploading")
+      )
     }
     return response
   }
@@ -117,7 +121,9 @@
       data.append("file", file)
       response = await API.uploadFavicon(data)
     } catch (error) {
-      notifications.error("Error uploading favicon")
+      notifications.error(
+        $_("pages.builder.portal.settings.branding.Error_favicon")
+      )
     }
     return response
   }
@@ -173,10 +179,17 @@
       // Update settings
       await organisation.save(config)
       await organisation.init()
-      notifications.success("Branding settings updated")
+      notifications.success(
+        $_("pages.builder.portal.settings.branding.Error_favicon")
+      )
     } catch (e) {
-      console.error("Branding updated failed", e)
-      notifications.error("Branding updated failed")
+      console.error(
+        $_("pages.builder.portal.settings.branding.Branding_failed"),
+        e
+      )
+      notifications.error(
+        $_("pages.builder.portal.settings.branding.Branding_failed")
+      )
     }
     updated = false
     saving = false
@@ -205,28 +218,39 @@
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <div class="title">
-        <Heading size="M">Branding</Heading>
+        <Heading size="M"
+          >{$_("pages.builder.portal.settings.branding.Branding")}</Heading
+        >
         {#if !isCloud && !brandingEnabled}
           <Tags>
-            <Tag icon="LockClosed">Business</Tag>
+            <Tag icon="LockClosed"
+              >{$_("pages.builder.portal.settings.branding.Business")}</Tag
+            >
           </Tags>
         {/if}
         {#if isCloud && !brandingEnabled}
           <Tags>
-            <Tag icon="LockClosed">Pro</Tag>
+            <Tag icon="LockClosed"
+              >{$_("pages.builder.portal.settings.branding.Pro")}</Tag
+            >
           </Tags>
         {/if}
       </div>
-      <Body>Remove all Budibase branding and use your own.</Body>
+      <Body>{$_("pages.builder.portal.settings.branding.Remove_branding")}</Body
+      >
     </Layout>
     <Divider />
     <div class="branding fields">
       <div class="field">
-        <Label size="L">Logo</Label>
+        <Label size="L"
+          >{$_("pages.builder.portal.settings.branding.Logo")}</Label
+        >
         <File
-          title="Upload image"
+          title={$_("pages.builder.portal.settings.branding.Upload_image")}
           handleFileTooLarge={() => {
-            notifications.warn("File too large. 20mb limit")
+            notifications.warn(
+              $_("pages.builder.portal.settings.branding.File_large")
+            )
           }}
           extensions={imageExtensions}
           previewUrl={logoPreview || logo?.url}
@@ -250,9 +274,11 @@
       <div class="field">
         <Label size="L">Favicon</Label>
         <File
-          title="Upload image"
+          title={$_("pages.builder.portal.settings.branding.Upload_image")}
           handleFileTooLarge={() => {
-            notifications.warn("File too large. 20mb limit")
+            notifications.warn(
+              $_("pages.builder.portal.settings.branding.File_large")
+            )
           }}
           extensions={faviconExtensions}
           previewUrl={faviconPreview || favicon?.url}
@@ -273,7 +299,9 @@
       </div>
       {#if !isCloud}
         <div class="field">
-          <Label size="L">Title</Label>
+          <Label size="L"
+            >{$_("pages.builder.portal.settings.branding.Title")}</Label
+          >
           <Input
             on:change={e => {
               let clone = { ...config }
@@ -287,7 +315,7 @@
       {/if}
       <div>
         <Toggle
-          text={"Remove Budibase brand from emails"}
+          text={$_("pages.builder.portal.settings.branding.Remove_brand")}
           on:change={e => {
             let clone = { ...config }
             clone.emailBrandingEnabled = !e.detail
@@ -302,13 +330,17 @@
     {#if !isCloud}
       <Divider />
       <Layout gap="XS" noPadding>
-        <Heading size="S">Login page</Heading>
+        <Heading size="S"
+          >{$_("pages.builder.portal.settings.branding.Login_page")}</Heading
+        >
         <Body />
       </Layout>
       <div class="login">
         <div class="fields">
           <div class="field">
-            <Label size="L">Header</Label>
+            <Label size="L"
+              >{$_("pages.builder.portal.settings.branding.Header")}</Label
+            >
             <Input
               on:change={e => {
                 let clone = { ...config }
@@ -321,7 +353,9 @@
           </div>
 
           <div class="field">
-            <Label size="L">Button</Label>
+            <Label size="L"
+              >{$_("pages.builder.portal.settings.branding.Button")}</Label
+            >
             <Input
               on:change={e => {
                 let clone = { ...config }
@@ -334,7 +368,9 @@
           </div>
           <div>
             <Toggle
-              text={"Remove customer testimonials"}
+              text={$_(
+                "pages.builder.portal.settings.branding.Remove_testimonials"
+              )}
               on:change={e => {
                 let clone = { ...config }
                 clone.testimonialsEnabled = !e.detail
@@ -349,13 +385,19 @@
     {/if}
     <Divider />
     <Layout gap="XS" noPadding>
-      <Heading size="S">Application previews</Heading>
-      <Body>Customise the meta tags on your app preview</Body>
+      <Heading size="S"
+        >{$_(
+          "pages.builder.portal.settings.branding.Application_previews"
+        )}</Heading
+      >
+      <Body>{$_("pages.builder.portal.settings.branding.Customise_tags")}</Body>
     </Layout>
     <div class="app-previews">
       <div class="fields">
         <div class="field">
-          <Label size="L">Image URL</Label>
+          <Label size="L"
+            >{$_("pages.builder.portal.settings.branding.Image_URL")}</Label
+          >
           <Input
             on:change={e => {
               let clone = { ...config }
@@ -367,7 +409,9 @@
           />
         </div>
         <div class="field">
-          <Label size="L">Title</Label>
+          <Label size="L"
+            >{$_("pages.builder.portal.settings.branding.Title")}</Label
+          >
           <Input
             on:change={e => {
               let clone = { ...config }
@@ -379,7 +423,9 @@
           />
         </div>
         <div class="field">
-          <Label size="L">Description</Label>
+          <Label size="L"
+            >{$_("pages.builder.portal.settings.branding.Description")}</Label
+          >
           <TextArea
             on:change={e => {
               let clone = { ...config }
@@ -405,11 +451,11 @@
           secondary
           disabled={saving}
         >
-          Upgrade
+          {$_("pages.builder.portal.settings.branding.Upgrade")}
         </Button>
       {/if}
       <Button on:click={saveConfig} cta disabled={saving || !updated || !init}>
-        Save
+        {$_("pages.builder.portal.settings.branding.Upgrade")}
       </Button>
     </div>
   </Layout>

@@ -1,4 +1,5 @@
 <script context="module">
+  import { _ } from "../../../../../../lang/i18n.js"
   import iconData from "./icons.js"
 
   const icons = Object.keys(iconData).reduce(
@@ -107,13 +108,19 @@
     loading = false
   }
 
-  $: displayValue = value ? value.substring(3) : "Pick icon"
+  $: displayValue = value
+    ? value.substring(3)
+    : $_("components.design.settings.controls.IconSelect.IconSelect.Pick_icon")
 
   $: totalPages = Math.ceil(filteredIcons.length / maxIconsPerPage)
   $: pageEndIdx = maxIconsPerPage * currentPage
   $: pagedIcons = filteredIcons.slice(pageEndIdx - maxIconsPerPage, pageEndIdx)
 
-  $: pagerText = `Page ${currentPage} of ${totalPages}`
+  $: pagerText = `${$_(
+    "components.design.settings.controls.IconSelect.IconSelect.Page"
+  )} ${currentPage} $_(
+  "components.design.settings.controls.IconSelect.IconSelect.of"
+) ${totalPages}`
 </script>
 
 <div bind:this={buttonAnchor}>
@@ -140,7 +147,11 @@
         <div class="input-wrapper">
           <Input bind:value={searchTerm} thin placeholder="Search Icon" />
         </div>
-        <Button secondary on:click={searchForIcon}>Search</Button>
+        <Button secondary on:click={searchForIcon}
+          >{$_(
+            "components.design.settings.controls.IconSelect.IconSelect.Search"
+          )}</Button
+        >
       </div>
       <div class="page-area">
         <div class="pager">
@@ -184,7 +195,17 @@
     {:else}
       <div class="no-icons">
         <h5>
-          {`There is no icons for this ${searchTerm ? "search" : "page"}`}
+          {`${$_(
+            "components.design.settings.controls.IconSelect.IconSelect.no_icons"
+          )} ${
+            searchTerm
+              ? $_(
+                  "components.design.settings.controls.IconSelect.IconSelect.search"
+                )
+              : $_(
+                  "components.design.settings.controls.IconSelect.IconSelect.page"
+                )
+          }`}
         </h5>
       </div>
     {/if}

@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../lang/i18n"
   import { Drawer, Button, Icon } from "@budibase/bbui"
   import CellDrawer from "./CellDrawer.svelte"
 
@@ -25,10 +26,21 @@
 </script>
 
 <Icon name="Settings" hoverable size="S" on:click={open} />
-<Drawer bind:this={drawer} title="Table Columns">
+<Drawer
+  bind:this={drawer}
+  title={$_(
+    "components.design.settings.controls.ColumnEditor.CellEditor.Table_Columns"
+  )}
+>
   <svelte:fragment slot="description">
-    "{column.name}" column settings
+    "{column.name}" {$_(
+      "components.design.settings.controls.ColumnEditor.CellEditor.column_settings"
+    )}
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={save}>Save</Button>
+  <Button cta slot="buttons" on:click={save}
+    >{$_(
+      "components.design.settings.controls.ColumnEditor.CellEditor.Save"
+    )}</Button
+  >
   <CellDrawer slot="body" bind:column={boundValue} />
 </Drawer>

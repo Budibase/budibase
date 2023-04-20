@@ -25,6 +25,8 @@
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
 
+  import { _ } from "../../../../../lang/i18n"
+
   export let application
 
   let promise = getPackage()
@@ -45,7 +47,11 @@
       await flags.fetch()
       return pkg
     } catch (error) {
-      notifications.error(`Error initialising app: ${error?.message}`)
+      notifications.error(
+        `${$_("pages.builder.app.application._layout.notiofications_error")}: ${
+          error?.message
+        }`
+      )
       $redirect("../../")
     }
   }
@@ -112,7 +118,9 @@
         // betaAccess = betaResponse.access
         initTour()
       } catch (error) {
-        notifications.error("Failed to sync with production database")
+        notifications.error(
+          $_("pages.builder.app.application._layout.notiofications_error_mount")
+        )
       }
       hasSynced = true
     }
@@ -140,40 +148,40 @@
           <Icon size="M" hoverable name="ShowMenu" />
         </div>
         <MenuItem on:click={() => $goto("../../portal/apps")}>
-          Exit to portal
+          {$_("pages.builder.app.application._layout.Exit")}
         </MenuItem>
         <MenuItem
           on:click={() => $goto(`../../portal/overview/${application}`)}
         >
-          Overview
+          {$_("pages.builder.app.application._layout.Overview")}
         </MenuItem>
         <MenuItem
           on:click={() => $goto(`../../portal/overview/${application}/access`)}
         >
-          Access
+          {$_("pages.builder.app.application._layout.Access")}
         </MenuItem>
         <MenuItem
           on:click={() =>
             $goto(`../../portal/overview/${application}/automation-history`)}
         >
-          Automation history
+          {$_("pages.builder.app.application._layout.History")}
         </MenuItem>
         <MenuItem
           on:click={() => $goto(`../../portal/overview/${application}/backups`)}
         >
-          Backups
+          {$_("pages.builder.app.application._layout.Backups")}
         </MenuItem>
 
         <MenuItem
           on:click={() =>
             $goto(`../../portal/overview/${application}/name-and-url`)}
         >
-          Name and URL
+          {$_("pages.builder.app.application._layout.URL")}
         </MenuItem>
         <MenuItem
           on:click={() => $goto(`../../portal/overview/${application}/version`)}
         >
-          Version
+          {$_("pages.builder.app.application._layout.Version")}
         </MenuItem>
       </ActionMenu>
       <Heading size="XS">{$store.name}</Heading>
@@ -203,7 +211,9 @@
   {:then _}
     <slot />
   {:catch error}
-    <p>Something went wrong: {error.message}</p>
+    <p>
+      {$_("pages.builder.app.application._layout.WentWrong")}: {error.message}
+    </p>
   {/await}
 </div>
 

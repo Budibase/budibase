@@ -1,4 +1,5 @@
 <script>
+  import { _ } from "../../../../../../../lang/i18n"
   import { Select, Label } from "@budibase/bbui"
   import { currentAsset, store } from "builderStore"
   import { getActionProviderComponents } from "builderStore/dataBinding"
@@ -13,7 +14,11 @@
 </script>
 
 <div class="root">
-  <Label small>Data Provider</Label>
+  <Label small
+    >{$_(
+      "components.design.settings.controls.ButtonActionEditor.actions.RefreshDataProvider.Data_Provider"
+    )}</Label
+  >
   <Select
     bind:value={parameters.componentId}
     options={actionProviders}
