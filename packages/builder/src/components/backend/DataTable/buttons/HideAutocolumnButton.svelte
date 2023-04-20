@@ -11,6 +11,7 @@
 <ActionButton
   icon={hideAutocolumns ? "VisibilityOff" : "Visibility"}
   primary
+  size="S"
   quiet
   on:click={hideOrUnhide}
 >

@@ -57,6 +57,7 @@
   {data}
   {loading}
   {type}
+  allowEditing={false}
   rowCount={10}
   bind:hideAutocolumns
 >

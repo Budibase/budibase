@@ -135,24 +135,6 @@ export function createTablesStore() {
     await save(draft)
   }
 
-  const updateTable = table => {
-    const index = get(store).list.findIndex(x => x._id === table._id)
-    if (index === -1) {
-      return
-    }
-
-    // This function has to merge state as there discrepancies with the table
-    // API endpoints. The table list endpoint and get table endpoint use the
-    // "type" property to mean different things.
-    store.update(state => {
-      state.list[index] = {
-        ...table,
-        type: state.list[index].type,
-      }
-      return state
-    })
-  }
-
   return {
     subscribe: derivedStore.subscribe,
     fetch,
@@ -163,7 +145,6 @@ export function createTablesStore() {
     delete: deleteTable,
     saveField,
     deleteField,
-    updateTable,
   }
 }
 

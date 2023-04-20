@@ -143,7 +143,7 @@
     }
     fields?.forEach(field => {
       const fieldSchema = schema[field]
-      if (fieldSchema.width && typeof fieldSchema.width === "string") {
+      if (fieldSchema.width) {
         style += ` ${fieldSchema.width}`
       } else {
         style += " minmax(auto, 1fr)"

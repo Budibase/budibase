@@ -325,4 +325,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  footer {
+    display: flex;
+    justify-content: center;
+  }
 </style>

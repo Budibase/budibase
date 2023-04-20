@@ -1,14 +1,12 @@
-export const domDebounce = (callback, extractParams = x => x) => {
+export const domDebounce = callback => {
   let active = false
-  let lastParams
-  return (...params) => {
-    lastParams = extractParams(...params)
+  return e => {
     if (!active) {
-      active = true
-      requestAnimationFrame(() => {
-        callback(lastParams)
+      window.requestAnimationFrame(() => {
+        callback(e)
         active = false
       })
+      active = true
     }
   }
 }

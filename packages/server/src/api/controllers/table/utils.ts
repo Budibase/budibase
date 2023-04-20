@@ -124,8 +124,7 @@ export function importToRows(
     for (const [fieldName, schema] of Object.entries(table.schema)) {
       // check whether the options need to be updated for inclusion as part of the data import
       if (
-        (schema.type === FieldTypes.OPTIONS ||
-          schema.type === FieldTypes.ARRAY) &&
+        schema.type === FieldTypes.OPTIONS &&
         row[fieldName] &&
         (!schema.constraints!.inclusion ||
           schema.constraints!.inclusion.indexOf(row[fieldName]) === -1)

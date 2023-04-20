@@ -182,12 +182,8 @@
         indexes,
       })
       dispatch("updatecolumns")
-      if (originalName) {
-        notifications.success("Column updated successfully")
-      } else {
-        notifications.success("Column created successfully")
-      }
     } catch (err) {
+      console.log(err)
       notifications.error(`Error saving column: ${err.message}`)
     }
   }
@@ -203,7 +199,7 @@
         notifications.error("You cannot delete the display column")
       } else {
         await tables.deleteField(editableColumn)
-        notifications.success(`Column ${editableColumn.name} deleted`)
+        notifications.success(`Column ${editableColumn.name} deleted.`)
         confirmDeleteDialog.hide()
         hide()
         deletion = false

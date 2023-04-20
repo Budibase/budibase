@@ -10,6 +10,7 @@
 <Button
   icon="Group"
   primary
+  size="S"
   quiet
   active={!!view.groupBy}
   on:click={modal.show}
