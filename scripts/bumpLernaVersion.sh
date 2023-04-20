@@ -8,7 +8,7 @@ sed -i '' "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" l
 lerna version prerelease --no-git-tag-version --force-publish --no-push --y
 git add lerna.json
 git commit -m "Bump version to $NEW_VERSION"
-git tag $NEW_VERSION
+git tag v$NEW_VERSION
 git push
 git push --tags
 
