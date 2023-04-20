@@ -26,7 +26,7 @@ export default class Socket {
     const middlewares = [
       userAgent,
       authenticate,
-      // currentApp,
+      currentApp,
       ...(additionalMiddlewares || []),
     ]
 
@@ -46,7 +46,9 @@ export default class Socket {
         },
 
         // Needed for koa-useragent middleware
+        headers: socket.request.headers,
         header: socket.request.headers,
+        path: "/socket/grid",
       }
 
       // Run all koa middlewares
@@ -60,7 +62,6 @@ export default class Socket {
               socket.data.user = {
                 id: ctx.user._id,
                 email: ctx.user.email,
-                selectedCellId: null,
               }
               next()
             }

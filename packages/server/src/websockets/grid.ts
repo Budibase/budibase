@@ -4,9 +4,9 @@ import { permissions } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 
-export default class SpreadsheetSocket extends Socket {
+export default class GridSocket extends Socket {
   constructor(app: Koa, server: http.Server) {
-    super(app, server, "/socket/spreadsheet", [authorized(permissions.BUILDER)])
+    super(app, server, "/socket/grid", [authorized(permissions.BUILDER)])
 
     this.io.on("connection", socket => {
       const user = socket.data.user

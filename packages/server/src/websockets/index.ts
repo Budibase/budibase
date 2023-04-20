@@ -1,14 +1,14 @@
 import http from "http"
 import Koa from "koa"
-import SpreadsheetSocket from "./spreadsheet"
+import GridSocket from "./grid"
 import ClientAppSocket from "./client"
 
 let clientAppSocket: ClientAppSocket
-let spreadsheetSocket: SpreadsheetSocket
+let gridSocket: GridSocket
 
 export const initialise = (app: Koa, server: http.Server) => {
   clientAppSocket = new ClientAppSocket(app, server)
-  spreadsheetSocket = new SpreadsheetSocket(app, server)
+  gridSocket = new GridSocket(app, server)
 }
 
-export { clientAppSocket, spreadsheetSocket }
+export { clientAppSocket, gridSocket }
