@@ -64,6 +64,7 @@ jobs:
           git commit -a -m 'release process'
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release:develop
+          echo 'Done'
 
       - name: Build/release Docker images
         run: |
