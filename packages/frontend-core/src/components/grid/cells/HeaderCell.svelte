@@ -100,7 +100,6 @@
   style="flex: 0 0 {column.width}px;"
   bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
-  class:sorted={sortedBy}
 >
   <GridCell
     on:mousedown={onMouseDown}
@@ -201,9 +200,6 @@
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
     background: var(--spectrum-global-color-gray-100);
-  }
-  .header-cell.sorted :global(.cell) {
-    background: var(--spectrum-global-color-gray-200);
   }
 
   .name {
