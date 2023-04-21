@@ -101,4 +101,5 @@ export interface Quota {
    * which can have subsequent effects such as sending emails to users.
    */
   triggers: number[]
+  startDate?: number
 }
