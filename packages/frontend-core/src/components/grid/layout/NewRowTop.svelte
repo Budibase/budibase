@@ -1,6 +1,6 @@
 <script>
   import GridCell from "../cells/GridCell.svelte"
-  import { getContext, onMount } from "svelte"
+  import { getContext, onMount, tick } from "svelte"
   import { Icon, Button } from "@budibase/bbui"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
@@ -15,11 +15,10 @@
     config,
     dispatch,
     rows,
-    showHScrollbar,
+    focusedCellAPI,
     tableId,
     subscribe,
     renderedColumns,
-    scrollLeft,
   } = getContext("grid")
 
   let isAdding = false
@@ -27,8 +26,6 @@
   let touched = false
 
   $: firstColumn = $stickyColumn || $renderedColumns[0]
-  $: rowHovered = $hoveredRowId === "new"
-  $: rowFocused = $focusedCellId?.startsWith("new-")
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $tableId, (isAdding = false)
 
@@ -56,12 +53,18 @@
     $hoveredRowId = null
   }
 
-  const startAdding = () => {
+  const startAdding = async () => {
     newRow = {}
     isAdding = true
     $hoveredRowId = "new"
     if (firstColumn) {
       $focusedCellId = `new-${firstColumn.name}`
+
+      // Also focus the cell if it is a text-like cell
+      if (["string", "number"].includes(firstColumn.schema.type)) {
+        await tick()
+        $focusedCellAPI?.focus()
+      }
     }
   }
 
@@ -97,12 +100,17 @@
 {#if isAdding}
   <div class="container">
     <div
+      class="underlay sticky"
+      style="width:{width}px;"
+      transition:fade={{ duration: 130 }}
+    />
+    <div class="underlay" transition:fade={{ duration: 130 }} />
+    <div
       class="sticky-column"
       transition:fade={{ duration: 130 }}
       style="flex: 0 0 {width}px"
-      class:scrolled={$scrollLeft > 0}
     >
-      <GridCell width={GutterWidth} {rowHovered} rowFocused>
+      <GridCell width={GutterWidth} rowFocused>
         <div class="gutter">
           <div class="number">1</div>
           {#if $config.allowExpandRows}
@@ -124,28 +132,25 @@
         />
       {/if}
     </div>
-    <div class="normal-columns" transition:fade={{ duration: 130 }}>
-      <GridScrollWrapper scrollHorizontally wheelInteractive>
-        <div class="row">
-          {#each $renderedColumns as column}
-            {@const cellId = `new-${column.name}`}
-            {#key cellId}
-              <DataCell
-                {cellId}
-                {column}
-                {rowFocused}
-                {rowHovered}
-                {updateValue}
-                row={newRow}
-                focused={$focusedCellId === cellId}
-                width={column.width}
-                rowIdx={0}
-              />
-            {/key}
-          {/each}
-        </div>
-      </GridScrollWrapper>
-    </div>
+    <GridScrollWrapper scrollHorizontally wheelInteractive>
+      <div class="row" transition:fade={{ duration: 130 }}>
+        {#each $renderedColumns as column}
+          {@const cellId = `new-${column.name}`}
+          {#key cellId}
+            <DataCell
+              {cellId}
+              {column}
+              {updateValue}
+              rowFocused
+              row={newRow}
+              focused={$focusedCellId === cellId}
+              width={column.width}
+              rowIdx={0}
+            />
+          {/key}
+        {/each}
+      </div>
+    </GridScrollWrapper>
     <div class="buttons" transition:fade={{ duration: 130 }}>
       <Button size="M" cta on:click={addRow}>Save</Button>
       <Button size="M" secondary newStyles on:click={cancel}>Cancel</Button>
@@ -168,24 +173,39 @@
     --cell-background: var(--spectrum-global-color-gray-100);
   }
 
-  /* Add overlays independently behind both separate z-indexed column containers */
-  .sticky-column:before,
-  .normal-columns:before {
+  /* Underlay sits behind everything */
+  .underlay {
     position: absolute;
     content: "";
     left: 0;
-    top: 0;
+    top: var(--row-height);
     height: 100%;
     width: 100%;
     background: var(--cell-background);
     opacity: 0.8;
   }
+  .underlay.sticky {
+    z-index: 2;
+  }
+
+  /* Floating buttons which sit on top of the underlay but below the sticky column */
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    pointer-events: all;
+    z-index: 3;
+    position: absolute;
+    top: calc(var(--row-height) + 24px);
+    left: 32px;
+  }
 
   /* Sticky column styles */
   .sticky-column {
     display: flex;
-    z-index: 2;
+    z-index: 4;
     position: relative;
+    align-self: flex-start;
   }
   .sticky-column :global(.cell:not(:last-child)) {
     border-right: none;
@@ -208,22 +228,9 @@
 
   /* Normal column styles */
   .normal-columns {
-    flex: 1 1 auto;
   }
   .row {
     width: 0;
     display: flex;
-  }
-
-  /* Floating buttons */
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    pointer-events: all;
-    z-index: 2;
-    position: absolute;
-    top: calc(var(--row-height) + 24px);
-    left: var(--gutter-width);
   }
 </style>
