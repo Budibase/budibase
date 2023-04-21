@@ -47,7 +47,6 @@ export const createLicensingStore = () => {
       actions.setNavigation()
       actions.setLicense()
       await actions.setQuotaUsage()
-      actions.setUsageMetrics()
     },
     setNavigation: () => {
       const upgradeUrl = `${get(admin).accountPortalUrl}/portal/upgrade`
@@ -111,6 +110,7 @@ export const createLicensingStore = () => {
           quotaUsage,
         }
       })
+      actions.setUsageMetrics()
     },
     setUsageMetrics: () => {
       if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
@@ -174,10 +174,12 @@ export const createLicensingStore = () => {
         const userQuota = license.quotas.usage.static.users
         const userLimit = userQuota?.value
         const userCount = usage.usageQuota.users
+
+        const userLimitExceeded = userCount > userLimit
         const userLimitReached = userCount >= userLimit
 
         // only warn when the start date has been included
-        const warnUserLimit = userQuota?.startDate && userLimitReached
+        const warnUserLimit = userQuota?.startDate && userLimitExceeded
 
         store.update(state => {
           return {

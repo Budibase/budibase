@@ -30,7 +30,8 @@
   $: hasError = userData.find(x => x.error != null)
 
   $: userCount = $licensing.userCount + userData.length
-  $: userLimitReached = $licensing.userLimitReached || userCount > $licensing.userLimit
+  $: willReach = userCount === $licensing.userLimit
+  $: willExceed = userCount > $licensing.userLimit
 
   function removeInput(idx) {
     userData = userData.filter((e, i) => i !== idx)
@@ -86,7 +87,7 @@
   confirmDisabled={disabled}
   cancelText="Cancel"
   showCloseIcon={false}
-  disabled={hasError || !userData.length || userLimitReached}
+  disabled={hasError || !userData.length || willExceed}
 >
   <Layout noPadding gap="XS">
     <Label>Email address</Label>
@@ -117,7 +118,7 @@
       </div>
     {/each}
 
-    {#if userLimitReached}
+    {#if willReach}
       <div class="user-notification">
         <Icon name="Info" />
         <span>
