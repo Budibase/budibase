@@ -9,6 +9,7 @@
   import { groups, licensing, admin } from "stores/portal"
   import { emailValidator } from "helpers/validation"
   import { Constants } from "@budibase/frontend-core"
+  import { capitalise } from "helpers"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
@@ -20,8 +21,10 @@
   let userEmails = []
   let userGroups = []
   let usersRole = null
-
+  let userLimitReached = false
   $: invalidEmails = []
+  $: maxUserLimit = $licensing.license?.quotas.usage.static.users.value
+  $: currentUserCount = $licensing.quotaUsage.usageQuota.users
 
   const validEmails = userEmails => {
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
@@ -63,9 +66,15 @@
       files = fileArray
 
       userEmails = csvString.split(/\r?\n/)
+
+      if (userEmails.length + currentUserCount > maxUserLimit) {
+        userLimitReached = true
+      }
     })
     reader.readAsText(fileArray[0])
   }
+
+  $: console.log($licensing.license)
 </script>
 
 <ModalContent
@@ -75,7 +84,10 @@
   cancelText="Cancel"
   showCloseIcon={false}
   onConfirm={() => createUsersFromCsv({ userEmails, usersRole, userGroups })}
-  disabled={!userEmails.length || !validEmails(userEmails) || !usersRole}
+  disabled={!userEmails.length ||
+    !validEmails(userEmails) ||
+    !usersRole ||
+    userLimitReached}
 >
   <Body size="S">Import your users email addresses from a CSV file</Body>
 
@@ -86,6 +98,12 @@
     </label>
   </div>
 
+  {#if userLimitReached}
+    <div class="user-warning">
+      {capitalise($licensing.license.plan)} plan is limited to {maxUserLimit} users.
+      Upgrade your plan to add more users
+    </div>
+  {/if}
   <RadioGroup
     bind:value={usersRole}
     options={Constants.BuilderRoleDescriptions}
@@ -116,6 +134,9 @@
     color: var(--blue);
   }
 
+  .user-warning {
+    color: red;
+  }
   label {
     font-weight: 600;
     box-sizing: border-box;
