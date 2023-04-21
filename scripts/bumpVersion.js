@@ -9,7 +9,7 @@ const lernaData = JSON.parse(fileData)
 
 // Get current version and split into major, minor, patch, and alpha components
 const currentVersion = lernaData.version
-const [versionWithoutPrerelease, prerelease] = currentVersion.split("-")
+const [versionWithoutPrerelease, alpha] = currentVersion.split("-")
 const [major, minor, patch] = versionWithoutPrerelease.split(".").map(Number)
 
 // Calculate new version based on specified version bump
@@ -25,10 +25,13 @@ switch (versionBump) {
     newVersion = `${major}.${minor}.${patch + 1}`
     break
   case "alpha":
-    const newPrerelease = (prerelease || -1) + 1
-    newVersion = prerelease
-      ? `${versionWithoutPrerelease}-alpha.${newPrerelease}`
-      : `${major}.${minor}.${patch}-alpha.${newPrerelease}`
+    let newAlphaVersion = 0
+    if (alpha) {
+      const [_, alphaVersion] = alpha.split(".")
+      newAlphaVersion = +alphaVersion + 1
+    }
+    newVersion = `${versionWithoutPrerelease}-alpha.${newAlphaVersion}`
+
     break
   default:
     console.error(`Invalid version bump '${versionBump}' specified.`)
