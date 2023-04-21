@@ -17,9 +17,18 @@
   const getColumnOptions = (stickyColumn, columns) => {
     let options = []
     if (stickyColumn) {
-      options.push(stickyColumn.name)
+      options.push({
+        label: stickyColumn.label || stickyColumn.name,
+        value: stickyColumn.name,
+      })
     }
-    return [...options, ...columns.map(col => col.name)]
+    return [
+      ...options,
+      ...columns.map(col => ({
+        label: col.label || col.name,
+        value: col.name,
+      })),
+    ]
   }
 
   const updateSortColumn = e => {
@@ -66,7 +75,7 @@
     quiet
     size="M"
     on:click={() => (open = !open)}
-    selected={open || $sort.column}
+    selected={open}
     disabled={!columnOptions.length}
   >
     Sort
