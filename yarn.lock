@@ -7777,6 +7777,13 @@ cli-cursor@3.1.0, cli-cursor@^3.1.0:
   dependencies:
     restore-cursor "^3.1.0"
 
+cli-progress@3.11.2:
+  version "3.11.2"
+  resolved "https://registry.yarnpkg.com/cli-progress/-/cli-progress-3.11.2.tgz#f8c89bd157e74f3f2c43bcfb3505670b4d48fc77"
+  integrity sha512-lCPoS6ncgX4+rJu5bS3F/iCz17kZ9MPZ6dpuTtI0KXKABkhyXIdYB3Inby1OpaGti3YlI3EeEkM9AuWpelJrVA==
+  dependencies:
+    string-width "^4.2.3"
+
 cli-spinners@2.6.1:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/cli-spinners/-/cli-spinners-2.6.1.tgz#adc954ebe281c37a6319bfa401e6dd2488ffb70d"
@@ -8065,6 +8072,11 @@ commander@6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-6.2.0.tgz#b990bfb8ac030aedc6d11bc04d1488ffef56db75"
   integrity sha512-zP4jEKbe8SHzKJYQmq8Y9gYjtO/POJLgIdKgV7B9qNmABVFVc+ctqSX6iXh4mCpJfRBOabiZ2YKPg8ciDw6C+Q==
+
+commander@7.1.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-7.1.0.tgz#f2eaecf131f10e36e07d894698226e36ae0eb5ff"
+  integrity sha512-pRxBna3MJe6HKnBGsDyMv8ETbptw3axEdYHoqNh7gu5oDcew8fs0xnivZGm06Ogk8zGAJ9VX+OPEr2GXEQK4dg==
 
 commander@^10.0.0:
   version "10.0.0"
@@ -8860,7 +8872,7 @@ dateformat@^4.5.1, dateformat@^4.6.3:
   resolved "https://registry.yarnpkg.com/dateformat/-/dateformat-4.6.3.tgz#556fa6497e5217fedb78821424f8a1c22fa3f4b5"
   integrity sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==
 
-dayjs@^1.10.4, dayjs@^1.10.5, dayjs@^1.11.2:
+dayjs@^1.10.4, dayjs@^1.10.5, dayjs@^1.11.2, dayjs@^1.11.7:
   version "1.11.7"
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.7.tgz#4b296922642f70999544d1144a2c25730fce63e2"
   integrity sha512-+Yw9U6YO5TQohxLcIkrXBeY73WP3ejHWVvx8XCk3gxvQDCTEmS48ZrSZCKciI7Bhl/uCMyxYtE9UqRILmFphkQ==
@@ -9505,6 +9517,13 @@ dir-glob@^3.0.1:
   integrity sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==
   dependencies:
     path-type "^4.0.0"
+
+docker-compose@0.23.12:
+  version "0.23.12"
+  resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.23.12.tgz#fa883b98be08f6926143d06bf9e522ef7ed3210c"
+  integrity sha512-KFbSMqQBuHjTGZGmYDOCO0L4SaML3BsWTId5oSUyaBa22vALuFHNv+UdDWs3HcMylHWKsxCbLB7hnM/nCosWZw==
+  dependencies:
+    yaml "^1.10.2"
 
 docker-compose@0.23.17:
   version "0.23.17"
