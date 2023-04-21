@@ -15,6 +15,11 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
   const env = loadEnv(mode, process.cwd())
   return {
+    test: {
+      setupFiles: ["./vitest.setup.js"],
+      globals: true,
+      environment: "jsdom",
+    },
     server: {
       fs: {
         strict: false,

@@ -3,6 +3,12 @@ import { temporalStore } from "builderStore"
 import { admin, auth, licensing } from "stores/portal"
 import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
+import { capitalise } from "helpers"
+
+import dayjs from "dayjs"
+import relativeTime from "dayjs/plugin/relativeTime"
+dayjs.extend(relativeTime)
 
 const oneDayInSeconds = 86400
 
@@ -141,6 +147,32 @@ const buildPaymentFailedBanner = () => {
   }
 }
 
+const buildUsersAboveLimitBanner = EXPIRY_KEY => {
+  const userLicensing = get(licensing)
+  let startDate =
+    userLicensing.license.quotas.usage.static.users.value.startDate
+  return {
+    key: EXPIRY_KEY,
+    type: BANNER_TYPES.WARNING,
+    criteria: () => {
+      return userLicensing.warnUserLimit
+    },
+    message: `${capitalise(
+      userLicensing.license.plan.type
+    )} plan changes - Users will be limited to ${
+      userLicensing.license.quotas.usage.static.users.value
+    } users ${dayjs(startDate).fromNow()}`,
+    ...{
+      extraButtonText: "Find out more",
+      extraButtonAction: () => {
+        defaultCacheFn(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER)
+        window.location.href = "/builder/portal/users/users"
+      },
+    },
+    showCloseButton: true,
+  }
+}
+
 export const getBanners = () => {
   return [
     buildPaymentFailedBanner(),
@@ -163,6 +195,7 @@ export const getBanners = () => {
       ExpiringKeys.LICENSING_QUERIES_WARNING_BANNER,
       90
     ),
+    buildUsersAboveLimitBanner(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER),
   ].filter(licensingBanner => {
     return (
       !temporalStore.actions.getExpiring(licensingBanner.key) &&

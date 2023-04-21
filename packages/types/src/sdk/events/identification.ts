@@ -46,6 +46,8 @@ export interface Identity {
   environment: string
   installationId?: string
   tenantId?: string
+  // usable - no unique format
+  realTenantId?: string
   hostInfo?: HostInfo
 }
 

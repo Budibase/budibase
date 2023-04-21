@@ -24,7 +24,7 @@ export enum PermissionType {
   QUERY = "query",
 }
 
-class Permission {
+export class Permission {
   type: PermissionType
   level: PermissionLevel
 
@@ -34,7 +34,7 @@ class Permission {
   }
 }
 
-function levelToNumber(perm: PermissionLevel) {
+export function levelToNumber(perm: PermissionLevel) {
   switch (perm) {
     // not everything has execute privileges
     case PermissionLevel.EXECUTE:
@@ -55,7 +55,7 @@ function levelToNumber(perm: PermissionLevel) {
  * @param {string} userPermLevel The permission level of the user.
  * @return {string[]} All the permission levels this user is allowed to carry out.
  */
-function getAllowedLevels(userPermLevel: PermissionLevel) {
+export function getAllowedLevels(userPermLevel: PermissionLevel): string[] {
   switch (userPermLevel) {
     case PermissionLevel.EXECUTE:
       return [PermissionLevel.EXECUTE]
@@ -64,9 +64,9 @@ function getAllowedLevels(userPermLevel: PermissionLevel) {
     case PermissionLevel.WRITE:
     case PermissionLevel.ADMIN:
       return [
+        PermissionLevel.EXECUTE,
         PermissionLevel.READ,
         PermissionLevel.WRITE,
-        PermissionLevel.EXECUTE,
       ]
     default:
       return []
@@ -81,7 +81,7 @@ export enum BuiltinPermissionID {
   POWER = "power",
 }
 
-const BUILTIN_PERMISSIONS = {
+export const BUILTIN_PERMISSIONS = {
   PUBLIC: {
     _id: BuiltinPermissionID.PUBLIC,
     name: "Public",
