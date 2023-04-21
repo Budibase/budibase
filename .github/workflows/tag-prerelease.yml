@@ -14,8 +14,6 @@ on:
       - "scripts/**"
       - "package.json"
       - "yarn.lock"
-      - "package.json"
-      - "yarn.lock"
       - "lerna.json"
   workflow_dispatch:
 
