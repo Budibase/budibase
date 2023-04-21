@@ -91,7 +91,6 @@ jobs:
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
           git reset --hard
-          git pull
           mkdir sync
           echo "Packaging chart to sync dir"
           helm package charts/budibase --version 0.0.0-develop --app-version develop --destination sync
