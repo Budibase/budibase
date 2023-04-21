@@ -14,7 +14,6 @@ on:
       - "scripts/**"
       - "package.json"
       - "yarn.lock"
-      - "lerna.json"
   workflow_dispatch:
 
 jobs:
@@ -35,6 +34,6 @@ jobs:
       - name: Tag prerelease
         run: |
           # setup the username and email.
-          git config --global user.name "adrinr"
-          git config --global user.email "adria@budibase.com"
+          git config --global user.name "Budibase Staging Release Bot"
+          git config --global user.email "<>"
           ./scripts/bumpLernaVersion.sh
