@@ -24,7 +24,6 @@ vi.mock("svelte/store", () => {
 vi.mock("api", () => {
   return {
     API: {
-      checkImportComplete: vi.fn(),
       getEnvironment: vi.fn(),
       getSystemStatus: vi.fn(),
       getChecklist: vi.fn(),
@@ -55,7 +54,6 @@ describe("admin store", () => {
     expect(ctx.returnedStore).toEqual({
       subscribe: expect.toBe(ctx.writableReturn.subscribe),
       init: expect.toBeFunc(),
-      checkImportComplete: expect.toBeFunc(),
       unload: expect.toBeFunc(),
       getChecklist: expect.toBeFunc(),
     })
@@ -200,37 +198,6 @@ describe("admin store", () => {
         expect(ctx.writableReturn.update.calls[3][0]({ foo: "foo" })).toEqual({
           foo: "foo",
           loaded: true,
-        })
-      })
-    })
-  })
-
-  describe("checkImportComplete", () => {
-    describe("import complete", () => {
-      beforeEach(async ctx => {
-        API.checkImportComplete.mockReturnValue({ imported: true })
-        await ctx.returnedStore.checkImportComplete()
-      })
-
-      it("updates the store's importComplete parameter", ctx => {
-        expect(ctx.writableReturn.update.calls[0][0]({ foo: "foo" })).toEqual({
-          foo: "foo",
-          importComplete: true,
-        })
-      })
-    })
-
-    describe("import not complete", () => {
-      beforeEach(async ctx => {
-        // Can be null
-        API.checkImportComplete.mockReturnValue(null)
-        await ctx.returnedStore.checkImportComplete()
-      })
-
-      it("updates the store's importComplete parameter", ctx => {
-        expect(ctx.writableReturn.update.calls[0][0]({ foo: "foo" })).toEqual({
-          foo: "foo",
-          importComplete: false,
         })
       })
     })
