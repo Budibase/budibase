@@ -71,9 +71,6 @@
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: readonly = !$auth.isAdmin || $features.isScimEnabled
 
-  $: userLimitReached =
-    $licensing.quotaUsage.usageQuota.users >=
-    $licensing.license.quotas.usage.static.users.value
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -280,7 +277,7 @@
       <ButtonGroup>
         <Button
           disabled={readonly}
-          on:click={userLimitReached
+          on:click={$licensing.userLimitReached
             ? userLimitReachedModal.show
             : createUserModal.show}
           cta
@@ -289,7 +286,7 @@
         </Button>
         <Button
           disabled={readonly}
-          on:click={userLimitReached
+          on:click={$licensing.userLimitReached
             ? userLimitReachedModal.show
             : importUsersModal.show}
           secondary

@@ -8,9 +8,11 @@
     Layout,
     Icon,
   } from "@budibase/bbui"
-  import { groups, licensing } from "stores/portal"
+  import { groups, licensing, admin } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
+  import { capitalise } from "helpers"
+  import {} from "svelte/store"
 
   export let showOnboardingTypeModal
 
@@ -30,6 +32,7 @@
 
   $: maxUserLimit = $licensing.license?.quotas.usage.static.users.value
   $: maxUserLimitReached =
+    $admin.cloud &&
     $licensing.quotaUsage.usageQuota.users + userData.length > maxUserLimit
 
   function removeInput(idx) {
@@ -120,9 +123,9 @@
     {#if maxUserLimitReached}
       <div class="user-notification">
         <Icon name="Info" />
-        <span
-          >Free plan is limited to {maxUserLimit} users. Upgrade your plan to add
-          more users</span
+        <span>
+          {capitalise($licensing.license.plan)} plan is limited to {maxUserLimit}
+          users. Upgrade your plan to add more users</span
         >
       </div>
     {:else}

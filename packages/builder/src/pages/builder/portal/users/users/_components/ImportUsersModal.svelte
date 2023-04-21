@@ -67,14 +67,12 @@
 
       userEmails = csvString.split(/\r?\n/)
 
-      if (userEmails.length + currentUserCount > maxUserLimit) {
+      if ($admin.cloud && userEmails.length + currentUserCount > maxUserLimit) {
         userLimitReached = true
       }
     })
     reader.readAsText(fileArray[0])
   }
-
-  $: console.log($licensing.license)
 </script>
 
 <ModalContent
