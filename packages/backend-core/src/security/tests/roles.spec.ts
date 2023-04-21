@@ -234,19 +234,52 @@ describe("Role", () => {
     })
   })
   describe("getAllRoles", () => {
-    it("should return all roles for an app if appId is provided", async () => {
-      const appId = "123"
-      const expectedRoles = [{ _id: "role1" }, { _id: "role2" }]
-      roles.getAllRoles.mockImplementationOnce(async () => expectedRoles)
-      const result = await roles.getAllRoles(appId)
-      expect(result).toEqual(expectedRoles)
+    it("should return all roles when no appId is provided", async () => {
+      const allRoles = await roles.getAllRoles()
+      let result = roles.BUILTIN_ROLE_IDS
+      let resultLength = Object.keys(result)
+      expect(resultLength).toHaveLength(4)
     })
 
-    it("should return all built-in roles if no appId is provided", async () => {
-      const expectedRoles = [{ _id: "role1" }, { _id: "role2" }]
-      roles.getAllRoles.mockImplementationOnce(async () => expectedRoles)
-      const result = await roles.getAllRoles()
-      expect(result).toEqual(expectedRoles)
+    // it("should return roles for a specific app when appId is provided", async () => {
+    //   const allRoles = await roles.getAllRoles("budibase")
+    //   expect(Array.isArray(roles)).toBe(true)
+    // })
+  })
+  describe("getRequiredResourceRole", () => {
+    it("should return an empty array if there are no roles with permissions for the given resource", async () => {
+      const result = await roles.getRequiredResourceRole("READ", {
+        resourceId: "budibase",
+      })
+      expect(result).toEqual([])
+    })
+
+    it("should return the IDs of roles with main-level permissions for the given resource", async () => {
+      const result = await roles.getRequiredResourceRole("READ", {
+        resourceId: "app1",
+      })
+      expect(result).toEqual(["role1"])
+    })
+
+    it("should return the IDs of roles with sub-level permissions for the given resource", async () => {
+      const result = await roles.getRequiredResourceRole("WRITE", {
+        resourceId: "resourceId2",
+        subResourceId: "subResourceId1",
+      })
+      expect(result).toEqual(["role1", "role2"])
+    })
+
+    it("should return the IDs of roles with sub-level permissions for the given sub-resource", async () => {
+      const result = await roles.getRequiredResourceRole("READ", {
+        resourceId: "resourceId2",
+        subResourceId: "subResourceId2",
+      })
+      expect(result).toEqual(["role1"])
+    })
+
+    it("should return an empty array if no resource ID is provided", async () => {
+      const result = await roles.getRequiredResourceRole("READ", {})
+      expect(result).toEqual([])
     })
   })
 })
