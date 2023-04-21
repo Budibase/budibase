@@ -3,6 +3,10 @@ import { temporalStore } from "builderStore"
 import { admin, auth, licensing } from "stores/portal"
 import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
+import { Constants } from "@budibase/frontend-core"
+import dayjs from "dayjs"
+import relativeTime from "dayjs/plugin/relativeTime"
+dayjs.extend(relativeTime)
 
 const oneDayInSeconds = 86400
 
@@ -149,13 +153,17 @@ const buildUsersAboveLimitBanner = EXPIRY_KEY => {
     criteria: () => {
       return (
         // make sure this negation is removed (just for testing locally)
-        !get(admin).cloud &&
+        get(admin).cloud &&
         userLicensing.license.plan.model === Constants.PlanModel.PER_USER &&
         userLicensing.isFreePlan &&
         userLicensing.quotaUsage.usageQuota.users > 5
       )
     },
-    message: `Free plan changes - Users will be limited to ${userLicensing.license.quotas.usage.static.users.value} users in X days`,
+    message: `Free plan changes - Users will be limited to ${
+      userLicensing.license.quotas.usage.static.users.value
+    } users ${dayjs(
+      userLicensing.license.quotas.usage.static.users.value.startDate
+    ).fromNow()}`,
     ...{
       extraButtonText: "Find out more",
       extraButtonAction: () => {

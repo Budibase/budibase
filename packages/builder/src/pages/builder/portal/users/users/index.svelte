@@ -38,6 +38,9 @@
   import { API } from "api"
   import { OnboardingType } from "../../../../../constants"
   import ScimBanner from "../_components/SCIMBanner.svelte"
+  import dayjs from "dayjs"
+  import relativeTime from "dayjs/plugin/relativeTime"
+  dayjs.extend(relativeTime)
 
   const fetch = fetchData({
     API,
@@ -85,7 +88,7 @@
   }
 
   $: showUserLimitAlert =
-    !$admin.cloud &&
+    $admin.cloud &&
     $licensing.isFreePlan &&
     $licensing.license.plan.model === Constants.PlanModel.PER_USER &&
     $licensing.quotaUsage.usageQuota.users > 5
@@ -251,8 +254,15 @@
   {#if showUserLimitAlert}
     <InlineAlert
       type="error"
+      onConfirm={() => {
+        window.open("https://budibase.com/pricing/", "_blank")
+      }}
+      buttonText="View plans"
+      cta
       header={`Users will soon be limited to ${staticUserLimit}`}
-      message={`Our free plan is going to be limited to ${staticUserLimit} users in X days.
+      message={`Our free plan is going to be limited to ${staticUserLimit} users ${dayjs(
+        $licensing.license.quotas.usage.static.users.value.startDate
+      ).fromNow()}.
     
     This means any users exceeding the limit have been de-activated.
 
