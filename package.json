@@ -81,8 +81,8 @@
     "security:audit": "node scripts/audit.js",
     "postinstall": "husky install",
     "dep:clean": "yarn clean -y && yarn bootstrap",
-    "submodules:load": "git submodule init && git submodule update && yarn bootstrap",
-    "submodules:unload": "git submodule deinit --all && yarn bootstrap"
+    "submodules:load": "git submodule init && git submodule update && yarn && yarn bootstrap",
+    "submodules:unload": "git submodule deinit --all && yarn && yarn bootstrap"
   },
   "workspaces": {
     "packages": [
