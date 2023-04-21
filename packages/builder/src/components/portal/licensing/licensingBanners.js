@@ -4,6 +4,8 @@ import { admin, auth, licensing } from "stores/portal"
 import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
 import { Constants } from "@budibase/frontend-core"
+import { capitalise } from "helpers"
+
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 dayjs.extend(relativeTime)
@@ -147,22 +149,19 @@ const buildPaymentFailedBanner = () => {
 
 const buildUsersAboveLimitBanner = EXPIRY_KEY => {
   const userLicensing = get(licensing)
+  let startDate =
+    userLicensing.license.quotas.usage.static.users.value.startDate
   return {
     key: EXPIRY_KEY,
     type: BANNER_TYPES.WARNING,
     criteria: () => {
-      return (
-        get(admin).cloud &&
-        userLicensing.license.plan.model === Constants.PlanModel.PER_USER &&
-        userLicensing.isFreePlan &&
-        userLicensing.quotaUsage.usageQuota.users > 5
-      )
+      return userLicensing.warnUserLimit && Date.now() < startDate
     },
-    message: `Free plan changes - Users will be limited to ${
+    message: `${capitalise(
+      userLicensing.license.plan.type
+    )} plan changes - Users will be limited to ${
       userLicensing.license.quotas.usage.static.users.value
-    } users ${dayjs(
-      userLicensing.license.quotas.usage.static.users.value.startDate
-    ).fromNow()}`,
+    } users ${dayjs(startDate).fromNow()}`,
     ...{
       extraButtonText: "Find out more",
       extraButtonAction: () => {

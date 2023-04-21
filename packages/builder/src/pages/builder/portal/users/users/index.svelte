@@ -89,13 +89,6 @@
     },
   }
 
-  // Per user check
-  $: showUserLimitAlert =
-    $admin.cloud &&
-    $licensing.isFreePlan &&
-    $licensing.license.plan.model === Constants.PlanModel.PER_USER &&
-    $licensing.quotaUsage.usageQuota.users > 5
-
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
   $: {
@@ -254,7 +247,7 @@
     <Body>Add users and control who gets access to your published apps</Body>
   </Layout>
   <Divider />
-  {#if showUserLimitAlert}
+  {#if $licensing.warnUserLimit}
     <InlineAlert
       type="error"
       onConfirm={() => {

@@ -2,7 +2,7 @@ import { writable, get } from "svelte/store"
 import { API } from "api"
 import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
-import { StripeStatus } from "components/portal/licensing/constants"
+import { StripeStatus, PlanModel } from "components/portal/licensing/constants"
 import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
 
 export const createLicensingStore = () => {
@@ -165,6 +165,12 @@ export const createLicensingStore = () => {
           )
         }
 
+        let warnUserLimit =
+          !get(admin).cloud &&
+          license.plan.model === PlanModel.PER_USER &&
+          license?.plan.type === Constants.PlanType.FREE &&
+          quota.usageQuota.users > license.quotas.usage.static.users.value
+
         store.update(state => {
           return {
             ...state,
@@ -175,6 +181,7 @@ export const createLicensingStore = () => {
             accountPastDue: pastDueAtMilliseconds != null,
             pastDueEndDate,
             pastDueDaysRemaining,
+            warnUserLimit,
           }
         })
       }

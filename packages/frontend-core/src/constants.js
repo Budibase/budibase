@@ -54,11 +54,6 @@ export const PlanType = {
   ENTERPRISE: "enterprise",
 }
 
-export const PlanModel = {
-  PER_USER: "perUser",
-  DAY_PASS: "dayPass",
-}
-
 /**
  * API version header attached to all requests.
  * Version changelog:
