@@ -8,14 +8,16 @@
     notifications,
     ActionButton,
     CopyInput,
+    Modal,
   } from "@budibase/bbui"
   import { store } from "builderStore"
-  import { groups, licensing, apps, users } from "stores/portal"
+  import { groups, licensing, apps, users, auth, admin } from "stores/portal"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "api"
   import { onMount } from "svelte"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "components/common/RoleSelect.svelte"
+  import UpgradeModal from "components/common/users/UpgradeModal.svelte"
   import { Constants, Utils } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
   import { roles } from "stores/backend"
@@ -33,6 +35,8 @@
   let selectedGroup
   let userOnboardResponse = null
 
+  let userLimitReachedModal
+
   $: queryIsEmail = emailValidator(query) === true
   $: prodAppId = apps.getProdAppID($store.appId)
   $: promptInvite = showInvite(
@@ -41,6 +45,7 @@
     filteredGroups,
     query
   )
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   const showInvite = (invites, users, groups, query) => {
     return !invites?.length && !users?.length && !groups?.length && query
@@ -450,7 +455,9 @@
           <ActionButton
             icon="UserAdd"
             disabled={!queryIsEmail || inviting}
-            on:click={onInviteUser}
+            on:click={$licensing.userLimitReached
+              ? userLimitReachedModal.show
+              : onInviteUser}
           >
             Add user
           </ActionButton>
@@ -608,6 +615,9 @@
       </Layout>
     {/if}
   </div>
+  <Modal bind:this={userLimitReachedModal}>
+    <UpgradeModal {isOwner} />
+  </Modal>
 </div>
 
 <style>

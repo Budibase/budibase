@@ -11,6 +11,7 @@
   import { groups, licensing } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
+  import { capitalise } from "helpers"
 
   export let showOnboardingTypeModal
 
@@ -27,6 +28,9 @@
     },
   ]
   $: hasError = userData.find(x => x.error != null)
+
+  $: userCount = $licensing.userCount + userData.length
+  $: userLimitReached = $licensing.userLimitReached || userCount > $licensing.userLimit
 
   function removeInput(idx) {
     userData = userData.filter((e, i) => i !== idx)
@@ -82,7 +86,7 @@
   confirmDisabled={disabled}
   cancelText="Cancel"
   showCloseIcon={false}
-  disabled={hasError || !userData.length}
+  disabled={hasError || !userData.length || userLimitReached}
 >
   <Layout noPadding gap="XS">
     <Label>Email address</Label>
@@ -112,9 +116,20 @@
         </div>
       </div>
     {/each}
-    <div>
-      <ActionButton on:click={addNewInput} icon="Add">Add email</ActionButton>
-    </div>
+
+    {#if userLimitReached}
+      <div class="user-notification">
+        <Icon name="Info" />
+        <span>
+          {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
+          users. Upgrade your plan to add more users</span
+        >
+      </div>
+    {:else}
+      <div>
+        <ActionButton on:click={addNewInput} icon="Add">Add email</ActionButton>
+      </div>
+    {/if}
   </Layout>
 
   {#if $licensing.groupsEnabled}
@@ -130,6 +145,12 @@
 </ModalContent>
 
 <style>
+  .user-notification {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: var(--spacing-m);
+  }
   .icon {
     width: 10%;
     align-self: flex-start;

@@ -2,7 +2,7 @@ import { writable, get } from "svelte/store"
 import { API } from "api"
 import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
-import { StripeStatus, PlanModel } from "components/portal/licensing/constants"
+import { StripeStatus } from "components/portal/licensing/constants"
 import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
 
 export const createLicensingStore = () => {
@@ -31,7 +31,13 @@ export const createLicensingStore = () => {
     pastDueEndDate: undefined,
     pastDueDaysRemaining: undefined,
     accountDowngraded: undefined,
+    // user limits
+    userCount: undefined,
+    userLimit: undefined,
+    userLimitReached: false,
+    warnUserLimit: false
   }
+
   const oneDayInMilliseconds = 86400000
 
   const store = writable(DEFAULT)
@@ -108,7 +114,7 @@ export const createLicensingStore = () => {
     },
     setUsageMetrics: () => {
       if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
-        const quota = get(store).quotaUsage
+        const usage = get(store).quotaUsage
         const license = get(auth).user.license
         const now = new Date()
 
@@ -126,12 +132,12 @@ export const createLicensingStore = () => {
         const monthlyMetrics = getMetrics(
           ["dayPasses", "queries", "automations"],
           license.quotas.usage.monthly,
-          quota.monthly.current
+          usage.monthly.current
         )
         const staticMetrics = getMetrics(
           ["apps", "rows"],
           license.quotas.usage.static,
-          quota.usageQuota
+          usage.usageQuota
         )
 
         const getDaysBetween = (dateStart, dateEnd) => {
@@ -142,7 +148,7 @@ export const createLicensingStore = () => {
             : 0
         }
 
-        const quotaResetDate = new Date(quota.quotaReset)
+        const quotaResetDate = new Date(usage.quotaReset)
         const quotaResetDaysRemaining = getDaysBetween(now, quotaResetDate)
 
         const accountDowngraded =
@@ -165,9 +171,13 @@ export const createLicensingStore = () => {
           )
         }
 
-        const warnUserLimit =
-          license.quotas.usage.static.users.value.startDate &&
-          quota.usageQuota.users >= license?.quotas.usage.static.users.value
+        const userQuota = license.quotas.usage.static.users
+        const userLimit = userQuota?.value
+        const userCount = usage.usageQuota.users
+        const userLimitReached = userCount >= userLimit
+
+        // only warn when the start date has been included
+        const warnUserLimit = userQuota?.startDate && userLimitReached
 
         store.update(state => {
           return {
@@ -179,7 +189,10 @@ export const createLicensingStore = () => {
             accountPastDue: pastDueAtMilliseconds != null,
             pastDueEndDate,
             pastDueDaysRemaining,
-            warnUserLimit,
+            userLimitReached,
+            userCount,
+            userLimit,
+            warnUserLimit
           }
         })
       }
