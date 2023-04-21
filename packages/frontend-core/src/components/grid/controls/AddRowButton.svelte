@@ -9,7 +9,7 @@
   icon="TableRowAddBottom"
   quiet
   size="M"
-  on:click={() => dispatch("add-row")}
+  on:click={() => dispatch("add-row-inline")}
   disabled={!loaded ||
     !$config.allowAddRows ||
     (!$columns.length && !$stickyColumn)}

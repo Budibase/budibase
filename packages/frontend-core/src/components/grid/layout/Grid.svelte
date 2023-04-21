@@ -23,7 +23,6 @@
   import AddRowButton from "../controls/AddRowButton.svelte"
   import RowHeightButton from "../controls/RowHeightButton.svelte"
   import NewRowTop from "./NewRowTop.svelte"
-  import FloatingAddRowButton from "../controls/FloatingAddRowButton.svelte"
   import {
     MaxCellRenderHeight,
     MaxCellRenderWidthOverflow,
@@ -129,14 +128,11 @@
           <HeaderRow />
           <GridBody />
         </div>
+        <NewRowTop />
         <div class="overlays">
-          <NewRowTop />
           <ResizeOverlay />
           <ReorderOverlay />
           <BetaButton />
-          {#if allowAddRows}
-            <FloatingAddRowButton />
-          {/if}
           <ScrollOverlay />
           <MenuOverlay />
         </div>

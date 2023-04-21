@@ -4,7 +4,7 @@
   import { Icon, Button } from "@budibase/bbui"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
-  import { fly } from "svelte/transition"
+  import { fade } from "svelte/transition"
   import { GutterWidth } from "../lib/constants"
 
   const {
@@ -14,11 +14,11 @@
     scroll,
     config,
     dispatch,
-    visibleColumns,
     rows,
     showHScrollbar,
     tableId,
     subscribe,
+    renderedColumns,
     scrollLeft,
   } = getContext("grid")
 
@@ -26,7 +26,7 @@
   let newRow = {}
   let touched = false
 
-  $: firstColumn = $stickyColumn || $visibleColumns[0]
+  $: firstColumn = $stickyColumn || $renderedColumns[0]
   $: rowHovered = $hoveredRowId === "new"
   $: rowFocused = $focusedCellId?.startsWith("new-")
   $: width = GutterWidth + ($stickyColumn?.width || 0)
@@ -52,11 +52,14 @@
 
   const cancel = () => {
     isAdding = false
+    $focusedCellId = null
+    $hoveredRowId = null
   }
 
   const startAdding = () => {
     newRow = {}
     isAdding = true
+    $hoveredRowId = "new"
     if (firstColumn) {
       $focusedCellId = `new-${firstColumn.name}`
     }
@@ -72,74 +75,78 @@
     dispatch("add-row")
   }
 
+  const handleKeyPress = e => {
+    if (!isAdding) {
+      return
+    }
+    if (e.key === "Escape") {
+      cancel()
+    }
+  }
+
   onMount(() => subscribe("add-row-inline", startAdding))
+  onMount(() => {
+    document.addEventListener("keydown", handleKeyPress)
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress)
+    }
+  })
 </script>
 
 <!-- Only show new row functionality if we have any columns -->
 {#if isAdding}
-  <div class="container" transition:fly={{ y: 20, duration: 130 }}>
-    <div class="content" class:above-scrollbar={$showHScrollbar}>
-      <div
-        class="new-row"
-        on:mouseenter={() => ($hoveredRowId = "new")}
-        on:mouseleave={() => ($hoveredRowId = null)}
-      >
-        <div
-          class="sticky-column"
-          style="flex: 0 0 {width}px"
-          class:scrolled={$scrollLeft > 0}
-        >
-          <GridCell width={GutterWidth} {rowHovered} rowFocused>
-            <div class="gutter">
-              <div class="number">1</div>
-              {#if $config.allowExpandRows}
-                <Icon
-                  name="Maximize"
-                  size="S"
-                  hoverable
-                  on:click={addViaModal}
-                />
-              {/if}
-            </div>
-          </GridCell>
-          {#if $stickyColumn}
-            {@const cellId = `new-${$stickyColumn.name}`}
-            <DataCell
-              {cellId}
-              rowFocused
-              column={$stickyColumn}
-              row={newRow}
-              focused={$focusedCellId === cellId}
-              width={$stickyColumn.width}
-              {updateValue}
-              rowIdx={0}
-            />
+  <div class="container">
+    <div
+      class="sticky-column"
+      transition:fade={{ duration: 130 }}
+      style="flex: 0 0 {width}px"
+      class:scrolled={$scrollLeft > 0}
+    >
+      <GridCell width={GutterWidth} {rowHovered} rowFocused>
+        <div class="gutter">
+          <div class="number">1</div>
+          {#if $config.allowExpandRows}
+            <Icon name="Maximize" size="S" hoverable on:click={addViaModal} />
           {/if}
         </div>
-
-        <GridScrollWrapper scrollHorizontally wheelInteractive>
-          <div class="row">
-            {#each $visibleColumns as column}
-              {@const cellId = `new-${column.name}`}
-              {#key cellId}
-                <DataCell
-                  {cellId}
-                  {column}
-                  row={newRow}
-                  {rowHovered}
-                  focused={$focusedCellId === cellId}
-                  {rowFocused}
-                  width={column.width}
-                  {updateValue}
-                  rowIdx={0}
-                />
-              {/key}
-            {/each}
-          </div>
-        </GridScrollWrapper>
-      </div>
+      </GridCell>
+      {#if $stickyColumn}
+        {@const cellId = `new-${$stickyColumn.name}`}
+        <DataCell
+          {cellId}
+          rowFocused
+          column={$stickyColumn}
+          row={newRow}
+          focused={$focusedCellId === cellId}
+          width={$stickyColumn.width}
+          {updateValue}
+          rowIdx={0}
+        />
+      {/if}
     </div>
-    <div class="buttons">
+    <div class="normal-columns" transition:fade={{ duration: 130 }}>
+      <GridScrollWrapper scrollHorizontally wheelInteractive>
+        <div class="row">
+          {#each $renderedColumns as column}
+            {@const cellId = `new-${column.name}`}
+            {#key cellId}
+              <DataCell
+                {cellId}
+                {column}
+                {rowFocused}
+                {rowHovered}
+                {updateValue}
+                row={newRow}
+                focused={$focusedCellId === cellId}
+                width={column.width}
+                rowIdx={0}
+              />
+            {/key}
+          {/each}
+        </div>
+      </GridScrollWrapper>
+    </div>
+    <div class="buttons" transition:fade={{ duration: 130 }}>
       <Button size="M" cta on:click={addRow}>Save</Button>
       <Button size="M" secondary newStyles on:click={cancel}>Cancel</Button>
     </div>
@@ -148,17 +155,22 @@
 
 <style>
   .container {
-    pointer-events: none;
     position: absolute;
-    top: var(--row-height);
+    top: var(--default-row-height);
     left: 0;
     width: 100%;
-    padding-bottom: 800px;
+    height: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: stretch;
   }
-  .container:before {
+  .container :global(.cell) {
+    --cell-background: var(--spectrum-global-color-gray-100);
+  }
+
+  /* Add overlays independently behind both separate z-indexed column containers */
+  .sticky-column:before,
+  .normal-columns:before {
     position: absolute;
     content: "";
     left: 0;
@@ -167,56 +179,17 @@
     width: 100%;
     background: var(--cell-background);
     opacity: 0.8;
-    z-index: -1;
-  }
-  .content {
-    pointer-events: all;
-    background: var(--background);
-    border-bottom: var(--cell-border);
   }
 
-  .new-row {
-    display: flex;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    transition: margin-bottom 130ms ease-out;
-  }
-  .new-row :global(.cell) {
-    --cell-background: var(--background) !important;
-    border-bottom: none;
-  }
-
+  /* Sticky column styles */
   .sticky-column {
     display: flex;
-    z-index: 1;
+    z-index: 2;
     position: relative;
   }
-  /* Don't show borders between cells in the sticky column */
   .sticky-column :global(.cell:not(:last-child)) {
     border-right: none;
   }
-
-  .row {
-    width: 0;
-    display: flex;
-  }
-
-  /* Add shadow when scrolled */
-  .sticky-column.scrolled {
-    /*box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.1);*/
-  }
-  .sticky-column.scrolled:after {
-    content: "";
-    width: 10px;
-    height: 100%;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.05), transparent);
-    left: 100%;
-    top: 0;
-    position: absolute;
-  }
-
-  /* Styles for gutter */
   .gutter {
     flex: 1 1 auto;
     display: grid;
@@ -225,22 +198,32 @@
     grid-template-columns: 1fr auto;
     gap: var(--cell-spacing);
   }
-
-  /* Floating buttons */
-  .buttons {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    margin: 24px 0 0 var(--gutter-width);
-    pointer-events: all;
-    align-self: flex-start;
-  }
-
   .number {
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
     color: var(--spectrum-global-color-gray-500);
+  }
+
+  /* Normal column styles */
+  .normal-columns {
+    flex: 1 1 auto;
+  }
+  .row {
+    width: 0;
+    display: flex;
+  }
+
+  /* Floating buttons */
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    pointer-events: all;
+    z-index: 2;
+    position: absolute;
+    top: calc(var(--row-height) + 24px);
+    left: var(--gutter-width);
   }
 </style>

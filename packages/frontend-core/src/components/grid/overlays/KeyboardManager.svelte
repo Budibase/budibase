@@ -10,6 +10,7 @@
     stickyColumn,
     focusedCellAPI,
     clipboard,
+    dispatch,
   } = getContext("grid")
 
   // Global key listener which intercepts all key events
@@ -19,6 +20,9 @@
       if (e.key === "Tab") {
         e.preventDefault()
         focusFirstCell()
+      } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        dispatch("add-row-inline")
       }
       return
     }
@@ -58,6 +62,8 @@
             clipboard.actions.paste()
           }
           break
+        case "Enter":
+          dispatch("add-row-inline")
       }
     } else {
       switch (e.key) {
