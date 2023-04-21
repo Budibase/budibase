@@ -6,6 +6,11 @@ on:
     tags:
       - v*-alpha.*
   workflow_dispatch:
+    inputs:
+      tags:
+        description: "Release tag"
+        required: true
+        type: boolean
 
 env:
   # Posthog token used by ui at build time
@@ -91,6 +96,7 @@ jobs:
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
           git reset --hard
+          git fetch
           mkdir sync
           echo "Packaging chart to sync dir"
           helm package charts/budibase --version 0.0.0-develop --app-version develop --destination sync
