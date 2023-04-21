@@ -89,7 +89,7 @@
           style="flex: 0 0 {width}px"
           class:scrolled={$scrollLeft > 0}
         >
-          <GridCell width={GutterWidth} {rowHovered} {rowFocused}>
+          <GridCell width={GutterWidth} {rowHovered} rowFocused>
             <div class="gutter">
               <div class="number">1</div>
               {#if $config.allowExpandRows}
@@ -106,11 +106,10 @@
             {@const cellId = `new-${$stickyColumn.name}`}
             <DataCell
               {cellId}
+              rowFocused
               column={$stickyColumn}
               row={newRow}
-              {rowHovered}
               focused={$focusedCellId === cellId}
-              {rowFocused}
               width={$stickyColumn.width}
               {updateValue}
               rowIdx={0}
