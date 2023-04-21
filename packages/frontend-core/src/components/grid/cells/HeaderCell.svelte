@@ -20,6 +20,7 @@
     ui,
     columns,
   } = getContext("grid")
+
   const bannedDisplayColumnTypes = [
     "link",
     "array",
