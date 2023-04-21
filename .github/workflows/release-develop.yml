@@ -60,8 +60,8 @@ jobs:
           # setup the username and email.
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
-          git reset --hard
-          git submodule foreach git reset --hard
+          git submodule foreach git add . && git commit -m 'release process'
+          git add . && git commit -m 'release process'
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release:develop
 
