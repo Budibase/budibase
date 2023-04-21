@@ -4,4 +4,7 @@ if [ -d "packages/pro/packages" ]; then
   yarn
   lerna bootstrap
   yarn setup
+else
+  node scripts/updateLocalPro.js 
+  yarn
 fi
