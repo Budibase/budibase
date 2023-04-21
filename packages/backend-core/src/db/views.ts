@@ -42,7 +42,11 @@ async function removeDeprecated(db: Database, viewName: ViewName) {
   }
 }
 
-export async function createView(db: any, viewJs: string, viewName: string) {
+export async function createView(
+  db: any,
+  viewJs: string,
+  viewName: string
+): Promise<void> {
   let designDoc
   try {
     designDoc = (await db.get(DESIGN_DB)) as DesignDocument
@@ -57,7 +61,15 @@ export async function createView(db: any, viewJs: string, viewName: string) {
     ...designDoc.views,
     [viewName]: view,
   }
-  await db.put(designDoc)
+  try {
+    await db.put(designDoc)
+  } catch (err: any) {
+    if (err.status === 409) {
+      return await createView(db, viewJs, viewName)
+    } else {
+      throw err
+    }
+  }
 }
 
 export const createNewUserEmailView = async () => {
@@ -124,6 +136,10 @@ export async function queryViewRaw<T>(
     if (pouchNotFound || couchNotFound) {
       await removeDeprecated(db, viewName)
       await createFunc()
+      return queryViewRaw(viewName, params, db, createFunc, opts)
+    } else if (err.status === 409) {
+      // can happen when multiple queries occur at once, view couldn't be created
+      // other design docs being updated, re-run
       return queryViewRaw(viewName, params, db, createFunc, opts)
     } else {
       throw err

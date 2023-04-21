@@ -13,6 +13,7 @@
   export let allowSelectRows
   export let compact
   export let onClick
+  export let noRowsMessage
 
   const component = getContext("component")
   const { styleable, getAction, ActionTypes, rowSelectionStore } =
@@ -144,6 +145,7 @@
     autoSortColumns={!columns?.length}
     on:sort={onSort}
     on:click={handleClick}
+    placeholderText={noRowsMessage || "No rows found"}
   >
     <slot />
   </Table>

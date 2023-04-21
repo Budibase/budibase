@@ -98,3 +98,21 @@
 a {
   text-decoration: none;
 }
+
+/* Custom theme additions */
+.spectrum--darkest {
+  --drop-shadow: rgba(0, 0, 0, 0.6);
+  --spectrum-global-color-blue-100: rgb(28, 33, 43);
+}
+.spectrum--dark {
+  --drop-shadow: rgba(0, 0, 0, 0.3);
+  --spectrum-global-color-blue-100: rgb(42, 47, 57);
+}
+.spectrum--light {
+  --drop-shadow: rgba(0, 0, 0, 0.075);
+  --spectrum-global-color-blue-100: rgb(240, 245, 255);
+}
+.spectrum--lightest {
+  --drop-shadow: rgba(0, 0, 0, 0.05);
+  --spectrum-global-color-blue-100: rgb(240, 244, 255);
+}
