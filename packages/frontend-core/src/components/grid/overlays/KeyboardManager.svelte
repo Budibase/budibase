@@ -54,7 +54,9 @@
           clipboard.actions.copy()
           break
         case "v":
-          clipboard.actions.paste()
+          if (!api?.isReadonly()) {
+            clipboard.actions.paste()
+          }
           break
       }
     } else {
