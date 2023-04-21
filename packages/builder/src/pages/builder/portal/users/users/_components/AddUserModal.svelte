@@ -79,6 +79,7 @@
     }
     showOnboardingTypeModal({ users: userData, groups: userGroups })
   }
+  $: console.log($licensing)
 </script>
 
 <ModalContent
@@ -124,7 +125,7 @@
       <div class="user-notification">
         <Icon name="Info" />
         <span>
-          {capitalise($licensing.license.plan)} plan is limited to {maxUserLimit}
+          {capitalise($licensing.license.plan.type)} plan is limited to {maxUserLimit}
           users. Upgrade your plan to add more users</span
         >
       </div>

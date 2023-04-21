@@ -5,6 +5,7 @@
     RadioGroup,
     Multiselect,
     notifications,
+    Icon,
   } from "@budibase/bbui"
   import { groups, licensing, admin } from "stores/portal"
   import { emailValidator } from "helpers/validation"
@@ -97,9 +98,10 @@
   </div>
 
   {#if userLimitReached}
-    <div class="user-warning">
-      {capitalise($licensing.license.plan)} plan is limited to {maxUserLimit} users.
-      Upgrade your plan to add more users
+    <div class="user-notification">
+      <Icon name="Info" />
+      {capitalise($licensing.license.plan.type)} plan is limited to {maxUserLimit}
+      users. Upgrade your plan to add more users
     </div>
   {/if}
   <RadioGroup
@@ -120,6 +122,13 @@
 </ModalContent>
 
 <style>
+  .user-notification {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: var(--spacing-m);
+  }
+
   .dropzone {
     text-align: center;
     display: flex;
@@ -132,9 +141,6 @@
     color: var(--blue);
   }
 
-  .user-warning {
-    color: red;
-  }
   label {
     font-weight: 600;
     box-sizing: border-box;
