@@ -79,7 +79,6 @@
     }
     showOnboardingTypeModal({ users: userData, groups: userGroups })
   }
-  $: console.log($licensing)
 </script>
 
 <ModalContent
