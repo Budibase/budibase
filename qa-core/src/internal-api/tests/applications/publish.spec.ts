@@ -36,7 +36,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
 
     const [syncResponse, sync] = await config.api.apps.sync(app.appId!)
     expect(sync).toEqual({
-      message: "App sync not required, app not deployed.",
+      message: "App sync completed successfully.",
     })
   })
 

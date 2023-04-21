@@ -1,5 +1,5 @@
 import env from "../../environment"
-import logger from "./logger"
+import { logger } from "./logger"
 import { IncomingMessage } from "http"
 const pino = require("koa-pino-logger")
 import { Options } from "pino-http"

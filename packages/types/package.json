@@ -1,6 +1,6 @@
 {
   "name": "@budibase/types",
-  "version": "2.4.44-alpha.9",
+  "version": "2.5.6-alpha.15",
   "description": "Budibase types",
   "main": "dist/cjs/index.js",
   "types": "dist/mjs/index.d.ts",
@@ -20,7 +20,7 @@
   },
   "jest": {},
   "devDependencies": {
-    "@budibase/nano": "10.1.1",
+    "@budibase/nano": "10.1.2",
     "@types/json5": "2.2.0",
     "@types/koa": "2.13.4",
     "@types/node": "14.18.20",
