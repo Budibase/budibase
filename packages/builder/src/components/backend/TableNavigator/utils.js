@@ -42,16 +42,7 @@ export const parseFile = e => {
 
     reader.addEventListener("load", function (e) {
       const fileData = e.target.result
-
-      if (file.type === "text/csv") {
-        API.csvToJson(fileData)
-          .then(rows => {
-            resolveRows(rows)
-          })
-          .catch(() => {
-            reject("can't convert csv to json")
-          })
-      } else if (file.type === "application/json") {
+      if (file.type?.includes("json")) {
         const parsedFileData = JSON.parse(fileData)
 
         if (Array.isArray(parsedFileData)) {
@@ -62,7 +53,13 @@ export const parseFile = e => {
           reject("invalid json format")
         }
       } else {
-        reject("invalid file type")
+        API.csvToJson(fileData)
+          .then(rows => {
+            resolveRows(rows)
+          })
+          .catch(() => {
+            reject("cannot parse csv")
+          })
       }
     })
 
