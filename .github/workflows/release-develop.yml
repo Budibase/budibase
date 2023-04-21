@@ -5,16 +5,6 @@ on:
   push:
     tags:
       - v*-alpha.*
-    paths:
-      - ".aws/**"
-      - ".github/**"
-      - "charts/**"
-      - "packages/**"
-      - "scripts/**"
-      - "package.json"
-      - "yarn.lock"
-      - "package.json"
-      - "yarn.lock"
   workflow_dispatch:
 
 env:
