@@ -1,3 +1,5 @@
+import Redlock from "redlock"
+
 export enum LockType {
   /**
    * If this lock is already held the attempted operation will not be performed.
@@ -6,6 +8,7 @@ export enum LockType {
   TRY_ONCE = "try_once",
   DEFAULT = "default",
   DELAY_500 = "delay_500",
+  CUSTOM = "custom"
 }
 
 export enum LockName {
@@ -14,6 +17,7 @@ export enum LockName {
   SYNC_ACCOUNT_LICENSE = "sync_account_license",
   UPDATE_TENANTS_DOC = "update_tenants_doc",
   PERSIST_WRITETHROUGH = "persist_writethrough",
+  QUOTA_USAGE_EVENT = "quota_usage_event",
 }
 
 export interface LockOptions {
@@ -21,6 +25,11 @@ export interface LockOptions {
    * The lock type determines which client to use
    */
   type: LockType
+  /**
+   * The custom options to use when creating the redlock instance
+   * type must be set to custom for the options to be applied
+   */
+  customOptions?: Redlock.Options
   /**
    * The name for the lock
    */
