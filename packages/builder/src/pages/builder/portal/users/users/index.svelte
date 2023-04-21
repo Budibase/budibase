@@ -11,6 +11,7 @@
     notifications,
     Pagination,
     Divider,
+    InlineAlert,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import {
@@ -20,6 +21,7 @@
     licensing,
     organisation,
     features,
+    admin,
   } from "stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
@@ -81,6 +83,13 @@
       width: "1fr",
     },
   }
+
+  $: showUserLimitAlert =
+    !$admin.cloud &&
+    $licensing.isFreePlan &&
+    $licensing.license.plan.model === Constants.PlanModel.PER_USER &&
+    $licensing.quotaUsage.usageQuota.users > 5
+
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
   $: {
@@ -229,6 +238,8 @@
       notifications.error("Error fetching user group data")
     }
   })
+
+  let staticUserLimit = $licensing.license.quotas.usage.static.users.value
 </script>
 
 <Layout noPadding gap="M">
@@ -237,6 +248,18 @@
     <Body>Add users and control who gets access to your published apps</Body>
   </Layout>
   <Divider />
+  {#if showUserLimitAlert}
+    <InlineAlert
+      type="error"
+      header={`Users will soon be limited to ${staticUserLimit}`}
+      message={`Our free plan is going to be limited to ${staticUserLimit} users in X days.
+    
+    This means any users exceeding the limit have been de-activated.
+
+    De-activated users will not able to access the builder or any published apps until you upgrade to one of our paid plans.
+    `}
+    />
+  {/if}
   <div class="controls">
     {#if !readonly}
       <ButtonGroup>
@@ -319,7 +342,6 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
     gap: var(--spacing-xl);
   }
 

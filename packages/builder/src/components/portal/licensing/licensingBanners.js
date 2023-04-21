@@ -141,6 +141,32 @@ const buildPaymentFailedBanner = () => {
   }
 }
 
+const buildUsersAboveLimitBanner = EXPIRY_KEY => {
+  const userLicensing = get(licensing)
+  return {
+    key: EXPIRY_KEY,
+    type: BANNER_TYPES.WARNING,
+    criteria: () => {
+      return (
+        // make sure this negation is removed (just for testing locally)
+        !get(admin).cloud &&
+        userLicensing.license.plan.model === Constants.PlanModel.PER_USER &&
+        userLicensing.isFreePlan &&
+        userLicensing.quotaUsage.usageQuota.users > 5
+      )
+    },
+    message: `Free plan changes - Users will be limited to ${userLicensing.license.quotas.usage.static.users.value} users in X days`,
+    ...{
+      extraButtonText: "Find out more",
+      extraButtonAction: () => {
+        defaultCacheFn(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER)
+        window.location.href = "/builder/portal/users/users"
+      },
+    },
+    showCloseButton: true,
+  }
+}
+
 export const getBanners = () => {
   return [
     buildPaymentFailedBanner(),
@@ -163,6 +189,7 @@ export const getBanners = () => {
       ExpiringKeys.LICENSING_QUERIES_WARNING_BANNER,
       90
     ),
+    buildUsersAboveLimitBanner(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER),
   ].filter(licensingBanner => {
     return (
       !temporalStore.actions.getExpiring(licensingBanner.key) &&
