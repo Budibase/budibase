@@ -29,10 +29,7 @@
   // Handles a wheel even and updates the scroll offsets
   const handleWheel = e => {
     e.preventDefault()
-    const modifier = e.ctrlKey || e.metaKey
-    let x = modifier ? e.deltaY : e.deltaX
-    let y = modifier ? e.deltaX : e.deltaY
-    debouncedHandleWheel(x, y, e.clientY)
+    debouncedHandleWheel(e.deltaX, e.deltaY, e.clientY)
   }
   const debouncedHandleWheel = domDebounce((deltaX, deltaY, clientY) => {
     const { top, left } = $scroll
