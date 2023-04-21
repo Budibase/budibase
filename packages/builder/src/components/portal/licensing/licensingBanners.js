@@ -152,7 +152,6 @@ const buildUsersAboveLimitBanner = EXPIRY_KEY => {
     type: BANNER_TYPES.WARNING,
     criteria: () => {
       return (
-        // make sure this negation is removed (just for testing locally)
         get(admin).cloud &&
         userLicensing.license.plan.model === Constants.PlanModel.PER_USER &&
         userLicensing.isFreePlan &&

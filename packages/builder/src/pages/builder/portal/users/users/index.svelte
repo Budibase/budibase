@@ -66,7 +66,9 @@
   ]
   let userData = []
 
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: readonly = !$auth.isAdmin || $features.isScimEnabled
+
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -87,6 +89,7 @@
     },
   }
 
+  // Per user check
   $: showUserLimitAlert =
     $admin.cloud &&
     $licensing.isFreePlan &&
@@ -255,9 +258,13 @@
     <InlineAlert
       type="error"
       onConfirm={() => {
-        window.open("https://budibase.com/pricing/", "_blank")
+        if (isOwner) {
+          $licensing.goToUpgradePage()
+        } else {
+          window.open("https://budibase.com/pricing/", "_blank")
+        }
       }}
-      buttonText="View plans"
+      buttonText={isOwner ? "Upgrade" : "View plans"}
       cta
       header={`Users will soon be limited to ${staticUserLimit}`}
       message={`Our free plan is going to be limited to ${staticUserLimit} users ${dayjs(
