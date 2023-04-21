@@ -21,6 +21,7 @@
     "typescript": "4.7.3"
   },
   "scripts": {
+    "preinstall": "node scripts/syncProPackage.js",
     "setup": "git config submodule.recurse true && git submodule update && node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
     "bootstrap": "./scripts/bootstrap.sh && lerna link && ./scripts/link-dependencies.sh",
     "build": "lerna run --stream build",
