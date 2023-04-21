@@ -61,6 +61,7 @@ jobs:
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
           git reset --hard
+          git submodule foreach git reset --hard
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release:develop
 
