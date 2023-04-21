@@ -3,8 +3,6 @@ concurrency: release
 
 on:
   push:
-    tags:
-      - v*
     tags-ignore:
       - v*-alpha.*
   workflow_dispatch:
