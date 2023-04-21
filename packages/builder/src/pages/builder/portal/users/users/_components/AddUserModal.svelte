@@ -28,6 +28,10 @@
   ]
   $: hasError = userData.find(x => x.error != null)
 
+  $: maxUserLimit = $licensing.license?.quotas.usage.static.users.value
+  $: maxUserLimitReached =
+    $licensing.quotaUsage.usageQuota.users + userData.length > maxUserLimit
+
   function removeInput(idx) {
     userData = userData.filter((e, i) => i !== idx)
   }
@@ -82,7 +86,7 @@
   confirmDisabled={disabled}
   cancelText="Cancel"
   showCloseIcon={false}
-  disabled={hasError || !userData.length}
+  disabled={hasError || !userData.length || maxUserLimitReached}
 >
   <Layout noPadding gap="XS">
     <Label>Email address</Label>
@@ -112,9 +116,20 @@
         </div>
       </div>
     {/each}
-    <div>
-      <ActionButton on:click={addNewInput} icon="Add">Add email</ActionButton>
-    </div>
+
+    {#if maxUserLimitReached}
+      <div class="user-notification">
+        <Icon name="Info" />
+        <span
+          >Free plan is limited to {maxUserLimit} users. Upgrade your plan to add
+          more users</span
+        >
+      </div>
+    {:else}
+      <div>
+        <ActionButton on:click={addNewInput} icon="Add">Add email</ActionButton>
+      </div>
+    {/if}
   </Layout>
 
   {#if $licensing.groupsEnabled}
@@ -130,6 +145,12 @@
 </ModalContent>
 
 <style>
+  .user-notification {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: var(--spacing-m);
+  }
   .icon {
     width: 10%;
     align-self: flex-start;

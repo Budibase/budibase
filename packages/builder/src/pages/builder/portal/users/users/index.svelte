@@ -25,6 +25,7 @@
   } from "stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
+  import UpgradeModal from "components/common/users/UpgradeModal.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
@@ -55,7 +56,8 @@
     inviteConfirmationModal,
     onboardingTypeModal,
     passwordModal,
-    importUsersModal
+    importUsersModal,
+    userLimitReachedModal
   let searchEmail = undefined
   let selectedRows = []
   let bulkSaveResponse
@@ -69,6 +71,9 @@
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: readonly = !$auth.isAdmin || $features.isScimEnabled
 
+  $: userLimitReached =
+    $licensing.quotaUsage.usageQuota.users >=
+    $licensing.license.quotas.usage.static.users.value
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -273,10 +278,22 @@
   <div class="controls">
     {#if !readonly}
       <ButtonGroup>
-        <Button disabled={readonly} on:click={createUserModal.show} cta>
+        <Button
+          disabled={readonly}
+          on:click={userLimitReached
+            ? userLimitReachedModal.show
+            : createUserModal.show}
+          cta
+        >
           Add users
         </Button>
-        <Button disabled={readonly} on:click={importUsersModal.show} secondary>
+        <Button
+          disabled={readonly}
+          on:click={userLimitReached
+            ? userLimitReachedModal.show
+            : importUsersModal.show}
+          secondary
+        >
           Import
         </Button>
       </ButtonGroup>
@@ -338,6 +355,10 @@
 
 <Modal bind:this={importUsersModal}>
   <ImportUsersModal {createUsersFromCsv} />
+</Modal>
+
+<Modal bind:this={userLimitReachedModal}>
+  <UpgradeModal {isOwner} />
 </Modal>
 
 <style>
