@@ -4,7 +4,7 @@
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
 
-  import { _ } from "../../../../../lang/i18n."
+  import { _ } from "../../../../../lang/i18n"
 
   // Don't block loading if we've already hydrated state
   let loaded = $apps.length > 0

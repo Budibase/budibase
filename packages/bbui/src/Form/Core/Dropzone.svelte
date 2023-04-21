@@ -9,6 +9,8 @@
   import Tag from "../../Tags/Tag.svelte"
   import Tags from "../../Tags/Tags.svelte"
 
+  import { _ } from "../../../../builder/lang/i18n"
+
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
 
@@ -176,7 +178,7 @@
             <div class="extension">
               {selectedImage.name || "Unknown file"}
             </div>
-            <div>Preview not supported</div>
+            <div>{$_("bbui.src.Form.Core.DropZone.Preview")}</div>
           </div>
         {/if}
         <div
@@ -193,7 +195,12 @@
         >
           <Icon name="ChevronRight" />
         </div>
-        <div class="footer">File {selectedImageIdx + 1} of {fileCount}</div>
+        <div class="footer">
+          {$_("bbui.src.Form.Core.DropZone.File")}
+          {selectedImageIdx + 1}
+          {$_("bbui.src.Form.Core.DropZone.of")}
+          {fileCount}
+        </div>
       </div>
     {:else if value?.length}
       {#each value as file}
@@ -303,7 +310,7 @@
           <h2
             class="spectrum-Heading spectrum-Heading--sizeL spectrum-Heading--light spectrum-IllustratedMessage-heading"
           >
-            Drag and drop your file
+            {$_("bbui.src.Form.Core.DropZone.Drag")}
           </h2>
         {/if}
         {#if !disabled}
@@ -311,11 +318,11 @@
             class="spectrum-Body spectrum-Body--sizeS spectrum-IllustratedMessage-description"
           >
             <label for={fieldId} class="spectrum-Link">
-              Select a file to upload
+              {$_("bbui.src.Form.Core.DropZone.Select")}
             </label>
             {#if !compact}
               <br />
-              from your computer
+              {$_("bbui.src.Form.Core.DropZone.Computer")}
             {/if}
           </p>
           {#if fileTags.length}

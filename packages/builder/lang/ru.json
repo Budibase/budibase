@@ -1,4 +1,78 @@
 {
+  "bbui": {
+    "src": {
+      "ColorPicker": {
+        "Theme": "Тема",
+        "Colors": "Цвета",
+        "Custom": "Собственные"
+      },
+      "Drawer": {
+        "Cancel": "Отмена"
+      },
+      "Form": {
+        "Core": {
+          "DropZone": {
+            "Preview": "Предпросмотр не поддерживается",
+            "File": "Файл",
+            "of": "из",
+            "Drag": "Перетащите сюда свои файлы",
+            "Select": "Выберите файл для загрузки",
+            "Computer": "со своего компьютера"
+          },
+          "EnvDropdown": {
+            "Upgrade": "Обновите свой план, чтобы получить переменные среды",
+            "You": "У вас еще нет переменных окружения",
+            "Add_Variable": "Добавить переменную",
+            "Upgrade_plan": "Улучшить тариф"
+          },
+          "InputDropdown": {
+            "Choose_type": "Выберите вариант или тип"
+          },
+          "Multiselect": {
+            "Choose": "Выберите несколько вариантов"
+          },
+          "Select": {
+            "Choose": "Выберите вариант"
+          }
+        },
+        "Combobox": {
+          "Choose": "Выберите вариант или тип"
+        }
+      },
+      "CopyInput": {
+        "Copied": "Скопированно"
+      },
+      "Modal": {
+        "Click": "Кликай по мне",
+        "more": "больше раз",
+        "close": "чтобы окно закрылось"
+      },
+      "QuizModal": {
+        "Wrong": "Неправильно! Пробуй ещё.",
+        "What": "Сколько будет 4+4?"
+      },
+      "Pagination": {
+        "Page": "Страница"
+      },
+      "Table": {
+        "ArrayRenderer": {
+          "more": "больше"
+        },
+        "InternalRenderer": {
+          "Copied": "Скопированно",
+          "Failed": "Ошибка копирования. Проверьте значение в консоли dev.",
+          "Failed_copy": "Не удалось скопировать значение"
+        },
+        "SelectEditRenderer": {
+          "Edit": "Редактировать"
+        },
+        "Table": {
+          "No_rows": "Строки не найдены",
+          "Edit": "Редактировать"
+        }
+      }
+    }
+  },
   "builderStore": {
     "store": {
       "automation": {
@@ -1640,9 +1714,9 @@
             "Heading": "Создать администратора",
             "Body": "Администратор имеет доступ ко всему в Budibase.",
             "FancyInput": {
-              "labelEmail": "Email",
+              "labelEmail": "Электронная почта",
               "labelErrorEmail": "Пожалуйста, введите верный email",
-              "labelPassword": "Password",
+              "labelPassword": "Пароль",
               "labelErrorPassword": "Пожалуйста, введите пароль",
               "labelRepeatPassword": "Повторите пароль",
               "PasswordMustMatch": "Пароли должны совпадать"

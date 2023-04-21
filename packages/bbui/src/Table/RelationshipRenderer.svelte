@@ -3,6 +3,8 @@
   import { createEventDispatcher } from "svelte"
   import Badge from "../Badge/Badge.svelte"
 
+  import _ from "../../../builder/lang/i18n"
+
   export let row
   export let value
   export let schema
@@ -31,5 +33,5 @@
   {/if}
 {/each}
 {#if leftover}
-  <div>+{leftover} more</div>
+  <div>+{leftover} {$_("bbui.src.Table.ArrayRenderer.more")}</div>
 {/if}

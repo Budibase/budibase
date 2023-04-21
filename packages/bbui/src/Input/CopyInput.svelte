@@ -3,6 +3,8 @@
   import Icon from "../Icon/Icon.svelte"
   import { notifications } from "../Stores/notifications"
 
+  import _ from "../../../builder/lang/i18n"
+
   export let label = null
   export let value
 
@@ -13,7 +15,7 @@
     dummy.select()
     document.execCommand("copy")
     document.body.removeChild(dummy)
-    notifications.success(`Copied to clipboard`)
+    notifications.success(`${$_("bbui.src.CopyInput.Copied")}}`)
   }
 </script>
 

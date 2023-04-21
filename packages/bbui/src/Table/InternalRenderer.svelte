@@ -3,18 +3,18 @@
   import { copyToClipboard } from "../helpers"
   import { notifications } from "../Stores/notifications"
 
+  import _ from "../../../builder/lang/i18n"
+
   export let value
 
   const onClick = async e => {
     e.stopPropagation()
     try {
       await copyToClipboard(value)
-      notifications.success("Copied to clipboard")
+      notifications.success($_("bbui.src.Table.InternalRenderer.Copied"))
     } catch (error) {
-      notifications.error(
-        "Failed to copy to clipboard. Check the dev console for the value."
-      )
-      console.warn("Failed to copy the value", value)
+      notifications.error($_("bbui.src.Table.InternalRenderer.Failed"))
+      console.warn($_("bbui.src.Table.InternalRenderer.Failed_copy"), value)
     }
   }
 </script>

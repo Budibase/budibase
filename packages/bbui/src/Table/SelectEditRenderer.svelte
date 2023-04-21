@@ -2,6 +2,8 @@
   import Checkbox from "../Form/Checkbox.svelte"
   import ActionButton from "../ActionButton/ActionButton.svelte"
 
+  import _ from "../../../builder/lang/i18n"
+
   export let selected
   export let onEdit
   export let allowSelectRows = false
@@ -13,7 +15,9 @@
     <Checkbox value={selected} />
   {/if}
   {#if allowEditRows}
-    <ActionButton size="S" on:click={onEdit}>Edit</ActionButton>
+    <ActionButton size="S" on:click={onEdit}
+      >{$_("bbui.src.Table.SelectEditRenderer.Edit")}</ActionButton
+    >
   {/if}
 </div>
 

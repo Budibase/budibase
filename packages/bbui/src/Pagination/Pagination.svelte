@@ -3,6 +3,8 @@
   import "@spectrum-css/actionbutton/dist/index-vars.css"
   import "@spectrum-css/typography/dist/index-vars.css"
 
+  import _ from "../../../builder/lang/i18n"
+
   export let page
   export let goToPrevPage
   export let goToNextPage
@@ -27,7 +29,8 @@
     </svg>
   </div>
   <span class="spectrum-Body--secondary spectrum-Pagination-counter">
-    Page {page}
+    {$_("bbui.src.Pagination.Page")}
+    {page}
   </span>
   <div
     href="#"

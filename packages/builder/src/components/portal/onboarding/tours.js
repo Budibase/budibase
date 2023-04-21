@@ -32,7 +32,7 @@ const getTours = () => {
     [TOUR_KEYS.TOUR_BUILDER_ONBOARDING]: [
       {
         id: TOUR_STEP_KEYS.BUILDER_DATA_SECTION,
-        title: $_("components.portal.onboarding.tours.Data"),
+        title: "Data",
         route: "/builder/app/:application/data",
         layout: OnboardingData,
         query: ".topcenternav .spectrum-Tabs-item#builder-data-tab",
@@ -43,7 +43,7 @@ const getTours = () => {
       },
       {
         id: TOUR_STEP_KEYS.BUILDER_DESIGN_SECTION,
-        title: $_("components.portal.onboarding.tours.Design"),
+        title: "Design",
         route: "/builder/app/:application/design",
         layout: OnboardingDesign,
         query: ".topcenternav .spectrum-Tabs-item#builder-design-tab",
@@ -57,7 +57,7 @@ const getTours = () => {
         title: "Automations",
         route: "/builder/app/:application/automate",
         query: ".topcenternav .spectrum-Tabs-item#builder-automate-tab",
-        body: $_("components.portal.onboarding.tours.Once"),
+        body: "Once you have your app screens made, you can set up automations to fit in with your current workflow",
         onLoad: () => {
           tourEvent(TOUR_STEP_KEYS.BUILDER_AUTOMATE_SECTION)
         },
@@ -67,14 +67,14 @@ const getTours = () => {
         id: TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT,
         title: "Users",
         query: ".toprightnav #builder-app-users-button",
-        body: $_("components.portal.onboarding.tours.Add"),
+        body: "Add users to your app and control what level of access they have.",
         onLoad: () => {
           tourEvent(TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT)
         },
       },
       {
         id: TOUR_STEP_KEYS.BUILDER_APP_PUBLISH,
-        title: $_("components.portal.onboarding.tours.Publish"),
+        title: "Publish",
         layout: OnboardingPublish,
         route: "/builder/app/:application/design",
         query: ".toprightnav #builder-app-publish-button",
@@ -108,7 +108,7 @@ const getTours = () => {
         id: TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT,
         title: "Users",
         query: ".toprightnav #builder-app-users-button",
-        body: $_("components.portal.onboarding.tours.Add"),
+        body: "Add users to your app and control what level of access they have.",
         onLoad: () => {
           tourEvent(TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT)
         },

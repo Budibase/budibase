@@ -6,6 +6,8 @@
   import { createEventDispatcher } from "svelte"
   import clickOutside from "../../Actions/click_outside"
 
+  import { _ } from "../../../../builder/lang/i18n"
+
   export let inputValue
   export let dropdownValue
   export let id = null
@@ -30,7 +32,7 @@
   const getFieldText = (dropdownValue, options, placeholder) => {
     // Always use placeholder if no value
     if (dropdownValue == null || dropdownValue === "") {
-      return placeholder || "Choose an option or type"
+      return placeholder || $_("bbui.src.Form.Core.InputDropdown.Choose_type")
     }
 
     // Wait for options to load if there is a value but no options

@@ -3,6 +3,8 @@
   import PickerDropdown from "./Core/PickerDropdown.svelte"
   import { createEventDispatcher } from "svelte"
 
+  import { _ } from "../../../builder/lang/i18n"
+
   export let primaryValue = null
   export let secondaryValue = null
   export let inputType = "text"
@@ -64,7 +66,7 @@
   const getSecondaryFieldText = (value, options, placeholder) => {
     // Always use placeholder if no value
     if (value == null || value === "") {
-      return placeholder || "Choose an option"
+      return placeholder || $_("bbui.src.Form.Core.Select.Choose")
     }
 
     return getSecondaryFieldAttribute(getSecondaryOptionLabel, value, options)

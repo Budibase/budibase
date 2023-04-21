@@ -4,6 +4,8 @@
   import Body from "../Typography/Body.svelte"
   import Heading from "../Typography/Heading.svelte"
 
+  import { _ } from "../../../builder/lang/i18n"
+
   export let title
   export let fillWidth
   export let left = "314px"
@@ -58,7 +60,9 @@
           </Body>
         </div>
         <div class="buttons">
-          <Button secondary quiet on:click={hide}>Cancel</Button>
+          <Button secondary quiet on:click={hide}
+            >{$_("bbui.src.Drawer.Cancel")}</Button
+          >
           <slot name="buttons" />
         </div>
       </header>

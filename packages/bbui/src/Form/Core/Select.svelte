@@ -2,6 +2,8 @@
   import { createEventDispatcher } from "svelte"
   import Picker from "./Picker.svelte"
 
+  import { _ } from "../../../../builder/lang/i18n"
+
   export let value = null
   export let id = null
   export let placeholder = "Choose an option"
@@ -48,7 +50,7 @@
         return ""
       }
       // Otherwise we use the placeholder if possible
-      return placeholder || "Choose an option"
+      return placeholder || $_("bbui.src.Form.Core.Select.Choose")
     }
 
     return getFieldAttribute(getOptionLabel, value, options)

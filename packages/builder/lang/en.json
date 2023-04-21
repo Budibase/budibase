@@ -1,4 +1,78 @@
 {
+  "bbui": {
+    "src": {
+      "ColorPicker": {
+        "Theme": "Theme",
+        "Colors": "Colors",
+        "Custom": "Custom"
+      },
+      "Drawer": {
+        "Cancel": "Cancel"
+      },
+      "Form": {
+        "Core": {
+          "DropZone": {
+            "Preview": "Preview not supported",
+            "File": "File",
+            "of": "of",
+            "Drag": "Drag and drop your file",
+            "Select": "Select a file to upload",
+            "Computer": "from your computer"
+          },
+          "EnvDropdown": {
+            "Upgrade": "Upgrade your plan to get environment variables",
+            "You": "You don't have any environment variables yet",
+            "Add_Variable": "Add Variable",
+            "Upgrade_plan": "Upgrade plan"
+          },
+          "InputDropdown": {
+            "Choose_type": "Choose variant or type"
+          },
+          "Multiselect": {
+            "Choose": "Choose some options"
+          },
+          "Select": {
+            "Choose": "Choose an option"
+          }
+        },
+        "Combobox": {
+          "Choose": "Choose an option or type"
+        }
+      },
+      "CopyInput": {
+        "Copied": "Copied to clipboard"
+      },
+      "Modal": {
+        "Click": "Click me",
+        "more": "more time",
+        "close": "to close this modal!"
+      },
+      "QuizModal": {
+        "Wrong": "Wrong answer! Try again.",
+        "What": "What is 4 + 4?"
+      },
+      "Pagination": {
+        "Page": "Page"
+      },
+      "Table": {
+        "ArrayRenderer": {
+          "more": "more"
+        },
+        "InternalRenderer": {
+          "Copied": "Copied to clipboard",
+          "Failed": "Failed to copy to clipboard. Check the dev console for the value.",
+          "Failed_copy": "Failed to copy the value"
+        },
+        "SelectEditRenderer": {
+          "Edit": "Edit"
+        },
+        "Table": {
+          "No_rows": "No rows found",
+          "Edit": "Edit"
+        }
+      }
+    }
+  },
   "builderStore": {
     "store": {
       "automation": {

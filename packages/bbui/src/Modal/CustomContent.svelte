@@ -2,6 +2,8 @@
   import { getContext } from "svelte"
   import Context from "../context"
 
+  import _ from "../../../builder/lang/i18n"
+
   const { hide } = getContext(Context.Modal)
 
   let count = 0
@@ -15,10 +17,10 @@
 </script>
 
 <div on:click={increment}>
-  Click me
+  {$_("bbui.src.Modal.Click")}
   {remaining}
-  more time{remaining === 1 ? "" : "s"}
-  to close this modal!
+  {$_("bbui.src.Modal.more")}{remaining === 1 ? "" : "s"}
+  {$_("bbui.src.Modal.close")}
 </div>
 
 <style>

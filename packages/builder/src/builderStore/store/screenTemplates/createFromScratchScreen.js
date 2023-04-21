@@ -2,12 +2,12 @@ import { Screen } from "./utils/Screen"
 import { _ } from "../../../../lang/i18n"
 
 export default {
-  name: $_(`builderStore.store.screenTemplates.createFromScratchScreen.from_scratch`),
+  name: "Create from scratch",
   id: `createFromScratch`,
   create: () => createScreen(),
-  table: $_(`builderStore.store.screenTemplates.createFromScratchScreen.from_scratch`),
+  table: "Create from scratch",
 }
 
 const createScreen = () => {
-  return new Screen().instanceName($_("builderStore.store.screenTemplates.createFromScratchScreen.New_Screen")).json()
+  return new Screen().instanceName("New Screen").json()
 }

@@ -4,6 +4,8 @@
   import clickOutside from "../../Actions/click_outside"
   import Divider from "../../Divider/Divider.svelte"
 
+  import { _ } from "../../../../builder/lang/i18n"
+
   export let value = null
   export let placeholder = null
   export let type = "text"
@@ -146,7 +148,7 @@
       <ul class="spectrum-Menu" role="listbox">
         {#if !environmentVariablesEnabled}
           <div class="no-variables-text primary-text">
-            Upgrade your plan to get environment variables
+            {$_("bbui.src.Form.Core.EnvDropdown.Upgrade")}
           </div>
         {:else if variables.length}
           <div style="max-height: 100px">
@@ -176,7 +178,7 @@
           </div>
         {:else}
           <div class="no-variables-text primary-text">
-            You don't have any environment variables yet
+            {$_("bbui.src.Form.Core.EnvDropdown.You")}
           </div>
         {/if}
       </ul>
@@ -184,24 +186,28 @@
       {#if environmentVariablesEnabled}
         <div on:click={() => showModal()} class="add-variable">
           <svg
-            class="spectrum-Icon spectrum-Icon--sizeS "
+            class="spectrum-Icon spectrum-Icon--sizeS"
             focusable="false"
             aria-hidden="true"
           >
             <use xlink:href="#spectrum-icon-18-Add" />
           </svg>
-          <div class="primary-text">Add Variable</div>
+          <div class="primary-text">
+            {$_("bbui.src.Form.Core.EnvDropdown.Add_Variable")}
+          </div>
         </div>
       {:else}
         <div on:click={() => handleUpgradePanel()} class="add-variable">
           <svg
-            class="spectrum-Icon spectrum-Icon--sizeS "
+            class="spectrum-Icon spectrum-Icon--sizeS"
             focusable="false"
             aria-hidden="true"
           >
             <use xlink:href="#spectrum-icon-18-ArrowUp" />
           </svg>
-          <div class="primary-text">Upgrade plan</div>
+          <div class="primary-text">
+            {$_("bbui.src.Form.Core.EnvDropdown.Upgrade_plan")}
+          </div>
         </div>
       {/if}
     </div>

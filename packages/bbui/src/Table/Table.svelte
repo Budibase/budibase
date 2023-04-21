@@ -7,6 +7,8 @@
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
   import Checkbox from "../Form/Checkbox.svelte"
 
+  import _ from "../../../builder/lang/i18n"
+
   /**
    * The expected schema is our normal couch schemas for our tables.
    * Each field schema can be enriched with a few extra properties to customise
@@ -41,7 +43,7 @@
   export let compact = false
   export let customPlaceholder = false
   export let showHeaderBorder = true
-  export let placeholderText = "No rows found"
+  export let placeholderText = $_("bbui.src.Table.Table.No_rows")
 
   const dispatch = createEventDispatcher()
 
@@ -322,7 +324,7 @@
                     on:change={toggleSelectAll}
                   />
                 {:else}
-                  Edit
+                  {$_("bbui.src.Table.Table.Edit")}
                 {/if}
               </div>
             {/if}

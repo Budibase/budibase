@@ -2,6 +2,8 @@
   import ModalContent from "./ModalContent.svelte"
   import Input from "../Form/Input.svelte"
 
+  import _ from "../../../builder/lang/i18n"
+
   let modal
   let answer
   let error
@@ -31,11 +33,11 @@
   confirmText="Submit"
   onConfirm={answerQuiz}
   on:show={resetState}
->
+  >{$_("bbui.src.Modal.Click")}
   {#if error}
-    <p class="error">Wrong answer! Try again.</p>
+    <p class="error">{$_("bbui.src.QuizModal.Wrong")}</p>
   {/if}
-  <p>What is 4 + 4?</p>
+  <p>{$_("bbui.src.QuizModal.Wrong")}</p>
   <Input label="Answer" bind:value={answer} />
 </ModalContent>
 

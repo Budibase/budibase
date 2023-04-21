@@ -15,7 +15,7 @@
   import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
 
-  import { _ } from "../../../../../../lang/i18n"
+  import { _ } from "../../../../../lang/i18n"
 
   let version
   let loaded = false

@@ -1,6 +1,8 @@
 <script>
   import Link from "../Link/Link.svelte"
 
+  import _ from "../../../builder/lang/i18n"
+
   export let value
 
   const displayLimit = 5
@@ -45,7 +47,7 @@
   {/if}
 {/each}
 {#if leftover}
-  <div>+{leftover} more</div>
+  <div>+{leftover} {$_("bbui.src.Table.ArrayRenderer.more")}</div>
 {/if}
 
 <style>

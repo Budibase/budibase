@@ -2,6 +2,8 @@
   import Picker from "./Picker.svelte"
   import { createEventDispatcher } from "svelte"
 
+  import { _ } from "../../../../builder/lang/i18n"
+
   export let value = []
   export let id = null
   export let placeholder = null
@@ -35,7 +37,7 @@
       const vals = value.map(option => map[option] || option).join(", ")
       return `(${value.length}) ${vals}`
     } else {
-      return placeholder || "Choose some options"
+      return placeholder || $_("bbui.src.Form.Core.Multiselect.Choose")
     }
   }
 

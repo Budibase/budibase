@@ -3,14 +3,10 @@ import { Input, Select } from "@budibase/bbui"
 import ColorPicker from "components/design/settings/controls/ColorPicker.svelte"
 
 export const margin = {
-  label: $_(
-    "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Margin"
-  ),
+  label: "Margin",
   settings: [
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Top"
-      ),
+      label: "Top",
       key: "margin-top",
       control: Select,
       placeholder: "None",
@@ -26,18 +22,14 @@ export const margin = {
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
-          ),
+          label: "Auto",
           value: "auto",
         },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Right"
-      ),
+      label: "Right",
       key: "margin-right",
       control: Select,
       placeholder: "None",
@@ -53,18 +45,14 @@ export const margin = {
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
-          ),
+          label: "Auto",
           value: "auto",
         },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Bottom"
-      ),
+      label: "Bottom",
       key: "margin-bottom",
       control: Select,
       placeholder: "None",
@@ -80,18 +68,14 @@ export const margin = {
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
-          ),
+          label: "Auto",
           value: "auto",
         },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Left"
-      ),
+      label: "Left",
       key: "margin-left",
       control: Select,
       placeholder: "None",
@@ -107,9 +91,7 @@ export const margin = {
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
-          ),
+          label: "Auto",
           value: "auto",
         },
         { label: "100%", value: "100%" },
@@ -119,14 +101,10 @@ export const margin = {
 }
 
 export const padding = {
-  label: $_(
-    "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Padding"
-  ),
+  label: "Padding",
   settings: [
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Top"
-      ),
+      label: "Top",
       key: "padding-top",
       control: Select,
       placeholder: "None",
@@ -142,18 +120,14 @@ export const padding = {
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
-          ),
+          label: "Auto",
           value: "auto",
         },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Right"
-      ),
+      label: "Right",
       key: "padding-right",
       control: Select,
       placeholder: "None",
@@ -169,18 +143,14 @@ export const padding = {
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
-          ),
+          label: "Auto",
           value: "auto",
         },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Bottom"
-      ),
+      label: "Bottom",
       key: "padding-bottom",
       control: Select,
       placeholder: "None",
@@ -196,18 +166,14 @@ export const padding = {
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
-          ),
+          label: "Auto",
           value: "auto",
         },
         { label: "100%", value: "100%" },
       ],
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Left"
-      ),
+      label: "Left",
       key: "padding-left",
       control: Select,
       placeholder: "None",
@@ -223,9 +189,7 @@ export const padding = {
         { label: "128px", value: "128px" },
         { label: "256px", value: "256px" },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
-          ),
+          label: "Auto",
           value: "auto",
         },
         { label: "100%", value: "100%" },
@@ -235,49 +199,33 @@ export const padding = {
 }
 
 export const size = {
-  label: $_(
-    "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Size"
-  ),
+  label: "Size",
   settings: [
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Width"
-      ),
+      label: "Width",
       key: "width",
       control: Input,
-      placeholder: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
-      ),
+      placeholder: "Auto",
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Height"
-      ),
+      label: "Height",
       key: "height",
       control: Input,
-      placeholder: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Auto"
-      ),
+      placeholder: "Auto",
     },
   ],
 }
 
 export const background = {
-  label: $_(
-    "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Background"
-  ),
+  label: "Background",
   settings: [
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Color"
-      ),
+      label: "Color",
       key: "background",
       control: ColorPicker,
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Gradient"
-      ),
+      label: "Gradient",
       key: "background-image",
       control: Select,
       options: [
@@ -357,135 +305,97 @@ export const background = {
 }
 
 export const border = {
-  label: $_(
-    "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Border"
-  ),
+  label: "Border",
   settings: [
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Color"
-      ),
+      label: "Color",
       key: "border-color",
       control: ColorPicker,
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Width"
-      ),
+      label: "Width",
       key: "border-width",
       control: Select,
       column: "1 / 2",
       placeholder: "None",
       options: [
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Small"
-          ),
+          label: "Small",
           value: "1px",
         },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Medium"
-          ),
+          label: "Medium",
           value: "2px",
         },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Large"
-          ),
+          label: "Large",
           value: "4px",
         },
       ],
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Style"
-      ),
+      label: "Style",
       key: "border-style",
       control: Select,
       column: "2 / 3",
       placeholder: "None",
       options: [
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Solid"
-          ),
+          label: "Solid",
           value: "solid",
         },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Dotted"
-          ),
+          label: "Dotted",
           value: "dotted",
         },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Dashed"
-          ),
+          label: "Dashed",
           value: "dashed",
         },
       ],
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Radius"
-      ),
+      label: "Radius",
       key: "border-radius",
       control: Select,
       placeholder: "None",
       options: [
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Small"
-          ),
+          label: "Small",
           value: "0.25rem",
         },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Medium"
-          ),
+          label: "Medium",
           value: "0.5rem",
         },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Large"
-          ),
+          label: "Large",
           value: "1rem",
         },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Round"
-          ),
+          label: "Round",
           value: "100%",
         },
       ],
     },
     {
-      label: $_(
-        "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Shadow"
-      ),
+      label: "Shadow",
       key: "box-shadow",
       control: Select,
       placeholder: "None",
       options: [
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Small"
-          ),
+          label: "Small",
           value:
             "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
         },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Medium"
-          ),
+          label: "Medium",
           value:
             "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
         },
         {
-          label: $_(
-            "pages.builder.app.application.design.screenId.components.componentId._components.settings.componentStyles.Large"
-          ),
+          label: "Large",
           value:
             "0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
         },

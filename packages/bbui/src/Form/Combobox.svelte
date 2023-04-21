@@ -3,13 +3,15 @@
   import Combobox from "./Core/Combobox.svelte"
   import { createEventDispatcher } from "svelte"
 
+  import { _ } from "../../../builder/lang/i18n"
+
   export let value = null
   export let label = undefined
   export let disabled = false
   export let readonly = false
   export let labelPosition = "above"
   export let error = null
-  export let placeholder = "Choose an option or type"
+  export let placeholder = $_("bbui.src.Form.Combobox.Choose")
   export let options = []
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")

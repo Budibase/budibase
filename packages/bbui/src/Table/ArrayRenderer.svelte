@@ -1,6 +1,7 @@
 <script>
   import "@spectrum-css/label/dist/index-vars.css"
   import Badge from "../Badge/Badge.svelte"
+  import _ from "../../../builder/lang/i18n"
   export let value
 
   const displayLimit = 5
@@ -13,5 +14,5 @@
   <Badge size="S" grey>{badge}</Badge>
 {/each}
 {#if leftover}
-  <div>+{leftover} more</div>
+  <div>+{leftover} {$_("bbui.src.Table.ArrayRenderer.more")}</div>
 {/if}

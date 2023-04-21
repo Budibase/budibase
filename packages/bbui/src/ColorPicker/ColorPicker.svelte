@@ -6,6 +6,7 @@
   import Icon from "../Icon/Icon.svelte"
   import Input from "../Form/Input.svelte"
   import { capitalise } from "../helpers"
+  import { _ } from "../../../builder/lang/i18n"
 
   export let value
   export let size = "M"
@@ -20,7 +21,7 @@
   const dispatch = createEventDispatcher()
   const categories = [
     {
-      label: "Theme",
+      label: $_("bbui.src.ColorPicker.Theme"),
       colors: [
         "gray-50",
         "gray-75",
@@ -36,7 +37,7 @@
       ],
     },
     {
-      label: "Colors",
+      label: $_("bbui.src.ColorPicker.Colors"),
       colors: [
         "red-400",
         "orange-400",
@@ -169,7 +170,7 @@
         </div>
       {/each}
       <div class="category category--custom">
-        <div class="heading">Custom</div>
+        <div class="heading">{$_("bbui.src..ColorPicker.Custom")}</div>
         <div class="custom">
           <Input
             updateOnChange={false}
