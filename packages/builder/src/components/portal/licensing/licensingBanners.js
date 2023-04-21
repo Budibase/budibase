@@ -155,7 +155,7 @@ const buildUsersAboveLimitBanner = EXPIRY_KEY => {
     key: EXPIRY_KEY,
     type: BANNER_TYPES.WARNING,
     criteria: () => {
-      return userLicensing.warnUserLimit && Date.now() < startDate
+      return userLicensing.warnUserLimit
     },
     message: `${capitalise(
       userLicensing.license.plan.type

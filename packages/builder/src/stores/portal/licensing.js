@@ -165,11 +165,9 @@ export const createLicensingStore = () => {
           )
         }
 
-        let warnUserLimit =
-          !get(admin).cloud &&
-          license.plan.model === PlanModel.PER_USER &&
-          license?.plan.type === Constants.PlanType.FREE &&
-          quota.usageQuota.users > license.quotas.usage.static.users.value
+        const warnUserLimit =
+          license.quotas.usage.static.users.value.startDate &&
+          quota.usageQuota.users >= license?.quotas.usage.static.users.value
 
         store.update(state => {
           return {
