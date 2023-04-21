@@ -22,7 +22,6 @@ import queryRoutes from "./query"
 import backupRoutes from "./backup"
 import metadataRoutes from "./metadata"
 import devRoutes from "./dev"
-import cloudRoutes from "./cloud"
 import migrationRoutes from "./migrations"
 import pluginRoutes from "./plugin"
 import opsRoutes from "./ops"
@@ -60,7 +59,6 @@ export const mainRoutes: Router[] = [
   queryRoutes,
   metadataRoutes,
   devRoutes,
-  cloudRoutes,
   rowRoutes,
   migrationRoutes,
   pluginRoutes,
