@@ -22,10 +22,10 @@
   let userEmails = []
   let userGroups = []
   let usersRole = null
-  let userLimitReached = false
   $: invalidEmails = []
-  $: maxUserLimit = $licensing.license?.quotas.usage.static.users.value
-  $: currentUserCount = $licensing.quotaUsage.usageQuota.users
+
+  $: userCount = $licensing.userCount + userEmails.length
+  $: userLimitReached = $licensing.userLimitReached || userCount > $licensing.userLimit
 
   const validEmails = userEmails => {
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
@@ -67,10 +67,6 @@
       files = fileArray
 
       userEmails = csvString.split(/\r?\n/)
-
-      if ($admin.cloud && userEmails.length + currentUserCount > maxUserLimit) {
-        userLimitReached = true
-      }
     })
     reader.readAsText(fileArray[0])
   }
@@ -100,7 +96,7 @@
   {#if userLimitReached}
     <div class="user-notification">
       <Icon name="Info" />
-      {capitalise($licensing.license.plan.type)} plan is limited to {maxUserLimit}
+      {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
       users. Upgrade your plan to add more users
     </div>
   {/if}

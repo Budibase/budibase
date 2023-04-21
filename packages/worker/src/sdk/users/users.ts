@@ -283,7 +283,7 @@ export const save = async (
       await platform.users.addUser(tenantId, builtUser._id!, builtUser.email)
       await cache.user.invalidateUser(response.id)
 
-    await Promise.all(groupPromises)
+      await Promise.all(groupPromises)
 
       // finally returned the saved user from the db
       return db.get(builtUser._id!)
@@ -409,32 +409,32 @@ export const bulkCreate = async (
 
   const account = await accountSdk.api.getAccountByTenantId(tenantId)
   return pro.quotas.addUsers(newUsers.length, async () => {
-  // create the promises array that will be called by bulkDocs
-  newUsers.forEach((user: any) => {
-    usersToSave.push(
-      buildUser(
-        user,
-        {
-          hashPassword: true,
-          requirePassword: user.requirePassword,
-        },
-        tenantId,
-        undefined, // no dbUser
-        account
+    // create the promises array that will be called by bulkDocs
+    newUsers.forEach((user: any) => {
+      usersToSave.push(
+        buildUser(
+          user,
+          {
+            hashPassword: true,
+            requirePassword: user.requirePassword,
+          },
+          tenantId,
+          undefined, // no dbUser
+          account
+        )
       )
-    )
-  })
+    })
 
     const usersToBulkSave = await Promise.all(usersToSave)
     await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
 
-  // Post-processing of bulk added users, e.g. events and cache operations
-  for (const user of usersToBulkSave) {
-    // TODO: Refactor to bulk insert users into the info db
-    // instead of relying on looping tenant creation
-    await platform.users.addUser(tenantId, user._id, user.email)
-    await eventHelpers.handleSaveEvents(user, undefined)
-  }
+    // Post-processing of bulk added users, e.g. events and cache operations
+    for (const user of usersToBulkSave) {
+      // TODO: Refactor to bulk insert users into the info db
+      // instead of relying on looping tenant creation
+      await platform.users.addUser(tenantId, user._id, user.email)
+      await eventHelpers.handleSaveEvents(user, undefined)
+    }
 
     const saved = usersToBulkSave.map(user => {
       return {

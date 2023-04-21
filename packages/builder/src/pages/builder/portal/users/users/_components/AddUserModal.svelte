@@ -8,11 +8,10 @@
     Layout,
     Icon,
   } from "@budibase/bbui"
-  import { groups, licensing, admin } from "stores/portal"
+  import { groups, licensing } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
   import { capitalise } from "helpers"
-  import {} from "svelte/store"
 
   export let showOnboardingTypeModal
 
@@ -30,10 +29,8 @@
   ]
   $: hasError = userData.find(x => x.error != null)
 
-  $: maxUserLimit = $licensing.license?.quotas.usage.static.users.value
-  $: maxUserLimitReached =
-    $admin.cloud &&
-    $licensing.quotaUsage.usageQuota.users + userData.length > maxUserLimit
+  $: userCount = $licensing.userCount + userData.length
+  $: userLimitReached = $licensing.userLimitReached || userCount > $licensing.userLimit
 
   function removeInput(idx) {
     userData = userData.filter((e, i) => i !== idx)
@@ -89,7 +86,7 @@
   confirmDisabled={disabled}
   cancelText="Cancel"
   showCloseIcon={false}
-  disabled={hasError || !userData.length || maxUserLimitReached}
+  disabled={hasError || !userData.length || userLimitReached}
 >
   <Layout noPadding gap="XS">
     <Label>Email address</Label>
@@ -120,11 +117,11 @@
       </div>
     {/each}
 
-    {#if maxUserLimitReached}
+    {#if userLimitReached}
       <div class="user-notification">
         <Icon name="Info" />
         <span>
-          {capitalise($licensing.license.plan.type)} plan is limited to {maxUserLimit}
+          {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
           users. Upgrade your plan to add more users</span
         >
       </div>
