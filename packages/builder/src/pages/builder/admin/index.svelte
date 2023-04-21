@@ -1,11 +1,5 @@
 <script>
-  import {
-    Button,
-    Heading,
-    notifications,
-    Layout,
-    Body,
-  } from "@budibase/bbui"
+  import { Button, Heading, notifications, Layout, Body } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { API } from "api"
   import { admin, auth } from "stores/portal"
