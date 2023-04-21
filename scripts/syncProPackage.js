@@ -2,15 +2,17 @@ const fs = require("fs")
 const path = require("path")
 const { execSync } = require("child_process")
 
-// Get the version argument from the command line
-let version = process.argv[2]
-if (!version) {
-  console.error("Usage: node updateLocalPro.js <develop|latest|local>")
-  process.exit(1)
-}
-
-if (version === "local") {
-  version = "0.0.1"
+let version = "0.0.1"
+const localPro = fs.existsSync("/packages/pro/packages")
+if (!localPro) {
+  const branchName = execSync("git rev-parse --abbrev-ref HEAD")
+    .toString()
+    .trim()
+  if (branchName === "master") {
+    version = "latest"
+  } else {
+    version = "develop"
+  }
 }
 
 // Get the list of workspaces with mismatched dependencies

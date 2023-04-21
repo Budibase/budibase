@@ -22,7 +22,7 @@
   },
   "scripts": {
     "setup": "git config submodule.recurse true && git submodule update && node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
-    "bootstrap": "./scripts/bootstrap.sh && lerna link && ./scripts/link-dependencies.sh",
+    "bootstrap": "node scripts/syncProPackage.js && yarn && ./scripts/bootstrap.sh && lerna link && ./scripts/link-dependencies.sh",
     "build": "lerna run --stream build",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
     "backend:bootstrap": "./scripts/scopeBackend.sh && yarn run bootstrap",
@@ -80,8 +80,8 @@
     "security:audit": "node scripts/audit.js",
     "postinstall": "husky install",
     "dep:clean": "yarn clean -y && yarn bootstrap",
-    "submodules:load": "git submodule init && git submodule update && yarn && yarn bootstrap",
-    "submodules:unload": "git submodule deinit --all && yarn && yarn bootstrap"
+    "submodules:load": "git submodule init && git submodule update && yarn bootstrap",
+    "submodules:unload": "git submodule deinit --all && yarn bootstrap"
   },
   "workspaces": {
     "packages": [
