@@ -158,7 +158,7 @@
 
   // Focuses the cell and starts entering a new value
   const startEnteringValue = (key, keyCode) => {
-    if ($focusedCellAPI) {
+    if ($focusedCellAPI && !$focusedCellAPI.isReadonly()) {
       const type = $focusedCellAPI.getType()
       if (type === "number" && keyCodeIsNumber(keyCode)) {
         $focusedCellAPI.setValue(parseInt(key))
