@@ -1,4 +1,5 @@
 import { writable, get, derived } from "svelte/store"
+import { tick } from "svelte"
 import {
   DefaultRowHeight,
   LargeRowHeight,
@@ -101,7 +102,10 @@ export const initialise = context => {
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
-  rows.subscribe(() => {
+  rows.subscribe(async () => {
+    // We tick here to ensure other derived stores have properly updated.
+    // We depend on the row lookup map which is a derived store,
+    await tick()
     const $focusedCellId = get(focusedCellId)
     const $selectedRows = get(selectedRows)
     const $hoveredRowId = get(hoveredRowId)
