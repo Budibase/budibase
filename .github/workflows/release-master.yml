@@ -2,9 +2,6 @@ name: Budibase Release
 concurrency: release
 
 on:
-  tag:
-    tags-ignore:
-      - v*-alpha.*
   workflow_dispatch:
     inputs:
       tags:
