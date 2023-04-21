@@ -475,7 +475,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.5.7":
+"@budibase/backend-core@2.5.7", "@budibase/backend-core@^2.5.7":
   version "2.5.7"
   resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.5.7.tgz#df392b2a10b827576265ea541b1a56c56a286d3e"
   integrity sha512-GaqW5rkFAjiOnOtY8bof8eVtK/5N9gmN/AhgWvNpzSDy+1vq3U9pQGfKGp/iSJjkvL8woayf8NCyJfFWdxdAIA==
@@ -591,6 +591,18 @@
     handlebars-utils "^1.0.6"
     lodash "^4.17.20"
     vm2 "^3.9.4"
+
+"@budibase/string-templates@^2.5.7":
+  version "2.5.7"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.5.7.tgz#9763503f69fbee74e60f84269ba3aeb3e23e7872"
+  integrity sha512-hx8FEED84PNN91tb3dqAj/xCbTLjOXdvl05+DtBuE7D83b1HVMD8FJNG2TC5N2asi+UD9wmT22oVhk79JMxYfQ==
+  dependencies:
+    "@budibase/handlebars-helpers" "^0.11.8"
+    dayjs "^1.10.4"
+    handlebars "^4.7.6"
+    handlebars-utils "^1.0.6"
+    lodash "^4.17.20"
+    vm2 "^3.9.15"
 
 "@budibase/types@2.5.7", "@budibase/types@^2.5.7":
   version "2.5.7"
@@ -9302,10 +9314,10 @@ verror@1.10.0:
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
 
-vm2@^3.9.4:
-  version "3.9.15"
-  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.15.tgz#c544e6a9bc31e4e40d2e5f532342cf799ea56a6e"
-  integrity sha512-XqNqknHGw2avJo13gbIwLNZUumvrSHc9mLqoadFZTpo3KaNEJoe1I0lqTFhRXmXD7WkLyG01aaraXdXT0pa4ag==
+vm2@^3.9.15, vm2@^3.9.4:
+  version "3.9.17"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.17.tgz#251b165ff8a0e034942b5181057305e39570aeab"
+  integrity sha512-AqwtCnZ/ERcX+AVj9vUsphY56YANXxRuqMb7GsDtAr0m0PcQX3u0Aj3KWiXM0YAHy7i6JEeHrwOnwXbGYgRpAw==
   dependencies:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"
