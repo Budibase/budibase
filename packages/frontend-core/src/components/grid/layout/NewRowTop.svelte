@@ -170,7 +170,7 @@
     align-items: stretch;
   }
   .container :global(.cell) {
-    --cell-background: var(--spectrum-global-color-gray-100);
+    --cell-background: var(--spectrum-global-color-gray-75);
   }
 
   /* Underlay sits behind everything */
@@ -227,8 +227,6 @@
   }
 
   /* Normal column styles */
-  .normal-columns {
-  }
   .row {
     width: 0;
     display: flex;
