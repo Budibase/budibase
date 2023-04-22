@@ -31,7 +31,6 @@
     isOpen = true
     await tick()
     textarea.focus()
-    textarea.setSelectionRange(0, 0)
   }
 
   const close = () => {
