@@ -4,6 +4,7 @@ import {
   DefaultRowHeight,
   LargeRowHeight,
   MediumRowHeight,
+  NewRowID,
 } from "../lib/constants"
 
 export const createStores = () => {
@@ -50,9 +51,9 @@ export const deriveStores = context => {
     ([$focusedCellId, $rowLookupMap, $enrichedRows]) => {
       const rowId = $focusedCellId?.split("-")[0]
 
-      // Edge case for new rows (top and bottom row ID components have unique IDs)
-      if (rowId?.startsWith("new")) {
-        return { _id: rowId }
+      // Edge case for new rows
+      if (rowId === NewRowID) {
+        return { _id: NewRowID }
       }
 
       // All normal rows
@@ -145,18 +146,18 @@ export const initialise = context => {
   })
 
   // Reset selected rows when selected cell changes
-  focusedCellId.subscribe(id => {
-    if (id) {
-      selectedRows.set({})
-    }
-  })
+  // focusedCellId.subscribe(id => {
+  //   if (id) {
+  //     selectedRows.set({})
+  //   }
+  // })
 
   // Unset selected cell when rows are selected
-  selectedRows.subscribe(rows => {
-    if (Object.keys(rows || {}).length) {
-      focusedCellId.set(null)
-    }
-  })
+  // selectedRows.subscribe(rows => {
+  //   if (Object.keys(rows || {}).length) {
+  //     focusedCellId.set(null)
+  //   }
+  // })
 
   // Remove hovered row when a cell is selected
   focusedCellId.subscribe(cell => {

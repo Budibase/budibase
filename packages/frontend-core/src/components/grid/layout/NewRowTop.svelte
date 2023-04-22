@@ -6,6 +6,7 @@
   import DataCell from "../cells/DataCell.svelte"
   import { fade } from "svelte/transition"
   import { GutterWidth } from "../lib/constants"
+  import { NewRowID } from "../lib/constants"
 
   const {
     hoveredRowId,
@@ -21,10 +22,8 @@
     renderedColumns,
   } = getContext("grid")
 
-  const rowId = "new"
   let isAdding = false
   let newRow = {}
-  let touched = false
 
   $: firstColumn = $stickyColumn || $renderedColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
@@ -66,19 +65,18 @@
     document.addEventListener("keydown", handleKeyPress)
     newRow = {}
     isAdding = true
-    $hoveredRowId = rowId
+    $hoveredRowId = NewRowID
     if (firstColumn) {
-      $focusedCellId = `${rowId}-${firstColumn.name}`
+      $focusedCellId = `${NewRowID}-${firstColumn.name}`
     }
   }
 
   const updateValue = (rowId, columnName, val) => {
-    touched = true
     newRow[columnName] = val
   }
 
   const addViaModal = () => {
-    isAdding = false
+    clear()
     dispatch("add-row")
   }
 
