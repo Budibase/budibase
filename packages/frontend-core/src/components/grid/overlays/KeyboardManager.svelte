@@ -30,7 +30,10 @@
     // Always intercept certain key presses
     const api = $focusedCellAPI
     if (e.key === "Escape") {
-      api?.blur?.()
+      // By setting a tiny timeout here we can ensure that other listeners
+      // which depend on being able to read cell state on an escape keypress
+      // get a chance to observe the true state before we blur
+      setTimeout(api?.blur, 10)
     } else if (e.key === "Tab") {
       api?.blur?.()
       changeFocusedColumn(1)

@@ -31,6 +31,10 @@
   $: $tableId, (isAdding = false)
 
   const addRow = async () => {
+    // Blur the active cell and tick to let final value updates propagate
+    $focusedCellAPI?.blur()
+    await tick()
+
     // Create row
     const savedRow = await rows.actions.addRow(newRow, 0)
     if (savedRow) {
@@ -65,12 +69,6 @@
     $hoveredRowId = rowId
     if (firstColumn) {
       $focusedCellId = `${rowId}-${firstColumn.name}`
-
-      // Also focus the cell if it is a text-like cell
-      if (["string", "number"].includes(firstColumn.schema.type)) {
-        await tick()
-        $focusedCellAPI?.focus()
-      }
     }
   }
 
@@ -89,8 +87,11 @@
       return
     }
     if (e.key === "Escape") {
-      e.preventDefault()
-      clear()
+      // Only close the new row component if we aren't actively inside a cell
+      if (!$focusedCellAPI?.isActive()) {
+        e.preventDefault()
+        clear()
+      }
     } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault()
       addRow()
@@ -119,7 +120,9 @@
     >
       <GridCell width={GutterWidth} rowFocused>
         <div class="gutter">
-          <div class="number">1</div>
+          <div class="number">
+            <Icon name="Add" />
+          </div>
           {#if $config.allowExpandRows}
             <Icon name="Maximize" size="S" hoverable on:click={addViaModal} />
           {/if}
