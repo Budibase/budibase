@@ -28,7 +28,7 @@ export const account = (): Account => {
     name: generator.name(),
     size: "10+",
     profession: "Software Engineer",
-    quotaUsage: quotas.usage()
+    quotaUsage: quotas.usage(),
   }
 }
 

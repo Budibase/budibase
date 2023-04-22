@@ -4,7 +4,10 @@ import { LockOptions, LockType } from "@budibase/types"
 import * as context from "../context"
 import env from "../environment"
 
-const getClient = async (type: LockType, opts?: Redlock.Options): Promise<Redlock> => {
+const getClient = async (
+  type: LockType,
+  opts?: Redlock.Options
+): Promise<Redlock> => {
   if (type === LockType.CUSTOM) {
     return newRedlock(opts)
   }
@@ -56,7 +59,7 @@ const OPTIONS = {
   },
   DELAY_500: {
     retryDelay: 500,
-  }
+  },
 }
 
 const newRedlock = async (opts: Redlock.Options = {}) => {

@@ -28,10 +28,7 @@
   $: willExceed = userCount > $licensing.userLimit
 
   $: importDisabled =
-    !userEmails.length ||
-    !validEmails(userEmails) ||
-    !usersRole ||
-    willExceed
+    !userEmails.length || !validEmails(userEmails) || !usersRole || willExceed
 
   const validEmails = userEmails => {
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {

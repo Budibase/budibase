@@ -8,7 +8,7 @@ export enum LockType {
   TRY_ONCE = "try_once",
   DEFAULT = "default",
   DELAY_500 = "delay_500",
-  CUSTOM = "custom"
+  CUSTOM = "custom",
 }
 
 export enum LockName {
