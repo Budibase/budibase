@@ -27,6 +27,12 @@
   $: userCount = $licensing.userCount + userEmails.length
   $: willExceed = userCount > $licensing.userLimit
 
+  $: importDisabled =
+    !userEmails.length ||
+    !validEmails(userEmails) ||
+    !usersRole ||
+    willExceed
+
   const validEmails = userEmails => {
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
       notifications.error(
@@ -79,10 +85,7 @@
   cancelText="Cancel"
   showCloseIcon={false}
   onConfirm={() => createUsersFromCsv({ userEmails, usersRole, userGroups })}
-  disabled={!userEmails.length ||
-    !validEmails(userEmails) ||
-    !usersRole ||
-    willExceed}
+  disabled={importDisabled}
 >
   <Body size="S">Import your users email addresses from a CSV file</Body>
 
