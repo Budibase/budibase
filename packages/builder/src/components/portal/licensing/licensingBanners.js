@@ -5,10 +5,6 @@ import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
 import { capitalise } from "helpers"
 
-import dayjs from "dayjs"
-import relativeTime from "dayjs/plugin/relativeTime"
-dayjs.extend(relativeTime)
-
 const oneDayInSeconds = 86400
 
 const defaultCacheFn = key => {
@@ -148,8 +144,6 @@ const buildPaymentFailedBanner = () => {
 
 const buildUsersAboveLimitBanner = EXPIRY_KEY => {
   const userLicensing = get(licensing)
-  let startDate =
-    userLicensing.license.quotas.usage.static.users.value.startDate
   return {
     key: EXPIRY_KEY,
     type: BANNER_TYPES.WARNING,
@@ -159,8 +153,8 @@ const buildUsersAboveLimitBanner = EXPIRY_KEY => {
     message: `${capitalise(
       userLicensing.license.plan.type
     )} plan changes - Users will be limited to ${
-      userLicensing.license.quotas.usage.static.users.value
-    } users ${dayjs(startDate).fromNow()}`,
+      userLicensing.userLimit
+    } users in ${userLicensing.userLimitDays}`,
     ...{
       extraButtonText: "Find out more",
       extraButtonAction: () => {

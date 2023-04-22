@@ -4,6 +4,9 @@ import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "components/portal/licensing/constants"
 import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
+import dayjs from "dayjs"
+
+const UNLIMITED = -1
 
 export const createLicensingStore = () => {
   const DEFAULT = {
@@ -34,13 +37,28 @@ export const createLicensingStore = () => {
     // user limits
     userCount: undefined,
     userLimit: undefined,
+    userLimitDays: undefined,
     userLimitReached: false,
-    warnUserLimit: false
+    warnUserLimit: false,
   }
 
   const oneDayInMilliseconds = 86400000
 
   const store = writable(DEFAULT)
+
+  function willReachUserLimit(userCount, userLimit) {
+    if (userLimit === UNLIMITED) {
+      return false
+    }
+    return userCount >= userLimit
+  }
+
+  function willExceedUserLimit(userCount, userLimit) {
+    if (userLimit === UNLIMITED) {
+      return false
+    }
+    return userCount > userLimit
+  }
 
   const actions = {
     init: async () => {
@@ -112,6 +130,12 @@ export const createLicensingStore = () => {
       })
       actions.setUsageMetrics()
     },
+    willReachUserLimit: userCount => {
+      return willReachUserLimit(userCount, get(store).userLimit)
+    },
+    willExceedUserLimit(userCount) {
+      return willExceedUserLimit(userCount, get(store).userLimit)
+    },
     setUsageMetrics: () => {
       if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
         const usage = get(store).quotaUsage
@@ -174,11 +198,10 @@ export const createLicensingStore = () => {
         const userQuota = license.quotas.usage.static.users
         const userLimit = userQuota?.value
         const userCount = usage.usageQuota.users
-
-        const userLimitExceeded = userCount > userLimit
-        const userLimitReached = userCount >= userLimit
-
-        // only warn when the start date has been included
+        const userLimitReached = willReachUserLimit(userCount, userLimit)
+        const userLimitExceeded = willExceedUserLimit(userCount, userLimit)
+        const days = dayjs(userQuota?.startDate).diff(dayjs(), "day")
+        const userLimitDays = days > 1 ? `${days} days` : "1 day"
         const warnUserLimit = userQuota?.startDate && userLimitExceeded
 
         store.update(state => {
@@ -191,10 +214,12 @@ export const createLicensingStore = () => {
             accountPastDue: pastDueAtMilliseconds != null,
             pastDueEndDate,
             pastDueDaysRemaining,
-            userLimitReached,
+            // user limits
             userCount,
             userLimit,
-            warnUserLimit
+            userLimitDays,
+            userLimitReached,
+            warnUserLimit,
           }
         })
       }
