@@ -22,6 +22,7 @@
   import HideColumnsButton from "../controls/HideColumnsButton.svelte"
   import AddRowButton from "../controls/AddRowButton.svelte"
   import RowHeightButton from "../controls/RowHeightButton.svelte"
+  import ColumnWidthButton from "../controls/ColumnWidthButton.svelte"
   import NewRowTop from "./NewRowTop.svelte"
   import {
     MaxCellRenderHeight,
@@ -29,7 +30,6 @@
     GutterWidth,
     DefaultRowHeight,
   } from "../lib/constants"
-  import NewRowBottom from "./NewRowBottom.svelte"
 
   export let API = null
   export let tableId = null
@@ -112,6 +112,7 @@
       <AddRowButton />
       <AddColumnButton />
       <slot name="controls" />
+      <ColumnWidthButton />
       <RowHeightButton />
       <HideColumnsButton />
       <SortButton />

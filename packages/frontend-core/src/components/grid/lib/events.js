@@ -21,10 +21,7 @@ export const createEventManagers = () => {
 
     // Return unsubscribe function
     return () => {
-      console.log("unsub", event)
-      console.log(subscribers[event].length)
       subscribers[event] = subscribers[event].filter(cb => cb !== callback)
-      console.log(subscribers[event].length)
     }
   }
 
