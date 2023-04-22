@@ -43,6 +43,7 @@
     api = {
       focus: () => open(),
       blur: () => close(),
+      isActive: () => isOpen,
       onKeyDown,
     }
   })
