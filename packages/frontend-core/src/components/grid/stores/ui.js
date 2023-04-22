@@ -50,14 +50,14 @@ export const deriveStores = context => {
     ([$focusedCellId, $rowLookupMap, $enrichedRows]) => {
       const rowId = $focusedCellId?.split("-")[0]
 
-      if (rowId === "new") {
-        // Edge case for new row
+      // Edge case for new rows (top and bottom row ID components have unique IDs)
+      if (rowId?.startsWith("new")) {
         return { _id: rowId }
-      } else {
-        // All normal rows
-        const index = $rowLookupMap[rowId]
-        return $enrichedRows[index]
       }
+
+      // All normal rows
+      const index = $rowLookupMap[rowId]
+      return $enrichedRows[index]
     },
     null
   )
