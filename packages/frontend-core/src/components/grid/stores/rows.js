@@ -1,6 +1,7 @@
 import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
+import { NewRowID } from "../lib/constants"
 
 const initialSortState = {
   column: null,
@@ -230,7 +231,7 @@ export const deriveStores = context => {
       if (bubble) {
         throw error
       } else {
-        handleValidationError("new", error)
+        handleValidationError(NewRowID, error)
       }
     }
   }

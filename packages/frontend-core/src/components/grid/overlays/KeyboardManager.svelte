@@ -1,6 +1,7 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { debounce } from "../../../utils/utils"
+  import { NewRowID } from "../lib/constants"
 
   const {
     enrichedRows,
@@ -11,6 +12,7 @@
     focusedCellAPI,
     clipboard,
     dispatch,
+    selectedRows,
   } = getContext("grid")
 
   // Global key listener which intercepts all key events
@@ -34,9 +36,11 @@
       // which depend on being able to read cell state on an escape keypress
       // get a chance to observe the true state before we blur
       setTimeout(api?.blur, 10)
+      return
     } else if (e.key === "Tab") {
       api?.blur?.()
       changeFocusedColumn(1)
+      return
     }
 
     // Pass the key event to the selected cell and let it decide whether to
@@ -84,10 +88,18 @@
           break
         case "Delete":
         case "Backspace":
-          deleteSelectedCell()
+          if (Object.keys($selectedRows).length) {
+            dispatch("request-bulk-delete")
+          } else {
+            deleteSelectedCell()
+          }
           break
         case "Enter":
           focusCell()
+          break
+        case " ":
+        case "Space":
+          toggleSelectRow()
           break
         default:
           startEnteringValue(e.key, e.which)
@@ -180,6 +192,17 @@
         $focusedCellAPI.focus()
       }
     }
+  }
+
+  const toggleSelectRow = () => {
+    const id = $focusedRow?._id
+    if (!id || id === NewRowID) {
+      return
+    }
+    selectedRows.update(state => {
+      state[id] = !state[id]
+      return state
+    })
   }
 
   onMount(() => {
