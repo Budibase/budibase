@@ -1,17 +1,19 @@
 <script>
   import GridCell from "../cells/GridCell.svelte"
-  import { getContext, onDestroy, onMount, tick } from "svelte"
+  import { getContext, onMount, tick } from "svelte"
   import { Icon, Button } from "@budibase/bbui"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
   import { fade } from "svelte/transition"
   import { GutterWidth } from "../lib/constants"
 
+  export let animate = false
+  export let rowIdx = 0
+
   const {
     hoveredRowId,
     focusedCellId,
     stickyColumn,
-    scroll,
     config,
     dispatch,
     rows,
@@ -19,48 +21,45 @@
     tableId,
     subscribe,
     renderedColumns,
+    focusedRow,
+    reorder,
   } = getContext("grid")
 
-  const rowId = "new"
   let isAdding = false
-  let newRow = {}
+  let newRow = { _id: `new${rowIdx}` }
   let touched = false
 
+  $: rowId = `new${rowIdx}`
   $: firstColumn = $stickyColumn || $renderedColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $tableId, (isAdding = false)
+  $: rowHovered = $hoveredRowId === rowId
+  $: rowFocused = $focusedRow?._id === rowId
+  $: reorderSource = $reorder.sourceColumn
 
   const addRow = async () => {
     // Create row
-    const savedRow = await rows.actions.addRow(newRow, 0)
+    const savedRow = await rows.actions.addRow(newRow, rowIdx)
     if (savedRow) {
-      // Reset state
-      scroll.update(state => ({
-        ...state,
-        top: 0,
-      }))
-      clear()
-
       // Select the first cell if possible
       if (firstColumn) {
         $focusedCellId = `${savedRow._id}-${firstColumn.name}`
       }
+
+      // Reset state
+      isAdding = false
+      newRow = {}
     }
   }
 
-  const clear = () => {
+  const cancel = () => {
+    newRow = { _id: rowId }
     isAdding = false
     $focusedCellId = null
     $hoveredRowId = null
-    document.removeEventListener("keydown", handleKeyPress)
   }
 
   const startAdding = async () => {
-    if (isAdding) {
-      return
-    }
-    document.addEventListener("keydown", handleKeyPress)
-    newRow = {}
     isAdding = true
     $hoveredRowId = rowId
     if (firstColumn) {
@@ -89,110 +88,90 @@
       return
     }
     if (e.key === "Escape") {
-      e.preventDefault()
-      clear()
-    } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      addRow()
+      cancel()
     }
   }
 
   onMount(() => subscribe("add-row-inline", startAdding))
-  onDestroy(() => {
-    document.removeEventListener("keydown", handleKeyPress)
+  onMount(() => {
+    document.addEventListener("keydown", handleKeyPress)
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress)
+    }
   })
 </script>
 
 <!-- Only show new row functionality if we have any columns -->
-{#if isAdding}
-  <div class="container">
-    <div
-      class="underlay sticky"
-      style="width:{width}px;"
-      transition:fade={{ duration: 130 }}
-    />
-    <div class="underlay" transition:fade={{ duration: 130 }} />
-    <div
-      class="sticky-column"
-      transition:fade={{ duration: 130 }}
-      style="flex: 0 0 {width}px"
-    >
-      <GridCell width={GutterWidth} rowFocused>
-        <div class="gutter">
-          <div class="number">1</div>
-          {#if $config.allowExpandRows}
-            <Icon name="Maximize" size="S" hoverable on:click={addViaModal} />
-          {/if}
+<div
+  class="container"
+  transition:fade={{ duration: 130 }}
+  on:focus
+  on:mouseenter={() => ($hoveredRowId = rowId)}
+  on:mouseleave={() => ($hoveredRowId = null)}
+>
+  <div class="sticky-column" style="flex: 0 0 {width}px">
+    <GridCell width={GutterWidth} highlighted={rowHovered || rowFocused}>
+      <div class="gutter">
+        <div class="number">
+          <Icon name="Add" />
         </div>
-      </GridCell>
-      {#if $stickyColumn}
-        {@const cellId = `new-${$stickyColumn.name}`}
-        <DataCell
-          {cellId}
-          rowFocused
-          column={$stickyColumn}
-          row={newRow}
-          focused={$focusedCellId === cellId}
-          width={$stickyColumn.width}
-          {updateValue}
-          rowIdx={0}
-        />
-      {/if}
-    </div>
-    <GridScrollWrapper scrollHorizontally wheelInteractive>
-      <div class="row" transition:fade={{ duration: 130 }}>
-        {#each $renderedColumns as column}
-          {@const cellId = `new-${column.name}`}
-          {#key cellId}
-            <DataCell
-              {cellId}
-              {column}
-              {updateValue}
-              rowFocused
-              row={newRow}
-              focused={$focusedCellId === cellId}
-              width={column.width}
-              rowIdx={0}
-            />
-          {/key}
-        {/each}
+        {#if $config.allowExpandRows}
+          <div class="expand" class:visible={rowFocused || rowHovered}>
+            <Icon name="Maximize" size="S" hoverable on:click={addViaModal} />
+          </div>
+        {/if}
       </div>
-    </GridScrollWrapper>
-    <div class="buttons" transition:fade={{ duration: 130 }}>
-      <Button size="M" cta on:click={addRow}>Save</Button>
-      <Button size="M" secondary newStyles on:click={clear}>Cancel</Button>
-    </div>
+    </GridCell>
+    {#if $stickyColumn}
+      {@const cellId = `${rowId}-${$stickyColumn.name}`}
+      <DataCell
+        {cellId}
+        {rowFocused}
+        highlighted={rowHovered || rowFocused}
+        column={$stickyColumn}
+        row={newRow}
+        focused={$focusedCellId === cellId}
+        width={$stickyColumn.width}
+        {updateValue}
+        rowIdx={0}
+      />
+    {/if}
   </div>
-{/if}
+  <GridScrollWrapper scrollHorizontally wheelInteractive>
+    <div class="row">
+      {#each $renderedColumns as column}
+        {@const cellId = `${rowId}-${column.name}`}
+        {#key cellId}
+          <DataCell
+            {cellId}
+            {column}
+            {updateValue}
+            {rowFocused}
+            highlighted={rowHovered ||
+              rowFocused ||
+              reorderSource === column.name}
+            row={newRow}
+            focused={$focusedCellId === cellId}
+            width={column.width}
+            rowIdx={0}
+          />
+        {/key}
+      {/each}
+    </div>
+  </GridScrollWrapper>
+  {#if Object.keys(newRow || {}).length > 1}
+    <div class="buttons" in:fade={{ duration: 130 }}>
+      <Button size="M" cta on:click={addRow}>Save</Button>
+      <Button size="M" secondary newStyles on:click={cancel}>Cancel</Button>
+    </div>
+  {/if}
+</div>
 
 <style>
   .container {
-    position: absolute;
-    top: var(--default-row-height);
-    left: 0;
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: row;
     align-items: stretch;
-  }
-  .container :global(.cell) {
-    --cell-background: var(--spectrum-global-color-gray-75);
-  }
-
-  /* Underlay sits behind everything */
-  .underlay {
-    position: absolute;
-    content: "";
-    left: 0;
-    top: var(--row-height);
-    height: 100%;
-    width: 100%;
-    background: var(--cell-background);
-    opacity: 0.8;
-  }
-  .underlay.sticky {
-    z-index: 2;
   }
 
   /* Floating buttons which sit on top of the underlay but below the sticky column */
@@ -204,7 +183,7 @@
     z-index: 3;
     position: absolute;
     top: calc(var(--row-height) + 24px);
-    left: 32px;
+    left: var(--gutter-width);
   }
 
   /* Sticky column styles */
@@ -231,6 +210,14 @@
     justify-content: center;
     align-items: center;
     color: var(--spectrum-global-color-gray-500);
+  }
+  .expand {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .expand.visible {
+    opacity: 1;
+    pointer-events: all;
   }
 
   /* Normal column styles */

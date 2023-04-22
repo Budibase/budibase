@@ -29,6 +29,7 @@
     GutterWidth,
     DefaultRowHeight,
   } from "../lib/constants"
+  import NewRowBottom from "./NewRowBottom.svelte"
 
   export let API = null
   export let tableId = null
