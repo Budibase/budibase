@@ -329,6 +329,7 @@ export const checkInvite = async (ctx: any) => {
   try {
     invite = await checkInviteCode(code, false)
   } catch (e) {
+    console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
   }
   ctx.body = {
