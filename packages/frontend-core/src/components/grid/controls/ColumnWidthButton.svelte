@@ -1,10 +1,10 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Popover } from "@budibase/bbui"
-  import { DefaultColumnWidth, MinColumnWidth } from "../lib/constants"
+  import { DefaultColumnWidth } from "../lib/constants"
 
   const { stickyColumn, columns } = getContext("grid")
-  const smallSize = MinColumnWidth
+  const smallSize = 120
   const mediumSize = DefaultColumnWidth
   const largeSize = DefaultColumnWidth * 1.5
 
