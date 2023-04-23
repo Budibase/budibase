@@ -15,7 +15,3 @@ export const StripeStatus = {
   ACTIVE: "active",
 }
 
-export const PlanModel = {
-  PER_USER: "perUser",
-  DAY_PASS: "dayPass",
-}
