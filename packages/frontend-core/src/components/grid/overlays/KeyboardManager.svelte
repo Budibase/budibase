@@ -19,7 +19,7 @@
   const handleKeyDown = e => {
     // If nothing selected avoid processing further key presses
     if (!$focusedCellId) {
-      if (e.key === "Tab") {
+      if (e.key === "Tab" || e.key?.startsWith("Arrow")) {
         e.preventDefault()
         focusFirstCell()
       } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -35,7 +35,11 @@
       // By setting a tiny timeout here we can ensure that other listeners
       // which depend on being able to read cell state on an escape keypress
       // get a chance to observe the true state before we blur
-      setTimeout(api?.blur, 10)
+      if (api?.isActive()) {
+        setTimeout(api?.blur, 10)
+      } else {
+        $focusedCellId = null
+      }
       return
     } else if (e.key === "Tab") {
       api?.blur?.()
