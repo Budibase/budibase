@@ -83,13 +83,6 @@ export const buildMigrations = () => {
         })
         break
       }
-      case MigrationName.SYNC_USERS: {
-        serverMigrations.push({
-          ...definition,
-          fn: syncUsers.run,
-        })
-        break
-      }
     }
   }
 
