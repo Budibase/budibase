@@ -245,7 +245,7 @@ async function execute(
     }
     const runFn = () => Runner.run(inputs)
 
-    const { rows, pagination, extra } = await quotas.addQuery(runFn, {
+    const { rows, pagination, extra, info } = await quotas.addQuery(runFn, {
       datasourceId: datasource._id,
     })
     // remove the raw from execution incase transformer being used to hide data
@@ -255,7 +255,7 @@ async function execute(
     if (opts && opts.rowsOnly) {
       ctx.body = rows
     } else {
-      ctx.body = { data: rows, pagination, ...extra }
+      ctx.body = { data: rows, pagination, ...extra, ...info }
     }
   } catch (err) {
     ctx.throw(400, err)
