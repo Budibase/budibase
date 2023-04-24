@@ -75,7 +75,6 @@ jobs:
       - name: Build/release Docker images
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build
           yarn build:docker
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
