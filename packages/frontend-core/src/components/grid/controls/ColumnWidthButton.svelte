@@ -11,9 +11,10 @@
   let open = false
   let anchor
 
-  $: allSmall = $columns.every(col => col.width === smallSize)
-  $: allMedium = $columns.every(col => col.width === mediumSize)
-  $: allLarge = $columns.every(col => col.width === largeSize)
+  $: allCols = $columns.concat($stickyColumn ? [$stickyColumn] : [])
+  $: allSmall = allCols.every(col => col.width === smallSize)
+  $: allMedium = allCols.every(col => col.width === mediumSize)
+  $: allLarge = allCols.every(col => col.width === largeSize)
   $: custom = !allSmall && !allMedium && !allLarge
   $: sizeOptions = [
     {
@@ -57,6 +58,7 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open}
+    disabled={!allCols.length}
   >
     Width
   </ActionButton>

@@ -87,8 +87,10 @@
         ...state,
         top: $maxScrollTop,
       }))
-      offset =
-        $renderedRows.length * $rowHeight - ($maxScrollTop % $rowHeight) - 1
+      offset = $renderedRows.length * $rowHeight - ($maxScrollTop % $rowHeight)
+      if ($renderedRows.length !== 0) {
+        offset -= 1
+      }
     }
 
     // Update state and select initial cell
