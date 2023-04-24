@@ -1,6 +1,6 @@
 import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
-import { Padding, GutterWidth, DefaultRowHeight } from "../lib/constants"
+import { Padding, GutterWidth } from "../lib/constants"
 
 export const createStores = () => {
   const scroll = writable({
