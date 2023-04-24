@@ -11,6 +11,7 @@
   export let rowSelected
   export let disableExpand = false
   export let disableNumber = false
+  export let defaultHeight = false
 
   const { config, dispatch, selectedRows } = getContext("grid")
   const svelteDispatch = createEventDispatcher()
@@ -44,6 +45,7 @@
   width={GutterWidth}
   highlighted={rowFocused || rowHovered}
   selected={rowSelected}
+  {defaultHeight}
 >
   <div class="gutter">
     {#if $$slots.default}
@@ -111,6 +113,7 @@
   .expand {
     opacity: 0;
     pointer-events: none;
+    margin-right: 4px;
   }
   .expand.visible {
     opacity: 1;

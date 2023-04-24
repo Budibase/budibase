@@ -46,7 +46,12 @@
   class:scrolled={$scrollLeft > 0}
 >
   <div class="header row">
-    <GutterCell disableExpand disableNumber on:select={selectAll} />
+    <GutterCell
+      disableExpand
+      disableNumber
+      on:select={selectAll}
+      defaultHeight
+    />
     {#if $stickyColumn}
       <HeaderCell column={$stickyColumn} orderable={false} idx="sticky" />
     {/if}
