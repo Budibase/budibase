@@ -6,12 +6,13 @@
   import { createEventDispatcher } from "svelte"
 
   export let row
-  export let rowFocused
-  export let rowHovered
-  export let rowSelected
+  export let rowFocused = false
+  export let rowHovered = false
+  export let rowSelected = false
   export let disableExpand = false
   export let disableNumber = false
   export let defaultHeight = false
+  export let disabled = false
 
   const { config, dispatch, selectedRows } = getContext("grid")
   const svelteDispatch = createEventDispatcher()
@@ -57,7 +58,7 @@
         class:visible={$config.allowDeleteRows &&
           (disableNumber || rowSelected || rowHovered || rowFocused)}
       >
-        <Checkbox value={rowSelected} />
+        <Checkbox value={rowSelected} {disabled} />
       </div>
       {#if !disableNumber}
         <div

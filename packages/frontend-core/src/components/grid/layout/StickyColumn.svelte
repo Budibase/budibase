@@ -12,6 +12,7 @@
     rows,
     selectedRows,
     stickyColumn,
+    renderedColumns,
     renderedRows,
     focusedCellId,
     hoveredRowId,
@@ -51,7 +52,8 @@
       disableNumber
       on:select={selectAll}
       defaultHeight
-      rowSelected={selectedRowCount === rowCount}
+      rowSelected={selectedRowCount && selectedRowCount === rowCount}
+      disabled={!$renderedRows.length}
     />
     {#if $stickyColumn}
       <HeaderCell column={$stickyColumn} orderable={false} idx="sticky" />
@@ -87,7 +89,7 @@
           {/if}
         </div>
       {/each}
-      {#if $config.allowAddRows}
+      {#if $config.allowAddRows && ($renderedColumns.length || $stickyColumn)}
         <div
           class="row new"
           on:mouseenter={() => ($hoveredRowId = BlankRowID)}
