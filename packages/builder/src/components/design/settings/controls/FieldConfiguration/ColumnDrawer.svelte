@@ -81,6 +81,10 @@
   const reset = () => {
     columns = []
   }
+
+  const getFieldType = column => {
+    return `validation/${schema[column.name]?.type}`
+  }
 </script>
 
 <DrawerContent>
@@ -123,10 +127,7 @@
                   on:change={e => (column.displayName = e.detail)}
                 />
                 <Input bind:value={column.displayName} placeholder="Label" />
-                <CellEditor
-                  type={`validation/${schema[column.name].type}`}
-                  bind:column
-                />
+                <CellEditor type={getFieldType(column)} bind:column />
                 <Icon
                   name="Close"
                   hoverable

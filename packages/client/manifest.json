@@ -4437,7 +4437,7 @@
             ]
           },
           {
-            "label": "Side panel fields",
+            "label": "Fields",
             "type": "fieldConfiguration",
             "key": "sidePanelFields",
             "nested": true,
@@ -4447,7 +4447,7 @@
             }
           },
           {
-            "label": "Show side panel delete button",
+            "label": "Show delete",
             "type": "boolean",
             "key": "sidePanelShowDelete",
             "nested": true,
@@ -4457,7 +4457,7 @@
             }
           },
           {
-            "label": "Side panel save label",
+            "label": "Save label",
             "type": "text",
             "key": "sidePanelSaveLabel",
             "defaultValue": "Save",
@@ -4468,14 +4468,14 @@
             }
           },
           {
-            "label": "Side panel delete label",
+            "label": "Delete label",
             "type": "text",
             "key": "sidePanelDeleteLabel",
             "defaultValue": "Delete",
             "nested": true,
             "dependsOn": {
-              "setting": "sidePanelShowDelete",
-              "value": true
+              "setting": "clickBehaviour",
+              "value": "details"
             }
           }
         ]
@@ -5060,20 +5060,6 @@
         "name": "Buttons",
         "settings": [
           {
-            "type": "text",
-            "key": "saveButtonLabel",
-            "label": "Save Button Label",
-            "nested": true,
-            "defaultValue": "Save"
-          },
-          {
-            "type": "text",
-            "key": "deleteButtonLabel",
-            "label": "Delete Button Label",
-            "nested": true,
-            "defaultValue": "Delete"
-          },
-          {
             "type": "boolean",
             "label": "Show save button",
             "key": "showSaveButton",
@@ -5085,6 +5071,17 @@
             }
           },
           {
+            "type": "text",
+            "key": "saveButtonLabel",
+            "label": "Save button label",
+            "nested": true,
+            "defaultValue": "Save",
+            "dependsOn": {
+              "setting": "showSaveButton",
+              "value": true
+            }
+          },
+          {
             "type": "boolean",
             "label": "Allow delete",
             "key": "showDeleteButton",
@@ -5092,6 +5089,17 @@
             "dependsOn": {
               "setting": "actionType",
               "value": "Update"
+            }
+          },
+          {
+            "type": "text",
+            "key": "deleteButtonLabel",
+            "label": "Delete button label",
+            "nested": true,
+            "defaultValue": "Delete",
+            "dependsOn": {
+              "setting": "showDeleteButton",
+              "value": true
             }
           },
           {

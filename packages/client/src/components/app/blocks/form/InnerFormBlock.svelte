@@ -171,7 +171,7 @@
                 <BlockComponent
                   type="button"
                   props={{
-                    text: deleteButtonLabel,
+                    text: deleteButtonLabel || "Delete",
                     onClick: onDelete,
                     quiet: true,
                     type: "secondary",
@@ -183,7 +183,7 @@
                 <BlockComponent
                   type="button"
                   props={{
-                    text: saveButtonLabel,
+                    text: saveButtonLabel || "Save",
                     onClick: onSave,
                     type: "cta",
                   }}
@@ -203,7 +203,7 @@
                 validation: field.validation,
                 field: field.name,
                 label: field.displayName,
-                placeholder: field.name,
+                placeholder: field.displayName,
               }}
               order={idx}
             />

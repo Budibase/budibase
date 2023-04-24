@@ -13,6 +13,14 @@
   export let componentInstance
   export let value = []
 
+  const convertOldColumnFormat = oldColumns => {
+    if (typeof oldColumns?.[0] === "string") {
+      value = oldColumns.map(field => ({ name: field, displayName: field }))
+    }
+  }
+
+  $: convertOldColumnFormat(value)
+
   const dispatch = createEventDispatcher()
 
   let drawer

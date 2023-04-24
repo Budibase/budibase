@@ -20,18 +20,6 @@
   export let actionUrl
   export let noRowsMessage
 
-  // We previously handled fields as an array of strings, now it's a more complicated array of objects;
-  // this formats the old style into something useable by the new code.
-  const formatFields = fields => {
-    if (typeof fields?.[0] === "string") {
-      return fields.map(field => ({ name: field, displayName: field }))
-    }
-
-    return fields
-  }
-
-  $: formattedFields = formatFields(fields)
-
   const { fetchDatasourceSchema } = getContext("sdk")
 
   let schema
@@ -60,7 +48,7 @@
     actionType,
     size,
     disabled,
-    fields: formattedFields,
+    fields,
     labelPosition,
     title,
     saveButtonLabel,
