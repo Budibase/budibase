@@ -22,6 +22,8 @@
   import HideColumnsButton from "../controls/HideColumnsButton.svelte"
   import AddRowButton from "../controls/AddRowButton.svelte"
   import RowHeightButton from "../controls/RowHeightButton.svelte"
+  import ColumnWidthButton from "../controls/ColumnWidthButton.svelte"
+  import NewRow from "./NewRow.svelte"
   import {
     MaxCellRenderHeight,
     MaxCellRenderWidthOverflow,
@@ -110,6 +112,7 @@
       <AddRowButton />
       <AddColumnButton />
       <slot name="controls" />
+      <ColumnWidthButton />
       <RowHeightButton />
       <HideColumnsButton />
       <SortButton />
@@ -127,10 +130,11 @@
           <HeaderRow />
           <GridBody />
         </div>
+        <BetaButton />
+        <NewRow />
         <div class="overlays">
           <ResizeOverlay />
           <ReorderOverlay />
-          <BetaButton />
           <ScrollOverlay />
           <MenuOverlay />
         </div>

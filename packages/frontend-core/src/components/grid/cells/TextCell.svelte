@@ -33,6 +33,7 @@
     api = {
       focus: () => input?.focus(),
       blur: () => input?.blur(),
+      isActive: () => active,
       onKeyDown,
     }
   })

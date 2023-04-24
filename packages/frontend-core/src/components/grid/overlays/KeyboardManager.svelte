@@ -1,6 +1,7 @@
 <script>
   import { getContext, onMount } from "svelte"
   import { debounce } from "../../../utils/utils"
+  import { NewRowID } from "../lib/constants"
 
   const {
     enrichedRows,
@@ -10,15 +11,24 @@
     stickyColumn,
     focusedCellAPI,
     clipboard,
+    dispatch,
+    selectedRows,
   } = getContext("grid")
 
   // Global key listener which intercepts all key events
   const handleKeyDown = e => {
     // If nothing selected avoid processing further key presses
     if (!$focusedCellId) {
-      if (e.key === "Tab") {
+      if (e.key === "Tab" || e.key?.startsWith("Arrow")) {
         e.preventDefault()
         focusFirstCell()
+      } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        dispatch("add-row-inline")
+      } else if (e.key === "Delete" || e.key === "Backspace") {
+        if (Object.keys($selectedRows).length) {
+          dispatch("request-bulk-delete")
+        }
       }
       return
     }
@@ -26,10 +36,19 @@
     // Always intercept certain key presses
     const api = $focusedCellAPI
     if (e.key === "Escape") {
-      api?.blur?.()
+      // By setting a tiny timeout here we can ensure that other listeners
+      // which depend on being able to read cell state on an escape keypress
+      // get a chance to observe the true state before we blur
+      if (api?.isActive()) {
+        setTimeout(api?.blur, 10)
+      } else {
+        $focusedCellId = null
+      }
+      return
     } else if (e.key === "Tab") {
       api?.blur?.()
       changeFocusedColumn(1)
+      return
     }
 
     // Pass the key event to the selected cell and let it decide whether to
@@ -54,8 +73,12 @@
           clipboard.actions.copy()
           break
         case "v":
-          clipboard.actions.paste()
+          if (!api?.isReadonly()) {
+            clipboard.actions.paste()
+          }
           break
+        case "Enter":
+          dispatch("add-row-inline")
       }
     } else {
       switch (e.key) {
@@ -73,10 +96,18 @@
           break
         case "Delete":
         case "Backspace":
-          deleteSelectedCell()
+          if (Object.keys($selectedRows).length) {
+            dispatch("request-bulk-delete")
+          } else {
+            deleteSelectedCell()
+          }
           break
         case "Enter":
           focusCell()
+          break
+        case " ":
+        case "Space":
+          toggleSelectRow()
           break
         default:
           startEnteringValue(e.key, e.which)
@@ -156,7 +187,7 @@
 
   // Focuses the cell and starts entering a new value
   const startEnteringValue = (key, keyCode) => {
-    if ($focusedCellAPI) {
+    if ($focusedCellAPI && !$focusedCellAPI.isReadonly()) {
       const type = $focusedCellAPI.getType()
       if (type === "number" && keyCodeIsNumber(keyCode)) {
         $focusedCellAPI.setValue(parseInt(key))
@@ -169,6 +200,17 @@
         $focusedCellAPI.focus()
       }
     }
+  }
+
+  const toggleSelectRow = () => {
+    const id = $focusedRow?._id
+    if (!id || id === NewRowID) {
+      return
+    }
+    selectedRows.update(state => {
+      state[id] = !state[id]
+      return state
+    })
   }
 
   onMount(() => {
