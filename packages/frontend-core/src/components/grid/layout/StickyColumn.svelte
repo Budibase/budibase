@@ -94,7 +94,7 @@
           on:click={() => dispatch("add-row-inline")}
         >
           <GutterCell disableExpand rowHovered={$hoveredRowId === BlankRowID}>
-            <Icon name="Add" />
+            <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
           </GutterCell>
           {#if $stickyColumn}
             <GridCell
