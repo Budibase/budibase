@@ -23,16 +23,25 @@
     rowHeight,
     hasNextPage,
     maxScrollTop,
+    rowVerticalInversionIndex,
+    columnHorizontalInversionIndex,
   } = getContext("grid")
 
   let isAdding = false
   let newRow = {}
   let offset = 0
 
-  $: minimumDesiredRenderHeight = $rowHeight + 96
   $: firstColumn = $stickyColumn || $renderedColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $tableId, (isAdding = false)
+  $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
+
+  const shouldInvertY = (offset, inversionIndex, rows) => {
+    if (offset === 0) {
+      return false
+    }
+    return rows.length >= inversionIndex
+  }
 
   const addRow = async () => {
     // Blur the active cell and tick to let final value updates propagate
@@ -82,13 +91,16 @@
         $renderedRows.length * $rowHeight - ($maxScrollTop % $rowHeight) - 1
     }
 
-    document.addEventListener("keydown", handleKeyPress)
+    // Update state and select initial cell
     newRow = {}
     isAdding = true
     $hoveredRowId = NewRowID
     if (firstColumn) {
       $focusedCellId = `${NewRowID}-${firstColumn.name}`
     }
+
+    // Attach key listener
+    document.addEventListener("keydown", handleKeyPress)
   }
 
   const updateValue = (rowId, columnName, val) => {
@@ -127,24 +139,16 @@
   <div
     class="container"
     class:floating={offset > 0}
-    style="--offset:{offset}px"
+    style="--offset:{offset}px; --sticky-width:{width}px;"
   >
-    <div
-      class="underlay sticky"
-      style="width:{width}px;"
-      transition:fade={{ duration: 130 }}
-    />
+    <div class="underlay sticky" transition:fade={{ duration: 130 }} />
     <div class="underlay" transition:fade={{ duration: 130 }} />
-    <div
-      class="sticky-column"
-      transition:fade={{ duration: 130 }}
-      style="flex: 0 0 {width}px"
-    >
+    <div class="sticky-column" transition:fade={{ duration: 130 }}>
       <GutterCell on:expand={addViaModal} rowHovered>
         <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
       </GutterCell>
       {#if $stickyColumn}
-        {@const cellId = `new-${$stickyColumn.name}`}
+        {@const cellId = `${NewRowID}-${$stickyColumn.name}`}
         <DataCell
           {cellId}
           rowFocused
@@ -154,13 +158,14 @@
           width={$stickyColumn.width}
           {updateValue}
           rowIdx={0}
+          {invertY}
         />
       {/if}
     </div>
-    <div class="normal-columns">
+    <div class="normal-columns" transition:fade={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally wheelInteractive>
-        <div class="row" transition:fade={{ duration: 130 }}>
-          {#each $renderedColumns as column}
+        <div class="row">
+          {#each $renderedColumns as column, columnIdx}
             {@const cellId = `new-${column.name}`}
             {#key cellId}
               <DataCell
@@ -172,6 +177,8 @@
                 focused={$focusedCellId === cellId}
                 width={column.width}
                 rowIdx={0}
+                invertX={columnIdx >= $columnHorizontalInversionIndex}
+                {invertY}
               />
             {/key}
           {/each}
@@ -217,6 +224,7 @@
   }
   .underlay.sticky {
     z-index: 2;
+    width: var(--sticky-width);
   }
 
   /* Floating buttons which sit on top of the underlay but below the sticky column */
@@ -237,6 +245,7 @@
     z-index: 4;
     position: relative;
     align-self: flex-start;
+    flex: 0 0 var(--sticky-width);
   }
   .sticky-column :global(.cell:not(:last-child)) {
     border-right: none;
