@@ -45,7 +45,7 @@
         style="width:{renderColumnsWidth}px"
         on:mouseenter={() => ($hoveredRowId = BlankRowID)}
         on:mouseleave={() => ($hoveredRowId = null)}
-        on:click={() => dispatch("add-row-inline", true)}
+        on:click={() => dispatch("add-row-inline")}
       />
     {/if}
   </GridScrollWrapper>

@@ -91,7 +91,7 @@
           class="row new"
           on:mouseenter={() => ($hoveredRowId = BlankRowID)}
           on:mouseleave={() => ($hoveredRowId = null)}
-          on:click={() => dispatch("add-row-inline", true)}
+          on:click={() => dispatch("add-row-inline")}
         >
           <GutterCell disableExpand rowHovered={$hoveredRowId === BlankRowID}>
             <Icon name="Add" />

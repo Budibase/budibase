@@ -1,4 +1,4 @@
-export const Padding = 276
+export const Padding = 128
 export const MaxCellRenderHeight = 252
 export const MaxCellRenderWidthOverflow = 200
 export const ScrollBarSize = 8
@@ -11,3 +11,4 @@ export const LargeRowHeight = 92
 export const DefaultRowHeight = SmallRowHeight
 export const NewRowID = "new"
 export const BlankRowID = "blank"
+export const RowPageSize = 100
