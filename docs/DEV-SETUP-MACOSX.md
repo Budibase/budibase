@@ -4,14 +4,14 @@
 
 Install instructions [here](https://brew.sh/)
 
-| **NOTE**: If you are working on a M1 Apple Silicon which is running Z shell, you could need to add 
-`eval $(/opt/homebrew/bin/brew shellenv)` line to your `.zshrc`. This will make your zsh to find the apps you install 
+| **NOTE**: If you are working on a M1 Apple Silicon which is running Z shell, you could need to add
+`eval $(/opt/homebrew/bin/brew shellenv)` line to your `.zshrc`. This will make your zsh to find the apps you install
 through brew.
-
 
 ### Install Node
 
 Budibase requires a recent version of node 14:
+
 ```
 brew install node npm
 node -v
@@ -22,12 +22,15 @@ node -v
 ```
 npm install -g yarn jest lerna
 ```
+
 ### Install Docker and Docker Compose
 
 ```
 brew install docker docker-compose
 ```
+
 ### Clone the repo
+
 ```
 git clone https://github.com/Budibase/budibase.git
 ```
@@ -48,10 +51,13 @@ This setup process was tested on Mac OSX 12 (Monterey) with version numbers show
 cd budibase
 yarn setup
 ```
+
 The yarn setup command runs several build steps i.e.
+
 ```
 node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev
 ```
+
 So this command will actually run the application in dev mode. It creates .env files under `./packages/server` and `./packages/worker` and runs docker containers for each service via docker-compose.
 
 The dev version will be available on port 10000 i.e.
