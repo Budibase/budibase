@@ -2,6 +2,7 @@ import { derived, get } from "svelte/store"
 import {
   MaxCellRenderHeight,
   MaxCellRenderWidthOverflow,
+  MinColumnWidth,
   ScrollBarSize,
 } from "../lib/constants"
 
@@ -46,7 +47,7 @@ export const deriveStores = context => {
 
   // Derive visible columns
   const scrollLeftRounded = derived(scrollLeft, $scrollLeft => {
-    const interval = 50
+    const interval = MinColumnWidth
     return Math.round($scrollLeft / interval) * interval
   })
   const renderedColumns = derived(
@@ -74,17 +75,15 @@ export const deriveStores = context => {
         leftEdge += $visibleColumns[endColIdx].width
         endColIdx++
       }
-      const next = $visibleColumns.slice(startColIdx, endColIdx)
-
-      // Only update if the column selection is actually different
+      const next = $visibleColumns.slice(
+        Math.max(0, startColIdx - 1),
+        endColIdx + 1
+      )
       const current = get(renderedColumns)
-      const currentKey = current.map(col => col.width).join("-")
-      const nextKey = next.map(col => col.width).join("-")
-      if (currentKey !== nextKey) {
+      if (JSON.stringify(next) !== JSON.stringify(current)) {
         set(next)
       }
-    },
-    []
+    }
   )
 
   const hiddenColumnsWidth = derived(
