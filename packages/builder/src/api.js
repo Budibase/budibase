@@ -5,12 +5,16 @@ import {
 } from "@budibase/frontend-core"
 import { store } from "./builderStore"
 import { get } from "svelte/store"
-import { auth } from "./stores/portal"
+import { auth, overview } from "./stores/portal"
 
 export const API = createAPIClient({
   attachHeaders: headers => {
     // Attach app ID header from store
-    headers["x-budibase-app-id"] = get(store).appId
+    let appId = get(store).appId
+    if (!appId) {
+      appId = get(overview).selectedAppId
+    }
+    headers["x-budibase-app-id"] = appId
 
     // Add csrf token if authenticated
     const user = get(auth).user
