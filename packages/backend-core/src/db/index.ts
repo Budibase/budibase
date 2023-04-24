@@ -2,7 +2,7 @@ export * from "./couch"
 export * from "./db"
 export * from "./utils"
 export * from "./views"
-export * from "./conversions"
+export * from "../docIds/conversions"
 export { default as Replication } from "./Replication"
 // exports to support old export structure
 export * from "../constants/db"

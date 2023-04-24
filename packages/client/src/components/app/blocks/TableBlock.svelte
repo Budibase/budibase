@@ -25,6 +25,7 @@
   export let titleButtonText
   export let titleButtonClickBehaviour
   export let onClickTitleButton
+  export let noRowsMessage
 
   const { fetchDatasourceSchema, API } = getContext("sdk")
   const stateKey = `ID_${generate()}`
@@ -221,6 +222,7 @@
             allowSelectRows,
             size,
             onClick: rowClickActions,
+            noRowsMessage: noRowsMessage || "No rows found",
           }}
         />
       </BlockComponent>

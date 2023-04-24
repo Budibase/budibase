@@ -1,17 +1,21 @@
-import { permissions, roles } from "@budibase/backend-core"
+import { permissions, roles, utils } from "@budibase/backend-core"
 import { createHomeScreen } from "../../constants/screens"
 import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
-import { ACTION_DEFINITIONS, TRIGGER_DEFINITIONS } from "../../automations"
+import {
+  BUILTIN_ACTION_DEFINITIONS,
+  TRIGGER_DEFINITIONS,
+} from "../../automations"
 import {
   Automation,
   AutomationActionStepId,
+  AutomationStep,
+  AutomationStepType,
+  AutomationTrigger,
   AutomationTriggerStepId,
   Datasource,
   SourceName,
 } from "@budibase/types"
-
-const { v4: uuidv4 } = require("uuid")
 
 export function basicTable() {
   return {
@@ -71,19 +75,19 @@ export function view(tableId: string) {
 }
 
 export function automationStep(
-  actionDefinition = ACTION_DEFINITIONS.CREATE_ROW
-) {
+  actionDefinition = BUILTIN_ACTION_DEFINITIONS.CREATE_ROW
+): AutomationStep {
   return {
-    id: uuidv4(),
+    id: utils.newid(),
     ...actionDefinition,
   }
 }
 
 export function automationTrigger(
   triggerDefinition = TRIGGER_DEFINITIONS.ROW_SAVED
-) {
+): AutomationTrigger {
   return {
-    id: uuidv4(),
+    id: utils.newid(),
     ...triggerDefinition,
   }
 }
@@ -106,7 +110,7 @@ export function newAutomation({ steps, trigger }: any = {}) {
   return automation
 }
 
-export function basicAutomation(appId?: string) {
+export function basicAutomation(appId?: string): Automation {
   return {
     name: "My Automation",
     screenId: "kasdkfldsafkl",
@@ -119,18 +123,22 @@ export function basicAutomation(appId?: string) {
         tagline: "test",
         icon: "test",
         description: "test",
-        type: "trigger",
+        type: AutomationStepType.TRIGGER,
         id: "test",
         inputs: {},
         schema: {
-          inputs: {},
-          outputs: {},
+          inputs: {
+            properties: {},
+          },
+          outputs: {
+            properties: {},
+          },
         },
       },
       steps: [],
     },
     type: "automation",
-    appId,
+    appId: appId!,
   }
 }
 
@@ -154,7 +162,7 @@ export function loopAutomation(tableId: string, loopOpts?: any): Automation {
           inputs: {
             tableId,
           },
-          schema: ACTION_DEFINITIONS.QUERY_ROWS.schema,
+          schema: BUILTIN_ACTION_DEFINITIONS.QUERY_ROWS.schema,
         },
         {
           id: "c",
@@ -163,7 +171,7 @@ export function loopAutomation(tableId: string, loopOpts?: any): Automation {
           internal: true,
           inputs: loopOpts,
           blockToLoop: "d",
-          schema: ACTION_DEFINITIONS.LOOP.schema,
+          schema: BUILTIN_ACTION_DEFINITIONS.LOOP.schema,
         },
         {
           id: "d",
@@ -173,7 +181,7 @@ export function loopAutomation(tableId: string, loopOpts?: any): Automation {
           inputs: {
             text: "log statement",
           },
-          schema: ACTION_DEFINITIONS.SERVER_LOG.schema,
+          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
         },
       ],
       trigger: {

@@ -1,8 +1,9 @@
-import { AccountPlan, Quotas, Feature, Billing } from "."
+import { PurchasedPlan, Quotas, Feature, Billing } from "."
 
 export interface License {
   features: Feature[]
   quotas: Quotas
-  plan: AccountPlan
+  plan: PurchasedPlan
   billing?: Billing
+  testClockId?: string
 }

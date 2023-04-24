@@ -128,7 +128,7 @@
           />
         </div>
       </div>
-      <ButtonGroup>
+      <ButtonGroup gap="M">
         <Button cta on:click={activate} disabled={activateDisabled}>
           Activate
         </Button>

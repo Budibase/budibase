@@ -11,6 +11,7 @@
     notifications,
     Pagination,
     Divider,
+    InlineAlert,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import {
@@ -20,9 +21,11 @@
     licensing,
     organisation,
     features,
+    admin,
   } from "stores/portal"
   import { onMount } from "svelte"
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
+  import UpgradeModal from "components/common/users/UpgradeModal.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
@@ -50,7 +53,8 @@
     inviteConfirmationModal,
     onboardingTypeModal,
     passwordModal,
-    importUsersModal
+    importUsersModal,
+    userLimitReachedModal
   let searchEmail = undefined
   let selectedRows = []
   let bulkSaveResponse
@@ -61,7 +65,9 @@
   ]
   let userData = []
 
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: readonly = !$auth.isAdmin || $features.isScimEnabled
+
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -81,6 +87,7 @@
       width: "1fr",
     },
   }
+
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
   $: {
@@ -229,6 +236,8 @@
       notifications.error("Error fetching user group data")
     }
   })
+
+  let staticUserLimit = $licensing.license.quotas.usage.static.users.value
 </script>
 
 <Layout noPadding gap="M">
@@ -237,13 +246,46 @@
     <Body>Add users and control who gets access to your published apps</Body>
   </Layout>
   <Divider />
+  {#if $licensing.warnUserLimit}
+    <InlineAlert
+      type="error"
+      onConfirm={() => {
+        if (isOwner) {
+          $licensing.goToUpgradePage()
+        } else {
+          window.open("https://budibase.com/pricing/", "_blank")
+        }
+      }}
+      buttonText={isOwner ? "Upgrade" : "View plans"}
+      cta
+      header={`Users will soon be limited to ${staticUserLimit}`}
+      message={`Our free plan is going to be limited to ${staticUserLimit} users in ${$licensing.userLimitDays}.
+    
+    This means any users exceeding the limit have been de-activated.
+
+    De-activated users will not able to access the builder or any published apps until you upgrade to one of our paid plans.
+    `}
+    />
+  {/if}
   <div class="controls">
     {#if !readonly}
       <ButtonGroup>
-        <Button disabled={readonly} on:click={createUserModal.show} cta>
+        <Button
+          disabled={readonly}
+          on:click={$licensing.userLimitReached
+            ? userLimitReachedModal.show
+            : createUserModal.show}
+          cta
+        >
           Add users
         </Button>
-        <Button disabled={readonly} on:click={importUsersModal.show} secondary>
+        <Button
+          disabled={readonly}
+          on:click={$licensing.userLimitReached
+            ? userLimitReachedModal.show
+            : importUsersModal.show}
+          secondary
+        >
           Import
         </Button>
       </ButtonGroup>
@@ -307,6 +349,10 @@
   <ImportUsersModal {createUsersFromCsv} />
 </Modal>
 
+<Modal bind:this={userLimitReachedModal}>
+  <UpgradeModal {isOwner} />
+</Modal>
+
 <style>
   .pagination {
     display: flex;
@@ -319,7 +365,6 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
     gap: var(--spacing-xl);
   }
 

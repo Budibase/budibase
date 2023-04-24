@@ -2,7 +2,7 @@
 // store an app ID to pretend there is a context
 import env from "../environment"
 import Context from "./Context"
-import * as conversions from "../db/conversions"
+import * as conversions from "../docIds/conversions"
 import { getDB } from "../db/db"
 import {
   DocumentType,
@@ -43,8 +43,12 @@ export function baseGlobalDBName(tenantId: string | undefined | null) {
   }
 }
 
+export function getPlatformURL() {
+  return env.PLATFORM_URL
+}
+
 export function isMultiTenant() {
-  return env.MULTI_TENANCY
+  return !!env.MULTI_TENANCY
 }
 
 export function isTenantIdSet() {
@@ -111,10 +115,10 @@ export async function doInContext(appId: string, task: any): Promise<any> {
   )
 }
 
-export async function doInTenant(
+export async function doInTenant<T>(
   tenantId: string | null,
-  task: any
-): Promise<any> {
+  task: () => T
+): Promise<T> {
   // make sure default always selected in single tenancy
   if (!env.MULTI_TENANCY) {
     tenantId = tenantId || DEFAULT_TENANT_ID

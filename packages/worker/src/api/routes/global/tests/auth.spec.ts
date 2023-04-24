@@ -126,9 +126,8 @@ describe("/api/global/auth", () => {
           it("should prevent user from logging in", async () => {
             user = await config.createUser()
             const account = structures.accounts.ssoAccount() as CloudAccount
-            mocks.accounts.getAccount.mockReturnValueOnce(
-              Promise.resolve(account)
-            )
+            account.email = user.email
+            mocks.accounts.getAccountByTenantId.mockResolvedValueOnce(account)
 
             await testSSOUser()
           })
@@ -186,9 +185,8 @@ describe("/api/global/auth", () => {
           it("should prevent user from generating password reset email", async () => {
             user = await config.createUser(structures.users.user())
             const account = structures.accounts.ssoAccount() as CloudAccount
-            mocks.accounts.getAccount.mockReturnValueOnce(
-              Promise.resolve(account)
-            )
+            account.email = user.email
+            mocks.accounts.getAccountByTenantId.mockResolvedValueOnce(account)
 
             await testSSOUser()
           })

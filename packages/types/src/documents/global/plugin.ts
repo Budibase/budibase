@@ -3,6 +3,7 @@ import { Document } from "../document"
 export enum PluginType {
   DATASOURCE = "datasource",
   COMPONENT = "component",
+  AUTOMATION = "automation",
 }
 
 export enum PluginSource {

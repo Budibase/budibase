@@ -26,7 +26,7 @@
 
   const external = actions.reduce((acc, elm) => {
     const [k, v] = elm
-    if (!v.internal) {
+    if (!v.internal && !v.custom) {
       acc[k] = v
     }
     return acc
@@ -40,6 +40,15 @@
     delete acc.LOOP
     return acc
   }, {})
+
+  const plugins = actions.reduce((acc, elm) => {
+    const [k, v] = elm
+    if (v.custom) {
+      acc[k] = v
+    }
+    return acc
+  }, {})
+  console.log(plugins)
 
   const selectAction = action => {
     actionVal = action
@@ -116,6 +125,26 @@
       {/each}
     </div>
   </Layout>
+
+  {#if Object.keys(plugins).length}
+    <Layout noPadding gap="XS">
+      <Detail size="S">Plugins</Detail>
+      <div class="item-list">
+        {#each Object.entries(plugins) as [idx, action]}
+          <div
+            class="item"
+            class:selected={selectedAction === action.name}
+            on:click={() => selectAction(action)}
+          >
+            <div class="item-body">
+              <Icon name={action.icon} />
+              <Body size="XS">{action.name}</Body>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </Layout>
+  {/if}
 </ModalContent>
 
 <style>
@@ -126,7 +155,7 @@
   }
   .item-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
     grid-gap: var(--spectrum-alias-grid-baseline);
   }
 
