@@ -129,11 +129,7 @@
         />
       </div>
     {/if}
-    <div
-      class="more"
-      on:mousedown|stopPropagation
-      on:click={() => (open = true)}
-    >
+    <div class="more" on:click={() => (open = true)}>
       <Icon
         size="S"
         name="MoreVertical"
