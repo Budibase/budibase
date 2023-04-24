@@ -14,4 +14,3 @@ export const StripeStatus = {
   PAST_DUE: "past_due",
   ACTIVE: "active",
 }
-

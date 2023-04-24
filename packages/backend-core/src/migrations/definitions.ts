@@ -36,5 +36,5 @@ export const DEFINITIONS: MigrationDefinition[] = [
   {
     type: MigrationType.GLOBAL,
     name: MigrationName.GLOBAL_INFO_SYNC_USERS,
-  }
+  },
 ]
