@@ -51,6 +51,7 @@
       disableNumber
       on:select={selectAll}
       defaultHeight
+      rowSelected={selectedRowCount === rowCount}
     />
     {#if $stickyColumn}
       <HeaderCell column={$stickyColumn} orderable={false} idx="sticky" />
