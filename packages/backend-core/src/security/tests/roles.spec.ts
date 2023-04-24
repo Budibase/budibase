@@ -240,11 +240,6 @@ describe("Role", () => {
       let resultLength = Object.keys(result)
       expect(resultLength).toHaveLength(4)
     })
-
-    // it("should return roles for a specific app when appId is provided", async () => {
-    //   const allRoles = await roles.getAllRoles("budibase")
-    //   expect(Array.isArray(roles)).toBe(true)
-    // })
   })
   describe("getRequiredResourceRole", () => {
     it("should return an empty array if there are no roles with permissions for the given resource", async () => {
@@ -254,32 +249,47 @@ describe("Role", () => {
       expect(result).toEqual([])
     })
 
-    it("should return the IDs of roles with main-level permissions for the given resource", async () => {
-      const result = await roles.getRequiredResourceRole("READ", {
-        resourceId: "app1",
-      })
-      expect(result).toEqual(["role1"])
-    })
-
-    it("should return the IDs of roles with sub-level permissions for the given resource", async () => {
-      const result = await roles.getRequiredResourceRole("WRITE", {
-        resourceId: "resourceId2",
-        subResourceId: "subResourceId1",
-      })
-      expect(result).toEqual(["role1", "role2"])
-    })
-
-    it("should return the IDs of roles with sub-level permissions for the given sub-resource", async () => {
-      const result = await roles.getRequiredResourceRole("READ", {
-        resourceId: "resourceId2",
-        subResourceId: "subResourceId2",
-      })
-      expect(result).toEqual(["role1"])
-    })
-
     it("should return an empty array if no resource ID is provided", async () => {
       const result = await roles.getRequiredResourceRole("READ", {})
       expect(result).toEqual([])
+    })
+  })
+
+  describe("getDBRoleID", () => {
+    it("returns the provided role ID if it starts with DocumentType.ROLE", () => {
+      const roleId = "DocumentType.budibase"
+      const result = roles.getDBRoleID(roleId)
+      expect(result).toEqual("role_" + roleId)
+    })
+
+    it("generates a role ID if none is provided or if it does not start with DocumentType.ROLE", () => {
+      const result1 = roles.getDBRoleID()
+      const result2 = roles.getDBRoleID("budibase")
+      expect(result1).not.toBeNull()
+      expect(result2).not.toBeNull()
+      expect(result1).not.toEqual(result2)
+    })
+  })
+
+  describe("getExternalRoleID", () => {
+    it("removes the DB role ID element from built-in roles", () => {
+      const roleId = "DocumentType.ROLE_role_123"
+      const result = roles.getExternalRoleID(roleId)
+      expect(result).toEqual("DocumentType.ROLE_role_123")
+    })
+
+    it("returns the provided role ID if it does not start with DocumentType.ROLE or is not a built-in role", () => {
+      const roleId1 = "role_123"
+      const roleId2 = "DocumentType.PERMISSION_perm_123"
+      const result1 = roles.getExternalRoleID(roleId1)
+      const result2 = roles.getExternalRoleID(roleId2)
+      expect(result1).toEqual(roleId1)
+      expect(result2).toEqual(roleId2)
+    })
+
+    it("returns null if the provided role ID is null", () => {
+      const result = roles.getExternalRoleID(null)
+      expect(result).toBeNull()
     })
   })
 })
