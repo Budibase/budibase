@@ -1,5 +1,4 @@
 <script>
-  import GridCell from "../cells/GridCell.svelte"
   import { getContext, onDestroy, onMount, tick } from "svelte"
   import { Icon, Button } from "@budibase/bbui"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
@@ -14,18 +13,23 @@
     focusedCellId,
     stickyColumn,
     scroll,
-    config,
     dispatch,
     rows,
     focusedCellAPI,
     tableId,
     subscribe,
+    renderedRows,
     renderedColumns,
+    rowHeight,
+    hasNextPage,
+    maxScrollTop,
   } = getContext("grid")
 
   let isAdding = false
   let newRow = {}
+  let offset = 0
 
+  $: minimumDesiredRenderHeight = $rowHeight + 96
   $: firstColumn = $stickyColumn || $renderedColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $tableId, (isAdding = false)
@@ -36,13 +40,10 @@
     await tick()
 
     // Create row
-    const savedRow = await rows.actions.addRow(newRow, 0)
+    const newRowIndex = offset ? undefined : 0
+    const savedRow = await rows.actions.addRow(newRow, newRowIndex)
     if (savedRow) {
       // Reset state
-      scroll.update(state => ({
-        ...state,
-        top: 0,
-      }))
       clear()
 
       // Select the first cell if possible
@@ -63,6 +64,24 @@
     if (isAdding) {
       return
     }
+
+    // If we have a next page of data then we aren't truly at the bottom, so we
+    // render the add row component at the top
+    if ($hasNextPage) {
+      offset = 0
+    }
+
+    // If we don't have a next page then we're at the bottom and can scroll to
+    // the max available offset
+    else {
+      scroll.update(state => ({
+        ...state,
+        top: $maxScrollTop,
+      }))
+      offset =
+        $renderedRows.length * $rowHeight - ($maxScrollTop % $rowHeight) - 1
+    }
+
     document.addEventListener("keydown", handleKeyPress)
     newRow = {}
     isAdding = true
@@ -105,7 +124,11 @@
 
 <!-- Only show new row functionality if we have any columns -->
 {#if isAdding}
-  <div class="container">
+  <div
+    class="container"
+    class:floating={offset > 0}
+    style="--offset:{offset}px"
+  >
     <div
       class="underlay sticky"
       style="width:{width}px;"
@@ -134,25 +157,27 @@
         />
       {/if}
     </div>
-    <GridScrollWrapper scrollHorizontally wheelInteractive>
-      <div class="row" transition:fade={{ duration: 130 }}>
-        {#each $renderedColumns as column}
-          {@const cellId = `new-${column.name}`}
-          {#key cellId}
-            <DataCell
-              {cellId}
-              {column}
-              {updateValue}
-              rowFocused
-              row={newRow}
-              focused={$focusedCellId === cellId}
-              width={column.width}
-              rowIdx={0}
-            />
-          {/key}
-        {/each}
-      </div>
-    </GridScrollWrapper>
+    <div class="normal-columns">
+      <GridScrollWrapper scrollHorizontally wheelInteractive>
+        <div class="row" transition:fade={{ duration: 130 }}>
+          {#each $renderedColumns as column}
+            {@const cellId = `new-${column.name}`}
+            {#key cellId}
+              <DataCell
+                {cellId}
+                {column}
+                {updateValue}
+                rowFocused
+                row={newRow}
+                focused={$focusedCellId === cellId}
+                width={column.width}
+                rowIdx={0}
+              />
+            {/key}
+          {/each}
+        </div>
+      </GridScrollWrapper>
+    </div>
     <div class="buttons" transition:fade={{ duration: 130 }}>
       <Button size="M" cta on:click={addRow}>Save</Button>
       <Button size="M" secondary newStyles on:click={clear}>Cancel</Button>
@@ -174,13 +199,17 @@
   .container :global(.cell) {
     --cell-background: var(--spectrum-global-color-gray-75) !important;
   }
+  .container.floating :global(.cell) {
+    height: calc(var(--row-height) + 1px);
+    border-top: var(--cell-border);
+  }
 
   /* Underlay sits behind everything */
   .underlay {
     position: absolute;
     content: "";
     left: 0;
-    top: var(--row-height);
+    top: 0;
     height: 100%;
     width: 100%;
     background: var(--cell-background);
@@ -198,8 +227,8 @@
     pointer-events: all;
     z-index: 3;
     position: absolute;
-    top: calc(var(--row-height) + 24px);
-    left: 32px;
+    top: calc(var(--row-height) + var(--offset) + 24px);
+    left: var(--gutter-width);
   }
 
   /* Sticky column styles */
@@ -212,20 +241,9 @@
   .sticky-column :global(.cell:not(:last-child)) {
     border-right: none;
   }
-  .gutter {
-    flex: 1 1 auto;
-    display: grid;
-    align-items: center;
-    padding: var(--cell-padding);
-    grid-template-columns: 1fr auto;
-    gap: var(--cell-spacing);
-  }
-  .number {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    color: var(--spectrum-global-color-gray-500);
+  .sticky-column,
+  .normal-columns {
+    margin-top: var(--offset);
   }
 
   /* Normal column styles */

@@ -27,12 +27,6 @@
   // Get the error for this cell if the row is focused
   $: error = getErrorStore(rowFocused, cellId)
 
-  $: {
-    if ($error) {
-      console.log(cellId, $error)
-    }
-  }
-
   // Determine if the cell is editable
   $: readonly =
     column.schema.autocolumn ||

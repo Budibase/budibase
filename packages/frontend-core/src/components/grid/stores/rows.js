@@ -1,7 +1,7 @@
 import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
-import { NewRowID } from "../lib/constants"
+import { NewRowID, RowPageSize } from "../lib/constants"
 
 const initialSortState = {
   column: null,
@@ -17,6 +17,7 @@ export const createStores = () => {
   const sort = writable(initialSortState)
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
+  const hasNextPage = writable(false)
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(
@@ -51,6 +52,7 @@ export const createStores = () => {
     sort,
     rowChangeCache,
     inProgressChanges,
+    hasNextPage,
   }
 }
 
@@ -71,6 +73,7 @@ export const deriveStores = context => {
     rowChangeCache,
     inProgressChanges,
     previousFocusedRowId,
+    hasNextPage,
   } = context
   const instanceLoaded = writable(false)
   const fetch = writable(null)
@@ -115,7 +118,7 @@ export const deriveStores = context => {
         filter: [],
         sortColumn: initialSortState.column,
         sortOrder: initialSortState.order,
-        limit: 100,
+        limit: RowPageSize,
         paginate: true,
       },
     })
@@ -123,6 +126,7 @@ export const deriveStores = context => {
     // Subscribe to changes of this fetch model
     unsubscribe = newFetch.subscribe($fetch => {
       if ($fetch.loaded && !$fetch.loading) {
+        hasNextPage.set($fetch.hasNextPage)
         const $instanceLoaded = get(instanceLoaded)
         const resetRows = $fetch.resetKey !== lastResetKey
         lastResetKey = $fetch.resetKey
