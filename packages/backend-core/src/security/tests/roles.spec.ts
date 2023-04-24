@@ -230,12 +230,14 @@ describe("Role", () => {
       })
     })
   })
+
   describe("getAllRoles", () => {
     it("should return all roles when no appId is provided", async () => {
       let resultLength = Object.keys(roles.BUILTIN_ROLE_IDS)
       expect(resultLength).toHaveLength(4)
     })
   })
+
   describe("getRequiredResourceRole", () => {
     it("should return an empty array if there are no roles with permissions for the given resource", async () => {
       const result = await roles.getRequiredResourceRole("READ", {
@@ -282,9 +284,9 @@ describe("Role", () => {
       expect(result2).toEqual(roleId2)
     })
 
-    it("returns null if the provided role ID is null", () => {
+    it("returns undefined if the provided role ID is undefined", () => {
       const result = roles.getExternalRoleID()
-      expect(result).toBeNull()
+      expect(result).toBeUndefined()
     })
   })
 })
