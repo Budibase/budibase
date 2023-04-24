@@ -38,7 +38,7 @@
     {#each $renderedRows as row, idx}
       <GridRow {row} {idx} invertY={idx >= $rowVerticalInversionIndex} />
     {/each}
-    {#if $config.allowAddRows}
+    {#if $config.allowAddRows && $renderedColumns.length}
       <div
         class="blank"
         class:highlighted={$hoveredRowId === BlankRowID}
