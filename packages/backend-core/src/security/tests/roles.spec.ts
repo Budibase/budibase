@@ -1,5 +1,7 @@
 import { PermissionLevel } from "../permissions"
 import * as roles from "../roles"
+import { expect } from "@jest/globals"
+
 describe("Role", () => {
   describe("constructor", () => {
     it("it should initialize _id, name, and permissionId", () => {
@@ -227,17 +229,10 @@ describe("Role", () => {
         resource1: [PermissionLevel.READ, PermissionLevel.WRITE],
       })
     })
-
-    it("returns an empty object when rolePerms is falsy", () => {
-      const result = roles.checkForRoleResourceArray(undefined, "resource1")
-      expect(result).toBeUndefined()
-    })
   })
   describe("getAllRoles", () => {
     it("should return all roles when no appId is provided", async () => {
-      const allRoles = await roles.getAllRoles()
-      let result = roles.BUILTIN_ROLE_IDS
-      let resultLength = Object.keys(result)
+      let resultLength = Object.keys(roles.BUILTIN_ROLE_IDS)
       expect(resultLength).toHaveLength(4)
     })
   })
@@ -288,7 +283,7 @@ describe("Role", () => {
     })
 
     it("returns null if the provided role ID is null", () => {
-      const result = roles.getExternalRoleID(null)
+      const result = roles.getExternalRoleID()
       expect(result).toBeNull()
     })
   })

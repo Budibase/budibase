@@ -230,7 +230,7 @@ export function checkForRoleResourceArray(
 }
 
 /**
- * Given an app ID this will retrieve all of the roles that are currently within that app.
+ * Given an app ID this will retrieve all the roles that are currently within that app.
  * @return {Promise<object[]>} An array of the role objects that were found.
  */
 export async function getAllRoles(appId?: string) {
