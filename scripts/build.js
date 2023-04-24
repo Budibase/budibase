@@ -1,3 +1,5 @@
+#!/usr/bin/node
+
 const start = Date.now()
 
 const glob = require("glob")

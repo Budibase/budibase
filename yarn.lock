@@ -1485,15 +1485,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.5.6-alpha.5":
-  version "2.5.6-alpha.5"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.6-alpha.5.tgz#8136ea50e06aab8a23e48359d58c6c84ba386263"
-  integrity sha512-YEcDRJU4Up7g/fMSnO8K8YH6gObO/Sy0Jh28Ms+Sxb9RQ/zqlcobonsICF6h2ntfzLZH2cfArLGFEvIT10/PvA==
+"@budibase/pro@2.5.6-alpha.6":
+  version "2.5.6-alpha.6"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.6-alpha.6.tgz#079c9f6ee1e0efdc1487d841d24f765eb8c3ca40"
+  integrity sha512-7R51B1FIlXVolMoWa/WmDrpDvSqtrbZywIzOHq6NRbdvVSBCW3sD+biDIRXo9MFvNT9sLJXB21A4DLjfIYDpOA==
   dependencies:
-    "@budibase/backend-core" "2.5.6-alpha.5"
+    "@budibase/backend-core" "2.5.6-alpha.6"
     "@budibase/shared-core" "2.4.44-alpha.1"
     "@budibase/string-templates" "2.4.44-alpha.1"
-    "@budibase/types" "2.5.6-alpha.5"
+    "@budibase/types" "2.5.6-alpha.6"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -13142,10 +13142,10 @@ humanize-ms@^1.2.0, humanize-ms@^1.2.1:
   dependencies:
     ms "^2.0.0"
 
-husky@^7.0.1:
-  version "7.0.4"
-  resolved "https://registry.yarnpkg.com/husky/-/husky-7.0.4.tgz#242048245dc49c8fb1bf0cc7cfb98dd722531535"
-  integrity sha512-vbaCKN2QLtP/vD4yvs6iz6hBEo6wkSzs8HpRah1Z6aGmF2KW5PdYuAd7uX5a+OyBZHBhd+TFLqgjUgytQr4RvQ==
+husky@^8.0.3:
+  version "8.0.3"
+  resolved "https://registry.yarnpkg.com/husky/-/husky-8.0.3.tgz#4936d7212e46d1dea28fef29bb3a108872cd9184"
+  integrity sha512-+dQSyqPh4x1hlO1swXBiNb2HzTDN1I2IGLQx1GrBuiqFJfoMrnZWwVmatvSiO+Iz8fBUnf+lekwNo4c2LlXItg==
 
 iconv-lite@0.4.24, iconv-lite@^0.4.15, iconv-lite@^0.4.24, iconv-lite@^0.4.5:
   version "0.4.24"

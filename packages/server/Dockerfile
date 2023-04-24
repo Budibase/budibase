@@ -16,7 +16,8 @@ ENV TENANT_FEATURE_FLAGS=*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
 
 # copy files and install dependencies
-COPY . ./
+COPY package.json dist specs client build builder docker_run.sh pm2.config.js ./
+
 # handle node-gyp
 RUN apt-get update \
     && apt-get install -y --no-install-recommends g++ make python \
@@ -25,7 +26,7 @@ RUN apt-get update \
     && apt-get remove -y --purge --auto-remove g++ make python \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
 RUN yarn global add pm2
-RUN yarn build
+RUN yarn
 
 # Install client for oracle datasource
 RUN apt-get install unzip libaio1
