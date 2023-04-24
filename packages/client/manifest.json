@@ -4435,6 +4435,48 @@
                 "key": "row"
               }
             ]
+          },
+          {
+            "label": "Side panel fields",
+            "type": "fieldConfiguration",
+            "key": "sidePanelFields",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
+          },
+          {
+            "label": "Show side panel delete button",
+            "type": "boolean",
+            "key": "sidePanelShowDelete",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
+          },
+          {
+            "label": "Side panel save label",
+            "type": "text",
+            "key": "sidePanelSaveLabel",
+            "defaultValue": "Save",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
+          },
+          {
+            "label": "Side panel delete label",
+            "type": "text",
+            "key": "sidePanelDeleteLabel",
+            "defaultValue": "Delete",
+            "nested": true,
+            "dependsOn": {
+              "setting": "sidePanelShowDelete",
+              "value": true
+            }
           }
         ]
       },
@@ -4979,7 +5021,7 @@
         "name": "Fields",
         "settings": [
           {
-            "type": "multifield",
+            "type": "fieldConfiguration",
             "label": "Fields",
             "key": "fields",
             "selectAllFields": true
@@ -5017,6 +5059,20 @@
         "section": true,
         "name": "Buttons",
         "settings": [
+          {
+            "type": "text",
+            "key": "saveButtonLabel",
+            "label": "Save Button Label",
+            "nested": true,
+            "defaultValue": "Save"
+          },
+          {
+            "type": "text",
+            "key": "deleteButtonLabel",
+            "label": "Delete Button Label",
+            "nested": true,
+            "defaultValue": "Delete"
+          },
           {
             "type": "boolean",
             "label": "Show save button",
