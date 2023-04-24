@@ -1,4 +1,7 @@
 import {
+  AutomationCustomIOType,
+  AutomationIOType,
+  AutomationStepType,
   AutomationTriggerSchema,
   AutomationTriggerStepId,
 } from "@budibase/types"
@@ -15,8 +18,8 @@ export const definition: AutomationTriggerSchema = {
     inputs: {
       properties: {
         tableId: {
-          type: "string",
-          customType: "table",
+          type: AutomationIOType.STRING,
+          customType: AutomationCustomIOType.TABLE,
           title: "Table",
         },
       },
@@ -25,21 +28,21 @@ export const definition: AutomationTriggerSchema = {
     outputs: {
       properties: {
         row: {
-          type: "object",
-          customType: "row",
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.ROW,
           description: "The new row that was created",
         },
         id: {
-          type: "string",
+          type: AutomationIOType.STRING,
           description: "Row ID - can be used for updating",
         },
         revision: {
-          type: "string",
+          type: AutomationIOType.STRING,
           description: "Revision of row",
         },
       },
       required: ["row", "id"],
     },
   },
-  type: "TRIGGER",
+  type: AutomationStepType.TRIGGER,
 }

@@ -16,9 +16,15 @@ import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events } from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
 import { Automation, BBContext } from "@budibase/types"
+import { getActionDefinitions as actionDefs } from "../../automations/actions"
 
-const ACTION_DEFS = removeDeprecated(actions.ACTION_DEFINITIONS)
-const TRIGGER_DEFS = removeDeprecated(triggers.TRIGGER_DEFINITIONS)
+async function getActionDefinitions() {
+  return removeDeprecated(await actionDefs())
+}
+
+function getTriggerDefinitions() {
+  return removeDeprecated(triggers.TRIGGER_DEFINITIONS)
+}
 
 /*************************
  *                       *
@@ -228,17 +234,17 @@ export async function clearLogError(ctx: BBContext) {
 }
 
 export async function getActionList(ctx: BBContext) {
-  ctx.body = ACTION_DEFS
+  ctx.body = await getActionDefinitions()
 }
 
 export async function getTriggerList(ctx: BBContext) {
-  ctx.body = TRIGGER_DEFS
+  ctx.body = getTriggerDefinitions()
 }
 
 export async function getDefinitionList(ctx: BBContext) {
   ctx.body = {
-    trigger: TRIGGER_DEFS,
-    action: ACTION_DEFS,
+    trigger: getTriggerDefinitions(),
+    action: await getActionDefinitions(),
   }
 }
 

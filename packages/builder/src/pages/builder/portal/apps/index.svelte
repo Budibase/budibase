@@ -9,14 +9,11 @@
     notifications,
     Notification,
     Body,
-    Icon,
     Search,
-    InlineAlert,
   } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
@@ -33,11 +30,9 @@
   let appLimitModal
   let creatingApp = false
   let searchTerm = ""
-  let cloud = $admin.cloud
   let creatingFromTemplate = false
   let automationErrors
   let accessFilterList = null
-  let confirmDownloadDialog
 
   $: welcomeHeader = `Welcome ${$auth?.user?.firstName || "back"}`
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
@@ -120,15 +115,6 @@
       template = null
       creationModal.show()
       creatingApp = true
-    }
-  }
-
-  const initiateAppsExport = () => {
-    try {
-      window.location = `/api/cloud/export`
-      notifications.success("Apps exported successfully")
-    } catch (err) {
-      notifications.error(`Error exporting apps: ${err}`)
     }
   }
 
@@ -264,13 +250,6 @@
             </div>
             {#if enrichedApps.length > 1}
               <div class="app-actions">
-                {#if cloud}
-                  <Icon
-                    name="Download"
-                    hoverable
-                    on:click={confirmDownloadDialog.show}
-                  />
-                {/if}
                 <Select
                   autoWidth
                   bind:value={sortBy}
@@ -315,18 +294,6 @@
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />
-
-<ConfirmDialog
-  bind:this={confirmDownloadDialog}
-  okText="Continue"
-  onOk={initiateAppsExport}
-  warning={false}
-  title="Download all apps"
->
-  <InlineAlert
-    header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
-  />
-</ConfirmDialog>
 
 <style>
   .title {

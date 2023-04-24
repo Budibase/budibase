@@ -1,14 +1,5 @@
-import {
-  Feature,
-  Hosting,
-  License,
-  MonthlyQuotaName,
-  PlanType,
-  PriceDuration,
-  Quotas,
-  StaticQuotaName,
-} from "../../sdk"
-import { MonthlyUsage, QuotaUsage, StaticUsage } from "../global"
+import { Feature, Hosting, License, PlanType, Quotas } from "../../sdk"
+import { QuotaUsage } from "../global"
 
 export interface CreateAccount {
   email: string
@@ -49,6 +40,9 @@ export interface Account extends CreateAccount {
   planType?: PlanType
   planTier?: number
   license?: License
+  installId?: string
+  installTenantId?: string
+  installVersion?: string
   stripeCustomerId?: string
   licenseKey?: string
   licenseKeyActivatedAt?: number

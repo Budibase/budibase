@@ -11,6 +11,7 @@ import env from "../environment"
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
 import * as syncQuotas from "./functions/syncQuotas"
+import * as syncUsers from "./functions/usageQuotas/syncUsers"
 import * as appUrls from "./functions/appUrls"
 import * as tableSettings from "./functions/tableSettings"
 import * as backfill from "./functions/backfill"

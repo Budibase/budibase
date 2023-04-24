@@ -124,7 +124,7 @@
       label: "Navigation",
       control: Toggle,
       props: {
-        text: "Show navigation",
+        text: "Show nav",
         disabled: !!$selectedScreen.layoutId,
       },
     },

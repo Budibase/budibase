@@ -3662,6 +3662,12 @@
         "info": "Row selection is only compatible with internal or SQL tables"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No rows found"
+      },
+      {
         "section": true,
         "name": "On Row Click",
         "settings": [
@@ -4376,6 +4382,12 @@
             "nested": true
           },
           {
+            "type": "text",
+            "label": "Empty text",
+            "key": "noRowsMessage",
+            "defaultValue": "No rows found"
+          },
+          {
             "type": "searchfield",
             "label": "Search fields",
             "key": "searchColumns",
@@ -4462,10 +4474,8 @@
             ]
           },
           {
-            "label": "On click",
             "type": "event",
             "label": "On click",
-            "labelHidden": true,
             "key": "onClickTitleButton",
             "nested": true,
             "dependsOn": {
@@ -4533,6 +4543,12 @@
         "type": "boolean",
         "label": "Paginate",
         "key": "paginate"
+      },
+      {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No rows found"
       },
       {
         "section": true,
@@ -4948,6 +4964,17 @@
         "defaultValue": "spectrum--medium"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "We couldn't find a row to display",
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "Create",
+          "invert": true
+        }
+      },
+      {
         "section": true,
         "name": "Fields",
         "settings": [
@@ -5067,6 +5094,12 @@
         "defaultValue": "426px"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No data"
+      },
+      {
         "section": true,
         "name": "Cards",
         "settings": [
@@ -5128,5 +5161,36 @@
       "type": "schema",
       "suffix": "repeater"
     }
+  },
+  "spreadsheet": {
+    "name": "Spreadsheet",
+    "icon": "ViewGrid",
+    "settings": [
+      {
+        "key": "table",
+        "type": "table",
+        "label": "Table"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
+        "defaultValue": "Ascending"
+      }
+    ]
   }
 }
