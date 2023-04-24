@@ -138,7 +138,7 @@
   }
 </script>
 
-<div class="container">
+<div class="container" class:compact>
   {#if selectedImage}
     {#if gallery}
       <div class="gallery">
@@ -355,6 +355,9 @@
   input[type="file"] {
     display: none;
   }
+  .compact .spectrum-Dropzone {
+    padding: 6px 0 !important;
+  }
 
   .gallery {
     display: flex;
@@ -378,6 +381,17 @@
     max-width: 100%;
     object-fit: contain;
     margin: 20px 30px;
+  }
+  .compact .placeholder,
+  .compact img {
+    margin: 10px 16px;
+  }
+  .compact img {
+    height: 90px;
+  }
+  .compact .gallery {
+    padding: 6px 10px;
+    margin-bottom: 8px;
   }
   .title {
     display: flex;
@@ -446,6 +460,13 @@
   }
   .disabled .spectrum-Heading--sizeL {
     color: var(--spectrum-alias-text-color-disabled);
+  }
+  .compact .spectrum-Dropzone {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .compact .spectrum-IllustratedMessage-description {
+    margin: 0;
   }
 
   .tags {

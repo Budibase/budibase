@@ -32,7 +32,7 @@ async function createInstallDoc(platformDb: Database) {
   }
 }
 
-const getInstallFromDB = async (): Promise<Installation> => {
+export const getInstallFromDB = async (): Promise<Installation> => {
   return doWithDB(
     StaticDatabases.PLATFORM_INFO.name,
     async (platformDb: any) => {

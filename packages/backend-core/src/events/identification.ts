@@ -63,6 +63,7 @@ const getCurrentIdentity = async (): Promise<Identity> => {
       hosting,
       installationId,
       tenantId,
+      realTenantId: context.getTenantId(),
       environment,
     }
   } else if (identityType === IdentityType.USER) {
@@ -303,4 +304,5 @@ export default {
   identify,
   identifyGroup,
   getInstallationId,
+  getUniqueTenantId,
 }

@@ -22,15 +22,19 @@ export interface BulkUserRequest {
   }
 }
 
+export interface BulkUserCreated {
+  successful: UserDetails[]
+  unsuccessful: { email: string; reason: string }[]
+}
+
+export interface BulkUserDeleted {
+  successful: UserDetails[]
+  unsuccessful: { _id: string; email: string; reason: string }[]
+}
+
 export interface BulkUserResponse {
-  created?: {
-    successful: UserDetails[]
-    unsuccessful: { email: string; reason: string }[]
-  }
-  deleted?: {
-    successful: UserDetails[]
-    unsuccessful: { _id: string; email: string; reason: string }[]
-  }
+  created?: BulkUserCreated
+  deleted?: BulkUserDeleted
   message?: string
 }
 

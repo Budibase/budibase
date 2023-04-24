@@ -110,21 +110,28 @@ export function importToRows(
   table: Table,
   user: ContextUser | null = null
 ) {
+  let originalTable = table
   let finalData: any = []
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
     row._id = generateRowID(table._id!)
     row.tableId = table._id
+
+    // We use a reference to table here and update it after input processing,
+    // so that we can auto increment auto IDs in imported data properly
     const processed = inputProcessing(user, table, row, {
       noAutoRelationships: true,
     })
     row = processed.row
     table = processed.table
 
-    for (const [fieldName, schema] of Object.entries(table.schema)) {
-      // check whether the options need to be updated for inclusion as part of the data import
+    // However here we must reference the original table, as we want to mutate
+    // the real schema of the table passed in, not the clone used for
+    // incrementing auto IDs
+    for (const [fieldName, schema] of Object.entries(originalTable.schema)) {
       if (
-        schema.type === FieldTypes.OPTIONS &&
+        (schema.type === FieldTypes.OPTIONS ||
+          schema.type === FieldTypes.ARRAY) &&
         row[fieldName] &&
         (!schema.constraints!.inclusion ||
           schema.constraints!.inclusion.indexOf(row[fieldName]) === -1)

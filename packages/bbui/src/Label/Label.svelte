@@ -9,6 +9,7 @@
 
 <TooltipWrapper {tooltip} {size}>
   <label
+    data-testid="label"
     class:muted
     for=""
     class={`spectrum-FieldLabel spectrum-FieldLabel--size${size}`}

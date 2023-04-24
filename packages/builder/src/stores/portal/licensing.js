@@ -4,6 +4,9 @@ import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "components/portal/licensing/constants"
 import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
+import dayjs from "dayjs"
+
+const UNLIMITED = -1
 
 export const createLicensingStore = () => {
   const DEFAULT = {
@@ -31,17 +34,37 @@ export const createLicensingStore = () => {
     pastDueEndDate: undefined,
     pastDueDaysRemaining: undefined,
     accountDowngraded: undefined,
+    // user limits
+    userCount: undefined,
+    userLimit: undefined,
+    userLimitDays: undefined,
+    userLimitReached: false,
+    warnUserLimit: false,
   }
+
   const oneDayInMilliseconds = 86400000
 
   const store = writable(DEFAULT)
+
+  function willReachUserLimit(userCount, userLimit) {
+    if (userLimit === UNLIMITED) {
+      return false
+    }
+    return userCount >= userLimit
+  }
+
+  function willExceedUserLimit(userCount, userLimit) {
+    if (userLimit === UNLIMITED) {
+      return false
+    }
+    return userCount > userLimit
+  }
 
   const actions = {
     init: async () => {
       actions.setNavigation()
       actions.setLicense()
       await actions.setQuotaUsage()
-      actions.setUsageMetrics()
     },
     setNavigation: () => {
       const upgradeUrl = `${get(admin).accountPortalUrl}/portal/upgrade`
@@ -105,10 +128,17 @@ export const createLicensingStore = () => {
           quotaUsage,
         }
       })
+      actions.setUsageMetrics()
+    },
+    willReachUserLimit: userCount => {
+      return willReachUserLimit(userCount, get(store).userLimit)
+    },
+    willExceedUserLimit(userCount) {
+      return willExceedUserLimit(userCount, get(store).userLimit)
     },
     setUsageMetrics: () => {
       if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
-        const quota = get(store).quotaUsage
+        const usage = get(store).quotaUsage
         const license = get(auth).user.license
         const now = new Date()
 
@@ -126,12 +156,12 @@ export const createLicensingStore = () => {
         const monthlyMetrics = getMetrics(
           ["dayPasses", "queries", "automations"],
           license.quotas.usage.monthly,
-          quota.monthly.current
+          usage.monthly.current
         )
         const staticMetrics = getMetrics(
           ["apps", "rows"],
           license.quotas.usage.static,
-          quota.usageQuota
+          usage.usageQuota
         )
 
         const getDaysBetween = (dateStart, dateEnd) => {
@@ -142,7 +172,7 @@ export const createLicensingStore = () => {
             : 0
         }
 
-        const quotaResetDate = new Date(quota.quotaReset)
+        const quotaResetDate = new Date(usage.quotaReset)
         const quotaResetDaysRemaining = getDaysBetween(now, quotaResetDate)
 
         const accountDowngraded =
@@ -165,6 +195,15 @@ export const createLicensingStore = () => {
           )
         }
 
+        const userQuota = license.quotas.usage.static.users
+        const userLimit = userQuota?.value
+        const userCount = usage.usageQuota.users
+        const userLimitReached = willReachUserLimit(userCount, userLimit)
+        const userLimitExceeded = willExceedUserLimit(userCount, userLimit)
+        const days = dayjs(userQuota?.startDate).diff(dayjs(), "day")
+        const userLimitDays = days > 1 ? `${days} days` : "1 day"
+        const warnUserLimit = userQuota?.startDate && userLimitExceeded
+
         store.update(state => {
           return {
             ...state,
@@ -175,6 +214,12 @@ export const createLicensingStore = () => {
             accountPastDue: pastDueAtMilliseconds != null,
             pastDueEndDate,
             pastDueDaysRemaining,
+            // user limits
+            userCount,
+            userLimit,
+            userLimitDays,
+            userLimitReached,
+            warnUserLimit,
           }
         })
       }

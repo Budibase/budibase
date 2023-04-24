@@ -6,6 +6,7 @@ import { default as datasources } from "./app/datasources"
 import { default as queries } from "./app/queries"
 import { default as rows } from "./app/rows"
 import { default as users } from "./users"
+import { default as plugins } from "./plugins"
 
 const sdk = {
   backups,
@@ -16,6 +17,7 @@ const sdk = {
   users,
   datasources,
   queries,
+  plugins,
 }
 
 // default export for TS
