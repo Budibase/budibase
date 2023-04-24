@@ -115,6 +115,7 @@
     flex-direction: column;
     position: relative;
     z-index: 2;
+    background: var(--cell-background);
   }
 
   /* Add right border */
