@@ -145,20 +145,6 @@ export const initialise = context => {
     lastFocusedRowId = id
   })
 
-  // Reset selected rows when selected cell changes
-  // focusedCellId.subscribe(id => {
-  //   if (id) {
-  //     selectedRows.set({})
-  //   }
-  // })
-
-  // Unset selected cell when rows are selected
-  // selectedRows.subscribe(rows => {
-  //   if (Object.keys(rows || {}).length) {
-  //     focusedCellId.set(null)
-  //   }
-  // })
-
   // Remove hovered row when a cell is selected
   focusedCellId.subscribe(cell => {
     if (cell && get(hoveredRowId)) {
