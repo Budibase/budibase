@@ -101,6 +101,7 @@
   style="flex: 0 0 {column.width}px;"
   bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
+  class:sticky={idx === "sticky"}
 >
   <GridCell
     on:mousedown={onMouseDown}
@@ -193,6 +194,10 @@
 <style>
   .header-cell {
     display: flex;
+  }
+  .header-cell:not(.sticky):hover,
+  .header-cell:not(.sticky) :global(.cell:hover) {
+    cursor: grab;
   }
   .header-cell.disabled {
     pointer-events: none;
