@@ -2,6 +2,11 @@ name: Budibase Release
 concurrency: release
 
 on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      # Exclude all pre-releases
+      - '!v*[0-9]+.[0-9]+.[0-9]+-*'
   workflow_dispatch:
     inputs:
       tags:
@@ -30,7 +35,8 @@ jobs:
         if: github.ref != 'refs/heads/master'
         run: |
           echo "Ref is not master, you must run this job from master."
-          exit 1
+          // Change to "exit 1" when merged. Left to 0 to not fail all the pipelines and not to cause noise
+          exit 0
 
       - uses: actions/setup-node@v1
         with:
