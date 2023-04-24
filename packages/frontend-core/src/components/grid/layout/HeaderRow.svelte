@@ -2,8 +2,17 @@
   import { getContext } from "svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import HeaderCell from "../cells/HeaderCell.svelte"
+  import { Icon } from "@budibase/bbui"
 
-  const { renderedColumns } = getContext("grid")
+  const { renderedColumns, dispatch, scroll, hiddenColumnsWidth, width } =
+    getContext("grid")
+
+  $: columnsWidth = $renderedColumns.reduce(
+    (total, col) => (total += col.width),
+    0
+  )
+  $: end = $hiddenColumnsWidth + columnsWidth - 1 - $scroll.left
+  $: left = Math.min($width - 40, end)
 </script>
 
 <div class="header">
@@ -14,6 +23,13 @@
       {/each}
     </div>
   </GridScrollWrapper>
+  <div
+    class="add"
+    style="left:{left}px"
+    on:click={() => dispatch("add-column")}
+  >
+    <Icon name="Add" />
+  </div>
 </div>
 
 <style>
@@ -26,5 +42,20 @@
   }
   .row {
     display: flex;
+  }
+  .add {
+    height: var(--default-row-height);
+    display: grid;
+    place-items: center;
+    width: 40px;
+    position: absolute;
+    top: 0;
+    border-left: var(--cell-border);
+    border-right: var(--cell-border);
+    background: var(--spectrum-global-color-gray-100);
+  }
+  .add:hover {
+    background: var(--spectrum-global-color-gray-200);
+    cursor: pointer;
   }
 </style>
