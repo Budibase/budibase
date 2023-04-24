@@ -48,7 +48,7 @@
     selected={open || anyHidden}
     disabled={!$columns.length}
   >
-    Hide columns
+    Columns
   </ActionButton>
 </div>
 
