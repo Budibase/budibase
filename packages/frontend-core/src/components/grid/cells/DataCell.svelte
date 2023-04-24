@@ -50,6 +50,7 @@
   const cellAPI = {
     focus: () => api?.focus(),
     blur: () => api?.blur(),
+    isActive: () => api?.isActive?.() ?? false,
     onKeyDown: (...params) => api?.onKeyDown(...params),
     isReadonly: () => readonly,
     getType: () => column.schema.type,
@@ -67,6 +68,7 @@
   {rowIdx}
   {focused}
   {selectedUser}
+  {readonly}
   error={$error}
   on:click={() => focusedCellId.set(cellId)}
   on:contextmenu={e => menu.actions.open(cellId, e)}

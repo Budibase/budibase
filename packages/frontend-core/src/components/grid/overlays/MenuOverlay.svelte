@@ -13,6 +13,7 @@
     copiedCell,
     clipboard,
     dispatch,
+    focusedCellAPI,
   } = getContext("grid")
 
   $: style = makeStyle($menu)
@@ -49,7 +50,7 @@
       </MenuItem>
       <MenuItem
         icon="Paste"
-        disabled={$copiedCell == null}
+        disabled={$copiedCell == null || $focusedCellAPI?.isReadonly()}
         on:click={clipboard.actions.paste}
         on:click={menu.actions.close}
       >

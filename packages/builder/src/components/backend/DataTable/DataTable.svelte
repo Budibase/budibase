@@ -42,13 +42,14 @@
         <GridCreateViewButton />
       {/if}
       <GridManageAccessButton />
-      {#if isUsersTable}
-        <EditRolesButton />
-      {/if}
       {#if !isInternal}
         <GridRelationshipButton />
       {/if}
-      <GridImportButton disabled={isUsersTable} />
+      {#if isUsersTable}
+        <EditRolesButton />
+      {:else}
+        <GridImportButton />
+      {/if}
       <GridExportButton />
       <GridFilterButton />
       <GridAddColumnModal />
