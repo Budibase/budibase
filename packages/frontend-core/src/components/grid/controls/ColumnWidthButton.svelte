@@ -52,13 +52,13 @@
 
 <div bind:this={anchor}>
   <ActionButton
-    icon="ViewColumn"
+    icon="MoveLeftRight"
     quiet
     size="M"
     on:click={() => (open = !open)}
     selected={open}
   >
-    Column width
+    Width
   </ActionButton>
 </div>
 

@@ -1,11 +1,12 @@
 <script>
   import { getContext } from "svelte"
-  import { Checkbox, Icon } from "@budibase/bbui"
+  import { Icon } from "@budibase/bbui"
   import GridCell from "../cells/GridCell.svelte"
   import DataCell from "../cells/DataCell.svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import HeaderCell from "../cells/HeaderCell.svelte"
-  import { GutterWidth } from "../lib/constants"
+  import { GutterWidth, BlankRowID } from "../lib/constants"
+  import GutterCell from "../cells/GutterCell.svelte"
 
   const {
     rows,
@@ -17,8 +18,8 @@
     config,
     selectedCellMap,
     focusedRow,
-    dispatch,
     scrollLeft,
+    dispatch,
   } = getContext("grid")
 
   $: rowCount = $rows.length
@@ -37,19 +38,6 @@
       $selectedRows = allRows
     }
   }
-
-  const selectRow = id => {
-    selectedRows.update(state => {
-      let newState = {
-        ...state,
-        [id]: !state[id],
-      }
-      if (!newState[id]) {
-        delete newState[id]
-      }
-      return newState
-    })
-  }
 </script>
 
 <div
@@ -58,26 +46,7 @@
   class:scrolled={$scrollLeft > 0}
 >
   <div class="header row">
-    <GridCell width={GutterWidth} defaultHeight center>
-      <div class="gutter">
-        <div class="checkbox visible">
-          {#if $config.allowDeleteRows}
-            <div on:click={selectAll}>
-              <Checkbox
-                value={rowCount && selectedRowCount === rowCount}
-                disabled={!$renderedRows.length}
-              />
-            </div>
-          {/if}
-        </div>
-        {#if $config.allowExpandRows}
-          <div class="expand">
-            <Icon name="Maximize" size="S" />
-          </div>
-        {/if}
-      </div>
-    </GridCell>
-
+    <GutterCell disableExpand disableNumber on:select={selectAll} />
     {#if $stickyColumn}
       <HeaderCell column={$stickyColumn} orderable={false} idx="sticky" />
     {/if}
@@ -95,41 +64,7 @@
           on:mouseenter={() => ($hoveredRowId = row._id)}
           on:mouseleave={() => ($hoveredRowId = null)}
         >
-          <GridCell
-            width={GutterWidth}
-            highlighted={rowFocused || rowHovered}
-            selected={rowSelected}
-          >
-            <div class="gutter">
-              <div
-                on:click={() => selectRow(row._id)}
-                class="checkbox"
-                class:visible={$config.allowDeleteRows &&
-                  (rowSelected || rowHovered || rowFocused)}
-              >
-                <Checkbox value={rowSelected} />
-              </div>
-              <div
-                class="number"
-                class:visible={!$config.allowDeleteRows ||
-                  !(rowSelected || rowHovered || rowFocused)}
-              >
-                {row.__idx + 1}
-              </div>
-              {#if $config.allowExpandRows}
-                <div class="expand" class:visible={rowFocused || rowHovered}>
-                  <Icon
-                    name="Maximize"
-                    hoverable
-                    size="S"
-                    on:click={() => {
-                      dispatch("edit-row", row)
-                    }}
-                  />
-                </div>
-              {/if}
-            </div>
-          </GridCell>
+          <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
           {#if $stickyColumn}
             <DataCell
               {row}
@@ -146,6 +81,24 @@
           {/if}
         </div>
       {/each}
+      {#if $config.allowAddRows}
+        <div
+          class="row new"
+          on:mouseenter={() => ($hoveredRowId = BlankRowID)}
+          on:mouseleave={() => ($hoveredRowId = null)}
+          on:click={() => dispatch("add-row-inline", true)}
+        >
+          <GutterCell disableExpand rowHovered={$hoveredRowId === BlankRowID}>
+            <Icon name="Add" />
+          </GutterCell>
+          {#if $stickyColumn}
+            <GridCell
+              width={$stickyColumn.width}
+              highlighted={$hoveredRowId === BlankRowID}
+            />
+          {/if}
+        </div>
+      {/if}
     </GridScrollWrapper>
   </div>
 </div>
@@ -203,43 +156,7 @@
     position: relative;
     flex: 1 1 auto;
   }
-
-  /* Styles for gutter */
-  .gutter {
-    flex: 1 1 auto;
-    display: grid;
-    align-items: center;
-    padding: var(--cell-padding);
-    grid-template-columns: 1fr auto;
-    gap: var(--cell-spacing);
-  }
-  .checkbox,
-  .number {
-    display: none;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-  }
-  .checkbox :global(.spectrum-Checkbox) {
-    min-height: 0;
-    height: 20px;
-  }
-  .checkbox :global(.spectrum-Checkbox-box) {
-    margin: 3px 0 0 0;
-  }
-  .number {
-    color: var(--spectrum-global-color-gray-500);
-  }
-  .checkbox.visible,
-  .number.visible {
-    display: flex;
-  }
-  .expand {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .expand.visible {
-    opacity: 1;
-    pointer-events: all;
+  .row.new :global(*:hover) {
+    cursor: pointer;
   }
 </style>

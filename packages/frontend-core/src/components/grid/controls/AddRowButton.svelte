@@ -14,5 +14,5 @@
     !$config.allowAddRows ||
     (!$columns.length && !$stickyColumn)}
 >
-  Create row
+  Add row
 </ActionButton>

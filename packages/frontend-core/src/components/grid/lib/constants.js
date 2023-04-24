@@ -10,3 +10,4 @@ export const MediumRowHeight = 64
 export const LargeRowHeight = 92
 export const DefaultRowHeight = SmallRowHeight
 export const NewRowID = "new"
+export const BlankRowID = "blank"

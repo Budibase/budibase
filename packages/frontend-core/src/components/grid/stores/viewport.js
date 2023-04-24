@@ -75,6 +75,8 @@ export const deriveStores = context => {
         leftEdge += $visibleColumns[endColIdx].width
         endColIdx++
       }
+      // Render an additional column on either side to account for
+      // debounce column updates based on scroll position
       const next = $visibleColumns.slice(
         Math.max(0, startColIdx - 1),
         endColIdx + 1
