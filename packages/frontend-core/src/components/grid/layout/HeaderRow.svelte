@@ -52,6 +52,7 @@
     top: 0;
     border-left: var(--cell-border);
     border-right: var(--cell-border);
+    border-bottom: var(--cell-border);
     background: var(--spectrum-global-color-gray-100);
   }
   .add:hover {
