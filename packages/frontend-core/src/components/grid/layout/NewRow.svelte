@@ -141,7 +141,7 @@
       style="flex: 0 0 {width}px"
     >
       <GutterCell on:expand={addViaModal} rowHovered>
-        <Icon name="Add" />
+        <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
       </GutterCell>
       {#if $stickyColumn}
         {@const cellId = `new-${$stickyColumn.name}`}
