@@ -130,11 +130,11 @@
           <HeaderRow />
           <GridBody />
         </div>
+        <BetaButton />
         <NewRow />
         <div class="overlays">
           <ResizeOverlay />
           <ReorderOverlay />
-          <BetaButton />
           <ScrollOverlay />
           <MenuOverlay />
         </div>
