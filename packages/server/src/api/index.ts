@@ -3,8 +3,6 @@ import { auth, middleware, env as envCore } from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
 import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
-import env from "../environment"
-import pkg from "../../package.json"
 import { middleware as pro } from "@budibase/pro"
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
