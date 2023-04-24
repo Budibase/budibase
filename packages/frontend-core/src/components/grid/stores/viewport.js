@@ -45,11 +45,16 @@ export const deriveStores = context => {
   )
 
   // Derive visible columns
+  const scrollLeftRounded = derived(scrollLeft, $scrollLeft => {
+    const interval = 50
+    return Math.round($scrollLeft / interval) * interval
+  })
   const renderedColumns = derived(
-    [visibleColumns, scrollLeft, width],
-    ([$visibleColumns, $scrollLeft, $width]) => {
+    [visibleColumns, scrollLeftRounded, width],
+    ([$visibleColumns, $scrollLeft, $width], set) => {
       if (!$visibleColumns.length) {
-        return []
+        set([])
+        return
       }
       let startColIdx = 0
       let rightEdge = $visibleColumns[0].width
@@ -69,16 +74,14 @@ export const deriveStores = context => {
         leftEdge += $visibleColumns[endColIdx].width
         endColIdx++
       }
-      const nextRenderedColumns = $visibleColumns.slice(startColIdx, endColIdx)
+      const next = $visibleColumns.slice(startColIdx, endColIdx)
 
-      // Cautiously shrink the number of rendered columns.
-      // This is to avoid rapidly shrinking and growing the visible column count
-      // which results in remounting cells
-      const currentCount = get(renderedColumns).length
-      if (currentCount === nextRenderedColumns.length + 1) {
-        return $visibleColumns.slice(startColIdx, endColIdx + 1)
-      } else {
-        return nextRenderedColumns
+      // Only update if the column selection is actually different
+      const current = get(renderedColumns)
+      const currentKey = current.map(col => col.width).join("-")
+      const nextKey = next.map(col => col.width).join("-")
+      if (currentKey !== nextKey) {
+        set(next)
       }
     },
     []
