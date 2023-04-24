@@ -25,6 +25,10 @@
       } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault()
         dispatch("add-row-inline")
+      } else if (e.key === "Delete" || e.key === "Backspace") {
+        if (Object.keys($selectedRows).length) {
+          dispatch("request-bulk-delete")
+        }
       }
       return
     }
