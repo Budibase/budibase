@@ -7,6 +7,7 @@
   import { fade } from "svelte/transition"
   import { GutterWidth } from "../lib/constants"
   import { NewRowID } from "../lib/constants"
+  import GutterCell from "../cells/GutterCell.svelte"
 
   const {
     hoveredRowId,
@@ -116,16 +117,9 @@
       transition:fade={{ duration: 130 }}
       style="flex: 0 0 {width}px"
     >
-      <GridCell width={GutterWidth} rowFocused>
-        <div class="gutter">
-          <div class="number">
-            <Icon name="Add" />
-          </div>
-          {#if $config.allowExpandRows}
-            <Icon name="Maximize" size="S" hoverable on:click={addViaModal} />
-          {/if}
-        </div>
-      </GridCell>
+      <GutterCell on:expand={addViaModal} rowHovered>
+        <Icon name="Add" />
+      </GutterCell>
       {#if $stickyColumn}
         {@const cellId = `new-${$stickyColumn.name}`}
         <DataCell
@@ -178,7 +172,7 @@
     align-items: stretch;
   }
   .container :global(.cell) {
-    --cell-background: var(--spectrum-global-color-gray-75);
+    --cell-background: var(--spectrum-global-color-gray-75) !important;
   }
 
   /* Underlay sits behind everything */
