@@ -4,6 +4,7 @@
 
   export let wide = false
   export let narrow = false
+  export let narrower = false
   export let noPadding = false
 
   let sidePanelVisble = false
@@ -16,7 +17,7 @@
 
 <div class="page">
   <div class="main">
-    <div class="content" class:wide class:noPadding class:narrow>
+    <div class="content" class:wide class:noPadding class:narrow class:narrower>
       <slot />
       <div class="fix-scroll-padding" />
     </div>
@@ -69,6 +70,9 @@
   }
   .content.narrow {
     max-width: 840px;
+  }
+  .content.narrower {
+    max-width: 700px;
   }
   #side-panel {
     position: absolute;
