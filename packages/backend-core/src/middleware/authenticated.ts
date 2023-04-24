@@ -44,7 +44,7 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
   // check both the primary and the fallback internal api keys
   // this allows for rotation
   if (isValidInternalAPIKey(apiKey)) {
-    return { valid: true }
+    return { valid: true, user: undefined }
   }
   const decrypted = decrypt(apiKey)
   const tenantId = decrypted.split(SEPARATOR)[0]
