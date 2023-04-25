@@ -5,12 +5,12 @@ import {
 } from "@budibase/frontend-core"
 import { store } from "./builderStore"
 import { get } from "svelte/store"
-import { auth, overview } from "./stores/portal"
+import { auth } from "./stores/portal"
 
 export const API = createAPIClient({
   attachHeaders: headers => {
     // Attach app ID header from store
-    let appId = get(store).appId || get(overview).selectedAppId
+    let appId = get(store).appId
     if (appId) {
       headers["x-budibase-app-id"] = appId
     }
