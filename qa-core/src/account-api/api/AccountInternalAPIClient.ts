@@ -46,7 +46,7 @@ export default class AccountInternalAPIClient {
       if (options.internal) {
         requestOptions.headers = {
           ...requestOptions.headers,
-          ...{ "x-budibase-api-key":  env.ACCOUNT_PORTAL_API_KEY }
+          ...{ "x-budibase-api-key": env.ACCOUNT_PORTAL_API_KEY },
         }
       }
 
@@ -63,7 +63,7 @@ export default class AccountInternalAPIClient {
 
       const data = {
         request: requestOptions.body,
-        response: body
+        response: body,
       }
       const message = `${method} ${url} - ${response.status}`
 

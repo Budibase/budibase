@@ -27,7 +27,7 @@ async function createAccount() {
   return account
 }
 
-const UNLIMITED =  { value: -1 }
+const UNLIMITED = { value: -1 }
 
 async function updateLicense(accountId: string) {
   await accountsApi.licenses.updateLicense(accountId, {
@@ -37,17 +37,17 @@ async function updateLicense(accountId: string) {
       quotas: {
         usage: {
           monthly: {
-            automations: UNLIMITED
+            automations: UNLIMITED,
           },
           static: {
             rows: UNLIMITED,
             users: UNLIMITED,
             userGroups: UNLIMITED,
-            plugins: UNLIMITED
-          }
-        }
-      }
-    }
+            plugins: UNLIMITED,
+          },
+        },
+      },
+    },
   })
 }
 

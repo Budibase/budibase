@@ -1,5 +1,5 @@
 import AccountInternalAPIClient from "../AccountInternalAPIClient"
-import { Account,  UpdateLicenseRequest } from "@budibase/types"
+import { Account, UpdateLicenseRequest } from "@budibase/types"
 import { Response } from "node-fetch"
 
 export default class LicenseAPI {
@@ -9,11 +9,17 @@ export default class LicenseAPI {
     this.client = client
   }
 
-  async updateLicense(accountId: string, body: UpdateLicenseRequest): Promise<[Response, Account]> {
-    const [response, json] = await this.client.put(`/api/accounts/${accountId}/license`, {
-      body,
-      internal: true
-    })
+  async updateLicense(
+    accountId: string,
+    body: UpdateLicenseRequest
+  ): Promise<[Response, Account]> {
+    const [response, json] = await this.client.put(
+      `/api/accounts/${accountId}/license`,
+      {
+        body,
+        internal: true,
+      }
+    )
     return [response, json]
   }
 }

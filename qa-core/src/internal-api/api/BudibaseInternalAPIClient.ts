@@ -54,7 +54,7 @@ class BudibaseInternalAPIClient {
 
       const data = {
         request: requestOptions.body,
-        response: body
+        response: body,
       }
       const message = `${method} ${url} - ${response.status}`
 
