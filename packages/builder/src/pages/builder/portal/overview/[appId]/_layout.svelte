@@ -33,7 +33,7 @@
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
 
-  // Keep URL and state in sync for selected screen ID
+  // Keep URL and state in sync for selected app ID
   const stopSyncing = syncURLToState({
     urlParam: "appId",
     stateKey: "selectedAppId",
@@ -111,6 +111,10 @@
   onDestroy(() => {
     stopSyncing()
     store.actions.reset()
+    overview.update(state => ({
+      ...state,
+      selectedAppId: null,
+    }))
   })
 </script>
 
