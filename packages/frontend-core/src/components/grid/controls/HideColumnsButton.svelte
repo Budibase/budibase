@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover, Toggle } from "@budibase/bbui"
 
-  const { columns } = getContext("grid")
+  const { columns, stickyColumn } = getContext("grid")
 
   let open = false
   let anchor
@@ -55,6 +55,10 @@
 <Popover bind:open {anchor} align="left">
   <div class="content">
     <div class="columns">
+      {#if $stickyColumn}
+        <Toggle disabled size="S" value={true} />
+        <span>{$stickyColumn.name}</span>
+      {/if}
       {#each $columns as column}
         <Toggle
           size="S"
