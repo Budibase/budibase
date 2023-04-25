@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover, Select } from "@budibase/bbui"
 
-  const { sort, visibleColumns, stickyColumn } = getContext("grid")
+  const { sort, columns, stickyColumn } = getContext("grid")
   const orderOptions = [
     { label: "A-Z", value: "ascending" },
     { label: "Z-A", value: "descending" },
@@ -11,15 +11,24 @@
   let open = false
   let anchor
 
-  $: columnOptions = getColumnOptions($stickyColumn, $visibleColumns)
-  $: checkValidSortColumn($sort.column, $stickyColumn, $visibleColumns)
+  $: columnOptions = getColumnOptions($stickyColumn, $columns)
+  $: checkValidSortColumn($sort.column, $stickyColumn, $columns)
 
   const getColumnOptions = (stickyColumn, columns) => {
     let options = []
     if (stickyColumn) {
-      options.push(stickyColumn.name)
+      options.push({
+        label: stickyColumn.label || stickyColumn.name,
+        value: stickyColumn.name,
+      })
     }
-    return [...options, ...columns.map(col => col.name)]
+    return [
+      ...options,
+      ...columns.map(col => ({
+        label: col.label || col.name,
+        value: col.name,
+      })),
+    ]
   }
 
   const updateSortColumn = e => {
@@ -37,13 +46,13 @@
   }
 
   // Ensure we never have a sort column selected that is not visible
-  const checkValidSortColumn = (sortColumn, stickyColumn, visibleColumns) => {
+  const checkValidSortColumn = (sortColumn, stickyColumn, columns) => {
     if (!sortColumn) {
       return
     }
     if (
       sortColumn !== stickyColumn?.name &&
-      !visibleColumns.some(col => col.name === sortColumn)
+      !columns.some(col => col.name === sortColumn)
     ) {
       if (stickyColumn) {
         sort.update(state => ({
@@ -53,7 +62,7 @@
       } else {
         sort.update(state => ({
           ...state,
-          column: visibleColumns[0]?.name,
+          column: columns[0]?.name,
         }))
       }
     }
@@ -66,7 +75,7 @@
     quiet
     size="M"
     on:click={() => (open = !open)}
-    selected={open || $sort.column}
+    selected={open}
     disabled={!columnOptions.length}
   >
     Sort

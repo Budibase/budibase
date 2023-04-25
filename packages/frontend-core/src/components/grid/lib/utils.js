@@ -15,7 +15,7 @@ const TypeIconMap = {
   number: "123",
   boolean: "Boolean",
   attachment: "AppleFiles",
-  link: "Link",
+  link: "DataCorrelated",
   formula: "Calculator",
   json: "Brackets",
 }

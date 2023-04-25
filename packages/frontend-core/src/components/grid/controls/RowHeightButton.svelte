@@ -36,13 +36,13 @@
 
 <div bind:this={anchor}>
   <ActionButton
-    icon="LineHeight"
+    icon="MoveUpDown"
     quiet
     size="M"
     on:click={() => (open = !open)}
     selected={open}
   >
-    Row height
+    Height
   </ActionButton>
 </div>
 

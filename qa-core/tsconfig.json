@@ -22,6 +22,10 @@
   "ts-node": {
     "require": ["tsconfig-paths/register"]
   },
-  "include": ["src/**/*", "package.json"],
+  "references": [
+    { "path": "../packages/types" },
+    { "path": "../packages/backend-core" }
+  ],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
