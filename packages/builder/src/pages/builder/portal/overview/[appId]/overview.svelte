@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte"
   import DashCard from "components/common/DashCard.svelte"
   import { AppStatus } from "constants"
   import { goto } from "@roxi/routify"
