@@ -1,13 +1,18 @@
 <script>
   import CreateEditRow from "../../modals/CreateEditRow.svelte"
   import { getContext, onMount } from "svelte"
-  import { Modal } from "@budibase/bbui"
+  import { Modal, notifications } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
 
   const { subscribe, rows } = getContext("grid")
 
   let modal
   let row
+
+  const deleteRow = e => {
+    rows.actions.deleteRows([e.detail])
+    notifications.success("Deleted 1 row")
+  }
 
   onMount(() =>
     subscribe("add-row", () => {
@@ -24,5 +29,9 @@
 </script>
 
 <Modal bind:this={modal}>
-  <CreateEditRow {row} on:updaterows={e => rows.actions.refreshRow(e.detail)} />
+  <CreateEditRow
+    {row}
+    on:updaterows={e => rows.actions.refreshRow(e.detail)}
+    on:deleteRows={deleteRow}
+  />
 </Modal>
