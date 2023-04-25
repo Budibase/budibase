@@ -19,6 +19,7 @@
   export let updateValue = rows.actions.updateValue
   export let invertX = false
   export let invertY = false
+  export let contentLines = 1
 
   const emptyError = writable(null)
 
@@ -84,5 +85,6 @@
     {readonly}
     {invertY}
     {invertX}
+    {contentLines}
   />
 </GridCell>
