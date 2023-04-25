@@ -11,7 +11,7 @@
 </script>
 
 <ActionButton {disabled} icon="CollectionAdd" quiet on:click={modal.show}>
-  Create view
+  Add view
 </ActionButton>
 <Modal bind:this={modal}>
   <CreateViewModal />

@@ -4,7 +4,6 @@ import { EventProcessor } from "../types"
 import env from "../../../environment"
 import * as context from "../../../context"
 import * as rateLimiting from "./rateLimiting"
-const pkg = require("../../../../package.json")
 
 const EXCLUDED_EVENTS: Event[] = [
   Event.USER_UPDATED,
@@ -49,7 +48,7 @@ export default class PosthogProcessor implements EventProcessor {
 
     properties = this.clearPIIProperties(properties)
 
-    properties.version = pkg.version
+    properties.version = env.VERSION
     properties.service = env.SERVICE
     properties.environment = identity.environment
     properties.hosting = identity.hosting
