@@ -93,6 +93,16 @@
     columns.actions.changePrimaryDisplay(column.name)
     open = false
   }
+
+  const hideColumn = () => {
+    columns.update(state => {
+      const index = state.findIndex(col => col.name === column.name)
+      state[index].visible = false
+      return state.slice()
+    })
+    columns.actions.saveChanges()
+    open = false
+  }
 </script>
 
 <div
@@ -184,6 +194,7 @@
     <MenuItem disabled={!canMoveRight} icon="ChevronRight" on:click={moveRight}>
       Move right
     </MenuItem>
+    <MenuItem icon="VisibilityOff" on:click={hideColumn}>Hide column</MenuItem>
   </Menu>
 </Popover>
 
