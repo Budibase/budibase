@@ -11,6 +11,8 @@
   export let fields
   export let labelPosition
   export let title
+  export let saveButtonLabel
+  export let deleteButtonLabel
   export let showSaveButton
   export let showDeleteButton
   export let schema
@@ -33,6 +35,12 @@
   let formId
 
   $: onSave = [
+    {
+      "##eventHandlerType": "Validate Form",
+      parameters: {
+        componentId: formId,
+      },
+    },
     {
       "##eventHandlerType": "Save Row",
       parameters: {
@@ -163,7 +171,7 @@
                 <BlockComponent
                   type="button"
                   props={{
-                    text: "Delete",
+                    text: deleteButtonLabel || "Delete",
                     onClick: onDelete,
                     quiet: true,
                     type: "secondary",
@@ -175,7 +183,7 @@
                 <BlockComponent
                   type="button"
                   props={{
-                    text: "Save",
+                    text: saveButtonLabel || "Save",
                     onClick: onSave,
                     type: "cta",
                   }}
@@ -188,14 +196,14 @@
       {/if}
       <BlockComponent type="fieldgroup" props={{ labelPosition }} order={1}>
         {#each fields as field, idx}
-          {#if getComponentForField(field)}
+          {#if getComponentForField(field.name)}
             <BlockComponent
-              type={getComponentForField(field)}
+              type={getComponentForField(field.name)}
               props={{
-                field,
-                label: field,
-                placeholder: field,
-                disabled,
+                validation: field.validation,
+                field: field.name,
+                label: field.displayName,
+                placeholder: field.displayName,
               }}
               order={idx}
             />

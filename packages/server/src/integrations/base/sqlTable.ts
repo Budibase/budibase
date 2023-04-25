@@ -79,10 +79,17 @@ function generateSchema(
           if (!relatedTable) {
             throw "Referenced table doesn't exist"
           }
-          schema.integer(column.foreignKey).unsigned()
+          const relatedPrimary = relatedTable.primary[0]
+          const externalType = relatedTable.schema[relatedPrimary].externalType
+          if (externalType) {
+            schema.specificType(column.foreignKey, externalType)
+          } else {
+            schema.integer(column.foreignKey).unsigned()
+          }
+
           schema
             .foreign(column.foreignKey)
-            .references(`${tableName}.${relatedTable.primary[0]}`)
+            .references(`${tableName}.${relatedPrimary}`)
         }
         break
     }
