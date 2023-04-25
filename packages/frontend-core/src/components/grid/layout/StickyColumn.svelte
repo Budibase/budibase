@@ -21,6 +21,7 @@
     focusedRow,
     scrollLeft,
     dispatch,
+    contentLines,
   } = getContext("grid")
 
   $: rowCount = $rows.length
@@ -85,6 +86,7 @@
               selectedUser={$selectedCellMap[cellId]}
               width={$stickyColumn.width}
               column={$stickyColumn}
+              contentLines={$contentLines}
             />
           {/if}
         </div>
