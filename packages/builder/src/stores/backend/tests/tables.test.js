@@ -134,28 +134,27 @@ describe("tables store", () => {
     })
   })
 
-  // describe("deleteTable", () => {
-  //   it("calls deleteTable and does a store fetch", async ctx => {
-  //     const table = {
-  //       _id: "TABLE_ID",
-  //       _rev: "REV"
-  //     }
-  //     API.deleteTable.mockReturnValue()
-  //     ctx.returnedStore.fetch.mockImplementation(() => {})
+  describe("delete", () => {
+    it("calls deleteTable and does a store fetch", async ctx => {
+      const table = {
+        _id: "TABLE_ID",
+        _rev: "REV"
+      }
+      API.deleteTable.mockReturnValue()
 
-  //     await ctx.returnedStore.deleteTable(table)
+      await ctx.returnedStore.delete(table)
 
-  //     expect(API.deleteTable).toHaveBeenCalledTimes(1)
-  //     expect(API.deleteTable).toHaveBeenCalledWith({
-  //       tableId: "TABLE_ID",
-  //       tableRev: "REV"
-  //     })
-  //     expect(fetch).toHaveBeenCalledTimes(1)
-  //   })
-  // })
+      expect(API.deleteTable).toHaveBeenCalledTimes(1)
+      expect(API.deleteTable).toHaveBeenCalledWith({
+        tableId: "TABLE_ID",
+        tableRev: "REV"
+      })
+      //TODO - Verify fetch was called
+    })
+  })
 
   describe("updateTable", () => {
-    beforeEach(async ctx => {
+    beforeEach(() => {
       get.mockImplementation(() => {
         return {
             list: [{
@@ -222,6 +221,178 @@ describe("tables store", () => {
       await ctx.returnedStore.updateTable(table)
 
       expect(ctx.writableReturn.update.calls.length).toBe(0)
+    })
+  })
+
+  describe("saveField", () => {
+    beforeEach(ctx => {
+      get.mockImplementation(() => {
+        return {
+            selected: {
+              _id: "TABLE_ID",
+              primaryDisplay: "firstName",
+              schema: {
+                firstName: {
+                  name: "firstName",
+                  type: "string"
+                },
+                age: {
+                  name: "age",
+                  type: "number"
+                }
+              }
+            },
+            list: [{
+              _id: "T1",
+              name: "OLD_1"
+            }, {
+              _id: "T2",
+              name: "OLD_2"
+            }, {
+              _id: "T3",
+              _rev: "REV",
+              name: "NEW",
+              extra: "ADD_PROP",
+              type: "TYPE_FROM_STATE"
+            }
+          ]
+        }
+      })
+    })
+
+    it("saves a new field to a selected table", async ctx => {
+      const originalName = null
+      const field = {
+        name: "lastName",
+        type: "string"
+      }
+      const indexes = ["id"]
+
+      API.saveTable.mockReturnValue("TABLE_SAVED")
+      
+      await ctx.returnedStore.saveField({
+        originalName,
+        field,
+        indexes
+      })
+
+      expect(API.saveTable).toHaveBeenCalledOnce()
+      expect(API.saveTable).toHaveBeenCalledWith({
+        _id: "TABLE_ID",
+        indexes,
+        primaryDisplay: "firstName",
+        schema: {
+          firstName: {
+            name: "firstName",
+            type: "string"
+          },
+          age: {
+            name: "age",
+            type: "number"
+          },
+          lastName: field,
+        }
+      })
+    })
+
+    it("overwrites an existing field if renaming", async ctx => {
+      const originalName = "age"
+      const field = {
+        name: "Years",
+        type: "number"
+      }
+      const indexes = ["id"]
+
+      API.saveTable.mockReturnValue("TABLE_SAVED")
+      
+      await ctx.returnedStore.saveField({
+        originalName,
+        field,
+        indexes
+      })
+
+      expect(API.saveTable).toHaveBeenCalledOnce()
+      expect(API.saveTable).toHaveBeenCalledWith({
+        _id: "TABLE_ID",
+        _rename: {
+          old: originalName,
+          updated: "Years"
+        },
+        primaryDisplay: "firstName",
+        indexes,
+        schema: {
+          firstName: {
+            name: "firstName",
+            type: "string"
+          },
+          Years: field
+        }
+      })
+    })
+
+    it("will set the primaryDisplay if the flag is true", async ctx => {
+      const originalName = null
+      const field = {
+        name: "lastName",
+        type: "string"
+      }
+
+      API.saveTable.mockReturnValue("TABLE_SAVED")
+      
+      await ctx.returnedStore.saveField({
+        originalName,
+        field,
+        primaryDisplay: true
+      })
+
+      expect(API.saveTable).toHaveBeenCalledOnce()
+      expect(API.saveTable).toHaveBeenCalledWith({
+        _id: "TABLE_ID",
+        primaryDisplay: "lastName",
+        schema: {
+          firstName: {
+            name: "firstName",
+            type: "string"
+          },
+          age: {
+            name: "age",
+            type: "number"
+          },
+          lastName: field,
+        }
+      })
+    })
+
+    it("will set the primaryDisplay to the next field if the flag was previously true", async ctx => {
+      const originalName = "firstName"
+      const field = {
+        name: "firstName",
+        type: "string",
+      }
+
+      API.saveTable.mockReturnValue("TABLE_SAVED")
+      
+      await ctx.returnedStore.saveField({
+        originalName,
+        field,
+        primaryDisplay: false
+      })
+
+      expect(API.saveTable).toHaveBeenCalledOnce()
+      expect(API.saveTable).toHaveBeenCalledWith({
+        _id: "TABLE_ID",
+        primaryDisplay: "age",
+        schema: {
+          firstName: {
+            name: "firstName",
+            type: "string",
+          },
+          age: {
+            name: "age",
+            type: "number",
+          },
+        }
+      })
     })
   })
 
