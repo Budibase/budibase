@@ -57,7 +57,7 @@
     <div class="columns">
       {#if $stickyColumn}
         <Toggle disabled size="S" value={true} />
-        <span>{$stickyColumn.name}</span>
+        <span>{$stickyColumn.label}</span>
       {/if}
       {#each $columns as column}
         <Toggle
@@ -65,7 +65,7 @@
           value={column.visible}
           on:change={e => toggleVisibility(column, e.detail)}
         />
-        <span>{column.name}</span>
+        <span>{column.label}</span>
       {/each}
     </div>
     <div class="buttons">
