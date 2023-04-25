@@ -10,11 +10,10 @@ import { auth, overview } from "./stores/portal"
 export const API = createAPIClient({
   attachHeaders: headers => {
     // Attach app ID header from store
-    let appId = get(store).appId
-    if (!appId) {
-      appId = get(overview).selectedAppId
+    let appId = get(store).appId || get(overview).selectedAppId
+    if (appId) {
+      headers["x-budibase-app-id"] = appId
     }
-    headers["x-budibase-app-id"] = appId
 
     // Add csrf token if authenticated
     const user = get(auth).user
