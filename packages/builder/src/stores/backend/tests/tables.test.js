@@ -86,16 +86,19 @@ describe("tables store", () => {
       API.fetchTableDefinition.mockReturnValue(table)
 
       const state = {
-        list: [{
+        list: [
+          {
             _id: "T1",
-            name: "OLD_1"
-          }, {
+            name: "OLD_1",
+          },
+          {
             _id: tableId,
-            name: "OLD_2"
-          }, {
+            name: "OLD_2",
+          },
+          {
             _id: "T3",
-            name: "OLD_3"
-          }
+            name: "OLD_3",
+          },
         ],
       }
       await ctx.returnedStore.fetchTable(tableId)
@@ -104,17 +107,20 @@ describe("tables store", () => {
       expect(API.fetchTableDefinition).toHaveBeenCalledWith(tableId)
 
       expect(ctx.writableReturn.update.calls[0][0](state)).toEqual({
-        list: [{
-          _id: "T1",
-          name: "OLD_1"
-        }, {
-          _id: tableId,
-          name: "NEW"
-        }, {
-          _id: "T3",
-          name: "OLD_3"
-        }
-      ],
+        list: [
+          {
+            _id: "T1",
+            name: "OLD_1",
+          },
+          {
+            _id: tableId,
+            name: "NEW",
+          },
+          {
+            _id: "T3",
+            name: "OLD_3",
+          },
+        ],
       })
     })
   })
@@ -138,7 +144,7 @@ describe("tables store", () => {
     it("calls deleteTable and does a store fetch", async ctx => {
       const table = {
         _id: "TABLE_ID",
-        _rev: "REV"
+        _rev: "REV",
       }
       const listOfTables = ["T1", "T2"]
       API.deleteTable.mockReturnValue()
@@ -149,7 +155,7 @@ describe("tables store", () => {
       expect(API.deleteTable).toHaveBeenCalledTimes(1)
       expect(API.deleteTable).toHaveBeenCalledWith({
         tableId: "TABLE_ID",
-        tableRev: "REV"
+        tableRev: "REV",
       })
 
       expect(API.getTables).toHaveBeenCalledTimes(1)
@@ -163,17 +169,20 @@ describe("tables store", () => {
     beforeEach(() => {
       get.mockImplementation(() => {
         return {
-            list: [{
+          list: [
+            {
               _id: "T1",
-              name: "OLD_1"
-            }, {
+              name: "OLD_1",
+            },
+            {
               _id: "T2",
-              name: "OLD_2"
-            }, {
+              name: "OLD_2",
+            },
+            {
               _id: "T3",
-              name: "OLD_3"
-            }
-          ]
+              name: "OLD_3",
+            },
+          ],
         }
       })
     })
@@ -183,40 +192,46 @@ describe("tables store", () => {
         _rev: "REV",
         type: "TYPE_FROM_TABLE",
         name: "NEW",
-        extra: "ADD_PROP"
+        extra: "ADD_PROP",
       }
       const state = {
-        list: [{
+        list: [
+          {
             _id: "T1",
-            name: "OLD_1"
-          }, {
+            name: "OLD_1",
+          },
+          {
             _id: "T2",
-            name: "OLD_2"
-          }, {
+            name: "OLD_2",
+          },
+          {
             _id: "T3",
             name: "OLD_3",
             type: "TYPE_FROM_STATE",
-          }
-        ]
+          },
+        ],
       }
 
       await ctx.returnedStore.updateTable(table)
 
       expect(ctx.writableReturn.update.calls[0][0](state)).toEqual({
-          list: [{
+        list: [
+          {
             _id: "T1",
-            name: "OLD_1"
-          }, {
+            name: "OLD_1",
+          },
+          {
             _id: "T2",
-            name: "OLD_2"
-          }, {
+            name: "OLD_2",
+          },
+          {
             _id: "T3",
             _rev: "REV",
             name: "NEW",
             extra: "ADD_PROP",
-            type: "TYPE_FROM_STATE"
-          }
-        ]
+            type: "TYPE_FROM_STATE",
+          },
+        ],
       })
     })
 
@@ -234,28 +249,31 @@ describe("tables store", () => {
     beforeEach(() => {
       get.mockImplementation(() => {
         return {
-            selected: {
-              _id: "TABLE_ID",
-              primaryDisplay: "firstName",
-              schema: {
-                firstName: {
-                  name: "firstName",
-                  type: "string"
-                },
-                age: {
-                  name: "age",
-                  type: "number"
-                }
-              }
+          selected: {
+            _id: "TABLE_ID",
+            primaryDisplay: "firstName",
+            schema: {
+              firstName: {
+                name: "firstName",
+                type: "string",
+              },
+              age: {
+                name: "age",
+                type: "number",
+              },
             },
-            list: [{
+          },
+          list: [
+            {
               _id: "T1",
-            }, {
+            },
+            {
               _id: "T2",
-            }, {
+            },
+            {
               _id: "T3",
-            }
-          ]
+            },
+          ],
         }
       })
     })
@@ -264,16 +282,16 @@ describe("tables store", () => {
       const originalName = null
       const field = {
         name: "lastName",
-        type: "string"
+        type: "string",
       }
       const indexes = ["id"]
 
       API.saveTable.mockReturnValue("TABLE_SAVED")
-      
+
       await ctx.returnedStore.saveField({
         originalName,
         field,
-        indexes
+        indexes,
       })
 
       expect(API.saveTable).toHaveBeenCalledOnce()
@@ -284,14 +302,14 @@ describe("tables store", () => {
         schema: {
           firstName: {
             name: "firstName",
-            type: "string"
+            type: "string",
           },
           age: {
             name: "age",
-            type: "number"
+            type: "number",
           },
           lastName: field,
-        }
+        },
       })
     })
 
@@ -299,16 +317,16 @@ describe("tables store", () => {
       const originalName = "age"
       const field = {
         name: "Years",
-        type: "number"
+        type: "number",
       }
       const indexes = ["id"]
 
       API.saveTable.mockReturnValue("TABLE_SAVED")
-      
+
       await ctx.returnedStore.saveField({
         originalName,
         field,
-        indexes
+        indexes,
       })
 
       expect(API.saveTable).toHaveBeenCalledOnce()
@@ -316,17 +334,17 @@ describe("tables store", () => {
         _id: "TABLE_ID",
         _rename: {
           old: originalName,
-          updated: "Years"
+          updated: "Years",
         },
         primaryDisplay: "firstName",
         indexes,
         schema: {
           firstName: {
             name: "firstName",
-            type: "string"
+            type: "string",
           },
-          Years: field
-        }
+          Years: field,
+        },
       })
     })
 
@@ -334,15 +352,15 @@ describe("tables store", () => {
       const originalName = null
       const field = {
         name: "lastName",
-        type: "string"
+        type: "string",
       }
 
       API.saveTable.mockReturnValue("TABLE_SAVED")
-      
+
       await ctx.returnedStore.saveField({
         originalName,
         field,
-        primaryDisplay: true
+        primaryDisplay: true,
       })
 
       expect(API.saveTable).toHaveBeenCalledOnce()
@@ -352,14 +370,14 @@ describe("tables store", () => {
         schema: {
           firstName: {
             name: "firstName",
-            type: "string"
+            type: "string",
           },
           age: {
             name: "age",
-            type: "number"
+            type: "number",
           },
           lastName: field,
-        }
+        },
       })
     })
 
@@ -371,11 +389,11 @@ describe("tables store", () => {
       }
 
       API.saveTable.mockReturnValue("TABLE_SAVED")
-      
+
       await ctx.returnedStore.saveField({
         originalName,
         field,
-        primaryDisplay: false
+        primaryDisplay: false,
       })
 
       expect(API.saveTable).toHaveBeenCalledOnce()
@@ -391,7 +409,7 @@ describe("tables store", () => {
             name: "age",
             type: "number",
           },
-        }
+        },
       })
     })
   })
@@ -400,28 +418,31 @@ describe("tables store", () => {
     beforeEach(() => {
       get.mockImplementation(() => {
         return {
-            selected: {
-              _id: "TABLE_ID",
-              primaryDisplay: "firstName",
-              schema: {
-                firstName: {
-                  name: "firstName",
-                  type: "string"
-                },
-                age: {
-                  name: "age",
-                  type: "number"
-                }
-              }
+          selected: {
+            _id: "TABLE_ID",
+            primaryDisplay: "firstName",
+            schema: {
+              firstName: {
+                name: "firstName",
+                type: "string",
+              },
+              age: {
+                name: "age",
+                type: "number",
+              },
             },
-            list: [{
+          },
+          list: [
+            {
               _id: "T1",
-            }, {
+            },
+            {
               _id: "T2",
-            }, {
+            },
+            {
               _id: "T3",
-            }
-          ]
+            },
+          ],
         }
       })
     })
@@ -429,11 +450,11 @@ describe("tables store", () => {
     it("deletes an existing field", async ctx => {
       const field = {
         name: "age",
-        type: "number"
+        type: "number",
       }
 
       API.saveTable.mockReturnValue("TABLE_SAVED")
-      
+
       await ctx.returnedStore.deleteField(field)
 
       expect(API.saveTable).toHaveBeenCalledOnce()
@@ -443,20 +464,20 @@ describe("tables store", () => {
         schema: {
           firstName: {
             name: "firstName",
-            type: "string"
+            type: "string",
           },
-        }
+        },
       })
     })
 
     it("will assign a new primary display when deletes an existing primary display field", async ctx => {
       const field = {
         name: "firstName",
-        type: "string"
+        type: "string",
       }
 
       API.saveTable.mockReturnValue("TABLE_SAVED")
-      
+
       await ctx.returnedStore.deleteField(field)
 
       expect(API.saveTable).toHaveBeenCalledOnce()
@@ -466,11 +487,10 @@ describe("tables store", () => {
         schema: {
           age: {
             name: "age",
-            type: "number"
+            type: "number",
           },
-        }
+        },
       })
     })
   })
-
 })
