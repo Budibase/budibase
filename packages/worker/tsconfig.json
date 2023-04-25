@@ -16,6 +16,11 @@
     "require": ["tsconfig-paths/register"],
     "swc": true
   },
-  "include": ["src/**/*", "package.json"],
+  "references": [
+    { "path": "../types" },
+    { "path": "../backend-core" },
+    { "path": "../../../budibase-pro/packages/pro" }
+  ],
+  "include": ["src/**/*"],
   "exclude": ["dist"]
 }

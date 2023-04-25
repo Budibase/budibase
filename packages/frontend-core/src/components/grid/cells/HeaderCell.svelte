@@ -20,6 +20,7 @@
     ui,
     columns,
   } = getContext("grid")
+
   const bannedDisplayColumnTypes = [
     "link",
     "array",
@@ -92,6 +93,16 @@
     columns.actions.changePrimaryDisplay(column.name)
     open = false
   }
+
+  const hideColumn = () => {
+    columns.update(state => {
+      const index = state.findIndex(col => col.name === column.name)
+      state[index].visible = false
+      return state.slice()
+    })
+    columns.actions.saveChanges()
+    open = false
+  }
 </script>
 
 <div
@@ -100,7 +111,7 @@
   style="flex: 0 0 {column.width}px;"
   bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
-  class:sorted={sortedBy}
+  class:sticky={idx === "sticky"}
 >
   <GridCell
     on:mousedown={onMouseDown}
@@ -128,11 +139,7 @@
         />
       </div>
     {/if}
-    <div
-      class="more"
-      on:mousedown|stopPropagation
-      on:click={() => (open = true)}
-    >
+    <div class="more" on:click={() => (open = true)}>
       <Icon
         size="S"
         name="MoreVertical"
@@ -187,12 +194,17 @@
     <MenuItem disabled={!canMoveRight} icon="ChevronRight" on:click={moveRight}>
       Move right
     </MenuItem>
+    <MenuItem icon="VisibilityOff" on:click={hideColumn}>Hide column</MenuItem>
   </Menu>
 </Popover>
 
 <style>
   .header-cell {
     display: flex;
+  }
+  .header-cell:not(.sticky):hover,
+  .header-cell:not(.sticky) :global(.cell:hover) {
+    cursor: grab;
   }
   .header-cell.disabled {
     pointer-events: none;
@@ -201,9 +213,6 @@
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
     background: var(--spectrum-global-color-gray-100);
-  }
-  .header-cell.sorted :global(.cell) {
-    background: var(--spectrum-global-color-gray-200);
   }
 
   .name {
