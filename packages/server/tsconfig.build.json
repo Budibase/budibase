@@ -9,7 +9,7 @@
     "resolveJsonModule": true,
     "incremental": true,
     "types": ["node", "jest"],
-    "outDir": "dist",
+    "outDir": "dist/src",
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {

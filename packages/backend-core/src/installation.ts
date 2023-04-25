@@ -6,8 +6,7 @@ import { Installation, IdentityType, Database } from "@budibase/types"
 import * as context from "./context"
 import semver from "semver"
 import { bustCache, withCache, TTL, CacheKey } from "./cache/generic"
-
-const pkg = require("../package.json")
+import environment from "./environment"
 
 export const getInstall = async (): Promise<Installation> => {
   return withCache(CacheKey.INSTALLATION, TTL.ONE_DAY, getInstallFromDB, {
@@ -18,7 +17,7 @@ async function createInstallDoc(platformDb: Database) {
   const install: Installation = {
     _id: StaticDatabases.PLATFORM_INFO.docs.install,
     installId: newid(),
-    version: pkg.version,
+    version: environment.VERSION,
   }
   try {
     const resp = await platformDb.put(install)
@@ -33,7 +32,7 @@ async function createInstallDoc(platformDb: Database) {
   }
 }
 
-const getInstallFromDB = async (): Promise<Installation> => {
+export const getInstallFromDB = async (): Promise<Installation> => {
   return doWithDB(
     StaticDatabases.PLATFORM_INFO.name,
     async (platformDb: any) => {
@@ -80,7 +79,7 @@ export const checkInstallVersion = async (): Promise<void> => {
   const install = await getInstall()
 
   const currentVersion = install.version
-  const newVersion = pkg.version
+  const newVersion = environment.VERSION
 
   if (currentVersion !== newVersion) {
     const isUpgrade = semver.gt(newVersion, currentVersion)

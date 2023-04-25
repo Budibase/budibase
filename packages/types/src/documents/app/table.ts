@@ -31,6 +31,8 @@ export interface FieldSchema {
   timeOnly?: boolean
   lastID?: number
   useRichText?: boolean | null
+  order?: number
+  width?: number
   meta?: {
     toTable: string
     toKey: string
@@ -77,6 +79,7 @@ export interface Table extends Document {
   indexes?: { [key: string]: any }
   rows?: { [key: string]: any }
   created?: boolean
+  rowHeight?: number
 }
 
 export interface TableRequest extends Table {

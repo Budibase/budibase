@@ -7,7 +7,7 @@ import {
 } from "@budibase/backend-core"
 import { fileUpload } from "../../api/controllers/plugin/file"
 import env from "../../environment"
-import { ClientAppSocket } from "../../websocket"
+import { clientAppSocket } from "../../websockets"
 import { sdk as pro } from "@budibase/pro"
 
 export async function fetch(type?: PluginType) {
@@ -36,6 +36,6 @@ export async function processUploaded(plugin: FileType, source?: PluginSource) {
   }
 
   const doc = await pro.plugins.storePlugin(metadata, directory, source)
-  ClientAppSocket.emit("plugin-update", { name: doc.name, hash: doc.hash })
+  clientAppSocket.emit("plugin-update", { name: doc.name, hash: doc.hash })
   return doc
 }
