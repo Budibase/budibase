@@ -140,7 +140,9 @@ describe("tables store", () => {
         _id: "TABLE_ID",
         _rev: "REV"
       }
+      const listOfTables = ["T1", "T2"]
       API.deleteTable.mockReturnValue()
+      API.getTables.mockReturnValue(listOfTables)
 
       await ctx.returnedStore.delete(table)
 
@@ -149,7 +151,11 @@ describe("tables store", () => {
         tableId: "TABLE_ID",
         tableRev: "REV"
       })
-      //TODO - Verify fetch was called
+
+      expect(API.getTables).toHaveBeenCalledTimes(1)
+      expect(ctx.writableReturn.update.calls[0][0]({})).toEqual({
+        list: listOfTables,
+      })
     })
   })
 
