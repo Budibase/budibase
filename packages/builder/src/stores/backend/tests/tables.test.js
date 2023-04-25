@@ -225,7 +225,7 @@ describe("tables store", () => {
   })
 
   describe("saveField", () => {
-    beforeEach(ctx => {
+    beforeEach(() => {
       get.mockImplementation(() => {
         return {
             selected: {
@@ -244,16 +244,10 @@ describe("tables store", () => {
             },
             list: [{
               _id: "T1",
-              name: "OLD_1"
             }, {
               _id: "T2",
-              name: "OLD_2"
             }, {
               _id: "T3",
-              _rev: "REV",
-              name: "NEW",
-              extra: "ADD_PROP",
-              type: "TYPE_FROM_STATE"
             }
           ]
         }
@@ -390,6 +384,83 @@ describe("tables store", () => {
           age: {
             name: "age",
             type: "number",
+          },
+        }
+      })
+    })
+  })
+
+  describe("deleteField", () => {
+    beforeEach(() => {
+      get.mockImplementation(() => {
+        return {
+            selected: {
+              _id: "TABLE_ID",
+              primaryDisplay: "firstName",
+              schema: {
+                firstName: {
+                  name: "firstName",
+                  type: "string"
+                },
+                age: {
+                  name: "age",
+                  type: "number"
+                }
+              }
+            },
+            list: [{
+              _id: "T1",
+            }, {
+              _id: "T2",
+            }, {
+              _id: "T3",
+            }
+          ]
+        }
+      })
+    })
+
+    it("deletes an existing field", async ctx => {
+      const field = {
+        name: "age",
+        type: "number"
+      }
+
+      API.saveTable.mockReturnValue("TABLE_SAVED")
+      
+      await ctx.returnedStore.deleteField(field)
+
+      expect(API.saveTable).toHaveBeenCalledOnce()
+      expect(API.saveTable).toHaveBeenCalledWith({
+        _id: "TABLE_ID",
+        primaryDisplay: "firstName",
+        schema: {
+          firstName: {
+            name: "firstName",
+            type: "string"
+          },
+        }
+      })
+    })
+
+    it("will assign a new primary display when deletes an existing primary display field", async ctx => {
+      const field = {
+        name: "firstName",
+        type: "string"
+      }
+
+      API.saveTable.mockReturnValue("TABLE_SAVED")
+      
+      await ctx.returnedStore.deleteField(field)
+
+      expect(API.saveTable).toHaveBeenCalledOnce()
+      expect(API.saveTable).toHaveBeenCalledWith({
+        _id: "TABLE_ID",
+        primaryDisplay: "age",
+        schema: {
+          age: {
+            name: "age",
+            type: "number"
           },
         }
       })
