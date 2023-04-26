@@ -128,9 +128,6 @@
     })
   }
   $: parsedInvites = invitesToSchema(pendingInvites)
-  $: console.log("parsed invites ", parsedInvites)
-  // $: console.log(pendingInvites)
-  $: console.log(enrichedUsers)
 
   const updateFetch = email => {
     fetch.update({
