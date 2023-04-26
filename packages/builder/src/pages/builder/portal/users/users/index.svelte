@@ -162,6 +162,7 @@
     }))
     try {
       inviteUsersResponse = await users.invite(payload)
+      pendingInvites = await users.getInvites()
       inviteConfirmationModal.show()
     } catch (error) {
       notifications.error("Error inviting user")
