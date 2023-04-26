@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "fs"
+
 function isTest() {
   return isCypress() || isJest()
 }
@@ -43,6 +45,35 @@ function httpLogging() {
   }
 
   return process.env.HTTP_LOGGING
+}
+
+function findVersion() {
+  function findFileInAncestors(
+    fileName: string,
+    currentDir: string
+  ): string | null {
+    const filePath = `${currentDir}/${fileName}`
+    if (existsSync(filePath)) {
+      return filePath
+    }
+
+    const parentDir = `${currentDir}/..`
+    if (parentDir === currentDir) {
+      // reached root directory
+      return null
+    }
+
+    return findFileInAncestors(fileName, parentDir)
+  }
+
+  try {
+    const packageJsonFile = findFileInAncestors("package.json", process.cwd())
+    const content = readFileSync(packageJsonFile!, "utf-8")
+    const version = JSON.parse(content).version
+    return version
+  } catch {
+    throw new Error("Cannot find a valid version in its package.json")
+  }
 }
 
 const environment = {
@@ -122,6 +153,7 @@ const environment = {
   ENABLE_SSO_MAINTENANCE_MODE: selfHosted
     ? process.env.ENABLE_SSO_MAINTENANCE_MODE
     : false,
+  VERSION: findVersion(),
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore

@@ -7,6 +7,7 @@ export const ExpiringKeys = {
   LICENSING_ROWS_WARNING_BANNER: "licensing_rows_warning_banner",
   LICENSING_AUTOMATIONS_WARNING_BANNER: "licensing_automations_warning_banner",
   LICENSING_QUERIES_WARNING_BANNER: "licensing_queries_warning_banner",
+  LICENSING_USERS_ABOVE_LIMIT_BANNER: "licensing_users_above_limit_banner",
 }
 
 export const StripeStatus = {

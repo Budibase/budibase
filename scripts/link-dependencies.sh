@@ -88,6 +88,6 @@ if [ -d "../account-portal" ]; then
   echo "Linking bbui to account-portal"
   yarn link "@budibase/bbui"
 
-   echo "Linking frontend-core to account-portal"
-    yarn link "@budibase/frontend-core"
+  echo "Linking frontend-core to account-portal"
+  yarn link "@budibase/frontend-core"
 fi

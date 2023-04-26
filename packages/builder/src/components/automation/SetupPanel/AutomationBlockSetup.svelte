@@ -67,6 +67,15 @@
       newInputData = cloneDeep(blockInputs)
     }
     inputData = newInputData
+    setDefaultEnumValues()
+  }
+
+  const setDefaultEnumValues = () => {
+    for (const [key, value] of schemaProperties) {
+      if (value.type === "string" && value.enum && inputData[key] == null) {
+        inputData[key] = value.enum[0]
+      }
+    }
   }
 
   const onChange = Utils.sequential(async (e, key) => {
@@ -243,6 +252,7 @@
         <Select
           on:change={e => onChange(e, key)}
           value={inputData[key]}
+          placeholder={false}
           options={value.enum}
           getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
         />

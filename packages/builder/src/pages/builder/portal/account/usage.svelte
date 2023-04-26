@@ -13,6 +13,7 @@
   import { admin, auth, licensing } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import { DashCard, Usage } from "components/usage"
+  import { PlanModel } from "constants"
 
   let staticUsage = []
   let monthlyUsage = []
@@ -25,8 +26,21 @@
   const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
   const manageUrl = `${$admin.accountPortalUrl}/portal/billing`
 
-  const WARN_USAGE = ["Queries", "Automations", "Rows", "Day Passes"]
-  const EXCLUDE_QUOTAS = ["Queries"]
+  const WARN_USAGE = ["Queries", "Automations", "Rows", "Day Passes", "Users"]
+
+  const EXCLUDE_QUOTAS = {
+    Queries: () => true,
+    Users: license => {
+      return license.plan.model !== PlanModel.PER_USER
+    },
+    "Day Passes": license => {
+      return license.plan.model !== PlanModel.DAY_PASS
+    },
+  }
+
+  function excludeQuota(name) {
+    return EXCLUDE_QUOTAS[name] && EXCLUDE_QUOTAS[name](license)
+  }
 
   $: quotaUsage = $licensing.quotaUsage
   $: license = $auth.user?.license
@@ -39,7 +53,7 @@
     monthlyUsage = []
     if (quotaUsage.monthly) {
       for (let [key, value] of Object.entries(license.quotas.usage.monthly)) {
-        if (EXCLUDE_QUOTAS.includes(value.name)) {
+        if (excludeQuota(value.name)) {
           continue
         }
         const used = quotaUsage.monthly.current[key]
@@ -58,7 +72,7 @@
   const setStaticUsage = () => {
     staticUsage = []
     for (let [key, value] of Object.entries(license.quotas.usage.static)) {
-      if (EXCLUDE_QUOTAS.includes(value.name)) {
+      if (excludeQuota(value.name)) {
         continue
       }
       const used = quotaUsage.usageQuota[key]
@@ -84,7 +98,7 @@
   }
 
   const planTitle = () => {
-    return capitalise(license?.plan.type)
+    return `${capitalise(license?.plan.type)} Plan`
   }
 
   const getDaysRemaining = timestamp => {
@@ -110,8 +124,8 @@
     if (cancelAt) {
       textRows.push({ message: "Subscription has been cancelled" })
       textRows.push({
-        message: `${getDaysRemaining(cancelAt * 1000)} days remaining`,
-        tooltip: new Date(cancelAt * 1000),
+        message: `${getDaysRemaining(cancelAt)} days remaining`,
+        tooltip: new Date(cancelAt),
       })
     }
   }

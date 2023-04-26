@@ -134,6 +134,7 @@ export const getFrontendStore = () => {
         previousTopNavPath: {},
         version: application.version,
         revertableVersion: application.revertableVersion,
+        upgradableVersion: application.upgradableVersion,
         navigation: application.navigation || {},
         usedPlugins: application.usedPlugins || [],
       }))

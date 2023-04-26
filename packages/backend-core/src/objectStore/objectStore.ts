@@ -3,7 +3,7 @@ import AWS from "aws-sdk"
 import stream from "stream"
 import fetch from "node-fetch"
 import tar from "tar-fs"
-const zlib = require("zlib")
+import zlib from "zlib"
 import { promisify } from "util"
 import { join } from "path"
 import fs from "fs"
@@ -415,7 +415,7 @@ export const downloadTarballDirect = async (
     throw new Error(`unexpected response ${response.statusText}`)
   }
 
-  await streamPipeline(response.body, zlib.Unzip(), tar.extract(path))
+  await streamPipeline(response.body, zlib.createUnzip(), tar.extract(path))
 }
 
 export const downloadTarball = async (
@@ -431,7 +431,7 @@ export const downloadTarball = async (
   }
 
   const tmpPath = join(budibaseTempDir(), path)
-  await streamPipeline(response.body, zlib.Unzip(), tar.extract(tmpPath))
+  await streamPipeline(response.body, zlib.createUnzip(), tar.extract(tmpPath))
   if (!env.isTest() && env.SELF_HOSTED) {
     await uploadDirectory(bucketName, tmpPath, path)
   }
