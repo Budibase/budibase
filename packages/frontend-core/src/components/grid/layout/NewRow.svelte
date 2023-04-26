@@ -27,13 +27,14 @@
     columnHorizontalInversionIndex,
   } = getContext("grid")
 
+  let visible = false
   let isAdding = false
   let newRow = {}
   let offset = 0
 
   $: firstColumn = $stickyColumn || $renderedColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
-  $: $tableId, (isAdding = false)
+  $: $tableId, (visible = false)
   $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
 
   const shouldInvertY = (offset, inversionIndex, rows) => {
@@ -45,7 +46,8 @@
 
   const addRow = async () => {
     // Blur the active cell and tick to let final value updates propagate
-    $focusedCellAPI?.blur()
+    isAdding = true
+    $focusedCellId = null
     await tick()
 
     // Create row
@@ -60,17 +62,19 @@
         $focusedCellId = `${savedRow._id}-${firstColumn.name}`
       }
     }
+    isAdding = false
   }
 
   const clear = () => {
     isAdding = false
+    visible = false
     $focusedCellId = null
     $hoveredRowId = null
     document.removeEventListener("keydown", handleKeyPress)
   }
 
   const startAdding = async () => {
-    if (isAdding) {
+    if (visible) {
       return
     }
 
@@ -95,7 +99,7 @@
 
     // Update state and select initial cell
     newRow = {}
-    isAdding = true
+    visible = true
     $hoveredRowId = NewRowID
     if (firstColumn) {
       $focusedCellId = `${NewRowID}-${firstColumn.name}`
@@ -115,7 +119,7 @@
   }
 
   const handleKeyPress = e => {
-    if (!isAdding) {
+    if (!visible) {
       return
     }
     if (e.key === "Escape") {
@@ -137,7 +141,7 @@
 </script>
 
 <!-- Only show new row functionality if we have any columns -->
-{#if isAdding}
+{#if visible}
   <div
     class="container"
     class:floating={offset > 0}
@@ -148,6 +152,9 @@
     <div class="sticky-column" transition:fade={{ duration: 130 }}>
       <GutterCell on:expand={addViaModal} rowHovered>
         <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
+        {#if isAdding}
+          <div in:fade={{ duration: 130 }} class="loading-overlay" />
+        {/if}
       </GutterCell>
       {#if $stickyColumn}
         {@const cellId = `${NewRowID}-${$stickyColumn.name}`}
@@ -161,7 +168,14 @@
           {updateValue}
           rowIdx={0}
           {invertY}
-        />
+        >
+          {#if $stickyColumn?.schema?.autocolumn}
+            <div class="readonly-overlay">Can't edit auto column</div>
+          {/if}
+          {#if isAdding}
+            <div in:fade={{ duration: 130 }} class="loading-overlay" />
+          {/if}
+        </DataCell>
       {/if}
     </div>
     <div class="normal-columns" transition:fade={{ duration: 130 }}>
@@ -183,7 +197,10 @@
                 {invertY}
               >
                 {#if column?.schema?.autocolumn}
-                  <div class="readonly">Can't edit auto column</div>
+                  <div class="readonly-overlay">Can't edit auto column</div>
+                {/if}
+                {#if isAdding}
+                  <div in:fade={{ duration: 130 }} class="loading-overlay" />
                 {/if}
               </DataCell>
             {/key}
@@ -192,7 +209,7 @@
       </GridScrollWrapper>
     </div>
     <div class="buttons" transition:fade={{ duration: 130 }}>
-      <Button size="M" cta on:click={addRow}>Save</Button>
+      <Button size="M" cta on:click={addRow} disabled={isAdding}>Save</Button>
       <Button size="M" secondary newStyles on:click={clear}>Cancel</Button>
     </div>
   </div>
@@ -268,7 +285,7 @@
   }
 
   /*  Readonly cell overlay */
-  .readonly {
+  .readonly-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -282,5 +299,17 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+  }
+
+  /*  Overlay while row is being added */
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: var(--row-height);
+    width: 100%;
+    z-index: 1;
+    background: var(--spectrum-global-color-gray-400);
+    opacity: 0.25;
   }
 </style>
