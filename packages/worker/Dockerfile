@@ -7,11 +7,15 @@ LABEL com.centurylinklabs.watchtower.lifecycle.post-check="scripts/watchtower-ho
 
 WORKDIR /app
 
-# copy files and install dependencies
+# copy required files
 COPY . ./
+
 # handle node-gyp
 RUN apk add --no-cache --virtual .gyp python3 make g++ \
-    && yarn && apk del .gyp
+    && yarn && apk del .gyp \
+    && yarn \
+    && yarn cache clean \
+    && rm -rf node_modules/@budibase
 RUN yarn global add pm2
 
 EXPOSE 4001
