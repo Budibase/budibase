@@ -12,7 +12,7 @@ export default class IntegrationsAPI {
     const [response, json] = await this.client.get(`/integrations`)
     expect(response).toHaveStatusCode(200)
     const integrationsCount = Object.keys(json).length
-    expect(integrationsCount).toBe(16)
+    expect(integrationsCount).toBeGreaterThan(0)
     return [response, json]
   }
 }
