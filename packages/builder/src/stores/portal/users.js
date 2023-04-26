@@ -114,11 +114,13 @@ export function createUsersStore() {
   const getUserRole = ({ admin, builder }) =>
     admin?.global ? "admin" : builder?.global ? "developer" : "appUser"
 
-  const refreshUsage = fn => async (...args) => {
-    const response = await fn(...args)
-    await licensing.setQuotaUsage()
-    return response
-  }
+  const refreshUsage =
+    fn =>
+    async (...args) => {
+      const response = await fn(...args)
+      await licensing.setQuotaUsage()
+      return response
+    }
 
   return {
     subscribe,
