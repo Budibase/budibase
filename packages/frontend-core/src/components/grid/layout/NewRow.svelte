@@ -181,7 +181,11 @@
                 rowIdx={0}
                 invertX={columnIdx >= $columnHorizontalInversionIndex}
                 {invertY}
-              />
+              >
+                {#if column?.schema?.autocolumn}
+                  <div class="readonly">Can't edit auto column</div>
+                {/if}
+              </DataCell>
             {/key}
           {/each}
         </div>
@@ -261,5 +265,22 @@
   .row {
     width: 0;
     display: flex;
+  }
+
+  /*  Readonly cell overlay */
+  .readonly {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: var(--row-height);
+    width: 100%;
+    padding: var(--cell-padding);
+    font-style: italic;
+    color: var(--spectrum-global-color-gray-600);
+    z-index: 1;
+    user-select: none;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 </style>

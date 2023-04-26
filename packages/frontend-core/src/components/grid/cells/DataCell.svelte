@@ -87,4 +87,5 @@
     {invertX}
     {contentLines}
   />
+  <slot />
 </GridCell>
