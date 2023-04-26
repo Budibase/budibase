@@ -46,6 +46,7 @@
       }
       return
     } else if (e.key === "Tab") {
+      e.preventDefault()
       api?.blur?.()
       changeFocusedColumn(1)
       return

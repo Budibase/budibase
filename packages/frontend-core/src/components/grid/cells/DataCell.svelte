@@ -48,8 +48,8 @@
   }
 
   const cellAPI = {
-    focus: () => api?.focus(),
-    blur: () => api?.blur(),
+    focus: () => api?.focus?.(),
+    blur: () => api?.blur?.(),
     isActive: () => api?.isActive?.() ?? false,
     onKeyDown: (...params) => api?.onKeyDown(...params),
     isReadonly: () => readonly,

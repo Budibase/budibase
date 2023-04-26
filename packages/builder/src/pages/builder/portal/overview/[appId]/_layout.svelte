@@ -33,7 +33,7 @@
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
 
-  // Keep URL and state in sync for selected screen ID
+  // Keep URL and state in sync for selected app ID
   const stopSyncing = syncURLToState({
     urlParam: "appId",
     stateKey: "selectedAppId",
@@ -47,6 +47,7 @@
   let deletionModal
   let exportPublishedVersion = false
   let deletionConfirmationAppName
+  let loaded = false
 
   $: app = $overview.selectedApp
   $: appId = $overview.selectedAppId
@@ -56,10 +57,12 @@
   $: lockedByYou = $auth.user.email === app?.lockedBy?.email
 
   const initialiseApp = async appId => {
+    loaded = false
     try {
       const pkg = await API.fetchAppPackage(appId)
       await store.actions.initialise(pkg)
       await API.syncApp(appId)
+      loaded = true
     } catch (error) {
       notifications.error("Error initialising app overview")
       $goto("../../")
@@ -228,7 +231,9 @@
             active={$isActive("./version")}
           />
         </SideNav>
-        <slot />
+        {#if loaded}
+          <slot />
+        {/if}
       </Content>
     </Layout>
   </Page>

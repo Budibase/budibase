@@ -113,11 +113,15 @@
   }
   .expand {
     opacity: 0;
-    pointer-events: none;
     margin-right: 4px;
+  }
+  .expand :global(.spectrum-Icon) {
+    pointer-events: none;
   }
   .expand.visible {
     opacity: 1;
+  }
+  .expand.visible :global(.spectrum-Icon) {
     pointer-events: all;
   }
 </style>
