@@ -114,8 +114,8 @@ export function createUsersStore() {
   const getUserRole = ({ admin, builder }) =>
     admin?.global ? "admin" : builder?.global ? "developer" : "appUser"
 
-  const refreshUsage = fn => async args => {
-    const response = await fn(args)
+  const refreshUsage = fn => async (...args) => {
+    const response = await fn(...args)
     await licensing.setQuotaUsage()
     return response
   }
@@ -133,7 +133,7 @@ export function createUsersStore() {
     updateInvite,
     getUserCountByApp,
     // any operation that adds or deletes users
-    acceptInvite: refreshUsage(acceptInvite),
+    acceptInvite,
     create: refreshUsage(create),
     save: refreshUsage(save),
     bulkDelete: refreshUsage(bulkDelete),
