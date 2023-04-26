@@ -252,6 +252,91 @@ describe("Role", () => {
     })
   })
 
+  describe("AccessController", () => {
+    let accessController: roles.AccessController
+
+    beforeEach(() => {
+      accessController = new roles.AccessController()
+    })
+
+    describe("hasAccess()", () => {
+      it("should return true when tryingRoleId is null", async () => {
+        const hasAccess = await accessController.hasAccess(null, "user")
+        expect(hasAccess).toBe(true)
+      })
+
+      it("should return true when tryingRoleId is empty string", async () => {
+        const hasAccess = await accessController.hasAccess("", "user")
+        expect(hasAccess).toBe(true)
+      })
+
+      it("should return true when tryingRoleId and userRoleId are the same", async () => {
+        const hasAccess = await accessController.hasAccess("user", "user")
+        expect(hasAccess).toBe(true)
+      })
+
+      it("should return true when tryingRoleId is BUILTIN_IDS.BUILDER", async () => {
+        const hasAccess = await accessController.hasAccess(
+          roles.BUILTIN_IDS.BUILDER,
+          "user"
+        )
+        expect(hasAccess).toBe(true)
+      })
+
+      it("should return true when userRoleId is BUILTIN_IDS.BUILDER", async () => {
+        const hasAccess = await accessController.hasAccess(
+          "role",
+          roles.BUILTIN_IDS.BUILDER
+        )
+        expect(hasAccess).toBe(true)
+      })
+
+      it("should return true when tryingRoleId is in userRoleId's hierarchy", async () => {
+        accessController.userHierarchies["user"] = ["role", "subrole"]
+        const hasAccess = await accessController.hasAccess("role", "user")
+        expect(hasAccess).toBe(true)
+      })
+
+      it("should return false when tryingRoleId is not in userRoleId's hierarchy", async () => {
+        accessController.userHierarchies["user"] = ["role"]
+        const hasAccess = await accessController.hasAccess("subrole", "user")
+        expect(hasAccess).toBe(false)
+      })
+    })
+
+    describe("checkScreensAccess()", () => {
+      it("should return array of accessible screens", async () => {
+        const screens = [
+          { routing: { roleId: "role1" } },
+          { routing: { roleId: "role2" } },
+          { routing: { roleId: "role3" } },
+        ]
+        accessController.hasAccess = jest
+          .fn()
+          .mockImplementation((roleId, userRoleId) => {
+            return roleId === "role2" || roleId === "role3"
+          })
+        const accessibleScreens = await accessController.checkScreensAccess(
+          screens,
+          "user"
+        )
+        expect(accessibleScreens).toEqual([screens[1], screens[2]])
+      })
+    })
+
+    describe("checkScreenAccess()", () => {
+      it("should return screen when user has access", async () => {
+        accessController.hasAccess = jest.fn().mockResolvedValue(true)
+        const screen = { routing: { roleId: "role" } }
+        const accessibleScreen = await accessController.checkScreenAccess(
+          screen,
+          "user"
+        )
+        expect(accessibleScreen).toBe(screen)
+      })
+    })
+  })
+
   describe("getDBRoleID", () => {
     it("returns the provided role ID if it starts with DocumentType.ROLE", () => {
       const roleId = "DocumentType.budibase"

@@ -12,7 +12,7 @@ export const BUILTIN_ROLE_IDS = {
   PUBLIC: "PUBLIC",
 }
 
-const BUILTIN_IDS = {
+export const BUILTIN_IDS = {
   ...BUILTIN_ROLE_IDS,
   BUILDER: "BUILDER",
 }
