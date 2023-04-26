@@ -22,7 +22,7 @@ export const definition: AutomationStepSchema = {
   description: "Interact with the OpenAI ChatGPT API.",
   type: AutomationStepType.ACTION,
   internal: true,
-  stepId: AutomationActionStepId.OPEN_AI,
+  stepId: AutomationActionStepId.OPENAI,
   inputs: {
     prompt: "",
   },
@@ -90,7 +90,7 @@ export async function run({ inputs, context }: AutomationStepInput) {
       ],
     })
 
-    let response = completion?.data?.choices[0]?.message?.content
+    const response = completion?.data?.choices[0]?.message?.content
 
     return {
       response,

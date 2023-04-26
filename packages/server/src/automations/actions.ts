@@ -40,7 +40,7 @@ const ACTION_IMPLS: Record<
   DELAY: delay.run,
   FILTER: filter.run,
   QUERY_ROWS: queryRow.run,
-  OPEN_AI: openai.run,
+  OPENAI: openai.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -61,7 +61,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
     FILTER: filter.definition,
     QUERY_ROWS: queryRow.definition,
     LOOP: loop.definition,
-    OPEN_AI: openai.definition,
+    OPENAI: openai.definition,
     // these used to be lowercase step IDs, maintain for backwards compat
     discord: discord.definition,
     slack: slack.definition,
