@@ -8,6 +8,7 @@
   export let rowIdx
   export let defaultHeight = false
   export let center = false
+  export let readonly = false
 
   $: style = getStyle(width, selectedUser)
 
@@ -27,6 +28,7 @@
   class:focused
   class:error
   class:center
+  class:readonly
   class:default-height={defaultHeight}
   class:selected-other={selectedUser != null}
   on:focus
@@ -121,7 +123,8 @@
   .cell:hover {
     cursor: default;
   }
-  .cell.highlighted:not(.focused) {
+  .cell.highlighted:not(.focused),
+  .cell.focused.readonly {
     --cell-background: var(--cell-background-hover);
   }
   .cell.selected:not(.focused) {

@@ -21,11 +21,6 @@
     { "path": "../backend-core" },
     { "path": "../../../budibase-pro/packages/pro" }
   ],
-  "include": [
-    "src/**/*",
-    "package.json"
-  ],
-  "exclude": [
-    "dist"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["dist"]
 }

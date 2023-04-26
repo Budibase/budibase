@@ -12,5 +12,5 @@
   on:click={() => dispatch("add-column")}
   disabled={!$config.allowAddColumns}
 >
-  Create column
+  Add column
 </ActionButton>
