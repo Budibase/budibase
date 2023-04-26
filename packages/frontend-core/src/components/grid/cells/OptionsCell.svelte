@@ -12,7 +12,7 @@
   export let api
   export let invertX = false
   export let invertY = false
-  export let contentLines
+  export let contentLines = 1
 
   let isOpen = false
   let focusedOptionIdx = null

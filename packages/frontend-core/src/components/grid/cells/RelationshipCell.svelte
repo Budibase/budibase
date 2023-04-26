@@ -29,6 +29,7 @@
   export let onChange
   export let invertX = false
   export let invertY = false
+  export let contentLines = 1
 
   const { API, dispatch } = getContext("grid")
   const color = getColor(0)
@@ -243,7 +244,11 @@
 
 <div class="wrapper" class:editable class:focused style="--color:{color};">
   <div class="container">
-    <div class="values" on:wheel={e => (focused ? e.stopPropagation() : null)}>
+    <div
+      class="values"
+      class:wrap={editable || contentLines > 1}
+      on:wheel={e => (focused ? e.stopPropagation() : null)}
+    >
       {#each value || [] as relationship, idx}
         {#if relationship.primaryDisplay}
           <div class="badge">
@@ -376,6 +381,9 @@
     grid-row-gap: var(--cell-padding);
     overflow: hidden;
     padding: var(--cell-padding);
+    flex-wrap: nowrap;
+  }
+  .values.wrap {
     flex-wrap: wrap;
   }
   .count {
