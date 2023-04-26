@@ -59,7 +59,6 @@
   },
   "dependencies": {
     "@budibase/bbui": "2.5.6-alpha.32",
-    "@budibase/client": "2.5.6-alpha.32",
     "@budibase/frontend-core": "2.5.6-alpha.32",
     "@budibase/shared-core": "2.5.6-alpha.32",
     "@budibase/string-templates": "2.5.6-alpha.32",
