@@ -1,8 +1,8 @@
+import { DEFAULT_TENANT_ID, logging } from "@budibase/backend-core"
 import { AccountInternalAPI } from "../account-api"
 import * as fixtures from "../internal-api/fixtures"
 import { BudibaseInternalAPI } from "../internal-api"
-import { DEFAULT_TENANT_ID, logging } from "@budibase/backend-core"
-import { CreateAccountRequest } from "@budibase/types"
+import { CreateAccountRequest, Feature } from "@budibase/types"
 import env from "../environment"
 import { APIRequestOpts } from "../types"
 
@@ -22,8 +22,33 @@ async function createAccount() {
   const account = fixtures.accounts.generateAccount()
   await accountsApi.accounts.validateEmail(account.email, API_OPTS)
   await accountsApi.accounts.validateTenantId(account.tenantId, API_OPTS)
-  await accountsApi.accounts.create(account, API_OPTS)
+  const [res, newAccount] = await accountsApi.accounts.create(account, API_OPTS)
+  await updateLicense(newAccount.accountId)
   return account
+}
+
+const UNLIMITED = { value: -1 }
+
+async function updateLicense(accountId: string) {
+  await accountsApi.licenses.updateLicense(accountId, {
+    overrides: {
+      // add all features
+      features: Object.values(Feature),
+      quotas: {
+        usage: {
+          monthly: {
+            automations: UNLIMITED,
+          },
+          static: {
+            rows: UNLIMITED,
+            users: UNLIMITED,
+            userGroups: UNLIMITED,
+            plugins: UNLIMITED,
+          },
+        },
+      },
+    },
+  })
 }
 
 async function loginAsAdmin() {
