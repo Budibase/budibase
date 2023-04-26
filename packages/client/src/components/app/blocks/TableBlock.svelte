@@ -25,6 +25,11 @@
   export let titleButtonText
   export let titleButtonClickBehaviour
   export let onClickTitleButton
+  export let noRowsMessage
+  export let sidePanelFields
+  export let sidePanelShowDelete
+  export let sidePanelSaveLabel
+  export let sidePanelDeleteLabel
 
   const { fetchDatasourceSchema, API } = getContext("sdk")
   const stateKey = `ID_${generate()}`
@@ -221,6 +226,7 @@
             allowSelectRows,
             size,
             onClick: rowClickActions,
+            noRowsMessage: noRowsMessage || "No rows found",
           }}
         />
       </BlockComponent>
@@ -239,10 +245,12 @@
             props={{
               dataSource,
               showSaveButton: true,
-              showDeleteButton: true,
+              showDeleteButton: sidePanelShowDelete,
+              saveButtonLabel: sidePanelSaveLabel,
+              deleteButtonLabel: sidePanelDeleteLabel,
               actionType: "Update",
               rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
-              fields: normalFields,
+              fields: sidePanelFields || normalFields,
               title: editTitle,
               labelPosition: "left",
             }}
@@ -264,8 +272,9 @@
               dataSource,
               showSaveButton: true,
               showDeleteButton: false,
+              saveButtonLabel: sidePanelSaveLabel,
               actionType: "Create",
-              fields: normalFields,
+              fields: sidePanelFields || normalFields,
               title: "Create Row",
               labelPosition: "left",
             }}

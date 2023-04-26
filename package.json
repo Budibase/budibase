@@ -44,7 +44,7 @@
     "dev": "yarn run kill-all && lerna link && lerna run --stream --parallel dev:builder --concurrency 1 --stream",
     "dev:noserver": "yarn run kill-builder && lerna link && lerna run --stream dev:stack:up && lerna run --stream --parallel dev:builder --concurrency 1 --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
     "dev:server": "yarn run kill-server && lerna run --stream --parallel dev:builder --concurrency 1 --scope @budibase/backend-core --scope @budibase/worker --scope @budibase/server",
-    "dev:built": "cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream --parallel dev:built",
+    "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream --parallel dev:built",
     "test": "lerna run --stream test --stream",
     "test:pro": "bash scripts/pro/test.sh",
     "lint:eslint": "eslint packages && eslint qa-core",

@@ -1,15 +1,16 @@
 import {
-  ViewName,
-  getUsersByAppParams,
-  getProdAppID,
-  generateAppUserID,
-  queryGlobalView,
-  UNICODE_MAX,
-  DocumentType,
-  SEPARATOR,
   directCouchFind,
+  DocumentType,
+  generateAppUserID,
   getGlobalUserParams,
+  getProdAppID,
+  getUsersByAppParams,
   pagination,
+  queryGlobalView,
+  queryGlobalViewRaw,
+  SEPARATOR,
+  UNICODE_MAX,
+  ViewName,
 } from "./db"
 import { BulkDocsResponse, SearchUsersRequest, User } from "@budibase/types"
 import { getGlobalDB } from "./context"
@@ -238,4 +239,12 @@ export const paginatedUsers = async ({
     property,
     getKey,
   })
+}
+
+export async function getUserCount() {
+  const response = await queryGlobalViewRaw(ViewName.USER_BY_EMAIL, {
+    limit: 0, // to be as fast as possible - we just want the total rows count
+    include_docs: false,
+  })
+  return response.total_rows
 }

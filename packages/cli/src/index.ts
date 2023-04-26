@@ -1,17 +1,19 @@
 #!/usr/bin/env node
+import { logging } from "@budibase/backend-core"
+logging.disableLogger()
 import "./prebuilds"
 import "./environment"
+import { env } from "@budibase/backend-core"
 import { getCommands } from "./options"
 import { Command } from "commander"
 import { getHelpDescription } from "./utils"
-const json = require("../package.json")
 
 // add hosting config
 async function init() {
   const program = new Command()
     .addHelpCommand("help", getHelpDescription("Help with Budibase commands."))
     .helpOption(false)
-    .version(json.version)
+    .version(env.VERSION)
   // add commands
   for (let command of getCommands()) {
     command.configure(program)

@@ -1,5 +1,4 @@
 import env from "../../environment"
-import packageJson from "../../../package.json"
 import {
   createLinkView,
   createRoutingView,
@@ -24,6 +23,7 @@ import {
   migrations,
   objectStore,
   ErrorCode,
+  env as envCore,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
@@ -223,7 +223,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
   )
 
   ctx.body = {
-    application,
+    application: { ...application, upgradableVersion: envCore.VERSION },
     screens,
     layouts,
     clientLibPath,
@@ -264,7 +264,7 @@ async function performAppCreate(ctx: UserCtx) {
       _rev: undefined,
       appId,
       type: "app",
-      version: packageJson.version,
+      version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
       name: name,
       url: url,
@@ -433,7 +433,7 @@ export async function updateClient(ctx: UserCtx) {
   }
 
   // Update versions in app package
-  const updatedToVersion = packageJson.version
+  const updatedToVersion = envCore.VERSION
   const appPackageUpdates = {
     version: updatedToVersion,
     revertableVersion: currentVersion,
