@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi } from "openai";
+import { Configuration, OpenAIApi } from "openai"
 import {
   AutomationActionStepId,
   AutomationStepSchema,
@@ -7,7 +7,7 @@ import {
   AutomationIOType,
 } from "@budibase/types"
 import * as automationUtils from "../automationUtils"
-import environment from "../../environment";
+import environment from "../../environment"
 
 enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
@@ -61,7 +61,8 @@ export async function run({ inputs, context }: AutomationStepInput) {
   if (!environment.OPENAI_API_KEY) {
     return {
       success: false,
-      response: "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable.",
+      response:
+        "OpenAI API Key not configured - please add the OPENAI_API_KEY environment variable.",
     }
   }
 
@@ -75,19 +76,19 @@ export async function run({ inputs, context }: AutomationStepInput) {
   try {
     const configuration = new Configuration({
       apiKey: environment.OPENAI_API_KEY,
-    });
+    })
 
-    const openai = new OpenAIApi(configuration);
+    const openai = new OpenAIApi(configuration)
 
     const completion = await openai.createChatCompletion({
       model: inputs.model,
       messages: [
         {
           role: "user",
-          content: inputs.prompt
-        }
+          content: inputs.prompt,
+        },
       ],
-    });
+    })
 
     let response = completion?.data?.choices[0]?.message?.content
 
