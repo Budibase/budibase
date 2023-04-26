@@ -1486,15 +1486,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.5.6-alpha.29":
-  version "2.5.6-alpha.29"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.6-alpha.29.tgz#71414f68a296535ef53ffb0453352ea137c4aeab"
-  integrity sha512-tQuzMOo2WFxKvsUgYAfUEcLabRpmAD7hPlhBhCFzYasaXNbJiPhcwv4i52US0i0Wr2IXMb2X0d7fwa8tnbKzIA==
+"@budibase/pro@2.5.6-alpha.30":
+  version "2.5.6-alpha.30"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.6-alpha.30.tgz#9b8089a983fd61a062f31a8e5757d7bb5b56fb8c"
+  integrity sha512-YTyjMHK/wsSOFJkON7a5WRJSgAr8Gh/cflRzifm6Jw1Gb8S8B8Z6uTWW/S7+psVBRGeUfV1s8biYNr71tXz2Ng==
   dependencies:
-    "@budibase/backend-core" "2.5.6-alpha.29"
+    "@budibase/backend-core" "2.5.6-alpha.30"
     "@budibase/shared-core" "2.4.44-alpha.1"
     "@budibase/string-templates" "2.4.44-alpha.1"
-    "@budibase/types" "2.5.6-alpha.29"
+    "@budibase/types" "2.5.6-alpha.30"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -18357,6 +18357,14 @@ open@^8.4.0:
     define-lazy-prop "^2.0.0"
     is-docker "^2.1.1"
     is-wsl "^2.2.0"
+
+openai@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/openai/-/openai-3.2.1.tgz#1fa35bdf979cbde8453b43f2dd3a7d401ee40866"
+  integrity sha512-762C9BNlJPbjjlWZi4WYK9iM2tAVAv0uUp1UmI34vb0CN5T2mjB/qM6RYBmNKMh/dN9fC+bxqPwWJZUTWW052A==
+  dependencies:
+    axios "^0.26.0"
+    form-data "^4.0.0"
 
 openapi-response-validator@^9.2.0:
   version "9.3.1"
