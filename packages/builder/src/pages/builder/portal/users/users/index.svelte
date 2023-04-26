@@ -110,6 +110,27 @@
       }
     })
   }
+  let invitesLoaded = false
+  let pendingInvites = []
+  let parsedInvites = []
+
+  const invitesToSchema = invites => {
+    return invites.map(invite => {
+      const { admin, builder, userGroups, apps } = invite.info
+
+      return {
+        email: invite.email,
+        builder,
+        admin,
+        userGroups: userGroups,
+        apps: apps ? [...new Set(Object.keys(apps))] : undefined,
+      }
+    })
+  }
+  $: parsedInvites = invitesToSchema(pendingInvites)
+  $: console.log("parsed invites ", parsedInvites)
+  // $: console.log(pendingInvites)
+  $: console.log(enrichedUsers)
 
   const updateFetch = email => {
     fetch.update({
@@ -232,6 +253,9 @@
     try {
       await groups.actions.init()
       groupsLoaded = true
+
+      pendingInvites = await users.getInvites()
+      invitesLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
     }
@@ -324,6 +348,23 @@
       goToNextPage={fetch.nextPage}
     />
   </div>
+</Layout>
+
+<Layout noPadding gap="M">
+  <Layout gap="XS" noPadding>
+    <Heading>Pending invitations</Heading>
+    <Body>A list of all pending user invitations</Body>
+  </Layout>
+  <Divider />
+
+  <Table
+    {schema}
+    data={parsedInvites}
+    allowEditColumns={false}
+    allowEditRows={false}
+    {customRenderers}
+    loading={!invitesLoaded}
+  />
 </Layout>
 
 <Modal bind:this={createUserModal}>
