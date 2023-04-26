@@ -15,8 +15,8 @@ ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
 ENV TENANT_FEATURE_FLAGS=*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
 
-# copy files and install dependencies
-COPY package.json dist specs client build builder docker_run.sh pm2.config.js ./
+# copy required files
+COPY . ./
 
 # handle node-gyp
 RUN apt-get update \
@@ -24,9 +24,9 @@ RUN apt-get update \
     && yarn \
     && yarn cache clean \
     && apt-get remove -y --purge --auto-remove g++ make python \
-    && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
+    && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp \
+    && rm -rf node_modules/@budibase
 RUN yarn global add pm2
-RUN yarn
 
 # Install client for oracle datasource
 RUN apt-get install unzip libaio1
