@@ -4435,6 +4435,48 @@
                 "key": "row"
               }
             ]
+          },
+          {
+            "label": "Fields",
+            "type": "fieldConfiguration",
+            "key": "sidePanelFields",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
+          },
+          {
+            "label": "Show delete",
+            "type": "boolean",
+            "key": "sidePanelShowDelete",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
+          },
+          {
+            "label": "Save label",
+            "type": "text",
+            "key": "sidePanelSaveLabel",
+            "defaultValue": "Save",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
+          },
+          {
+            "label": "Delete label",
+            "type": "text",
+            "key": "sidePanelDeleteLabel",
+            "defaultValue": "Delete",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
           }
         ]
       },
@@ -4979,7 +5021,7 @@
         "name": "Fields",
         "settings": [
           {
-            "type": "multifield",
+            "type": "fieldConfiguration",
             "label": "Fields",
             "key": "fields",
             "selectAllFields": true
@@ -5029,6 +5071,17 @@
             }
           },
           {
+            "type": "text",
+            "key": "saveButtonLabel",
+            "label": "Save button label",
+            "nested": true,
+            "defaultValue": "Save",
+            "dependsOn": {
+              "setting": "showSaveButton",
+              "value": true
+            }
+          },
+          {
             "type": "boolean",
             "label": "Allow delete",
             "key": "showDeleteButton",
@@ -5036,6 +5089,17 @@
             "dependsOn": {
               "setting": "actionType",
               "value": "Update"
+            }
+          },
+          {
+            "type": "text",
+            "key": "deleteButtonLabel",
+            "label": "Delete button label",
+            "nested": true,
+            "defaultValue": "Delete",
+            "dependsOn": {
+              "setting": "showDeleteButton",
+              "value": true
             }
           },
           {
@@ -5161,36 +5225,5 @@
       "type": "schema",
       "suffix": "repeater"
     }
-  },
-  "spreadsheet": {
-    "name": "Spreadsheet",
-    "icon": "ViewGrid",
-    "settings": [
-      {
-        "key": "table",
-        "type": "table",
-        "label": "Table"
-      },
-      {
-        "type": "filter",
-        "label": "Filtering",
-        "key": "filter"
-      },
-      {
-        "type": "field/sortable",
-        "label": "Sort Column",
-        "key": "sortColumn"
-      },
-      {
-        "type": "select",
-        "label": "Sort Order",
-        "key": "sortOrder",
-        "options": [
-          "Ascending",
-          "Descending"
-        ],
-        "defaultValue": "Ascending"
-      }
-    ]
   }
 }
