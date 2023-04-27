@@ -123,7 +123,6 @@ beforeAll(async () => {
   jest.spyOn(events.plugin, "imported")
   jest.spyOn(events.plugin, "deleted")
 
-  jest.spyOn(events.license, "tierChanged")
   jest.spyOn(events.license, "planChanged")
   jest.spyOn(events.license, "activated")
   jest.spyOn(events.license, "checkoutOpened")
