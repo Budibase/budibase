@@ -25,7 +25,7 @@
   $: invalidEmails = []
 
   $: userCount = $licensing.userCount + userEmails.length
-  $: willExceed = userCount > $licensing.userLimit
+  $: willExceed = licensing.willExceedUserLimit(userCount)
 
   $: importDisabled =
     !userEmails.length || !validEmails(userEmails) || !usersRole || willExceed
