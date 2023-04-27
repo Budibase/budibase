@@ -19,12 +19,12 @@
   export let active = false
 
   const handleOnClick = async () => {
-    if (handlingOnClick) {
-      return
+    handlingOnClick = true
+
+    if (onClick) {
+      await onClick()
     }
 
-    handlingOnClick = true
-    await onClick()
     handlingOnClick = false
   }
 
@@ -49,7 +49,7 @@
   <button
     class={`spectrum-Button spectrum-Button--size${size} spectrum-Button--${type}`}
     class:spectrum-Button--quiet={quiet}
-    {disabled}
+    disabled={disabled || handlingOnClick}
     use:styleable={$component.styles}
     on:click={handleOnClick}
     contenteditable={$component.editing && !icon}
