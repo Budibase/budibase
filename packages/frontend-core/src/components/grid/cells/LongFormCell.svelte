@@ -1,5 +1,6 @@
 <script>
   import { onMount, tick } from "svelte"
+  import { clickOutside } from "@budibase/bbui"
 
   export let value
   export let focused = false
@@ -60,6 +61,7 @@
     on:change={handleChange}
     on:wheel|stopPropagation
     spellcheck="false"
+    use:clickOutside={close}
   />
 {:else}
   <div class="long-form-cell" on:click={editable ? open : null} class:editable>
