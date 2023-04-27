@@ -1,5 +1,5 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Icon, clickOutside } from "@budibase/bbui"
   import { getColor } from "../lib/utils"
   import { onMount } from "svelte"
 
@@ -118,6 +118,7 @@
       class:invertX
       class:invertY
       on:wheel={e => e.stopPropagation()}
+      use:clickOutside={close}
     >
       {#each options as option, idx}
         {@const color = getOptionColor(option)}

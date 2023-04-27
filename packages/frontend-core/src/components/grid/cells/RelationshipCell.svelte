@@ -18,7 +18,7 @@
 <script>
   import { getColor } from "../lib/utils"
   import { onMount, getContext } from "svelte"
-  import { Icon, Input, ProgressCircle } from "@budibase/bbui"
+  import { Icon, Input, ProgressCircle, clickOutside } from "@budibase/bbui"
   import { debounce } from "../../../utils/utils"
 
   export let value
@@ -284,7 +284,13 @@
   </div>
 
   {#if isOpen}
-    <div class="dropdown" class:invertX class:invertY on:wheel|stopPropagation>
+    <div
+      class="dropdown"
+      class:invertX
+      class:invertY
+      on:wheel|stopPropagation
+      use:clickOutside={close}
+    >
       <div class="search">
         <Input
           autofocus

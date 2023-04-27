@@ -94,7 +94,7 @@
       <Heading size="M">Groups</Heading>
       {#if !$licensing.groupsEnabled}
         <Tags>
-          <Tag icon="LockClosed">Pro plan</Tag>
+          <Tag icon="LockClosed">Business</Tag>
         </Tags>
       {/if}
     </div>
