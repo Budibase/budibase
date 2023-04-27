@@ -6,6 +6,10 @@ import { resolve } from "../centralPath"
 import env from "../../environment"
 import { TOP_LEVEL_PATH } from "./filesystem"
 
+export function devClientLibPath() {
+  return require.resolve("@budibase/client")
+}
+
 /**
  * Client library paths in the object store:
  * Previously, the entire client library package was downloaded from NPM
@@ -89,9 +93,10 @@ export async function updateClientLibrary(appId: string) {
   let manifest, client
 
   if (env.isDev()) {
+    const path = devClientLibPath()
     // Load the symlinked version in dev which is always the newest
-    manifest = require.resolve("@budibase/client/manifest.json")
-    client = require.resolve("@budibase/client")
+    manifest = join(path, "manifest.json")
+    client = path
   } else {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")

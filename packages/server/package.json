@@ -10,7 +10,7 @@
   },
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "../../scripts/build.js",
+    "build": "./scripts/build.js",
     "tsbuild": "tsc -p tsconfig.build.json && mv dist/src/* dist/ && rimraf dist/src/",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
