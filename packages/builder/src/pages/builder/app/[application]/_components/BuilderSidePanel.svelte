@@ -28,6 +28,10 @@
   let inviting = false
   let searchFocus = false
 
+  //Or searching = true?
+  let filtered = true
+  $: console.log("filtering enabled ", filtered)
+
   let appInvites = []
   let filteredInvites = []
   let filteredUsers = []
@@ -52,15 +56,31 @@
   }
 
   const filterInvites = async query => {
-    appInvites = await getInvites()
-    if (!query || query == "") {
-      filteredInvites = appInvites
+    if (!prodAppId) {
       return
     }
-    filteredInvites = appInvites.filter(invite => invite.email.includes(query))
+
+    appInvites = await getInvites()
+
+    //On Focus behaviour
+    if (!filtered && (!query || query == "")) {
+      filteredInvites = [...appInvites]
+      return
+    }
+
+    filteredInvites = appInvites.filter(invite => {
+      const inviteInfo = invite.info?.apps
+      if ((!query || query == "") && inviteInfo && prodAppId) {
+        return Object.keys(inviteInfo).includes(prodAppId)
+      }
+      return invite.email.includes(query)
+    })
   }
 
-  $: filterInvites(query)
+  $: filtered, prodAppId, filterInvites(query)
+  $: if (searchFocus === true) {
+    filtered = false
+  }
 
   const usersFetch = fetchData({
     API,
@@ -351,7 +371,7 @@
 
   onMount(() => {
     rendered = true
-    searchFocus = true
+    // searchFocus = true
   })
 
   function handleKeyDown(evt) {
@@ -417,7 +437,6 @@
         autocomplete="off"
         disabled={inviting}
         value={query}
-        autofocus
         on:input={e => {
           query = e.target.value.trim()
         }}
@@ -428,16 +447,20 @@
 
     <span
       class="search-input-icon"
-      class:searching={query}
+      class:searching={query || !filtered}
       on:click={() => {
+        if (!filtered) {
+          filtered = true
+        }
         if (!query) {
           return
         }
         query = null
         userOnboardResponse = null
+        filtered = true
       }}
     >
-      <Icon name={query ? "Close" : "Search"} />
+      <Icon name={!filtered || query ? "Close" : "Search"} />
     </span>
   </div>
 
@@ -481,6 +504,8 @@
                   </div>
                 </div>
                 <div class="auth-entity-access">
+                  <!-- {#key filteredInvites} -->
+                  <!-- {invite.info.apps?.[prodAppId]} -->
                   <RoleSelect
                     placeholder={false}
                     value={invite.info.apps?.[prodAppId]}
@@ -496,6 +521,7 @@
                     autoWidth
                     align="right"
                   />
+                  <!-- {/key} -->
                 </div>
               </div>
             {/each}
