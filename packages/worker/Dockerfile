@@ -14,8 +14,7 @@ COPY . ./
 RUN apk add --no-cache --virtual .gyp python3 make g++ \
     && yarn && apk del .gyp \
     && yarn \
-    && yarn cache clean \
-    && rm -rf node_modules/@budibase
+    && yarn cache clean
 RUN yarn global add pm2
 
 EXPOSE 4001

@@ -24,8 +24,7 @@ RUN apt-get update \
     && yarn \
     && yarn cache clean \
     && apt-get remove -y --purge --auto-remove g++ make python \
-    && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp \
-    && rm -rf node_modules/@budibase
+    && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
 RUN yarn global add pm2
 
 # Install client for oracle datasource
