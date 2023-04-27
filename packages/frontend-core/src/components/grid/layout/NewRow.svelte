@@ -7,6 +7,7 @@
   import { GutterWidth } from "../lib/constants"
   import { NewRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
+  import KeyboardShortcut from "./KeyboardShortcut.svelte"
 
   const {
     hoveredRowId,
@@ -209,8 +210,18 @@
       </GridScrollWrapper>
     </div>
     <div class="buttons" transition:fade={{ duration: 130 }}>
-      <Button size="M" cta on:click={addRow} disabled={isAdding}>Save</Button>
-      <Button size="M" secondary newStyles on:click={clear}>Cancel</Button>
+      <Button size="M" cta on:click={addRow} disabled={isAdding}>
+        <div class="button-with-keys">
+          Save
+          <KeyboardShortcut overlay keybind="Ctrl+Enter" />
+        </div>
+      </Button>
+      <Button size="M" secondary newStyles on:click={clear}>
+        <div class="button-with-keys">
+          Cancel
+          <KeyboardShortcut overlay keybind="Esc" />
+        </div>
+      </Button>
     </div>
   </div>
 {/if}
@@ -260,6 +271,14 @@
     position: absolute;
     top: calc(var(--row-height) + var(--offset) + 24px);
     left: var(--gutter-width);
+  }
+  .button-with-keys {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .button-with-keys :global(> div) {
+    padding-top: 2px;
   }
 
   /* Sticky column styles */

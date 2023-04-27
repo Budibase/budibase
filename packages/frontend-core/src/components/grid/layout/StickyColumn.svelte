@@ -7,6 +7,7 @@
   import HeaderCell from "../cells/HeaderCell.svelte"
   import { GutterWidth, BlankRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
+  import KeyboardShortcut from "./KeyboardShortcut.svelte"
 
   const {
     rows,
@@ -105,7 +106,9 @@
             <GridCell
               width={$stickyColumn.width}
               highlighted={$hoveredRowId === BlankRowID}
-            />
+            >
+              <KeyboardShortcut padded keybind="Ctrl+Enter" />
+            </GridCell>
           {/if}
         </div>
       {/if}
