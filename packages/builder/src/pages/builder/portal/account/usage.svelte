@@ -242,10 +242,7 @@
             </Layout>
             <Layout noPadding gap="M">
               {#each monthlyUsage as usage}
-                <Usage
-                  {usage}
-                  warnWhenFull={WARN_USAGE.includes(usage.name)}
-                />
+                <Usage {usage} warnWhenFull={WARN_USAGE.includes(usage.name)} />
               {/each}
             </Layout>
           </Layout>
