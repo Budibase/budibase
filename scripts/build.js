@@ -11,8 +11,12 @@ const sveltePlugin = require("esbuild-svelte")
 
 const { default: NodeResolve } = require("@esbuild-plugins/node-resolve")
 
+const entry = process.argv[2] || "./src/index.ts"
+const outfile = `dist/${entry.split("/").pop().replace(".ts", ".js")}`
+console.log(`Building from ${entry} to ${outfile}`)
+
 const sharedConfig = {
-  entryPoints: [`./src/index.ts`],
+  entryPoints: [entry],
   bundle: true,
   minify: true,
   tsconfig: `tsconfig.build.json`,
@@ -37,7 +41,7 @@ const sharedConfig = {
 build({
   ...sharedConfig,
   platform: "node",
-  outfile: "dist/index.js",
+  outfile,
 }).then(() => {
   glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
     for (const file of files) {
