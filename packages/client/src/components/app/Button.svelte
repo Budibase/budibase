@@ -5,6 +5,8 @@
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
+  let handlingOnClick = false
+
   export let disabled = false
   export let text = ""
   export let onClick
@@ -15,6 +17,16 @@
   // For internal use only for now - not defined in the manifest
   export let icon = null
   export let active = false
+
+  const handleOnClick = async () => {
+    if (handlingOnClick) {
+      return
+    }
+
+    handlingOnClick = true
+    await onClick()
+    handlingOnClick = false
+  }
 
   let node
 
@@ -39,7 +51,7 @@
     class:spectrum-Button--quiet={quiet}
     {disabled}
     use:styleable={$component.styles}
-    on:click={onClick}
+    on:click={handleOnClick}
     contenteditable={$component.editing && !icon}
     on:blur={$component.editing ? updateText : null}
     bind:this={node}
