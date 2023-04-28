@@ -6,7 +6,8 @@ import {
   PlanModel,
   PlanType,
   PriceDuration,
-  PurchasedPlan, PurchasedPrice,
+  PurchasedPlan,
+  PurchasedPrice,
   Quotas,
   Subscription,
 } from "@budibase/types"
@@ -19,7 +20,7 @@ export function price(): PurchasedPrice {
     duration: PriceDuration.MONTHLY,
     priceId: "price_123",
     dayPasses: undefined,
-    isPerUser: true
+    isPerUser: true,
   }
 }
 
@@ -29,7 +30,7 @@ export const plan = (type: PlanType = PlanType.FREE): PurchasedPlan => {
     usesInvoicing: false,
     minUsers: 1,
     model: PlanModel.PER_USER,
-    price: price()
+    price: price(),
   }
 }
 
