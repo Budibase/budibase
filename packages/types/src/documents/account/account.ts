@@ -39,6 +39,7 @@ export interface Account extends CreateAccount {
   // licensing
   tier: string // deprecated
   planType?: PlanType
+  /** @deprecated */
   planTier?: number
   license?: License
   installId?: string
