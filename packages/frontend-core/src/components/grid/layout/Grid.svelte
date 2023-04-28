@@ -244,7 +244,7 @@
     height: 100%;
     display: grid;
     place-items: center;
-    z-index: 10;
+    z-index: 100;
   }
   .grid-loading:before {
     content: "";
