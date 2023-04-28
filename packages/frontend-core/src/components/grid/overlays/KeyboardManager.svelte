@@ -122,7 +122,9 @@
           break
         case " ":
         case "Space":
-          toggleSelectRow()
+          if ($config.allowDeleteRows) {
+            toggleSelectRow()
+          }
           break
         default:
           startEnteringValue(e.key, e.which)
