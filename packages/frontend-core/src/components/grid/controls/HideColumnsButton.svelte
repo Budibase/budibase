@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover, Toggle } from "@budibase/bbui"
 
-  const { columns, stickyColumn } = getContext("grid")
+  const { columns, stickyColumn, compact } = getContext("grid")
 
   let open = false
   let anchor
@@ -47,12 +47,13 @@
     on:click={() => (open = !open)}
     selected={open || anyHidden}
     disabled={!$columns.length}
+    tooltip={$compact ? "Columns" : ""}
   >
-    Columns
+    {$compact ? "" : "Columns"}
   </ActionButton>
 </div>
 
-<Popover bind:open {anchor} align="left">
+<Popover bind:open {anchor} align={$compact ? "right" : "left"}>
   <div class="content">
     <div class="columns">
       {#if $stickyColumn}
