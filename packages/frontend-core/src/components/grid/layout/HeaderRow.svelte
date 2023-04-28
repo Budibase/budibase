@@ -46,7 +46,6 @@
     border-bottom: var(--cell-border);
     position: relative;
     height: var(--default-row-height);
-    z-index: 1;
   }
   .row {
     display: flex;
@@ -62,6 +61,7 @@
     border-right: var(--cell-border);
     border-bottom: var(--cell-border);
     background: var(--spectrum-global-color-gray-100);
+    z-index: 20;
   }
   .add:hover {
     background: var(--spectrum-global-color-gray-200);
