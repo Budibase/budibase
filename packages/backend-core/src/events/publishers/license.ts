@@ -9,7 +9,8 @@ import {
   LicenseCheckoutSuccessEvent,
   LicenseCheckoutOpenedEvent,
   LicensePaymentFailedEvent,
-  LicensePaymentRecoveredEvent, PriceDuration,
+  LicensePaymentRecoveredEvent,
+  PriceDuration,
 } from "@budibase/types"
 
 async function planChanged(
@@ -24,7 +25,7 @@ async function planChanged(
     to,
     from,
     quantity,
-    duration
+    duration,
   }
   await publishEvent(Event.LICENSE_PLAN_CHANGED, properties)
 }
