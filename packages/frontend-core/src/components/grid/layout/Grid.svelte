@@ -112,10 +112,10 @@
       <AddRowButton />
       <AddColumnButton />
       <slot name="controls" />
+      <SortButton />
+      <HideColumnsButton />
       <ColumnWidthButton />
       <RowHeightButton />
-      <HideColumnsButton />
-      <SortButton />
     </div>
     <div class="controls-right">
       <DeleteButton />
@@ -214,6 +214,7 @@
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
     background: var(--background);
+    z-index: 2;
   }
   .controls-left,
   .controls-right {
