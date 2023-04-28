@@ -5214,5 +5214,22 @@
       "type": "schema",
       "suffix": "repeater"
     }
+  },
+  "grid": {
+    "name": "Grid",
+    "icon": "ViewGrid",
+    "hasChildren": true,
+    "settings": [
+      {
+        "type": "number",
+        "key": "cols",
+        "label": "Columns"
+      },
+      {
+        "type": "number",
+        "key": "rows",
+        "label": "Rows"
+      }
+    ]
   }
 }
