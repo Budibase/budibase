@@ -82,7 +82,7 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   if (client) {
     client.disconnect()
   }
-  const { redisProtocolUrl, opts, host, port } = getRedisOptions(CLUSTERED)
+  const { redisProtocolUrl, opts, host, port } = getRedisOptions()
 
   if (CLUSTERED) {
     client = new Redis.Cluster([{ host, port }], opts)
