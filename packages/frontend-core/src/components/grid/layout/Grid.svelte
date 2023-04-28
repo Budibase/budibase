@@ -6,7 +6,7 @@
   import { createEventManagers } from "../lib/events"
   import { createAPIClient } from "../../../api"
   import { attachStores } from "../stores"
-  import DeleteButton from "../controls/DeleteButton.svelte"
+  import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
   import BetaButton from "../controls/BetaButton.svelte"
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
@@ -118,7 +118,6 @@
       <RowHeightButton />
     </div>
     <div class="controls-right">
-      <DeleteButton />
       <UserAvatars />
     </div>
   </div>
@@ -146,6 +145,7 @@
       <ProgressCircle />
     </div>
   {/if}
+  <BulkDeleteHandler />
   <KeyboardManager />
 </div>
 
