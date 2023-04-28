@@ -145,7 +145,9 @@
       <ProgressCircle />
     </div>
   {/if}
-  <BulkDeleteHandler />
+  {#if allowDeleteRows}
+    <BulkDeleteHandler />
+  {/if}
   <KeyboardManager />
 </div>
 

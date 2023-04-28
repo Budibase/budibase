@@ -13,6 +13,7 @@
     clipboard,
     dispatch,
     selectedRows,
+    config,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -40,7 +41,7 @@
         e.preventDefault()
         dispatch("add-row-inline")
       } else if (e.key === "Delete" || e.key === "Backspace") {
-        if (Object.keys($selectedRows).length) {
+        if (Object.keys($selectedRows).length && $config.allowDeleteRows) {
           dispatch("request-bulk-delete")
         }
       }
@@ -106,7 +107,7 @@
           break
         case "Delete":
         case "Backspace":
-          if (Object.keys($selectedRows).length) {
+          if (Object.keys($selectedRows).length && $config.allowDeleteRows) {
             dispatch("request-bulk-delete")
           } else {
             deleteSelectedCell()
