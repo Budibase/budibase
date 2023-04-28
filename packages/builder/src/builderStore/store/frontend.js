@@ -621,10 +621,9 @@ export const getFrontendStore = () => {
           else {
             if (setting.type === "dataProvider") {
               // Validate data provider exists, or else clear it
-              const treeId = parent?._id || component._id
-              const path = findComponentPath(screen?.props, treeId)
-              const providers = path.filter(component =>
-                component._component?.endsWith("/dataprovider")
+              const providers = findAllMatchingComponents(
+                screen?.props,
+                component => component._component?.endsWith("/dataprovider")
               )
               // Validate non-empty values
               const valid = providers?.some(dp => value.includes?.(dp._id))

@@ -199,15 +199,7 @@ export const getContextProviderComponents = (
     return []
   }
 
-  // Get the component tree leading up to this component, ignoring the component
-  // itself
-  const path = findComponentPath(asset.props, componentId)
-  if (!options?.includeSelf) {
-    path.pop()
-  }
-
-  // Filter by only data provider components
-  return path.filter(component => {
+  return findAllMatchingComponents(asset.props, component => {
     const def = store.actions.components.getDefinition(component._component)
     if (!def?.context) {
       return false
@@ -222,6 +214,30 @@ export const getContextProviderComponents = (
     const contexts = Array.isArray(def.context) ? def.context : [def.context]
     return contexts.find(context => context.type === type) != null
   })
+  //
+  // // Get the component tree leading up to this component, ignoring the component
+  // // itself
+  // const path = findComponentPath(asset.props, componentId)
+  // if (!options?.includeSelf) {
+  //   path.pop()
+  // }
+  //
+  // // Filter by only data provider components
+  // return path.filter(component => {
+  //   const def = store.actions.components.getDefinition(component._component)
+  //   if (!def?.context) {
+  //     return false
+  //   }
+  //
+  //   // If no type specified, return anything that exposes context
+  //   if (!type) {
+  //     return true
+  //   }
+  //
+  //   // Otherwise only match components with the specific context type
+  //   const contexts = Array.isArray(def.context) ? def.context : [def.context]
+  //   return contexts.find(context => context.type === type) != null
+  // })
 }
 
 /**

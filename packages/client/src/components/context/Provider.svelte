@@ -11,8 +11,6 @@
   // Clone and create new data context for this component tree
   const context = getContext("context")
   const component = getContext("component")
-  const newContext = createContextStore(context)
-  setContext("context", newContext)
 
   const providerKey = key || $component.id
 
@@ -30,7 +28,7 @@
   const provideData = newData => {
     const dataKey = JSON.stringify(newData)
     if (dataKey !== lastDataKey) {
-      newContext.actions.provideData(providerKey, newData)
+      context.actions.provideData(providerKey, newData)
       lastDataKey = dataKey
     }
   }
@@ -40,7 +38,7 @@
     if (actionsKey !== lastActionsKey) {
       lastActionsKey = actionsKey
       newActions?.forEach(({ type, callback, metadata }) => {
-        newContext.actions.provideAction(providerKey, type, callback)
+        context.actions.provideAction(providerKey, type, callback)
 
         // Register any "refresh datasource" actions with a singleton store
         // so we can easily refresh data at all levels for any datasource

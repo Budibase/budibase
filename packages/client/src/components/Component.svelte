@@ -30,6 +30,11 @@
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
   import ComponentErrorState from "components/error-states/ComponentErrorState.svelte"
   import { BudibasePrefix } from "../stores/components.js"
+  import {
+    decodeJSBinding,
+    findHBSBlocks,
+    isJSBinding,
+  } from "@budibase/string-templates"
 
   export let instance = {}
   export let isLayout = false
@@ -98,6 +103,13 @@
   // We clear these whenever a new instance is received.
   let ephemeralStyles
 
+  // Single string of all HBS blocks, used to check if we use a certain binding
+  // or not
+  let bindingString = ""
+
+  // List of context keys which we use inside bindings
+  let knownContextKeyMap = {}
+
   // Set up initial state for each new component instance
   $: initialise(instance)
 
@@ -155,7 +167,7 @@
   $: emptyState = empty && showEmptyState
 
   // Enrich component settings
-  $: enrichComponentSettings($context, settingsDefinitionMap)
+  // $: enrichComponentSettings($context, settingsDefinitionMap)
 
   // Evaluate conditional UI settings and store any component setting changes
   // which need to be made
@@ -212,7 +224,8 @@
     }
 
     // Ensure we're processing a new instance
-    const instanceKey = Helpers.hashString(JSON.stringify(instance))
+    const stringifiedInstance = JSON.stringify(instance)
+    const instanceKey = Helpers.hashString(stringifiedInstance)
     if (instanceKey === lastInstanceKey && !force) {
       return
     } else {
@@ -272,10 +285,22 @@
       return missing
     })
 
-    // Force an initial enrichment of the new settings
-    enrichComponentSettings(get(context), settingsDefinitionMap, {
-      force: true,
+    // When considering bindings we can ignore children, so we remove that
+    // before storing the reference stringified version
+    const noChildren = JSON.stringify({ ...instance, _children: null })
+    const bindings = findHBSBlocks(noChildren).map(binding => {
+      let sanitizedBinding = binding.replace(/\\"/g, '"')
+      if (isJSBinding(sanitizedBinding)) {
+        return decodeJSBinding(sanitizedBinding)
+      } else {
+        return sanitizedBinding
+      }
     })
+    bindingString = bindings.join(" ")
+    knownContextKeyMap = {}
+
+    // Force an initial enrichment of the new settings
+    enrichComponentSettings($context, settingsDefinitionMap)
   }
 
   const getSettingsDefinitionMap = settingsDefinition => {
@@ -355,17 +380,7 @@
   }
 
   // Enriches any string component props using handlebars
-  const enrichComponentSettings = (
-    context,
-    settingsDefinitionMap,
-    options = { force: false }
-  ) => {
-    const contextChanged = context.key !== lastContextKey
-    if (!contextChanged && !options?.force) {
-      return
-    }
-    lastContextKey = context.key
-
+  const enrichComponentSettings = (context, settingsDefinitionMap) => {
     // Record the timestamp so we can reference it after enrichment
     latestUpdateTime = Date.now()
     const enrichmentTime = latestUpdateTime
@@ -480,6 +495,28 @@
     })
   }
 
+  const handleContextChange = key => {
+    // Check if we already know if this key is used
+    let used = knownContextKeyMap[key]
+
+    // If we don't know, check
+    if (used == null) {
+      // Check HBS
+      if (bindingString.indexOf(`[${key}]`) !== -1) {
+        used = true
+      } else {
+        used = false
+      }
+      // Cache result
+      knownContextKeyMap[key] = used
+    }
+
+    // Enrich settings if we use this key
+    if (used) {
+      enrichComponentSettings($context, settingsDefinitionMap)
+    }
+  }
+
   onMount(() => {
     if (
       $appStore.isDevApp &&
@@ -496,6 +533,8 @@
       })
     }
   })
+
+  onMount(() => context.actions.observeChanges(handleContextChange))
 
   onDestroy(() => {
     if (
