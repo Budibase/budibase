@@ -130,7 +130,9 @@
           <GridBody />
         </div>
         <BetaButton />
-        <NewRow />
+        {#if allowAddRows}
+          <NewRow />
+        {/if}
         <div class="overlays">
           <ResizeOverlay />
           <ReorderOverlay />

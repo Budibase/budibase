@@ -38,8 +38,10 @@
         e.preventDefault()
         focusFirstCell()
       } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault()
-        dispatch("add-row-inline")
+        if ($config.allowAddRows) {
+          e.preventDefault()
+          dispatch("add-row-inline")
+        }
       } else if (e.key === "Delete" || e.key === "Backspace") {
         if (Object.keys($selectedRows).length && $config.allowDeleteRows) {
           dispatch("request-bulk-delete")
@@ -89,7 +91,9 @@
           }
           break
         case "Enter":
-          dispatch("add-row-inline")
+          if ($config.allowAddRows) {
+            dispatch("add-row-inline")
+          }
       }
     } else {
       switch (e.key) {
