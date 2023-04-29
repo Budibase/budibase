@@ -48,6 +48,7 @@ export interface Account extends CreateAccount {
   stripeCustomerId?: string
   licenseKey?: string
   licenseKeyActivatedAt?: number
+  licenseRequestedAt?: number
   licenseOverrides?: LicenseOverrides
   quotaUsage?: QuotaUsage
 }
