@@ -29,7 +29,7 @@ export const plan = (type: PlanType = PlanType.FREE): PurchasedPlan => {
     type,
     usesInvoicing: false,
     model: PlanModel.PER_USER,
-    price: price(),
+    price: type !== PlanType.FREE ? price() : undefined,
   }
 }
 
