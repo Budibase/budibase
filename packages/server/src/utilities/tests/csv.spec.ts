@@ -11,6 +11,23 @@ describe("csv", () => {
         { id: "1", title: "aaa" },
         { id: "2", title: "bbb" },
       ])
+      result.forEach(r => expect(Object.keys(r)).toEqual(["id", "title"]))
+    })
+
+    test("empty values are casted as undefined", async () => {
+      const csvString =
+        '"id","optional","title"\n1,,"aaa"\n2,"value","bbb"\n3,,"ccc"'
+
+      const result = await jsonFromCsvString(csvString)
+
+      expect(result).toEqual([
+        { id: "1", optional: undefined, title: "aaa" },
+        { id: "2", optional: "value", title: "bbb" },
+        { id: "3", optional: undefined, title: "ccc" },
+      ])
+      result.forEach(r =>
+        expect(Object.keys(r)).toEqual(["id", "optional", "title"])
+      )
     })
   })
 })
