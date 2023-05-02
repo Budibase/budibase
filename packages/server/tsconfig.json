@@ -5,6 +5,7 @@
     "declaration": true,
     "sourceMap": true,
     "baseUrl": ".",
+    "outDir": "dist",
     "paths": {
       "@budibase/types": ["../types/src"],
       "@budibase/backend-core": ["../backend-core/src"],
@@ -17,6 +18,12 @@
     "require": ["tsconfig-paths/register"],
     "swc": true
   },
-  "include": ["src/**/*", "specs", "package.json"],
+  "references": [
+    { "path": "../types" },
+    { "path": "../backend-core" },
+    { "path": "../shared-core" },
+    { "path": "../../../budibase-pro/packages/pro" }
+  ],
+  "include": ["src/**/*", "specs"],
   "exclude": ["node_modules", "dist"]
 }

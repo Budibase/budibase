@@ -31,7 +31,9 @@
     isOpen = true
     await tick()
     textarea.focus()
-    textarea.setSelectionRange(0, 0)
+    if (value?.length > 100) {
+      textarea.setSelectionRange(0, 0)
+    }
   }
 
   const close = () => {
@@ -43,6 +45,7 @@
     api = {
       focus: () => open(),
       blur: () => close(),
+      isActive: () => isOpen,
       onKeyDown,
     }
   })
