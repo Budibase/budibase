@@ -4,28 +4,33 @@
   import Bulgaria from "../../assets/bulgaria.png"
   import Covanta from "../../assets/covanta.png"
   import Schnellecke from "../../assets/schnellecke.png"
+  import { _ } from "../../../builder/lang/i18n"
 
   export let enabled = true
 
   const testimonials = [
     {
-      text: "Budibase was the only solution that checked all the boxes for Covanta. Covanta expects to realize $3.2MM in savings due to the elimination of redundant data entry.",
-      name: "Charles Link",
-      role: "Senior Director, Data and Analytics",
+      text: $_("frontend-core.src.components.TestimonialPage.Budibase"),
+      name: $_("frontend-core.src.components.TestimonialPage.Charles_Link"),
+      role: $_("frontend-core.src.components.TestimonialPage.Senior_Director"),
       image: Covanta,
       imageSize: 105,
     },
     {
-      text: "Budibase was mission-critical for us and went a long way in preventing what could have become a humanitarian crisis here in Bulgaria.",
-      name: "Bozhidar Bozhanov",
-      role: "Government of Bulgaria",
+      text: $_("frontend-core.src.components.TestimonialPage.Budibase_mission"),
+      name: $_(
+        "frontend-core.src.components.TestimonialPage.Bozhidar_Bozhanov"
+      ),
+      role: $_(
+        "frontend-core.src.components.TestimonialPage.Government_Bulgaria"
+      ),
       image: Bulgaria,
       imageSize: 49,
     },
     {
-      text: "Centralization of authentication, quick turnaround time for requests, integration with different database systems has given it the edge and it’s now used daily for internal development for those apps that you know you need but don’t feel value in losing days of development to reinvent the wheel.",
-      name: "Davide Lenzarini",
-      role: "IT manager",
+      text: $_("frontend-core.src.components.TestimonialPage.Centralization"),
+      name: $_("frontend-core.src.components.TestimonialPage.Davide_Lenzarini"),
+      role: $_("frontend-core.src.components.TestimonialPage.IT_manager"),
       image: Schnellecke,
       imageSize: 141,
     },
