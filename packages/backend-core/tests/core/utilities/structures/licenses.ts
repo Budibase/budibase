@@ -28,7 +28,6 @@ export const plan = (type: PlanType = PlanType.FREE): PurchasedPlan => {
   return {
     type,
     usesInvoicing: false,
-    minUsers: 1,
     model: PlanModel.PER_USER,
     price: price(),
   }
