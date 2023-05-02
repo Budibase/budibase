@@ -1,4 +1,5 @@
-import { QuotaUsage } from "../../documents"
+import { LicenseOverrides, QuotaUsage } from "../../documents"
+import { PlanType } from "../../sdk"
 
 export interface GetLicenseRequest {
   // All fields should be optional to cater for
@@ -19,4 +20,9 @@ export interface QuotaTriggeredRequest {
 
 export interface LicenseActivateRequest {
   installVersion?: string
+}
+
+export interface UpdateLicenseRequest {
+  planType?: PlanType
+  overrides?: LicenseOverrides
 }

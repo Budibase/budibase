@@ -9,7 +9,6 @@
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import { API } from "api"
-  import clientPackage from "@budibase/client/package.json"
 
   export function show() {
     updateModal.show()
@@ -25,9 +24,9 @@
 
   $: appId = $store.appId
   $: updateAvailable =
-    clientPackage.version &&
+    $store.upgradableVersion &&
     $store.version &&
-    clientPackage.version !== $store.version
+    $store.upgradableVersion !== $store.version
   $: revertAvailable = $store.revertableVersion != null
 
   const refreshAppPackage = async () => {
@@ -46,7 +45,7 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-        `App updated successfully to version ${clientPackage.version}`
+        `App updated successfully to version ${$store.upgradableVersion}`
       )
     } catch (err) {
       notifications.error(`Error updating app: ${err}`)
@@ -91,7 +90,7 @@
     {#if updateAvailable}
       <Body size="S">
         This app is currently using version <b>{$store.version}</b>, but version
-        <b>{clientPackage.version}</b> is available. Updates can contain new features,
+        <b>{$store.upgradableVersion}</b> is available. Updates can contain new features,
         performance improvements and bug fixes.
       </Body>
     {:else}

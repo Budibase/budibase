@@ -20,11 +20,11 @@ const config: Config.InitialOptions = {
 }
 
 // add pro sources if they exist
-if (fs.existsSync("../../../budibase-pro")) {
-  config.moduleNameMapper["@budibase/pro/(.*)"] =
-    "<rootDir>/../../../budibase-pro/packages/pro/$1"
-  config.moduleNameMapper["@budibase/pro"] =
-    "<rootDir>/../../../budibase-pro/packages/pro/src"
+if (fs.existsSync("../pro/packages")) {
+  config.moduleNameMapper!["@budibase/pro/(.*)"] =
+    "<rootDir>/../pro/packages/pro/$1"
+  config.moduleNameMapper!["@budibase/pro"] =
+    "<rootDir>/../pro/packages/pro/src"
 }
 
 export default config

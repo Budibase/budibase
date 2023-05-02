@@ -223,7 +223,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
   )
 
   ctx.body = {
-    application,
+    application: { ...application, upgradableVersion: envCore.VERSION },
     screens,
     layouts,
     clientLibPath,
