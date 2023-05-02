@@ -33,7 +33,7 @@ if (!env.DISABLE_PINO_LOGGER) {
 
   pinoInstance = pino(pinoOptions)
 
-// CONSOLE OVERRIDES
+  // CONSOLE OVERRIDES
 
   interface MergingObject {
     objects?: any[]
@@ -137,7 +137,7 @@ if (!env.DISABLE_PINO_LOGGER) {
     pinoInstance?.debug(obj, msg)
   }
 
-// CONTEXT
+  // CONTEXT
 
   const getTenantId = () => {
     let tenantId
