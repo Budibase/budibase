@@ -349,7 +349,7 @@ describe("row api - postgres", () => {
       },
       plus: true,
       source: "POSTGRES",
-      type: "datasource",
+      type: "datasource_plus",
       _id: expect.any(String),
       _rev: expect.any(String),
       createdAt: expect.any(String),
