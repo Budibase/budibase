@@ -21,9 +21,9 @@ describe("csv", () => {
       const result = await jsonFromCsvString(csvString)
 
       expect(result).toEqual([
-        { id: "1", optional: undefined, title: "aaa" },
+        { id: "1", optional: null, title: "aaa" },
         { id: "2", optional: "value", title: "bbb" },
-        { id: "3", optional: undefined, title: "ccc" },
+        { id: "3", optional: null, title: "ccc" },
       ])
       result.forEach(r =>
         expect(Object.keys(r)).toEqual(["id", "optional", "title"])
