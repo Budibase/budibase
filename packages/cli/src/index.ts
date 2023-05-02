@@ -1,8 +1,8 @@
 #!/usr/bin/env node
+process.env.DISABLE_PINO_LOGGER = "1"
 import "./prebuilds"
 import "./environment"
-import { env, logging } from "@budibase/backend-core"
-logging.disableLogger()
+import { env } from "@budibase/backend-core"
 import { getCommands } from "./options"
 import { Command } from "commander"
 import { getHelpDescription } from "./utils"
