@@ -15,6 +15,7 @@
     selectedCellMap,
     focusedRow,
     columnHorizontalInversionIndex,
+    contentLines,
   } = getContext("grid")
 
   $: rowSelected = !!$selectedRows[row._id]
@@ -44,6 +45,7 @@
       focused={$focusedCellId === cellId}
       selectedUser={$selectedCellMap[cellId]}
       width={column.width}
+      contentLines={$contentLines}
     />
   {/each}
 </div>

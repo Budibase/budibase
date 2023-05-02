@@ -424,7 +424,9 @@ export const inviteAccept = async (
     if (err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
       ctx.throw(400, err)
+      return
     }
+    console.warn("Error inviting user", err)
     ctx.throw(400, "Unable to create new user, invitation invalid.")
   }
 }
