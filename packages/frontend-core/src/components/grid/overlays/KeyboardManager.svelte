@@ -15,8 +15,22 @@
     selectedRows,
   } = getContext("grid")
 
+  const ignoredOriginSelectors = [
+    ".spectrum-Modal",
+    "#builder-side-panel-container",
+  ]
+
   // Global key listener which intercepts all key events
   const handleKeyDown = e => {
+    // Avoid processing events sourced from certain origins
+    if (e.target?.closest) {
+      for (let selector of ignoredOriginSelectors) {
+        if (e.target.closest(selector)) {
+          return
+        }
+      }
+    }
+
     // If nothing selected avoid processing further key presses
     if (!$focusedCellId) {
       if (e.key === "Tab" || e.key?.startsWith("Arrow")) {
@@ -59,11 +73,6 @@
       if (handled) {
         return
       }
-    }
-
-    // Avoid processing events sourced from modals
-    if (e.target?.closest?.(".spectrum-Modal")) {
-      return
     }
     e.preventDefault()
 

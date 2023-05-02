@@ -12,7 +12,15 @@ import { getIntegration } from "../../integrations"
 import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { db as dbCore, context, events } from "@budibase/backend-core"
-import { UserCtx, Datasource, Row } from "@budibase/types"
+import {
+  UserCtx,
+  Datasource,
+  Row,
+  CreateDatasourceResponse,
+  UpdateDatasourceResponse,
+  UpdateDatasourceRequest,
+  CreateDatasourceRequest,
+} from "@budibase/types"
 import sdk from "../../sdk"
 
 export async function fetch(ctx: UserCtx) {
@@ -146,7 +154,7 @@ async function invalidateVariables(
   await invalidateDynamicVariables(toInvalidate)
 }
 
-export async function update(ctx: UserCtx) {
+export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
   let datasource = await sdk.datasources.get(datasourceId)
@@ -187,15 +195,17 @@ export async function update(ctx: UserCtx) {
   }
 }
 
-export async function save(ctx: UserCtx) {
+export async function save(
+  ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
+) {
   const db = context.getAppDB()
   const plus = ctx.request.body.datasource.plus
   const fetchSchema = ctx.request.body.fetchSchema
 
   const datasource = {
     _id: generateDatasourceID({ plus }),
-    type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
     ...ctx.request.body.datasource,
+    type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
   }
 
   let schemaError = null
@@ -218,7 +228,7 @@ export async function save(ctx: UserCtx) {
     }
   }
 
-  const response: any = {
+  const response: CreateDatasourceResponse = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
   }
   if (schemaError) {
