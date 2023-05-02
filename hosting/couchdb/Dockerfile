@@ -5,8 +5,8 @@ ENV COUCHDB_PASSWORD admin
 EXPOSE 5984
 
 RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common wget unzip curl && \
-    apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' && \
-    apt-get update && apt-get install -y --no-install-recommends openjdk-8-jre && \
+    apt-add-repository 'deb http://security.debian.org/debian-security bullseye-security/updates main' && \
+    apt-get update && apt-get install -y --no-install-recommends openjdk-11-jre && \
     rm -rf /var/lib/apt/lists/
 
 # setup clouseau
