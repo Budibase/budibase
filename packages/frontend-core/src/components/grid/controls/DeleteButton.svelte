@@ -1,13 +1,8 @@
 <script>
-  import {
-    Modal,
-    ModalContent,
-    ActionButton,
-    notifications,
-  } from "@budibase/bbui"
-  import { getContext } from "svelte"
+  import { Modal, ModalContent, Button, notifications } from "@budibase/bbui"
+  import { getContext, onMount } from "svelte"
 
-  const { selectedRows, rows, config } = getContext("grid")
+  const { selectedRows, rows, config, subscribe } = getContext("grid")
 
   let modal
 
@@ -28,18 +23,21 @@
     await rows.actions.deleteRows(rowsToDelete)
     notifications.success(`Deleted ${count} row${count === 1 ? "" : "s"}`)
   }
+
+  onMount(() => subscribe("request-bulk-delete", () => modal?.show()))
 </script>
 
 {#if selectedRowCount}
   <div class="delete-button" data-ignore-click-outside="true">
-    <ActionButton
+    <Button
       icon="Delete"
-      size="S"
+      size="M"
       on:click={modal.show}
       disabled={!$config.allowEditRows}
+      cta
     >
       Delete {selectedRowCount} row{selectedRowCount === 1 ? "" : "s"}
-    </ActionButton>
+    </Button>
   </div>
 {/if}
 
@@ -57,16 +55,12 @@
 </Modal>
 
 <style>
-  .delete-button :global(.spectrum-ActionButton:not(:disabled) *) {
-    color: var(--spectrum-global-color-red-400);
-  }
-  .delete-button :global(.spectrum-ActionButton:not(:disabled)) {
+  .delete-button :global(.spectrum-Button:not(:disabled)) {
+    background-color: var(--spectrum-global-color-red-400);
     border-color: var(--spectrum-global-color-red-400);
   }
-  /*.delete-button.disabled :global(.spectrum-ActionButton *) {*/
-  /*  color: var(--spectrum-global-color-gray-600);*/
-  /*}*/
-  /*.delete-button.disabled :global(.spectrum-ActionButton) {*/
-  /*  border-color: var(--spectrum-global-color-gray-400);*/
-  /*}*/
+  .delete-button :global(.spectrum-Button:not(:disabled):hover) {
+    background-color: var(--spectrum-global-color-red-500);
+    border-color: var(--spectrum-global-color-red-500);
+  }
 </style>

@@ -1,8 +1,10 @@
 import { writable, get, derived } from "svelte/store"
+import { tick } from "svelte"
 import {
   DefaultRowHeight,
   LargeRowHeight,
   MediumRowHeight,
+  NewRowID,
 } from "../lib/constants"
 
 export const createStores = () => {
@@ -49,14 +51,14 @@ export const deriveStores = context => {
     ([$focusedCellId, $rowLookupMap, $enrichedRows]) => {
       const rowId = $focusedCellId?.split("-")[0]
 
-      if (rowId === "new") {
-        // Edge case for new row
-        return { _id: rowId }
-      } else {
-        // All normal rows
-        const index = $rowLookupMap[rowId]
-        return $enrichedRows[index]
+      // Edge case for new rows
+      if (rowId === NewRowID) {
+        return { _id: NewRowID }
       }
+
+      // All normal rows
+      const index = $rowLookupMap[rowId]
+      return $enrichedRows[index]
     },
     null
   )
@@ -101,7 +103,10 @@ export const initialise = context => {
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
-  rows.subscribe(() => {
+  rows.subscribe(async () => {
+    // We tick here to ensure other derived stores have properly updated.
+    // We depend on the row lookup map which is a derived store,
+    await tick()
     const $focusedCellId = get(focusedCellId)
     const $selectedRows = get(selectedRows)
     const $hoveredRowId = get(hoveredRowId)
@@ -138,20 +143,6 @@ export const initialise = context => {
   focusedRowId.subscribe(id => {
     previousFocusedRowId.set(lastFocusedRowId)
     lastFocusedRowId = id
-  })
-
-  // Reset selected rows when selected cell changes
-  focusedCellId.subscribe(id => {
-    if (id) {
-      selectedRows.set({})
-    }
-  })
-
-  // Unset selected cell when rows are selected
-  selectedRows.subscribe(rows => {
-    if (Object.keys(rows || {}).length) {
-      focusedCellId.set(null)
-    }
   })
 
   // Remove hovered row when a cell is selected
