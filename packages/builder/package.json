@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "2.5.6-alpha.43",
+  "version": "2.5.6-alpha.44",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -58,10 +58,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "2.5.6-alpha.43",
-    "@budibase/frontend-core": "2.5.6-alpha.43",
-    "@budibase/shared-core": "2.5.6-alpha.43",
-    "@budibase/string-templates": "2.5.6-alpha.43",
+    "@budibase/bbui": "2.5.6-alpha.44",
+    "@budibase/frontend-core": "2.5.6-alpha.44",
+    "@budibase/shared-core": "2.5.6-alpha.44",
+    "@budibase/string-templates": "2.5.6-alpha.44",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-brands-svg-icons": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
