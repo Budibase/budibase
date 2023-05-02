@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-import { logging } from "@budibase/backend-core"
-logging.disableLogger()
 import "./prebuilds"
 import "./environment"
-import { env } from "@budibase/backend-core"
+import { env, logging } from "@budibase/backend-core"
+logging.disableLogger()
 import { getCommands } from "./options"
 import { Command } from "commander"
 import { getHelpDescription } from "./utils"

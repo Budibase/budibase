@@ -1486,15 +1486,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.5.6-alpha.41":
-  version "2.5.6-alpha.41"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.6-alpha.41.tgz#2632b398159211bf64bf6caff9753c877b6fc09d"
-  integrity sha512-8Zfm+RtcXY77gdXXHti8QT+Vt+1ApuVqYL3KCkxBVbpzgQci/F3mipNXUX8bEy/y+QYAdgn6psDTWAqyr9VALg==
+"@budibase/pro@2.5.6-alpha.42":
+  version "2.5.6-alpha.42"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.6-alpha.42.tgz#15ec86d9918b7d58e3236240afda31309f3162ae"
+  integrity sha512-aes19IVAEGqf0YPLJMnOKHv99AR6LO8jMpPVCbSZcZODS3byxh9kC2+sWH1mAd781zymyN79HnwGrVJNOdV8jw==
   dependencies:
-    "@budibase/backend-core" "2.5.6-alpha.41"
+    "@budibase/backend-core" "2.5.6-alpha.42"
     "@budibase/shared-core" "2.4.44-alpha.1"
     "@budibase/string-templates" "2.4.44-alpha.1"
-    "@budibase/types" "2.5.6-alpha.41"
+    "@budibase/types" "2.5.6-alpha.42"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -9545,17 +9545,17 @@ dir-glob@^3.0.1:
   dependencies:
     path-type "^4.0.0"
 
-docker-compose@0.23.12:
-  version "0.23.12"
-  resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.23.12.tgz#fa883b98be08f6926143d06bf9e522ef7ed3210c"
-  integrity sha512-KFbSMqQBuHjTGZGmYDOCO0L4SaML3BsWTId5oSUyaBa22vALuFHNv+UdDWs3HcMylHWKsxCbLB7hnM/nCosWZw==
-  dependencies:
-    yaml "^1.10.2"
-
 docker-compose@0.23.17:
   version "0.23.17"
   resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.23.17.tgz#8816bef82562d9417dc8c790aa4871350f93a2ba"
   integrity sha512-YJV18YoYIcxOdJKeFcCFihE6F4M2NExWM/d4S1ITcS9samHKnNUihz9kjggr0dNtsrbpFNc7/Yzd19DWs+m1xg==
+  dependencies:
+    yaml "^1.10.2"
+
+docker-compose@0.24.0:
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.24.0.tgz#474cd38b05b3887a56ffb2c39f16a7ae4d7d5077"
+  integrity sha512-RN/oSPLPa6ZG5e4dHg8tD8EMpd1WJqomNMBQT+d2M5MwcmfrPW/xHTent4TVqX0zZvHemv7qhhNlzXjxCnFaQw==
   dependencies:
     yaml "^1.10.2"
 
