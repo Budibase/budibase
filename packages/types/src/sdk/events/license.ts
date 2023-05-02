@@ -1,15 +1,15 @@
-import { PlanType } from "../licensing"
-
-export interface LicenseTierChangedEvent {
-  accountId: string
-  from: number
-  to: number
-}
+import { PlanType, PriceDuration } from "../licensing"
 
 export interface LicensePlanChangedEvent {
   accountId: string
   from: PlanType
   to: PlanType
+  // may not be on historical events
+  // free plans won't have a duration
+  duration: PriceDuration | undefined
+  // may not be on historical events
+  // free plans won't have a quantity
+  quantity: number | undefined
 }
 
 export interface LicenseActivatedEvent {
