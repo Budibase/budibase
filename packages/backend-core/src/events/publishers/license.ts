@@ -15,17 +15,18 @@ import {
 
 async function planChanged(
   account: Account,
-  from: PlanType,
-  to: PlanType,
-  quantity: number | undefined,
-  duration: PriceDuration | undefined
+  opts: {
+    from: PlanType
+    to: PlanType
+    fromQuantity: number | undefined
+    toQuantity: number | undefined
+    fromDuration: PriceDuration | undefined
+    toDuration: PriceDuration | undefined
+  }
 ) {
   const properties: LicensePlanChangedEvent = {
     accountId: account.accountId,
-    to,
-    from,
-    quantity,
-    duration,
+    ...opts,
   }
   await publishEvent(Event.LICENSE_PLAN_CHANGED, properties)
 }
