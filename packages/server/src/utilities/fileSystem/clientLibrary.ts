@@ -1,4 +1,4 @@
-import { join } from "path"
+import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
 import fs from "fs"
 import { objectStore } from "@budibase/backend-core"
@@ -93,10 +93,10 @@ export async function updateClientLibrary(appId: string) {
   let manifest, client
 
   if (env.isDev()) {
-    const path = devClientLibPath()
+    const clientPath = devClientLibPath()
     // Load the symlinked version in dev which is always the newest
-    manifest = join(path, "manifest.json")
-    client = path
+    manifest = join(path.dirname(path.dirname(clientPath)), "manifest.json")
+    client = clientPath
   } else {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")

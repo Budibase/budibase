@@ -16,7 +16,6 @@ function runBuild(entry, outfile) {
   const isDev = process.env.NODE_ENV !== "production"
   const tsconfig = argv["p"] || `tsconfig.build.json`
 
-  const devExternals = isDev ? ["@budibase/client"] : []
   const sharedConfig = {
     entryPoints: [entry],
     bundle: true,
@@ -41,7 +40,6 @@ function runBuild(entry, outfile) {
     loader: {
       ".svelte": "copy",
     },
-    external: [...(isDev && devExternals)],
   }
 
   build({
