@@ -1525,15 +1525,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.5.6-alpha.42":
-  version "2.5.6-alpha.42"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.6-alpha.42.tgz#15ec86d9918b7d58e3236240afda31309f3162ae"
-  integrity sha512-aes19IVAEGqf0YPLJMnOKHv99AR6LO8jMpPVCbSZcZODS3byxh9kC2+sWH1mAd781zymyN79HnwGrVJNOdV8jw==
+"@budibase/pro@2.5.10-alpha.0":
+  version "2.5.10-alpha.0"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.10-alpha.0.tgz#f3688cc61d2130fbf8b191e515b8ac9789f2a9df"
+  integrity sha512-vYa1F4NhMh7veSZyhgrE54iziwZLHiuRwXbU+unEo3xqyFZIvERAAQZ88nrnwssubWBWnPhpN/8JMHrsyM8mXg==
   dependencies:
-    "@budibase/backend-core" "2.5.6-alpha.42"
-    "@budibase/shared-core" "2.4.44-alpha.1"
-    "@budibase/string-templates" "2.4.44-alpha.1"
-    "@budibase/types" "2.5.6-alpha.42"
+    "@budibase/backend-core" "2.5.10-alpha.0"
+    "@budibase/shared-core" "2.5.9"
+    "@budibase/string-templates" "2.5.9"
+    "@budibase/types" "2.5.10-alpha.0"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1550,6 +1550,13 @@
   integrity sha512-cN8LaDczijtsfWUYiXC4sg9Z+US4020i3Mb8TwCbf8TQyA1b06U5PwPCp+GHVA/wDFqfwcpcE1GXf8GwVuYs7A==
   dependencies:
     "@budibase/types" "2.4.44-alpha.1"
+
+"@budibase/shared-core@2.5.9":
+  version "2.5.9"
+  resolved "https://registry.yarnpkg.com/@budibase/shared-core/-/shared-core-2.5.9.tgz#f22f22637fb7618ded1c7292b10793d7969827ce"
+  integrity sha512-l417Rb2+1tuXbjNL42wJHmqIQQyla2pPglOnapxfOdRuvzng+5GqlrTV1caLNf/53TS9U6ueGJdPOtxZTTFGUA==
+  dependencies:
+    "@budibase/types" "^2.5.9"
 
 "@budibase/standard-components@^0.9.139":
   version "0.9.139"
@@ -1581,6 +1588,18 @@
     lodash "^4.17.20"
     vm2 "^3.9.4"
 
+"@budibase/string-templates@2.5.9":
+  version "2.5.9"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.5.9.tgz#64582730421801e1e829b430136b449b1adc0314"
+  integrity sha512-Szu06M0JFHuUVIil2aHZWU8hvsROYpDx9raX9uIv4DcwBOAtyvVzD16wOCHzlmj8wWeV8fbKe4JF4q4GXnilJg==
+  dependencies:
+    "@budibase/handlebars-helpers" "^0.11.8"
+    dayjs "^1.10.4"
+    handlebars "^4.7.6"
+    handlebars-utils "^1.0.6"
+    lodash "^4.17.20"
+    vm2 "^3.9.15"
+
 "@budibase/types@2.4.44-alpha.1":
   version "2.4.44-alpha.1"
   resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.1.tgz#1679657aa180d9c59afa1dffa611bff0638bd933"
@@ -1592,6 +1611,11 @@
   integrity sha512-C1eHWj4tRwsQb2dJbMdukxRFVqiyzRBhwIMuCSIdJg763sbn9TXTqWTBbljyG7ppH+Dwge+py9KtiFP2MpMCfQ==
   dependencies:
     scim-patch "^0.7.0"
+
+"@budibase/types@^2.5.9":
+  version "2.5.9"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.5.9.tgz#4b1253e76b95cd8d6a42e86ebc3363a305c62653"
+  integrity sha512-7NELdWB3iV5y+pmXhm9g/v1AlN+wqHtoy67DZxKY5dlcK4DCcTdlqkToGiiw9d3sDPgDAVznjdZYnB5pGzd3TQ==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
@@ -9607,17 +9631,17 @@ dir-glob@^3.0.1:
   dependencies:
     path-type "^4.0.0"
 
-docker-compose@0.23.12:
-  version "0.23.12"
-  resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.23.12.tgz#fa883b98be08f6926143d06bf9e522ef7ed3210c"
-  integrity sha512-KFbSMqQBuHjTGZGmYDOCO0L4SaML3BsWTId5oSUyaBa22vALuFHNv+UdDWs3HcMylHWKsxCbLB7hnM/nCosWZw==
-  dependencies:
-    yaml "^1.10.2"
-
 docker-compose@0.23.17:
   version "0.23.17"
   resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.23.17.tgz#8816bef82562d9417dc8c790aa4871350f93a2ba"
   integrity sha512-YJV18YoYIcxOdJKeFcCFihE6F4M2NExWM/d4S1ITcS9samHKnNUihz9kjggr0dNtsrbpFNc7/Yzd19DWs+m1xg==
+  dependencies:
+    yaml "^1.10.2"
+
+docker-compose@0.24.0:
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.24.0.tgz#474cd38b05b3887a56ffb2c39f16a7ae4d7d5077"
+  integrity sha512-RN/oSPLPa6ZG5e4dHg8tD8EMpd1WJqomNMBQT+d2M5MwcmfrPW/xHTent4TVqX0zZvHemv7qhhNlzXjxCnFaQw==
   dependencies:
     yaml "^1.10.2"
 
