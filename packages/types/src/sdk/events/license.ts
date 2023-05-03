@@ -5,11 +5,10 @@ export interface LicensePlanChangedEvent {
   from: PlanType
   to: PlanType
   // may not be on historical events
-  // free plans won't have a duration
-  duration: PriceDuration | undefined
-  // may not be on historical events
-  // free plans won't have a quantity
-  quantity: number | undefined
+  fromDuration: PriceDuration | undefined
+  toDuration: PriceDuration | undefined
+  fromQuantity: number | undefined
+  toQuantity: number | undefined
 }
 
 export interface LicenseActivatedEvent {

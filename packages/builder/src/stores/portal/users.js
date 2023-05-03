@@ -41,7 +41,7 @@ export function createUsersStore() {
       inviteCode,
       password,
       firstName,
-      lastName,
+      lastName: !lastName?.trim() ? undefined : lastName,
     })
   }
 
