@@ -15,12 +15,15 @@ var argv = require("minimist")(process.argv.slice(2))
 
 function runBuild(entry, outfile) {
   const isDev = process.env.NODE_ENV !== "production"
+  const tsconfig = argv["p"] || `tsconfig.build.json`
+
+  const tsconfigContent = require(`${process.cwd()}/${tsconfig}`)
 
   const sharedConfig = {
     entryPoints: [entry],
     bundle: true,
     minify: !isDev,
-    tsconfig: argv["p"] || `tsconfig.build.json`,
+    tsconfig,
     plugins: [
       sveltePlugin(),
       NodeResolve({
@@ -40,12 +43,12 @@ function runBuild(entry, outfile) {
     external: isDev ? ["@budibase/client"] : [],
   }
 
-  const outdir = argv["outdir"]
+  const outdir = tsconfigContent.compilerOptions?.outDir
   build({
     ...sharedConfig,
     platform: "node",
     outdir,
-    outfile: outdir ? undefined : outfile,
+    outfile,
   }).then(() => {
     glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
       for (const file of files) {
@@ -62,8 +65,7 @@ function runBuild(entry, outfile) {
 
 if (require.main === module) {
   const entry = argv["e"] || "./src/index.ts"
-  const outfile = `dist/${entry.split("/").pop().replace(".ts", ".js")}`
-  runBuild(entry, outfile)
+  runBuild(entry)
 } else {
   module.exports = runBuild
 }
