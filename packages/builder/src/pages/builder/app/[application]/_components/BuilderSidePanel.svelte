@@ -28,10 +28,6 @@
   let inviting = false
   let searchFocus = false
 
-  // Initially filter entities without app access
-  // Show all when false
-  let filterByAppAccess = true
-
   let appInvites = []
   let filteredInvites = []
   let filteredUsers = []
@@ -62,7 +58,7 @@
     appInvites = await getInvites()
 
     //On Focus behaviour
-    if (!filterByAppAccess && (!query || query == "")) {
+    if (searchFocus && !query) {
       filteredInvites =
         appInvites.length > 100 ? appInvites.slice(0, 100) : [...appInvites]
       return
@@ -77,10 +73,7 @@
     })
   }
 
-  $: filterByAppAccess, prodAppId, filterInvites(query)
-  $: if (searchFocus === true) {
-    filterByAppAccess = false
-  }
+  $: searchFocus, prodAppId, filterInvites(query)
 
   const usersFetch = fetchData({
     API,
@@ -99,9 +92,9 @@
     }
     await usersFetch.update({
       query: {
-        appId: query || !filterByAppAccess ? null : prodAppId,
+        appId: query || searchFocus ? null : prodAppId,
         email: query,
-        paginated: query || !filterByAppAccess ? null : false,
+        paginated: query || searchFocus ? null : false,
       },
     })
     await usersFetch.refresh()
@@ -127,12 +120,7 @@
   }
 
   const debouncedUpdateFetch = Utils.debounce(searchUsers, 250)
-  $: debouncedUpdateFetch(
-    query,
-    $store.builderSidePanel,
-    loaded,
-    filterByAppAccess
-  )
+  $: debouncedUpdateFetch(query, $store.builderSidePanel, loaded, searchFocus)
 
   const updateAppUser = async (user, role) => {
     if (!prodAppId) {
@@ -208,7 +196,7 @@
 
   const searchGroups = (userGroups, query) => {
     let filterGroups =
-      query?.length || !filterByAppAccess
+      query?.length || searchFocus
         ? userGroups
         : getAppGroups(userGroups, prodAppId)
     return filterGroups
@@ -240,7 +228,7 @@
   }
 
   // Adds the 'role' attribute and sets it to the current app.
-  $: enrichedGroups = getEnrichedGroups($groups, filterByAppAccess)
+  $: enrichedGroups = getEnrichedGroups($groups, searchFocus)
   $: filteredGroups = searchGroups(enrichedGroups, query)
   $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
   $: allUsers = [...filteredUsers, ...groupUsers]
@@ -252,7 +240,7 @@
     specific roles for the app.
   */
   const buildGroupUsers = (userGroups, filteredUsers) => {
-    if (query || !filterByAppAccess) {
+    if (query || searchFocus) {
       return []
     }
     // Must exclude users who have explicit privileges
@@ -452,20 +440,19 @@
 
     <span
       class="search-input-icon"
-      class:searching={query || !filterByAppAccess}
+      class:searching={query || searchFocus}
       on:click={() => {
-        if (!filterByAppAccess) {
-          filterByAppAccess = true
+        if (searchFocus) {
+          searchFocus = false
         }
         if (!query) {
           return
         }
         query = null
         userOnboardResponse = null
-        filterByAppAccess = true
       }}
     >
-      <Icon name={!filterByAppAccess || query ? "Close" : "Search"} />
+      <Icon name={searchFocus || query ? "Close" : "Search"} />
     </span>
   </div>
 
@@ -509,8 +496,6 @@
                   </div>
                 </div>
                 <div class="auth-entity-access">
-                  <!-- {#key filteredInvites} -->
-                  <!-- {invite.info.apps?.[prodAppId]} -->
                   <RoleSelect
                     placeholder={false}
                     value={invite.info.apps?.[prodAppId]}
@@ -526,7 +511,6 @@
                     autoWidth
                     align="right"
                   />
-                  <!-- {/key} -->
                 </div>
               </div>
             {/each}
