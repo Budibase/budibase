@@ -14,7 +14,6 @@
     "tsbuild": "tsc -p tsconfig.build.json && mv dist/src/* dist/ && rimraf dist/src/",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
-    "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "bash scripts/test.sh",
     "test:memory": "jest --maxWorkers=2 --logHeapUsage --forceExit",
     "test:watch": "jest --watch",
