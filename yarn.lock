@@ -1385,47 +1385,6 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.5.6-alpha.42":
-  version "2.5.6-alpha.42"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.5.6-alpha.42.tgz#d8a10d489887d7f765a5235943687772faef5d2b"
-  integrity sha512-2zWlSvZzaNnb/Ax3Ty00k9cFv4Ot0z+/Zo5KXcbvnqw5jmQ15gJUf5varXbQ+tyChEmgh9H4FXgZlO1mrec7rQ==
-  dependencies:
-    "@budibase/nano" "10.1.2"
-    "@budibase/pouchdb-replication-stream" "1.2.10"
-    "@budibase/types" "2.5.6-alpha.42"
-    "@shopify/jest-koa-mocks" "5.0.1"
-    "@techpass/passport-openidconnect" "0.3.2"
-    aws-cloudfront-sign "2.2.0"
-    aws-sdk "2.1030.0"
-    bcrypt "5.0.1"
-    bcryptjs "2.4.3"
-    bull "4.10.1"
-    correlation-id "4.0.0"
-    dotenv "16.0.1"
-    emitter-listener "1.1.2"
-    ioredis "4.28.0"
-    joi "17.6.0"
-    jsonwebtoken "9.0.0"
-    koa-passport "4.1.4"
-    koa-pino-logger "4.0.0"
-    lodash "4.17.21"
-    lodash.isarguments "3.1.0"
-    node-fetch "2.6.7"
-    passport-google-oauth "2.0.0"
-    passport-jwt "4.0.0"
-    passport-local "1.0.0"
-    passport-oauth2-refresh "^2.1.0"
-    pino "8.11.0"
-    pino-http "8.3.3"
-    posthog-node "1.3.0"
-    pouchdb "7.3.0"
-    pouchdb-find "7.2.2"
-    redlock "4.2.0"
-    sanitize-s3-objectkey "0.0.1"
-    semver "7.3.7"
-    tar-fs "2.1.1"
-    uuid "8.3.2"
-
 "@budibase/bbui@^0.9.139":
   version "0.9.190"
   resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.190.tgz#e1ec400ac90f556bfbc80fc23a04506f1585ea81"
@@ -1526,39 +1485,6 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.5.10-alpha.0":
-  version "2.5.10-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.10-alpha.0.tgz#f3688cc61d2130fbf8b191e515b8ac9789f2a9df"
-  integrity sha512-vYa1F4NhMh7veSZyhgrE54iziwZLHiuRwXbU+unEo3xqyFZIvERAAQZ88nrnwssubWBWnPhpN/8JMHrsyM8mXg==
-  dependencies:
-    "@budibase/backend-core" "2.5.10-alpha.0"
-    "@budibase/shared-core" "2.5.9"
-    "@budibase/string-templates" "2.5.9"
-    "@budibase/types" "2.5.10-alpha.0"
-    "@koa/router" "8.0.8"
-    bull "4.10.1"
-    joi "17.6.0"
-    jsonwebtoken "8.5.1"
-    lru-cache "^7.14.1"
-    memorystream "^0.3.1"
-    node-fetch "^2.6.1"
-    scim-patch "^0.7.0"
-    scim2-parse-filter "^0.2.8"
-
-"@budibase/shared-core@2.5.6-alpha.42":
-  version "2.5.6-alpha.42"
-  resolved "https://registry.yarnpkg.com/@budibase/shared-core/-/shared-core-2.5.6-alpha.42.tgz#d7fcddebcdfb6ec17841ac533beb1a4f5fdb8aaf"
-  integrity sha512-0vJwiQh8aukVpeYhesXAkt/x+B7dFoKhbEZhxiqJurUPBj7iHpann7i8s77yrDo/MOwDznx6B+1tkSBmPgDRJg==
-  dependencies:
-    "@budibase/types" "2.5.6-alpha.42"
-
-"@budibase/shared-core@2.5.9":
-  version "2.5.9"
-  resolved "https://registry.yarnpkg.com/@budibase/shared-core/-/shared-core-2.5.9.tgz#f22f22637fb7618ded1c7292b10793d7969827ce"
-  integrity sha512-l417Rb2+1tuXbjNL42wJHmqIQQyla2pPglOnapxfOdRuvzng+5GqlrTV1caLNf/53TS9U6ueGJdPOtxZTTFGUA==
-  dependencies:
-    "@budibase/types" "^2.5.9"
-
 "@budibase/standard-components@^0.9.139":
   version "0.9.139"
   resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.139.tgz#cf8e2b759ae863e469e50272b3ca87f2827e66e3"
@@ -1576,42 +1502,6 @@
     dayjs "^1.10.5"
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
-
-"@budibase/string-templates@2.5.6-alpha.42":
-  version "2.5.6-alpha.42"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.5.6-alpha.42.tgz#6e303946306f3c440426892fed37adbe90450eda"
-  integrity sha512-L8UMOrwRJ6e4c/t/pK5er7K9VGSe24fO4BLYMYTK4BLVHqWRC1IaFeWmekR9oNHpL3PEuYJz0wwdRByR/j1e1w==
-  dependencies:
-    "@budibase/handlebars-helpers" "^0.11.8"
-    dayjs "^1.10.4"
-    handlebars "^4.7.6"
-    handlebars-utils "^1.0.6"
-    lodash "^4.17.20"
-    vm2 "^3.9.15"
-
-"@budibase/string-templates@2.5.9":
-  version "2.5.9"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.5.9.tgz#64582730421801e1e829b430136b449b1adc0314"
-  integrity sha512-Szu06M0JFHuUVIil2aHZWU8hvsROYpDx9raX9uIv4DcwBOAtyvVzD16wOCHzlmj8wWeV8fbKe4JF4q4GXnilJg==
-  dependencies:
-    "@budibase/handlebars-helpers" "^0.11.8"
-    dayjs "^1.10.4"
-    handlebars "^4.7.6"
-    handlebars-utils "^1.0.6"
-    lodash "^4.17.20"
-    vm2 "^3.9.15"
-
-"@budibase/types@2.5.6-alpha.42":
-  version "2.5.6-alpha.42"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.5.6-alpha.42.tgz#7284d50271394bc95db40144ab749bd5796dfdb6"
-  integrity sha512-ld92LR3K0nUZzd0cWO913GCc/3G1G3RM6ut3vEvUlG7KPDpLXgI2MX4Cm9gQh5ZEcmHVl4hqdbjMZ6hbKWnhPA==
-  dependencies:
-    scim-patch "^0.7.0"
-
-"@budibase/types@^2.5.9":
-  version "2.5.9"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.5.9.tgz#4b1253e76b95cd8d6a42e86ebc3363a305c62653"
-  integrity sha512-7NELdWB3iV5y+pmXhm9g/v1AlN+wqHtoy67DZxKY5dlcK4DCcTdlqkToGiiw9d3sDPgDAVznjdZYnB5pGzd3TQ==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
