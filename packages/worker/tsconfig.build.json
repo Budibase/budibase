@@ -15,6 +15,7 @@
       "@budibase/types": ["../types/src"],
       "@budibase/backend-core": ["../backend-core/src"],
       "@budibase/backend-core/*": ["../backend-core/*"],
+      "@budibase/shared-core": ["../shared-core/src"],
       "@budibase/pro": ["../pro/packages/pro/src"]
     }
   },
