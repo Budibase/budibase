@@ -15,7 +15,7 @@
   "license": "GPL-3.0",
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig-cjs.build.json",
+    "build": "node ../../scripts/build.js -p tsconfig.build.json --outdir dist/mjs/src && node ../../scripts/build.js -p tsconfig-cjs.build.json --outdir dist/cjs/src",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "dev:builder": "yarn prebuild && concurrently \"tsc -p tsconfig.build.json --watch\" \"tsc -p tsconfig-cjs.build.json --watch\""
   },

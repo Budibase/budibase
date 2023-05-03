@@ -11,12 +11,16 @@ const sveltePlugin = require("esbuild-svelte")
 
 const { default: NodeResolve } = require("@esbuild-plugins/node-resolve")
 
+var argv = require("minimist")(process.argv.slice(2))
+
 function runBuild(entry, outfile) {
+  const isDev = process.env.NODE_ENV !== "production"
+
   const sharedConfig = {
     entryPoints: [entry],
     bundle: true,
-    minify: true,
-    tsconfig: `tsconfig.build.json`,
+    minify: !isDev,
+    tsconfig: argv["p"] || `tsconfig.build.json`,
     plugins: [
       sveltePlugin(),
       NodeResolve({
@@ -33,12 +37,15 @@ function runBuild(entry, outfile) {
     ],
     target: "node14",
     preserveSymlinks: true,
+    external: isDev ? ["@budibase/client"] : [],
   }
 
+  const outdir = argv["outdir"]
   build({
     ...sharedConfig,
     platform: "node",
-    outfile,
+    outdir,
+    outfile: outdir ? undefined : outfile,
   }).then(() => {
     glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
       for (const file of files) {
@@ -54,7 +61,7 @@ function runBuild(entry, outfile) {
 }
 
 if (require.main === module) {
-  const entry = process.argv[2] || "./src/index.ts"
+  const entry = argv["e"] || "./src/index.ts"
   const outfile = `dist/${entry.split("/").pop().replace(".ts", ".js")}`
   runBuild(entry, outfile)
 } else {
