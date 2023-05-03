@@ -134,7 +134,7 @@ export const serveApp = async function (ctx: any) {
             ? objectStore.getGlobalFileUrl("settings", "logoUrl")
             : "",
       })
-      const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+      const appHbs = loadHandlebarsFile(`${__dirname}/app.hbs`)
       ctx.body = await processString(appHbs, {
         head,
         body: html,
@@ -161,7 +161,7 @@ export const serveApp = async function (ctx: any) {
             : "",
       })
 
-      const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+      const appHbs = loadHandlebarsFile(`${__dirname}/app.hbs`)
       ctx.body = await processString(appHbs, {
         head,
         body: html,
@@ -177,7 +177,7 @@ export const serveBuilderPreview = async function (ctx: any) {
 
   if (!env.isJest()) {
     let appId = context.getAppId()
-    const previewHbs = loadHandlebarsFile(`${__dirname}/templates/preview.hbs`)
+    const previewHbs = loadHandlebarsFile(`${__dirname}/preview.hbs`)
     ctx.body = await processString(previewHbs, {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
     })

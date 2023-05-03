@@ -10570,11 +10570,6 @@ esbuild-sunos-64@0.15.18:
   resolved "https://registry.yarnpkg.com/esbuild-sunos-64/-/esbuild-sunos-64-0.15.18.tgz#fd528aa5da5374b7e1e93d36ef9b07c3dfed2971"
   integrity sha512-On22LLFlBeLNj/YF3FT+cXcyKPEI263nflYlAhz5crxtp3yRG1Ugfr7ITyxmCmjm4vbN/dGrb/B7w7U8yJR9yw==
 
-esbuild-svelte@^0.7.3:
-  version "0.7.3"
-  resolved "https://registry.yarnpkg.com/esbuild-svelte/-/esbuild-svelte-0.7.3.tgz#676c49b3892215fc706e73d24b03d0ed83c50ccf"
-  integrity sha512-aq4PjZowV2LhW5U6KYKDkaHiAp9q/NquthbX1tddGRGYrlaBBGgDNis58jNU4wU6+iHsNWfLVsg8G3W6ccszdw==
-
 esbuild-windows-32@0.15.18:
   version "0.15.18"
   resolved "https://registry.yarnpkg.com/esbuild-windows-32/-/esbuild-windows-32-0.15.18.tgz#0e92b66ecdf5435a76813c4bc5ccda0696f4efc3"
