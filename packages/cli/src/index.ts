@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-import { logging } from "@budibase/backend-core"
-logging.disableLogger()
+process.env.DISABLE_PINO_LOGGER = "1"
 import "./prebuilds"
 import "./environment"
 import { env } from "@budibase/backend-core"
