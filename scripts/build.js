@@ -17,8 +17,6 @@ function runBuild(entry, outfile) {
   const isDev = process.env.NODE_ENV !== "production"
   const tsconfig = argv["p"] || `tsconfig.build.json`
 
-  const tsconfigContent = require(`${process.cwd()}/${tsconfig}`)
-
   const sharedConfig = {
     entryPoints: [entry],
     bundle: true,
@@ -43,11 +41,9 @@ function runBuild(entry, outfile) {
     external: isDev ? ["@budibase/client"] : [],
   }
 
-  const outdir = tsconfigContent.compilerOptions?.outDir
   build({
     ...sharedConfig,
     platform: "node",
-    outdir,
     outfile,
   }).then(() => {
     glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
@@ -65,7 +61,8 @@ function runBuild(entry, outfile) {
 
 if (require.main === module) {
   const entry = argv["e"] || "./src/index.ts"
-  runBuild(entry)
+  const outfile = `dist/${entry.split("/").pop().replace(".ts", ".js")}`
+  runBuild(entry, outfile)
 } else {
   module.exports = runBuild
 }
