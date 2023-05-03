@@ -154,6 +154,7 @@ const environment = {
     ? process.env.ENABLE_SSO_MAINTENANCE_MODE
     : false,
   VERSION: findVersion(),
+  DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
