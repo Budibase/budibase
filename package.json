@@ -16,6 +16,7 @@
     "kill-port": "^1.6.1",
     "lerna": "^6.6.1",
     "madge": "^6.0.0",
+    "minimist": "^1.2.8",
     "prettier": "^2.3.1",
     "prettier-plugin-svelte": "^2.3.0",
     "rimraf": "^3.0.2",
