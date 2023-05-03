@@ -32,7 +32,7 @@ COPY --from=build /worker /worker
 # install base dependencies
 RUN apt-get update && \
   apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server && \
-  apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' && \
+  apt-add-repository 'deb http://security.debian.org/debian-security bullseye-security/updates main' && \
   apt-get update
 
 # install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx
