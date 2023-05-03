@@ -88,6 +88,16 @@
     },
   }
 
+  const getPendingSchema = tblSchema => {
+    if (!tblSchema) {
+      return {}
+    }
+    let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
+    pendingSchema.email.displayName = "Pending Invites"
+    return pendingSchema
+  }
+
+  $: pendingSchema = getPendingSchema(schema)
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
   $: {
@@ -346,22 +356,14 @@
       goToNextPage={fetch.nextPage}
     />
   </div>
-</Layout>
-
-<Layout noPadding gap="M">
-  <Layout gap="XS" noPadding>
-    <Heading>Pending invitations</Heading>
-    <Body>A list of all pending user invitations</Body>
-  </Layout>
-  <Divider />
-
   <Table
-    {schema}
+    schema={pendingSchema}
     data={parsedInvites}
     allowEditColumns={false}
     allowEditRows={false}
     {customRenderers}
     loading={!invitesLoaded}
+    allowClickRows={false}
   />
 </Layout>
 
