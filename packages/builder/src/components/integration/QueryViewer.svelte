@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto, beforeUrlChange } from "@roxi/routify"
   import {
     Icon,
     Select,
@@ -12,6 +12,8 @@
     Heading,
     Tabs,
     Tab,
+    Modal,
+    ModalContent,
   } from "@budibase/bbui"
   import { notifications, Divider } from "@budibase/bbui"
   import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
@@ -36,6 +38,22 @@
   let data = []
   let saveId
   let currentTab = "JSON"
+  let saveModal
+  let queryStr = JSON.stringify(query)
+  let discard = false
+
+  let navigateTo = null
+  $: console.log("GO ", navigateTo)
+  $: console.log("DISCARD ", discard)
+
+  $beforeUrlChange(event => {
+    const updated = JSON.stringify(query)
+    if (updated !== queryStr && !discard) {
+      navigateTo = event.url
+      saveModal.show()
+      return false
+    } else return true
+  })
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fieldsToSchema(fields)
@@ -101,21 +119,53 @@
     }
   }
 
+  // return the query.
   async function saveQuery() {
     try {
-      const { _id } = await queries.save(query.datasourceId, query)
-      saveId = _id
-      notifications.success(`Query saved successfully`)
+      // const { _id } = await queries.save(query.datasourceId, query)
+      const response = await queries.save(query.datasourceId, query)
+      saveId = response._id
 
-      // Go to the correct URL if we just created a new query
-      if (!query._rev) {
-        $goto(`../../${_id}`)
-      }
+      // notifications.success(`Query saved successfully`)
+
+      // // Go to the correct URL if we just created a new query
+      // if (!query._rev) {
+      //   $goto(`../../${_id}`)
+      // }
+      return response
     } catch (error) {
       notifications.error("Error saving query")
     }
   }
 </script>
+
+<Modal
+  bind:this={saveModal}
+  on:hide={() => {
+    console.log("running")
+    //navigateTo = null
+  }}
+>
+  <ModalContent
+    title="You have unsaved changes"
+    confirmText="Save and Continue"
+    cancelText="Discard Changes"
+    size="L"
+    onConfirm={async () => {
+      console.log("CONFIRM")
+      saveQuery() //needs ascertain success?
+      discard = true
+      $goto(`${navigateTo}`)
+    }}
+    onCancel={() => {
+      console.log("CANCEL")
+      discard = true
+      $goto(`${navigateTo}`)
+    }}
+  >
+    <Body>Leaving this section will mean losing and changes to your query</Body>
+  </ModalContent>
+</Modal>
 
 <div class="wrapper">
   <Layout gap="S" noPadding>
@@ -149,18 +199,20 @@
           />
         {/if}
         {#key query.parameters}
-          <BindingBuilder
-            queryBindings={query.parameters}
-            bindable={false}
-            on:change={e => {
-              query.parameters = e.detail.map(binding => {
-                return {
-                  name: binding.name,
-                  default: binding.value,
-                }
-              })
-            }}
-          />
+          <div class="binding-wrap">
+            <BindingBuilder
+              queryBindings={query.parameters}
+              bindable={false}
+              on:change={e => {
+                query.parameters = e.detail.map(binding => {
+                  return {
+                    name: binding.name,
+                    default: binding.value,
+                  }
+                })
+              }}
+            />
+          </div>
         {/key}
       {/if}
     </div>
@@ -203,7 +255,17 @@
       <div class="viewer-controls">
         <Heading size="S">Results</Heading>
         <ButtonGroup gap="XS">
-          <Button cta disabled={queryInvalid} on:click={saveQuery}>
+          <Button
+            cta
+            disabled={queryInvalid}
+            on:click={async () => {
+              const saveResponse = await saveQuery()
+              // Go to the correct URL if we just created a new query
+              if (saveResponse && !saveResponse._rev) {
+                $goto(`../../${saveResponse._id}`)
+              }
+            }}
+          >
             Save Query
           </Button>
           <Button secondary on:click={previewQuery}>Run Query</Button>
@@ -273,5 +335,10 @@
     gap: var(--spacing-m);
     min-width: 150px;
     align-items: center;
+  }
+
+  .binding-wrap :global(div.container) {
+    padding-left: 0px;
+    padding-right: 0px;
   }
 </style>
