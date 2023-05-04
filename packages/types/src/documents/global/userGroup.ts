@@ -21,3 +21,8 @@ export interface GroupUser {
 export interface UserGroupRoles {
   [key: string]: string
 }
+
+export interface SearchGroupRequest {}
+export interface SearchGroupResponse {
+  data: UserGroup[]
+}
