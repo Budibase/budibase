@@ -9,6 +9,8 @@
   import { oidc, organisation, auth } from "stores/portal"
   import { onMount } from "svelte"
 
+  export let samePage
+
   $: show = $organisation.oidc
 
   let preDefinedIcons = {
@@ -35,11 +37,14 @@
 {#if show}
   <FancyButton
     icon={src}
-    on:click={() =>
-      window.open(
-        `/api/global/auth/${$auth.tenantId}/oidc/configs/${$oidc.uuid}`,
-        "_blank"
-      )}
+    on:click={() => {
+      const url = `/api/global/auth/${$auth.tenantId}/oidc/configs/${$oidc.uuid}`
+      if (samePage) {
+        window.location = url
+      } else {
+        window.open(url, "_blank")
+      }
+    }}
   >
     {`Log in with ${$oidc.name || "OIDC"}`}
   </FancyButton>

@@ -1,6 +1,6 @@
-import { testEnv } from "../../../tests"
-const context = require("../")
-const { DEFAULT_TENANT_ID } = require("../../constants")
+import { testEnv } from "../../../tests/extra"
+import * as context from "../"
+import { DEFAULT_TENANT_ID } from "../../constants"
 
 describe("context", () => {
   describe("doInTenant", () => {
@@ -129,6 +129,19 @@ describe("context", () => {
           })
         })
       })
+    })
+  })
+
+  describe("doInScimContext", () => {
+    it("returns true when set", () => {
+      context.doInScimContext(() => {
+        const isScim = context.isScim()
+        expect(isScim).toBe(true)
+      })
+    })
+    it("returns false when not set", () => {
+      const isScim = context.isScim()
+      expect(isScim).toBe(false)
     })
   })
 })

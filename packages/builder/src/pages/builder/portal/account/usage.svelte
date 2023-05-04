@@ -13,6 +13,7 @@
   import { admin, auth, licensing } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import { DashCard, Usage } from "components/usage"
+  import { PlanModel } from "constants"
 
   let staticUsage = []
   let monthlyUsage = []
@@ -25,21 +26,40 @@
   const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
   const manageUrl = `${$admin.accountPortalUrl}/portal/billing`
 
-  const WARN_USAGE = ["Queries", "Automations", "Rows", "Day Passes"]
-  const EXCLUDE_QUOTAS = ["Queries"]
+  const WARN_USAGE = ["Queries", "Automations", "Rows", "Day Passes", "Users"]
+
+  const EXCLUDE_QUOTAS = {
+    Queries: () => true,
+    Users: license => {
+      return license.plan.model !== PlanModel.PER_USER
+    },
+    "Day Passes": license => {
+      return license.plan.model !== PlanModel.DAY_PASS
+    },
+  }
+
+  function excludeQuota(name) {
+    return EXCLUDE_QUOTAS[name] && EXCLUDE_QUOTAS[name](license)
+  }
 
   $: quotaUsage = $licensing.quotaUsage
+
   $: license = $auth.user?.license
+  $: plan = license?.plan
+  $: usesInvoicing = plan?.usesInvoicing
+
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: quotaReset = quotaUsage?.quotaReset
   $: canManagePlan =
     ($admin.cloud && accountPortalAccess) || (!$admin.cloud && $auth.isAdmin)
 
+  $: showButton = !usesInvoicing && accountPortalAccess
+
   const setMonthlyUsage = () => {
     monthlyUsage = []
     if (quotaUsage.monthly) {
       for (let [key, value] of Object.entries(license.quotas.usage.monthly)) {
-        if (EXCLUDE_QUOTAS.includes(value.name)) {
+        if (excludeQuota(value.name)) {
           continue
         }
         const used = quotaUsage.monthly.current[key]
@@ -58,7 +78,7 @@
   const setStaticUsage = () => {
     staticUsage = []
     for (let [key, value] of Object.entries(license.quotas.usage.static)) {
-      if (EXCLUDE_QUOTAS.includes(value.name)) {
+      if (excludeQuota(value.name)) {
         continue
       }
       const used = quotaUsage.usageQuota[key]
@@ -84,7 +104,7 @@
   }
 
   const planTitle = () => {
-    return capitalise(license?.plan.type)
+    return `${capitalise(license?.plan.type)} Plan`
   }
 
   const getDaysRemaining = timestamp => {
@@ -107,11 +127,11 @@
   const setTextRows = () => {
     textRows = []
 
-    if (cancelAt) {
+    if (cancelAt && !usesInvoicing) {
       textRows.push({ message: "Subscription has been cancelled" })
       textRows.push({
-        message: `${getDaysRemaining(cancelAt * 1000)} days remaining`,
-        tooltip: new Date(cancelAt * 1000),
+        message: `${getDaysRemaining(cancelAt)} days remaining`,
+        tooltip: new Date(cancelAt),
       })
     }
   }
@@ -199,7 +219,7 @@
       description="YOUR CURRENT PLAN"
       title={planTitle()}
       {primaryActionText}
-      primaryAction={accountPortalAccess ? goToAccountPortal : undefined}
+      primaryAction={showButton ? goToAccountPortal : undefined}
       {textRows}
     >
       <div class="content">
@@ -210,33 +230,23 @@
                 <Usage {usage} warnWhenFull={WARN_USAGE.includes(usage.name)} />
               </div>
             {/each}
+            <Layout gap="XS" noPadding>
+              <Heading size="S">Monthly limits</Heading>
+              <div class="detail">
+                <TooltipWrapper tooltip={new Date(quotaReset)}>
+                  <Detail size="M">
+                    Resets in {daysRemainingInMonth} days
+                  </Detail>
+                </TooltipWrapper>
+              </div>
+            </Layout>
+            <Layout noPadding gap="M">
+              {#each monthlyUsage as usage}
+                <Usage {usage} warnWhenFull={WARN_USAGE.includes(usage.name)} />
+              {/each}
+            </Layout>
           </Layout>
         </div>
-
-        {#if monthlyUsage.length}
-          <div class="column">
-            <Layout noPadding gap="M">
-              <Layout gap="XS" noPadding>
-                <Heading size="S">Monthly limits</Heading>
-                <div class="detail">
-                  <TooltipWrapper tooltip={new Date(quotaReset)}>
-                    <Detail size="M">
-                      Resets in {daysRemainingInMonth} days
-                    </Detail>
-                  </TooltipWrapper>
-                </div>
-              </Layout>
-              <Layout noPadding gap="M">
-                {#each monthlyUsage as usage}
-                  <Usage
-                    {usage}
-                    warnWhenFull={WARN_USAGE.includes(usage.name)}
-                  />
-                {/each}
-              </Layout>
-            </Layout>
-          </div>
-        {/if}
       </div>
     </DashCard>
   </Layout>

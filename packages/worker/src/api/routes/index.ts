@@ -1,5 +1,5 @@
 import Router from "@koa/router"
-import { api } from "@budibase/pro"
+import { api as pro } from "@budibase/pro"
 import userRoutes from "./global/users"
 import configRoutes from "./global/configs"
 import workspaceRoutes from "./global/workspaces"
@@ -17,9 +17,6 @@ import migrationRoutes from "./system/migrations"
 import accountRoutes from "./system/accounts"
 import restoreRoutes from "./system/restore"
 
-let userGroupRoutes = api.groups
-let auditLogRoutes = api.auditLogs
-
 export const routes: Router[] = [
   configRoutes,
   userRoutes,
@@ -33,10 +30,11 @@ export const routes: Router[] = [
   statusRoutes,
   selfRoutes,
   licenseRoutes,
-  userGroupRoutes,
-  auditLogRoutes,
+  pro.groups,
+  pro.auditLogs,
   migrationRoutes,
   accountRoutes,
   restoreRoutes,
   eventRoutes,
+  pro.scim,
 ]

@@ -1,4 +1,5 @@
 import { Hosting } from "../hosting"
+import { Group, Identity } from "./identification"
 
 export enum Event {
   // USER
@@ -137,7 +138,6 @@ export enum Event {
 
   // LICENSE
   LICENSE_PLAN_CHANGED = "license:plan:changed",
-  LICENSE_TIER_CHANGED = "license:tier:changed",
   LICENSE_ACTIVATED = "license:activated",
   LICENSE_PAYMENT_FAILED = "license:payment:failed",
   LICENSE_PAYMENT_RECOVERED = "license:payment:recovered",
@@ -186,6 +186,24 @@ export enum Event {
   AUDIT_LOGS_DOWNLOADED = "audit_log:downloaded",
 }
 
+export const UserGroupSyncEvents: Event[] = [
+  Event.USER_CREATED,
+  Event.USER_UPDATED,
+  Event.USER_DELETED,
+  Event.USER_PERMISSION_ADMIN_ASSIGNED,
+  Event.USER_PERMISSION_ADMIN_REMOVED,
+  Event.USER_PERMISSION_BUILDER_ASSIGNED,
+  Event.USER_PERMISSION_BUILDER_REMOVED,
+  Event.USER_GROUP_CREATED,
+  Event.USER_GROUP_UPDATED,
+  Event.USER_GROUP_DELETED,
+  Event.USER_GROUP_USERS_ADDED,
+  Event.USER_GROUP_USERS_REMOVED,
+  Event.USER_GROUP_PERMISSIONS_EDITED,
+]
+
+export const AsyncEvents: Event[] = [...UserGroupSyncEvents]
+
 // all events that are not audited have been added to this record as undefined, this means
 // that Typescript can protect us against new events being added and auditing of those
 // events not being considered. This might be a little ugly, but provides a level of
@@ -194,9 +212,9 @@ export enum Event {
 // a user facing event or not.
 export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   // USER
-  [Event.USER_CREATED]: `User "{{ email }}" created`,
-  [Event.USER_UPDATED]: `User "{{ email }}" updated`,
-  [Event.USER_DELETED]: `User "{{ email }}" deleted`,
+  [Event.USER_CREATED]: `User "{{ email }}" created{{#if viaScim}} via SCIM{{/if}}`,
+  [Event.USER_UPDATED]: `User "{{ email }}" updated{{#if viaScim}} via SCIM{{/if}}`,
+  [Event.USER_DELETED]: `User "{{ email }}" deleted{{#if viaScim}} via SCIM{{/if}}`,
   [Event.USER_PERMISSION_ADMIN_ASSIGNED]: `User "{{ email }}" admin role assigned`,
   [Event.USER_PERMISSION_ADMIN_REMOVED]: `User "{{ email }}" admin role removed`,
   [Event.USER_PERMISSION_BUILDER_ASSIGNED]: `User "{{ email }}" builder role assigned`,
@@ -206,11 +224,11 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.USER_PASSWORD_UPDATED]: `User "{{ email }}" password updated`,
   [Event.USER_PASSWORD_RESET_REQUESTED]: `User "{{ email }}" password reset requested`,
   [Event.USER_PASSWORD_RESET]: `User "{{ email }}" password reset`,
-  [Event.USER_GROUP_CREATED]: `User group "{{ name }}" created`,
-  [Event.USER_GROUP_UPDATED]: `User group "{{ name }}" updated`,
-  [Event.USER_GROUP_DELETED]: `User group "{{ name }}" deleted`,
-  [Event.USER_GROUP_USERS_ADDED]: `User group "{{ name }}" {{ count }} users added`,
-  [Event.USER_GROUP_USERS_REMOVED]: `User group "{{ name }}" {{ count }} users removed`,
+  [Event.USER_GROUP_CREATED]: `User group "{{ name }}" created{{#if viaScim}} via SCIM{{/if}}`,
+  [Event.USER_GROUP_UPDATED]: `User group "{{ name }}" updated{{#if viaScim}} via SCIM{{/if}}`,
+  [Event.USER_GROUP_DELETED]: `User group "{{ name }}" deleted{{#if viaScim}} via SCIM{{/if}}`,
+  [Event.USER_GROUP_USERS_ADDED]: `User group "{{ name }}" {{ count }} users added{{#if viaScim}} via SCIM{{/if}}`,
+  [Event.USER_GROUP_USERS_REMOVED]: `User group "{{ name }}" {{ count }} users removed{{#if viaScim}} via SCIM{{/if}}`,
   [Event.USER_GROUP_PERMISSIONS_EDITED]: `User group "{{ name }}" permissions edited`,
   [Event.USER_PASSWORD_FORCE_RESET]: undefined,
   [Event.USER_GROUP_ONBOARDING]: undefined,
@@ -309,7 +327,6 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
 
   // LICENSE - NOT AUDITED
   [Event.LICENSE_PLAN_CHANGED]: undefined,
-  [Event.LICENSE_TIER_CHANGED]: undefined,
   [Event.LICENSE_ACTIVATED]: undefined,
   [Event.LICENSE_PAYMENT_FAILED]: undefined,
   [Event.LICENSE_PAYMENT_RECOVERED]: undefined,
@@ -383,3 +400,21 @@ export interface BaseEvent {
 }
 
 export type TableExportFormat = "json" | "csv"
+
+export type DocUpdateEvent = {
+  id: string
+  tenantId: string
+  appId?: string
+}
+
+export interface EventProcessor {
+  processEvent(
+    event: Event,
+    identity: Identity,
+    properties: any,
+    timestamp?: string | number
+  ): Promise<void>
+  identify?(identity: Identity, timestamp?: string | number): Promise<void>
+  identifyGroup?(group: Group, timestamp?: string | number): Promise<void>
+  shutdown?(): void
+}

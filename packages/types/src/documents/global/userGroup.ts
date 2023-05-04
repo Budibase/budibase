@@ -7,6 +7,10 @@ export interface UserGroup extends Document {
   users?: GroupUser[]
   roles?: UserGroupRoles
   createdAt?: number
+  scimInfo?: {
+    externalId: string
+    isSync: boolean
+  }
 }
 
 export interface GroupUser {

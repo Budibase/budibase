@@ -16,6 +16,7 @@
     themeStore,
     appStore,
     devToolsStore,
+    environmentStore,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -34,6 +35,8 @@
   import KeyboardManager from "components/preview/KeyboardManager.svelte"
   import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
   import DevTools from "components/devtools/DevTools.svelte"
+  import FreeFooter from "components/FreeFooter.svelte"
+  import licensing from "../licensing"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -92,7 +95,7 @@
 
 <svelte:head>
   {#if $builderStore.usedPlugins?.length}
-    {#each $builderStore.usedPlugins as plugin}
+    {#each $builderStore.usedPlugins as plugin (plugin.hash)}
       <script src={`${plugin.jsUrl}`}></script>
     {/each}
   {/if}
@@ -186,6 +189,10 @@
                       <DevTools />
                     {/if}
                   </div>
+
+                  {#if !$builderStore.inBuilder && licensing.logoEnabled() && $environmentStore.cloud}
+                    <FreeFooter />
+                  {/if}
                 </div>
 
                 <!-- Preview and dev tools utilities  -->

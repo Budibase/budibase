@@ -6,6 +6,7 @@
   export let preAuthStep
   export let datasource
   export let disabled
+  export let samePage
 
   $: tenantId = $auth.tenantId
 </script>
@@ -25,10 +26,12 @@
         ds = resp
       }
     }
-    window.open(
-      `/api/global/auth/${tenantId}/datasource/google?datasourceId=${ds._id}&appId=${appId}`,
-      "_blank"
-    )
+    const url = `/api/global/auth/${tenantId}/datasource/google?datasourceId=${ds._id}&appId=${appId}`
+    if (samePage) {
+      window.location = url
+    } else {
+      window.open(url, "_blank")
+    }
   }}
 >
   <img src={GoogleLogo} alt="google icon" />

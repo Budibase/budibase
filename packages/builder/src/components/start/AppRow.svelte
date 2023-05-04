@@ -59,9 +59,7 @@
   <div class="app-row-actions">
     <AppLockModal {app} buttonSize="M" />
     <Button size="S" secondary on:click={goToOverview}>Manage</Button>
-    <Button size="S" primary disabled={app.lockedOther} on:click={goToBuilder}>
-      Edit
-    </Button>
+    <Button size="S" primary on:click={goToBuilder}>Edit</Button>
   </div>
 </div>
 

@@ -176,7 +176,7 @@
       <Heading>Backups</Heading>
       {#if !$licensing.backupsEnabled}
         <Tags>
-          <Tag icon="LockClosed">Pro plan</Tag>
+          <Tag icon="LockClosed">Premium</Tag>
         </Tags>
       {/if}
     </div>

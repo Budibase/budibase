@@ -1,4 +1,7 @@
 import {
+  AutomationCustomIOType,
+  AutomationIOType,
+  AutomationStepType,
   AutomationTriggerSchema,
   AutomationTriggerStepId,
 } from "@budibase/types"
@@ -15,8 +18,8 @@ export const definition: AutomationTriggerSchema = {
     inputs: {
       properties: {
         cron: {
-          type: "string",
-          customType: "cron",
+          type: AutomationIOType.STRING,
+          customType: AutomationCustomIOType.CRON,
           title: "Expression",
         },
       },
@@ -25,12 +28,12 @@ export const definition: AutomationTriggerSchema = {
     outputs: {
       properties: {
         timestamp: {
-          type: "number",
+          type: AutomationIOType.NUMBER,
           description: "Timestamp the cron was executed",
         },
       },
       required: ["timestamp"],
     },
   },
-  type: "TRIGGER",
+  type: AutomationStepType.TRIGGER,
 }
