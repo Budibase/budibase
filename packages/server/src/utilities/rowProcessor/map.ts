@@ -70,17 +70,17 @@ export const TYPE_TRANSFORM_MAP: any = {
     "": [],
     [null]: [],
     [undefined]: undefined,
-    parse: (attachments) => {
-      if(typeof attachments === "string"){
+    parse: attachments => {
+      if (typeof attachments === "string") {
         let result = attachments
         try {
           result = JSON.parse(attachments)
         } catch (e) {
           console.error("Could not parse attachments", e)
         }
-        return result;
+        return result
       }
-    }
+    },
   },
   [FieldTypes.BOOLEAN]: {
     "": null,
