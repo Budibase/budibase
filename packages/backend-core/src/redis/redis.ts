@@ -9,11 +9,10 @@ import {
   SelectableDatabase,
 } from "./utils"
 import * as timers from "../timers"
-import environment from "../environment"
 
 const RETRY_PERIOD_MS = 2000
 const STARTUP_TIMEOUT_MS = 5000
-const CLUSTERED = environment.REDIS_CLUSTERED
+const CLUSTERED = env.REDIS_CLUSTERED
 const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 
 // for testing just generate the client once
