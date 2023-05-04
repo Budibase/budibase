@@ -59,7 +59,6 @@
   },
   "dependencies": {
     "@budibase/bbui": "0.0.1",
-    "@budibase/client": "0.0.1",
     "@budibase/frontend-core": "0.0.1",
     "@budibase/shared-core": "0.0.1",
     "@budibase/string-templates": "0.0.1",

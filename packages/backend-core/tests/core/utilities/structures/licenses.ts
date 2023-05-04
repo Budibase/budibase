@@ -7,16 +7,29 @@ import {
   PlanType,
   PriceDuration,
   PurchasedPlan,
+  PurchasedPrice,
   Quotas,
   Subscription,
 } from "@budibase/types"
+
+export function price(): PurchasedPrice {
+  return {
+    amount: 10000,
+    amountMonthly: 10000,
+    currency: "usd",
+    duration: PriceDuration.MONTHLY,
+    priceId: "price_123",
+    dayPasses: undefined,
+    isPerUser: true,
+  }
+}
 
 export const plan = (type: PlanType = PlanType.FREE): PurchasedPlan => {
   return {
     type,
     usesInvoicing: false,
-    minUsers: 1,
     model: PlanModel.PER_USER,
+    price: type !== PlanType.FREE ? price() : undefined,
   }
 }
 

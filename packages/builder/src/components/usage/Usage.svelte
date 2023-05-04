@@ -27,7 +27,7 @@
   onMount(() => {
     unlimited = isUnlimited()
     percentage = getPercentage()
-    if (warnWhenFull && percentage === 100) {
+    if (warnWhenFull && percentage >= 100) {
       showWarning = true
     }
   })
