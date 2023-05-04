@@ -1486,15 +1486,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.5.10-alpha.1":
-  version "2.5.10-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.10-alpha.1.tgz#9b3241809330860a0c38bcd08a31c8ddfe4f7fe8"
-  integrity sha512-Bhy9fb0HmfLpmaknfE+qxxRB4X4CWKHho2WMVugqLqzpLIyYJIksNucJgIu4EHPP6By24R0PtcCoJNZNgn6xNw==
+"@budibase/pro@2.5.10":
+  version "2.5.10"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.10.tgz#b7d81c1615df7ba51a199c29d5c87dadad3f004e"
+  integrity sha512-c3uAYPyn3BXZyZc1940kIAbNoFOxWVJHQOCz+4AQLRUmMDznSNsOZGhzhdqlc2IL7xL51Oz3Ry5eAVhdPJWb7A==
   dependencies:
-    "@budibase/backend-core" "2.5.10-alpha.1"
+    "@budibase/backend-core" "2.5.10"
     "@budibase/shared-core" "2.5.9"
     "@budibase/string-templates" "2.5.9"
-    "@budibase/types" "2.5.10-alpha.1"
+    "@budibase/types" "2.5.10"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1541,11 +1541,6 @@
     handlebars-utils "^1.0.6"
     lodash "^4.17.20"
     vm2 "^3.9.15"
-
-"@budibase/types@^2.5.9":
-  version "2.5.9"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.5.9.tgz#4b1253e76b95cd8d6a42e86ebc3363a305c62653"
-  integrity sha512-7NELdWB3iV5y+pmXhm9g/v1AlN+wqHtoy67DZxKY5dlcK4DCcTdlqkToGiiw9d3sDPgDAVznjdZYnB5pGzd3TQ==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
