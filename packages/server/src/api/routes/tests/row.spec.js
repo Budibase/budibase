@@ -212,6 +212,7 @@ describe("/rows", () => {
           attachmentNull: attachment,
           attachmentUndefined: attachment,
           attachmentEmpty: attachment,
+          attachmentEmptyArrayStr: attachment
         },
       })
 
@@ -239,6 +240,7 @@ describe("/rows", () => {
         attachmentNull: null,
         attachmentUndefined: undefined,
         attachmentEmpty: "",
+        attachmentEmptyArrayStr: "[]",
       }
 
       const id = (await config.createRow(row))._id
@@ -268,6 +270,7 @@ describe("/rows", () => {
       expect(saved.attachmentNull).toEqual([])
       expect(saved.attachmentUndefined).toBe(undefined)
       expect(saved.attachmentEmpty).toEqual([])
+      expect(saved.attachmentEmptyArrayStr).toEqual([])
     })
   })
 
