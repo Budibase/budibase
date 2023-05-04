@@ -42,7 +42,8 @@ if (!env.isTest()) {
         host: REDIS_OPTS.host,
         port: REDIS_OPTS.port,
       },
-      password: REDIS_OPTS.opts.password || REDIS_OPTS.opts.redisOptions.password,
+      password:
+        REDIS_OPTS.opts.password || REDIS_OPTS.opts.redisOptions.password,
     }
 
     if (!env.REDIS_CLUSTERED) {
