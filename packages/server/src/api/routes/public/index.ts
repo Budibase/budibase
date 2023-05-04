@@ -47,6 +47,7 @@ if (!env.isTest()) {
 
     if (!env.REDIS_CLUSTERED) {
       // Can't set direct redis db in clustered env
+      // @ts-ignore
       options.database = 1
     }
   }
