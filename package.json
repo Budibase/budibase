@@ -24,6 +24,7 @@
     "typescript": "4.7.3"
   },
   "scripts": {
+    "preinstall": "node scripts/syncProPackage.js",
     "setup": "git config submodule.recurse true && git submodule update && node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
     "bootstrap": "./scripts/bootstrap.sh && lerna link && ./scripts/link-dependencies.sh",
     "build": "lerna run --stream build",
@@ -32,8 +33,8 @@
     "backend:build": "./scripts/scopeBackend.sh 'lerna run --stream build'",
     "build:sdk": "lerna run --stream build:sdk",
     "deps:circular": "madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular",
-    "release": "lerna publish ${RELEASE_VERSION_TYPE:-patch} --yes --force-publish && yarn release:pro",
-    "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop --exact && yarn release:pro:develop",
+    "release": "lerna publish ${RELEASE_VERSION_TYPE:-patch} --yes --force-publish --no-git-tag-version --no-push --no-git-reset",
+    "release:develop": "lerna publish from-package --yes --force-publish --dist-tag develop --exact --no-git-tag-version --no-push --no-git-reset",
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
