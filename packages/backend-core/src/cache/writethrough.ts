@@ -47,7 +47,7 @@ async function put(
         type: LockType.TRY_ONCE,
         name: LockName.PERSIST_WRITETHROUGH,
         resource: key,
-        ttl: 1000,
+        ttl: 15000,
       },
       async () => {
         const writeDb = async (toWrite: any) => {
@@ -71,6 +71,7 @@ async function put(
         }
       }
     )
+
     if (!lockResponse.executed) {
       logWarn(`Ignoring redlock conflict in write-through cache`)
     }
