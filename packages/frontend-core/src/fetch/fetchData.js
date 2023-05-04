@@ -6,6 +6,7 @@ import NestedProviderFetch from "./NestedProviderFetch.js"
 import FieldFetch from "./FieldFetch.js"
 import JSONArrayFetch from "./JSONArrayFetch.js"
 import UserFetch from "./UserFetch.js"
+import GroupUserFetch from "./GroupUserFetch.js"
 
 const DataFetchMap = {
   table: TableFetch,
@@ -13,6 +14,7 @@ const DataFetchMap = {
   query: QueryFetch,
   link: RelationshipFetch,
   user: UserFetch,
+  groupUser: GroupUserFetch,
 
   // Client specific datasource types
   provider: NestedProviderFetch,
