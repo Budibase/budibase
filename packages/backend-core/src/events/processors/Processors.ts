@@ -25,7 +25,9 @@ export default class Processor implements EventProcessor {
     timestamp?: string | number
   ): Promise<void> {
     for (const eventProcessor of this.processors) {
-      await eventProcessor.identify(identity, timestamp)
+      if (eventProcessor.identify) {
+        await eventProcessor.identify(identity, timestamp)
+      }
     }
   }
 
@@ -34,13 +36,17 @@ export default class Processor implements EventProcessor {
     timestamp?: string | number
   ): Promise<void> {
     for (const eventProcessor of this.processors) {
-      await eventProcessor.identifyGroup(identity, timestamp)
+      if (eventProcessor.identifyGroup) {
+        await eventProcessor.identifyGroup(identity, timestamp)
+      }
     }
   }
 
   shutdown() {
     for (const eventProcessor of this.processors) {
-      eventProcessor.shutdown()
+      if (eventProcessor.shutdown) {
+        eventProcessor.shutdown()
+      }
     }
   }
 }

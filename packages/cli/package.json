@@ -1,6 +1,6 @@
 {
   "name": "@budibase/cli",
-  "version": "2.5.6",
+  "version": "2.6.2",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "dist/index.js",
   "bin": {
@@ -9,7 +9,7 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
-    "prebuild": "rm -rf prebuilds 2> /dev/null && cp -r node_modules/leveldown/prebuilds prebuilds",
+    "prebuild": "rm -rf prebuilds 2> /dev/null && cp -r ../../node_modules/leveldown/prebuilds prebuilds",
     "rename": "renamer --find .node --replace .fake 'prebuilds/**'",
     "tsc": "tsc -p tsconfig.build.json",
     "pkg": "pkg . --out-path build --no-bytecode --public --public-packages \"*\" -C GZip",
@@ -29,14 +29,14 @@
     "outputPath": "build"
   },
   "dependencies": {
-    "@budibase/backend-core": "^2.5.6",
-    "@budibase/string-templates": "^2.5.6",
-    "@budibase/types": "^2.5.6",
+    "@budibase/backend-core": "^2.6.2",
+    "@budibase/string-templates": "^2.6.2",
+    "@budibase/types": "^2.6.2",
     "axios": "0.21.2",
     "chalk": "4.1.0",
     "cli-progress": "3.11.2",
     "commander": "7.1.0",
-    "docker-compose": "0.23.12",
+    "docker-compose": "0.24.0",
     "dotenv": "16.0.1",
     "download": "8.0.0",
     "find-free-port": "^2.0.0",

@@ -1,9 +1,8 @@
 {
-  "version": "2.5.6",
+  "version": "2.6.2",
   "npmClient": "yarn",
-  "packages": [
-    "packages/*"
-  ],
+  "useWorkspaces": true,
+  "packages": ["packages/*"],
   "command": {
     "publish": {
       "ignoreChanges": [
@@ -13,6 +12,9 @@
         "# We ignore every JSON file, except for built-in-modules, built-ins and plugins defined in babel-preset-env/data.",
         "@(!(built-in-modules|built-ins|plugins|package)).json"
       ]
+    },
+    "run": {
+      "loadEnvFiles": false
     }
   }
 }

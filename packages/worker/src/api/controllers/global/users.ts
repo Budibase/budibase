@@ -177,7 +177,7 @@ export const destroy = async (ctx: any) => {
     ctx.throw(400, "Unable to delete self.")
   }
 
-  await userSdk.destroy(id, ctx.user)
+  await userSdk.destroy(id)
 
   ctx.body = {
     message: `User ${id} deleted.`,
@@ -197,7 +197,7 @@ export const search = async (ctx: any) => {
   if (body.paginated === false) {
     await getAppUsers(ctx)
   } else {
-    const paginated = await userSdk.paginatedUsers(body)
+    const paginated = await userSdk.core.paginatedUsers(body)
     // user hashed password shouldn't ever be returned
     for (let user of paginated.data) {
       if (user) {
@@ -329,6 +329,7 @@ export const checkInvite = async (ctx: any) => {
   try {
     invite = await checkInviteCode(code, false)
   } catch (e) {
+    console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
   }
   ctx.body = {
@@ -415,15 +416,17 @@ export const inviteAccept = async (
     })
 
     ctx.body = {
-      _id: user._id,
-      _rev: user._rev,
+      _id: user._id!,
+      _rev: user._rev!,
       email: user.email,
     }
   } catch (err: any) {
     if (err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
       ctx.throw(400, err)
+      return
     }
+    console.warn("Error inviting user", err)
     ctx.throw(400, "Unable to create new user, invitation invalid.")
   }
 }

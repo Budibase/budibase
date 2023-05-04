@@ -4,7 +4,7 @@ import { checkSlashesInUrl } from "../../utilities"
 import { request } from "../../utilities/workerRequests"
 import { clearLock as redisClearLock } from "../../utilities/redis"
 import { DocumentType } from "../../db/utils"
-import { context } from "@budibase/backend-core"
+import { context, env as envCore } from "@budibase/backend-core"
 import { events, db as dbCore, cache } from "@budibase/backend-core"
 
 async function redirect(ctx: any, method: string, path: string = "global") {
@@ -121,7 +121,7 @@ export async function revert(ctx: any) {
 }
 
 export async function getBudibaseVersion(ctx: any) {
-  const version = require("../../../package.json").version
+  const version = envCore.VERSION
   ctx.body = {
     version,
   }

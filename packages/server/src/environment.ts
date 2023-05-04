@@ -47,6 +47,7 @@ const environment = {
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   REDIS_URL: process.env.REDIS_URL,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  REDIS_CLUSTERED: process.env.REDIS_CLUSTERED,
   HTTP_MIGRATIONS: process.env.HTTP_MIGRATIONS,
   API_REQ_LIMIT_PER_SEC: process.env.API_REQ_LIMIT_PER_SEC,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -62,7 +63,6 @@ const environment = {
   // minor
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
-  LOG_LEVEL: process.env.LOG_LEVEL,
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
   AUTOMATION_MAX_ITERATIONS:
     parseIntSafe(process.env.AUTOMATION_MAX_ITERATIONS) || 200,

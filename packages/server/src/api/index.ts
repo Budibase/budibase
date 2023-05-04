@@ -1,10 +1,8 @@
 import Router from "@koa/router"
-import { auth, middleware } from "@budibase/backend-core"
+import { auth, middleware, env as envCore } from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
 import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
-import pkg from "../../package.json"
-import env from "../environment"
 import { middleware as pro } from "@budibase/pro"
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
@@ -12,7 +10,7 @@ const compress = require("koa-compress")
 export const router: Router = new Router()
 
 router.get("/health", ctx => (ctx.status = 200))
-router.get("/version", ctx => (ctx.body = pkg.version))
+router.get("/version", ctx => (ctx.body = envCore.VERSION))
 
 router.use(middleware.errorHandling)
 

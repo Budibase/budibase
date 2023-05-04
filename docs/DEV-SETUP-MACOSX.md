@@ -61,5 +61,18 @@ http://127.0.0.1:10000/builder/admin
 | **NOTE**: If you are working on a M1 Apple Silicon, you will need to uncomment `# platform: linux/amd64` line in
 [hosting/docker-compose-dev.yaml](../hosting/docker-compose.dev.yaml)
 
-### Troubleshooting
-If there are errors with the `yarn setup` command, you can try installing nvm and node 14. This is the same as the instructions for Debian 11. 
+### Troubleshootings
+
+#### Yarn setup errors
+
+If there are errors with the `yarn setup` command, you can try installing nvm and node 14. This is the same as the instructions for Debian 11.
+
+#### Node 14.20.1 not supported for arm64
+
+If you are working with M1 or M2 Mac and trying the Node installation via `nvm`, probably you will find the error `curl: (22) The requested URL returned error: 404`.
+
+Version `v14.20.1` is not supported for arm64; in order to use it, you can switch the CPU architecture for this by the following command:
+
+```shell
+arch -x86_64 zsh #Run this before nvm install
+```
