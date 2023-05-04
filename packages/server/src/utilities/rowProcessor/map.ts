@@ -67,12 +67,14 @@ export const TYPE_TRANSFORM_MAP: any = {
     },
   },
   [FieldTypes.ATTACHMENT]: {
-    "": [],
     [null]: [],
     [undefined]: undefined,
     parse: attachments => {
       if (typeof attachments === "string") {
-        let result = attachments
+        if (attachments === "") {
+          return []
+        }
+        let result
         try {
           result = JSON.parse(attachments)
         } catch (e) {
@@ -80,6 +82,7 @@ export const TYPE_TRANSFORM_MAP: any = {
         }
         return result
       }
+      return attachments
     },
   },
   [FieldTypes.BOOLEAN]: {
