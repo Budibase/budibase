@@ -34,8 +34,6 @@ function parseIntSafe(number?: string) {
   }
 }
 
-let inThread = false
-
 const environment = {
   // important - prefer app port to generic port
   PORT: process.env.APP_PORT || process.env.PORT,
@@ -95,12 +93,8 @@ const environment = {
   isProd: () => {
     return !isDev()
   },
-  // used to check if already in a thread, don't thread further
-  setInThread: () => {
-    inThread = true
-  },
   isInThread: () => {
-    return inThread
+    return process.env.FORKED_PROCESS
   },
 }
 
