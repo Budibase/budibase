@@ -1,3 +1,4 @@
+import { PaginationResponse } from "../../api"
 import { Document } from "../document"
 
 export interface UserGroup extends Document {
@@ -25,4 +26,11 @@ export interface UserGroupRoles {
 export interface SearchGroupRequest {}
 export interface SearchGroupResponse {
   data: UserGroup[]
+}
+
+export interface SearchUserGroupResponse extends PaginationResponse {
+  users: {
+    _id: any
+    email: any
+  }[]
 }

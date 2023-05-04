@@ -11,9 +11,11 @@
     ActionMenu,
     MenuItem,
     Modal,
+    Pagination,
   } from "@budibase/bbui"
+  import { fetchData } from "@budibase/frontend-core"
+  import { API } from "api"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
-  import { createPaginationStore } from "helpers/pagination"
   import { users, apps, groups, auth, features } from "stores/portal"
   import { onMount, setContext } from "svelte"
   import { roles } from "stores/backend"
@@ -27,6 +29,18 @@
   import ScimBanner from "../_components/SCIMBanner.svelte"
 
   export let groupId
+
+  const fetchUsers = fetchData({
+    API,
+    datasource: {
+      type: "groupUser",
+    },
+    options: {
+      query: {
+        groupId,
+      },
+    },
+  })
 
   $: userSchema = {
     email: {
@@ -70,17 +84,12 @@
   let popoverAnchor
   let popover
   let searchTerm = ""
-  let prevSearch = undefined
-  let pageInfo = createPaginationStore()
   let loaded = false
   let editModal, deleteModal
 
   $: scimEnabled = $features.isScimEnabled
   $: readonly = !$auth.isAdmin || scimEnabled
-  $: page = $pageInfo.page
-  $: fetchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
-  $: filtered = $users.data
   $: groupApps = $apps
     .filter(app =>
       groups.actions
@@ -94,25 +103,6 @@
   $: {
     if (loaded && !group?._id) {
       $goto("./")
-    }
-  }
-
-  async function fetchUsers(page, search) {
-    if ($pageInfo.loading) {
-      return
-    }
-    // need to remove the page if they've started searching
-    if (search && !prevSearch) {
-      pageInfo.reset()
-      page = undefined
-    }
-    prevSearch = search
-    try {
-      pageInfo.loading()
-      await users.search({ page, email: search })
-      pageInfo.fetched($users.hasNextPage, $users.nextPage)
-    } catch (error) {
-      notifications.error("Error getting user list")
     }
   }
 
@@ -211,7 +201,7 @@
 
       <Table
         schema={userSchema}
-        data={group?.users}
+        data={$fetchUsers.rows}
         allowEditRows={false}
         customPlaceholder
         customRenderers={customUserTableRenderers}
@@ -221,6 +211,16 @@
           <Heading size="S">This user group doesn't have any users</Heading>
         </div>
       </Table>
+
+      <div class="pagination">
+        <Pagination
+          page={$fetchUsers.pageNumber + 1}
+          hasPrevPage={$fetchUsers.loading ? false : $fetchUsers.hasPrevPage}
+          hasNextPage={$fetchUsers.loading ? false : $fetchUsers.hasNextPage}
+          goToPrevPage={$fetchUsers.loading ? null : fetchUsers.prevPage}
+          goToNextPage={$fetchUsers.loading ? null : fetchUsers.nextPage}
+        />
+      </div>
     </Layout>
 
     <Layout noPadding gap="S">
