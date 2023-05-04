@@ -107,7 +107,7 @@
     </FancyForm>
   </div>
   {#if isGoogle}
-    <GoogleButton disabled={!isValid} preAuthStep={handleNext} />
+    <GoogleButton disabled={!isValid} preAuthStep={handleNext} samePage />
   {:else}
     <Button cta disabled={!isValid} on:click={handleNext}>Connect</Button>
   {/if}

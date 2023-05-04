@@ -2,20 +2,8 @@ if (process.env.DD_APM_ENABLED) {
   require("./ddApm")
 }
 
-if (process.env.ELASTIC_APM_ENABLED) {
-  require("./elasticApm")
-}
-
 // need to load environment first
 import env from "./environment"
-
-// enable APM if configured
-if (process.env.ELASTIC_APM_ENABLED) {
-  const apm = require("elastic-apm-node").start({
-    serviceName: process.env.SERVICE,
-    environment: process.env.BUDIBASE_ENVIRONMENT,
-  })
-}
 
 import { ExtendableContext } from "koa"
 import * as db from "./db"
@@ -27,8 +15,8 @@ import * as api from "./api"
 import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
+import { initialise as initialiseWebsockets } from "./websockets"
 import { events, logging, middleware, timers } from "@budibase/backend-core"
-import { initialise as initialiseWebsockets } from "./websocket"
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
 const destroyable = require("server-destroy")
@@ -53,7 +41,8 @@ app.use(
   })
 )
 
-app.use(middleware.logging)
+app.use(middleware.correlation)
+app.use(middleware.pino)
 app.use(userAgent)
 
 if (env.isProd()) {
@@ -72,7 +61,7 @@ if (env.isProd()) {
 
 const server = http.createServer(app.callback())
 destroyable(server)
-initialiseWebsockets(server)
+initialiseWebsockets(app, server)
 
 let shuttingDown = false,
   errCode = 0

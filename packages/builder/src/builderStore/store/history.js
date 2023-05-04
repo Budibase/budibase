@@ -1,13 +1,13 @@
 import * as jsonpatch from "fast-json-patch/index.mjs"
 import { writable, derived, get } from "svelte/store"
 
-const Operations = {
+export const Operations = {
   Add: "Add",
   Delete: "Delete",
   Change: "Change",
 }
 
-const initialState = {
+export const initialState = {
   history: [],
   position: 0,
   loading: false,

@@ -30,7 +30,6 @@ import { finaliseRow, updateRelatedFormula } from "./staticFormula"
 import { csv, json, jsonWithSchema, Format } from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import {
-  Ctx,
   UserCtx,
   Database,
   LinkDocumentValue,
@@ -38,7 +37,7 @@ import {
   Table,
 } from "@budibase/types"
 
-const { cleanExportRows } = require("./utils")
+import { cleanExportRows } from "./utils"
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -72,7 +71,7 @@ async function getView(db: Database, viewName: string) {
   return viewInfo
 }
 
-async function getRawTableData(ctx: Ctx, db: Database, tableId: string) {
+async function getRawTableData(ctx: UserCtx, db: Database, tableId: string) {
   let rows
   if (tableId === InternalTables.USER_METADATA) {
     await userController.fetchMetadata(ctx)
@@ -188,7 +187,7 @@ export async function save(ctx: UserCtx) {
   })
 }
 
-export async function fetchView(ctx: Ctx) {
+export async function fetchView(ctx: UserCtx) {
   const viewName = decodeURIComponent(ctx.params.viewName)
 
   // if this is a table view being looked for just transfer to that
@@ -255,7 +254,7 @@ export async function fetchView(ctx: Ctx) {
   return rows
 }
 
-export async function fetch(ctx: Ctx) {
+export async function fetch(ctx: UserCtx) {
   const db = context.getAppDB()
 
   const tableId = ctx.params.tableId
@@ -264,7 +263,7 @@ export async function fetch(ctx: Ctx) {
   return outputProcessing(table, rows)
 }
 
-export async function find(ctx: Ctx) {
+export async function find(ctx: UserCtx) {
   const db = dbCore.getDB(ctx.appId)
   const table = await db.get(ctx.params.tableId)
   let row = await utils.findRow(ctx, ctx.params.tableId, ctx.params.rowId)
@@ -272,7 +271,7 @@ export async function find(ctx: Ctx) {
   return row
 }
 
-export async function destroy(ctx: Ctx) {
+export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
   const { _id } = ctx.request.body
   let row = await db.get(_id)
@@ -308,7 +307,7 @@ export async function destroy(ctx: Ctx) {
   return { response, row }
 }
 
-export async function bulkDestroy(ctx: Ctx) {
+export async function bulkDestroy(ctx: UserCtx) {
   const db = context.getAppDB()
   const tableId = ctx.params.tableId
   const table = await db.get(tableId)
@@ -347,7 +346,7 @@ export async function bulkDestroy(ctx: Ctx) {
   return { response: { ok: true }, rows: processedRows }
 }
 
-export async function search(ctx: Ctx) {
+export async function search(ctx: UserCtx) {
   // Fetch the whole table when running in cypress, as search doesn't work
   if (!env.COUCH_DB_URL && env.isCypress()) {
     return { rows: await fetch(ctx) }
@@ -387,11 +386,14 @@ export async function search(ctx: Ctx) {
   return response
 }
 
-export async function exportRows(ctx: Ctx) {
+export async function exportRows(ctx: UserCtx) {
   const db = context.getAppDB()
   const table = await db.get(ctx.params.tableId)
   const rowIds = ctx.request.body.rows
   let format = ctx.query.format
+  if (typeof format !== "string") {
+    ctx.throw(400, "Format parameter is not valid")
+  }
   const { columns, query } = ctx.request.body
 
   let result
@@ -439,7 +441,7 @@ export async function exportRows(ctx: Ctx) {
   }
 }
 
-export async function fetchEnrichedRow(ctx: Ctx) {
+export async function fetchEnrichedRow(ctx: UserCtx) {
   const db = context.getAppDB()
   const tableId = ctx.params.tableId
   const rowId = ctx.params.rowId

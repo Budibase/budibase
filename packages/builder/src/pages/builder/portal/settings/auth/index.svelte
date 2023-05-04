@@ -27,6 +27,7 @@
   import { onMount } from "svelte"
   import { API } from "api"
   import { organisation, admin, licensing } from "stores/portal"
+  import Scim from "./scim.svelte"
 
   const ConfigTypes = {
     Google: "google",
@@ -377,7 +378,7 @@
         </div>
         {#if !$licensing.enforceableSSO}
           <Tags>
-            <Tag icon="LockClosed">Enterprise plan</Tag>
+            <Tag icon="LockClosed">Enterprise</Tag>
           </Tags>
         {/if}
       </div>
@@ -606,11 +607,16 @@
         </Tags>
       </div>
     </Layout>
+
     <div>
       <Button disabled={oidcSaveButtonDisabled} cta on:click={() => saveOIDC()}>
         Save
       </Button>
     </div>
+  {/if}
+  {#if $licensing.scimEnabled}
+    <Divider />
+    <Scim />
   {/if}
 </Layout>
 

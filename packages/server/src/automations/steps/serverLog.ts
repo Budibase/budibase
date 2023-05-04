@@ -2,6 +2,8 @@ import {
   AutomationActionStepId,
   AutomationStepSchema,
   AutomationStepInput,
+  AutomationStepType,
+  AutomationIOType,
 } from "@budibase/types"
 
 /**
@@ -15,7 +17,7 @@ export const definition: AutomationStepSchema = {
   tagline: "Console log a value in the backend",
   icon: "Monitoring",
   description: "Logs the given text to the server (using console.log)",
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   internal: true,
   stepId: AutomationActionStepId.SERVER_LOG,
   inputs: {
@@ -25,7 +27,7 @@ export const definition: AutomationStepSchema = {
     inputs: {
       properties: {
         text: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Log",
         },
       },
@@ -34,11 +36,11 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the action was successful",
         },
         message: {
-          type: "string",
+          type: AutomationIOType.STRING,
           description: "What was output",
         },
       },

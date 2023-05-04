@@ -67,3 +67,8 @@ export const OnboardingType = {
   EMAIL: "email",
   PASSWORD: "password",
 }
+
+export const PlanModel = {
+  PER_USER: "perUser",
+  DAY_PASS: "dayPass",
+}

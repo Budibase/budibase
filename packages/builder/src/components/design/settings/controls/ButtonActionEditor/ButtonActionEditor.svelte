@@ -90,6 +90,7 @@
 
 <style>
   .action-count {
+    padding-top: 6px;
     padding-bottom: var(--spacing-s);
     font-weight: 600;
   }

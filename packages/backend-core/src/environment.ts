@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "fs"
+
 function isTest() {
   return isCypress() || isJest()
 }
@@ -34,6 +36,44 @@ function getAPIEncryptionKey() {
   return process.env.API_ENCRYPTION_KEY
     ? process.env.API_ENCRYPTION_KEY
     : process.env.JWT_SECRET // fallback to the JWT_SECRET used historically
+}
+
+function httpLogging() {
+  if (process.env.HTTP_LOGGING === undefined) {
+    // on by default unless otherwise specified
+    return true
+  }
+
+  return process.env.HTTP_LOGGING
+}
+
+function findVersion() {
+  function findFileInAncestors(
+    fileName: string,
+    currentDir: string
+  ): string | null {
+    const filePath = `${currentDir}/${fileName}`
+    if (existsSync(filePath)) {
+      return filePath
+    }
+
+    const parentDir = `${currentDir}/..`
+    if (parentDir === currentDir) {
+      // reached root directory
+      return null
+    }
+
+    return findFileInAncestors(fileName, parentDir)
+  }
+
+  try {
+    const packageJsonFile = findFileInAncestors("package.json", process.cwd())
+    const content = readFileSync(packageJsonFile!, "utf-8")
+    const version = JSON.parse(content).version
+    return version
+  } catch {
+    throw new Error("Cannot find a valid version in its package.json")
+  }
 }
 
 const environment = {
@@ -90,11 +130,11 @@ const environment = {
   USE_COUCH: process.env.USE_COUCH || true,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
   SERVICE: process.env.SERVICE || "budibase",
-  LOG_LEVEL: process.env.LOG_LEVEL,
+  LOG_LEVEL: process.env.LOG_LEVEL || "info",
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
-  ENABLE_4XX_HTTP_LOGGING: process.env.ENABLE_4XX_HTTP_LOGGING || true,
+  HTTP_LOGGING: httpLogging(),
   ENABLE_AUDIT_LOG_IP_ADDR: process.env.ENABLE_AUDIT_LOG_IP_ADDR,
   // smtp
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
@@ -113,6 +153,8 @@ const environment = {
   ENABLE_SSO_MAINTENANCE_MODE: selfHosted
     ? process.env.ENABLE_SSO_MAINTENANCE_MODE
     : false,
+  VERSION: findVersion(),
+  DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
