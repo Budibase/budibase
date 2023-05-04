@@ -1486,15 +1486,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.5.10-alpha.0":
-  version "2.5.10-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.10-alpha.0.tgz#f3688cc61d2130fbf8b191e515b8ac9789f2a9df"
-  integrity sha512-vYa1F4NhMh7veSZyhgrE54iziwZLHiuRwXbU+unEo3xqyFZIvERAAQZ88nrnwssubWBWnPhpN/8JMHrsyM8mXg==
+"@budibase/pro@2.5.10-alpha.1":
+  version "2.5.10-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.10-alpha.1.tgz#9b3241809330860a0c38bcd08a31c8ddfe4f7fe8"
+  integrity sha512-Bhy9fb0HmfLpmaknfE+qxxRB4X4CWKHho2WMVugqLqzpLIyYJIksNucJgIu4EHPP6By24R0PtcCoJNZNgn6xNw==
   dependencies:
-    "@budibase/backend-core" "2.5.10-alpha.0"
+    "@budibase/backend-core" "2.5.10-alpha.1"
     "@budibase/shared-core" "2.5.9"
     "@budibase/string-templates" "2.5.9"
-    "@budibase/types" "2.5.10-alpha.0"
+    "@budibase/types" "2.5.10-alpha.1"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -9977,9 +9977,9 @@ engine.io-parser@~5.0.3:
   integrity sha512-tjuoZDMAdEhVnSFleYPCtdL2GXwVTGtNjoeJd9IhIG3C1xs9uwxqRNEu5WpnDZCaozwVlK/nuQhpodhXSIMaxw==
 
 engine.io@~6.4.1:
-  version "6.4.1"
-  resolved "https://registry.yarnpkg.com/engine.io/-/engine.io-6.4.1.tgz#8056b4526a88e779f9c280d820422d4e3eeaaae5"
-  integrity sha512-JFYQurD/nbsA5BSPmbaOSLa3tSVj8L6o4srSwXXY3NqE+gGUNmmPTbhn8tjzcCtSqhFgIeqef81ngny8JM25hw==
+  version "6.4.2"
+  resolved "https://registry.yarnpkg.com/engine.io/-/engine.io-6.4.2.tgz#ffeaf68f69b1364b0286badddf15ff633476473f"
+  integrity sha512-FKn/3oMiJjrOEOeUub2WCox6JhxBXq/Zn3fZOMCBxKnNYtsdKjxhl7yR3fZhM9PV+rdE75SU5SYMc+2PGzo+Tg==
   dependencies:
     "@types/cookie" "^0.4.1"
     "@types/cors" "^2.8.12"
