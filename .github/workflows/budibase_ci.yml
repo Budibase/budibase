@@ -79,6 +79,7 @@ jobs:
           node-version: 14.x
       - run: yarn
       - run: yarn bootstrap
+      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core
       - run: yarn test --scope=@budibase/pro
 
   integration-test:
