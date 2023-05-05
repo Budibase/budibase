@@ -137,8 +137,8 @@ export function cleanExportRows(
     delete schema[column]
   })
 
-  // Intended to avoid 'undefined' in export
   if (format === Format.CSV) {
+    // Intended to append empty values in export
     const schemaKeys = Object.keys(schema)
     for (let key of schemaKeys) {
       if (columns?.length && columns.indexOf(key) > 0) {
@@ -146,7 +146,7 @@ export function cleanExportRows(
       }
       for (let row of cleanRows) {
         if (row[key] == null) {
-          row[key] = ""
+          row[key] = undefined
         }
       }
     }
