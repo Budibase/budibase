@@ -6,11 +6,6 @@ on:
     tags:
       - v*-alpha.*
   workflow_dispatch:
-    inputs:
-      tags:
-        description: "Release tag"
-        required: true
-        type: boolean
 
 env:
   # Posthog token used by ui at build time
