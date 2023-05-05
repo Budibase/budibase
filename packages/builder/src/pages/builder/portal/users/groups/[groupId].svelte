@@ -86,14 +86,14 @@
   let popover
   let searchTerm = ""
   let prevSearch = undefined
-  let pageInfo = createPaginationStore()
+  let searchUsersPageInfo = createPaginationStore()
   let loaded = false
   let editModal, deleteModal
 
   $: scimEnabled = $features.isScimEnabled
   $: readonly = !$auth.isAdmin || scimEnabled
-  $: page = $pageInfo.page
-  $: fetchUsers(page, searchTerm)
+  $: page = $searchUsersPageInfo.page
+  $: searchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
   $: filtered = $users.data
   $: groupApps = $apps
@@ -112,20 +112,20 @@
     }
   }
 
-  async function fetchUsers(page, search) {
-    if ($pageInfo.loading) {
+  async function searchUsers(page, search) {
+    if ($searchUsersPageInfo.loading) {
       return
     }
     // need to remove the page if they've started searching
     if (search && !prevSearch) {
-      pageInfo.reset()
+      searchUsersPageInfo.reset()
       page = undefined
     }
     prevSearch = search
     try {
-      pageInfo.loading()
+      searchUsersPageInfo.loading()
       await users.search({ page, email: search })
-      pageInfo.fetched($users.hasNextPage, $users.nextPage)
+      searchUsersPageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
     }
