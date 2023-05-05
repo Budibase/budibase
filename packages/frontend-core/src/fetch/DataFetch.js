@@ -369,8 +369,18 @@ export default class DataFetch {
 
     const currentNextCursor = cursors[pageNumber + 1]
     if (currentNextCursor != cursor) {
+      // If the current cursor changed, all the next pages need to be updated, so we mark them as stale
       cursors = cursors.slice(0, pageNumber + 1)
       cursors[pageNumber + 1] = cursor
+    }
+
+    if (!rows.length && pageNumber > 0) {
+      this.store.update($store => ({
+        ...$store,
+        loading: false,
+        cursors: cursors.slice(0, pageNumber),
+      }))
+      return await this.prevPage()
     }
 
     this.store.update($store => ({
