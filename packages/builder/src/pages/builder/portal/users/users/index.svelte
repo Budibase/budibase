@@ -261,7 +261,7 @@
       header={`Users will soon be limited to ${staticUserLimit}`}
       message={`Our free plan is going to be limited to ${staticUserLimit} users in ${$licensing.userLimitDays}.
     
-    This means any users exceeding the limit have been de-activated.
+    This means any users exceeding the limit will be de-activated.
 
     De-activated users will not able to access the builder or any published apps until you upgrade to one of our paid plans.
     `}

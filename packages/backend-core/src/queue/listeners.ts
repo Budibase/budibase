@@ -40,6 +40,12 @@ function logging(queue: Queue, jobQueue: JobQueue) {
     case JobQueue.APP_BACKUP:
       eventType = "app-backup-event"
       break
+    case JobQueue.AUDIT_LOG:
+      eventType = "audit-log-event"
+      break
+    case JobQueue.SYSTEM_EVENT_QUEUE:
+      eventType = "system-event"
+      break
   }
   if (process.env.NODE_DEBUG?.includes("bull")) {
     queue
