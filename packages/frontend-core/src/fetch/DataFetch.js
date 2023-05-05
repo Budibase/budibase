@@ -367,20 +367,21 @@ export default class DataFetch {
     let { cursors } = get(this.store)
     const { pageNumber } = get(this.store)
 
-    const currentNextCursor = cursors[pageNumber + 1]
-    if (currentNextCursor != cursor) {
-      // If the current cursor changed, all the next pages need to be updated, so we mark them as stale
-      cursors = cursors.slice(0, pageNumber + 1)
-      cursors[pageNumber + 1] = cursor
-    }
-
     if (!rows.length && pageNumber > 0) {
+      // If the full page is gone but we have previous pages, navigate to the previous page
       this.store.update($store => ({
         ...$store,
         loading: false,
         cursors: cursors.slice(0, pageNumber),
       }))
       return await this.prevPage()
+    }
+
+    const currentNextCursor = cursors[pageNumber + 1]
+    if (currentNextCursor != cursor) {
+      // If the current cursor changed, all the next pages need to be updated, so we mark them as stale
+      cursors = cursors.slice(0, pageNumber + 1)
+      cursors[pageNumber + 1] = cursor
     }
 
     this.store.update($store => ({
