@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { FieldTypes } from "../../constants"
+import { logging } from "@budibase/backend-core"
 
 /**
  * A map of how we convert various properties in rows to each other based on the row type.
@@ -78,7 +79,7 @@ export const TYPE_TRANSFORM_MAP: any = {
         try {
           result = JSON.parse(attachments)
         } catch (e) {
-          console.error("Could not parse attachments", e)
+          logging.logAlert("Could not parse attachments", e)
         }
         return result
       }
