@@ -40,9 +40,9 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
+      - run: yarn
       - name: Tag prerelease
         run: |
-          npm i semver
           # setup the username and email.
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
