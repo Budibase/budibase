@@ -66,9 +66,7 @@
       {/if}
       {#each $columns as column}
         <div class="column">
-          <!--{#if column.schema.autocolumn}-->
           <Icon size="S" name={getColumnIcon(column)} />
-          <!--{/if}-->
           {column.label}
         </div>
         <Toggle
