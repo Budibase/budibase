@@ -1,5 +1,5 @@
 <script>
-  import { goto, beforeUrlChange } from "@roxi/routify"
+  import { goto, beforeUrlChange, route, getDirection } from "@roxi/routify"
   import {
     Icon,
     Select,
@@ -29,6 +29,11 @@
   import { fieldsToSchema, schemaToFields } from "helpers/data/utils"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
 
+  // $: lastRoute = $route.last
+  // $: console.log("lastRoute", lastRoute)
+  // $: direction = getDirection($route, lastRoute)
+  // $: console.log("directioon ", direction)
+
   export let query
 
   const transformerDocs = "https://docs.budibase.com/docs/transformers"
@@ -46,13 +51,16 @@
   $: console.log("GO ", navigateTo)
   $: console.log("DISCARD ", discard)
 
-  $beforeUrlChange(event => {
+  $beforeUrlChange((event, route) => {
     const updated = JSON.stringify(query)
-    if (updated !== queryStr && !discard) {
-      navigateTo = event.url
-      saveModal.show()
-      return false
-    } else return true
+    console.log("route ", route)
+    console.log("event ", event)
+    // if (updated !== queryStr && !discard) {
+    //   navigateTo = event.url
+    //   saveModal.show()
+    //   return false
+    // } else return true
+    return true
   })
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
