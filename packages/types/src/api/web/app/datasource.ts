@@ -14,6 +14,14 @@ export interface CreateDatasourceRequest {
   fetchSchema?: boolean
 }
 
+export interface VerifyDatasourceRequest {
+  datasource: Datasource
+}
+
+export interface VerifyDatasourceResponse {
+  connected: boolean
+}
+
 export interface UpdateDatasourceRequest extends Datasource {
   datasource: Datasource
 }
