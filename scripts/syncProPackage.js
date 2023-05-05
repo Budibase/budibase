@@ -26,6 +26,11 @@ Object.keys(data).forEach(workspace => {
   // Loop through each dependency and update its version in package.json
   const packageJsonPath = path.join(data[workspace].location, "package.json")
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
+  if (packageJson.version !== "0.0.1") {
+    // Don't change if we are not using local versions
+    return
+  }
+
   let hasChanges = false
 
   if (packageJson.dependencies["@budibase/pro"]) {
