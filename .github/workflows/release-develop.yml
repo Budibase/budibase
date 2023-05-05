@@ -49,7 +49,6 @@ jobs:
           yarn lerna exec "yarn version --no-git-tag-version --new-version=$version"
           node scripts/syncLocalDependencies.js $version
           yarn
-      - run: yarn bootstrap
       - run: yarn build
       - run: yarn build:sdk
 
