@@ -2,6 +2,7 @@ import { writable, get, derived } from "svelte/store"
 import { tick } from "svelte"
 import {
   DefaultRowHeight,
+  GutterWidth,
   LargeRowHeight,
   MediumRowHeight,
   NewRowID,
@@ -43,6 +44,8 @@ export const deriveStores = context => {
     enrichedRows,
     rowLookupMap,
     rowHeight,
+    stickyColumn,
+    width,
   } = context
 
   // Derive the row that contains the selected cell
@@ -70,6 +73,7 @@ export const deriveStores = context => {
     hoveredRowId.set(null)
   }
 
+  // Derive the amount of content lines to show in cells depending on row height
   const contentLines = derived(rowHeight, $rowHeight => {
     if ($rowHeight === LargeRowHeight) {
       return 3
@@ -79,9 +83,15 @@ export const deriveStores = context => {
     return 1
   })
 
+  // Derive whether we should use the compact UI, depending on width
+  const compact = derived([stickyColumn, width], ([$stickyColumn, $width]) => {
+    return ($stickyColumn?.width || 0) + $width + GutterWidth < 1100
+  })
+
   return {
     focusedRow,
     contentLines,
+    compact,
     ui: {
       actions: {
         blur,
