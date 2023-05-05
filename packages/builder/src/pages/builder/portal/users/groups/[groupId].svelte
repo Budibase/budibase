@@ -151,6 +151,7 @@
 
   const removeUser = async id => {
     await groups.actions.removeUser(groupId, id)
+    fetchGroupUsers.refresh()
   }
 
   const removeApp = async app => {
@@ -218,15 +219,21 @@
             labelKey="email"
             selected={group.users?.map(user => user._id)}
             list={$users.data}
-            on:select={e => groups.actions.addUser(groupId, e.detail)}
-            on:deselect={e => groups.actions.removeUser(groupId, e.detail)}
+            on:select={async e => {
+              await groups.actions.addUser(groupId, e.detail)
+              fetchGroupUsers.refresh()
+            }}
+            on:deselect={async e => {
+              await groups.actions.removeUser(groupId, e.detail)
+              fetchGroupUsers.refresh()
+            }}
           />
         </Popover>
       </div>
 
       <Table
         schema={userSchema}
-        data={$fetchGroupUsers?.users}
+        data={$fetchGroupUsers?.rows}
         allowEditRows={false}
         customPlaceholder
         customRenderers={customUserTableRenderers}
