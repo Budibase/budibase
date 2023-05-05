@@ -256,6 +256,8 @@
           options={value.enum}
           getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
         />
+      {:else if value.type === "json"}
+        <Editor editorHeight="250" mode="json" value={inputData[key]} />
       {:else if value.customType === "column"}
         <Select
           on:change={e => onChange(e, key)}

@@ -26,6 +26,10 @@ export const definition: AutomationStepSchema = {
           type: AutomationIOType.STRING,
           title: "Webhook URL",
         },
+        body: {
+          type: AutomationIOType.JSON,
+          title: "Payload",
+        },
         value1: {
           type: AutomationIOType.STRING,
           title: "Input Value 1",
