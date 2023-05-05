@@ -1,4 +1,4 @@
-name: Tag prerelease
+name: Tag release
 concurrency: release-prerelease
 
 on:
