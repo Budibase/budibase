@@ -39,7 +39,7 @@
 {#if datasource}
   <div>
     <ActionButton icon="DataCorrelated" primary quiet on:click={modal.show}>
-      Define existing relationship
+      Define relationship
     </ActionButton>
   </div>
   <Modal bind:this={modal}>
