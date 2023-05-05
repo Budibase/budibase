@@ -150,7 +150,7 @@
 
   const removeUser = async id => {
     await groups.actions.removeUser(groupId, id)
-    fetchGroupUsers.getInitialData()
+    fetchGroupUsers.refresh()
   }
 
   const removeApp = async app => {
