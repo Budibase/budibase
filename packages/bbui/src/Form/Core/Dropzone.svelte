@@ -165,7 +165,7 @@
           {/if}
           {#if !disabled}
             <div class="delete-button" on:click={removeFile}>
-              <i class="ri-delete-bin-line" />
+              <Icon name="Delete" />
             </div>
           {/if}
         </div>
@@ -209,7 +209,7 @@
             {/if}
             {#if !disabled}
               <div class="delete-button" on:click={removeFile}>
-                <i class="ri-delete-bin-line" />
+                <Icon name="Delete" />
               </div>
             {/if}
           </div>
