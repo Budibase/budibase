@@ -7,7 +7,7 @@
     SmallRowHeight,
   } from "../lib/constants"
 
-  const { rowHeight, columns, table } = getContext("grid")
+  const { rowHeight, columns, table, compact } = getContext("grid")
   const sizeOptions = [
     {
       label: "Small",
@@ -41,12 +41,13 @@
     size="M"
     on:click={() => (open = !open)}
     selected={open}
+    tooltip={$compact ? "Height" : null}
   >
-    Height
+    {$compact ? "" : "Height"}
   </ActionButton>
 </div>
 
-<Popover bind:open {anchor} align="left">
+<Popover bind:open {anchor} align={$compact ? "right" : "left"}>
   <div class="content">
     {#each sizeOptions as option}
       <ActionButton

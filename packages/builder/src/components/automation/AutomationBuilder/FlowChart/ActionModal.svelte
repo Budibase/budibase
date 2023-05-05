@@ -94,7 +94,7 @@
             />
             <span class="icon-spacing">
               <Body size="XS">
-                {idx.charAt(0).toUpperCase() + idx.slice(1)}
+                {action.stepTitle || idx.charAt(0).toUpperCase() + idx.slice(1)}
               </Body>
             </span>
           </div>
