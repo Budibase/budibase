@@ -362,13 +362,24 @@ export default class DataFetch {
       return
     }
     this.store.update($store => ({ ...$store, loading: true }))
-    const { rows, info, error } = await this.getPage()
+    const { rows, info, error, cursor } = await this.getPage()
+
+    let { cursors } = get(this.store)
+    const { pageNumber } = get(this.store)
+
+    const currentNextCursor = cursors[pageNumber + 1]
+    if (currentNextCursor != cursor) {
+      cursors = cursors.slice(0, pageNumber + 1)
+      cursors[pageNumber + 1] = cursor
+    }
+
     this.store.update($store => ({
       ...$store,
       rows,
       info,
       loading: false,
       error,
+      cursors,
     }))
   }
 
