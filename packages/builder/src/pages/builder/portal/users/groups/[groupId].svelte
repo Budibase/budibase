@@ -95,7 +95,6 @@
   $: page = $searchUsersPageInfo.page
   $: searchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
-  $: filtered = $users.data
   $: groupApps = $apps
     .filter(app =>
       groups.actions
@@ -151,7 +150,7 @@
 
   const removeUser = async id => {
     await groups.actions.removeUser(groupId, id)
-    fetchGroupUsers.refresh()
+    fetchGroupUsers.getInitialData()
   }
 
   const removeApp = async app => {
@@ -221,11 +220,11 @@
             list={$users.data}
             on:select={async e => {
               await groups.actions.addUser(groupId, e.detail)
-              fetchGroupUsers.refresh()
+              fetchGroupUsers.getInitialData()
             }}
             on:deselect={async e => {
               await groups.actions.removeUser(groupId, e.detail)
-              fetchGroupUsers.refresh()
+              fetchGroupUsers.getInitialData()
             }}
           />
         </Popover>
