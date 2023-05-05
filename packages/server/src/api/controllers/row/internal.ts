@@ -37,7 +37,7 @@ import {
   Table,
 } from "@budibase/types"
 
-const { cleanExportRows } = require("./utils")
+import { cleanExportRows } from "./utils"
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -391,6 +391,9 @@ export async function exportRows(ctx: UserCtx) {
   const table = await db.get(ctx.params.tableId)
   const rowIds = ctx.request.body.rows
   let format = ctx.query.format
+  if (typeof format !== "string") {
+    ctx.throw(400, "Format parameter is not valid")
+  }
   const { columns, query } = ctx.request.body
 
   let result
