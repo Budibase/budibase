@@ -3,6 +3,7 @@ import {
   DatasourceFieldType,
   QueryType,
   IntegrationBase,
+  DatasourceFeature,
 } from "@budibase/types"
 import {
   MongoClient,
@@ -38,6 +39,7 @@ const getSchema = () => {
     type: "Non-relational",
     description:
       "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
+    features: [DatasourceFeature.CONNECTION_CHECKING],
     datasource: {
       connectionString: {
         type: DatasourceFieldType.STRING,

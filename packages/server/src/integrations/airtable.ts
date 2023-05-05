@@ -1,8 +1,9 @@
 import {
-  Integration,
+  DatasourceFeature,
   DatasourceFieldType,
-  QueryType,
+  Integration,
   IntegrationBase,
+  QueryType,
 } from "@budibase/types"
 
 const Airtable = require("airtable")
@@ -18,6 +19,7 @@ const SCHEMA: Integration = {
     "Airtable is a spreadsheet-database hybrid, with the features of a database but applied to a spreadsheet.",
   friendlyName: "Airtable",
   type: "Spreadsheet",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     apiKey: {
       type: DatasourceFieldType.PASSWORD,
@@ -86,6 +88,10 @@ class AirtableIntegration implements IntegrationBase {
   constructor(config: AirtableConfig) {
     this.config = config
     this.client = new Airtable(config).base(config.base)
+  }
+
+  async connection() {
+    return { connected: true }
   }
 
   async create(query: { table: any; json: any }) {

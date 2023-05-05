@@ -74,6 +74,10 @@ export enum FilterType {
   ONE_OF = "oneOf",
 }
 
+export enum DatasourceFeature {
+  CONNECTION_CHECKING = "connection",
+}
+
 export interface StepDefinition {
   key: string
   template: string
@@ -112,6 +116,7 @@ export interface Integration {
   docs: string
   plus?: boolean
   auth?: { type: string }
+  features?: DatasourceFeature[]
   relationships?: boolean
   description: string
   friendlyName: string
@@ -124,11 +129,16 @@ export interface Integration {
   extra?: ExtraQueryConfig
 }
 
+export interface ConnectionInformation {
+  connected: boolean
+}
+
 export interface IntegrationBase {
   create?(query: any): Promise<any[] | any>
   read?(query: any): Promise<any[] | any>
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
+  connection?(): Promise<ConnectionInformation>
 }
 
 export interface DatasourcePlus extends IntegrationBase {

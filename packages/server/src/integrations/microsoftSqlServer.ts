@@ -8,6 +8,7 @@ import {
   QueryType,
   SqlQuery,
   DatasourcePlus,
+  DatasourceFeature,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -39,6 +40,7 @@ const SCHEMA: Integration = {
     "Microsoft SQL Server is a relational database management system developed by Microsoft. ",
   friendlyName: "MS SQL Server",
   type: "Relational",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     user: {
       type: DatasourceFieldType.STRING,
