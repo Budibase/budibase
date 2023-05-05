@@ -25,7 +25,6 @@ jobs:
         run: |
           echo "Ref is not develop, you must run this job from develop."
           exit 1
-      - run: npm i semver
       - uses: actions/checkout@v2
         with:
           submodules: true
@@ -34,6 +33,7 @@ jobs:
       - name: Tag prerelease
         run: |
           # setup the username and email.
+          npm i semver
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
           ./scripts/versionCommit.sh prerelease
