@@ -35,7 +35,7 @@ jobs:
         run: |
           echo "Ref is not master, you must run this job from master."
           exit 1
-      - run: npm i -g semver
+      - run: npm i semver
       - uses: actions/checkout@v2
         with:
           submodules: true
