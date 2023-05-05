@@ -1,4 +1,8 @@
-const ignoredClasses = [".flatpickr-calendar", ".spectrum-Popover"]
+const ignoredClasses = [
+  ".flatpickr-calendar",
+  ".spectrum-Popover",
+  ".download-js-link",
+]
 let clickHandlers = []
 
 /**
