@@ -1,5 +1,8 @@
 import { events } from "@budibase/backend-core"
 import { structures, TestConfiguration, mocks } from "../../../../tests"
+import { UserGroup } from "@budibase/types"
+
+mocks.licenses.useGroups()
 
 describe("/api/global/groups", () => {
   const config = new TestConfiguration()
@@ -110,6 +113,25 @@ describe("/api/global/groups", () => {
         )
 
         expect(events.group.deleted).toBeCalledTimes(1)
+      })
+    })
+  })
+
+  describe("find users", () => {
+    describe("without users", () => {
+      let group: UserGroup
+      beforeAll(async () => {
+        group = structures.groups.UserGroup()
+        await config.api.groups.saveGroup(group)
+      })
+
+      it("should return empty", async () => {
+        const result = await config.api.groups.searchUsers(group._id!)
+        expect(result.body).toEqual({
+          users: [],
+          bookmark: undefined,
+          hasNextPage: false,
+        })
       })
     })
   })
