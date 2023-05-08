@@ -24,9 +24,25 @@ export class GroupsAPI extends TestAPI {
       .expect(200)
   }
 
-  searchUsers = (id: string) => {
+  searchUsers = (id: string, params?: { bookmark?: string }) => {
+    let url = `/api/global/groups/${id}/users?`
+    if (params?.bookmark) {
+      url += `bookmark=${params.bookmark}&`
+    }
     return this.request
-      .get(`/api/global/groups/${id}/users`)
+      .get(url)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
+
+  updateGroupUsers = (
+    id: string,
+    body: { add: string[]; remove: string[] }
+  ) => {
+    return this.request
+      .post(`/api/global/groups/${id}/users`)
+      .send(body)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
