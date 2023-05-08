@@ -1,7 +1,7 @@
 <script>
   import EditUserPicker from "./EditUserPicker.svelte"
 
-  import { Heading, Pagination, Table } from "@budibase/bbui"
+  import { Heading, Pagination, Table, Search } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
   import { goto } from "@roxi/routify"
   import { API } from "api"
@@ -12,7 +12,9 @@
 
   export let groupId
 
-  const fetchGroupUsers = fetchData({
+  let searchTerm
+  let fetchGroupUsers
+  $: fetchGroupUsers = fetchData({
     API,
     datasource: {
       type: "groupUser",
@@ -20,6 +22,7 @@
     options: {
       query: {
         groupId,
+        searchTerm,
       },
     },
   })
@@ -67,6 +70,9 @@
   {/if}
 </div>
 
+<div class="controls-right">
+  <Search bind:value={searchTerm} placeholder="Search" />
+</div>
 <Table
   schema={userSchema}
   data={$fetchGroupUsers?.rows}
@@ -108,5 +114,16 @@
   .placeholder {
     width: 100%;
     text-align: center;
+  }
+
+  .controls-right {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+  .controls-right :global(.spectrum-Search) {
+    width: 200px;
   }
 </style>
