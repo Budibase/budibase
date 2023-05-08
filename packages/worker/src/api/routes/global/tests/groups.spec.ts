@@ -185,6 +185,17 @@ describe("/api/global/groups", () => {
           hasNextPage: true,
         })
       })
+
+      it("bookmarking the last page, should return last page info", async () => {
+        const result = await config.api.groups.searchUsers(groupId, {
+          bookmark: users[20]._id,
+        })
+        expect(result.body).toEqual({
+          users: users.slice(20),
+          bookmark: undefined,
+          hasNextPage: false,
+        })
+      })
     })
   })
 })
