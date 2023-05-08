@@ -130,7 +130,11 @@
     try {
       await groups.actions.save(group)
     } catch (error) {
-      notifications.error(`Failed to save user group`)
+      if (error.message) {
+        notifications.error(error.message)
+      } else {
+        notifications.error(`Failed to save user group`)
+      }
     }
   }
 
