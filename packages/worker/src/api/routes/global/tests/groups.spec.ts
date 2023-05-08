@@ -13,6 +13,7 @@ describe("/api/global/groups", () => {
   })
 
   beforeEach(async () => {
+    jest.resetAllMocks()
     mocks.licenses.useGroups()
   })
 
@@ -46,6 +47,14 @@ describe("/api/global/groups", () => {
       const response = await config.api.groups.saveGroup(group, { expect: 400 })
       expect(JSON.parse(response.text).message).toEqual(
         'Invalid body - "name" is not allowed to be empty'
+      )
+    })
+
+    it("should trim names", async () => {
+      const group = { ...structures.groups.UserGroup(), name: "   group name " }
+      await config.api.groups.saveGroup(group)
+      expect(events.group.created).toBeCalledWith(
+        expect.objectContaining({ name: "group name" })
       )
     })
   })
