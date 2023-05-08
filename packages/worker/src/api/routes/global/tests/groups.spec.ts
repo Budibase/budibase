@@ -1,5 +1,10 @@
 import { events } from "@budibase/backend-core"
-import { structures, TestConfiguration, mocks } from "../../../../tests"
+import {
+  structures,
+  TestConfiguration,
+  mocks,
+  generator,
+} from "../../../../tests"
 import { UserGroup } from "@budibase/types"
 
 mocks.licenses.useGroups()
@@ -131,6 +136,53 @@ describe("/api/global/groups", () => {
           users: [],
           bookmark: undefined,
           hasNextPage: false,
+        })
+      })
+    })
+
+    describe("existing users", () => {
+      let groupId: string
+      let users: { _id: string; email: string }[] = []
+
+      beforeAll(async () => {
+        groupId = (
+          await config.api.groups.saveGroup(structures.groups.UserGroup())
+        ).body._id
+
+        await Promise.all(
+          Array.from({ length: 30 }).map(async (_, i) => {
+            const email = `user${i}@${generator.domain()}`
+            const user = await config.api.users.saveUser({
+              ...structures.users.user(),
+              email,
+            })
+            users.push({ _id: user.body._id, email })
+          })
+        )
+        users = users.sort((a, b) => a._id.localeCompare(b._id))
+        await config.api.groups.updateGroupUsers(groupId, {
+          add: users.map(u => u._id),
+          remove: [],
+        })
+      })
+
+      it("should return first page", async () => {
+        const result = await config.api.groups.searchUsers(groupId)
+        expect(result.body).toEqual({
+          users: users.slice(0, 10),
+          bookmark: users[10]._id,
+          hasNextPage: true,
+        })
+      })
+
+      it("given a bookmark, should return skip items", async () => {
+        const result = await config.api.groups.searchUsers(groupId, {
+          bookmark: users[7]._id,
+        })
+        expect(result.body).toEqual({
+          users: users.slice(7, 17),
+          bookmark: users[17]._id,
+          hasNextPage: true,
         })
       })
     })
