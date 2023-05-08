@@ -1,10 +1,9 @@
-import { getAllApps, queryGlobalView } from "../db"
+import { getAllApps } from "../db"
 import {
   Header,
   MAX_VALID_DATE,
   DocumentType,
   SEPARATOR,
-  ViewName,
 } from "../constants"
 import env from "../environment"
 import * as tenancy from "../tenancy"
@@ -23,7 +22,9 @@ const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
 
 const BUILDER_PREVIEW_PATH = "/app/preview"
-const BUILDER_REFERER_PREFIX = "/builder/app/"
+const BUILDER_PREFIX = "/builder"
+const BUILDER_REFERER_PREFIX = `${BUILDER_PREFIX}/app/`
+const PUBLIC_API_PREFIX = "/api/public/v1"
 
 function confirmAppId(possibleAppId: string | undefined) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
@@ -67,6 +68,18 @@ export function isServingApp(ctx: Ctx) {
     return true
   }
   return false
+}
+
+export function isServingBuilder(ctx: Ctx): boolean {
+  return ctx.path.startsWith(BUILDER_REFERER_PREFIX)
+}
+
+export function isServingBuilderPreview(ctx: Ctx): boolean {
+  return ctx.path.startsWith(BUILDER_PREVIEW_PATH)
+}
+
+export function isPublicApiRequest(ctx: Ctx): boolean {
+  return ctx.path.startsWith(PUBLIC_API_PREFIX)
 }
 
 /**
