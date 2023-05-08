@@ -95,7 +95,7 @@ const environment = {
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   REDIS_URL: process.env.REDIS_URL || "localhost:6379",
-  REDIS_PASSWORD: process.env.REDIS_PASSWORD || "budibase",
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   REDIS_CLUSTERED: process.env.REDIS_CLUSTERED,
   MOCK_REDIS: process.env.MOCK_REDIS,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
