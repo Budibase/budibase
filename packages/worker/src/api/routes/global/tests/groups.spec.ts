@@ -57,6 +57,31 @@ describe("/api/global/groups", () => {
         expect.objectContaining({ name: "group name" })
       )
     })
+
+    describe("name max length", () => {
+      const maxLength = 50
+
+      it(`should allow names shorter than ${maxLength} characters`, async () => {
+        const group = {
+          ...structures.groups.UserGroup(),
+          name: structures.generator.word({ length: maxLength }),
+        }
+        await config.api.groups.saveGroup(group, { expect: 200 })
+      })
+
+      it(`should not allow names longer than ${maxLength} characters`, async () => {
+        const group = {
+          ...structures.groups.UserGroup(),
+          name: structures.generator.word({ length: maxLength + 1 }),
+        }
+        const response = await config.api.groups.saveGroup(group, {
+          expect: 400,
+        })
+        expect(JSON.parse(response.text).message).toEqual(
+          'Invalid body - "name" length must be less than or equal to 50 characters long'
+        )
+      })
+    })
   })
 
   describe("update", () => {
