@@ -46,7 +46,8 @@ if (!env.isTest()) {
 
     if (REDIS_OPTS.opts?.password || REDIS_OPTS.opts.redisOptions?.password) {
       // @ts-ignore
-      options.password = REDIS_OPTS.opts.password || REDIS_OPTS.opts.redisOptions.password
+      options.password =
+        REDIS_OPTS.opts.password || REDIS_OPTS.opts.redisOptions.password
     }
 
     if (!env.REDIS_CLUSTERED) {
