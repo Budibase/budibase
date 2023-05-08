@@ -76,6 +76,7 @@
 <Table
   schema={userSchema}
   data={$fetchGroupUsers?.rows}
+  loading={$fetchGroupUsers.loading}
   allowEditRows={false}
   customPlaceholder
   customRenderers={customUserTableRenderers}
