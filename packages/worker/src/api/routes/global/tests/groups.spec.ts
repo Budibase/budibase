@@ -24,6 +24,14 @@ describe("/api/global/groups", () => {
       expect(events.group.updated).not.toBeCalled()
       expect(events.group.permissionsEdited).not.toBeCalled()
     })
+
+    it("should not allow undefined names", async () => {
+      const group = { ...structures.groups.UserGroup(), name: undefined } as any
+      const response = await config.api.groups.saveGroup(group, { expect: 400 })
+      expect(JSON.parse(response.text).message).toEqual(
+        'Invalid body - "name" is required'
+      )
+    })
   })
 
   describe("update", () => {
