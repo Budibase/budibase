@@ -32,6 +32,22 @@ describe("/api/global/groups", () => {
         'Invalid body - "name" is required'
       )
     })
+
+    it("should not allow empty names", async () => {
+      const group = { ...structures.groups.UserGroup(), name: "" }
+      const response = await config.api.groups.saveGroup(group, { expect: 400 })
+      expect(JSON.parse(response.text).message).toEqual(
+        'Invalid body - "name" is not allowed to be empty'
+      )
+    })
+
+    it("should not allow whitespace names", async () => {
+      const group = { ...structures.groups.UserGroup(), name: "   " }
+      const response = await config.api.groups.saveGroup(group, { expect: 400 })
+      expect(JSON.parse(response.text).message).toEqual(
+        'Invalid body - "name" is not allowed to be empty'
+      )
+    })
   })
 
   describe("update", () => {
