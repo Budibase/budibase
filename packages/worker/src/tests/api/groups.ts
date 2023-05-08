@@ -23,4 +23,12 @@ export class GroupsAPI extends TestAPI {
       .expect("Content-Type", /json/)
       .expect(200)
   }
+
+  searchUsers = (id: string) => {
+    return this.request
+      .get(`/api/global/groups/${id}/users`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
 }
