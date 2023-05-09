@@ -42,6 +42,7 @@ export const definition: AutomationStepSchema = {
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.QUERY_ROWS,
   internal: true,
+  canLoop: true,
   inputs: {},
   schema: {
     inputs: {

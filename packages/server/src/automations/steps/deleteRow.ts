@@ -18,6 +18,7 @@ export const definition: AutomationStepSchema = {
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.DELETE_ROW,
   internal: true,
+  canLoop: true,
   inputs: {},
   schema: {
     inputs: {

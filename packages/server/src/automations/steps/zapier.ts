@@ -13,6 +13,7 @@ export const definition: AutomationStepSchema = {
   stepId: AutomationActionStepId.zapier,
   type: AutomationStepType.ACTION,
   internal: false,
+  canLoop: true,
   description: "Trigger a Zapier Zap via webhooks",
   tagline: "Trigger a Zapier Zap",
   icon: "ri-flashlight-line",

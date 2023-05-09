@@ -18,6 +18,7 @@ export const definition: AutomationStepSchema = {
   description: "Run a bash script",
   type: AutomationStepType.ACTION,
   internal: true,
+  canLoop: true,
   stepId: AutomationActionStepId.EXECUTE_BASH,
   inputs: {},
   schema: {

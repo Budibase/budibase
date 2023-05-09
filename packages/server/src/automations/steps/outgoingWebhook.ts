@@ -32,6 +32,7 @@ export const definition: AutomationStepSchema = {
   description: "Send a request of specified method to a URL",
   type: AutomationStepType.ACTION,
   internal: true,
+  canLoop: true,
   stepId: AutomationActionStepId.OUTGOING_WEBHOOK,
   inputs: {
     requestMethod: "POST",
