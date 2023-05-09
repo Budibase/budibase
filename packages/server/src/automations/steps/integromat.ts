@@ -17,6 +17,7 @@ export const definition: AutomationStepSchema = {
   stepId: AutomationActionStepId.integromat,
   type: AutomationStepType.ACTION,
   internal: false,
+  canLoop: true,
   inputs: {},
   schema: {
     inputs: {

@@ -16,6 +16,7 @@ export const definition: AutomationStepSchema = {
   stepId: AutomationActionStepId.slack,
   type: AutomationStepType.ACTION,
   internal: false,
+  canLoop: true,
   inputs: {},
   schema: {
     inputs: {

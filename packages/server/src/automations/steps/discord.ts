@@ -19,6 +19,7 @@ export const definition: AutomationStepSchema = {
   stepId: AutomationActionStepId.discord,
   type: AutomationStepType.ACTION,
   internal: false,
+  canLoop: true,
   inputs: {},
   schema: {
     inputs: {

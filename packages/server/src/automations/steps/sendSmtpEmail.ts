@@ -15,6 +15,7 @@ export const definition: AutomationStepSchema = {
   name: "Send Email (SMTP)",
   type: AutomationStepType.ACTION,
   internal: true,
+  canLoop: true,
   stepId: AutomationActionStepId.SEND_EMAIL_SMTP,
   inputs: {},
   schema: {

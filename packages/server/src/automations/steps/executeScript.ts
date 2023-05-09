@@ -19,6 +19,7 @@ export const definition: AutomationStepSchema = {
   internal: true,
   stepId: AutomationActionStepId.EXECUTE_SCRIPT,
   inputs: {},
+  canLoop: true,
   schema: {
     inputs: {
       properties: {
