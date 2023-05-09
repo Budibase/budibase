@@ -56,6 +56,7 @@ export enum AutomationActionStepId {
   FILTER = "FILTER",
   QUERY_ROWS = "QUERY_ROWS",
   LOOP = "LOOP",
+  COLLECT = "COLLECT",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -120,6 +121,7 @@ export interface AutomationStepSchema {
     outputs: InputOutputBlock
   }
   custom?: boolean
+  canLoop?: boolean
 }
 
 export interface AutomationStep extends AutomationStepSchema {

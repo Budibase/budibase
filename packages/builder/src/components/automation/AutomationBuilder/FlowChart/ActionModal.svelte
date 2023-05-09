@@ -48,7 +48,6 @@
     }
     return acc
   }, {})
-  console.log(plugins)
 
   const selectAction = action => {
     actionVal = action

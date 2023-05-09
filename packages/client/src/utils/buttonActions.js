@@ -122,15 +122,24 @@ const deleteRowHandler = async action => {
 }
 
 const triggerAutomationHandler = async action => {
-  const { fields, notificationOverride } = action.parameters
+  const { fields, notificationOverride, synchronous } = action.parameters
   if (fields) {
     try {
-      await API.triggerAutomation({
-        automationId: action.parameters.automationId,
-        fields,
-      })
-      if (!notificationOverride) {
-        notificationStore.actions.success("Automation triggered")
+      if (synchronous) {
+        const result = await API.triggerSynchronousAutomation({
+          automationId: action.parameters.automationId,
+          fields,
+        })
+        console.log(typeof result)
+        return { result }
+      } else {
+        await API.triggerAutomation({
+          automationId: action.parameters.automationId,
+          fields,
+        })
+        if (!notificationOverride) {
+          notificationStore.actions.success("Automation triggered")
+        }
       }
     } catch (error) {
       // Abort next actions
@@ -138,7 +147,6 @@ const triggerAutomationHandler = async action => {
     }
   }
 }
-
 const navigationHandler = action => {
   const { url, peek, externalNewTab } = action.parameters
   routeStore.actions.navigate(url, peek, externalNewTab)

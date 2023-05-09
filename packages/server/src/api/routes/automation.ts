@@ -74,6 +74,17 @@ router
     controller.trigger
   )
   .post(
+    "/api/automations/:id/triggerSynchronous",
+    appInfoMiddleware({ appType: AppType.PROD }),
+    paramResource("id"),
+    authorized(
+      permissions.PermissionType.AUTOMATION,
+      permissions.PermissionLevel.EXECUTE
+    ),
+    controller.triggerSynchronous
+  )
+
+  .post(
     "/api/automations/:id/test",
     appInfoMiddleware({ appType: AppType.DEV }),
     paramResource("id"),

@@ -15,7 +15,12 @@ import { MetadataTypes } from "../../constants"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events } from "@budibase/backend-core"
 import { automations } from "@budibase/pro"
-import { Automation, BBContext } from "@budibase/types"
+import {
+  Automation,
+  AutomationActionStepId,
+  AutomationResults,
+  BBContext,
+} from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 
 async function getActionDefinitions() {
@@ -265,6 +270,24 @@ export async function trigger(ctx: BBContext) {
     message: `Automation ${automation._id} has been triggered.`,
     automation,
   }
+}
+
+export async function triggerSynchronous(ctx: BBContext) {
+  const db = context.getAppDB()
+  let automation = await db.get(ctx.params.id)
+  const response: AutomationResults = await triggers.externalTrigger(
+    automation,
+    {
+      ...ctx.request.body,
+      appId: ctx.appId,
+    },
+    { getResponses: true }
+  )
+
+  let collectedValue = response.steps.find(
+    step => step.stepId === AutomationActionStepId.COLLECT
+  )
+  ctx.body = collectedValue?.outputs
 }
 
 function prepareTestInput(input: any) {
