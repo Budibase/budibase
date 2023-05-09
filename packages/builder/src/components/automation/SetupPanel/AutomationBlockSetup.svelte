@@ -61,11 +61,54 @@
   $: isTrigger = block?.type === "TRIGGER"
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
 
+  /**
+   * TODO - Remove after July 2023
+   * *******************************
+   * Code added to provide backwards compatibility between Values 1,2,3,4,5
+   * and the new JSON body.
+   */
+  let deprecatedSchemaProperties
+  $: {
+    if (block?.stepId === "integromat" || block?.stepId === "zapier") {
+      deprecatedSchemaProperties = schemaProperties.filter(
+        prop => !prop[0].startsWith("value")
+      )
+    } else {
+      deprecatedSchemaProperties = schemaProperties
+    }
+  }
+  /****************************************************/
+
   const getInputData = (testData, blockInputs) => {
     let newInputData = testData || blockInputs
     if (block.event === "app:trigger" && !newInputData?.fields) {
       newInputData = cloneDeep(blockInputs)
     }
+
+    /**
+     * TODO - Remove after July 2023
+     * *******************************
+     * Code added to provide backwards compatibility between Values 1,2,3,4,5
+     * and the new JSON body.
+     */
+    if (
+      (block?.stepId === "integromat" || block?.stepId === "zapier") &&
+      !newInputData?.body?.value
+    ) {
+      let deprecatedValues = {
+        ...newInputData,
+      }
+      delete deprecatedValues.url
+      delete deprecatedValues.body
+      newInputData = {
+        url: newInputData.url,
+        body: {
+          value: JSON.stringify(deprecatedValues),
+        },
+      }
+    }
+    /**********************************/
+
     inputData = newInputData
     setDefaultEnumValues()
   }
@@ -239,7 +282,7 @@
 </script>
 
 <div class="fields">
-  {#each schemaProperties as [key, value]}
+  {#each deprecatedSchemaProperties as [key, value]}
     <div class="block-field">
       {#if key !== "fields"}
         <Label
@@ -257,7 +300,12 @@
           getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
         />
       {:else if value.type === "json"}
-        <Editor editorHeight="250" mode="json" value={inputData[key]} />
+        <Editor
+          editorHeight="250"
+          mode="json"
+          value={inputData[key]?.value}
+          on:change={e => onChange(e, key)}
+        />
       {:else if value.customType === "column"}
         <Select
           on:change={e => onChange(e, key)}

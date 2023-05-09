@@ -74,7 +74,8 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  const { url, value1, value2, value3, value4, value5 } = inputs
+  //TODO - Remove deprecated values 1,2,3,4,5 after July 2023
+  const { url, value1, value2, value3, value4, value5, body } = inputs
 
   if (!url?.trim()?.length) {
     return {
@@ -88,6 +89,7 @@ export async function run({ inputs }: AutomationStepInput) {
     response = await fetch(url, {
       method: "post",
       body: JSON.stringify({
+        ...body,
         value1,
         value2,
         value3,
