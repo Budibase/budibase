@@ -302,6 +302,7 @@
       {:else if value.type === "json"}
         <Editor
           editorHeight="250"
+          editorWidth="448"
           mode="json"
           value={inputData[key]?.value}
           on:change={e => onChange(e, key)}
