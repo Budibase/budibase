@@ -436,13 +436,14 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       const sheet = this.client.sheetsByTitle[query.sheet]
       let rows: GoogleSpreadsheetRow[] = []
       if (query.paginate) {
+        const limit = query.paginate.limit || 100
         let page: number =
           typeof query.paginate.page === "number"
             ? query.paginate.page
             : parseInt(query.paginate.page || "1")
         rows = await sheet.getRows({
-          limit: query.paginate.limit,
-          offset: (page - 1) * query.paginate.limit,
+          limit,
+          offset: (page - 1) * limit,
         })
       } else {
         rows = await sheet.getRows()
