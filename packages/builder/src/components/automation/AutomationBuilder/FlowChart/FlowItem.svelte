@@ -184,7 +184,7 @@
         {#if !isTrigger}
           <div>
             <div class="block-options">
-              {#if !loopBlock}
+              {#if block?.canLoop}
                 <ActionButton on:click={() => addLooping()} icon="Reuse">
                   Add Looping
                 </ActionButton>

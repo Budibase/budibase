@@ -1,11 +1,14 @@
 <script>
-  import { Select, Label, Input, Checkbox } from "@budibase/bbui"
+  import { Select, Label, Input, Checkbox, Icon } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
   import { TriggerStepID } from "constants/backend/automations"
+  import { AutomationActionStepId } from "../../../../../../../../types/src/documents"
 
   export let parameters = {}
   export let bindings = []
+
+  let synchronous = parameters.synchronous
 
   const AUTOMATION_STATUS = {
     NEW: "new",
@@ -16,6 +19,11 @@
     ? AUTOMATION_STATUS.EXISTING
     : AUTOMATION_STATUS.NEW
 
+  $: {
+    if (automationStatus === AUTOMATION_STATUS.NEW) {
+      synchronous = false
+    }
+  }
   $: automations = $automationStore.automations
     .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
     .map(automation => {
@@ -23,10 +31,15 @@
         automation.definition.trigger.inputs.fields || {}
       ).map(([name, type]) => ({ name, type }))
 
+      let hasCollectBlock = automation.definition.steps.some(
+        step => step.stepId === AutomationActionStepId.COLLECT
+      )
+
       return {
         name: automation.name,
         _id: automation._id,
         schema,
+        synchronous: hasCollectBlock,
       }
     })
   $: hasAutomations = automations && automations.length > 0
@@ -57,6 +70,15 @@
     parameters.fields = {}
     parameters.automationId = automations[0]?._id
   }
+
+  const onChange = value => {
+    let automationId = value.detail
+    synchronous = automations.find(
+      automation => automation._id === automationId
+    ).synchronous
+    parameters.automationId = automationId
+    parameters.synchronous = synchronous
+  }
 </script>
 
 <div class="root">
@@ -85,6 +107,7 @@
 
     {#if automationStatus === AUTOMATION_STATUS.EXISTING}
       <Select
+        on:change={onChange}
         bind:value={parameters.automationId}
         placeholder="Choose automation"
         options={automations}
@@ -98,6 +121,19 @@
       />
     {/if}
 
+    {#if synchronous}
+      <Label small />
+
+      <div class="synchronous-info">
+        <Icon name="Info" />
+        <div>
+          <i
+            >This automation will run synchronously due to the existence of a
+            Collect block</i
+          >
+        </div>
+      </div>
+    {/if}
     <Label small />
     <Checkbox
       text="Do not display default notification"
@@ -140,6 +176,11 @@
     row-gap: var(--spacing-s);
     grid-template-columns: 60px 1fr;
     align-items: center;
+  }
+
+  .synchronous-info {
+    display: flex;
+    gap: var(--spacing-s);
   }
 
   .fields {

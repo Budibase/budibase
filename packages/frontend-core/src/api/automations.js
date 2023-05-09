@@ -11,6 +11,13 @@ export const buildAutomationEndpoints = API => ({
     })
   },
 
+  triggerSynchronousAutomation: async ({ automationId, fields }) => {
+    return await API.post({
+      url: `/api/automations/${automationId}/triggerSynchronous`,
+      body: { fields },
+    })
+  },
+
   /**
    * Tests an automation with data.
    * @param automationId the ID of the automation to test
