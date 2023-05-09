@@ -73,6 +73,15 @@
       deprecatedSchemaProperties = schemaProperties.filter(
         prop => !prop[0].startsWith("value")
       )
+      if (!deprecatedSchemaProperties.map(entry => entry[0]).includes("body")) {
+        deprecatedSchemaProperties.push([
+          "body",
+          {
+            title: "Payload",
+            type: "json",
+          },
+        ])
+      }
     } else {
       deprecatedSchemaProperties = schemaProperties
     }
