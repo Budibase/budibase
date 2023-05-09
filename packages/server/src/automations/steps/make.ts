@@ -77,6 +77,17 @@ export async function run({ inputs }: AutomationStepInput) {
   //TODO - Remove deprecated values 1,2,3,4,5 after July 2023
   const { url, value1, value2, value3, value4, value5, body } = inputs
 
+  let payload = {}
+  try {
+    payload = JSON.parse(body?.value || "{}")
+  } catch (err) {
+    return {
+      httpStatus: 400,
+      response: "Invalid payload JSON",
+      success: false,
+    }
+  }
+
   if (!url?.trim()?.length) {
     return {
       httpStatus: 400,
@@ -89,12 +100,12 @@ export async function run({ inputs }: AutomationStepInput) {
     response = await fetch(url, {
       method: "post",
       body: JSON.stringify({
-        ...body,
         value1,
         value2,
         value3,
         value4,
         value5,
+        ...payload,
       }),
       headers: {
         "Content-Type": "application/json",

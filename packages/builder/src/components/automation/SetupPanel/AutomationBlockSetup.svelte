@@ -314,7 +314,21 @@
           editorWidth="448"
           mode="json"
           value={inputData[key]?.value}
-          on:change={e => onChange(e, key)}
+          on:change={e => {
+            /**
+             * TODO - Remove after July 2023
+             * *******************************
+             * Code added to provide backwards compatibility between Values 1,2,3,4,5
+             * and the new JSON body.
+             */
+            delete inputData.value1
+            delete inputData.value2
+            delete inputData.value3
+            delete inputData.value4
+            delete inputData.value5
+            /***********************/
+            onChange(e, key)
+          }}
         />
       {:else if value.customType === "column"}
         <Select
