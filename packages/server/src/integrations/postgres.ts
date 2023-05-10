@@ -335,8 +335,8 @@ async function validateConnection(config: PostgresConfig) {
   try {
     await integration.openConnection()
     return true
-  } catch {
-    return false
+  } catch (e: any) {
+    return { error: e.message as string }
   } finally {
     await integration.closeConnection()
   }
