@@ -1,36 +1,25 @@
 name: Budibase CI
 
-on: 
- # Trigger the workflow on push or pull request,
- # but only for the master branch
- push:
-    branches:
-      - master
-      - develop 
- pull_request:
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the master branch
+  push:
     branches:
       - master
       - develop
- workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+      - develop
+  workflow_dispatch:
 
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js 14.x
-      uses: actions/setup-node@v1
-      with:
-        node-version: 14.x
-    - run: yarn
-    - run: yarn lint
-
-  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -38,8 +27,20 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
+      - run: yarn
+      - run: yarn lint
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
       - run: yarn
       - run: yarn bootstrap
       - run: yarn build
@@ -48,16 +49,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
       - run: yarn
       - run: yarn bootstrap
       - run: yarn build
-      - run: yarn test
+      - run: yarn test --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
@@ -68,26 +70,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
       - run: yarn
       - run: yarn bootstrap
-      - run: yarn test:pro
+      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core
+      - run: yarn test --scope=@budibase/pro
 
   integration-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
       - run: yarn && yarn bootstrap && yarn build
       - run: |
           cd qa-core
@@ -96,3 +101,24 @@ jobs:
         env:
           BB_ADMIN_USER_EMAIL: admin
           BB_ADMIN_USER_PASSWORD: admin
+
+  check-pro-submodule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          fetch-depth: 0
+      - name: Check submodule
+        run: |
+          cd packages/pro
+          git fetch
+          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/develop; then
+            echo "Current commit has not been merged to develop"
+            echo "Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md"
+            exit 1
+          else
+            echo "All good, the submodule had been merged!"
+          fi

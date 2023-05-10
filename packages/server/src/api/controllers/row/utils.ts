@@ -69,9 +69,9 @@ export async function validate({
     if (type === FieldTypes.FORMULA || column.autocolumn) {
       continue
     }
-    // special case for options, need to always allow unselected (null)
+    // special case for options, need to always allow unselected (empty)
     if (type === FieldTypes.OPTIONS && constraints.inclusion) {
-      constraints.inclusion.push(null)
+      constraints.inclusion.push(null, "")
     }
     let res
 
