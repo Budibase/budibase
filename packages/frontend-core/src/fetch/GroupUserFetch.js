@@ -31,7 +31,7 @@ export default class GroupUserFetch extends DataFetch {
     try {
       const res = await this.API.getGroupUsers({
         id: query.groupId,
-        searchTerm: query.searchTerm,
+        emailSearch: query.emailSearch,
         bookmark: cursor,
       })
 

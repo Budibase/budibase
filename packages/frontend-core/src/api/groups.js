@@ -55,13 +55,13 @@ export const buildGroupsEndpoints = API => {
     /**
      * Gets a group users by the group id
      */
-    getGroupUsers: async ({ id, bookmark, searchTerm }) => {
+    getGroupUsers: async ({ id, bookmark, emailSearch }) => {
       let url = `/api/global/groups/${id}/users?`
       if (bookmark) {
         url += `bookmark=${bookmark}&`
       }
-      if (searchTerm) {
-        url += `searchTerm=${searchTerm}&`
+      if (emailSearch) {
+        url += `emailSearch=${emailSearch}&`
       }
 
       return await API.get({
