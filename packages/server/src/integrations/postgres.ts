@@ -330,7 +330,20 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   }
 }
 
+async function validateConnection(config: PostgresConfig) {
+  const integration = new PostgresIntegration(config)
+  try {
+    await integration.openConnection()
+    return true
+  } catch {
+    return false
+  } finally {
+    await integration.closeConnection()
+  }
+}
+
 export default {
   schema: SCHEMA,
   integration: PostgresIntegration,
+  validateConnection,
 }
