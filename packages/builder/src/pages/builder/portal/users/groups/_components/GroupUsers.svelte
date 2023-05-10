@@ -71,7 +71,7 @@
 </div>
 
 <div class="controls-right">
-  <Search bind:value={emailSearch} placeholder="Search" />
+  <Search bind:value={emailSearch} placeholder="Search email" />
 </div>
 <Table
   schema={userSchema}
@@ -83,7 +83,11 @@
   on:click={e => $goto(`../users/${e.detail._id}`)}
 >
   <div class="placeholder" slot="placeholder">
-    <Heading size="S">This user group doesn't have any users</Heading>
+    <Heading size="S"
+      >{emailSearch
+        ? `No users found matching the email "${emailSearch}"`
+        : "This user group doesn't have any users"}</Heading
+    >
   </div>
 </Table>
 
