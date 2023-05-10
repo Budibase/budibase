@@ -1,10 +1,6 @@
 import { events } from "@budibase/backend-core"
-import {
-  structures,
-  TestConfiguration,
-  mocks,
-  generator,
-} from "../../../../tests"
+import { generator } from "@budibase/backend-core/tests"
+import { structures, TestConfiguration, mocks } from "../../../../tests"
 import { UserGroup } from "@budibase/types"
 
 mocks.licenses.useGroups()
@@ -166,34 +162,71 @@ describe("/api/global/groups", () => {
         })
       })
 
-      it("should return first page", async () => {
-        const result = await config.api.groups.searchUsers(groupId)
-        expect(result.body).toEqual({
-          users: users.slice(0, 10),
-          bookmark: users[10]._id,
-          hasNextPage: true,
+      describe("pagination", () => {
+        it("should return first page", async () => {
+          const result = await config.api.groups.searchUsers(groupId)
+          expect(result.body).toEqual({
+            users: users.slice(0, 10),
+            bookmark: users[10]._id,
+            hasNextPage: true,
+          })
+        })
+
+        it("given a bookmark, should return skip items", async () => {
+          const result = await config.api.groups.searchUsers(groupId, {
+            bookmark: users[7]._id,
+          })
+          expect(result.body).toEqual({
+            users: users.slice(7, 17),
+            bookmark: users[17]._id,
+            hasNextPage: true,
+          })
+        })
+
+        it("bookmarking the last page, should return last page info", async () => {
+          const result = await config.api.groups.searchUsers(groupId, {
+            bookmark: users[20]._id,
+          })
+          expect(result.body).toEqual({
+            users: users.slice(20),
+            bookmark: undefined,
+            hasNextPage: false,
+          })
         })
       })
 
-      it("given a bookmark, should return skip items", async () => {
-        const result = await config.api.groups.searchUsers(groupId, {
-          bookmark: users[7]._id,
-        })
-        expect(result.body).toEqual({
-          users: users.slice(7, 17),
-          bookmark: users[17]._id,
-          hasNextPage: true,
-        })
-      })
+      describe("search by email", () => {
+        it('should be able to search "starting" by email', async () => {
+          const result = await config.api.groups.searchUsers(groupId, {
+            emailSearch: `user1`,
+          })
 
-      it("bookmarking the last page, should return last page info", async () => {
-        const result = await config.api.groups.searchUsers(groupId, {
-          bookmark: users[20]._id,
+          const matchedUsers = users
+            .filter(u => u.email.startsWith("user1"))
+            .sort((a, b) => a.email.localeCompare(b.email))
+
+          expect(result.body).toEqual({
+            users: matchedUsers.slice(0, 10),
+            bookmark: matchedUsers[10].email,
+            hasNextPage: true,
+          })
         })
-        expect(result.body).toEqual({
-          users: users.slice(20),
-          bookmark: undefined,
-          hasNextPage: false,
+
+        it("should be able to bookmark when searching by email", async () => {
+          const matchedUsers = users
+            .filter(u => u.email.startsWith("user1"))
+            .sort((a, b) => a.email.localeCompare(b.email))
+
+          const result = await config.api.groups.searchUsers(groupId, {
+            emailSearch: `user1`,
+            bookmark: matchedUsers[4].email,
+          })
+
+          expect(result.body).toEqual({
+            users: matchedUsers.slice(4),
+            bookmark: undefined,
+            hasNextPage: false,
+          })
         })
       })
     })
