@@ -24,10 +24,16 @@ export class GroupsAPI extends TestAPI {
       .expect(200)
   }
 
-  searchUsers = (id: string, params?: { bookmark?: string }) => {
+  searchUsers = (
+    id: string,
+    params?: { bookmark?: string; emailSearch?: string }
+  ) => {
     let url = `/api/global/groups/${id}/users?`
     if (params?.bookmark) {
       url += `bookmark=${params.bookmark}&`
+    }
+    if (params?.emailSearch) {
+      url += `emailSearch=${params.emailSearch}&`
     }
     return this.request
       .get(url)
