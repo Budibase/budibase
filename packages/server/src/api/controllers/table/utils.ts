@@ -138,10 +138,8 @@ export function importToRows(
         row[fieldName]
       ) {
         let merged = [...schema.constraints!.inclusion!, ...rowVal]
-
         let superSet = new Set(merged)
         schema.constraints!.inclusion = Array.from(superSet)
-
         schema.constraints!.inclusion.sort()
       }
     }
