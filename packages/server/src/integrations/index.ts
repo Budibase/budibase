@@ -122,7 +122,7 @@ export async function getIntegration(integration: SourceName) {
 }
 
 const VALIDATORS: Partial<
-  Record<SourceName, (config: any) => Promise<boolean>>
+  Record<SourceName, (config: any) => Promise<boolean | { error: string }>>
 > = {
   [SourceName.POSTGRES]: postgres.validateConnection,
 }

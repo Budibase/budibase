@@ -37,22 +37,20 @@ describe("datasource validators", () => {
     })
 
     it("test invalid connection string", async () => {
-      try {
-        const result = await validator({
-          host,
-          port,
-          database: "postgres",
-          user: "wrong",
-          password: "password",
-          schema: "public",
-          ssl: false,
-          rejectUnauthorized: false,
-          ca: false,
-        })
-        expect(result).toBeFalsy()
-      } catch (e) {
-        console.error(e)
-      }
+      const result = await validator({
+        host,
+        port,
+        database: "postgres",
+        user: "wrong",
+        password: "password",
+        schema: "public",
+        ssl: false,
+        rejectUnauthorized: false,
+        ca: false,
+      })
+      expect(result).toEqual({
+        error: 'password authentication failed for user "wrong"',
+      })
     })
   })
 })
