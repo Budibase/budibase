@@ -20,7 +20,7 @@ import env from "../environment"
 import { cloneDeep } from "lodash"
 import sdk from "../sdk"
 
-const DEFINITIONS: { [key: string]: Integration } = {
+const DEFINITIONS: Record<string, Integration> = {
   [SourceName.POSTGRES]: postgres.schema,
   [SourceName.DYNAMODB]: dynamodb.schema,
   [SourceName.MONGODB]: mongodb.schema,
@@ -38,7 +38,7 @@ const DEFINITIONS: { [key: string]: Integration } = {
   [SourceName.SNOWFLAKE]: snowflake.schema,
 }
 
-const INTEGRATIONS: { [key: string]: any } = {
+const INTEGRATIONS: Record<SourceName, any> = {
   [SourceName.POSTGRES]: postgres.integration,
   [SourceName.DYNAMODB]: dynamodb.integration,
   [SourceName.MONGODB]: mongodb.integration,
@@ -55,6 +55,7 @@ const INTEGRATIONS: { [key: string]: any } = {
   [SourceName.REDIS]: redis.integration,
   [SourceName.FIRESTORE]: firebase.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
+  [SourceName.ORACLE]: undefined,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
@@ -69,8 +70,9 @@ if (
 
 export async function getDefinition(source: SourceName): Promise<Integration> {
   // check if its integrated, faster
-  if (DEFINITIONS[source]) {
-    return DEFINITIONS[source]
+  const definition = DEFINITIONS[source]
+  if (definition) {
+    return definition
   }
   const allDefinitions = await getDefinitions()
   return allDefinitions[source]
@@ -98,7 +100,7 @@ export async function getDefinitions() {
   }
 }
 
-export async function getIntegration(integration: string) {
+export async function getIntegration(integration: SourceName) {
   if (INTEGRATIONS[integration]) {
     return INTEGRATIONS[integration]
   }
@@ -119,7 +121,18 @@ export async function getIntegration(integration: string) {
   throw new Error("No datasource implementation found.")
 }
 
+const VALIDATORS: Partial<
+  Record<SourceName, (config: any) => Promise<boolean>>
+> = {
+  [SourceName.POSTGRES]: postgres.validateConnection,
+}
+
+function getValidators(integration: SourceName) {
+  return VALIDATORS[integration]
+}
+
 export default {
   getDefinitions,
   getIntegration,
+  getValidators,
 }
