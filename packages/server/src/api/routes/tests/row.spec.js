@@ -34,9 +34,9 @@ describe("/rows", () => {
     row = basicRow(table._id)
   })
 
-  const loadRow = async (id, status = 200) =>
+  const loadRow = async (id, tbl_Id, status = 200) =>
     await request
-      .get(`/api/${table._id}/rows/${id}`)
+      .get(`/api/${tbl_Id}/rows/${id}`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status)
@@ -182,8 +182,32 @@ describe("/rows", () => {
           type: "string",
           presence: false,
           datetime: { earliest: "", latest: "" },
-        },
+        }
       }
+      const arrayField = {
+        type: "array",
+        constraints: {
+          type: "array",
+          presence: false,
+          inclusion: [
+            "One",
+            "Two",
+            "Three",
+          ]
+        },
+        name: "Sample Tags",
+        sortable: false
+      }
+      const optsField = {
+        fieldName: "Sample Opts",
+        name: "Sample Opts",
+        type: "options",
+        constraints: {
+          type: "string",
+          presence: false,
+          inclusion: [ "Alpha", "Beta", "Gamma" ]
+        },
+      },
 
       table = await config.createTable({
         name: "TestTable2",
@@ -212,7 +236,15 @@ describe("/rows", () => {
           attachmentNull: attachment,
           attachmentUndefined: attachment,
           attachmentEmpty: attachment,
-          attachmentEmptyArrayStr: attachment
+          attachmentEmptyArrayStr: attachment,
+          arrayFieldEmptyArrayStr: arrayField,
+          arrayFieldArrayStrKnown: arrayField,
+          arrayFieldNull: arrayField,
+          arrayFieldUndefined: arrayField,
+          optsFieldEmptyStr: optsField,
+          optsFieldUndefined: optsField,
+          optsFieldNull: optsField,
+          optsFieldStrKnown: optsField
         },
       })
 
@@ -241,11 +273,20 @@ describe("/rows", () => {
         attachmentUndefined: undefined,
         attachmentEmpty: "",
         attachmentEmptyArrayStr: "[]",
+        arrayFieldEmptyArrayStr: "[]",
+        arrayFieldUndefined: undefined,
+        arrayFieldNull: null,
+        arrayFieldArrayStrKnown: "['One']",
+        optsFieldEmptyStr: "",
+        optsFieldUndefined: undefined,
+        optsFieldNull: null,
+        optsFieldStrKnown: 'Alpha'
       }
 
-      const id = (await config.createRow(row))._id
+      const createdRow = await config.createRow(row);
+      const id = createdRow._id
 
-      const saved = (await loadRow(id)).body
+      const saved = (await loadRow(id, table._id)).body
 
       expect(saved.stringUndefined).toBe(undefined)
       expect(saved.stringNull).toBe("")
@@ -270,7 +311,15 @@ describe("/rows", () => {
       expect(saved.attachmentNull).toEqual([])
       expect(saved.attachmentUndefined).toBe(undefined)
       expect(saved.attachmentEmpty).toEqual([])
-      expect(saved.attachmentEmptyArrayStr).toEqual([])
+      expect(saved.attachmentEmptyArrayStr).toEqual([])      
+      expect(saved.arrayFieldEmptyArrayStr).toEqual([])
+      expect(saved.arrayFieldNull).toEqual([])
+      expect(saved.arrayFieldUndefined).toEqual(undefined)
+      expect(saved.optsFieldEmptyStr).toEqual(null)
+      expect(saved.optsFieldUndefined).toEqual(undefined)
+      expect(saved.optsFieldNull).toEqual(null)
+      expect(saved.arrayFieldArrayStrKnown).toEqual(['One'])
+      expect(saved.optsFieldStrKnown).toEqual('Alpha')
     })
   })
 
@@ -299,7 +348,7 @@ describe("/rows", () => {
       expect(res.body.name).toEqual("Updated Name")
       expect(res.body.description).toEqual(existing.description)
 
-      const savedRow = await loadRow(res.body._id)
+      const savedRow = await loadRow(res.body._id, table._id)
 
       expect(savedRow.body.description).toEqual(existing.description)
       expect(savedRow.body.name).toEqual("Updated Name")
@@ -401,7 +450,7 @@ describe("/rows", () => {
         .expect(200)
 
       expect(res.body.length).toEqual(2)
-      await loadRow(row1._id, 404)
+      await loadRow(row1._id, table._id, 404)
       await assertRowUsage(rowUsage - 2)
       await assertQueryUsage(queryUsage + 1)
     })

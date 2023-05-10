@@ -98,8 +98,6 @@ export async function bulkImport(ctx: UserCtx) {
   // can only be done in the builder, but in the future we may need to
   // think about events for bulk items
 
-  //const resp = pickApi({ tableId }).save(ctx)
-
   ctx.status = 200
   ctx.body = { message: `Bulk rows created.` }
 }

@@ -184,8 +184,13 @@ export async function destroy(ctx: any) {
 }
 
 export async function bulkImport(ctx: any) {
+  const db = context.getAppDB()
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows } = ctx.request.body
   await handleDataImport(ctx.user, table, rows)
+
+  // Ensure auto id and other table updates are persisted
+  await db.put(table)
+
   return table
 }

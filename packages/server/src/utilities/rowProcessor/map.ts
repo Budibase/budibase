@@ -2,6 +2,22 @@
 import { FieldTypes } from "../../constants"
 import { logging } from "@budibase/backend-core"
 
+const parseArrayString = value => {
+  if (typeof value === "string") {
+    if (value === "") {
+      return []
+    }
+    let result
+    try {
+      result = JSON.parse(value.replace(/'/g, '"'))
+      return result
+    } catch (e) {
+      logging.logAlert("Could not parse row value", e)
+    }
+  }
+  return value
+}
+
 /**
  * A map of how we convert various properties in rows to each other based on the row type.
  */
@@ -26,9 +42,9 @@ export const TYPE_TRANSFORM_MAP: any = {
     [undefined]: undefined,
   },
   [FieldTypes.ARRAY]: {
-    "": [],
     [null]: [],
     [undefined]: undefined,
+    parse: parseArrayString,
   },
   [FieldTypes.STRING]: {
     "": "",
@@ -70,21 +86,7 @@ export const TYPE_TRANSFORM_MAP: any = {
   [FieldTypes.ATTACHMENT]: {
     [null]: [],
     [undefined]: undefined,
-    parse: attachments => {
-      if (typeof attachments === "string") {
-        if (attachments === "") {
-          return []
-        }
-        let result
-        try {
-          result = JSON.parse(attachments)
-        } catch (e) {
-          logging.logAlert("Could not parse attachments", e)
-        }
-        return result
-      }
-      return attachments
-    },
+    parse: parseArrayString,
   },
   [FieldTypes.BOOLEAN]: {
     "": null,
