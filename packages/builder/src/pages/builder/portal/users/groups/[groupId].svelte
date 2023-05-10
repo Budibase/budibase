@@ -11,7 +11,10 @@
     ActionMenu,
     MenuItem,
     Modal,
+    Pagination,
   } from "@budibase/bbui"
+  import { fetchData } from "@budibase/frontend-core"
+  import { API } from "api"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "helpers/pagination"
   import { users, apps, groups, auth, features } from "stores/portal"
@@ -27,6 +30,18 @@
   import ScimBanner from "../_components/SCIMBanner.svelte"
 
   export let groupId
+
+  const fetchGroupUsers = fetchData({
+    API,
+    datasource: {
+      type: "groupUser",
+    },
+    options: {
+      query: {
+        groupId,
+      },
+    },
+  })
 
   $: userSchema = {
     email: {
@@ -71,16 +86,15 @@
   let popover
   let searchTerm = ""
   let prevSearch = undefined
-  let pageInfo = createPaginationStore()
+  let searchUsersPageInfo = createPaginationStore()
   let loaded = false
   let editModal, deleteModal
 
   $: scimEnabled = $features.isScimEnabled
   $: readonly = !$auth.isAdmin || scimEnabled
-  $: page = $pageInfo.page
-  $: fetchUsers(page, searchTerm)
+  $: page = $searchUsersPageInfo.page
+  $: searchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
-  $: filtered = $users.data
   $: groupApps = $apps
     .filter(app =>
       groups.actions
@@ -97,20 +111,20 @@
     }
   }
 
-  async function fetchUsers(page, search) {
-    if ($pageInfo.loading) {
+  async function searchUsers(page, search) {
+    if ($searchUsersPageInfo.loading) {
       return
     }
     // need to remove the page if they've started searching
     if (search && !prevSearch) {
-      pageInfo.reset()
+      searchUsersPageInfo.reset()
       page = undefined
     }
     prevSearch = search
     try {
-      pageInfo.loading()
+      searchUsersPageInfo.loading()
       await users.search({ page, email: search })
-      pageInfo.fetched($users.hasNextPage, $users.nextPage)
+      searchUsersPageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
     }
@@ -136,6 +150,7 @@
 
   const removeUser = async id => {
     await groups.actions.removeUser(groupId, id)
+    fetchGroupUsers.refresh()
   }
 
   const removeApp = async app => {
@@ -203,15 +218,21 @@
             labelKey="email"
             selected={group.users?.map(user => user._id)}
             list={$users.data}
-            on:select={e => groups.actions.addUser(groupId, e.detail)}
-            on:deselect={e => groups.actions.removeUser(groupId, e.detail)}
+            on:select={async e => {
+              await groups.actions.addUser(groupId, e.detail)
+              fetchGroupUsers.getInitialData()
+            }}
+            on:deselect={async e => {
+              await groups.actions.removeUser(groupId, e.detail)
+              fetchGroupUsers.getInitialData()
+            }}
           />
         </Popover>
       </div>
 
       <Table
         schema={userSchema}
-        data={group?.users}
+        data={$fetchGroupUsers?.rows}
         allowEditRows={false}
         customPlaceholder
         customRenderers={customUserTableRenderers}
@@ -221,6 +242,24 @@
           <Heading size="S">This user group doesn't have any users</Heading>
         </div>
       </Table>
+
+      <div class="pagination">
+        <Pagination
+          page={$fetchGroupUsers.pageNumber + 1}
+          hasPrevPage={$fetchGroupUsers.loading
+            ? false
+            : $fetchGroupUsers.hasPrevPage}
+          hasNextPage={$fetchGroupUsers.loading
+            ? false
+            : $fetchGroupUsers.hasNextPage}
+          goToPrevPage={$fetchGroupUsers.loading
+            ? null
+            : fetchGroupUsers.prevPage}
+          goToNextPage={$fetchGroupUsers.loading
+            ? null
+            : fetchGroupUsers.nextPage}
+        />
+      </div>
     </Layout>
 
     <Layout noPadding gap="S">
