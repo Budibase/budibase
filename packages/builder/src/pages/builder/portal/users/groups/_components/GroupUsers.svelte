@@ -62,16 +62,15 @@
 </script>
 
 <div class="header">
-  <Heading size="S">Users</Heading>
   {#if !scimEnabled}
     <EditUserPicker {groupId} onUsersUpdated={fetchGroupUsers.getInitialData} />
   {:else}
     <ScimBanner />
   {/if}
-</div>
 
-<div class="controls-right">
-  <Search bind:value={emailSearch} placeholder="Search email" />
+  <div class="controls-right">
+    <Search bind:value={emailSearch} placeholder="Search email" />
+  </div>
 </div>
 <Table
   schema={userSchema}
@@ -109,7 +108,7 @@
   .header {
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     gap: var(--spacing-l);
   }
