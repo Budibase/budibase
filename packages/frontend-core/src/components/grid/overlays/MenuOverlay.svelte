@@ -1,5 +1,11 @@
 <script>
-  import { clickOutside, Menu, MenuItem, notifications } from "@budibase/bbui"
+  import {
+    clickOutside,
+    Menu,
+    MenuItem,
+    Helpers,
+    notifications,
+  } from "@budibase/bbui"
   import { getContext } from "svelte"
 
   const {
@@ -36,6 +42,11 @@
       $focusedCellId = `${newRow._id}-${column}`
     }
   }
+
+  const copyToClipboard = async value => {
+    await Helpers.copyToClipboard(value)
+    notifications.success("Copied to clipboard")
+  }
 </script>
 
 {#if $menu.visible}
@@ -63,6 +74,22 @@
         on:click={menu.actions.close}
       >
         Edit row in modal
+      </MenuItem>
+      <MenuItem
+        icon="Copy"
+        disabled={!$focusedRow?._id}
+        on:click={() => copyToClipboard($focusedRow?._id)}
+        on:click={menu.actions.close}
+      >
+        Copy row _id
+      </MenuItem>
+      <MenuItem
+        icon="Copy"
+        disabled={!$focusedRow?._rev}
+        on:click={() => copyToClipboard($focusedRow?._rev)}
+        on:click={menu.actions.close}
+      >
+        Copy row _rev
       </MenuItem>
       <MenuItem
         icon="Duplicate"
