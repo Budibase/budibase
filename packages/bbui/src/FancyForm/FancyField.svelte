@@ -1,7 +1,7 @@
 <script>
   import Icon from "../Icon/Icon.svelte"
   import { getContext, onMount } from "svelte"
-  import { slide } from "svelte/transition"
+  import ErrorMessage from "./ErrorMessage.svelte"
 
   export let disabled = false
   export let error = null
@@ -55,9 +55,7 @@
     {/if}
   </div>
   {#if error}
-    <div transition:slide|local={{ duration: 130 }} class="error-message">
-      {error}
-    </div>
+    <ErrorMessage {error} />
   {/if}
 </div>
 
@@ -109,13 +107,6 @@
   }
   .field {
     flex: 1 1 auto;
-  }
-  .error-message {
-    background: var(--spectrum-global-color-red-400);
-    color: white;
-    font-size: 14px;
-    padding: 6px 16px;
-    font-weight: 500;
   }
   .error-icon {
     flex: 0 0 auto;
