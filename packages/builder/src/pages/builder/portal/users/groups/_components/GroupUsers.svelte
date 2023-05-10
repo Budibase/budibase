@@ -12,7 +12,7 @@
 
   export let groupId
 
-  let searchTerm
+  let emailSearch
   let fetchGroupUsers
   $: fetchGroupUsers = fetchData({
     API,
@@ -22,7 +22,7 @@
     options: {
       query: {
         groupId,
-        searchTerm,
+        emailSearch,
       },
     },
   })
@@ -71,7 +71,7 @@
 </div>
 
 <div class="controls-right">
-  <Search bind:value={searchTerm} placeholder="Search" />
+  <Search bind:value={emailSearch} placeholder="Search" />
 </div>
 <Table
   schema={userSchema}
