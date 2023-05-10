@@ -1,62 +1,28 @@
 <script>
-  import { url, goto } from "@roxi/routify"
   import {
-    Button,
-    Layout,
+    ActionMenu,
     Heading,
     Icon,
-    Popover,
-    notifications,
-    Table,
-    ActionMenu,
+    Layout,
     MenuItem,
     Modal,
-    Pagination,
+    Table,
+    notifications,
   } from "@budibase/bbui"
-  import { fetchData } from "@budibase/frontend-core"
-  import { API } from "api"
-  import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
-  import { createPaginationStore } from "helpers/pagination"
-  import { users, apps, groups, auth, features } from "stores/portal"
-  import { onMount, setContext } from "svelte"
-  import { roles } from "stores/backend"
+  import { goto, url } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { Breadcrumb, Breadcrumbs } from "components/portal/page"
+  import { roles } from "stores/backend"
+  import { apps, auth, features, groups } from "stores/portal"
+  import { onMount, setContext } from "svelte"
+  import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
+  import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
-  import { Breadcrumbs, Breadcrumb } from "components/portal/page"
-  import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
-  import RemoveUserTableRenderer from "./_components/RemoveUserTableRenderer.svelte"
-  import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
-  import ScimBanner from "../_components/SCIMBanner.svelte"
+  import GroupUsers from "./_components/GroupUsers.svelte"
 
   export let groupId
 
-  const fetchGroupUsers = fetchData({
-    API,
-    datasource: {
-      type: "groupUser",
-    },
-    options: {
-      query: {
-        groupId,
-      },
-    },
-  })
-
-  $: userSchema = {
-    email: {
-      width: "1fr",
-    },
-    ...(readonly
-      ? {}
-      : {
-          _id: {
-            displayName: "",
-            width: "auto",
-            borderLeft: true,
-          },
-        }),
-  }
   const appSchema = {
     name: {
       width: "2fr",
@@ -65,12 +31,6 @@
       width: "1fr",
     },
   }
-  const customUserTableRenderers = [
-    {
-      column: "_id",
-      component: RemoveUserTableRenderer,
-    },
-  ]
   const customAppTableRenderers = [
     {
       column: "name",
@@ -82,18 +42,11 @@
     },
   ]
 
-  let popoverAnchor
-  let popover
-  let searchTerm = ""
-  let prevSearch = undefined
-  let searchUsersPageInfo = createPaginationStore()
   let loaded = false
   let editModal, deleteModal
 
   $: scimEnabled = $features.isScimEnabled
   $: readonly = !$auth.isAdmin || scimEnabled
-  $: page = $searchUsersPageInfo.page
-  $: searchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
   $: groupApps = $apps
     .filter(app =>
@@ -108,25 +61,6 @@
   $: {
     if (loaded && !group?._id) {
       $goto("./")
-    }
-  }
-
-  async function searchUsers(page, search) {
-    if ($searchUsersPageInfo.loading) {
-      return
-    }
-    // need to remove the page if they've started searching
-    if (search && !prevSearch) {
-      searchUsersPageInfo.reset()
-      page = undefined
-    }
-    prevSearch = search
-    try {
-      searchUsersPageInfo.loading()
-      await users.search({ page, email: search })
-      searchUsersPageInfo.fetched($users.hasNextPage, $users.nextPage)
-    } catch (error) {
-      notifications.error("Error getting user list")
     }
   }
 
@@ -148,18 +82,9 @@
     }
   }
 
-  const removeUser = async id => {
-    await groups.actions.removeUser(groupId, id)
-    fetchGroupUsers.refresh()
-  }
-
   const removeApp = async app => {
     await groups.actions.removeApp(groupId, apps.getProdAppID(app.devId))
   }
-
-  setContext("users", {
-    removeUser,
-  })
   setContext("roles", {
     updateRole: () => {},
     removeRole: removeApp,
@@ -201,65 +126,7 @@
     </div>
 
     <Layout noPadding gap="S">
-      <div class="header">
-        <Heading size="S">Users</Heading>
-        {#if !scimEnabled}
-          <div bind:this={popoverAnchor}>
-            <Button disabled={readonly} on:click={popover.show()} cta
-              >Add user</Button
-            >
-          </div>
-        {:else}
-          <ScimBanner />
-        {/if}
-        <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
-          <UserGroupPicker
-            bind:searchTerm
-            labelKey="email"
-            selected={group.users?.map(user => user._id)}
-            list={$users.data}
-            on:select={async e => {
-              await groups.actions.addUser(groupId, e.detail)
-              fetchGroupUsers.getInitialData()
-            }}
-            on:deselect={async e => {
-              await groups.actions.removeUser(groupId, e.detail)
-              fetchGroupUsers.getInitialData()
-            }}
-          />
-        </Popover>
-      </div>
-
-      <Table
-        schema={userSchema}
-        data={$fetchGroupUsers?.rows}
-        allowEditRows={false}
-        customPlaceholder
-        customRenderers={customUserTableRenderers}
-        on:click={e => $goto(`../users/${e.detail._id}`)}
-      >
-        <div class="placeholder" slot="placeholder">
-          <Heading size="S">This user group doesn't have any users</Heading>
-        </div>
-      </Table>
-
-      <div class="pagination">
-        <Pagination
-          page={$fetchGroupUsers.pageNumber + 1}
-          hasPrevPage={$fetchGroupUsers.loading
-            ? false
-            : $fetchGroupUsers.hasPrevPage}
-          hasNextPage={$fetchGroupUsers.loading
-            ? false
-            : $fetchGroupUsers.hasNextPage}
-          goToPrevPage={$fetchGroupUsers.loading
-            ? null
-            : fetchGroupUsers.prevPage}
-          goToNextPage={$fetchGroupUsers.loading
-            ? null
-            : fetchGroupUsers.nextPage}
-        />
-      </div>
+      <GroupUsers {groupId} />
     </Layout>
 
     <Layout noPadding gap="S">
