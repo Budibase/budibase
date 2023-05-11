@@ -62,7 +62,7 @@
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
 
   /**
-   * TODO - Remove after July 2023
+   * TODO - Remove after November 2023
    * *******************************
    * Code added to provide backwards compatibility between Values 1,2,3,4,5
    * and the new JSON body.
@@ -95,7 +95,7 @@
     }
 
     /**
-     * TODO - Remove after July 2023
+     * TODO - Remove after November 2023
      * *******************************
      * Code added to provide backwards compatibility between Values 1,2,3,4,5
      * and the new JSON body.
@@ -316,7 +316,7 @@
           value={inputData[key]?.value}
           on:change={e => {
             /**
-             * TODO - Remove after July 2023
+             * TODO - Remove after November 2023
              * *******************************
              * Code added to provide backwards compatibility between Values 1,2,3,4,5
              * and the new JSON body.
