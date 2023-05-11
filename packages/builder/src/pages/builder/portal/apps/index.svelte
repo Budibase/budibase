@@ -50,6 +50,7 @@
         : true)
   )
   $: automationErrors = getAutomationErrors(enrichedApps)
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
 
   const usersLimitLockAction = $licensing?.errUserLimit
     ? () => accountLockedModal.show()
@@ -313,7 +314,10 @@
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />
-<AccountLockedModal bind:this={accountLockedModal} />
+<AccountLockedModal bind:this={accountLockedModal} onConfirm={() =>
+    isOwner
+      ? $licensing.goToUpgradePage()
+      : window.open("https://budibase.com/pricing/", "_blank")} />
 
 <style>
   .title {
