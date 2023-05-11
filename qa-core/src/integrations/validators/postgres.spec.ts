@@ -1,6 +1,8 @@
 import { GenericContainer } from "testcontainers"
 import postgres from "../../../../packages/server/src/integrations/postgres"
 
+import { generator } from "@budibase/backend-core/tests"
+
 jest.unmock("pg")
 
 describe("datasource validators", () => {
