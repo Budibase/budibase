@@ -15,7 +15,7 @@ import {
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId, finaliseExternalTables } from "./utils"
-import { GoogleSpreadsheet } from "google-spreadsheet"
+import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
 import { dataFilters } from "@budibase/shared-core"
@@ -434,7 +434,20 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     try {
       await this.connect()
       const sheet = this.client.sheetsByTitle[query.sheet]
-      const rows = await sheet.getRows()
+      let rows: GoogleSpreadsheetRow[] = []
+      if (query.paginate) {
+        const limit = query.paginate.limit || 100
+        let page: number =
+          typeof query.paginate.page === "number"
+            ? query.paginate.page
+            : parseInt(query.paginate.page || "1")
+        rows = await sheet.getRows({
+          limit,
+          offset: (page - 1) * limit,
+        })
+      } else {
+        rows = await sheet.getRows()
+      }
       const filtered = dataFilters.runLuceneQuery(rows, query.filters)
       const headerValues = sheet.headerValues
       let response = []

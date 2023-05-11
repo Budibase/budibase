@@ -9,10 +9,11 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
-  name: "Integromat Integration",
-  tagline: "Trigger an Integromat scenario",
+  name: "Make Integration",
+  stepTitle: "Make",
+  tagline: "Trigger a Make scenario",
   description:
-    "Performs a webhook call to Integromat and gets the response (if configured)",
+    "Performs a webhook call to Make and gets the response (if configured)",
   icon: "ri-shut-down-line",
   stepId: AutomationActionStepId.integromat,
   type: AutomationStepType.ACTION,

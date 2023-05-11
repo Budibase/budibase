@@ -270,7 +270,7 @@
     z-index: 3;
     position: absolute;
     top: calc(var(--row-height) + var(--offset) + 24px);
-    left: var(--gutter-width);
+    left: 18px;
   }
   .button-with-keys {
     display: flex;
