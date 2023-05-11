@@ -31,7 +31,7 @@ if (types) {
 
 const JSON_REGEX = /'{.*}'::json/s
 
-interface PostgresConfig {
+export interface PostgresConfig {
   host: string
   port: number
   database: string
