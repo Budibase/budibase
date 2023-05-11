@@ -20,18 +20,11 @@ import { NUMBER_REGEX } from "../utilities"
 import Sql from "./base/sql"
 import { MySQLColumn } from "./base/types"
 
-const mysql = require("mysql2/promise")
+import mysql from "mysql2/promise"
 
-interface MySQLConfig {
-  host: string
-  port: number
-  user: string
-  password: string
+export interface MySQLConfig extends mysql.ConnectionOptions {
   database: string
-  ssl?: { [key: string]: any }
   rejectUnauthorized: boolean
-  typeCast: Function
-  multipleStatements: boolean
 }
 
 const SCHEMA: Integration = {
@@ -134,7 +127,8 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     if (
       config.rejectUnauthorized != null &&
       !config.rejectUnauthorized &&
-      config.ssl
+      config.ssl &&
+      typeof config.ssl !== "string"
     ) {
       config.ssl.rejectUnauthorized = config.rejectUnauthorized
     }
