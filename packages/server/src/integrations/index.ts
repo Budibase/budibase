@@ -121,9 +121,7 @@ export async function getIntegration(integration: SourceName) {
   throw new Error("No datasource implementation found.")
 }
 
-const VALIDATORS: Partial<
-  Record<SourceName, (config: any) => Promise<boolean | { error: string }>>
-> = {
+const VALIDATORS = {
   [SourceName.POSTGRES]: postgres.validateConnection,
 }
 
@@ -134,5 +132,5 @@ function getValidators(integration: SourceName) {
 export default {
   getDefinitions,
   getIntegration,
-  getValidators,
+  getValidator: VALIDATORS,
 }

@@ -6,7 +6,7 @@ jest.unmock("pg")
 
 describe("datasource validators", () => {
   describe("postgres", () => {
-    const validator = integrations.getValidators(SourceName.POSTGRES)!
+    const validator = integrations.getValidator[SourceName.POSTGRES]!
 
     let host: string
     let port: number
@@ -31,7 +31,6 @@ describe("datasource validators", () => {
         schema: "public",
         ssl: false,
         rejectUnauthorized: false,
-        ca: false,
       })
       expect(result).toBeTruthy()
     })
@@ -46,7 +45,6 @@ describe("datasource validators", () => {
         schema: "public",
         ssl: false,
         rejectUnauthorized: false,
-        ca: false,
       })
       expect(result).toEqual({
         error: 'password authentication failed for user "wrong"',
