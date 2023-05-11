@@ -107,8 +107,9 @@
     useSampleData,
     isGoogle,
   }) => {
+    let app
     try {
-      const app = await createApp(useSampleData)
+      app = await createApp(useSampleData)
 
       let datasource
       if (datasourceConfig) {
@@ -134,6 +135,17 @@
       console.log(e)
       creationLoading = false
       notifications.error("There was a problem creating your app")
+
+      // Reset the store so that we don't send up stale headers
+      store.actions.reset()
+
+      // If we successfully created an app, delete it again so that we
+      // can try again once the error has been corrected.
+      // This also ensures onboarding can't be skipped by entering invalid
+      // data credentials.
+      if (app?.appId) {
+        await API.deleteApp(app.appId)
+      }
     }
   }
 </script>
@@ -146,80 +158,87 @@
   />
 </Modal>
 
-<SplitPage>
-  {#if stage === "name"}
-    <NamePanel bind:name bind:url onNext={() => (stage = "data")} />
-  {:else if googleComplete}
-    <div class="centered">
-      <Body
-        >Please login to your Google account in the new tab which as opened to
-        continue.</Body
-      >
-    </div>
-  {:else if integrationsLoading || creationLoading}
-    <div class="centered">
-      <Spinner />
-    </div>
-  {:else if stage === "data"}
-    <DataPanel onBack={() => (stage = "name")}>
-      <div class="dataButton">
-        <FancyButton on:click={() => handleCreateApp({ useSampleData: true })}>
-          <div class="dataButtonContent">
-            <div class="dataButtonIcon">
-              <img
-                alt="Budibase Logo"
-                class="budibaseLogo"
-                src={"https://i.imgur.com/Xhdt1YP.png"}
-              />
-            </div>
-            Budibase Sample data
-          </div>
-        </FancyButton>
+<div class="full-width">
+  <SplitPage>
+    {#if stage === "name"}
+      <NamePanel bind:name bind:url onNext={() => (stage = "data")} />
+    {:else if googleComplete}
+      <div class="centered">
+        <Body
+          >Please login to your Google account in the new tab which as opened to
+          continue.</Body
+        >
       </div>
-      <div class="dataButton">
-        <FancyButton on:click={uploadModal.show}>
-          <div class="dataButtonContent">
-            <div class="dataButtonIcon">
-              <FontAwesomeIcon name="fa-solid fa-file-arrow-up" />
-            </div>
-            Upload data (CSV or JSON)
-          </div>
-        </FancyButton>
+    {:else if integrationsLoading || creationLoading}
+      <div class="centered">
+        <Spinner />
       </div>
-      {#each Object.entries(plusIntegrations) as [integrationType, schema]}
+    {:else if stage === "data"}
+      <DataPanel onBack={() => (stage = "name")}>
         <div class="dataButton">
-          <FancyButton on:click={() => (stage = integrationType)}>
+          <FancyButton
+            on:click={() => handleCreateApp({ useSampleData: true })}
+          >
             <div class="dataButtonContent">
               <div class="dataButtonIcon">
-                <IntegrationIcon {integrationType} {schema} />
+                <img
+                  alt="Budibase Logo"
+                  class="budibaseLogo"
+                  src={"https://i.imgur.com/Xhdt1YP.png"}
+                />
               </div>
-              {schema.friendlyName}
+              Budibase Sample data
             </div>
           </FancyButton>
         </div>
-      {/each}
-    </DataPanel>
-  {:else if stage in plusIntegrations}
-    <DatasourceConfigPanel
-      title={plusIntegrations[stage].friendlyName}
-      fields={plusIntegrations[stage].datasource}
-      type={stage}
-      onBack={() => (stage = "data")}
-      onNext={data => {
-        const isGoogle = data.isGoogle
-        delete data.isGoogle
-        return handleCreateApp({ datasourceConfig: data, isGoogle })
-      }}
-    />
-  {:else}
-    <p>There was an problem. Please refresh the page and try again.</p>
-  {/if}
-  <div slot="right">
-    <ExampleApp {name} showData={stage !== "name"} />
-  </div>
-</SplitPage>
+        <div class="dataButton">
+          <FancyButton on:click={uploadModal.show}>
+            <div class="dataButtonContent">
+              <div class="dataButtonIcon">
+                <FontAwesomeIcon name="fa-solid fa-file-arrow-up" />
+              </div>
+              Upload data (CSV or JSON)
+            </div>
+          </FancyButton>
+        </div>
+        {#each Object.entries(plusIntegrations) as [integrationType, schema]}
+          <div class="dataButton">
+            <FancyButton on:click={() => (stage = integrationType)}>
+              <div class="dataButtonContent">
+                <div class="dataButtonIcon">
+                  <IntegrationIcon {integrationType} {schema} />
+                </div>
+                {schema.friendlyName}
+              </div>
+            </FancyButton>
+          </div>
+        {/each}
+      </DataPanel>
+    {:else if stage in plusIntegrations}
+      <DatasourceConfigPanel
+        title={plusIntegrations[stage].friendlyName}
+        fields={plusIntegrations[stage].datasource}
+        type={stage}
+        onBack={() => (stage = "data")}
+        onNext={data => {
+          const isGoogle = data.isGoogle
+          delete data.isGoogle
+          return handleCreateApp({ datasourceConfig: data, isGoogle })
+        }}
+      />
+    {:else}
+      <p>There was an problem. Please refresh the page and try again.</p>
+    {/if}
+    <div slot="right">
+      <ExampleApp {name} showData={stage !== "name"} />
+    </div>
+  </SplitPage>
+</div>
 
 <style>
+  .full-width {
+    width: 100%;
+  }
   .centered {
     display: flex;
     justify-content: center;
