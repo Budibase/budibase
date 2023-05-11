@@ -34,33 +34,17 @@ yarn unlink
 yarn link
 cd -
 
-if [ -d "../budibase-pro" ]; then
-  cd ../budibase-pro
-  echo "Bootstrapping budibase-pro"
-  yarn bootstrap
+if [ -d packages/pro/packages ]; then
+  pro_loaded_locally=true
+else
+  pro_loaded_locally=false
+fi
 
-  cd packages/pro
+if [ $pro_loaded_locally = true ]; then
   echo "Linking pro"
+  cd packages/pro/packages/pro
   yarn unlink
   yarn link
-
-  echo "Linking backend-core to pro"
-  yarn link '@budibase/backend-core'
-
-  echo "Linking types to pro"
-  yarn link '@budibase/types'
-
-  echo "Linking string-templates to pro"
-  yarn link '@budibase/string-templates'
-
-  cd ../../../budibase
-
-  echo "Linking pro to worker"
-  cd packages/worker && yarn link '@budibase/pro'
-  cd -
-
-  echo "Linking pro to server"
-  cd packages/server && yarn link '@budibase/pro'
   cd -
 fi
 
@@ -79,7 +63,7 @@ if [ -d "../account-portal" ]; then
   echo "Linking types to account-portal"
   yarn link "@budibase/types"
 
-  if [ -d "../../../budibase-pro" ]; then
+  if [ $pro_loaded_locally = true ]; then
     echo "Linking pro to account-portal"
     yarn link "@budibase/pro"
   fi

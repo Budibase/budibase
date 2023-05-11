@@ -147,6 +147,9 @@ const automationActions = store => ({
       testData,
     })
     if (!result?.trigger && !result?.steps?.length) {
+      if (result?.err?.code === "usage_limit_exceeded") {
+        throw "You have exceeded your automation quota"
+      }
       throw "Something went wrong testing your automation"
     }
     store.update(state => {

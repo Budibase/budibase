@@ -1,8 +1,9 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Popover, Toggle } from "@budibase/bbui"
+  import { ActionButton, Popover, Toggle, Icon } from "@budibase/bbui"
+  import { getColumnIcon } from "../lib/utils"
 
-  const { columns, stickyColumn } = getContext("grid")
+  const { columns, stickyColumn, compact } = getContext("grid")
 
   let open = false
   let anchor
@@ -47,25 +48,32 @@
     on:click={() => (open = !open)}
     selected={open || anyHidden}
     disabled={!$columns.length}
+    tooltip={$compact ? "Columns" : ""}
   >
-    Columns
+    {$compact ? "" : "Columns"}
   </ActionButton>
 </div>
 
-<Popover bind:open {anchor} align="left">
+<Popover bind:open {anchor} align={$compact ? "right" : "left"}>
   <div class="content">
     <div class="columns">
       {#if $stickyColumn}
+        <div class="column">
+          <Icon size="S" name={getColumnIcon($stickyColumn)} />
+          {$stickyColumn.label}
+        </div>
         <Toggle disabled size="S" value={true} />
-        <span>{$stickyColumn.label}</span>
       {/if}
       {#each $columns as column}
+        <div class="column">
+          <Icon size="S" name={getColumnIcon(column)} />
+          {column.label}
+        </div>
         <Toggle
           size="S"
           value={column.visible}
           on:change={e => toggleVisibility(column, e.detail)}
         />
-        <span>{column.label}</span>
       {/each}
     </div>
     <div class="buttons">
@@ -90,6 +98,13 @@
   .columns {
     display: grid;
     align-items: center;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr auto;
+  }
+  .columns :global(.spectrum-Switch) {
+    margin-right: 0;
+  }
+  .column {
+    display: flex;
+    gap: 8px;
   }
 </style>

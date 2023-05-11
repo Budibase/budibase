@@ -42,8 +42,14 @@ if (!env.isTest()) {
         host: REDIS_OPTS.host,
         port: REDIS_OPTS.port,
       },
-      password: REDIS_OPTS.opts.password,
-      database: 1,
+      password:
+        REDIS_OPTS.opts.password || REDIS_OPTS.opts.redisOptions.password,
+    }
+
+    if (!env.REDIS_CLUSTERED) {
+      // Can't set direct redis db in clustered env
+      // @ts-ignore
+      options.database = 1
     }
   }
   rateLimitStore = new Stores.Redis(options)

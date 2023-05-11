@@ -11,7 +11,7 @@
       "@budibase/backend-core": ["../backend-core/src"],
       "@budibase/backend-core/*": ["../backend-core/*"],
       "@budibase/shared-core": ["../shared-core/src"],
-      "@budibase/pro": ["../../../budibase-pro/packages/pro/src"]
+      "@budibase/pro": ["../pro/packages/pro/src"]
     }
   },
   "ts-node": {
