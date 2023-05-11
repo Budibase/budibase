@@ -1,5 +1,8 @@
 import { GenericContainer } from "testcontainers"
+import { Duration, TemporalUnit } from "node-duration"
+
 import postgres from "../../../../packages/server/src/integrations/postgres"
+import { SourceName } from "@budibase/types"
 
 jest.unmock("pg")
 jest.unmock("mssql")
@@ -57,14 +60,24 @@ describe("datasource validators", () => {
 
     let host: string, port: number
 
+    const password = "Str0Ng_p@ssW0rd!"
+
     beforeAll(async () => {
       const container = await new GenericContainer(
         "mcr.microsoft.com/mssql/server"
       )
         .withExposedPorts(1433)
         .withEnv("ACCEPT_EULA", "Y")
-        .withEnv("MSSQL_SA_PASSWORD", "Str0Ng_p@ssW0rd!")
+        .withEnv("MSSQL_SA_PASSWORD", password)
         .withEnv("MSSQL_PID", "Developer")
+        .withWaitStrategy(Wait.forHealthCheck())
+        .withHealthCheck({
+          test: `/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "${password}" -Q "SELECT 1" -b -o /dev/null`,
+          interval: new Duration(1000, TemporalUnit.MILLISECONDS),
+          timeout: new Duration(3, TemporalUnit.SECONDS),
+          retries: 20,
+          startPeriod: new Duration(100, TemporalUnit.MILLISECONDS),
+        })
         .start()
 
       host = container.getContainerIpAddress()
@@ -74,7 +87,7 @@ describe("datasource validators", () => {
     it("test valid connection string", async () => {
       const result = await validator({
         user: "sa",
-        password: "Str0Ng_p@ssW0rd!",
+        password,
         server: host,
         port: port,
         database: "master",
