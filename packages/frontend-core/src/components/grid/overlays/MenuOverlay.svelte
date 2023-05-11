@@ -7,6 +7,7 @@
     notifications,
   } from "@budibase/bbui"
   import { getContext } from "svelte"
+  import { NewRowID } from "../lib/constants"
 
   const {
     focusedRow,
@@ -20,9 +21,11 @@
     clipboard,
     dispatch,
     focusedCellAPI,
+    focusedRowId,
   } = getContext("grid")
 
   $: style = makeStyle($menu)
+  $: isNewRow = $focusedRowId === NewRowID
 
   const makeStyle = menu => {
     return `left:${menu.left}px; top:${menu.top}px;`
@@ -69,7 +72,7 @@
       </MenuItem>
       <MenuItem
         icon="Maximize"
-        disabled={!$config.allowEditRows}
+        disabled={isNewRow || !$config.allowEditRows}
         on:click={() => dispatch("edit-row", $focusedRow)}
         on:click={menu.actions.close}
       >
@@ -77,7 +80,7 @@
       </MenuItem>
       <MenuItem
         icon="Copy"
-        disabled={!$focusedRow?._id}
+        disabled={isNewRow || !$focusedRow?._id}
         on:click={() => copyToClipboard($focusedRow?._id)}
         on:click={menu.actions.close}
       >
@@ -85,7 +88,7 @@
       </MenuItem>
       <MenuItem
         icon="Copy"
-        disabled={!$focusedRow?._rev}
+        disabled={isNewRow || !$focusedRow?._rev}
         on:click={() => copyToClipboard($focusedRow?._rev)}
         on:click={menu.actions.close}
       >
@@ -93,14 +96,14 @@
       </MenuItem>
       <MenuItem
         icon="Duplicate"
-        disabled={!$config.allowAddRows}
+        disabled={isNewRow || !$config.allowAddRows}
         on:click={duplicate}
       >
         Duplicate row
       </MenuItem>
       <MenuItem
         icon="Delete"
-        disabled={!$config.allowDeleteRows}
+        disabled={isNewRow || !$config.allowDeleteRows}
         on:click={deleteRow}
       >
         Delete row
