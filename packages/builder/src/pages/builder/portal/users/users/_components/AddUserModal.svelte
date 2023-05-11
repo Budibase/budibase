@@ -30,8 +30,8 @@
   $: hasError = userData.find(x => x.error != null)
 
   $: userCount = $licensing.userCount + userData.length
-  $: willReach = licensing.willReachUserLimit(userCount)
-  $: willExceed = licensing.willExceedUserLimit(userCount)
+  $: willReach = licensing.usersLimitReached(userCount)
+  $: willExceed = licensing.usersLimitExceeded(userCount)
 
   function removeInput(idx) {
     userData = userData.filter((e, i) => i !== idx)
