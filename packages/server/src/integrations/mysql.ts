@@ -85,8 +85,6 @@ const SCHEMA: Integration = {
   },
 }
 
-const TimezoneAwareDateTypes = ["timestamp"]
-
 function bindingTypeCoerce(bindings: any[]) {
   for (let i = 0; i < bindings.length; i++) {
     const binding = bindings[i]
@@ -113,7 +111,7 @@ function bindingTypeCoerce(bindings: any[]) {
 
 class MySQLIntegration extends Sql implements DatasourcePlus {
   private config: MySQLConfig
-  private client: any
+  private client?: mysql.Connection
   public tables: Record<string, Table> = {}
   public schemaErrors: Record<string, string> = {}
 
@@ -167,7 +165,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   }
 
   async disconnect() {
-    await this.client.end()
+    await this.client!.end()
   }
 
   async internalQuery(
@@ -186,10 +184,10 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         ? baseBindings
         : bindingTypeCoerce(baseBindings)
       // Node MySQL is callback based, so we must wrap our call in a promise
-      const response = await this.client.query(query.sql, bindings)
+      const response = await this.client!.query(query.sql, bindings)
       return response[0]
     } finally {
-      if (opts?.connect) {
+      if (opts?.connect && this.client) {
         await this.disconnect()
       }
     }
@@ -288,7 +286,21 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   }
 }
 
+async function validateConnection(config: MySQLConfig) {
+  const integration = new MySQLIntegration(config)
+  try {
+    const [result] = await integration.internalQuery(
+      { sql: "SELECT 1+1 AS checkRes" },
+      { connect: true }
+    )
+    return result?.checkRes == 2
+  } catch (e: any) {
+    return { error: e.message as string }
+  }
+}
+
 export default {
   schema: SCHEMA,
   integration: MySQLIntegration,
+  validateConnection,
 }
