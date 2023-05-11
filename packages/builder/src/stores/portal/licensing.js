@@ -39,21 +39,21 @@ export const createLicensingStore = () => {
     userLimit: undefined,
     userLimitDays: undefined,
     userLimitReached: false,
-    warnUserLimit: false,
+    errUserLimit: false,
   }
 
   const oneDayInMilliseconds = 86400000
 
   const store = writable(DEFAULT)
 
-  function willReachUserLimit(userCount, userLimit) {
+  function usersLimitReached(userCount, userLimit) {
     if (userLimit === UNLIMITED) {
       return false
     }
     return userCount >= userLimit
   }
 
-  function willExceedUserLimit(userCount, userLimit) {
+  function usersLimitExceeded(userCount, userLimit) {
     if (userLimit === UNLIMITED) {
       return false
     }
@@ -130,11 +130,11 @@ export const createLicensingStore = () => {
       })
       actions.setUsageMetrics()
     },
-    willReachUserLimit: userCount => {
-      return willReachUserLimit(userCount, get(store).userLimit)
+    usersLimitReached: userCount => {
+      return usersLimitReached(userCount, get(store).userLimit)
     },
-    willExceedUserLimit(userCount) {
-      return willExceedUserLimit(userCount, get(store).userLimit)
+    usersLimitExceeded(userCount) {
+      return usersLimitExceeded(userCount, get(store).userLimit)
     },
     setUsageMetrics: () => {
       if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
@@ -198,11 +198,11 @@ export const createLicensingStore = () => {
         const userQuota = license.quotas.usage.static.users
         const userLimit = userQuota?.value
         const userCount = usage.usageQuota.users
-        const userLimitReached = willReachUserLimit(userCount, userLimit)
-        const userLimitExceeded = willExceedUserLimit(userCount, userLimit)
+        const userLimitReached = usersLimitReached(userCount, userLimit)
+        const userLimitExceeded = usersLimitExceeded(userCount, userLimit)
         const days = dayjs(userQuota?.startDate).diff(dayjs(), "day")
         const userLimitDays = days > 1 ? `${days} days` : "1 day"
-        const warnUserLimit = userQuota?.startDate && userLimitExceeded
+        const errUserLimit = userQuota?.startDate && userLimitExceeded
 
         store.update(state => {
           return {
@@ -219,7 +219,7 @@ export const createLicensingStore = () => {
             userLimit,
             userLimitDays,
             userLimitReached,
-            warnUserLimit,
+            errUserLimit,
           }
         })
       }
