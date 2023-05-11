@@ -105,6 +105,7 @@ interface InputOutputBlock {
 
 export interface AutomationStepSchema {
   name: string
+  stepTitle?: string
   tagline: string
   icon: string
   description: string
