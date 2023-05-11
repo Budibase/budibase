@@ -72,7 +72,7 @@ export async function run({ inputs }: AutomationStepInput) {
 
   let payload = {}
   try {
-    payload = JSON.parse(body?.value || "{}")
+    payload = body?.value ? JSON.parse(body?.value) : {}
   } catch (err) {
     return {
       httpStatus: 400,
