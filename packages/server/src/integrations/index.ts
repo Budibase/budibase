@@ -125,10 +125,6 @@ const VALIDATORS = {
   [SourceName.POSTGRES]: postgres.validateConnection,
 }
 
-function getValidators(integration: SourceName) {
-  return VALIDATORS[integration]
-}
-
 export default {
   getDefinitions,
   getIntegration,
