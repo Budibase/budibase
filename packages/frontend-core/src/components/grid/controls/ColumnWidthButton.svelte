@@ -3,7 +3,7 @@
   import { ActionButton, Popover } from "@budibase/bbui"
   import { DefaultColumnWidth } from "../lib/constants"
 
-  const { stickyColumn, columns } = getContext("grid")
+  const { stickyColumn, columns, compact } = getContext("grid")
   const smallSize = 120
   const mediumSize = DefaultColumnWidth
   const largeSize = DefaultColumnWidth * 1.5
@@ -59,12 +59,13 @@
     on:click={() => (open = !open)}
     selected={open}
     disabled={!allCols.length}
+    tooltip={$compact ? "Width" : null}
   >
-    Width
+    {$compact ? "" : "Width"}
   </ActionButton>
 </div>
 
-<Popover bind:open {anchor} align="left">
+<Popover bind:open {anchor} align={$compact ? "right" : "left"}>
   <div class="content">
     {#each sizeOptions as option}
       <ActionButton
