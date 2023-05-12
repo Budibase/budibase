@@ -3,5 +3,4 @@ if [ -d "packages/pro/packages" ]; then
 
   yarn
   lerna bootstrap
-  yarn setup
 fi
