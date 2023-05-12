@@ -1,12 +1,11 @@
 import { GenericContainer } from "testcontainers"
-import mongodb from "../../../../packages/server/src/integrations/mongodb"
+import mongo from "../../../../packages/server/src/integrations/mongodb"
+import { generator } from "../../shared"
 
 jest.unmock("mongodb")
 
 describe("datasource validators", () => {
   describe("mongo", () => {
-    const validator = integrations.getValidator[SourceName.MONGODB]
-
     let connectionSettings: {
       user: string
       password: string
@@ -42,46 +41,50 @@ describe("datasource validators", () => {
     })
 
     it("test valid connection string", async () => {
-      const result = await validator({
+      const integration = new mongo.integration({
         connectionString: getConnectionString(),
         db: "",
         tlsCertificateFile: "",
         tlsCertificateKeyFile: "",
         tlsCAFile: "",
       })
+      const result = await integration.testConnection()
       expect(result).toBe(true)
     })
 
     it("test invalid password", async () => {
-      const result = await validator({
+      const integration = new mongo.integration({
         connectionString: getConnectionString({ password: "wrong" }),
         db: "",
         tlsCertificateFile: "",
         tlsCertificateKeyFile: "",
         tlsCAFile: "",
       })
+      const result = await integration.testConnection()
       expect(result).toEqual({ error: "Authentication failed." })
     })
 
     it("test invalid username", async () => {
-      const result = await validator({
+      const integration = new mongo.integration({
         connectionString: getConnectionString({ user: "wrong" }),
         db: "",
         tlsCertificateFile: "",
         tlsCertificateKeyFile: "",
         tlsCAFile: "",
       })
+      const result = await integration.testConnection()
       expect(result).toEqual({ error: "Authentication failed." })
     })
 
     it("test invalid connection", async () => {
-      const result = await validator({
+      const integration = new mongo.integration({
         connectionString: getConnectionString({ host: "http://nothinghere" }),
         db: "",
         tlsCertificateFile: "",
         tlsCertificateKeyFile: "",
         tlsCAFile: "",
       })
+      const result = await integration.testConnection()
       expect(result).toEqual({ error: "Error: getaddrinfo ENOTFOUND http" })
     })
   })
