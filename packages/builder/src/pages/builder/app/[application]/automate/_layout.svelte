@@ -8,6 +8,15 @@
   import { onDestroy, onMount } from "svelte"
   import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
+  import { store } from "builderStore"
+  import { redirect } from "@roxi/routify"
+
+  // Prevent access for other users than the lock holder
+  $: {
+    if (!$store.hasLock) {
+      $redirect("../data")
+    }
+  }
 
   // Keep URL and state in sync for selected screen ID
   const stopSyncing = syncURLToState({
