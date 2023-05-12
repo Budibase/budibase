@@ -149,6 +149,15 @@ class DynamoDBIntegration implements IntegrationBase {
     this.client = new AWS.DynamoDB.DocumentClient(this.config)
   }
 
+  async testConnection() {
+    try {
+      const scanRes = await new AWS.DynamoDB(this.config).listTables().promise()
+      return !!scanRes.$response
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
+  }
+
   async create(query: {
     table: string
     json: Omit<DocumentClient.PutItemInput, "TableName">
