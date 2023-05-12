@@ -29,7 +29,7 @@ import { USERS_TABLE_SCHEMA } from "../../constants"
 import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { stringToReadStream, isQsTrue } from "../../utilities"
-import { getLocksById } from "../../utilities/redis"
+import { getLocksById, doesUserHaveLock } from "../../utilities/redis"
 import {
   updateClientLibrary,
   backupClientLibrary,
@@ -227,6 +227,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
     screens,
     layouts,
     clientLibPath,
+    hasLock: await doesUserHaveLock(application.appId, ctx.user),
   }
 }
 
