@@ -5,9 +5,9 @@ import {
   IntegrationBase,
 } from "@budibase/types"
 
-const { Database, aql } = require("arangojs")
+import { Database, aql } from "arangojs"
 
-interface ArangodbConfig {
+export interface ArangodbConfig {
   url: string
   username: string
   password: string
@@ -58,7 +58,7 @@ const SCHEMA: Integration = {
 
 class ArangoDBIntegration implements IntegrationBase {
   private config: ArangodbConfig
-  private client: any
+  private client
 
   constructor(config: ArangodbConfig) {
     const newConfig = {
@@ -102,9 +102,24 @@ class ArangoDBIntegration implements IntegrationBase {
       this.client.close()
     }
   }
+
+  async check() {
+    await this.client.get()
+  }
+}
+
+async function validateConnection(config: ArangodbConfig) {
+  const integration = new ArangoDBIntegration(config)
+  try {
+    await integration.check()
+    return true
+  } catch (e: any) {
+    return { error: e.message as string }
+  }
 }
 
 export default {
   schema: SCHEMA,
   integration: ArangoDBIntegration,
+  validateConnection,
 }
