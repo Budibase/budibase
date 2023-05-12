@@ -22,7 +22,7 @@ import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
 const sqlServer = require("mssql")
 const DEFAULT_SCHEMA = "dbo"
 
-export interface MSSQLConfig {
+interface MSSQLConfig {
   user: string
   password: string
   server: string
