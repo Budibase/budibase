@@ -22,7 +22,9 @@ export default class LicenseAPI {
     )
 
     if (response.status !== 200) {
-      throw new Error(`Could not update license for accountId=${accountId}: ${response.status}`)
+      throw new Error(
+        `Could not update license for accountId=${accountId}: ${response.status}`
+      )
     }
     return [response, json]
   }
