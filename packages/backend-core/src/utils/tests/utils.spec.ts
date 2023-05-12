@@ -123,7 +123,7 @@ describe("utils", () => {
       expectResult(true)
     })
 
-    it("returns false if current path is not in builder", async () => {
+    it("returns false if current path doesn't have '/' suffix", async () => {
       ctx.path = "/builder/app"
       expectResult(false)
 
