@@ -338,15 +338,11 @@ export const deriveStores = context => {
         ...state,
         [rowId]: true,
       }))
-      const newRow = { ...row, ...get(rowChangeCache)[rowId] }
-      const saved = await API.saveRow(newRow)
+      const saved = await API.saveRow({ ...row, ...get(rowChangeCache)[rowId] })
 
       // Update state after a successful change
       rows.update(state => {
-        state[index] = {
-          ...newRow,
-          _rev: saved._rev,
-        }
+        state[index] = saved
         return state.slice()
       })
       rowChangeCache.update(state => {
