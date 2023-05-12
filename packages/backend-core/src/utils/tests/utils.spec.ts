@@ -172,6 +172,12 @@ describe("utils", () => {
 
       ctx.path = "/api/public/v1"
       expectResult(true)
+
+      ctx.path = "/api/public/v2"
+      expectResult(true)
+
+      ctx.path = "/api/public/v21"
+      expectResult(true)
     })
 
     it("returns false if current path doesn't remain to public API", async () => {
