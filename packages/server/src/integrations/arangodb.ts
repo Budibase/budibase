@@ -7,7 +7,7 @@ import {
 
 import { Database, aql } from "arangojs"
 
-export interface ArangodbConfig {
+interface ArangodbConfig {
   url: string
   username: string
   password: string
@@ -74,6 +74,15 @@ class ArangoDBIntegration implements IntegrationBase {
     this.client = new Database(newConfig)
   }
 
+  async testConnection() {
+    try {
+      await this.client.get()
+      return true
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
+  }
+
   async read(query: { sql: any }) {
     try {
       const result = await this.client.query(query.sql)
@@ -102,24 +111,9 @@ class ArangoDBIntegration implements IntegrationBase {
       this.client.close()
     }
   }
-
-  async check() {
-    await this.client.get()
-  }
-}
-
-async function validateConnection(config: ArangodbConfig) {
-  const integration = new ArangoDBIntegration(config)
-  try {
-    await integration.check()
-    return true
-  } catch (e: any) {
-    return { error: e.message as string }
-  }
 }
 
 export default {
   schema: SCHEMA,
   integration: ArangoDBIntegration,
-  validateConnection,
 }

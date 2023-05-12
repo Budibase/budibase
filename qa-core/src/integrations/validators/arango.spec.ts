@@ -6,8 +6,6 @@ jest.unmock("arangojs")
 
 describe("datasource validators", () => {
   describe("arangodb", () => {
-    const validator = integrations.getValidator[SourceName.ARANGODB]
-
     let connectionSettings: {
       user: string
       password: string
@@ -35,37 +33,40 @@ describe("datasource validators", () => {
     })
 
     it("test valid connection string", async () => {
-      const result = await validator({
+      const integration = new arangodb.integration({
         url: connectionSettings.url,
         username: connectionSettings.user,
         password: connectionSettings.password,
         databaseName: "",
         collection: "",
       })
+      const result = await integration.testConnection()
       expect(result).toBe(true)
     })
 
     it("test wrong password", async () => {
-      const result = await validator({
+      const integration = new arangodb.integration({
         url: connectionSettings.url,
         username: connectionSettings.user,
         password: "wrong",
         databaseName: "",
         collection: "",
       })
+      const result = await integration.testConnection()
       expect(result).toEqual({
         error: "not authorized to execute this request",
       })
     })
 
     it("test wrong url", async () => {
-      const result = await validator({
+      const integration = new arangodb.integration({
         url: "http://not.here",
         username: connectionSettings.user,
         password: connectionSettings.password,
         databaseName: "",
         collection: "",
       })
+      const result = await integration.testConnection()
       expect(result).toEqual({
         error: "getaddrinfo ENOTFOUND not.here",
       })
