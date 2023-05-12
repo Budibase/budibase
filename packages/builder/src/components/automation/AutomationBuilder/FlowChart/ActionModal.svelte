@@ -7,16 +7,39 @@
     Icon,
     notifications,
   } from "@budibase/bbui"
-  import { automationStore } from "builderStore"
-  import { admin } from "stores/portal"
+  import { automationStore, selectedAutomation } from "builderStore"
+  import { admin, licensing } from "stores/portal"
   import { externalActions } from "./ExternalActions"
+  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
 
   export let blockIdx
+  export let lastStep
 
+  let syncWebhooksEnabled = $licensing.syncWebhooksEnabled
+  let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
+  let collectBlockExists = $selectedAutomation.definition.steps.some(
+    step => step.stepId === ActionStepID.COLLECT
+  )
+  $: console.log($licensing)
+  $: console.log(syncWebhooksEnabled)
   const disabled = {
     SEND_EMAIL_SMTP: {
       disabled: !$admin.checklist.smtp.checked,
       message: "Please configure SMTP",
+    },
+    COLLECT: {
+      disabled:
+        !collectBlockAllowedSteps.includes(
+          $selectedAutomation.definition.trigger.stepId
+        ) ||
+        !lastStep ||
+        !syncWebhooksEnabled ||
+        collectBlockExists,
+      message: !collectBlockAllowedSteps.includes(
+        $selectedAutomation.definition.trigger.stepId
+      )
+        ? "Only available for App Action or Webhook triggers"
+        : "Only available as the last step",
     },
   }
 

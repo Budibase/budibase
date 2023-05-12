@@ -103,6 +103,9 @@ export const createLicensingStore = () => {
       const auditLogsEnabled = license.features.includes(
         Constants.Features.AUDIT_LOGS
       )
+      const syncWebhooksEnabled = license.features.includes(
+        Constants.Features.SYNC_WEBHOOKS
+      )
       store.update(state => {
         return {
           ...state,
@@ -117,6 +120,7 @@ export const createLicensingStore = () => {
           environmentVariablesEnabled,
           auditLogsEnabled,
           enforceableSSO,
+          syncWebhooksEnabled,
         }
       })
     },

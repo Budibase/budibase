@@ -226,7 +226,7 @@
   {/if}
 
   <Modal bind:this={actionModal} width="30%">
-    <ActionModal {blockIdx} />
+    <ActionModal {lastStep} {blockIdx} />
   </Modal>
 
   <Modal bind:this={webhookModal} width="30%">
