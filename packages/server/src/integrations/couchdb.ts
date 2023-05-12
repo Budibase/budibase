@@ -67,6 +67,15 @@ class CouchDBIntegration implements IntegrationBase {
     this.client = dbCore.DatabaseWithConnection(config.database, config.url)
   }
 
+  async testConnection() {
+    try {
+      const result = await this.query("exists", "validation error", {})
+      return result === true
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
+  }
+
   async query(
     command: string,
     errorMsg: string,
@@ -125,18 +134,7 @@ class CouchDBIntegration implements IntegrationBase {
   }
 }
 
-async function validateConnection(config: CouchDBConfig) {
-  const integration = new CouchDBIntegration(config)
-  try {
-    const result = await integration.query("exists", "validation error", {})
-    return result === true
-  } catch (e: any) {
-    return { error: e.message as string }
-  }
-}
-
 export default {
   schema: SCHEMA,
   integration: CouchDBIntegration,
-  validateConnection,
 }
