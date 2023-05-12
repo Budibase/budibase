@@ -1,6 +1,6 @@
 {
   "name": "@budibase/types",
-  "version": "2.4.44-alpha.32",
+  "version": "0.0.1",
   "description": "Budibase types",
   "main": "dist/cjs/index.js",
   "types": "dist/mjs/index.d.ts",
@@ -25,6 +25,7 @@
     "@types/koa": "2.13.4",
     "@types/node": "14.18.20",
     "@types/pouchdb": "6.4.0",
+    "@types/redlock": "4.0.3",
     "concurrently": "^7.6.0",
     "koa-body": "4.2.0",
     "rimraf": "3.0.2",
@@ -32,6 +33,5 @@
   },
   "dependencies": {
     "scim-patch": "^0.7.0"
-  },
-  "gitHead": "ec99a79ea55d3395b83c801699eb8b462f905fe8"
+  }
 }

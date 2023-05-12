@@ -105,7 +105,7 @@ describe("internal search", () => {
         "column": "",
       },
     }, PARAMS)
-    checkLucene(response, `*:* AND !column:["" TO *]`, PARAMS)
+    checkLucene(response, `*:* AND (*:* -column:["" TO *])`, PARAMS)
   })
 
   it("test notEmpty query", async () => {

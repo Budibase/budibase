@@ -14,11 +14,13 @@
   export let align = "right"
   export let portalTarget
   export let maxWidth
+  export let maxHeight
   export let open = false
   export let useAnchorWidth = false
   export let dismissible = true
   export let offset = 5
   export let customHeight
+  export let animate = true
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
@@ -64,6 +66,7 @@
       use:positionDropdown={{
         anchor,
         align,
+        maxHeight,
         maxWidth,
         useAnchorWidth,
         offset,
@@ -76,7 +79,7 @@
       class="spectrum-Popover is-open"
       role="presentation"
       style="height: {customHeight}"
-      transition:fly|local={{ y: -20, duration: 200 }}
+      transition:fly|local={{ y: -20, duration: animate ? 200 : 0 }}
     >
       <slot />
     </div>

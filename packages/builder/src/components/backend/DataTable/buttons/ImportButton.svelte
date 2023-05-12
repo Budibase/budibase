@@ -8,7 +8,7 @@
   let modal
 </script>
 
-<ActionButton icon="DataUpload" size="S" quiet on:click={modal.show} {disabled}>
+<ActionButton icon="DataUpload" quiet on:click={modal.show} {disabled}>
   Import
 </ActionButton>
 <Modal bind:this={modal}>

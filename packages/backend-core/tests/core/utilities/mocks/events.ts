@@ -1,3 +1,5 @@
+import * as events from "../../../../src/events"
+
 beforeAll(async () => {
   const processors = await import("../../../../src/events/processors")
   const events = await import("../../../../src/events")
@@ -120,4 +122,12 @@ beforeAll(async () => {
   jest.spyOn(events.plugin, "init")
   jest.spyOn(events.plugin, "imported")
   jest.spyOn(events.plugin, "deleted")
+
+  jest.spyOn(events.license, "planChanged")
+  jest.spyOn(events.license, "activated")
+  jest.spyOn(events.license, "checkoutOpened")
+  jest.spyOn(events.license, "checkoutSuccess")
+  jest.spyOn(events.license, "portalOpened")
+  jest.spyOn(events.license, "paymentFailed")
+  jest.spyOn(events.license, "paymentRecovered")
 })

@@ -18,6 +18,7 @@ export class ScimGroupsAPI extends ScimTestAPI {
         startIndex?: number
         pageSize?: number
         filter?: string
+        excludedAttributes?: string
       }
     }
   ) => {
@@ -31,6 +32,9 @@ export class ScimGroupsAPI extends ScimTestAPI {
     }
     if (params?.filter) {
       url += `filter=${params.filter}&`
+    }
+    if (params?.excludedAttributes) {
+      url += `excludedAttributes=${params.excludedAttributes}&`
     }
     const res = await this.call(url, "get", requestSettings)
     return res.body as ScimGroupListResponse
@@ -54,9 +58,12 @@ export class ScimGroupsAPI extends ScimTestAPI {
     return res.body as ScimGroupResponse
   }
 
-  find = async (id: string, requestSettings?: Partial<RequestSettings>) => {
+  find = async (
+    id: string,
+    requestSettings?: Partial<RequestSettings> & { qs?: string }
+  ) => {
     const res = await this.call(
-      `/api/global/scim/v2/groups/${id}`,
+      `/api/global/scim/v2/groups/${id}?${requestSettings?.qs}`,
       "get",
       requestSettings
     )

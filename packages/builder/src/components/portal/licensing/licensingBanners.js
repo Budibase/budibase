@@ -3,6 +3,7 @@ import { temporalStore } from "builderStore"
 import { admin, auth, licensing } from "stores/portal"
 import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
+import { capitalise } from "helpers"
 
 const oneDayInSeconds = 86400
 
@@ -141,6 +142,33 @@ const buildPaymentFailedBanner = () => {
   }
 }
 
+const buildUsersAboveLimitBanner = EXPIRY_KEY => {
+  const userLicensing = get(licensing)
+  return {
+    key: EXPIRY_KEY,
+    type: BANNER_TYPES.WARNING,
+    onChange: () => {
+      defaultCacheFn(EXPIRY_KEY)
+    },
+    criteria: () => {
+      return userLicensing.warnUserLimit
+    },
+    message: `${capitalise(
+      userLicensing.license.plan.type
+    )} plan changes - Users will be limited to ${
+      userLicensing.userLimit
+    } users in ${userLicensing.userLimitDays}`,
+    ...{
+      extraButtonText: "Find out more",
+      extraButtonAction: () => {
+        defaultCacheFn(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER)
+        window.location.href = "/builder/portal/users/users"
+      },
+    },
+    showCloseButton: true,
+  }
+}
+
 export const getBanners = () => {
   return [
     buildPaymentFailedBanner(),
@@ -163,6 +191,7 @@ export const getBanners = () => {
       ExpiringKeys.LICENSING_QUERIES_WARNING_BANNER,
       90
     ),
+    buildUsersAboveLimitBanner(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER),
   ].filter(licensingBanner => {
     return (
       !temporalStore.actions.getExpiring(licensingBanner.key) &&

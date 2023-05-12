@@ -61,12 +61,73 @@
   $: isTrigger = block?.type === "TRIGGER"
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
 
+  /**
+   * TODO - Remove after November 2023
+   * *******************************
+   * Code added to provide backwards compatibility between Values 1,2,3,4,5
+   * and the new JSON body.
+   */
+  let deprecatedSchemaProperties
+  $: {
+    if (block?.stepId === "integromat" || block?.stepId === "zapier") {
+      deprecatedSchemaProperties = schemaProperties.filter(
+        prop => !prop[0].startsWith("value")
+      )
+      if (!deprecatedSchemaProperties.map(entry => entry[0]).includes("body")) {
+        deprecatedSchemaProperties.push([
+          "body",
+          {
+            title: "Payload",
+            type: "json",
+          },
+        ])
+      }
+    } else {
+      deprecatedSchemaProperties = schemaProperties
+    }
+  }
+  /****************************************************/
+
   const getInputData = (testData, blockInputs) => {
     let newInputData = testData || blockInputs
     if (block.event === "app:trigger" && !newInputData?.fields) {
       newInputData = cloneDeep(blockInputs)
     }
+
+    /**
+     * TODO - Remove after November 2023
+     * *******************************
+     * Code added to provide backwards compatibility between Values 1,2,3,4,5
+     * and the new JSON body.
+     */
+    if (
+      (block?.stepId === "integromat" || block?.stepId === "zapier") &&
+      !newInputData?.body?.value
+    ) {
+      let deprecatedValues = {
+        ...newInputData,
+      }
+      delete deprecatedValues.url
+      delete deprecatedValues.body
+      newInputData = {
+        url: newInputData.url,
+        body: {
+          value: JSON.stringify(deprecatedValues),
+        },
+      }
+    }
+    /**********************************/
+
     inputData = newInputData
+    setDefaultEnumValues()
+  }
+
+  const setDefaultEnumValues = () => {
+    for (const [key, value] of schemaProperties) {
+      if (value.type === "string" && value.enum && inputData[key] == null) {
+        inputData[key] = value.enum[0]
+      }
+    }
   }
 
   const onChange = Utils.sequential(async (e, key) => {
@@ -230,7 +291,7 @@
 </script>
 
 <div class="fields">
-  {#each schemaProperties as [key, value]}
+  {#each deprecatedSchemaProperties as [key, value]}
     <div class="block-field">
       {#if key !== "fields"}
         <Label
@@ -243,8 +304,31 @@
         <Select
           on:change={e => onChange(e, key)}
           value={inputData[key]}
+          placeholder={false}
           options={value.enum}
           getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
+        />
+      {:else if value.type === "json"}
+        <Editor
+          editorHeight="250"
+          editorWidth="448"
+          mode="json"
+          value={inputData[key]?.value}
+          on:change={e => {
+            /**
+             * TODO - Remove after November 2023
+             * *******************************
+             * Code added to provide backwards compatibility between Values 1,2,3,4,5
+             * and the new JSON body.
+             */
+            delete inputData.value1
+            delete inputData.value2
+            delete inputData.value3
+            delete inputData.value4
+            delete inputData.value5
+            /***********************/
+            onChange(e, key)
+          }}
         />
       {:else if value.customType === "column"}
         <Select

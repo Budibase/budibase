@@ -66,6 +66,8 @@
     } catch (error) {
       if (error.status === 400) {
         notifications.error(error.message)
+      } else if (error.message) {
+        notifications.error(error.message)
       } else {
         notifications.error(`Failed to save group`)
       }
@@ -94,7 +96,7 @@
       <Heading size="M">Groups</Heading>
       {#if !$licensing.groupsEnabled}
         <Tags>
-          <Tag icon="LockClosed">Pro plan</Tag>
+          <Tag icon="LockClosed">Business</Tag>
         </Tags>
       {/if}
     </div>

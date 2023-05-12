@@ -57,7 +57,7 @@ export enum SelectableDatabase {
   UNUSED_14 = 15,
 }
 
-export function getRedisOptions(clustered = false) {
+export function getRedisOptions() {
   let password = env.REDIS_PASSWORD
   let url: string[] | string = env.REDIS_URL.split("//")
   // get rid of the protocol
@@ -83,7 +83,7 @@ export function getRedisOptions(clustered = false) {
   const opts: any = {
     connectTimeout: CONNECT_TIMEOUT_MS,
   }
-  if (clustered) {
+  if (env.REDIS_CLUSTERED) {
     opts.redisOptions = {}
     opts.redisOptions.tls = {}
     opts.redisOptions.password = password

@@ -7,14 +7,22 @@
   export let table
   const dispatch = createEventDispatcher()
 
+  $: datasource = findDatasource(table?._id)
   $: plusTables = datasource?.plus
     ? Object.values(datasource?.entities || {})
     : []
-  $: datasource = $datasources.list.find(
-    source => source._id === table?.sourceId
-  )
 
   let modal
+
+  const findDatasource = tableId => {
+    return $datasources.list.find(datasource => {
+      return (
+        Object.values(datasource.entities || {}).find(entity => {
+          return entity._id === tableId
+        }) != null
+      )
+    })
+  }
 
   async function saveRelationship() {
     try {
@@ -28,16 +36,10 @@
   }
 </script>
 
-{#if table.sourceId}
+{#if datasource}
   <div>
-    <ActionButton
-      icon="DataCorrelated"
-      primary
-      size="S"
-      quiet
-      on:click={modal.show}
-    >
-      Define existing relationship
+    <ActionButton icon="DataCorrelated" primary quiet on:click={modal.show}>
+      Define relationship
     </ActionButton>
   </div>
   <Modal bind:this={modal}>

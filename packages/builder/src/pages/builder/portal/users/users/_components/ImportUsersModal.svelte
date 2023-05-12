@@ -5,10 +5,12 @@
     RadioGroup,
     Multiselect,
     notifications,
+    Icon,
   } from "@budibase/bbui"
   import { groups, licensing, admin } from "stores/portal"
   import { emailValidator } from "helpers/validation"
   import { Constants } from "@budibase/frontend-core"
+  import { capitalise } from "helpers"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
@@ -20,8 +22,13 @@
   let userEmails = []
   let userGroups = []
   let usersRole = null
-
   $: invalidEmails = []
+
+  $: userCount = $licensing.userCount + userEmails.length
+  $: willExceed = licensing.willExceedUserLimit(userCount)
+
+  $: importDisabled =
+    !userEmails.length || !validEmails(userEmails) || !usersRole || willExceed
 
   const validEmails = userEmails => {
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
@@ -75,7 +82,7 @@
   cancelText="Cancel"
   showCloseIcon={false}
   onConfirm={() => createUsersFromCsv({ userEmails, usersRole, userGroups })}
-  disabled={!userEmails.length || !validEmails(userEmails) || !usersRole}
+  disabled={importDisabled}
 >
   <Body size="S">Import your users email addresses from a CSV file</Body>
 
@@ -86,6 +93,13 @@
     </label>
   </div>
 
+  {#if willExceed}
+    <div class="user-notification">
+      <Icon name="Info" />
+      {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}
+      users. Upgrade your plan to add more users
+    </div>
+  {/if}
   <RadioGroup
     bind:value={usersRole}
     options={Constants.BuilderRoleDescriptions}
@@ -104,6 +118,13 @@
 </ModalContent>
 
 <style>
+  .user-notification {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: var(--spacing-m);
+  }
+
   .dropzone {
     text-align: center;
     display: flex;

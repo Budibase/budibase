@@ -1,6 +1,7 @@
 import { writable } from "svelte/store"
 import { API } from "api"
 import { update } from "lodash"
+import { licensing } from "."
 
 export function createUsersStore() {
   const { subscribe, set } = writable({})
@@ -40,7 +41,7 @@ export function createUsersStore() {
       inviteCode,
       password,
       firstName,
-      lastName,
+      lastName: !lastName?.trim() ? undefined : lastName,
     })
   }
 
@@ -113,6 +114,14 @@ export function createUsersStore() {
   const getUserRole = ({ admin, builder }) =>
     admin?.global ? "admin" : builder?.global ? "developer" : "appUser"
 
+  const refreshUsage =
+    fn =>
+    async (...args) => {
+      const response = await fn(...args)
+      await licensing.setQuotaUsage()
+      return response
+    }
+
   return {
     subscribe,
     search,
@@ -121,15 +130,16 @@ export function createUsersStore() {
     fetch,
     invite,
     onboard,
-    acceptInvite,
     fetchInvite,
     getInvites,
     updateInvite,
-    create,
-    save,
-    bulkDelete,
     getUserCountByApp,
-    delete: del,
+    // any operation that adds or deletes users
+    acceptInvite,
+    create: refreshUsage(create),
+    save: refreshUsage(save),
+    bulkDelete: refreshUsage(bulkDelete),
+    delete: refreshUsage(del),
   }
 }
 

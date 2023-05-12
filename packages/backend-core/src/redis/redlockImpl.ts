@@ -1,10 +1,16 @@
-import Redlock, { Options } from "redlock"
+import Redlock from "redlock"
 import { getLockClient } from "./init"
 import { LockOptions, LockType } from "@budibase/types"
 import * as context from "../context"
 import env from "../environment"
 
-const getClient = async (type: LockType): Promise<Redlock> => {
+const getClient = async (
+  type: LockType,
+  opts?: Redlock.Options
+): Promise<Redlock> => {
+  if (type === LockType.CUSTOM) {
+    return newRedlock(opts)
+  }
   if (env.isTest() && type !== LockType.TRY_ONCE) {
     return newRedlock(OPTIONS.TEST)
   }
@@ -56,7 +62,7 @@ const OPTIONS = {
   },
 }
 
-const newRedlock = async (opts: Options = {}) => {
+const newRedlock = async (opts: Redlock.Options = {}) => {
   let options = { ...OPTIONS.DEFAULT, ...opts }
   const redisWrapper = await getLockClient()
   const client = redisWrapper.getClient()
@@ -79,7 +85,7 @@ export const doWithLock = async <T>(
   opts: LockOptions,
   task: () => Promise<T>
 ): Promise<RedlockExecution<T>> => {
-  const redlock = await getClient(opts.type)
+  const redlock = await getClient(opts.type, opts.customOptions)
   let lock
   try {
     // determine lock name

@@ -5,8 +5,6 @@
   import { FieldTypes } from "constants"
   import active from "svelte-spa-router/active"
   import { RoleUtils } from "@budibase/frontend-core"
-  import FreeLogo from "../FreeLogo.svelte"
-  import licensing from "../../licensing"
 
   const sdk = getContext("sdk")
   const {
@@ -15,7 +13,6 @@
     linkable,
     builderStore,
     currentRole,
-    environmentStore,
     sidePanelStore,
   } = sdk
   const component = getContext("component")
@@ -237,11 +234,6 @@
         </div>
       </div>
     {/if}
-
-    {#if !$builderStore.inBuilder && licensing.logoEnabled() && $environmentStore.cloud}
-      <FreeLogo />
-    {/if}
-
     <div class="main-wrapper">
       <div class="main size--{pageWidthClass}">
         <slot />

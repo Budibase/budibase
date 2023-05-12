@@ -21,11 +21,11 @@ export default class DataFetch {
     this.API = null
 
     // Feature flags
-    this.featureStore = writable({
+    this.features = {
       supportsSearch: false,
       supportsSort: false,
       supportsPagination: false,
-    })
+    }
 
     // Config
     this.options = {
@@ -56,6 +56,7 @@ export default class DataFetch {
       pageNumber: 0,
       cursor: null,
       cursors: [],
+      resetKey: Math.random(),
     })
 
     // Merge options with their default values
@@ -81,17 +82,14 @@ export default class DataFetch {
     this.prevPage = this.prevPage.bind(this)
 
     // Derive certain properties to return
-    this.derivedStore = derived(
-      [this.store, this.featureStore],
-      ([$store, $featureStore]) => {
-        return {
-          ...$store,
-          ...$featureStore,
-          hasNextPage: this.hasNextPage($store),
-          hasPrevPage: this.hasPrevPage($store),
-        }
+    this.derivedStore = derived(this.store, $store => {
+      return {
+        ...$store,
+        ...this.features,
+        hasNextPage: this.hasNextPage($store),
+        hasPrevPage: this.hasPrevPage($store),
       }
-    )
+    })
 
     // Mark as loaded if we have no datasource
     if (!this.options.datasource) {
@@ -120,11 +118,11 @@ export default class DataFetch {
     // Fetch datasource definition and determine feature flags
     const definition = await this.getDefinition(datasource)
     const features = this.determineFeatureFlags(definition)
-    this.featureStore.set({
+    this.features = {
       supportsSearch: !!features?.supportsSearch,
       supportsSort: !!features?.supportsSort,
       supportsPagination: paginate && !!features?.supportsPagination,
-    })
+    }
 
     // Fetch and enrich schema
     let schema = this.getSchema(datasource, definition)
@@ -138,11 +136,17 @@ export default class DataFetch {
       this.options.sortOrder = "ascending"
     }
 
-    // If no sort column, use the first field in the schema
+    // If no sort column, use the primary display and fallback to first column
     if (!this.options.sortColumn) {
-      this.options.sortColumn = Object.keys(schema)[0]
+      let newSortColumn
+      if (definition?.primaryDisplay && schema[definition.primaryDisplay]) {
+        newSortColumn = definition.primaryDisplay
+      } else {
+        newSortColumn = Object.keys(schema)[0]
+      }
+      this.options.sortColumn = newSortColumn
     }
-    const { sortColumn } = this.options
+    const { sortOrder, sortColumn } = this.options
 
     // Determine what sort type to use
     let sortType = "string"
@@ -167,6 +171,8 @@ export default class DataFetch {
       loading: true,
       cursors: [],
       cursor: null,
+      sortOrder,
+      sortColumn,
     }))
 
     // Actually fetch data
@@ -180,6 +186,7 @@ export default class DataFetch {
       info: page.info,
       cursors: paginate && page.hasNextPage ? [null, page.cursor] : [null],
       error: page.error,
+      resetKey: Math.random(),
     }))
   }
 
@@ -189,23 +196,22 @@ export default class DataFetch {
   async getPage() {
     const { sortColumn, sortOrder, sortType, limit } = this.options
     const { query } = get(this.store)
-    const features = get(this.featureStore)
 
     // Get the actual data
     let { rows, info, hasNextPage, cursor, error } = await this.getData()
 
     // If we don't support searching, do a client search
-    if (!features.supportsSearch) {
+    if (!this.features.supportsSearch) {
       rows = runLuceneQuery(rows, query)
     }
 
     // If we don't support sorting, do a client-side sort
-    if (!features.supportsSort) {
+    if (!this.features.supportsSort) {
       rows = luceneSort(rows, sortColumn, sortOrder, sortType)
     }
 
     // If we don't support pagination, do a client-side limit
-    if (!features.supportsPagination) {
+    if (!this.features.supportsPagination) {
       rows = luceneLimit(rows, limit)
     }
 
@@ -356,13 +362,35 @@ export default class DataFetch {
       return
     }
     this.store.update($store => ({ ...$store, loading: true }))
-    const { rows, info, error } = await this.getPage()
+    const { rows, info, error, cursor } = await this.getPage()
+
+    let { cursors } = get(this.store)
+    const { pageNumber } = get(this.store)
+
+    if (!rows.length && pageNumber > 0) {
+      // If the full page is gone but we have previous pages, navigate to the previous page
+      this.store.update($store => ({
+        ...$store,
+        loading: false,
+        cursors: cursors.slice(0, pageNumber),
+      }))
+      return await this.prevPage()
+    }
+
+    const currentNextCursor = cursors[pageNumber + 1]
+    if (currentNextCursor != cursor) {
+      // If the current cursor changed, all the next pages need to be updated, so we mark them as stale
+      cursors = cursors.slice(0, pageNumber + 1)
+      cursors[pageNumber + 1] = cursor
+    }
+
     this.store.update($store => ({
       ...$store,
       rows,
       info,
       loading: false,
       error,
+      cursors,
     }))
   }
 

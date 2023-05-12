@@ -4,6 +4,7 @@
   import ManageAccessModal from "../modals/ManageAccessModal.svelte"
 
   export let resourceId
+  export let disabled = false
 
   let modal
   let resourcePermissions
@@ -14,8 +15,8 @@
   }
 </script>
 
-<ActionButton icon="LockClosed" size="S" quiet on:click={openDropdown}>
-  Manage access
+<ActionButton icon="LockClosed" quiet on:click={openDropdown} {disabled}>
+  Access
 </ActionButton>
 <Modal bind:this={modal}>
   <ManageAccessModal
