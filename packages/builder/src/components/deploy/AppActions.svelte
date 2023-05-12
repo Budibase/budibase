@@ -113,109 +113,113 @@
   })
 </script>
 
-<div class="action-top-nav">
-  <div class="action-buttons">
-    <div class="version">
-      <VersionModal />
-    </div>
-    <RevertModal />
-
-    {#if isPublished}
-      <div class="publish-popover">
-        <div bind:this={publishPopoverAnchor}>
-          <ActionButton
-            quiet
-            icon="Globe"
-            size="M"
-            tooltip="Your published app"
-            on:click={publishPopover.show()}
-          />
-        </div>
-        <Popover
-          bind:this={publishPopover}
-          align="right"
-          disabled={!isPublished}
-          anchor={publishPopoverAnchor}
-          offset={10}
-        >
-          <div class="popover-content">
-            <Layout noPadding gap="M">
-              <Heading size="XS">Your published app</Heading>
-              <Body size="S">
-                <span class="publish-popover-message">
-                  {processStringSync(
-                    "Last published {{ duration time 'millisecond' }} ago",
-                    {
-                      time:
-                        new Date().getTime() -
-                        new Date(latestDeployments[0].updatedAt).getTime(),
-                    }
-                  )}
-                </span>
-              </Body>
-              <div class="buttons">
-                <Button
-                  warning={true}
-                  icon="GlobeStrike"
-                  disabled={!isPublished}
-                  on:click={unpublishApp}
-                >
-                  Unpublish
-                </Button>
-                <Button cta on:click={viewApp}>View app</Button>
-              </div>
-            </Layout>
-          </div>
-        </Popover>
+{#if $store.hasLock}
+  <div class="action-top-nav">
+    <div class="action-buttons">
+      <div class="version">
+        <VersionModal />
       </div>
-    {/if}
+      <RevertModal />
 
-    {#if !isPublished}
-      <ActionButton
-        quiet
-        icon="GlobeStrike"
-        size="M"
-        tooltip="Your app has not been published yet"
-        disabled
-      />
-    {/if}
+      {#if isPublished}
+        <div class="publish-popover">
+          <div bind:this={publishPopoverAnchor}>
+            <ActionButton
+              quiet
+              icon="Globe"
+              size="M"
+              tooltip="Your published app"
+              on:click={publishPopover.show()}
+            />
+          </div>
+          <Popover
+            bind:this={publishPopover}
+            align="right"
+            disabled={!isPublished}
+            anchor={publishPopoverAnchor}
+            offset={10}
+          >
+            <div class="popover-content">
+              <Layout noPadding gap="M">
+                <Heading size="XS">Your published app</Heading>
+                <Body size="S">
+                  <span class="publish-popover-message">
+                    {processStringSync(
+                      "Last published {{ duration time 'millisecond' }} ago",
+                      {
+                        time:
+                          new Date().getTime() -
+                          new Date(latestDeployments[0].updatedAt).getTime(),
+                      }
+                    )}
+                  </span>
+                </Body>
+                <div class="buttons">
+                  <Button
+                    warning={true}
+                    icon="GlobeStrike"
+                    disabled={!isPublished}
+                    on:click={unpublishApp}
+                  >
+                    Unpublish
+                  </Button>
+                  <Button cta on:click={viewApp}>View app</Button>
+                </div>
+              </Layout>
+            </div>
+          </Popover>
+        </div>
+      {/if}
 
-    <TourWrap
-      tourStepKey={$store.onboarding
-        ? TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT
-        : TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT}
-    >
-      <span id="builder-app-users-button">
+      {#if !isPublished}
         <ActionButton
           quiet
-          icon="UserGroup"
+          icon="GlobeStrike"
           size="M"
-          on:click={() => {
-            store.update(state => {
-              state.builderSidePanel = true
-              return state
-            })
-          }}
-        >
-          Users
-        </ActionButton>
-      </span>
-    </TourWrap>
-  </div>
-</div>
+          tooltip="Your app has not been published yet"
+          disabled
+        />
+      {/if}
 
-<ConfirmDialog
-  bind:this={unpublishModal}
-  title="Confirm unpublish"
-  okText="Unpublish app"
-  onOk={confirmUnpublishApp}
->
-  Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
-</ConfirmDialog>
+      <TourWrap
+        tourStepKey={$store.onboarding
+          ? TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT
+          : TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT}
+      >
+        <span id="builder-app-users-button">
+          <ActionButton
+            quiet
+            icon="UserGroup"
+            size="M"
+            on:click={() => {
+              store.update(state => {
+                state.builderSidePanel = true
+                return state
+              })
+            }}
+          >
+            Users
+          </ActionButton>
+        </span>
+      </TourWrap>
+    </div>
+  </div>
+
+  <ConfirmDialog
+    bind:this={unpublishModal}
+    title="Confirm unpublish"
+    okText="Unpublish app"
+    onOk={confirmUnpublishApp}
+  >
+    Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
+  </ConfirmDialog>
+{/if}
 
 <div class="buttons">
   <Button on:click={previewApp} secondary>Preview</Button>
-  <DeployModal onOk={completePublish} />
+  {#if $store.hasLock}
+    <DeployModal onOk={completePublish} />
+  {/if}
 </div>
 
 <style>
