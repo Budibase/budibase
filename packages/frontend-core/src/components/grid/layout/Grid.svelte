@@ -1,5 +1,5 @@
 <script>
-  import { setContext } from "svelte"
+  import { setContext, onMount } from "svelte"
   import { writable } from "svelte/store"
   import { fade } from "svelte/transition"
   import { clickOutside, ProgressCircle } from "@budibase/bbui"
@@ -24,6 +24,7 @@
   import RowHeightButton from "../controls/RowHeightButton.svelte"
   import ColumnWidthButton from "../controls/ColumnWidthButton.svelte"
   import NewRow from "./NewRow.svelte"
+  import { createWebsocket } from "../lib/websocket"
   import {
     MaxCellRenderHeight,
     MaxCellRenderWidthOverflow,
@@ -97,7 +98,7 @@
   export const getContext = () => context
 
   // Initialise websocket for multi-user
-  // onMount(() => createWebsocket(context))
+  onMount(() => createWebsocket(context))
 </script>
 
 <div

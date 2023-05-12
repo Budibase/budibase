@@ -38,7 +38,7 @@ export const createWebsocket = context => {
   })
   socket.on("row-update", data => {
     if (data.id) {
-      rows.actions.refreshRow(data.id)
+      rows.actions.replaceRow(data.id, data.row)
     }
   })
   socket.on("user-update", user => {
