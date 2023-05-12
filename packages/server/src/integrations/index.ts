@@ -20,7 +20,7 @@ import env from "../environment"
 import { cloneDeep } from "lodash"
 import sdk from "../sdk"
 
-const DEFINITIONS: Record<string, Integration> = {
+const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.POSTGRES]: postgres.schema,
   [SourceName.DYNAMODB]: dynamodb.schema,
   [SourceName.MONGODB]: mongodb.schema,
@@ -36,6 +36,7 @@ const DEFINITIONS: Record<string, Integration> = {
   [SourceName.GOOGLE_SHEETS]: googlesheets.schema,
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
+  [SourceName.ORACLE]: undefined,
 }
 
 const INTEGRATIONS: Record<SourceName, any> = {
@@ -68,7 +69,9 @@ if (
   INTEGRATIONS[SourceName.ORACLE] = oracle.integration
 }
 
-export async function getDefinition(source: SourceName): Promise<Integration> {
+export async function getDefinition(
+  source: SourceName
+): Promise<Integration | undefined> {
   // check if its integrated, faster
   const definition = DEFINITIONS[source]
   if (definition) {
@@ -109,7 +112,7 @@ export async function getIntegration(integration: SourceName) {
     for (let plugin of plugins) {
       if (plugin.name === integration) {
         // need to use commonJS require due to its dynamic runtime nature
-        const retrieved: any = await getDatasourcePlugin(plugin)
+        const retrieved = await getDatasourcePlugin(plugin)
         if (retrieved.integration) {
           return retrieved.integration
         } else {
@@ -121,12 +124,7 @@ export async function getIntegration(integration: SourceName) {
   throw new Error("No datasource implementation found.")
 }
 
-const VALIDATORS = {
-  [SourceName.POSTGRES]: postgres.validateConnection,
-}
-
 export default {
   getDefinitions,
   getIntegration,
-  getValidator: VALIDATORS,
 }

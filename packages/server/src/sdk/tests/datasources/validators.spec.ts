@@ -1,13 +1,10 @@
-import { SourceName } from "@budibase/types"
-import integrations from "../../../integrations"
+import postgres from "../../../integrations/postgres"
 import { GenericContainer } from "testcontainers"
 
 jest.unmock("pg")
 
 describe("datasource validators", () => {
   describe("postgres", () => {
-    const validator = integrations.getValidator[SourceName.POSTGRES]!
-
     let host: string
     let port: number
 
@@ -22,7 +19,7 @@ describe("datasource validators", () => {
     })
 
     it("test valid connection string", async () => {
-      const result = await validator({
+      const integration = new postgres.integration({
         host,
         port,
         database: "postgres",
@@ -32,11 +29,12 @@ describe("datasource validators", () => {
         ssl: false,
         rejectUnauthorized: false,
       })
+      const result = await integration.testConnection()
       expect(result).toBeTruthy()
     })
 
     it("test invalid connection string", async () => {
-      const result = await validator({
+      const integration = new postgres.integration({
         host,
         port,
         database: "postgres",
@@ -46,6 +44,7 @@ describe("datasource validators", () => {
         ssl: false,
         rejectUnauthorized: false,
       })
+      const result = await integration.testConnection()
       expect(result).toEqual({
         error: 'password authentication failed for user "wrong"',
       })

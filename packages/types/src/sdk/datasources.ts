@@ -128,6 +128,12 @@ export interface IntegrationBase {
   read?(query: any): Promise<any[] | any>
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
+  testConnection?(): Promise<
+    | true
+    | {
+        error: string
+      }
+  >
 }
 
 export interface DatasourcePlus extends IntegrationBase {

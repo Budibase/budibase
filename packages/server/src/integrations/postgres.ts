@@ -150,6 +150,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     this.open = false
   }
 
+  async testConnection() {
+    try {
+      await this.openConnection()
+      return true
+    } catch (e: any) {
+      return { error: e.message as string }
+    } finally {
+      await this.closeConnection()
+    }
+  }
+
   getBindingIdentifier(): string {
     return `$${this.index++}`
   }
@@ -330,20 +341,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   }
 }
 
-async function validateConnection(config: PostgresConfig) {
-  const integration = new PostgresIntegration(config)
-  try {
-    await integration.openConnection()
-    return true
-  } catch (e: any) {
-    return { error: e.message as string }
-  } finally {
-    await integration.closeConnection()
-  }
-}
-
 export default {
   schema: SCHEMA,
   integration: PostgresIntegration,
-  validateConnection,
 }
