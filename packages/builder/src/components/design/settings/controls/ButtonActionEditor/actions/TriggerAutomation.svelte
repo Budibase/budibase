@@ -23,6 +23,12 @@
     if (automationStatus === AUTOMATION_STATUS.NEW) {
       synchronous = false
     }
+
+    if (automationStatus === AUTOMATION_STATUS.EXISTING) {
+      synchronous = automations.find(
+        automation => automation._id === parameters.automationId
+      ).synchronous
+    }
   }
   $: automations = $automationStore.automations
     .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
@@ -79,6 +85,8 @@
     parameters.automationId = automationId
     parameters.synchronous = synchronous
   }
+
+  $: error = parameters.timeout > 120 ? "Timeout must be less than 120s" : null
 </script>
 
 <div class="root">
@@ -133,6 +141,16 @@
           >
         </div>
       </div>
+      <Label small />
+
+      <div class="timeout-width">
+        <Input
+          label="Timeout in seconds (120 max)"
+          type="number"
+          {error}
+          bind:value={parameters.timeout}
+        />
+      </div>
     {/if}
     <Label small />
     <Checkbox
@@ -168,6 +186,9 @@
   .root {
     max-width: 800px;
     margin: 0 auto;
+  }
+  .timeout-width {
+    width: 30%;
   }
 
   .params {
