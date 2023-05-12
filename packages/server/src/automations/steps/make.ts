@@ -9,10 +9,11 @@ import {
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
-  name: "Integromat Integration",
-  tagline: "Trigger an Integromat scenario",
+  name: "Make Integration",
+  stepTitle: "Make",
+  tagline: "Trigger a Make scenario",
   description:
-    "Performs a webhook call to Integromat and gets the response (if configured)",
+    "Performs a webhook call to Make and gets the response (if configured)",
   icon: "ri-shut-down-line",
   stepId: AutomationActionStepId.integromat,
   type: AutomationStepType.ACTION,
@@ -24,6 +25,10 @@ export const definition: AutomationStepSchema = {
         url: {
           type: AutomationIOType.STRING,
           title: "Webhook URL",
+        },
+        body: {
+          type: AutomationIOType.JSON,
+          title: "Payload",
         },
         value1: {
           type: AutomationIOType.STRING,
@@ -69,7 +74,19 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  const { url, value1, value2, value3, value4, value5 } = inputs
+  //TODO - Remove deprecated values 1,2,3,4,5 after November 2023
+  const { url, value1, value2, value3, value4, value5, body } = inputs
+
+  let payload = {}
+  try {
+    payload = body?.value ? JSON.parse(body?.value) : {}
+  } catch (err) {
+    return {
+      httpStatus: 400,
+      response: "Invalid payload JSON",
+      success: false,
+    }
+  }
 
   if (!url?.trim()?.length) {
     return {
@@ -88,6 +105,7 @@ export async function run({ inputs }: AutomationStepInput) {
         value3,
         value4,
         value5,
+        ...payload,
       }),
       headers: {
         "Content-Type": "application/json",
