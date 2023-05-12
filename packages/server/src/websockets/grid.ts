@@ -3,6 +3,8 @@ import Socket from "./websocket"
 import { permissions } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
+import { getTableId } from "../api/controllers/row/utils"
+import { Row } from "@budibase/types"
 
 export default class GridSocket extends Socket {
   constructor(app: Koa, server: http.Server) {
@@ -51,5 +53,15 @@ export default class GridSocket extends Socket {
         }
       })
     })
+  }
+
+  emitRowUpdate(ctx: any, row: Row) {
+    const tableId = getTableId(ctx)
+    this.io.in(tableId).emit("row-update", { id: row._id, row })
+  }
+
+  emitRowDeletion(ctx: any, id: string) {
+    const tableId = getTableId(ctx)
+    this.io.in(tableId).emit("row-update", { id, row: null })
   }
 }

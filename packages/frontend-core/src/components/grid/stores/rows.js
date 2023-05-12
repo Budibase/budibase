@@ -268,32 +268,39 @@ export const deriveStores = context => {
     return res?.rows?.[0]
   }
 
-  // Refreshes a specific row, handling updates, addition or deletion
-  const refreshRow = async id => {
-    // Fetch row from the server again
-    const newRow = await fetchRow(id)
-
+  // Replaces a row in state with the newly defined row, handling updates,
+  // addition and deletion
+  const replaceRow = (id, row) => {
     // Get index of row to check if it exists
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[id]
 
     // Process as either an update, addition or deletion
-    if (newRow) {
+    if (row) {
       if (index != null) {
         // An existing row was updated
         rows.update(state => {
-          state[index] = { ...newRow }
+          state[index] = { ...row }
           return state
         })
       } else {
         // A new row was created
-        handleNewRows([newRow])
+        handleNewRows([row])
       }
     } else if (index != null) {
       // A row was removed
       handleRemoveRows([$rows[index]])
     }
+  }
+
+  // Refreshes a specific row
+  const refreshRow = async id => {
+    // Fetch row from the server again
+    const row = await fetchRow(id)
+
+    // Update local state
+    replaceRow(id, row)
   }
 
   // Refreshes all data
@@ -455,6 +462,7 @@ export const deriveStores = context => {
         hasRow,
         loadNextPage,
         refreshRow,
+        replaceRow,
         refreshData,
         refreshTableDefinition,
       },
