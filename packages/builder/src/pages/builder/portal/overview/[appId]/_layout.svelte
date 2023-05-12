@@ -80,13 +80,6 @@
   }
 
   const editApp = () => {
-    if (appLocked && !lockedByYou) {
-      const identifier = app?.lockedBy?.firstName || app?.lockedBy?.email
-      notifications.warning(
-        `App locked by ${identifier}. Please allow lock to expire or have them unlock this app.`
-      )
-      return
-    }
     $goto(`../../../app/${app.devId}`)
   }
 
