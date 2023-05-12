@@ -23,15 +23,15 @@
     status: { name: "Status", disabled: true },
   }
 
-  $: id = $tables.selected?._id
-  $: isUsersTable = id === TableNames.USERS
-  $: isInternal = $tables.selected?.type !== "external"
+  $: table = $tables.selected
+  $: isUsersTable = table?._id === TableNames.USERS
+  $: isInternal = table?.type !== "external"
 </script>
 
 <div class="wrapper">
   <Grid
     {API}
-    tableId={id}
+    {table}
     allowAddRows={!isUsersTable}
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
