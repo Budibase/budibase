@@ -44,5 +44,31 @@ describe("datasource validators", () => {
       })
       expect(result).toBe(true)
     })
+
+    it("test wrong password", async () => {
+      const result = await validator({
+        url: connectionSettings.url,
+        username: connectionSettings.user,
+        password: "wrong",
+        databaseName: "",
+        collection: "",
+      })
+      expect(result).toEqual({
+        error: "not authorized to execute this request",
+      })
+    })
+
+    it("test wrong url", async () => {
+      const result = await validator({
+        url: "http://not.here",
+        username: connectionSettings.user,
+        password: connectionSettings.password,
+        databaseName: "",
+        collection: "",
+      })
+      expect(result).toEqual({
+        error: "getaddrinfo ENOTFOUND not.here",
+      })
+    })
   })
 })
