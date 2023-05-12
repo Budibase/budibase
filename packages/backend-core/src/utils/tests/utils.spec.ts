@@ -5,7 +5,6 @@ import * as db from "../../db"
 import { Header } from "../../constants"
 import { newid } from "../../utils"
 import env from "../../environment"
-import { beforeEach } from "@jest/globals"
 import { BBContext } from "@budibase/types"
 
 describe("utils", () => {
