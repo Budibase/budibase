@@ -32,7 +32,7 @@
   } from "../lib/constants"
 
   export let API = null
-  export let tableId = null
+  export let table = null
   export let schemaOverrides = null
   export let allowAddRows = true
   export let allowAddColumns = true
@@ -45,7 +45,7 @@
   const rand = Math.random()
 
   // State stores
-  const tableIdStore = writable(tableId)
+  const tableIdStore = writable(table?._id)
   const schemaOverridesStore = writable(schemaOverrides)
   const config = writable({
     allowAddRows,
@@ -79,7 +79,7 @@
   } = context
 
   // Keep stores up to date
-  $: tableIdStore.set(tableId)
+  $: tableIdStore.set(table?._id)
   $: schemaOverridesStore.set(schemaOverrides)
   $: config.set({
     allowAddRows,
