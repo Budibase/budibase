@@ -1,5 +1,6 @@
 import { GenericContainer } from "testcontainers"
 import postgres from "../../../../packages/server/src/integrations/postgres"
+import mysql from "../../../../packages/server/src/integrations/mysql"
 
 jest.unmock("pg")
 jest.unmock("mysql2/promise")
@@ -53,8 +54,6 @@ describe("datasource validators", () => {
   })
 
   describe("mysql", () => {
-    const validator = integrations.getValidator[SourceName.MYSQL]!
-
     let host: string
     let port: number
 
@@ -72,7 +71,7 @@ describe("datasource validators", () => {
     })
 
     it("test valid connection string", async () => {
-      const result = await validator({
+      const integration = new mysql.integration({
         host,
         port,
         user: "user",
@@ -80,11 +79,12 @@ describe("datasource validators", () => {
         password: "password",
         rejectUnauthorized: true,
       })
+      const result = await integration.testConnection()
       expect(result).toBe(true)
     })
 
     it("test invalid database", async () => {
-      const result = await validator({
+      const integration = new mysql.integration({
         host,
         port,
         user: "user",
@@ -92,13 +92,14 @@ describe("datasource validators", () => {
         password: "password",
         rejectUnauthorized: true,
       })
+      const result = await integration.testConnection()
       expect(result).toEqual({
         error: "Access denied for user 'user'@'%' to database 'test'",
       })
     })
 
     it("test invalid password", async () => {
-      const result = await validator({
+      const integration = new mysql.integration({
         host,
         port,
         user: "root",
@@ -106,6 +107,7 @@ describe("datasource validators", () => {
         password: "wrong",
         rejectUnauthorized: true,
       })
+      const result = await integration.testConnection()
       expect(result).toEqual({
         error:
           "Access denied for user 'root'@'172.17.0.1' (using password: YES)",
