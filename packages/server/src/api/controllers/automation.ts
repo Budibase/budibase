@@ -19,6 +19,7 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationResults,
+  AutomationStepType,
   BBContext,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
@@ -262,32 +263,34 @@ export async function getDefinitionList(ctx: BBContext) {
 export async function trigger(ctx: BBContext) {
   const db = context.getAppDB()
   let automation = await db.get(ctx.params.id)
-  await triggers.externalTrigger(automation, {
-    ...ctx.request.body,
-    appId: ctx.appId,
-  })
-  ctx.body = {
-    message: `Automation ${automation._id} has been triggered.`,
-    automation,
-  }
-}
 
-export async function triggerSynchronous(ctx: BBContext) {
-  const db = context.getAppDB()
-  let automation = await db.get(ctx.params.id)
-  const response: AutomationResults = await triggers.externalTrigger(
-    automation,
-    {
+  let hasCollectBlock = automation.definition.steps.some(
+    (step: any) => step.stepId === AutomationActionStepId.COLLECT
+  )
+  if (hasCollectBlock) {
+    const response: AutomationResults = await triggers.externalTrigger(
+      automation,
+      {
+        fields: ctx.request.body.fields,
+        timeout: ctx.request.body.timeout || 120000,
+      },
+      { getResponses: true }
+    )
+
+    let collectedValue = response.steps.find(
+      step => step.stepId === AutomationActionStepId.COLLECT
+    )
+    ctx.body = collectedValue?.outputs
+  } else {
+    await triggers.externalTrigger(automation, {
       ...ctx.request.body,
       appId: ctx.appId,
-    },
-    { getResponses: true }
-  )
-
-  let collectedValue = response.steps.find(
-    step => step.stepId === AutomationActionStepId.COLLECT
-  )
-  ctx.body = collectedValue?.outputs
+    })
+    ctx.body = {
+      message: `Automation ${automation._id} has been triggered.`,
+      automation,
+    }
+  }
 }
 
 function prepareTestInput(input: any) {

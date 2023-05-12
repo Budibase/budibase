@@ -14,13 +14,16 @@ import sdk from "../sdk"
 const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
-const Runner = new Thread(ThreadType.AUTOMATION)
 
 const jobMessage = (job: any, message: string) => {
   return `app=${job.data.event.appId} automation=${job.data.automation._id} jobId=${job.id} trigger=${job.data.automation.definition.trigger.event} : ${message}`
 }
 
-export async function processEvent(job: any) {
+export async function processEvent(job: any, timeout?: { timeout?: number }) {
+  const Runner = new Thread(ThreadType.AUTOMATION, {
+    timeout: timeout || null,
+  })
+
   try {
     const automationId = job.data.automation._id
     console.log(jobMessage(job, "running"))

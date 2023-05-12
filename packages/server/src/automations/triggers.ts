@@ -91,7 +91,7 @@ emitter.on("row:delete", async function (event) {
 
 export async function externalTrigger(
   automation: Automation,
-  params: { fields: Record<string, any> },
+  params: { fields: Record<string, any>; timeout?: number },
   { getResponses }: { getResponses?: boolean } = {}
 ) {
   if (
@@ -116,7 +116,7 @@ export async function externalTrigger(
       appId: context.getAppId(),
       automation,
     }
-    return utils.processEvent({ data })
+    return utils.processEvent({ data }, { timeout: params.timeout })
   } else {
     return automationQueue.add(data, JOB_OPTS)
   }
