@@ -121,6 +121,15 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
   }
 
+  async testConnection() {
+    try {
+      await this.connect()
+      return true
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
+  }
+
   getBindingIdentifier(): string {
     return `@p${this.index++}`
   }
@@ -310,18 +319,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   }
 }
 
-async function validateConnection(config: MSSQLConfig) {
-  const integration = new SqlServerIntegration(config)
-  try {
-    await integration.connect()
-    return true
-  } catch (e: any) {
-    return { error: e.message as string }
-  }
-}
-
 export default {
   schema: SCHEMA,
   integration: SqlServerIntegration,
-  validateConnection,
 }
