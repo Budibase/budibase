@@ -19,7 +19,7 @@ const PROD_APP_PREFIX = "/app/"
 const BUILDER_PREVIEW_PATH = "/app/preview"
 const BUILDER_PREFIX = "/builder"
 const BUILDER_REFERER_PREFIX = `${BUILDER_PREFIX}/app/`
-const PUBLIC_API_PREFIX = "/api/public/v1"
+const PUBLIC_API_PREFIX = "/api/public/v"
 
 function confirmAppId(possibleAppId: string | undefined) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
