@@ -22,7 +22,7 @@ import { MySQLColumn } from "./base/types"
 
 import mysql from "mysql2/promise"
 
-export interface MySQLConfig extends mysql.ConnectionOptions {
+interface MySQLConfig extends mysql.ConnectionOptions {
   database: string
   rejectUnauthorized: boolean
 }
@@ -149,6 +149,18 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         }
         return next()
       },
+    }
+  }
+
+  async testConnection() {
+    try {
+      const [result] = await this.internalQuery(
+        { sql: "SELECT 1+1 AS checkRes" },
+        { connect: true }
+      )
+      return result?.checkRes == 2
+    } catch (e: any) {
+      return { error: e.message as string }
     }
   }
 
@@ -286,21 +298,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   }
 }
 
-async function validateConnection(config: MySQLConfig) {
-  const integration = new MySQLIntegration(config)
-  try {
-    const [result] = await integration.internalQuery(
-      { sql: "SELECT 1+1 AS checkRes" },
-      { connect: true }
-    )
-    return result?.checkRes == 2
-  } catch (e: any) {
-    return { error: e.message as string }
-  }
-}
-
 export default {
   schema: SCHEMA,
   integration: MySQLIntegration,
-  validateConnection,
 }
