@@ -358,6 +358,15 @@ class MongoIntegration implements IntegrationBase {
     this.client = new MongoClient(config.connectionString, options)
   }
 
+  async testConnection() {
+    try {
+      await this.connect()
+      return true
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
+  }
+
   async connect() {
     return this.client.connect()
   }
@@ -631,18 +640,8 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 }
-async function validateConnection(config: MongoDBConfig) {
-  const integration = new MongoIntegration(config)
-  try {
-    await integration.connect()
-    return true
-  } catch (e: any) {
-    return { error: e.message as string }
-  }
-}
 
 export default {
   schema: SCHEMA,
   integration: MongoIntegration,
-  validateConnection,
 }
