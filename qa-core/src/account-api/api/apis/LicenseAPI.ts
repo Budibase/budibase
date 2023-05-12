@@ -20,6 +20,10 @@ export default class LicenseAPI {
         internal: true,
       }
     )
+
+    if (response.status !== 200) {
+      throw new Error(`License Error: ${response.status}`)
+    }
     return [response, json]
   }
 }
