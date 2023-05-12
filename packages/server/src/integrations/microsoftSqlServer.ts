@@ -147,10 +147,6 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
   }
 
-  // async end(){
-  //   this.client!.
-  // }
-
   async internalQuery(
     query: SqlQuery,
     operation: string | undefined = undefined
