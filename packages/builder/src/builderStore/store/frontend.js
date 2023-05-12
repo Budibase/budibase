@@ -39,6 +39,7 @@ import { makePropSafe as safe } from "@budibase/string-templates"
 import { getComponentFieldOptions } from "helpers/formFields"
 
 const INITIAL_FRONTEND_STATE = {
+  initialised: false,
   apps: [],
   name: "",
   url: "",
@@ -70,6 +71,7 @@ const INITIAL_FRONTEND_STATE = {
   previewDevice: "desktop",
   highlightedSettingKey: null,
   builderSidePanel: false,
+  hasLock: true,
 
   // URL params
   selectedScreenId: null,
@@ -112,7 +114,7 @@ export const getFrontendStore = () => {
       store.set({ ...INITIAL_FRONTEND_STATE })
     },
     initialise: async pkg => {
-      const { layouts, screens, application, clientLibPath } = pkg
+      const { layouts, screens, application, clientLibPath, hasLock } = pkg
 
       await store.actions.components.refreshDefinitions(application.appId)
 
@@ -137,6 +139,8 @@ export const getFrontendStore = () => {
         upgradableVersion: application.upgradableVersion,
         navigation: application.navigation || {},
         usedPlugins: application.usedPlugins || [],
+        hasLock,
+        initialised: true,
       }))
       screenHistoryStore.reset()
       automationHistoryStore.reset()

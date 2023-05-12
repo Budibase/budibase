@@ -134,68 +134,80 @@
 
 <div class="root">
   <div class="top-nav">
-    <div class="topleftnav">
-      <ActionMenu>
-        <div slot="control">
-          <Icon size="M" hoverable name="ShowMenu" />
-        </div>
-        <MenuItem on:click={() => $goto("../../portal/apps")}>
-          Exit to portal
-        </MenuItem>
-        <MenuItem
-          on:click={() => $goto(`../../portal/overview/${application}`)}
-        >
-          Overview
-        </MenuItem>
-        <MenuItem
-          on:click={() => $goto(`../../portal/overview/${application}/access`)}
-        >
-          Access
-        </MenuItem>
-        <MenuItem
-          on:click={() =>
-            $goto(`../../portal/overview/${application}/automation-history`)}
-        >
-          Automation history
-        </MenuItem>
-        <MenuItem
-          on:click={() => $goto(`../../portal/overview/${application}/backups`)}
-        >
-          Backups
-        </MenuItem>
+    {#if $store.initialised}
+      <div class="topleftnav">
+        <ActionMenu>
+          <div slot="control">
+            <Icon size="M" hoverable name="ShowMenu" />
+          </div>
+          <MenuItem on:click={() => $goto("../../portal/apps")}>
+            Exit to portal
+          </MenuItem>
+          <MenuItem
+            on:click={() => $goto(`../../portal/overview/${application}`)}
+          >
+            Overview
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/access`)}
+          >
+            Access
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/automation-history`)}
+          >
+            Automation history
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/backups`)}
+          >
+            Backups
+          </MenuItem>
 
-        <MenuItem
-          on:click={() =>
-            $goto(`../../portal/overview/${application}/name-and-url`)}
-        >
-          Name and URL
-        </MenuItem>
-        <MenuItem
-          on:click={() => $goto(`../../portal/overview/${application}/version`)}
-        >
-          Version
-        </MenuItem>
-      </ActionMenu>
-      <Heading size="XS">{$store.name}</Heading>
-    </div>
-    <div class="topcenternav">
-      <Tabs {selected} size="M">
-        {#each $layout.children as { path, title }}
-          <TourWrap tourStepKey={`builder-${title}-section`}>
-            <Tab
-              quiet
-              selected={$isActive(path)}
-              on:click={topItemNavigate(path)}
-              title={capitalise(title)}
-              id={`builder-${title}-tab`}
-            />
-          </TourWrap>
-        {/each}
-      </Tabs>
-    </div>
-    <div class="toprightnav">
-      <AppActions {application} />
-    </div>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/name-and-url`)}
+          >
+            Name and URL
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/version`)}
+          >
+            Version
+          </MenuItem>
+        </ActionMenu>
+        <Heading size="XS">{$store.name}</Heading>
+      </div>
+      <div class="topcenternav">
+        {#if $store.hasLock}
+          <Tabs {selected} size="M">
+            {#each $layout.children as { path, title }}
+              <TourWrap tourStepKey={`builder-${title}-section`}>
+                <Tab
+                  quiet
+                  selected={$isActive(path)}
+                  on:click={topItemNavigate(path)}
+                  title={capitalise(title)}
+                  id={`builder-${title}-tab`}
+                />
+              </TourWrap>
+            {/each}
+          </Tabs>
+        {:else}
+          <div class="secondary-editor">
+            <Icon name="LockClosed" />
+            Another user is currently editing your screens and automations
+          </div>
+        {/if}
+      </div>
+      <div class="toprightnav">
+        <AppActions {application} />
+      </div>
+    {/if}
   </div>
   {#await promise}
     <!-- This should probably be some kind of loading state? -->
@@ -269,5 +281,12 @@
     justify-content: flex-end;
     align-items: center;
     gap: var(--spacing-l);
+  }
+
+  .secondary-editor {
+    align-self: center;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
   }
 </style>
