@@ -13,7 +13,6 @@
     Modal,
     notifications,
   } from "@budibase/bbui"
-
   import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
@@ -30,7 +29,9 @@
   let promise = getPackage()
   let hasSynced = false
   let commandPaletteModal
+  let loaded = false
 
+  $: loaded && initTour()
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
@@ -43,6 +44,7 @@
       await automationStore.actions.fetch()
       await roles.fetch()
       await flags.fetch()
+      loaded = true
       return pkg
     } catch (error) {
       notifications.error(`Error initialising app: ${error?.message}`)
@@ -67,13 +69,18 @@
 
   // Event handler for the command palette
   const handleKeyDown = e => {
-    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey) && $store.hasLock) {
       e.preventDefault()
       commandPaletteModal.toggle()
     }
   }
 
   const initTour = async () => {
+    // Skip tour if we don't have the lock
+    if (!$store.hasLock) {
+      return
+    }
+
     // Check if onboarding is enabled.
     if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
       if (!$auth.user?.onboardedAt) {
@@ -110,7 +117,6 @@
         // check if user has beta access
         // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
         // betaAccess = betaResponse.access
-        initTour()
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }
