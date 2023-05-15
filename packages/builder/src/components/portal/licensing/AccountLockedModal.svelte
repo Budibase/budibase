@@ -16,7 +16,7 @@
 
 <Modal bind:this={modal} on:hide={modal}>
   <ModalContent
-    title="Your account is currently locked"
+    title="Your account is currently de-activated"
     size="S"
     showCancelButton={true}
     showCloseIcon={false}
