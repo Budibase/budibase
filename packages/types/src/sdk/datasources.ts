@@ -55,7 +55,6 @@ export enum SourceName {
   FIRESTORE = "FIRESTORE",
   REDIS = "REDIS",
   SNOWFLAKE = "SNOWFLAKE",
-  UNKNOWN = "unknown",
 }
 
 export enum IncludeRelationship {
@@ -129,6 +128,12 @@ export interface IntegrationBase {
   read?(query: any): Promise<any[] | any>
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
+  testConnection?(): Promise<
+    | boolean
+    | {
+        error: string
+      }
+  >
 }
 
 export interface DatasourcePlus extends IntegrationBase {
