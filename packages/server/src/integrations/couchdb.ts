@@ -7,7 +7,7 @@ import {
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
 
-export interface CouchDBConfig {
+interface CouchDBConfig {
   url: string
   database: string
 }
