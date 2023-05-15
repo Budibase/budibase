@@ -94,13 +94,14 @@
   }
 
   /* Cell border for cells with labels */
-  .cell.error:after,
-  .cell.selected-other:not(.focused):after {
+  .cell.error:after {
     border-radius: 0 2px 2px 2px;
   }
-  .cell[data-row="0"].error:after,
-  .cell[data-row="0"].selected-other:not(.focused):after {
+  .cell[data-row="0"].error:after {
     border-radius: 2px 2px 2px 0;
+  }
+  .cell.selected-other:not(.focused):after {
+    border-radius: 2px;
   }
 
   /* Cell z-index */
