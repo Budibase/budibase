@@ -1,6 +1,5 @@
 import s3 from "../../../../packages/server/src/integrations/s3"
 import { GenericContainer } from "testcontainers"
-import { generator } from "../../shared"
 
 jest.unmock("aws-sdk")
 
