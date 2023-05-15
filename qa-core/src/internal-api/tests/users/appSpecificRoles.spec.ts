@@ -14,9 +14,6 @@ describe("Internal API - App Specific Roles & Permissions", () => {
   afterAll(async () => {
     await config.afterAll()
   })
-  afterAll(async () => {
-    await config.afterAll()
-  })
 
   it("Add BASIC user to app", async () => {
     const appUser = fixtures.users.generateUser()

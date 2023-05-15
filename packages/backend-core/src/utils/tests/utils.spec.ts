@@ -5,7 +5,6 @@ import * as db from "../../db"
 import { Header } from "../../constants"
 import { newid } from "../../utils"
 import env from "../../environment"
-import { beforeEach } from "@jest/globals"
 import { BBContext } from "@budibase/types"
 
 describe("utils", () => {
@@ -124,7 +123,7 @@ describe("utils", () => {
       expectResult(true)
     })
 
-    it("returns false if current path is not in builder", async () => {
+    it("returns false if current path doesn't have '/' suffix", async () => {
       ctx.path = "/builder/app"
       expectResult(false)
 
@@ -172,6 +171,12 @@ describe("utils", () => {
       expectResult(true)
 
       ctx.path = "/api/public/v1"
+      expectResult(true)
+
+      ctx.path = "/api/public/v2"
+      expectResult(true)
+
+      ctx.path = "/api/public/v21"
       expectResult(true)
     })
 
