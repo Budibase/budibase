@@ -3,6 +3,7 @@ import {
   Integration,
   QueryType,
   IntegrationBase,
+  DatasourceFeature,
 } from "@budibase/types"
 import { Firestore, WhereFilterOp } from "@google-cloud/firestore"
 
@@ -18,6 +19,7 @@ const SCHEMA: Integration = {
   type: "Non-relational",
   description:
     "Cloud Firestore is a flexible, scalable database for mobile, web, and server development from Firebase and Google Cloud.",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     email: {
       type: DatasourceFieldType.STRING,

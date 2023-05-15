@@ -3,6 +3,7 @@ import {
   DatasourceFieldType,
   QueryType,
   IntegrationBase,
+  DatasourceFeature,
 } from "@budibase/types"
 
 import AWS from "aws-sdk"
@@ -22,6 +23,7 @@ const SCHEMA: Integration = {
     "Amazon DynamoDB is a key-value and document database that delivers single-digit millisecond performance at any scale.",
   friendlyName: "DynamoDB",
   type: "Non-relational",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     region: {
       type: DatasourceFieldType.STRING,

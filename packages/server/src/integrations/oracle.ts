@@ -7,6 +7,7 @@ import {
   SqlQuery,
   Table,
   DatasourcePlus,
+  DatasourceFeature,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -53,6 +54,7 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "Oracle Database is an object-relational database management system developed by Oracle Corporation",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,

@@ -73,6 +73,10 @@ export enum FilterType {
   ONE_OF = "oneOf",
 }
 
+export enum DatasourceFeature {
+  CONNECTION_CHECKING = "connection",
+}
+
 export interface StepDefinition {
   key: string
   template: string
@@ -111,6 +115,7 @@ export interface Integration {
   docs: string
   plus?: boolean
   auth?: { type: string }
+  features?: DatasourceFeature[]
   relationships?: boolean
   description: string
   friendlyName: string
