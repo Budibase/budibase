@@ -1,4 +1,5 @@
 import {
+  ConnectionInfo,
   DatasourceFeature,
   DatasourceFieldType,
   Integration,
@@ -107,14 +108,18 @@ class RedisIntegration {
   }
 
   async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
     try {
       await this.client.ping()
-      return true
+      response.connected = true
     } catch (e: any) {
-      return { error: e.message as string }
+      response.error = e.message as string
     } finally {
       await this.disconnect()
     }
+    return response
   }
 
   async disconnect() {

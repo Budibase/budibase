@@ -4,6 +4,7 @@ import {
   IntegrationBase,
   DatasourceFieldType,
   DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 
 import AWS from "aws-sdk"
@@ -168,12 +169,16 @@ class S3Integration implements IntegrationBase {
   }
 
   async testConnection() {
-    try {
-      const buckets = await this.client.listBuckets().promise()
-      return true
-    } catch (e: any) {
-      return { error: e.message as string }
+    const response: ConnectionInfo = {
+      connected: false,
     }
+    try {
+      await this.client.listBuckets().promise()
+      response.connected = true
+    } catch (e: any) {
+      response.error = e.message as string
+    }
+    return response
   }
 
   async create(query: {

@@ -140,7 +140,7 @@ export async function verify(
   } else {
     ctx.body = {
       connected: false,
-      error: response.error
+      error: response.error,
     }
   }
 }

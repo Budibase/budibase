@@ -25,12 +25,7 @@ import {
   ExecuteOptions,
   Result,
 } from "oracledb"
-import {
-  OracleTable,
-  OracleColumn,
-  OracleColumnsResponse,
-  OracleConstraint,
-} from "./base/types"
+import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
 let oracledb: any
 try {
   oracledb = require("oracledb")
@@ -54,7 +49,7 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "Oracle Database is an object-relational database management system developed by Oracle Corporation",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: [],
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
