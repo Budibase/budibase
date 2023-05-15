@@ -1,8 +1,9 @@
 import {
-  Integration,
+  DatasourceFeature,
   DatasourceFieldType,
-  QueryType,
+  Integration,
   IntegrationBase,
+  QueryType,
 } from "@budibase/types"
 
 const Airtable = require("airtable")
@@ -18,6 +19,7 @@ const SCHEMA: Integration = {
     "Airtable is a spreadsheet-database hybrid, with the features of a database but applied to a spreadsheet.",
   friendlyName: "Airtable",
   type: "Spreadsheet",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     apiKey: {
       type: DatasourceFieldType.PASSWORD,

@@ -1,4 +1,9 @@
-import { DatasourceFieldType, Integration, QueryType } from "@budibase/types"
+import {
+  DatasourceFeature,
+  DatasourceFieldType,
+  Integration,
+  QueryType,
+} from "@budibase/types"
 import Redis from "ioredis"
 
 interface RedisConfig {
@@ -11,9 +16,11 @@ interface RedisConfig {
 
 const SCHEMA: Integration = {
   docs: "https://redis.io/docs/",
-  description: "",
+  description:
+    "Redis is a caching tool, providing powerful key-value store capabilities.",
   friendlyName: "Redis",
   type: "Non-relational",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     host: {
       type: "string",

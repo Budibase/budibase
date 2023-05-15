@@ -3,6 +3,7 @@ import {
   QueryType,
   IntegrationBase,
   DatasourceFieldType,
+  DatasourceFeature,
 } from "@budibase/types"
 
 const AWS = require("aws-sdk")
@@ -22,6 +23,7 @@ const SCHEMA: Integration = {
     "Amazon Simple Storage Service (Amazon S3) is an object storage service that offers industry-leading scalability, data availability, security, and performance.",
   friendlyName: "Amazon S3",
   type: "Object store",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     region: {
       type: "string",

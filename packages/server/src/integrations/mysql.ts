@@ -7,6 +7,7 @@ import {
   Table,
   TableSchema,
   DatasourcePlus,
+  DatasourceFeature,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -41,6 +42,7 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "MySQL Database Service is a fully managed database service to deploy cloud-native applications. ",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
