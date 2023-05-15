@@ -129,7 +129,7 @@ export interface IntegrationBase {
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
   testConnection?(): Promise<
-    | true
+    | boolean
     | {
         error: string
       }
