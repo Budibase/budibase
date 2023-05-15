@@ -69,10 +69,10 @@ function findVersion() {
   try {
     const packageJsonFile = findFileInAncestors("package.json", process.cwd())
     const content = readFileSync(packageJsonFile!, "utf-8")
-    const version = JSON.parse(content).version
-    return version
+    return JSON.parse(content).version
   } catch {
-    throw new Error("Cannot find a valid version in its package.json")
+    // throwing an error here is confusing/causes backend-core to be hard to import
+    return undefined
   }
 }
 
