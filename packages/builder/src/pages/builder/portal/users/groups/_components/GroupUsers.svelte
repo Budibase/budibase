@@ -1,7 +1,7 @@
 <script>
   import EditUserPicker from "./EditUserPicker.svelte"
 
-  import { Heading, Pagination, Table } from "@budibase/bbui"
+  import { Heading, Pagination, Table, Search } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
   import { goto } from "@roxi/routify"
   import { API } from "api"
@@ -12,7 +12,9 @@
 
   export let groupId
 
-  const fetchGroupUsers = fetchData({
+  let emailSearch
+  let fetchGroupUsers
+  $: fetchGroupUsers = fetchData({
     API,
     datasource: {
       type: "groupUser",
@@ -20,6 +22,7 @@
     options: {
       query: {
         groupId,
+        emailSearch,
       },
     },
   })
@@ -59,24 +62,31 @@
 </script>
 
 <div class="header">
-  <Heading size="S">Users</Heading>
   {#if !scimEnabled}
     <EditUserPicker {groupId} onUsersUpdated={fetchGroupUsers.getInitialData} />
   {:else}
     <ScimBanner />
   {/if}
-</div>
 
+  <div class="controls-right">
+    <Search bind:value={emailSearch} placeholder="Search email" />
+  </div>
+</div>
 <Table
   schema={userSchema}
   data={$fetchGroupUsers?.rows}
+  loading={$fetchGroupUsers.loading}
   allowEditRows={false}
   customPlaceholder
   customRenderers={customUserTableRenderers}
   on:click={e => $goto(`../users/${e.detail._id}`)}
 >
   <div class="placeholder" slot="placeholder">
-    <Heading size="S">This user group doesn't have any users</Heading>
+    <Heading size="S"
+      >{emailSearch
+        ? `No users found matching the email "${emailSearch}"`
+        : "This user group doesn't have any users"}</Heading
+    >
   </div>
 </Table>
 
@@ -98,7 +108,7 @@
   .header {
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     gap: var(--spacing-l);
   }
@@ -108,5 +118,16 @@
   .placeholder {
     width: 100%;
     text-align: center;
+  }
+
+  .controls-right {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+  .controls-right :global(.spectrum-Search) {
+    width: 200px;
   }
 </style>
