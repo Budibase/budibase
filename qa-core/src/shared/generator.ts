@@ -1,3 +1,3 @@
-const Chance = require("chance")
+import Chance from "chance"
 
 export default new Chance()

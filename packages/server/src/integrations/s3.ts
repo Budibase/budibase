@@ -5,8 +5,8 @@ import {
   DatasourceFieldType,
 } from "@budibase/types"
 
-const AWS = require("aws-sdk")
-const csv = require("csvtojson")
+import AWS from "aws-sdk"
+import csv from "csvtojson"
 
 interface S3Config {
   region: string
@@ -152,7 +152,7 @@ const SCHEMA: Integration = {
 
 class S3Integration implements IntegrationBase {
   private readonly config: S3Config
-  private client: any
+  private client
 
   constructor(config: S3Config) {
     this.config = config
@@ -163,6 +163,15 @@ class S3Integration implements IntegrationBase {
     }
 
     this.client = new AWS.S3(this.config)
+  }
+
+  async testConnection() {
+    try {
+      const buckets = await this.client.listBuckets().promise()
+      return true
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
   }
 
   async create(query: {
