@@ -296,10 +296,7 @@ export const deriveStores = context => {
 
   // Refreshes a specific row
   const refreshRow = async id => {
-    // Fetch row from the server again
     const row = await fetchRow(id)
-
-    // Update local state
     replaceRow(id, row)
   }
 
