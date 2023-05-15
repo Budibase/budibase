@@ -4,7 +4,7 @@ import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "components/portal/licensing/constants"
 import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
-import { Hosting, PlanModel } from "@budibase/types"
+import { PlanModel } from "@budibase/types"
 
 const UNLIMITED = -1
 
@@ -58,6 +58,15 @@ export const createLicensingStore = () => {
       return false
     }
     return userCount > userLimit
+  }
+
+  async function isCloud() {
+    let adminStore = get(admin)
+    if (!adminStore.loaded) {
+      await admin.init()
+      adminStore = get(admin)
+    }
+    return adminStore.cloud
   }
 
   const actions = {
@@ -132,7 +141,7 @@ export const createLicensingStore = () => {
           quotaUsage,
         }
       })
-      actions.setUsageMetrics()
+      await actions.setUsageMetrics()
     },
     usersLimitReached: userCount => {
       return usersLimitReached(userCount, get(store).userLimit)
@@ -140,7 +149,7 @@ export const createLicensingStore = () => {
     usersLimitExceeded(userCount) {
       return usersLimitExceeded(userCount, get(store).userLimit)
     },
-    setUsageMetrics: () => {
+    setUsageMetrics: async () => {
       if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
         const usage = get(store).quotaUsage
         const license = get(auth).user.license
@@ -204,9 +213,9 @@ export const createLicensingStore = () => {
         const userCount = usage.usageQuota.users
         const userLimitReached = usersLimitReached(userCount, userLimit)
         const userLimitExceeded = usersLimitExceeded(userCount, userLimit)
-        const errUserLimit = license.account.hosting === Hosting.CLOUD &&
+        const isCloudAccount = await isCloud()
+        const errUserLimit = isCloudAccount &&
           license.plan.model === PlanModel.PER_USER &&
-          userQuota.usage.static.users.value !== UNLIMITED &&
           userLimitExceeded
 
         store.update(state => {
