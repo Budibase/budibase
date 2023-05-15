@@ -12,6 +12,7 @@ export const createLicensingStore = () => {
   const DEFAULT = {
     // navigation
     goToUpgradePage: () => {},
+    goToPricingPage: () => {},
     // the top level license
     license: undefined,
     isFreePlan: true,
@@ -71,10 +72,14 @@ export const createLicensingStore = () => {
       const goToUpgradePage = () => {
         window.location.href = upgradeUrl
       }
+      const goToPricingPage = () => {
+        window.open("https://budibase.com/pricing/", "_blank")
+      }
       store.update(state => {
         return {
           ...state,
           goToUpgradePage,
+          goToPricingPage,
         }
       })
     },
