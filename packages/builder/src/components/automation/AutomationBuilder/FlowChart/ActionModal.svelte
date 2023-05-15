@@ -6,6 +6,8 @@
     Body,
     Icon,
     notifications,
+    Tags,
+    Tag,
   } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "builderStore"
   import { admin, licensing } from "stores/portal"
@@ -15,7 +17,7 @@
   export let blockIdx
   export let lastStep
 
-  let syncWebhooksEnabled = $licensing.syncWebhooksEnabled
+  let syncWebhooksEnabled = false
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let collectBlockExists = $selectedAutomation.definition.steps.some(
     step => step.stepId === ActionStepID.COLLECT
@@ -93,7 +95,7 @@
 <ModalContent
   title="Add automation step"
   confirmText="Save"
-  size="M"
+  size="L"
   disabled={!selectedAction}
   onConfirm={addBlockToAutomation}
 >
@@ -138,7 +140,13 @@
           <div class="item-body">
             <Icon name={action.icon} />
             <Body size="XS">{action.name}</Body>
-            {#if isDisabled}
+            {#if isDisabled && !syncWebhooksEnabled}
+              <div class="tag-color">
+                <Tags>
+                  <Tag icon="LockClosed">Business</Tag>
+                </Tags>
+              </div>
+            {:else if isDisabled}
               <Icon name="Help" tooltip={disabled[idx].message} />
             {/if}
           </div>
@@ -173,6 +181,7 @@
     display: flex;
     margin-left: var(--spacing-m);
     gap: var(--spacing-m);
+    align-items: center;
   }
   .item-list {
     display: grid;
@@ -201,5 +210,9 @@
   }
   .disabled :global(.spectrum-Body) {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .tag-color :global(.spectrum-Tags-item) {
+    background: var(--spectrum-global-color-gray-200);
   }
 </style>
