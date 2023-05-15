@@ -151,7 +151,6 @@
           bindings.push(stateBinding)
         }
       })
-
     // Get which indexes are asynchronous automations as we want to filter them out from the bindings
     const asynchronousAutomationIndexes = actions
       .map((action, index) => {
@@ -174,7 +173,6 @@
     } else {
       allBindings = eventContextBindings.concat(bindings)
     }
-
     return allBindings
   }
 </script>

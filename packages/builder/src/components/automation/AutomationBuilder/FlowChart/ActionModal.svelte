@@ -20,8 +20,7 @@
   let collectBlockExists = $selectedAutomation.definition.steps.some(
     step => step.stepId === ActionStepID.COLLECT
   )
-  $: console.log($licensing)
-  $: console.log(syncWebhooksEnabled)
+
   const disabled = {
     SEND_EMAIL_SMTP: {
       disabled: !$admin.checklist.smtp.checked,
