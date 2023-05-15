@@ -60,7 +60,7 @@
 
   let queryStr = JSON.stringify(query)
 
-  $beforeUrlChange((event, targetRoute) => {
+  $beforeUrlChange(event => {
     const updated = JSON.stringify(query)
 
     if (updated !== queryStr && !override) {
@@ -68,8 +68,6 @@
       saveModal.show()
       return false
     } else return true
-
-    return true
   })
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
@@ -160,7 +158,7 @@
     cancelText="Discard Changes"
     size="L"
     onConfirm={async () => {
-      const saveResponse = await saveQuery()
+      await saveQuery()
       override = true
       resumeNavigation()
     }}
@@ -271,7 +269,7 @@
             cta
             disabled={queryInvalid}
             on:click={async () => {
-              const saveResponse = await saveQuery()
+              await saveQuery()
               notifications.success(`Query saved successfully`)
               // Go to the correct URL if we just created a new query
               if (!query._rev) {
