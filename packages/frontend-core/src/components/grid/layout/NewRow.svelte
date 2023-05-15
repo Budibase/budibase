@@ -193,7 +193,7 @@
                 row={newRow}
                 focused={$focusedCellId === cellId}
                 width={column.width}
-                rowIdx={0}
+                rowIdx={offset === 0 ? 0 : 1}
                 invertX={columnIdx >= $columnHorizontalInversionIndex}
                 {invertY}
               >
