@@ -33,5 +33,20 @@ describe("datasource validators", () => {
       const result = await integration.testConnection()
       expect(result).toBe(true)
     })
+
+    it("test wrong endpoint", async () => {
+      const integration = new s3.integration({
+        region: "eu-west-2",
+        accessKeyId: "testkey",
+        secretAccessKey: "testsecret",
+        s3ForcePathStyle: false,
+        endpoint: `http://wrong:123`,
+      })
+      const result = await integration.testConnection()
+      expect(result).toEqual({
+        error:
+          "Inaccessible host: `wrong' at port `undefined'. This service may not be available in the `eu-west-2' region.",
+      })
+    })
   })
 })
