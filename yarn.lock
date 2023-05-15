@@ -1486,6 +1486,25 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
+"@budibase/pro@0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-0.0.1.tgz#a30ede9ba3839fc5d3fc3b53d10cf2551f661ec1"
+  integrity sha512-h2RCgiDj2ujdZ0QI47LmUuDQ7TdUVplrkUBpBVXRVc/rrrLuf12H0/s0S7gtwxstfDjc2/thS+3Ak6xdUWwqKQ==
+  dependencies:
+    "@budibase/backend-core" "0.0.1"
+    "@budibase/shared-core" "0.0.1"
+    "@budibase/string-templates" "0.0.1"
+    "@budibase/types" "0.0.1"
+    "@koa/router" "8.0.8"
+    bull "4.10.1"
+    joi "17.6.0"
+    jsonwebtoken "8.5.1"
+    lru-cache "^7.14.1"
+    memorystream "^0.3.1"
+    node-fetch "^2.6.1"
+    scim-patch "^0.7.0"
+    scim2-parse-filter "^0.2.8"
+
 "@budibase/standard-components@^0.9.139":
   version "0.9.139"
   resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.139.tgz#cf8e2b759ae863e469e50272b3ca87f2827e66e3"
@@ -2964,7 +2983,7 @@
   resolved "https://registry.yarnpkg.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.14.tgz#add4c98d341472a289190b424efbdb096991bb24"
   integrity sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==
 
-"@jridgewell/sourcemap-codec@^1.4.10", "@jridgewell/sourcemap-codec@^1.4.13":
+"@jridgewell/sourcemap-codec@^1.4.10":
   version "1.4.15"
   resolved "https://registry.yarnpkg.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz#d7c6e6755c78567a951e04ab52ef0fd26de59f32"
   integrity sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==
@@ -3674,7 +3693,7 @@
   dependencies:
     slash "^3.0.0"
 
-"@rollup/plugin-commonjs@16.0.0", "@rollup/plugin-commonjs@^16.0.0":
+"@rollup/plugin-commonjs@^16.0.0":
   version "16.0.0"
   resolved "https://registry.yarnpkg.com/@rollup/plugin-commonjs/-/plugin-commonjs-16.0.0.tgz#169004d56cd0f0a1d0f35915d31a036b0efe281f"
   integrity sha512-LuNyypCP3msCGVQJ7ki8PqYdpjfEkE/xtFa5DqlF+7IBD0JsfMZ87C58heSwIMint58sAUZbt3ITqOmdQv/dXw==
@@ -3756,22 +3775,6 @@
   dependencies:
     "@rollup/pluginutils" "^3.1.0"
     magic-string "^0.25.7"
-
-"@rollup/plugin-replace@^5.0.2":
-  version "5.0.2"
-  resolved "https://registry.yarnpkg.com/@rollup/plugin-replace/-/plugin-replace-5.0.2.tgz#45f53501b16311feded2485e98419acb8448c61d"
-  integrity sha512-M9YXNekv/C/iHHK+cvORzfRYfPbq0RDD8r0G+bMiTXjNGKulPnCT9O3Ss46WfhI6ZOCgApOP7xAdmCQJ+U2LAA==
-  dependencies:
-    "@rollup/pluginutils" "^5.0.1"
-    magic-string "^0.27.0"
-
-"@rollup/plugin-typescript@8.3.0":
-  version "8.3.0"
-  resolved "https://registry.yarnpkg.com/@rollup/plugin-typescript/-/plugin-typescript-8.3.0.tgz#bc1077fa5897b980fc27e376c4e377882c63e68b"
-  integrity sha512-I5FpSvLbtAdwJ+naznv+B4sjXZUcIvLLceYpITAn7wAP8W0wqc5noLdGIp9HGVntNhRWXctwPYrSSFQxtl0FPA==
-  dependencies:
-    "@rollup/pluginutils" "^3.1.0"
-    resolve "^1.17.0"
 
 "@rollup/pluginutils@^3.0.8", "@rollup/pluginutils@^3.1.0":
   version "3.1.0"
@@ -11671,7 +11674,7 @@ fs.realpath@^1.0.0:
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
 
-fsevents@^2.1.2, fsevents@^2.3.2, fsevents@~2.3.1, fsevents@~2.3.2:
+fsevents@^2.1.2, fsevents@^2.3.2, fsevents@~2.3.2:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.2.tgz#8a526f78b8fdf4623b709e0b975c52c24c02fd1a"
   integrity sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==
@@ -16661,13 +16664,6 @@ magic-string@^0.26.2:
   dependencies:
     sourcemap-codec "^1.4.8"
 
-magic-string@^0.27.0:
-  version "0.27.0"
-  resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.27.0.tgz#e4a3413b4bab6d98d2becffd48b4a257effdbbf3"
-  integrity sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==
-  dependencies:
-    "@jridgewell/sourcemap-codec" "^1.4.13"
-
 make-dir@3.1.0, make-dir@^3.0.0, make-dir@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/make-dir/-/make-dir-3.1.0.tgz#415e967046b3a7f1d185277d84aa58203726a13f"
@@ -21439,13 +21435,6 @@ rollup-pluginutils@^2.3.1, rollup-pluginutils@^2.5.0, rollup-pluginutils@^2.6.0,
   dependencies:
     estree-walker "^0.6.1"
 
-rollup@2.45.2:
-  version "2.45.2"
-  resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.45.2.tgz#8fb85917c9f35605720e92328f3ccbfba6f78b48"
-  integrity sha512-kRRU7wXzFHUzBIv0GfoFFIN3m9oteY4uAsKllIpQDId5cfnkWF2J130l+27dzDju0E6MScKiV0ZM5Bw8m4blYQ==
-  optionalDependencies:
-    fsevents "~2.3.1"
-
 rollup@^2.36.2, rollup@^2.44.0, rollup@^2.45.2, rollup@^2.79.1:
   version "2.79.1"
   resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.79.1.tgz#bedee8faef7c9f93a2647ac0108748f497f081c7"
@@ -23422,7 +23411,7 @@ timed-out@^4.0.1:
   resolved "https://registry.yarnpkg.com/timed-out/-/timed-out-4.0.1.tgz#f32eacac5a175bea25d7fab565ab3ed8741ef56f"
   integrity sha512-G7r3AhovYtr5YKOWQkta8RKAPb+J9IsO4uVmzjl8AZwfhs8UcUwTiD6gcJYSgOtzyjvQKrKYn41syHbUWMkafA==
 
-timekeeper@2.2.0, timekeeper@^2.2.0:
+timekeeper@2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/timekeeper/-/timekeeper-2.2.0.tgz#9645731fce9e3280a18614a57a9d1b72af3ca368"
   integrity sha512-W3AmPTJWZkRwu+iSNxPIsLZ2ByADsOLbbLxe46UJyWj3mlYLlwucKiq+/dPm0l9wTzqoF3/2PH0AGFCebjq23A==
@@ -24488,18 +24477,10 @@ vlq@^0.2.2:
   resolved "https://registry.yarnpkg.com/vlq/-/vlq-0.2.3.tgz#8f3e4328cf63b1540c0d67e1b2778386f8975b26"
   integrity sha512-DRibZL6DsNhIgYQ+wNdWDL2SL3bKPlVrRiBqV5yuMm++op8W4kGFtaQfCs4KEJn0wBZcHVHJ3eoywX8983k1ow==
 
-vm2@3.9.17:
-  version "3.9.17"
-  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.17.tgz#251b165ff8a0e034942b5181057305e39570aeab"
-  integrity sha512-AqwtCnZ/ERcX+AVj9vUsphY56YANXxRuqMb7GsDtAr0m0PcQX3u0Aj3KWiXM0YAHy7i6JEeHrwOnwXbGYgRpAw==
-  dependencies:
-    acorn "^8.7.0"
-    acorn-walk "^8.2.0"
-
-vm2@^3.9.11, vm2@^3.9.15:
-  version "3.9.16"
-  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.16.tgz#0fbc2a265f7bf8b837cea6f4a908f88a3f93b8e6"
-  integrity sha512-3T9LscojNTxdOyG+e8gFeyBXkMlOBYDoF6dqZbj+MPVHi9x10UfiTAJIobuchRCp3QvC+inybTbMJIUrLsig0w==
+vm2@3.9.18, vm2@^3.9.11, vm2@^3.9.15:
+  version "3.9.18"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.18.tgz#d919848bee191a0410c5cc1c5aac58adfd03ce9a"
+  integrity sha512-iM7PchOElv6Uv6Q+0Hq7dcgDtWWT6SizYqVcvol+1WQc+E9HlgTCnPozbQNSP3yDV9oXHQOEQu530w2q/BCVZg==
   dependencies:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"
