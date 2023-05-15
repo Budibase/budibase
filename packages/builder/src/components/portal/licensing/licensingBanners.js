@@ -147,6 +147,9 @@ const buildUsersAboveLimitBanner = EXPIRY_KEY => {
   return {
     key: EXPIRY_KEY,
     type: BANNER_TYPES.WARNING,
+    onChange: () => {
+      defaultCacheFn(EXPIRY_KEY)
+    },
     criteria: () => {
       return userLicensing.warnUserLimit
     },
