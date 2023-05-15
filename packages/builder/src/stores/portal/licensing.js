@@ -214,7 +214,8 @@ export const createLicensingStore = () => {
         const userLimitReached = usersLimitReached(userCount, userLimit)
         const userLimitExceeded = usersLimitExceeded(userCount, userLimit)
         const isCloudAccount = await isCloud()
-        const errUserLimit = isCloudAccount &&
+        const errUserLimit =
+          isCloudAccount &&
           license.plan.model === PlanModel.PER_USER &&
           userLimitExceeded
 
