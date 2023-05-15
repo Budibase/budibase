@@ -2,8 +2,6 @@ import redis from "../../../../packages/server/src/integrations/redis"
 import { GenericContainer } from "testcontainers"
 import { generator } from "../../shared"
 
-jest.unmock("pg")
-
 describe("datasource validators", () => {
   describe("redis", () => {
     describe("unsecured", () => {
