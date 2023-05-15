@@ -1,5 +1,5 @@
 <script>
-  import { goto, beforeUrlChange, route, getDirection } from "@roxi/routify"
+  import { goto, beforeUrlChange, route } from "@roxi/routify"
   import {
     Icon,
     Select,
@@ -29,12 +29,13 @@
   import { fieldsToSchema, schemaToFields } from "helpers/data/utils"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
 
-  // $: lastRoute = $route.last
-  // $: console.log("lastRoute", lastRoute)
-  // $: direction = getDirection($route, lastRoute)
-  // $: console.log("directioon ", direction)
-
   export let query
+
+  const resumeNavigation = () => {
+    if (typeof navigateTo == "string") {
+      $goto(typeof navigateTo == "string" ? `${navigateTo}` : navigateTo)
+    }
+  }
 
   const transformerDocs = "https://docs.budibase.com/docs/transformers"
 
@@ -45,21 +46,19 @@
   let currentTab = "JSON"
   let saveModal
   let queryStr = JSON.stringify(query)
-  let discard = false
+  let override = false
 
   let navigateTo = null
-  $: console.log("GO ", navigateTo)
-  $: console.log("DISCARD ", discard)
 
-  $beforeUrlChange((event, route) => {
+  $beforeUrlChange((event, targetRoute) => {
     const updated = JSON.stringify(query)
-    console.log("route ", route)
-    console.log("event ", event)
-    // if (updated !== queryStr && !discard) {
-    //   navigateTo = event.url
-    //   saveModal.show()
-    //   return false
-    // } else return true
+
+    if (updated !== queryStr && !override) {
+      navigateTo = event.type == "pushstate" ? event.url : null
+      saveModal.show()
+      return false
+    } else return true
+
     return true
   })
 
@@ -130,16 +129,13 @@
   // return the query.
   async function saveQuery() {
     try {
-      // const { _id } = await queries.save(query.datasourceId, query)
       const response = await queries.save(query.datasourceId, query)
       saveId = response._id
 
-      // notifications.success(`Query saved successfully`)
+      if (response?._rev) {
+        queryStr = JSON.stringify(query)
+      }
 
-      // // Go to the correct URL if we just created a new query
-      // if (!query._rev) {
-      //   $goto(`../../${_id}`)
-      // }
       return response
     } catch (error) {
       notifications.error("Error saving query")
@@ -150,8 +146,7 @@
 <Modal
   bind:this={saveModal}
   on:hide={() => {
-    console.log("running")
-    //navigateTo = null
+    navigateTo = null
   }}
 >
   <ModalContent
@@ -160,15 +155,13 @@
     cancelText="Discard Changes"
     size="L"
     onConfirm={async () => {
-      console.log("CONFIRM")
-      saveQuery() //needs ascertain success?
-      discard = true
-      $goto(`${navigateTo}`)
+      const saveResponse = await saveQuery()
+      override = true
+      resumeNavigation()
     }}
-    onCancel={() => {
-      console.log("CANCEL")
-      discard = true
-      $goto(`${navigateTo}`)
+    onCancel={async () => {
+      override = true
+      resumeNavigation()
     }}
   >
     <Body>Leaving this section will mean losing and changes to your query</Body>
@@ -183,7 +176,13 @@
     <div class="config">
       <div class="config-field">
         <Label>Query Name</Label>
-        <Input bind:value={query.name} />
+        <Input
+          value={query.name}
+          on:input={e => {
+            let newValue = e.target.value || ""
+            query.name = newValue.trim()
+          }}
+        />
       </div>
       {#if queryConfig}
         <div class="config-field">
@@ -268,9 +267,10 @@
             disabled={queryInvalid}
             on:click={async () => {
               const saveResponse = await saveQuery()
+              notifications.success(`Query saved successfully`)
               // Go to the correct URL if we just created a new query
-              if (saveResponse && !saveResponse._rev) {
-                $goto(`../../${saveResponse._id}`)
+              if (!query._rev) {
+                $goto(`../../${query._id}`)
               }
             }}
           >
