@@ -314,10 +314,11 @@
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />
-<AccountLockedModal bind:this={accountLockedModal} onConfirm={() =>
-    isOwner
-      ? $licensing.goToUpgradePage()
-      : window.open("https://budibase.com/pricing/", "_blank")} />
+<AccountLockedModal
+  bind:this={accountLockedModal}
+  onConfirm={() =>
+    isOwner ? $licensing.goToUpgradePage() : $licensing.goToPricingPage()}
+/>
 
 <style>
   .title {

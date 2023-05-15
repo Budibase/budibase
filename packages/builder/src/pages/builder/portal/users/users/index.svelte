@@ -236,8 +236,6 @@
       notifications.error("Error fetching user group data")
     }
   })
-
-  let staticUserLimit = $licensing.license.quotas.usage.static.users.value
 </script>
 
 <Layout noPadding gap="M">
