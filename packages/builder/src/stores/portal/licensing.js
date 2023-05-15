@@ -4,7 +4,7 @@ import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "components/portal/licensing/constants"
 import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
-import dayjs from "dayjs"
+import { Hosting, PlanModel } from "@budibase/types"
 
 const UNLIMITED = -1
 
@@ -38,7 +38,6 @@ export const createLicensingStore = () => {
     // user limits
     userCount: undefined,
     userLimit: undefined,
-    userLimitDays: undefined,
     userLimitReached: false,
     errUserLimit: false,
   }
@@ -205,9 +204,10 @@ export const createLicensingStore = () => {
         const userCount = usage.usageQuota.users
         const userLimitReached = usersLimitReached(userCount, userLimit)
         const userLimitExceeded = usersLimitExceeded(userCount, userLimit)
-        const days = dayjs(userQuota?.startDate).diff(dayjs(), "day")
-        const userLimitDays = days > 1 ? `${days} days` : "1 day"
-        const errUserLimit = userQuota?.startDate && userLimitExceeded
+        const errUserLimit = license.account.hosting === Hosting.CLOUD &&
+          license.plan.model === PlanModel.PER_USER &&
+          userQuota.usage.static.users.value !== UNLIMITED &&
+          userLimitExceeded
 
         store.update(state => {
           return {
@@ -222,7 +222,6 @@ export const createLicensingStore = () => {
             // user limits
             userCount,
             userLimit,
-            userLimitDays,
             userLimitReached,
             errUserLimit,
           }
