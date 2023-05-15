@@ -128,5 +128,6 @@
     max-width: 150px;
     transform: translateX(-50%);
     text-align: center;
+    z-index: 100;
   }
 </style>

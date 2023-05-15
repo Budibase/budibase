@@ -36,6 +36,7 @@
   size="M"
   tooltip="Revert changes"
   on:click={revertModal.show}
+  {disabled}
 />
 
 <Modal bind:this={revertModal}>
