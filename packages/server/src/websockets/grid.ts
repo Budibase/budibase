@@ -40,7 +40,7 @@ export default class GridSocket extends Socket {
 
       // Handle users selecting a new cell
       socket.on("select-cell", cellId => {
-        socket.data.user.selectedCellId = cellId
+        socket.data.user.focusedCellId = cellId
         if (currentRoom) {
           socket.to(currentRoom).emit("user-update", socket.data.user)
         }

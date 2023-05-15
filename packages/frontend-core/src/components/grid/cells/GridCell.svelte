@@ -112,10 +112,10 @@
     z-index: 2;
   }
   .cell.focused {
-    --cell-color: var(--spectrum-global-color-blue-400);
+    --cell-color: var(--spectrum-global-color-blue-400) !important;
   }
   .cell.error {
-    --cell-color: var(--spectrum-global-color-red-500);
+    --cell-color: var(--spectrum-global-color-red-500) !important;
   }
   .cell.readonly {
     --cell-color: var(--spectrum-global-color-gray-600);
@@ -141,7 +141,7 @@
     left: 0;
     padding: 1px 4px 3px 4px;
     margin: 0 0 -2px 0;
-    background: var(--user-color);
+    background: var(--cell-color);
     border-radius: 2px;
     display: block;
     color: white;
@@ -161,5 +161,11 @@
   }
   .error .label {
     background: var(--spectrum-global-color-red-500);
+  }
+  .selected-other:not(.error) .label {
+    display: none;
+  }
+  .selected-other:not(.error):hover .label {
+    display: block;
   }
 </style>

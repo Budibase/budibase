@@ -85,11 +85,11 @@ export const deriveStores = context => {
 
   const updateUser = user => {
     const $users = get(users)
-    const index = $users.findIndex(x => x.id === user.id)
-    if (index === -1) {
+    if (!$users.some(x => x.id === user.id)) {
       users.set([...$users, user])
     } else {
       users.update(state => {
+        const index = state.findIndex(x => x.id === user.id)
         state[index] = user
         return state.slice()
       })
