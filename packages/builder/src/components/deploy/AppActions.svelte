@@ -118,7 +118,7 @@
     <div class="version">
       <VersionModal />
     </div>
-    <RevertModal />
+    <RevertModal disabled={filteredApps.length == 0} />
 
     {#if isPublished}
       <div class="publish-popover">

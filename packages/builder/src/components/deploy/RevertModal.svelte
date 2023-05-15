@@ -9,6 +9,8 @@
   import { store } from "builderStore"
   import { API } from "api"
 
+  export let disabled = false
+
   let revertModal
   let appName
 
