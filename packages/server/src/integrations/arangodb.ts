@@ -6,7 +6,7 @@ import {
   DatasourceFeature,
 } from "@budibase/types"
 
-const { Database, aql } = require("arangojs")
+import { Database, aql } from "arangojs"
 
 interface ArangodbConfig {
   url: string
@@ -60,7 +60,7 @@ const SCHEMA: Integration = {
 
 class ArangoDBIntegration implements IntegrationBase {
   private config: ArangodbConfig
-  private client: any
+  private client
 
   constructor(config: ArangodbConfig) {
     const newConfig = {
@@ -74,6 +74,15 @@ class ArangoDBIntegration implements IntegrationBase {
 
     this.config = config
     this.client = new Database(newConfig)
+  }
+
+  async testConnection() {
+    try {
+      await this.client.get()
+      return true
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
   }
 
   async read(query: { sql: any }) {
