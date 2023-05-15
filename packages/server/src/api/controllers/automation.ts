@@ -272,7 +272,7 @@ export async function trigger(ctx: BBContext) {
       automation,
       {
         fields: ctx.request.body.fields,
-        timeout: ctx.request.body.timeout || 120000,
+        timeout: ctx.request.body.timeout * 1000 || 120000,
       },
       { getResponses: true }
     )
