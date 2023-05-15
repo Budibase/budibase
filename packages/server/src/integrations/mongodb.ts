@@ -360,6 +360,15 @@ class MongoIntegration implements IntegrationBase {
     this.client = new MongoClient(config.connectionString, options)
   }
 
+  async testConnection() {
+    try {
+      await this.connect()
+      return true
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
+  }
+
   async connect() {
     return this.client.connect()
   }
