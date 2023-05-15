@@ -93,7 +93,7 @@ const SCHEMA: Integration = {
 
 class RedisIntegration {
   private readonly config: RedisConfig
-  private client: any
+  private client
 
   constructor(config: RedisConfig) {
     this.config = config
@@ -104,6 +104,17 @@ class RedisIntegration {
       password: this.config.password,
       db: this.config.db,
     })
+  }
+
+  async testConnection() {
+    try {
+      await this.client.ping()
+      return true
+    } catch (e: any) {
+      return { error: e.message as string }
+    } finally {
+      await this.disconnect()
+    }
   }
 
   async disconnect() {
