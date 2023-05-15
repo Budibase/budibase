@@ -1,5 +1,5 @@
 import { generator } from "@budibase/backend-core/tests"
-import redis from "../../../../integrations/redis"
+import redis from "../../../../packages/server/src/integrations/redis"
 import { GenericContainer } from "testcontainers"
 
 jest.unmock("pg")
