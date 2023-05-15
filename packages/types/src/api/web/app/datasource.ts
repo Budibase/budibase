@@ -20,6 +20,7 @@ export interface VerifyDatasourceRequest {
 
 export interface VerifyDatasourceResponse {
   connected: boolean
+  error?: string
 }
 
 export interface UpdateDatasourceRequest extends Datasource {
