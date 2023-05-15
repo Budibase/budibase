@@ -41,7 +41,7 @@ async function enrichDatasourceWithValues(datasource: Datasource) {
     { onlyFound: true }
   ) as Datasource
   const definition = await getDefinition(processed.source)
-  processed.config = checkDatasourceTypes(definition, processed.config)
+  processed.config = checkDatasourceTypes(definition!, processed.config)
   return {
     datasource: processed,
     envVars: env as Record<string, string>,
