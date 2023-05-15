@@ -30,7 +30,7 @@ describe("datasource validators", () => {
         rejectUnauthorized: false,
       })
       const result = await integration.testConnection()
-      expect(result).toBeTruthy()
+      expect(result).toBe(true)
     })
 
     it("test invalid connection string", async () => {
