@@ -79,6 +79,60 @@ describe("/rows", () => {
       await assertQueryUsage(queryUsage + 1)
     })
 
+    it("Increment row autoId per create row request", async () => {
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const newTable = await config.createTable({
+        name: "TestTableAuto",
+        type: "table",
+        key: "name",
+        schema: {
+          ...table.schema,
+          "Row ID": {
+            name: "Row ID",
+            type: "number",
+            subtype: "autoID",
+            icon: "ri-magic-line",
+            autocolumn: true,
+            constraints: {
+              type: "number",
+              presence: false,
+              numericality: {
+                greaterThanOrEqualTo: "",
+                lessThanOrEqualTo: "",
+              },
+            },
+          },
+        }
+      })
+
+      const ids = [1,2,3]
+
+      // Performing several create row requests should increment the autoID fields accordingly
+      const createRow = async (id) => {
+        const res = await request
+          .post(`/api/${newTable._id}/rows`)
+          .send({
+            name: "row_" + id
+          })
+          .set(config.defaultHeaders())
+          .expect('Content-Type', /json/)
+          .expect(200)
+        expect(res.res.statusMessage).toEqual(`${newTable.name} saved successfully`)
+        expect(res.body.name).toEqual("row_" + id)
+        expect(res.body._rev).toBeDefined()
+        expect(res.body["Row ID"]).toEqual(id)
+      }
+
+      for (let i=0; i<ids.length; i++ ){
+        await createRow(ids[i])
+      }
+
+      await assertRowUsage(rowUsage + ids.length)
+      await assertQueryUsage(queryUsage + ids.length)
+    })
+
     it("updates a row successfully", async () => {
       const existing = await config.createRow()
       const rowUsage = await getRowUsage()
