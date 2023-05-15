@@ -555,7 +555,7 @@
 
         {#if filteredUsers?.length}
           <div class="auth-entity-section">
-            <div class="auth-entity-header ">
+            <div class="auth-entity-header">
               <div class="auth-entity-title">Users</div>
               <div class="auth-entity-access-title">Access</div>
             </div>
@@ -696,7 +696,7 @@
     max-width: calc(100vw - 40px);
     background: var(--background);
     border-left: var(--border-light);
-    z-index: 3;
+    z-index: 999;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
