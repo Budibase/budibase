@@ -63,12 +63,19 @@ const SCHEMA: Integration = {
 }
 
 class CouchDBIntegration implements IntegrationBase {
-  private config: CouchDBConfig
-  private readonly client: any
+  private readonly client: dbCore.DatabaseImpl
 
   constructor(config: CouchDBConfig) {
-    this.config = config
     this.client = dbCore.DatabaseWithConnection(config.database, config.url)
+  }
+
+  async testConnection() {
+    try {
+      const result = await this.query("exists", "validation error", {})
+      return result === true
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
   }
 
   async query(
@@ -77,7 +84,7 @@ class CouchDBIntegration implements IntegrationBase {
     query: { json?: object; id?: string }
   ) {
     try {
-      return await this.client[command](query.id || query.json)
+      return await (this.client as any)[command](query.id || query.json)
     } catch (err) {
       console.error(errorMsg, err)
       throw err
