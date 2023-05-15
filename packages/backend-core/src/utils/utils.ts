@@ -18,8 +18,8 @@ const PROD_APP_PREFIX = "/app/"
 
 const BUILDER_PREVIEW_PATH = "/app/preview"
 const BUILDER_PREFIX = "/builder"
-const BUILDER_REFERER_PREFIX = `${BUILDER_PREFIX}/app/`
-const PUBLIC_API_PREFIX = "/api/public/v1"
+const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/app/`
+const PUBLIC_API_PREFIX = "/api/public/v"
 
 function confirmAppId(possibleAppId: string | undefined) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
@@ -66,7 +66,7 @@ export function isServingApp(ctx: Ctx) {
 }
 
 export function isServingBuilder(ctx: Ctx): boolean {
-  return ctx.path.startsWith(BUILDER_REFERER_PREFIX)
+  return ctx.path.startsWith(BUILDER_APP_PREFIX)
 }
 
 export function isServingBuilderPreview(ctx: Ctx): boolean {
@@ -118,7 +118,7 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   // make sure this is performed after prod app url resolution, in case the
   // referer header is present from a builder redirect
   const referer = ctx.request.headers.referer
-  if (!appId && referer?.includes(BUILDER_REFERER_PREFIX)) {
+  if (!appId && referer?.includes(BUILDER_APP_PREFIX)) {
     const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
     appId = confirmAppId(refererId)
   }
