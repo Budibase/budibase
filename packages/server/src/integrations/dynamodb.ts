@@ -4,6 +4,7 @@ import {
   QueryType,
   IntegrationBase,
   DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 
 import AWS from "aws-sdk"
@@ -152,12 +153,16 @@ class DynamoDBIntegration implements IntegrationBase {
   }
 
   async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
     try {
       const scanRes = await new AWS.DynamoDB(this.config).listTables().promise()
-      return !!scanRes.$response
+      response.connected = !!scanRes.$response
     } catch (e: any) {
-      return { error: e.message as string }
+      response.error = e.message as string
     }
+    return response
   }
 
   async create(query: {
