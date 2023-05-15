@@ -9,6 +9,7 @@ import {
   SqlQuery,
   DatasourcePlus,
   DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -124,12 +125,16 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   }
 
   async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
     try {
       await this.connect()
-      return true
+      response.connected = true
     } catch (e: any) {
-      return { error: e.message as string }
+      response.error = e.message as string
     }
+    return response
   }
 
   getBindingIdentifier(): string {

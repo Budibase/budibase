@@ -8,6 +8,7 @@ import {
   TableSchema,
   DatasourcePlus,
   DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -155,15 +156,19 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   }
 
   async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
     try {
       const [result] = await this.internalQuery(
         { sql: "SELECT 1+1 AS checkRes" },
         { connect: true }
       )
-      return result?.checkRes == 2
+      response.connected = result?.checkRes == 2
     } catch (e: any) {
-      return { error: e.message as string }
+      response.error = e.message as string
     }
+    return response
   }
 
   getBindingIdentifier(): string {

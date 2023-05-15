@@ -1,4 +1,5 @@
 import {
+  ConnectionInfo,
   DatasourceFeature,
   DatasourceFieldType,
   Document,
@@ -70,12 +71,16 @@ class CouchDBIntegration implements IntegrationBase {
   }
 
   async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
     try {
       const result = await this.query("exists", "validation error", {})
-      return result === true
+      response.connected = result === true
     } catch (e: any) {
-      return { error: e.message as string }
+      response.error = e.message as string
     }
+    return response
   }
 
   async query(
