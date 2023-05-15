@@ -7,13 +7,13 @@ export class GroupsAPI extends TestAPI {
     super(config)
   }
 
-  saveGroup = (group: UserGroup) => {
+  saveGroup = (group: UserGroup, { expect } = { expect: 200 }) => {
     return this.request
       .post(`/api/global/groups`)
       .send(group)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(200)
+      .expect(expect)
   }
 
   deleteGroup = (id: string, rev: string) => {
