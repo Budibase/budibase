@@ -7,6 +7,7 @@ export enum AutomationIOType {
   BOOLEAN = "boolean",
   NUMBER = "number",
   ARRAY = "array",
+  JSON = "json",
 }
 
 export enum AutomationCustomIOType {
