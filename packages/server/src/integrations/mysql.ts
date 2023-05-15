@@ -21,18 +21,11 @@ import { NUMBER_REGEX } from "../utilities"
 import Sql from "./base/sql"
 import { MySQLColumn } from "./base/types"
 
-const mysql = require("mysql2/promise")
+import mysql from "mysql2/promise"
 
-interface MySQLConfig {
-  host: string
-  port: number
-  user: string
-  password: string
+interface MySQLConfig extends mysql.ConnectionOptions {
   database: string
-  ssl?: { [key: string]: any }
   rejectUnauthorized: boolean
-  typeCast: Function
-  multipleStatements: boolean
 }
 
 const SCHEMA: Integration = {
@@ -94,8 +87,6 @@ const SCHEMA: Integration = {
   },
 }
 
-const TimezoneAwareDateTypes = ["timestamp"]
-
 function bindingTypeCoerce(bindings: any[]) {
   for (let i = 0; i < bindings.length; i++) {
     const binding = bindings[i]
@@ -122,7 +113,7 @@ function bindingTypeCoerce(bindings: any[]) {
 
 class MySQLIntegration extends Sql implements DatasourcePlus {
   private config: MySQLConfig
-  private client: any
+  private client?: mysql.Connection
   public tables: Record<string, Table> = {}
   public schemaErrors: Record<string, string> = {}
 
@@ -136,7 +127,8 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     if (
       config.rejectUnauthorized != null &&
       !config.rejectUnauthorized &&
-      config.ssl
+      config.ssl &&
+      typeof config.ssl !== "string"
     ) {
       config.ssl.rejectUnauthorized = config.rejectUnauthorized
     }
@@ -162,6 +154,18 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     }
   }
 
+  async testConnection() {
+    try {
+      const [result] = await this.internalQuery(
+        { sql: "SELECT 1+1 AS checkRes" },
+        { connect: true }
+      )
+      return result?.checkRes == 2
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
+  }
+
   getBindingIdentifier(): string {
     return "?"
   }
@@ -175,7 +179,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   }
 
   async disconnect() {
-    await this.client.end()
+    await this.client!.end()
   }
 
   async internalQuery(
@@ -194,10 +198,10 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         ? baseBindings
         : bindingTypeCoerce(baseBindings)
       // Node MySQL is callback based, so we must wrap our call in a promise
-      const response = await this.client.query(query.sql, bindings)
+      const response = await this.client!.query(query.sql, bindings)
       return response[0]
     } finally {
-      if (opts?.connect) {
+      if (opts?.connect && this.client) {
         await this.disconnect()
       }
     }
