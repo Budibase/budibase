@@ -1,5 +1,5 @@
 <script>
-  import { goto, beforeUrlChange, route } from "@roxi/routify"
+  import { goto, beforeUrlChange } from "@roxi/routify"
   import {
     Icon,
     Select,
@@ -45,10 +45,20 @@
   let saveId
   let currentTab = "JSON"
   let saveModal
-  let queryStr = JSON.stringify(query)
   let override = false
-
   let navigateTo = null
+
+  // seed the transformer
+  if (query && !query.transformer) {
+    query.transformer = "return data"
+  }
+
+  // initialise a new empty schema
+  if (query && !query.schema) {
+    query.schema = {}
+  }
+
+  let queryStr = JSON.stringify(query)
 
   $beforeUrlChange((event, targetRoute) => {
     const updated = JSON.stringify(query)
@@ -83,11 +93,6 @@
         }
       }
     }
-  }
-
-  // seed the transformer
-  if (query && !query.transformer) {
-    query.transformer = "return data"
   }
 
   function resetDependentFields() {
