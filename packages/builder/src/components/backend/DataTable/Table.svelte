@@ -22,11 +22,8 @@
   export let rowCount
   export let disableSorting = false
   export let customPlaceholder = false
-<<<<<<< HEAD
   export let allowEditing = true
-=======
   export let allowClickRows
->>>>>>> origin/develop
 
   const dispatch = createEventDispatcher()
 
