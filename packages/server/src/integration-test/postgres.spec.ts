@@ -19,7 +19,6 @@ import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 import { GenericContainer } from "testcontainers"
-import { generateRowIdField } from "../integrations/utils"
 
 const config = setup.getConfig()!
 
