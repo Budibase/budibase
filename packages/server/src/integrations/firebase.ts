@@ -19,7 +19,7 @@ const SCHEMA: Integration = {
   type: "Non-relational",
   description:
     "Cloud Firestore is a flexible, scalable database for mobile, web, and server development from Firebase and Google Cloud.",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: [],
   datasource: {
     email: {
       type: DatasourceFieldType.STRING,

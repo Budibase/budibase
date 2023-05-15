@@ -4,6 +4,7 @@ import {
   QueryType,
   IntegrationBase,
   DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   MongoClient,
@@ -361,12 +362,16 @@ class MongoIntegration implements IntegrationBase {
   }
 
   async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
     try {
       await this.connect()
-      return true
+      response.connected = true
     } catch (e: any) {
-      return { error: e.message as string }
+      response.error = e.message as string
     }
+    return response
   }
 
   async connect() {

@@ -128,17 +128,17 @@ export interface Integration {
   extra?: ExtraQueryConfig
 }
 
+export type ConnectionInfo = {
+  connected: boolean
+  error?: string
+}
+
 export interface IntegrationBase {
   create?(query: any): Promise<any[] | any>
   read?(query: any): Promise<any[] | any>
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
-  testConnection?(): Promise<
-    | boolean
-    | {
-        error: string
-      }
-  >
+  testConnection?(): Promise<ConnectionInfo>
 }
 
 export interface DatasourcePlus extends IntegrationBase {
