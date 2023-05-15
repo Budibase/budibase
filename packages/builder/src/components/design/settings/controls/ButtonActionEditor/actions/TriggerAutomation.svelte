@@ -54,6 +54,8 @@
   )
   $: selectedSchema = selectedAutomation?.schema
 
+  $: error = parameters.timeout > 120 ? "Timeout must be less than 120s" : null
+
   const onFieldsChanged = e => {
     parameters.fields = Object.entries(e.detail || {}).reduce(
       (acc, [key, value]) => {
@@ -85,8 +87,6 @@
     parameters.automationId = automationId
     parameters.synchronous = synchronous
   }
-
-  $: error = parameters.timeout > 120 ? "Timeout must be less than 120s" : null
 </script>
 
 <div class="root">
@@ -136,8 +136,8 @@
         <Icon name="Info" />
         <div>
           <i
-            >This automation will run synchronously due to the existence of a
-            Collect block</i
+            >This automation will run synchronously as it contains a Collect
+            step</i
           >
         </div>
       </div>
