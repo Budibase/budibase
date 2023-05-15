@@ -128,12 +128,20 @@ export async function verify(
 ) {
   const datasource = ctx.request.body.datasource
   const connector = (await getConnector(datasource)) as IntegrationBase
-  if (!connector.connection) {
+  if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")
   }
-  const connectionInfo = await connector.connection()
-  ctx.body = {
-    connected: connectionInfo.connected,
+  const response = await connector.testConnection()
+
+  if (typeof response === "boolean") {
+    ctx.body = {
+      connected: response,
+    }
+  } else {
+    ctx.body = {
+      connected: false,
+      error: response.error
+    }
   }
 }
 
