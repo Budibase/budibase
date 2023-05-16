@@ -126,8 +126,15 @@ export async function fetch(ctx: UserCtx) {
 export async function verify(
   ctx: UserCtx<VerifyDatasourceRequest, VerifyDatasourceResponse>
 ) {
-  const datasource = ctx.request.body.datasource
-  const connector = (await getConnector(datasource)) as IntegrationBase
+  const { datasource } = ctx.request.body
+  const existingDatasource = await sdk.datasources.get(datasource._id!)
+
+  const enrichedDatasource = sdk.datasources.mergeConfigs(
+    datasource,
+    existingDatasource
+  )
+
+  const connector = await getConnector(enrichedDatasource)
   if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")
   }
