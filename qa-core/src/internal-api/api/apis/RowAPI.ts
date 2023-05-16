@@ -28,7 +28,11 @@ export default class RowAPI extends BaseAPI {
   }
 
   async delete(tableId: string, body: any): Promise<[Response, Row[]]> {
-    const [response, json] = await this.del(`/${tableId}/rows/`, body)
+    const [response, json] = await this.del(
+      `/${tableId}/rows/`,
+      undefined,
+      body
+    )
     return [response, json]
   }
 
