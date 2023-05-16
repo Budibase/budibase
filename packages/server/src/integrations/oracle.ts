@@ -22,7 +22,8 @@ import { FieldTypes } from "../constants"
 import {
   BindParameters,
   Connection,
-  ConnectionAttributes, DBError,
+  ConnectionAttributes,
+  DBError,
   ExecuteOptions,
   Result,
 } from "oracledb"
@@ -330,6 +331,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     let connection
     try {
       connection = await this.getConnection()
+      response.connected = true
     } catch (err: any) {
       response.connected = false
       response.error = err.message
