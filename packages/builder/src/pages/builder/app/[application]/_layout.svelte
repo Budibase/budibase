@@ -22,6 +22,7 @@
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
+  import UserAvatars from "./_components/UserAvatars.svelte"
   import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
 
   export let application
@@ -125,10 +126,7 @@
   })
 
   onDestroy(() => {
-    store.update(state => {
-      state.appId = null
-      return state
-    })
+    store.actions.reset()
   })
 </script>
 
@@ -211,6 +209,7 @@
         {/if}
       </div>
       <div class="toprightnav">
+        <UserAvatars users={$store.users} />
         <AppActions {application} />
       </div>
     {/if}

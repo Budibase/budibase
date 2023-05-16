@@ -21,35 +21,6 @@ export const createStores = () => {
               return 0
             }
           })
-          // Enrich users with colors
-          .map((user, idx) => {
-            // Generate random colour hue
-            let hue = 1
-            for (let i = 0; i < user.email.length && i < 5; i++) {
-              hue *= user.email.charCodeAt(i + 1)
-              hue /= 17
-            }
-            hue = hue % 360
-            const color =
-              idx === 0
-                ? "var(--spectrum-global-color-blue-400)"
-                : `hsl(${hue}, 50%, 40%)`
-
-            // Generate friendly label
-            let label = user.email
-            if (user.firstName) {
-              label = user.firstName
-              if (user.lastName) {
-                label += ` ${user.lastName}`
-              }
-            }
-
-            return {
-              ...user,
-              color,
-              label,
-            }
-          })
       )
     },
     []
