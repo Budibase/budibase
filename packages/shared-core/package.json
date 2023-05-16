@@ -1,6 +1,6 @@
 {
   "name": "@budibase/shared-core",
-  "version": "2.6.14",
+  "version": "2.6.15",
   "description": "Shared data utils",
   "main": "dist/cjs/src/index.js",
   "types": "dist/mjs/src/index.d.ts",
@@ -20,7 +20,7 @@
     "dev:builder": "yarn prebuild && concurrently \"tsc -p tsconfig.build.json --watch\" \"tsc -p tsconfig-cjs.build.json --watch\""
   },
   "dependencies": {
-    "@budibase/types": "^2.6.14"
+    "@budibase/types": "^2.6.15"
   },
   "devDependencies": {
     "concurrently": "^7.6.0",
