@@ -19,11 +19,10 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationResults,
-  AutomationStepType,
   BBContext,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
-import sdk from "src/sdk"
+import sdk from "../../sdk"
 
 async function getActionDefinitions() {
   return removeDeprecated(await actionDefs())
