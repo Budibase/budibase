@@ -17,6 +17,7 @@
   export let highlighted = false
   export let rightAlignIcon = false
   export let id
+  export let showTooltip = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -84,7 +85,7 @@
         <Icon color={iconColor} size="S" name={icon} />
       </div>
     {/if}
-    <div class="text">{text}</div>
+    <div class="text" title={showTooltip ? text : null}>{text}</div>
     {#if withActions}
       <div class="actions">
         <slot />

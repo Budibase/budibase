@@ -2,9 +2,9 @@
   "name": "@budibase/cli",
   "version": "0.0.1",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "bin": {
-    "budi": "dist/index.js"
+    "budi": "dist/src/index.js"
   },
   "author": "Budibase",
   "license": "GPL-3.0",
