@@ -25,7 +25,6 @@ import {
   DatasourcePlus,
 } from "@budibase/types"
 import sdk from "../../sdk"
-import _ from "lodash"
 
 function getErrorTables(errors: any, errorType: string) {
   return Object.entries(errors)
