@@ -81,12 +81,9 @@ export async function trigger(ctx: BBContext) {
       if (webhook.action.type === WebhookActionType.AUTOMATION) {
         // trigger with both the pure request and then expand it
         // incase the user has produced a schema to bind to
+        let hasCollectStep = sdk.automations.utils.checkForCollectStep(target)
 
-        let hasCollectBlock = target.definition.steps.some(
-          (step: any) => step.stepId === AutomationActionStepId.COLLECT
-        )
-
-        if (hasCollectBlock && (await pro.features.isSyncWebhookEnabled())) {
+        if (hasCollectStep && (await pro.features.isSyncWebhookEnabled())) {
           const response = await triggers.externalTrigger(
             target,
             {

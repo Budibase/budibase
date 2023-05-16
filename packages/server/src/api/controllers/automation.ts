@@ -23,6 +23,7 @@ import {
   BBContext,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
+import sdk from "src/sdk"
 
 async function getActionDefinitions() {
   return removeDeprecated(await actionDefs())
@@ -264,10 +265,9 @@ export async function trigger(ctx: BBContext) {
   const db = context.getAppDB()
   let automation = await db.get(ctx.params.id)
 
-  let hasCollectBlock = automation.definition.steps.some(
-    (step: any) => step.stepId === AutomationActionStepId.COLLECT
-  )
-  if (hasCollectBlock) {
+  let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
+
+  if (hasCollectStep) {
     const response: AutomationResults = await triggers.externalTrigger(
       automation,
       {
