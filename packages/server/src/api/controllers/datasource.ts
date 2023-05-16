@@ -133,15 +133,9 @@ export async function verify(
   }
   const response = await connector.testConnection()
 
-  if (typeof response === "boolean") {
-    ctx.body = {
-      connected: response,
-    }
-  } else {
-    ctx.body = {
-      connected: false,
-      error: response.error,
-    }
+  ctx.body = {
+    connected: response.connected,
+    error: response.error,
   }
 }
 
