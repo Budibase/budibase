@@ -71,6 +71,15 @@ class SnowflakeIntegration {
     this.client = new Snowflake(config)
   }
 
+  async testConnection() {
+    try {
+      await this.client.connect()
+      return true
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
+  }
+
   async internalQuery(query: SqlQuery) {
     await this.client.connect()
     try {
