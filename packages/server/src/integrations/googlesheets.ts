@@ -1,5 +1,5 @@
 import {
-  DatasourceFeature,
+  ConnectionInfo,
   DatasourceFieldType,
   DatasourcePlus,
   FieldType,
@@ -139,6 +139,19 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     this.config = config
     const spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
     this.client = new GoogleSpreadsheet(spreadsheetId)
+  }
+
+  async testConnection(): Promise<ConnectionInfo> {
+    try {
+      await this.connect()
+      await this.client.loadInfo()
+      return { connected: true }
+    } catch (e: any) {
+      return {
+        connected: false,
+        error: e.message as string,
+      }
+    }
   }
 
   getBindingIdentifier() {
