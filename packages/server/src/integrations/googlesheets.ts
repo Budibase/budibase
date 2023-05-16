@@ -1,5 +1,5 @@
 import {
-  DatasourceFeature,
+  ConnectionInfo,
   DatasourceFieldType,
   DatasourcePlus,
   FieldType,
@@ -141,13 +141,16 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     this.client = new GoogleSpreadsheet(spreadsheetId)
   }
 
-  async testConnection() {
+  async testConnection(): Promise<ConnectionInfo> {
     try {
       await this.connect()
       await this.client.loadInfo()
-      return true
+      return { connected: true }
     } catch (e: any) {
-      return { error: e.message as string }
+      return {
+        connected: false,
+        error: e.message as string,
+      }
     }
   }
 
