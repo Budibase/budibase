@@ -31,6 +31,9 @@
   let showLooping = false
   let role
 
+  $: collectBlockExists = $selectedAutomation.definition.steps.some(
+    step => step.stepId === ActionStepID.COLLECT
+  )
   $: automationId = $selectedAutomation?._id
   $: showBindingPicker =
     block.stepId === ActionStepID.CREATE_ROW ||
@@ -224,20 +227,27 @@
       </Layout>
     </div>
   {/if}
-
-  <Modal bind:this={actionModal} width="30%">
-    <ActionModal {lastStep} {blockIdx} />
-  </Modal>
-
-  <Modal bind:this={webhookModal} width="30%">
-    <CreateWebhookModal />
-  </Modal>
 </div>
-<div class="separator" />
-<Icon on:click={() => actionModal.show()} hoverable name="AddCircle" size="S" />
-{#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
+{#if !collectBlockExists || !lastStep}
   <div class="separator" />
+  <Icon
+    on:click={() => actionModal.show()}
+    hoverable
+    name="AddCircle"
+    size="S"
+  />
+  {#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
+    <div class="separator" />
+  {/if}
 {/if}
+
+<Modal bind:this={actionModal} width="30%">
+  <ActionModal {lastStep} {blockIdx} />
+</Modal>
+
+<Modal bind:this={webhookModal} width="30%">
+  <CreateWebhookModal />
+</Modal>
 
 <style>
   .delete-padding {
