@@ -103,6 +103,7 @@ class AirtableIntegration implements IntegrationBase {
         e.message ===
         `Could not find table ${mockTable} in application ${this.config.base}`
       ) {
+        // The request managed to check the application, so the credentials are valid
         return { connected: true }
       }
 
