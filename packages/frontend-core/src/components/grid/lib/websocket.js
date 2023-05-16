@@ -1,24 +1,9 @@
 import { get } from "svelte/store"
-import { io } from "socket.io-client"
+import { createWebsocket } from "../../../utils"
 
-export const createWebsocket = context => {
+export const createGridWebsocket = context => {
   const { rows, tableId, users, userId, focusedCellId } = context
-
-  // Determine connection info
-  const tls = location.protocol === "https:"
-  const proto = tls ? "wss:" : "ws:"
-  const host = location.hostname
-  const port = location.port || (tls ? 443 : 80)
-  const socket = io(`${proto}//${host}:${port}`, {
-    path: "/socket/grid",
-    // Cap reconnection attempts to 3 (total of 15 seconds before giving up)
-    reconnectionAttempts: 3,
-    // Delay reconnection attempt by 5 seconds
-    reconnectionDelay: 5000,
-    reconnectionDelayMax: 5000,
-    // Timeout after 4 seconds so we never stack requests
-    timeout: 4000,
-  })
+  const socket = createWebsocket("/socket/grid")
 
   const connectToTable = tableId => {
     if (!socket.connected) {

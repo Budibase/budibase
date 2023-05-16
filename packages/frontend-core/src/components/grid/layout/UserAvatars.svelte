@@ -15,6 +15,6 @@
   .users {
     display: flex;
     flex-direction: row;
-    gap: 8px;
+    gap: 4px;
   }
 </style>

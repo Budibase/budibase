@@ -24,7 +24,7 @@
   import RowHeightButton from "../controls/RowHeightButton.svelte"
   import ColumnWidthButton from "../controls/ColumnWidthButton.svelte"
   import NewRow from "./NewRow.svelte"
-  import { createWebsocket } from "../lib/websocket"
+  import { createGridWebsocket } from "../lib/websocket"
   import {
     MaxCellRenderHeight,
     MaxCellRenderWidthOverflow,
@@ -98,7 +98,7 @@
   export const getContext = () => context
 
   // Initialise websocket for multi-user
-  onMount(() => createWebsocket(context))
+  onMount(() => createGridWebsocket(context))
 </script>
 
 <div
