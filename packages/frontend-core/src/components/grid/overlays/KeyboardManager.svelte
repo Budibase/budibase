@@ -224,10 +224,7 @@
     if (!id || id === NewRowID) {
       return
     }
-    selectedRows.update(state => {
-      state[id] = !state[id]
-      return state
-    })
+    selectedRows.actions.toggleRow(id)
   }
 
   onMount(() => {
