@@ -9,7 +9,7 @@ export interface Datasource extends Document {
   // the config is defined by the schema
   config?: {
     [key: string]: string | number | boolean | any[]
-  }
+  } & { auth?: object }
   plus?: boolean
   entities?: {
     [key: string]: Table
