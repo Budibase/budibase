@@ -165,7 +165,6 @@
   .cell[data-row="0"] .label {
     bottom: auto;
     top: 100%;
-    border-radius: 0 2px 2px 2px;
     padding: 2px 4px 2px 4px;
     margin: -2px 0 0 0;
   }
