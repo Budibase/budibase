@@ -130,13 +130,17 @@ const triggerAutomationHandler = async action => {
         fields,
         timeout,
       })
-      if (!notificationOverride) {
-        notificationStore.actions.success("Automation triggered")
-      }
 
       // Value will exist if automation is synchronous, so return it.
       if (result.value) {
+        if (!notificationOverride) {
+          notificationStore.actions.success("Automation ran successfully")
+        }
         return { result }
+      }
+
+      if (!notificationOverride) {
+        notificationStore.actions.success("Automation triggered")
       }
     } catch (error) {
       // Abort next actions
