@@ -3,7 +3,6 @@
   import Tooltip from "../Tooltip/Tooltip.svelte"
 
   export let type
-  export let preventDefault = true
   export let disabled = false
   export let size = "M"
   export let cta = false
