@@ -15,7 +15,7 @@
   const getStyle = (width, selectedUser) => {
     let style = `flex: 0 0 ${width}px;`
     if (selectedUser) {
-      style += `--cell-color:${selectedUser.color};`
+      style += `--user-color:${selectedUser.color};`
     }
     return style
   }
@@ -112,14 +112,8 @@
   .cell.focused {
     z-index: 2;
   }
-  .cell.focused {
-    --cell-color: var(--spectrum-global-color-blue-400) !important;
-  }
-  .cell.error {
-    --cell-color: var(--spectrum-global-color-red-500) !important;
-  }
-  .cell.readonly {
-    --cell-color: var(--spectrum-global-color-gray-600);
+  .cell.selected-other:hover {
+    z-index: 2;
   }
   .cell:not(.focused) {
     user-select: none;
@@ -127,6 +121,21 @@
   .cell:hover {
     cursor: default;
   }
+
+  /* Cell color overrides */
+  .cell.selected-other {
+    --cell-color: var(--user-color);
+  }
+  .cell.focused {
+    --cell-color: var(--spectrum-global-color-blue-400);
+  }
+  .cell.error {
+    --cell-color: var(--spectrum-global-color-red-500);
+  }
+  .cell.focused.readonly {
+    --cell-color: var(--spectrum-global-color-gray-600);
+  }
+
   .cell.highlighted:not(.focused),
   .cell.focused.readonly {
     --cell-background: var(--cell-background-hover);
