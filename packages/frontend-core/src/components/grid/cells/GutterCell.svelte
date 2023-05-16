@@ -38,6 +38,7 @@
   highlighted={rowFocused || rowHovered}
   selected={rowSelected}
   {defaultHeight}
+  rowIdx={row?.__idx}
 >
   <div class="gutter">
     {#if $$slots.default}

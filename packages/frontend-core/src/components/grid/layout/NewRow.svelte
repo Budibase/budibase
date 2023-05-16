@@ -167,7 +167,7 @@
           focused={$focusedCellId === cellId}
           width={$stickyColumn.width}
           {updateValue}
-          rowIdx={0}
+          topRow={offset === 0}
           {invertY}
         >
           {#if $stickyColumn?.schema?.autocolumn}
@@ -193,7 +193,7 @@
                 row={newRow}
                 focused={$focusedCellId === cellId}
                 width={column.width}
-                rowIdx={0}
+                topRow={offset === 0}
                 invertX={columnIdx >= $columnHorizontalInversionIndex}
                 {invertY}
               >

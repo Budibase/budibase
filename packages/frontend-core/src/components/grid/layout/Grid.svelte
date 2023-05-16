@@ -40,6 +40,7 @@
   export let allowExpandRows = true
   export let allowEditRows = true
   export let allowDeleteRows = true
+  export let stripeRows = false
 
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
@@ -54,6 +55,7 @@
     allowExpandRows,
     allowEditRows,
     allowDeleteRows,
+    stripeRows,
   })
 
   // Build up context
@@ -88,6 +90,7 @@
     allowExpandRows,
     allowEditRows,
     allowDeleteRows,
+    stripeRows,
   })
 
   // Set context for children to consume
@@ -105,6 +108,7 @@
   id="grid-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
+  class:stripe={$config.stripeRows}
   style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
 >
   <div class="controls">
@@ -167,6 +171,7 @@
     /* Variables */
     --cell-background: var(--spectrum-global-color-gray-50);
     --cell-background-hover: var(--spectrum-global-color-gray-100);
+    --cell-background-alt: var(--cell-background);
     --cell-padding: 8px;
     --cell-spacing: 4px;
     --cell-border: 1px solid var(--spectrum-global-color-gray-200);
@@ -182,6 +187,9 @@
   }
   .grid.is-reordering :global(*) {
     cursor: grabbing !important;
+  }
+  .grid.stripe {
+    --cell-background-alt: var(--spectrum-global-color-gray-75);
   }
 
   .grid-data-outer,
