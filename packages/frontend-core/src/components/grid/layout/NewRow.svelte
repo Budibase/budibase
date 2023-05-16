@@ -219,7 +219,7 @@
       <Button size="M" secondary newStyles on:click={clear}>
         <div class="button-with-keys">
           Cancel
-          <KeyboardShortcut overlay keybind="Esc" />
+          <KeyboardShortcut keybind="Esc" />
         </div>
       </Button>
     </div>
