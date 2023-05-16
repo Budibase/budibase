@@ -129,11 +129,9 @@ export async function verify(
 ) {
   const { datasource } = ctx.request.body
 
-  const { config: { auth } = {} } = await sdk.datasources.get(datasource._id!)
+  const { config } = await sdk.datasources.get(datasource._id!)
 
-  const connector = await getConnector(
-    _.merge({ config: { auth } }, datasource)
-  )
+  const connector = await getConnector(_.merge(datasource, { config }))
   if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")
   }
