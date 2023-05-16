@@ -13,40 +13,40 @@
   import { admin, licensing } from "stores/portal"
   import { externalActions } from "./ExternalActions"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
+  import { checkForCollectStep } from "builderStore/utils"
 
   export let blockIdx
   export let lastStep
 
-  let syncWebhooksEnabled = false
+  let syncWebhooksEnabled = $licensing.syncWebhooksEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
-  let collectBlockExists = $selectedAutomation.definition.steps.some(
-    step => step.stepId === ActionStepID.COLLECT
-  )
-
-  const disabled = {
-    SEND_EMAIL_SMTP: {
-      disabled: !$admin.checklist.smtp.checked,
-      message: "Please configure SMTP",
-    },
-    COLLECT: {
-      disabled:
-        !collectBlockAllowedSteps.includes(
-          $selectedAutomation.definition.trigger.stepId
-        ) ||
-        !lastStep ||
-        !syncWebhooksEnabled ||
-        collectBlockExists,
-      message: !collectBlockAllowedSteps.includes(
-        $selectedAutomation.definition.trigger.stepId
-      )
-        ? "Only available for App Action or Webhook triggers"
-        : "Only available as the last step",
-    },
-  }
-
   let selectedAction
   let actionVal
   let actions = Object.entries($automationStore.blockDefinitions.ACTION)
+
+  $: collectBlockExists = checkForCollectStep($selectedAutomation)
+
+  const disabled = () => {
+    return {
+      SEND_EMAIL_SMTP: {
+        disabled: !$admin.checklist.smtp.checked,
+        message: "Please configure SMTP",
+      },
+      COLLECT: {
+        disabled: !lastStep || !syncWebhooksEnabled || collectBlockExists,
+        message: collectDisabledMessage(),
+      },
+    }
+  }
+
+  const collectDisabledMessage = () => {
+    if (collectBlockExists) {
+      return "Only one Collect step allowed"
+    }
+    if (!lastStep) {
+      return "Only available as the last step"
+    }
+  }
 
   const external = actions.reduce((acc, elm) => {
     const [k, v] = elm
@@ -62,6 +62,15 @@
       acc[k] = v
     }
     delete acc.LOOP
+
+    // Filter out Collect block if not App Action or Webhook
+    if (
+      !collectBlockAllowedSteps.includes(
+        $selectedAutomation.definition.trigger.stepId
+      )
+    ) {
+      delete acc.COLLECT
+    }
     return acc
   }, {})
 
@@ -130,7 +139,7 @@
     <Detail size="S">Actions</Detail>
     <div class="item-list">
       {#each Object.entries(internal) as [idx, action]}
-        {@const isDisabled = disabled[idx] && disabled[idx].disabled}
+        {@const isDisabled = disabled()[idx] && disabled()[idx].disabled}
         <div
           class="item"
           class:disabled={isDisabled}
@@ -147,7 +156,7 @@
                 </Tags>
               </div>
             {:else if isDisabled}
-              <Icon name="Help" tooltip={disabled[idx].message} />
+              <Icon name="Help" tooltip={disabled()[idx].message} />
             {/if}
           </div>
         </div>
