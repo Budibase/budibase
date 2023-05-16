@@ -25,6 +25,7 @@ import {
   DatasourcePlus,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import _ from "lodash"
 
 function getErrorTables(errors: any, errorType: string) {
   return Object.entries(errors)
@@ -126,8 +127,13 @@ export async function fetch(ctx: UserCtx) {
 export async function verify(
   ctx: UserCtx<VerifyDatasourceRequest, VerifyDatasourceResponse>
 ) {
-  const datasource = ctx.request.body.datasource
-  const connector = (await getConnector(datasource)) as IntegrationBase
+  const { datasource } = ctx.request.body
+
+  const { config: { auth } = {} } = await sdk.datasources.get(datasource._id!)
+
+  const connector = await getConnector(
+    _.merge({ config: { auth } }, datasource)
+  )
   if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")
   }
