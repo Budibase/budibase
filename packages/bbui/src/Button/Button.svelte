@@ -1,7 +1,6 @@
 <script>
   import "@spectrum-css/button/dist/index-vars.css"
   import Tooltip from "../Tooltip/Tooltip.svelte"
-  import { createEventDispatcher } from "svelte"
 
   export let type
   export let preventDefault = true
@@ -20,13 +19,6 @@
   export let id
 
   let showTooltip = false
-  const dispatch = createEventDispatcher()
-
-  const handleClick = e => {
-    if (preventDefault) e.preventDefault()
-
-    dispatch("click", e)
-  }
 </script>
 
 <button
@@ -43,7 +35,7 @@
   class:disabled
   class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
   {disabled}
-  on:click={handleClick}
+  on:click|preventDefault
   on:mouseover={() => (showTooltip = true)}
   on:focus={() => (showTooltip = true)}
   on:mouseleave={() => (showTooltip = false)}
