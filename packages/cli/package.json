@@ -4,7 +4,7 @@
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "dist/index.js",
   "bin": {
-    "budi": "dist/index.js"
+    "budi": "dist/src/index.js"
   },
   "author": "Budibase",
   "license": "GPL-3.0",
