@@ -1,5 +1,6 @@
 import {
   ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
   Integration,
   IntegrationBase,
@@ -19,7 +20,7 @@ const SCHEMA: Integration = {
     "Airtable is a spreadsheet-database hybrid, with the features of a database but applied to a spreadsheet.",
   friendlyName: "Airtable",
   type: "Spreadsheet",
-  features: [],
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     apiKey: {
       type: DatasourceFieldType.PASSWORD,
