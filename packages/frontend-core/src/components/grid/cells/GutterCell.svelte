@@ -21,16 +21,7 @@
     svelteDispatch("select")
     const id = row?._id
     if (id) {
-      selectedRows.update(state => {
-        let newState = {
-          ...state,
-          [id]: !state[id],
-        }
-        if (!newState[id]) {
-          delete newState[id]
-        }
-        return newState
-      })
+      selectedRows.actions.toggleRow(id)
     }
   }
 
