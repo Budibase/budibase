@@ -1486,15 +1486,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.6.11":
-  version "2.6.11"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.6.11.tgz#87339ba06c462d8757f408847da8283e20a49e21"
-  integrity sha512-i1l5/TK6Mdoua+19zQFGfBxpTL9W2LUYdH6gEWKo/coHo7VQu+sDyoPS2u9MrbT2qahAuYm66v7IlaBC/mBBEA==
+"@budibase/pro@2.6.12":
+  version "2.6.12"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.6.12.tgz#e252ccba3681c5689a2e502b1e92609b3a6c9a79"
+  integrity sha512-AjlC3MazYYlUwQPqFlMkHb0yFmlKI5KOs+5IOKgW0sQFOUXNzSU1CDHAEpAWZsbGea14f9DJ8MZAS20gljJDog==
   dependencies:
-    "@budibase/backend-core" "2.6.11"
+    "@budibase/backend-core" "2.6.12"
     "@budibase/shared-core" "2.5.9"
     "@budibase/string-templates" "2.5.9"
-    "@budibase/types" "2.6.11"
+    "@budibase/types" "2.6.12"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
