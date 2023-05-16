@@ -44,8 +44,12 @@ export default class BaseAPI {
     return [response, json]
   }
 
-  async del(url: string, statusCode?: number): Promise<[Response, any]> {
-    const [response, json] = await this.client.del(url)
+  async del(
+    url: string,
+    statusCode?: number,
+    body?: any
+  ): Promise<[Response, any]> {
+    const [response, json] = await this.client.del(url, { body })
     expect(response).toHaveStatusCode(statusCode ? statusCode : 200)
     return [response, json]
   }
