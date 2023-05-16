@@ -1,4 +1,5 @@
 import {
+  ConnectionInfo,
   DatasourceFeature,
   Integration,
   QueryType,
@@ -69,6 +70,18 @@ class SnowflakeIntegration {
 
   constructor(config: SnowflakeConfig) {
     this.client = new Snowflake(config)
+  }
+
+  async testConnection(): Promise<ConnectionInfo> {
+    try {
+      await this.client.connect()
+      return { connected: true }
+    } catch (e: any) {
+      return {
+        connected: false,
+        error: e.message as string,
+      }
+    }
   }
 
   async internalQuery(query: SqlQuery) {
