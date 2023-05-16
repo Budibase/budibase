@@ -141,6 +141,16 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     this.client = new GoogleSpreadsheet(spreadsheetId)
   }
 
+  async testConnection() {
+    try {
+      await this.connect()
+      await this.client.loadInfo()
+      return true
+    } catch (e: any) {
+      return { error: e.message as string }
+    }
+  }
+
   getBindingIdentifier() {
     return ""
   }
