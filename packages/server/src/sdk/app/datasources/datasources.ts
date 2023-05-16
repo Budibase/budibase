@@ -13,6 +13,7 @@ import {
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
 import { getDefinitions, getDefinition } from "../../../integrations"
+import _ from "lodash"
 
 const ENV_VAR_PREFIX = "env."
 
@@ -147,6 +148,11 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
       }
     }
   }
+
+  if (old.config?.auth) {
+    update.config = _.merge(old.config, update.config)
+  }
+
   // update back to actual passwords for everything else
   for (let [key, value] of Object.entries(update.config)) {
     if (value !== PASSWORD_REPLACEMENT) {
