@@ -105,8 +105,8 @@ async function newContext(updates: ContextMap, task: any) {
 }
 
 export async function doInAutomationContext(params: {
-  appId: string,
-  automationId: string,
+  appId: string
+  automationId: string
   task: any
 }): Promise<any> {
   const tenantId = getTenantIDFromAppID(params.appId)
