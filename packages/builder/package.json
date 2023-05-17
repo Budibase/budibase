@@ -69,6 +69,7 @@
     "@codemirror/state": "^6.2.0",
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.11.2",
+    "@budibase/types": "0.0.1",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-brands-svg-icons": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
