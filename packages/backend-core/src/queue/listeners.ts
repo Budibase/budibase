@@ -45,7 +45,8 @@ function getLogParams(
   const message = `[BULL] ${eventType}=${event}`
   const err = opts.error
 
-  const data = {
+  const bullLog = {
+    _logKey: "bull",
     eventType,
     event,
     job: opts.job,
@@ -53,7 +54,17 @@ function getLogParams(
     ...extra,
   }
 
-  return [message, err, data]
+  let automationLog
+  if (opts.job?.data?.automation) {
+    automationLog = {
+      _logKey: "automation",
+      trigger: opts.job
+        ? opts.job.data.automation.definition.trigger.event
+        : undefined,
+    }
+  }
+
+  return [message, err, bullLog, automationLog]
 }
 
 enum BullEvent {

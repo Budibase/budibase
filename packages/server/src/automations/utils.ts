@@ -17,10 +17,16 @@ const CRON_STEP_ID = definitions.CRON.stepId
 const Runner = new Thread(ThreadType.AUTOMATION)
 
 function loggingArgs(job: AutomationJob) {
-  return {
-    jobId: job.id,
-    trigger: job.data.automation.definition.trigger.event,
-  }
+  return [
+    {
+      _logKey: "automation",
+      trigger: job.data.automation.definition.trigger.event,
+    },
+    {
+      _logKey: "bull",
+      jobId: job.id,
+    },
+  ]
 }
 
 export async function processEvent(job: AutomationJob) {
@@ -29,16 +35,16 @@ export async function processEvent(job: AutomationJob) {
   const task = async () => {
     try {
       // need to actually await these so that an error can be captured properly
-      console.log("automation running", loggingArgs(job))
+      console.log("automation running", ...loggingArgs(job))
 
       const runFn = () => Runner.run(job)
       const result = await quotas.addAutomation(runFn, {
         automationId,
       })
-      console.log("automation completed", loggingArgs(job))
+      console.log("automation completed", ...loggingArgs(job))
       return result
     } catch (err) {
-      console.error(`automation was unable to run`, err, loggingArgs(job))
+      console.error(`automation was unable to run`, err, ...loggingArgs(job))
       return { err }
     }
   }
