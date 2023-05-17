@@ -65,6 +65,7 @@ export type DatabaseQueryOpts = {
   key?: string
   keys?: string[]
   group?: boolean
+  startkey_docid?: string
 }
 
 export const isDocument = (doc: any): doc is Document => {

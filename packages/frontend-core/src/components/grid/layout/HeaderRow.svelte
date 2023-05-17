@@ -4,8 +4,14 @@
   import HeaderCell from "../cells/HeaderCell.svelte"
   import { Icon } from "@budibase/bbui"
 
-  const { renderedColumns, dispatch, scroll, hiddenColumnsWidth, width } =
-    getContext("grid")
+  const {
+    renderedColumns,
+    dispatch,
+    scroll,
+    hiddenColumnsWidth,
+    width,
+    config,
+  } = getContext("grid")
 
   $: columnsWidth = $renderedColumns.reduce(
     (total, col) => (total += col.width),
@@ -23,13 +29,15 @@
       {/each}
     </div>
   </GridScrollWrapper>
-  <div
-    class="add"
-    style="left:{left}px"
-    on:click={() => dispatch("add-column")}
-  >
-    <Icon name="Add" />
-  </div>
+  {#if $config.allowAddColumns}
+    <div
+      class="add"
+      style="left:{left}px"
+      on:click={() => dispatch("add-column")}
+    >
+      <Icon name="Add" />
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -38,7 +46,6 @@
     border-bottom: var(--cell-border);
     position: relative;
     height: var(--default-row-height);
-    z-index: 1;
   }
   .row {
     display: flex;
@@ -54,6 +61,7 @@
     border-right: var(--cell-border);
     border-bottom: var(--cell-border);
     background: var(--spectrum-global-color-gray-100);
+    z-index: 20;
   }
   .add:hover {
     background: var(--spectrum-global-color-gray-200);

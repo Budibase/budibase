@@ -32,6 +32,7 @@
   $: readonly =
     column.schema.autocolumn ||
     column.schema.disabled ||
+    column.schema.type === "formula" ||
     (!$config.allowEditRows && row._id)
 
   // Register this cell API if the row is focused

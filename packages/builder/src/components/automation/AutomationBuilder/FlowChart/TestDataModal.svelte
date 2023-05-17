@@ -52,7 +52,7 @@
       await automationStore.actions.test($selectedAutomation, testData)
       $automationStore.showTestPanel = true
     } catch (error) {
-      notifications.error("Error testing automation")
+      notifications.error(error)
     }
   }
 </script>

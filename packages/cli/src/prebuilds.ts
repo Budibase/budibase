@@ -13,7 +13,7 @@ if (!process.argv[0].includes("node")) {
 }
 
 function checkForBinaries() {
-  const readDir = join(__filename, "..", "..", PREBUILDS, ARCH)
+  const readDir = join(__filename, "..", "..", "..", PREBUILDS, ARCH)
   if (fs.existsSync(PREBUILD_DIR) || !fs.existsSync(readDir)) {
     return
   }

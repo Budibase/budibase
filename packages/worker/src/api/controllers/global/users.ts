@@ -69,9 +69,11 @@ const bulkCreate = async (users: User[], groupIds: string[]) => {
   return await userSdk.bulkCreate(users, groupIds)
 }
 
-export const bulkUpdate = async (ctx: any) => {
+export const bulkUpdate = async (
+  ctx: Ctx<BulkUserRequest, BulkUserResponse>
+) => {
   const currentUserId = ctx.user._id
-  const input = ctx.request.body as BulkUserRequest
+  const input = ctx.request.body
   let created, deleted
   try {
     if (input.create) {
@@ -83,7 +85,7 @@ export const bulkUpdate = async (ctx: any) => {
   } catch (err: any) {
     ctx.throw(err.status || 400, err?.message || err)
   }
-  ctx.body = { created, deleted } as BulkUserResponse
+  ctx.body = { created, deleted }
 }
 
 const parseBooleanParam = (param: any) => {
@@ -184,15 +186,15 @@ export const destroy = async (ctx: any) => {
   }
 }
 
-export const getAppUsers = async (ctx: any) => {
-  const body = ctx.request.body as SearchUsersRequest
+export const getAppUsers = async (ctx: Ctx<SearchUsersRequest>) => {
+  const body = ctx.request.body
   const users = await userSdk.getUsersByAppAccess(body?.appId)
 
   ctx.body = { data: users }
 }
 
-export const search = async (ctx: any) => {
-  const body = ctx.request.body as SearchUsersRequest
+export const search = async (ctx: Ctx<SearchUsersRequest>) => {
+  const body = ctx.request.body
 
   if (body.paginated === false) {
     await getAppUsers(ctx)
@@ -238,8 +240,8 @@ export const tenantUserLookup = async (ctx: any) => {
 /* 
   Encapsulate the app user onboarding flows here.
 */
-export const onboardUsers = async (ctx: any) => {
-  const request = ctx.request.body as InviteUsersRequest | BulkUserRequest
+export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
+  const request = ctx.request.body
   const isBulkCreate = "create" in request
 
   const emailConfigured = await isEmailConfigured()
@@ -255,7 +257,7 @@ export const onboardUsers = async (ctx: any) => {
   } else if (emailConfigured) {
     onboardingResponse = await inviteMultiple(ctx)
   } else if (!emailConfigured) {
-    const inviteRequest = ctx.request.body as InviteUsersRequest
+    const inviteRequest = ctx.request.body
 
     let createdPasswords: any = {}
 
@@ -295,10 +297,10 @@ export const onboardUsers = async (ctx: any) => {
   }
 }
 
-export const invite = async (ctx: any) => {
-  const request = ctx.request.body as InviteUserRequest
+export const invite = async (ctx: Ctx<InviteUserRequest>) => {
+  const request = ctx.request.body
 
-  let multiRequest = [request] as InviteUsersRequest
+  let multiRequest = [request]
   const response = await userSdk.invite(multiRequest)
 
   // explicitly throw for single user invite
@@ -318,8 +320,8 @@ export const invite = async (ctx: any) => {
   }
 }
 
-export const inviteMultiple = async (ctx: any) => {
-  const request = ctx.request.body as InviteUsersRequest
+export const inviteMultiple = async (ctx: Ctx<InviteUsersRequest>) => {
+  const request = ctx.request.body
   ctx.body = await userSdk.invite(request)
 }
 
@@ -424,7 +426,6 @@ export const inviteAccept = async (
     if (err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
       ctx.throw(400, err)
-      return
     }
     console.warn("Error inviting user", err)
     ctx.throw(400, "Unable to create new user, invitation invalid.")

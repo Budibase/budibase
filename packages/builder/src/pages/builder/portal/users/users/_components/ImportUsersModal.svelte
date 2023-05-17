@@ -25,10 +25,10 @@
   $: invalidEmails = []
 
   $: userCount = $licensing.userCount + userEmails.length
-  $: willExceed = licensing.willExceedUserLimit(userCount)
+  $: exceed = licensing.usersLimitExceeded(userCount)
 
   $: importDisabled =
-    !userEmails.length || !validEmails(userEmails) || !usersRole || willExceed
+    !userEmails.length || !validEmails(userEmails) || !usersRole || exceed
 
   const validEmails = userEmails => {
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
@@ -93,7 +93,7 @@
     </label>
   </div>
 
-  {#if willExceed}
+  {#if exceed}
     <div class="user-notification">
       <Icon name="Info" />
       {capitalise($licensing.license.plan.type)} plan is limited to {$licensing.userLimit}

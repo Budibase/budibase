@@ -1,4 +1,4 @@
-name: Tag prerelease
+name: Tag release
 concurrency: release-prerelease
 
 on:
@@ -40,6 +40,7 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
+      - run: yarn
       - name: Tag prerelease
         run: |
           # setup the username and email.
