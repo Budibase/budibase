@@ -104,19 +104,19 @@ async function newContext(updates: ContextMap, task: any) {
   return Context.run(context, task)
 }
 
-export async function doInAutomationContext(
+export async function doInAutomationContext(params: {
   appId: string,
   automationId: string,
   task: any
-): Promise<any> {
-  const tenantId = getTenantIDFromAppID(appId)
+}): Promise<any> {
+  const tenantId = getTenantIDFromAppID(params.appId)
   return newContext(
     {
       tenantId,
-      appId,
-      automationId,
+      appId: params.appId,
+      automationId: params.automationId,
     },
-    task
+    params.task
   )
 }
 
