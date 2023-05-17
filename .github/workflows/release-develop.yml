@@ -6,11 +6,6 @@ on:
     tags:
       - v*-alpha.*
   workflow_dispatch:
-    inputs:
-      tags:
-        description: "Release tag"
-        required: true
-        type: boolean
 
 env:
   # Posthog token used by ui at build time
@@ -29,7 +24,7 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Fail if tag is not develop
         run: |
@@ -52,9 +47,10 @@ jobs:
             | sed 's/[",]//g')
           echo "Setting version $version"
           yarn lerna exec "yarn version --no-git-tag-version --new-version=$version"
+          echo "Updating dependencies"
           node scripts/syncLocalDependencies.js $version
+          echo "Syncing yarn workspace"
           yarn
-      - run: yarn bootstrap
       - run: yarn build
       - run: yarn build:sdk
 

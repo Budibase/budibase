@@ -30,9 +30,10 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
+      - run: yarn
       - name: Tag prerelease
         run: |
           # setup the username and email.
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
-          ./scripts/versionCommit.sh alpha
+          ./scripts/versionCommit.sh prerelease

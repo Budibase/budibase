@@ -39,6 +39,12 @@ export class Thread {
       const workerOpts: any = {
         autoStart: true,
         maxConcurrentWorkers: this.count,
+        workerOptions: {
+          env: {
+            ...process.env,
+            FORKED_PROCESS: "1",
+          },
+        },
       }
       if (opts.timeoutMs) {
         this.timeoutMs = opts.timeoutMs

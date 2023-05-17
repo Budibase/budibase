@@ -62,6 +62,7 @@
     "@budibase/frontend-core": "0.0.1",
     "@budibase/shared-core": "0.0.1",
     "@budibase/string-templates": "0.0.1",
+    "@budibase/types": "0.0.1",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-brands-svg-icons": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",

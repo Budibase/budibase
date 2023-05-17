@@ -10122,9 +10122,9 @@ engine.io-parser@~5.0.3:
   integrity sha512-tjuoZDMAdEhVnSFleYPCtdL2GXwVTGtNjoeJd9IhIG3C1xs9uwxqRNEu5WpnDZCaozwVlK/nuQhpodhXSIMaxw==
 
 engine.io@~6.4.1:
-  version "6.4.1"
-  resolved "https://registry.yarnpkg.com/engine.io/-/engine.io-6.4.1.tgz#8056b4526a88e779f9c280d820422d4e3eeaaae5"
-  integrity sha512-JFYQurD/nbsA5BSPmbaOSLa3tSVj8L6o4srSwXXY3NqE+gGUNmmPTbhn8tjzcCtSqhFgIeqef81ngny8JM25hw==
+  version "6.4.2"
+  resolved "https://registry.yarnpkg.com/engine.io/-/engine.io-6.4.2.tgz#ffeaf68f69b1364b0286badddf15ff633476473f"
+  integrity sha512-FKn/3oMiJjrOEOeUub2WCox6JhxBXq/Zn3fZOMCBxKnNYtsdKjxhl7yR3fZhM9PV+rdE75SU5SYMc+2PGzo+Tg==
   dependencies:
     "@types/cookie" "^0.4.1"
     "@types/cors" "^2.8.12"
@@ -22075,6 +22075,13 @@ semver@^7.2.1, semver@^7.3.5:
   dependencies:
     lru-cache "^6.0.0"
 
+semver@^7.5.0:
+  version "7.5.0"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-7.5.0.tgz#ed8c5dc8efb6c629c88b23d41dc9bf40c1d96cd0"
+  integrity sha512-+XC0AD/R7Q2mPSRuy2Id0+CGTZ98+8f+KvwirxOKIEyid+XSx6HbC63p+O4IndTHuX5Z+JxQ0TghCkO5Cg/2HA==
+  dependencies:
+    lru-cache "^6.0.0"
+
 semver@~2.3.1:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/semver/-/semver-2.3.2.tgz#b9848f25d6cf36333073ec9ef8856d42f1233e52"
@@ -23317,7 +23324,14 @@ svelte-dnd-action@^0.9.8:
   resolved "https://registry.yarnpkg.com/svelte-dnd-action/-/svelte-dnd-action-0.9.22.tgz#003eee9dddb31d8c782f6832aec8b1507fff194d"
   integrity sha512-lOQJsNLM1QWv5mdxIkCVtk6k4lHCtLgfE59y8rs7iOM6erchbLC9hMEFYSveZz7biJV0mpg7yDSs4bj/RT/YkA==
 
-svelte-flatpickr@^3.1.0, svelte-flatpickr@^3.2.3, svelte-flatpickr@^3.3.2:
+svelte-flatpickr@3.2.3:
+  version "3.2.3"
+  resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-3.2.3.tgz#db5dd7ad832ef83262b45e09737955ad3d591fc8"
+  integrity sha512-PNkqK4Napx8nTvCwkaUXdnKo8dISThaxEOK+szTUXcY6H0dQM0TSyuoMaVWY2yX7pM+PN5cpCQCcVe8YvTRFSw==
+  dependencies:
+    flatpickr "^4.5.2"
+
+svelte-flatpickr@^3.1.0, svelte-flatpickr@^3.2.3:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-3.3.2.tgz#f08bcde83d439cb30df6fd07b974d87371f130c1"
   integrity sha512-VNJLYyLRDplI63oWX5hJylzAJc2VhTh3z9SNecfjtuPZmP6FZPpg9Fw7rXpkEV2DPovIWj2PtaVxB6Kp9r423w==

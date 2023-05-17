@@ -7,6 +7,7 @@ export enum AutomationIOType {
   BOOLEAN = "boolean",
   NUMBER = "number",
   ARRAY = "array",
+  JSON = "json",
 }
 
 export enum AutomationCustomIOType {
@@ -104,6 +105,7 @@ interface InputOutputBlock {
 
 export interface AutomationStepSchema {
   name: string
+  stepTitle?: string
   tagline: string
   icon: string
   description: string

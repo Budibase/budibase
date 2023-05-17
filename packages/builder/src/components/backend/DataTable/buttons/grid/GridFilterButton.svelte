@@ -2,19 +2,19 @@
   import TableFilterButton from "../TableFilterButton.svelte"
   import { getContext } from "svelte"
 
-  const { columns, config, filter, table } = getContext("grid")
+  const { columns, tableId, filter, table } = getContext("grid")
 
   const onFilter = e => {
     filter.set(e.detail || [])
   }
 </script>
 
-{#key $config.tableId}
+{#key $tableId}
   <TableFilterButton
     schema={$table?.schema}
     filters={$filter}
     on:change={onFilter}
     disabled={!$columns.length}
-    tableId={$config.tableId}
+    tableId={$tableId}
   />
 {/key}
