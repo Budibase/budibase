@@ -167,7 +167,10 @@ describe("/tables", () => {
 
       expect(events.table.created).not.toHaveBeenCalled()
       expect(events.rows.imported).toBeCalledTimes(1)
-      expect(events.rows.imported).toBeCalledWith(table, 1)
+      expect(events.rows.imported).toBeCalledWith(expect.objectContaining({
+        name: "TestTable",
+        _id: table._id
+      }), 1)
     })
   })
 
