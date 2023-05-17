@@ -19,5 +19,16 @@ describe("datasource validators", () => {
       const result = await integration.testConnection()
       expect(result).toEqual({ connected: true })
     })
+
+    it("test wrong connection string", async () => {
+      const integration = new elastic.integration({
+        url: `http://localhost:5656`,
+      })
+      const result = await integration.testConnection()
+      expect(result).toEqual({
+        connected: false,
+        error: "connect ECONNREFUSED 127.0.0.1:5656",
+      })
+    })
   })
 })
