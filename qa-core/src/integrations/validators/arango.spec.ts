@@ -41,7 +41,7 @@ describe("datasource validators", () => {
         collection: "",
       })
       const result = await integration.testConnection()
-      expect(result).toBe(true)
+      expect(result).toEqual({ connected: true })
     })
 
     it("test wrong password", async () => {
@@ -54,6 +54,7 @@ describe("datasource validators", () => {
       })
       const result = await integration.testConnection()
       expect(result).toEqual({
+        connected: false,
         error: "not authorized to execute this request",
       })
     })
@@ -68,6 +69,7 @@ describe("datasource validators", () => {
       })
       const result = await integration.testConnection()
       expect(result).toEqual({
+        connected: false,
         error: "getaddrinfo ENOTFOUND not.here",
       })
     })

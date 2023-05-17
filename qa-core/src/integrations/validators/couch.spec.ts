@@ -37,7 +37,7 @@ describe("datasource validators", () => {
         database: "db",
       })
       const result = await integration.testConnection()
-      expect(result).toBe(true)
+      expect(result).toEqual({ connected: true })
     })
 
     it("test invalid database", async () => {
@@ -56,6 +56,7 @@ describe("datasource validators", () => {
       })
       const result = await integration.testConnection()
       expect(result).toEqual({
+        connected: false,
         error:
           "request to http://invalid:123/any failed, reason: getaddrinfo ENOTFOUND invalid",
       })
