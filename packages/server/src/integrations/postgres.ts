@@ -6,6 +6,8 @@ import {
   SqlQuery,
   Table,
   DatasourcePlus,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -18,7 +20,7 @@ import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
-const { Client, types } = require("pg")
+import { Client, types } from "pg"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -50,6 +52,7 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -114,7 +117,7 @@ const SCHEMA: Integration = {
 }
 
 class PostgresIntegration extends Sql implements DatasourcePlus {
-  private readonly client: any
+  private readonly client: Client
   private readonly config: PostgresConfig
   private index: number = 1
   private open: boolean
@@ -150,6 +153,21 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     this.open = false
   }
 
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      await this.openConnection()
+      response.connected = true
+    } catch (e: any) {
+      response.error = e.message as string
+    } finally {
+      await this.closeConnection()
+    }
+    return response
+  }
+
   getBindingIdentifier(): string {
     return `$${this.index++}`
   }
@@ -163,7 +181,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     if (!this.config.schema) {
       this.config.schema = "public"
     }
-    this.client.query(`SET search_path TO ${this.config.schema}`)
+    await this.client.query(`SET search_path TO ${this.config.schema}`)
     this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     this.open = true
   }
