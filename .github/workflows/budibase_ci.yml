@@ -24,9 +24,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
+          cache: "yarn"
       - run: yarn
       - run: yarn lint
 
@@ -38,9 +39,10 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
+          cache: "yarn"
       - run: yarn
       - run: yarn bootstrap
       - run: yarn build
@@ -53,9 +55,10 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
+          cache: "yarn"
       - run: yarn
       - run: yarn bootstrap
       - run: yarn build
@@ -74,9 +77,10 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
+          cache: "yarn"
       - run: yarn
       - run: yarn bootstrap
       - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core
@@ -90,9 +94,10 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
+          cache: "yarn"
       - run: yarn && yarn bootstrap && yarn build
       - run: |
           cd qa-core
