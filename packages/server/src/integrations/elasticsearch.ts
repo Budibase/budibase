@@ -4,6 +4,7 @@ import {
   QueryType,
   IntegrationBase,
   DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 
 import { Client, ClientOptions } from "@elastic/elasticsearch"
@@ -21,7 +22,7 @@ const SCHEMA: Integration = {
     "Elasticsearch is a search engine based on the Lucene library. It provides a distributed, multitenant-capable full-text search engine with an HTTP web interface and schema-free JSON documents.",
   friendlyName: "ElasticSearch",
   type: "Non-relational",
-  features: [],
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     url: {
       type: DatasourceFieldType.STRING,
@@ -97,7 +98,7 @@ const SCHEMA: Integration = {
 
 class ElasticSearchIntegration implements IntegrationBase {
   private config: ElasticsearchConfig
-  private client: any
+  private client
 
   constructor(config: ElasticsearchConfig) {
     this.config = config
@@ -114,6 +115,18 @@ class ElasticSearchIntegration implements IntegrationBase {
     }
 
     this.client = new Client(clientConfig)
+  }
+
+  async testConnection(): Promise<ConnectionInfo> {
+    try {
+      await this.client.info()
+      return { connected: true }
+    } catch (e: any) {
+      return {
+        connected: false,
+        error: e.message as string,
+      }
+    }
   }
 
   async create(query: { index: string; json: object }) {
