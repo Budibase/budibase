@@ -44,7 +44,6 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn bootstrap
       - run: yarn build
 
   test:
@@ -60,8 +59,7 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn bootstrap
-      - run: yarn build
+      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core
       - run: yarn test --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
@@ -82,7 +80,6 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn bootstrap
       - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core
       - run: yarn test --scope=@budibase/pro
 
