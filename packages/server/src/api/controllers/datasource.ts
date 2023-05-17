@@ -47,7 +47,10 @@ async function getConnector(
   datasource: Datasource
 ): Promise<IntegrationBase | DatasourcePlus> {
   const Connector = await getIntegration(datasource.source)
-  datasource = await sdk.datasources.enrich(datasource)
+  // can't enrich if it doesn't have an ID yet
+  if (datasource._id) {
+    datasource = await sdk.datasources.enrich(datasource)
+  }
   // Connect to the DB and build the schema
   return new Connector(datasource.config)
 }
@@ -127,13 +130,17 @@ export async function verify(
   ctx: UserCtx<VerifyDatasourceRequest, VerifyDatasourceResponse>
 ) {
   const { datasource } = ctx.request.body
-  const existingDatasource = await sdk.datasources.get(datasource._id!)
-
-  const enrichedDatasource = sdk.datasources.mergeConfigs(
-    datasource,
-    existingDatasource
-  )
-
+  let existingDatasource: undefined | Datasource
+  if (datasource._id) {
+    existingDatasource = await sdk.datasources.get(datasource._id)
+  }
+  let enrichedDatasource = datasource
+  if (existingDatasource) {
+    enrichedDatasource = sdk.datasources.mergeConfigs(
+      datasource,
+      existingDatasource
+    )
+  }
   const connector = await getConnector(enrichedDatasource)
   if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")

@@ -8,6 +8,7 @@ import {
   Table,
   DatasourcePlus,
   DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -49,7 +50,7 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "Oracle Database is an object-relational database management system developed by Oracle Corporation",
-  features: [],
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -320,6 +321,30 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     const final = finaliseExternalTables(tables, entities)
     this.tables = final.tables
     this.schemaErrors = final.errors
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    let connection
+    try {
+      connection = await this.getConnection()
+      response.connected = true
+    } catch (err: any) {
+      response.connected = false
+      response.error = err.message
+    } finally {
+      if (connection) {
+        try {
+          await connection.close()
+        } catch (err: any) {
+          response.connected = false
+          response.error = err.message
+        }
+      }
+    }
+    return response
   }
 
   private async internalQuery<T>(query: SqlQuery): Promise<Result<T>> {
