@@ -39,6 +39,7 @@ if (!env.DISABLE_PINO_LOGGER) {
     objects?: any[]
     tenantId?: string
     appId?: string
+    automationId?: string
     identityId?: string
     identityType?: IdentityType
     correlationId?: string
@@ -86,6 +87,7 @@ if (!env.DISABLE_PINO_LOGGER) {
       contextObject = {
         tenantId: getTenantId(),
         appId: getAppId(),
+        automationId: getAutomationId(),
         identityId: identity?._id,
         identityType: identity?.type,
         correlationId: correlation.getId(),
@@ -153,6 +155,16 @@ if (!env.DISABLE_PINO_LOGGER) {
     let appId
     try {
       appId = context.getAppId()
+    } catch (e) {
+      // do nothing
+    }
+    return appId
+  }
+
+  const getAutomationId = () => {
+    let appId
+    try {
+      appId = context.getAutomationId()
     } catch (e) {
       // do nothing
     }
