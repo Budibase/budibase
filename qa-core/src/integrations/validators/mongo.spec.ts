@@ -49,7 +49,7 @@ describe("datasource validators", () => {
         tlsCAFile: "",
       })
       const result = await integration.testConnection()
-      expect(result).toBe(true)
+      expect(result).toEqual({ connected: true })
     })
 
     it("test invalid password", async () => {

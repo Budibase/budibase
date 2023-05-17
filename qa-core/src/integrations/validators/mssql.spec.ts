@@ -43,7 +43,7 @@ describe("datasource validators", () => {
         schema: "dbo",
       })
       const result = await integration.testConnection()
-      expect(result).toBe(true)
+      expect(result).toEqual({ connected: true })
     })
 
     it("test invalid password", async () => {
@@ -57,6 +57,7 @@ describe("datasource validators", () => {
       })
       const result = await integration.testConnection()
       expect(result).toEqual({
+        connected: false,
         error: "ConnectionError: Login failed for user 'sa'.",
       })
     })
