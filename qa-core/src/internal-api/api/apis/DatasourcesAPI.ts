@@ -6,6 +6,7 @@ import {
 } from "@budibase/types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import BaseAPI from "./BaseAPI"
+import { DatasourceRequest } from "../../../types"
 
 export default class DatasourcesAPI extends BaseAPI {
   constructor(client: BudibaseInternalAPIClient) {
@@ -31,7 +32,9 @@ export default class DatasourcesAPI extends BaseAPI {
     return [response, json]
   }
 
-  async add(body: any): Promise<[Response, CreateDatasourceResponse]> {
+  async add(
+    body: DatasourceRequest
+  ): Promise<[Response, CreateDatasourceResponse]> {
     const [response, json] = await this.post(`/datasources`, body)
     expect(json.datasource._id).toBeDefined()
     expect(json.datasource._rev).toBeDefined()
@@ -39,32 +42,12 @@ export default class DatasourcesAPI extends BaseAPI {
     return [response, json]
   }
 
-  async update(body: any): Promise<[Response, UpdateDatasourceResponse]> {
+  async update(
+    body: Datasource
+  ): Promise<[Response, UpdateDatasourceResponse]> {
     const [response, json] = await this.put(`/datasources/${body._id}`, body)
     expect(json.datasource._id).toBeDefined()
     expect(json.datasource._rev).toBeDefined()
-
-    return [response, json]
-  }
-
-  async previewQuery(body: any): Promise<[Response, any]> {
-    const [response, json] = await this.post(`/queries/preview`, body)
-    return [response, json]
-  }
-
-  async saveQuery(body: any): Promise<[Response, any]> {
-    const [response, json] = await this.post(`/queries`, body)
-    return [response, json]
-  }
-
-  async getQuery(queryId: string): Promise<[Response, any]> {
-    const [response, json] = await this.get(`/queries/${queryId}`)
-
-    return [response, json]
-  }
-
-  async getQueryPermissions(queryId: string): Promise<[Response, any]> {
-    const [response, json] = await this.get(`/permissions/${queryId}`)
 
     return [response, json]
   }

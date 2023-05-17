@@ -3,7 +3,7 @@ import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import { PreviewQueryRequest, Query } from "@budibase/types"
 import BaseAPI from "./BaseAPI"
 
-export default class DatasourcesAPI extends BaseAPI {
+export default class QueriesAPI extends BaseAPI {
   constructor(client: BudibaseInternalAPIClient) {
     super(client)
   }
@@ -18,7 +18,7 @@ export default class DatasourcesAPI extends BaseAPI {
     return [response, json]
   }
 
-  async get(queryId: string): Promise<[Response, any]> {
+  async getQuery(queryId: string): Promise<[Response, any]> {
     const [response, json] = await this.get(`/queries/${queryId}`)
     return [response, json]
   }

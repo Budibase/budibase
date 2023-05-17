@@ -1,5 +1,6 @@
-import { Screen } from "@budibase/types"
 import { Response } from "node-fetch"
+import { Screen } from "@budibase/types"
+import { ScreenRequest } from "../../../types/screens"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import BaseAPI from "./BaseAPI"
 
@@ -8,7 +9,7 @@ export default class ScreenAPI extends BaseAPI {
     super(client)
   }
 
-  async create(body: any): Promise<[Response, Screen]> {
+  async create(body: ScreenRequest): Promise<[Response, Screen]> {
     const [response, json] = await this.post(`/screens`, body)
     expect(json._id).toBeDefined()
     expect(json.routing.roleId).toBe(body.routing.roleId)
