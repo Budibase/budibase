@@ -26,7 +26,7 @@ function loggingArgs(job: AutomationJob) {
 export async function processEvent(job: AutomationJob) {
   const appId = job.data.event.appId!
   const automationId = job.data.automation._id!
-  return await context.doInAutomationContext(appId, automationId, async () => {
+  const task = async () => {
     try {
       // need to actually await these so that an error can be captured properly
       console.log("automation running", loggingArgs(job))
@@ -41,7 +41,9 @@ export async function processEvent(job: AutomationJob) {
       console.error(`automation was unable to run`, err, loggingArgs(job))
       return { err }
     }
-  })
+  }
+
+  return await context.doInAutomationContext({ appId, automationId, task })
 }
 
 export async function updateTestHistory(
