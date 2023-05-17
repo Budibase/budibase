@@ -97,7 +97,8 @@ jobs:
           cache: "yarn"
       - run: yarn
       - run: yarn build
-      - run: |
+      - name: Run tests
+        run: |
           cd qa-core
           yarn setup
           yarn test:ci
