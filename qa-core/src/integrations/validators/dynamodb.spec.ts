@@ -41,7 +41,7 @@ describe("datasource validators", () => {
       })
 
       const result = await integration.testConnection()
-      expect(result).toBe(true)
+      expect(result).toEqual({ connected: true })
     })
 
     it("test wrong endpoint", async () => {
@@ -54,6 +54,7 @@ describe("datasource validators", () => {
 
       const result = await integration.testConnection()
       expect(result).toEqual({
+        connected: false,
         error:
           "Inaccessible host: `wrong.url' at port `undefined'. This service may not be available in the `eu-west-1' region.",
       })
