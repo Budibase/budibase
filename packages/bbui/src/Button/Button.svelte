@@ -2,6 +2,7 @@
   import "@spectrum-css/button/dist/index-vars.css"
   import Tooltip from "../Tooltip/Tooltip.svelte"
 
+  export let type
   export let disabled = false
   export let size = "M"
   export let cta = false
@@ -21,6 +22,7 @@
 
 <button
   {id}
+  {type}
   class:spectrum-Button--cta={cta}
   class:spectrum-Button--primary={primary}
   class:spectrum-Button--secondary={secondary}
@@ -73,6 +75,7 @@
   button {
     position: relative;
   }
+
   .spectrum-Button-label {
     white-space: nowrap;
     overflow: hidden;
