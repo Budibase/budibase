@@ -131,10 +131,8 @@ export async function verify(
 ) {
   const { datasource } = ctx.request.body
   let existingDatasource: undefined | Datasource
-  try {
-    existingDatasource = await sdk.datasources.get(datasource._id!)
-  } catch (err) {
-    // doesn't exist - can ignore, first creation
+  if (datasource._id) {
+    existingDatasource = await sdk.datasources.get(datasource._id)
   }
   let enrichedDatasource = datasource
   if (existingDatasource) {
