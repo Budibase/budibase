@@ -1,4 +1,6 @@
 import {
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
   FieldType,
@@ -64,6 +66,7 @@ const SCHEMA: Integration = {
     "Create and collaborate on online spreadsheets in real-time and from any device. ",
   friendlyName: "Google Sheets",
   type: "Spreadsheet",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     spreadsheetId: {
       display: "Google Sheet URL",
@@ -137,6 +140,19 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     this.config = config
     const spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
     this.client = new GoogleSpreadsheet(spreadsheetId)
+  }
+
+  async testConnection(): Promise<ConnectionInfo> {
+    try {
+      await this.connect()
+      await this.client.loadInfo()
+      return { connected: true }
+    } catch (e: any) {
+      return {
+        connected: false,
+        error: e.message as string,
+      }
+    }
   }
 
   getBindingIdentifier() {

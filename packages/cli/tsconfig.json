@@ -5,6 +5,7 @@
     "declaration": true,
     "sourceMap": true,
     "baseUrl": ".",
+    "resolveJsonModule": true,
     "paths": {
       "@budibase/types": ["../types/src"],
       "@budibase/backend-core": ["../backend-core/src"],
@@ -16,6 +17,6 @@
     "swc": true
   },
   "references": [{ "path": "../types" }, { "path": "../backend-core" }],
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "package.json"],
   "exclude": ["node_modules", "dist"]
 }
