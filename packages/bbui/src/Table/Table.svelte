@@ -203,16 +203,8 @@
       }
     })
     return columns
-      .sort((a, b) => {
-        const orderA = a.order || Number.MAX_SAFE_INTEGER
-        const orderB = b.order || Number.MAX_SAFE_INTEGER
-        const nameA = getDisplayName(a)
-        const nameB = getDisplayName(b)
-        if (orderA !== orderB) {
-          return orderA < orderB ? orderA : orderB
-        }
-        return nameA < nameB ? a : b
-      })
+      .filter(column => column.divider)
+      .concat(columns.filter(column => !column.divider))
       .concat(autoColumns)
       .map(column => column.name)
   }
