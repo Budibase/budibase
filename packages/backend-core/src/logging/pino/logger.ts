@@ -94,10 +94,35 @@ if (!env.DISABLE_PINO_LOGGER) {
       }
     }
 
-    const mergingObject = {
-      objects: objects.length ? objects : undefined,
+    const mergingObject: any = {
       err: error,
       ...contextObject,
+    }
+
+    if (objects.length) {
+      // init generic data object for params supplied that don't have a
+      // '_logKey' field. This prints an object using argument index as the key
+      // e.g. { 0: {}, 1: {} }
+      const data: any = {}
+      let dataIndex = 0
+
+      for (let i = 0; i < objects.length; i++) {
+        const object = objects[i]
+        // the object has specified a log key
+        // use this instead of generic key
+        const logKey = object._logKey
+        if (logKey) {
+          delete object._logKey
+          mergingObject[logKey] = object
+        } else {
+          data[dataIndex] = object
+          dataIndex++
+        }
+      }
+
+      if (Object.keys(data).length) {
+        mergingObject.data = data
+      }
     }
 
     return [mergingObject, message]
