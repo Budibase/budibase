@@ -49,7 +49,7 @@ describe("datasource validators", () => {
         tlsCAFile: "",
       })
       const result = await integration.testConnection()
-      expect(result).toBe(true)
+      expect(result).toEqual({ connected: true })
     })
 
     it("test invalid password", async () => {
@@ -61,7 +61,10 @@ describe("datasource validators", () => {
         tlsCAFile: "",
       })
       const result = await integration.testConnection()
-      expect(result).toEqual({ error: "Authentication failed." })
+      expect(result).toEqual({
+        connected: false,
+        error: "Authentication failed.",
+      })
     })
 
     it("test invalid username", async () => {
@@ -73,7 +76,10 @@ describe("datasource validators", () => {
         tlsCAFile: "",
       })
       const result = await integration.testConnection()
-      expect(result).toEqual({ error: "Authentication failed." })
+      expect(result).toEqual({
+        connected: false,
+        error: "Authentication failed.",
+      })
     })
 
     it("test invalid connection", async () => {
@@ -85,7 +91,10 @@ describe("datasource validators", () => {
         tlsCAFile: "",
       })
       const result = await integration.testConnection()
-      expect(result).toEqual({ error: "Error: getaddrinfo ENOTFOUND http" })
+      expect(result).toEqual({
+        connected: false,
+        error: "Error: getaddrinfo ENOTFOUND http",
+      })
     })
   })
 })

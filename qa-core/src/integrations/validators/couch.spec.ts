@@ -1,7 +1,7 @@
 import { GenericContainer } from "testcontainers"
-import { generator } from "@budibase/backend-core/tests"
 
 import couchdb from "../../../../packages/server/src/integrations/couchdb"
+import { generator } from "../../shared"
 
 describe("datasource validators", () => {
   describe("couchdb", () => {
@@ -37,7 +37,7 @@ describe("datasource validators", () => {
         database: "db",
       })
       const result = await integration.testConnection()
-      expect(result).toBe(true)
+      expect(result).toEqual({ connected: true })
     })
 
     it("test invalid database", async () => {
@@ -46,7 +46,9 @@ describe("datasource validators", () => {
         database: "random_db",
       })
       const result = await integration.testConnection()
-      expect(result).toBe(false)
+      expect(result).toEqual({
+        connected: false,
+      })
     })
 
     it("test invalid url", async () => {
@@ -56,6 +58,7 @@ describe("datasource validators", () => {
       })
       const result = await integration.testConnection()
       expect(result).toEqual({
+        connected: false,
         error:
           "request to http://invalid:123/any failed, reason: getaddrinfo ENOTFOUND invalid",
       })

@@ -24,7 +24,7 @@ describe("datasource validators", () => {
           username: "",
         })
         const result = await integration.testConnection()
-        expect(result).toBe(true)
+        expect(result).toEqual({ connected: true })
       })
 
       it("test invalid connection even with wrong user/password", async () => {
@@ -36,6 +36,7 @@ describe("datasource validators", () => {
         })
         const result = await integration.testConnection()
         expect(result).toEqual({
+          connected: false,
           error:
             "WRONGPASS invalid username-password pair or user is disabled.",
         })
@@ -64,7 +65,7 @@ describe("datasource validators", () => {
           password: "P@ssW0rd!",
         })
         const result = await integration.testConnection()
-        expect(result).toBe(true)
+        expect(result).toEqual({ connected: true })
       })
     })
   })

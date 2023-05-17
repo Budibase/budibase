@@ -31,7 +31,7 @@ describe("datasource validators", () => {
         rejectUnauthorized: true,
       })
       const result = await integration.testConnection()
-      expect(result).toBe(true)
+      expect(result).toEqual({ connected: true })
     })
 
     it("test invalid database", async () => {
@@ -45,6 +45,7 @@ describe("datasource validators", () => {
       })
       const result = await integration.testConnection()
       expect(result).toEqual({
+        connected: false,
         error: "Access denied for user 'user'@'%' to database 'test'",
       })
     })
@@ -60,6 +61,7 @@ describe("datasource validators", () => {
       })
       const result = await integration.testConnection()
       expect(result).toEqual({
+        connected: false,
         error:
           "Access denied for user 'root'@'172.17.0.1' (using password: YES)",
       })
