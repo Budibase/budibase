@@ -27,4 +27,3 @@ export interface AutomationContext extends AutomationResults {
   env?: Record<string, string>
   trigger: any
 }
-
