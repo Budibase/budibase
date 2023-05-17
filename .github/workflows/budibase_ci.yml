@@ -59,7 +59,7 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core
+      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core --scope=@budibase/string-templates
       - run: yarn test --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
@@ -95,7 +95,8 @@ jobs:
         with:
           node-version: 14.x
           cache: "yarn"
-      - run: yarn && yarn bootstrap && yarn build
+      - run: yarn
+      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core --scope=@budibase/string-templates
       - run: |
           cd qa-core
           yarn setup
