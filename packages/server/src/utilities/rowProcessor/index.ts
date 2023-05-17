@@ -137,8 +137,7 @@ export function inputProcessing(
   opts?: AutoColumnProcessingOpts
 ) {
   let clonedRow = cloneDeep(row)
-  // need to copy the table so it can be differenced on way out
-  const copiedTable = cloneDeep(table)
+
   const dontCleanseKeys = ["type", "_id", "_rev", "tableId"]
   for (let [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
@@ -175,7 +174,7 @@ export function inputProcessing(
   }
 
   // handle auto columns - this returns an object like {table, row}
-  return processAutoColumn(user, copiedTable, clonedRow, opts)
+  return processAutoColumn(user, table, clonedRow, opts)
 }
 
 /**
