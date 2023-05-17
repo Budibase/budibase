@@ -20,7 +20,7 @@ import env from "../environment"
 import { cloneDeep } from "lodash"
 import sdk from "../sdk"
 
-const DEFINITIONS: { [key: string]: Integration } = {
+const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.POSTGRES]: postgres.schema,
   [SourceName.DYNAMODB]: dynamodb.schema,
   [SourceName.MONGODB]: mongodb.schema,
@@ -36,9 +36,10 @@ const DEFINITIONS: { [key: string]: Integration } = {
   [SourceName.GOOGLE_SHEETS]: googlesheets.schema,
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
+  [SourceName.ORACLE]: undefined,
 }
 
-const INTEGRATIONS: { [key: string]: any } = {
+const INTEGRATIONS: Record<SourceName, any> = {
   [SourceName.POSTGRES]: postgres.integration,
   [SourceName.DYNAMODB]: dynamodb.integration,
   [SourceName.MONGODB]: mongodb.integration,
@@ -55,6 +56,7 @@ const INTEGRATIONS: { [key: string]: any } = {
   [SourceName.REDIS]: redis.integration,
   [SourceName.FIRESTORE]: firebase.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
+  [SourceName.ORACLE]: undefined,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
@@ -67,10 +69,13 @@ if (
   INTEGRATIONS[SourceName.ORACLE] = oracle.integration
 }
 
-export async function getDefinition(source: SourceName): Promise<Integration> {
+export async function getDefinition(
+  source: SourceName
+): Promise<Integration | undefined> {
   // check if its integrated, faster
-  if (DEFINITIONS[source]) {
-    return DEFINITIONS[source]
+  const definition = DEFINITIONS[source]
+  if (definition) {
+    return definition
   }
   const allDefinitions = await getDefinitions()
   return allDefinitions[source]
@@ -98,7 +103,7 @@ export async function getDefinitions() {
   }
 }
 
-export async function getIntegration(integration: string) {
+export async function getIntegration(integration: SourceName) {
   if (INTEGRATIONS[integration]) {
     return INTEGRATIONS[integration]
   }
@@ -107,7 +112,7 @@ export async function getIntegration(integration: string) {
     for (let plugin of plugins) {
       if (plugin.name === integration) {
         // need to use commonJS require due to its dynamic runtime nature
-        const retrieved: any = await getDatasourcePlugin(plugin)
+        const retrieved = await getDatasourcePlugin(plugin)
         if (retrieved.integration) {
           return retrieved.integration
         } else {

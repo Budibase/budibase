@@ -2,17 +2,17 @@
 process.env.DISABLE_PINO_LOGGER = "1"
 import "./prebuilds"
 import "./environment"
-import { env } from "@budibase/backend-core"
 import { getCommands } from "./options"
 import { Command } from "commander"
 import { getHelpDescription } from "./utils"
+import { version } from "../package.json"
 
 // add hosting config
 async function init() {
   const program = new Command()
     .addHelpCommand("help", getHelpDescription("Help with Budibase commands."))
     .helpOption(false)
-    .version(env.VERSION)
+    .version(version)
   // add commands
   for (let command of getCommands()) {
     command.configure(program)
