@@ -5,9 +5,14 @@ import {
   AppPackageResponse,
   DeployConfig,
   MessageResponse,
+  CreateAppRequest,
 } from "../../../types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import BaseAPI from "./BaseAPI"
+
+interface RenameAppBody {
+  name: string
+}
 
 export default class AppAPI extends BaseAPI {
   constructor(client: BudibaseInternalAPIClient) {
@@ -46,7 +51,7 @@ export default class AppAPI extends BaseAPI {
     return [response, json]
   }
 
-  async create(body: any): Promise<App> {
+  async create(body: CreateAppRequest): Promise<App> {
     const [response, json] = await this.post(`/applications`, body)
     expect(json._id).toBeDefined()
     return json
@@ -100,15 +105,10 @@ export default class AppAPI extends BaseAPI {
   async rename(
     appId: string,
     oldName: string,
-    body: any
+    body: RenameAppBody
   ): Promise<[Response, App]> {
     const [response, json] = await this.put(`/applications/${appId}`, body)
     expect(json.name).not.toEqual(oldName)
-    return [response, json]
-  }
-
-  async addScreentoApp(body: any): Promise<[Response, App]> {
-    const [response, json] = await this.post(`/screens`, body)
     return [response, json]
   }
 

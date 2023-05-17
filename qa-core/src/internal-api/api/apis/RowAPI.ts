@@ -18,7 +18,7 @@ export default class RowAPI extends BaseAPI {
     }
     return [response, json]
   }
-  async add(tableId: string, body: any): Promise<[Response, Row]> {
+  async add(tableId: string, body: Row): Promise<[Response, Row]> {
     const [response, json] = await this.post(`/${tableId}/rows`, body)
     expect(json._id).toBeDefined()
     expect(json._rev).toBeDefined()
@@ -27,7 +27,7 @@ export default class RowAPI extends BaseAPI {
     return [response, json]
   }
 
-  async delete(tableId: string, body: any): Promise<[Response, Row[]]> {
+  async delete(tableId: string, body: Row): Promise<[Response, Row[]]> {
     const [response, json] = await this.del(
       `/${tableId}/rows/`,
       undefined,
@@ -38,7 +38,7 @@ export default class RowAPI extends BaseAPI {
 
   async searchNoPagination(
     tableId: string,
-    body: any
+    body: string
   ): Promise<[Response, Row[]]> {
     const [response, json] = await this.post(`/${tableId}/search`, body)
     expect(json.hasNextPage).toEqual(false)
@@ -47,7 +47,7 @@ export default class RowAPI extends BaseAPI {
 
   async searchWithPagination(
     tableId: string,
-    body: any
+    body: string
   ): Promise<[Response, Row[]]> {
     const [response, json] = await this.post(`/${tableId}/search`, body)
     expect(json.hasNextPage).toEqual(true)

@@ -52,7 +52,7 @@ describe("Internal API - Data Sources: MongoDB", () => {
       datasourcetoSave
     )
     // Get Query
-    const [getQueryResponse, getQueryJson] = await config.api.queries.get(
+    const [getQueryResponse, getQueryJson] = await config.api.queries.getQuery(
       <string>saveQueryJson._id
     )
 
