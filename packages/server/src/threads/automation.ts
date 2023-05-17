@@ -13,7 +13,13 @@ import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { definitions as triggerDefs } from "../automations/triggerInfo"
 import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
-import { Automation, AutomationStep, AutomationStatus, AutomationMetadata, AutomationJob } from "@budibase/types"
+import {
+  Automation,
+  AutomationStep,
+  AutomationStatus,
+  AutomationMetadata,
+  AutomationJob,
+} from "@budibase/types"
 import {
   LoopStep,
   LoopInput,

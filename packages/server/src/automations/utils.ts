@@ -19,7 +19,7 @@ const Runner = new Thread(ThreadType.AUTOMATION)
 function loggingArgs(job: AutomationJob) {
   return {
     jobId: job.id,
-    trigger: job.data.automation.definition.trigger.event
+    trigger: job.data.automation.definition.trigger.event,
   }
 }
 
