@@ -23,7 +23,6 @@ import {
   BindParameters,
   Connection,
   ConnectionAttributes,
-  DBError,
   ExecuteOptions,
   Result,
 } from "oracledb"
