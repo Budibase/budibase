@@ -32,7 +32,9 @@
 
 <!-- routify:options index=3 -->
 <div class="root">
-  <AutomationPanel {modal} {webhookModal} />
+  <div class="list">
+    <AutomationPanel {modal} {webhookModal} />
+  </div>
   <div class="content">
     {#if $automationStore.automations?.length}
       <slot />
@@ -80,6 +82,11 @@
     grid-auto-flow: column dense;
     grid-template-columns: 260px minmax(510px, 1fr) fit-content(500px);
     overflow: hidden;
+  }
+  .list {
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: flex;
   }
   .content {
     position: relative;
