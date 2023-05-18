@@ -14,7 +14,7 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "build": "node ../../scripts/build.js",
-    "tsbuild": "tsc -p tsconfig.build.json",
+    "check:types": "tsc -p tsconfig.build.json --noEmit",
     "postbuild": "copyfiles -u 1 src/**/*.hbs dist/",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "run:docker": "node dist/index.js",
