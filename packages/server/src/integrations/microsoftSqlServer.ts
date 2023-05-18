@@ -8,6 +8,8 @@ import {
   QueryType,
   SqlQuery,
   DatasourcePlus,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -39,6 +41,7 @@ const SCHEMA: Integration = {
     "Microsoft SQL Server is a relational database management system developed by Microsoft. ",
   friendlyName: "MS SQL Server",
   type: "Relational",
+  features: [DatasourceFeature.CONNECTION_CHECKING],
   datasource: {
     user: {
       type: DatasourceFieldType.STRING,
@@ -119,6 +122,19 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     if (!this.pool) {
       this.pool = new sqlServer.ConnectionPool(clientCfg)
     }
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      await this.connect()
+      response.connected = true
+    } catch (e: any) {
+      response.error = e.message as string
+    }
+    return response
   }
 
   getBindingIdentifier(): string {
