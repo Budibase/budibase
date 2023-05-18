@@ -343,6 +343,9 @@ export class QueryBuilder<T> {
     }
 
     const oneOf = (key: string, value: any) => {
+      if (!value) {
+        return `*:*`
+      }
       if (!Array.isArray(value)) {
         if (typeof value === "string") {
           value = value.split(",")
