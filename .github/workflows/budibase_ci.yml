@@ -59,6 +59,7 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
+      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core --scope=@budibase/string-templates
       - run: yarn test --ignore=@budibase/pro
         env:
           JEST_MAX_WORKERS: ${{ steps.cpu-cores.outputs.count }}
