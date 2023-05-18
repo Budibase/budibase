@@ -21,6 +21,11 @@ router
     datasourceController.verify
   )
   .get(
+    "/api/datasources/:datasourceId/tables",
+    authorized(permissions.BUILDER),
+    datasourceController.tables
+  )
+  .get(
     "/api/datasources/:datasourceId",
     authorized(
       permissions.PermissionType.TABLE,
