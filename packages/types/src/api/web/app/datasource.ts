@@ -23,6 +23,10 @@ export interface VerifyDatasourceResponse {
   error?: string
 }
 
+export interface FetchTablesDatasourceResponse {
+  tables: string[]
+}
+
 export interface UpdateDatasourceRequest extends Datasource {
   datasource: Datasource
 }
