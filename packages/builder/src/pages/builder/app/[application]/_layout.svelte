@@ -1,5 +1,5 @@
 <script>
-  import { store, automationStore } from "builderStore"
+  import { store, automationStore, userStore } from "builderStore"
   import { roles, flags } from "stores/backend"
   import { auth } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
@@ -209,7 +209,7 @@
         {/if}
       </div>
       <div class="toprightnav">
-        <UserAvatars users={$store.users} />
+        <UserAvatars users={$userStore} />
         <AppActions {application} />
       </div>
     {/if}

@@ -34,7 +34,6 @@ export default class GridSocket extends Socket {
         const sockets = await this.io.in(currentRoom).fetchSockets()
         callback({
           users: sockets.map(socket => socket.data.user),
-          id: user.id,
         })
       })
 

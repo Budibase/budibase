@@ -41,6 +41,8 @@
   export let allowExpandRows = true
   export let allowEditRows = true
   export let allowDeleteRows = true
+  export let collaboration = true
+  export let showAvatars = true
 
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
@@ -98,7 +100,11 @@
   export const getContext = () => context
 
   // Initialise websocket for multi-user
-  onMount(() => createGridWebsocket(context))
+  onMount(() => {
+    if (collaboration) {
+      return createGridWebsocket(context)
+    }
+  })
 </script>
 
 <div
@@ -119,7 +125,9 @@
       <RowHeightButton />
     </div>
     <div class="controls-right">
-      <UserAvatars />
+      {#if showAvatars}
+        <UserAvatars />
+      {/if}
     </div>
   </div>
   {#if $loaded}

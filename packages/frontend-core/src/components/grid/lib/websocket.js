@@ -2,7 +2,7 @@ import { get } from "svelte/store"
 import { createWebsocket } from "../../../utils"
 
 export const createGridWebsocket = context => {
-  const { rows, tableId, users, userId, focusedCellId } = context
+  const { rows, tableId, users, focusedCellId } = context
   const socket = createWebsocket("/socket/grid")
 
   const connectToTable = tableId => {
@@ -13,7 +13,6 @@ export const createGridWebsocket = context => {
     socket.emit("select-table", tableId, response => {
       // handle initial connection info
       users.set(response.users)
-      userId.set(response.id)
     })
   }
 
