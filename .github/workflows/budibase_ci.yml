@@ -43,7 +43,7 @@ jobs:
           node-version: 14.x
       - run: yarn
       - run: yarn bootstrap
-      - run: yarn build
+      - run: yarn nx run-many -t=check:types
 
   test:
     runs-on: ubuntu-latest
