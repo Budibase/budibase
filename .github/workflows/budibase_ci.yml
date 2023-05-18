@@ -61,9 +61,6 @@ jobs:
       - run: yarn
       - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core --scope=@budibase/string-templates
       - run: yarn test --ignore=@budibase/pro
-        env:
-          JEST_MAX_WORKERS: ${{ steps.cpu-cores.outputs.count }}
-
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
