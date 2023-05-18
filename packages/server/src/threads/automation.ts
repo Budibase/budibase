@@ -495,6 +495,36 @@ export function execute(job: Job, callback: WorkerCallback) {
   })
 }
 
+export function executeSynchronously(job: Job) {
+  const appId = job.data.event.appId
+  if (!appId) {
+    throw new Error("Unable to execute, event doesn't contain app ID.")
+  }
+
+  const timeoutPromise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      reject(new Error("Timeout exceeded"))
+    }, job.data.event.timeout || 12000)
+  })
+
+  return context.doInAppContext(appId, async () => {
+    const envVars = await sdkUtils.getEnvironmentVariables()
+    // put into automation thread for whole context
+    return context.doInEnvironmentContext(envVars, async () => {
+      const automationOrchestrator = new Orchestrator(job)
+      try {
+        const response = await Promise.race([
+          automationOrchestrator.execute(),
+          timeoutPromise,
+        ])
+        return response
+      } catch (err) {
+        throw err
+      }
+    })
+  })
+}
+
 export const removeStalled = async (job: Job) => {
   const appId = job.data.event.appId
   if (!appId) {

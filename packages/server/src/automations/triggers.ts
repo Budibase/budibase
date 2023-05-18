@@ -10,6 +10,7 @@ import * as utils from "./utils"
 import env from "../environment"
 import { context, db as dbCore } from "@budibase/backend-core"
 import { Automation, Row, AutomationData, AutomationJob } from "@budibase/types"
+import { executeSynchronously } from "../threads/automation"
 
 export const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
@@ -118,7 +119,7 @@ export async function externalTrigger(
       automation,
     }
     const job = { data } as AutomationJob
-    return utils.processEvent(job)
+    return executeSynchronously(job)
   } else {
     return automationQueue.add(data, JOB_OPTS)
   }
