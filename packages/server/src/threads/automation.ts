@@ -13,13 +13,18 @@ import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { definitions as triggerDefs } from "../automations/triggerInfo"
 import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
-import { Automation, AutomationStep, AutomationStatus } from "@budibase/types"
+import {
+  Automation,
+  AutomationStep,
+  AutomationStatus,
+  AutomationMetadata,
+  AutomationJob,
+} from "@budibase/types"
 import {
   LoopStep,
   LoopInput,
   TriggerOutput,
   AutomationContext,
-  AutomationMetadata,
 } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
@@ -60,11 +65,11 @@ class Orchestrator {
   _job: Job
   executionOutput: AutomationContext
 
-  constructor(job: Job) {
-    let automation = job.data.automation,
-      triggerOutput = job.data.event
+  constructor(job: AutomationJob) {
+    let automation = job.data.automation
+    let triggerOutput = job.data.event
     const metadata = triggerOutput.metadata
-    this._chainCount = metadata ? metadata.automationChainCount : 0
+    this._chainCount = metadata ? metadata.automationChainCount! : 0
     this._appId = triggerOutput.appId as string
     this._job = job
     const triggerStepId = automation.definition.trigger.stepId
