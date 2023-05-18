@@ -5,6 +5,7 @@ import {
   selectedComponent,
   screenHistoryStore,
   automationHistoryStore,
+  userStore,
 } from "builderStore"
 import {
   datasources,
@@ -85,9 +86,6 @@ const INITIAL_FRONTEND_STATE = {
   // Onboarding
   onboarding: false,
   tourNodes: null,
-
-  // Multi user collab
-  users: [],
 }
 
 export const getFrontendStore = () => {
@@ -122,7 +120,6 @@ export const getFrontendStore = () => {
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath, hasLock } = pkg
       websocket = createBuilderWebsocket()
-
       await store.actions.components.refreshDefinitions(application.appId)
 
       // Reset store state

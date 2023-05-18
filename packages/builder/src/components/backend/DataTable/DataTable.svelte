@@ -36,6 +36,7 @@
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     on:updatetable={e => tables.updateTable(e.detail)}
+    showAvatars={false}
   >
     <svelte:fragment slot="controls">
       {#if isInternal}

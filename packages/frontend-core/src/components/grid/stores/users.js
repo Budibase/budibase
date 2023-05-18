@@ -2,56 +2,28 @@ import { writable, get, derived } from "svelte/store"
 
 export const createStores = () => {
   const users = writable([])
-  const userId = writable(null)
-
-  // Enrich users with unique colours
-  const enrichedUsers = derived(
-    [users, userId],
-    ([$users, $userId]) => {
-      return (
-        $users
-          .slice()
-          // Place current user first
-          .sort((a, b) => {
-            if (a.id === $userId) {
-              return -1
-            } else if (b.id === $userId) {
-              return 1
-            } else {
-              return 0
-            }
-          })
-      )
-    },
-    []
-  )
 
   return {
-    users: {
-      ...users,
-      subscribe: enrichedUsers.subscribe,
-    },
-    userId,
+    users,
   }
 }
 
 export const deriveStores = context => {
-  const { users, userId } = context
+  const { users, focusedCellId } = context
 
   // Generate a lookup map of cell ID to the user that has it selected, to make
   // lookups inside cells extremely fast
   const selectedCellMap = derived(
-    [users, userId],
-    ([$enrichedUsers, $userId]) => {
+    [users, focusedCellId],
+    ([$users, $focusedCellId]) => {
       let map = {}
-      $enrichedUsers.forEach(user => {
-        if (user.focusedCellId && user.id !== $userId) {
+      $users.forEach(user => {
+        if (user.focusedCellId && user.focusedCellId !== $focusedCellId) {
           map[user.focusedCellId] = user
         }
       })
       return map
-    },
-    {}
+    }
   )
 
   const updateUser = user => {
