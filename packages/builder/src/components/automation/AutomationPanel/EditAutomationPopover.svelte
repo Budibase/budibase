@@ -32,7 +32,12 @@
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Duplicate" on:click={duplicateAutomation}>Duplicate</MenuItem>
+  <MenuItem
+    icon="Duplicate"
+    on:click={duplicateAutomation}
+    disabled={automation.definition.trigger.name === "Webhook"}
+    >Duplicate</MenuItem
+  >
   <MenuItem icon="Edit" on:click={updateAutomationDialog.show}>Edit</MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
