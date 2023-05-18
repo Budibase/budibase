@@ -311,6 +311,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
   }
 
+  async getTableNames() {
+    try {
+      await this.openConnection()
+      const columnsResponse: { rows: PostgresColumn[] } =
+        await this.client.query(this.COLUMNS_SQL)
+      return columnsResponse.rows.map(row => row.table_name)
+    } finally {
+      await this.closeConnection()
+    }
+  }
+
   async create(query: SqlQuery | string) {
     const response = await this.internalQuery(getSqlQuery(query))
     return response.rows.length ? response.rows : [{ created: true }]

@@ -323,6 +323,17 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     this.schemaErrors = final.errors
   }
 
+  async getTableNames() {
+    const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
+      sql: this.COLUMNS_SQL,
+    })
+    if (!columnsResponse.rows) {
+      return []
+    } else {
+      return columnsResponse.rows.map(row => row.TABLE_NAME)
+    }
+  }
+
   async testConnection() {
     const response: ConnectionInfo = {
       connected: false,
