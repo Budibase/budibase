@@ -24,7 +24,7 @@ export interface VerifyDatasourceResponse {
 }
 
 export interface FetchTablesDatasourceResponse {
-  tables: string[]
+  tableNames: string[]
 }
 
 export interface UpdateDatasourceRequest extends Datasource {

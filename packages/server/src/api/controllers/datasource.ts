@@ -163,9 +163,9 @@ export async function fetchTables(
   if (!connector.getTableNames) {
     ctx.throw(400, "Table name fetching not supported by datasource")
   }
-  const tables = await connector.getTableNames()
+  const tableNames = await connector.getTableNames()
   ctx.body = {
-    tables,
+    tableNames,
   }
 }
 
