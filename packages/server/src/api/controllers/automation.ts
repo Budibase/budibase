@@ -23,7 +23,7 @@ import {
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
-import { isProdAppID } from "@budibase/backend-core/src/db"
+import { db as dbCore } from "@budibase/backend-core"
 
 async function getActionDefinitions() {
   return removeDeprecated(await actionDefs())
@@ -281,7 +281,7 @@ export async function trigger(ctx: BBContext) {
     )
     ctx.body = collectedValue?.outputs
   } else {
-    if (ctx.appId && !isProdAppID(ctx.appId)) {
+    if (ctx.appId && !dbCore.isProdAppID(ctx.appId)) {
       ctx.throw(400, "Only apps in production support this endpoint")
     }
     await triggers.externalTrigger(automation, {
