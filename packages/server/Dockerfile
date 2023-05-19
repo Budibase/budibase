@@ -5,7 +5,7 @@ LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-ho
 LABEL com.centurylinklabs.watchtower.lifecycle.post-update="scripts/watchtower-hooks/post-update.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.post-check="scripts/watchtower-hooks/post-check.sh"
 
-WORKDIR /app/dist
+WORKDIR /app
 
 ENV PORT=4001
 ENV COUCH_DB_URL=https://couchdb.budi.live:5984
@@ -32,7 +32,7 @@ RUN yarn \
 RUN apt-get remove -y --purge --auto-remove g++ make python \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
 
-COPY dist/ .
+COPY dist/ dist/
 COPY docker_run.sh .
 COPY builder/ builder/
 COPY client/ client/
