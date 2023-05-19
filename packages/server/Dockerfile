@@ -35,6 +35,7 @@ RUN apt-get remove -y --purge --auto-remove g++ make python \
 COPY dist/ .
 COPY docker_run.sh .
 COPY builder/ builder/
+COPY client/ client/
 
 EXPOSE 4001
 
