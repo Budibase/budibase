@@ -22,43 +22,44 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
+          cache: "yarn"
       - run: yarn
       - run: yarn lint
 
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
+          cache: "yarn"
       - run: yarn
-      - run: yarn bootstrap
       - run: yarn nx run-many -t=check:types
 
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
+          cache: "yarn"
       - run: yarn
-      - run: yarn bootstrap
-      - run: yarn build
+      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core --scope=@budibase/string-templates
       - run: yarn test --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
@@ -69,32 +70,34 @@ jobs:
   test-pro:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
+          cache: "yarn"
       - run: yarn
-      - run: yarn bootstrap
-      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core
       - run: yarn test --scope=@budibase/pro
 
   integration-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
-      - run: yarn && yarn bootstrap && yarn build
-      - run: |
+          cache: "yarn"
+      - run: yarn
+      - run: yarn build
+      - name: Run tests
+        run: |
           cd qa-core
           yarn setup
           yarn test:ci
@@ -106,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
