@@ -18,7 +18,7 @@ export const UserGroup = () => {
     apps: [],
     color: generator.color(),
     icon: generator.word(),
-    name: generator.word({ length: 2 }),
+    name: generator.word(),
     roles: roles,
     users: [],
   }
