@@ -12,7 +12,6 @@
         "outputFileName": "index.js",
         "tsConfig": "packages/worker/tsconfig.build.json",
         "assets": [
-          "packages/worker/docker_run.sh",
           {
             "glob": "**/*.hbs",
             "input": "packages/worker/src/constants/templates",
