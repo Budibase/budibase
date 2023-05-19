@@ -7,15 +7,17 @@ LABEL com.centurylinklabs.watchtower.lifecycle.post-check="scripts/watchtower-ho
 
 WORKDIR /app
 
-# copy required files
-COPY . ./
-
 # handle node-gyp
-RUN apk add --no-cache --virtual .gyp python3 make g++ \
-    && yarn && apk del .gyp \
-    && yarn \
-    && yarn cache clean
+RUN apk add --no-cache --virtual .gyp python3 make g++
 RUN yarn global add pm2
+
+
+COPY dist/package.json .
+RUN yarn
+RUN apk del .gyp \
+    && yarn cache clean
+
+COPY dist/ .
 
 EXPOSE 4001
 

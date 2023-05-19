@@ -29,8 +29,8 @@ services:
     depends_on:
       - worker-service
       - redis-service
-#    volumes:
-#      - /some/path/to/plugins:/plugins
+  #    volumes:
+  #      - /some/path/to/plugins:/plugins
 
   worker-service:
     build: ../packages/worker
