@@ -23,6 +23,7 @@ import {
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
+import { isProdAppID } from "@budibase/backend-core/src/db"
 
 async function getActionDefinitions() {
   return removeDeprecated(await actionDefs())
@@ -265,7 +266,6 @@ export async function trigger(ctx: BBContext) {
   let automation = await db.get(ctx.params.id)
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
-
   if (hasCollectStep) {
     const response: AutomationResults = await triggers.externalTrigger(
       automation,
@@ -281,6 +281,9 @@ export async function trigger(ctx: BBContext) {
     )
     ctx.body = collectedValue?.outputs
   } else {
+    if (ctx.appId && !isProdAppID(ctx.appId)) {
+      ctx.throw(400, "Only apps in production support this endpoint")
+    }
     await triggers.externalTrigger(automation, {
       ...ctx.request.body,
       appId: ctx.appId,
