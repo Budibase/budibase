@@ -52,8 +52,8 @@ describe("row api - postgres", () => {
     makeRequest = generateMakeRequest(apiKey, true)
   })
 
-  beforeEach(async () => {
-    postgresDatasource = await config.createDatasource({
+  function pgDatasourceConfig() {
+    return {
       datasource: {
         type: "datasource",
         source: SourceName.POSTGRES,
@@ -70,7 +70,11 @@ describe("row api - postgres", () => {
           ca: false,
         },
       },
-    })
+    }
+  }
+
+  beforeEach(async () => {
+    postgresDatasource = await config.createDatasource(pgDatasourceConfig())
 
     async function createAuxTable(prefix: string) {
       return await config.createTable({
@@ -436,6 +440,19 @@ describe("row api - postgres", () => {
           })
         )
       })
+    })
+  })
+
+  describe("POST /api/datasources/verify", () => {
+    it("should be able to verify the connection", async () => {
+      const config = pgDatasourceConfig()
+      const response = await makeRequest(
+        "post",
+        "/api/datasources/verify",
+        config
+      )
+      expect(response.status).toBe(200)
+      expect(response.body.connected).toBe(true)
     })
   })
 

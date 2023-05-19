@@ -154,7 +154,7 @@ export async function verify(
   }
 }
 
-export async function tables(
+export async function fetchTables(
   ctx: UserCtx<void, FetchTablesDatasourceResponse>
 ) {
   const datasourceId = ctx.params.datasourceId
