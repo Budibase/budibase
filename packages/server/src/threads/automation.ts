@@ -512,15 +512,11 @@ export function executeSynchronously(job: Job) {
     // put into automation thread for whole context
     return context.doInEnvironmentContext(envVars, async () => {
       const automationOrchestrator = new Orchestrator(job)
-      try {
-        const response = await Promise.race([
-          automationOrchestrator.execute(),
-          timeoutPromise,
-        ])
-        return response
-      } catch (err) {
-        throw err
-      }
+      const response = await Promise.race([
+        automationOrchestrator.execute(),
+        timeoutPromise,
+      ])
+      return response
     })
   })
 }
