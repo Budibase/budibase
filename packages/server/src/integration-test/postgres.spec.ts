@@ -26,7 +26,7 @@ jest.setTimeout(30000)
 
 jest.unmock("pg")
 
-describe("row api - postgres", () => {
+describe("postgres integrations", () => {
   let makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
     primaryPostgresTable: Table,
@@ -440,19 +440,6 @@ describe("row api - postgres", () => {
           })
         )
       })
-    })
-  })
-
-  describe("POST /api/datasources/verify", () => {
-    it("should be able to verify the connection", async () => {
-      const config = pgDatasourceConfig()
-      const response = await makeRequest(
-        "post",
-        "/api/datasources/verify",
-        config
-      )
-      expect(response.status).toBe(200)
-      expect(response.body.connected).toBe(true)
     })
   })
 
@@ -1039,6 +1026,45 @@ describe("row api - postgres", () => {
 
         expect(res.body).toHaveLength(rowsCount)
       })
+    })
+  })
+
+  describe("POST /api/datasources/verify", () => {
+    it("should be able to verify the connection", async () => {
+      const config = pgDatasourceConfig()
+      const response = await makeRequest(
+        "post",
+        "/api/datasources/verify",
+        config
+      )
+      expect(response.status).toBe(200)
+      expect(response.body.connected).toBe(true)
+    })
+
+    it("should state an invalid datasource cannot connect", async () => {
+      const config = pgDatasourceConfig()
+      config.datasource.config.password = "wrongpassword"
+      const response = await makeRequest(
+        "post",
+        "/api/datasources/verify",
+        config
+      )
+      expect(response.status).toBe(200)
+      expect(response.body.connected).toBe(false)
+      expect(response.body.error).toBeDefined()
+    })
+  })
+
+  describe("GET /api/datasources/:datasourceId/tables", () => {
+    it("should fetch tables within postgres datasource", async () => {
+      const primaryName = primaryPostgresTable.name
+      const response = await makeRequest(
+        "get",
+        `/api/datasources/${postgresDatasource._id}/tables`
+      )
+      expect(response.status).toBe(200)
+      expect(response.body.tableNames).toBeDefined()
+      expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-10)
     })
   })
 })
