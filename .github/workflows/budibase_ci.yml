@@ -60,7 +60,7 @@ jobs:
           cache: "yarn"
       - run: yarn
       - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core --scope=@budibase/string-templates
-      - run: yarn test --ignore=@budibase/pro --concurrency=1
+      - run: yarn test --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
