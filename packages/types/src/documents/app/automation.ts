@@ -178,3 +178,8 @@ export type AutomationStepInput = {
   appId: string
   apiKey?: string
 }
+
+export interface AutomationMetadata extends Document {
+  errorCount?: number
+  automationChainCount?: number
+}
