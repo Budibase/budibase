@@ -23,7 +23,7 @@ router
   .get(
     "/api/datasources/:datasourceId/tables",
     authorized(permissions.BUILDER),
-    datasourceController.tables
+    datasourceController.fetchTables
   )
   .get(
     "/api/datasources/:datasourceId",
