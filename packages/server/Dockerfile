@@ -15,21 +15,25 @@ ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
 ENV TENANT_FEATURE_FLAGS=*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
 
-# copy required files
-COPY . ./
 
 # handle node-gyp
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends g++ make python \
-    && yarn \
-    && yarn cache clean \
-    && apt-get remove -y --purge --auto-remove g++ make python \
-    && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
+    && apt-get install -y --no-install-recommends g++ make python
 RUN yarn global add pm2
 
 # Install client for oracle datasource
 RUN apt-get install unzip libaio1
+COPY scripts/integrations/oracle/ scripts/integrations/oracle/
 RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh 
+
+COPY package.json .
+RUN yarn \
+    && yarn cache clean 
+RUN apt-get remove -y --purge --auto-remove g++ make python \
+    && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
+
+COPY dist/ .
+COPY docker_run.sh .
 
 EXPOSE 4001
 
