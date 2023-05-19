@@ -90,8 +90,8 @@ export const useScimIntegration = () => {
   return useFeature(Feature.SCIM)
 }
 
-export const useSyncWebhook = () => {
-  return useFeature(Feature.SYNC_WEBHOOKS)
+export const useSyncAutomations = () => {
+  return useFeature(Feature.SYNC_AUTOMATIONS)
 }
 
 // QUOTAS

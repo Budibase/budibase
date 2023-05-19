@@ -18,7 +18,7 @@
   export let blockIdx
   export let lastStep
 
-  let syncWebhooksEnabled = $licensing.syncWebhooksEnabled
+  let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let selectedAction
   let actionVal
@@ -33,7 +33,7 @@
         message: "Please configure SMTP",
       },
       COLLECT: {
-        disabled: !lastStep || !syncWebhooksEnabled || collectBlockExists,
+        disabled: !lastStep || !syncAutomationsEnabled || collectBlockExists,
         message: collectDisabledMessage(),
       },
     }
@@ -149,7 +149,7 @@
           <div class="item-body">
             <Icon name={action.icon} />
             <Body size="XS">{action.name}</Body>
-            {#if isDisabled && !syncWebhooksEnabled}
+            {#if isDisabled && !syncAutomationsEnabled}
               <div class="tag-color">
                 <Tags>
                   <Tag icon="LockClosed">Business</Tag>

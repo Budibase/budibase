@@ -70,7 +70,7 @@ export const Features = {
   ENFORCEABLE_SSO: "enforceableSSO",
   BRANDING: "branding",
   SCIM: "scim",
-  SYNC_WEBHOOKS: "syncWebhooks",
+  SYNC_AUTOMATIONS: "syncAutoamtions",
 }
 
 // Role IDs
