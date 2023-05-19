@@ -1,0 +1,34 @@
+{
+  "name": "@budibase/worker",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "main": "packages/worker/src/index.ts",
+        "outputPath": "packages/worker/dist",
+        "outputFileName": "index.js",
+        "tsConfig": "packages/worker/tsconfig.build.json",
+        "assets": [
+          "packages/worker/docker_run.sh",
+          {
+            "glob": "**/*.hbs",
+            "input": "packages/worker/src/constants/templates",
+            "output": "."
+          }
+        ],
+        "format": ["cjs"]
+      },
+      "configurations": {
+        "development": {
+          "minify": false
+        },
+        "production": {
+          "minify": true
+        }
+      }
+    }
+  }
+}
