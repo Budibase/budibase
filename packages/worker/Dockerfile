@@ -5,7 +5,7 @@ LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-ho
 LABEL com.centurylinklabs.watchtower.lifecycle.post-update="scripts/watchtower-hooks/post-update.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.post-check="scripts/watchtower-hooks/post-check.sh"
 
-WORKDIR /app
+WORKDIR /app/dist
 
 # handle node-gyp
 RUN apk add --no-cache --virtual .gyp python3 make g++

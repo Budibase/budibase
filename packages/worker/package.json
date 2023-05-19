@@ -16,7 +16,7 @@
     "build": "cd ../.. && nx build @budibase/worker",
     "check:types": "tsc -p tsconfig.build.json --noEmit",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "run:docker": "node index.cjs",
+    "run:docker": "node dist/index.cjs",
     "debug": "yarn build && node --expose-gc --inspect=9223 dist/index.cjs",
     "run:docker:cluster": "pm2-runtime start pm2.config.js",
     "predocker": "yarn build",
