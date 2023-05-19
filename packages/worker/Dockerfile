@@ -18,6 +18,7 @@ RUN apk del .gyp \
     && yarn cache clean
 
 COPY dist/ dist/
+COPY docker_run.sh .
 
 EXPOSE 4001
 

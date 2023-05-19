@@ -1,2 +1,3 @@
 *
 !/dist/
+!/docker_run.sh
