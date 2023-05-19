@@ -21,7 +21,7 @@
     "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client && yarn build",
     "build:docker": "yarn predocker && docker build . -t app-service --label version=$BUDIBASE_RELEASE_VERSION",
     "build:docs": "node ./scripts/docs/generate.js open",
-    "run:docker": "node index.js",
+    "run:docker": "node dist/index.js",
     "run:docker:cluster": "pm2-runtime start pm2.config.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
     "dev:stack:down": "node scripts/dev/manage.js down",
