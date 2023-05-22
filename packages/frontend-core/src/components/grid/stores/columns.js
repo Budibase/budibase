@@ -90,10 +90,6 @@ export const deriveStores = context => {
     // Update local state
     table.set(newTable)
 
-    // Broadcast event so that we can keep sync with external state
-    // (e.g. data section which maintains a list of table definitions)
-    dispatch("updatetable", newTable)
-
     // Update server
     await API.saveTable(newTable)
   }

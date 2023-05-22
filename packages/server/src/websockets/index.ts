@@ -14,4 +14,4 @@ export const initialise = (app: Koa, server: http.Server) => {
   builderSocket = new BuilderSocket(app, server)
 }
 
-export { clientAppSocket, gridSocket }
+export { clientAppSocket, gridSocket, builderSocket }
