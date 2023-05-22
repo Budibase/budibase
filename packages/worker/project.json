@@ -22,7 +22,8 @@
           "outExtension": {
             ".js": ".js"
           }
-        }
+        },
+        "generatePackageJson": true
       },
       "configurations": {
         "development": {
