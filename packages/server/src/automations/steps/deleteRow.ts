@@ -8,6 +8,7 @@ import {
   AutomationStepType,
   AutomationIOType,
   AutomationCustomIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -18,7 +19,7 @@ export const definition: AutomationStepSchema = {
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.DELETE_ROW,
   internal: true,
-  canLoop: true,
+  features: [AutomationFeature.LOOPING],
   inputs: {},
   schema: {
     inputs: {

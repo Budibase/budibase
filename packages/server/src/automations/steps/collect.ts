@@ -4,6 +4,7 @@ import {
   AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -14,7 +15,7 @@ export const definition: AutomationStepSchema = {
     "Collects specified data so it can be provided to the design section",
   type: AutomationStepType.ACTION,
   internal: true,
-  canLoop: false,
+  features: [],
   stepId: AutomationActionStepId.COLLECT,
   inputs: {
     text: "",

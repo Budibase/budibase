@@ -123,7 +123,11 @@ export interface AutomationStepSchema {
     outputs: InputOutputBlock
   }
   custom?: boolean
-  canLoop?: boolean
+  features?: AutomationFeature[]
+}
+
+export enum AutomationFeature {
+  LOOPING = "LOOPING",
 }
 
 export interface AutomationStep extends AutomationStepSchema {

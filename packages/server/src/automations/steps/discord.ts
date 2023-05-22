@@ -6,6 +6,7 @@ import {
   AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 const DEFAULT_USERNAME = "Budibase Automate"
@@ -19,7 +20,7 @@ export const definition: AutomationStepSchema = {
   stepId: AutomationActionStepId.discord,
   type: AutomationStepType.ACTION,
   internal: false,
-  canLoop: true,
+  features: [AutomationFeature.LOOPING],
   inputs: {},
   schema: {
     inputs: {
