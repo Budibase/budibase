@@ -12,7 +12,7 @@ export interface Datasource extends Document {
   }
   plus?: boolean
   entities?: {
-    [key: string]: Table
+    [key: string]: any
   }
 }
 
