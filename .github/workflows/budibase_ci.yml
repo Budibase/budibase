@@ -44,6 +44,7 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
+      - run: yarn build --projects=@budibase/string-templates
       - run: yarn nx run-many -t=check:types
 
   test:
