@@ -44,7 +44,6 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn build --scope=@budibase/string-templates
       - run: yarn nx run-many -t=check:types
 
   test:
@@ -60,7 +59,7 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core --scope=@budibase/string-templates
+      - run: yarn build --projects @budibase/types,@budibase/shared-core,@budibase/string-templates
       - run: yarn test --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
