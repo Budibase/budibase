@@ -178,5 +178,19 @@
   "optionalDependencies": {
     "oracledb": "5.3.0"
   },
+  "nx": {
+    "targets": {
+      "test": {
+        "dependsOn": [
+          {
+            "target": "build",
+            "projects": [
+              "@budibase/client"
+            ]
+          }
+        ]
+      }
+    }
+  },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }
