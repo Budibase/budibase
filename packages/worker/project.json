@@ -5,7 +5,6 @@
     "build": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
       "options": {
         "main": "packages/worker/src/index.ts",
         "outputPath": "packages/worker/dist",
@@ -18,7 +17,12 @@
             "output": "."
           }
         ],
-        "format": ["cjs"]
+        "format": ["cjs"],
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
       },
       "configurations": {
         "development": {
