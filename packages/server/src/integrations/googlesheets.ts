@@ -240,6 +240,11 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
+  getTableNames(): Promise<string[]> {
+    // TODO: implement
+    return Promise.resolve([])
+  }
+
   getTableSchema(title: string, headerValues: string[], id?: string) {
     // base table
     const table: Table = {
