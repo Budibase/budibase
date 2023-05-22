@@ -21,17 +21,11 @@
         "esbuildOptions": {
           "outExtension": {
             ".js": ".js"
-          }
+          },
+          "sourcemap": true
         },
+        "minify": true,
         "generatePackageJson": true
-      },
-      "configurations": {
-        "development": {
-          "minify": false
-        },
-        "production": {
-          "minify": true
-        }
       }
     }
   }
