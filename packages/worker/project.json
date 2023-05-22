@@ -30,7 +30,10 @@
       },
       "configurations": {
         "production": {
-          "skipTypeCheck": false
+          "skipTypeCheck": false,
+          "esbuildOptions": {
+            "sourcemap": false
+          }
         }
       }
     }
