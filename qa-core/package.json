@@ -17,7 +17,8 @@
     "test:smoke": "yarn run test --testPathIgnorePatterns=/.+\\.integration\\.spec\\.ts",
     "test:ci": "start-server-and-test dev:built http://localhost:4001/health test:smoke",
     "serve": "start-server-and-test dev:built http://localhost:4001/health",
-    "dev:built": "cd ../ && yarn dev:built"
+    "dev:built": "cd ../ && yarn dev:built",
+    "test:datasources": "jest --runInBand --json --outputFile=testResults.json --testPathPattern='datasources/.*\\.spec\\.(ts|js)$'"
   },
   "devDependencies": {
     "@budibase/types": "^2.3.17",
