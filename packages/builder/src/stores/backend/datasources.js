@@ -89,7 +89,7 @@ export function createDatasourcesStore() {
     })
   }
 
-  // Handles external updates of tables
+  // Handles external updates of datasources
   const replaceDatasource = (datasourceId, datasource) => {
     if (!datasourceId) {
       return
