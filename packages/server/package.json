@@ -18,7 +18,7 @@
     "test": "bash scripts/test.sh",
     "test:memory": "jest --maxWorkers=2 --logHeapUsage --forceExit",
     "test:watch": "jest --watch",
-    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client && yarn build",
+    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client && yarn build  --configuration=production",
     "build:docker": "yarn predocker && docker build . -t app-service --label version=$BUDIBASE_RELEASE_VERSION",
     "build:docs": "node ./scripts/docs/generate.js open",
     "run:docker": "node dist/index.js",
