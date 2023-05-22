@@ -5,6 +5,7 @@ import environment from "../../environment"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
+  AutomationFeature,
   AutomationIOType,
   AutomationStepInput,
   AutomationStepSchema,
@@ -18,7 +19,7 @@ export const definition: AutomationStepSchema = {
   description: "Run a bash script",
   type: AutomationStepType.ACTION,
   internal: true,
-  canLoop: true,
+  features: [AutomationFeature.LOOPING],
   stepId: AutomationActionStepId.EXECUTE_BASH,
   inputs: {},
   schema: {

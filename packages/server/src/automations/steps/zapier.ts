@@ -6,6 +6,7 @@ import {
   AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -13,7 +14,7 @@ export const definition: AutomationStepSchema = {
   stepId: AutomationActionStepId.zapier,
   type: AutomationStepType.ACTION,
   internal: false,
-  canLoop: true,
+  features: [AutomationFeature.LOOPING],
   description: "Trigger a Zapier Zap via webhooks",
   tagline: "Trigger a Zapier Zap",
   icon: "ri-flashlight-line",

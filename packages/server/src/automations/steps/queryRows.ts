@@ -6,6 +6,7 @@ import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
+  AutomationFeature,
   AutomationIOType,
   AutomationStepInput,
   AutomationStepSchema,
@@ -42,7 +43,7 @@ export const definition: AutomationStepSchema = {
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.QUERY_ROWS,
   internal: true,
-  canLoop: true,
+  features: [AutomationFeature.LOOPING],
   inputs: {},
   schema: {
     inputs: {

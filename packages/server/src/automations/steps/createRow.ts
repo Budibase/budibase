@@ -4,6 +4,7 @@ import { buildCtx } from "./utils"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
+  AutomationFeature,
   AutomationIOType,
   AutomationStepInput,
   AutomationStepSchema,
@@ -17,7 +18,7 @@ export const definition: AutomationStepSchema = {
   description: "Add a row to your database",
   type: AutomationStepType.ACTION,
   internal: true,
-  canLoop: true,
+  features: [AutomationFeature.LOOPING],
   stepId: AutomationActionStepId.CREATE_ROW,
   inputs: {},
   schema: {

@@ -6,6 +6,7 @@ import {
   AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -15,7 +16,7 @@ export const definition: AutomationStepSchema = {
   name: "Send Email (SMTP)",
   type: AutomationStepType.ACTION,
   internal: true,
-  canLoop: true,
+  features: [AutomationFeature.LOOPING],
   stepId: AutomationActionStepId.SEND_EMAIL_SMTP,
   inputs: {},
   schema: {
