@@ -25,7 +25,13 @@
           "sourcemap": true
         },
         "minify": true,
-        "generatePackageJson": true
+        "generatePackageJson": true,
+        "skipTypeCheck": true
+      },
+      "configurations": {
+        "production": {
+          "skipTypeCheck": false
+        }
       }
     }
   }
