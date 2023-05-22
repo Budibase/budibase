@@ -1064,7 +1064,7 @@ describe("postgres integrations", () => {
       )
       expect(response.status).toBe(200)
       expect(response.body.tableNames).toBeDefined()
-      expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-10)
+      expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-1)
     })
   })
 })
