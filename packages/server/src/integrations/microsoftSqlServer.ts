@@ -40,7 +40,10 @@ const SCHEMA: Integration = {
     "Microsoft SQL Server is a relational database management system developed by Microsoft. ",
   friendlyName: "MS SQL Server",
   type: "Relational",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: [
+    DatasourceFeature.CONNECTION_CHECKING,
+    DatasourceFeature.FETCH_TABLE_NAMES,
+  ],
   datasource: {
     user: {
       type: DatasourceFieldType.STRING,

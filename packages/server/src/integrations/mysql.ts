@@ -36,7 +36,10 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "MySQL Database Service is a fully managed database service to deploy cloud-native applications. ",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: [
+    DatasourceFeature.CONNECTION_CHECKING,
+    DatasourceFeature.FETCH_TABLE_NAMES,
+  ],
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,

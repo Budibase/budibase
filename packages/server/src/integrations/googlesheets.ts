@@ -63,10 +63,13 @@ const SCHEMA: Integration = {
   relationships: false,
   docs: "https://developers.google.com/sheets/api/quickstart/nodejs",
   description:
-    "Create and collaborate on online spreadsheets in real-time and from any device. ",
+    "Create and collaborate on online spreadsheets in real-time and from any device.",
   friendlyName: "Google Sheets",
   type: "Spreadsheet",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: [
+    DatasourceFeature.CONNECTION_CHECKING,
+    DatasourceFeature.FETCH_TABLE_NAMES,
+  ],
   datasource: {
     spreadsheetId: {
       display: "Google Sheet URL",

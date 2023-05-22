@@ -75,6 +75,7 @@ export enum FilterType {
 
 export enum DatasourceFeature {
   CONNECTION_CHECKING = "connection",
+  FETCH_TABLE_NAMES = "fetch_table_names",
 }
 
 export interface StepDefinition {
