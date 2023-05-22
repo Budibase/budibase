@@ -60,6 +60,7 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
+      - run: yarn build --projects @budibase/shared-core,@budibase/string-templates
       - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
