@@ -1,5 +1,6 @@
+import { DatasourceRequest } from "../../types"
 // Add information about the data source to the fixtures file from 1password
-export const mongoDB = () => {
+export const mongoDB = (): DatasourceRequest => {
   return {
     datasource: {
       name: "MongoDB",
@@ -15,7 +16,7 @@ export const mongoDB = () => {
   }
 }
 
-export const postgresSQL = () => {
+export const postgresSQL = (): DatasourceRequest => {
   return {
     datasource: {
       name: "PostgresSQL",
@@ -34,7 +35,7 @@ export const postgresSQL = () => {
     fetchSchema: true,
   }
 }
-export const mariaDB = () => {
+export const mariaDB = (): DatasourceRequest => {
   return {
     datasource: {
       name: "MariaDB",
@@ -54,7 +55,7 @@ export const mariaDB = () => {
   }
 }
 
-export const restAPI = () => {
+export const restAPI = (): DatasourceRequest => {
   return {
     datasource: {
       name: "RestAPI",
