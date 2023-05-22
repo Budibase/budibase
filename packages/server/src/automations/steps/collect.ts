@@ -17,9 +17,7 @@ export const definition: AutomationStepSchema = {
   internal: true,
   features: [],
   stepId: AutomationActionStepId.COLLECT,
-  inputs: {
-    text: "",
-  },
+  inputs: {},
   schema: {
     inputs: {
       properties: {
@@ -28,7 +26,7 @@ export const definition: AutomationStepSchema = {
           title: "What to Collect",
         },
       },
-      required: ["text"],
+      required: ["collection"],
     },
     outputs: {
       properties: {
