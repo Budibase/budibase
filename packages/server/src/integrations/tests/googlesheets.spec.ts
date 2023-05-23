@@ -144,4 +144,15 @@ describe("Google Sheets Integration", () => {
       })
     })
   })
+
+  describe("testConnection", () => {
+    it("can test successful connections", async () => {
+      await config.doInContext(structures.uuid(), async () => {
+        const res = await integration.testConnection()
+
+        expect(mockGoogleIntegration.loadInfo).toBeCalledTimes(1)
+        expect(res).toEqual({ connected: true })
+      })
+    })
+  })
 })
