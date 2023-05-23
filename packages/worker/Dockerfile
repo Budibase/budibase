@@ -14,6 +14,7 @@ RUN yarn global add pm2
 
 COPY dist/package.json .
 RUN yarn
+# Remove unneeded data from file system to reduce image size
 RUN apk del .gyp \
     && yarn cache clean
 
