@@ -19023,7 +19023,7 @@ nx@15.9.2, "nx@>=15.5.2 < 16":
     "@nrwl/nx-win32-arm64-msvc" "15.9.2"
     "@nrwl/nx-win32-x64-msvc" "15.9.2"
 
-nx@16.2.1:
+nx@16.2.1, nx@^16.2.1:
   version "16.2.1"
   resolved "https://registry.yarnpkg.com/nx/-/nx-16.2.1.tgz#8571a4663c79dc9d60c98599b19146b58c59b473"
   integrity sha512-O+yGcYIQtYKYagbIuOQFk1P8ki5PHn0BZjdZpsa4K8UZ4pCaRWzlwWwwUL91FUJe6tdhic5710DwAAakbGKP7Q==
