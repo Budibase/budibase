@@ -15,7 +15,6 @@
 
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)
-  let skipFetch = false
   let isValid = false
 
   $: name =
@@ -47,7 +46,7 @@
       if (!datasource.name) {
         datasource.name = name
       }
-      const resp = await save(datasource, skipFetch)
+      const resp = await save(datasource)
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
     } catch (err) {
@@ -56,10 +55,6 @@
       return false
     }
   }
-
-  onMount(() => {
-    skipFetch = false
-  })
 </script>
 
 <ModalContent
@@ -69,11 +64,6 @@
   confirmText={datasource.plus ? "Connect" : "Save and continue to query"}
   cancelText="Back"
   showSecondaryButton={datasource.plus}
-  secondaryAction={() => {
-    skipFetch = true
-    saveDatasource()
-    return true
-  }}
   size="L"
   disabled={!isValid}
 >
