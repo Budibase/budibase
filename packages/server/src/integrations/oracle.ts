@@ -330,11 +330,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: this.COLUMNS_SQL,
     })
-    if (!columnsResponse.rows) {
-      return []
-    } else {
-      return columnsResponse.rows.map(row => row.TABLE_NAME)
-    }
+    return (columnsResponse.rows || []).map(row => row.TABLE_NAME)
   }
 
   async testConnection() {

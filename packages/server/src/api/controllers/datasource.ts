@@ -21,7 +21,7 @@ import {
   CreateDatasourceRequest,
   VerifyDatasourceRequest,
   VerifyDatasourceResponse,
-  FetchTablesDatasourceResponse,
+  FetchDatasourceInfoResponse,
   IntegrationBase,
   DatasourcePlus,
 } from "@budibase/types"
@@ -154,8 +154,8 @@ export async function verify(
   }
 }
 
-export async function fetchTables(
-  ctx: UserCtx<void, FetchTablesDatasourceResponse>
+export async function information(
+  ctx: UserCtx<void, FetchDatasourceInfoResponse>
 ) {
   const datasourceId = ctx.params.datasourceId
   const datasource = await sdk.datasources.get(datasourceId, { enriched: true })
