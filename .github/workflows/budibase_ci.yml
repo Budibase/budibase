@@ -45,7 +45,7 @@ jobs:
           cache: "yarn"
       - run: yarn
       - run: yarn build --projects=@budibase/string-templates
-      - run: yarn nx run-many -t=check:types
+      - run: yarn nx run-many -t=build:checktypes
 
   test-libraries:
     runs-on: ubuntu-latest
