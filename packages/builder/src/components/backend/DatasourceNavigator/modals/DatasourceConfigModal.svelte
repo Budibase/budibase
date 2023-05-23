@@ -29,7 +29,7 @@
     try {
       const resp = await validateDatasourceConfig(datasource)
       if (!resp.connected) {
-        displayError(resp.error)
+        displayError(`Unable to connect - ${resp.error}`)
       }
       connected = resp.connected
     } catch (err) {

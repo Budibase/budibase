@@ -54,7 +54,7 @@
     try {
       const resp = await API.validateDatasource(datasource)
       if (!resp.connected) {
-        displayError(`Error connecting to the datasource: ` + resp.error)
+        displayError(`Unable to connect - ${resp.error}`)
       }
       connected = resp.connected
     } catch (err) {
