@@ -243,9 +243,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  getTableNames(): Promise<string[]> {
-    // TODO: implement
-    return Promise.resolve([])
+  async getTableNames(): Promise<string[]> {
+    await this.connect()
+    const sheets = this.client.sheetsByIndex
+    return sheets.map(s => s.title)
   }
 
   getTableSchema(title: string, headerValues: string[], id?: string) {
