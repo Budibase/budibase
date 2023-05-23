@@ -148,7 +148,6 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async testConnection(): Promise<ConnectionInfo> {
     try {
       await this.connect()
-      await this.client.loadInfo()
       return { connected: true }
     } catch (e: any) {
       return {
