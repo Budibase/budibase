@@ -58,4 +58,15 @@ export const buildDatasourceEndpoints = API => ({
       url: `/api/datasources/${datasourceId}/${datasourceRev}`,
     })
   },
+
+  /**
+   * Validate a datasource configuration
+   * @param datasource the datasource configuration to validate
+   */
+  validateDatasource: async datasource => {
+    return await API.post({
+      url: `/api/datasources/verify`,
+      body: { datasource },
+    })
+  },
 })

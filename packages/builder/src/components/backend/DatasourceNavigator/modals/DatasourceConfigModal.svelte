@@ -4,7 +4,10 @@
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { IntegrationNames } from "constants/backend"
   import cloneDeep from "lodash/cloneDeepWith"
-  import { saveDatasource as save } from "builderStore/datasource"
+  import {
+    saveDatasource as save,
+    validateDatasourceConfig,
+  } from "builderStore/datasource"
   import { onMount } from "svelte"
 
   export let integration
@@ -18,6 +21,27 @@
   $: name =
     IntegrationNames[datasource.type] || datasource.name || datasource.type
 
+  async function validateConfig() {
+    function displayError(message) {
+      notifications.error(message ?? "Error validating datasource")
+    }
+
+    let connected = false
+    try {
+      if (!datasource.name) {
+        datasource.name = name
+      }
+
+      const resp = await validateDatasourceConfig(datasource)
+      if (!resp.connected) {
+        displayError(resp.error)
+      }
+      connected = resp.connected
+    } catch (err) {
+      displayError(err?.message)
+    }
+    return connected
+  }
   async function saveDatasource() {
     try {
       if (!datasource.name) {
@@ -40,7 +64,8 @@
 
 <ModalContent
   title={`Connect to ${name}`}
-  onConfirm={() => saveDatasource()}
+  onConfirm={() =>
+    validateConfig().then(connected => connected && saveDatasource())}
   onCancel={() => modal.show()}
   confirmText={datasource.plus
     ? "Save and fetch tables"
