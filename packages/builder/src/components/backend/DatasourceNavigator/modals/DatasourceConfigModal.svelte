@@ -8,7 +8,6 @@
     saveDatasource as save,
     validateDatasourceConfig,
   } from "builderStore/datasource"
-  import { onMount } from "svelte"
 
   export let integration
   export let modal
@@ -37,10 +36,14 @@
     return connected
   }
 
+  $: shouldValidate = integration.features?.find(f => f === "connection")
+
   async function saveDatasource() {
-    const valid = await validateConfig()
-    if (!valid) {
-      return false
+    if (shouldValidate) {
+      const valid = await validateConfig()
+      if (!valid) {
+        return false
+      }
     }
     try {
       if (!datasource.name) {
@@ -48,7 +51,7 @@
       }
       const resp = await save(datasource)
       $goto(`./datasource/${resp._id}`)
-      notifications.success(`Datasource updated successfully.`)
+      notifications.success(`Datasource created successfully.`)
     } catch (err) {
       notifications.error(err?.message ?? "Error saving datasource")
       // prevent the modal from closing
@@ -61,7 +64,11 @@
   title={`Connect to ${name}`}
   onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
-  confirmText={datasource.plus ? "Connect" : "Save and continue to query"}
+  confirmText={datasource.plus
+    ? shouldValidate
+      ? "Connect"
+      : "Save and continue"
+    : "Save and continue to query"}
   cancelText="Back"
   showSecondaryButton={datasource.plus}
   size="L"

@@ -53,6 +53,7 @@
       config,
       schema: selected.datasource,
       auth: selected.auth,
+      features: selected.features || [],
     }
     if (selected.friendlyName) {
       integration.name = selected.friendlyName
