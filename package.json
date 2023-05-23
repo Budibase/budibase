@@ -18,6 +18,7 @@
     "lerna": "^6.6.2",
     "madge": "^6.0.0",
     "minimist": "^1.2.8",
+    "nx": "^16.2.1",
     "prettier": "^2.3.1",
     "prettier-plugin-svelte": "^2.3.0",
     "rimraf": "^3.0.2",

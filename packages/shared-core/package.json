@@ -26,5 +26,19 @@
     "concurrently": "^7.6.0",
     "rimraf": "3.0.2",
     "typescript": "4.7.3"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }
