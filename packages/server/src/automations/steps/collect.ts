@@ -45,8 +45,14 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  return {
-    success: true,
-    value: inputs.collection,
+  if (!inputs.collection) {
+    return {
+      success: false,
+    }
+  } else {
+    return {
+      success: true,
+      value: inputs.collection,
+    }
   }
 }
