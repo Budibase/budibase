@@ -22,16 +22,11 @@
     IntegrationNames[datasource.type] || datasource.name || datasource.type
 
   async function validateConfig() {
-    function displayError(message) {
+    const displayError = message =>
       notifications.error(message ?? "Error validating datasource")
-    }
 
     let connected = false
     try {
-      if (!datasource.name) {
-        datasource.name = name
-      }
-
       const resp = await validateDatasourceConfig(datasource)
       if (!resp.connected) {
         displayError(resp.error)
@@ -42,7 +37,12 @@
     }
     return connected
   }
+
   async function saveDatasource() {
+    const valid = await validateConfig()
+    if (!valid) {
+      return false
+    }
     try {
       if (!datasource.name) {
         datasource.name = name
@@ -64,8 +64,7 @@
 
 <ModalContent
   title={`Connect to ${name}`}
-  onConfirm={() =>
-    validateConfig().then(connected => connected && saveDatasource())}
+  onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
   confirmText={datasource.plus
     ? "Save and fetch tables"
