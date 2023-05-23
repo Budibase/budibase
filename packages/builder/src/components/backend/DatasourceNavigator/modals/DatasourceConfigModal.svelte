@@ -66,12 +66,9 @@
   title={`Connect to ${name}`}
   onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
-  confirmText={datasource.plus
-    ? "Save and fetch tables"
-    : "Save and continue to query"}
+  confirmText={datasource.plus ? "Connect" : "Save and continue to query"}
   cancelText="Back"
   showSecondaryButton={datasource.plus}
-  secondaryButtonText={datasource.plus ? "Skip table fetch" : undefined}
   secondaryAction={() => {
     skipFetch = true
     saveDatasource()
