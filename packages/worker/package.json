@@ -14,7 +14,6 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "build": "cd ../.. && nx build @budibase/worker",
-    "build:checktypes": "yarn build --configuration=production",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "run:docker": "node dist/index.js",
     "debug": "yarn build && node --expose-gc --inspect=9223 dist/index.js",
