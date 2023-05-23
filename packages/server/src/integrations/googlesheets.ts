@@ -148,7 +148,6 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async testConnection(): Promise<ConnectionInfo> {
     try {
       await this.connect()
-      await this.client.loadInfo()
       return { connected: true }
     } catch (e: any) {
       return {
@@ -243,9 +242,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
-  getTableNames(): Promise<string[]> {
-    // TODO: implement
-    return Promise.resolve([])
+  async getTableNames(): Promise<string[]> {
+    await this.connect()
+    const sheets = this.client.sheetsByIndex
+    return sheets.map(s => s.title)
   }
 
   getTableSchema(title: string, headerValues: string[], id?: string) {
