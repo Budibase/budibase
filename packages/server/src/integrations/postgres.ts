@@ -52,7 +52,10 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: [
+    DatasourceFeature.CONNECTION_CHECKING,
+    DatasourceFeature.FETCH_TABLE_NAMES,
+  ],
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -309,6 +312,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     } catch (err) {
       // @ts-ignore
       throw new Error(err)
+    } finally {
+      await this.closeConnection()
+    }
+  }
+
+  async getTableNames() {
+    try {
+      await this.openConnection()
+      const columnsResponse: { rows: PostgresColumn[] } =
+        await this.client.query(this.COLUMNS_SQL)
+      return columnsResponse.rows.map(row => row.table_name)
     } finally {
       await this.closeConnection()
     }
