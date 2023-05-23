@@ -18,15 +18,14 @@ const { GoogleSpreadsheet } = require("google-spreadsheet")
 
 const sheetsByTitle: { [title: string]: GoogleSpreadsheetWorksheet } = {}
 const sheetsByIndex: GoogleSpreadsheetWorksheet[] = []
+const mockGoogleIntegration = {
+  useOAuth2Client: jest.fn(),
+  loadInfo: jest.fn(),
+  sheetsByTitle,
+  sheetsByIndex,
+}
 
-GoogleSpreadsheet.mockImplementation(() => {
-  return {
-    useOAuth2Client: jest.fn(),
-    loadInfo: jest.fn(),
-    sheetsByTitle,
-    sheetsByIndex,
-  }
-})
+GoogleSpreadsheet.mockImplementation(() => mockGoogleIntegration)
 
 import { structures } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
@@ -55,6 +54,8 @@ describe("Google Sheets Integration", () => {
       },
     })
     await config.init()
+
+    jest.clearAllMocks()
   })
 
   function createBasicTable(name: string, columns: string[]): Table {
@@ -137,6 +138,8 @@ describe("Google Sheets Integration", () => {
         }
 
         const res = await integration.getTableNames()
+
+        expect(mockGoogleIntegration.loadInfo).toBeCalledTimes(1)
         expect(res).toEqual(sheetNames)
       })
     })
