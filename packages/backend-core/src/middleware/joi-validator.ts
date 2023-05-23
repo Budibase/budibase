@@ -29,10 +29,12 @@ function validate(
 
     const { error } = schema.validate(params)
     if (error) {
-      ctx.throw(400, `Invalid ${property} - ${error.message}`)
-      return
+      ctx.status = 400
+      ctx.body = `Invalid ${property} - ${error.message}`
+      ctx.throw(ctx.status, ctx.body)
+    } else {
+      return next()
     }
-    return next()
   }
 }
 
