@@ -3942,7 +3942,7 @@
     tmp "~0.2.1"
     tslib "^2.3.0"
 
-"@nx/esbuild@16.2.1", "@nx/esbuild@^16.2.1":
+"@nx/esbuild@16.2.1":
   version "16.2.1"
   resolved "https://registry.yarnpkg.com/@nx/esbuild/-/esbuild-16.2.1.tgz#157a408a617b5095ba1372ec27b03d6c9aa3b78c"
   integrity sha512-jG4zsGc1EN+SfEBUky44+4cpj7M0Sf0v3pGWsw4hCOuBeLl6qW+eAcFypDXecDosS7ct/M2nEtlZP45IVDMZgQ==
