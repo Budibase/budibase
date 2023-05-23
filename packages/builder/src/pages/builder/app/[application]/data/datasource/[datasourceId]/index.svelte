@@ -20,6 +20,7 @@
   import { isEqual } from "lodash"
   import { cloneDeep } from "lodash/fp"
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
+  import { API } from "api"
 
   const querySchema = {
     name: {},
@@ -45,7 +46,28 @@
     }
   }
 
+  async function validateConfig() {
+    const displayError = message =>
+      notifications.error(message ?? "Error validating datasource")
+
+    let connected = false
+    try {
+      const resp = await API.validateDatasource(datasource)
+      if (!resp.connected) {
+        displayError(resp.error)
+      }
+      connected = resp.connected
+    } catch (err) {
+      displayError(err?.message)
+    }
+    return connected
+  }
+
   const saveDatasource = async () => {
+    const valid = await validateConfig()
+    if (!valid) {
+      return false
+    }
     try {
       // Create datasource
       await datasources.save(datasource)
