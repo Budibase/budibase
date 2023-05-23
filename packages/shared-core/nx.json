@@ -1,7 +1,0 @@
-{
-  "targets": {
-    "build": {
-      "dependsOn": ["@budibase/types:build"]
-    }
-  }
-}
