@@ -23,7 +23,7 @@ export interface VerifyDatasourceResponse {
   error?: string
 }
 
-export interface FetchTablesDatasourceResponse {
+export interface FetchDatasourceInfoResponse {
   tableNames: string[]
 }
 

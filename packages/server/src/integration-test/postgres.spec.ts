@@ -1055,12 +1055,12 @@ describe("postgres integrations", () => {
     })
   })
 
-  describe("GET /api/datasources/:datasourceId/tables", () => {
-    it("should fetch tables within postgres datasource", async () => {
+  describe("GET /api/datasources/:datasourceId/info", () => {
+    it("should fetch information about postgres datasource", async () => {
       const primaryName = primaryPostgresTable.name
       const response = await makeRequest(
         "get",
-        `/api/datasources/${postgresDatasource._id}/tables`
+        `/api/datasources/${postgresDatasource._id}/info`
       )
       expect(response.status).toBe(200)
       expect(response.body.tableNames).toBeDefined()
