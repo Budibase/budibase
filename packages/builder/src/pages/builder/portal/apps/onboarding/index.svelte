@@ -18,6 +18,8 @@
   import { Roles } from "constants/backend"
   import Spinner from "components/common/Spinner.svelte"
   import { helpers } from "@budibase/shared-core"
+  import { validateDatasourceConfig } from "builderStore/datasource"
+  import { DatasourceFeature } from "@budibase/types"
 
   let name = "My first app"
   let url = "my-first-app"
@@ -108,7 +110,24 @@
     isGoogle,
   }) => {
     let app
+
     try {
+      if (
+        datasourceConfig &&
+        plusIntegrations[stage].features[DatasourceFeature.CONNECTION_CHECKING]
+      ) {
+        const resp = await validateDatasourceConfig({
+          config: datasourceConfig,
+          type: stage,
+        })
+        if (!resp.connected) {
+          notifications.error(
+            `Unable to connect - ${resp.error ?? "Error validating datasource"}`
+          )
+          return false
+        }
+      }
+
       app = await createApp(useSampleData)
 
       let datasource
