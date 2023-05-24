@@ -14,7 +14,6 @@ import * as filter from "./steps/filter"
 import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
 import * as loop from "./steps/loop"
-import * as openai from "./steps/openai"
 import env from "../environment"
 import {
   AutomationStepSchema,
@@ -40,7 +39,6 @@ const ACTION_IMPLS: Record<
   DELAY: delay.run,
   FILTER: filter.run,
   QUERY_ROWS: queryRow.run,
-  OPENAI: openai.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -61,7 +59,6 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
     FILTER: filter.definition,
     QUERY_ROWS: queryRow.definition,
     LOOP: loop.definition,
-    OPENAI: openai.definition,
     // these used to be lowercase step IDs, maintain for backwards compat
     discord: discord.definition,
     slack: slack.definition,
@@ -74,10 +71,15 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
 // ran at all
 if (env.SELF_HOSTED) {
   const bash = require("./steps/bash")
+  const openai = require("./steps/openai")
+
   // @ts-ignore
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   // @ts-ignore
   BUILTIN_ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
+
+  ACTION_IMPLS.OPENAI = openai.run
+  BUILTIN_ACTION_DEFINITIONS.OPENAI = openai.definition
 }
 
 export async function getActionDefinitions() {
