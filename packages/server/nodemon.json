@@ -6,5 +6,5 @@
     "src/**/*.spec.js",
     "../backend-core/dist/**/*"
   ],
-  "exec": "node ../../scripts/build && node ./dist/index.js"
+  "exec": "node ./scripts/build.js && node ./dist/index.js"
 }
