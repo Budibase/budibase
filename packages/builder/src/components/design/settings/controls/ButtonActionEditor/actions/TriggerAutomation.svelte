@@ -2,8 +2,7 @@
   import { Select, Label, Input, Checkbox, Icon } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
-  import { TriggerStepID } from "constants/backend/automations"
-  import { AutomationActionStepId } from "../../../../../../../../types/src/documents"
+  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
 
   export let parameters = {}
   export let bindings = []
@@ -38,7 +37,7 @@
       ).map(([name, type]) => ({ name, type }))
 
       let hasCollectBlock = automation.definition.steps.some(
-        step => step.stepId === AutomationActionStepId.COLLECT
+        step => step.stepId === ActionStepID.COLLECT
       )
 
       return {
