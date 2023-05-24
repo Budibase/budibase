@@ -25,7 +25,9 @@ export async function runView(
       }))
     )
     let fn = (doc: Document, emit: any) => emit(doc._id)
-    eval("fn = " + view?.map?.replace("function (doc)", "function (doc, emit)"))
+    ;(0, eval)(
+      "fn = " + view?.map?.replace("function (doc)", "function (doc, emit)")
+    )
     const queryFns: any = {
       meta: view.meta,
       map: fn,
