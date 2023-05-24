@@ -38,7 +38,7 @@
       },
       "dependsOn": [
         {
-          "projects": ["@budibase/types"],
+          "projects": ["@budibase/types", "@budibase/string-templates"],
           "target": "build"
         }
       ]
