@@ -35,7 +35,13 @@
             "sourcemap": false
           }
         }
-      }
+      },
+      "dependsOn": [
+        {
+          "projects": ["@budibase/types"],
+          "target": "build"
+        }
+      ]
     }
   }
 }
