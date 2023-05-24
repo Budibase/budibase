@@ -21,6 +21,7 @@ import {
   CreateDatasourceRequest,
   VerifyDatasourceRequest,
   VerifyDatasourceResponse,
+  FetchDatasourceInfoResponse,
   IntegrationBase,
   DatasourcePlus,
 } from "@budibase/types"
@@ -150,6 +151,21 @@ export async function verify(
   ctx.body = {
     connected: response.connected,
     error: response.error,
+  }
+}
+
+export async function information(
+  ctx: UserCtx<void, FetchDatasourceInfoResponse>
+) {
+  const datasourceId = ctx.params.datasourceId
+  const datasource = await sdk.datasources.get(datasourceId, { enriched: true })
+  const connector = (await getConnector(datasource)) as DatasourcePlus
+  if (!connector.getTableNames) {
+    ctx.throw(400, "Table name fetching not supported by datasource")
+  }
+  const tableNames = await connector.getTableNames()
+  ctx.body = {
+    tableNames,
   }
 }
 
