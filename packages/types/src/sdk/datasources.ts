@@ -75,6 +75,7 @@ export enum FilterType {
 
 export enum DatasourceFeature {
   CONNECTION_CHECKING = "connection",
+  FETCH_TABLE_NAMES = "fetch_table_names",
 }
 
 export interface StepDefinition {
@@ -150,4 +151,5 @@ export interface DatasourcePlus extends IntegrationBase {
   getBindingIdentifier(): string
   getStringConcat(parts: string[]): string
   buildSchema(datasourceId: string, entities: Record<string, Table>): any
+  getTableNames(): Promise<string[]>
 }
