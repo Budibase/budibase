@@ -115,36 +115,12 @@
     align-items: center;
   }
 
-  input[type="file"] {
-    display: none;
-  }
-  .sso-link-icon {
-    padding-top: 4px;
-    margin-left: 3px;
-  }
-  .sso-link {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-  }
-  .enforce-sso-title {
-    margin-right: 10px;
-  }
-  .enforce-sso-heading-container {
-    display: flex;
-    flex-direction: row;
-    align-items: start;
-  }
   .provider-title {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-m);
-  }
-  .provider-title span {
-    flex: 1 1 auto;
   }
   .inputContainer {
     display: flex;

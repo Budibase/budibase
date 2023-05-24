@@ -146,15 +146,18 @@
 
   /* Override default active line highlight colour in dark theme */
   div
-    :global(.CodeMirror-focused.cm-s-tomorrow-night-eighties
-      .CodeMirror-activeline-background) {
+    :global(
+      .CodeMirror-focused.cm-s-tomorrow-night-eighties
+        .CodeMirror-activeline-background
+    ) {
     background: rgba(255, 255, 255, 0.075);
   }
 
   /* Remove active line styling when not focused */
   div
-    :global(.CodeMirror:not(.CodeMirror-focused)
-      .CodeMirror-activeline-background) {
+    :global(
+      .CodeMirror:not(.CodeMirror-focused) .CodeMirror-activeline-background
+    ) {
     background: unset;
   }
 
