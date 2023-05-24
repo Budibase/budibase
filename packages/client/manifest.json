@@ -5225,36 +5225,5 @@
       "type": "schema",
       "suffix": "repeater"
     }
-  },
-  "spreadsheet": {
-    "name": "Spreadsheet",
-    "icon": "ViewGrid",
-    "settings": [
-      {
-        "key": "table",
-        "type": "table",
-        "label": "Table"
-      },
-      {
-        "type": "filter",
-        "label": "Filtering",
-        "key": "filter"
-      },
-      {
-        "type": "field/sortable",
-        "label": "Sort Column",
-        "key": "sortColumn"
-      },
-      {
-        "type": "select",
-        "label": "Sort Order",
-        "key": "sortOrder",
-        "options": [
-          "Ascending",
-          "Descending"
-        ],
-        "defaultValue": "Ascending"
-      }
-    ]
   }
 }

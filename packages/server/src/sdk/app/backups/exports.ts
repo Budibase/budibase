@@ -3,6 +3,7 @@ import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { streamFile, createTempFolder } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets } from "../../../constants"
 import {
+  AUTOMATION_LOG_PREFIX,
   LINK_USER_METADATA_PREFIX,
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
@@ -20,11 +21,15 @@ const uuid = require("uuid/v4")
 const tar = require("tar")
 const MemoryStream = require("memorystream")
 
-type ExportOpts = {
+interface DBDumpOpts {
   filter?: any
   exportPath?: string
+}
+
+interface ExportOpts extends DBDumpOpts {
   tar?: boolean
   excludeRows?: boolean
+  excludeLogs?: boolean
 }
 
 function tarFilesToTmp(tmpDir: string, files: string[]) {
@@ -49,7 +54,7 @@ function tarFilesToTmp(tmpDir: string, files: string[]) {
  * a filter function or the name of the export.
  * @return {*} either a readable stream or a string
  */
-export async function exportDB(dbName: string, opts: ExportOpts = {}) {
+export async function exportDB(dbName: string, opts: DBDumpOpts = {}) {
   const exportOpts = {
     filter: opts?.filter,
     batch_size: 1000,
@@ -76,10 +81,13 @@ export async function exportDB(dbName: string, opts: ExportOpts = {}) {
   })
 }
 
-function defineFilter(excludeRows?: boolean) {
+function defineFilter(excludeRows?: boolean, excludeLogs?: boolean) {
   const ids = [USER_METDATA_PREFIX, LINK_USER_METADATA_PREFIX]
   if (excludeRows) {
     ids.push(TABLE_ROW_PREFIX)
+  }
+  if (excludeLogs) {
+    ids.push(AUTOMATION_LOG_PREFIX)
   }
   return (doc: any) =>
     !ids.map(key => doc._id.includes(key)).reduce((prev, curr) => prev || curr)
@@ -130,8 +138,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   // enforce an export of app DB to the tmp path
   const dbPath = join(tmpPath, DB_EXPORT_FILE)
   await exportDB(appId, {
-    ...config,
-    filter: defineFilter(config?.excludeRows),
+    filter: defineFilter(config?.excludeRows, config?.excludeLogs),
     exportPath: dbPath,
   })
   // if tar requested, return where the tarball is
@@ -155,6 +162,10 @@ export async function exportApp(appId: string, config?: ExportOpts) {
  * @returns {*} a readable stream of the backup which is written in real time
  */
 export async function streamExportApp(appId: string, excludeRows: boolean) {
-  const tmpPath = await exportApp(appId, { excludeRows, tar: true })
+  const tmpPath = await exportApp(appId, {
+    excludeRows,
+    excludeLogs: true,
+    tar: true,
+  })
   return streamFile(tmpPath)
 }

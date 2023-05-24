@@ -2,17 +2,14 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover, Select } from "@budibase/bbui"
 
-  const { sort, columns, stickyColumn } = getContext("grid")
-  const orderOptions = [
-    { label: "A-Z", value: "ascending" },
-    { label: "Z-A", value: "descending" },
-  ]
+  const { sort, columns, stickyColumn, compact } = getContext("grid")
 
   let open = false
   let anchor
 
   $: columnOptions = getColumnOptions($stickyColumn, $columns)
   $: checkValidSortColumn($sort.column, $stickyColumn, $columns)
+  $: orderOptions = getOrderOptions($sort.column, columnOptions)
 
   const getColumnOptions = (stickyColumn, columns) => {
     let options = []
@@ -20,6 +17,7 @@
       options.push({
         label: stickyColumn.label || stickyColumn.name,
         value: stickyColumn.name,
+        type: stickyColumn.schema?.type,
       })
     }
     return [
@@ -27,7 +25,22 @@
       ...columns.map(col => ({
         label: col.label || col.name,
         value: col.name,
+        type: col.schema?.type,
       })),
+    ]
+  }
+
+  const getOrderOptions = (column, columnOptions) => {
+    const type = columnOptions.find(col => col.value === column)?.type
+    return [
+      {
+        label: type === "number" ? "Low-high" : "A-Z",
+        value: "ascending",
+      },
+      {
+        label: type === "number" ? "High-low" : "Z-A",
+        value: "descending",
+      },
     ]
   }
 
@@ -77,12 +90,13 @@
     on:click={() => (open = !open)}
     selected={open}
     disabled={!columnOptions.length}
+    tooltip={$compact ? "Sort" : ""}
   >
-    Sort
+    {$compact ? "" : "Sort"}
   </ActionButton>
 </div>
 
-<Popover bind:open {anchor} align="left">
+<Popover bind:open {anchor} align={$compact ? "right" : "left"}>
   <div class="content">
     <Select
       placeholder={null}

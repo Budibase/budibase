@@ -6,6 +6,8 @@
 
   export let app
 
+  export let lockedAction
+
   const handleDefaultClick = () => {
     if (window.innerWidth < 640) {
       goToOverview()
@@ -29,7 +31,7 @@
   }
 </script>
 
-<div class="app-row" on:click={handleDefaultClick}>
+<div class="app-row" on:click={lockedAction || handleDefaultClick}>
   <div class="title">
     <div class="app-icon">
       <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
@@ -58,8 +60,11 @@
 
   <div class="app-row-actions">
     <AppLockModal {app} buttonSize="M" />
-    <Button size="S" secondary on:click={goToOverview}>Manage</Button>
-    <Button size="S" primary on:click={goToBuilder}>Edit</Button>
+    <Button size="S" secondary on:click={lockedAction || goToOverview}
+      >Manage</Button
+    >
+    <Button size="S" primary on:click={lockedAction || goToBuilder}>Edit</Button
+    >
   </div>
 </div>
 

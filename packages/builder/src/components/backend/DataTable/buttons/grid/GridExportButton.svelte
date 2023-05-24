@@ -9,13 +9,21 @@
   $: selectedRowArray = Object.keys($selectedRows).map(id => ({ _id: id }))
 </script>
 
-<ExportButton
-  {disabled}
-  view={$tableId}
-  filters={$filter}
-  sorting={{
-    sortColumn: $sort.column,
-    sortOrder: $sort.order,
-  }}
-  selectedRows={selectedRowArray}
-/>
+<span data-ignore-click-outside="true">
+  <ExportButton
+    {disabled}
+    view={$tableId}
+    filters={$filter}
+    sorting={{
+      sortColumn: $sort.column,
+      sortOrder: $sort.order,
+    }}
+    selectedRows={selectedRowArray}
+  />
+</span>
+
+<style>
+  span {
+    display: contents;
+  }
+</style>

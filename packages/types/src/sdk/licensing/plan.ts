@@ -17,7 +17,6 @@ export enum PriceDuration {
 export interface AvailablePlan {
   type: PlanType
   maxUsers: number
-  minUsers: number
   prices: AvailablePrice[]
 }
 
@@ -38,7 +37,6 @@ export interface PurchasedPlan {
   type: PlanType
   model: PlanModel
   usesInvoicing: boolean
-  minUsers: number
   price?: PurchasedPrice
 }
 
