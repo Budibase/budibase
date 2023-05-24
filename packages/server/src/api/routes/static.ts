@@ -5,6 +5,7 @@ import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
+import { devClientLibPath } from "../../utilities/fileSystem"
 const { BUILDER, PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
@@ -17,7 +18,8 @@ router.param("file", async (file: any, ctx: any, next: any) => {
   }
   // test serves from require
   if (env.isTest()) {
-    ctx.devPath = require.resolve("@budibase/client").split(ctx.file)[0]
+    const path = devClientLibPath()
+    ctx.devPath = path.split(ctx.file)[0]
   } else if (env.isDev()) {
     // Serving the client library from your local dir in dev
     ctx.devPath = budibaseTempDir()
