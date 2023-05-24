@@ -13,7 +13,7 @@ RUN yarn global add pm2
 
 
 COPY dist/package.json .
-RUN yarn
+RUN yarn install --frozen-lockfile --production=true
 # Remove unneeded data from file system to reduce image size
 RUN apk del .gyp \
     && yarn cache clean
