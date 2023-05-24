@@ -37,6 +37,8 @@
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
   $: canMoveRight = orderable && idx < $renderedColumns.length - 1
+  $: ascendingLabel = column.schema?.type === "number" ? "low-high" : "A-Z"
+  $: descendingLabel = column.schema?.type === "number" ? "high-low" : "Z-A"
 
   const editColumn = () => {
     dispatch("edit-column", column.schema)
@@ -179,14 +181,14 @@
       on:click={sortAscending}
       disabled={column.name === $sort.column && $sort.order === "ascending"}
     >
-      Sort A-Z
+      Sort {ascendingLabel}
     </MenuItem>
     <MenuItem
       icon="SortOrderDown"
       on:click={sortDescending}
       disabled={column.name === $sort.column && $sort.order === "descending"}
     >
-      Sort Z-A
+      Sort {descendingLabel}
     </MenuItem>
     <MenuItem disabled={!canMoveLeft} icon="ChevronLeft" on:click={moveLeft}>
       Move left

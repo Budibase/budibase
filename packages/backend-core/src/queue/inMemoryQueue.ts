@@ -128,6 +128,7 @@ class InMemoryQueue {
 
   on() {
     // do nothing
+    return this
   }
 
   async waitForCompletion() {

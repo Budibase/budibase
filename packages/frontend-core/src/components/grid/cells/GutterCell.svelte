@@ -70,7 +70,15 @@
         </div>
       {/if}
     {/if}
-    {#if $config.allowExpandRows}
+    {#if rowSelected && $config.allowDeleteRows}
+      <div class="delete" on:click={() => dispatch("request-bulk-delete")}>
+        <Icon
+          name="Delete"
+          size="S"
+          color="var(--spectrum-global-color-red-400)"
+        />
+      </div>
+    {:else if $config.allowExpandRows}
       <div
         class="expand"
         class:visible={!disableExpand && (rowFocused || rowHovered)}
@@ -111,9 +119,12 @@
   .number.visible {
     display: flex;
   }
+  .delete,
+  .expand {
+    margin-right: 4px;
+  }
   .expand {
     opacity: 0;
-    margin-right: 4px;
   }
   .expand :global(.spectrum-Icon) {
     pointer-events: none;
@@ -123,5 +134,12 @@
   }
   .expand.visible :global(.spectrum-Icon) {
     pointer-events: all;
+  }
+
+  .delete:hover {
+    cursor: pointer;
+  }
+  .delete:hover :global(.spectrum-Icon) {
+    color: var(--spectrum-global-color-red-600) !important;
   }
 </style>

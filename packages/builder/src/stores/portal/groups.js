@@ -28,7 +28,7 @@ export function createGroupsStore() {
       // on the backend anyway
       if (get(licensing).groupsEnabled) {
         const groups = await API.getGroups()
-        store.set(groups)
+        store.set(groups.data)
       }
     },
 

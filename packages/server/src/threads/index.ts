@@ -1,5 +1,7 @@
 import workerFarm from "worker-farm"
 import env from "../environment"
+import { AutomationJob } from "@budibase/types"
+import { QueryEvent } from "./definitions"
 
 export const ThreadType = {
   QUERY: "query",
@@ -39,6 +41,12 @@ export class Thread {
       const workerOpts: any = {
         autoStart: true,
         maxConcurrentWorkers: this.count,
+        workerOptions: {
+          env: {
+            ...process.env,
+            FORKED_PROCESS: "1",
+          },
+        },
       }
       if (opts.timeoutMs) {
         this.timeoutMs = opts.timeoutMs
@@ -58,11 +66,11 @@ export class Thread {
     )
   }
 
-  run(data: any) {
+  run(job: AutomationJob | QueryEvent) {
     const timeout = this.timeoutMs
     return new Promise((resolve, reject) => {
       function fire(worker: any) {
-        worker.execute(data, (err: any, response: any) => {
+        worker.execute(job, (err: any, response: any) => {
           if (err && err.type === "TimeoutError") {
             reject(
               new Error(`Query response time exceeded ${timeout}ms timeout.`)

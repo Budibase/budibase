@@ -21,6 +21,9 @@ const TypeIconMap = {
 }
 
 export const getColumnIcon = column => {
+  if (column.schema.autocolumn) {
+    return "MagicWand"
+  }
   const type = column.schema.type
   return TypeIconMap[type] || "Text"
 }

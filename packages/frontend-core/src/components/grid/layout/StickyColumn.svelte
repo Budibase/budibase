@@ -7,6 +7,7 @@
   import HeaderCell from "../cells/HeaderCell.svelte"
   import { GutterWidth, BlankRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
+  import KeyboardShortcut from "./KeyboardShortcut.svelte"
 
   const {
     rows,
@@ -21,6 +22,7 @@
     focusedRow,
     scrollLeft,
     dispatch,
+    contentLines,
   } = getContext("grid")
 
   $: rowCount = $rows.length
@@ -85,6 +87,7 @@
               selectedUser={$selectedCellMap[cellId]}
               width={$stickyColumn.width}
               column={$stickyColumn}
+              contentLines={$contentLines}
             />
           {/if}
         </div>
@@ -103,7 +106,9 @@
             <GridCell
               width={$stickyColumn.width}
               highlighted={$hoveredRowId === BlankRowID}
-            />
+            >
+              <KeyboardShortcut padded keybind="Ctrl+Enter" />
+            </GridCell>
           {/if}
         </div>
       {/if}

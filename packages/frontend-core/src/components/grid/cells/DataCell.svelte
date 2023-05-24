@@ -19,6 +19,7 @@
   export let updateValue = rows.actions.updateValue
   export let invertX = false
   export let invertY = false
+  export let contentLines = 1
 
   const emptyError = writable(null)
 
@@ -31,6 +32,7 @@
   $: readonly =
     column.schema.autocolumn ||
     column.schema.disabled ||
+    column.schema.type === "formula" ||
     (!$config.allowEditRows && row._id)
 
   // Register this cell API if the row is focused
@@ -84,5 +86,7 @@
     {readonly}
     {invertY}
     {invertX}
+    {contentLines}
   />
+  <slot />
 </GridCell>

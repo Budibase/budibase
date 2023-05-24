@@ -12,7 +12,7 @@ import * as timers from "../timers"
 
 const RETRY_PERIOD_MS = 2000
 const STARTUP_TIMEOUT_MS = 5000
-const CLUSTERED = false
+const CLUSTERED = env.REDIS_CLUSTERED
 const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 
 // for testing just generate the client once
@@ -81,7 +81,7 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   if (client) {
     client.disconnect()
   }
-  const { redisProtocolUrl, opts, host, port } = getRedisOptions(CLUSTERED)
+  const { redisProtocolUrl, opts, host, port } = getRedisOptions()
 
   if (CLUSTERED) {
     client = new Redis.Cluster([{ host, port }], opts)

@@ -2,57 +2,60 @@ name: Budibase Release
 concurrency: release
 
 on:
- push:
-    branches:
-      - master
-    paths:
-      - '.aws/**'
-      - '.github/**'
-      - 'charts/**'
-      - 'packages/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'yarn.lock'
-      - 'package.json'
-      - 'yarn.lock'
- workflow_dispatch:
-  inputs:
-    versioning:
-      type: choice
-      description: "Versioning type: patch, minor, major"
-      default: patch
-      options:
-        - patch
-        - minor
-        - major
-      required: true
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      # Exclude all pre-releases
+      - "!v*[0-9]+.[0-9]+.[0-9]+-*"
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: "Release tag"
+        required: true
+        type: boolean
 
 env:
-  # Posthog token used by ui at build time 
+  # Posthog token used by ui at build time
   POSTHOG_TOKEN: phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
   release-images:
     runs-on: ubuntu-latest
     steps:
-      - name: Fail if branch is not master
-        if: github.ref != 'refs/heads/master' 
-        run: | 
-          echo "Ref is not master, you must run this job from master."
-          exit 1
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          fetch-depth: 0
+
+      - name: Fail if branch is not master
+        if: github.ref != 'refs/heads/master'
+        run: |
+          echo "Ref is not master, you must run this job from master."
+          // Change to "exit 1" when merged. Left to 0 to not fail all the pipelines and not to cause noise
+          exit 0
+
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
 
-      - name: Install Pro
-        run: yarn install:pro master
-
       - run: yarn
-      - run: yarn bootstrap
+      - name: Update versions
+        run: |
+          version=$(cat lerna.json \
+            | grep version \
+            | head -1 \
+            | awk -F: '{gsub(/"/,"",$2);gsub(/[[:space:]]*/,"",$2); print $2}' \
+            | sed 's/[",]//g')
+          echo "Setting version $version"
+          yarn lerna exec "yarn version --no-git-tag-version --new-version=$version"
+          echo "Updating dependencies"
+          node scripts/syncLocalDependencies.js $version
+          echo "Syncing yarn workspace"
+          yarn
       - run: yarn lint
       - run: yarn build
       - run: yarn build:sdk
@@ -65,15 +68,17 @@ jobs:
           # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
           git config --global user.name "Budibase Release Bot"
           git config --global user.email "<>"
+          git submodule foreach git commit -a -m 'Release process'
+          git commit -a -m 'Release process'
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
           yarn release
 
-      - name: 'Get Previous tag'
+      - name: "Get Previous tag"
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       - name: Build/release Docker images
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build:docker
         env:
@@ -103,7 +108,7 @@ jobs:
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
           git reset --hard
-          git pull
+          git fetch
           mkdir sync
           echo "Packaging chart to sync dir"
           helm package charts/budibase --version 0.0.0-master --app-version v"$RELEASE_VERSION" --destination sync

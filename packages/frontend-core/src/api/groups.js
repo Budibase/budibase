@@ -53,6 +53,23 @@ export const buildGroupsEndpoints = API => {
     },
 
     /**
+     * Gets a group users by the group id
+     */
+    getGroupUsers: async ({ id, bookmark, emailSearch }) => {
+      let url = `/api/global/groups/${id}/users?`
+      if (bookmark) {
+        url += `bookmark=${bookmark}&`
+      }
+      if (emailSearch) {
+        url += `emailSearch=${emailSearch}&`
+      }
+
+      return await API.get({
+        url,
+      })
+    },
+
+    /**
      * Adds users to a group
      * @param groupId The group to update
      * @param userIds The user IDs to be added

@@ -22,7 +22,7 @@ FROM budibase/couchdb
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
-# e.g. docker build --build-arg TARGETBUILD=aas ....
+# e.g. docker build --build-arg TARGETBUILD=aas ....
 ARG TARGETBUILD=single
 ENV TARGETBUILD $TARGETBUILD
 
@@ -32,7 +32,7 @@ COPY --from=build /worker /worker
 # install base dependencies
 RUN apt-get update && \
   apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server && \
-  apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' && \
+  apt-add-repository 'deb http://security.debian.org/debian-security bullseye-security/updates main' && \
   apt-get update
 
 # install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx

@@ -1,4 +1,6 @@
 import {
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
   FieldType,
@@ -15,7 +17,7 @@ import {
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId, finaliseExternalTables } from "./utils"
-import { GoogleSpreadsheet } from "google-spreadsheet"
+import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
 import { dataFilters } from "@budibase/shared-core"
@@ -61,9 +63,13 @@ const SCHEMA: Integration = {
   relationships: false,
   docs: "https://developers.google.com/sheets/api/quickstart/nodejs",
   description:
-    "Create and collaborate on online spreadsheets in real-time and from any device. ",
+    "Create and collaborate on online spreadsheets in real-time and from any device.",
   friendlyName: "Google Sheets",
   type: "Spreadsheet",
+  features: [
+    DatasourceFeature.CONNECTION_CHECKING,
+    DatasourceFeature.FETCH_TABLE_NAMES,
+  ],
   datasource: {
     spreadsheetId: {
       display: "Google Sheet URL",
@@ -137,6 +143,18 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     this.config = config
     const spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
     this.client = new GoogleSpreadsheet(spreadsheetId)
+  }
+
+  async testConnection(): Promise<ConnectionInfo> {
+    try {
+      await this.connect()
+      return { connected: true }
+    } catch (e: any) {
+      return {
+        connected: false,
+        error: e.message as string,
+      }
+    }
   }
 
   getBindingIdentifier() {
@@ -222,6 +240,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       console.error("Error connecting to google sheets", err)
       throw err
     }
+  }
+
+  async getTableNames(): Promise<string[]> {
+    await this.connect()
+    const sheets = this.client.sheetsByIndex
+    return sheets.map(s => s.title)
   }
 
   getTableSchema(title: string, headerValues: string[], id?: string) {
@@ -434,7 +458,20 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     try {
       await this.connect()
       const sheet = this.client.sheetsByTitle[query.sheet]
-      const rows = await sheet.getRows()
+      let rows: GoogleSpreadsheetRow[] = []
+      if (query.paginate) {
+        const limit = query.paginate.limit || 100
+        let page: number =
+          typeof query.paginate.page === "number"
+            ? query.paginate.page
+            : parseInt(query.paginate.page || "1")
+        rows = await sheet.getRows({
+          limit,
+          offset: (page - 1) * limit,
+        })
+      } else {
+        rows = await sheet.getRows()
+      }
       const filtered = dataFilters.runLuceneQuery(rows, query.filters)
       const headerValues = sheet.headerValues
       let response = []

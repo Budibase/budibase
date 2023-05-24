@@ -1,5 +1,5 @@
 export * as correlation from "./correlation/correlation"
-export { logger, disableLogger } from "./pino/logger"
+export { logger } from "./pino/logger"
 export * from "./alerts"
 
 // turn off or on context logging i.e. tenantId, appId etc

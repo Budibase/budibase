@@ -4,6 +4,9 @@ interface SchemaColumn {
   readonly name: string
   readonly type: FieldTypes
   readonly autocolumn?: boolean
+  readonly constraints?: {
+    presence: boolean
+  }
 }
 
 interface Schema {
@@ -76,6 +79,11 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
       // If the columnType is not a string, then it's not present in the schema, and should be added to the invalid columns array
       if (typeof columnType !== "string") {
         results.invalidColumns.push(columnName)
+      } else if (
+        columnData == null &&
+        !schema[columnName].constraints?.presence
+      ) {
+        results.schemaValidation[columnName] = true
       } else if (
         // If there's no data for this field don't bother with further checks
         // If the field is already marked as invalid there's no need for further checks

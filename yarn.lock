@@ -1386,6 +1386,47 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@budibase/backend-core@2.6.19-alpha.4":
+  version "2.6.19-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-2.6.19-alpha.4.tgz#525dd7ba6c5db4404cf00d1165f79d34a1093826"
+  integrity sha512-1pfOr+J9xYawedVmvqpQ4b/8C2SQP4cKhFmSz5uErM2SCgbRj+JuzOUTPNX0vzAXPvat/kEegt79xThummDvhA==
+  dependencies:
+    "@budibase/nano" "10.1.2"
+    "@budibase/pouchdb-replication-stream" "1.2.10"
+    "@budibase/types" "2.6.19-alpha.4"
+    "@shopify/jest-koa-mocks" "5.0.1"
+    "@techpass/passport-openidconnect" "0.3.2"
+    aws-cloudfront-sign "2.2.0"
+    aws-sdk "2.1030.0"
+    bcrypt "5.0.1"
+    bcryptjs "2.4.3"
+    bull "4.10.1"
+    correlation-id "4.0.0"
+    dotenv "16.0.1"
+    emitter-listener "1.1.2"
+    ioredis "4.28.0"
+    joi "17.6.0"
+    jsonwebtoken "9.0.0"
+    koa-passport "4.1.4"
+    koa-pino-logger "4.0.0"
+    lodash "4.17.21"
+    lodash.isarguments "3.1.0"
+    node-fetch "2.6.7"
+    passport-google-oauth "2.0.0"
+    passport-jwt "4.0.0"
+    passport-local "1.0.0"
+    passport-oauth2-refresh "^2.1.0"
+    pino "8.11.0"
+    pino-http "8.3.3"
+    posthog-node "1.3.0"
+    pouchdb "7.3.0"
+    pouchdb-find "7.2.2"
+    redlock "4.2.0"
+    sanitize-s3-objectkey "0.0.1"
+    semver "7.3.7"
+    tar-fs "2.1.1"
+    uuid "8.3.2"
+
 "@budibase/bbui@^0.9.139":
   version "0.9.190"
   resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.190.tgz#e1ec400ac90f556bfbc80fc23a04506f1585ea81"
@@ -1486,15 +1527,15 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.5.6-alpha.30":
-  version "2.5.6-alpha.30"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.5.6-alpha.30.tgz#9b8089a983fd61a062f31a8e5757d7bb5b56fb8c"
-  integrity sha512-YTyjMHK/wsSOFJkON7a5WRJSgAr8Gh/cflRzifm6Jw1Gb8S8B8Z6uTWW/S7+psVBRGeUfV1s8biYNr71tXz2Ng==
+"@budibase/pro@develop":
+  version "2.6.19-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.6.19-alpha.4.tgz#5d4c885ac9ac4ccfb2f8896961aca903c1178750"
+  integrity sha512-iu2QzV8Z77c00muBSK+NVsZdug3lLD0lR+vcKancGEz1PPE4yNIH7g8jB6i8h9agArbx9S2ICeHQqGb6nQaGHQ==
   dependencies:
-    "@budibase/backend-core" "2.5.6-alpha.30"
-    "@budibase/shared-core" "2.4.44-alpha.1"
-    "@budibase/string-templates" "2.4.44-alpha.1"
-    "@budibase/types" "2.5.6-alpha.30"
+    "@budibase/backend-core" "2.6.19-alpha.4"
+    "@budibase/shared-core" "2.6.19-alpha.4"
+    "@budibase/string-templates" "2.6.19-alpha.4"
+    "@budibase/types" "2.6.19-alpha.4"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
@@ -1505,12 +1546,12 @@
     scim-patch "^0.7.0"
     scim2-parse-filter "^0.2.8"
 
-"@budibase/shared-core@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/shared-core/-/shared-core-2.4.44-alpha.1.tgz#3d499e40e7e6c646e13a87cd08e01ba116c2ff1d"
-  integrity sha512-cN8LaDczijtsfWUYiXC4sg9Z+US4020i3Mb8TwCbf8TQyA1b06U5PwPCp+GHVA/wDFqfwcpcE1GXf8GwVuYs7A==
+"@budibase/shared-core@2.6.19-alpha.4":
+  version "2.6.19-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/shared-core/-/shared-core-2.6.19-alpha.4.tgz#dd22dd0a18ee4d6739b629f461e5caec90706282"
+  integrity sha512-ac6iWSsgz70OYbdA+QHPLpTnRbIZ4OecVc6Y7gnEZ78hZ4S5da8a+73jswuy0/t4YsiT/gjukjzjoihg3NemVg==
   dependencies:
-    "@budibase/types" "2.4.44-alpha.1"
+    "@budibase/types" "2.6.19-alpha.4"
 
 "@budibase/standard-components@^0.9.139":
   version "0.9.139"
@@ -1530,22 +1571,24 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.4.44-alpha.1.tgz#6c2aee594d16eac1f173c509e087a817dd3172f0"
-  integrity sha512-4gC2+0kccK0ilLnd0i/dmJzC0Ur7UgSAmV6zbzDDYNL4spU0qSy5VhBh7E3qKieg5RKMMzbpXLMWERpoPLlnqA==
+"@budibase/string-templates@2.6.19-alpha.4":
+  version "2.6.19-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-2.6.19-alpha.4.tgz#92ebd69a6841174b8af91f338c4754ca7c402707"
+  integrity sha512-KsH3NlQcJibRj98Q8zQ3KQHhfSIWPQfvR80MmBTIe05llEZGox4re4pQQUnlMafaUEyNNtIqVnbTJ1XP0LmFng==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
     handlebars "^4.7.6"
     handlebars-utils "^1.0.6"
     lodash "^4.17.20"
-    vm2 "^3.9.4"
+    vm2 "^3.9.15"
 
-"@budibase/types@2.4.44-alpha.1":
-  version "2.4.44-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.4.44-alpha.1.tgz#1679657aa180d9c59afa1dffa611bff0638bd933"
-  integrity sha512-Sq+8HfM75EBMoOvKYFwELdlxmVN6wNZMofDjT/2G+9aF+Zfe5Tzw69C+unmdBgcGGjGCHEYWSz4mF0v8FPAGbg==
+"@budibase/types@2.6.19-alpha.4":
+  version "2.6.19-alpha.4"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-2.6.19-alpha.4.tgz#bcf81699329d3f8509e4b0a489211f35b6cfa7ce"
+  integrity sha512-qFsXHZTSigcfCv02aTZGsf17vBT/MC+zK9ky7WZVX4h0sJiE0li4A66/tMaSDz3/vQ7ToPRhJK/p+LOWA/oceg==
+  dependencies:
+    scim-patch "^0.7.0"
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
@@ -5237,6 +5280,15 @@
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@types/parse-json/-/parse-json-4.0.0.tgz#2f8bb441434d163b35fb8ffdccd7138927ffb8c0"
   integrity sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==
+
+"@types/pg@8.6.6":
+  version "8.6.6"
+  resolved "https://registry.yarnpkg.com/@types/pg/-/pg-8.6.6.tgz#21cdf873a3e345a6e78f394677e3b3b1b543cb80"
+  integrity sha512-O2xNmXebtwVekJDD+02udOncjVcMZQuTEQEMpKJ0ZRf5E7/9JJX3izhKUcUifBkyKpljyUM6BTgy2trmviKlpw==
+  dependencies:
+    "@types/node" "*"
+    pg-protocol "*"
+    pg-types "^2.2.0"
 
 "@types/pouchdb-adapter-cordova-sqlite@*":
   version "1.0.1"
@@ -9545,17 +9597,17 @@ dir-glob@^3.0.1:
   dependencies:
     path-type "^4.0.0"
 
-docker-compose@0.23.12:
-  version "0.23.12"
-  resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.23.12.tgz#fa883b98be08f6926143d06bf9e522ef7ed3210c"
-  integrity sha512-KFbSMqQBuHjTGZGmYDOCO0L4SaML3BsWTId5oSUyaBa22vALuFHNv+UdDWs3HcMylHWKsxCbLB7hnM/nCosWZw==
-  dependencies:
-    yaml "^1.10.2"
-
 docker-compose@0.23.17:
   version "0.23.17"
   resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.23.17.tgz#8816bef82562d9417dc8c790aa4871350f93a2ba"
   integrity sha512-YJV18YoYIcxOdJKeFcCFihE6F4M2NExWM/d4S1ITcS9samHKnNUihz9kjggr0dNtsrbpFNc7/Yzd19DWs+m1xg==
+  dependencies:
+    yaml "^1.10.2"
+
+docker-compose@0.24.0:
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/docker-compose/-/docker-compose-0.24.0.tgz#474cd38b05b3887a56ffb2c39f16a7ae4d7d5077"
+  integrity sha512-RN/oSPLPa6ZG5e4dHg8tD8EMpd1WJqomNMBQT+d2M5MwcmfrPW/xHTent4TVqX0zZvHemv7qhhNlzXjxCnFaQw==
   dependencies:
     yaml "^1.10.2"
 
@@ -9977,9 +10029,9 @@ engine.io-parser@~5.0.3:
   integrity sha512-tjuoZDMAdEhVnSFleYPCtdL2GXwVTGtNjoeJd9IhIG3C1xs9uwxqRNEu5WpnDZCaozwVlK/nuQhpodhXSIMaxw==
 
 engine.io@~6.4.1:
-  version "6.4.1"
-  resolved "https://registry.yarnpkg.com/engine.io/-/engine.io-6.4.1.tgz#8056b4526a88e779f9c280d820422d4e3eeaaae5"
-  integrity sha512-JFYQurD/nbsA5BSPmbaOSLa3tSVj8L6o4srSwXXY3NqE+gGUNmmPTbhn8tjzcCtSqhFgIeqef81ngny8JM25hw==
+  version "6.4.2"
+  resolved "https://registry.yarnpkg.com/engine.io/-/engine.io-6.4.2.tgz#ffeaf68f69b1364b0286badddf15ff633476473f"
+  integrity sha512-FKn/3oMiJjrOEOeUub2WCox6JhxBXq/Zn3fZOMCBxKnNYtsdKjxhl7yR3fZhM9PV+rdE75SU5SYMc+2PGzo+Tg==
   dependencies:
     "@types/cookie" "^0.4.1"
     "@types/cors" "^2.8.12"
@@ -12880,10 +12932,10 @@ humanize-ms@^1.2.0, humanize-ms@^1.2.1:
   dependencies:
     ms "^2.0.0"
 
-husky@^7.0.1:
-  version "7.0.4"
-  resolved "https://registry.yarnpkg.com/husky/-/husky-7.0.4.tgz#242048245dc49c8fb1bf0cc7cfb98dd722531535"
-  integrity sha512-vbaCKN2QLtP/vD4yvs6iz6hBEo6wkSzs8HpRah1Z6aGmF2KW5PdYuAd7uX5a+OyBZHBhd+TFLqgjUgytQr4RvQ==
+husky@^8.0.3:
+  version "8.0.3"
+  resolved "https://registry.yarnpkg.com/husky/-/husky-8.0.3.tgz#4936d7212e46d1dea28fef29bb3a108872cd9184"
+  integrity sha512-+dQSyqPh4x1hlO1swXBiNb2HzTDN1I2IGLQx1GrBuiqFJfoMrnZWwVmatvSiO+Iz8fBUnf+lekwNo4c2LlXItg==
 
 iconv-lite@0.4.24, iconv-lite@^0.4.15, iconv-lite@^0.4.24, iconv-lite@^0.4.5:
   version "0.4.24"
@@ -19113,7 +19165,7 @@ performance-now@^2.1.0:
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
   integrity sha512-7EAHlyLHI56VEIdK57uwHdHKIaAGbnXPiw0yWbarQZOKaKpvUIgW0jWRVLiatnM+XXlSwsanIBH/hzGMJulMow==
 
-pg-connection-string@2.5.0, pg-connection-string@^2.4.0:
+pg-connection-string@2.5.0, pg-connection-string@^2.5.0:
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/pg-connection-string/-/pg-connection-string-2.5.0.tgz#538cadd0f7e603fc09a12590f3b8a452c2c0cf34"
   integrity sha512-r5o/V/ORTA6TmUnyWZR9nCj1klXCO2CEKNRlVuJptZe85QuhFayC7WeMic7ndayT5IRIR0S0xFxFi2ousartlQ==
@@ -19123,17 +19175,17 @@ pg-int8@1.0.1:
   resolved "https://registry.yarnpkg.com/pg-int8/-/pg-int8-1.0.1.tgz#943bd463bf5b71b4170115f80f8efc9a0c0eb78c"
   integrity sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==
 
-pg-pool@^3.2.2:
+pg-pool@^3.6.0:
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/pg-pool/-/pg-pool-3.6.0.tgz#3190df3e4747a0d23e5e9e8045bcd99bda0a712e"
   integrity sha512-clFRf2ksqd+F497kWFyM21tMjeikn60oGDmqMT8UBrynEwVEX/5R5xd2sdvdo1cZCFlguORNpVuqxIj+aK4cfQ==
 
-pg-protocol@^1.4.0:
+pg-protocol@*, pg-protocol@^1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/pg-protocol/-/pg-protocol-1.6.0.tgz#4c91613c0315349363af2084608db843502f8833"
   integrity sha512-M+PDm637OY5WM307051+bsDia5Xej6d9IR4GwJse1qA1DIhiKlksvrneZOYQq42OM+spubpcNYEo2FcKQrDk+Q==
 
-pg-types@^2.1.0:
+pg-types@^2.1.0, pg-types@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/pg-types/-/pg-types-2.2.0.tgz#2d0250d636454f7cfa3b6ae0382fdfa8063254a3"
   integrity sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==
@@ -19144,16 +19196,16 @@ pg-types@^2.1.0:
     postgres-date "~1.0.4"
     postgres-interval "^1.1.0"
 
-pg@8.5.1:
-  version "8.5.1"
-  resolved "https://registry.yarnpkg.com/pg/-/pg-8.5.1.tgz#34dcb15f6db4a29c702bf5031ef2e1e25a06a120"
-  integrity sha512-9wm3yX9lCfjvA98ybCyw2pADUivyNWT/yIP4ZcDVpMN0og70BUWYEGXPCTAQdGTAqnytfRADb7NERrY1qxhIqw==
+pg@8.10.0:
+  version "8.10.0"
+  resolved "https://registry.yarnpkg.com/pg/-/pg-8.10.0.tgz#5b8379c9b4a36451d110fc8cd98fc325fe62ad24"
+  integrity sha512-ke7o7qSTMb47iwzOSaZMfeR7xToFdkE71ifIipOAAaLIM0DYzfOAXlgFFmYUIE2BcJtvnVlGCID84ZzCegE8CQ==
   dependencies:
     buffer-writer "2.0.0"
     packet-reader "1.0.0"
-    pg-connection-string "^2.4.0"
-    pg-pool "^3.2.2"
-    pg-protocol "^1.4.0"
+    pg-connection-string "^2.5.0"
+    pg-pool "^3.6.0"
+    pg-protocol "^1.6.0"
     pg-types "^2.1.0"
     pgpass "1.x"
 
@@ -21739,6 +21791,13 @@ semver@^7.2.1, semver@^7.3.5:
   dependencies:
     lru-cache "^6.0.0"
 
+semver@^7.5.0:
+  version "7.5.0"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-7.5.0.tgz#ed8c5dc8efb6c629c88b23d41dc9bf40c1d96cd0"
+  integrity sha512-+XC0AD/R7Q2mPSRuy2Id0+CGTZ98+8f+KvwirxOKIEyid+XSx6HbC63p+O4IndTHuX5Z+JxQ0TghCkO5Cg/2HA==
+  dependencies:
+    lru-cache "^6.0.0"
+
 semver@~2.3.1:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/semver/-/semver-2.3.2.tgz#b9848f25d6cf36333073ec9ef8856d42f1233e52"
@@ -22965,7 +23024,14 @@ svelte-dnd-action@^0.9.8:
   resolved "https://registry.yarnpkg.com/svelte-dnd-action/-/svelte-dnd-action-0.9.22.tgz#003eee9dddb31d8c782f6832aec8b1507fff194d"
   integrity sha512-lOQJsNLM1QWv5mdxIkCVtk6k4lHCtLgfE59y8rs7iOM6erchbLC9hMEFYSveZz7biJV0mpg7yDSs4bj/RT/YkA==
 
-svelte-flatpickr@^3.1.0, svelte-flatpickr@^3.2.3, svelte-flatpickr@^3.3.2:
+svelte-flatpickr@3.2.3:
+  version "3.2.3"
+  resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-3.2.3.tgz#db5dd7ad832ef83262b45e09737955ad3d591fc8"
+  integrity sha512-PNkqK4Napx8nTvCwkaUXdnKo8dISThaxEOK+szTUXcY6H0dQM0TSyuoMaVWY2yX7pM+PN5cpCQCcVe8YvTRFSw==
+  dependencies:
+    flatpickr "^4.5.2"
+
+svelte-flatpickr@^3.1.0, svelte-flatpickr@^3.2.3:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-3.3.2.tgz#f08bcde83d439cb30df6fd07b974d87371f130c1"
   integrity sha512-VNJLYyLRDplI63oWX5hJylzAJc2VhTh3z9SNecfjtuPZmP6FZPpg9Fw7rXpkEV2DPovIWj2PtaVxB6Kp9r423w==
@@ -24510,7 +24576,7 @@ vm2@3.9.17:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"
 
-vm2@^3.9.11, vm2@^3.9.15, vm2@^3.9.4:
+vm2@^3.9.11, vm2@^3.9.15:
   version "3.9.16"
   resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.16.tgz#0fbc2a265f7bf8b837cea6f4a908f88a3f93b8e6"
   integrity sha512-3T9LscojNTxdOyG+e8gFeyBXkMlOBYDoF6dqZbj+MPVHi9x10UfiTAJIobuchRCp3QvC+inybTbMJIUrLsig0w==

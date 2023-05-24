@@ -55,12 +55,6 @@ export const isConstantQuota = (
   return quotaType === QuotaType.CONSTANT
 }
 
-export interface Minimums {
-  users: number
-}
-
-export type PlanMinimums = { [key in PlanType]: Minimums }
-
 export type PlanQuotas = { [key in PlanType]: Quotas | undefined }
 
 export type MonthlyQuotas = {

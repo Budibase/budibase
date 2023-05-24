@@ -1,0 +1,3 @@
+[submodule "packages/pro"]
+	path = packages/pro
+	url = git@github.com:Budibase/budibase-pro.git

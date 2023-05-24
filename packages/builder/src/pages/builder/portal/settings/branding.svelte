@@ -213,7 +213,7 @@
         {/if}
         {#if isCloud && !brandingEnabled}
           <Tags>
-            <Tag icon="LockClosed">Pro</Tag>
+            <Tag icon="LockClosed">Premium</Tag>
           </Tags>
         {/if}
       </div>

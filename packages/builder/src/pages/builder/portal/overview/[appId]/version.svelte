@@ -1,12 +1,11 @@
 <script>
   import { Layout, Heading, Body, Divider, Button } from "@budibase/bbui"
   import { store } from "builderStore"
-  import clientPackage from "@budibase/client/package.json"
   import VersionModal from "components/deploy/VersionModal.svelte"
 
   let versionModal
 
-  $: updateAvailable = clientPackage.version !== $store.version
+  $: updateAvailable = $store.upgradableVersion !== $store.version
 </script>
 
 <Layout noPadding>
@@ -18,7 +17,7 @@
   {#if updateAvailable}
     <Body>
       The app is currently using version <strong>{$store.version}</strong>
-      but version <strong>{clientPackage.version}</strong> is available.
+      but version <strong>{$store.upgradableVersion}</strong> is available.
       <br />
       Updates can contain new features, performance improvements and bug fixes.
     </Body>

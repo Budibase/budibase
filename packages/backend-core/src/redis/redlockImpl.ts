@@ -85,7 +85,7 @@ export const doWithLock = async <T>(
   opts: LockOptions,
   task: () => Promise<T>
 ): Promise<RedlockExecution<T>> => {
-  const redlock = await getClient(opts.type)
+  const redlock = await getClient(opts.type, opts.customOptions)
   let lock
   try {
     // determine lock name

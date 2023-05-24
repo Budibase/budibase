@@ -149,6 +149,7 @@
   title={$selectedScreen.routing.route}
   icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
   borderLeft
+  wide
 >
   <Layout gap="S" paddingX="L" paddingY="XL">
     {#if $selectedScreen.layoutId}
