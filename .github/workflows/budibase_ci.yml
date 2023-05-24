@@ -44,9 +44,9 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn build
+      - run: yarn nx run-many -t=build --configuration=production
 
-  test:
+  test-libraries:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -59,8 +59,27 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn build --scope=@budibase/types --scope=@budibase/shared-core --scope=@budibase/string-templates
-      - run: yarn test --ignore=@budibase/pro
+      - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          name: codecov-umbrella
+          verbose: true
+
+  test-services:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.x
+          cache: "yarn"
+      - run: yarn
+      - run: yarn test --scope=@budibase/worker --scope=@budibase/server
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos

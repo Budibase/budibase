@@ -72,9 +72,11 @@
   :global(.spectrum-Form-itemField .spectrum-Textfield--multiline) {
     min-height: calc(var(--height) - 24px);
   }
-  :global(.spectrum-Form--labelsAbove
-      .spectrum-Form-itemField
-      .spectrum-Textfield--multiline) {
+  :global(
+      .spectrum-Form--labelsAbove
+        .spectrum-Form-itemField
+        .spectrum-Textfield--multiline
+    ) {
     min-height: calc(var(--height) - 24px);
   }
 </style>
