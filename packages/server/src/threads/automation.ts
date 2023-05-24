@@ -68,6 +68,7 @@ class Orchestrator {
   constructor(job: AutomationJob) {
     let automation = job.data.automation
     let triggerOutput = job.data.event
+    let timeout = job.data.event.timeout
     const metadata = triggerOutput.metadata
     this._chainCount = metadata ? metadata.automationChainCount! : 0
     this._appId = triggerOutput.appId as string
@@ -240,7 +241,9 @@ class Orchestrator {
     let loopStepNumber: any = undefined
     let loopSteps: LoopStep[] | undefined = []
     let metadata
+    let timeoutFlag = false
     let wasLoopStep = false
+    let timeout = this._job.data.event.timeout
     // check if this is a recurring automation,
     if (isProdAppID(this._appId) && isRecurring(automation)) {
       metadata = await this.getMetadata()
@@ -251,6 +254,16 @@ class Orchestrator {
     }
 
     for (let step of automation.definition.steps) {
+      if (timeoutFlag) {
+        break
+      }
+
+      if (timeout) {
+        setTimeout(() => {
+          timeoutFlag = true
+        }, timeout || 12000)
+      }
+
       stepCount++
       let input: any,
         iterations = 1,
@@ -391,7 +404,7 @@ class Orchestrator {
             emitter: this._emitter,
             context: this._context,
           })
-
+          console.log("after stepFn")
           this._context.steps[stepCount] = outputs
           // if filter causes us to stop execution don't break the loop, set a var
           // so that we can finish iterating through the steps and record that it stopped
