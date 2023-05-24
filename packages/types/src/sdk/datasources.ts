@@ -116,7 +116,7 @@ export interface Integration {
   docs: string
   plus?: boolean
   auth?: { type: string }
-  features?: DatasourceFeature[]
+  features?: Partial<Record<DatasourceFeature, boolean>>
   relationships?: boolean
   description: string
   friendlyName: string

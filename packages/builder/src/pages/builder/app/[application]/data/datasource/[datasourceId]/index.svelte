@@ -21,6 +21,7 @@
   import { cloneDeep } from "lodash/fp"
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
   import { API } from "api"
+  import { DatasourceFeature } from "@budibase/types"
 
   const querySchema = {
     name: {},
@@ -64,9 +65,11 @@
   }
 
   const saveDatasource = async () => {
-    const valid = await validateConfig()
-    if (!valid) {
-      return false
+    if (integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
+      const valid = await validateConfig()
+      if (!valid) {
+        return false
+      }
     }
     try {
       // Create datasource
