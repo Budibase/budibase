@@ -102,7 +102,9 @@
     margin-left: 0;
     transition: color ease-out 130ms;
   }
-  .is-selected:not(.spectrum-ActionButton--emphasized):not(.spectrum-ActionButton--quiet) {
+  .is-selected:not(.spectrum-ActionButton--emphasized):not(
+      .spectrum-ActionButton--quiet
+    ) {
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-gray-500);
   }
