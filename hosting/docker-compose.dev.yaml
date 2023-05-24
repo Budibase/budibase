@@ -38,9 +38,6 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       - PROXY_ADDRESS=host.docker.internal
-      - APPS_UPSTREAM_URL=http://app-service:4002
-      - WORKER_UPSTREAM_URL=http://worker-service:4003
-      - RESOLVER=127.0.0.11
 
   couchdb-service:
     # platform: linux/amd64
