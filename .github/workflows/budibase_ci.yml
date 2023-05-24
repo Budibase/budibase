@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: 14.x
           cache: "yarn"
-      - run: yarn
+      - run: yarn install --frozen-lockfile
       - run: yarn lint
 
   build:
@@ -43,7 +43,7 @@ jobs:
         with:
           node-version: 14.x
           cache: "yarn"
-      - run: yarn
+      - run: yarn install --frozen-lockfile
       # Run build all the projects
       - run: yarn nx run-many -t=build
       # Check the types of the projects built via esbuild
@@ -61,7 +61,7 @@ jobs:
         with:
           node-version: 14.x
           cache: "yarn"
-      - run: yarn
+      - run: yarn install --frozen-lockfile
       - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
@@ -81,7 +81,7 @@ jobs:
         with:
           node-version: 14.x
           cache: "yarn"
-      - run: yarn
+      - run: yarn install --frozen-lockfile
       - run: yarn test --scope=@budibase/worker --scope=@budibase/server
       - uses: codecov/codecov-action@v3
         with:
@@ -101,7 +101,7 @@ jobs:
         with:
           node-version: 14.x
           cache: "yarn"
-      - run: yarn
+      - run: yarn install --frozen-lockfile
       - run: yarn test --scope=@budibase/pro
 
   integration-test:
@@ -116,7 +116,7 @@ jobs:
         with:
           node-version: 14.x
           cache: "yarn"
-      - run: yarn
+      - run: yarn install --frozen-lockfile
       - run: yarn build
       - name: Run tests
         run: |
