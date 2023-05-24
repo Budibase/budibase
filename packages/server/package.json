@@ -190,6 +190,16 @@
             "target": "build"
           }
         ]
+      },
+      "check:types": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
       }
     }
   },
