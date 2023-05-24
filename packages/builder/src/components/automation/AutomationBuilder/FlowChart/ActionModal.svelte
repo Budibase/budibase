@@ -12,7 +12,7 @@
   import { automationStore, selectedAutomation } from "builderStore"
   import { admin, licensing } from "stores/portal"
   import { externalActions } from "./ExternalActions"
-  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
+  import { TriggerStepID } from "constants/backend/automations"
   import { checkForCollectStep } from "builderStore/utils"
 
   export let blockIdx
