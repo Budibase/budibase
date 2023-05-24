@@ -52,7 +52,10 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: [
+    DatasourceFeature.CONNECTION_CHECKING,
+    DatasourceFeature.FETCH_TABLE_NAMES,
+  ],
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -126,14 +129,15 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
   COLUMNS_SQL!: string
 
-  PRIMARY_KEYS_SQL = `
-  select tc.table_schema, tc.table_name, kc.column_name as primary_key 
-  from information_schema.table_constraints tc
-  join 
-    information_schema.key_column_usage kc on kc.table_name = tc.table_name 
-    and kc.table_schema = tc.table_schema 
-    and kc.constraint_name = tc.constraint_name
-  where tc.constraint_type = 'PRIMARY KEY';
+  PRIMARY_KEYS_SQL = () => `
+  SELECT pg_namespace.nspname table_schema
+     , pg_class.relname table_name
+     , pg_attribute.attname primary_key
+  FROM pg_class
+  JOIN pg_index ON pg_class.oid = pg_index.indrelid AND pg_index.indisprimary
+  JOIN pg_attribute ON pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey)
+  JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+  WHERE pg_namespace.nspname = '${this.config.schema}';
   `
 
   constructor(config: PostgresConfig) {
@@ -239,7 +243,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     let tableKeys: { [key: string]: string[] } = {}
     await this.openConnection()
     try {
-      const primaryKeysResponse = await this.client.query(this.PRIMARY_KEYS_SQL)
+      const primaryKeysResponse = await this.client.query(
+        this.PRIMARY_KEYS_SQL()
+      )
       for (let table of primaryKeysResponse.rows) {
         const tableName = table.table_name
         if (!tableKeys[tableName]) {
@@ -306,6 +312,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     } catch (err) {
       // @ts-ignore
       throw new Error(err)
+    } finally {
+      await this.closeConnection()
+    }
+  }
+
+  async getTableNames() {
+    try {
+      await this.openConnection()
+      const columnsResponse: { rows: PostgresColumn[] } =
+        await this.client.query(this.COLUMNS_SQL)
+      return columnsResponse.rows.map(row => row.table_name)
     } finally {
       await this.closeConnection()
     }
