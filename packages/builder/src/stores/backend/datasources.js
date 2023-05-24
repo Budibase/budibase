@@ -25,6 +25,8 @@ export function createDatasourcesStore() {
     store.update(state => ({
       ...state,
       selectedDatasourceId: id,
+      // Remove any possible schema error
+      schemaError: null,
     }))
   }
 
