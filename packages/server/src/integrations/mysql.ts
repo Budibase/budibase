@@ -36,7 +36,10 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "MySQL Database Service is a fully managed database service to deploy cloud-native applications. ",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: [
+    DatasourceFeature.CONNECTION_CHECKING,
+    DatasourceFeature.FETCH_TABLE_NAMES,
+  ],
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -214,20 +217,11 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
 
   async buildSchema(datasourceId: string, entities: Record<string, Table>) {
     const tables: { [key: string]: Table } = {}
-    const database = this.config.database
     await this.connect()
 
     try {
       // get the tables first
-      const tablesResp: Record<string, string>[] = await this.internalQuery(
-        { sql: "SHOW TABLES;" },
-        { connect: false }
-      )
-      const tableNames: string[] = tablesResp.map(
-        (obj: any) =>
-          obj[`Tables_in_${database}`] ||
-          obj[`Tables_in_${database.toLowerCase()}`]
-      )
+      const tableNames = await this.queryTableNames()
       for (let tableName of tableNames) {
         const primaryKeys = []
         const schema: TableSchema = {}
@@ -272,6 +266,28 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     const final = finaliseExternalTables(tables, entities)
     this.tables = final.tables
     this.schemaErrors = final.errors
+  }
+
+  async queryTableNames() {
+    const database = this.config.database
+    const tablesResp: Record<string, string>[] = await this.internalQuery(
+      { sql: "SHOW TABLES;" },
+      { connect: false }
+    )
+    return tablesResp.map(
+      (obj: any) =>
+        obj[`Tables_in_${database}`] ||
+        obj[`Tables_in_${database.toLowerCase()}`]
+    )
+  }
+
+  async getTableNames() {
+    await this.connect()
+    try {
+      return this.queryTableNames()
+    } finally {
+      await this.disconnect()
+    }
   }
 
   async create(query: SqlQuery | string) {

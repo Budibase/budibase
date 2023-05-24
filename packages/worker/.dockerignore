@@ -1,7 +1,3 @@
-node_modules
-npm-debug.log
-Dockerfile
-.dockerignore
-.git
-.gitignore
-
+*
+!/dist/
+!/docker_run.sh

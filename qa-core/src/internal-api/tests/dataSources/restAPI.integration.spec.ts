@@ -52,7 +52,7 @@ describe("Internal API - Data Sources: REST API", () => {
       datasourcetoSave
     )
     // Get Query
-    const [getQueryResponse, getQueryJson] = await config.api.queries.get(
+    const [getQueryResponse, getQueryJson] = await config.api.queries.getQuery(
       saveQueryJson._id!
     )
 

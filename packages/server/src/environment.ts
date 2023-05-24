@@ -96,6 +96,7 @@ const environment = {
   isInThread: () => {
     return process.env.FORKED_PROCESS
   },
+  TOP_LEVEL_PATH: process.env.TOP_LEVEL_PATH,
 }
 
 // threading can cause memory issues with node-ts in development
