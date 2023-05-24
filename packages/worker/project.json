@@ -25,12 +25,10 @@
           "sourcemap": true
         },
         "minify": true,
-        "generatePackageJson": true,
-        "skipTypeCheck": true
+        "generatePackageJson": true
       },
       "configurations": {
         "production": {
-          "skipTypeCheck": false,
           "esbuildOptions": {
             "sourcemap": false
           }
