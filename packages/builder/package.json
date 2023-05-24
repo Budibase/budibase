@@ -119,6 +119,16 @@
   },
   "nx": {
     "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
+      },
       "test": {
         "dependsOn": [
           {
