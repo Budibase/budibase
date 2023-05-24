@@ -52,7 +52,7 @@
 {:else}
   <div class="text-cell" class:number={type === "number"}>
     <div class="value">
-      {value || ""}
+      {value ?? ""}
     </div>
   </div>
 {/if}
