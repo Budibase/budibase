@@ -66,10 +66,10 @@ const SCHEMA: Integration = {
     "Create and collaborate on online spreadsheets in real-time and from any device.",
   friendlyName: "Google Sheets",
   type: "Spreadsheet",
-  features: [
-    DatasourceFeature.CONNECTION_CHECKING,
-    DatasourceFeature.FETCH_TABLE_NAMES,
-  ],
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+  },
   datasource: {
     spreadsheetId: {
       display: "Google Sheet URL",

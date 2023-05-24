@@ -8,6 +8,7 @@
     saveDatasource as save,
     validateDatasourceConfig,
   } from "builderStore/datasource"
+  import { DatasourceFeature } from "@budibase/types"
 
   export let integration
   export let modal
@@ -36,10 +37,8 @@
     return connected
   }
 
-  $: shouldValidate = integration.features?.find(f => f === "connection")
-
   async function saveDatasource() {
-    if (shouldValidate) {
+    if (integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
       const valid = await validateConfig()
       if (!valid) {
         return false
@@ -64,11 +63,7 @@
   title={`Connect to ${name}`}
   onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
-  confirmText={datasource.plus
-    ? shouldValidate
-      ? "Connect"
-      : "Save and continue"
-    : "Save and continue to query"}
+  confirmText={datasource.plus ? "Connect" : "Save and continue to query"}
   cancelText="Back"
   showSecondaryButton={datasource.plus}
   size="L"
