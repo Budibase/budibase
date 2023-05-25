@@ -38,6 +38,7 @@ export class Thread {
     this.count = opts.count ? opts.count : 1
     this.disableThreading = this.shouldDisableThreading()
     if (!this.disableThreading) {
+      console.debug(`[${env.FORKED_PROCESS_NAME}] initialising worker farm type=${type}`)
       const workerOpts: any = {
         autoStart: true,
         maxConcurrentWorkers: this.count,
@@ -45,6 +46,7 @@ export class Thread {
           env: {
             ...process.env,
             FORKED_PROCESS: "1",
+            FORKED_PROCESS_NAME: type,
           },
         },
       }
@@ -54,6 +56,8 @@ export class Thread {
       }
       this.workers = workerFarm(workerOpts, typeToFile(type), ["execute"])
       Thread.workerRefs.push(this.workers)
+    } else {
+      console.debug(`[${env.FORKED_PROCESS_NAME}] skipping worker farm type=${type}`)
     }
   }
 
@@ -73,7 +77,7 @@ export class Thread {
         worker.execute(job, (err: any, response: any) => {
           if (err && err.type === "TimeoutError") {
             reject(
-              new Error(`Query response time exceeded ${timeout}ms timeout.`)
+              new Error(`Thread timeout exceeded ${timeout}ms timeout.`)
             )
           } else if (err) {
             reject(err)

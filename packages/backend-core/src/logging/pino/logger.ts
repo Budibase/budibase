@@ -96,6 +96,7 @@ if (!env.DISABLE_PINO_LOGGER) {
 
     const mergingObject: any = {
       err: error,
+      pid: process.pid,
       ...contextObject,
     }
 
