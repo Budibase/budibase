@@ -404,7 +404,7 @@ class Orchestrator {
             emitter: this._emitter,
             context: this._context,
           })
-          console.log("after stepFn")
+
           this._context.steps[stepCount] = outputs
           // if filter causes us to stop execution don't break the loop, set a var
           // so that we can finish iterating through the steps and record that it stopped
