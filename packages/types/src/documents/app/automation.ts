@@ -57,6 +57,7 @@ export enum AutomationActionStepId {
   FILTER = "FILTER",
   QUERY_ROWS = "QUERY_ROWS",
   LOOP = "LOOP",
+  OPENAI = "OPENAI",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -177,4 +178,9 @@ export type AutomationStepInput = {
   emitter: EventEmitter
   appId: string
   apiKey?: string
+}
+
+export interface AutomationMetadata extends Document {
+  errorCount?: number
+  automationChainCount?: number
 }

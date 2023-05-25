@@ -19,7 +19,6 @@ import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 import { GenericContainer } from "testcontainers"
-import { generateRowIdField } from "../integrations/utils"
 
 const config = setup.getConfig()!
 
@@ -27,7 +26,7 @@ jest.setTimeout(30000)
 
 jest.unmock("pg")
 
-describe("row api - postgres", () => {
+describe("postgres integrations", () => {
   let makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
     primaryPostgresTable: Table,
@@ -53,8 +52,8 @@ describe("row api - postgres", () => {
     makeRequest = generateMakeRequest(apiKey, true)
   })
 
-  beforeEach(async () => {
-    postgresDatasource = await config.createDatasource({
+  function pgDatasourceConfig() {
+    return {
       datasource: {
         type: "datasource",
         source: SourceName.POSTGRES,
@@ -71,7 +70,11 @@ describe("row api - postgres", () => {
           ca: false,
         },
       },
-    })
+    }
+  }
+
+  beforeEach(async () => {
+    postgresDatasource = await config.createDatasource(pgDatasourceConfig())
 
     async function createAuxTable(prefix: string) {
       return await config.createTable({
@@ -1023,6 +1026,45 @@ describe("row api - postgres", () => {
 
         expect(res.body).toHaveLength(rowsCount)
       })
+    })
+  })
+
+  describe("POST /api/datasources/verify", () => {
+    it("should be able to verify the connection", async () => {
+      const config = pgDatasourceConfig()
+      const response = await makeRequest(
+        "post",
+        "/api/datasources/verify",
+        config
+      )
+      expect(response.status).toBe(200)
+      expect(response.body.connected).toBe(true)
+    })
+
+    it("should state an invalid datasource cannot connect", async () => {
+      const config = pgDatasourceConfig()
+      config.datasource.config.password = "wrongpassword"
+      const response = await makeRequest(
+        "post",
+        "/api/datasources/verify",
+        config
+      )
+      expect(response.status).toBe(200)
+      expect(response.body.connected).toBe(false)
+      expect(response.body.error).toBeDefined()
+    })
+  })
+
+  describe("GET /api/datasources/:datasourceId/info", () => {
+    it("should fetch information about postgres datasource", async () => {
+      const primaryName = primaryPostgresTable.name
+      const response = await makeRequest(
+        "get",
+        `/api/datasources/${postgresDatasource._id}/info`
+      )
+      expect(response.status).toBe(200)
+      expect(response.body.tableNames).toBeDefined()
+      expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-1)
     })
   })
 })

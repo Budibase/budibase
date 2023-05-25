@@ -18,10 +18,71 @@ import {
   Row,
   CreateDatasourceResponse,
   UpdateDatasourceResponse,
-  UpdateDatasourceRequest,
   CreateDatasourceRequest,
+  VerifyDatasourceRequest,
+  VerifyDatasourceResponse,
+  FetchDatasourceInfoResponse,
+  IntegrationBase,
+  DatasourcePlus,
 } from "@budibase/types"
 import sdk from "../../sdk"
+
+function getErrorTables(errors: any, errorType: string) {
+  return Object.entries(errors)
+    .filter(entry => entry[1] === errorType)
+    .map(([name]) => name)
+}
+
+function updateError(error: any, newError: any, tables: string[]) {
+  if (!error) {
+    error = ""
+  }
+  if (error.length > 0) {
+    error += "\n"
+  }
+  error += `${newError} ${tables.join(", ")}`
+  return error
+}
+
+async function getConnector(
+  datasource: Datasource
+): Promise<IntegrationBase | DatasourcePlus> {
+  const Connector = await getIntegration(datasource.source)
+  // can't enrich if it doesn't have an ID yet
+  if (datasource._id) {
+    datasource = await sdk.datasources.enrich(datasource)
+  }
+  // Connect to the DB and build the schema
+  return new Connector(datasource.config)
+}
+
+async function buildSchemaHelper(datasource: Datasource) {
+  const connector = (await getConnector(datasource)) as DatasourcePlus
+  await connector.buildSchema(datasource._id!, datasource.entities!)
+
+  const errors = connector.schemaErrors
+  let error = null
+  if (errors && Object.keys(errors).length > 0) {
+    const noKey = getErrorTables(errors, BuildSchemaErrors.NO_KEY)
+    const invalidCol = getErrorTables(errors, BuildSchemaErrors.INVALID_COLUMN)
+    if (noKey.length) {
+      error = updateError(
+        error,
+        "No primary key constraint found for the following:",
+        noKey
+      )
+    }
+    if (invalidCol.length) {
+      const invalidCols = Object.values(InvalidColumns).join(", ")
+      error = updateError(
+        error,
+        `Cannot use columns ${invalidCols} found in following:`,
+        invalidCol
+      )
+    }
+  }
+  return { tables: connector.tables, error }
+}
 
 export async function fetch(ctx: UserCtx) {
   // Get internal tables
@@ -64,6 +125,48 @@ export async function fetch(ctx: UserCtx) {
   }
 
   ctx.body = [bbInternalDb, ...datasources]
+}
+
+export async function verify(
+  ctx: UserCtx<VerifyDatasourceRequest, VerifyDatasourceResponse>
+) {
+  const { datasource } = ctx.request.body
+  let existingDatasource: undefined | Datasource
+  if (datasource._id) {
+    existingDatasource = await sdk.datasources.get(datasource._id)
+  }
+  let enrichedDatasource = datasource
+  if (existingDatasource) {
+    enrichedDatasource = sdk.datasources.mergeConfigs(
+      datasource,
+      existingDatasource
+    )
+  }
+  const connector = await getConnector(enrichedDatasource)
+  if (!connector.testConnection) {
+    ctx.throw(400, "Connection information verification not supported")
+  }
+  const response = await connector.testConnection()
+
+  ctx.body = {
+    connected: response.connected,
+    error: response.error,
+  }
+}
+
+export async function information(
+  ctx: UserCtx<void, FetchDatasourceInfoResponse>
+) {
+  const datasourceId = ctx.params.datasourceId
+  const datasource = await sdk.datasources.get(datasourceId, { enriched: true })
+  const connector = (await getConnector(datasource)) as DatasourcePlus
+  if (!connector.getTableNames) {
+    ctx.throw(400, "Table name fetching not supported by datasource")
+  }
+  const tableNames = await connector.getTableNames()
+  ctx.body = {
+    tableNames,
+  }
 }
 
 export async function buildSchemaFromDb(ctx: UserCtx) {
@@ -310,52 +413,4 @@ export async function query(ctx: UserCtx) {
   } catch (err: any) {
     ctx.throw(400, err)
   }
-}
-
-function getErrorTables(errors: any, errorType: string) {
-  return Object.entries(errors)
-    .filter(entry => entry[1] === errorType)
-    .map(([name]) => name)
-}
-
-function updateError(error: any, newError: any, tables: string[]) {
-  if (!error) {
-    error = ""
-  }
-  if (error.length > 0) {
-    error += "\n"
-  }
-  error += `${newError} ${tables.join(", ")}`
-  return error
-}
-
-async function buildSchemaHelper(datasource: Datasource) {
-  const Connector = await getIntegration(datasource.source)
-  datasource = await sdk.datasources.enrich(datasource)
-  // Connect to the DB and build the schema
-  const connector = new Connector(datasource.config)
-  await connector.buildSchema(datasource._id, datasource.entities)
-
-  const errors = connector.schemaErrors
-  let error = null
-  if (errors && Object.keys(errors).length > 0) {
-    const noKey = getErrorTables(errors, BuildSchemaErrors.NO_KEY)
-    const invalidCol = getErrorTables(errors, BuildSchemaErrors.INVALID_COLUMN)
-    if (noKey.length) {
-      error = updateError(
-        error,
-        "No primary key constraint found for the following:",
-        noKey
-      )
-    }
-    if (invalidCol.length) {
-      const invalidCols = Object.values(InvalidColumns).join(", ")
-      error = updateError(
-        error,
-        `Cannot use columns ${invalidCols} found in following:`,
-        invalidCol
-      )
-    }
-  }
-  return { tables: connector.tables, error }
 }

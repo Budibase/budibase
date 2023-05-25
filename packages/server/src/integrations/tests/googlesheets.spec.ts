@@ -17,14 +17,15 @@ jest.mock("google-spreadsheet")
 const { GoogleSpreadsheet } = require("google-spreadsheet")
 
 const sheetsByTitle: { [title: string]: GoogleSpreadsheetWorksheet } = {}
+const sheetsByIndex: GoogleSpreadsheetWorksheet[] = []
+const mockGoogleIntegration = {
+  useOAuth2Client: jest.fn(),
+  loadInfo: jest.fn(),
+  sheetsByTitle,
+  sheetsByIndex,
+}
 
-GoogleSpreadsheet.mockImplementation(() => {
-  return {
-    useOAuth2Client: jest.fn(),
-    loadInfo: jest.fn(),
-    sheetsByTitle,
-  }
-})
+GoogleSpreadsheet.mockImplementation(() => mockGoogleIntegration)
 
 import { structures } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
@@ -53,6 +54,8 @@ describe("Google Sheets Integration", () => {
       },
     })
     await config.init()
+
+    jest.clearAllMocks()
   })
 
   function createBasicTable(name: string, columns: string[]): Table {
@@ -88,7 +91,7 @@ describe("Google Sheets Integration", () => {
   }
 
   describe("update table", () => {
-    test("adding a new field will be adding a new header row", async () => {
+    it("adding a new field will be adding a new header row", async () => {
       await config.doInContext(structures.uuid(), async () => {
         const tableColumns = ["name", "description", "new field"]
         const table = createBasicTable(structures.uuid(), tableColumns)
@@ -103,7 +106,7 @@ describe("Google Sheets Integration", () => {
       })
     })
 
-    test("removing an existing field will remove the header from the google sheet", async () => {
+    it("removing an existing field will remove the header from the google sheet", async () => {
       const sheet = await config.doInContext(structures.uuid(), async () => {
         const tableColumns = ["name"]
         const table = createBasicTable(structures.uuid(), tableColumns)
@@ -121,6 +124,35 @@ describe("Google Sheets Integration", () => {
 
       // No undefined are sent
       expect((sheet.setHeaderRow as any).mock.calls[0][0]).toHaveLength(1)
+    })
+  })
+
+  describe("getTableNames", () => {
+    it("can fetch table names", async () => {
+      await config.doInContext(structures.uuid(), async () => {
+        const sheetNames: string[] = []
+        for (let i = 0; i < 5; i++) {
+          const sheet = createSheet({ headerValues: [] })
+          sheetsByIndex.push(sheet)
+          sheetNames.push(sheet.title)
+        }
+
+        const res = await integration.getTableNames()
+
+        expect(mockGoogleIntegration.loadInfo).toBeCalledTimes(1)
+        expect(res).toEqual(sheetNames)
+      })
+    })
+  })
+
+  describe("testConnection", () => {
+    it("can test successful connections", async () => {
+      await config.doInContext(structures.uuid(), async () => {
+        const res = await integration.testConnection()
+
+        expect(mockGoogleIntegration.loadInfo).toBeCalledTimes(1)
+        expect(res).toEqual({ connected: true })
+      })
     })
   })
 })

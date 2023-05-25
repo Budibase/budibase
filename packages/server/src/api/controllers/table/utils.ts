@@ -129,17 +129,17 @@ export function importToRows(
     // the real schema of the table passed in, not the clone used for
     // incrementing auto IDs
     for (const [fieldName, schema] of Object.entries(originalTable.schema)) {
+      const rowVal = Array.isArray(row[fieldName])
+        ? row[fieldName]
+        : [row[fieldName]]
       if (
         (schema.type === FieldTypes.OPTIONS ||
           schema.type === FieldTypes.ARRAY) &&
-        row[fieldName] &&
-        (!schema.constraints!.inclusion ||
-          schema.constraints!.inclusion.indexOf(row[fieldName]) === -1)
+        row[fieldName]
       ) {
-        schema.constraints!.inclusion = [
-          ...schema.constraints!.inclusion!,
-          row[fieldName],
-        ]
+        let merged = [...schema.constraints!.inclusion!, ...rowVal]
+        let superSet = new Set(merged)
+        schema.constraints!.inclusion = Array.from(superSet)
         schema.constraints!.inclusion.sort()
       }
     }
