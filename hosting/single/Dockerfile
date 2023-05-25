@@ -1,22 +1,22 @@
-FROM node:14-slim as build
+FROM node:16-slim as build
 
 # install node-gyp dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-utils cron g++ make python
 
 # add pin script
 WORKDIR /
-ADD scripts/pinVersions.js scripts/cleanup.sh ./
+ADD scripts/cleanup.sh ./
 RUN chmod +x /cleanup.sh
 
 # build server
 WORKDIR /app
 ADD packages/server .
-RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+RUN yarn install --frozen-lockfile --production=true && /cleanup.sh
 
 # build worker
 WORKDIR /worker
 ADD packages/worker .
-RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+RUN yarn install --frozen-lockfile --production=true && /cleanup.sh
 
 FROM budibase/couchdb
 ARG TARGETARCH
@@ -31,9 +31,7 @@ COPY --from=build /worker /worker
 
 # install base dependencies
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server && \
-  apt-add-repository 'deb http://security.debian.org/debian-security bullseye-security/updates main' && \
-  apt-get update
+  apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server
 
 # install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx
 WORKDIR /nodejs
