@@ -40,7 +40,7 @@ service:
   port: 10000
 
 ingress:
-  enabled: false
+  enabled: true
   aws: false
   nginx: true
   certificateArn: ""
