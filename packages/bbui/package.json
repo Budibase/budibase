@@ -84,11 +84,25 @@
     "@spectrum-css/vars": "3.0.1",
     "dayjs": "^1.10.4",
     "easymde": "^2.16.1",
-    "svelte-flatpickr": "^3.3.2",
+    "svelte-flatpickr": "3.2.3",
     "svelte-portal": "^1.0.0"
   },
   "resolutions": {
     "loader-utils": "1.4.1"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }
