@@ -44,7 +44,7 @@ ingress:
   aws: false
   nginx: false
   certificateArn: ""
-  className: "nginx"
+  className: ""
   annotations:
     nginx.ingress.kubernetes.io/client-max-body-size: 150M
     nginx.ingress.kubernetes.io/proxy-body-size: 50m
@@ -291,7 +291,6 @@ couchdb:
       - chart-example.local
     path: /
     annotations:
-      []
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
     tls:
