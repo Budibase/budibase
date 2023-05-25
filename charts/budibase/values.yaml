@@ -42,11 +42,10 @@ service:
 ingress:
   enabled: true
   aws: false
-  nginx: true
+  nginx: false
   certificateArn: ""
-  className: ""
+  className: "nginx"
   annotations:
-    kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/client-max-body-size: 150M
     nginx.ingress.kubernetes.io/proxy-body-size: 50m
   hosts:
