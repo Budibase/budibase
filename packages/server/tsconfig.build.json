@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "incremental": true,
-    "types": ["node", "jest"],
+    "types": ["node"],
     "outDir": "dist/src",
     "skipLibCheck": true,
     "baseUrl": ".",
