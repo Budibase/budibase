@@ -5,6 +5,8 @@ import Cookies from "cookies"
 import { userAgent } from "koa-useragent"
 import { auth } from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
+import { createAdapter } from "@socket.io/redis-adapter"
+import { getSocketPubSubClients } from "../utilities/redis"
 
 export default class Socket {
   io: Server
@@ -12,7 +14,7 @@ export default class Socket {
   constructor(
     app: Koa,
     server: http.Server,
-    path: string,
+    path: string = "/",
     additionalMiddlewares?: any[]
   ) {
     this.io = new Server(server, {
@@ -97,6 +99,11 @@ export default class Socket {
         next(error)
       }
     })
+
+    // Instantiate redis adapter
+    const { pub, sub } = getSocketPubSubClients()
+    const opts = { key: `socket.io-${path}` }
+    this.io.adapter(createAdapter(pub, sub, opts))
   }
 
   // Emit an event to all sockets
