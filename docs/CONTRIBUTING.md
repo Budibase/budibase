@@ -144,8 +144,6 @@ The following commands can be executed to manually get Budibase up and running (
 
 `yarn` to install project dependencies
 
-`yarn bootstrap` will install all budibase modules and symlink them together using lerna.
-
 `yarn build` will build all budibase packages.
 
 #### 4. Running
@@ -243,7 +241,7 @@ An overview of the CI pipelines can be found [here](../.github/workflows/README.
 
 Note that only budibase maintainers will be able to access the pro repo.
 
-The `yarn bootstrap` command can be used to replace the NPM supplied dependency with the local source aware version. This is achieved using the `yarn link` command. To see specifically how dependencies are linked see [scripts/link-dependencies.sh](../scripts/link-dependencies.sh). The same link script is used to link dependencies to account-portal in local dev.
+By default, NX will make sure that dependencies are replaced with local source aware version. This is achieved using the `yarn link` command. To see specifically how dependencies are linked see [scripts/link-dependencies.sh](../scripts/link-dependencies.sh). The same link script is used to link dependencies to account-portal in local dev.
 
 ### Troubleshooting
 
