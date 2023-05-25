@@ -2,31 +2,27 @@ import { Response } from "node-fetch"
 import { Table } from "@budibase/types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import { MessageResponse } from "../../../types"
+import BaseAPI from "./BaseAPI"
 
-export default class TableAPI {
-  client: BudibaseInternalAPIClient
-
+export default class TableAPI extends BaseAPI {
   constructor(client: BudibaseInternalAPIClient) {
-    this.client = client
+    super(client)
   }
 
   async getAll(expectedNumber: Number): Promise<[Response, Table[]]> {
-    const [response, json] = await this.client.get(`/tables`)
-    expect(response).toHaveStatusCode(200)
+    const [response, json] = await this.get(`/tables`)
     expect(json.length).toBe(expectedNumber)
     return [response, json]
   }
 
   async getTableById(id: string): Promise<[Response, Table]> {
-    const [response, json] = await this.client.get(`/tables/${id}`)
-    expect(response).toHaveStatusCode(200)
+    const [response, json] = await this.get(`/tables/${id}`)
     expect(json._id).toEqual(id)
     return [response, json]
   }
 
   async save(body: any, columnAdded?: boolean): Promise<[Response, Table]> {
-    const [response, json] = await this.client.post(`/tables`, { body })
-    expect(response).toHaveStatusCode(200)
+    const [response, json] = await this.post(`/tables`, body)
     expect(json._id).toBeDefined()
     expect(json._rev).toBeDefined()
     if (columnAdded) {
@@ -37,9 +33,7 @@ export default class TableAPI {
   }
 
   async forbiddenSave(body: any): Promise<[Response, Table]> {
-    const [response, json] = await this.client.post(`/tables`, { body })
-    expect(response).toHaveStatusCode(403)
-
+    const [response, json] = await this.post(`/tables`, body, 403)
     return [response, json]
   }
 
@@ -47,8 +41,7 @@ export default class TableAPI {
     id: string,
     revId: string
   ): Promise<[Response, MessageResponse]> {
-    const [response, json] = await this.client.del(`/tables/${id}/${revId}`)
-    expect(response).toHaveStatusCode(200)
+    const [response, json] = await this.del(`/tables/${id}/${revId}`)
     expect(json.message).toEqual(`Table ${id} deleted.`)
     return [response, json]
   }

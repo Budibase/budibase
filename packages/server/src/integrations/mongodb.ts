@@ -3,6 +3,8 @@ import {
   DatasourceFieldType,
   QueryType,
   IntegrationBase,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   MongoClient,
@@ -38,6 +40,7 @@ const getSchema = () => {
     type: "Non-relational",
     description:
       "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
+    features: [DatasourceFeature.CONNECTION_CHECKING],
     datasource: {
       connectionString: {
         type: DatasourceFieldType.STRING,
@@ -356,6 +359,19 @@ class MongoIntegration implements IntegrationBase {
       tlsCAFile: config.tlsCAFile || undefined,
     }
     this.client = new MongoClient(config.connectionString, options)
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      await this.connect()
+      response.connected = true
+    } catch (e: any) {
+      response.error = e.message as string
+    }
+    return response
   }
 
   async connect() {

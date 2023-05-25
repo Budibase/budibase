@@ -2,7 +2,7 @@ import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
 import { Query } from "@budibase/types"
 
-describe("Internal API - Data Sources: MongoDB", () => {
+describe("Internal API - Data Sources: PostgresSQL", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -13,7 +13,7 @@ describe("Internal API - Data Sources: MongoDB", () => {
     await config.afterAll()
   })
 
-  it("Create an app with a data source - MongoDB", async () => {
+  it("Create an app with a data source - PostgresSQL", async () => {
     // Create app
     await config.createApp()
 
@@ -22,29 +22,29 @@ describe("Internal API - Data Sources: MongoDB", () => {
 
     // Add data source
     const [dataSourceResponse, dataSourceJson] =
-      await config.api.datasources.add(fixtures.datasources.mongoDB())
+      await config.api.datasources.add(fixtures.datasources.postgresSQL())
 
     // Update data source
     const newDataSourceInfo = {
       ...dataSourceJson.datasource,
-      name: "MongoDB2",
+      name: "PostgresSQL2",
     }
     const [updatedDataSourceResponse, updatedDataSourceJson] =
       await config.api.datasources.update(newDataSourceInfo)
 
     // Query data source
     const [queryResponse, queryJson] = await config.api.queries.preview(
-      fixtures.queries.mongoDB(updatedDataSourceJson.datasource._id!)
+      fixtures.queries.postgres(updatedDataSourceJson.datasource._id!)
     )
 
-    expect(queryJson.rows.length).toBeGreaterThan(10)
+    expect(queryJson.rows.length).toEqual(91)
     expect(queryJson.schemaFields).toEqual(
-      fixtures.queries.expectedSchemaFields.mongoDB
+      fixtures.queries.expectedSchemaFields.postgres
     )
 
     // Save query
     const datasourcetoSave: Query = {
-      ...fixtures.queries.mongoDB(updatedDataSourceJson.datasource._id!),
+      ...fixtures.queries.postgres(updatedDataSourceJson.datasource._id!),
       parameters: [],
     }
 
@@ -52,8 +52,8 @@ describe("Internal API - Data Sources: MongoDB", () => {
       datasourcetoSave
     )
     // Get Query
-    const [getQueryResponse, getQueryJson] = await config.api.queries.get(
-      <string>saveQueryJson._id
+    const [getQueryResponse, getQueryJson] = await config.api.queries.getQuery(
+      saveQueryJson._id!
     )
 
     // Get Query permissions

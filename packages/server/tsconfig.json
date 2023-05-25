@@ -18,12 +18,6 @@
     "require": ["tsconfig-paths/register"],
     "swc": true
   },
-  "references": [
-    { "path": "../types" },
-    { "path": "../backend-core" },
-    { "path": "../shared-core" },
-    { "path": "../../../budibase-pro/packages/pro" }
-  ],
   "include": ["src/**/*", "specs"],
   "exclude": ["node_modules", "dist"]
 }

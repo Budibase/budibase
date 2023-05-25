@@ -4,7 +4,7 @@ import { auth, admin } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
 import { StripeStatus } from "components/portal/licensing/constants"
 import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
-import dayjs from "dayjs"
+import { PlanModel } from "@budibase/types"
 
 const UNLIMITED = -1
 
@@ -12,6 +12,7 @@ export const createLicensingStore = () => {
   const DEFAULT = {
     // navigation
     goToUpgradePage: () => {},
+    goToPricingPage: () => {},
     // the top level license
     license: undefined,
     isFreePlan: true,
@@ -37,27 +38,35 @@ export const createLicensingStore = () => {
     // user limits
     userCount: undefined,
     userLimit: undefined,
-    userLimitDays: undefined,
     userLimitReached: false,
-    warnUserLimit: false,
+    errUserLimit: false,
   }
 
   const oneDayInMilliseconds = 86400000
 
   const store = writable(DEFAULT)
 
-  function willReachUserLimit(userCount, userLimit) {
+  function usersLimitReached(userCount, userLimit) {
     if (userLimit === UNLIMITED) {
       return false
     }
     return userCount >= userLimit
   }
 
-  function willExceedUserLimit(userCount, userLimit) {
+  function usersLimitExceeded(userCount, userLimit) {
     if (userLimit === UNLIMITED) {
       return false
     }
     return userCount > userLimit
+  }
+
+  async function isCloud() {
+    let adminStore = get(admin)
+    if (!adminStore.loaded) {
+      await admin.init()
+      adminStore = get(admin)
+    }
+    return adminStore.cloud
   }
 
   const actions = {
@@ -71,10 +80,14 @@ export const createLicensingStore = () => {
       const goToUpgradePage = () => {
         window.location.href = upgradeUrl
       }
+      const goToPricingPage = () => {
+        window.open("https://budibase.com/pricing/", "_blank")
+      }
       store.update(state => {
         return {
           ...state,
           goToUpgradePage,
+          goToPricingPage,
         }
       })
     },
@@ -128,15 +141,15 @@ export const createLicensingStore = () => {
           quotaUsage,
         }
       })
-      actions.setUsageMetrics()
+      await actions.setUsageMetrics()
     },
-    willReachUserLimit: userCount => {
-      return willReachUserLimit(userCount, get(store).userLimit)
+    usersLimitReached: userCount => {
+      return usersLimitReached(userCount, get(store).userLimit)
     },
-    willExceedUserLimit(userCount) {
-      return willExceedUserLimit(userCount, get(store).userLimit)
+    usersLimitExceeded(userCount) {
+      return usersLimitExceeded(userCount, get(store).userLimit)
     },
-    setUsageMetrics: () => {
+    setUsageMetrics: async () => {
       if (isEnabled(TENANT_FEATURE_FLAGS.LICENSING)) {
         const usage = get(store).quotaUsage
         const license = get(auth).user.license
@@ -198,11 +211,13 @@ export const createLicensingStore = () => {
         const userQuota = license.quotas.usage.static.users
         const userLimit = userQuota?.value
         const userCount = usage.usageQuota.users
-        const userLimitReached = willReachUserLimit(userCount, userLimit)
-        const userLimitExceeded = willExceedUserLimit(userCount, userLimit)
-        const days = dayjs(userQuota?.startDate).diff(dayjs(), "day")
-        const userLimitDays = days > 1 ? `${days} days` : "1 day"
-        const warnUserLimit = userQuota?.startDate && userLimitExceeded
+        const userLimitReached = usersLimitReached(userCount, userLimit)
+        const userLimitExceeded = usersLimitExceeded(userCount, userLimit)
+        const isCloudAccount = await isCloud()
+        const errUserLimit =
+          isCloudAccount &&
+          license.plan.model === PlanModel.PER_USER &&
+          userLimitExceeded
 
         store.update(state => {
           return {
@@ -217,9 +232,8 @@ export const createLicensingStore = () => {
             // user limits
             userCount,
             userLimit,
-            userLimitDays,
             userLimitReached,
-            warnUserLimit,
+            errUserLimit,
           }
         })
       }

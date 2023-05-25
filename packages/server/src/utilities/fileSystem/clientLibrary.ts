@@ -1,10 +1,14 @@
-import { join } from "path"
+import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
 import fs from "fs"
 import { objectStore } from "@budibase/backend-core"
 import { resolve } from "../centralPath"
 import env from "../../environment"
 import { TOP_LEVEL_PATH } from "./filesystem"
+
+export function devClientLibPath() {
+  return require.resolve("@budibase/client")
+}
 
 /**
  * Client library paths in the object store:
@@ -89,9 +93,10 @@ export async function updateClientLibrary(appId: string) {
   let manifest, client
 
   if (env.isDev()) {
+    const clientPath = devClientLibPath()
     // Load the symlinked version in dev which is always the newest
-    manifest = require.resolve("@budibase/client/manifest.json")
-    client = require.resolve("@budibase/client")
+    manifest = join(path.dirname(path.dirname(clientPath)), "manifest.json")
+    client = clientPath
   } else {
     // Load the bundled version in prod
     manifest = resolve(TOP_LEVEL_PATH, "client", "manifest.json")

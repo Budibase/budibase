@@ -9,7 +9,7 @@
     "dev:builder": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "jest": {
     "globals": {
@@ -62,6 +62,7 @@
     "@budibase/frontend-core": "0.0.1",
     "@budibase/shared-core": "0.0.1",
     "@budibase/string-templates": "0.0.1",
+    "@budibase/types": "0.0.1",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-brands-svg-icons": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
@@ -115,6 +116,32 @@
     "typescript": "4.7.3",
     "vite": "^3.0.8",
     "vitest": "^0.29.2"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates",
+              "@budibase/shared-core"
+            ],
+            "target": "build"
+          }
+        ]
+      },
+      "test": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/shared-core",
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   },
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
 }
