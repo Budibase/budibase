@@ -121,7 +121,7 @@ services:
       apps: 'http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}'
       worker: 'http://worker-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.worker.port }}'
       minio: 'http://minio-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.objectStore.port }}'
-      couchdb: 'http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}'
+      couchdb: 'http://{{ .Release.Name }}-svc-couchdb.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.couchdb.port }}'
     resources: {}
 #    annotations:
 #      co.elastic.logs/module: nginx

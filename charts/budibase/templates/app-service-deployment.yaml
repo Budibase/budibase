@@ -46,7 +46,7 @@ spec:
           {{ if .Values.services.couchdb.url }}
           value: {{ .Values.services.couchdb.url }}
           {{ else }}
-          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
+          value: http://{{ .Release.Name }}-svc-couchdb.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.couchdb.port }}
           {{ end }}
         {{ if .Values.services.couchdb.enabled }}
         - name: COUCH_DB_USER
