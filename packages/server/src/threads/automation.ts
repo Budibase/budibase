@@ -19,6 +19,7 @@ import {
   AutomationStatus,
   AutomationMetadata,
   AutomationJob,
+  AutomationData,
 } from "@budibase/types"
 import {
   LoopStep,
@@ -480,7 +481,16 @@ class Orchestrator {
     }
 
     // store the logs for the automation run
-    await storeLog(this._automation, this.executionOutput)
+    try {
+      await storeLog(this._automation, this.executionOutput)
+    } catch (e: any) {
+      if (e.status === 413 && e.request?.data) {
+        // if content is too large we shouldn't log it
+        delete e.request.data
+        e.request.data = { message: "removed due to large size" }
+      }
+      logging.logAlert("Error writing automation log", e)
+    }
     if (isProdAppID(this._appId) && isRecurring(automation) && metadata) {
       await this.updateMetadata(metadata)
     }
@@ -488,24 +498,28 @@ class Orchestrator {
   }
 }
 
-export function execute(job: Job, callback: WorkerCallback) {
+export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   const appId = job.data.event.appId
+  const automationId = job.data.automation._id
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
-  return context.doInAppContext(appId, async () => {
-    const envVars = await sdkUtils.getEnvironmentVariables()
-    // put into automation thread for whole context
-    await context.doInEnvironmentContext(envVars, async () => {
-      const automationOrchestrator = new Orchestrator(job)
-      try {
-        const response = await automationOrchestrator.execute()
-        callback(null, response)
-      } catch (err) {
-        callback(err)
-      }
-    })
-  })
+  if (!automationId) {
+    throw new Error("Unable to execute, event doesn't contain automation ID.")
+  }
+  return context.doInAutomationContext({ appId, automationId, task: async () => {
+      const envVars = await sdkUtils.getEnvironmentVariables()
+      // put into automation thread for whole context
+      await context.doInEnvironmentContext(envVars, async () => {
+        const automationOrchestrator = new Orchestrator(job)
+        try {
+          const response = await automationOrchestrator.execute()
+          callback(null, response)
+        } catch (err) {
+          callback(err)
+        }
+      })
+  }})
 }
 
 export function executeSynchronously(job: Job) {
