@@ -159,6 +159,14 @@ async function addDefaultTables(db: Database) {
   await db.bulkDocs([...defaultDbDocs])
 }
 
+export const addSampleData = async (ctx: UserCtx) => {
+  console.log("i am here")
+  const db = context.getAppDB()
+  await addDefaultTables(db)
+
+  ctx.status = 200
+}
+
 export async function fetch(ctx: UserCtx) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
