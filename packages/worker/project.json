@@ -39,6 +39,10 @@
         {
           "projects": ["@budibase/types", "@budibase/string-templates"],
           "target": "build"
+        },
+        {
+          "projects": ["@budibase/types", "@budibase/string-templates"],
+          "target": "check:types"
         }
       ]
     }
