@@ -17,6 +17,7 @@
             "output": "."
           }
         ],
+        "external": ["graphql/*", "deasync", "mock-aws-s3", "nock"],
         "format": ["cjs"],
         "esbuildOptions": {
           "outExtension": {
