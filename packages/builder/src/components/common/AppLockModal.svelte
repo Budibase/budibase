@@ -60,7 +60,7 @@
 {#if lockedBy}
   <div class="lock-status">
     <Icon
-      name="LockClosed"
+      name="User"
       hoverable
       size={buttonSize}
       on:click={e => {

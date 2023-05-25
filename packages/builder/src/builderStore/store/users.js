@@ -8,7 +8,6 @@ export const getUserStore = () => {
   }
 
   const updateUser = user => {
-    console.log(user)
     const $users = get(store)
     if (!$users.some(x => x.id === user.id)) {
       store.set([...$users, user])
