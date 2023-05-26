@@ -71,6 +71,7 @@ const environment = {
   BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
   PLUGINS_DIR: process.env.PLUGINS_DIR || "/plugins",
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
@@ -96,6 +97,7 @@ const environment = {
   isInThread: () => {
     return process.env.FORKED_PROCESS
   },
+  TOP_LEVEL_PATH: process.env.TOP_LEVEL_PATH,
 }
 
 // threading can cause memory issues with node-ts in development
