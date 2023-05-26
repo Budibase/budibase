@@ -102,7 +102,9 @@ export function createTablesStore() {
       const fields = Object.keys(draft.schema)
       // pick another display column randomly if unselecting
       draft.primaryDisplay = fields.filter(
-        name => name !== originalName || name !== field.name
+        name =>
+          (name !== originalName || name !== field.name) &&
+          !["attachment", "json", "link"].includes(draft.schema[name].type)
       )[0]
     }
   }

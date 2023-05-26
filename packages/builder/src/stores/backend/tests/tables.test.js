@@ -412,6 +412,85 @@ describe("tables store", () => {
         },
       })
     })
+
+    it("will skip setting the next field as primaryDisplay if it is not a valid type", async ctx => {
+      get.mockImplementation(() => {
+        return {
+          selected: {
+            _id: "TABLE_ID",
+            primaryDisplay: "firstName",
+            schema: {
+              firstName: {
+                name: "firstName",
+                type: "string",
+              },
+              badgePhoto: {
+                name: "badgePhoto",
+                type: "attachment",
+              },
+              relationship: {
+                name: "relationship",
+                type: "link",
+              },
+              metadata: {
+                name: "metadata",
+                type: "json",
+              },
+              age: {
+                name: "age",
+                type: "number",
+              },
+            },
+          },
+          list: [
+            {
+              _id: "T1",
+            },
+          ],
+        }
+      })
+      const originalName = "firstName"
+      const field = {
+        name: "firstName",
+        type: "string",
+      }
+
+      API.saveTable.mockReturnValue("TABLE_SAVED")
+
+      await ctx.returnedStore.saveField({
+        originalName,
+        field,
+        primaryDisplay: false,
+      })
+
+      expect(API.saveTable).toHaveBeenCalledOnce()
+      expect(API.saveTable).toHaveBeenCalledWith({
+        _id: "TABLE_ID",
+        primaryDisplay: "age",
+        schema: {
+          firstName: {
+            name: "firstName",
+            type: "string",
+          },
+          badgePhoto: {
+            name: "badgePhoto",
+            type: "attachment",
+          },
+          relationship: {
+            name: "relationship",
+            type: "link",
+          },
+          metadata: {
+            name: "metadata",
+            type: "json",
+          },
+          age: {
+            name: "age",
+            type: "number",
+          },
+        },
+      })
+    })
   })
 
   describe("deleteField", () => {
