@@ -90,6 +90,10 @@ export const useScimIntegration = () => {
   return useFeature(Feature.SCIM)
 }
 
+export const useSyncAutomations = () => {
+  return useFeature(Feature.SYNC_AUTOMATIONS)
+}
+
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {

@@ -22,6 +22,7 @@ export const definition: AutomationStepSchema = {
   description: "Interact with the OpenAI ChatGPT API.",
   type: AutomationStepType.ACTION,
   internal: true,
+  features: {},
   stepId: AutomationActionStepId.OPENAI,
   inputs: {
     prompt: "",
