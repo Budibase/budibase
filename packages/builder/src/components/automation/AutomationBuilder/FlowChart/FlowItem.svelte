@@ -17,7 +17,11 @@
   import ActionModal from "./ActionModal.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+  import {
+    ActionStepID,
+    TriggerStepID,
+    Features,
+  } from "constants/backend/automations"
   import { permissions } from "stores/backend"
 
   export let block
@@ -187,7 +191,7 @@
         {#if !isTrigger}
           <div>
             <div class="block-options">
-              {#if block?.features?.includes("LOOPING")}
+              {#if block?.features?.[Features.LOOPING] || !block.features}
                 <ActionButton on:click={() => addLooping()} icon="Reuse">
                   Add Looping
                 </ActionButton>

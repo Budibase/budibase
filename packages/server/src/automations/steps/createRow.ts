@@ -18,7 +18,9 @@ export const definition: AutomationStepSchema = {
   description: "Add a row to your database",
   type: AutomationStepType.ACTION,
   internal: true,
-  features: [AutomationFeature.LOOPING],
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   stepId: AutomationActionStepId.CREATE_ROW,
   inputs: {},
   schema: {

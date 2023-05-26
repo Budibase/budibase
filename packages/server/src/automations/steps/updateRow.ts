@@ -18,7 +18,9 @@ export const definition: AutomationStepSchema = {
   description: "Update a row in your database",
   type: AutomationStepType.ACTION,
   internal: true,
-  features: [AutomationFeature.LOOPING],
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   stepId: AutomationActionStepId.UPDATE_ROW,
   inputs: {},
   schema: {

@@ -17,7 +17,9 @@ export const definition: AutomationStepSchema = {
   stepId: AutomationActionStepId.slack,
   type: AutomationStepType.ACTION,
   internal: false,
-  features: [AutomationFeature.LOOPING],
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   inputs: {},
   schema: {
     inputs: {

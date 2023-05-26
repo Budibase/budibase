@@ -19,7 +19,9 @@ export const definition: AutomationStepSchema = {
   type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.EXECUTE_QUERY,
   internal: true,
-  features: [AutomationFeature.LOOPING],
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   inputs: {},
   schema: {
     inputs: {

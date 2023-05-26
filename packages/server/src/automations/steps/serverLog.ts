@@ -20,7 +20,9 @@ export const definition: AutomationStepSchema = {
   description: "Logs the given text to the server (using console.log)",
   type: AutomationStepType.ACTION,
   internal: true,
-  features: [AutomationFeature.LOOPING],
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   stepId: AutomationActionStepId.SERVER_LOG,
   inputs: {
     text: "",

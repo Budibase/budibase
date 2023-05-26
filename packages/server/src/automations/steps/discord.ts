@@ -20,7 +20,9 @@ export const definition: AutomationStepSchema = {
   stepId: AutomationActionStepId.discord,
   type: AutomationStepType.ACTION,
   internal: false,
-  features: [AutomationFeature.LOOPING],
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   inputs: {},
   schema: {
     inputs: {
