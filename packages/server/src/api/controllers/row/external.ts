@@ -214,7 +214,7 @@ export async function exportRows(ctx: UserCtx) {
       query: {
         oneOf: {
           _id: ctx.request.body.rows.map(
-            (row: string) => JSON.parse(decodeURI(row))[0]
+            (row: string) => JSON.parse(decodeURI(row).replace(/'/g, `"`))[0]
           ),
         },
       },
