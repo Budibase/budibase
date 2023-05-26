@@ -18,15 +18,19 @@
 
 <style>
   .option {
-    background-color: #171717;
-    border: 1px solid #4b4b4b;
+    background-color: var(--background);
+    border: 1px solid var(--grey-4);
     padding: 10px 16px 14px;
     border-radius: 4px;
     cursor: pointer;
   }
 
+  .option :global(label) {
+    cursor: pointer;
+  }
+
   .option:hover {
-    background-color: #080808;
+    background-color: var(--background-alt);
   }
 
   .header {

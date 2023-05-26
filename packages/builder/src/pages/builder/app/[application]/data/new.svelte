@@ -38,7 +38,8 @@
   }
 
   const handleIntegrationSelect = integrationType => {
-    const selected = integrations[integrationType]
+    const selected = integrations.find(([type]) => type === integrationType)[1]
+    console.log(integrationType, selected)
 
     // build the schema
     const config = {}
@@ -88,7 +89,7 @@
   }
 
   const handleInternalTableSave = table => {
-    notifications.success(`Table foo created successfully.`)
+    notifications.success(`Table created successfully.`)
     $goto(`./table/${table._id}`)
   }
 
@@ -244,5 +245,6 @@
     grid-template-columns: repeat(auto-fit, 235px);
     justify-content: center;
     margin-bottom: 48px;
+    max-width: 1050px;
   }
 </style>
