@@ -101,7 +101,13 @@
     }
     // Ignore events when typing
     const activeTag = document.activeElement?.tagName.toLowerCase()
-    if (["input", "textarea"].indexOf(activeTag) !== -1 && e.key !== "Escape") {
+    const inCodeEditor =
+      document.activeElement?.classList?.contains("cm-content")
+    if (
+      (inCodeEditor || ["input", "textarea"].indexOf(activeTag) !== -1) &&
+      e.key !== "Escape"
+    ) {
+      console.log("KEY PRESS")
       return
     }
     // Key events are always for the selected component

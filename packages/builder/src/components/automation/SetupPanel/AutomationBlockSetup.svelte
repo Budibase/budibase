@@ -29,11 +29,15 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
   import { LuceneUtils } from "@budibase/frontend-core"
-  import { getSchemaForTable } from "builderStore/dataBinding"
+  import {
+    getSchemaForTable,
+    getEnvironmentBindings,
+  } from "builderStore/dataBinding"
   import { Utils } from "@budibase/frontend-core"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
+  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
 
   export let block
   export let testData
@@ -210,6 +214,19 @@
       }
       const outputs = Object.entries(schema)
 
+      let bindingIcon = ""
+      let bindindingRank = 0
+
+      if (idx === 0) {
+        bindingIcon = automation.trigger.icon
+      } else if (isLoopBlock) {
+        bindingIcon = "Reuse"
+        bindindingRank = idx + 1
+      } else {
+        bindingIcon = allSteps[idx].icon
+        bindindingRank = idx - loopBlockCount
+      }
+
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
           let runtimeName = isLoopBlock
@@ -219,16 +236,22 @@
             : `steps.${idx - loopBlockCount}.${name}`
           const runtime = idx === 0 ? `trigger.${name}` : runtimeName
           return {
-            label: runtime,
+            readableBinding: runtime,
+            runtimeBinding: runtime,
             type: value.type,
             description: value.description,
+            icon: bindingIcon,
             category:
               idx === 0
                 ? "Trigger outputs"
                 : isLoopBlock
                 ? "Loop Outputs"
                 : `Step ${idx - loopBlockCount} outputs`,
-            path: runtime,
+            display: {
+              type: value.type,
+              name: name,
+              rank: bindindingRank,
+            },
           }
         })
       )
@@ -237,15 +260,12 @@
     // Environment bindings
     if ($licensing.environmentVariablesEnabled) {
       bindings = bindings.concat(
-        $environment.variables.map(variable => {
+        getEnvironmentBindings().map(binding => {
           return {
-            label: `env.${variable.name}`,
-            path: `env.${variable.name}`,
-            icon: "Key",
-            category: "Environment",
+            ...binding,
             display: {
-              type: "string",
-              name: variable.name,
+              ...binding.display,
+              rank: 98,
             },
           }
         })
