@@ -25,7 +25,9 @@ const SCHEMA: Integration = {
     "Amazon DynamoDB is a key-value and document database that delivers single-digit millisecond performance at any scale.",
   friendlyName: "DynamoDB",
   type: "Non-relational",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     region: {
       type: DatasourceFieldType.STRING,

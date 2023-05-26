@@ -20,6 +20,8 @@
   import { isEqual } from "lodash"
   import { cloneDeep } from "lodash/fp"
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
+  import { API } from "api"
+  import { DatasourceFeature } from "@budibase/types"
 
   const querySchema = {
     name: {},
@@ -45,7 +47,30 @@
     }
   }
 
+  async function validateConfig() {
+    const displayError = message =>
+      notifications.error(message ?? "Error validating datasource")
+
+    let connected = false
+    try {
+      const resp = await API.validateDatasource(datasource)
+      if (!resp.connected) {
+        displayError(`Unable to connect - ${resp.error}`)
+      }
+      connected = resp.connected
+    } catch (err) {
+      displayError(err?.message)
+    }
+    return connected
+  }
+
   const saveDatasource = async () => {
+    if (integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
+      const valid = await validateConfig()
+      if (!valid) {
+        return false
+      }
+    }
     try {
       // Create datasource
       await datasources.save(datasource)
