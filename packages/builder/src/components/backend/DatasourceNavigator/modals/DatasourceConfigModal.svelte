@@ -1,7 +1,14 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { ModalContent, notifications, Body, Layout } from "@budibase/bbui"
+  import {
+    ModalContent,
+    notifications,
+    Body,
+    Layout,
+    Modal,
+  } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
+  import FetchTablesModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
   import { IntegrationNames } from "constants/backend"
   import cloneDeep from "lodash/cloneDeepWith"
   import {
@@ -16,9 +23,11 @@
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)
   let isValid = false
+  let fetchTablesModal
 
   $: name =
     IntegrationNames[datasource.type] || datasource.name || datasource.type
+  $: datasourcePlus = datasource?.plus
 
   async function validateConfig() {
     const displayError = message =>
@@ -59,13 +68,18 @@
   }
 </script>
 
+<Modal bind:this={fetchTablesModal}>
+  <FetchTablesModal {datasource} onConfirm={saveDatasource} />
+</Modal>
+
 <ModalContent
   title={`Connect to ${name}`}
-  onConfirm={() => saveDatasource()}
+  onConfirm={() =>
+    datasourcePlus ? saveDatasource() : fetchTablesModal.show()}
   onCancel={() => modal.show()}
-  confirmText={datasource.plus ? "Connect" : "Save and continue to query"}
+  confirmText={datasourcePlus ? "Connect" : "Save and continue to query"}
   cancelText="Back"
-  showSecondaryButton={datasource.plus}
+  showSecondaryButton={datasourcePlus}
   size="L"
   disabled={!isValid}
 >
