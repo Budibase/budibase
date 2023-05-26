@@ -36,7 +36,11 @@
 <div bind:this={body} class="grid-body">
   <GridScrollWrapper scrollHorizontally scrollVertically wheelInteractive>
     {#each $renderedRows as row, idx}
-      <GridRow {row} {idx} invertY={idx >= $rowVerticalInversionIndex} />
+      <GridRow
+        {row}
+        top={idx === 0}
+        invertY={idx >= $rowVerticalInversionIndex}
+      />
     {/each}
     {#if $config.allowAddRows && $renderedColumns.length}
       <div
