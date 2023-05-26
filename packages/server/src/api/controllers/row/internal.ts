@@ -415,7 +415,7 @@ export async function exportRows(ctx: UserCtx) {
 
     result = await outputProcessing(table, response)
   } else if (query) {
-    let searchResponse = await exports.search(ctx)
+    let searchResponse = await search(ctx)
     result = searchResponse.rows
   }
 
