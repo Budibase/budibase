@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Body, Button, Icon, Tooltip } from "@budibase/bbui"
+  import { Heading, Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { goto } from "@roxi/routify"
   import { helpers } from "@budibase/shared-core"
