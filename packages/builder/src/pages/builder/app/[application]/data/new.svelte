@@ -4,7 +4,7 @@
 
   import { Icon, Modal, notifications, Heading, Body } from "@budibase/bbui"
   import { params, goto } from "@roxi/routify"
-  import { IntegrationTypes } from "constants/backend"
+  import { IntegrationTypes, DatasourceTypes } from "constants/backend"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
   import GoogleDatasourceConfigModal from "components/backend/DatasourceNavigator/modals/GoogleDatasourceConfigModal.svelte"
@@ -21,8 +21,7 @@
   let disabled = false
   let promptUpload = false
 
-  $: hasData =
-    $datasources.list.length > 1 || $tables.list.length > 1
+  $: hasData = $datasources.list.length > 1 || $tables.list.length > 1
 
   const createSampleData = async () => {
     disabled = true
@@ -93,8 +92,38 @@
     $goto(`./table/${table._id}`)
   }
 
+  function sortIntegrations(integrations) {
+    let integrationsArray = Object.entries(integrations)
+
+    function getTypeOrder(schema) {
+      if (schema.type === DatasourceTypes.API) {
+        return 1
+      }
+
+      if (schema.type === DatasourceTypes.RELATIONAL) {
+        return 2
+      }
+
+      return schema.type?.charCodeAt(0)
+    }
+
+    integrationsArray.sort((a, b) => {
+      let typeOrderA = getTypeOrder(a[1])
+      let typeOrderB = getTypeOrder(b[1])
+
+      if (typeOrderA === typeOrderB) {
+        return a[1].friendlyName?.localeCompare(b[1].friendlyName)
+      }
+
+      return typeOrderA < typeOrderB ? -1 : 1
+    })
+
+    return integrationsArray
+  }
+
   const fetchIntegrations = async () => {
-    integrations = await API.getIntegrations()
+    const unsortedIntegrations = await API.getIntegrations()
+    integrations = sortIntegrations(unsortedIntegrations)
   }
 
   $: fetchIntegrations()
@@ -106,15 +135,9 @@
 
 <Modal bind:this={externalDatasourceModal}>
   {#if integration?.auth?.type === "google"}
-    <GoogleDatasourceConfigModal
-      {integration}
-      onCancel={externalDatasourceModal.hide}
-    />
+    <GoogleDatasourceConfigModal {integration} />
   {:else}
-    <DatasourceConfigModal
-      {integration}
-      onCancel={externalDatasourceModal.hide}
-    />
+    <DatasourceConfigModal {integration} />
   {/if}
 </Modal>
 
@@ -171,7 +194,7 @@
   </div>
 
   <div class="options">
-    {#each Object.entries(integrations) as [key, value]}
+    {#each integrations as [key, value]}
       <DatasourceOption
         on:click={() => handleIntegrationSelect(key)}
         title={value.friendlyName}
