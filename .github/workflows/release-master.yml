@@ -60,6 +60,19 @@ jobs:
       - run: yarn build --configuration=production
       - run: yarn build:sdk
 
+      - name: "Get Previous tag"
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      - name: Build/release Docker images
+        run: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          yarn build:docker
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+
       - name: Reset pro dependencies
         run: node scripts/resetProDependencies.js
 
@@ -75,19 +88,6 @@ jobs:
           git commit -a -m 'Release process'
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
           yarn release
-
-      - name: "Get Previous tag"
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-
-      - name: Build/release Docker images
-        run: |
-          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build:docker
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
 
   release-helm-chart:
     needs: [release-images]
