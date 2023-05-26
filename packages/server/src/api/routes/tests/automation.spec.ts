@@ -12,6 +12,7 @@ import {
 import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { Automation } from "@budibase/types"
+import { mocks } from "@budibase/backend-core/tests"
 
 const MAX_RETRIES = 4
 let {
@@ -194,6 +195,7 @@ describe("/automations", () => {
     })
 
     it("triggers a synchronous automation", async () => {
+      mocks.licenses.useSyncAutomations()
       let automation = collectAutomation()
       automation = await config.createAutomation(automation)
       const res = await request
