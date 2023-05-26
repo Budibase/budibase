@@ -24,7 +24,6 @@
   import { AppStatus } from "constants"
   import analytics, { Events, EventSource } from "analytics"
   import { store } from "builderStore"
-  import AppLockModal from "components/common/AppLockModal.svelte"
   import EditableIcon from "components/common/EditableIcon.svelte"
   import { API } from "api"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -128,7 +127,6 @@
           />
         </div>
         <div slot="buttons">
-          <AppLockModal {app} />
           <span class="desktop">
             <Button
               size="M"

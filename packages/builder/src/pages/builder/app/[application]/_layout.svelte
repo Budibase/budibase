@@ -218,7 +218,9 @@
     <!-- This should probably be some kind of loading state? -->
     <div class="loading" />
   {:then _}
-    <slot />
+    <div class="body">
+      <slot />
+    </div>
   {:catch error}
     <p>Something went wrong: {error.message}</p>
   {/await}
@@ -254,6 +256,7 @@
     box-sizing: border-box;
     align-items: stretch;
     border-bottom: var(--border-light);
+    z-index: 2;
   }
 
   .topleftnav {
@@ -293,5 +296,12 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
+  }
+
+  .body {
+    flex: 1 1 auto;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
   }
 </style>

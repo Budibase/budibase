@@ -1,10 +1,22 @@
 import { writable, get, derived } from "svelte/store"
+import { helpers } from "@budibase/shared-core"
 
 export const createStores = () => {
   const users = writable([])
 
+  const enrichedUsers = derived(users, $users => {
+    return $users.map(user => ({
+      ...user,
+      color: helpers.getUserColor(user),
+      label: helpers.getUserLabel(user),
+    }))
+  })
+
   return {
-    users,
+    users: {
+      ...users,
+      subscribe: enrichedUsers.subscribe,
+    },
   }
 }
 
@@ -28,11 +40,11 @@ export const deriveStores = context => {
 
   const updateUser = user => {
     const $users = get(users)
-    if (!$users.some(x => x.id === user.id)) {
+    if (!$users.some(x => x.sessionId === user.sessionId)) {
       users.set([...$users, user])
     } else {
       users.update(state => {
-        const index = state.findIndex(x => x.id === user.id)
+        const index = state.findIndex(x => x.sessionId === user.sessionId)
         state[index] = user
         return state.slice()
       })
@@ -41,7 +53,7 @@ export const deriveStores = context => {
 
   const removeUser = user => {
     users.update(state => {
-      return state.filter(x => x.id !== user.id)
+      return state.filter(x => x.sessionId !== user.sessionId)
     })
   }
 
