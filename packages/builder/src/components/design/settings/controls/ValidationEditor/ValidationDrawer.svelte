@@ -16,6 +16,7 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
 
+  export let fieldName = null
   export let rules = []
   export let bindings = []
   export let type
@@ -124,7 +125,7 @@
   }
 
   $: dataSourceSchema = getDataSourceSchema($currentAsset, $selectedComponent)
-  $: field = $selectedComponent?.field
+  $: field = fieldName || $selectedComponent?.field
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
   $: fieldType = type?.split("/")[1] || "string"
   $: constraintOptions = getConstraintsForType(fieldType)
@@ -140,8 +141,12 @@
     const formParent = findClosestMatchingComponent(
       asset.props,
       component._id,
-      component => component._component.endsWith("/form")
+      component =>
+        component._component.endsWith("/form") ||
+        component._component.endsWith("/formblock") ||
+        component._component.endsWith("/tableblock")
     )
+
     return getSchemaForDatasource(asset, formParent?.dataSource)
   }
 

@@ -117,6 +117,9 @@
   .cell.error {
     --cell-color: var(--spectrum-global-color-red-500);
   }
+  .cell.readonly {
+    --cell-color: var(--spectrum-global-color-gray-600);
+  }
   .cell:not(.focused) {
     user-select: none;
   }

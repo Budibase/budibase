@@ -6,7 +6,7 @@
   import { createEventManagers } from "../lib/events"
   import { createAPIClient } from "../../../api"
   import { attachStores } from "../stores"
-  import DeleteButton from "../controls/DeleteButton.svelte"
+  import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
   import BetaButton from "../controls/BetaButton.svelte"
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
@@ -33,6 +33,7 @@
 
   export let API = null
   export let tableId = null
+  export let tableType = null
   export let schemaOverrides = null
   export let allowAddRows = true
   export let allowAddColumns = true
@@ -62,6 +63,7 @@
     rand,
     config,
     tableId: tableIdStore,
+    tableType,
     schemaOverrides: schemaOverridesStore,
   }
   context = { ...context, ...createEventManagers() }
@@ -112,13 +114,12 @@
       <AddRowButton />
       <AddColumnButton />
       <slot name="controls" />
+      <SortButton />
+      <HideColumnsButton />
       <ColumnWidthButton />
       <RowHeightButton />
-      <HideColumnsButton />
-      <SortButton />
     </div>
     <div class="controls-right">
-      <DeleteButton />
       <UserAvatars />
     </div>
   </div>
@@ -131,7 +132,9 @@
           <GridBody />
         </div>
         <BetaButton />
-        <NewRow />
+        {#if allowAddRows}
+          <NewRow />
+        {/if}
         <div class="overlays">
           <ResizeOverlay />
           <ReorderOverlay />
@@ -145,6 +148,9 @@
     <div in:fade|local={{ duration: 130 }} class="grid-loading">
       <ProgressCircle />
     </div>
+  {/if}
+  {#if allowDeleteRows}
+    <BulkDeleteHandler />
   {/if}
   <KeyboardManager />
 </div>
@@ -214,6 +220,7 @@
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
     background: var(--background);
+    z-index: 2;
   }
   .controls-left,
   .controls-right {
@@ -239,7 +246,7 @@
     height: 100%;
     display: grid;
     place-items: center;
-    z-index: 10;
+    z-index: 100;
   }
   .grid-loading:before {
     content: "";

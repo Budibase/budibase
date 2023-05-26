@@ -138,7 +138,6 @@ export enum Event {
 
   // LICENSE
   LICENSE_PLAN_CHANGED = "license:plan:changed",
-  LICENSE_TIER_CHANGED = "license:tier:changed",
   LICENSE_ACTIVATED = "license:activated",
   LICENSE_PAYMENT_FAILED = "license:payment:failed",
   LICENSE_PAYMENT_RECOVERED = "license:payment:recovered",
@@ -328,7 +327,6 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
 
   // LICENSE - NOT AUDITED
   [Event.LICENSE_PLAN_CHANGED]: undefined,
-  [Event.LICENSE_TIER_CHANGED]: undefined,
   [Event.LICENSE_ACTIVATED]: undefined,
   [Event.LICENSE_PAYMENT_FAILED]: undefined,
   [Event.LICENSE_PAYMENT_RECOVERED]: undefined,

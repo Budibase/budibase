@@ -4,18 +4,9 @@
     "composite": true,
     "declaration": true,
     "sourceMap": true,
-    "baseUrl": ".",
-    "paths": {
-      "@budibase/types": ["../types/src"],
-      "@budibase/backend-core": ["../backend-core/src"],
-      "@budibase/backend-core/*": ["../backend-core/*.js"]
-    }
+    "baseUrl": "."
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"]
-  },
-  "references": [
-    { "path": "../types" },
-    { "path": "../backend-core" },
-  ]
+  }
 }

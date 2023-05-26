@@ -12,6 +12,8 @@
   export let fields
   export let labelPosition
   export let title
+  export let saveButtonLabel
+  export let deleteButtonLabel
   export let showSaveButton
   export let showDeleteButton
   export let rowId
@@ -20,9 +22,39 @@
 
   const { fetchDatasourceSchema } = getContext("sdk")
 
+  const convertOldFieldFormat = fields => {
+    if (typeof fields?.[0] === "string") {
+      return fields.map(field => ({ name: field, displayName: field }))
+    }
+
+    return fields
+  }
+
+  const getDefaultFields = (fields, schema) => {
+    if (schema && (!fields || fields.length === 0)) {
+      const defaultFields = []
+
+      Object.values(schema).forEach(field => {
+        if (field.autocolumn) return
+
+        defaultFields.push({
+          name: field.name,
+          displayName: field.name,
+        })
+      })
+
+      return defaultFields
+    }
+
+    return fields
+  }
+
   let schema
   let providerId
   let repeaterId
+
+  $: formattedFields = convertOldFieldFormat(fields)
+  $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
 
   $: fetchSchema(dataSource)
   $: dataProvider = `{{ literal ${safe(providerId)} }}`
@@ -46,9 +78,11 @@
     actionType,
     size,
     disabled,
-    fields,
+    fields: fieldsOrDefault,
     labelPosition,
     title,
+    saveButtonLabel,
+    deleteButtonLabel,
     showSaveButton,
     showDeleteButton,
     schema,

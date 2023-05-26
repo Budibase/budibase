@@ -1,5 +1,5 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Icon, clickOutside } from "@budibase/bbui"
   import { getColor } from "../lib/utils"
   import { onMount } from "svelte"
 
@@ -12,6 +12,7 @@
   export let api
   export let invertX = false
   export let invertY = false
+  export let contentLines = 1
 
   let isOpen = false
   let focusedOptionIdx = null
@@ -86,7 +87,11 @@
   class:open
   on:click|self={editable ? open : null}
 >
-  <div class="values" on:click={editable ? open : null}>
+  <div
+    class="values"
+    class:wrap={contentLines > 1}
+    on:click={editable ? open : null}
+  >
     {#each values as val}
       {@const color = getOptionColor(val)}
       {#if color}
@@ -113,6 +118,7 @@
       class:invertX
       class:invertY
       on:wheel={e => e.stopPropagation()}
+      use:clickOutside={close}
     >
       {#each options as option, idx}
         {@const color = getOptionColor(option)}
@@ -160,6 +166,9 @@
     grid-row-gap: var(--cell-padding);
     overflow: hidden;
     padding: var(--cell-padding);
+    flex-wrap: nowrap;
+  }
+  .values.wrap {
     flex-wrap: wrap;
   }
   .text {

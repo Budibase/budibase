@@ -104,6 +104,22 @@ async function newContext(updates: ContextMap, task: any) {
   return Context.run(context, task)
 }
 
+export async function doInAutomationContext(params: {
+  appId: string
+  automationId: string
+  task: any
+}): Promise<any> {
+  const tenantId = getTenantIDFromAppID(params.appId)
+  return newContext(
+    {
+      tenantId,
+      appId: params.appId,
+      automationId: params.automationId,
+    },
+    params.task
+  )
+}
+
 export async function doInContext(appId: string, task: any): Promise<any> {
   const tenantId = getTenantIDFromAppID(appId)
   return newContext(
@@ -185,6 +201,11 @@ export function getTenantId(): string {
     throw new Error("Tenant id not found")
   }
   return tenantId
+}
+
+export function getAutomationId(): string | undefined {
+  const context = Context.get()
+  return context?.automationId
 }
 
 export function getAppId(): string | undefined {

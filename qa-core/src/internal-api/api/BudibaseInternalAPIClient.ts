@@ -18,7 +18,6 @@ class BudibaseInternalAPIClient {
     if (!env.BUDIBASE_URL) {
       throw new Error("Must set BUDIBASE_URL env var")
     }
-    this.host = `${env.ACCOUNT_PORTAL_URL}/api`
     this.host = `${env.BUDIBASE_URL}/api`
     this.state = state
   }
@@ -53,14 +52,18 @@ class BudibaseInternalAPIClient {
         body = await response.text()
       }
 
-      const message = `${method} ${url} - ${response.status} 
-        Response body: ${JSON.stringify(body)}
-        Request body: ${requestOptions.body}`
+      const data = {
+        request: requestOptions.body,
+        response: body,
+      }
+      const message = `${method} ${url} - ${response.status}`
 
       if (response.status > 499) {
-        console.error(message)
+        console.error(message, data)
       } else if (response.status >= 400) {
-        console.warn(message)
+        console.warn(message, data)
+      } else {
+        console.debug(message, data)
       }
 
       return [response, body]

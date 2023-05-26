@@ -13,7 +13,6 @@
     notifications,
   } from "@budibase/bbui"
   import { store } from "builderStore"
-  import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
   import { users, auth, apps, groups, overview } from "stores/portal"
   import { fetchData } from "@budibase/frontend-core"
@@ -40,7 +39,7 @@
       },
     },
   })
-  $: updateAvailable = clientPackage.version !== $store.version
+  $: updateAvailable = $store.upgradableVersion !== $store.version
   $: isPublished = app?.status === AppStatus.DEPLOYED
   $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
   $: appEditorText = appEditor?.firstName || appEditor?.email
@@ -172,8 +171,8 @@
           <Heading size="XS">{$store.version}</Heading>
           {#if updateAvailable}
             <div class="version-status">
-              New version <strong>{clientPackage.version}</strong> is available
-              -
+              New version <strong>{$store.upgradableVersion}</strong> is
+              available -
               <Link
                 on:click={() => {
                   $goto("./version")

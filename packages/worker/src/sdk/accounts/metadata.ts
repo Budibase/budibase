@@ -18,8 +18,17 @@ export const saveMetadata = async (
     if (existing) {
       metadata._rev = existing._rev
     }
-    const res = await db.put(metadata)
-    metadata._rev = res.rev
+    try {
+      const res = await db.put(metadata)
+      metadata._rev = res.rev
+    } catch (e: any) {
+      // account can be updated frequently
+      // ignore 409
+      if (e.status !== 409) {
+        throw e
+      }
+    }
+
     return metadata
   })
 }

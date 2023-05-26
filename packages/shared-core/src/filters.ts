@@ -328,8 +328,8 @@ export const runLuceneQuery = (docs: any[], query?: Query) => {
       return (
         docValue == null ||
         docValue === "" ||
-        docValue < testValue.low ||
-        docValue > testValue.high
+        +docValue < testValue.low ||
+        +docValue > testValue.high
       )
     }
   )

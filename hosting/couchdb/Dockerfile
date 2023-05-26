@@ -5,8 +5,11 @@ ENV COUCHDB_PASSWORD admin
 EXPOSE 5984
 
 RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common wget unzip curl && \
-    apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' && \
-    apt-get update && apt-get install -y --no-install-recommends openjdk-8-jre && \
+    wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - && \
+    apt-add-repository 'deb http://security.debian.org/debian-security bullseye-security/updates main' && \
+    apt-add-repository 'deb http://archive.debian.org/debian stretch-backports main' && \
+    apt-add-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ && \
+    apt-get update && apt-get install -y --no-install-recommends adoptopenjdk-8-hotspot && \
     rm -rf /var/lib/apt/lists/
 
 # setup clouseau

@@ -7,6 +7,7 @@ export enum AutomationIOType {
   BOOLEAN = "boolean",
   NUMBER = "number",
   ARRAY = "array",
+  JSON = "json",
 }
 
 export enum AutomationCustomIOType {
@@ -56,6 +57,7 @@ export enum AutomationActionStepId {
   FILTER = "FILTER",
   QUERY_ROWS = "QUERY_ROWS",
   LOOP = "LOOP",
+  OPENAI = "OPENAI",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -104,6 +106,7 @@ interface InputOutputBlock {
 
 export interface AutomationStepSchema {
   name: string
+  stepTitle?: string
   tagline: string
   icon: string
   description: string
@@ -175,4 +178,9 @@ export type AutomationStepInput = {
   emitter: EventEmitter
   appId: string
   apiKey?: string
+}
+
+export interface AutomationMetadata extends Document {
+  errorCount?: number
+  automationChainCount?: number
 }

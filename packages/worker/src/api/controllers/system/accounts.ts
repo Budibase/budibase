@@ -1,7 +1,7 @@
-import { Account, AccountMetadata } from "@budibase/types"
+import { Account, AccountMetadata, Ctx } from "@budibase/types"
 import * as accounts from "../../../sdk/accounts"
 
-export const save = async (ctx: any) => {
+export const save = async (ctx: Ctx<Account, AccountMetadata>) => {
   const account = ctx.request.body as Account
   let metadata: AccountMetadata = {
     _id: accounts.metadata.formatAccountMetadataId(account.accountId),

@@ -434,7 +434,7 @@ export class QueryBuilder<T> {
       })
     }
     if (this.#query.empty) {
-      build(this.#query.empty, (key: string) => `!${key}:["" TO *]`)
+      build(this.#query.empty, (key: string) => `(*:* -${key}:["" TO *])`)
     }
     if (this.#query.notEmpty) {
       build(this.#query.notEmpty, (key: string) => `${key}:["" TO *]`)

@@ -3,6 +3,7 @@
   import ImportModal from "../modals/ImportModal.svelte"
 
   export let tableId
+  export let tableType
   export let disabled
 
   let modal
@@ -12,5 +13,5 @@
   Import
 </ActionButton>
 <Modal bind:this={modal}>
-  <ImportModal {tableId} on:importrows />
+  <ImportModal {tableId} {tableType} on:importrows />
 </Modal>

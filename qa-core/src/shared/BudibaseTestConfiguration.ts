@@ -3,9 +3,6 @@ import { AccountInternalAPI } from "../account-api"
 import { CreateAppRequest, State } from "../types"
 import * as fixtures from "../internal-api/fixtures"
 
-// TEMP
-import setup from "../jest/globalSetup"
-
 export default class BudibaseTestConfiguration {
   // apis
   internalApi: BudibaseInternalAPI
@@ -23,11 +20,6 @@ export default class BudibaseTestConfiguration {
   // LIFECYCLE
 
   async beforeAll() {
-    // TEMP - move back to single tenant when we integrate licensing with
-    // the test run - need to use multiple tenants in cloud to get around
-    // app limit restrictions
-    await setup()
-
     // @ts-ignore
     this.state.tenantId = global.qa.tenantId
     // @ts-ignore

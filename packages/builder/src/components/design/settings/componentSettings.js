@@ -21,6 +21,7 @@ import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCom
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
 import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
+import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
 
 const componentMap = {
   text: DrawerBindableCombobox,
@@ -43,6 +44,7 @@ const componentMap = {
   section: SectionSelect,
   filter: FilterEditor,
   url: URLSelect,
+  fieldConfiguration: FieldConfiguration,
   columns: ColumnEditor,
   "columns/basic": BasicColumnEditor,
   "field/sortable": SortableFieldSelect,

@@ -1,0 +1,49 @@
+name: Tag release
+concurrency: release-prerelease
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".aws/**"
+      - ".github/**"
+      - "charts/**"
+      - "packages/**"
+      - "scripts/**"
+      - "package.json"
+      - "yarn.lock"
+  workflow_dispatch:
+    inputs:
+      versioning:
+        type: choice
+        description: "Versioning type: patch, minor, major"
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+        required: true
+
+jobs:
+  tag-prerelease:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fail if branch is not master
+        if: github.ref != 'refs/heads/master'
+        run: |
+          echo "Ref is not master, you must run this job from master."
+          exit 1
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - run: yarn
+      - name: Tag prerelease
+        run: |
+          # setup the username and email.
+          git config --global user.name "Budibase Staging Release Bot"
+          git config --global user.email "<>"
+          ./scripts/versionCommit.sh ${{ github.event.inputs.versioning }}

@@ -10,7 +10,9 @@ export function csv(headers: string[], rows: Row[]) {
         val =
           typeof val === "object" && !(val instanceof Date)
             ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
-            : `"${val}"`
+            : val !== undefined
+            ? `"${val}"`
+            : ""
         return val.trim()
       })
       .join(",")}`

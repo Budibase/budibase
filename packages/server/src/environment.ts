@@ -34,8 +34,6 @@ function parseIntSafe(number?: string) {
   }
 }
 
-let inThread = false
-
 const environment = {
   // important - prefer app port to generic port
   PORT: process.env.APP_PORT || process.env.PORT,
@@ -47,6 +45,7 @@ const environment = {
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   REDIS_URL: process.env.REDIS_URL,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  REDIS_CLUSTERED: process.env.REDIS_CLUSTERED,
   HTTP_MIGRATIONS: process.env.HTTP_MIGRATIONS,
   API_REQ_LIMIT_PER_SEC: process.env.API_REQ_LIMIT_PER_SEC,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -72,6 +71,7 @@ const environment = {
   BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
   PLUGINS_DIR: process.env.PLUGINS_DIR || "/plugins",
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
@@ -94,13 +94,10 @@ const environment = {
   isProd: () => {
     return !isDev()
   },
-  // used to check if already in a thread, don't thread further
-  setInThread: () => {
-    inThread = true
-  },
   isInThread: () => {
-    return inThread
+    return process.env.FORKED_PROCESS
   },
+  TOP_LEVEL_PATH: process.env.TOP_LEVEL_PATH,
 }
 
 // threading can cause memory issues with node-ts in development

@@ -14,12 +14,14 @@
     "test:watch": "yarn run test --watch",
     "test:debug": "DEBUG=1 yarn run test",
     "test:notify": "node scripts/testResultsWebhook",
-    "test:smoke": "yarn run test --testPathIgnorePatterns=\\\"\\/dataSources\\/\\\"",
+    "test:smoke": "yarn run test --testPathIgnorePatterns=/.+\\.integration\\.spec\\.ts",
     "test:ci": "start-server-and-test dev:built http://localhost:4001/health test:smoke",
+    "serve": "start-server-and-test dev:built http://localhost:4001/health",
     "dev:built": "cd ../ && yarn dev:built"
   },
   "devDependencies": {
     "@budibase/types": "^2.3.17",
+    "@trendyol/jest-testcontainers": "^2.1.1",
     "@types/jest": "29.0.0",
     "@types/node-fetch": "2.6.2",
     "chance": "1.1.8",

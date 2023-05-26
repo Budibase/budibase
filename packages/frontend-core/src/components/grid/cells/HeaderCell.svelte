@@ -37,6 +37,8 @@
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
   $: canMoveRight = orderable && idx < $renderedColumns.length - 1
+  $: ascendingLabel = column.schema?.type === "number" ? "low-high" : "A-Z"
+  $: descendingLabel = column.schema?.type === "number" ? "high-low" : "Z-A"
 
   const editColumn = () => {
     dispatch("edit-column", column.schema)
@@ -91,6 +93,16 @@
 
   const makeDisplayColumn = () => {
     columns.actions.changePrimaryDisplay(column.name)
+    open = false
+  }
+
+  const hideColumn = () => {
+    columns.update(state => {
+      const index = state.findIndex(col => col.name === column.name)
+      state[index].visible = false
+      return state.slice()
+    })
+    columns.actions.saveChanges()
     open = false
   }
 </script>
@@ -169,14 +181,14 @@
       on:click={sortAscending}
       disabled={column.name === $sort.column && $sort.order === "ascending"}
     >
-      Sort A-Z
+      Sort {ascendingLabel}
     </MenuItem>
     <MenuItem
       icon="SortOrderDown"
       on:click={sortDescending}
       disabled={column.name === $sort.column && $sort.order === "descending"}
     >
-      Sort Z-A
+      Sort {descendingLabel}
     </MenuItem>
     <MenuItem disabled={!canMoveLeft} icon="ChevronLeft" on:click={moveLeft}>
       Move left
@@ -184,6 +196,7 @@
     <MenuItem disabled={!canMoveRight} icon="ChevronRight" on:click={moveRight}>
       Move right
     </MenuItem>
+    <MenuItem icon="VisibilityOff" on:click={hideColumn}>Hide column</MenuItem>
   </Menu>
 </Popover>
 
