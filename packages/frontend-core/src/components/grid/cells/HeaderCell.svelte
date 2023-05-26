@@ -196,7 +196,11 @@
     <MenuItem disabled={!canMoveRight} icon="ChevronRight" on:click={moveRight}>
       Move right
     </MenuItem>
-    <MenuItem icon="VisibilityOff" on:click={hideColumn}>Hide column</MenuItem>
+    <MenuItem
+      disabled={idx === "sticky"}
+      icon="VisibilityOff"
+      on:click={hideColumn}>Hide column</MenuItem
+    >
   </Menu>
 </Popover>
 

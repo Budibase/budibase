@@ -37,6 +37,9 @@
   .boolean-cell {
     padding: 2px var(--cell-padding);
     pointer-events: none;
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
   }
   .boolean-cell.editable {
     pointer-events: all;

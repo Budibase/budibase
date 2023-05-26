@@ -20,7 +20,9 @@ const SCHEMA: Integration = {
   type: "Non-relational",
   description:
     "Apache CouchDB is an open-source document-oriented NoSQL database, implemented in Erlang.",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     url: {
       type: DatasourceFieldType.STRING,

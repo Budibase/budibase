@@ -44,7 +44,10 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn nx run-many -t=build --configuration=production
+      # Run build all the projects
+      - run: yarn build
+      # Check the types of the projects built via esbuild
+      - run: yarn check:types
 
   test-libraries:
     runs-on: ubuntu-latest

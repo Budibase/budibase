@@ -6,6 +6,7 @@
   export let selectedUser = null
   export let error = null
   export let rowIdx
+  export let topRow = false
   export let defaultHeight = false
   export let center = false
   export let readonly = false
@@ -31,13 +32,14 @@
   class:readonly
   class:default-height={defaultHeight}
   class:selected-other={selectedUser != null}
+  class:alt={rowIdx % 2 === 1}
+  class:top={topRow}
   on:focus
   on:mousedown
   on:mouseup
   on:click
   on:contextmenu
   {style}
-  data-row={rowIdx}
 >
   {#if error}
     <div class="label">
@@ -70,6 +72,9 @@
     width: 0;
     --cell-color: transparent;
   }
+  .cell.alt {
+    --cell-background: var(--cell-background-alt);
+  }
   .cell.default-height {
     height: var(--default-row-height);
   }
@@ -98,8 +103,8 @@
   .cell.selected-other:not(.focused):after {
     border-radius: 0 2px 2px 2px;
   }
-  .cell[data-row="0"].error:after,
-  .cell[data-row="0"].selected-other:not(.focused):after {
+  .cell.top.error:after,
+  .cell.top.selected-other:not(.focused):after {
     border-radius: 2px 2px 2px 0;
   }
 
@@ -152,7 +157,7 @@
     overflow: hidden;
     user-select: none;
   }
-  .cell[data-row="0"] .label {
+  .cell.top .label {
     bottom: auto;
     top: 100%;
     border-radius: 0 2px 2px 2px;
