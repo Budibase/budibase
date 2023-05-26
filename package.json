@@ -4,7 +4,6 @@
   "devDependencies": {
     "@esbuild-plugins/node-resolve": "^0.2.2",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
-    "@nx/esbuild": "16.2.1",
     "@nx/js": "16.2.1",
     "@rollup/plugin-json": "^4.0.2",
     "@typescript-eslint/parser": "5.45.0",
@@ -34,6 +33,7 @@
     "bootstrap": "./scripts/link-dependencies.sh && echo '***BOOTSTRAP ONLY REQUIRED FOR USE WITH ACCOUNT PORTAL***'",
     "build": "yarn nx run-many -t=build",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
+    "check:types": "lerna run check:types --skip-nx-cache",
     "backend:bootstrap": "./scripts/scopeBackend.sh && yarn run bootstrap",
     "backend:build": "./scripts/scopeBackend.sh 'lerna run --stream build'",
     "build:sdk": "lerna run --stream build:sdk",
