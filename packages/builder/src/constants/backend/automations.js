@@ -27,3 +27,7 @@ export const ActionStepID = {
   zapier: "zapier",
   integromat: "integromat",
 }
+
+export const Features = {
+  LOOPING: "LOOPING",
+}

@@ -20,7 +20,9 @@ export const definition: AutomationStepSchema = {
   internal: true,
   stepId: AutomationActionStepId.EXECUTE_SCRIPT,
   inputs: {},
-  features: [AutomationFeature.LOOPING],
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   schema: {
     inputs: {
       properties: {

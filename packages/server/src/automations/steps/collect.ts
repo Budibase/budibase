@@ -15,7 +15,7 @@ export const definition: AutomationStepSchema = {
     "Collects specified data so it can be provided to the design section",
   type: AutomationStepType.ACTION,
   internal: true,
-  features: [],
+  features: {},
   stepId: AutomationActionStepId.COLLECT,
   inputs: {},
   schema: {

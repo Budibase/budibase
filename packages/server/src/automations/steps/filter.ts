@@ -28,7 +28,7 @@ export const definition: AutomationStepSchema = {
     "Conditionally halt automations which do not meet certain conditions",
   type: AutomationStepType.LOGIC,
   internal: true,
-  features: [],
+  features: {},
   stepId: AutomationActionStepId.FILTER,
   inputs: {
     condition: FilterConditions.EQUAL,

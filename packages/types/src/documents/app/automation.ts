@@ -124,7 +124,7 @@ export interface AutomationStepSchema {
     outputs: InputOutputBlock
   }
   custom?: boolean
-  features?: AutomationFeature[]
+  features?: Partial<Record<AutomationFeature, boolean>>
 }
 
 export enum AutomationFeature {
