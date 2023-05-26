@@ -116,6 +116,9 @@ export const createLicensingStore = () => {
       const auditLogsEnabled = license.features.includes(
         Constants.Features.AUDIT_LOGS
       )
+      const syncAutomationsEnabled = license.features.includes(
+        Constants.Features.SYNC_AUTOMATIONS
+      )
       store.update(state => {
         return {
           ...state,
@@ -130,6 +133,7 @@ export const createLicensingStore = () => {
           environmentVariablesEnabled,
           auditLogsEnabled,
           enforceableSSO,
+          syncAutomationsEnabled,
         }
       })
     },
