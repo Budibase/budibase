@@ -160,7 +160,6 @@ async function addDefaultTables(db: Database) {
 }
 
 export const addSampleData = async (ctx: UserCtx) => {
-  console.log("i am here")
   const db = context.getAppDB()
   await addDefaultTables(db)
 
