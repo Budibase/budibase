@@ -5,7 +5,7 @@
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
 
   export let panel = ClientBindingPanel
@@ -36,6 +36,10 @@
     bindingDrawer.hide()
   }
 
+  setContext("binding-drawer-actions", {
+    save: saveBinding,
+  })
+
   const onChange = value => {
     currentVal = readableToRuntimeBinding(bindings, value)
     dispatch("change", currentVal)
@@ -63,7 +67,13 @@
     </div>
   {/if}
 </div>
-<Drawer {fillWidth} bind:this={bindingDrawer} {title} left={drawerLeft}>
+<Drawer
+  {fillWidth}
+  bind:this={bindingDrawer}
+  {title}
+  left={drawerLeft}
+  headless
+>
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>
