@@ -7,7 +7,6 @@
     Icon,
     Heading,
     Link,
-    Avatar,
     Layout,
     Body,
     notifications,
@@ -20,7 +19,6 @@
   import GroupIcon from "../../users/groups/_components/GroupIcon.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
-  import { helpers } from "@budibase/shared-core"
 
   let appEditor
   let unpublishModal
