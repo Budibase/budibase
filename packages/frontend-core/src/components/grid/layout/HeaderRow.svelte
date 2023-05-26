@@ -61,7 +61,7 @@
     border-right: var(--cell-border);
     border-bottom: var(--cell-border);
     background: var(--spectrum-global-color-gray-100);
-    z-index: 20;
+    z-index: 1;
   }
   .add:hover {
     background: var(--spectrum-global-color-gray-200);
