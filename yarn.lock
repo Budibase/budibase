@@ -3780,13 +3780,6 @@
   dependencies:
     "@nx/devkit" "16.2.2"
 
-"@nrwl/esbuild@16.2.1":
-  version "16.2.1"
-  resolved "https://registry.yarnpkg.com/@nrwl/esbuild/-/esbuild-16.2.1.tgz#83f8fbf2c7c541c220ccfff8be17a0e542aa7d01"
-  integrity sha512-qyNpdtPAzk2IhYmK5Qzn9gM1cvEtWFp6vJfgdbCKQngdqioYcJpGtdKhRm6Vcj8mFXF7zDgtUd2ecqJSiJU6VA==
-  dependencies:
-    "@nx/esbuild" "16.2.1"
-
 "@nrwl/js@16.2.1":
   version "16.2.1"
   resolved "https://registry.yarnpkg.com/@nrwl/js/-/js-16.2.1.tgz#6eacfa1f0658ca1e288da86b6c38be4846f2779a"
@@ -3837,21 +3830,6 @@
     ignore "^5.0.4"
     semver "7.3.4"
     tmp "~0.2.1"
-    tslib "^2.3.0"
-
-"@nx/esbuild@16.2.1":
-  version "16.2.1"
-  resolved "https://registry.yarnpkg.com/@nx/esbuild/-/esbuild-16.2.1.tgz#157a408a617b5095ba1372ec27b03d6c9aa3b78c"
-  integrity sha512-jG4zsGc1EN+SfEBUky44+4cpj7M0Sf0v3pGWsw4hCOuBeLl6qW+eAcFypDXecDosS7ct/M2nEtlZP45IVDMZgQ==
-  dependencies:
-    "@nrwl/esbuild" "16.2.1"
-    "@nx/devkit" "16.2.1"
-    "@nx/js" "16.2.1"
-    chalk "^4.1.0"
-    dotenv "~10.0.0"
-    fast-glob "3.2.7"
-    fs-extra "^11.1.0"
-    tsconfig-paths "^4.1.2"
     tslib "^2.3.0"
 
 "@nx/js@16.2.1":
