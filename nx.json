@@ -6,5 +6,15 @@
         "cacheableOperations": ["build", "test"]
       }
     }
+  },
+  "targetDefaults": {
+    "dev:builder": {
+      "dependsOn": [
+        {
+          "projects": ["@budibase/string-templates"],
+          "target": "build"
+        }
+      ]
+    }
   }
 }
