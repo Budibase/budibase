@@ -14,6 +14,7 @@
     dispatch,
     selectedRows,
     config,
+    menu,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -61,6 +62,7 @@
       } else {
         $focusedCellId = null
       }
+      menu.actions.close()
       return
     } else if (e.key === "Tab") {
       e.preventDefault()
