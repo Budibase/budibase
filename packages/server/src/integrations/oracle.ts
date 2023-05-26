@@ -50,10 +50,10 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "Oracle Database is an object-relational database management system developed by Oracle Corporation",
-  features: [
-    DatasourceFeature.CONNECTION_CHECKING,
-    DatasourceFeature.FETCH_TABLE_NAMES,
-  ],
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+  },
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,

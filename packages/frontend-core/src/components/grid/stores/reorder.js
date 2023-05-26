@@ -4,9 +4,10 @@ const reorderInitialState = {
   sourceColumn: null,
   targetColumn: null,
   breakpoints: [],
-  initialMouseX: null,
-  scrollLeft: 0,
   gridLeft: 0,
+  width: 0,
+  latestX: 0,
+  increment: 0,
 }
 
 export const createStores = () => {
@@ -23,14 +24,24 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { reorder, columns, visibleColumns, scroll, bounds, stickyColumn, ui } =
-    context
+  const {
+    reorder,
+    columns,
+    visibleColumns,
+    scroll,
+    bounds,
+    stickyColumn,
+    ui,
+    maxScrollLeft,
+  } = context
+
+  let autoScrollInterval
+  let isAutoScrolling
 
   // Callback when dragging on a colum header and starting reordering
   const startReordering = (column, e) => {
     const $visibleColumns = get(visibleColumns)
     const $bounds = get(bounds)
-    const $scroll = get(scroll)
     const $stickyColumn = get(stickyColumn)
     ui.actions.blur()
 
@@ -51,9 +62,8 @@ export const deriveStores = context => {
       sourceColumn: column,
       targetColumn: null,
       breakpoints,
-      initialMouseX: e.clientX,
-      scrollLeft: $scroll.left,
       gridLeft: $bounds.left,
+      width: $bounds.width,
     })
 
     // Add listeners to handle mouse movement
@@ -66,12 +76,44 @@ export const deriveStores = context => {
 
   // Callback when moving the mouse when reordering columns
   const onReorderMouseMove = e => {
+    // Immediately handle the current position
+    const x = e.clientX
+    reorder.update(state => ({
+      ...state,
+      latestX: x,
+    }))
+    considerReorderPosition()
+
+    // Check if we need to start auto-scrolling
     const $reorder = get(reorder)
+    const proximityCutoff = 140
+    const speedFactor = 8
+    const rightProximity = Math.max(0, $reorder.gridLeft + $reorder.width - x)
+    const leftProximity = Math.max(0, x - $reorder.gridLeft)
+    if (rightProximity < proximityCutoff) {
+      const weight = proximityCutoff - rightProximity
+      const increment = (weight / proximityCutoff) * speedFactor
+      reorder.update(state => ({ ...state, increment }))
+      startAutoScroll()
+    } else if (leftProximity < proximityCutoff) {
+      const weight = -1 * (proximityCutoff - leftProximity)
+      const increment = (weight / proximityCutoff) * speedFactor
+      reorder.update(state => ({ ...state, increment }))
+      startAutoScroll()
+    } else {
+      stopAutoScroll()
+    }
+  }
+
+  // Actual logic to consider the current position and determine the new order
+  const considerReorderPosition = () => {
+    const $reorder = get(reorder)
+    const $scroll = get(scroll)
 
     // Compute the closest breakpoint to the current position
     let targetColumn
     let minDistance = Number.MAX_SAFE_INTEGER
-    const mouseX = e.clientX - $reorder.gridLeft + $reorder.scrollLeft
+    const mouseX = $reorder.latestX - $reorder.gridLeft + $scroll.left
     $reorder.breakpoints.forEach(point => {
       const distance = Math.abs(point.x - mouseX)
       if (distance < minDistance) {
@@ -79,7 +121,6 @@ export const deriveStores = context => {
         targetColumn = point.column
       }
     })
-
     if (targetColumn !== $reorder.targetColumn) {
       reorder.update(state => ({
         ...state,
@@ -88,8 +129,35 @@ export const deriveStores = context => {
     }
   }
 
+  // Commences auto-scrolling in a certain direction, triggered when the mouse
+  // approaches the edges of the grid
+  const startAutoScroll = () => {
+    if (isAutoScrolling) {
+      return
+    }
+    isAutoScrolling = true
+    autoScrollInterval = setInterval(() => {
+      const $maxLeft = get(maxScrollLeft)
+      const { increment } = get(reorder)
+      scroll.update(state => ({
+        ...state,
+        left: Math.max(0, Math.min($maxLeft, state.left + increment)),
+      }))
+      considerReorderPosition()
+    }, 10)
+  }
+
+  // Stops auto scrolling
+  const stopAutoScroll = () => {
+    isAutoScrolling = false
+    clearInterval(autoScrollInterval)
+  }
+
   // Callback when stopping reordering columns
   const stopReordering = async () => {
+    // Ensure auto-scrolling is stopped
+    stopAutoScroll()
+
     // Swap position of columns
     let { sourceColumn, targetColumn } = get(reorder)
     moveColumn(sourceColumn, targetColumn)
