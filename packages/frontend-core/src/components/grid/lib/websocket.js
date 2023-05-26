@@ -33,9 +33,12 @@ export const createGridWebsocket = context => {
   })
 
   // Row events
-  socket.on("row-change", data => {
+  socket.on("row-change", async data => {
     if (data.id) {
       rows.actions.replaceRow(data.id, data.row)
+    } else if (data.row.id) {
+      // Handle users table edge case
+      await rows.actions.refreshRow(data.row.id)
     }
   })
 

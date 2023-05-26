@@ -345,10 +345,15 @@ export const deriveStores = context => {
       const saved = await API.saveRow({ ...row, ...get(rowChangeCache)[rowId] })
 
       // Update state after a successful change
-      rows.update(state => {
-        state[index] = saved
-        return state.slice()
-      })
+      if (saved?._id) {
+        rows.update(state => {
+          state[index] = saved
+          return state.slice()
+        })
+      } else if (saved?.id) {
+        // Handle users table edge case
+        await refreshRow(saved.id)
+      }
       rowChangeCache.update(state => {
         delete state[rowId]
         return state
