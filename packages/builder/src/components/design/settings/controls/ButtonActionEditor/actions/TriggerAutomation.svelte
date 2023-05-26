@@ -7,8 +7,6 @@
   export let parameters = {}
   export let bindings = []
 
-  let synchronous = parameters.synchronous
-
   const AUTOMATION_STATUS = {
     NEW: "new",
     EXISTING: "existing",
@@ -20,14 +18,11 @@
 
   $: {
     if (automationStatus === AUTOMATION_STATUS.NEW) {
-      synchronous = false
+      parameters.synchronous = false
     }
-
-    if (automationStatus === AUTOMATION_STATUS.EXISTING) {
-      synchronous = automations.find(
-        automation => automation._id === parameters.automationId
-      ).synchronous
-    }
+    parameters.synchronous = automations.find(
+      automation => automation._id === parameters.automationId
+    )?.synchronous
   }
   $: automations = $automationStore.automations
     .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
@@ -80,11 +75,10 @@
 
   const onChange = value => {
     let automationId = value.detail
-    synchronous = automations.find(
+    parameters.synchronous = automations.find(
       automation => automation._id === automationId
-    ).synchronous
+    )?.synchronous
     parameters.automationId = automationId
-    parameters.synchronous = synchronous
   }
 </script>
 
@@ -128,7 +122,7 @@
       />
     {/if}
 
-    {#if synchronous}
+    {#if parameters.synchronous}
       <Label small />
 
       <div class="synchronous-info">
