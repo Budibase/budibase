@@ -14,7 +14,7 @@ import { deleteEntityMetadata } from "../../utilities"
 import { MetadataTypes } from "../../constants"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events } from "@budibase/backend-core"
-import { automations } from "@budibase/pro"
+import { automations, features } from "@budibase/pro"
 import {
   Automation,
   AutomationActionStepId,
@@ -266,7 +266,7 @@ export async function trigger(ctx: BBContext) {
   let automation = await db.get(ctx.params.id)
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
-  if (hasCollectStep) {
+  if (hasCollectStep && (await features.isSyncAutomationsEnabled())) {
     const response: AutomationResults = await triggers.externalTrigger(
       automation,
       {
