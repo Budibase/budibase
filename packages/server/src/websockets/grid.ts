@@ -12,7 +12,6 @@ export default class GridSocket extends Socket {
 
     this.io.on("connection", socket => {
       const user = socket.data.user
-      console.log(`Spreadsheet user connected: ${user?.id}`)
 
       // Socket state
       let currentRoom: string
@@ -21,14 +20,14 @@ export default class GridSocket extends Socket {
       socket.on("select-table", async (tableId, callback) => {
         // Leave current room
         if (currentRoom) {
-          socket.to(currentRoom).emit("user-disconnect", socket.data.user)
+          socket.to(currentRoom).emit("user-disconnect", user)
           socket.leave(currentRoom)
         }
 
         // Join new room
         currentRoom = tableId
         socket.join(currentRoom)
-        socket.to(currentRoom).emit("user-update", socket.data.user)
+        socket.to(currentRoom).emit("user-update", user)
 
         // Reply with all users in current room
         const sockets = await this.io.in(currentRoom).fetchSockets()
@@ -41,14 +40,14 @@ export default class GridSocket extends Socket {
       socket.on("select-cell", cellId => {
         socket.data.user.focusedCellId = cellId
         if (currentRoom) {
-          socket.to(currentRoom).emit("user-update", socket.data.user)
+          socket.to(currentRoom).emit("user-update", user)
         }
       })
 
       // Disconnection cleanup
       socket.on("disconnect", () => {
         if (currentRoom) {
-          socket.to(currentRoom).emit("user-disconnect", socket.data.user)
+          socket.to(currentRoom).emit("user-disconnect", user)
         }
       })
     })

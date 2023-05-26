@@ -1,12 +1,22 @@
 <script>
+  import { UserAvatar } from "@budibase/frontend-core"
+
   export let users = []
+
+  $: uniqueUsers = unique(users)
+
+  const unique = users => {
+    let uniqueUsers = {}
+    users?.forEach(user => {
+      uniqueUsers[user.email] = user
+    })
+    return Object.values(uniqueUsers)
+  }
 </script>
 
 <div class="avatars">
-  {#each users as user}
-    <div class="avatar" style="background:{user.color};" title={user.email}>
-      {user.email[0]}
-    </div>
+  {#each uniqueUsers as user}
+    <UserAvatar {user} tooltipDirection="bottom" />
   {/each}
 </div>
 
@@ -14,20 +24,5 @@
   .avatars {
     display: flex;
     gap: 4px;
-  }
-  .avatar {
-    width: 24px;
-    height: 24px;
-    display: grid;
-    place-items: center;
-    color: white;
-    border-radius: 50%;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    line-height: 0;
-  }
-  .avatar:hover {
-    cursor: pointer;
   }
 </style>

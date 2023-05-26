@@ -15,11 +15,12 @@
   import { store } from "builderStore"
   import { processStringSync } from "@budibase/string-templates"
   import { users, auth, apps, groups, overview } from "stores/portal"
-  import { fetchData } from "@budibase/frontend-core"
+  import { fetchData, UserAvatar } from "@budibase/frontend-core"
   import { API } from "api"
   import GroupIcon from "../../users/groups/_components/GroupIcon.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
+  import { helpers } from "@budibase/shared-core"
 
   let appEditor
   let unpublishModal
@@ -54,14 +55,6 @@
 
   async function fetchAppEditor(editorId) {
     appEditor = await users.get(editorId)
-  }
-
-  const getInitials = user => {
-    let initials = ""
-    initials += user.firstName ? user.firstName[0] : ""
-    initials += user.lastName ? user.lastName[0] : ""
-
-    return initials === "" ? user.email[0] : initials
   }
 
   const confirmUnpublishApp = async () => {
@@ -140,7 +133,7 @@
           <div class="last-edited-content">
             <div class="updated-by">
               {#if appEditor}
-                <Avatar size="M" initials={getInitials(appEditor)} />
+                <UserAvatar user={appEditor} showTooltip={false} />
                 <div class="editor-name">
                   {appEditor._id === $auth.user._id ? "You" : appEditorText}
                 </div>
@@ -201,7 +194,7 @@
                   <div class="users">
                     <div class="list">
                       {#each appUsers.slice(0, 4) as user}
-                        <Avatar size="M" initials={getInitials(user)} />
+                        <UserAvatar {user} />
                       {/each}
                     </div>
                     <div class="text">

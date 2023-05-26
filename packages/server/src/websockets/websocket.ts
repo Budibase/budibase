@@ -7,6 +7,7 @@ import { auth } from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
 import { createAdapter } from "@socket.io/redis-adapter"
 import { getSocketPubSubClients } from "../utilities/redis"
+import uuid from "uuid"
 
 export default class Socket {
   io: Server
@@ -64,29 +65,14 @@ export default class Socket {
               // Middlewares are finished
               // Extract some data from our enriched koa context to persist
               // as metadata for the socket
-
-              // Add user info, including a deterministic color and friendly
-              // label
+              // Add user info, including a deterministic color and label
               const { _id, email, firstName, lastName } = ctx.user
-              let hue = 1
-              for (let i = 0; i < email.length && i < 5; i++) {
-                hue *= email.charCodeAt(i + 1)
-                hue /= 17
-              }
-              hue = hue % 360
-              const color = `hsl(${hue}, 50%, 40%)`
-              let label = email
-              if (firstName) {
-                label = firstName
-                if (lastName) {
-                  label += ` ${lastName}`
-                }
-              }
               socket.data.user = {
-                id: _id,
+                _id,
                 email,
-                color,
-                label,
+                firstName,
+                lastName,
+                sessionId: uuid.v4(),
               }
 
               // Add app ID to help split sockets into rooms

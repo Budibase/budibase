@@ -1,12 +1,15 @@
 <script>
-  import { Heading, Body, Button, Icon, notifications } from "@budibase/bbui"
-  import AppLockModal from "../common/AppLockModal.svelte"
+  import { Heading, Body, Button, Icon, Tooltip } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { goto } from "@roxi/routify"
+  import { helpers } from "@budibase/shared-core"
+  import { UserAvatar } from "@budibase/frontend-core"
 
   export let app
-
   export let lockedAction
+
+  $: editing = app?.lockedBy != null
+  $: initials = helpers.getUserInitials(app?.lockedBy)
 
   const handleDefaultClick = () => {
     if (window.innerWidth < 640) {
@@ -38,7 +41,10 @@
   </div>
 
   <div class="updated">
-    {#if app.updatedAt}
+    {#if editing}
+      Currently editing
+      <UserAvatar user={app.lockedBy} />
+    {:else if app.updatedAt}
       {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
         time: new Date().getTime() - new Date(app.updatedAt).getTime(),
       })}
@@ -53,12 +59,12 @@
   </div>
 
   <div class="app-row-actions">
-    <AppLockModal {app} buttonSize="M" />
-    <Button size="S" secondary on:click={lockedAction || goToOverview}
-      >Manage</Button
-    >
-    <Button size="S" primary on:click={lockedAction || goToBuilder}>Edit</Button
-    >
+    <Button size="S" secondary on:click={lockedAction || goToOverview}>
+      Manage
+    </Button>
+    <Button size="S" primary on:click={lockedAction || goToBuilder}>
+      Edit
+    </Button>
   </div>
 </div>
 
@@ -81,6 +87,9 @@
 
   .updated {
     color: var(--spectrum-global-color-gray-700);
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .title,

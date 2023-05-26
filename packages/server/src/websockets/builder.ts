@@ -5,6 +5,7 @@ import http from "http"
 import Koa from "koa"
 import { Datasource, Table } from "@budibase/types"
 import { gridSocket } from "./index"
+import { clearLock } from "../utilities/redis"
 
 export default class BuilderSocket extends Socket {
   constructor(app: Koa, server: http.Server) {
@@ -15,8 +16,7 @@ export default class BuilderSocket extends Socket {
       const user = socket.data.user
       const appId = socket.data.appId
       socket.join(appId)
-      socket.to(appId).emit("user-update", socket.data.user)
-      console.log(`Builder user connected: ${user?.id}`)
+      socket.to(appId).emit("user-update", user)
 
       // Initial identification of connected spreadsheet
       socket.on("get-users", async (payload, callback) => {
@@ -27,8 +27,22 @@ export default class BuilderSocket extends Socket {
       })
 
       // Disconnection cleanup
-      socket.on("disconnect", () => {
-        socket.to(appId).emit("user-disconnect", socket.data.user)
+      socket.on("disconnect", async () => {
+        socket.to(appId).emit("user-disconnect", user)
+
+        // Remove app lock from this user if they have no other connections
+        try {
+          const sockets = await this.io.in(appId).fetchSockets()
+          const hasOtherConnection = sockets.some(socket => {
+            const { _id, sessionId } = socket.data.user
+            return _id === user._id && sessionId !== user.sessionId
+          })
+          if (!hasOtherConnection) {
+            await clearLock(appId, user)
+          }
+        } catch (e) {
+          // This is fine, just means this user didn't hold the lock
+        }
       })
     })
   }
