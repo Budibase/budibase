@@ -31,6 +31,18 @@
       return "Invalid URL"
     }
   }
+
+  $: urlManuallySet = false
+
+  const updateUrl = event => {
+    const appName = event.detail
+    if (urlManuallySet) {
+      return
+    }
+
+    const parsedUrl = appName.toLowerCase().replace(/\s+/g, "-")
+    url = encodeURI(parsedUrl)
+  }
 </script>
 
 <div>
@@ -43,11 +55,13 @@
       bind:value={name}
       bind:error={nameError}
       validate={validateName}
+      on:change={updateUrl}
       label="Name"
     />
     <FancyInput
       bind:value={url}
       bind:error={urlError}
+      on:change={() => (urlManuallySet = true)}
       validate={validateUrl}
       label="URL"
     />
