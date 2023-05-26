@@ -9,6 +9,9 @@ const path = require("path")
 const { build } = require("esbuild")
 
 const { default: NodeResolve } = require("@esbuild-plugins/node-resolve")
+const {
+  default: TsconfigPathsPlugin,
+} = require("@esbuild-plugins/tsconfig-paths")
 
 var argv = require("minimist")(process.argv.slice(2))
 
@@ -23,6 +26,7 @@ function runBuild(entry, outfile) {
     sourcemap: isDev,
     tsconfig,
     plugins: [
+      TsconfigPathsPlugin({ tsconfig }),
       NodeResolve({
         extensions: [".ts", ".js"],
         onResolved: resolved => {
