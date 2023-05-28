@@ -126,8 +126,7 @@
   }
 
   const getAllBindings = (bindings, eventContextBindings, actions) => {
-    let allBindings = eventContextBindings.concat(bindings)
-
+    let allBindings = []
     if (!actions) {
       return []
     }
@@ -145,14 +144,35 @@
       .forEach(action => {
         // Check we have a binding for this action, and generate one if not
         const stateBinding = makeStateBinding(action.parameters.key)
-        const hasKey = allBindings.some(binding => {
+        const hasKey = bindings.some(binding => {
           return binding.runtimeBinding === stateBinding.runtimeBinding
         })
         if (!hasKey) {
-          allBindings.push(stateBinding)
+          bindings.push(stateBinding)
         }
       })
+    // Get which indexes are asynchronous automations as we want to filter them out from the bindings
+    const asynchronousAutomationIndexes = actions
+      .map((action, index) => {
+        if (
+          action[EVENT_TYPE_KEY] === "Trigger Automation" &&
+          !action.parameters?.synchronous
+        ) {
+          return index
+        }
+      })
+      .filter(index => index !== undefined)
 
+    // Based on the above, filter out the asynchronous automations from the bindings
+    if (asynchronousAutomationIndexes) {
+      allBindings = eventContextBindings
+        .filter((binding, index) => {
+          return !asynchronousAutomationIndexes.includes(index)
+        })
+        .concat(bindings)
+    } else {
+      allBindings = eventContextBindings.concat(bindings)
+    }
     return allBindings
   }
 </script>

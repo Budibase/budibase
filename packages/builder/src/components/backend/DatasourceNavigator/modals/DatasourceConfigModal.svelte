@@ -4,55 +4,68 @@
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { IntegrationNames } from "constants/backend"
   import cloneDeep from "lodash/cloneDeepWith"
-  import { saveDatasource as save } from "builderStore/datasource"
-  import { onMount } from "svelte"
+  import {
+    saveDatasource as save,
+    validateDatasourceConfig,
+  } from "builderStore/datasource"
+  import { DatasourceFeature } from "@budibase/types"
 
   export let integration
   export let modal
 
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)
-  let skipFetch = false
   let isValid = false
 
   $: name =
     IntegrationNames[datasource.type] || datasource.name || datasource.type
 
+  async function validateConfig() {
+    const displayError = message =>
+      notifications.error(message ?? "Error validating datasource")
+
+    let connected = false
+    try {
+      const resp = await validateDatasourceConfig(datasource)
+      if (!resp.connected) {
+        displayError(`Unable to connect - ${resp.error}`)
+      }
+      connected = resp.connected
+    } catch (err) {
+      displayError(err?.message)
+    }
+    return connected
+  }
+
   async function saveDatasource() {
+    if (integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
+      const valid = await validateConfig()
+      if (!valid) {
+        return false
+      }
+    }
     try {
       if (!datasource.name) {
         datasource.name = name
       }
-      const resp = await save(datasource, skipFetch)
+      const resp = await save(datasource)
       $goto(`./datasource/${resp._id}`)
-      notifications.success(`Datasource updated successfully.`)
+      notifications.success(`Datasource created successfully.`)
     } catch (err) {
       notifications.error(err?.message ?? "Error saving datasource")
       // prevent the modal from closing
       return false
     }
   }
-
-  onMount(() => {
-    skipFetch = false
-  })
 </script>
 
 <ModalContent
   title={`Connect to ${name}`}
   onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
-  confirmText={datasource.plus
-    ? "Save and fetch tables"
-    : "Save and continue to query"}
+  confirmText={datasource.plus ? "Connect" : "Save and continue to query"}
   cancelText="Back"
   showSecondaryButton={datasource.plus}
-  secondaryButtonText={datasource.plus ? "Skip table fetch" : undefined}
-  secondaryAction={() => {
-    skipFetch = true
-    saveDatasource()
-    return true
-  }}
   size="L"
   disabled={!isValid}
 >

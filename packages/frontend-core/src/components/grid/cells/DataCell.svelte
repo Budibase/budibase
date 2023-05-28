@@ -11,6 +11,7 @@
   export let selected
   export let rowFocused
   export let rowIdx
+  export let topRow = false
   export let focused
   export let selectedUser
   export let column
@@ -68,6 +69,7 @@
   {highlighted}
   {selected}
   {rowIdx}
+  {topRow}
   {focused}
   {selectedUser}
   {readonly}

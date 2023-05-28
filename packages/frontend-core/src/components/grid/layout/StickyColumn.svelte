@@ -82,7 +82,8 @@
               {rowFocused}
               selected={rowSelected}
               highlighted={rowHovered || rowFocused}
-              rowIdx={idx}
+              rowIdx={row.__idx}
+              topRow={idx === 0}
               focused={$focusedCellId === cellId}
               selectedUser={$selectedCellMap[cellId]}
               width={$stickyColumn.width}

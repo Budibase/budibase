@@ -373,7 +373,7 @@ class TestConfiguration {
 
   // HEADERS
 
-  defaultHeaders(extras = {}) {
+  defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
     const authObj: AuthToken = {
       userId: this.defaultUserValues.globalUserId,
@@ -390,7 +390,9 @@ class TestConfiguration {
       ...extras,
     }
 
-    if (this.appId) {
+    if (prodApp) {
+      headers[constants.Header.APP_ID] = this.prodAppId
+    } else if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
     return headers
