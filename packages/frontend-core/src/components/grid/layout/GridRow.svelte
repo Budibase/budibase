@@ -3,7 +3,7 @@
   import DataCell from "../cells/DataCell.svelte"
 
   export let row
-  export let idx
+  export let top = false
   export let invertY = false
 
   const {
@@ -41,7 +41,8 @@
       invertX={columnIdx >= $columnHorizontalInversionIndex}
       highlighted={rowHovered || rowFocused || reorderSource === column.name}
       selected={rowSelected}
-      rowIdx={idx}
+      rowIdx={row.__idx}
+      topRow={top}
       focused={$focusedCellId === cellId}
       selectedUser={$selectedCellMap[cellId]}
       width={column.width}

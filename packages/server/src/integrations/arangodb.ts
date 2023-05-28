@@ -23,7 +23,9 @@ const SCHEMA: Integration = {
   type: "Non-relational",
   description:
     "ArangoDB is a scalable open-source multi-model database natively supporting graph, document and search. All supported data models & access patterns can be combined in queries allowing for maximal flexibility. ",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     url: {
       type: DatasourceFieldType.STRING,

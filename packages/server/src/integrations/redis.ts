@@ -21,7 +21,9 @@ const SCHEMA: Integration = {
     "Redis is a caching tool, providing powerful key-value store capabilities.",
   friendlyName: "Redis",
   type: "Non-relational",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     host: {
       type: "string",
