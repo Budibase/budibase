@@ -110,5 +110,11 @@
       "packages/pro/packages/pro"
     ]
   },
+  "resolutions": {
+    "@budibase/backend-core": "0.0.0",
+    "@budibase/shared-core": "0.0.0",
+    "@budibase/string-templates": "0.0.0",
+    "@budibase/types": "0.0.0"
+  },
   "dependencies": {}
 }
