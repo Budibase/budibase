@@ -33,7 +33,7 @@
         ]} integration.</Body
       >
     </Layout>
-    <GoogleButton preAuthStep={() => save(datasource, true)} />
+    <GoogleButton preAuthStep={() => save(datasource, true)} samePage />
   {:else if isGoogleConfigured === false}
     <Body size="S"
       >Google authentication is not enabled, please complete Google SSO
