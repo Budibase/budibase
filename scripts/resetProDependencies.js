@@ -19,15 +19,15 @@ let hasChanges = false
 const dependencies = data["@budibase/pro"].workspaceDependencies
 dependencies.forEach(dependency => {
   if (packageJson.dependencies?.[dependency]) {
-    packageJson.dependencies[dependency] = "0.0.1"
+    packageJson.dependencies[dependency] = "0.0.0"
     hasChanges = true
   }
   if (packageJson.devDependencies?.[dependency]) {
-    packageJson.devDependencies[dependency] = "0.0.1"
+    packageJson.devDependencies[dependency] = "0.0.0"
     hasChanges = true
   }
   if (packageJson.peerDependencies?.[dependency]) {
-    packageJson.peerDependencies[dependency] = "0.0.1"
+    packageJson.peerDependencies[dependency] = "0.0.0"
     hasChanges = true
   }
 })

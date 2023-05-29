@@ -2,7 +2,7 @@ const fs = require("fs")
 const path = require("path")
 const { execSync } = require("child_process")
 
-let version = "0.0.1"
+let version = "0.0.0"
 const localPro = fs.existsSync("packages/pro/packages")
 if (!localPro) {
   const branchName = execSync("git rev-parse --abbrev-ref HEAD")
@@ -26,7 +26,7 @@ Object.keys(data).forEach(workspace => {
   // Loop through each dependency and update its version in package.json
   const packageJsonPath = path.join(data[workspace].location, "package.json")
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
-  if (packageJson.version !== "0.0.1") {
+  if (packageJson.version !== "0.0.0") {
     // Don't change if we are not using local versions
     return
   }
