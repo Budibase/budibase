@@ -21,7 +21,6 @@
   }
 
   export function hide() {
-    console.log("CLOSE")
     if (!visible) {
       return
     }

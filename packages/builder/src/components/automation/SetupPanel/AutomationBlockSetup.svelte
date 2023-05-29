@@ -37,7 +37,6 @@
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
 
   export let block
   export let testData
@@ -235,18 +234,19 @@
             ? `steps[${idx - loopBlockCount}].${name}`
             : `steps.${idx - loopBlockCount}.${name}`
           const runtime = idx === 0 ? `trigger.${name}` : runtimeName
+          const categoryName =
+            idx === 0
+              ? "Trigger outputs"
+              : isLoopBlock
+              ? "Loop Outputs"
+              : `Step ${idx - loopBlockCount} outputs`
           return {
             readableBinding: runtime,
             runtimeBinding: runtime,
             type: value.type,
             description: value.description,
             icon: bindingIcon,
-            category:
-              idx === 0
-                ? "Trigger outputs"
-                : isLoopBlock
-                ? "Loop Outputs"
-                : `Step ${idx - loopBlockCount} outputs`,
+            category: categoryName,
             display: {
               type: value.type,
               name: name,

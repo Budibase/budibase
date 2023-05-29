@@ -45,7 +45,6 @@
         (!selectedCategory ? true : selectedCategory === category.name)
       )
     })
-  $: console.log(filteredCategories)
   $: filteredHelpers = helpers?.filter(helper => {
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
   })

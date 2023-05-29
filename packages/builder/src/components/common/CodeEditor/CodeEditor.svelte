@@ -69,13 +69,15 @@
         to: opts.end || editor.state.doc.length,
         insert: opts.value,
       },
-      selection: {
-        anchor: opts.start + opts.value.length,
-      },
+      selection: opts.cursor
+        ? {
+            anchor: opts.start + opts.value.length,
+          }
+        : undefined,
     })
   }
 
-  // For handlebars only. Demo
+  // For handlebars only.
   const bindStyle = new MatchDecorator({
     regexp: /{{[.\[\]\"#-\w\s\/]*}}/g,
     decoration: match => {
@@ -117,7 +119,7 @@
       ...completionKeymap,
       indentWithTab,
     ]
-    return buildKeymap
+    return baseMap
   }
 
   const buildBaseExtensions = () => {
@@ -167,8 +169,6 @@
       complete.push(foldGutter())
       complete.push(
         EditorView.inputHandler.of((view, from, to, insert) => {
-          console.log({ view, from, to, insert })
-
           if (insert === "$") {
             let { text } = view.state.doc.lineAt(from)
 
