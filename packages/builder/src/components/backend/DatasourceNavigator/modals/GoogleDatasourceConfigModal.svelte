@@ -22,6 +22,7 @@
   title={`Connect to ${IntegrationNames[datasource.type]}`}
   cancelText="Back"
   size="L"
+  showConfirmButton={false}
 >
   <!-- check true and false directly, don't render until flag is set -->
   {#if isGoogleConfigured === true}
