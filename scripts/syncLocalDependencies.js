@@ -51,3 +51,10 @@ workspaces.forEach(workspace => {
     )
   }
 })
+
+const rootPackageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"))
+delete rootPackageJson["resolutions"]
+fs.writeFileSync(
+  "package.json",
+  JSON.stringify(rootPackageJson, null, 2) + "\n"
+)
