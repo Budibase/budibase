@@ -294,12 +294,12 @@ export const bindingsToCompletions = (bindings, mode) => {
     if (ele.icon) {
       acc[ele.category]["icon"] = acc[ele.category]["icon"] || ele.icon
     }
-    if (ele.display?.rank) {
+    if (typeof ele.display?.rank == "number") {
       acc[ele.category]["rank"] = acc[ele.category]["rank"] || ele.display.rank
     }
     return acc
   }, {})
-
+  console.log(categoryMeta)
   const completions = Object.keys(bindingByCategory).reduce((comps, catKey) => {
     const { icon, rank } = categoryMeta[catKey] || {}
 
