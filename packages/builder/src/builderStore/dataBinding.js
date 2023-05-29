@@ -519,7 +519,7 @@ export const makeStateBinding = key => {
     readableBinding: `State.${key}`,
     category: "State",
     icon: "AutomatedSegment",
-    display: { name: key }, //no type
+    display: { name: key },
   }
 }
 

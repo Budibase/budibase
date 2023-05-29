@@ -107,7 +107,6 @@
       (inCodeEditor || ["input", "textarea"].indexOf(activeTag) !== -1) &&
       e.key !== "Escape"
     ) {
-      console.log("KEY PRESS")
       return
     }
     // Key events are always for the selected component

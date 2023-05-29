@@ -1,17 +1,13 @@
 <script>
-  import groupBy from "lodash/fp/groupBy"
   import {
-    Search,
-    Input,
     DrawerContent,
     Tabs,
     Tab,
     Body,
-    Layout,
     Button,
     ActionButton,
+    Heading,
     Icon,
-    Popover,
   } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
   import {
@@ -23,7 +19,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import { handlebarsCompletions } from "constants/completions"
+  import { store } from "builderStore"
   import { convertToJS } from "@budibase/string-templates"
   import { admin } from "stores/portal"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
@@ -37,7 +33,6 @@
     jsInsert,
   } from "../CodeEditor"
   import { getContext } from "svelte"
-
   import BindingPicker from "./BindingPicker.svelte"
 
   const dispatch = createEventDispatcher()
@@ -55,70 +50,24 @@
   const drawerActions = getContext("drawer-actions")
   const bindingDrawerActions = getContext("binding-drawer-actions")
 
-  let helpers = handlebarsCompletions()
   let getCaretPosition
   let insertAtPos
-  let search = ""
   let initialValueJS = typeof value === "string" && value?.startsWith("{{ js ")
   let mode = initialValueJS ? "JavaScript" : "Text"
   let jsValue = initialValueJS ? value : null
   let hbsValue = initialValueJS ? null : value
   let sidebar = true
-  let selectedCategory = null
-
-  let popover
-  let popoverAnchor
-  let hoverTarget
+  let targetMode = null
 
   $: usingJS = mode === "JavaScript"
-  $: searchRgx = new RegExp(search, "ig")
-  $: categories = Object.entries(groupBy("category", bindings))
-
   $: editorMode = mode == "JavaScript" ? EditorModes.JS : EditorModes.Handlebars
   $: bindingCompletions = bindingsToCompletions(bindings, editorMode)
-
-  $: bindingIcons = bindings?.reduce((acc, ele) => {
-    if (ele.icon) {
-      acc[ele.category] = acc[ele.category] || ele.icon
-    }
-    return acc
-  }, {})
-
-  $: categoryIcons = { ...bindingIcons, Helpers: "MagicWand" }
-
-  $: filteredCategories = categories
-    .map(([name, categoryBindings]) => ({
-      name,
-      bindings: categoryBindings?.filter(binding => {
-        return binding.readableBinding.match(searchRgx)
-      }),
-    }))
-    .filter(category => {
-      return (
-        category.bindings?.length > 0 &&
-        (!selectedCategory ? true : selectedCategory === category.name)
-      )
-    })
-
-  $: filteredHelpers = helpers?.filter(helper => {
-    return helper.label.match(searchRgx) || helper.description.match(searchRgx)
-  })
-
-  $: categoryNames = getCategoryNames(categories)
 
   const updateValue = val => {
     valid = isValid(readableToRuntimeBinding(bindings, val))
     if (valid) {
       dispatch("change", val)
     }
-  }
-
-  const getCategoryNames = categories => {
-    let names = [...categories.map(cat => cat[0])]
-    if (allowHelpers) {
-      names.push("Helpers")
-    }
-    return names
   }
 
   // Adds a JS/HBS helper to the expression
@@ -163,6 +112,18 @@
     updateValue(jsValue)
   }
 
+  const switchMode = () => {
+    if (targetMode == "Text") {
+      jsValue = null
+      updateValue(jsValue)
+    } else {
+      hbsValue = null
+      updateValue(hbsValue)
+    }
+    mode = targetMode + ""
+    targetMode = null
+  }
+
   const convert = () => {
     const runtime = readableToRuntimeBinding(bindings, hbsValue)
     const runtimeJs = encodeJSBinding(convertToJS(runtime))
@@ -177,84 +138,108 @@
   })
 </script>
 
-<DrawerContent>
-  <div class="main">
-    <Tabs selected={mode} on:select={onChangeMode}>
-      <Tab title="Text">
-        <div class="main-content" class:binding-panel={sidebar}>
-          <div class="editor">
-            <CodeEditor
-              value={hbsValue}
-              on:change={onChangeHBSValue}
-              bind:getCaretPosition
-              bind:insertAtPos
-              completions={[
-                hbAutocomplete([
-                  ...bindingCompletions,
-                  ...getHelperCompletions(),
-                ]),
-              ]}
-              placeholder="Add text, or click the objects on the left to add them to the textbox."
-            />
-            <div class="binding-footer">
-              <div class="messaging">
-                {#if !valid}
-                  <p class="syntax-error">
-                    Current Handlebars syntax is invalid, please check the guide
-                    <a href="https://handlebarsjs.com/guide/">here</a>
-                    for more details.
-                  </p>
-                {/if}
-              </div>
-              <div class="actions">
-                {#if $admin.isDev && allowJS}
-                  <ActionButton secondary>Convert To JS</ActionButton>
-                {/if}
-                <ActionButton
-                  secondary
-                  icon={sidebar ? "RailRightClose" : "RailRightOpen"}
-                  on:click={() => {
-                    sidebar = !sidebar
-                  }}
-                />
-              </div>
-            </div>
-          </div>
+<span class="binding-drawer">
+  <DrawerContent>
+    <div class="main">
+      <Tabs
+        selected={mode}
+        on:select={onChangeMode}
+        beforeSwitch={selectedMode => {
+          if (selectedMode == mode) {
+            return true
+          }
 
-          {#if sidebar}
-            <div class="binding-picker">
-              <BindingPicker
-                {bindings}
-                {allowHelpers}
-                addHelper={onSelectHelper}
-                addBinding={onSelectBinding}
-                mode={editorMode}
-              />
-            </div>
-          {/if}
-        </div>
-      </Tab>
-      {#if allowJS}
-        <Tab title="JavaScript">
+          //Get the current mode value
+          const currentEditorValue = mode === "JavaScript" ? jsValue : hbsValue
+          if (currentEditorValue) {
+            targetMode = selectedMode
+            return false
+          }
+          return true
+        }}
+      >
+        <Tab title="Text">
           <div class="main-content" class:binding-panel={sidebar}>
             <div class="editor">
-              <CodeEditor
-                value={decodeJSBinding(jsValue)}
-                on:change={onChangeJSValue}
-                completions={[
-                  jsAutocomplete([
-                    ...bindingCompletions,
-                    ...getHelperCompletions(),
-                  ]),
-                ]}
-                mode={EditorModes.JS}
-                bind:getCaretPosition
-                bind:insertAtPos
-              />
-              <Body size="S">
-                JavaScript expressions are executed as functions, so ensure that
-                your expression returns a value.
-              </Body>
+              <div class="overlay-wrap">
+                {#if targetMode}
+                  <div class="mode-overlay">
+                    <div class="prompt-body">
+                      <Heading size="S">
+                        {`Switch to ${targetMode}?`}
+                      </Heading>
+                      <Body>This will discard anything in your text</Body>
+                      <div class="switch-actions">
+                        <Button
+                          secondary
+                          size="S"
+                          on:click={() => {
+                            targetMode = null
+                          }}
+                        >
+                          No - keep text
+                        </Button>
+                        <Button cta size="S" on:click={switchMode}>
+                          Yes - discard text
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                {/if}
+                <CodeEditor
+                  value={hbsValue}
+                  on:change={onChangeHBSValue}
+                  bind:getCaretPosition
+                  bind:insertAtPos
+                  completions={[
+                    hbAutocomplete([
+                      ...bindingCompletions,
+                      ...getHelperCompletions(),
+                    ]),
+                  ]}
+                  placeholder=""
+                />
+              </div>
+              <div class="binding-footer">
+                <div class="messaging">
+                  {#if !valid}
+                    <div class="syntax-error">
+                      Current Handlebars syntax is invalid, please check the
+                      guide
+                      <a href="https://handlebarsjs.com/guide/">here</a>
+                      for more details.
+                    </div>
+                  {:else}
+                    <Icon name="FlashOn" />
+                    <div class="messaging-wrap">
+                      <div>
+                        Add available bindings by typing $ or use the menu on
+                        the right
+                      </div>
+                    </div>
+                  {/if}
+                </div>
+                <div class="actions">
+                  {#if $admin.isDev && allowJS}
+                    <ActionButton
+                      secondary
+                      on:click={() => {
+                        convert()
+                        targetMode = null
+                      }}
+                    >
+                      Convert To JS
+                    </ActionButton>
+                  {/if}
+                  <ActionButton
+                    secondary
+                    icon={sidebar ? "RailRightClose" : "RailRightOpen"}
+                    on:click={() => {
+                      sidebar = !sidebar
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
             {#if sidebar}
@@ -270,32 +255,130 @@
             {/if}
           </div>
         </Tab>
-      {/if}
-      <div class="drawer-actions">
-        <Button
-          secondary
-          quiet
-          on:click={() => {
-            console.log(drawerActions)
-            drawerActions.hide()
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          cta
-          on:click={() => {
-            bindingDrawerActions.save()
-          }}
-        >
-          Save
-        </Button>
-      </div>
-    </Tabs>
-  </div>
-</DrawerContent>
+        {#if allowJS}
+          <Tab title="JavaScript">
+            <div class="main-content" class:binding-panel={sidebar}>
+              <div class="editor">
+                <div class="overlay-wrap">
+                  {#if targetMode}
+                    <div class="mode-overlay">
+                      <div class="prompt-body">
+                        <Heading size="S">
+                          {`Switch to ${targetMode}?`}
+                        </Heading>
+                        <Body>This will discard anything in your text</Body>
+                        <div class="switch-actions">
+                          <Button
+                            secondary
+                            size="S"
+                            on:click={() => {
+                              targetMode = null
+                            }}
+                          >
+                            No - keep text
+                          </Button>
+                          <Button cta size="S" on:click={switchMode}>
+                            Yes - discard text
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  {/if}
+
+                  <CodeEditor
+                    value={decodeJSBinding(jsValue)}
+                    on:change={onChangeJSValue}
+                    completions={[
+                      jsAutocomplete([
+                        ...bindingCompletions,
+                        ...getHelperCompletions(),
+                      ]),
+                    ]}
+                    mode={EditorModes.JS}
+                    bind:getCaretPosition
+                    bind:insertAtPos
+                  />
+                </div>
+                <div class="binding-footer">
+                  <div class="messaging">
+                    <Icon name="FlashOn" />
+                    <div class="messaging-wrap">
+                      <div>
+                        Add available bindings by typing $ or use the menu on
+                        the right
+                      </div>
+                    </div>
+                  </div>
+                  <div class="actions">
+                    <ActionButton
+                      secondary
+                      icon={sidebar ? "RailRightClose" : "RailRightOpen"}
+                      on:click={() => {
+                        sidebar = !sidebar
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {#if sidebar}
+                <div class="binding-picker">
+                  <BindingPicker
+                    {bindings}
+                    {allowHelpers}
+                    addHelper={onSelectHelper}
+                    addBinding={onSelectBinding}
+                    mode={editorMode}
+                  />
+                </div>
+              {/if}
+            </div>
+          </Tab>
+        {/if}
+        <div class="drawer-actions">
+          <Button
+            secondary
+            quiet
+            on:click={() => {
+              store.actions.settings.propertyFocus(null)
+              drawerActions.hide()
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            cta
+            on:click={() => {
+              bindingDrawerActions.save()
+            }}
+          >
+            Save
+          </Button>
+        </div>
+      </Tabs>
+    </div>
+  </DrawerContent>
+</span>
 
 <style>
+  .messaging {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+    min-width: 0;
+    flex: 1;
+  }
+  .messaging-wrap {
+    overflow: hidden;
+  }
+  .messaging-wrap > div {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .binding-drawer :global(.drawer-contents) {
+    height: unset;
+  }
   .main :global(textarea) {
     min-height: 202px !important;
   }
@@ -323,7 +406,6 @@
   }
 
   .syntax-error {
-    padding-top: var(--spacing-m);
     color: var(--red);
     font-size: 12px;
   }
@@ -354,5 +436,36 @@
   .editor {
     padding: var(--spacing-xl);
     padding-bottom: 0px;
+    min-width: 0;
+  }
+  .overlay-wrap {
+    position: relative;
+  }
+  .mode-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(
+      --spectrum-textfield-m-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    border-radius: var(--border-radius-s);
+  }
+  .prompt-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-l);
+  }
+  .prompt-body .switch-actions {
+    display: flex;
+    gap: var(--spacing-l);
   }
 </style>

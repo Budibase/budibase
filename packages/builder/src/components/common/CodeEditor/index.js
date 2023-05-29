@@ -1,25 +1,13 @@
 import { EditorView } from "@codemirror/view"
-// import { insertCompletionText } from "@codemirror/autocomplete"
 import { getManifest } from "@budibase/string-templates"
 import sanitizeHtml from "sanitize-html"
 import { groupBy } from "lodash"
 
-// Really just Javascript and Text
 export const EditorModes = {
   JS: {
     name: "javascript",
     json: false,
     match: /\$$/,
-  },
-  JSON: {
-    name: "javascript",
-    json: true,
-  },
-  XML: {
-    name: "xml",
-  },
-  SQL: {
-    name: "sql",
   },
   Handlebars: {
     name: "handlebars",
@@ -31,7 +19,6 @@ export const EditorModes = {
   },
 }
 
-// Get a generalised approach to constants in the dataBindings file?
 export const SECTIONS = {
   HB_HELPER: {
     name: "Helper",
@@ -108,7 +95,7 @@ export const getDefaultTheme = opts => {
         color: "var(--ink)",
       },
       "& .binding-wrap": {
-        color: "chartreuse",
+        color: "var(--spectrum-global-color-blue-700)",
       },
     },
     { dark }
@@ -209,20 +196,15 @@ export const jsAutocomplete = baseCompletions => {
     let jsBinding = context.matchBefore(/\$\(\"[\s\w]*/)
     let options = baseCompletions || []
 
-    if (!jsBinding) {
-      console.log("leaving")
+    if (jsBinding) {
       return {
-        from: context.pos,
+        from: jsBinding.from + 3,
         filter: true,
         options,
       }
     }
 
-    return {
-      from: jsBinding.from + 3,
-      filter: true,
-      options,
-    }
+    return null
   }
 
   return coreCompletion
@@ -305,30 +287,27 @@ export const insertBinding = (view, from, to, text, mode) => {
 }
 
 export const bindingsToCompletions = (bindings, mode) => {
-  // REFACTOR OUT
   const bindingByCategory = groupBy(bindings, "category")
-  const categoryToIcon = bindings?.reduce((acc, ele) => {
-    if (ele.icon) {
-      acc[ele.category] = acc[ele.category] || ele.icon
-    }
-    return acc
-  }, {})
+  const categoryMeta = bindings?.reduce((acc, ele) => {
+    acc[ele.category] = acc[ele.category] || {}
 
-  // REFACTOR OUT
-  const categoryToRank = bindings?.reduce((acc, ele) => {
     if (ele.icon) {
-      acc[ele.category] = acc[ele.category] || ele.display.rank
+      acc[ele.category]["icon"] = acc[ele.category]["icon"] || ele.icon
+    }
+    if (ele.display?.rank) {
+      acc[ele.category]["rank"] = acc[ele.category]["rank"] || ele.display.rank
     }
     return acc
   }, {})
 
   const completions = Object.keys(bindingByCategory).reduce((comps, catKey) => {
-    // REFACTOR OUT
+    const { icon, rank } = categoryMeta[catKey] || {}
+
     const bindindSectionHeader = buildSectionHeader(
       bindingByCategory.type,
       catKey,
-      categoryToIcon[catKey] || "",
-      categoryToRank[catKey] || 1
+      icon || "",
+      typeof rank == "number" ? rank : 1
     )
 
     return [
