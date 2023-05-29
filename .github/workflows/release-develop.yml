@@ -54,9 +54,6 @@ jobs:
       - run: yarn build --configuration=production
       - run: yarn build:sdk
 
-      - name: Reset pro dependencies
-        run: node scripts/resetProDependencies.js
-
       - name: Publish budibase packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
