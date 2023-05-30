@@ -337,7 +337,6 @@
     gap: var(--spacing-m);
   }
 
-  .heading,
   .cat-heading {
     font-size: var(--font-size-s);
     font-weight: 600;

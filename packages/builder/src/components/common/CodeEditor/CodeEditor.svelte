@@ -1,8 +1,6 @@
 <script>
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
-  import { API } from "api"
-  import _ from "lodash"
 
   import {
     autocompletion,
@@ -79,9 +77,8 @@
 
   // For handlebars only.
   const bindStyle = new MatchDecorator({
-    regexp: /{{[.\[\]\"#-\w\s\/]*}}/g,
-    decoration: match => {
-      const url = match[0]
+    regexp: /{{[.[]"#-\w\s\/]*}}/g,
+    decoration: () => {
       return Decoration.mark({
         tag: "span",
         attributes: {
