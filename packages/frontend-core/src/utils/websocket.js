@@ -19,5 +19,8 @@ export const createWebsocket = path => {
     reconnectionDelayMax: 5000,
     // Timeout after 4 seconds so we never stack requests
     timeout: 4000,
+    // Disable polling and rely on websocket only, as HTTP transport
+    // will only work with sticky sessions which we don't have
+    transports: ["websocket"]
   })
 }
