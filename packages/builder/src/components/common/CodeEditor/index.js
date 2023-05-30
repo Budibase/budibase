@@ -193,7 +193,7 @@ export const hbAutocomplete = baseCompletions => {
 
 export const jsAutocomplete = baseCompletions => {
   async function coreCompletion(context) {
-    let jsBinding = context.matchBefore(/\$("[\s\w]*/)
+    let jsBinding = context.matchBefore(/\$\("[\s\w]*/)
     let options = baseCompletions || []
 
     if (jsBinding) {
