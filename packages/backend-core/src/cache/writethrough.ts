@@ -44,7 +44,7 @@ async function put(
   if (updateDb) {
     const lockResponse = await locks.doWithLock(
       {
-        type: LockType.TRY_ONCE,
+        type: LockType.TRY_TWICE,
         name: LockName.PERSIST_WRITETHROUGH,
         resource: key,
         ttl: 15000,
