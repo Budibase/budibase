@@ -507,7 +507,10 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   if (!automationId) {
     throw new Error("Unable to execute, event doesn't contain automation ID.")
   }
-  return context.doInAutomationContext({ appId, automationId, task: async () => {
+  return context.doInAutomationContext({
+    appId,
+    automationId,
+    task: async () => {
       const envVars = await sdkUtils.getEnvironmentVariables()
       // put into automation thread for whole context
       await context.doInEnvironmentContext(envVars, async () => {
@@ -519,7 +522,8 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
           callback(err)
         }
       })
-  }})
+    },
+  })
 }
 
 export function executeSynchronously(job: Job) {

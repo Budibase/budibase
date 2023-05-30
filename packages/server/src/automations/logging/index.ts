@@ -15,7 +15,7 @@ function sanitiseResults(results: AutomationResults) {
     }
     step.outputs = {
       message,
-      success: step.outputs.success
+      success: step.outputs.success,
     }
   }
 }
@@ -29,7 +29,7 @@ export async function storeLog(
     return
   }
   const bytes = sizeof(results)
-  if ((bytes / MB_IN_BYTES) > MAX_LOG_SIZE_MB) {
+  if (bytes / MB_IN_BYTES > MAX_LOG_SIZE_MB) {
     sanitiseResults(results)
   }
   await automations.logs.storeLog(automation, results)
