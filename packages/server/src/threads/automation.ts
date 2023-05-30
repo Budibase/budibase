@@ -37,8 +37,8 @@ const LOOP_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
-function getLoopIterations(loopStep: LoopStep, input: LoopInput) {
-  const binding = automationUtils.typecastForLooping(loopStep, input)
+function getLoopIterations(loopStep: LoopStep) {
+  let binding = loopStep.inputs.binding
   if (!binding) {
     return 0
   }
@@ -68,7 +68,6 @@ class Orchestrator {
   constructor(job: AutomationJob) {
     let automation = job.data.automation
     let triggerOutput = job.data.event
-    let timeout = job.data.event.timeout
     const metadata = triggerOutput.metadata
     this._chainCount = metadata ? metadata.automationChainCount! : 0
     this._appId = triggerOutput.appId as string
@@ -277,22 +276,17 @@ class Orchestrator {
 
       if (loopStep) {
         input = await processObject(loopStep.inputs, this._context)
-        iterations = getLoopIterations(loopStep as LoopStep, input)
+        iterations = getLoopIterations(loopStep as LoopStep)
       }
       for (let index = 0; index < iterations; index++) {
         let originalStepInput = cloneDeep(step.inputs)
         // Handle if the user has set a max iteration count or if it reaches the max limit set by us
         if (loopStep && input.binding) {
-          let newInput: any = await processObject(
-            loopStep.inputs,
-            cloneDeep(this._context)
-          )
-
           let tempOutput = { items: loopSteps, iterations: iterationCount }
           try {
-            newInput.binding = automationUtils.typecastForLooping(
+            loopStep.inputs.binding = automationUtils.typecastForLooping(
               loopStep as LoopStep,
-              newInput
+              loopStep.inputs as LoopInput
             )
           } catch (err) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
@@ -303,13 +297,12 @@ class Orchestrator {
             loopStep = undefined
             break
           }
-
           let item = []
           if (
             typeof loopStep.inputs.binding === "string" &&
             loopStep.inputs.option === "String"
           ) {
-            item = automationUtils.stringSplit(newInput.binding)
+            item = automationUtils.stringSplit(loopStep.inputs.binding)
           } else if (Array.isArray(loopStep.inputs.binding)) {
             item = loopStep.inputs.binding
           }
@@ -351,6 +344,7 @@ class Orchestrator {
               }
             }
           }
+
           if (
             index === env.AUTOMATION_MAX_ITERATIONS ||
             index === parseInt(loopStep.inputs.iterations)
@@ -439,6 +433,7 @@ class Orchestrator {
             break
           }
         }
+        console.log("end of loop!")
       }
 
       if (loopStep && iterations === 0) {
