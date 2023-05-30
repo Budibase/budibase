@@ -1,11 +1,12 @@
 <script>
   import { auth } from "stores/portal"
-  import { ActionMenu, Avatar, MenuItem, Icon, Modal } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, Modal } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import ProfileModal from "components/settings/ProfileModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import ThemeModal from "components/settings/ThemeModal.svelte"
   import APIKeyModal from "components/settings/APIKeyModal.svelte"
+  import { UserAvatar } from "@budibase/frontend-core"
 
   let themeModal
   let profileModal
@@ -23,7 +24,7 @@
 
 <ActionMenu align="right">
   <div slot="control" class="user-dropdown">
-    <Avatar size="M" initials={$auth.initials} url={$auth.user.pictureUrl} />
+    <UserAvatar user={$auth.user} showTooltip={false} />
     <Icon size="XL" name="ChevronDown" />
   </div>
   <MenuItem icon="UserEdit" on:click={() => profileModal.show()}>
