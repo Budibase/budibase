@@ -1,6 +1,7 @@
 import { Config } from "@jest/types"
 
 import * as fs from "fs"
+import { join } from "path"
 const preset = require("ts-jest/jest-preset")
 
 const baseConfig: Config.InitialProjectOptions = {
@@ -48,5 +49,7 @@ const config: Config.InitialOptions = {
   ],
   coverageReporters: ["lcov", "json", "clover"],
 }
+
+process.env.TOP_LEVEL_PATH = join(__dirname, "..", "..")
 
 export default config

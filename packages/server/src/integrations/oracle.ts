@@ -50,7 +50,10 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "Oracle Database is an object-relational database management system developed by Oracle Corporation",
-  features: [DatasourceFeature.CONNECTION_CHECKING],
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+  },
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -321,6 +324,13 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     const final = finaliseExternalTables(tables, entities)
     this.tables = final.tables
     this.schemaErrors = final.errors
+  }
+
+  async getTableNames() {
+    const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
+      sql: this.COLUMNS_SQL,
+    })
+    return (columnsResponse.rows || []).map(row => row.TABLE_NAME)
   }
 
   async testConnection() {

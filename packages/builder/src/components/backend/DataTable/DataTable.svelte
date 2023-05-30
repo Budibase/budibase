@@ -16,11 +16,11 @@
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
 
   const userSchemaOverrides = {
-    firstName: { name: "First name", disabled: true },
-    lastName: { name: "Last name", disabled: true },
-    email: { name: "Email", disabled: true },
-    roleId: { name: "Role", disabled: true },
-    status: { name: "Status", disabled: true },
+    firstName: { displayName: "First name", disabled: true },
+    lastName: { displayName: "Last name", disabled: true },
+    email: { displayName: "Email", disabled: true },
+    roleId: { displayName: "Role", disabled: true },
+    status: { displayName: "Status", disabled: true },
   }
 
   $: id = $tables.selected?._id
@@ -32,10 +32,11 @@
   <Grid
     {API}
     tableId={id}
+    tableType={$tables.selected?.type}
     allowAddRows={!isUsersTable}
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
-    on:updatetable={e => tables.updateTable(e.detail)}
+    showAvatars={false}
   >
     <svelte:fragment slot="controls">
       {#if isInternal}

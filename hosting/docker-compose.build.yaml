@@ -1,0 +1,77 @@
+version: "3"
+
+# optional ports are specified throughout for more advanced use cases.
+
+services:
+  app-service:
+    build: ../packages/server
+    container_name: build-bbapps
+    environment:
+      SELF_HOSTED: 1
+      COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
+      WORKER_URL: http://worker-service:4003
+      MINIO_URL: http://minio-service:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      BUDIBASE_ENVIRONMENT: ${BUDIBASE_ENVIRONMENT}
+      PORT: 4002
+      API_ENCRYPTION_KEY: ${API_ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: info
+      SENTRY_DSN: https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131
+      ENABLE_ANALYTICS: "true"
+      REDIS_URL: redis-service:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      BB_ADMIN_USER_EMAIL: ${BB_ADMIN_USER_EMAIL}
+      BB_ADMIN_USER_PASSWORD: ${BB_ADMIN_USER_PASSWORD}
+      PLUGINS_DIR: ${PLUGINS_DIR}
+    depends_on:
+      - worker-service
+      - redis-service
+  #    volumes:
+  #      - /some/path/to/plugins:/plugins
+
+  worker-service:
+    build: ../packages/worker
+    container_name: build-bbworker
+    environment:
+      SELF_HOSTED: 1
+      PORT: 4003
+      CLUSTER_PORT: ${MAIN_PORT}
+      API_ENCRYPTION_KEY: ${API_ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_URL: http://minio-service:9000
+      APPS_URL: http://app-service:4002
+      COUCH_DB_USERNAME: ${COUCH_DB_USER}
+      COUCH_DB_PASSWORD: ${COUCH_DB_PASSWORD}
+      COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
+      SENTRY_DSN: https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      REDIS_URL: redis-service:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    depends_on:
+      - redis-service
+      - minio-service
+
+  proxy-service-docker:
+    ports:
+      - "${MAIN_PORT}:10000"
+    container_name: build-bbproxy
+    image: budibase/proxy
+    environment:
+      - PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND=10
+      - PROXY_RATE_LIMIT_API_PER_SECOND=20
+      - APPS_UPSTREAM_URL=http://app-service:4002
+      - WORKER_UPSTREAM_URL=http://worker-service:4003
+      - MINIO_UPSTREAM_URL=http://minio-service:9000
+      - COUCHDB_UPSTREAM_URL=http://couchdb-service:5984
+      - WATCHTOWER_UPSTREAM_URL=http://watchtower-service:8080
+      - RESOLVER=127.0.0.11
+    depends_on:
+      - minio-service
+      - worker-service
+      - app-service
+      - couchdb-service

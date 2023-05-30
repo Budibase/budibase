@@ -5,6 +5,7 @@ export interface AutomationDataEvent {
   appId?: string
   metadata?: AutomationMetadata
   automation?: Automation
+  timeout?: number
 }
 
 export interface AutomationData {

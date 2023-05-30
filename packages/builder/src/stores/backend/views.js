@@ -1,4 +1,4 @@
-import { writable, get, derived } from "svelte/store"
+import { writable, derived } from "svelte/store"
 import { tables } from "./"
 import { API } from "api"
 
@@ -27,21 +27,31 @@ export function createViewsStore() {
 
   const deleteView = async view => {
     await API.deleteView(view)
-    await tables.fetch()
+
+    // Update tables
+    tables.update(state => {
+      const table = state.list.find(table => table._id === view.tableId)
+      if (table) {
+        delete table.views[view.name]
+      }
+      return { ...state }
+    })
   }
 
   const save = async view => {
     const savedView = await API.saveView(view)
-    const viewMeta = {
-      name: view.name,
-      ...savedView,
-    }
 
-    const viewTable = get(tables).list.find(table => table._id === view.tableId)
-
-    if (view.originalName) delete viewTable.views[view.originalName]
-    viewTable.views[view.name] = viewMeta
-    await tables.save(viewTable)
+    // Update tables
+    tables.update(state => {
+      const table = state.list.find(table => table._id === view.tableId)
+      if (table) {
+        if (view.originalName) {
+          delete table.views[view.originalName]
+        }
+        table.views[view.name] = savedView
+      }
+      return { ...state }
+    })
   }
 
   return {

@@ -40,7 +40,9 @@ const getSchema = () => {
     type: "Non-relational",
     description:
       "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
-    features: [DatasourceFeature.CONNECTION_CHECKING],
+    features: {
+      [DatasourceFeature.CONNECTION_CHECKING]: true,
+    },
     datasource: {
       connectionString: {
         type: DatasourceFieldType.STRING,

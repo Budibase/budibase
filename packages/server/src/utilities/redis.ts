@@ -4,23 +4,33 @@ import { ContextUser } from "@budibase/types"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
-let devAppClient: any, debounceClient: any, flagClient: any
+let devAppClient: any, debounceClient: any, flagClient: any, socketClient: any
 
-// we init this as we want to keep the connection open all the time
+// We need to maintain a duplicate client for socket.io pub/sub
+let socketSubClient: any
+
+// We init this as we want to keep the connection open all the time
 // reduces the performance hit
 export async function init() {
   devAppClient = new redis.Client(redis.utils.Databases.DEV_LOCKS)
   debounceClient = new redis.Client(redis.utils.Databases.DEBOUNCE)
   flagClient = new redis.Client(redis.utils.Databases.FLAGS)
+  socketClient = new redis.Client(redis.utils.Databases.SOCKET_IO)
   await devAppClient.init()
   await debounceClient.init()
   await flagClient.init()
+  await socketClient.init()
+
+  // Duplicate the socket client for pub/sub
+  socketSubClient = socketClient.getClient().duplicate()
 }
 
 export async function shutdown() {
   if (devAppClient) await devAppClient.finish()
   if (debounceClient) await debounceClient.finish()
   if (flagClient) await flagClient.finish()
+  if (socketClient) await socketClient.finish()
+  if (socketSubClient) socketSubClient.disconnect()
   // shutdown core clients
   await redis.clients.shutdown()
   console.log("Redis shutdown")
@@ -85,4 +95,11 @@ export async function checkTestFlag(id: string) {
 
 export async function clearTestFlag(id: string) {
   await devAppClient.delete(id)
+}
+
+export function getSocketPubSubClients() {
+  return {
+    pub: socketClient.getClient(),
+    sub: socketSubClient,
+  }
 }
