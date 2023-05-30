@@ -152,4 +152,10 @@ export const buildAppEndpoints = API => ({
       url: `/api/${appId}/components/definitions`,
     })
   },
+
+  addSampleData: async appId => {
+    return await API.post({
+      url: `/api/applications/${appId}/sample`,
+    })
+  },
 })

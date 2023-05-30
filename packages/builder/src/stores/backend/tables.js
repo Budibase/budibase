@@ -63,9 +63,7 @@ export function createTablesStore() {
 
     const savedTable = await API.saveTable(updatedTable)
     replaceTable(table._id, savedTable)
-    if (table.type === "external") {
-      await datasources.fetch()
-    }
+    await datasources.fetch()
     select(savedTable._id)
     return savedTable
   }
