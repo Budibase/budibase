@@ -4,7 +4,11 @@
 
   import { Icon, Modal, notifications, Heading, Body } from "@budibase/bbui"
   import { params, goto } from "@roxi/routify"
-  import { IntegrationTypes, DatasourceTypes } from "constants/backend"
+  import {
+    IntegrationTypes,
+    DatasourceTypes,
+    DEFAULT_BB_DATASOURCE_ID,
+  } from "constants/backend"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
   import GoogleDatasourceConfigModal from "components/backend/DatasourceNavigator/modals/GoogleDatasourceConfigModal.svelte"
@@ -22,7 +26,10 @@
   let promptUpload = false
 
   $: hasData = $datasources.list.length > 1 || $tables.list.length > 1
-  $: hasDefaultData = $datasources.list.findIndex(datasource => datasource._id === 'datasource_internal_bb_default') !== -1
+  $: hasDefaultData =
+    $datasources.list.findIndex(
+      datasource => datasource._id === DEFAULT_BB_DATASOURCE_ID
+    ) !== -1
 
   const createSampleData = async () => {
     disabled = true

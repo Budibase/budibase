@@ -26,7 +26,10 @@ import {
   env as envCore,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
-import { DEFAULT_BB_DATASOURCE_ID, buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
+import {
+  DEFAULT_BB_DATASOURCE_ID,
+  buildDefaultDocs,
+} from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { stringToReadStream, isQsTrue } from "../../utilities"
 import { getLocksById, doesUserHaveLock } from "../../utilities/redis"
@@ -111,10 +114,7 @@ function checkAppName(
   }
 }
 
-async function createInstance(
-  appId: string,
-  template: any
-) {
+async function createInstance(appId: string, template: any) {
   const db = context.getAppDB()
   await db.put({
     _id: "_design/database",
@@ -255,10 +255,7 @@ async function performAppCreate(ctx: UserCtx) {
   const appId = generateDevAppID(generateAppID(tenantId))
 
   return await context.doInAppContext(appId, async () => {
-    const instance = await createInstance(
-      appId,
-      instanceConfig
-    )
+    const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
 
     let newApplication: App = {
