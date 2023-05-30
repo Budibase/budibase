@@ -122,7 +122,6 @@ export async function doWithLock<T>(
       if (opts.type === LockType.TRY_ONCE) {
         // don't throw for try-once locks, they will always error
         // due to retry count (0) exceeded
-        console.warn(e)
         return { executed: false }
       } else {
         console.error(e)
