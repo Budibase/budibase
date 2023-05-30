@@ -344,7 +344,6 @@ class Orchestrator {
               }
             }
           }
-
           if (
             index === env.AUTOMATION_MAX_ITERATIONS ||
             index === parseInt(loopStep.inputs.iterations)
@@ -433,7 +432,6 @@ class Orchestrator {
             break
           }
         }
-        console.log("end of loop!")
       }
 
       if (loopStep && iterations === 0) {
