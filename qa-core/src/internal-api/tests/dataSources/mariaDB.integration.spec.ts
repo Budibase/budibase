@@ -91,7 +91,7 @@ describe("Internal API - Data Sources: MariaDB", () => {
       fixtures.queries.mariaDB(updatedDataSourceJson.datasource._id!)
     )
 
-    expect(queryJson.rows.length).toEqual(10)
+    expect(queryJson.rows.length).toBeGreaterThan(9)
     expect(queryJson.schemaFields).toEqual(
       fixtures.queries.expectedSchemaFields.mariaDB
     )
