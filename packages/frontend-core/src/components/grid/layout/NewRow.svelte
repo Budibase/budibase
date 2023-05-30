@@ -167,7 +167,7 @@
           focused={$focusedCellId === cellId}
           width={$stickyColumn.width}
           {updateValue}
-          rowIdx={0}
+          topRow={offset === 0}
           {invertY}
         >
           {#if $stickyColumn?.schema?.autocolumn}
@@ -193,7 +193,7 @@
                 row={newRow}
                 focused={$focusedCellId === cellId}
                 width={column.width}
-                rowIdx={0}
+                topRow={offset === 0}
                 invertX={columnIdx >= $columnHorizontalInversionIndex}
                 {invertY}
               >
@@ -219,7 +219,7 @@
       <Button size="M" secondary newStyles on:click={clear}>
         <div class="button-with-keys">
           Cancel
-          <KeyboardShortcut overlay keybind="Esc" />
+          <KeyboardShortcut keybind="Esc" />
         </div>
       </Button>
     </div>

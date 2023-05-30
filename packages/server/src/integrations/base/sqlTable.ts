@@ -206,4 +206,3 @@ class SqlTableQueryBuilder {
 }
 
 export default SqlTableQueryBuilder
-module.exports = SqlTableQueryBuilder

@@ -68,6 +68,7 @@ class Orchestrator {
   constructor(job: AutomationJob) {
     let automation = job.data.automation
     let triggerOutput = job.data.event
+    let timeout = job.data.event.timeout
     const metadata = triggerOutput.metadata
     this._chainCount = metadata ? metadata.automationChainCount! : 0
     this._appId = triggerOutput.appId as string
@@ -240,7 +241,9 @@ class Orchestrator {
     let loopStepNumber: any = undefined
     let loopSteps: LoopStep[] | undefined = []
     let metadata
+    let timeoutFlag = false
     let wasLoopStep = false
+    let timeout = this._job.data.event.timeout
     // check if this is a recurring automation,
     if (isProdAppID(this._appId) && isRecurring(automation)) {
       metadata = await this.getMetadata()
@@ -251,6 +254,16 @@ class Orchestrator {
     }
 
     for (let step of automation.definition.steps) {
+      if (timeoutFlag) {
+        break
+      }
+
+      if (timeout) {
+        setTimeout(() => {
+          timeoutFlag = true
+        }, timeout || 12000)
+      }
+
       stepCount++
       let input: any,
         iterations = 1,
@@ -491,6 +504,32 @@ export function execute(job: Job, callback: WorkerCallback) {
       } catch (err) {
         callback(err)
       }
+    })
+  })
+}
+
+export function executeSynchronously(job: Job) {
+  const appId = job.data.event.appId
+  if (!appId) {
+    throw new Error("Unable to execute, event doesn't contain app ID.")
+  }
+
+  const timeoutPromise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      reject(new Error("Timeout exceeded"))
+    }, job.data.event.timeout || 12000)
+  })
+
+  return context.doInAppContext(appId, async () => {
+    const envVars = await sdkUtils.getEnvironmentVariables()
+    // put into automation thread for whole context
+    return context.doInEnvironmentContext(envVars, async () => {
+      const automationOrchestrator = new Orchestrator(job)
+      const response = await Promise.race([
+        automationOrchestrator.execute(),
+        timeoutPromise,
+      ])
+      return response
     })
   })
 }

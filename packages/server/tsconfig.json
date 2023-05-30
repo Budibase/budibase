@@ -5,25 +5,12 @@
     "declaration": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "outDir": "dist",
-    "paths": {
-      "@budibase/types": ["../types/src"],
-      "@budibase/backend-core": ["../backend-core/src"],
-      "@budibase/backend-core/*": ["../backend-core/*"],
-      "@budibase/shared-core": ["../shared-core/src"],
-      "@budibase/pro": ["../pro/packages/pro/src"]
-    }
+    "outDir": "dist"
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"],
     "swc": true
   },
-  "references": [
-    { "path": "../types" },
-    { "path": "../backend-core" },
-    { "path": "../shared-core" },
-    { "path": "../../../budibase-pro/packages/pro" }
-  ],
   "include": ["src/**/*", "specs"],
   "exclude": ["node_modules", "dist"]
 }
