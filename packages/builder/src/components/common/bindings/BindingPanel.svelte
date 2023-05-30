@@ -150,8 +150,9 @@
           }
 
           //Get the current mode value
-          const currentEditorValue = mode === "JavaScript" ? jsValue : hbsValue
-          if (currentEditorValue) {
+          const editorValue = usingJS ? decodeJSBinding(jsValue) : hbsValue
+
+          if (editorValue) {
             targetMode = selectedMode
             return false
           }
@@ -168,7 +169,7 @@
                       <Heading size="S">
                         {`Switch to ${targetMode}?`}
                       </Heading>
-                      <Body>This will discard anything in your text</Body>
+                      <Body>This will discard anything in your binding</Body>
                       <div class="switch-actions">
                         <Button
                           secondary
@@ -213,8 +214,8 @@
                     <Icon name="FlashOn" />
                     <div class="messaging-wrap">
                       <div>
-                        Add available bindings by typing $ or use the menu on
-                        the right
+                        Add available bindings by typing &#123;&#123; or use the
+                        menu on the right
                       </div>
                     </div>
                   {/if}
@@ -266,7 +267,7 @@
                         <Heading size="S">
                           {`Switch to ${targetMode}?`}
                         </Heading>
-                        <Body>This will discard anything in your text</Body>
+                        <Body>This will discard anything in your binding</Body>
                         <div class="switch-actions">
                           <Button
                             secondary
@@ -275,10 +276,10 @@
                               targetMode = null
                             }}
                           >
-                            No - keep text
+                            No - keep javascript
                           </Button>
                           <Button cta size="S" on:click={switchMode}>
-                            Yes - discard text
+                            Yes - discard javascript
                           </Button>
                         </div>
                       </div>
