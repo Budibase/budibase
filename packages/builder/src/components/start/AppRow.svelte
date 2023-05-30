@@ -2,14 +2,12 @@
   import { Heading, Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { goto } from "@roxi/routify"
-  import { helpers } from "@budibase/shared-core"
   import { UserAvatar } from "@budibase/frontend-core"
 
   export let app
   export let lockedAction
 
   $: editing = app?.lockedBy != null
-  $: initials = helpers.getUserInitials(app?.lockedBy)
 
   const handleDefaultClick = () => {
     if (window.innerWidth < 640) {
