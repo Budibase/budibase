@@ -299,7 +299,7 @@ export const bindingsToCompletions = (bindings, mode) => {
     }
     return acc
   }, {})
-  console.log(categoryMeta)
+
   const completions = Object.keys(bindingByCategory).reduce((comps, catKey) => {
     const { icon, rank } = categoryMeta[catKey] || {}
 
