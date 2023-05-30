@@ -1,10 +1,9 @@
 <script>
-  import { getContext } from "svelte"
-  import UserAvatar from "../../UserAvatar.svelte"
+  import { UserAvatar } from "@budibase/frontend-core"
 
-  const { users } = getContext("grid")
+  export let users = []
 
-  $: uniqueUsers = unique($users)
+  $: uniqueUsers = unique(users)
 
   const unique = users => {
     let uniqueUsers = {}
@@ -15,16 +14,15 @@
   }
 </script>
 
-<div class="users">
+<div class="avatars">
   {#each uniqueUsers as user}
-    <UserAvatar {user} />
+    <UserAvatar {user} tooltipDirection="bottom" />
   {/each}
 </div>
 
 <style>
-  .users {
+  .avatars {
     display: flex;
-    flex-direction: row;
     gap: 4px;
   }
 </style>
