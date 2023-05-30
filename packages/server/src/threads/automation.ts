@@ -38,7 +38,7 @@ const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
 function getLoopIterations(loopStep: LoopStep) {
-  const binding = loopStep.inputs.binding
+  let binding = loopStep.inputs.binding
   if (!binding) {
     return 0
   }
@@ -251,7 +251,7 @@ class Orchestrator {
         return
       }
     }
-
+    const start = performance.now()
     for (let step of automation.definition.steps) {
       if (timeoutFlag) {
         break
@@ -344,6 +344,7 @@ class Orchestrator {
               }
             }
           }
+
           if (
             index === env.AUTOMATION_MAX_ITERATIONS ||
             index === parseInt(loopStep.inputs.iterations)
@@ -432,6 +433,7 @@ class Orchestrator {
             break
           }
         }
+        console.log("end of loop!")
       }
 
       if (loopStep && iterations === 0) {
@@ -471,6 +473,11 @@ class Orchestrator {
         loopSteps = []
       }
     }
+
+    const end = performance.now()
+    const executionTime = end - start
+
+    console.log(`Execution time: ${executionTime} milliseconds`)
 
     // store the logs for the automation run
     await storeLog(this._automation, this.executionOutput)
