@@ -172,6 +172,19 @@ export const getHelperCompletions = () => {
   }, [])
 }
 
+const bindingFilter = (options, query) => {
+  return options.filter(completion => {
+    const section_parsed = completion.section.name.toLowerCase()
+    const label_parsed = completion.label.toLowerCase()
+    const query_parsed = query.toLowerCase()
+
+    return (
+      section_parsed.includes(query_parsed) ||
+      label_parsed.includes(query_parsed)
+    )
+  })
+}
+
 export const hbAutocomplete = baseCompletions => {
   async function coreCompletion(context) {
     let bindingStart = context.matchBefore(EditorModes.Handlebars.match)
@@ -181,10 +194,15 @@ export const hbAutocomplete = baseCompletions => {
     if (!bindingStart) {
       return null
     }
+    // Accomodate spaces
+    const match = bindingStart.text.match(/{{[\s]*/)
+    const query = bindingStart.text.replace(match[0], "")
+    let filtered = bindingFilter(options, query)
+
     return {
-      from: bindingStart.from + 2,
-      filter: true,
-      options,
+      from: bindingStart.from + match[0].length,
+      filter: false,
+      options: filtered,
     }
   }
 
@@ -197,10 +215,14 @@ export const jsAutocomplete = baseCompletions => {
     let options = baseCompletions || []
 
     if (jsBinding) {
+      // Accomodate spaces
+      const match = jsBinding.text.match(/\$\("[\s]*/)
+      const query = jsBinding.text.replace(match[0], "")
+      let filtered = bindingFilter(options, query)
       return {
-        from: jsBinding.from + 3,
-        filter: true,
-        options,
+        from: jsBinding.from + match[0].length,
+        filter: false,
+        options: filtered,
       }
     }
 
