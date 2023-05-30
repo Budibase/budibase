@@ -38,7 +38,7 @@ const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
 function getLoopIterations(loopStep: LoopStep) {
-  let binding = loopStep.inputs.binding
+  const binding = loopStep.inputs.binding
   if (!binding) {
     return 0
   }
