@@ -39,6 +39,11 @@ router
     controller.revertClient
   )
   .post(
+    "/api/applications/:appId/sample",
+    authorized(permissions.BUILDER),
+    controller.addSampleData
+  )
+  .post(
     "/api/applications/:appId/publish",
     authorized(permissions.BUILDER),
     deploymentController.publishApp

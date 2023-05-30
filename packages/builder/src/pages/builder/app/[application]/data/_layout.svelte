@@ -1,21 +1,20 @@
 <script>
   import { Button, Layout } from "@budibase/bbui"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
-  import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
   import Panel from "components/design/Panel.svelte"
-
-  let modal
+  import { isActive, goto } from "@roxi/routify"
 </script>
 
 <!-- routify:options index=1 -->
 <div class="data">
-  <Panel title="Sources" borderRight>
-    <Layout paddingX="L" paddingY="XL" gap="S">
-      <Button cta on:click={modal.show}>Add source</Button>
-      <CreateDatasourceModal bind:modal />
-      <DatasourceNavigator />
-    </Layout>
-  </Panel>
+  {#if !$isActive("./new")}
+    <Panel title="Sources" borderRight>
+      <Layout paddingX="L" paddingY="XL" gap="S">
+        <Button cta on:click={() => $goto("./new")}>Add source</Button>
+        <DatasourceNavigator />
+      </Layout>
+    </Panel>
+  {/if}
 
   <div class="content">
     <slot />
