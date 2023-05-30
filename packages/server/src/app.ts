@@ -61,7 +61,6 @@ if (env.isProd()) {
 
 const server = http.createServer(app.callback())
 destroyable(server)
-initialiseWebsockets(app, server)
 
 let shuttingDown = false,
   errCode = 0

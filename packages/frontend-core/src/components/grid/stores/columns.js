@@ -46,7 +46,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { table, columns, stickyColumn, API, dispatch } = context
+  const { table, columns, stickyColumn, API } = context
 
   // Updates the tables primary display column
   const changePrimaryDisplay = async column => {
@@ -90,10 +90,6 @@ export const deriveStores = context => {
     // Update local state
     table.set(newTable)
 
-    // Broadcast event so that we can keep sync with external state
-    // (e.g. data section which maintains a list of table definitions)
-    dispatch("updatetable", newTable)
-
     // Update server
     await API.saveTable(newTable)
   }
@@ -116,10 +112,24 @@ export const initialise = context => {
   const schema = derived(
     [table, schemaOverrides],
     ([$table, $schemaOverrides]) => {
-      let newSchema = $table?.schema
-      if (!newSchema) {
+      if (!$table?.schema) {
         return null
       }
+      let newSchema = { ...$table?.schema }
+
+      // Edge case to temporarily allow deletion of duplicated user
+      // fields that were saved with the "disabled" flag set.
+      // By overriding the saved schema we ensure only overrides can
+      // set the disabled flag.
+      // TODO: remove in future
+      Object.keys(newSchema).forEach(field => {
+        newSchema[field] = {
+          ...newSchema[field],
+          disabled: false,
+        }
+      })
+
+      // Apply schema overrides
       Object.keys($schemaOverrides || {}).forEach(field => {
         if (newSchema[field]) {
           newSchema[field] = {
@@ -160,7 +170,7 @@ export const initialise = context => {
       fields
         .map(field => ({
           name: field,
-          label: $schema[field].name || field,
+          label: $schema[field].displayName || field,
           schema: $schema[field],
           width: $schema[field].width || DefaultColumnWidth,
           visible: $schema[field].visible ?? true,
