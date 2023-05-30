@@ -22,7 +22,6 @@
 
   let creating = false
   let defaultAppName
-  let includeSampleDB = true
 
   const values = writable({ name: "", url: null })
   const validation = createValidationStore()
@@ -117,8 +116,6 @@
         data.append("templateName", template.name)
         data.append("templateKey", template.key)
         data.append("templateFile", $values.file)
-      } else {
-        data.append("sampleData", includeSampleDB)
       }
 
       // Create App
@@ -213,15 +210,6 @@
       </div>
     {/if}
   </span>
-  {#if !template && !template?.fromFile}
-    <span>
-      <Toggle
-        text="Include sample data"
-        bind:value={includeSampleDB}
-        disabled={creating}
-      />
-    </span>
-  {/if}
 </ModalContent>
 
 <style>

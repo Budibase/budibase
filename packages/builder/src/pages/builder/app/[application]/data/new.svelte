@@ -22,6 +22,7 @@
   let promptUpload = false
 
   $: hasData = $datasources.list.length > 1 || $tables.list.length > 1
+  $: hasDefaultData = $datasources.list.findIndex(datasource => datasource._id === 'datasource_internal_bb_default') !== -1
 
   const createSampleData = async () => {
     disabled = true
@@ -39,7 +40,6 @@
 
   const handleIntegrationSelect = integrationType => {
     const selected = integrations.find(([type]) => type === integrationType)[1]
-    console.log(integrationType, selected)
 
     // build the schema
     const config = {}
@@ -167,7 +167,7 @@
     <DatasourceOption
       on:click={handleInternalTable}
       title="Create new table"
-      description="Non-Relational"
+      description="Non-relational"
       {disabled}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
@@ -175,15 +175,15 @@
     <DatasourceOption
       on:click={createSampleData}
       title="Use sample data"
-      description="Non-Relational"
-      {disabled}
+      description="Non-relational"
+      disabled={disabled || hasDefaultData}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
     </DatasourceOption>
     <DatasourceOption
       on:click={handleDataImport}
       title="Upload data"
-      description="Non-Relational"
+      description="Non-relational"
       {disabled}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
