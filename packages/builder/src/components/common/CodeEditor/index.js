@@ -102,7 +102,7 @@ export const getDefaultTheme = opts => {
   )
 }
 
-export const buildHelperInfoNode = (completion, helper, mode) => {
+export const buildHelperInfoNode = (completion, helper) => {
   const ele = document.createElement("div")
   ele.classList.add("info-bubble")
 
@@ -193,7 +193,7 @@ export const hbAutocomplete = baseCompletions => {
 
 export const jsAutocomplete = baseCompletions => {
   async function coreCompletion(context) {
-    let jsBinding = context.matchBefore(/\$\(\"[\s\w]*/)
+    let jsBinding = context.matchBefore(/\$("[\s\w]*/)
     let options = baseCompletions || []
 
     if (jsBinding) {
