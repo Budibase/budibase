@@ -72,20 +72,26 @@ describe("writethrough", () => {
           writethrough.put({ ...current, value: 4 }),
         ])
 
-        const newRev = responses.map(x => x.rev).find(x => x !== current._rev)
-        expect(newRev).toBeDefined()
-        expect(responses.map(x => x.rev)).toEqual(
-          expect.arrayContaining([current._rev, current._rev, newRev])
-        )
-        expectFunctionWasCalledTimesWith(
-          mocks.alerts.logWarn,
-          2,
-          "Ignoring redlock conflict in write-through cache"
-        )
+        // with a lock, this will work
+        const revs = responses.map(x => x.rev)
+        const startWith = ["3", "4", "5"]
+        const found = []
+        let maxRev
+        for (let starting of startWith) {
+          for (let rev of revs) {
+            if (rev?.startsWith(starting)) {
+              found.push(starting)
+            }
+            if (rev?.startsWith("5")) {
+              maxRev = rev
+            }
+          }
+        }
+        expect(found.length).toBe(3)
 
         const output = await db.get(current._id)
         expect(output.value).toBe(4)
-        expect(output._rev).toBe(newRev)
+        expect(output._rev).toBe(maxRev)
 
         current = output
       })
