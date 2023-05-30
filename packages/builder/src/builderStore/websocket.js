@@ -24,7 +24,7 @@ export const createBuilderWebsocket = () => {
     tables.replaceTable(id, table)
   })
 
-  // Table events
+  // Datasource events
   socket.on("datasource-change", ({ id, datasource }) => {
     datasources.replaceDatasource(id, datasource)
   })

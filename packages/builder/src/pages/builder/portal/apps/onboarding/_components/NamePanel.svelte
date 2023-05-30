@@ -3,6 +3,7 @@
   import PanelHeader from "./PanelHeader.svelte"
   import { APP_URL_REGEX } from "constants"
 
+  export let disabled
   export let name = ""
   export let url = ""
   export let onNext = () => {}
@@ -71,7 +72,9 @@
   {:else}
     <p>‎</p>
   {/if}
-  <Button size="L" cta disabled={!isValid} on:click={onNext}>Lets go!</Button>
+  <Button size="L" cta disabled={!isValid || disabled} on:click={onNext}
+    >Lets go!</Button
+  >
 </div>
 
 <style>
