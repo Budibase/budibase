@@ -19,6 +19,7 @@ import {
   AutomationStatus,
   AutomationMetadata,
   AutomationJob,
+  AutomationData,
 } from "@budibase/types"
 import {
   LoopStep,
@@ -37,8 +38,8 @@ const LOOP_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
-function getLoopIterations(loopStep: LoopStep, input: LoopInput) {
-  const binding = automationUtils.typecastForLooping(loopStep, input)
+function getLoopIterations(loopStep: LoopStep) {
+  let binding = loopStep.inputs.binding
   if (!binding) {
     return 0
   }
@@ -68,7 +69,6 @@ class Orchestrator {
   constructor(job: AutomationJob) {
     let automation = job.data.automation
     let triggerOutput = job.data.event
-    let timeout = job.data.event.timeout
     const metadata = triggerOutput.metadata
     this._chainCount = metadata ? metadata.automationChainCount! : 0
     this._appId = triggerOutput.appId as string
@@ -252,7 +252,7 @@ class Orchestrator {
         return
       }
     }
-
+    const start = performance.now()
     for (let step of automation.definition.steps) {
       if (timeoutFlag) {
         break
@@ -277,22 +277,17 @@ class Orchestrator {
 
       if (loopStep) {
         input = await processObject(loopStep.inputs, this._context)
-        iterations = getLoopIterations(loopStep as LoopStep, input)
+        iterations = getLoopIterations(loopStep as LoopStep)
       }
       for (let index = 0; index < iterations; index++) {
         let originalStepInput = cloneDeep(step.inputs)
         // Handle if the user has set a max iteration count or if it reaches the max limit set by us
         if (loopStep && input.binding) {
-          let newInput: any = await processObject(
-            loopStep.inputs,
-            cloneDeep(this._context)
-          )
-
           let tempOutput = { items: loopSteps, iterations: iterationCount }
           try {
-            newInput.binding = automationUtils.typecastForLooping(
+            loopStep.inputs.binding = automationUtils.typecastForLooping(
               loopStep as LoopStep,
-              newInput
+              loopStep.inputs as LoopInput
             )
           } catch (err) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
@@ -303,13 +298,12 @@ class Orchestrator {
             loopStep = undefined
             break
           }
-
           let item = []
           if (
             typeof loopStep.inputs.binding === "string" &&
             loopStep.inputs.option === "String"
           ) {
-            item = automationUtils.stringSplit(newInput.binding)
+            item = automationUtils.stringSplit(loopStep.inputs.binding)
           } else if (Array.isArray(loopStep.inputs.binding)) {
             item = loopStep.inputs.binding
           }
@@ -351,6 +345,7 @@ class Orchestrator {
               }
             }
           }
+
           if (
             index === env.AUTOMATION_MAX_ITERATIONS ||
             index === parseInt(loopStep.inputs.iterations)
@@ -479,8 +474,22 @@ class Orchestrator {
       }
     }
 
+    const end = performance.now()
+    const executionTime = end - start
+
+    console.log(`Execution time: ${executionTime} milliseconds`)
+
     // store the logs for the automation run
-    await storeLog(this._automation, this.executionOutput)
+    try {
+      await storeLog(this._automation, this.executionOutput)
+    } catch (e: any) {
+      if (e.status === 413 && e.request?.data) {
+        // if content is too large we shouldn't log it
+        delete e.request.data
+        e.request.data = { message: "removed due to large size" }
+      }
+      logging.logAlert("Error writing automation log", e)
+    }
     if (isProdAppID(this._appId) && isRecurring(automation) && metadata) {
       await this.updateMetadata(metadata)
     }
@@ -488,23 +497,31 @@ class Orchestrator {
   }
 }
 
-export function execute(job: Job, callback: WorkerCallback) {
+export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   const appId = job.data.event.appId
+  const automationId = job.data.automation._id
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
-  return context.doInAppContext(appId, async () => {
-    const envVars = await sdkUtils.getEnvironmentVariables()
-    // put into automation thread for whole context
-    await context.doInEnvironmentContext(envVars, async () => {
-      const automationOrchestrator = new Orchestrator(job)
-      try {
-        const response = await automationOrchestrator.execute()
-        callback(null, response)
-      } catch (err) {
-        callback(err)
-      }
-    })
+  if (!automationId) {
+    throw new Error("Unable to execute, event doesn't contain automation ID.")
+  }
+  return context.doInAutomationContext({
+    appId,
+    automationId,
+    task: async () => {
+      const envVars = await sdkUtils.getEnvironmentVariables()
+      // put into automation thread for whole context
+      await context.doInEnvironmentContext(envVars, async () => {
+        const automationOrchestrator = new Orchestrator(job)
+        try {
+          const response = await automationOrchestrator.execute()
+          callback(null, response)
+        } catch (err) {
+          callback(err)
+        }
+      })
+    },
   })
 }
 

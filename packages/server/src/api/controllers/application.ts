@@ -26,10 +26,13 @@ import {
   env as envCore,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
-import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
+import {
+  DEFAULT_BB_DATASOURCE_ID,
+  buildDefaultDocs,
+} from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { stringToReadStream, isQsTrue } from "../../utilities"
-import { getLocksById } from "../../utilities/redis"
+import { getLocksById, doesUserHaveLock } from "../../utilities/redis"
 import {
   updateClientLibrary,
   backupClientLibrary,
@@ -111,11 +114,7 @@ function checkAppName(
   }
 }
 
-async function createInstance(
-  appId: string,
-  template: any,
-  includeSampleData: boolean
-) {
+async function createInstance(appId: string, template: any) {
   const db = context.getAppDB()
   await db.put({
     _id: "_design/database",
@@ -142,21 +141,25 @@ async function createInstance(
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
-
-    if (includeSampleData) {
-      // create ootb stock db
-      await addDefaultTables(db)
-    }
   }
 
   return { _id: appId }
 }
 
-async function addDefaultTables(db: Database) {
-  const defaultDbDocs = buildDefaultDocs()
+export const addSampleData = async (ctx: UserCtx) => {
+  const db = context.getAppDB()
 
-  // add in the default db data docs - tables, datasource, rows and links
-  await db.bulkDocs([...defaultDbDocs])
+  try {
+    // Check if default datasource exists before creating it
+    await sdk.datasources.get(DEFAULT_BB_DATASOURCE_ID)
+  } catch (err: any) {
+    const defaultDbDocs = buildDefaultDocs()
+
+    // add in the default db data docs - tables, datasource, rows and links
+    await db.bulkDocs([...defaultDbDocs])
+  }
+
+  ctx.status = 200
 }
 
 export async function fetch(ctx: UserCtx) {
@@ -227,6 +230,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
     screens,
     layouts,
     clientLibPath,
+    hasLock: await doesUserHaveLock(application.appId, ctx.user),
   }
 }
 
@@ -247,16 +251,11 @@ async function performAppCreate(ctx: UserCtx) {
   if (ctx.request.files && ctx.request.files.templateFile) {
     instanceConfig.file = ctx.request.files.templateFile
   }
-  const includeSampleData = isQsTrue(ctx.request.body.sampleData)
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))
 
   return await context.doInAppContext(appId, async () => {
-    const instance = await createInstance(
-      appId,
-      instanceConfig,
-      includeSampleData
-    )
+    const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
 
     let newApplication: App = {
