@@ -13,6 +13,10 @@
   import { validateDatasourceConfig } from "builderStore/datasource"
   import cloneDeep from "lodash/cloneDeepWith"
   import IntegrationConfigForm from "../TableIntegrationMenu/IntegrationConfigForm.svelte"
+  import { goto } from "@roxi/routify"
+
+  import { saveDatasource } from "builderStore/datasource"
+  import { DatasourceFeature } from "@budibase/types"
 
   export let integration
   export let continueSetupId = false
@@ -36,19 +40,30 @@
     ? GoogleDatasouceConfigStep.SET_URL
     : GoogleDatasouceConfigStep.AUTH
 
-  let isValid
+  let isValid = false
 
   const modalConfig = {
     [GoogleDatasouceConfigStep.AUTH]: {},
     [GoogleDatasouceConfigStep.SET_URL]: {
       confirmButtonText: "Connect",
       onConfirm: async () => {
-        const resp = await validateDatasourceConfig(datasource)
-        if (!resp.connected) {
-          notifications.error(`Unable to connect - ${resp.error}`)
+        if (integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
+          const resp = await validateDatasourceConfig(datasource)
+          if (!resp.connected) {
+            notifications.error(`Unable to connect - ${resp.error}`)
+            return false
+          }
         }
 
-        return false
+        try {
+          const resp = await saveDatasource(datasource)
+          $goto(`./datasource/${resp._id}`)
+          notifications.success(`Datasource created successfully.`)
+        } catch (err) {
+          notifications.error(err?.message ?? "Error saving datasource")
+          // prevent the modal from closing
+          return false
+        }
       },
     },
   }
@@ -61,6 +76,7 @@
   confirmText={modalConfig[step].confirmButtonText}
   showConfirmButton={!!modalConfig[step].onConfirm}
   onConfirm={modalConfig[step].onConfirm}
+  disabled={!isValid}
 >
   {#if step === GoogleDatasouceConfigStep.AUTH}
     <!-- check true and false directly, don't render until flag is set -->
