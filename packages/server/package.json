@@ -100,6 +100,7 @@
     "mssql": "6.2.3",
     "mysql2": "2.3.3",
     "node-fetch": "2.6.7",
+    "object-sizeof": "2.6.1",
     "open": "8.4.0",
     "openai": "^3.2.1",
     "pg": "8.10.0",

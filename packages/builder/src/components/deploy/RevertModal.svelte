@@ -9,6 +9,8 @@
   import { store } from "builderStore"
   import { API } from "api"
 
+  export let disabled = false
+
   let revertModal
   let appName
 
@@ -34,6 +36,7 @@
   size="M"
   tooltip="Revert changes"
   on:click={revertModal.show}
+  {disabled}
 />
 
 <Modal bind:this={revertModal}>

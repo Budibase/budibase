@@ -58,6 +58,7 @@
     justify-content: flex-start;
     align-items: stretch;
     transition: width 130ms ease-out;
+    overflow: hidden;
   }
   .panel.borderLeft {
     border-left: var(--border-light);
