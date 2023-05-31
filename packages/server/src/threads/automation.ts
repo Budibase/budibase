@@ -31,6 +31,7 @@ import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
 import { processObject } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
+import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 const FILTER_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.FILTER.stepId
