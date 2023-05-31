@@ -183,7 +183,7 @@ class RedisWrapper {
     CLOSED = false
     init(this._select)
     await waitForConnection(this._select)
-    if (this._select) {
+    if (this._select && !env.isTest()) {
       this.getClient().select(this._select)
     }
     return this
