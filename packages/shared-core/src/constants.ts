@@ -72,20 +72,20 @@ export const SocketEvents = {
   UserUpdate: "UserUpdate",
   UserDisconnect: "UserDisconnect",
   GetUsers: "GetUsers",
-  Heartbeat: "Heartbeat"
+  Heartbeat: "Heartbeat",
 }
 
 export const GridSocketEvents = {
   RowChange: "RowChange",
   TableChange: "TableChange",
   SelectTable: "SelectTable",
-  SelectCell: "SelectCell"
+  SelectCell: "SelectCell",
 }
 
 export const BuilderSocketEvents = {
   SelectApp: "SelectApp",
   TableChange: "TableChange",
-  DatasourceChange: "DatasourceChange"
+  DatasourceChange: "DatasourceChange",
 }
 
 export const SocketSessionTTL = 60
