@@ -1,14 +1,14 @@
 import { createWebsocket } from "@budibase/frontend-core"
 import { userStore } from "builderStore"
 import { datasources, tables } from "stores/backend"
-import { SocketEvents, BuilderSocketEvents } from "@budibase/shared-core"
+import { SocketEvent, BuilderSocketEvent } from "@budibase/shared-core"
 
 export const createBuilderWebsocket = appId => {
   const socket = createWebsocket("/socket/builder")
 
   // Built-in events
   socket.on("connect", () => {
-    socket.emit(BuilderSocketEvents.SelectApp, appId, response => {
+    socket.emit(BuilderSocketEvent.SelectApp, appId, response => {
       userStore.actions.init(response.users)
     })
   })
@@ -17,16 +17,16 @@ export const createBuilderWebsocket = appId => {
   })
 
   // User events
-  socket.on(SocketEvents.UserUpdate, userStore.actions.updateUser)
-  socket.on(SocketEvents.UserDisconnect, userStore.actions.removeUser)
+  socket.on(SocketEvent.UserUpdate, userStore.actions.updateUser)
+  socket.on(SocketEvent.UserDisconnect, userStore.actions.removeUser)
 
   // Table events
-  socket.on(BuilderSocketEvents.TableChange, ({ id, table }) => {
+  socket.on(BuilderSocketEvent.TableChange, ({ id, table }) => {
     tables.replaceTable(id, table)
   })
 
   // Datasource events
-  socket.on(BuilderSocketEvents.DatasourceChange, ({ id, datasource }) => {
+  socket.on(BuilderSocketEvent.DatasourceChange, ({ id, datasource }) => {
     datasources.replaceDatasource(id, datasource)
   })
 

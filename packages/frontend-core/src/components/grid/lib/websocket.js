@@ -1,6 +1,6 @@
 import { get } from "svelte/store"
 import { createWebsocket } from "../../../utils"
-import { SocketEvents, GridSocketEvents } from "@budibase/shared-core"
+import { SocketEvent, GridSocketEvent } from "@budibase/shared-core"
 
 export const createGridWebsocket = context => {
   const { rows, tableId, users, focusedCellId, table } = context
@@ -11,7 +11,7 @@ export const createGridWebsocket = context => {
       return
     }
     // Identify which table we are editing
-    socket.emit(GridSocketEvents.SelectTable, tableId, response => {
+    socket.emit(GridSocketEvent.SelectTable, tableId, response => {
       // handle initial connection info
       users.set(response.users)
     })
@@ -26,15 +26,15 @@ export const createGridWebsocket = context => {
   })
 
   // User events
-  socket.on(SocketEvents.UserUpdate, user => {
+  socket.on(SocketEvent.UserUpdate, user => {
     users.actions.updateUser(user)
   })
-  socket.on(SocketEvents.UserDisconnect, user => {
+  socket.on(SocketEvent.UserDisconnect, user => {
     users.actions.removeUser(user)
   })
 
   // Row events
-  socket.on(GridSocketEvents.RowChange, async data => {
+  socket.on(GridSocketEvent.RowChange, async data => {
     if (data.id) {
       rows.actions.replaceRow(data.id, data.row)
     } else if (data.row.id) {
@@ -44,7 +44,7 @@ export const createGridWebsocket = context => {
   })
 
   // Table events
-  socket.on(GridSocketEvents.TableChange, data => {
+  socket.on(GridSocketEvent.TableChange, data => {
     // Only update table if one exists. If the table was deleted then we don't
     // want to know - let the builder navigate away
     if (data.table) {
@@ -57,7 +57,7 @@ export const createGridWebsocket = context => {
 
   // Notify selected cell changes
   focusedCellId.subscribe($focusedCellId => {
-    socket.emit(GridSocketEvents.SelectCell, $focusedCellId)
+    socket.emit(GridSocketEvent.SelectCell, $focusedCellId)
   })
 
   return () => socket?.disconnect()
