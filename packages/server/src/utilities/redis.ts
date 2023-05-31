@@ -25,7 +25,9 @@ export async function init() {
 
   // Duplicate the socket client for pub/sub
   socketClient = await redis.clients.getSocketClient()
-  socketSubClient = socketClient.getClient().duplicate()
+  if (!env.isTest()) {
+    socketSubClient = socketClient.getClient().duplicate()
+  }
 }
 
 export async function shutdown() {
