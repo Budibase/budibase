@@ -32,8 +32,9 @@
   const integrationName = IntegrationNames[IntegrationTypes.GOOGLE_SHEETS]
 
   export const GoogleDatasouceConfigStep = {
-    AUTH: "Auth",
-    SET_URL: "Set_url",
+    AUTH: "auth",
+    SET_URL: "set_url",
+    SET_SHEETS: "set_sheets",
   }
 
   let step = continueSetupId
@@ -43,8 +44,11 @@
   let isValid = false
 
   const modalConfig = {
-    [GoogleDatasouceConfigStep.AUTH]: {},
+    [GoogleDatasouceConfigStep.AUTH]: {
+      title: `Connect to ${integrationName}`,
+    },
     [GoogleDatasouceConfigStep.SET_URL]: {
+      title: `Connect your spreadsheet`,
       confirmButtonText: "Connect",
       onConfirm: async () => {
         const checkConnection =
@@ -57,14 +61,25 @@
           }
         }
 
+        step = GoogleDatasouceConfigStep.SET_SHEETS
+        notifications.success(
+          checkConnection
+            ? "Connection Successful"
+            : `Datasource created successfully.`
+        )
+
+        // prevent the modal from closing
+        return false
+      },
+    },
+    [GoogleDatasouceConfigStep.SET_SHEETS]: {
+      title: `Choose your sheets`,
+      confirmButtonText: "Fetch sheets",
+      onConfirm: async () => {
         try {
           const resp = await saveDatasource(datasource)
           $goto(`./datasource/${resp._id}`)
-          notifications.success(
-            checkConnection
-              ? "Connection Successful"
-              : `Datasource created successfully.`
-          )
+          notifications.success(`Datasource created successfully.`)
         } catch (err) {
           notifications.error(err?.message ?? "Error saving datasource")
           // prevent the modal from closing
@@ -76,7 +91,7 @@
 </script>
 
 <ModalContent
-  title={`Connect to ${integrationName}`}
+  title={modalConfig[step].title}
   cancelText="Cancel"
   size="L"
   confirmText={modalConfig[step].confirmButtonText}
@@ -111,6 +126,11 @@
         creating={true}
         on:valid={e => (isValid = e.detail)}
       />
+    </Layout>
+  {/if}
+  {#if step === GoogleDatasouceConfigStep.SET_SHEETS}
+    <Layout noPadding no>
+      <Body size="S">Select which spreadsheet you want to connect.</Body>
     </Layout>
   {/if}
 </ModalContent>
