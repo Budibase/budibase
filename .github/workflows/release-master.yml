@@ -1,5 +1,7 @@
 name: Budibase Release
-concurrency: release
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 on:
   push:

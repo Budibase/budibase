@@ -1,5 +1,7 @@
 name: Tag prerelease
-concurrency: release-prerelease
+concurrency:
+  group: tag-prerelease
+  cancel-in-progress: false
 
 on:
   push:

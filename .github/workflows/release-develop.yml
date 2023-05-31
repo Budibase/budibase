@@ -1,5 +1,7 @@
 name: Budibase Prerelease
-concurrency: release-prerelease
+concurrency:
+  group: release-prerelease
+  cancel-in-progress: false
 
 on:
   push:
