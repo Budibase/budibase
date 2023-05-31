@@ -77,7 +77,7 @@
 
   // For handlebars only.
   const bindStyle = new MatchDecorator({
-    regexp: /{{[."#\-\w\s\]\[]*}}/g,
+    regexp: /{{[."#\-\w\s\][]*}}/g,
     decoration: () => {
       return Decoration.mark({
         tag: "span",
