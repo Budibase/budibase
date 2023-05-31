@@ -174,6 +174,9 @@ class RedisWrapper {
     CLOSED = false
     init(this._select)
     await waitForConnection(this._select)
+    if (this._select && !env.isTest()) {
+      this.getClient().select(this._select)
+    }
     return this
   }
 
@@ -198,6 +201,11 @@ class RedisWrapper {
   async keys(pattern: string) {
     const db = this._db
     return this.getClient().keys(addDbPrefix(db, pattern))
+  }
+
+  async exists(key: string) {
+    const db = this._db
+    return await this.getClient().exists(addDbPrefix(db, key))
   }
 
   async get(key: string) {
