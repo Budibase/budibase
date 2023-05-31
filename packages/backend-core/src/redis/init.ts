@@ -14,10 +14,7 @@ async function init() {
   appClient = await new Client(utils.Databases.APP_METADATA).init()
   cacheClient = await new Client(utils.Databases.GENERIC_CACHE).init()
   lockClient = await new Client(utils.Databases.LOCKS).init()
-  writethroughClient = await new Client(
-    utils.Databases.WRITE_THROUGH,
-    utils.SelectableDatabase.WRITE_THROUGH
-  ).init()
+  writethroughClient = await new Client(utils.Databases.WRITE_THROUGH).init()
 }
 
 export async function shutdown() {
