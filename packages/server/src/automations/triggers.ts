@@ -9,7 +9,8 @@ import { checkTestFlag } from "../utilities/redis"
 import * as utils from "./utils"
 import env from "../environment"
 import { context, db as dbCore } from "@budibase/backend-core"
-import { Automation, Row } from "@budibase/types"
+import { Automation, Row, AutomationData, AutomationJob } from "@budibase/types"
+import { executeSynchronously } from "../threads/automation"
 
 export const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
@@ -91,7 +92,7 @@ emitter.on("row:delete", async function (event) {
 
 export async function externalTrigger(
   automation: Automation,
-  params: { fields: Record<string, any> },
+  params: { fields: Record<string, any>; timeout?: number },
   { getResponses }: { getResponses?: boolean } = {}
 ) {
   if (
@@ -109,14 +110,16 @@ export async function externalTrigger(
     }
     params.fields = coercedFields
   }
-  const data: Record<string, any> = { automation, event: params }
+
+  const data: AutomationData = { automation, event: params as any }
   if (getResponses) {
     data.event = {
       ...data.event,
       appId: context.getAppId(),
       automation,
     }
-    return utils.processEvent({ data })
+    const job = { data } as AutomationJob
+    return executeSynchronously(job)
   } else {
     return automationQueue.add(data, JOB_OPTS)
   }

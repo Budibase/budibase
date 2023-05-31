@@ -1,4 +1,6 @@
 import {
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
   FieldType,
@@ -61,9 +63,13 @@ const SCHEMA: Integration = {
   relationships: false,
   docs: "https://developers.google.com/sheets/api/quickstart/nodejs",
   description:
-    "Create and collaborate on online spreadsheets in real-time and from any device. ",
+    "Create and collaborate on online spreadsheets in real-time and from any device.",
   friendlyName: "Google Sheets",
   type: "Spreadsheet",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+  },
   datasource: {
     spreadsheetId: {
       display: "Google Sheet URL",
@@ -137,6 +143,18 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     this.config = config
     const spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
     this.client = new GoogleSpreadsheet(spreadsheetId)
+  }
+
+  async testConnection(): Promise<ConnectionInfo> {
+    try {
+      await this.connect()
+      return { connected: true }
+    } catch (e: any) {
+      return {
+        connected: false,
+        error: e.message as string,
+      }
+    }
   }
 
   getBindingIdentifier() {
@@ -222,6 +240,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       console.error("Error connecting to google sheets", err)
       throw err
     }
+  }
+
+  async getTableNames(): Promise<string[]> {
+    await this.connect()
+    const sheets = this.client.sheetsByIndex
+    return sheets.map(s => s.title)
   }
 
   getTableSchema(title: string, headerValues: string[], id?: string) {

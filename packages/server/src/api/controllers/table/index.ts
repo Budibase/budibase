@@ -11,6 +11,7 @@ import { context, events } from "@budibase/backend-core"
 import { Table, UserCtx } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
+import { builderSocket } from "../../../websockets"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
@@ -77,6 +78,7 @@ export async function save(ctx: UserCtx) {
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:save`, appId, savedTable)
   ctx.body = savedTable
+  builderSocket.emitTableUpdate(ctx, savedTable)
 }
 
 export async function destroy(ctx: UserCtx) {
@@ -89,6 +91,7 @@ export async function destroy(ctx: UserCtx) {
   ctx.status = 200
   ctx.table = deletedTable
   ctx.body = { message: `Table ${tableId} deleted.` }
+  builderSocket.emitTableDeletion(ctx, tableId)
 }
 
 export async function bulkImport(ctx: UserCtx) {
@@ -97,6 +100,7 @@ export async function bulkImport(ctx: UserCtx) {
   // right now we don't trigger anything for bulk import because it
   // can only be done in the builder, but in the future we may need to
   // think about events for bulk items
+
   ctx.status = 200
   ctx.body = { message: `Bulk rows created.` }
 }

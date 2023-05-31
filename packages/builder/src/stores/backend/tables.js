@@ -22,18 +22,6 @@ export function createTablesStore() {
     }))
   }
 
-  const fetchTable = async tableId => {
-    const table = await API.fetchTableDefinition(tableId)
-
-    store.update(state => {
-      const indexToUpdate = state.list.findIndex(t => t._id === table._id)
-      state.list[indexToUpdate] = table
-      return {
-        ...state,
-      }
-    })
-  }
-
   const select = tableId => {
     store.update(state => ({
       ...state,
@@ -74,20 +62,40 @@ export function createTablesStore() {
     }
 
     const savedTable = await API.saveTable(updatedTable)
-    await fetch()
-    if (table.type === "external") {
-      await datasources.fetch()
-    }
-    await select(savedTable._id)
+    replaceTable(table._id, savedTable)
+    await datasources.fetch()
+    select(savedTable._id)
     return savedTable
   }
 
   const deleteTable = async table => {
+    if (!table?._id || !table?._rev) {
+      return
+    }
     await API.deleteTable({
-      tableId: table?._id,
-      tableRev: table?._rev,
+      tableId: table._id,
+      tableRev: table._rev,
     })
-    await fetch()
+    replaceTable(table._id, null)
+  }
+
+  const assignDisplayColumn = ({
+    primaryDisplay,
+    draft,
+    field,
+    originalName,
+  }) => {
+    if (primaryDisplay) {
+      draft.primaryDisplay = field.name
+    } else if (draft.primaryDisplay === originalName) {
+      const fields = Object.keys(draft.schema)
+      // pick another display column randomly if unselecting
+      draft.primaryDisplay = fields.filter(
+        name =>
+          (name !== originalName || name !== field.name) &&
+          !["attachment", "json", "link"].includes(draft.schema[name].type)
+      )[0]
+    }
   }
 
   const saveField = async ({
@@ -109,15 +117,13 @@ export function createTablesStore() {
     }
 
     // Optionally set display column
-    if (primaryDisplay) {
-      draft.primaryDisplay = field.name
-    } else if (draft.primaryDisplay === originalName) {
-      const fields = Object.keys(draft.schema)
-      // pick another display column randomly if unselecting
-      draft.primaryDisplay = fields.filter(
-        name => name !== originalName || name !== field
-      )[0]
-    }
+    assignDisplayColumn({
+      primaryDisplay,
+      draft,
+      field,
+      originalName,
+    })
+
     if (indexes) {
       draft.indexes = indexes
     }
@@ -131,39 +137,66 @@ export function createTablesStore() {
 
   const deleteField = async field => {
     let draft = cloneDeep(get(derivedStore).selected)
+    assignDisplayColumn({
+      primaryDisplay: false,
+      draft,
+      field,
+      originalName: draft.primaryDisplay === field.name ? field.name : false,
+    })
     delete draft.schema[field.name]
     await save(draft)
   }
 
-  const updateTable = table => {
-    const index = get(store).list.findIndex(x => x._id === table._id)
-    if (index === -1) {
+  // Handles external updates of tables
+  const replaceTable = (tableId, table) => {
+    if (!tableId) {
       return
     }
 
-    // This function has to merge state as there discrepancies with the table
-    // API endpoints. The table list endpoint and get table endpoint use the
-    // "type" property to mean different things.
-    store.update(state => {
-      state.list[index] = {
-        ...table,
-        type: state.list[index].type,
-      }
-      return state
-    })
+    // Handle deletion
+    if (!table) {
+      store.update(state => ({
+        ...state,
+        list: state.list.filter(x => x._id !== tableId),
+      }))
+      return
+    }
+
+    // Add new table
+    const index = get(store).list.findIndex(x => x._id === table._id)
+    if (index === -1) {
+      store.update(state => ({
+        ...state,
+        list: [...state.list, table],
+      }))
+    }
+
+    // Update existing table
+    else if (table) {
+      // This function has to merge state as there discrepancies with the table
+      // API endpoints. The table list endpoint and get table endpoint use the
+      // "type" property to mean different things.
+      store.update(state => {
+        state.list[index] = {
+          ...table,
+          type: state.list[index].type,
+        }
+        return state
+      })
+    }
   }
 
   return {
+    ...store,
     subscribe: derivedStore.subscribe,
     fetch,
-    fetchTable,
     init: fetch,
     select,
     save,
     delete: deleteTable,
     saveField,
     deleteField,
-    updateTable,
+    replaceTable,
   }
 }
 

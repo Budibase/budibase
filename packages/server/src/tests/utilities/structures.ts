@@ -199,6 +199,48 @@ export function loopAutomation(tableId: string, loopOpts?: any): Automation {
   return automation as Automation
 }
 
+export function collectAutomation(tableId?: string): Automation {
+  const automation: any = {
+    name: "looping",
+    type: "automation",
+    definition: {
+      steps: [
+        {
+          id: "b",
+          type: "ACTION",
+          internal: true,
+          stepId: AutomationActionStepId.EXECUTE_SCRIPT,
+          inputs: {
+            code: "return [1,2,3]",
+          },
+          schema: BUILTIN_ACTION_DEFINITIONS.EXECUTE_SCRIPT.schema,
+        },
+        {
+          id: "c",
+          type: "ACTION",
+          internal: true,
+          stepId: AutomationActionStepId.COLLECT,
+          inputs: {
+            collection: "{{ literal steps.1.value }}",
+          },
+          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
+        },
+      ],
+      trigger: {
+        id: "a",
+        type: "TRIGGER",
+        event: "row:save",
+        stepId: AutomationTriggerStepId.ROW_SAVED,
+        inputs: {
+          tableId,
+        },
+        schema: TRIGGER_DEFINITIONS.ROW_SAVED.schema,
+      },
+    },
+  }
+  return automation as Automation
+}
+
 export function basicRow(tableId: string) {
   return {
     name: "Test Contact",

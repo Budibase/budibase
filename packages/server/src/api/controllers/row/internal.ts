@@ -118,8 +118,11 @@ export async function patch(ctx: UserCtx) {
     combinedRow[key] = inputs[key]
   }
 
+  // need to copy the table so it can be differenced on way out
+  const tableClone = cloneDeep(dbTable)
+
   // this returns the table and row incase they have been updated
-  let { table, row } = inputProcessing(ctx.user, dbTable, combinedRow)
+  let { table, row } = inputProcessing(ctx.user, tableClone, combinedRow)
   const validateResult = await utils.validate({
     row,
     table,
@@ -163,7 +166,12 @@ export async function save(ctx: UserCtx) {
 
   // this returns the table and row incase they have been updated
   const dbTable = await db.get(inputs.tableId)
-  let { table, row } = inputProcessing(ctx.user, dbTable, inputs)
+
+  // need to copy the table so it can be differenced on way out
+  const tableClone = cloneDeep(dbTable)
+
+  let { table, row } = inputProcessing(ctx.user, tableClone, inputs)
+
   const validateResult = await utils.validate({
     row,
     table,
@@ -407,7 +415,7 @@ export async function exportRows(ctx: UserCtx) {
 
     result = await outputProcessing(table, response)
   } else if (query) {
-    let searchResponse = await exports.search(ctx)
+    let searchResponse = await search(ctx)
     result = searchResponse.rows
   }
 
