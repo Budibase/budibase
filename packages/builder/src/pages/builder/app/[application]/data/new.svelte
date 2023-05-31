@@ -17,6 +17,7 @@
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons/index.js"
   import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
+  import { onMount } from "svelte"
 
   let internalTableModal
   let externalDatasourceModal
@@ -24,6 +25,7 @@
   let integration = null
   let disabled = false
   let promptUpload = false
+  let continueGoogleSetup
 
   $: hasData = $datasources.list.length > 1 || $tables.list.length > 1
   $: hasDefaultData =
@@ -135,15 +137,29 @@
   }
 
   $: fetchIntegrations()
+
+  onMount(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const action = urlParams.get("action")
+    if (action === "google_continue") {
+      continueGoogleSetup = true
+      externalDatasourceModal.show()
+    }
+  })
 </script>
 
 <Modal bind:this={internalTableModal}>
   <CreateTableModal {promptUpload} afterSave={handleInternalTableSave} />
 </Modal>
 
-<Modal bind:this={externalDatasourceModal}>
-  {#if integration?.auth?.type === "google"}
-    <GoogleDatasourceConfigModal {integration} />
+<Modal
+  bind:this={externalDatasourceModal}
+  on:hide={() => {
+    continueGoogleSetup = false
+  }}
+>
+  {#if integration?.auth?.type === "google" || continueGoogleSetup}
+    <GoogleDatasourceConfigModal continueSetup={continueGoogleSetup} />
   {:else}
     <DatasourceConfigModal {integration} />
   {/if}
