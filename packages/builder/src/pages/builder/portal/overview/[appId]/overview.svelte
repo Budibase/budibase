@@ -51,6 +51,26 @@
     return groups.actions.getGroupAppIds(group).includes(prodAppId)
   })
 
+  const updateDeploymentString = () => {
+    return deployments?.length
+      ? processStringSync(
+          "Last published {{ duration time 'millisecond' }} ago",
+          {
+            time:
+              new Date().getTime() -
+              new Date(deployments[0].updatedAt).getTime(),
+          }
+        )
+      : ""
+  }
+  // App is updating in the layout asynchronously
+  $: if ($store.appId?.length) {
+    fetchDeployments().then(resp => {
+      deployments = resp
+    })
+  }
+  $: deploymentString = updateDeploymentString(deployments)
+
   async function fetchAppEditor(editorId) {
     appEditor = await users.get(editorId)
   }
@@ -107,19 +127,11 @@
           </div>
 
           <div class="status-text">
-            {#if deployments?.length}
-              {processStringSync(
-                "Last published {{ duration time 'millisecond' }} ago",
-                {
-                  time:
-                    new Date().getTime() -
-                    new Date(deployments[0].updatedAt).getTime(),
-                }
-              )}
-              {#if isPublished}
-                - <Link on:click={unpublishModal.show}>Unpublish</Link>
-              {/if}
+            {#if isPublished}
+              {deploymentString}
+              - <Link on:click={unpublishModal.show}>Unpublish</Link>
             {/if}
+
             {#if !deployments?.length}
               -
             {/if}
