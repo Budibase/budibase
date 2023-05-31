@@ -51,9 +51,9 @@ export const deriveStores = context => {
     }
   }
 
-  const removeUser = user => {
+  const removeUser = sessionId => {
     users.update(state => {
-      return state.filter(x => x.sessionId !== user.sessionId)
+      return state.filter(x => x.sessionId !== sessionId)
     })
   }
 

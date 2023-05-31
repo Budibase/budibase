@@ -41,7 +41,7 @@ export enum Databases {
  */
 export enum SelectableDatabase {
   DEFAULT = 0,
-  WRITE_THROUGH = 1,
+  SOCKET_IO = 1,
   UNUSED_1 = 2,
   UNUSED_2 = 3,
   UNUSED_3 = 4,
