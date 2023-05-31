@@ -3,7 +3,6 @@
   import { IntegrationNames } from "constants/backend"
   import cloneDeep from "lodash/cloneDeepWith"
   import GoogleButton from "../_components/GoogleButton.svelte"
-  import { saveDatasource as save } from "builderStore/datasource"
   import { organisation } from "stores/portal"
   import { onMount } from "svelte"
 
@@ -33,7 +32,7 @@
         ]} integration.</Body
       >
     </Layout>
-    <GoogleButton preAuthStep={() => save(datasource, true)} samePage />
+    <GoogleButton samePage />
   {:else if isGoogleConfigured === false}
     <Body size="S"
       >Google authentication is not enabled, please complete Google SSO
