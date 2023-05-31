@@ -1,12 +1,13 @@
 import { redis } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
-import { ContextUser, SocketUser } from "@budibase/types"
+import { ContextUser } from "@budibase/types"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
-let devAppClient: any, debounceClient: any, flagClient: any, socketClient: any
+let devAppClient: any, debounceClient: any, flagClient: any
 
 // We need to maintain a duplicate client for socket.io pub/sub
+let socketClient: any
 let socketSubClient: any
 
 // We init this as we want to keep the connection open all the time
@@ -15,13 +16,12 @@ export async function init() {
   devAppClient = new redis.Client(redis.utils.Databases.DEV_LOCKS)
   debounceClient = new redis.Client(redis.utils.Databases.DEBOUNCE)
   flagClient = new redis.Client(redis.utils.Databases.FLAGS)
-  socketClient = new redis.Client(redis.utils.Databases.SOCKET_IO, redis.utils.SelectableDatabase.SOCKET_IO)
   await devAppClient.init()
   await debounceClient.init()
   await flagClient.init()
-  await socketClient.init()
 
   // Duplicate the socket client for pub/sub
+  socketClient = await redis.clients.getSocketClient()
   socketSubClient = socketClient.getClient().duplicate()
 }
 
@@ -30,7 +30,6 @@ export async function shutdown() {
   if (devAppClient) await devAppClient.finish()
   if (debounceClient) await debounceClient.finish()
   if (flagClient) await flagClient.finish()
-  if (socketClient) await socketClient.finish()
   if (socketSubClient) socketSubClient.disconnect()
   // shutdown core clients
   await redis.clients.shutdown()
@@ -96,14 +95,6 @@ export async function checkTestFlag(id: string) {
 
 export async function clearTestFlag(id: string) {
   await devAppClient.delete(id)
-}
-
-export async function getSocketUsers(path: string, room: string) {
-  return await socketClient.get(`${path}:${room}`)
-}
-
-export async function setSocketUsers(path: string, room: string, users: SocketUser[]) {
-  await socketClient.store(`${path}:${room}`, users)
 }
 
 export function getSocketPubSubClients() {

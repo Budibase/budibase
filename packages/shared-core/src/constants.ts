@@ -71,7 +71,8 @@ export const SqlNumberTypeRangeMap = {
 export const SocketEvents = {
   UserUpdate: "UserUpdate",
   UserDisconnect: "UserDisconnect",
-  GetUsers: "GetUsers"
+  GetUsers: "GetUsers",
+  Heartbeat: "Heartbeat"
 }
 
 export const GridSocketEvents = {
@@ -82,6 +83,9 @@ export const GridSocketEvents = {
 }
 
 export const BuilderSocketEvents = {
+  SelectApp: "SelectApp",
   TableChange: "TableChange",
   DatasourceChange: "DatasourceChange"
 }
+
+export const SocketSessionTTL = 60

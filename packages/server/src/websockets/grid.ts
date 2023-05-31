@@ -18,9 +18,9 @@ export default class GridSocket extends BaseSocket {
     socket.on(GridSocketEvents.SelectTable, async (tableId, callback) => {
       await this.joinRoom(socket, tableId)
 
-      // Reply with all users in current roome
-      const users = await this.getSocketUsers(tableId)
-      callback({ users })
+      // Reply with all users in current room
+      const sessions = await this.getRoomSessions(tableId)
+      callback({ users: sessions })
     })
 
     // Handle users selecting a new cell
