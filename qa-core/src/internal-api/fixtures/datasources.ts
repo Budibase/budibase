@@ -1,4 +1,7 @@
+import { Datasource } from "@budibase/types"
 import { DatasourceRequest } from "../../types"
+import { generator } from "../../shared"
+
 // Add information about the data source to the fixtures file from 1password
 export const mongoDB = (): DatasourceRequest => {
   return {
@@ -69,4 +72,51 @@ export const restAPI = (): DatasourceRequest => {
     },
     fetchSchema: false,
   }
+}
+
+export const generateRelationshipForMySQL = (
+  updatedDataSourceJson: any
+): Datasource => {
+  const entities = updatedDataSourceJson!.datasource!.entities!
+  const datasourceId = updatedDataSourceJson!.datasource!._id!
+  const relationShipBody = {
+    ...updatedDataSourceJson.datasource,
+    entities: {
+      ...updatedDataSourceJson.datasource.entities,
+      employees: {
+        ...entities.employees,
+        schema: {
+          ...entities.employees.schema,
+          salaries: {
+            tableId: `${datasourceId}__salaries`,
+            name: "salaries",
+            relationshipType: "many-to-one",
+            fieldName: "salary",
+            type: "link",
+            main: true,
+            _id: generator.string(),
+            foreignKey: "emp_no",
+          },
+        },
+      },
+      titles: {
+        ...entities.titles,
+        schema: {
+          ...entities.titles.schema,
+          employees: {
+            tableId: `${datasourceId}__employees`,
+            name: "employees",
+            relationshipType: "one-to-many",
+            fieldName: "emp_no",
+            type: "link",
+            main: true,
+            _id: generator.string(),
+            foreignKey: "emp_no",
+          },
+        },
+      },
+    },
+  }
+
+  return relationShipBody
 }
