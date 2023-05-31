@@ -88,7 +88,7 @@ export async function postAuth(
         }
       )
 
-      ctx.redirect(`${baseUrl}/new?action=google_continue&id=${id}`)
+      ctx.redirect(`${baseUrl}/new?continue_google_setup=${id}`)
     }
   )(ctx, next)
 }

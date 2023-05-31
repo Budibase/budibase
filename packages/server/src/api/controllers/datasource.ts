@@ -11,7 +11,7 @@ import { BuildSchemaErrors, InvalidColumns } from "../../constants"
 import { getIntegration } from "../../integrations"
 import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
-import { db as dbCore, context, events } from "@budibase/backend-core"
+import { db as dbCore, context, events, cache } from "@budibase/backend-core"
 import {
   UserCtx,
   Datasource,
@@ -25,6 +25,7 @@ import {
   FetchDatasourceInfoResponse,
   IntegrationBase,
   DatasourcePlus,
+  SourceName,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"

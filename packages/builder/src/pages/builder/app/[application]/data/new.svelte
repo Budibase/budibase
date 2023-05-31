@@ -25,7 +25,6 @@
   let integration = null
   let disabled = false
   let promptUpload = false
-  let continueGoogleSetup
 
   $: hasData = $datasources.list.length > 1 || $tables.list.length > 1
   $: hasDefaultData =
@@ -131,12 +130,10 @@
     return integrationsArray
   }
 
-  let isGoogleContinueAction
+  let continueGoogleSetup
   onMount(() => {
     const urlParams = new URLSearchParams(window.location.search)
-    const action = urlParams.get("action")
-
-    isGoogleContinueAction = action === "google_continue"
+    continueGoogleSetup = urlParams.get("continue_google_setup")
   })
 
   const fetchIntegrations = async () => {
@@ -144,7 +141,7 @@
     integrations = sortIntegrations(unsortedIntegrations)
     console.log(integrations[IntegrationTypes.GOOGLE_SHEETS])
 
-    if (isGoogleContinueAction) {
+    if (continueGoogleSetup) {
       handleIntegrationSelect(IntegrationTypes.GOOGLE_SHEETS)
     }
   }
@@ -159,12 +156,12 @@
 <Modal
   bind:this={externalDatasourceModal}
   on:hide={() => {
-    continueGoogleSetup = false
+    continueGoogleSetup = null
   }}
 >
   {#if integration?.auth?.type === "google"}
     <GoogleDatasourceConfigModal
-      continueSetup={isGoogleContinueAction}
+      continueSetupId={continueGoogleSetup}
       {integration}
     />
   {:else}
