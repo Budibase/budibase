@@ -131,21 +131,25 @@
     return integrationsArray
   }
 
-  const fetchIntegrations = async () => {
-    const unsortedIntegrations = await API.getIntegrations()
-    integrations = sortIntegrations(unsortedIntegrations)
-  }
-
-  $: fetchIntegrations()
-
+  let isGoogleContinueAction
   onMount(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const action = urlParams.get("action")
-    if (action === "google_continue") {
-      continueGoogleSetup = true
-      externalDatasourceModal.show()
-    }
+
+    isGoogleContinueAction = action === "google_continue"
   })
+
+  const fetchIntegrations = async () => {
+    const unsortedIntegrations = await API.getIntegrations()
+    integrations = sortIntegrations(unsortedIntegrations)
+    console.log(integrations[IntegrationTypes.GOOGLE_SHEETS])
+
+    if (isGoogleContinueAction) {
+      handleIntegrationSelect(IntegrationTypes.GOOGLE_SHEETS)
+    }
+  }
+
+  $: fetchIntegrations()
 </script>
 
 <Modal bind:this={internalTableModal}>
@@ -158,8 +162,11 @@
     continueGoogleSetup = false
   }}
 >
-  {#if integration?.auth?.type === "google" || continueGoogleSetup}
-    <GoogleDatasourceConfigModal continueSetup={continueGoogleSetup} />
+  {#if integration?.auth?.type === "google"}
+    <GoogleDatasourceConfigModal
+      continueSetup={isGoogleContinueAction}
+      {integration}
+    />
   {:else}
     <DatasourceConfigModal {integration} />
   {/if}
