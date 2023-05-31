@@ -11846,7 +11846,7 @@ fecha@^4.2.0:
   resolved "https://registry.yarnpkg.com/fecha/-/fecha-4.2.3.tgz#4d9ccdbc61e8629b259fdca67e65891448d569fd"
   integrity sha512-OP2IUU6HeYKJi3i0z4A19kHMQoLVs4Hc+DPqqxI2h/DPZHTm/vjsfC6P0b4jCMy14XizLBqvndQ+UilD7707Jw==
 
-fengari-interop@^0.1.2, fengari-interop@^0.1.3:
+fengari-interop@^0.1.2:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/fengari-interop/-/fengari-interop-0.1.3.tgz#3ad37a90e7430b69b365441e9fc0ba168942a146"
   integrity sha512-EtZ+oTu3kEwVJnoymFPBVLIbQcCoy9uWCVnMA6h3M/RqHkUBsLYp29+RRHf9rKr6GwjubWREU1O7RretFIXjHw==
@@ -13891,16 +13891,6 @@ ioredis-mock@5.8.0:
     fengari "^0.1.4"
     fengari-interop "^0.1.2"
     lodash "^4.17.21"
-    standard-as-callback "^2.1.0"
-
-ioredis-mock@7.2.0:
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/ioredis-mock/-/ioredis-mock-7.2.0.tgz#48f006c07ef7f1f93f75e60d8f9035fa46c4ef0a"
-  integrity sha512-xzABBG3NhfDBGxH1KX9n6vs7WGNn9lhcxMT3b+vjynVImxlUV+vOXU+tjGzSUnGmx4IYllA8RqbXN8z6ROMPVA==
-  dependencies:
-    fengari "^0.1.4"
-    fengari-interop "^0.1.3"
-    redis-commands "^1.7.0"
     standard-as-callback "^2.1.0"
 
 ioredis@4.28.0:
@@ -21649,7 +21639,7 @@ redent@^3.0.0:
     indent-string "^4.0.0"
     strip-indent "^3.0.0"
 
-redis-commands@1.7.0, redis-commands@^1.7.0:
+redis-commands@1.7.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/redis-commands/-/redis-commands-1.7.0.tgz#15a6fea2d58281e27b1cd1acfb4b293e278c3a89"
   integrity sha512-nJWqw3bTFy21hX/CPKHth6sfhZbdiHP6bTawSgQBlKOVRG7EZkfHbbHwQJnrE4vsQf0CMNE+3gJ4Fmm16vdVlQ==

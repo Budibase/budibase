@@ -1,10 +1,14 @@
-import { redis } from "@budibase/backend-core"
+import { redis, RedisClient } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import { ContextUser } from "@budibase/types"
+import env from "../environment"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
-let devAppClient: any, debounceClient: any, flagClient: any, socketClient: any
+let devAppClient: RedisClient,
+  debounceClient: RedisClient,
+  flagClient: RedisClient,
+  socketClient: RedisClient
 
 // We need to maintain a duplicate client for socket.io pub/sub
 let socketSubClient: any

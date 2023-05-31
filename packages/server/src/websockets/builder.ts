@@ -49,12 +49,12 @@ export default class BuilderSocket extends Socket {
 
   emitTableUpdate(ctx: any, table: Table) {
     this.io.in(ctx.appId).emit("table-change", { id: table._id, table })
-    gridSocket.emitTableUpdate(table)
+    gridSocket?.emitTableUpdate(table)
   }
 
   emitTableDeletion(ctx: any, id: string) {
     this.io.in(ctx.appId).emit("table-change", { id, table: null })
-    gridSocket.emitTableDeletion(id)
+    gridSocket?.emitTableDeletion(id)
   }
 
   emitDatasourceUpdate(ctx: any, datasource: Datasource) {
