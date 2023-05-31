@@ -77,7 +77,7 @@
 
   // For handlebars only.
   const bindStyle = new MatchDecorator({
-    regexp: /{{[."#\-\w\s]*}}/g,
+    regexp: /{{[."#\-\w\s\]\[]*}}/g,
     decoration: () => {
       return Decoration.mark({
         tag: "span",
@@ -133,7 +133,7 @@
       highlightSpecialChars(),
       autocompletion({
         override: [...completions],
-        closeOnBlur: false,
+        closeOnBlur: true,
         icons: false,
         optionClass: () => "autocomplete-option",
       }),
@@ -148,7 +148,7 @@
       keymap.of(buildKeymap()),
       themeConfig.of([
         getDefaultTheme({
-          height,
+          height: editorHeight,
           resize,
           dark: isDark,
         }),
@@ -181,6 +181,7 @@
               },
               {
                 scrollIntoView: true,
+                userEvent: "input.type",
               }
             )
             view.dispatch(tr)
@@ -213,6 +214,8 @@
     })
   }
 
+  $: editorHeight = typeof height === "number" ? `${height}px` : height
+
   // Init when all elements are ready
   $: if (mounted && !isEditorInitialised) {
     isEditorInitialised = true
@@ -229,7 +232,7 @@
       editor.dispatch({
         effects: themeConfig.reconfigure([
           getDefaultTheme({
-            height,
+            height: editorHeight,
             resize,
             dark: isDark,
           }),
@@ -279,8 +282,6 @@
   .code-editor :global(.autocomplete-option .cm-completionDetail) {
     background-color: var(--spectrum-global-color-gray-200);
     border-radius: var(--border-radius-s);
-    padding: 2px 4px;
-    margin-left: 2px;
-    /* font-weight: 600; */
+    padding: 4px 6px;
   }
 </style>
