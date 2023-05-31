@@ -3,21 +3,18 @@ import http from "http"
 import Koa from "koa"
 import Cookies from "cookies"
 import { userAgent } from "koa-useragent"
-import { auth } from "@budibase/backend-core"
+import { auth, redis } from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
 import { createAdapter } from "@socket.io/redis-adapter"
 import { Socket } from "socket.io"
-import {
-  getSocketPubSubClients,
-  getSocketUsers,
-  setSocketUsers,
-} from "../utilities/redis"
-import { SocketEvents } from "@budibase/shared-core"
-import { SocketUser } from "@budibase/types"
+import { getSocketPubSubClients } from "../utilities/redis"
+import { SocketEvents, SocketSessionTTL } from "@budibase/shared-core"
+import { SocketSession } from "@budibase/types"
 
 export class BaseSocket {
   io: Server
   path: string
+  redisClient?: redis.Client
 
   constructor(
     app: Koa,
@@ -79,7 +76,6 @@ export class BaseSocket {
                 email,
                 firstName,
                 lastName,
-                appId: ctx.appId,
                 sessionId: socket.id,
               }
               next()
@@ -91,50 +87,116 @@ export class BaseSocket {
       }
     })
 
-    // Instantiate redis adapter
-    const { pub, sub } = getSocketPubSubClients()
-    const opts = { key: `socket.io-${path}` }
-    this.io.adapter(createAdapter(pub, sub, opts))
+    // Initialise redis before handling connections
+    this.initialise().then(() => {
+      this.io.on("connection", async socket => {
+        // Add built in handler to allow fetching all other users in this room
+        socket.on(SocketEvents.GetUsers, async (payload, callback) => {
+          const sessions = await this.getRoomSessions(socket.data.room)
+          callback({ users: sessions })
+        })
 
-    // Handle user connections and disconnections
-    this.io.on("connection", async socket => {
-      // Add built in handler to allow fetching all other users in this room
-      socket.on(SocketEvents.GetUsers, async (payload, callback) => {
-        let users
-        if (socket.data.room) {
-          users = await this.getSocketUsers(socket.data.room)
-        }
-        callback({ users })
-      })
+        // Add built in handler for heartbeats
+        socket.on(SocketEvents.Heartbeat, async () => {
+          console.log(socket.data.email, "heartbeat received")
+          await this.extendSessionTTL(socket.data.sessionId)
+        })
 
-      // Add handlers for this socket
-      await this.onConnect(socket)
+        // Add early disconnection handler to clean up and leave room
+        socket.on("disconnect", async () => {
+          // Run any custom disconnection logic before we leave the room,
+          // so that we have access to their room etc before disconnection
+          await this.onDisconnect(socket)
 
-      // Add early disconnection handler to clean up and leave room
-      socket.on("disconnect", async () => {
-        // Leave the current room when the user disconnects if we're in one
-        if (socket.data.room) {
+          // Leave the current room when the user disconnects if we're in one
           await this.leaveRoom(socket)
-        }
+        })
 
-        // Run any other disconnection logic
-        await this.onDisconnect(socket)
+        // Add handlers for this socket
+        await this.onConnect(socket)
       })
     })
   }
 
+  async initialise() {
+    // Instantiate redis adapter.
+    // We use a fully qualified key name here as this bypasses the normal
+    // redis client#s key prefixing.
+    const { pub, sub } = getSocketPubSubClients()
+    const opts = {
+      key: `${redis.utils.Databases.SOCKET_IO}-${this.path}-pubsub`,
+    }
+    this.io.adapter(createAdapter(pub, sub, opts))
+
+    // Fetch redis client
+    this.redisClient = await redis.clients.getSocketClient()
+  }
+
+  // Gets the redis key for a certain session ID
+  getSessionKey(sessionId: string) {
+    return `${this.path}-session:${sessionId}`
+  }
+
+  // Gets the redis key for certain room name
+  getRoomKey(room: string) {
+    return `${this.path}-room:${room}`
+  }
+
+  async extendSessionTTL(sessionId: string) {
+    const key = this.getSessionKey(sessionId)
+    await this.redisClient?.setExpiry(key, SocketSessionTTL)
+  }
+
+  // Gets an array of all redis keys of users inside a certain room
+  async getRoomSessionKeys(room: string): Promise<string[]> {
+    const keys = await this.redisClient?.get(this.getRoomKey(room))
+    return keys || []
+  }
+
+  // Sets the list of redis keys for users inside a certain room.
+  // There is no TTL on the actual room key map itself.
+  async setRoomSessionKeys(room: string, keys: string[]) {
+    await this.redisClient?.store(this.getRoomKey(room), keys)
+  }
+
   // Gets a list of all users inside a certain room
-  async getSocketUsers(room?: string): Promise<SocketUser[]> {
+  async getRoomSessions(room?: string): Promise<SocketSession[]> {
     if (room) {
-      const users = await getSocketUsers(this.path, room)
-      return users || []
+      const keys = await this.getRoomSessionKeys(room)
+      const sessions = await this.redisClient?.bulkGet(keys)
+      return Object.values(sessions || {})
     } else {
       return []
     }
   }
 
+  // Detects keys which have been pruned from redis due to TTL expiry in a certain
+  // room and broadcasts disconnection messages to ensure clients are aware
+  async pruneRoom(room: string) {
+    const keys = await this.getRoomSessionKeys(room)
+    const keysExist = await Promise.all(
+      keys.map(key => this.redisClient?.exists(key))
+    )
+    const prunedKeys = keys.filter((key, idx) => {
+      if (!keysExist[idx]) {
+        console.log("pruning key", keys[idx])
+        return false
+      }
+      return true
+    })
+
+    // Store new pruned keys
+    await this.setRoomSessionKeys(room, prunedKeys)
+  }
+
   // Adds a user to a certain room
   async joinRoom(socket: Socket, room: string) {
+    if (!room) {
+      return
+    }
+    // Prune room before joining
+    await this.pruneRoom(room)
+
     // Check if we're already in a room, as we'll need to leave if we are before we
     // can join a different room
     const oldRoom = socket.data.room
@@ -148,40 +210,43 @@ export class BaseSocket {
       socket.data.room = room
     }
 
+    // Store in redis
     // @ts-ignore
-    let user: SocketUser = socket.data
-    let users = await this.getSocketUsers(room)
+    let user: SocketSession = socket.data
+    const key = this.getSessionKey(user.sessionId)
+    await this.redisClient?.store(key, user, SocketSessionTTL)
+    const roomKeys = await this.getRoomSessionKeys(room)
+    if (!roomKeys.includes(key)) {
+      await this.setRoomSessionKeys(room, [...roomKeys, key])
+    }
 
-    // Store this socket in redis
-    if (!users?.length) {
-      users = []
-    }
-    const index = users.findIndex(x => x.sessionId === socket.data.sessionId)
-    if (index === -1) {
-      users.push(user)
-    } else {
-      users[index] = user
-    }
-    await setSocketUsers(this.path, room, users)
+    // Notify other users
     socket.to(room).emit(SocketEvents.UserUpdate, user)
   }
 
   // Disconnects a socket from its current room
   async leaveRoom(socket: Socket) {
     // @ts-ignore
-    let user: SocketUser = socket.data
+    let user: SocketSession = socket.data
     const { room, sessionId } = user
     if (!room) {
       return
     }
+
+    // Leave room
     socket.leave(room)
     socket.data.room = undefined
 
-    let users = await this.getSocketUsers(room)
+    // Delete from redis
+    const key = this.getSessionKey(sessionId)
+    await this.redisClient?.delete(key)
+    const roomKeys = await this.getRoomSessionKeys(room)
+    await this.setRoomSessionKeys(
+      room,
+      roomKeys.filter(k => k !== key)
+    )
 
-    // Remove this socket from redis
-    users = users.filter(user => user.sessionId !== sessionId)
-    await setSocketUsers(this.path, room, users)
+    // Notify other users
     socket.to(room).emit(SocketEvents.UserDisconnect, user)
   }
 

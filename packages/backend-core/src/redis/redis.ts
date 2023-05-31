@@ -212,6 +212,11 @@ class RedisWrapper {
     return this.getClient().keys(addDbPrefix(db, pattern))
   }
 
+  async exists(key: string) {
+    const db = this._db
+    return await this.getClient().exists(addDbPrefix(db, key))
+  }
+
   async get(key: string) {
     const db = this._db
     let response = await this.getClient().get(addDbPrefix(db, key))

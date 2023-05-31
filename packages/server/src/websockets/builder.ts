@@ -3,7 +3,7 @@ import { BaseSocket } from "./websocket"
 import { permissions } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
-import { Datasource, Table, SocketUser, ContextUser } from "@budibase/types"
+import { Datasource, Table, SocketSession, ContextUser } from "@budibase/types"
 import { gridSocket } from "./index"
 import { clearLock } from "../utilities/redis"
 import { Socket } from "socket.io"
@@ -15,24 +15,30 @@ export default class BuilderSocket extends BaseSocket {
   }
 
   async onConnect(socket: Socket) {
-    // Join a room for this app
-    await this.joinRoom(socket, socket.data.appId)
+    // Initial identification of selected app
+    socket.on(BuilderSocketEvents.SelectApp, async (appId, callback) => {
+      await this.joinRoom(socket, appId)
+
+      // Reply with all users in current room
+      const sessions = await this.getRoomSessions(appId)
+      callback({ users: sessions })
+    })
   }
 
   async onDisconnect(socket: Socket) {
     // Remove app lock from this user if they have no other connections
     try {
       // @ts-ignore
-      const user: SocketUser = socket.data
-      const { _id, sessionId, appId } = user
-      const users = await this.getSocketUsers(user.room)
-      const hasOtherConnection = users.some(otherUser => {
-        return _id === otherUser._id && sessionId !== otherUser.sessionId
+      const session: SocketSession = socket.data
+      const { _id, sessionId, room } = session
+      const sessions = await this.getRoomSessions(room)
+      const hasOtherSession = sessions.some(otherSession => {
+        return _id === otherSession._id && sessionId !== otherSession.sessionId
       })
-      if (!hasOtherConnection) {
+      if (!hasOtherSession && room) {
         // @ts-ignore
         const user: ContextUser = { _id: socket.data._id }
-        await clearLock(appId, user)
+        await clearLock(room, user)
       }
     } catch (e) {
       // This is fine, just means this user didn't hold the lock

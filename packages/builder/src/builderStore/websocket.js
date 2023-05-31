@@ -3,12 +3,12 @@ import { userStore } from "builderStore"
 import { datasources, tables } from "stores/backend"
 import { SocketEvents, BuilderSocketEvents } from "@budibase/shared-core"
 
-export const createBuilderWebsocket = () => {
+export const createBuilderWebsocket = appId => {
   const socket = createWebsocket("/socket/builder")
 
   // Built-in events
   socket.on("connect", () => {
-    socket.emit(SocketEvents.GetUsers, null, response => {
+    socket.emit(BuilderSocketEvents.SelectApp, appId, response => {
       userStore.actions.init(response.users)
     })
   })
@@ -30,11 +30,10 @@ export const createBuilderWebsocket = () => {
     datasources.replaceDatasource(id, datasource)
   })
 
-  return {
-    ...socket,
-    disconnect: () => {
-      socket?.disconnect()
-      userStore.actions.reset()
-    },
-  }
+  // Clean up user store on disconnect
+  socket.on("disconnect", () => {
+    userStore.actions.reset()
+  })
+
+  return socket
 }
