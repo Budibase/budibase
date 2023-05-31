@@ -1,10 +1,10 @@
 import * as google from "../sso/google"
 import { Cookie } from "../../../constants"
 import { clearCookie, getCookie } from "../../../utils"
-import { doWithDB } from "../../../db"
 import * as configs from "../../../configs"
-import { BBContext, Database, SSOProfile } from "@budibase/types"
+import { BBContext, SSOProfile } from "@budibase/types"
 import { ssoSaveUserNoOp } from "../sso/sso"
+import { cache, utils } from "../../../"
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
 type Passport = {
@@ -36,8 +36,8 @@ export async function preAuth(
     ssoSaveUserNoOp
   )
 
-  if (!ctx.query.appId || !ctx.query.datasourceId) {
-    ctx.throw(400, "appId and datasourceId query params not present.")
+  if (!ctx.query.appId) {
+    ctx.throw(400, "appId query param not present.")
   }
 
   return passport.authenticate(strategy, {
@@ -69,7 +69,7 @@ export async function postAuth(
       (
         accessToken: string,
         refreshToken: string,
-        profile: SSOProfile,
+        _profile: SSOProfile,
         done: Function
       ) => {
         clearCookie(ctx, Cookie.DatasourceAuth)
@@ -79,23 +79,16 @@ export async function postAuth(
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, tokens: string[]) => {
       const baseUrl = `/builder/app/${authStateCookie.appId}/data`
-      // update the DB for the datasource with all the user info
-      await doWithDB(authStateCookie.appId, async (db: Database) => {
-        let datasource
-        try {
-          datasource = await db.get(authStateCookie.datasourceId)
-        } catch (err: any) {
-          if (err.status === 404) {
-            ctx.redirect(baseUrl)
-          }
+
+      const id = utils.newid()
+      await cache.store(
+        `datasource:creation:${authStateCookie.appId}:google:${id}`,
+        {
+          tokens,
         }
-        if (!datasource.config) {
-          datasource.config = {}
-        }
-        datasource.config.auth = { type: "google", ...tokens }
-        await db.put(datasource)
-        ctx.redirect(`${baseUrl}/datasource/${authStateCookie.datasourceId}`)
-      })
+      )
+
+      ctx.redirect(`${baseUrl}/new?type=google&action=continue&id=${id}`)
     }
   )(ctx, next)
 }

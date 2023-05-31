@@ -140,7 +140,6 @@ export const datasourcePreAuth = async (ctx: any, next: any) => {
     {
       provider,
       appId: ctx.query.appId,
-      datasourceId: ctx.query.datasourceId,
     },
     Cookie.DatasourceAuth
   )
