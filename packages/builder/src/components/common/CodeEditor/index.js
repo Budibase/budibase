@@ -35,7 +35,7 @@ export const getDefaultTheme = opts => {
         borderLeftColor: "var(--spectrum-alias-text-color)",
       },
       "&": {
-        height: height ? `${height}px` : "",
+        height: height ? `${height}` : "",
         lineHeight: "1.3",
         border:
           "var(--spectrum-alias-border-size-thin) solid var(--spectrum-alias-border-color)",
@@ -49,6 +49,7 @@ export const getDefaultTheme = opts => {
       "& .cm-tooltip.cm-tooltip-autocomplete > ul": {
         fontFamily:
           "var(--spectrum-alias-body-text-font-family, var(--spectrum-global-font-family-base))",
+        maxHeight: "16em",
       },
       "& .cm-placeholder": {
         color: "var(--spectrum-alias-text-color)",
@@ -62,6 +63,7 @@ export const getDefaultTheme = opts => {
       "& .cm-completionDetail": {
         fontStyle: "unset",
         textTransform: "uppercase",
+        fontSize: "10px",
       },
       "& .info-bubble": {
         fontSize: "var(--font-size-s)",
@@ -145,7 +147,7 @@ export const buildSectionHeader = (type, sectionName, icon, rank) => {
   }
 }
 
-export const helpersToCompletion = helpers => {
+export const helpersToCompletion = (helpers, mode) => {
   const { type, name: sectionName, icon } = SECTIONS.HB_HELPER
   const helperSection = buildSectionHeader(type, sectionName, icon, 99)
 
@@ -159,16 +161,19 @@ export const helpersToCompletion = helpers => {
       type: "helper",
       section: helperSection,
       detail: "FUNCTION",
+      apply: (view, completion, from, to) => {
+        insertBinding(view, from, to, key, mode)
+      },
     })
     return acc
   }, [])
 }
 
-export const getHelperCompletions = () => {
+export const getHelperCompletions = mode => {
   const manifest = getManifest()
   return Object.keys(manifest).reduce((acc, key) => {
     acc = acc || []
-    return [...acc, ...helpersToCompletion(manifest[key])]
+    return [...acc, ...helpersToCompletion(manifest[key], mode)]
   }, [])
 }
 
@@ -194,7 +199,7 @@ export const hbAutocomplete = baseCompletions => {
     if (!bindingStart) {
       return null
     }
-    // Accomodate spaces
+    // Accommodate spaces
     const match = bindingStart.text.match(/{{[\s]*/)
     const query = bindingStart.text.replace(match[0], "")
     let filtered = bindingFilter(options, query)
@@ -215,7 +220,7 @@ export const jsAutocomplete = baseCompletions => {
     let options = baseCompletions || []
 
     if (jsBinding) {
-      // Accomodate spaces
+      // Accommodate spaces
       const match = jsBinding.text.match(/\$\("[\s]*/)
       const query = jsBinding.text.replace(match[0], "")
       let filtered = bindingFilter(options, query)
@@ -263,6 +268,7 @@ export const hbInsert = (value, from, to, text) => {
   } else {
     parsedInsert = ` ${text} `
   }
+
   return parsedInsert
 }
 
@@ -296,6 +302,16 @@ export const insertBinding = (view, from, to, text, mode) => {
     return
   }
 
+  let bindingClosePattern = mode.name == "javascript" ? /[\s]*"\)/ : /[\s]*}}/
+  let sliced = view.state.doc?.toString().slice(to)
+
+  const rightBrace = sliced.match(bindingClosePattern)
+  let cursorPos = from + parsedInsert.length
+
+  if (rightBrace) {
+    cursorPos = from + parsedInsert.length + rightBrace[0].length
+  }
+
   view.dispatch({
     changes: {
       from,
@@ -303,7 +319,7 @@ export const insertBinding = (view, from, to, text, mode) => {
       insert: parsedInsert,
     },
     selection: {
-      anchor: from + parsedInsert.length,
+      anchor: cursorPos,
     },
   })
 }

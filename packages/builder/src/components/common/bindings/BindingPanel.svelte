@@ -195,10 +195,11 @@
                   completions={[
                     hbAutocomplete([
                       ...bindingCompletions,
-                      ...getHelperCompletions(),
+                      ...getHelperCompletions(editorMode),
                     ]),
                   ]}
                   placeholder=""
+                  height="100%"
                 />
               </div>
               <div class="binding-footer">
@@ -292,12 +293,13 @@
                     completions={[
                       jsAutocomplete([
                         ...bindingCompletions,
-                        ...getHelperCompletions(),
+                        ...getHelperCompletions(editorMode),
                       ]),
                     ]}
                     mode={EditorModes.JS}
                     bind:getCaretPosition
                     bind:insertAtPos
+                    height="100%"
                   />
                 </div>
                 <div class="binding-footer">
@@ -349,6 +351,7 @@
           </Button>
           <Button
             cta
+            disabled={!valid}
             on:click={() => {
               bindingDrawerActions.save()
             }}
@@ -419,12 +422,11 @@
     width: 100%;
     display: flex;
     justify-content: space-between;
-    margin-top: var(--spacing-m);
   }
   .main-content {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 270px;
+    grid-template-rows: 315px;
   }
   .main-content.binding-panel {
     grid-template-columns: 1fr 320px;
@@ -436,11 +438,14 @@
   }
   .editor {
     padding: var(--spacing-xl);
-    padding-bottom: 0px;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
   }
   .overlay-wrap {
     position: relative;
+    flex: 1;
   }
   .mode-overlay {
     position: absolute;
@@ -468,5 +473,10 @@
   .prompt-body .switch-actions {
     display: flex;
     gap: var(--spacing-l);
+  }
+
+  .binding-drawer :global(.code-editor),
+  .binding-drawer :global(.code-editor > div) {
+    height: 100%;
   }
 </style>
