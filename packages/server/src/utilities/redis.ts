@@ -1,6 +1,6 @@
 import { redis } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
-import { ContextUser } from "@budibase/types"
+import { ContextUser, SocketUser } from "@budibase/types"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
@@ -26,6 +26,7 @@ export async function init() {
 }
 
 export async function shutdown() {
+  console.log("REDIS SHUTDOWN")
   if (devAppClient) await devAppClient.finish()
   if (debounceClient) await debounceClient.finish()
   if (flagClient) await flagClient.finish()
@@ -95,6 +96,14 @@ export async function checkTestFlag(id: string) {
 
 export async function clearTestFlag(id: string) {
   await devAppClient.delete(id)
+}
+
+export async function getSocketUsers(path: string, room: string) {
+  return await socketClient.get(`${path}:${room}`)
+}
+
+export async function setSocketUsers(path: string, room: string, users: SocketUser[]) {
+  await socketClient.store(`${path}:${room}`, users)
 }
 
 export function getSocketPubSubClients() {

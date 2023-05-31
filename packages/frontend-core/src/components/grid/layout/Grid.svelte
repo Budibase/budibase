@@ -62,6 +62,7 @@
     stripeRows,
   })
 
+
   // Build up context
   let context = {
     API: API || createAPIClient(),

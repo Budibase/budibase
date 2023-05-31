@@ -21,6 +21,6 @@ export const createWebsocket = path => {
     timeout: 4000,
     // Disable polling and rely on websocket only, as HTTP transport
     // will only work with sticky sessions which we don't have
-    transports: ["websocket"],
+    // transports: ["websocket"],
   })
 }

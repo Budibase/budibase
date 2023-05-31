@@ -67,3 +67,21 @@ export const SqlNumberTypeRangeMap = {
     min: -8388608,
   },
 }
+
+export const SocketEvents = {
+  UserUpdate: "UserUpdate",
+  UserDisconnect: "UserDisconnect",
+  GetUsers: "GetUsers"
+}
+
+export const GridSocketEvents = {
+  RowChange: "RowChange",
+  TableChange: "TableChange",
+  SelectTable: "SelectTable",
+  SelectCell: "SelectCell"
+}
+
+export const BuilderSocketEvents = {
+  TableChange: "TableChange",
+  DatasourceChange: "DatasourceChange"
+}
