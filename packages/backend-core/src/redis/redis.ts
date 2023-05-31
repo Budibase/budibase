@@ -1,6 +1,7 @@
 import env from "../environment"
-// ioredis mock is all in memory
 import Redis from "ioredis"
+// ioredis mock is all in memory
+const MockRedis = require("ioredis-mock")
 import {
   addDbPrefix,
   removeDbPrefix,
@@ -18,8 +19,13 @@ const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 // for testing just generate the client once
 let CLOSED = false
 let CLIENTS: { [key: number]: any } = {}
-
+0
 let CONNECTED = false
+
+// mock redis always connected
+if (env.MOCK_REDIS) {
+  CONNECTED = true
+}
 
 function pickClient(selectDb: number): any {
   return CLIENTS[selectDb]
@@ -50,12 +56,17 @@ function connectionError(
  * will return the ioredis client which will be ready to use.
  */
 function init(selectDb = DEFAULT_SELECT_DB) {
+  const RedisCore = env.MOCK_REDIS ? MockRedis : Redis
   let timeout: NodeJS.Timeout
   CLOSED = false
   let client = pickClient(selectDb)
   // already connected, ignore
   if (client && CONNECTED) {
     return
+  }
+  // testing uses a single in memory client
+  if (env.MOCK_REDIS) {
+    CLIENTS[selectDb] = new RedisCore(getRedisOptions())
   }
   // start the timer - only allowed 5 seconds to connect
   timeout = setTimeout(() => {
@@ -75,11 +86,11 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   const { redisProtocolUrl, opts, host, port } = getRedisOptions()
 
   if (CLUSTERED) {
-    client = new Redis.Cluster([{ host, port }], opts)
+    client = new RedisCore.Cluster([{ host, port }], opts)
   } else if (redisProtocolUrl) {
-    client = new Redis(redisProtocolUrl)
+    client = new RedisCore(redisProtocolUrl)
   } else {
-    client = new Redis(opts)
+    client = new RedisCore(opts)
   }
   // attach handlers
   client.on("end", (err: Error) => {
