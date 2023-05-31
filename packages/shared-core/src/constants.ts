@@ -68,24 +68,23 @@ export const SqlNumberTypeRangeMap = {
   },
 }
 
-export const SocketEvents = {
-  UserUpdate: "UserUpdate",
-  UserDisconnect: "UserDisconnect",
-  GetUsers: "GetUsers",
-  Heartbeat: "Heartbeat",
+export enum SocketEvent {
+  UserUpdate = "UserUpdate",
+  UserDisconnect = "UserDisconnect",
+  Heartbeat = "Heartbeat",
 }
 
-export const GridSocketEvents = {
-  RowChange: "RowChange",
-  TableChange: "TableChange",
-  SelectTable: "SelectTable",
-  SelectCell: "SelectCell",
+export enum GridSocketEvent {
+  RowChange = "RowChange",
+  TableChange = "TableChange",
+  SelectTable = "SelectTable",
+  SelectCell = "SelectCell",
 }
 
-export const BuilderSocketEvents = {
-  SelectApp: "SelectApp",
-  TableChange: "TableChange",
-  DatasourceChange: "DatasourceChange",
+export enum BuilderSocketEvent {
+  SelectApp = "SelectApp",
+  TableChange = "TableChange",
+  DatasourceChange = "DatasourceChange",
 }
 
 export const SocketSessionTTL = 60

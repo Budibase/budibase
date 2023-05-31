@@ -6,7 +6,7 @@ import Koa from "koa"
 import { getTableId } from "../api/controllers/row/utils"
 import { Row, Table } from "@budibase/types"
 import { Socket } from "socket.io"
-import { GridSocketEvents } from "@budibase/shared-core"
+import { GridSocketEvent } from "@budibase/shared-core"
 
 export default class GridSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
@@ -15,7 +15,7 @@ export default class GridSocket extends BaseSocket {
 
   async onConnect(socket: Socket) {
     // Initial identification of connected spreadsheet
-    socket.on(GridSocketEvents.SelectTable, async (tableId, callback) => {
+    socket.on(GridSocketEvent.SelectTable, async (tableId, callback) => {
       await this.joinRoom(socket, tableId)
 
       // Reply with all users in current room
@@ -24,28 +24,28 @@ export default class GridSocket extends BaseSocket {
     })
 
     // Handle users selecting a new cell
-    socket.on(GridSocketEvents.SelectCell, cellId => {
+    socket.on(GridSocketEvent.SelectCell, cellId => {
       this.updateUser(socket, { focusedCellId: cellId })
     })
   }
 
   emitRowUpdate(ctx: any, row: Row) {
     const tableId = getTableId(ctx)
-    this.io.in(tableId).emit(GridSocketEvents.RowChange, { id: row._id, row })
+    this.io.in(tableId).emit(GridSocketEvent.RowChange, { id: row._id, row })
   }
 
   emitRowDeletion(ctx: any, id: string) {
     const tableId = getTableId(ctx)
-    this.io.in(tableId).emit(GridSocketEvents.RowChange, { id, row: null })
+    this.io.in(tableId).emit(GridSocketEvent.RowChange, { id, row: null })
   }
 
   emitTableUpdate(table: Table) {
     this.io
       .in(table._id!)
-      .emit(GridSocketEvents.TableChange, { id: table._id, table })
+      .emit(GridSocketEvent.TableChange, { id: table._id, table })
   }
 
   emitTableDeletion(id: string) {
-    this.io.in(id).emit(GridSocketEvents.TableChange, { id, table: null })
+    this.io.in(id).emit(GridSocketEvent.TableChange, { id, table: null })
   }
 }

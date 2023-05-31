@@ -1,5 +1,5 @@
 import { io } from "socket.io-client"
-import { SocketEvents, SocketSessionTTL } from "@budibase/shared-core"
+import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
 
 export const createWebsocket = (path, heartbeat = true) => {
   if (!path) {
@@ -29,7 +29,7 @@ export const createWebsocket = (path, heartbeat = true) => {
   let interval
   if (heartbeat) {
     interval = setInterval(() => {
-      socket.emit(SocketEvents.Heartbeat)
+      socket.emit(SocketEvent.Heartbeat)
     }, SocketSessionTTL * 500)
   }
 

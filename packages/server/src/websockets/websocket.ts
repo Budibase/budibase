@@ -8,7 +8,7 @@ import currentApp from "../middleware/currentapp"
 import { createAdapter } from "@socket.io/redis-adapter"
 import { Socket } from "socket.io"
 import { getSocketPubSubClients } from "../utilities/redis"
-import { SocketEvents, SocketSessionTTL } from "@budibase/shared-core"
+import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
 import { SocketSession } from "@budibase/types"
 
 export class BaseSocket {
@@ -90,14 +90,8 @@ export class BaseSocket {
     // Initialise redis before handling connections
     this.initialise().then(() => {
       this.io.on("connection", async socket => {
-        // Add built in handler to allow fetching all other users in this room
-        socket.on(SocketEvents.GetUsers, async (payload, callback) => {
-          const sessions = await this.getRoomSessions(socket.data.room)
-          callback({ users: sessions })
-        })
-
         // Add built in handler for heartbeats
-        socket.on(SocketEvents.Heartbeat, async () => {
+        socket.on(SocketEvent.Heartbeat, async () => {
           console.log(socket.data.email, "heartbeat received")
           await this.extendSessionTTL(socket.data.sessionId)
         })
@@ -180,7 +174,7 @@ export class BaseSocket {
     )
     const prunedSessionIds = sessionIds.filter((id, idx) => {
       if (!sessionsExist[idx]) {
-        this.io.to(room).emit(SocketEvents.UserDisconnect, sessionIds[idx])
+        this.io.to(room).emit(SocketEvent.UserDisconnect, sessionIds[idx])
         return false
       }
       return true
@@ -223,7 +217,7 @@ export class BaseSocket {
     }
 
     // Notify other users
-    socket.to(room).emit(SocketEvents.UserUpdate, user)
+    socket.to(room).emit(SocketEvent.UserUpdate, user)
   }
 
   // Disconnects a socket from its current room
@@ -249,7 +243,7 @@ export class BaseSocket {
     )
 
     // Notify other users
-    socket.to(room).emit(SocketEvents.UserDisconnect, sessionId)
+    socket.to(room).emit(SocketEvent.UserDisconnect, sessionId)
   }
 
   // Updates a connected user's metadata, assuming a room change is not required.
