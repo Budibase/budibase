@@ -79,6 +79,25 @@ export function createTablesStore() {
     replaceTable(table._id, null)
   }
 
+  const assignDisplayColumn = ({
+    primaryDisplay,
+    draft,
+    field,
+    originalName,
+  }) => {
+    if (primaryDisplay) {
+      draft.primaryDisplay = field.name
+    } else if (draft.primaryDisplay === originalName) {
+      const fields = Object.keys(draft.schema)
+      // pick another display column randomly if unselecting
+      draft.primaryDisplay = fields.filter(
+        name =>
+          (name !== originalName || name !== field.name) &&
+          !["attachment", "json", "link"].includes(draft.schema[name].type)
+      )[0]
+    }
+  }
+
   const saveField = async ({
     originalName,
     field,
@@ -98,15 +117,13 @@ export function createTablesStore() {
     }
 
     // Optionally set display column
-    if (primaryDisplay) {
-      draft.primaryDisplay = field.name
-    } else if (draft.primaryDisplay === originalName) {
-      const fields = Object.keys(draft.schema)
-      // pick another display column randomly if unselecting
-      draft.primaryDisplay = fields.filter(
-        name => name !== originalName || name !== field
-      )[0]
-    }
+    assignDisplayColumn({
+      primaryDisplay,
+      draft,
+      field,
+      originalName,
+    })
+
     if (indexes) {
       draft.indexes = indexes
     }
@@ -120,6 +137,12 @@ export function createTablesStore() {
 
   const deleteField = async field => {
     let draft = cloneDeep(get(derivedStore).selected)
+    assignDisplayColumn({
+      primaryDisplay: false,
+      draft,
+      field,
+      originalName: draft.primaryDisplay === field.name ? field.name : false,
+    })
     delete draft.schema[field.name]
     await save(draft)
   }
