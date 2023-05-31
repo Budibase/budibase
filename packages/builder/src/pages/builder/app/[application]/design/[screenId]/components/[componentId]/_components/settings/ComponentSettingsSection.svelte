@@ -140,6 +140,7 @@
               nested={setting.nested}
               onChange={val => updateSetting(setting, val)}
               highlighted={$store.highlightedSettingKey === setting.key}
+              propertyFocus={$store.propertyFocus === setting.key}
               info={setting.info}
               props={{
                 // Generic settings
