@@ -4,8 +4,14 @@
   import GoogleButton from "../_components/GoogleButton.svelte"
   import { organisation } from "stores/portal"
   import { onMount } from "svelte"
+  import { validateDatasourceConfig } from "builderStore/datasource"
+  import cloneDeep from "lodash/cloneDeepWith"
+  import IntegrationConfigForm from "../TableIntegrationMenu/IntegrationConfigForm.svelte"
 
+  export let integration
   export let continueSetup = false
+
+  let datasource = cloneDeep(integration)
 
   $: isGoogleConfigured = !!$organisation.googleDatasourceConfigured
 
@@ -22,13 +28,32 @@
   let step = continueSetup
     ? GoogleDatasouceConfigStep.SET_URL
     : GoogleDatasouceConfigStep.AUTH
+
+  let isValid
+
+  const modalConfig = {
+    [GoogleDatasouceConfigStep.AUTH]: {},
+    [GoogleDatasouceConfigStep.SET_URL]: {
+      confirmButtonText: "Connect",
+      onConfirm: async () => {
+        const resp = await validateDatasourceConfig(datasource)
+        if (!resp.connected) {
+          displayError(`Unable to connect - ${resp.error}`)
+        }
+
+        return false
+      },
+    },
+  }
 </script>
 
 <ModalContent
   title={`Connect to ${integrationName}`}
-  cancelText="Back"
+  cancelText="Cancel"
   size="L"
-  showConfirmButton={false}
+  confirmText={modalConfig[step].confirmButtonText}
+  showConfirmButton={!!modalConfig[step].onConfirm}
+  onConfirm={modalConfig[step].onConfirm}
 >
   {#if step === GoogleDatasouceConfigStep.AUTH}
     <!-- check true and false directly, don't render until flag is set -->
@@ -48,8 +73,15 @@
     {/if}
   {/if}
   {#if step === GoogleDatasouceConfigStep.SET_URL}
-    <Layout noPadding>
-      <Body size="S">Add the URL of the sheet you want to connect</Body>
+    <Layout noPadding no>
+      <Body size="S">Add the URL of the sheet you want to connect.</Body>
+
+      <IntegrationConfigForm
+        schema={datasource.schema}
+        bind:datasource
+        creating={true}
+        on:valid={e => (isValid = e.detail)}
+      />
     </Layout>
   {/if}
 </ModalContent>
