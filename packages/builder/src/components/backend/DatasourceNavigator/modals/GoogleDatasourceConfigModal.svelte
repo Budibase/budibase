@@ -47,7 +47,9 @@
     [GoogleDatasouceConfigStep.SET_URL]: {
       confirmButtonText: "Connect",
       onConfirm: async () => {
-        if (integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
+        const checkConnection =
+          integration.features[DatasourceFeature.CONNECTION_CHECKING]
+        if (checkConnection) {
           const resp = await validateDatasourceConfig(datasource)
           if (!resp.connected) {
             notifications.error(`Unable to connect - ${resp.error}`)
@@ -58,7 +60,11 @@
         try {
           const resp = await saveDatasource(datasource)
           $goto(`./datasource/${resp._id}`)
-          notifications.success(`Datasource created successfully.`)
+          notifications.success(
+            checkConnection
+              ? "Connection Successful"
+              : `Datasource created successfully.`
+          )
         } catch (err) {
           notifications.error(err?.message ?? "Error saving datasource")
           // prevent the modal from closing
