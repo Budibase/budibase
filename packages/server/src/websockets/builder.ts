@@ -60,12 +60,10 @@ export default class BuilderSocket extends BaseSocket {
   }
 
   emitDatasourceUpdate(ctx: any, datasource: Datasource) {
-    this.io
-      .in(ctx.appId)
-      .emit(BuilderSocketEvents.DatasourceChange, {
-        id: datasource._id,
-        datasource,
-      })
+    this.io.in(ctx.appId).emit(BuilderSocketEvents.DatasourceChange, {
+      id: datasource._id,
+      datasource,
+    })
   }
 
   emitDatasourceDeletion(ctx: any, id: string) {
