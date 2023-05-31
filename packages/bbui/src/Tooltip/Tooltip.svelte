@@ -31,4 +31,12 @@
   .spectrum-Tooltip-tip {
     border-top-color: var(--spectrum-global-color-gray-500);
   }
+  .spectrum-Tooltip {
+    max-width: 280px;
+  }
+  .spectrum-Tooltip-label {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
 </style>
