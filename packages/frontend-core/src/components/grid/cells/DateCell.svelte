@@ -13,10 +13,10 @@
   let flatpickr
   let isOpen
 
-  // adding the 0- will turn a string like 00:00:00 into a valid ISO
+  // Adding the 0- will turn a string like 00:00:00 into a valid ISO
   // date, but will make actual ISO dates invalid
-  $: time = new Date(`0-${value}`)
-  $: timeOnly = !isNaN(time) || schema?.timeOnly
+  $: isTimeValue = !isNaN(new Date(`0-${value}`))
+  $: timeOnly = isTimeValue || schema?.timeOnly
   $: dateOnly = schema?.dateOnly
   $: format = timeOnly
     ? "HH:mm:ss"
@@ -24,6 +24,19 @@
     ? "MMM D YYYY"
     : "MMM D YYYY, HH:mm"
   $: editable = focused && !readonly
+  $: displayValue = getDisplayValue(value, format, timeOnly, isTimeValue)
+
+  const getDisplayValue = (value, format, timeOnly, isTimeValue) => {
+    if (!value) {
+      return ""
+    }
+    // Parse full date strings
+    if (!timeOnly || !isTimeValue) {
+      return dayjs(value).format(format)
+    }
+    // Otherwise must be a time string
+    return dayjs(`0-${value}`).format(format)
+  }
 
   // Ensure we close flatpickr when unselected
   $: {
@@ -49,7 +62,7 @@
 <div class="container">
   <div class="value">
     {#if value}
-      {dayjs(timeOnly ? time : value).format(format)}
+      {displayValue}
     {/if}
   </div>
   {#if editable}

@@ -20,9 +20,14 @@ export const ActionStepID = {
   FILTER: "FILTER",
   QUERY_ROWS: "QUERY_ROWS",
   LOOP: "LOOP",
+  COLLECT: "COLLECT",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: "discord",
   slack: "slack",
   zapier: "zapier",
   integromat: "integromat",
+}
+
+export const Features = {
+  LOOPING: "LOOPING",
 }

@@ -1,4 +1,10 @@
-import { DatasourceFieldType, Integration, QueryType } from "@budibase/types"
+import {
+  ConnectionInfo,
+  DatasourceFeature,
+  DatasourceFieldType,
+  Integration,
+  QueryType,
+} from "@budibase/types"
 import Redis from "ioredis"
 
 interface RedisConfig {
@@ -11,9 +17,13 @@ interface RedisConfig {
 
 const SCHEMA: Integration = {
   docs: "https://redis.io/docs/",
-  description: "",
+  description:
+    "Redis is a caching tool, providing powerful key-value store capabilities.",
   friendlyName: "Redis",
   type: "Non-relational",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     host: {
       type: "string",
@@ -86,7 +96,7 @@ const SCHEMA: Integration = {
 
 class RedisIntegration {
   private readonly config: RedisConfig
-  private client: any
+  private client
 
   constructor(config: RedisConfig) {
     this.config = config
@@ -97,6 +107,21 @@ class RedisIntegration {
       password: this.config.password,
       db: this.config.db,
     })
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      await this.client.ping()
+      response.connected = true
+    } catch (e: any) {
+      response.error = e.message as string
+    } finally {
+      await this.disconnect()
+    }
+    return response
   }
 
   async disconnect() {

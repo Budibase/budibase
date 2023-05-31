@@ -268,8 +268,6 @@
       notifications.error("Error fetching user group data")
     }
   })
-
-  let staticUserLimit = $licensing.license.quotas.usage.static.users.value
 </script>
 
 <Layout noPadding gap="M">
@@ -278,7 +276,7 @@
     <Body>Add users and control who gets access to your published apps</Body>
   </Layout>
   <Divider />
-  {#if $licensing.warnUserLimit}
+  {#if $licensing.errUserLimit}
     <InlineAlert
       type="error"
       onConfirm={() => {
@@ -290,13 +288,9 @@
       }}
       buttonText={isOwner ? "Upgrade" : "View plans"}
       cta
-      header={`Users will soon be limited to ${staticUserLimit}`}
-      message={`Our free plan is going to be limited to ${staticUserLimit} users in ${$licensing.userLimitDays}.
-    
-    This means any users exceeding the limit will be de-activated.
-
-    De-activated users will not able to access the builder or any published apps until you upgrade to one of our paid plans.
-    `}
+      header="Account de-activated"
+      message="Due to the free plan user limit being exceeded, your account has been de-activated.
+      Upgrade your plan to re-activate your account."
     />
   {/if}
   <div class="controls">

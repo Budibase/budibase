@@ -72,15 +72,11 @@ describe("writethrough", () => {
           writethrough.put({ ...current, value: 4 }),
         ])
 
+        // with a lock, this will work
         const newRev = responses.map(x => x.rev).find(x => x !== current._rev)
         expect(newRev).toBeDefined()
         expect(responses.map(x => x.rev)).toEqual(
           expect.arrayContaining([current._rev, current._rev, newRev])
-        )
-        expectFunctionWasCalledTimesWith(
-          mocks.alerts.logWarn,
-          2,
-          "Ignoring redlock conflict in write-through cache"
         )
 
         const output = await db.get(current._id)

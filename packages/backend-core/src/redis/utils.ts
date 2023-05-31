@@ -27,6 +27,7 @@ export enum Databases {
   GENERIC_CACHE = "data_cache",
   WRITE_THROUGH = "writeThrough",
   LOCKS = "locks",
+  SOCKET_IO = "socket_io",
 }
 
 /**

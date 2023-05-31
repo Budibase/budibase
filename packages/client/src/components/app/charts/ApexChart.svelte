@@ -54,8 +54,9 @@
     color: white;
   }
   div
-    :global(.apexcharts-theme-dark
-      .apexcharts-tooltip-series-group.apexcharts-active) {
+    :global(
+      .apexcharts-theme-dark .apexcharts-tooltip-series-group.apexcharts-active
+    ) {
     padding-bottom: 0;
   }
 </style>

@@ -1,13 +1,23 @@
 <script>
   import { getContext } from "svelte"
-  import Avatar from "./Avatar.svelte"
+  import UserAvatar from "../../UserAvatar.svelte"
 
   const { users } = getContext("grid")
+
+  $: uniqueUsers = unique($users)
+
+  const unique = users => {
+    let uniqueUsers = {}
+    users?.forEach(user => {
+      uniqueUsers[user.email] = user
+    })
+    return Object.values(uniqueUsers)
+  }
 </script>
 
 <div class="users">
-  {#each $users as user}
-    <Avatar {user} />
+  {#each uniqueUsers as user}
+    <UserAvatar {user} />
   {/each}
 </div>
 
@@ -15,6 +25,6 @@
   .users {
     display: flex;
     flex-direction: row;
-    gap: 8px;
+    gap: 4px;
   }
 </style>

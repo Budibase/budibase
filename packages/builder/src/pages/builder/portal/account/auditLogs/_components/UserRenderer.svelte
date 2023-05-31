@@ -1,15 +1,10 @@
 <script>
-  import { Avatar, Tooltip } from "@budibase/bbui"
+  import { Tooltip } from "@budibase/bbui"
+  import { UserAvatar } from "@budibase/frontend-core"
+
   export let row
 
   let showTooltip
-  const getInitials = user => {
-    let initials = ""
-    initials += user.firstName ? user.firstName[0] : ""
-    initials += user.lastName ? user.lastName[0] : ""
-
-    return initials === "" ? user.email[0] : initials
-  }
 </script>
 
 {#if row?.user?.email}
@@ -19,7 +14,7 @@
     on:focus={() => (showTooltip = true)}
     on:mouseleave={() => (showTooltip = false)}
   >
-    <Avatar size="M" initials={getInitials(row.user)} />
+    <UserAvatar user={row.user} />
   </div>
   {#if showTooltip}
     <div class="tooltip">

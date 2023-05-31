@@ -12,7 +12,7 @@ import {
   isDocument,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
-import { directCouchCall } from "./utils"
+import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { WriteStream, ReadStream } from "fs"
 import { newid } from "../../docIds/newid"
@@ -46,6 +46,8 @@ export class DatabaseImpl implements Database {
   private readonly instanceNano?: Nano.ServerScope
   private readonly pouchOpts: DatabaseOpts
 
+  private readonly couchInfo = getCouchInfo()
+
   constructor(dbName?: string, opts?: DatabaseOpts, connection?: string) {
     if (dbName == null) {
       throw new Error("Database name cannot be undefined.")
@@ -53,8 +55,8 @@ export class DatabaseImpl implements Database {
     this.name = dbName
     this.pouchOpts = opts || {}
     if (connection) {
-      const couchInfo = getCouchInfo(connection)
-      this.instanceNano = buildNano(couchInfo)
+      this.couchInfo = getCouchInfo(connection)
+      this.instanceNano = buildNano(this.couchInfo)
     }
     if (!DatabaseImpl.nano) {
       DatabaseImpl.init()
@@ -67,7 +69,11 @@ export class DatabaseImpl implements Database {
   }
 
   async exists() {
-    let response = await directCouchCall(`/${this.name}`, "HEAD")
+    const response = await directCouchUrlCall({
+      url: `${this.couchInfo.url}/${this.name}`,
+      method: "HEAD",
+      cookie: this.couchInfo.cookie,
+    })
     return response.status === 200
   }
 

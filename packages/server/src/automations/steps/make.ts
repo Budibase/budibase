@@ -6,6 +6,7 @@ import {
   AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -18,6 +19,9 @@ export const definition: AutomationStepSchema = {
   stepId: AutomationActionStepId.integromat,
   type: AutomationStepType.ACTION,
   internal: false,
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   inputs: {},
   schema: {
     inputs: {

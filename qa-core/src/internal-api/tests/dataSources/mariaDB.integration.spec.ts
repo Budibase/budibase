@@ -2,7 +2,7 @@ import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
 import { Query } from "@budibase/types"
 
-describe("Internal API - Data Sources: PostgresSQL", () => {
+describe("Internal API - Data Sources: MariaDB", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -13,7 +13,7 @@ describe("Internal API - Data Sources: PostgresSQL", () => {
     await config.afterAll()
   })
 
-  it("Create an app with a data source - PostgresSQL", async () => {
+  it("Create an app with a data source - MariaDB", async () => {
     // Create app
     await config.createApp()
 
@@ -22,29 +22,29 @@ describe("Internal API - Data Sources: PostgresSQL", () => {
 
     // Add data source
     const [dataSourceResponse, dataSourceJson] =
-      await config.api.datasources.add(fixtures.datasources.postgresSQL())
+      await config.api.datasources.add(fixtures.datasources.mariaDB())
 
     // Update data source
     const newDataSourceInfo = {
       ...dataSourceJson.datasource,
-      name: "PostgresSQL2",
+      name: "MariaDB2",
     }
     const [updatedDataSourceResponse, updatedDataSourceJson] =
       await config.api.datasources.update(newDataSourceInfo)
 
     // Query data source
     const [queryResponse, queryJson] = await config.api.queries.preview(
-      fixtures.queries.postgres(updatedDataSourceJson.datasource._id!)
+      fixtures.queries.mariaDB(updatedDataSourceJson.datasource._id!)
     )
 
-    expect(queryJson.rows.length).toEqual(91)
+    expect(queryJson.rows.length).toEqual(10)
     expect(queryJson.schemaFields).toEqual(
-      fixtures.queries.expectedSchemaFields.postgres
+      fixtures.queries.expectedSchemaFields.mariaDB
     )
 
     // Save query
     const datasourcetoSave: Query = {
-      ...fixtures.queries.postgres(updatedDataSourceJson.datasource._id!),
+      ...fixtures.queries.mariaDB(updatedDataSourceJson.datasource._id!),
       parameters: [],
     }
 
@@ -52,8 +52,8 @@ describe("Internal API - Data Sources: PostgresSQL", () => {
       datasourcetoSave
     )
     // Get Query
-    const [getQueryResponse, getQueryJson] = await config.api.queries.get(
-      saveQueryJson._id!
+    const [getQueryResponse, getQueryJson] = await config.api.queries.getQuery(
+      <string>saveQueryJson._id
     )
 
     // Get Query permissions

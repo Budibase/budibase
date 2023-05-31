@@ -24,7 +24,6 @@
   import { AppStatus } from "constants"
   import analytics, { Events, EventSource } from "analytics"
   import { store } from "builderStore"
-  import AppLockModal from "components/common/AppLockModal.svelte"
   import EditableIcon from "components/common/EditableIcon.svelte"
   import { API } from "api"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -80,13 +79,6 @@
   }
 
   const editApp = () => {
-    if (appLocked && !lockedByYou) {
-      const identifier = app?.lockedBy?.firstName || app?.lockedBy?.email
-      notifications.warning(
-        `App locked by ${identifier}. Please allow lock to expire or have them unlock this app.`
-      )
-      return
-    }
     $goto(`../../../app/${app.devId}`)
   }
 
@@ -135,7 +127,6 @@
           />
         </div>
         <div slot="buttons">
-          <AppLockModal {app} />
           <span class="desktop">
             <Button
               size="M"

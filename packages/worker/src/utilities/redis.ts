@@ -7,7 +7,7 @@ function getExpirySecondsForDB(db: string) {
       // a hour
       return 3600
     case redis.utils.Databases.INVITATIONS:
-      // a day
+      // a week
       return 604800
   }
 }
