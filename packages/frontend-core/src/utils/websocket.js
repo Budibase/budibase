@@ -29,13 +29,11 @@ export const createWebsocket = (path, heartbeat = true) => {
   let interval
   if (heartbeat) {
     interval = setInterval(() => {
-      console.log("Sending heartbeat")
       socket.emit(SocketEvents.Heartbeat)
     }, SocketSessionTTL * 500)
   }
 
   socket.on("disconnect", () => {
-    console.log("clear interval")
     clearInterval(interval)
   })
 
