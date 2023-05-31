@@ -11,7 +11,7 @@ import { BuildSchemaErrors, InvalidColumns } from "../../constants"
 import { getIntegration } from "../../integrations"
 import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
-import { db as dbCore, context, events } from "@budibase/backend-core"
+import { db as dbCore, context, events, cache } from "@budibase/backend-core"
 import {
   UserCtx,
   Datasource,
@@ -24,6 +24,7 @@ import {
   FetchDatasourceInfoResponse,
   IntegrationBase,
   DatasourcePlus,
+  SourceName,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
@@ -143,6 +144,20 @@ export async function verify(
       existingDatasource
     )
   }
+  if (
+    datasource.source === SourceName.GOOGLE_SHEETS &&
+    datasource.config?.continueSetupId
+  ) {
+    const appId = context.getAppId()
+    const tokens = await cache.get(
+      `datasource:creation:${appId}:google:${datasource.config?.continueSetupId}`
+    )
+
+    enrichedDatasource = sdk.datasources.mergeConfigs(datasource, {
+      config: { auth: tokens.tokens },
+    } as any)
+  }
+
   const connector = await getConnector(enrichedDatasource)
   if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")
