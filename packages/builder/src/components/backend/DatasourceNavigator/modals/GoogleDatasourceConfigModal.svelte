@@ -1,5 +1,11 @@
 <script>
-  import { ModalContent, Body, Layout, Link } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Body,
+    Layout,
+    Link,
+    notifications,
+  } from "@budibase/bbui"
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import GoogleButton from "../_components/GoogleButton.svelte"
   import { organisation } from "stores/portal"
@@ -9,9 +15,10 @@
   import IntegrationConfigForm from "../TableIntegrationMenu/IntegrationConfigForm.svelte"
 
   export let integration
-  export let continueSetup = false
+  export let continueSetupId = false
 
   let datasource = cloneDeep(integration)
+  datasource.config.continueSetupId = continueSetupId
 
   $: isGoogleConfigured = !!$organisation.googleDatasourceConfigured
 
@@ -25,7 +32,7 @@
     SET_URL: "Set_url",
   }
 
-  let step = continueSetup
+  let step = continueSetupId
     ? GoogleDatasouceConfigStep.SET_URL
     : GoogleDatasouceConfigStep.AUTH
 
@@ -38,7 +45,7 @@
       onConfirm: async () => {
         const resp = await validateDatasourceConfig(datasource)
         if (!resp.connected) {
-          displayError(`Unable to connect - ${resp.error}`)
+          notifications.error(`Unable to connect - ${resp.error}`)
         }
 
         return false
