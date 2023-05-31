@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto, beforeUrlChange } from "@roxi/routify"
   import {
     Icon,
     Select,
@@ -12,6 +12,8 @@
     Heading,
     Tabs,
     Tab,
+    Modal,
+    ModalContent,
   } from "@budibase/bbui"
   import { notifications, Divider } from "@budibase/bbui"
   import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
@@ -29,6 +31,12 @@
 
   export let query
 
+  const resumeNavigation = () => {
+    if (typeof navigateTo == "string") {
+      $goto(typeof navigateTo == "string" ? `${navigateTo}` : navigateTo)
+    }
+  }
+
   const transformerDocs = "https://docs.budibase.com/docs/transformers"
 
   let fields = query?.schema ? schemaToFields(query.schema) : []
@@ -36,6 +44,31 @@
   let data = []
   let saveId
   let currentTab = "JSON"
+  let saveModal
+  let override = false
+  let navigateTo = null
+
+  // seed the transformer
+  if (query && !query.transformer) {
+    query.transformer = "return data"
+  }
+
+  // initialise a new empty schema
+  if (query && !query.schema) {
+    query.schema = {}
+  }
+
+  let queryStr = JSON.stringify(query)
+
+  $beforeUrlChange(event => {
+    const updated = JSON.stringify(query)
+
+    if (updated !== queryStr && !override) {
+      navigateTo = event.type == "pushstate" ? event.url : null
+      saveModal.show()
+      return false
+    } else return true
+  })
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fieldsToSchema(fields)
@@ -58,11 +91,6 @@
         }
       }
     }
-  }
-
-  // seed the transformer
-  if (query && !query.transformer) {
-    query.transformer = "return data"
   }
 
   function resetDependentFields() {
@@ -101,21 +129,47 @@
     }
   }
 
+  // return the query.
   async function saveQuery() {
     try {
-      const { _id } = await queries.save(query.datasourceId, query)
-      saveId = _id
-      notifications.success(`Query saved successfully`)
+      const response = await queries.save(query.datasourceId, query)
+      saveId = response._id
 
-      // Go to the correct URL if we just created a new query
-      if (!query._rev) {
-        $goto(`../../${_id}`)
+      if (response?._rev) {
+        queryStr = JSON.stringify(query)
       }
+
+      return response
     } catch (error) {
       notifications.error("Error saving query")
     }
   }
 </script>
+
+<Modal
+  bind:this={saveModal}
+  on:hide={() => {
+    navigateTo = null
+  }}
+>
+  <ModalContent
+    title="You have unsaved changes"
+    confirmText="Save and Continue"
+    cancelText="Discard Changes"
+    size="L"
+    onConfirm={async () => {
+      await saveQuery()
+      override = true
+      resumeNavigation()
+    }}
+    onCancel={async () => {
+      override = true
+      resumeNavigation()
+    }}
+  >
+    <Body>Leaving this section will mean losing and changes to your query</Body>
+  </ModalContent>
+</Modal>
 
 <div class="wrapper">
   <Layout gap="S" noPadding>
@@ -125,7 +179,13 @@
     <div class="config">
       <div class="config-field">
         <Label>Query Name</Label>
-        <Input bind:value={query.name} />
+        <Input
+          value={query.name}
+          on:input={e => {
+            let newValue = e.target.value || ""
+            query.name = newValue.trim()
+          }}
+        />
       </div>
       {#if queryConfig}
         <div class="config-field">
@@ -149,18 +209,20 @@
           />
         {/if}
         {#key query.parameters}
-          <BindingBuilder
-            queryBindings={query.parameters}
-            bindable={false}
-            on:change={e => {
-              query.parameters = e.detail.map(binding => {
-                return {
-                  name: binding.name,
-                  default: binding.value,
-                }
-              })
-            }}
-          />
+          <div class="binding-wrap">
+            <BindingBuilder
+              queryBindings={query.parameters}
+              bindable={false}
+              on:change={e => {
+                query.parameters = e.detail.map(binding => {
+                  return {
+                    name: binding.name,
+                    default: binding.value,
+                  }
+                })
+              }}
+            />
+          </div>
         {/key}
       {/if}
     </div>
@@ -203,7 +265,18 @@
       <div class="viewer-controls">
         <Heading size="S">Results</Heading>
         <ButtonGroup gap="XS">
-          <Button cta disabled={queryInvalid} on:click={saveQuery}>
+          <Button
+            cta
+            disabled={queryInvalid}
+            on:click={async () => {
+              await saveQuery()
+              notifications.success(`Query saved successfully`)
+              // Go to the correct URL if we just created a new query
+              if (!query._rev) {
+                $goto(`../../${query._id}`)
+              }
+            }}
+          >
             Save Query
           </Button>
           <Button secondary on:click={previewQuery}>Run Query</Button>
@@ -273,5 +346,10 @@
     gap: var(--spacing-m);
     min-width: 150px;
     align-items: center;
+  }
+
+  .binding-wrap :global(div.container) {
+    padding-left: 0px;
+    padding-right: 0px;
   }
 </style>
