@@ -148,21 +148,22 @@ export class BaseSocket {
   }
 
   // Gets an array of all redis keys of users inside a certain room
-  async getRoomSessionKeys(room: string): Promise<string[]> {
+  async getRoomSessionIds(room: string): Promise<string[]> {
     const keys = await this.redisClient?.get(this.getRoomKey(room))
     return keys || []
   }
 
   // Sets the list of redis keys for users inside a certain room.
   // There is no TTL on the actual room key map itself.
-  async setRoomSessionKeys(room: string, keys: string[]) {
-    await this.redisClient?.store(this.getRoomKey(room), keys)
+  async setRoomSessionIds(room: string, ids: string[]) {
+    await this.redisClient?.store(this.getRoomKey(room), ids)
   }
 
   // Gets a list of all users inside a certain room
   async getRoomSessions(room?: string): Promise<SocketSession[]> {
     if (room) {
-      const keys = await this.getRoomSessionKeys(room)
+      const sessionIds = await this.getRoomSessionIds(room)
+      const keys = sessionIds.map(this.getSessionKey.bind(this))
       const sessions = await this.redisClient?.bulkGet(keys)
       return Object.values(sessions || {})
     } else {
@@ -173,20 +174,20 @@ export class BaseSocket {
   // Detects keys which have been pruned from redis due to TTL expiry in a certain
   // room and broadcasts disconnection messages to ensure clients are aware
   async pruneRoom(room: string) {
-    const keys = await this.getRoomSessionKeys(room)
-    const keysExist = await Promise.all(
-      keys.map(key => this.redisClient?.exists(key))
+    const sessionIds = await this.getRoomSessionIds(room)
+    const sessionsExist = await Promise.all(
+      sessionIds.map(id => this.redisClient?.exists(this.getSessionKey(id)))
     )
-    const prunedKeys = keys.filter((key, idx) => {
-      if (!keysExist[idx]) {
-        console.log("pruning key", keys[idx])
+    const prunedSessionIds = sessionIds.filter((id, idx) => {
+      if (!sessionsExist[idx]) {
+        this.io.to(room).emit(SocketEvents.UserDisconnect, sessionIds[idx])
         return false
       }
       return true
     })
 
     // Store new pruned keys
-    await this.setRoomSessionKeys(room, prunedKeys)
+    await this.setRoomSessionIds(room, prunedSessionIds)
   }
 
   // Adds a user to a certain room
@@ -213,11 +214,12 @@ export class BaseSocket {
     // Store in redis
     // @ts-ignore
     let user: SocketSession = socket.data
-    const key = this.getSessionKey(user.sessionId)
+    const { sessionId } = user
+    const key = this.getSessionKey(sessionId)
     await this.redisClient?.store(key, user, SocketSessionTTL)
-    const roomKeys = await this.getRoomSessionKeys(room)
-    if (!roomKeys.includes(key)) {
-      await this.setRoomSessionKeys(room, [...roomKeys, key])
+    const sessionIds = await this.getRoomSessionIds(room)
+    if (!sessionIds.includes(sessionId)) {
+      await this.setRoomSessionIds(room, [...sessionIds, sessionId])
     }
 
     // Notify other users
@@ -240,14 +242,14 @@ export class BaseSocket {
     // Delete from redis
     const key = this.getSessionKey(sessionId)
     await this.redisClient?.delete(key)
-    const roomKeys = await this.getRoomSessionKeys(room)
-    await this.setRoomSessionKeys(
+    const sessionIds = await this.getRoomSessionIds(room)
+    await this.setRoomSessionIds(
       room,
-      roomKeys.filter(k => k !== key)
+      sessionIds.filter(id => id !== sessionId)
     )
 
     // Notify other users
-    socket.to(room).emit(SocketEvents.UserDisconnect, user)
+    socket.to(room).emit(SocketEvents.UserDisconnect, sessionId)
   }
 
   // Updates a connected user's metadata, assuming a room change is not required.
