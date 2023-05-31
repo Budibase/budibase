@@ -5,7 +5,7 @@
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
 
   export let panel = ClientBindingPanel
@@ -33,6 +33,10 @@
     onChange(tempValue)
     bindingDrawer.hide()
   }
+
+  setContext("binding-drawer-actions", {
+    save: handleClose,
+  })
 
   const onChange = (value, optionPicked) => {
     // Add HBS braces if picking binding
@@ -63,7 +67,6 @@
     on:pick={e => onChange(e.detail, true)}
     on:blur={() => dispatch("blur")}
     {placeholder}
-    options={allOptions}
     {error}
   />
   {#if !disabled}
@@ -77,6 +80,7 @@
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>
+
   <Button cta slot="buttons" on:click={handleClose} disabled={!valid}>
     Save
   </Button>

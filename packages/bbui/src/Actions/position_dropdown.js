@@ -56,6 +56,8 @@ export default function positionDropdown(element, opts) {
       styles.left = anchorBounds.left + anchorBounds.width - elementBounds.width
     } else if (align === "right-outside") {
       styles.left = anchorBounds.right + offset
+    } else if (align === "left-outside") {
+      styles.left = anchorBounds.left - elementBounds.width - offset
     } else {
       styles.left = anchorBounds.left
     }
