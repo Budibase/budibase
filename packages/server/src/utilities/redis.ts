@@ -7,7 +7,7 @@ const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
 let devAppClient: RedisClient,
   debounceClient: RedisClient,
-  flagClient: RedisClient,
+  flagClient: RedisClient
 
 // We need to maintain a duplicate client for socket.io pub/sub
 let socketClient: RedisClient
