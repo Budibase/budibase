@@ -1,6 +1,7 @@
 import { io } from "socket.io-client"
+import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
 
-export const createWebsocket = path => {
+export const createWebsocket = (path, heartbeat = true) => {
   if (!path) {
     throw "A websocket path must be provided"
   }
@@ -10,7 +11,7 @@ export const createWebsocket = path => {
   const proto = tls ? "wss:" : "ws:"
   const host = location.hostname
   const port = location.port || (tls ? 443 : 80)
-  return io(`${proto}//${host}:${port}`, {
+  const socket = io(`${proto}//${host}:${port}`, {
     path,
     // Cap reconnection attempts to 3 (total of 15 seconds before giving up)
     reconnectionAttempts: 3,
@@ -23,4 +24,18 @@ export const createWebsocket = path => {
     // will only work with sticky sessions which we don't have
     transports: ["websocket"],
   })
+
+  // Set up a heartbeat that's half of the session TTL
+  let interval
+  if (heartbeat) {
+    interval = setInterval(() => {
+      socket.emit(SocketEvent.Heartbeat)
+    }, SocketSessionTTL * 500)
+  }
+
+  socket.on("disconnect", () => {
+    clearInterval(interval)
+  })
+
+  return socket
 }

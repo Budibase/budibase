@@ -67,3 +67,24 @@ export const SqlNumberTypeRangeMap = {
     min: -8388608,
   },
 }
+
+export enum SocketEvent {
+  UserUpdate = "UserUpdate",
+  UserDisconnect = "UserDisconnect",
+  Heartbeat = "Heartbeat",
+}
+
+export enum GridSocketEvent {
+  RowChange = "RowChange",
+  TableChange = "TableChange",
+  SelectTable = "SelectTable",
+  SelectCell = "SelectCell",
+}
+
+export enum BuilderSocketEvent {
+  SelectApp = "SelectApp",
+  TableChange = "TableChange",
+  DatasourceChange = "DatasourceChange",
+}
+
+export const SocketSessionTTL = 60
