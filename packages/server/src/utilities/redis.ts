@@ -15,7 +15,7 @@ export async function init() {
   devAppClient = new redis.Client(redis.utils.Databases.DEV_LOCKS)
   debounceClient = new redis.Client(redis.utils.Databases.DEBOUNCE)
   flagClient = new redis.Client(redis.utils.Databases.FLAGS)
-  socketClient = new redis.Client(redis.utils.Databases.SOCKET_IO)
+  socketClient = new redis.Client(redis.utils.Databases.SOCKET_IO, redis.utils.SelectableDatabase.SOCKET_IO)
   await devAppClient.init()
   await debounceClient.init()
   await flagClient.init()
