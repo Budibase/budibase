@@ -77,7 +77,7 @@ export const getAuthBindings = () => {
       runtime: `${safeUser}.${safeOAuth2}.${safeAccessToken}`,
       readable: `Current User.OAuthToken`,
       key: "accessToken",
-      display: { name: "OAuthToken" },
+      display: { name: "OAuthToken", type: "text" },
     },
   ]
 
@@ -434,6 +434,9 @@ export const getUserBindings = () => {
       providerId: "user",
       category: "Current User",
       icon: "User",
+      display: {
+        name: key,
+      },
     })
     return acc
   }, [])
@@ -550,7 +553,7 @@ const getUrlBindings = asset => {
     readableBinding: `URL.${param}`,
     category: "URL",
     icon: "RailTop",
-    display: { type: "string" },
+    display: { type: "string", name: param },
   }))
   const queryParamsBinding = {
     type: "context",
@@ -558,7 +561,7 @@ const getUrlBindings = asset => {
     readableBinding: "Query params",
     category: "URL",
     icon: "RailTop",
-    display: { type: "object" },
+    display: { type: "object", name: "Query params" },
   }
   return urlParamBindings.concat([queryParamsBinding])
 }
