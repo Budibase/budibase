@@ -72,7 +72,7 @@ const SCHEMA: Integration = {
   },
   datasource: {
     spreadsheetId: {
-      display: "Google Sheet URL",
+      display: "Spreadsheet URL",
       type: DatasourceFieldType.STRING,
       required: true,
     },
