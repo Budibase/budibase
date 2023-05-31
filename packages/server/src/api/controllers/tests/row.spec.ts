@@ -1,19 +1,17 @@
 import { exportRows } from "../row/external"
-const { datasources } = require("../../../sdk")
+import sdk from "../../../sdk"
 
-jest.mock("../../../sdk")
-// jest.mock("../../../sdk", () => {
-//   mockGetDatasource = jest.fn(() => null)
-//   return {
-//     datasources: {
-//       get: mockGetDatasource,
-//     },
-//   }
-// })
-// let mockGetDatasource: jest.Mock
+// @ts-ignore
+sdk.datasources = {
+  get: jest.fn(),
+};
 
 describe("external row controller", () => {
   describe("exportRows", () => {
+    afterEach(() => {
+      jest.clearAllMocks()
+    })
+
     it("should throw a 400 if no datasource entities are present", async () => {
       let userCtx = {
         params: {
@@ -40,11 +38,7 @@ describe("external row controller", () => {
 
     it("should something", async () => {
       //@ts-ignore
-      datasources.mockImplementationOnce(() => ({
-        datasources: {
-          get: jest.fn(() => ({ entities: [] })),
-        },
-      }))
+      sdk.datasources.get.mockImplementation(() => ({ entities: [] }));
       let userCtx = {
         params: {
           tableId: "ta__123abc",
