@@ -8,9 +8,9 @@ const AUTOMATION_TEST_FLAG_SECONDS = 60
 let devAppClient: RedisClient,
   debounceClient: RedisClient,
   flagClient: RedisClient,
-  socketClient: RedisClient
 
 // We need to maintain a duplicate client for socket.io pub/sub
+let socketClient: RedisClient
 let socketSubClient: any
 
 // We init this as we want to keep the connection open all the time
@@ -19,21 +19,20 @@ export async function init() {
   devAppClient = new redis.Client(redis.utils.Databases.DEV_LOCKS)
   debounceClient = new redis.Client(redis.utils.Databases.DEBOUNCE)
   flagClient = new redis.Client(redis.utils.Databases.FLAGS)
-  socketClient = new redis.Client(redis.utils.Databases.SOCKET_IO)
   await devAppClient.init()
   await debounceClient.init()
   await flagClient.init()
-  await socketClient.init()
 
   // Duplicate the socket client for pub/sub
+  socketClient = await redis.clients.getSocketClient()
   socketSubClient = socketClient.getClient().duplicate()
 }
 
 export async function shutdown() {
+  console.log("REDIS SHUTDOWN")
   if (devAppClient) await devAppClient.finish()
   if (debounceClient) await debounceClient.finish()
   if (flagClient) await flagClient.finish()
-  if (socketClient) await socketClient.finish()
   if (socketSubClient) socketSubClient.disconnect()
   // shutdown core clients
   await redis.clients.shutdown()

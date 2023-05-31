@@ -118,7 +118,7 @@ export const getFrontendStore = () => {
     },
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath, hasLock } = pkg
-      websocket = createBuilderWebsocket()
+      websocket = createBuilderWebsocket(application.appId)
       await store.actions.components.refreshDefinitions(application.appId)
 
       // Reset store state
