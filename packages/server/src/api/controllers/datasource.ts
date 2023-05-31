@@ -28,6 +28,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
+import { setupCreationAuth as googleSetupCreationAuth } from "src/integrations/googlesheets"
 
 function getErrorTables(errors: any, errorType: string) {
   return Object.entries(errors)
@@ -143,19 +144,6 @@ export async function verify(
       datasource,
       existingDatasource
     )
-  }
-  if (
-    datasource.source === SourceName.GOOGLE_SHEETS &&
-    datasource.config?.continueSetupId
-  ) {
-    const appId = context.getAppId()
-    const tokens = await cache.get(
-      `datasource:creation:${appId}:google:${datasource.config?.continueSetupId}`
-    )
-
-    enrichedDatasource = sdk.datasources.mergeConfigs(datasource, {
-      config: { auth: tokens.tokens },
-    } as any)
   }
 
   const connector = await getConnector(enrichedDatasource)
@@ -315,6 +303,12 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   builderSocket.emitDatasourceUpdate(ctx, datasource)
 }
 
+const preSaveAction: Partial<Record<SourceName, any>> = {
+  [SourceName.GOOGLE_SHEETS]: async (datasource: Datasource) => {
+    await googleSetupCreationAuth(datasource.config as any)
+  },
+}
+
 export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
@@ -334,6 +328,10 @@ export async function save(
     schemaError = error
     datasource.entities = tables
     setDefaultDisplayColumns(datasource)
+  }
+
+  if (preSaveAction[datasource.source]) {
+    await preSaveAction[datasource.source](datasource)
   }
 
   const dbResp = await db.put(datasource)
