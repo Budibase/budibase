@@ -25,6 +25,7 @@ const config = setup.getConfig()!
 jest.setTimeout(30000)
 
 jest.unmock("pg")
+jest.mock("../websockets")
 
 describe("postgres integrations", () => {
   let makeRequest: MakeRequestResponse,
@@ -1055,13 +1056,12 @@ describe("postgres integrations", () => {
     })
   })
 
-  describe("GET /api/datasources/:datasourceId/info", () => {
+  describe("POST /api/datasources/info", () => {
     it("should fetch information about postgres datasource", async () => {
       const primaryName = primaryPostgresTable.name
-      const response = await makeRequest(
-        "get",
-        `/api/datasources/${postgresDatasource._id}/info`
-      )
+      const response = await makeRequest("post", "/api/datasources/info", {
+        datasource: postgresDatasource,
+      })
       expect(response.status).toBe(200)
       expect(response.body.tableNames).toBeDefined()
       expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-1)
