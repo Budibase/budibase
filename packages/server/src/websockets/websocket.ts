@@ -5,6 +5,9 @@ import Cookies from "cookies"
 import { userAgent } from "koa-useragent"
 import { auth } from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
+import { createAdapter } from "@socket.io/redis-adapter"
+import { getSocketPubSubClients } from "../utilities/redis"
+import uuid from "uuid"
 
 export default class Socket {
   io: Server
@@ -12,7 +15,7 @@ export default class Socket {
   constructor(
     app: Koa,
     server: http.Server,
-    path: string,
+    path: string = "/",
     additionalMiddlewares?: any[]
   ) {
     this.io = new Server(server, {
@@ -59,13 +62,21 @@ export default class Socket {
         for (let [idx, middleware] of middlewares.entries()) {
           await middleware(ctx, () => {
             if (idx === middlewares.length - 1) {
-              // Middlewares are finished.
+              // Middlewares are finished
               // Extract some data from our enriched koa context to persist
               // as metadata for the socket
+              // Add user info, including a deterministic color and label
+              const { _id, email, firstName, lastName } = ctx.user
               socket.data.user = {
-                id: ctx.user._id,
-                email: ctx.user.email,
+                _id,
+                email,
+                firstName,
+                lastName,
+                sessionId: uuid.v4(),
               }
+
+              // Add app ID to help split sockets into rooms
+              socket.data.appId = ctx.appId
               next()
             }
           })
@@ -74,6 +85,11 @@ export default class Socket {
         next(error)
       }
     })
+
+    // Instantiate redis adapter
+    const { pub, sub } = getSocketPubSubClients()
+    const opts = { key: `socket.io-${path}` }
+    this.io.adapter(createAdapter(pub, sub, opts))
   }
 
   // Emit an event to all sockets

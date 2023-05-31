@@ -26,6 +26,7 @@ import {
   DatasourcePlus,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { builderSocket } from "../../websockets"
 
 function getErrorTables(errors: any, errorType: string) {
   return Object.entries(errors)
@@ -296,6 +297,7 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
   }
+  builderSocket.emitDatasourceUpdate(ctx, datasource)
 }
 
 export async function save(
@@ -338,6 +340,7 @@ export async function save(
     response.error = schemaError
   }
   ctx.body = response
+  builderSocket.emitDatasourceUpdate(ctx, datasource)
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {
@@ -397,6 +400,7 @@ export async function destroy(ctx: UserCtx) {
 
   ctx.message = `Datasource deleted.`
   ctx.status = 200
+  builderSocket.emitDatasourceDeletion(ctx, datasourceId)
 }
 
 export async function find(ctx: UserCtx) {
