@@ -315,6 +315,12 @@ const preSaveAction: Partial<Record<SourceName, any>> = {
   },
 }
 
+const preSaveAction: Partial<Record<SourceName, any>> = {
+  [SourceName.GOOGLE_SHEETS]: async (datasource: Datasource) => {
+    await googleSetupCreationAuth(datasource.config as any)
+  },
+}
+
 export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
