@@ -252,7 +252,6 @@ class Orchestrator {
         return
       }
     }
-    const start = performance.now()
     for (let step of automation.definition.steps) {
       if (timeoutFlag) {
         break
@@ -473,11 +472,6 @@ class Orchestrator {
         loopSteps = []
       }
     }
-
-    const end = performance.now()
-    const executionTime = end - start
-
-    console.log(`Execution time: ${executionTime} milliseconds`)
 
     // store the logs for the automation run
     try {
