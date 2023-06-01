@@ -16,7 +16,7 @@ on:
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
   lint:
