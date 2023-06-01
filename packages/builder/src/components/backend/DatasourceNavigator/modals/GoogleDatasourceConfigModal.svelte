@@ -7,11 +7,12 @@
     notifications,
   } from "@budibase/bbui"
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
-  import GoogleButton from "../_components/GoogleButton.svelte"
+  import cloneDeep from "lodash/cloneDeepWith"
+  import GoogleButton from "components/common/GoogleButton.svelte"
+  import { saveDatasource as save } from "builderStore/datasource"
   import { organisation } from "stores/portal"
   import { onMount } from "svelte"
   import { validateDatasourceConfig } from "builderStore/datasource"
-  import cloneDeep from "lodash/cloneDeepWith"
   import IntegrationConfigForm from "../TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { goto } from "@roxi/routify"
 
