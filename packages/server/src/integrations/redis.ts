@@ -177,7 +177,13 @@ class RedisIntegration {
       const pipeline = this.client.pipeline(pipelineCommands)
       const result = await pipeline.exec()
 
-      return result.map((output: string | string[]) => output[1])
+      return result?.map((output: any) => {
+        if (typeof output === "string") {
+          return output
+        } else if (Array.isArray(output)) {
+          return output[1]
+        }
+      })
     })
   }
 }

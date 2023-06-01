@@ -14,9 +14,9 @@ export default class BuilderSocket extends BaseSocket {
     super(app, server, "/socket/builder", [authorized(permissions.BUILDER)])
   }
 
-  async onConnect(socket: Socket) {
+  async onConnect(socket?: Socket) {
     // Initial identification of selected app
-    socket.on(BuilderSocketEvent.SelectApp, async (appId, callback) => {
+    socket?.on(BuilderSocketEvent.SelectApp, async (appId, callback) => {
       await this.joinRoom(socket, appId)
 
       // Reply with all users in current room
@@ -49,14 +49,14 @@ export default class BuilderSocket extends BaseSocket {
     this.io
       .in(ctx.appId)
       .emit(BuilderSocketEvent.TableChange, { id: table._id, table })
-    gridSocket.emitTableUpdate(table)
+    gridSocket?.emitTableUpdate(table)
   }
 
   emitTableDeletion(ctx: any, id: string) {
     this.io
       .in(ctx.appId)
       .emit(BuilderSocketEvent.TableChange, { id, table: null })
-    gridSocket.emitTableDeletion(id)
+    gridSocket?.emitTableDeletion(id)
   }
 
   emitDatasourceUpdate(ctx: any, datasource: Datasource) {
