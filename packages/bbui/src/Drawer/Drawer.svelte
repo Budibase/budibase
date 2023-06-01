@@ -54,6 +54,7 @@
     <section
       class:fillWidth
       class="drawer"
+      class:headless
       transition:slide|local
       style={`width: ${width}; left: ${left};`}
     >
@@ -77,6 +78,10 @@
 {/if}
 
 <style>
+  .drawer.headless :global(.drawer-contents) {
+    height: calc(40vh + 75px);
+  }
+
   .buttons {
     display: flex;
     gap: var(--spacing-m);
