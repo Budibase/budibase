@@ -1,13 +1,16 @@
-import { redis } from "@budibase/backend-core"
+import { redis, RedisClient } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import { ContextUser } from "@budibase/types"
+import env from "../environment"
 
 const APP_DEV_LOCK_SECONDS = 600
 const AUTOMATION_TEST_FLAG_SECONDS = 60
-let devAppClient: any, debounceClient: any, flagClient: any
+let devAppClient: RedisClient,
+  debounceClient: RedisClient,
+  flagClient: RedisClient
 
 // We need to maintain a duplicate client for socket.io pub/sub
-let socketClient: any
+let socketClient: RedisClient
 let socketSubClient: any
 
 // We init this as we want to keep the connection open all the time
@@ -22,7 +25,9 @@ export async function init() {
 
   // Duplicate the socket client for pub/sub
   socketClient = await redis.clients.getSocketClient()
-  socketSubClient = socketClient.getClient().duplicate()
+  if (!env.isTest()) {
+    socketSubClient = socketClient.getClient().duplicate()
+  }
 }
 
 export async function shutdown() {

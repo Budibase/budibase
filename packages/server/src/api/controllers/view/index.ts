@@ -58,7 +58,7 @@ export async function save(ctx: Ctx) {
   await handleViewEvents(existingTable.views[viewName], table.views[viewName])
 
   ctx.body = table.views[viewName]
-  builderSocket.emitTableUpdate(ctx, table)
+  builderSocket?.emitTableUpdate(ctx, table)
 }
 
 export async function calculationEvents(existingView: View, newView: View) {
@@ -127,7 +127,7 @@ export async function destroy(ctx: Ctx) {
   await events.view.deleted(view)
 
   ctx.body = view
-  builderSocket.emitTableUpdate(ctx, table)
+  builderSocket?.emitTableUpdate(ctx, table)
 }
 
 export async function exportView(ctx: Ctx) {
