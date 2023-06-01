@@ -44,10 +44,18 @@ function getLoopIterations(loopStep: LoopStep) {
   if (!binding) {
     return 0
   }
+  const isString = typeof binding === "string"
+  try {
+    if (isString) {
+      binding = JSON.parse(binding)
+    }
+  } catch (err) {
+    // ignore error - wasn't able to parse
+  }
   if (Array.isArray(binding)) {
     return binding.length
   }
-  if (typeof binding === "string") {
+  if (isString) {
     return automationUtils.stringSplit(binding).length
   }
   return 0
