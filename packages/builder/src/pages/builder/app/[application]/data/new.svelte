@@ -139,7 +139,6 @@
   const fetchIntegrations = async () => {
     const unsortedIntegrations = await API.getIntegrations()
     integrations = sortIntegrations(unsortedIntegrations)
-    console.log(integrations[IntegrationTypes.GOOGLE_SHEETS])
 
     if (continueGoogleSetup) {
       handleIntegrationSelect(IntegrationTypes.GOOGLE_SHEETS)
