@@ -592,7 +592,6 @@ export const getEventContextBindings = (
   actionId
 ) => {
   let bindings = []
-
   // Check if any context bindings are provided by the component for this
   // setting
   const component = findComponent(asset.props, componentId)
@@ -608,6 +607,9 @@ export const getEventContextBindings = (
         )}`,
         category: component._instanceName,
         icon: def.icon,
+        display: {
+          name: contextEntry.label,
+        },
       })
     })
   }
@@ -631,6 +633,9 @@ export const getEventContextBindings = (
           runtimeBinding: `actions.${idx}.${contextValue.value}`,
           category: "Actions",
           icon: "JourneyAction",
+          display: {
+            name: contextValue.label,
+          },
         })
       })
     }

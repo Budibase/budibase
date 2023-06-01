@@ -380,9 +380,6 @@
     white-space: nowrap;
     overflow: hidden;
   }
-  .binding-drawer :global(.drawer-contents) {
-    height: unset;
-  }
   .main :global(textarea) {
     min-height: 202px !important;
   }
@@ -426,7 +423,7 @@
   .main-content {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 315px;
+    grid-template-rows: 380px;
   }
   .main-content.binding-panel {
     grid-template-columns: 1fr 320px;
