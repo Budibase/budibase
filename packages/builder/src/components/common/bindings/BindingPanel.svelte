@@ -368,7 +368,6 @@
   .binding-drawer :global(.container > .main) {
     overflow: hidden;
     height: 100%;
-    /* box-sizing: border-box; */
     padding: 0px;
   }
 
@@ -380,9 +379,8 @@
   }
 
   .binding-drawer :global(.spectrum-Tabs-content) {
-    /* height: 100%;
-    max-height: 100%; */
     flex: 1;
+    overflow: hidden;
   }
 
   .binding-drawer :global(.spectrum-Tabs-content > div),
@@ -413,9 +411,7 @@
   .main :global(textarea) {
     min-height: 202px !important;
   }
-  /* .main {
-    margin: calc(-1 * var(--spacing-xl));
-  } */
+
   .main-content {
     padding: var(--spacing-s) var(--spacing-xl);
   }
@@ -459,9 +455,10 @@
     grid-template-columns: 1fr 320px;
   }
   .binding-picker {
-    overflow-y: auto;
     border-left: 2px solid var(--border-light);
     border-left: var(--border-light);
+    overflow: scroll;
+    height: 100%;
   }
   .editor {
     padding: var(--spacing-xl);
