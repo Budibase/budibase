@@ -95,7 +95,7 @@ export function getRedisOptions() {
     opts.port = port
     opts.password = password
   }
-  return { opts, host, port, redisProtocolUrl }
+  return { opts, host, port: parseInt(port), redisProtocolUrl }
 }
 
 export function addDbPrefix(db: string, key: string) {
