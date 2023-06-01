@@ -1324,7 +1324,7 @@ entries:
     version: 0.0.0-master
   - apiVersion: v2
     appVersion: develop
-    created: "2023-05-31T17:44:41.993182996Z"
+    created: "2023-06-01T09:30:53.273700082Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -1349,4 +1349,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2023-05-31T17:44:41.979988847Z"
+generated: "2023-06-01T09:30:53.265848489Z"
