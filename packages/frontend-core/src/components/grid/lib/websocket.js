@@ -26,15 +26,15 @@ export const createGridWebsocket = context => {
   })
 
   // User events
-  socket.on(SocketEvent.UserUpdate, user => {
+  socket.onOther(SocketEvent.UserUpdate, user => {
     users.actions.updateUser(user)
   })
-  socket.on(SocketEvent.UserDisconnect, user => {
+  socket.onOther(SocketEvent.UserDisconnect, user => {
     users.actions.removeUser(user)
   })
 
   // Row events
-  socket.on(GridSocketEvent.RowChange, async data => {
+  socket.onOther(GridSocketEvent.RowChange, async data => {
     if (data.id) {
       rows.actions.replaceRow(data.id, data.row)
     } else if (data.row.id) {
@@ -44,7 +44,7 @@ export const createGridWebsocket = context => {
   })
 
   // Table events
-  socket.on(GridSocketEvent.TableChange, data => {
+  socket.onOther(GridSocketEvent.TableChange, data => {
     // Only update table if one exists. If the table was deleted then we don't
     // want to know - let the builder navigate away
     if (data.table) {

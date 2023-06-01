@@ -18,7 +18,9 @@ export const initWebsocket = () => {
   }
 
   // Initialise connection
-  socket = createWebsocket("/socket/client", false)
+  socket = createWebsocket("/socket/client", {
+    heartbeat: false,
+  })
 
   // Event handlers
   socket.on("plugin-update", data => {
