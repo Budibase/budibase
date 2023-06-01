@@ -50,7 +50,7 @@ export const save = async (ctx: any) => {
   if (body && body._id) {
     return patch(ctx)
   }
-  const { row, table } = await quotas.addRow(() =>
+  const { row, table, squashed } = await quotas.addRow(() =>
     quotas.addQuery(() => pickApi(tableId).save(ctx), {
       datasourceId: tableId,
     })
@@ -58,8 +58,9 @@ export const save = async (ctx: any) => {
   ctx.status = 200
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
   ctx.message = `${table.name} saved successfully`
-  ctx.body = row
-  gridSocket?.emitRowUpdate(ctx, row)
+  // prefer squashed for response
+  ctx.body = row || squashed
+  gridSocket?.emitRowUpdate(ctx, row || squashed)
 }
 export async function fetchView(ctx: any) {
   const tableId = utils.getTableId(ctx)
