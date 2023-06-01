@@ -365,6 +365,36 @@
 </span>
 
 <style>
+  .binding-drawer :global(.container > .main) {
+    overflow: hidden;
+    height: 100%;
+    /* box-sizing: border-box; */
+    padding: 0px;
+  }
+
+  .binding-drawer :global(.container > .main > .main) {
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .binding-drawer :global(.spectrum-Tabs-content) {
+    /* height: 100%;
+    max-height: 100%; */
+    flex: 1;
+  }
+
+  .binding-drawer :global(.spectrum-Tabs-content > div),
+  .binding-drawer :global(.spectrum-Tabs-content > div > div),
+  .binding-drawer :global(.spectrum-Tabs-content .main-content) {
+    height: 100%;
+  }
+
+  .binding-drawer .main-content {
+    grid-template-rows: unset;
+  }
+
   .messaging {
     display: flex;
     align-items: center;
@@ -383,9 +413,9 @@
   .main :global(textarea) {
     min-height: 202px !important;
   }
-  .main {
+  /* .main {
     margin: calc(-1 * var(--spacing-xl));
-  }
+  } */
   .main-content {
     padding: var(--spacing-s) var(--spacing-xl);
   }
