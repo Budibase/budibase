@@ -472,6 +472,20 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       } else {
         rows = await sheet.getRows()
       }
+      // this is a special case - need to handle the _id, it doesn't exist
+      // we cannot edit the returned structure from google, it does not have
+      // setter functions and is immutable, easier to update the filters
+      // to look for the _rowNumber property rather than rowNumber
+      if (query.filters?.equal) {
+        const idFilterKeys = Object.keys(query.filters.equal).filter(filter =>
+          filter.includes(GOOGLE_SHEETS_PRIMARY_KEY)
+        )
+        for (let idFilterKey of idFilterKeys) {
+          const id = query.filters.equal[idFilterKey]
+          delete query.filters.equal[idFilterKey]
+          query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
+        }
+      }
       const filtered = dataFilters.runLuceneQuery(rows, query.filters)
       const headerValues = sheet.headerValues
       let response = []
@@ -535,7 +549,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     const row = rows[query.rowIndex]
     if (row) {
       await row.delete()
-      return [{ deleted: query.rowIndex, [GOOGLE_SHEETS_PRIMARY_KEY]: query.rowIndex }]
+      return [
+        {
+          deleted: query.rowIndex,
+          [GOOGLE_SHEETS_PRIMARY_KEY]: query.rowIndex,
+        },
+      ]
     } else {
       throw new Error("Row does not exist.")
     }
