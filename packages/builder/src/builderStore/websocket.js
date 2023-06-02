@@ -15,24 +15,22 @@ export const createBuilderWebsocket = appId => {
   socket.on("connect_error", err => {
     console.log("Failed to connect to builder websocket:", err.message)
   })
+  socket.on("disconnect", () => {
+    userStore.actions.reset()
+  })
 
   // User events
-  socket.on(SocketEvent.UserUpdate, userStore.actions.updateUser)
-  socket.on(SocketEvent.UserDisconnect, userStore.actions.removeUser)
+  socket.onOther(SocketEvent.UserUpdate, userStore.actions.updateUser)
+  socket.onOther(SocketEvent.UserDisconnect, userStore.actions.removeUser)
 
   // Table events
-  socket.on(BuilderSocketEvent.TableChange, ({ id, table }) => {
+  socket.onOther(BuilderSocketEvent.TableChange, ({ id, table }) => {
     tables.replaceTable(id, table)
   })
 
   // Datasource events
-  socket.on(BuilderSocketEvent.DatasourceChange, ({ id, datasource }) => {
+  socket.onOther(BuilderSocketEvent.DatasourceChange, ({ id, datasource }) => {
     datasources.replaceDatasource(id, datasource)
-  })
-
-  // Clean up user store on disconnect
-  socket.on("disconnect", () => {
-    userStore.actions.reset()
   })
 
   return socket
