@@ -11,7 +11,6 @@
     ActionButton,
     Drawer,
     Modal,
-    Detail,
     notifications,
     Icon,
   } from "@budibase/bbui"
@@ -53,7 +52,6 @@
   let webhookModal
   let drawer
   let fillWidth = true
-  let codeBindingOpen = false
   let inputData
 
   $: filters = lookForFilters(schemaProperties) || []
