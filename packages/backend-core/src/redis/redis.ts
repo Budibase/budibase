@@ -3,8 +3,12 @@ import Redis from "ioredis"
 // mock-redis doesn't have any typing
 let MockRedis: any | undefined
 if (env.MOCK_REDIS) {
-  // ioredis mock is all in memory
-  MockRedis = require("ioredis-mock")
+  try {
+    // ioredis mock is all in memory
+    MockRedis = require("ioredis-mock")
+  } catch (err) {
+    console.log("Mock redis unavailable")
+  }
 }
 import {
   addDbPrefix,
