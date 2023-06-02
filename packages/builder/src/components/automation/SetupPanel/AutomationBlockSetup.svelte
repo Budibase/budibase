@@ -11,8 +11,8 @@
     ActionButton,
     Drawer,
     Modal,
-    Detail,
     notifications,
+    Icon,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation } from "builderStore"
@@ -27,6 +27,12 @@
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
+  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
+  import {
+    bindingsToCompletions,
+    jsAutocomplete,
+    EditorModes,
+  } from "components/common/CodeEditor"
   import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
   import { LuceneUtils } from "@budibase/frontend-core"
   import {
@@ -46,7 +52,6 @@
   let webhookModal
   let drawer
   let fillWidth = true
-  let codeBindingOpen = false
   let inputData
 
   $: filters = lookForFilters(schemaProperties) || []
@@ -457,25 +462,27 @@
         <SchemaSetup on:change={e => onChange(e, key)} value={inputData[key]} />
       {:else if value.customType === "code"}
         <CodeEditorModal>
-          <ActionButton
-            on:click={() => (codeBindingOpen = !codeBindingOpen)}
-            quiet
-            icon={codeBindingOpen ? "ChevronDown" : "ChevronRight"}
-          >
-            <Detail size="S">Bindings</Detail>
-          </ActionButton>
-          {#if codeBindingOpen}
-            <pre>{JSON.stringify(bindings, null, 2)}</pre>
-          {/if}
-          <Editor
-            mode="javascript"
+          <CodeEditor
+            value={inputData[key]}
             on:change={e => {
               // need to pass without the value inside
-              onChange({ detail: e.detail.value }, key)
-              inputData[key] = e.detail.value
+              onChange({ detail: e.detail }, key)
+              inputData[key] = e.detail
             }}
-            value={inputData[key]}
+            completions={[
+              jsAutocomplete([
+                ...bindingsToCompletions(bindings, EditorModes.JS),
+              ]),
+            ]}
+            mode={EditorModes.JS}
+            height={500}
           />
+          <div class="messaging">
+            <Icon name="FlashOn" />
+            <div class="messaging-wrap">
+              <div>Add available bindings by typing <strong>$</strong></div>
+            </div>
+          </div>
         </CodeEditorModal>
       {:else if value.customType === "loopOption"}
         <Select
@@ -525,6 +532,11 @@
 {/if}
 
 <style>
+  .messaging {
+    display: flex;
+    align-items: center;
+    margin-top: var(--spacing-xl);
+  }
   .fields {
     display: flex;
     flex-direction: column;
