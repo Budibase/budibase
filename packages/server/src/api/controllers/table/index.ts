@@ -78,7 +78,7 @@ export async function save(ctx: UserCtx) {
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:save`, appId, savedTable)
   ctx.body = savedTable
-  builderSocket.emitTableUpdate(ctx, savedTable)
+  builderSocket?.emitTableUpdate(ctx, savedTable)
 }
 
 export async function destroy(ctx: UserCtx) {
@@ -91,7 +91,7 @@ export async function destroy(ctx: UserCtx) {
   ctx.status = 200
   ctx.table = deletedTable
   ctx.body = { message: `Table ${tableId} deleted.` }
-  builderSocket.emitTableDeletion(ctx, tableId)
+  builderSocket?.emitTableDeletion(ctx, tableId)
 }
 
 export async function bulkImport(ctx: UserCtx) {

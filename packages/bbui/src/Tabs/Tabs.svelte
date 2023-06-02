@@ -36,6 +36,10 @@
           selected = $tab.title
           dispatch("select", thisSelected)
         }
+      } else {
+        thisSelected = $tab.title
+        selected = $tab.title
+        dispatch("select", thisSelected)
       }
     }
     if ($tab.title !== thisSelected) {

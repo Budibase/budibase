@@ -20,8 +20,8 @@ router
     authorized(permissions.BUILDER),
     datasourceController.verify
   )
-  .get(
-    "/api/datasources/:datasourceId/info",
+  .post(
+    "/api/datasources/info",
     authorized(permissions.BUILDER),
     datasourceController.information
   )
