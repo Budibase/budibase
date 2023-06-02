@@ -214,8 +214,7 @@ export const deriveStores = context => {
   const addRow = async (row, idx, bubble = false) => {
     try {
       // Create row
-      let newRow = await API.saveRow({ ...row, tableId: get(tableId) })
-      newRow = await fetchRow(newRow._id)
+      const newRow = await API.saveRow({ ...row, tableId: get(tableId) })
 
       // Update state
       if (idx != null) {
@@ -437,6 +436,9 @@ export const deriveStores = context => {
 
   // Checks if we have a row with a certain ID
   const hasRow = id => {
+    if (id === NewRowID) {
+      return true
+    }
     return get(rowLookupMap)[id] != null
   }
 

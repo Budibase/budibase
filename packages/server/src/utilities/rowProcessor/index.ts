@@ -216,7 +216,10 @@ export async function outputProcessing(
     }
   }
   if (opts.squash) {
-    enriched = await linkRows.squashLinksToPrimaryDisplay(table, enriched)
+    enriched = (await linkRows.squashLinksToPrimaryDisplay(
+      table,
+      enriched
+    )) as Row[]
   }
   return wasArray ? enriched : enriched[0]
 }
