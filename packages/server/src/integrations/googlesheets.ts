@@ -535,7 +535,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     const row = rows[query.rowIndex]
     if (row) {
       await row.delete()
-      return [{ deleted: query.rowIndex }]
+      return [{ deleted: query.rowIndex, [GOOGLE_SHEETS_PRIMARY_KEY]: query.rowIndex }]
     } else {
       throw new Error("Row does not exist.")
     }
