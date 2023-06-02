@@ -1,7 +1,11 @@
 import env from "../environment"
 import Redis from "ioredis"
-// ioredis mock is all in memory
-const MockRedis = require("ioredis-mock")
+// mock-redis doesn't have any typing
+let MockRedis: any | undefined
+if (env.MOCK_REDIS) {
+  // ioredis mock is all in memory
+  MockRedis = require("ioredis-mock")
+}
 import {
   addDbPrefix,
   removeDbPrefix,
@@ -56,7 +60,7 @@ function connectionError(
  * will return the ioredis client which will be ready to use.
  */
 function init(selectDb = DEFAULT_SELECT_DB) {
-  const RedisCore = env.MOCK_REDIS ? MockRedis : Redis
+  const RedisCore = env.MOCK_REDIS && MockRedis ? MockRedis : Redis
   let timeout: NodeJS.Timeout
   CLOSED = false
   let client = pickClient(selectDb)
