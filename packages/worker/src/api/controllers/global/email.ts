@@ -14,6 +14,11 @@ export async function sendEmail(ctx: BBContext) {
     cc,
     bcc,
     automation,
+    addInvite,
+    startTime,
+    endTime,
+    summary,
+    location,
   } = ctx.request.body
   let user
   if (userId) {
@@ -29,6 +34,11 @@ export async function sendEmail(ctx: BBContext) {
     cc,
     bcc,
     automation,
+    addInvite,
+    startTime,
+    endTime,
+    summary,
+    location,
   })
   ctx.body = {
     ...response,

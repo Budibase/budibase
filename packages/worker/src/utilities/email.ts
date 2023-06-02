@@ -6,6 +6,7 @@ import { processString } from "@budibase/string-templates"
 import { getResetPasswordCode, getInviteCode } from "./redis"
 import { User, SMTPInnerConfig } from "@budibase/types"
 import { configs } from "@budibase/backend-core"
+import ical from "ical-generator"
 const nodemailer = require("nodemailer")
 
 type SendEmailOpts = {
@@ -24,6 +25,11 @@ type SendEmailOpts = {
   cc?: boolean
   bcc?: boolean
   automation?: boolean
+  addInvite?: boolean
+  startTime?: Date
+  endTime?: Date
+  summary?: string
+  location?: string
 }
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
@@ -200,6 +206,24 @@ export async function sendEmail(
       context
     )
   }
+  if (opts?.addInvite) {
+    const calendar = ical({
+      name: "Invite",
+    })
+    calendar.createEvent({
+      start: opts.startTime,
+      end: opts.endTime,
+      summary: opts.summary,
+      location: opts.location,
+    })
+    message = {
+      ...message,
+      filename: "invitation.ics",
+      method: "request",
+      content: calendar.toString(),
+    }
+  }
+
   const response = await transport.sendMail(message)
   if (TEST_MODE) {
     console.log("Test email URL: " + nodemailer.getTestMessageUrl(response))

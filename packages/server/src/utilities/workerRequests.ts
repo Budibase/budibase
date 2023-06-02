@@ -106,6 +106,11 @@ export async function sendSmtpEmail({
         bcc,
         purpose: "custom",
         automation,
+        addInvite,
+        startTime,
+        endTime,
+        summary,
+        location,
       },
     })
   )
