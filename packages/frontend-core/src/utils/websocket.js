@@ -52,8 +52,6 @@ export const createWebsocket = (path, options = DefaultOptions) => {
     socket.on(event, data => {
       if (data?.apiSessionId !== APISessionID) {
         callback(data)
-      } else {
-        console.log("ignore", event, data)
       }
     })
   }
