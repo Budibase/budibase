@@ -365,6 +365,34 @@
 </span>
 
 <style>
+  .binding-drawer :global(.container > .main) {
+    overflow: hidden;
+    height: 100%;
+    padding: 0px;
+  }
+
+  .binding-drawer :global(.container > .main > .main) {
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .binding-drawer :global(.spectrum-Tabs-content) {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .binding-drawer :global(.spectrum-Tabs-content > div),
+  .binding-drawer :global(.spectrum-Tabs-content > div > div),
+  .binding-drawer :global(.spectrum-Tabs-content .main-content) {
+    height: 100%;
+  }
+
+  .binding-drawer .main-content {
+    grid-template-rows: unset;
+  }
+
   .messaging {
     display: flex;
     align-items: center;
@@ -380,15 +408,10 @@
     white-space: nowrap;
     overflow: hidden;
   }
-  .binding-drawer :global(.drawer-contents) {
-    height: unset;
-  }
   .main :global(textarea) {
     min-height: 202px !important;
   }
-  .main {
-    margin: calc(-1 * var(--spacing-xl));
-  }
+
   .main-content {
     padding: var(--spacing-s) var(--spacing-xl);
   }
@@ -426,15 +449,16 @@
   .main-content {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 315px;
+    grid-template-rows: 380px;
   }
   .main-content.binding-panel {
     grid-template-columns: 1fr 320px;
   }
   .binding-picker {
-    overflow-y: auto;
     border-left: 2px solid var(--border-light);
     border-left: var(--border-light);
+    overflow: scroll;
+    height: 100%;
   }
   .editor {
     padding: var(--spacing-xl);
