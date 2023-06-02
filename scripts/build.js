@@ -30,7 +30,7 @@ function runBuild(entry, outfile) {
       NodeResolve({
         extensions: [".ts", ".js"],
         onResolved: resolved => {
-          if (resolved.includes("node_modules")) {
+          if (resolved.includes("node_modules") && !resolved.includes("/@budibase/pro/")) {
             return {
               external: true,
             }
