@@ -436,6 +436,9 @@ export const deriveStores = context => {
 
   // Checks if we have a row with a certain ID
   const hasRow = id => {
+    if (id === NewRowID) {
+      return true
+    }
     return get(rowLookupMap)[id] != null
   }
 
