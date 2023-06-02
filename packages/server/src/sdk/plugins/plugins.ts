@@ -36,6 +36,6 @@ export async function processUploaded(plugin: FileType, source?: PluginSource) {
   }
 
   const doc = await pro.plugins.storePlugin(metadata, directory, source)
-  clientAppSocket.emit("plugin-update", { name: doc.name, hash: doc.hash })
+  clientAppSocket?.emit("plugin-update", { name: doc.name, hash: doc.hash })
   return doc
 }
