@@ -65,15 +65,33 @@ async function checkResponse(
 }
 
 // have to pass in the tenant ID as this could be coming from an automation
-export async function sendSmtpEmail(
-  to: string,
-  from: string,
-  subject: string,
-  contents: string,
-  cc: string,
-  bcc: string,
+export async function sendSmtpEmail({
+  to,
+  from,
+  subject,
+  contents,
+  cc,
+  bcc,
+  automation,
+  addInvite,
+  startTime,
+  endTime,
+  summary,
+  location,
+}: {
+  to: string
+  from: string
+  subject: string
+  contents: string
+  cc: string
+  bcc: string
   automation: boolean
-) {
+  addInvite: boolean
+  startTime: Date
+  endTime: Date
+  summary: string
+  location: string
+}) {
   // tenant ID will be set in header
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),

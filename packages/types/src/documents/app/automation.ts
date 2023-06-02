@@ -8,6 +8,7 @@ export enum AutomationIOType {
   NUMBER = "number",
   ARRAY = "array",
   JSON = "json",
+  DATE = "date",
 }
 
 export enum AutomationCustomIOType {

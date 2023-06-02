@@ -48,6 +48,26 @@ export const definition: AutomationStepSchema = {
           type: AutomationIOType.STRING,
           title: "HTML Contents",
         },
+        addInvite: {
+          type: AutomationIOType.BOOLEAN,
+          title: "Add Calendar Invite?",
+        },
+        startTime: {
+          type: AutomationIOType.DATE,
+          title: "Start Time",
+        },
+        endTime: {
+          type: AutomationIOType.DATE,
+          title: "End Time",
+        },
+        summary: {
+          type: AutomationIOType.STRING,
+          title: "Meeting Summary",
+        },
+        location: {
+          type: AutomationIOType.STRING,
+          title: "Location",
+        },
       },
       required: ["to", "from", "subject", "contents"],
     },
@@ -68,21 +88,38 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  let { to, from, subject, contents, cc, bcc } = inputs
+  let {
+    to,
+    from,
+    subject,
+    contents,
+    cc,
+    bcc,
+    addInvite,
+    startTime,
+    endTime,
+    summary,
+    location,
+  } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"
   }
   to = to || undefined
   try {
-    let response = await sendSmtpEmail(
+    let response = await sendSmtpEmail({
       to,
       from,
       subject,
       contents,
       cc,
       bcc,
-      true
-    )
+      automation: true,
+      addInvite,
+      startTime,
+      endTime,
+      summary,
+      location,
+    })
     return {
       success: true,
       response,
