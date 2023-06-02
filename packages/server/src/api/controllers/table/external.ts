@@ -208,6 +208,7 @@ export async function save(ctx: UserCtx) {
   let tableToSave: TableRequest = {
     type: "table",
     _id: buildExternalTableId(datasourceId, inputs.name),
+    sourceId: datasourceId,
     ...inputs,
   }
 
