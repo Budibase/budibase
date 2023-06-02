@@ -258,12 +258,14 @@
   </div>
 {/if}
 
-<div class="code-editor">
+<div class={`code-editor ${mode?.name || ""}`}>
   <div tabindex="-1" bind:this={textarea} />
 </div>
 
 <style>
-  /* Push into theme */
+  .code-editor.handlebars :global(.cm-content) {
+    font-family: var(--font-sans);
+  }
   .code-editor :global(.cm-tooltip.cm-completionInfo) {
     padding: var(--spacing-m);
   }
