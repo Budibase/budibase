@@ -111,6 +111,7 @@ export const getDefaultTheme = opts => {
       },
       "& .binding-wrap": {
         color: "var(--spectrum-global-color-blue-700)",
+        fontFamily: "monospace",
       },
     },
     { dark }
