@@ -64,25 +64,38 @@ export const getDefaultTheme = opts => {
         fontStyle: "unset",
         textTransform: "uppercase",
         fontSize: "10px",
+        backgroundColor: "var(--spectrum-global-color-gray-100)",
+        color: "var(--spectrum-global-color-gray-600)",
+      },
+      "& .cm-completionLabel": {
+        marginLeft:
+          "calc(var(--spectrum-alias-workflow-icon-size-m) + var(--spacing-m))",
       },
       "& .info-bubble": {
         fontSize: "var(--font-size-s)",
         display: "grid",
         gridGap: "var(--spacing-s)",
         gridTemplateColumns: "1fr",
+        color: "var(--spectrum-global-color-gray-800)",
       },
       "& .cm-tooltip": {
         marginLeft: "var(--spacing-s)",
         border: "1px solid var(--spectrum-global-color-gray-300)",
         borderRadius:
           "var( --spectrum-popover-border-radius, var(--spectrum-alias-border-radius-regular) )",
+        backgroundColor: "var(--spectrum-global-color-gray-50)",
       },
       // Section header
       "& .info-section": {
         display: "flex",
         padding: "var(--spacing-s)",
         gap: "var(--spacing-m)",
-        borderBottom: "1px solid var(--spectrum-global-color-gray-300)",
+        borderBottom: "1px solid var(--spectrum-global-color-gray-200)",
+        color: "var(--spectrum-global-color-gray-800)",
+        fontWeight: "bold",
+      },
+      "& .info-section .spectrum-Icon": {
+        color: "var(--spectrum-global-color-gray-600)",
       },
       // Autocomplete Option
       "& .cm-tooltip.cm-tooltip-autocomplete .autocomplete-option": {
@@ -91,10 +104,10 @@ export const getDefaultTheme = opts => {
         alignItems: "center",
         fontSize: "var(--spectrum-alias-font-size-default)",
         padding: "var(--spacing-s)",
+        color: "var(--spectrum-global-color-gray-800)",
       },
       "& .cm-tooltip-autocomplete ul li[aria-selected].autocomplete-option": {
         backgroundColor: "var(--spectrum-global-color-gray-200)",
-        color: "var(--ink)",
       },
       "& .binding-wrap": {
         color: "var(--spectrum-global-color-blue-700)",
