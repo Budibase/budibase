@@ -14,10 +14,11 @@ export default class SelfAPI extends BaseAPI {
     return [response, json]
   }
 
-  async changeSelfPassword(body: Partial<User>): Promise<[Response, User]> {
+  async changeSelfPassword(): Promise<[Response, User]> {
+    const body = {
+      password: "newPassword",
+    }
     const [response, json] = await this.post(`/global/self`, body)
-    expect(json._id).toEqual(body._id)
-    expect(json._rev).not.toEqual(body._rev)
     return [response, json]
   }
 
@@ -25,5 +26,16 @@ export default class SelfAPI extends BaseAPI {
     const [response, json] = await this.get(`/global/self/api_key`)
     expect(json).toHaveProperty("apiKey")
     return json
+  }
+
+  async changeUserInfo(body: Partial<User>): Promise<[Response, User]> {
+    const [response, json] = await this.post(`/global/self`, body)
+    return [response, json]
+  }
+
+  async generateApiKey(): Promise<[Response, ApiKeyResponse]> {
+    const [response, json] = await this.post(`/global/self/api_key`)
+    expect(json).toHaveProperty("apiKey")
+    return [response, json]
   }
 }

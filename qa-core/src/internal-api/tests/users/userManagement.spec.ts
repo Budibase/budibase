@@ -87,4 +87,20 @@ describe("Internal API - User Management & Permissions", () => {
     expect(changedUserInfoJson.builder?.global).toBeDefined()
     expect(changedUserInfoJson.builder?.global).toEqual(true)
   })
+
+  it("Set First and Last Name", async () => {
+    const body: Partial<User> = {
+      firstName: "newFirstName",
+      lastName: "newLastName",
+    }
+    await config.api.self.changeUserInfo(body)
+  })
+
+  it("Generate API key", async () => {
+    await config.api.self.generateApiKey()
+  })
+
+  it("Change Password", async () => {
+    await config.api.self.changeSelfPassword()
+  })
 })
