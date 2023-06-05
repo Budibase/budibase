@@ -455,3 +455,19 @@ export const luceneLimit = (docs: any[], limit: string) => {
   }
   return docs.slice(0, numLimit)
 }
+
+export const hasFilters = (query?: Query) => {
+  if (!query) {
+    return false
+  }
+  const skipped = ["allOr"]
+  for (let [key, value] of Object.entries(query)) {
+    if (skipped.includes(key) || typeof value !== "object") {
+      continue
+    }
+    if (Object.keys(value).length !== 0) {
+      return true
+    }
+  }
+  return false
+}
