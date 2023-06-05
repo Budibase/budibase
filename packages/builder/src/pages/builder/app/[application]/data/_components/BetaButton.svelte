@@ -15,7 +15,7 @@
 <style>
   .beta {
     position: absolute;
-    bottom: var(--spacing-xl);
+    bottom: 24px;
     right: 24px;
     display: flex;
     flex-direction: row;
