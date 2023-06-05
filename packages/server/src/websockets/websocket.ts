@@ -77,6 +77,7 @@ export class BaseSocket {
                 firstName,
                 lastName,
                 sessionId: socket.id,
+                connectedAt: Date.now(),
               }
               next()
             }
@@ -173,7 +174,9 @@ export class BaseSocket {
     )
     const prunedSessionIds = sessionIds.filter((id, idx) => {
       if (!sessionsExist[idx]) {
-        this.io.to(room).emit(SocketEvent.UserDisconnect, sessionIds[idx])
+        this.io.to(room).emit(SocketEvent.UserDisconnect, {
+          sessionId: sessionIds[idx],
+        })
         return false
       }
       return true
@@ -216,7 +219,9 @@ export class BaseSocket {
     }
 
     // Notify other users
-    socket.to(room).emit(SocketEvent.UserUpdate, user)
+    socket.to(room).emit(SocketEvent.UserUpdate, {
+      user,
+    })
   }
 
   // Disconnects a socket from its current room
@@ -242,7 +247,7 @@ export class BaseSocket {
     )
 
     // Notify other users
-    socket.to(room).emit(SocketEvent.UserDisconnect, sessionId)
+    socket.to(room).emit(SocketEvent.UserDisconnect, { sessionId })
   }
 
   // Updates a connected user's metadata, assuming a room change is not required.
