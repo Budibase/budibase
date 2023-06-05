@@ -326,7 +326,7 @@
   {#each deprecatedSchemaProperties as [key, value]}
     {#if canShowField(key, value)}
       <div class="block-field">
-        {#if key !== "fields"}
+        {#if key !== "fields" && value.type !== "boolean"}
           <Label
             tooltip={value.title === "Binding / Value"
               ? "If using the String input type, please use a comma or newline separated string"
@@ -364,18 +364,21 @@
             }}
           />
         {:else if value.type === "boolean"}
-          <Checkbox
-            value={inputData[key]}
-            on:change={e => {
-              deprecatedSchemaProperties.forEach(([k, v]) => {
-                if (v.dependsOn === key) {
-                  v.show = e.detail
-                }
-              })
-              deprecatedSchemaProperties = [...deprecatedSchemaProperties]
-              onChange(e, key)
-            }}
-          />
+          <div style="margin-top: 10px">
+            <Checkbox
+              text={value.title}
+              value={inputData[key]}
+              on:change={e => {
+                deprecatedSchemaProperties.forEach(([k, v]) => {
+                  if (v.dependsOn === key) {
+                    v.show = e.detail
+                  }
+                })
+                deprecatedSchemaProperties = [...deprecatedSchemaProperties]
+                onChange(e, key)
+              }}
+            />
+          </div>
         {:else if value.type === "date"}
           <DatePicker
             value={inputData[key]}

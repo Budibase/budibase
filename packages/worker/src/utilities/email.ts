@@ -30,6 +30,7 @@ type SendEmailOpts = {
   endTime?: Date
   summary?: string
   location?: string
+  url?: string
 }
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
@@ -215,11 +216,14 @@ export async function sendEmail(
       end: opts.endTime,
       summary: opts.summary,
       location: opts.location,
+      url: opts.url,
     })
     message = {
       ...message,
-      method: "request",
-      content: calendar.toString(),
+      icalEvent: {
+        method: "request",
+        content: calendar.toString(),
+      },
     }
   }
 

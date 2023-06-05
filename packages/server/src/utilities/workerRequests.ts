@@ -78,6 +78,7 @@ export async function sendSmtpEmail({
   endTime,
   summary,
   location,
+  url,
 }: {
   to: string
   from: string
@@ -91,6 +92,7 @@ export async function sendSmtpEmail({
   endTime: Date
   summary: string
   location: string
+  url: string
 }) {
   // tenant ID will be set in header
   const response = await fetch(
@@ -111,6 +113,7 @@ export async function sendSmtpEmail({
         endTime,
         summary,
         location,
+        url,
       },
     })
   )

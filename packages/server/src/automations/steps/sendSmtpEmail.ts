@@ -50,7 +50,7 @@ export const definition: AutomationStepSchema = {
         },
         addInvite: {
           type: AutomationIOType.BOOLEAN,
-          title: "Add Calendar Invite?",
+          title: "Add calendar invite?",
         },
         startTime: {
           type: AutomationIOType.DATE,
@@ -70,6 +70,11 @@ export const definition: AutomationStepSchema = {
         location: {
           type: AutomationIOType.STRING,
           title: "Location",
+          dependsOn: "addInvite",
+        },
+        url: {
+          type: AutomationIOType.STRING,
+          title: "URL",
           dependsOn: "addInvite",
         },
       },
@@ -104,6 +109,7 @@ export async function run({ inputs }: AutomationStepInput) {
     endTime,
     summary,
     location,
+    url,
   } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"
@@ -123,6 +129,7 @@ export async function run({ inputs }: AutomationStepInput) {
       endTime,
       summary,
       location,
+      url,
     })
     return {
       success: true,
