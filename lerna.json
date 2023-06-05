@@ -1,5 +1,5 @@
 {
-  "version": "2.6.19-alpha.49",
+  "version": "2.6.19-alpha.50",
   "npmClient": "yarn",
   "packages": [
     "packages/backend-core",
