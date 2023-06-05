@@ -15,7 +15,7 @@
   } from "@budibase/bbui"
   import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
-  import { isActive, goto, layout, redirect, url } from "@roxi/routify"
+  import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
   import { onMount, onDestroy } from "svelte"
   import CommandPalette from "components/commandPalette/CommandPalette.svelte"
