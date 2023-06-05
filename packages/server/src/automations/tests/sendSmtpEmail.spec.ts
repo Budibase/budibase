@@ -48,6 +48,7 @@ describe("test the outgoing webhook action", () => {
       endTime: new Date(),
       summary: "summary",
       location: "location",
+      url: "url",
     }
     let resp = generateResponse(inputs.to, inputs.from)
     const res = await setup.runStep(
