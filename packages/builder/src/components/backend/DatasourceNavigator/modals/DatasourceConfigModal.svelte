@@ -1,6 +1,13 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { ModalContent, notifications, Body, Layout } from "@budibase/bbui"
+  import {
+    ModalContent,
+    notifications,
+    Body,
+    Layout,
+    FancyForm,
+    FancyCheckbox,
+  } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { IntegrationNames } from "constants/backend"
   import cloneDeep from "lodash/cloneDeepWith"
@@ -103,6 +110,20 @@
       on:valid={e => (isValid = e.detail)}
     />
   {:else}
-    <Body>Some stuff here</Body>
+    <div class="table-checkboxes">
+      <FancyForm compact noMaxWidth>
+        <FancyCheckbox value="table a" text="table a" />
+        <FancyCheckbox value="table a" text="table a" />
+        <FancyCheckbox value="table a" text="table a" />
+        <FancyCheckbox value="table a" text="table a" />
+        <FancyCheckbox value="table a" text="table a" />
+      </FancyForm>
+    </div>
   {/if}
 </ModalContent>
+
+<style>
+  .table-checkboxes {
+    width: 100%;
+  }
+</style>
