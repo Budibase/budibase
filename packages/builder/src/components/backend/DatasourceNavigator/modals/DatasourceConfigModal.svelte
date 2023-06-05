@@ -1,14 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
-  import {
-    ModalContent,
-    notifications,
-    Body,
-    Layout,
-    Modal,
-  } from "@budibase/bbui"
+  import { ModalContent, notifications, Body, Layout } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import FetchTablesModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
   import { IntegrationNames } from "constants/backend"
   import cloneDeep from "lodash/cloneDeepWith"
   import {
@@ -22,13 +15,22 @@
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)
   let isValid = false
-  let fetchTablesModal
+  let fetchTableStep = false
 
   $: name =
-    IntegrationNames[datasource.type] || datasource.name || datasource.type
+    IntegrationNames[datasource?.type] || datasource?.name || datasource?.type
   $: datasourcePlus = datasource?.plus
+  $: title = fetchTableStep ? "Fetch your tables" : `Connect to ${name}`
+  $: confirmText = fetchTableStep
+    ? "Continue"
+    : datasourcePlus
+    ? "Connect"
+    : "Save and continue to query"
 
   async function validateConfig() {
+    if (!integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
+      return true
+    }
     const displayError = message =>
       notifications.error(message ?? "Error validating datasource")
 
@@ -46,50 +48,61 @@
   }
 
   async function saveDatasource() {
-    if (integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
-      const valid = await validateConfig()
-      if (!valid) {
-        return false
-      }
-    }
     try {
       if (!datasource.name) {
         datasource.name = name
       }
       const resp = await save(datasource)
       $goto(`./datasource/${resp._id}`)
-      notifications.success(`Datasource created successfully.`)
+      notifications.success("Datasource created successfully.")
     } catch (err) {
       notifications.error(err?.message ?? "Error saving datasource")
       // prevent the modal from closing
       return false
     }
   }
+
+  async function nextStep() {
+    let connected = true
+    if (datasourcePlus) {
+      connected = await validateConfig()
+    }
+    if (!connected) {
+      return false
+    }
+    if (datasourcePlus) {
+      notifications.success("Connected to datasource successfully.")
+      fetchTableStep = true
+      return false
+    } else {
+      await saveDatasource()
+      return true
+    }
+  }
 </script>
 
-<Modal bind:this={fetchTablesModal}>
-  <FetchTablesModal {datasource} onConfirm={saveDatasource} />
-</Modal>
-
 <ModalContent
-  title={`Connect to ${name}`}
-  onConfirm={() =>
-    datasourcePlus ? saveDatasource() : fetchTablesModal.show()}
-  confirmText={datasourcePlus ? "Connect" : "Save and continue to query"}
-  cancelText="Back"
+  {title}
+  onConfirm={() => nextStep()}
+  {confirmText}
+  cancelText={fetchTableStep ? "Cancel" : "Back"}
   showSecondaryButton={datasourcePlus}
   size="L"
   disabled={!isValid}
 >
-  <Layout noPadding>
-    <Body size="XS"
-      >Connect your database to Budibase using the config below.
-    </Body>
-  </Layout>
-  <IntegrationConfigForm
-    schema={datasource.schema}
-    bind:datasource
-    creating={true}
-    on:valid={e => (isValid = e.detail)}
-  />
+  {#if !fetchTableStep}
+    <Layout noPadding>
+      <Body size="XS"
+        >Connect your database to Budibase using the config below.
+      </Body>
+    </Layout>
+    <IntegrationConfigForm
+      schema={datasource?.schema}
+      bind:datasource
+      creating={true}
+      on:valid={e => (isValid = e.detail)}
+    />
+  {:else}
+    <Body>Some stuff here</Body>
+  {/if}
 </ModalContent>
