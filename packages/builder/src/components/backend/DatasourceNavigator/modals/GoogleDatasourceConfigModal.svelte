@@ -9,8 +9,8 @@
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import cloneDeep from "lodash/cloneDeepWith"
   import GoogleButton from "components/common/GoogleButton.svelte"
-  import { saveDatasource as save } from "builderStore/datasource"
   import { organisation } from "stores/portal"
+  import { datasources } from "stores/backend"
   import { onMount } from "svelte"
   import { validateDatasourceConfig } from "builderStore/datasource"
   import IntegrationConfigForm from "../TableIntegrationMenu/IntegrationConfigForm.svelte"
@@ -24,7 +24,6 @@
 
   let datasource = cloneDeep(integration)
   datasource.config.continueSetupId = continueSetupId
-
   $: isGoogleConfigured = !!$organisation.googleDatasourceConfigured
 
   onMount(async () => {
@@ -91,8 +90,7 @@
     {:else if isGoogleConfigured === false}
       <Body size="S"
         >Google authentication is not enabled, please complete Google SSO
-        configuration.</Body
-      >
+        configuration.</Body>
       <Link href="/builder/portal/settings/auth">Configure Google SSO</Link>
     {/if}
   {/if}

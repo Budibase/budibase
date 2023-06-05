@@ -1,6 +1,8 @@
 import { writable, derived, get } from "svelte/store"
+import { IntegrationTypes, DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
 import { queries, tables } from "./"
 import { API } from "api"
+import { DatasourceFeature } from "@budibase/types"
 
 export function createDatasourcesStore() {
   const store = writable({
@@ -8,9 +10,14 @@ export function createDatasourcesStore() {
     selectedDatasourceId: null,
     schemaError: null,
   })
+
   const derivedStore = derived(store, $store => ({
     ...$store,
     selected: $store.list?.find(ds => ds._id === $store.selectedDatasourceId),
+    hasDefaultData:
+      $store.list.findIndex(
+        datasource => datasource._id === DEFAULT_BB_DATASOURCE_ID
+      ) !== -1,
   }))
 
   const fetch = async () => {
@@ -57,16 +64,39 @@ export function createDatasourcesStore() {
     return updateDatasource(response)
   }
 
-  const save = async (body, fetchSchema = false) => {
-    let response
-    if (body._id) {
-      response = await API.updateDatasource(body)
-    } else {
-      response = await API.createDatasource({
-        datasource: body,
-        fetchSchema,
-      })
+  const sourceCount = source => {
+    return get(store).list.filter(datasource => datasource.source === source)
+      .length
+  }
+
+  const create = async ({ integration, fields }) => {
+    const isSheets = integration.name === IntegrationTypes.GOOGLE_SHEETS
+    const datasource = {
+      type: "datasource",
+      source: integration.name,
+      config: fields,
+      name: `${integration.friendlyName}-${sourceCount(integration.name) + 1}`,
+      plus: integration.plus && integration.name !== IntegrationTypes.REST,
     }
+
+    if (
+      integration.features?.[DatasourceFeature.CONNECTION_CHECKING] &&
+      !isSheets
+    ) {
+      const { connected } = await API.validateDatasource(datasource)
+      if (!connected) throw "Unable to connect"
+    }
+
+    const response = await API.createDatasource({
+      datasource,
+      fetchSchema: integration.plus && !isSheets,
+    })
+
+    return updateDatasource(response)
+  }
+
+  const save = async body => {
+    const response = await API.updateDatasource(body)
     return updateDatasource(response)
   }
 
@@ -130,6 +160,7 @@ export function createDatasourcesStore() {
     init: fetch,
     select,
     updateSchema,
+    create,
     save,
     delete: deleteDatasource,
     removeSchemaError,
