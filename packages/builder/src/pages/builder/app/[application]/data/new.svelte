@@ -13,7 +13,7 @@
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
   import GoogleDatasourceConfigModal from "components/backend/DatasourceNavigator/modals/GoogleDatasourceConfigModal.svelte"
   import { createRestDatasource } from "builderStore/datasource"
-  import DatasourceOption from "./_DatasourceOption.svelte"
+  import DatasourceOption from "./_components/DatasourceOption.svelte"
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons/index.js"
   import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
