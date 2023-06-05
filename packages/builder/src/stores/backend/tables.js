@@ -62,7 +62,7 @@ export function createTablesStore() {
     }
 
     const savedTable = await API.saveTable(updatedTable)
-    replaceTable(table._id, savedTable)
+    replaceTable(savedTable._id, savedTable)
     await datasources.fetch()
     select(savedTable._id)
     return savedTable
