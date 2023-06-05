@@ -4,10 +4,10 @@ export const buildAutomationEndpoints = API => ({
    * @param automationId the ID of the automation to trigger
    * @param fields the fields to trigger the automation with
    */
-  triggerAutomation: async ({ automationId, fields }) => {
+  triggerAutomation: async ({ automationId, fields, timeout }) => {
     return await API.post({
       url: `/api/automations/${automationId}/trigger`,
-      body: { fields },
+      body: { fields, timeout },
     })
   },
 

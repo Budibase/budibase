@@ -1,11 +1,13 @@
-const setup = require("./utilities")
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const { basicWebhook, basicAutomation } = setup.structures
+import { Webhook } from "@budibase/types"
+import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { mocks } from "@budibase/backend-core/tests"
+const { basicWebhook, basicAutomation, collectAutomation } = setup.structures
 
 describe("/webhooks", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let webhook
+  let webhook: Webhook
 
   afterAll(setup.afterAll)
 
@@ -13,10 +15,11 @@ describe("/webhooks", () => {
     config.modeSelf()
     await config.init()
     const autoConfig = basicAutomation()
-    autoConfig.definition.trigger = {
-      schema: { outputs: { properties: {} } },
-      inputs: {},
+    autoConfig.definition.trigger.schema = {
+      outputs: { properties: {} },
+      inputs: { properties: {} },
     }
+    autoConfig.definition.trigger.inputs = {}
     await config.createAutomation(autoConfig)
     webhook = await config.createWebhook()
   }
@@ -70,7 +73,7 @@ describe("/webhooks", () => {
 
   describe("delete", () => {
     beforeAll(setupTest)
-    
+
     it("should successfully delete", async () => {
       const res = await request
         .delete(`/api/webhooks/${webhook._id}/${webhook._rev}`)
@@ -97,7 +100,7 @@ describe("/webhooks", () => {
       const res = await request
         .post(`/api/webhooks/schema/${config.getAppId()}/${webhook._id}`)
         .send({
-          a: 1
+          a: 1,
         })
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
@@ -112,7 +115,7 @@ describe("/webhooks", () => {
       expect(fetch.body[0]).toBeDefined()
       expect(fetch.body[0].bodySchema).toEqual({
         properties: {
-          a: { type: "integer" }
+          a: { type: "integer" },
         },
         type: "object",
       })
@@ -130,5 +133,24 @@ describe("/webhooks", () => {
         .expect(200)
       expect(res.body.message).toBeDefined()
     })
+  })
+
+  it("should trigger a synchronous webhook call ", async () => {
+    mocks.licenses.useSyncAutomations()
+    let automation = collectAutomation()
+    let newAutomation = await config.createAutomation(automation)
+    let syncWebhook = await config.createWebhook(
+      basicWebhook(newAutomation._id)
+    )
+
+    // replicate changes before checking webhook
+    await config.publish()
+
+    const res = await request
+      .post(`/api/webhooks/trigger/${config.prodAppId}/${syncWebhook._id}`)
+      .expect("Content-Type", /json/)
+      .expect(200)
+    expect(res.body.success).toEqual(true)
+    expect(res.body.value).toEqual([1, 2, 3])
   })
 })

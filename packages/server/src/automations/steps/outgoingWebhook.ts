@@ -4,6 +4,7 @@ import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
+  AutomationFeature,
   AutomationIOType,
   AutomationStepInput,
   AutomationStepSchema,
@@ -32,6 +33,9 @@ export const definition: AutomationStepSchema = {
   description: "Send a request of specified method to a URL",
   type: AutomationStepType.ACTION,
   internal: true,
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   stepId: AutomationActionStepId.OUTGOING_WEBHOOK,
   inputs: {
     requestMethod: "POST",

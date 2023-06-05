@@ -1,8 +1,8 @@
 <script>
-  import { Select, Label, Input, Checkbox } from "@budibase/bbui"
+  import { Select, Label, Input, Checkbox, Icon } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
-  import { TriggerStepID } from "constants/backend/automations"
+  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
 
   export let parameters = {}
   export let bindings = []
@@ -16,6 +16,14 @@
     ? AUTOMATION_STATUS.EXISTING
     : AUTOMATION_STATUS.NEW
 
+  $: {
+    if (automationStatus === AUTOMATION_STATUS.NEW) {
+      parameters.synchronous = false
+    }
+    parameters.synchronous = automations.find(
+      automation => automation._id === parameters.automationId
+    )?.synchronous
+  }
   $: automations = $automationStore.automations
     .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
     .map(automation => {
@@ -23,10 +31,15 @@
         automation.definition.trigger.inputs.fields || {}
       ).map(([name, type]) => ({ name, type }))
 
+      let hasCollectBlock = automation.definition.steps.some(
+        step => step.stepId === ActionStepID.COLLECT
+      )
+
       return {
         name: automation.name,
         _id: automation._id,
         schema,
+        synchronous: hasCollectBlock,
       }
     })
   $: hasAutomations = automations && automations.length > 0
@@ -34,6 +47,8 @@
     a => a._id === parameters?.automationId
   )
   $: selectedSchema = selectedAutomation?.schema
+
+  $: error = parameters.timeout > 120 ? "Timeout must be less than 120s" : null
 
   const onFieldsChanged = e => {
     parameters.fields = Object.entries(e.detail || {}).reduce(
@@ -56,6 +71,14 @@
     parameters.newAutomationName = ""
     parameters.fields = {}
     parameters.automationId = automations[0]?._id
+  }
+
+  const onChange = value => {
+    let automationId = value.detail
+    parameters.synchronous = automations.find(
+      automation => automation._id === automationId
+    )?.synchronous
+    parameters.automationId = automationId
   }
 </script>
 
@@ -85,6 +108,7 @@
 
     {#if automationStatus === AUTOMATION_STATUS.EXISTING}
       <Select
+        on:change={onChange}
         bind:value={parameters.automationId}
         placeholder="Choose automation"
         options={automations}
@@ -98,6 +122,29 @@
       />
     {/if}
 
+    {#if parameters.synchronous}
+      <Label small />
+
+      <div class="synchronous-info">
+        <Icon name="Info" />
+        <div>
+          <i
+            >This automation will run synchronously as it contains a Collect
+            step</i
+          >
+        </div>
+      </div>
+      <Label small />
+
+      <div class="timeout-width">
+        <Input
+          label="Timeout in seconds (120 max)"
+          type="number"
+          {error}
+          bind:value={parameters.timeout}
+        />
+      </div>
+    {/if}
     <Label small />
     <Checkbox
       text="Do not display default notification"
@@ -133,6 +180,9 @@
     max-width: 800px;
     margin: 0 auto;
   }
+  .timeout-width {
+    width: 30%;
+  }
 
   .params {
     display: grid;
@@ -140,6 +190,11 @@
     row-gap: var(--spacing-s);
     grid-template-columns: 60px 1fr;
     align-items: center;
+  }
+
+  .synchronous-info {
+    display: flex;
+    gap: var(--spacing-s);
   }
 
   .fields {

@@ -1,5 +1,5 @@
 <script>
-  import { setContext } from "svelte"
+  import { setContext, onMount } from "svelte"
   import { writable } from "svelte/store"
   import { fade } from "svelte/transition"
   import { clickOutside, ProgressCircle } from "@budibase/bbui"
@@ -7,7 +7,6 @@
   import { createAPIClient } from "../../../api"
   import { attachStores } from "../stores"
   import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
-  import BetaButton from "../controls/BetaButton.svelte"
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
@@ -24,6 +23,7 @@
   import RowHeightButton from "../controls/RowHeightButton.svelte"
   import ColumnWidthButton from "../controls/ColumnWidthButton.svelte"
   import NewRow from "./NewRow.svelte"
+  import { createGridWebsocket } from "../lib/websocket"
   import {
     MaxCellRenderHeight,
     MaxCellRenderWidthOverflow,
@@ -41,6 +41,9 @@
   export let allowExpandRows = true
   export let allowEditRows = true
   export let allowDeleteRows = true
+  export let stripeRows = false
+  export let collaboration = true
+  export let showAvatars = true
 
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
@@ -55,6 +58,7 @@
     allowExpandRows,
     allowEditRows,
     allowDeleteRows,
+    stripeRows,
   })
 
   // Build up context
@@ -90,6 +94,7 @@
     allowExpandRows,
     allowEditRows,
     allowDeleteRows,
+    stripeRows,
   })
 
   // Set context for children to consume
@@ -99,7 +104,11 @@
   export const getContext = () => context
 
   // Initialise websocket for multi-user
-  // onMount(() => createWebsocket(context))
+  onMount(() => {
+    if (collaboration) {
+      return createGridWebsocket(context)
+    }
+  })
 </script>
 
 <div
@@ -107,6 +116,7 @@
   id="grid-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
+  class:stripe={$config.stripeRows}
   style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
 >
   <div class="controls">
@@ -120,7 +130,9 @@
       <RowHeightButton />
     </div>
     <div class="controls-right">
-      <UserAvatars />
+      {#if showAvatars}
+        <UserAvatars />
+      {/if}
     </div>
   </div>
   {#if $loaded}
@@ -131,7 +143,6 @@
           <HeaderRow />
           <GridBody />
         </div>
-        <BetaButton />
         {#if allowAddRows}
           <NewRow />
         {/if}
@@ -169,6 +180,7 @@
     /* Variables */
     --cell-background: var(--spectrum-global-color-gray-50);
     --cell-background-hover: var(--spectrum-global-color-gray-100);
+    --cell-background-alt: var(--cell-background);
     --cell-padding: 8px;
     --cell-spacing: 4px;
     --cell-border: 1px solid var(--spectrum-global-color-gray-200);
@@ -184,6 +196,9 @@
   }
   .grid.is-reordering :global(*) {
     cursor: grabbing !important;
+  }
+  .grid.stripe {
+    --cell-background-alt: var(--spectrum-global-color-gray-75);
   }
 
   .grid-data-outer,
