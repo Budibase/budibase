@@ -11,7 +11,6 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
-import { getLicensedConfig } from "../../../utilities/configs"
 import {
   Config,
   ConfigType,

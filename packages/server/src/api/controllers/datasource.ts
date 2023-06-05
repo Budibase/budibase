@@ -21,11 +21,13 @@ import {
   CreateDatasourceRequest,
   VerifyDatasourceRequest,
   VerifyDatasourceResponse,
+  FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
   IntegrationBase,
   DatasourcePlus,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import { builderSocket } from "../../websockets"
 
 function getErrorTables(errors: any, errorType: string) {
   return Object.entries(errors)
@@ -54,6 +56,21 @@ async function getConnector(
   }
   // Connect to the DB and build the schema
   return new Connector(datasource.config)
+}
+
+async function getAndMergeDatasource(datasource: Datasource) {
+  let existingDatasource: undefined | Datasource
+  if (datasource._id) {
+    existingDatasource = await sdk.datasources.get(datasource._id)
+  }
+  let enrichedDatasource = datasource
+  if (existingDatasource) {
+    enrichedDatasource = sdk.datasources.mergeConfigs(
+      datasource,
+      existingDatasource
+    )
+  }
+  return await sdk.datasources.enrich(enrichedDatasource)
 }
 
 async function buildSchemaHelper(datasource: Datasource) {
@@ -131,17 +148,7 @@ export async function verify(
   ctx: UserCtx<VerifyDatasourceRequest, VerifyDatasourceResponse>
 ) {
   const { datasource } = ctx.request.body
-  let existingDatasource: undefined | Datasource
-  if (datasource._id) {
-    existingDatasource = await sdk.datasources.get(datasource._id)
-  }
-  let enrichedDatasource = datasource
-  if (existingDatasource) {
-    enrichedDatasource = sdk.datasources.mergeConfigs(
-      datasource,
-      existingDatasource
-    )
-  }
+  const enrichedDatasource = await getAndMergeDatasource(datasource)
   const connector = await getConnector(enrichedDatasource)
   if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")
@@ -155,11 +162,11 @@ export async function verify(
 }
 
 export async function information(
-  ctx: UserCtx<void, FetchDatasourceInfoResponse>
+  ctx: UserCtx<FetchDatasourceInfoRequest, FetchDatasourceInfoResponse>
 ) {
-  const datasourceId = ctx.params.datasourceId
-  const datasource = await sdk.datasources.get(datasourceId, { enriched: true })
-  const connector = (await getConnector(datasource)) as DatasourcePlus
+  const { datasource } = ctx.request.body
+  const enrichedDatasource = await getAndMergeDatasource(datasource)
+  const connector = (await getConnector(enrichedDatasource)) as DatasourcePlus
   if (!connector.getTableNames) {
     ctx.throw(400, "Table name fetching not supported by datasource")
   }
@@ -296,6 +303,7 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
   }
+  builderSocket?.emitDatasourceUpdate(ctx, datasource)
 }
 
 export async function save(
@@ -338,6 +346,7 @@ export async function save(
     response.error = schemaError
   }
   ctx.body = response
+  builderSocket?.emitDatasourceUpdate(ctx, datasource)
 }
 
 async function destroyInternalTablesBySourceId(datasourceId: string) {
@@ -397,6 +406,7 @@ export async function destroy(ctx: UserCtx) {
 
   ctx.message = `Datasource deleted.`
   ctx.status = 200
+  builderSocket?.emitDatasourceDeletion(ctx, datasourceId)
 }
 
 export async function find(ctx: UserCtx) {

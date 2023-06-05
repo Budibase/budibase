@@ -1,5 +1,5 @@
 <script>
-  import { store, automationStore } from "builderStore"
+  import { store, automationStore, userStore } from "builderStore"
   import { roles, flags } from "stores/backend"
   import { auth } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
@@ -13,7 +13,6 @@
     Modal,
     notifications,
   } from "@budibase/bbui"
-
   import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
@@ -23,6 +22,7 @@
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
+  import UserAvatars from "./_components/UserAvatars.svelte"
   import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
 
   export let application
@@ -30,7 +30,9 @@
   let promise = getPackage()
   let hasSynced = false
   let commandPaletteModal
+  let loaded = false
 
+  $: loaded && initTour()
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
@@ -43,6 +45,7 @@
       await automationStore.actions.fetch()
       await roles.fetch()
       await flags.fetch()
+      loaded = true
       return pkg
     } catch (error) {
       notifications.error(`Error initialising app: ${error?.message}`)
@@ -67,13 +70,18 @@
 
   // Event handler for the command palette
   const handleKeyDown = e => {
-    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey) && $store.hasLock) {
       e.preventDefault()
       commandPaletteModal.toggle()
     }
   }
 
   const initTour = async () => {
+    // Skip tour if we don't have the lock
+    if (!$store.hasLock) {
+      return
+    }
+
     // Check if onboarding is enabled.
     if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
       if (!$auth.user?.onboardedAt) {
@@ -110,7 +118,6 @@
         // check if user has beta access
         // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
         // betaAccess = betaResponse.access
-        initTour()
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }
@@ -119,10 +126,11 @@
   })
 
   onDestroy(() => {
-    store.update(state => {
-      state.appId = null
-      return state
-    })
+    // Run async on a slight delay to let other cleanup logic run without
+    // being confused by the store wiping
+    setTimeout(() => {
+      store.actions.reset()
+    }, 10)
   })
 </script>
 
@@ -134,74 +142,89 @@
 
 <div class="root">
   <div class="top-nav">
-    <div class="topleftnav">
-      <ActionMenu>
-        <div slot="control">
-          <Icon size="M" hoverable name="ShowMenu" />
-        </div>
-        <MenuItem on:click={() => $goto("../../portal/apps")}>
-          Exit to portal
-        </MenuItem>
-        <MenuItem
-          on:click={() => $goto(`../../portal/overview/${application}`)}
-        >
-          Overview
-        </MenuItem>
-        <MenuItem
-          on:click={() => $goto(`../../portal/overview/${application}/access`)}
-        >
-          Access
-        </MenuItem>
-        <MenuItem
-          on:click={() =>
-            $goto(`../../portal/overview/${application}/automation-history`)}
-        >
-          Automation history
-        </MenuItem>
-        <MenuItem
-          on:click={() => $goto(`../../portal/overview/${application}/backups`)}
-        >
-          Backups
-        </MenuItem>
+    {#if $store.initialised}
+      <div class="topleftnav">
+        <ActionMenu>
+          <div slot="control">
+            <Icon size="M" hoverable name="ShowMenu" />
+          </div>
+          <MenuItem on:click={() => $goto("../../portal/apps")}>
+            Exit to portal
+          </MenuItem>
+          <MenuItem
+            on:click={() => $goto(`../../portal/overview/${application}`)}
+          >
+            Overview
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/access`)}
+          >
+            Access
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/automation-history`)}
+          >
+            Automation history
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/backups`)}
+          >
+            Backups
+          </MenuItem>
 
-        <MenuItem
-          on:click={() =>
-            $goto(`../../portal/overview/${application}/name-and-url`)}
-        >
-          Name and URL
-        </MenuItem>
-        <MenuItem
-          on:click={() => $goto(`../../portal/overview/${application}/version`)}
-        >
-          Version
-        </MenuItem>
-      </ActionMenu>
-      <Heading size="XS">{$store.name}</Heading>
-    </div>
-    <div class="topcenternav">
-      <Tabs {selected} size="M">
-        {#each $layout.children as { path, title }}
-          <TourWrap tourStepKey={`builder-${title}-section`}>
-            <Tab
-              quiet
-              selected={$isActive(path)}
-              on:click={topItemNavigate(path)}
-              title={capitalise(title)}
-              id={`builder-${title}-tab`}
-            />
-          </TourWrap>
-        {/each}
-      </Tabs>
-    </div>
-    <div class="toprightnav">
-      <AppActions {application} />
-    </div>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/name-and-url`)}
+          >
+            Name and URL
+          </MenuItem>
+          <MenuItem
+            on:click={() =>
+              $goto(`../../portal/overview/${application}/version`)}
+          >
+            Version
+          </MenuItem>
+        </ActionMenu>
+        <Heading size="XS">{$store.name}</Heading>
+      </div>
+      <div class="topcenternav">
+        {#if $store.hasLock}
+          <Tabs {selected} size="M">
+            {#each $layout.children as { path, title }}
+              <TourWrap tourStepKey={`builder-${title}-section`}>
+                <Tab
+                  quiet
+                  selected={$isActive(path)}
+                  on:click={topItemNavigate(path)}
+                  title={capitalise(title)}
+                  id={`builder-${title}-tab`}
+                />
+              </TourWrap>
+            {/each}
+          </Tabs>
+        {:else}
+          <div class="secondary-editor">
+            <Icon name="LockClosed" />
+            Another user is currently editing your screens and automations
+          </div>
+        {/if}
+      </div>
+      <div class="toprightnav">
+        <UserAvatars users={$userStore} />
+        <AppActions {application} />
+      </div>
+    {/if}
   </div>
   {#await promise}
     <!-- This should probably be some kind of loading state? -->
     <div class="loading" />
   {:then _}
-    <slot />
+    <div class="body">
+      <slot />
+    </div>
   {:catch error}
     <p>Something went wrong: {error.message}</p>
   {/await}
@@ -237,6 +260,7 @@
     box-sizing: border-box;
     align-items: stretch;
     border-bottom: var(--border-light);
+    z-index: 2;
   }
 
   .topleftnav {
@@ -269,5 +293,19 @@
     justify-content: flex-end;
     align-items: center;
     gap: var(--spacing-l);
+  }
+
+  .secondary-editor {
+    align-self: center;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .body {
+    flex: 1 1 auto;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
   }
 </style>

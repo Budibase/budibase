@@ -1,7 +1,7 @@
 {
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "Budibase background service",
   "main": "src/index.ts",
   "repository": {
@@ -13,7 +13,8 @@
   ],
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "cd ../.. && nx build @budibase/worker",
+    "build": "node ../../scripts/build.js",
+    "check:types": "tsc -p tsconfig.build.json --noEmit",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "run:docker": "node dist/index.js",
     "debug": "yarn build && node --expose-gc --inspect=9223 dist/index.js",
@@ -37,10 +38,10 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
-    "@budibase/backend-core": "0.0.1",
-    "@budibase/pro": "0.0.1",
-    "@budibase/string-templates": "0.0.1",
-    "@budibase/types": "0.0.1",
+    "@budibase/backend-core": "0.0.0",
+    "@budibase/pro": "0.0.0",
+    "@budibase/string-templates": "0.0.0",
+    "@budibase/types": "0.0.0",
     "@koa/router": "8.0.8",
     "@sentry/node": "6.17.7",
     "@techpass/passport-openidconnect": "0.3.2",

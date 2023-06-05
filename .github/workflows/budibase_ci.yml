@@ -37,14 +37,17 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn nx run-many -t=build --configuration=production
+      # Run build all the projects
+      - run: yarn build
+      # Check the types of the projects built via esbuild
+      - run: yarn check:types
 
   test-libraries:
     runs-on: ubuntu-latest
@@ -52,7 +55,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -72,7 +75,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -82,7 +85,7 @@ jobs:
       - run: yarn test --scope=@budibase/worker --scope=@budibase/server
       - uses: codecov/codecov-action@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
           name: codecov-umbrella
           verbose: true
 
@@ -92,7 +95,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -107,7 +110,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -131,7 +134,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
       - name: Check submodule
         run: |

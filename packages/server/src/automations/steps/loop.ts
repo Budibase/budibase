@@ -13,6 +13,7 @@ export const definition: AutomationStepSchema = {
   description: "Loop",
   stepId: AutomationActionStepId.LOOP,
   internal: true,
+  features: {},
   inputs: {},
   schema: {
     inputs: {

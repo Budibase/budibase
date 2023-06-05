@@ -1,4 +1,4 @@
-export const Padding = 128
+export const Padding = 256
 export const MaxCellRenderHeight = 252
 export const MaxCellRenderWidthOverflow = 200
 export const ScrollBarSize = 8

@@ -18,7 +18,6 @@
   import { DatasourceFeature } from "@budibase/types"
 
   export let integration
-  export let modal
 
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)

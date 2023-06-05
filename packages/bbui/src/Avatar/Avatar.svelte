@@ -13,10 +13,12 @@
   export let url = ""
   export let disabled = false
   export let initials = "JD"
+  export let color = null
 
   const DefaultColor = "#3aab87"
 
-  $: color = getColor(initials)
+  $: avatarColor = color || getColor(initials)
+  $: style = getStyle(size, avatarColor)
 
   const getColor = initials => {
     if (!initials?.length) {
@@ -25,6 +27,12 @@
     const code = initials[0].toLowerCase().charCodeAt(0)
     const hue = ((code % 26) / 26) * 360
     return `hsl(${hue}, 50%, 50%)`
+  }
+
+  const getStyle = (sizeKey, color) => {
+    const size = `var(${sizes.get(sizeKey)})`
+    const fontSize = `calc(${size} / 2)`
+    return `width:${size}; height:${size}; font-size:${fontSize}; background:${color};`
   }
 </script>
 
@@ -37,13 +45,7 @@
     style="width: var({sizes.get(size)}); height: var({sizes.get(size)});"
   />
 {:else}
-  <div
-    class="spectrum-Avatar"
-    class:is-disabled={disabled}
-    style="width: var({sizes.get(size)}); height: var({sizes.get(
-      size
-    )}); font-size: calc(var({sizes.get(size)}) / 2); background: {color};"
-  >
+  <div class="spectrum-Avatar" class:is-disabled={disabled} {style}>
     {initials || ""}
   </div>
 {/if}
