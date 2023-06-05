@@ -1,15 +1,18 @@
 import { createWebsocket } from "@budibase/frontend-core"
-import { userStore } from "builderStore"
+import { userStore, store } from "builderStore"
 import { datasources, tables } from "stores/backend"
+import { get } from "svelte/store"
+import { auth } from "stores/portal"
 import { SocketEvent, BuilderSocketEvent } from "@budibase/shared-core"
+import { notifications } from "@budibase/bbui"
 
 export const createBuilderWebsocket = appId => {
   const socket = createWebsocket("/socket/builder")
 
   // Built-in events
   socket.on("connect", () => {
-    socket.emit(BuilderSocketEvent.SelectApp, appId, response => {
-      userStore.actions.init(response.users)
+    socket.emit(BuilderSocketEvent.SelectApp, { appId }, ({ users }) => {
+      userStore.actions.init(users)
     })
   })
   socket.on("connect_error", err => {
@@ -20,8 +23,21 @@ export const createBuilderWebsocket = appId => {
   })
 
   // User events
-  socket.onOther(SocketEvent.UserUpdate, userStore.actions.updateUser)
-  socket.onOther(SocketEvent.UserDisconnect, userStore.actions.removeUser)
+  socket.onOther(SocketEvent.UserUpdate, ({ user }) => {
+    userStore.actions.updateUser(user)
+  })
+  socket.onOther(SocketEvent.UserDisconnect, ({ sessionId }) => {
+    userStore.actions.removeUser(sessionId)
+  })
+  socket.onOther(BuilderSocketEvent.LockTransfer, ({ userId }) => {
+    if (userId === get(auth)?.user._id) {
+      notifications.success("You can now edit screens and automations")
+      store.update(state => ({
+        ...state,
+        hasLock: true,
+      }))
+    }
+  })
 
   // Table events
   socket.onOther(BuilderSocketEvent.TableChange, ({ id, table }) => {

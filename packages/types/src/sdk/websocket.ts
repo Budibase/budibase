@@ -5,4 +5,5 @@ export interface SocketSession {
   lastName?: string
   sessionId: string
   room?: string
+  connectedAt: number
 }

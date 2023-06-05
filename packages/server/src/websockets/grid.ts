@@ -15,7 +15,7 @@ export default class GridSocket extends BaseSocket {
 
   async onConnect(socket: Socket) {
     // Initial identification of connected spreadsheet
-    socket.on(GridSocketEvent.SelectTable, async (tableId, callback) => {
+    socket.on(GridSocketEvent.SelectTable, async ({ tableId }, callback) => {
       await this.joinRoom(socket, tableId)
 
       // Reply with all users in current room
@@ -24,7 +24,7 @@ export default class GridSocket extends BaseSocket {
     })
 
     // Handle users selecting a new cell
-    socket.on(GridSocketEvent.SelectCell, cellId => {
+    socket.on(GridSocketEvent.SelectCell, ({ cellId }) => {
       this.updateUser(socket, { focusedCellId: cellId })
     })
   }
