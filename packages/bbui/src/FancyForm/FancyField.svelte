@@ -61,7 +61,7 @@
 
 <style>
   .fancy-field {
-    max-width: 400px;
+    max-width: var(--fancy-field-max-width);
     background: var(--spectrum-global-color-gray-75);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
@@ -91,7 +91,7 @@
   }
   .content {
     position: relative;
-    height: 64px;
+    height: var(--fancy-field-height);
     padding: 0 16px;
   }
   .fancy-field.auto-height .content {

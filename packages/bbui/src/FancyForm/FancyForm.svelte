@@ -1,6 +1,9 @@
 <script>
   import { setContext } from "svelte"
 
+  export let noMaxWidth
+  export let compact
+
   let fields = {}
 
   setContext("fancy-form", {
@@ -22,9 +25,16 @@
     })
     return valid
   }
+
+  const styles = () => {
+    let styleString = ""
+    styleString += `--fancy-field-max-width: ${noMaxWidth ? "auto" : "400px"}`
+    styleString += `; --fancy-field-height: ${compact ? "40px" : "64px"}`
+    return styleString
+  }
 </script>
 
-<div class="fancy-form">
+<div class="fancy-form" style={styles()}>
   <slot />
 </div>
 

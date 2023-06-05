@@ -8,6 +8,8 @@
   export let disabled = false
   export let error = null
   export let validate = null
+  export let compact = false
+  export let noMaxWidth
 
   const dispatch = createEventDispatcher()
 
@@ -21,7 +23,16 @@
   }
 </script>
 
-<FancyField {error} {value} {validate} {disabled} clickable on:click={onChange}>
+<FancyField
+  {error}
+  {value}
+  {validate}
+  {disabled}
+  {compact}
+  {noMaxWidth}
+  clickable
+  on:click={onChange}
+>
   <span>
     <Checkbox {disabled} {value} />
   </span>
@@ -39,7 +50,6 @@
   }
   .text {
     font-size: 15px;
-    line-height: 17px;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
