@@ -30,7 +30,7 @@ export const createBuilderWebsocket = appId => {
     userStore.actions.removeUser(sessionId)
   })
   socket.onOther(BuilderSocketEvent.LockTransfer, ({ userId }) => {
-    if (userId === get(auth)?.user._id) {
+    if (userId === get(auth)?.user?._id) {
       notifications.success("You can now edit screens and automations")
       store.update(state => ({
         ...state,
