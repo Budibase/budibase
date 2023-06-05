@@ -337,6 +337,16 @@ export async function publicSettings(
       )
     }
 
+    // enrich the favicon url - empty url means deleted
+    const faviconUrl =
+      branding.faviconUrl && branding.faviconUrl !== ""
+        ? objectStore.getGlobalFileUrl(
+            "settings",
+            "faviconUrl",
+            branding.faviconUrlEtag
+          )
+        : undefined
+
     // google
     const googleConfig = await configs.getGoogleConfig()
     const googleDatasourceConfigured =
@@ -360,15 +370,7 @@ export async function publicSettings(
       config: {
         ...config,
         ...branding,
-        ...(branding.faviconUrl && branding.faviconUrl !== ""
-          ? {
-              faviconUrl: objectStore.getGlobalFileUrl(
-                "settings",
-                "faviconUrl",
-                branding.faviconUrlEtag
-              ),
-            }
-          : { faviconUrl: undefined }),
+        ...{ faviconUrl },
         google,
         googleDatasourceConfigured,
         oidc,
