@@ -46,7 +46,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { table, columns, stickyColumn, API } = context
+  const { table, columns, stickyColumn, API, dispatch } = context
 
   // Updates the tables primary display column
   const changePrimaryDisplay = async column => {
@@ -89,6 +89,10 @@ export const deriveStores = context => {
   const saveTable = async newTable => {
     // Update local state
     table.set(newTable)
+
+    // Broadcast change to external state can be updated, as this change
+    // will not be received by the builder websocket because we caused it ourselves
+    dispatch("updatetable", newTable)
 
     // Update server
     await API.saveTable(newTable)

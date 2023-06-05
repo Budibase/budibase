@@ -46,29 +46,32 @@ export default class BuilderSocket extends BaseSocket {
   }
 
   emitTableUpdate(ctx: any, table: Table) {
-    this.io
-      .in(ctx.appId)
-      .emit(BuilderSocketEvent.TableChange, { id: table._id, table })
-    gridSocket?.emitTableUpdate(table)
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.TableChange, {
+      id: table._id,
+      table,
+    })
+    gridSocket?.emitTableUpdate(ctx, table)
   }
 
   emitTableDeletion(ctx: any, id: string) {
-    this.io
-      .in(ctx.appId)
-      .emit(BuilderSocketEvent.TableChange, { id, table: null })
-    gridSocket?.emitTableDeletion(id)
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.TableChange, {
+      id,
+      table: null,
+    })
+    gridSocket?.emitTableDeletion(ctx, id)
   }
 
   emitDatasourceUpdate(ctx: any, datasource: Datasource) {
-    this.io.in(ctx.appId).emit(BuilderSocketEvent.DatasourceChange, {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.DatasourceChange, {
       id: datasource._id,
       datasource,
     })
   }
 
   emitDatasourceDeletion(ctx: any, id: string) {
-    this.io
-      .in(ctx.appId)
-      .emit(BuilderSocketEvent.DatasourceChange, { id, datasource: null })
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.DatasourceChange, {
+      id,
+      datasource: null,
+    })
   }
 }

@@ -3,7 +3,7 @@ import http from "http"
 import Koa from "koa"
 import Cookies from "cookies"
 import { userAgent } from "koa-useragent"
-import { auth, redis } from "@budibase/backend-core"
+import { auth, Header, redis } from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
 import { createAdapter } from "@socket.io/redis-adapter"
 import { Socket } from "socket.io"
@@ -270,5 +270,14 @@ export class BaseSocket {
   // Emit an event to all sockets
   emit(event: string, payload: any) {
     this.io.sockets.emit(event, payload)
+  }
+
+  // Emit an event to everyone in a room, including metadata of whom
+  // the originator of the request was
+  emitToRoom(ctx: any, room: string, event: string, payload: any) {
+    this.io.in(room).emit(event, {
+      ...payload,
+      apiSessionId: ctx.headers?.[Header.SESSION_ID],
+    })
   }
 }

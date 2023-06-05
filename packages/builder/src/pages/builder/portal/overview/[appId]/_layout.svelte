@@ -20,7 +20,7 @@
     Breadcrumb,
     Header,
   } from "components/portal/page"
-  import { apps, auth, overview } from "stores/portal"
+  import { apps, overview } from "stores/portal"
   import { AppStatus } from "constants"
   import analytics, { Events, EventSource } from "analytics"
   import { store } from "builderStore"
@@ -52,8 +52,6 @@
   $: appId = $overview.selectedAppId
   $: initialiseApp(appId)
   $: isPublished = app?.status === AppStatus.DEPLOYED
-  $: appLocked = !!app?.lockedBy
-  $: lockedByYou = $auth.user.email === app?.lockedBy?.email
 
   const initialiseApp = async appId => {
     loaded = false
@@ -139,14 +137,7 @@
             </Button>
           </span>
           <span class="desktop">
-            <Button
-              size="M"
-              cta
-              disabled={appLocked && !lockedByYou}
-              on:click={editApp}
-            >
-              Edit
-            </Button>
+            <Button size="M" cta on:click={editApp}>Edit</Button>
           </span>
           <ActionMenu align="right">
             <span slot="control" class="app-overview-actions-icon">
@@ -158,13 +149,7 @@
               </MenuItem>
             </span>
             <span class="mobile">
-              <MenuItem
-                icon="Edit"
-                disabled={appLocked && !lockedByYou}
-                on:click={editApp}
-              >
-                Edit
-              </MenuItem>
+              <MenuItem icon="Edit" on:click={editApp}>Edit</MenuItem>
             </span>
             <MenuItem
               on:click={() => exportApp({ published: false })}
