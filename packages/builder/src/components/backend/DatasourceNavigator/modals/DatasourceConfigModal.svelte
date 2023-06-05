@@ -75,7 +75,6 @@
   title={`Connect to ${name}`}
   onConfirm={() =>
     datasourcePlus ? saveDatasource() : fetchTablesModal.show()}
-  onCancel={() => modal.show()}
   confirmText={datasourcePlus ? "Connect" : "Save and continue to query"}
   cancelText="Back"
   showSecondaryButton={datasourcePlus}
