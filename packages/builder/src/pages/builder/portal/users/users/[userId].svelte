@@ -31,7 +31,6 @@
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
   import ScimBanner from "../_components/SCIMBanner.svelte"
-  import { helpers } from "@budibase/shared-core"
 
   export let userId
 
@@ -91,7 +90,6 @@
   $: readonly = !$auth.isAdmin || scimEnabled
   $: privileged = user?.admin?.global || user?.builder?.global
   $: nameLabel = getNameLabel(user)
-  $: initials = helpers.getUserInitials(user)
   $: filteredGroups = getFilteredGroups($groups, searchTerm)
   $: availableApps = getAvailableApps($apps, privileged, user?.roles)
   $: userGroups = $groups.filter(x => {
