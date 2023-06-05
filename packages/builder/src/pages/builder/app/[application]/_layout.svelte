@@ -15,7 +15,7 @@
   } from "@budibase/bbui"
   import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
-  import { isActive, goto, layout, redirect } from "@roxi/routify"
+  import { isActive, goto, layout, redirect, url } from "@roxi/routify"
   import { capitalise } from "helpers"
   import { onMount, onDestroy } from "svelte"
   import CommandPalette from "components/commandPalette/CommandPalette.svelte"
@@ -126,7 +126,11 @@
   })
 
   onDestroy(() => {
-    store.actions.reset()
+    // Run async on a slight delay to let other cleanup logic run without
+    // being confused by the store wiping
+    setTimeout(() => {
+      store.actions.reset()
+    }, 10)
   })
 </script>
 
