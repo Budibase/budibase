@@ -368,15 +368,7 @@
             <Checkbox
               text={value.title}
               value={inputData[key]}
-              on:change={e => {
-                deprecatedSchemaProperties.forEach(([k, v]) => {
-                  if (v.dependsOn === key) {
-                    v.show = e.detail
-                  }
-                })
-                deprecatedSchemaProperties = [...deprecatedSchemaProperties]
-                onChange(e, key)
-              }}
+              on:change={e => onChange(e, key)}
             />
           </div>
         {:else if value.type === "date"}
