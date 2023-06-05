@@ -126,7 +126,11 @@
   })
 
   onDestroy(() => {
-    store.actions.reset()
+    // Run async on a slight delay to let other cleanup logic run without
+    // being confused by the store wiping
+    setTimeout(() => {
+      store.actions.reset()
+    }, 10)
   })
 </script>
 
