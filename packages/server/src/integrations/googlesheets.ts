@@ -457,17 +457,19 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   }) {
     try {
       await this.connect()
+      const hasFilters = dataFilters.hasFilters(query.filters)
+      const limit = query.paginate?.limit || 100
+      const page: number =
+        typeof query.paginate?.page === "number"
+          ? query.paginate.page
+          : parseInt(query.paginate?.page || "1")
+      const offset = (page - 1) * limit
       const sheet = this.client.sheetsByTitle[query.sheet]
       let rows: GoogleSpreadsheetRow[] = []
-      if (query.paginate) {
-        const limit = query.paginate.limit || 100
-        let page: number =
-          typeof query.paginate.page === "number"
-            ? query.paginate.page
-            : parseInt(query.paginate.page || "1")
+      if (query.paginate && !hasFilters) {
         rows = await sheet.getRows({
           limit,
-          offset: (page - 1) * limit,
+          offset,
         })
       } else {
         rows = await sheet.getRows()
@@ -486,7 +488,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
         }
       }
-      const filtered = dataFilters.runLuceneQuery(rows, query.filters)
+      let filtered = dataFilters.runLuceneQuery(rows, query.filters)
+      if (hasFilters && query.paginate) {
+        filtered = filtered.slice(offset, offset + limit)
+      }
       const headerValues = sheet.headerValues
       let response = []
       for (let row of filtered) {
