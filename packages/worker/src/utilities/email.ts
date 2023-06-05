@@ -218,7 +218,6 @@ export async function sendEmail(
     })
     message = {
       ...message,
-      filename: "invitation.ics",
       method: "request",
       content: calendar.toString(),
     }

@@ -91,6 +91,7 @@ interface BaseIOStructure {
   customType?: AutomationCustomIOType
   title?: string
   description?: string
+  dependsOn?: string
   enum?: string[]
   pretty?: string[]
   properties?: {

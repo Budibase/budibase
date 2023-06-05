@@ -55,18 +55,22 @@ export const definition: AutomationStepSchema = {
         startTime: {
           type: AutomationIOType.DATE,
           title: "Start Time",
+          dependsOn: "addInvite",
         },
         endTime: {
           type: AutomationIOType.DATE,
           title: "End Time",
+          dependsOn: "addInvite",
         },
         summary: {
           type: AutomationIOType.STRING,
           title: "Meeting Summary",
+          dependsOn: "addInvite",
         },
         location: {
           type: AutomationIOType.STRING,
           title: "Location",
+          dependsOn: "addInvite",
         },
       },
       required: ["to", "from", "subject", "contents"],
