@@ -3,6 +3,7 @@
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "components/design/Panel.svelte"
   import { isActive, goto } from "@roxi/routify"
+  import BetaButton from "./_components/BetaButton.svelte"
 </script>
 
 <!-- routify:options index=1 -->
@@ -19,6 +20,7 @@
   <div class="content">
     <slot />
   </div>
+  <BetaButton />
 </div>
 
 <style>
@@ -39,5 +41,6 @@
     justify-content: flex-start;
     align-items: stretch;
     flex: 1 1 auto;
+    z-index: 1;
   }
 </style>

@@ -7,7 +7,6 @@
   import { createAPIClient } from "../../../api"
   import { attachStores } from "../stores"
   import BulkDeleteHandler from "../controls/BulkDeleteHandler.svelte"
-  import BetaButton from "../controls/BetaButton.svelte"
   import GridBody from "./GridBody.svelte"
   import ResizeOverlay from "../overlays/ResizeOverlay.svelte"
   import ReorderOverlay from "../overlays/ReorderOverlay.svelte"
@@ -144,7 +143,6 @@
           <HeaderRow />
           <GridBody />
         </div>
-        <BetaButton />
         {#if allowAddRows}
           <NewRow />
         {/if}

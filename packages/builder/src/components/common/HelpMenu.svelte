@@ -83,7 +83,7 @@
   .help {
     z-index: 2;
     position: absolute;
-    bottom: var(--spacing-xl);
+    bottom: 24px;
     right: 24px;
   }
 
