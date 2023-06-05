@@ -69,4 +69,15 @@ export const buildDatasourceEndpoints = API => ({
       body: { datasource },
     })
   },
+
+  /**
+   * Fetch table names available within the datasource, for filtering out undesired tables
+   * @param datasource the datasource configuration to use for fetching tables
+   */
+  fetchTablesForDatasource: async datasource => {
+    return await API.post({
+      url: `/api/datasources/tables`,
+      body: { datasource },
+    })
+  },
 })
