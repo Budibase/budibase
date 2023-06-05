@@ -44,7 +44,7 @@
   let config = {}
   let updated = false
 
-  $: onConfigUpdate(config, mounted)
+  $: onConfigUpdate(config)
   $: initialised = Object.keys(config).length > 0
 
   $: isCloud = $admin.cloud
@@ -130,8 +130,6 @@
         logoPreview = null
       }
       config.logoUrl = undefined
-    } else {
-      config.logoUrl = ""
     }
 
     if (faviconFile) {
@@ -141,8 +139,6 @@
         faviconPreview = null
       }
       config.faviconUrl = undefined
-    } else {
-      config.faviconUrl = ""
     }
   }
 
@@ -190,7 +186,6 @@
     if (!$organisation.loaded) {
       await organisation.init()
     }
-
     config = {
       faviconUrl: $organisation.faviconUrl,
       logoUrl: $organisation.logoUrl,
@@ -272,6 +267,7 @@
               faviconFile = e.detail
               faviconPreview = null
             } else {
+              faviconFile = null
               clone.faviconUrl = ""
             }
             config = clone
@@ -418,7 +414,11 @@
           Upgrade
         </Button>
       {/if}
-      <Button on:click={saveConfig} cta disabled={saving || !updated || !init}>
+      <Button
+        on:click={saveConfig}
+        cta
+        disabled={saving || !updated || !$organisation.loaded}
+      >
         Save
       </Button>
     </div>

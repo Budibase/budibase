@@ -22,7 +22,8 @@ import {
   isOIDCConfig,
   isSettingsConfig,
   isSMTPConfig,
-  OIDCConfigs, SettingsBrandingConfig,
+  OIDCConfigs,
+  SettingsBrandingConfig,
   SettingsInnerConfig,
   SSOConfig,
   SSOConfigType,
@@ -336,15 +337,6 @@ export async function publicSettings(
       )
     }
 
-    if (branding.faviconUrl && branding.faviconUrl !== "") {
-      // @ts-ignore
-      config.faviconUrl = objectStore.getGlobalFileUrl(
-        "settings",
-        "faviconUrl",
-        branding.faviconUrlEtag
-      )
-    }
-
     // google
     const googleConfig = await configs.getGoogleConfig()
     const googleDatasourceConfigured =
@@ -368,6 +360,15 @@ export async function publicSettings(
       config: {
         ...config,
         ...branding,
+        ...(branding.faviconUrl && branding.faviconUrl !== ""
+          ? {
+              faviconUrl: objectStore.getGlobalFileUrl(
+                "settings",
+                "faviconUrl",
+                branding.faviconUrlEtag
+              ),
+            }
+          : { faviconUrl: undefined }),
         google,
         googleDatasourceConfigured,
         oidc,
