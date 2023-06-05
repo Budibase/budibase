@@ -92,7 +92,6 @@ export class BaseSocket {
       this.io.on("connection", async socket => {
         // Add built in handler for heartbeats
         socket.on(SocketEvent.Heartbeat, async () => {
-          console.log(socket.data.email, "heartbeat received")
           await this.extendSessionTTL(socket.data.sessionId)
         })
 

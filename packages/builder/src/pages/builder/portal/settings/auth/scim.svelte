@@ -58,7 +58,7 @@
   }
 
   onMount(async () => {
-    await Promise.all(fetchConfig(), fetchAPIKey())
+    await Promise.all([fetchConfig(), fetchAPIKey()])
   })
 
   const copyToClipboard = async value => {

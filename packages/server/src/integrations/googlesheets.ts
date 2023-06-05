@@ -457,22 +457,41 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   }) {
     try {
       await this.connect()
+      const hasFilters = dataFilters.hasFilters(query.filters)
+      const limit = query.paginate?.limit || 100
+      const page: number =
+        typeof query.paginate?.page === "number"
+          ? query.paginate.page
+          : parseInt(query.paginate?.page || "1")
+      const offset = (page - 1) * limit
       const sheet = this.client.sheetsByTitle[query.sheet]
       let rows: GoogleSpreadsheetRow[] = []
-      if (query.paginate) {
-        const limit = query.paginate.limit || 100
-        let page: number =
-          typeof query.paginate.page === "number"
-            ? query.paginate.page
-            : parseInt(query.paginate.page || "1")
+      if (query.paginate && !hasFilters) {
         rows = await sheet.getRows({
           limit,
-          offset: (page - 1) * limit,
+          offset,
         })
       } else {
         rows = await sheet.getRows()
       }
-      const filtered = dataFilters.runLuceneQuery(rows, query.filters)
+      // this is a special case - need to handle the _id, it doesn't exist
+      // we cannot edit the returned structure from google, it does not have
+      // setter functions and is immutable, easier to update the filters
+      // to look for the _rowNumber property rather than rowNumber
+      if (query.filters?.equal) {
+        const idFilterKeys = Object.keys(query.filters.equal).filter(filter =>
+          filter.includes(GOOGLE_SHEETS_PRIMARY_KEY)
+        )
+        for (let idFilterKey of idFilterKeys) {
+          const id = query.filters.equal[idFilterKey]
+          delete query.filters.equal[idFilterKey]
+          query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
+        }
+      }
+      let filtered = dataFilters.runLuceneQuery(rows, query.filters)
+      if (hasFilters && query.paginate) {
+        filtered = filtered.slice(offset, offset + limit)
+      }
       const headerValues = sheet.headerValues
       let response = []
       for (let row of filtered) {
@@ -535,7 +554,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     const row = rows[query.rowIndex]
     if (row) {
       await row.delete()
-      return [{ deleted: query.rowIndex }]
+      return [
+        {
+          deleted: query.rowIndex,
+          [GOOGLE_SHEETS_PRIMARY_KEY]: query.rowIndex,
+        },
+      ]
     } else {
       throw new Error("Row does not exist.")
     }
