@@ -38,7 +38,7 @@
     padding: 2px 6px;
     font-size: 12px;
     font-weight: 600;
-    background-color: var(--spectrum-global-color-gray-200);
+    background-color: var(--spectrum-global-color-gray-300);
     color: var(--spectrum-global-color-gray-700);
     border-radius: 4px;
     text-align: center;

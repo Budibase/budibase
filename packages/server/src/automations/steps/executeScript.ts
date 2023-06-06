@@ -4,6 +4,7 @@ import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
   AutomationCustomIOType,
+  AutomationFeature,
   AutomationIOType,
   AutomationStepInput,
   AutomationStepSchema,
@@ -19,6 +20,9 @@ export const definition: AutomationStepSchema = {
   internal: true,
   stepId: AutomationActionStepId.EXECUTE_SCRIPT,
   inputs: {},
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   schema: {
     inputs: {
       properties: {

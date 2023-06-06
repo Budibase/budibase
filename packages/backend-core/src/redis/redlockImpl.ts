@@ -4,10 +4,10 @@ import { LockOptions, LockType } from "@budibase/types"
 import * as context from "../context"
 import env from "../environment"
 
-const getClient = async (
+async function getClient(
   type: LockType,
   opts?: Redlock.Options
-): Promise<Redlock> => {
+): Promise<Redlock> {
   if (type === LockType.CUSTOM) {
     return newRedlock(opts)
   }
@@ -17,6 +17,9 @@ const getClient = async (
   switch (type) {
     case LockType.TRY_ONCE: {
       return newRedlock(OPTIONS.TRY_ONCE)
+    }
+    case LockType.TRY_TWICE: {
+      return newRedlock(OPTIONS.TRY_TWICE)
     }
     case LockType.DEFAULT: {
       return newRedlock(OPTIONS.DEFAULT)
@@ -34,6 +37,9 @@ const OPTIONS = {
   TRY_ONCE: {
     // immediately throws an error if the lock is already held
     retryCount: 0,
+  },
+  TRY_TWICE: {
+    retryCount: 1,
   },
   TEST: {
     // higher retry count in unit tests
@@ -62,7 +68,7 @@ const OPTIONS = {
   },
 }
 
-const newRedlock = async (opts: Redlock.Options = {}) => {
+export async function newRedlock(opts: Redlock.Options = {}) {
   let options = { ...OPTIONS.DEFAULT, ...opts }
   const redisWrapper = await getLockClient()
   const client = redisWrapper.getClient()
@@ -81,22 +87,26 @@ type RedlockExecution<T> =
   | SuccessfulRedlockExecution<T>
   | UnsuccessfulRedlockExecution
 
-export const doWithLock = async <T>(
+function getLockName(opts: LockOptions) {
+  // determine lock name
+  // by default use the tenantId for uniqueness, unless using a system lock
+  const prefix = opts.systemLock ? "system" : context.getTenantId()
+  let name: string = `lock:${prefix}_${opts.name}`
+  // add additional unique name if required
+  if (opts.resource) {
+    name = name + `_${opts.resource}`
+  }
+  return name
+}
+
+export async function doWithLock<T>(
   opts: LockOptions,
   task: () => Promise<T>
-): Promise<RedlockExecution<T>> => {
+): Promise<RedlockExecution<T>> {
   const redlock = await getClient(opts.type, opts.customOptions)
   let lock
   try {
-    // determine lock name
-    // by default use the tenantId for uniqueness, unless using a system lock
-    const prefix = opts.systemLock ? "system" : context.getTenantId()
-    let name: string = `lock:${prefix}_${opts.name}`
-
-    // add additional unique name if required
-    if (opts.resource) {
-      name = name + `_${opts.resource}`
-    }
+    const name = getLockName(opts)
 
     // create the lock
     lock = await redlock.lock(name, opts.ttl)
@@ -112,7 +122,6 @@ export const doWithLock = async <T>(
       if (opts.type === LockType.TRY_ONCE) {
         // don't throw for try-once locks, they will always error
         // due to retry count (0) exceeded
-        console.warn(e)
         return { executed: false }
       } else {
         console.error(e)

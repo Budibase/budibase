@@ -3,6 +3,7 @@
   import PanelHeader from "./PanelHeader.svelte"
   import { APP_URL_REGEX } from "constants"
 
+  export let disabled
   export let name = ""
   export let url = ""
   export let onNext = () => {}
@@ -31,6 +32,18 @@
       return "Invalid URL"
     }
   }
+
+  $: urlManuallySet = false
+
+  const updateUrl = event => {
+    const appName = event.detail
+    if (urlManuallySet) {
+      return
+    }
+
+    const parsedUrl = appName.toLowerCase().replace(/\s+/g, "-")
+    url = encodeURI(parsedUrl)
+  }
 </script>
 
 <div>
@@ -43,11 +56,13 @@
       bind:value={name}
       bind:error={nameError}
       validate={validateName}
+      on:change={updateUrl}
       label="Name"
     />
     <FancyInput
       bind:value={url}
       bind:error={urlError}
+      on:change={() => (urlManuallySet = true)}
       validate={validateUrl}
       label="URL"
     />
@@ -57,7 +72,9 @@
   {:else}
     <p>‎</p>
   {/if}
-  <Button size="L" cta disabled={!isValid} on:click={onNext}>Lets go!</Button>
+  <Button size="L" cta disabled={!isValid || disabled} on:click={onNext}
+    >Lets go!</Button
+  >
 </div>
 
 <style>

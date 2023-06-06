@@ -15,6 +15,16 @@ router
     authorized(permissions.BUILDER),
     datasourceController.fetch
   )
+  .post(
+    "/api/datasources/verify",
+    authorized(permissions.BUILDER),
+    datasourceController.verify
+  )
+  .post(
+    "/api/datasources/info",
+    authorized(permissions.BUILDER),
+    datasourceController.information
+  )
   .get(
     "/api/datasources/:datasourceId",
     authorized(

@@ -23,6 +23,7 @@ const DEFAULT_CONFIG = {
   oidcCallbackUrl: "",
   googleCallbackUrl: "",
   isSSOEnforced: false,
+  loaded: false,
 }
 
 export function createOrganisationStore() {
@@ -32,7 +33,7 @@ export function createOrganisationStore() {
   async function init() {
     const tenantId = get(auth).tenantId
     const settingsConfigDoc = await API.getTenantConfig(tenantId)
-    set({ ...DEFAULT_CONFIG, ...settingsConfigDoc.config })
+    set({ ...DEFAULT_CONFIG, ...settingsConfigDoc.config, loaded: true })
   }
 
   async function save(config) {
@@ -43,6 +44,10 @@ export function createOrganisationStore() {
     delete storeConfig.googleDatasourceConfigured
     delete storeConfig.oidcCallbackUrl
     delete storeConfig.googleCallbackUrl
+
+    // delete internal store field
+    delete storeConfig.loaded
+
     await API.saveConfig({
       type: "settings",
       config: { ...storeConfig, ...config },

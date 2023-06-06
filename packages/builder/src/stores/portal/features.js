@@ -1,7 +1,7 @@
 import { writable } from "svelte/store"
 import { API } from "api"
 import { licensing } from "./licensing"
-import { ConfigType } from "../../../../types/src/documents"
+import { ConfigType } from "@budibase/types"
 
 export const createFeatureStore = () => {
   const internalStore = writable({

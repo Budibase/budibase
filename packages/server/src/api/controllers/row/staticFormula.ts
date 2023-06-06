@@ -7,6 +7,7 @@ import {
 import { FieldTypes, FormulaTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
 import { Table, Row } from "@budibase/types"
+import * as linkRows from "../../../db/linkedRows"
 const { isEqual } = require("lodash")
 const { cloneDeep } = require("lodash/fp")
 
@@ -166,5 +167,9 @@ export async function finaliseRow(
   if (updateFormula) {
     await updateRelatedFormula(table, enrichedRow)
   }
-  return { row: enrichedRow, table }
+  const squashed = await linkRows.squashLinksToPrimaryDisplay(
+    table,
+    enrichedRow
+  )
+  return { row: enrichedRow, squashed, table }
 }

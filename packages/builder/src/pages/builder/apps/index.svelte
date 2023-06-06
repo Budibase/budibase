@@ -5,7 +5,6 @@
     Divider,
     ActionMenu,
     MenuItem,
-    Avatar,
     Page,
     Icon,
     Body,
@@ -22,6 +21,8 @@
   import { processStringSync } from "@budibase/string-templates"
   import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"
+  import { UserAvatar } from "@budibase/frontend-core"
+  import { helpers } from "@budibase/shared-core"
 
   let loaded = false
   let userInfoModal
@@ -96,11 +97,7 @@
             <img class="logo" alt="logo" src={$organisation.logoUrl || Logo} />
             <ActionMenu align="right">
               <div slot="control" class="avatar">
-                <Avatar
-                  size="M"
-                  initials={$auth.initials}
-                  url={$auth.user.pictureUrl}
-                />
+                <UserAvatar user={$auth.user} showTooltip={false} />
                 <Icon size="XL" name="ChevronDown" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
@@ -125,7 +122,7 @@
           </div>
           <Layout noPadding gap="XS">
             <Heading size="M">
-              Hey {$auth.user.firstName || $auth.user.email}
+              Hey {helpers.getUserLabel($auth.user)}
             </Heading>
             <Body>
               Welcome to the {$organisation.company} portal. Below you'll find the
@@ -133,7 +130,7 @@
             </Body>
           </Layout>
           <Divider />
-          {#if $licensing.usageMetrics?.dayPasses >= 100}
+          {#if $licensing.usageMetrics?.dayPasses >= 100 || $licensing.errUserLimit}
             <div>
               <Layout gap="S" justifyItems="center">
                 <img class="spaceman" alt="spaceman" src={Spaceman} />
