@@ -8,15 +8,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Fail if branch is not master
-        if: github.ref != 'refs/heads/master'
+      - name: Fail if not a tag
         run: |
-          echo "Ref is not master, you must run this job from master."
-          exit 1
+          if [[ $GITHUB_REF != refs/tags/* ]]; then 
+            echo "Workflow Dispatch can only be run on tags" 
+            exit 1 
+          fi
 
       - uses: actions/checkout@v2
         with: 
           fetch_depth: 0
+
+      - name: Fail if tag is not in master
+        run: |
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
+            exit 1
+          fi
 
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
@@ -78,7 +86,7 @@ jobs:
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
           git reset --hard
-          git pull
+          git fetch
           mkdir sync
           echo "Packaging chart to sync dir"
           helm package charts/budibase --version "$RELEASE_VERSION" --app-version "$RELEASE_VERSION" --destination sync

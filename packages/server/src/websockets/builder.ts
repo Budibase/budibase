@@ -1,6 +1,6 @@
 import authorized from "../middleware/authorized"
 import { BaseSocket } from "./websocket"
-import { permissions } from "@budibase/backend-core"
+import { permissions, events } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import { Datasource, Table, SocketSession, ContextUser } from "@budibase/types"
@@ -22,6 +22,9 @@ export default class BuilderSocket extends BaseSocket {
       // Reply with all users in current room
       const sessions = await this.getRoomSessions(appId)
       callback({ users: sessions })
+
+      // Track usage
+      await events.user.dataCollaboration(sessions.length)
     })
   }
 
