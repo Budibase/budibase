@@ -10,10 +10,14 @@
   import GoogleButton from "../_components/GoogleButton.svelte"
   import { organisation } from "stores/portal"
   import { onMount } from "svelte"
-  import { validateDatasourceConfig } from "builderStore/datasource"
+  import {
+    validateDatasourceConfig,
+    getDatasourceInfo,
+  } from "builderStore/datasource"
   import cloneDeep from "lodash/cloneDeepWith"
   import IntegrationConfigForm from "../TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { goto } from "@roxi/routify"
+  import { API } from "api"
 
   import { saveDatasource } from "builderStore/datasource"
   import { DatasourceFeature } from "@budibase/types"
@@ -43,6 +47,18 @@
 
   let isValid = false
 
+  const saveDatasourceAndRedirect = async () => {
+    try {
+      const resp = await saveDatasource(datasource)
+      $goto(`./datasource/${resp._id}`)
+      notifications.success(`Datasource created successfully.`)
+    } catch (err) {
+      notifications.error(err?.message ?? "Error saving datasource")
+      // prevent the modal from closing
+      return false
+    }
+  }
+
   const modalConfig = {
     [GoogleDatasouceConfigStep.AUTH]: {
       title: `Connect to ${integrationName}`,
@@ -61,12 +77,22 @@
           }
         }
 
-        step = GoogleDatasouceConfigStep.SET_SHEETS
-        notifications.success(
-          checkConnection
-            ? "Connection Successful"
-            : `Datasource created successfully.`
-        )
+        if (!integration.features[DatasourceFeature.FETCH_TABLE_NAMES]) {
+          saveDatasourceAndRedirect()
+          return
+        }
+
+        getDatasourceInfo(datasource).then(i => {
+          debugger
+          console.log(i)
+
+          step = GoogleDatasouceConfigStep.SET_SHEETS
+          notifications.success(
+            checkConnection
+              ? "Connection Successful"
+              : `Datasource created successfully.`
+          )
+        })
 
         // prevent the modal from closing
         return false
@@ -75,17 +101,7 @@
     [GoogleDatasouceConfigStep.SET_SHEETS]: {
       title: `Choose your sheets`,
       confirmButtonText: "Fetch sheets",
-      onConfirm: async () => {
-        try {
-          const resp = await saveDatasource(datasource)
-          $goto(`./datasource/${resp._id}`)
-          notifications.success(`Datasource created successfully.`)
-        } catch (err) {
-          notifications.error(err?.message ?? "Error saving datasource")
-          // prevent the modal from closing
-          return false
-        }
-      },
+      onConfirm: saveDatasourceAndRedirect,
     },
   }
 </script>
