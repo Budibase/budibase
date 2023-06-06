@@ -2,7 +2,7 @@
 
 if [ -z "$1" ]
 then
-  echo "Error: version number is required. Usage: $0 [major|minor|patch|prerelease]"
+  echo "Error: bump type is required. Usage: $0 [major|minor|patch|prerelease]"
   exit 1
 fi
 
