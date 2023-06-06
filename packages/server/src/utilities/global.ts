@@ -122,11 +122,8 @@ export async function getGlobalUsers(
       delete user.forceResetPassword
       return user
     })
-  if (!appId) {
-    return globalUsers
-  }
 
-  if (opts?.noProcessing) {
+  if (opts?.noProcessing || !appId) {
     return globalUsers
   } else {
     // pass in the groups, meaning we don't actually need to retrieve them for
