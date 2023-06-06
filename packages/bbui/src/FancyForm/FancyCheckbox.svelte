@@ -8,8 +8,8 @@
   export let disabled = false
   export let error = null
   export let validate = null
-  export let compact = false
-  export let noMaxWidth
+  export let compress = false
+  export let lighter = false
 
   const dispatch = createEventDispatcher()
 
@@ -28,8 +28,8 @@
   {value}
   {validate}
   {disabled}
-  {compact}
-  {noMaxWidth}
+  {compress}
+  {lighter}
   clickable
   on:click={onChange}
 >
