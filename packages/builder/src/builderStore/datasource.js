@@ -52,6 +52,6 @@ export async function getDatasourceInfo(config) {
 
 export async function getDatasourceInfo(config) {
   const datasource = prepareData(config)
-  const resp = await API.fetchTablesForDatasource(datasource)
+  const resp = await API.fetchInfoForDatasource(datasource)
   return resp
 }
