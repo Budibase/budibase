@@ -62,7 +62,11 @@
       if (!datasource.name) {
         datasource.name = name
       }
-      const resp = await save(datasource)
+      const opts = {}
+      if (datasourcePlus && selectedTables) {
+        opts.tablesFilter = selectedTables
+      }
+      const resp = await save(datasource, opts)
       $goto(`./datasource/${resp._id}`)
       notifications.success("Datasource created successfully.")
     } catch (err) {
@@ -80,7 +84,7 @@
     if (!connected) {
       return false
     }
-    if (datasourcePlus) {
+    if (datasourcePlus && !fetchTableStep) {
       notifications.success("Connected to datasource successfully.")
       const info = await getDatasourceInfo(datasource)
       tableList = info.tableNames
