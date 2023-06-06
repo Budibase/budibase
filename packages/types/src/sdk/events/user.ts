@@ -86,3 +86,7 @@ export interface UserPasswordResetEvent extends BaseEvent {
     email: string
   }
 }
+
+export interface UserDataCollaborationEvent extends BaseEvent {
+  users: number
+}
