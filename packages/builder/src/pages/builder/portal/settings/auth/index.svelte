@@ -1,5 +1,4 @@
 <script>
-  import GoogleLogo from "./_logos/Google.svelte"
   import OidcLogo from "./_logos/OIDC.svelte"
   import MicrosoftLogo from "assets/microsoft-logo.png"
   import Auth0Logo from "assets/auth0-logo.png"
@@ -28,52 +27,15 @@
   import { API } from "api"
   import { organisation, admin, licensing } from "stores/portal"
   import Scim from "./scim.svelte"
+  import Google from "./google.svelte"
 
   const ConfigTypes = {
-    Google: "google",
     OIDC: "oidc",
   }
 
   const HasSpacesRegex = /[\\"\s]/
 
   $: enforcedSSO = $organisation.isSSOEnforced
-
-  // Some older google configs contain a manually specified value - retain the functionality to edit the field
-  // When there is no value or we are in the cloud - prohibit editing the field, must use platform url to change
-  $: googleCallbackUrl = undefined
-  $: googleCallbackReadonly = $admin.cloud || !googleCallbackUrl
-
-  // Indicate to user that callback is based on platform url
-  // If there is an existing value, indicate that it may be removed to return to default behaviour
-  $: googleCallbackTooltip = $admin.cloud
-    ? null
-    : googleCallbackReadonly
-    ? "Visit the organisation page to update the platform URL"
-    : "Leave blank to use the default callback URL"
-  $: googleSheetsCallbackUrl = `${$organisation.platformUrl}/api/global/auth/datasource/google/callback`
-
-  $: GoogleConfigFields = {
-    Google: [
-      { name: "clientID", label: "Client ID" },
-      { name: "clientSecret", label: "Client secret" },
-      {
-        name: "callbackURL",
-        label: "Callback URL",
-        readonly: googleCallbackReadonly,
-        tooltip: googleCallbackTooltip,
-        placeholder: $organisation.googleCallbackUrl,
-        copyButton: true,
-      },
-      {
-        name: "sheetsURL",
-        label: "Sheets URL",
-        readonly: googleCallbackReadonly,
-        tooltip: googleCallbackTooltip,
-        placeholder: googleSheetsCallbackUrl,
-        copyButton: true,
-      },
-    ],
-  }
 
   $: OIDCConfigFields = {
     Oidc: [
@@ -133,15 +95,9 @@
   const providers = { google, oidc }
 
   // control the state of the save button depending on whether form has changed
-  let originalGoogleDoc
   let originalOidcDoc
-  let googleSaveButtonDisabled
   let oidcSaveButtonDisabled
   $: {
-    isEqual(providers.google?.config, originalGoogleDoc?.config)
-      ? (googleSaveButtonDisabled = true)
-      : (googleSaveButtonDisabled = false)
-
     // delete the callback url which is never saved to the oidc
     // config doc, to ensure an accurate comparison
     delete providers.oidc?.config.configs[0].callbackURL
@@ -150,10 +106,6 @@
       ? (oidcSaveButtonDisabled = true)
       : (oidcSaveButtonDisabled = false)
   }
-
-  $: googleComplete = !!(
-    providers.google?.config?.clientID && providers.google?.config?.clientSecret
-  )
 
   $: oidcComplete = !!(
     providers.oidc?.config?.configs[0].configUrl &&
@@ -230,30 +182,6 @@
     originalOidcDoc = cloneDeep(providers.oidc)
   }
 
-  async function saveGoogle() {
-    if (!googleComplete) {
-      notifications.error(
-        `Please fill in all required ${ConfigTypes.Google} fields`
-      )
-      return
-    }
-
-    const google = providers.google
-
-    try {
-      const res = await saveConfig(google)
-      providers[res.type]._rev = res._rev
-      providers[res.type]._id = res._id
-      notifications.success(`Settings saved`)
-    } catch (e) {
-      notifications.error(e.message)
-      return
-    }
-
-    googleSaveButtonDisabled = true
-    originalGoogleDoc = cloneDeep(providers.google)
-  }
-
   let defaultScopes = ["profile", "email", "offline_access"]
 
   const refreshScopes = idx => {
@@ -280,29 +208,6 @@
     } catch (error) {
       notifications.error("Error getting org config")
     }
-
-    // Fetch Google config
-    let googleDoc
-    try {
-      googleDoc = await API.getConfig(ConfigTypes.Google)
-    } catch (error) {
-      notifications.error("Error fetching Google OAuth config")
-    }
-    if (!googleDoc?._id) {
-      providers.google = {
-        type: ConfigTypes.Google,
-        config: { activated: false },
-      }
-      originalGoogleDoc = cloneDeep(googleDoc)
-    } else {
-      // Default activated to true for older configs
-      if (googleDoc.config.activated === undefined) {
-        googleDoc.config.activated = true
-      }
-      originalGoogleDoc = cloneDeep(googleDoc)
-      providers.google = googleDoc
-    }
-    googleCallbackUrl = providers?.google?.config?.callbackURL
 
     // Get the list of user uploaded logos and push it to the dropdown options.
     // This needs to be done before the config call so they're available when
@@ -395,62 +300,7 @@
       > before enabling this feature.
     </Body>
   </Layout>
-  {#if providers.google}
-    <Divider />
-    <Layout gap="XS" noPadding>
-      <Heading size="S">
-        <div class="provider-title">
-          <GoogleLogo />
-          <span>Google</span>
-        </div>
-      </Heading>
-      <Body size="S">
-        To allow users to authenticate using their Google accounts, fill out the
-        fields below. Read the <Link
-          size="M"
-          href={"https://docs.budibase.com/docs/sso-with-google"}
-          >documentation</Link
-        > for more information.
-      </Body>
-    </Layout>
-    <Layout gap="XS" noPadding>
-      {#each GoogleConfigFields.Google as field}
-        <div class="form-row">
-          <Label size="L" tooltip={field.tooltip}>{field.label}</Label>
-          <div class="inputContainer">
-            <div class="input">
-              <Input
-                bind:value={providers.google.config[field.name]}
-                readonly={field.readonly}
-                placeholder={field.placeholder}
-              />
-            </div>
-            {#if field.copyButton}
-              <div
-                class="copy"
-                on:click={() => copyToClipboard(field.placeholder)}
-              >
-                <Icon size="S" name="Copy" />
-              </div>
-            {/if}
-          </div>
-        </div>
-      {/each}
-      <div class="form-row">
-        <Label size="L">Activated</Label>
-        <Toggle text="" bind:value={providers.google.config.activated} />
-      </div>
-    </Layout>
-    <div>
-      <Button
-        disabled={googleSaveButtonDisabled}
-        cta
-        on:click={() => saveGoogle()}
-      >
-        Save
-      </Button>
-    </div>
-  {/if}
+  <Google />
   {#if providers.oidc}
     <Divider />
     <Layout gap="XS" noPadding>
