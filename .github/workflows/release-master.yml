@@ -10,11 +10,6 @@ on:
       # Exclude all pre-releases
       - "!v*[0-9]+.[0-9]+.[0-9]+-*"
   workflow_dispatch:
-    inputs:
-      tags:
-        description: "Release tag"
-        required: true
-        type: boolean
 
 env:
   # Posthog token used by ui at build time
