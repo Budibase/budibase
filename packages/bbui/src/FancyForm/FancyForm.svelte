@@ -29,7 +29,8 @@
   const styles = () => {
     let styleString = ""
     styleString += `--fancy-field-max-width: ${noMaxWidth ? "auto" : "400px"}`
-    styleString += `; --fancy-field-height: ${compact ? "40px" : "64px"}`
+    styleString += `; --fancy-field-height: ${compact ? "36px" : "64px"}`
+    styleString += `; --fancy-field-padding: ${compact ? "8px" : "16px"}`
     return styleString
   }
 </script>

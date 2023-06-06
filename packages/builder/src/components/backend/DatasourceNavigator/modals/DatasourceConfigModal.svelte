@@ -5,8 +5,7 @@
     notifications,
     Body,
     Layout,
-    FancyForm,
-    FancyCheckbox,
+    FancyCheckboxGroup,
   } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { IntegrationNames } from "constants/backend"
@@ -111,13 +110,7 @@
     />
   {:else}
     <div class="table-checkboxes">
-      <FancyForm compact noMaxWidth>
-        <FancyCheckbox value="table a" text="table a" />
-        <FancyCheckbox value="table a" text="table a" />
-        <FancyCheckbox value="table a" text="table a" />
-        <FancyCheckbox value="table a" text="table a" />
-        <FancyCheckbox value="table a" text="table a" />
-      </FancyForm>
+      <FancyCheckboxGroup options={["table a", "table b", "table c"]} />
     </div>
   {/if}
 </ModalContent>

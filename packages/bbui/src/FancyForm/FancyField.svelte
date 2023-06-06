@@ -11,6 +11,8 @@
   export let value
   export let ref
   export let autoHeight
+  export let compress
+  export let lighter
 
   const formContext = getContext("fancy-form")
   const id = Math.random()
@@ -38,10 +40,12 @@
 <div
   bind:this={ref}
   class="fancy-field"
+  class:compress
   class:error
   class:disabled
   class:focused
   class:clickable
+  class:lighter
   class:auto-height={autoHeight}
 >
   <div class="content" on:click>
@@ -70,6 +74,12 @@
       background 130ms ease-out;
     color: var(--spectrum-global-color-gray-800);
   }
+  .lighter {
+    background: var(--spectrum-global-color-gray-100) !important;
+  }
+  .compress {
+    margin-bottom: -1px;
+  }
   .fancy-field:hover {
     border-color: var(--spectrum-global-color-gray-400);
   }
@@ -92,7 +102,7 @@
   .content {
     position: relative;
     height: var(--fancy-field-height);
-    padding: 0 16px;
+    padding: 0 var(--fancy-field-padding);
   }
   .fancy-field.auto-height .content {
     height: auto;
@@ -103,7 +113,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: 16px;
+    gap: var(--fancy-field-padding);
   }
   .field {
     flex: 1 1 auto;
