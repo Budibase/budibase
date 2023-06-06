@@ -130,7 +130,10 @@
         notifications.error("Export Failed")
       }
       if (response) {
-        download(response, `export.${exportFormat}`)
+        download(
+          new Blob([response], { type: "text/plain" }),
+          `export.${exportFormat}`
+        )
         notifications.success("Export Successful")
       }
     } else {
