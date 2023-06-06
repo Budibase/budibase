@@ -4,6 +4,7 @@
   import { API } from "api"
   import { parseFile } from "./utils"
 
+  let fileInput
   let error = null
   let fileName = null
   let fileType = null
@@ -16,6 +17,7 @@
   export let schema = {}
   export let allValid = true
   export let displayColumn = null
+  export let promptUpload = false
 
   const typeOptions = [
     {
@@ -99,10 +101,19 @@
     schema[name].type = e.detail
     schema[name].constraints = FIELDS[e.detail.toUpperCase()].constraints
   }
+
+  const openFileUpload = (promptUpload, fileInput) => {
+    if (promptUpload && fileInput) {
+      fileInput.click()
+    }
+  }
+
+  $: openFileUpload(promptUpload, fileInput)
 </script>
 
 <div class="dropzone">
   <input
+    bind:this={fileInput}
     disabled={loading}
     id="file-upload"
     accept="text/csv,application/json"

@@ -1,7 +1,7 @@
 import {
-  SortDirection,
   FieldTypes,
   NoEmptyFilterStrings,
+  SortDirection,
 } from "../../../constants"
 import {
   breakExternalTableId,
@@ -11,19 +11,33 @@ import { ExternalRequest, RunConfig } from "./ExternalRequest"
 import * as exporters from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import {
-  Operation,
-  UserCtx,
-  Row,
-  PaginationJson,
-  Table,
   Datasource,
   IncludeRelationship,
+  Operation,
+  PaginationJson,
+  Row,
   SortJson,
+  Table,
+  UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import * as utils from "./utils"
 
 const { cleanExportRows } = require("./utils")
+
+async function getRow(
+  tableId: string,
+  rowId: string,
+  opts?: { relationships?: boolean }
+) {
+  const response = (await handleRequest(Operation.READ, tableId, {
+    id: breakRowIdField(rowId),
+    includeSqlRelationships: opts?.relationships
+      ? IncludeRelationship.INCLUDE
+      : IncludeRelationship.EXCLUDE,
+  })) as Row[]
+  return response ? response[0] : response
+}
 
 export async function handleRequest(
   operation: Operation,
@@ -63,11 +77,15 @@ export async function patch(ctx: UserCtx) {
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }
   }
-  return handleRequest(Operation.UPDATE, tableId, {
+  const response = await handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(id),
     row: inputs,
-    includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
+  const row = await getRow(tableId, id, { relationships: true })
+  return {
+    ...response,
+    row,
+  }
 }
 
 export async function save(ctx: UserCtx) {
@@ -80,10 +98,20 @@ export async function save(ctx: UserCtx) {
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }
   }
-  return handleRequest(Operation.CREATE, tableId, {
+  const response = await handleRequest(Operation.CREATE, tableId, {
     row: inputs,
-    includeSqlRelationships: IncludeRelationship.EXCLUDE,
   })
+  const responseRow = response as { row: Row }
+  const rowId = responseRow.row._id
+  if (rowId) {
+    const row = await getRow(tableId, rowId, { relationships: true })
+    return {
+      ...response,
+      row,
+    }
+  } else {
+    return response
+  }
 }
 
 export async function fetchView(ctx: UserCtx) {
@@ -104,11 +132,7 @@ export async function fetch(ctx: UserCtx) {
 export async function find(ctx: UserCtx) {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
-  const response = (await handleRequest(Operation.READ, tableId, {
-    id: breakRowIdField(id),
-    includeSqlRelationships: IncludeRelationship.EXCLUDE,
-  })) as Row[]
-  return response ? response[0] : response
+  return getRow(tableId, id)
 }
 
 export async function destroy(ctx: UserCtx) {

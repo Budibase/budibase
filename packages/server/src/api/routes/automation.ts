@@ -65,7 +65,6 @@ router
   )
   .post(
     "/api/automations/:id/trigger",
-    appInfoMiddleware({ appType: AppType.PROD }),
     paramResource("id"),
     authorized(
       permissions.PermissionType.AUTOMATION,

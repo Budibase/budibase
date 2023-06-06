@@ -32,10 +32,12 @@
   <Grid
     {API}
     tableId={id}
+    tableType={$tables.selected?.type}
     allowAddRows={!isUsersTable}
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
-    on:updatetable={e => tables.updateTable(e.detail)}
+    showAvatars={false}
+    on:updatetable={e => tables.replaceTable(id, e.detail)}
   >
     <svelte:fragment slot="controls">
       {#if isInternal}

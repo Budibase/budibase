@@ -1,4 +1,4 @@
-import { getDefinitions } from "../../integrations"
+import { getDefinition, getDefinitions } from "../../integrations"
 import { BBContext } from "@budibase/types"
 
 export async function fetch(ctx: BBContext) {
@@ -7,7 +7,7 @@ export async function fetch(ctx: BBContext) {
 }
 
 export async function find(ctx: BBContext) {
-  const defs = await getDefinitions()
+  const def = await getDefinition(ctx.params.type)
+  ctx.body = def
   ctx.status = 200
-  ctx.body = defs[ctx.params.type]
 }

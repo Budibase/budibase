@@ -1,4 +1,6 @@
 import {
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
   FieldType,
@@ -15,7 +17,7 @@ import {
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId, finaliseExternalTables } from "./utils"
-import { GoogleSpreadsheet } from "google-spreadsheet"
+import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { configs, HTTPError } from "@budibase/backend-core"
 import { dataFilters } from "@budibase/shared-core"
@@ -61,9 +63,13 @@ const SCHEMA: Integration = {
   relationships: false,
   docs: "https://developers.google.com/sheets/api/quickstart/nodejs",
   description:
-    "Create and collaborate on online spreadsheets in real-time and from any device. ",
+    "Create and collaborate on online spreadsheets in real-time and from any device.",
   friendlyName: "Google Sheets",
   type: "Spreadsheet",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+  },
   datasource: {
     spreadsheetId: {
       display: "Google Sheet URL",
@@ -137,6 +143,18 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     this.config = config
     const spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
     this.client = new GoogleSpreadsheet(spreadsheetId)
+  }
+
+  async testConnection(): Promise<ConnectionInfo> {
+    try {
+      await this.connect()
+      return { connected: true }
+    } catch (e: any) {
+      return {
+        connected: false,
+        error: e.message as string,
+      }
+    }
   }
 
   getBindingIdentifier() {
@@ -222,6 +240,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       console.error("Error connecting to google sheets", err)
       throw err
     }
+  }
+
+  async getTableNames(): Promise<string[]> {
+    await this.connect()
+    const sheets = this.client.sheetsByIndex
+    return sheets.map(s => s.title)
   }
 
   getTableSchema(title: string, headerValues: string[], id?: string) {
@@ -433,9 +457,41 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   }) {
     try {
       await this.connect()
+      const hasFilters = dataFilters.hasFilters(query.filters)
+      const limit = query.paginate?.limit || 100
+      const page: number =
+        typeof query.paginate?.page === "number"
+          ? query.paginate.page
+          : parseInt(query.paginate?.page || "1")
+      const offset = (page - 1) * limit
       const sheet = this.client.sheetsByTitle[query.sheet]
-      const rows = await sheet.getRows()
-      const filtered = dataFilters.runLuceneQuery(rows, query.filters)
+      let rows: GoogleSpreadsheetRow[] = []
+      if (query.paginate && !hasFilters) {
+        rows = await sheet.getRows({
+          limit,
+          offset,
+        })
+      } else {
+        rows = await sheet.getRows()
+      }
+      // this is a special case - need to handle the _id, it doesn't exist
+      // we cannot edit the returned structure from google, it does not have
+      // setter functions and is immutable, easier to update the filters
+      // to look for the _rowNumber property rather than rowNumber
+      if (query.filters?.equal) {
+        const idFilterKeys = Object.keys(query.filters.equal).filter(filter =>
+          filter.includes(GOOGLE_SHEETS_PRIMARY_KEY)
+        )
+        for (let idFilterKey of idFilterKeys) {
+          const id = query.filters.equal[idFilterKey]
+          delete query.filters.equal[idFilterKey]
+          query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
+        }
+      }
+      let filtered = dataFilters.runLuceneQuery(rows, query.filters)
+      if (hasFilters && query.paginate) {
+        filtered = filtered.slice(offset, offset + limit)
+      }
       const headerValues = sheet.headerValues
       let response = []
       for (let row of filtered) {
@@ -498,7 +554,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     const row = rows[query.rowIndex]
     if (row) {
       await row.delete()
-      return [{ deleted: query.rowIndex }]
+      return [
+        {
+          deleted: query.rowIndex,
+          [GOOGLE_SHEETS_PRIMARY_KEY]: query.rowIndex,
+        },
+      ]
     } else {
       throw new Error("Row does not exist.")
     }

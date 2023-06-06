@@ -1,14 +1,11 @@
 <script>
-  import getUserInitials from "helpers/userInitials.js"
-  import { Avatar } from "@budibase/bbui"
+  import { UserAvatar } from "@budibase/frontend-core"
 
   export let value
-
-  $: initials = getUserInitials(value)
 </script>
 
-<div title={value.email} class="cell">
-  <Avatar size="M" {initials} />
+<div class="cell">
+  <UserAvatar user={value} />
 </div>
 
 <style>

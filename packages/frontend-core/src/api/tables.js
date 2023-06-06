@@ -62,13 +62,15 @@ export const buildTableEndpoints = API => ({
   /**
    * Imports data into an existing table
    * @param tableId the table ID to import to
-   * @param data the data import object
+   * @param rows the data import object
+   * @param identifierFields column names to be used as keys for overwriting existing rows
    */
-  importTableData: async ({ tableId, rows }) => {
+  importTableData: async ({ tableId, rows, identifierFields }) => {
     return await API.post({
       url: `/api/tables/${tableId}/import`,
       body: {
         rows,
+        identifierFields,
       },
     })
   },

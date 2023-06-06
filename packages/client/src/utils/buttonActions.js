@@ -122,13 +122,23 @@ const deleteRowHandler = async action => {
 }
 
 const triggerAutomationHandler = async action => {
-  const { fields, notificationOverride } = action.parameters
+  const { fields, notificationOverride, timeout } = action.parameters
   if (fields) {
     try {
-      await API.triggerAutomation({
+      const result = await API.triggerAutomation({
         automationId: action.parameters.automationId,
         fields,
+        timeout,
       })
+
+      // Value will exist if automation is synchronous, so return it.
+      if (result.value) {
+        if (!notificationOverride) {
+          notificationStore.actions.success("Automation ran successfully")
+        }
+        return { result }
+      }
+
       if (!notificationOverride) {
         notificationStore.actions.success("Automation triggered")
       }
@@ -138,7 +148,6 @@ const triggerAutomationHandler = async action => {
     }
   }
 }
-
 const navigationHandler = action => {
   const { url, peek, externalNewTab } = action.parameters
   routeStore.actions.navigate(url, peek, externalNewTab)

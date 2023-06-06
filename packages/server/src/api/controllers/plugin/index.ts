@@ -71,7 +71,7 @@ export async function create(ctx: any) {
 
     const doc = await pro.plugins.storePlugin(metadata, directory, source)
 
-    clientAppSocket.emit("plugins-update", { name, hash: doc.hash })
+    clientAppSocket?.emit("plugins-update", { name, hash: doc.hash })
     ctx.body = {
       message: "Plugin uploaded successfully",
       plugins: [doc],

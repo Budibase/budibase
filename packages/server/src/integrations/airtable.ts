@@ -1,11 +1,13 @@
 import {
-  Integration,
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
-  QueryType,
+  Integration,
   IntegrationBase,
+  QueryType,
 } from "@budibase/types"
 
-const Airtable = require("airtable")
+import Airtable from "airtable"
 
 interface AirtableConfig {
   apiKey: string
@@ -18,6 +20,9 @@ const SCHEMA: Integration = {
     "Airtable is a spreadsheet-database hybrid, with the features of a database but applied to a spreadsheet.",
   friendlyName: "Airtable",
   type: "Spreadsheet",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     apiKey: {
       type: DatasourceFieldType.PASSWORD,
@@ -81,11 +86,35 @@ const SCHEMA: Integration = {
 
 class AirtableIntegration implements IntegrationBase {
   private config: AirtableConfig
-  private client: any
+  private client
 
   constructor(config: AirtableConfig) {
     this.config = config
     this.client = new Airtable(config).base(config.base)
+  }
+
+  async testConnection(): Promise<ConnectionInfo> {
+    const mockTable = Date.now().toString()
+    try {
+      await this.client.makeRequest({
+        path: `/${mockTable}`,
+      })
+
+      return { connected: true }
+    } catch (e: any) {
+      if (
+        e.message ===
+        `Could not find table ${mockTable} in application ${this.config.base}`
+      ) {
+        // The request managed to check the application, so the credentials are valid
+        return { connected: true }
+      }
+
+      return {
+        connected: false,
+        error: e.message as string,
+      }
+    }
   }
 
   async create(query: { table: any; json: any }) {

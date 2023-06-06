@@ -28,7 +28,6 @@
   .dash-card {
     background: var(--spectrum-alias-background-color-primary);
     border-radius: var(--border-radius-s);
-    overflow: hidden;
     min-height: 170px;
   }
   .dash-card-header {

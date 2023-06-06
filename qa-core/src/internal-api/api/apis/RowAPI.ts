@@ -1,29 +1,25 @@
 import { Response } from "node-fetch"
 import { Row } from "@budibase/types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
+import BaseAPI from "./BaseAPI"
 
-export default class RowAPI {
+export default class RowAPI extends BaseAPI {
   rowAdded: boolean
-  client: BudibaseInternalAPIClient
 
   constructor(client: BudibaseInternalAPIClient) {
-    this.client = client
+    super(client)
     this.rowAdded = false
   }
 
   async getAll(tableId: string): Promise<[Response, Row[]]> {
-    const [response, json] = await this.client.get(`/${tableId}/rows`)
+    const [response, json] = await this.get(`/${tableId}/rows`)
     if (this.rowAdded) {
-      expect(response).toHaveStatusCode(200)
       expect(json.length).toBeGreaterThanOrEqual(1)
     }
     return [response, json]
   }
-  async add(tableId: string, body: any): Promise<[Response, Row]> {
-    const [response, json] = await this.client.post(`/${tableId}/rows`, {
-      body,
-    })
-    expect(response).toHaveStatusCode(200)
+  async add(tableId: string, body: Row): Promise<[Response, Row]> {
+    const [response, json] = await this.post(`/${tableId}/rows`, body)
     expect(json._id).toBeDefined()
     expect(json._rev).toBeDefined()
     expect(json.tableId).toEqual(tableId)
@@ -31,34 +27,29 @@ export default class RowAPI {
     return [response, json]
   }
 
-  async delete(tableId: string, body: any): Promise<[Response, Row[]]> {
-    const [response, json] = await this.client.del(`/${tableId}/rows/`, {
-      body,
-    })
-    expect(response).toHaveStatusCode(200)
+  async delete(tableId: string, body: Row): Promise<[Response, Row[]]> {
+    const [response, json] = await this.del(
+      `/${tableId}/rows/`,
+      undefined,
+      body
+    )
     return [response, json]
   }
 
   async searchNoPagination(
     tableId: string,
-    body: any
+    body: string
   ): Promise<[Response, Row[]]> {
-    const [response, json] = await this.client.post(`/${tableId}/search`, {
-      body,
-    })
-    expect(response).toHaveStatusCode(200)
+    const [response, json] = await this.post(`/${tableId}/search`, body)
     expect(json.hasNextPage).toEqual(false)
     return [response, json.rows]
   }
 
   async searchWithPagination(
     tableId: string,
-    body: any
+    body: string
   ): Promise<[Response, Row[]]> {
-    const [response, json] = await this.client.post(`/${tableId}/search`, {
-      body,
-    })
-    expect(response).toHaveStatusCode(200)
+    const [response, json] = await this.post(`/${tableId}/search`, body)
     expect(json.hasNextPage).toEqual(true)
     expect(json.rows.length).toEqual(10)
     return [response, json.rows]
