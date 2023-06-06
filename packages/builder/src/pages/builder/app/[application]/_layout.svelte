@@ -12,6 +12,7 @@
     Heading,
     Modal,
     notifications,
+    Button,
   } from "@budibase/bbui"
   import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
@@ -144,53 +145,14 @@
   <div class="top-nav">
     {#if $store.initialised}
       <div class="topleftnav">
-        <ActionMenu>
-          <div slot="control">
-            <Icon size="M" hoverable name="ShowMenu" />
-          </div>
-          <MenuItem on:click={() => $goto("../../portal/apps")}>
-            Exit to portal
-          </MenuItem>
-          <MenuItem
-            on:click={() => $goto(`../../portal/overview/${application}`)}
-          >
-            Overview
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/access`)}
-          >
-            Access
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/automation-history`)}
-          >
-            Automation history
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/backups`)}
-          >
-            Backups
-          </MenuItem>
-
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/name-and-url`)}
-          >
-            Name and URL
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/version`)}
-          >
-            Version
-          </MenuItem>
-        </ActionMenu>
-        <Heading size="XS">{$store.name}</Heading>
-      </div>
-      <div class="topcenternav">
+        <span class="back-to-apps">
+          <Icon
+            size="S"
+            hoverable
+            name="BackAndroid"
+            on:click={() => $goto("../../portal/apps")}
+          />
+        </span>
         {#if $store.hasLock}
           <Tabs {selected} size="M">
             {#each $layout.children as { path, title }}
@@ -211,6 +173,9 @@
             Another user is currently editing your screens and automations
           </div>
         {/if}
+      </div>
+      <div class="topcenternav">
+        <Heading size="XS">{$store.name}</Heading>
       </div>
       <div class="toprightnav">
         <UserAvatars users={$userStore} />
@@ -236,6 +201,13 @@
 </Modal>
 
 <style>
+  .back-to-apps {
+    display: contents;
+  }
+  .back-to-apps :global(.icon) {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
   .loading {
     min-height: 100%;
     height: 100%;
@@ -263,27 +235,29 @@
     z-index: 2;
   }
 
-  .topleftnav {
+  .topcenternav {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xl);
   }
-  .topleftnav :global(.spectrum-Heading) {
+
+  .topcenternav :global(.spectrum-Heading) {
     flex: 1 1 auto;
-    width: 0;
+    /* width: 0; */
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .topcenternav {
+  .topleftnav {
     display: flex;
     position: relative;
     margin-bottom: -2px;
   }
-  .topcenternav :global(.spectrum-Tabs-itemLabel) {
+
+  .topleftnav :global(.spectrum-Tabs-itemLabel) {
     font-weight: 600;
   }
 
