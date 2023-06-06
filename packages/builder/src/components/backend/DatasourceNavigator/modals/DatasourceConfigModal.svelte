@@ -106,12 +106,16 @@
   size="L"
   disabled={!isValid}
 >
+  <Layout noPadding>
+    <Body size="XS">
+      {#if !fetchTableStep}
+        Connect your database to Budibase using the config below
+      {:else}
+        Choose what tables you want to sync with Budibase
+      {/if}
+    </Body>
+  </Layout>
   {#if !fetchTableStep}
-    <Layout noPadding>
-      <Body size="XS"
-        >Connect your database to Budibase using the config below.
-      </Body>
-    </Layout>
     <IntegrationConfigForm
       schema={datasource?.schema}
       bind:datasource
