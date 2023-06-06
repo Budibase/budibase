@@ -47,7 +47,7 @@
 
   let isValid = false
 
-  let sheets
+  let allSheets
 
   const saveDatasourceAndRedirect = async () => {
     try {
@@ -85,14 +85,14 @@
         }
 
         const info = await getDatasourceInfo(datasource)
-        sheets = info.tableNames
+        allSheets = info.tableNames
 
-          step = GoogleDatasouceConfigStep.SET_SHEETS
-          notifications.success(
-            checkConnection
-              ? "Connection Successful"
-              : `Datasource created successfully.`
-          )
+        step = GoogleDatasouceConfigStep.SET_SHEETS
+        notifications.success(
+          checkConnection
+            ? "Connection Successful"
+            : `Datasource created successfully.`
+        )
 
         // prevent the modal from closing
         return false
@@ -101,7 +101,9 @@
     [GoogleDatasouceConfigStep.SET_SHEETS]: {
       title: `Choose your sheets`,
       confirmButtonText: "Fetch sheets",
-      onConfirm: saveDatasourceAndRedirect,
+      onConfirm: async () => {
+        await saveDatasourceAndRedirect()
+      },
     },
   }
 </script>
@@ -147,6 +149,10 @@
   {#if step === GoogleDatasouceConfigStep.SET_SHEETS}
     <Layout noPadding no>
       <Body size="S">Select which spreadsheets you want to connect.</Body>
+
+      {#each allSheets as sheet}
+        {sheet}
+      {/each}
     </Layout>
   {/if}
 </ModalContent>
