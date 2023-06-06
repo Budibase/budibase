@@ -30,7 +30,7 @@ jobs:
 
       - name: Fail if tag is not master
         run: |
-          if ! git merge-base --is-ancestor ${{ github.sha }} origin/develop; then
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
             echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
             exit 1
           fi
