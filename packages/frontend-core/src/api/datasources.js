@@ -26,13 +26,16 @@ export const buildDatasourceEndpoints = API => ({
    * Creates a datasource
    * @param datasource the datasource to create
    * @param fetchSchema whether to fetch the schema or not
+   * @param tablesFilter a list of tables to actually fetch rather than simply
+   * all that are accessible.
    */
-  createDatasource: async ({ datasource, fetchSchema }) => {
+  createDatasource: async ({ datasource, fetchSchema, tablesFilter }) => {
     return await API.post({
       url: "/api/datasources",
       body: {
         datasource,
         fetchSchema,
+        tablesFilter,
       },
     })
   },
