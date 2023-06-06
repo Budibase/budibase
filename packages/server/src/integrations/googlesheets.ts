@@ -150,7 +150,6 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async testConnection(): Promise<ConnectionInfo> {
     try {
-      await setupCreationAuth(this.config)
       await this.connect()
       return { connected: true }
     } catch (e: any) {
@@ -211,6 +210,8 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async connect() {
     try {
+      await setupCreationAuth(this.config)
+
       // Initialise oAuth client
       let googleConfig = await configs.getGoogleDatasourceConfig()
       if (!googleConfig) {
