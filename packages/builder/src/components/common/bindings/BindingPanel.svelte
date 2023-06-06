@@ -339,25 +339,29 @@
           </Tab>
         {/if}
         <div class="drawer-actions">
-          <Button
-            secondary
-            quiet
-            on:click={() => {
-              store.actions.settings.propertyFocus(null)
-              drawerActions.hide()
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            cta
-            disabled={!valid}
-            on:click={() => {
-              bindingDrawerActions.save()
-            }}
-          >
-            Save
-          </Button>
+          {#if drawerActions?.hide}
+            <Button
+              secondary
+              quiet
+              on:click={() => {
+                store.actions.settings.propertyFocus(null)
+                drawerActions.hide()
+              }}
+            >
+              Cancel
+            </Button>
+          {/if}
+          {#if bindingDrawerActions?.save}
+            <Button
+              cta
+              disabled={!valid}
+              on:click={() => {
+                bindingDrawerActions.save()
+              }}
+            >
+              Save
+            </Button>
+          {/if}
         </div>
       </Tabs>
     </div>
