@@ -28,7 +28,7 @@ on:
         required: true
 
 jobs:
-  tag-prerelease:
+  tag-release:
     runs-on: ubuntu-latest
 
     steps:
@@ -43,7 +43,7 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - run: yarn
-      - name: Tag prerelease
+      - name: Tag release
         run: |
           # setup the username and email.
           git config --global user.name "Budibase Staging Release Bot"
