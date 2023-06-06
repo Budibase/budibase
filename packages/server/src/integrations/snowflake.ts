@@ -38,6 +38,9 @@ const SCHEMA: Integration = {
       type: "password",
       required: true,
     },
+    role: {
+      type: "string",
+    },
     warehouse: {
       type: "string",
       required: true,
