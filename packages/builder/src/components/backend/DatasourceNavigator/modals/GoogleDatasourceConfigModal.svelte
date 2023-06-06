@@ -47,6 +47,8 @@
 
   let isValid = false
 
+  let sheets
+
   const saveDatasourceAndRedirect = async () => {
     try {
       const resp = await saveDatasource(datasource)
@@ -82,9 +84,8 @@
           return
         }
 
-        getDatasourceInfo(datasource).then(i => {
-          debugger
-          console.log(i)
+        const info = await getDatasourceInfo(datasource)
+        sheets = info.tableNames
 
           step = GoogleDatasouceConfigStep.SET_SHEETS
           notifications.success(
@@ -92,7 +93,6 @@
               ? "Connection Successful"
               : `Datasource created successfully.`
           )
-        })
 
         // prevent the modal from closing
         return false
@@ -146,7 +146,7 @@
   {/if}
   {#if step === GoogleDatasouceConfigStep.SET_SHEETS}
     <Layout noPadding no>
-      <Body size="S">Select which spreadsheet you want to connect.</Body>
+      <Body size="S">Select which spreadsheets you want to connect.</Body>
     </Layout>
   {/if}
 </ModalContent>
