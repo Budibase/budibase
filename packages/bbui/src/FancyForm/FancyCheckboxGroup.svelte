@@ -3,26 +3,35 @@
   import FancyForm from "./FancyForm.svelte"
 
   export let options = []
-  export let selected = []
+  export let selected
   export let showSelectAll = true
   export let selectAllText = "Select all"
 
-  let allSelected = false
-  $: {
-    if (selected.length === options.length) {
-      allSelected = true
-    } else if (selected.length === 0) {
-      allSelected = false
-    } else {
-      allSelected = "partial"
+  let selectedBooleans = reset()
+
+  $: selected = updateSelected(selectedBooleans)
+  $: console.log(selected)
+  $: allSelected = selected.length === options.length
+
+  function reset() {
+    return Array(options.length).fill(true)
+  }
+
+  function updateSelected(selectedArr) {
+    const array = []
+    for (let [i, isSelected] of Object.entries(selectedArr)) {
+      if (isSelected) {
+        array.push(options[i])
+      }
     }
+    return array
   }
 
   function toggleSelectAll() {
     if (allSelected === true) {
-      selected = []
+      selectedBooleans = []
     } else {
-      selected = [...options]
+      selectedBooleans = reset()
     }
   }
 </script>
@@ -41,7 +50,7 @@
       </div>
     {/if}
     {#each options as option, i}
-      <FancyCheckbox bind:value={selected[i]} text={option} compress />
+      <FancyCheckbox bind:value={selectedBooleans[i]} text={option} compress />
     {/each}
   </FancyForm>
 {/if}
