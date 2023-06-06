@@ -41,6 +41,10 @@ export async function createRestDatasource(integration) {
 
 export async function validateDatasourceConfig(config) {
   const datasource = prepareData(config)
-  const resp = await API.validateDatasource(datasource)
-  return resp
+  return await API.validateDatasource(datasource)
+}
+
+export async function getDatasourceInfo(config) {
+  const datasource = prepareData(config)
+  return await API.fetchInfoForDatasource(datasource)
 }

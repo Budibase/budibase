@@ -78,7 +78,6 @@ export { default as IconSideNavItem } from "./IconSideNav/IconSideNavItem.svelte
 export { default as Slider } from "./Form/Slider.svelte"
 export { default as Accordion } from "./Accordion/Accordion.svelte"
 export { default as File } from "./Form/File.svelte"
-export { default as ListBox } from "./ListBox/ListBox.svelte"
 
 // Renderers
 export { default as BoldRenderer } from "./Table/BoldRenderer.svelte"

@@ -174,7 +174,7 @@ export async function information(
   }
   const tableNames = await connector.getTableNames()
   ctx.body = {
-    tableNames,
+    tableNames: tableNames.sort(),
   }
 }
 

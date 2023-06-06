@@ -1,17 +1,19 @@
 <script>
   import FancyCheckbox from "./FancyCheckbox.svelte"
   import FancyForm from "./FancyForm.svelte"
+  import { createEventDispatcher } from "svelte"
 
   export let options = []
-  export let selected
+  export let selected = []
   export let showSelectAll = true
   export let selectAllText = "Select all"
 
   let selectedBooleans = reset()
+  const dispatch = createEventDispatcher()
 
-  $: selected = updateSelected(selectedBooleans)
-  $: console.log(selected)
-  $: allSelected = selected.length === options.length
+  $: updateSelected(selectedBooleans)
+  $: dispatch("change", selected)
+  $: allSelected = selected?.length === options.length
 
   function reset() {
     return Array(options.length).fill(true)
@@ -24,7 +26,7 @@
         array.push(options[i])
       }
     }
-    return array
+    selected = array
   }
 
   function toggleSelectAll() {

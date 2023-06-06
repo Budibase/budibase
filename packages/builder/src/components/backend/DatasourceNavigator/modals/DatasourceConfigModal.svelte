@@ -13,6 +13,7 @@
   import {
     saveDatasource as save,
     validateDatasourceConfig,
+    getDatasourceInfo,
   } from "builderStore/datasource"
   import { DatasourceFeature } from "@budibase/types"
 
@@ -22,7 +23,10 @@
   let datasource = cloneDeep(integration)
   let isValid = false
   let fetchTableStep = false
+  let selectedTables = []
+  let tableList = []
 
+  $: console.log(selectedTables)
   $: name =
     IntegrationNames[datasource?.type] || datasource?.name || datasource?.type
   $: datasourcePlus = datasource?.plus
@@ -78,6 +82,8 @@
     }
     if (datasourcePlus) {
       notifications.success("Connected to datasource successfully.")
+      const info = await getDatasourceInfo(datasource)
+      tableList = info.tableNames
       fetchTableStep = true
       return false
     } else {
@@ -110,7 +116,7 @@
     />
   {:else}
     <div class="table-checkboxes">
-      <FancyCheckboxGroup options={["table a", "table b", "table c"]} />
+      <FancyCheckboxGroup options={tableList} bind:selected={selectedTables} />
     </div>
   {/if}
 </ModalContent>
