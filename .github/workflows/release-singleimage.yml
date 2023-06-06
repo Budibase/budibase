@@ -15,13 +15,24 @@ jobs:
       matrix:
         node-version: [14.x]
     steps:
-      - name: Fail if branch is not master
-        if: github.ref != 'refs/heads/master'
-        run: | 
-          echo "Ref is not master, you must run this job from master."
-          exit 1
+      - name: Fail if not a tag
+        run: |
+          if [[ $GITHUB_REF != refs/tags/* ]]; then 
+            echo "Workflow Dispatch can only be run on tags" 
+            exit 1 
+          fi
       - name: "Checkout"
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Fail if tag is not in master
+        run: |
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
+            exit 1
+          fi
+          
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:

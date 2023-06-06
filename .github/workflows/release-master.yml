@@ -27,7 +27,7 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
 
-      - name: Fail if tag is not master
+      - name: Fail if tag is not in master
         run: |
           if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
             echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
@@ -134,7 +134,6 @@ jobs:
       - name: Get the latest budibase release version
         id: version
         run: |
-          git pull
           release_version=$(cat lerna.json | jq -r '.version')
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
