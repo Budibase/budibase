@@ -27,7 +27,7 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
 
-      - name: Fail if tag is not master
+      - name: Fail if tag is not in master
         run: |
           if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
             echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
