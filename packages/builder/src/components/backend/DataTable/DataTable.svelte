@@ -32,7 +32,6 @@
   <Grid
     {API}
     tableId={id}
-    tableType={$tables.selected?.type}
     allowAddRows={!isUsersTable}
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}

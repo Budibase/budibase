@@ -33,7 +33,6 @@
 
   export let API = null
   export let tableId = null
-  export let tableType = null
   export let schemaOverrides = null
   export let allowAddRows = true
   export let allowAddColumns = true
@@ -67,7 +66,6 @@
     rand,
     config,
     tableId: tableIdStore,
-    tableType,
     schemaOverrides: schemaOverridesStore,
   }
   context = { ...context, ...createEventManagers() }
