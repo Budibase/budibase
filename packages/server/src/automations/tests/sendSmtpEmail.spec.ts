@@ -35,7 +35,13 @@ describe("test the outgoing webhook action", () => {
       .mockImplementationOnce(async () =>
         generateResponse("user1@test.com", "admin@test.com")
       )
-
+    const invite = {
+      startTime: new Date(),
+      endTime: new Date(),
+      summary: "summary",
+      location: "location",
+      url: "url",
+    }
     inputs = {
       to: "user1@test.com",
       from: "admin@test.com",
@@ -43,12 +49,8 @@ describe("test the outgoing webhook action", () => {
       contents: "testing",
       cc: "cc",
       bcc: "bcc",
-      addInvite: false,
-      startTime: new Date(),
-      endTime: new Date(),
-      summary: "summary",
-      location: "location",
-      url: "url",
+      addInvite: true,
+      ...invite,
     }
     let resp = generateResponse(inputs.to, inputs.from)
     const res = await setup.runStep(
@@ -59,7 +61,13 @@ describe("test the outgoing webhook action", () => {
     expect(res.success).toEqual(true)
     expect(workerRequests.sendSmtpEmail).toHaveBeenCalledTimes(1)
     expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith({
-      ...inputs,
+      to: "user1@test.com",
+      from: "admin@test.com",
+      subject: "hello",
+      contents: "testing",
+      cc: "cc",
+      bcc: "bcc",
+      invite,
       automation: true,
     })
   })

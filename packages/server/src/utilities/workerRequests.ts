@@ -73,12 +73,7 @@ export async function sendSmtpEmail({
   cc,
   bcc,
   automation,
-  addInvite,
-  startTime,
-  endTime,
-  summary,
-  location,
-  url,
+  invite,
 }: {
   to: string
   from: string
@@ -87,12 +82,7 @@ export async function sendSmtpEmail({
   cc: string
   bcc: string
   automation: boolean
-  addInvite: boolean
-  startTime: Date
-  endTime: Date
-  summary: string
-  location: string
-  url: string
+  invite?: object
 }) {
   // tenant ID will be set in header
   const response = await fetch(
@@ -108,12 +98,7 @@ export async function sendSmtpEmail({
         bcc,
         purpose: "custom",
         automation,
-        addInvite,
-        startTime,
-        endTime,
-        summary,
-        location,
-        url,
+        invite,
       },
     })
   )

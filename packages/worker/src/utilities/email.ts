@@ -25,12 +25,13 @@ type SendEmailOpts = {
   cc?: boolean
   bcc?: boolean
   automation?: boolean
-  addInvite?: boolean
-  startTime?: Date
-  endTime?: Date
-  summary?: string
-  location?: string
-  url?: string
+  invite?: {
+    startTime: Date
+    endTime: Date
+    summary: string
+    location: string
+    url?: string
+  }
 }
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
@@ -207,16 +208,16 @@ export async function sendEmail(
       context
     )
   }
-  if (opts?.addInvite) {
+  if (opts?.invite) {
     const calendar = ical({
       name: "Invite",
     })
     calendar.createEvent({
-      start: opts.startTime,
-      end: opts.endTime,
-      summary: opts.summary,
-      location: opts.location,
-      url: opts.url,
+      start: opts.invite.startTime,
+      end: opts.invite.endTime,
+      summary: opts.invite.summary,
+      location: opts.invite.location,
+      url: opts.invite.url,
     })
     message = {
       ...message,
