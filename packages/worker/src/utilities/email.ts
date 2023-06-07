@@ -4,35 +4,10 @@ import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import { getResetPasswordCode, getInviteCode } from "./redis"
-import { User, SMTPInnerConfig } from "@budibase/types"
+import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
 import { configs } from "@budibase/backend-core"
 import ical from "ical-generator"
 const nodemailer = require("nodemailer")
-
-type SendEmailOpts = {
-  // workspaceId If finer grain controls being used then this will lookup config for workspace.
-  workspaceId?: string
-  // user If sending to an existing user the object can be provided, this is used in the context.
-  user: User
-  // from If sending from an address that is not what is configured in the SMTP config.
-  from?: string
-  // contents If sending a custom email then can supply contents which will be added to it.
-  contents?: string
-  // subject A custom subject can be specified if the config one is not desired.
-  subject?: string
-  // info Pass in a structure of information to be stored alongside the invitation.
-  info?: any
-  cc?: boolean
-  bcc?: boolean
-  automation?: boolean
-  invite?: {
-    startTime: Date
-    endTime: Date
-    summary: string
-    location?: string
-    url?: string
-  }
-}
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
 const TYPE = TemplateType.EMAIL

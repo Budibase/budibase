@@ -9,7 +9,7 @@ import {
   env as coreEnv,
 } from "@budibase/backend-core"
 import { updateAppRole } from "./global"
-import { BBContext, User } from "@budibase/types"
+import { BBContext, User, EmailInvite } from "@budibase/types"
 
 export function request(ctx?: BBContext, request?: any) {
   if (!request.headers) {
@@ -82,7 +82,7 @@ export async function sendSmtpEmail({
   cc: string
   bcc: string
   automation: boolean
-  invite?: object
+  invite?: EmailInvite
 }) {
   // tenant ID will be set in header
   const response = await fetch(
