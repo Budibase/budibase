@@ -43,6 +43,9 @@
   export let stripeRows = false
   export let collaboration = true
   export let showAvatars = true
+  export let showControls = true
+
+  allowExpandRows = false
 
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
@@ -117,22 +120,24 @@
   class:stripe={$config.stripeRows}
   style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
 >
-  <div class="controls">
-    <div class="controls-left">
-      <AddRowButton />
-      <AddColumnButton />
-      <slot name="controls" />
-      <SortButton />
-      <HideColumnsButton />
-      <ColumnWidthButton />
-      <RowHeightButton />
+  {#if showControls}
+    <div class="controls">
+      <div class="controls-left">
+        <AddRowButton />
+        <AddColumnButton />
+        <slot name="controls" />
+        <SortButton />
+        <HideColumnsButton />
+        <ColumnWidthButton />
+        <RowHeightButton />
+      </div>
+      <div class="controls-right">
+        {#if showAvatars}
+          <UserAvatars />
+        {/if}
+      </div>
     </div>
-    <div class="controls-right">
-      {#if showAvatars}
-        <UserAvatars />
-      {/if}
-    </div>
-  </div>
+  {/if}
   {#if $loaded}
     <div class="grid-data-outer" use:clickOutside={ui.actions.blur}>
       <div class="grid-data-inner">
