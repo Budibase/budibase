@@ -45,8 +45,6 @@
   export let showAvatars = true
   export let showControls = true
 
-  allowExpandRows = false
-
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
 
