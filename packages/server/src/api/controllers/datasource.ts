@@ -29,8 +29,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
-import { setupCreationAuth as googleSetupCreationAuth } from "src/integrations/googlesheets"
-
+import { setupCreationAuth as googleSetupCreationAuth } from "../../integrations/googlesheets"
 
 function getErrorTables(errors: any, errorType: string) {
   return Object.entries(errors)
