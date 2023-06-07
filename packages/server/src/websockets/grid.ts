@@ -15,7 +15,7 @@ export default class GridSocket extends BaseSocket {
 
   async onConnect(socket: Socket) {
     // Initial identification of connected spreadsheet
-    socket.on(GridSocketEvent.SelectTable, async (tableId, callback) => {
+    socket.on(GridSocketEvent.SelectTable, async ({ tableId }, callback) => {
       await this.joinRoom(socket, tableId)
 
       // Reply with all users in current room
@@ -24,28 +24,32 @@ export default class GridSocket extends BaseSocket {
     })
 
     // Handle users selecting a new cell
-    socket.on(GridSocketEvent.SelectCell, cellId => {
+    socket.on(GridSocketEvent.SelectCell, ({ cellId }) => {
       this.updateUser(socket, { focusedCellId: cellId })
     })
   }
 
   emitRowUpdate(ctx: any, row: Row) {
     const tableId = getTableId(ctx)
-    this.io.in(tableId).emit(GridSocketEvent.RowChange, { id: row._id, row })
+    this.emitToRoom(ctx, tableId, GridSocketEvent.RowChange, {
+      id: row._id,
+      row,
+    })
   }
 
   emitRowDeletion(ctx: any, id: string) {
     const tableId = getTableId(ctx)
-    this.io.in(tableId).emit(GridSocketEvent.RowChange, { id, row: null })
+    this.emitToRoom(ctx, tableId, GridSocketEvent.RowChange, { id, row: null })
   }
 
-  emitTableUpdate(table: Table) {
-    this.io
-      .in(table._id!)
-      .emit(GridSocketEvent.TableChange, { id: table._id, table })
+  emitTableUpdate(ctx: any, table: Table) {
+    this.emitToRoom(ctx, table._id!, GridSocketEvent.TableChange, {
+      id: table._id,
+      table,
+    })
   }
 
-  emitTableDeletion(id: string) {
-    this.io.in(id).emit(GridSocketEvent.TableChange, { id, table: null })
+  emitTableDeletion(ctx: any, id: string) {
+    this.emitToRoom(ctx, id, GridSocketEvent.TableChange, { id, table: null })
   }
 }

@@ -11,10 +11,13 @@ export const createGridWebsocket = context => {
       return
     }
     // Identify which table we are editing
-    socket.emit(GridSocketEvent.SelectTable, tableId, response => {
-      // handle initial connection info
-      users.set(response.users)
-    })
+    socket.emit(
+      GridSocketEvent.SelectTable,
+      { tableId },
+      ({ users: gridUsers }) => {
+        users.set(gridUsers)
+      }
+    )
   }
 
   // Built-in events
@@ -26,29 +29,29 @@ export const createGridWebsocket = context => {
   })
 
   // User events
-  socket.on(SocketEvent.UserUpdate, user => {
+  socket.onOther(SocketEvent.UserUpdate, ({ user }) => {
     users.actions.updateUser(user)
   })
-  socket.on(SocketEvent.UserDisconnect, user => {
-    users.actions.removeUser(user)
+  socket.onOther(SocketEvent.UserDisconnect, ({ sessionId }) => {
+    users.actions.removeUser(sessionId)
   })
 
   // Row events
-  socket.on(GridSocketEvent.RowChange, async data => {
-    if (data.id) {
-      rows.actions.replaceRow(data.id, data.row)
-    } else if (data.row.id) {
+  socket.onOther(GridSocketEvent.RowChange, async ({ id, row }) => {
+    if (id) {
+      rows.actions.replaceRow(id, row)
+    } else if (row.id) {
       // Handle users table edge cased
-      await rows.actions.refreshRow(data.row.id)
+      await rows.actions.refreshRow(row.id)
     }
   })
 
   // Table events
-  socket.on(GridSocketEvent.TableChange, data => {
+  socket.onOther(GridSocketEvent.TableChange, ({ table: newTable }) => {
     // Only update table if one exists. If the table was deleted then we don't
     // want to know - let the builder navigate away
-    if (data.table) {
-      table.set(data.table)
+    if (newTable) {
+      table.set(newTable)
     }
   })
 
@@ -57,7 +60,7 @@ export const createGridWebsocket = context => {
 
   // Notify selected cell changes
   focusedCellId.subscribe($focusedCellId => {
-    socket.emit(GridSocketEvent.SelectCell, $focusedCellId)
+    socket.emit(GridSocketEvent.SelectCell, { cellId: $focusedCellId })
   })
 
   return () => socket?.disconnect()

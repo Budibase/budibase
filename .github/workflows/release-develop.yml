@@ -22,6 +22,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Fail if not a tag
+        run: |
+          if [[ $GITHUB_REF != refs/tags/* ]]; then 
+            echo "Workflow Dispatch can only be run on tags" 
+            exit 1 
+          fi
+
       - uses: actions/checkout@v2
         with:
           submodules: true
@@ -53,7 +60,7 @@ jobs:
           node scripts/syncLocalDependencies.js $version
           echo "Syncing yarn workspace"
           yarn
-      - run: yarn build --configuration=production
+      - run: yarn build
       - run: yarn build:sdk
 
       - name: Publish budibase packages to NPM
