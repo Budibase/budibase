@@ -64,7 +64,7 @@
     }
   }
 
-  const modalConfig = {
+  $: modalConfig = {
     [GoogleDatasouceConfigStep.AUTH]: {
       title: `Connect to ${integrationName}`,
     },
@@ -103,7 +103,9 @@
     },
     [GoogleDatasouceConfigStep.SET_SHEETS]: {
       title: `Choose your sheets`,
-      confirmButtonText: "Fetch sheets",
+      confirmButtonText: selectedSheets?.length
+        ? "Fetch sheets"
+        : "Continue without fetching",
       onConfirm: async () => {
         await saveDatasourceAndRedirect()
       },
