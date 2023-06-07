@@ -5,6 +5,7 @@
     Layout,
     Link,
     notifications,
+    FancyCheckboxGroup,
   } from "@budibase/bbui"
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import GoogleButton from "../_components/GoogleButton.svelte"
@@ -17,7 +18,6 @@
   import cloneDeep from "lodash/cloneDeepWith"
   import IntegrationConfigForm from "../TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { goto } from "@roxi/routify"
-  import { API } from "api"
 
   import { saveDatasource } from "builderStore/datasource"
   import { DatasourceFeature } from "@budibase/types"
@@ -48,10 +48,13 @@
   let isValid = false
 
   let allSheets
+  let selectedSheets
 
   const saveDatasourceAndRedirect = async () => {
     try {
-      const resp = await saveDatasource(datasource)
+      const resp = await saveDatasource(datasource, {
+        tablesFilter: selectedSheets,
+      })
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource created successfully.`)
     } catch (err) {
@@ -150,9 +153,7 @@
     <Layout noPadding no>
       <Body size="S">Select which spreadsheets you want to connect.</Body>
 
-      {#each allSheets as sheet}
-        {sheet}
-      {/each}
+      <FancyCheckboxGroup options={allSheets} bind:selected={selectedSheets} />
     </Layout>
   {/if}
 </ModalContent>
