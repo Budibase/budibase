@@ -3,6 +3,8 @@
   import { store } from "builderStore"
   import { auth } from "stores/portal"
 
+  export let preAuthStep
+  export let datasource
   export let disabled
   export let samePage
 
@@ -13,8 +15,18 @@
   class:disabled
   {disabled}
   on:click={async () => {
+    let ds = datasource
     let appId = $store.appId
-    const url = `/api/global/auth/${tenantId}/datasource/google?appId=${appId}`
+    if (!ds) {
+      const resp = await preAuthStep()
+      if (resp.datasource && resp.appId) {
+        ds = resp.datasource
+        appId = resp.appId
+      } else {
+        ds = resp
+      }
+    }
+    const url = `/api/global/auth/${tenantId}/datasource/google?datasourceId=${ds._id}&appId=${appId}`
     if (samePage) {
       window.location = url
     } else {
