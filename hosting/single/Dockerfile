@@ -1,4 +1,4 @@
-FROM node:16-slim as build
+FROM node:14-slim as build
 
 # install node-gyp dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-utils cron g++ make python
@@ -12,13 +12,15 @@ RUN chmod +x /cleanup.sh
 WORKDIR /app
 ADD packages/server .
 COPY yarn.lock .
-RUN yarn install --production=true && /cleanup.sh
+RUN yarn install --production=true
+RUN /cleanup.sh
 
 # build worker
 WORKDIR /worker
 ADD packages/worker .
 COPY yarn.lock .
-RUN yarn install --production=true && /cleanup.sh
+RUN yarn install --production=true
+RUN /cleanup.sh
 
 FROM budibase/couchdb
 ARG TARGETARCH
