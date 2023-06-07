@@ -4,6 +4,9 @@ import {
   AutomationActionStepId,
   AutomationStepSchema,
   AutomationStepInput,
+  AutomationStepType,
+  AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -11,35 +14,38 @@ export const definition: AutomationStepSchema = {
   tagline: "Send SMTP email to {{inputs.to}}",
   icon: "Email",
   name: "Send Email (SMTP)",
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   internal: true,
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   stepId: AutomationActionStepId.SEND_EMAIL_SMTP,
   inputs: {},
   schema: {
     inputs: {
       properties: {
         to: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Send To",
         },
         from: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Send From",
         },
         cc: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "CC",
         },
         bcc: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "BCC",
         },
         subject: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Email Subject",
         },
         contents: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "HTML Contents",
         },
       },
@@ -48,11 +54,11 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the email was sent",
         },
         response: {
-          type: "object",
+          type: AutomationIOType.OBJECT,
           description: "A response from the email client, this may be an error",
         },
       },

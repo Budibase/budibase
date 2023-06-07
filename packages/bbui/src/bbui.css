@@ -40,12 +40,14 @@
   --rounded-medium: 8px;
   --rounded-large: 16px;
 
-  --font-sans: Source Sans Pro, -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
-    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-accent: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Segoe UI, "Inter",
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --font-serif: "Georgia", Cambria, Times New Roman, Times, serif;
   --font-mono: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
     monospace;
+  --spectrum-alias-body-text-font-family: var(--font-sans);
 
   font-size: 16px;
   --font-size-xs: 0.75rem;
@@ -89,8 +91,28 @@
   --border-light-2: 2px var(--grey-3) solid;
   --border-blue: 2px var(--blue) solid;
   --border-transparent: 2px transparent solid;
+
+  --spectrum-alias-text-color-disabled: var(--spectrum-global-color-gray-600);
 }
 
 a {
   text-decoration: none;
+}
+
+/* Custom theme additions */
+.spectrum--darkest {
+  --drop-shadow: rgba(0, 0, 0, 0.6);
+  --spectrum-global-color-blue-100: rgb(28, 33, 43);
+}
+.spectrum--dark {
+  --drop-shadow: rgba(0, 0, 0, 0.3);
+  --spectrum-global-color-blue-100: rgb(42, 47, 57);
+}
+.spectrum--light {
+  --drop-shadow: rgba(0, 0, 0, 0.075);
+  --spectrum-global-color-blue-100: rgb(240, 245, 255);
+}
+.spectrum--lightest {
+  --drop-shadow: rgba(0, 0, 0, 0.05);
+  --spectrum-global-color-blue-100: rgb(240, 244, 255);
 }

@@ -1,7 +1,7 @@
 {
   "name": "@budibase/bbui",
   "description": "A UI solution used in the different Budibase projects.",
-  "version": "2.2.8",
+  "version": "0.0.0",
   "license": "MPL-2.0",
   "svelte": "src/index.js",
   "module": "dist/bbui.es.js",
@@ -38,7 +38,9 @@
   ],
   "dependencies": {
     "@adobe/spectrum-css-workflow-icons": "1.2.1",
-    "@budibase/string-templates": "^2.2.8",
+    "@budibase/shared-core": "0.0.0",
+    "@budibase/string-templates": "0.0.0",
+    "@spectrum-css/accordion": "3.0.24",
     "@spectrum-css/actionbutton": "1.0.1",
     "@spectrum-css/actiongroup": "1.0.1",
     "@spectrum-css/avatar": "3.0.2",
@@ -82,11 +84,25 @@
     "@spectrum-css/vars": "3.0.1",
     "dayjs": "^1.10.4",
     "easymde": "^2.16.1",
-    "svelte-flatpickr": "^3.2.3",
+    "svelte-flatpickr": "3.2.3",
     "svelte-portal": "^1.0.0"
   },
   "resolutions": {
     "loader-utils": "1.4.1"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }

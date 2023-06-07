@@ -6,7 +6,7 @@ describe("/templates", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 

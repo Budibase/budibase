@@ -1,5 +1,5 @@
 import env from "../environment"
-export * from "../newid"
+export * from "../docIds/newid"
 const bcrypt = env.JS_BCRYPT ? require("bcryptjs") : require("bcrypt")
 
 const SALT_ROUNDS = env.SALT_ROUNDS || 10

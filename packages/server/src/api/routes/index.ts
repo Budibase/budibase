@@ -22,17 +22,19 @@ import queryRoutes from "./query"
 import backupRoutes from "./backup"
 import metadataRoutes from "./metadata"
 import devRoutes from "./dev"
-import cloudRoutes from "./cloud"
 import migrationRoutes from "./migrations"
 import pluginRoutes from "./plugin"
+import opsRoutes from "./ops"
 import Router from "@koa/router"
-import { api } from "@budibase/pro"
+import { api as pro } from "@budibase/pro"
 
 export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"
 
-const appBackupRoutes = api.appBackups
-const scheduleRoutes = api.schedules
+const appBackupRoutes = pro.appBackups
+const scheduleRoutes = pro.schedules
+const environmentVariableRoutes = pro.environmentVariables
+
 export const mainRoutes: Router[] = [
   appBackupRoutes,
   backupRoutes,
@@ -57,11 +59,12 @@ export const mainRoutes: Router[] = [
   queryRoutes,
   metadataRoutes,
   devRoutes,
-  cloudRoutes,
   rowRoutes,
   migrationRoutes,
   pluginRoutes,
+  opsRoutes,
   scheduleRoutes,
+  environmentVariableRoutes,
   // these need to be handled last as they still use /api/:tableId
   // this could be breaking as koa may recognise other routes as this
   tableRoutes,

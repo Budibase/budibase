@@ -38,4 +38,4 @@ router
     controller.removePermission
   )
 
-export = router
+export default router

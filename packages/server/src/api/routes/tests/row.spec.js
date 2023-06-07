@@ -1,3 +1,8 @@
+const tk = require( "timekeeper")
+const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
+tk.freeze(timestamp)
+
+
 const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
@@ -10,6 +15,7 @@ const {
   StaticQuotaName,
   MonthlyQuotaName,
 } = require("@budibase/types")
+const { structures } = require("@budibase/backend-core/tests");
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -19,15 +25,18 @@ describe("/rows", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+
+  beforeEach(async()=>{
     table = await config.createTable()
     row = basicRow(table._id)
   })
 
-  const loadRow = async (id, status = 200) =>
+  const loadRow = async (id, tbl_Id, status = 200) =>
     await request
-      .get(`/api/${table._id}/rows/${id}`)
+      .get(`/api/${tbl_Id}/rows/${id}`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(status)
@@ -70,6 +79,60 @@ describe("/rows", () => {
       await assertQueryUsage(queryUsage + 1)
     })
 
+    it("Increment row autoId per create row request", async () => {
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const newTable = await config.createTable({
+        name: "TestTableAuto",
+        type: "table",
+        key: "name",
+        schema: {
+          ...table.schema,
+          "Row ID": {
+            name: "Row ID",
+            type: "number",
+            subtype: "autoID",
+            icon: "ri-magic-line",
+            autocolumn: true,
+            constraints: {
+              type: "number",
+              presence: false,
+              numericality: {
+                greaterThanOrEqualTo: "",
+                lessThanOrEqualTo: "",
+              },
+            },
+          },
+        }
+      })
+
+      const ids = [1,2,3]
+
+      // Performing several create row requests should increment the autoID fields accordingly
+      const createRow = async (id) => {
+        const res = await request
+          .post(`/api/${newTable._id}/rows`)
+          .send({
+            name: "row_" + id
+          })
+          .set(config.defaultHeaders())
+          .expect('Content-Type', /json/)
+          .expect(200)
+        expect(res.res.statusMessage).toEqual(`${newTable.name} saved successfully`)
+        expect(res.body.name).toEqual("row_" + id)
+        expect(res.body._rev).toBeDefined()
+        expect(res.body["Row ID"]).toEqual(id)
+      }
+
+      for (let i=0; i<ids.length; i++ ){
+        await createRow(ids[i])
+      }
+
+      await assertRowUsage(rowUsage + ids.length)
+      await assertQueryUsage(queryUsage + ids.length)
+    })
+
     it("updates a row successfully", async () => {
       const existing = await config.createRow()
       const rowUsage = await getRowUsage()
@@ -110,8 +173,8 @@ describe("/rows", () => {
         _id: existing._id,
         _rev: existing._rev,
         type: "row",
-        createdAt: "2020-01-01T00:00:00.000Z",
-        updatedAt: "2020-01-01T00:00:00.000Z",
+        createdAt: timestamp,
+        updatedAt: timestamp,
       })
       await assertQueryUsage(queryUsage + 1)
     })
@@ -173,8 +236,32 @@ describe("/rows", () => {
           type: "string",
           presence: false,
           datetime: { earliest: "", latest: "" },
-        },
+        }
       }
+      const arrayField = {
+        type: "array",
+        constraints: {
+          type: "array",
+          presence: false,
+          inclusion: [
+            "One",
+            "Two",
+            "Three",
+          ]
+        },
+        name: "Sample Tags",
+        sortable: false
+      }
+      const optsField = {
+        fieldName: "Sample Opts",
+        name: "Sample Opts",
+        type: "options",
+        constraints: {
+          type: "string",
+          presence: false,
+          inclusion: [ "Alpha", "Beta", "Gamma" ]
+        },
+      },
 
       table = await config.createTable({
         name: "TestTable2",
@@ -203,6 +290,15 @@ describe("/rows", () => {
           attachmentNull: attachment,
           attachmentUndefined: attachment,
           attachmentEmpty: attachment,
+          attachmentEmptyArrayStr: attachment,
+          arrayFieldEmptyArrayStr: arrayField,
+          arrayFieldArrayStrKnown: arrayField,
+          arrayFieldNull: arrayField,
+          arrayFieldUndefined: arrayField,
+          optsFieldEmptyStr: optsField,
+          optsFieldUndefined: optsField,
+          optsFieldNull: optsField,
+          optsFieldStrKnown: optsField
         },
       })
 
@@ -230,11 +326,21 @@ describe("/rows", () => {
         attachmentNull: null,
         attachmentUndefined: undefined,
         attachmentEmpty: "",
+        attachmentEmptyArrayStr: "[]",
+        arrayFieldEmptyArrayStr: "[]",
+        arrayFieldUndefined: undefined,
+        arrayFieldNull: null,
+        arrayFieldArrayStrKnown: "['One']",
+        optsFieldEmptyStr: "",
+        optsFieldUndefined: undefined,
+        optsFieldNull: null,
+        optsFieldStrKnown: 'Alpha'
       }
 
-      const id = (await config.createRow(row))._id
+      const createdRow = await config.createRow(row);
+      const id = createdRow._id
 
-      const saved = (await loadRow(id)).body
+      const saved = (await loadRow(id, table._id)).body
 
       expect(saved.stringUndefined).toBe(undefined)
       expect(saved.stringNull).toBe("")
@@ -259,6 +365,15 @@ describe("/rows", () => {
       expect(saved.attachmentNull).toEqual([])
       expect(saved.attachmentUndefined).toBe(undefined)
       expect(saved.attachmentEmpty).toEqual([])
+      expect(saved.attachmentEmptyArrayStr).toEqual([])      
+      expect(saved.arrayFieldEmptyArrayStr).toEqual([])
+      expect(saved.arrayFieldNull).toEqual([])
+      expect(saved.arrayFieldUndefined).toEqual(undefined)
+      expect(saved.optsFieldEmptyStr).toEqual(null)
+      expect(saved.optsFieldUndefined).toEqual(undefined)
+      expect(saved.optsFieldNull).toEqual(null)
+      expect(saved.arrayFieldArrayStrKnown).toEqual(['One'])
+      expect(saved.optsFieldStrKnown).toEqual('Alpha')
     })
   })
 
@@ -287,7 +402,7 @@ describe("/rows", () => {
       expect(res.body.name).toEqual("Updated Name")
       expect(res.body.description).toEqual(existing.description)
 
-      const savedRow = await loadRow(res.body._id)
+      const savedRow = await loadRow(res.body._id, table._id)
 
       expect(savedRow.body.description).toEqual(existing.description)
       expect(savedRow.body.name).toEqual("Updated Name")
@@ -389,7 +504,7 @@ describe("/rows", () => {
         .expect(200)
 
       expect(res.body.length).toEqual(2)
-      await loadRow(row1._id, 404)
+      await loadRow(row1._id, table._id, 404)
       await assertRowUsage(rowUsage - 2)
       await assertQueryUsage(queryUsage + 1)
     })
@@ -494,12 +609,13 @@ describe("/rows", () => {
   describe("attachments", () => {
     it("should allow enriching attachment rows", async () => {
       const table = await config.createAttachmentTable()
+      const attachmentId = `${structures.uuid()}.csv`
       const row = await config.createRow({
         name: "test",
         description: "test",
         attachment: [
           {
-            key: `${config.getAppId()}/attachments/test/thing.csv`,
+            key: `${config.getAppId()}/attachments/${attachmentId}`,
           },
         ],
         tableId: table._id,
@@ -509,7 +625,7 @@ describe("/rows", () => {
         context.doInAppContext(config.getAppId(), async () => {
           const enriched = await outputProcessing(table, [row])
           expect(enriched[0].attachment[0].url).toBe(
-            `/prod-budi-app-assets/${config.getAppId()}/attachments/test/thing.csv`
+            `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
           )
         })
       })

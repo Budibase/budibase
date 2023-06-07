@@ -7,7 +7,7 @@
   export let testResults
   export let width = "400px"
 
-  let showParameters
+  let openBlocks = {}
   let blocks
 
   function prepTestResults(results) {
@@ -48,16 +48,17 @@
     <div class="block" style={width ? `width: ${width}` : ""}>
       {#if block.stepId !== ActionStepID.LOOP}
         <FlowItemHeader
-          showTestStatus={true}
-          bind:showParameters
-          {block}
+          open={!!openBlocks[block.id]}
+          on:toggle={() => (openBlocks[block.id] = !openBlocks[block.id])}
           isTrigger={idx === 0}
-          {idx}
           testResult={filteredResults?.[idx]}
+          showTestStatus
+          {block}
+          {idx}
         />
-        {#if showParameters && showParameters[block.id]}
+        {#if openBlocks[block.id]}
           <Divider noMargin />
-          {#if filteredResults?.[idx]?.outputs.iterations}
+          {#if filteredResults?.[idx]?.outputs?.iterations}
             <div style="display: flex; padding: 10px 10px 0px 12px;">
               <Icon name="Reuse" />
               <div style="margin-left: 10px;">
@@ -72,14 +73,14 @@
             <Tabs noHorizPadding selected="Input">
               <Tab title="Input">
                 <TextArea
-                  minHeight="80px"
+                  minHeight="160px"
                   disabled
                   value={textArea(filteredResults?.[idx]?.inputs, "No input")}
                 />
               </Tab>
               <Tab title="Output">
                 <TextArea
-                  minHeight="100px"
+                  minHeight="160px"
                   disabled
                   value={textArea(filteredResults?.[idx]?.outputs, "No output")}
                 />
@@ -97,8 +98,9 @@
 
 <style>
   .container {
-    padding: 0 30px 0 30px;
+    padding: 0 30px 30px 30px;
     height: 100%;
+    overflow: auto;
   }
 
   .tabs {

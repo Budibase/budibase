@@ -163,7 +163,12 @@ export const getComponentSettings = componentType => {
     def.settings
       ?.filter(setting => setting.section)
       .forEach(section => {
-        settings = settings.concat(section.settings || [])
+        settings = settings.concat(
+          (section.settings || []).map(setting => ({
+            ...setting,
+            section: section.name,
+          }))
+        )
       })
   }
   componentSettingCache[componentType] = settings

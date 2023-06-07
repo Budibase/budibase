@@ -5,4 +5,4 @@ const router: Router = new Router()
 
 router.get("/api/system/status", controller.fetch)
 
-export = router
+export default router

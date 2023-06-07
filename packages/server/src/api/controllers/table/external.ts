@@ -7,12 +7,13 @@ import {
   generateJunctionTableName,
   foreignKeyStructure,
   hasTypeChanged,
+  setStaticSchemas,
 } from "./utils"
-import { FieldTypes, RelationshipTypes } from "../../../constants"
+import { FieldTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import * as csvParser from "../../../utilities/csvParser"
 import { handleRequest } from "../row/external"
 import { events, context } from "@budibase/backend-core"
+import { parse, isRows, isSchema } from "../../../utilities/schema"
 import {
   Datasource,
   Table,
@@ -20,8 +21,9 @@ import {
   Operation,
   RenameColumn,
   FieldSchema,
-  BBContext,
+  UserCtx,
   TableRequest,
+  RelationshipTypes,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 const { cloneDeep } = require("lodash/fp")
@@ -146,7 +148,7 @@ function generateLinkSchema(
   column: FieldSchema,
   table: Table,
   relatedTable: Table,
-  type: string
+  type: RelationshipTypes
 ) {
   if (!table.primary || !relatedTable.primary) {
     throw new Error("Unable to generate link schema, no primary keys")
@@ -193,20 +195,21 @@ function isRelationshipSetup(column: FieldSchema) {
   return column.foreignKey || column.through
 }
 
-export async function save(ctx: BBContext) {
-  const table: TableRequest = ctx.request.body
-  const renamed = table?._rename
+export async function save(ctx: UserCtx) {
+  const inputs: TableRequest = ctx.request.body
+  const renamed = inputs?._rename
   // can't do this right now
-  delete table.dataImport
+  delete inputs.rows
   const datasourceId = getDatasourceId(ctx.request.body)!
   // table doesn't exist already, note that it is created
-  if (!table._id) {
-    table.created = true
+  if (!inputs._id) {
+    inputs.created = true
   }
   let tableToSave: TableRequest = {
     type: "table",
-    _id: buildExternalTableId(datasourceId, table.name),
-    ...table,
+    _id: buildExternalTableId(datasourceId, inputs.name),
+    sourceId: datasourceId,
+    ...inputs,
   }
 
   let oldTable
@@ -219,10 +222,14 @@ export async function save(ctx: BBContext) {
   }
 
   const db = context.getAppDB()
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId)
   if (!datasource.entities) {
     datasource.entities = {}
   }
+
+  // GSheets is a specific case - only ever has a static primary key
+  tableToSave = setStaticSchemas(datasource, tableToSave)
+
   const oldTables = cloneDeep(datasource.entities)
   const tables: Record<string, Table> = datasource.entities
 
@@ -245,7 +252,7 @@ export async function save(ctx: BBContext) {
       const junctionTable = generateManyLinkSchema(
         datasource,
         schema,
-        table,
+        tableToSave,
         relatedTable
       )
       if (tables[junctionTable.name]) {
@@ -255,10 +262,12 @@ export async function save(ctx: BBContext) {
       extraTablesToUpdate.push(junctionTable)
     } else {
       const fkTable =
-        relationType === RelationshipTypes.ONE_TO_MANY ? table : relatedTable
+        relationType === RelationshipTypes.ONE_TO_MANY
+          ? tableToSave
+          : relatedTable
       const foreignKey = generateLinkSchema(
         schema,
-        table,
+        tableToSave,
         relatedTable,
         relationType
       )
@@ -270,11 +279,11 @@ export async function save(ctx: BBContext) {
         fkTable.constrained.push(foreignKey)
       }
       // foreign key is in other table, need to save it to external
-      if (fkTable._id !== table._id) {
+      if (fkTable._id !== tableToSave._id) {
         extraTablesToUpdate.push(fkTable)
       }
     }
-    generateRelatedSchema(schema, relatedTable, table, relatedColumnName)
+    generateRelatedSchema(schema, relatedTable, tableToSave, relatedColumnName)
     schema.main = true
   }
 
@@ -312,7 +321,7 @@ export async function save(ctx: BBContext) {
   return tableToSave
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: UserCtx) {
   const tableToDelete: TableRequest = await sdk.tables.getTable(
     ctx.params.tableId
   )
@@ -322,33 +331,35 @@ export async function destroy(ctx: BBContext) {
   const datasourceId = getDatasourceId(tableToDelete)
 
   const db = context.getAppDB()
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId!)
   const tables = datasource.entities
 
   const operation = Operation.DELETE_TABLE
-  await makeTableRequest(datasource, operation, tableToDelete, tables)
+  if (tables) {
+    await makeTableRequest(datasource, operation, tableToDelete, tables)
+    cleanupRelationships(tableToDelete, tables)
+    delete tables[tableToDelete.name]
+    datasource.entities = tables
+  }
 
-  cleanupRelationships(tableToDelete, tables)
-
-  delete datasource.entities[tableToDelete.name]
   await db.put(datasource)
 
   return tableToDelete
 }
 
-export async function bulkImport(ctx: BBContext) {
+export async function bulkImport(ctx: UserCtx) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
-  const { dataImport } = ctx.request.body
-  if (!dataImport || !dataImport.schema || !dataImport.csvString) {
+  const { rows }: { rows: unknown } = ctx.request.body
+  const schema: unknown = table.schema
+
+  if (!rows || !isRows(rows) || !isSchema(schema)) {
     ctx.throw(400, "Provided data import information is invalid.")
   }
-  const rows = await csvParser.transform({
-    ...dataImport,
-    existingTable: table,
-  })
+
+  const parsedRows = parse(rows, schema)
   await handleRequest(Operation.BULK_CREATE, table._id!, {
-    rows,
+    rows: parsedRows,
   })
-  await events.rows.imported(table, "csv", rows.length)
+  await events.rows.imported(table, parsedRows.length)
   return table
 }

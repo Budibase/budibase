@@ -1,4 +1,5 @@
 import appEndpoints from "./applications"
+import metricEndpoints from "./metrics"
 import queryEndpoints from "./queries"
 import tableEndpoints from "./tables"
 import rowEndpoints from "./rows"
@@ -12,7 +13,7 @@ import env from "../../../environment"
 // below imports don't have declaration files
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
-import { redis, permissions } from "@budibase/backend-core"
+import { middleware, redis, permissions } from "@budibase/backend-core"
 const { PermissionType, PermissionLevel } = permissions
 
 const PREFIX = "/api/public/v1"
@@ -41,8 +42,18 @@ if (!env.isTest()) {
         host: REDIS_OPTS.host,
         port: REDIS_OPTS.port,
       },
-      password: REDIS_OPTS.opts.password,
-      database: 1,
+    }
+
+    if (REDIS_OPTS.opts?.password || REDIS_OPTS.opts.redisOptions?.password) {
+      // @ts-ignore
+      options.password =
+        REDIS_OPTS.opts.password || REDIS_OPTS.opts.redisOptions.password
+    }
+
+    if (!env.REDIS_CLUSTERED) {
+      // @ts-ignore
+      // Can't set direct redis db in clustered env
+      options.database = 1
     }
   }
   rateLimitStore = new Stores.Redis(options)
@@ -91,6 +102,13 @@ function addToRouter(endpoints: any) {
   }
 }
 
+function applyAdminRoutes(endpoints: any) {
+  addMiddleware(endpoints.read, middleware.builderOrAdmin)
+  addMiddleware(endpoints.write, middleware.builderOrAdmin)
+  addToRouter(endpoints.read)
+  addToRouter(endpoints.write)
+}
+
 function applyRoutes(
   endpoints: any,
   permType: string,
@@ -119,6 +137,7 @@ function applyRoutes(
   addToRouter(endpoints.write)
 }
 
+applyAdminRoutes(metricEndpoints)
 applyRoutes(appEndpoints, PermissionType.APP, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(userEndpoints, PermissionType.USER, "userId")

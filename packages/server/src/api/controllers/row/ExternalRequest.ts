@@ -1,31 +1,34 @@
 import {
+  Datasource,
+  FieldSchema,
+  FieldType,
   FilterType,
   IncludeRelationship,
   Operation,
   PaginationJson,
   RelationshipsJson,
+  RelationshipTypes,
+  Row,
   SearchFilters,
   SortJson,
-  Datasource,
-  FieldSchema,
-  Row,
+  SortType,
   Table,
 } from "@budibase/types"
 import {
+  breakExternalTableId,
   breakRowIdField,
+  convertRowId,
   generateRowIdField,
   isRowId,
-  convertRowId,
+  isSQL,
 } from "../../../integrations/utils"
 import { getDatasourceAndQuery } from "./utils"
-import { FieldTypes, RelationshipTypes } from "../../../constants"
-import { breakExternalTableId, isSQL } from "../../../integrations/utils"
+import { FieldTypes } from "../../../constants"
 import { processObjectSync } from "@budibase/string-templates"
-// @ts-ignore
 import { cloneDeep } from "lodash/fp"
-import { processFormulas, processDates } from "../../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
-import { removeKeyNumbering } from "./utils"
+import { processDates, processFormulas } from "../../../utilities/rowProcessor"
+import { db as dbCore } from "@budibase/backend-core"
+import sdk from "../../../sdk"
 
 export interface ManyRelationship {
   tableId?: string
@@ -44,6 +47,7 @@ export interface RunConfig {
   row?: Row
   rows?: Row[]
   tables?: Record<string, Table>
+  includeSqlRelationships?: IncludeRelationship
 }
 
 function buildFilters(
@@ -59,7 +63,7 @@ function buildFilters(
     let prefix = 1
     for (let operator of Object.values(filters)) {
       for (let field of Object.keys(operator || {})) {
-        if (removeKeyNumbering(field) === "_id") {
+        if (dbCore.removeKeyNumbering(field) === "_id") {
           if (primary) {
             const parts = breakRowIdField(operator[field])
             for (let field of primary) {
@@ -140,7 +144,11 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   return config
 }
 
-function generateIdForRow(row: Row | undefined, table: Table): string {
+function generateIdForRow(
+  row: Row | undefined,
+  table: Table,
+  isLinked: boolean = false
+): string {
   const primary = table.primary
   if (!row || !primary) {
     return ""
@@ -148,8 +156,12 @@ function generateIdForRow(row: Row | undefined, table: Table): string {
   // build id array
   let idParts = []
   for (let field of primary) {
-    // need to handle table name + field or just field, depending on if relationships used
-    const fieldValue = row[`${table.name}.${field}`] || row[field]
+    let fieldValue = extractFieldValue({
+      row,
+      tableName: table.name,
+      fieldName: field,
+      isLinked,
+    })
     if (fieldValue) {
       idParts.push(fieldValue)
     }
@@ -172,18 +184,52 @@ function getEndpoint(tableId: string | undefined, operation: string) {
   }
 }
 
-function basicProcessing(row: Row, table: Table): Row {
+// need to handle table name + field or just field, depending on if relationships used
+function extractFieldValue({
+  row,
+  tableName,
+  fieldName,
+  isLinked,
+}: {
+  row: Row
+  tableName: string
+  fieldName: string
+  isLinked: boolean
+}) {
+  let value = row[`${tableName}.${fieldName}`]
+  if (value == null && !isLinked) {
+    value = row[fieldName]
+  }
+  return value
+}
+
+function basicProcessing({
+  row,
+  table,
+  isLinked,
+}: {
+  row: Row
+  table: Table
+  isLinked: boolean
+}): Row {
   const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
-  for (let fieldName of Object.keys(table.schema)) {
-    const pathValue = row[`${table.name}.${fieldName}`]
-    const value = pathValue != null ? pathValue : row[fieldName]
+  for (let field of Object.values(table.schema)) {
+    const fieldName = field.name
+
+    const value = extractFieldValue({
+      row,
+      tableName: table.name,
+      fieldName,
+      isLinked,
+    })
+
     // all responses include "select col as table.col" so that overlaps are handled
     if (value != null) {
       thisRow[fieldName] = value
     }
   }
-  thisRow._id = generateIdForRow(row, table)
+  thisRow._id = generateIdForRow(row, table, isLinked)
   thisRow.tableId = table._id
   thisRow._rev = "rev"
   return processFormulas(table, thisRow)
@@ -291,7 +337,7 @@ export class ExternalRequest {
         // we're not inserting a doc, will be a bunch of update calls
         const otherKey: string = field.throughFrom || linkTablePrimary
         const thisKey: string = field.throughTo || tablePrimary
-        row[key].map((relationship: any) => {
+        row[key].forEach((relationship: any) => {
           manyRelationships.push({
             tableId: field.through || field.tableId,
             isUpdate: false,
@@ -307,7 +353,7 @@ export class ExternalRequest {
         const thisKey: string = "id"
         // @ts-ignore
         const otherKey: string = field.fieldName
-        row[key].map((relationship: any) => {
+        row[key].forEach((relationship: any) => {
           manyRelationships.push({
             tableId: field.tableId,
             isUpdate: true,
@@ -337,10 +383,18 @@ export class ExternalRequest {
       }
       const display = linkedTable.primaryDisplay
       for (let key of Object.keys(row[relationship.column])) {
-        const related: Row = row[relationship.column][key]
+        let relatedRow: Row = row[relationship.column][key]
+        // add this row as context for the relationship
+        for (let col of Object.values(linkedTable.schema)) {
+          if (col.type === FieldType.LINK && col.tableId === table._id) {
+            relatedRow[col.name] = [row]
+          }
+        }
+        relatedRow = processFormulas(linkedTable, relatedRow)
+        const relatedDisplay = display ? relatedRow[display] : undefined
         row[relationship.column][key] = {
-          primaryDisplay: display ? related[display] : undefined,
-          _id: related._id,
+          primaryDisplay: relatedDisplay || "Invalid display column",
+          _id: relatedRow._id,
         }
       }
     }
@@ -377,7 +431,8 @@ export class ExternalRequest {
       ) {
         continue
       }
-      let linked = basicProcessing(row, linkedTable)
+
+      let linked = basicProcessing({ row, table: linkedTable, isLinked: true })
       if (!linked._id) {
         continue
       }
@@ -425,7 +480,10 @@ export class ExternalRequest {
         )
         continue
       }
-      const thisRow = fixArrayTypes(basicProcessing(row, table), table)
+      const thisRow = fixArrayTypes(
+        basicProcessing({ row, table, isLinked: false }),
+        table
+      )
       if (thisRow._id == null) {
         throw "Unable to generate row ID for SQL rows"
       }
@@ -565,19 +623,41 @@ export class ExternalRequest {
       const { key, tableId, isUpdate, id, ...rest } = relationship
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
       const linkTable = this.getTable(tableId)
-      // @ts-ignore
-      const linkPrimary = linkTable?.primary[0]
+      const relationshipPrimary = linkTable?.primary || []
+      const linkPrimary = relationshipPrimary[0]
       if (!linkTable || !linkPrimary) {
         return
       }
+
+      const linkSecondary = relationshipPrimary[1]
+
       const rows = related[key]?.rows || []
-      const found = rows.find(
-        (row: { [key: string]: any }) =>
+
+      function relationshipMatchPredicate({
+        row,
+        linkPrimary,
+        linkSecondary,
+      }: {
+        row: { [key: string]: any }
+        linkPrimary: string
+        linkSecondary?: string
+      }) {
+        const matchesPrimaryLink =
           row[linkPrimary] === relationship.id ||
           row[linkPrimary] === body?.[linkPrimary]
+        if (!matchesPrimaryLink || !linkSecondary) {
+          return matchesPrimaryLink
+        }
+
+        const matchesSecondayLink = row[linkSecondary] === body?.[linkSecondary]
+        return matchesPrimaryLink && matchesSecondayLink
+      }
+
+      const existingRelationship = rows.find((row: { [key: string]: any }) =>
+        relationshipMatchPredicate({ row, linkPrimary, linkSecondary })
       )
       const operation = isUpdate ? Operation.UPDATE : Operation.CREATE
-      if (!found) {
+      if (!existingRelationship) {
         promises.push(
           getDatasourceAndQuery({
             endpoint: getEndpoint(tableId, operation),
@@ -588,7 +668,7 @@ export class ExternalRequest {
         )
       } else {
         // remove the relationship from cache so it isn't adjusted again
-        rows.splice(rows.indexOf(found), 1)
+        rows.splice(rows.indexOf(existingRelationship), 1)
       }
     }
     // finally cleanup anything that needs to be removed
@@ -627,10 +707,7 @@ export class ExternalRequest {
    * Creating the specific list of fields that we desire, and excluding the ones that are no use to us
    * is more performant and has the added benefit of protecting against this scenario.
    */
-  buildFields(
-    table: Table,
-    includeRelations: IncludeRelationship = IncludeRelationship.INCLUDE
-  ) {
+  buildFields(table: Table, includeRelations: boolean) {
     function extractRealFields(table: Table, existing: string[] = []) {
       return Object.entries(table.schema)
         .filter(
@@ -665,8 +742,7 @@ export class ExternalRequest {
       throw "Unable to run without a table name"
     }
     if (!this.datasource) {
-      const db = context.getAppDB()
-      this.datasource = await db.get(datasourceId)
+      this.datasource = await sdk.datasources.get(datasourceId!)
       if (!this.datasource || !this.datasource.entities) {
         throw "No tables found, fetch tables before query."
       }
@@ -682,8 +758,26 @@ export class ExternalRequest {
       config,
       table
     )
+    //if the sort column is a formula, remove it
+    for (let sortColumn of Object.keys(sort || {})) {
+      if (!sort?.[sortColumn]) {
+        continue
+      }
+      switch (table.schema[sortColumn]?.type) {
+        case FieldType.FORMULA:
+          delete sort?.[sortColumn]
+          break
+        case FieldType.NUMBER:
+          sort[sortColumn].type = SortType.number
+          break
+      }
+    }
     filters = buildFilters(id, filters || {}, table)
     const relationships = this.buildRelationships(table)
+
+    const includeSqlRelationships =
+      config.includeSqlRelationships === IncludeRelationship.INCLUDE
+
     // clean up row on ingress using schema
     const processed = this.inputProcessing(row, table)
     row = processed.row
@@ -701,7 +795,7 @@ export class ExternalRequest {
       },
       resource: {
         // have to specify the fields to avoid column overlap (for SQL)
-        fields: isSql ? this.buildFields(table) : [],
+        fields: isSql ? this.buildFields(table, includeSqlRelationships) : [],
       },
       filters,
       sort,
@@ -716,6 +810,7 @@ export class ExternalRequest {
         table,
       },
     }
+
     // can't really use response right now
     const response = await getDatasourceAndQuery(json)
     // handle many to many relationships now if we know the ID (could be auto increment)

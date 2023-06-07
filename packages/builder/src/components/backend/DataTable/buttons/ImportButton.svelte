@@ -3,14 +3,15 @@
   import ImportModal from "../modals/ImportModal.svelte"
 
   export let tableId
+  export let tableType
   export let disabled
 
   let modal
 </script>
 
-<ActionButton icon="DataUpload" size="S" quiet on:click={modal.show} {disabled}>
+<ActionButton icon="DataUpload" quiet on:click={modal.show} {disabled}>
   Import
 </ActionButton>
 <Modal bind:this={modal}>
-  <ImportModal {tableId} on:importrows />
+  <ImportModal {tableId} {tableType} on:importrows />
 </Modal>

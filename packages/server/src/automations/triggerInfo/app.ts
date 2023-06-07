@@ -1,4 +1,7 @@
 import {
+  AutomationCustomIOType,
+  AutomationIOType,
+  AutomationStepType,
   AutomationTriggerSchema,
   AutomationTriggerStepId,
 } from "@budibase/types"
@@ -15,8 +18,8 @@ export const definition: AutomationTriggerSchema = {
     inputs: {
       properties: {
         fields: {
-          type: "object",
-          customType: "triggerSchema",
+          type: AutomationIOType.OBJECT,
+          customType: AutomationCustomIOType.TRIGGER_SCHEMA,
           title: "Fields",
         },
       },
@@ -25,13 +28,13 @@ export const definition: AutomationTriggerSchema = {
     outputs: {
       properties: {
         fields: {
-          type: "object",
+          type: AutomationIOType.OBJECT,
           description: "Fields submitted from the app frontend",
-          customType: "triggerSchema",
+          customType: AutomationCustomIOType.TRIGGER_SCHEMA,
         },
       },
       required: ["fields"],
     },
   },
-  type: "TRIGGER",
+  type: AutomationStepType.TRIGGER,
 }

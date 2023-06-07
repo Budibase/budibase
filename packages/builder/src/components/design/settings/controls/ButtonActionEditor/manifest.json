@@ -28,6 +28,17 @@
       "component": "DeleteRow"
     },
     {
+      "name": "Fetch Row",
+      "type": "data",
+      "component": "FetchRow",
+      "context": [
+        {
+          "label": "Fetched row",
+          "value": "row"
+        }
+      ]
+    },
+    {
       "name": "Navigate To",
       "type": "application",
       "component": "NavigateTo"
@@ -46,7 +57,13 @@
     {
       "name": "Trigger Automation",
       "type": "application",
-      "component": "TriggerAutomation"
+      "component": "TriggerAutomation",
+      "context": [
+        {
+          "label": "Automation Result",
+          "value": "result"
+        }
+      ]
     },
     {
       "name": "Update Field Value",
@@ -116,6 +133,11 @@
       "type": "application",
       "component": "ShowNotification",
       "dependsOnFeature": "showNotificationAction"
+    },
+    {
+      "name": "Prompt User",
+      "type": "application",
+      "component": "PromptUser"
     },
     {
       "name": "Open Side Panel",

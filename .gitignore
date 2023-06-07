@@ -66,8 +66,6 @@ typings/
 .env
 !qa-core/.env
 !hosting/.env
-hosting/.generated-nginx.dev.conf
-hosting/proxy/.generated-nginx.prod.conf
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -105,5 +103,9 @@ stats.html
 
 # TypeScript cache
 *.tsbuildinfo
+
+# plugins
 budibase-component
 budibase-datasource
+
+*.iml

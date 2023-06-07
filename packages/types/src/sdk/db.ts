@@ -1,6 +1,13 @@
-import PouchDB from "pouchdb"
 import Nano from "@budibase/nano"
 import { AllDocsResponse, AnyDocument, Document } from "../"
+import { Writable } from "stream"
+import PouchDB from "pouchdb"
+
+export enum SearchIndex {
+  ROWS = "rows",
+  AUDIT = "audit",
+  USER = "user",
+}
 
 export type PouchOptions = {
   inMemory?: boolean
@@ -58,10 +65,23 @@ export type DatabaseQueryOpts = {
   key?: string
   keys?: string[]
   group?: boolean
+  startkey_docid?: string
 }
 
 export const isDocument = (doc: any): doc is Document => {
   return typeof doc === "object" && doc._id && doc._rev
+}
+
+export interface DatabaseDumpOpts {
+  filter?: (doc: AnyDocument) => boolean
+  batch_size?: number
+  batch_limit?: number
+  style?: "main_only" | "all_docs"
+  timeout?: number
+  doc_ids?: string[]
+  query_params?: any
+  view?: string
+  selector?: any
 }
 
 export interface Database {
@@ -88,7 +108,7 @@ export interface Database {
   compact(): Promise<Nano.OkResponse | void>
   // these are all PouchDB related functions that are rarely used - in future
   // should be replaced by better typed/non-pouch implemented methods
-  dump(...args: any[]): Promise<any>
+  dump(stream: Writable, opts?: DatabaseDumpOpts): Promise<any>
   load(...args: any[]): Promise<any>
   createIndex(...args: any[]): Promise<any>
   deleteIndex(...args: any[]): Promise<any>

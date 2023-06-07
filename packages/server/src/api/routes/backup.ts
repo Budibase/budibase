@@ -11,4 +11,4 @@ router.get(
   controller.exportAppDump
 )
 
-export = router
+export default router

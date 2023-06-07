@@ -5,7 +5,6 @@
     Divider,
     ActionMenu,
     MenuItem,
-    Avatar,
     Page,
     Icon,
     Body,
@@ -17,11 +16,13 @@
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
-  import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
+  import ProfileModal from "components/settings/ProfileModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
   import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"
+  import { UserAvatar } from "@budibase/frontend-core"
+  import { helpers } from "@budibase/shared-core"
 
   let loaded = false
   let userInfoModal
@@ -89,22 +90,18 @@
 
 {#if $auth.user && loaded}
   <div class="container">
-    <Page>
+    <Page narrow>
       <div class="content">
         <Layout noPadding>
           <div class="header">
             <img class="logo" alt="logo" src={$organisation.logoUrl || Logo} />
-            <ActionMenu align="right" dataCy="user-menu">
+            <ActionMenu align="right">
               <div slot="control" class="avatar">
-                <Avatar
-                  size="M"
-                  initials={$auth.initials}
-                  url={$auth.user.pictureUrl}
-                />
+                <UserAvatar user={$auth.user} showTooltip={false} />
                 <Icon size="XL" name="ChevronDown" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
-                Update user information
+                My profile
               </MenuItem>
               <MenuItem
                 icon="LockClosed"
@@ -125,7 +122,7 @@
           </div>
           <Layout noPadding gap="XS">
             <Heading size="M">
-              Hey {$auth.user.firstName || $auth.user.email}
+              Hey {helpers.getUserLabel($auth.user)}
             </Heading>
             <Body>
               Welcome to the {$organisation.company} portal. Below you'll find the
@@ -133,7 +130,7 @@
             </Body>
           </Layout>
           <Divider />
-          {#if $licensing.usageMetrics?.dayPasses >= 100}
+          {#if $licensing.usageMetrics?.dayPasses >= 100 || $licensing.errUserLimit}
             <div>
               <Layout gap="S" justifyItems="center">
                 <img class="spaceman" alt="spaceman" src={Spaceman} />
@@ -185,7 +182,7 @@
     </Page>
   </div>
   <Modal bind:this={userInfoModal}>
-    <UpdateUserInfoModal />
+    <ProfileModal />
   </Modal>
   <Modal bind:this={changePasswordModal}>
     <ChangePasswordModal />
@@ -196,6 +193,11 @@
   .container {
     height: 100%;
     overflow: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 80px;
   }
   .content {
     width: 100%;

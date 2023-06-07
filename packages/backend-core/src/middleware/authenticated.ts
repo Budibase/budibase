@@ -1,14 +1,20 @@
 import { Cookie, Header } from "../constants"
-import { getCookie, clearCookie, openJwt } from "../utils"
+import {
+  getCookie,
+  clearCookie,
+  openJwt,
+  isValidInternalAPIKey,
+} from "../utils"
 import { getUser } from "../cache/user"
 import { getSession, updateSessionTTL } from "../security/sessions"
 import { buildMatcherRegex, matches } from "./matchers"
 import { SEPARATOR, queryGlobalView, ViewName } from "../db"
-import { getGlobalDB, doInTenant } from "../tenancy"
+import { getGlobalDB, doInTenant } from "../context"
 import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
 import env from "../environment"
-import { BBContext, EndpointMatcher } from "@budibase/types"
+import { Ctx, EndpointMatcher } from "@budibase/types"
+import { InvalidAPIKeyError, ErrorCode } from "../errors"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
   ? parseInt(env.SESSION_UPDATE_PERIOD)
@@ -35,28 +41,35 @@ function finalise(ctx: any, opts: FinaliseOpts = {}) {
 }
 
 async function checkApiKey(apiKey: string, populateUser?: Function) {
-  if (apiKey === env.INTERNAL_API_KEY) {
-    return { valid: true }
+  // check both the primary and the fallback internal api keys
+  // this allows for rotation
+  if (isValidInternalAPIKey(apiKey)) {
+    return { valid: true, user: undefined }
   }
   const decrypted = decrypt(apiKey)
   const tenantId = decrypted.split(SEPARATOR)[0]
   return doInTenant(tenantId, async () => {
-    const db = getGlobalDB()
-    // api key is encrypted in the database
-    const userId = (await queryGlobalView(
-      ViewName.BY_API_KEY,
-      {
-        key: apiKey,
-      },
-      db
-    )) as string
+    let userId
+    try {
+      const db = getGlobalDB()
+      // api key is encrypted in the database
+      userId = (await queryGlobalView(
+        ViewName.BY_API_KEY,
+        {
+          key: apiKey,
+        },
+        db
+      )) as string
+    } catch (err) {
+      userId = undefined
+    }
     if (userId) {
       return {
         valid: true,
         user: await getUser(userId, tenantId, populateUser),
       }
     } else {
-      throw "Invalid API key"
+      throw new InvalidAPIKeyError()
     }
   })
 }
@@ -66,14 +79,14 @@ async function checkApiKey(apiKey: string, populateUser?: Function) {
  * The tenancy modules should not be used here and it should be assumed that the tenancy context
  * has not yet been populated.
  */
-export = function (
+export default function (
   noAuthPatterns: EndpointMatcher[] = [],
   opts: { publicAllowed?: boolean; populateUser?: Function } = {
     publicAllowed: false,
   }
 ) {
   const noAuthOptions = noAuthPatterns ? buildMatcherRegex(noAuthPatterns) : []
-  return async (ctx: BBContext | any, next: any) => {
+  return async (ctx: Ctx | any, next: any) => {
     let publicEndpoint = false
     const version = ctx.request.headers[Header.API_VER]
     // the path is not authenticated
@@ -83,9 +96,15 @@ export = function (
     }
     try {
       // check the actual user is authenticated first, try header or cookie
-      const headerToken = ctx.request.headers[Header.TOKEN]
+      let headerToken = ctx.request.headers[Header.TOKEN]
+
       const authCookie = getCookie(ctx, Cookie.Auth) || openJwt(headerToken)
-      const apiKey = ctx.request.headers[Header.API_KEY]
+      let apiKey = ctx.request.headers[Header.API_KEY]
+
+      if (!apiKey && ctx.request.headers[Header.AUTHORIZATION]) {
+        apiKey = ctx.request.headers[Header.AUTHORIZATION].split(" ")[1]
+      }
+
       const tenantId = ctx.request.headers[Header.TENANT_ID]
       let authenticated = false,
         user = null,
@@ -115,7 +134,8 @@ export = function (
           authenticated = true
         } catch (err: any) {
           authenticated = false
-          console.error("Auth Error", err?.message || err)
+          console.error(`Auth Error: ${err.message}`)
+          console.error(err)
           // remove the cookie as the user does not exist anymore
           clearCookie(ctx, Cookie.Auth)
         }
@@ -148,15 +168,18 @@ export = function (
       finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
 
       if (user && user.email) {
-        return identity.doInUserContext(user, next)
+        return identity.doInUserContext(user, ctx, next)
       } else {
         return next()
       }
     } catch (err: any) {
-      console.error("Auth Error", err?.message || err)
+      console.error(`Auth Error: ${err.message}`)
+      console.error(err)
       // invalid token, clear the cookie
-      if (err && err.name === "JsonWebTokenError") {
+      if (err?.name === "JsonWebTokenError") {
         clearCookie(ctx, Cookie.Auth)
+      } else if (err?.code === ErrorCode.INVALID_API_KEY) {
+        ctx.throw(403, err.message)
       }
       // allow configuring for public access
       if ((opts && opts.publicAllowed) || publicEndpoint) {

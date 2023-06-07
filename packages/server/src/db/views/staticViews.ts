@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
-import { DocumentType, SEPARATOR, ViewName, SearchIndexes } from "../utils"
-import { LinkDocument, Row } from "@budibase/types"
+import { DocumentType, SEPARATOR, ViewName } from "../utils"
+import { LinkDocument, Row, SearchIndex } from "@budibase/types"
 const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 
 /**************************************************
@@ -91,7 +91,7 @@ async function searchIndex(indexName: string, fnString: string) {
 
 export async function createAllSearchIndex() {
   await searchIndex(
-    SearchIndexes.ROWS,
+    SearchIndex.ROWS,
     function (doc: Row) {
       function idx(input: Row, prev?: string) {
         for (let key of Object.keys(input)) {

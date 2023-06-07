@@ -1,6 +1,6 @@
 import TestConfig from "../../../tests/utilities/TestConfiguration"
 import { context } from "@budibase/backend-core"
-import { ACTION_DEFINITIONS, getAction } from "../../actions"
+import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../../actions"
 import emitter from "../../../events/index"
 import env from "../../../environment"
 
@@ -31,7 +31,7 @@ export async function runInProd(fn: any) {
   }
 }
 
-export async function runStep(stepId: string, inputs: any) {
+export async function runStep(stepId: string, inputs: any, stepContext?: any) {
   async function run() {
     let step = await getAction(stepId)
     expect(step).toBeDefined()
@@ -39,7 +39,7 @@ export async function runStep(stepId: string, inputs: any) {
       throw new Error("No step found")
     }
     return step({
-      context: {},
+      context: stepContext || {},
       inputs,
       appId: config ? config.getAppId() : null,
       // don't really need an API key, mocked out usage quota, not being tested here
@@ -57,4 +57,4 @@ export async function runStep(stepId: string, inputs: any) {
 }
 
 export const apiKey = "test"
-export const actions = ACTION_DEFINITIONS
+export const actions = BUILTIN_ACTION_DEFINITIONS

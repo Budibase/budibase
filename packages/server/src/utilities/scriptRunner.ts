@@ -25,4 +25,4 @@ class ScriptRunner {
   }
 }
 
-export = ScriptRunner
+export default ScriptRunner

@@ -1,3 +1,4 @@
+import { Helpers } from "@budibase/bbui"
 import { ApiVersion } from "../constants"
 import { buildAnalyticsEndpoints } from "./analytics"
 import { buildAppEndpoints } from "./app"
@@ -26,6 +27,17 @@ import { buildLicensingEndpoints } from "./licensing"
 import { buildGroupsEndpoints } from "./groups"
 import { buildPluginEndpoints } from "./plugins"
 import { buildBackupsEndpoints } from "./backups"
+import { buildEnvironmentVariableEndpoints } from "./environmentVariables"
+import { buildEventEndpoints } from "./events"
+import { buildAuditLogsEndpoints } from "./auditLogs"
+
+/**
+ * Random identifier to uniquely identify a session in a tab. This is
+ * used to determine the originator of calls to the API, which is in
+ * turn used to determine who caused a websocket message to be sent, so
+ * that we can ignore events caused by ourselves.
+ */
+export const APISessionID = Helpers.uuid()
 
 const defaultAPIClientConfig = {
   /**
@@ -113,6 +125,7 @@ export const createAPIClient = config => {
 
     // Build headers
     let headers = { Accept: "application/json" }
+    headers["x-budibase-session-id"] = APISessionID
     if (!external) {
       headers["x-budibase-api-version"] = ApiVersion
     }
@@ -247,5 +260,8 @@ export const createAPIClient = config => {
     ...buildGroupsEndpoints(API),
     ...buildPluginEndpoints(API),
     ...buildBackupsEndpoints(API),
+    ...buildEnvironmentVariableEndpoints(API),
+    ...buildEventEndpoints(API),
+    ...buildAuditLogsEndpoints(API),
   }
 }

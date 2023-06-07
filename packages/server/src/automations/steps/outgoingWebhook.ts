@@ -3,8 +3,12 @@ import { getFetchResponse } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationCustomIOType,
+  AutomationFeature,
+  AutomationIOType,
   AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
 } from "@budibase/types"
 
 enum RequestType {
@@ -27,8 +31,11 @@ export const definition: AutomationStepSchema = {
   tagline: "Send a {{inputs.requestMethod}} request",
   icon: "Send",
   description: "Send a request of specified method to a URL",
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   internal: true,
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   stepId: AutomationActionStepId.OUTGOING_WEBHOOK,
   inputs: {
     requestMethod: "POST",
@@ -40,23 +47,23 @@ export const definition: AutomationStepSchema = {
     inputs: {
       properties: {
         requestMethod: {
-          type: "string",
+          type: AutomationIOType.STRING,
           enum: Object.values(RequestType),
           title: "Request method",
         },
         url: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "URL",
         },
         requestBody: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "JSON Body",
-          customType: "wide",
+          customType: AutomationCustomIOType.WIDE,
         },
         headers: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Headers",
-          customType: "wide",
+          customType: AutomationCustomIOType.WIDE,
         },
       },
       required: ["requestMethod", "url"],
@@ -64,15 +71,15 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         response: {
-          type: "object",
+          type: AutomationIOType.OBJECT,
           description: "The response from the webhook",
         },
         httpStatus: {
-          type: "number",
+          type: AutomationIOType.NUMBER,
           description: "The HTTP status code returned",
         },
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the action was successful",
         },
       },

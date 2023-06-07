@@ -7,13 +7,12 @@ export class SelfAPI extends TestAPI {
     super(config)
   }
 
-  updateSelf = (user: User) => {
+  updateSelf = (user: User, update: any) => {
     return this.request
       .post(`/api/global/self`)
-      .send(user)
+      .send(update)
       .set(this.config.authHeaders(user))
       .expect("Content-Type", /json/)
-      .expect(200)
   }
 
   getSelf = (user: User) => {

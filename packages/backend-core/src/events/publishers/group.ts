@@ -8,47 +8,68 @@ import {
   GroupUsersAddedEvent,
   GroupUsersDeletedEvent,
   GroupAddedOnboardingEvent,
-  UserGroupRoles,
+  GroupPermissionsEditedEvent,
 } from "@budibase/types"
+import { isScim } from "../../context"
 
-export async function created(group: UserGroup, timestamp?: number) {
+async function created(group: UserGroup, timestamp?: number) {
   const properties: GroupCreatedEvent = {
     groupId: group._id as string,
+    viaScim: isScim(),
+    audited: {
+      name: group.name,
+    },
   }
   await publishEvent(Event.USER_GROUP_CREATED, properties, timestamp)
 }
 
-export async function updated(group: UserGroup) {
+async function updated(group: UserGroup) {
   const properties: GroupUpdatedEvent = {
     groupId: group._id as string,
+    viaScim: isScim(),
+    audited: {
+      name: group.name,
+    },
   }
   await publishEvent(Event.USER_GROUP_UPDATED, properties)
 }
 
-export async function deleted(group: UserGroup) {
+async function deleted(group: UserGroup) {
   const properties: GroupDeletedEvent = {
     groupId: group._id as string,
+    viaScim: isScim(),
+    audited: {
+      name: group.name,
+    },
   }
   await publishEvent(Event.USER_GROUP_DELETED, properties)
 }
 
-export async function usersAdded(count: number, group: UserGroup) {
+async function usersAdded(count: number, group: UserGroup) {
   const properties: GroupUsersAddedEvent = {
     count,
     groupId: group._id as string,
+    viaScim: isScim(),
+    audited: {
+      name: group.name,
+    },
   }
   await publishEvent(Event.USER_GROUP_USERS_ADDED, properties)
 }
 
-export async function usersDeleted(count: number, group: UserGroup) {
+async function usersDeleted(count: number, group: UserGroup) {
   const properties: GroupUsersDeletedEvent = {
     count,
     groupId: group._id as string,
+    viaScim: isScim(),
+    audited: {
+      name: group.name,
+    },
   }
   await publishEvent(Event.USER_GROUP_USERS_REMOVED, properties)
 }
 
-export async function createdOnboarding(groupId: string) {
+async function createdOnboarding(groupId: string) {
   const properties: GroupAddedOnboardingEvent = {
     groupId: groupId,
     onboarding: true,
@@ -56,9 +77,23 @@ export async function createdOnboarding(groupId: string) {
   await publishEvent(Event.USER_GROUP_ONBOARDING, properties)
 }
 
-export async function permissionsEdited(roles: UserGroupRoles) {
-  const properties: UserGroupRoles = {
-    ...roles,
+async function permissionsEdited(group: UserGroup) {
+  const properties: GroupPermissionsEditedEvent = {
+    permissions: group.roles!,
+    groupId: group._id as string,
+    audited: {
+      name: group.name,
+    },
   }
   await publishEvent(Event.USER_GROUP_PERMISSIONS_EDITED, properties)
+}
+
+export default {
+  created,
+  updated,
+  deleted,
+  usersAdded,
+  usersDeleted,
+  createdOnboarding,
+  permissionsEdited,
 }

@@ -1,41 +1,35 @@
-import { get, writable } from "svelte/store"
-import { datasources, queries, views } from "./"
+import { get, writable, derived } from "svelte/store"
+import { datasources } from "./"
 import { cloneDeep } from "lodash/fp"
 import { API } from "api"
 import { SWITCHABLE_TYPES } from "constants/backend"
 
 export function createTablesStore() {
-  const store = writable({})
-  const { subscribe, update, set } = store
+  const store = writable({
+    list: [],
+    selectedTableId: null,
+  })
+  const derivedStore = derived(store, $store => ({
+    ...$store,
+    selected: $store.list?.find(table => table._id === $store.selectedTableId),
+  }))
 
-  async function fetch() {
+  const fetch = async () => {
     const tables = await API.getTables()
-    update(state => ({
+    store.update(state => ({
       ...state,
       list: tables,
     }))
-    return tables
   }
 
-  async function select(table) {
-    if (!table) {
-      update(state => ({
-        ...state,
-        selected: {},
-      }))
-    } else {
-      update(state => ({
-        ...state,
-        selected: table,
-        draft: cloneDeep(table),
-      }))
-      views.unselect()
-      queries.unselect()
-      datasources.unselect()
-    }
+  const select = tableId => {
+    store.update(state => ({
+      ...state,
+      selectedTableId: tableId,
+    }))
   }
 
-  async function save(table) {
+  const save = async table => {
     const updatedTable = cloneDeep(table)
     const oldTable = get(store).list.filter(t => t._id === table._id)[0]
 
@@ -68,100 +62,118 @@ export function createTablesStore() {
     }
 
     const savedTable = await API.saveTable(updatedTable)
-    await fetch()
-    if (table.type === "external") {
-      await datasources.fetch()
-    }
-    await select(savedTable)
+    replaceTable(savedTable._id, savedTable)
+    await datasources.fetch()
+    select(savedTable._id)
     return savedTable
   }
 
+  const deleteTable = async table => {
+    if (!table?._id || !table?._rev) {
+      return
+    }
+    await API.deleteTable({
+      tableId: table._id,
+      tableRev: table._rev,
+    })
+    replaceTable(table._id, null)
+  }
+
+  const saveField = async ({
+    originalName,
+    field,
+    primaryDisplay = false,
+    indexes,
+  }) => {
+    let draft = cloneDeep(get(derivedStore).selected)
+
+    // delete the original if renaming
+    // need to handle if the column had no name, empty string
+    if (originalName != null && originalName !== field.name) {
+      delete draft.schema[originalName]
+      draft._rename = {
+        old: originalName,
+        updated: field.name,
+      }
+    }
+
+    // Optionally set display column
+    if (primaryDisplay) {
+      draft.primaryDisplay = field.name
+    } else if (draft.primaryDisplay === originalName) {
+      const fields = Object.keys(draft.schema)
+      // pick another display column randomly if unselecting
+      draft.primaryDisplay = fields.filter(
+        name => name !== originalName || name !== field
+      )[0]
+    }
+    if (indexes) {
+      draft.indexes = indexes
+    }
+    draft.schema = {
+      ...draft.schema,
+      [field.name]: cloneDeep(field),
+    }
+
+    await save(draft)
+  }
+
+  const deleteField = async field => {
+    let draft = cloneDeep(get(derivedStore).selected)
+    delete draft.schema[field.name]
+    await save(draft)
+  }
+
+  // Handles external updates of tables
+  const replaceTable = (tableId, table) => {
+    if (!tableId) {
+      return
+    }
+
+    // Handle deletion
+    if (!table) {
+      store.update(state => ({
+        ...state,
+        list: state.list.filter(x => x._id !== tableId),
+      }))
+      return
+    }
+
+    // Add new table
+    const index = get(store).list.findIndex(x => x._id === table._id)
+    if (index === -1) {
+      store.update(state => ({
+        ...state,
+        list: [...state.list, table],
+      }))
+    }
+
+    // Update existing table
+    else if (table) {
+      // This function has to merge state as there discrepancies with the table
+      // API endpoints. The table list endpoint and get table endpoint use the
+      // "type" property to mean different things.
+      store.update(state => {
+        state.list[index] = {
+          ...table,
+          type: state.list[index].type,
+        }
+        return state
+      })
+    }
+  }
+
   return {
-    subscribe,
-    update,
+    ...store,
+    subscribe: derivedStore.subscribe,
     fetch,
+    init: fetch,
     select,
-    unselect: () => {
-      update(state => ({
-        ...state,
-        selected: null,
-      }))
-    },
     save,
-    init: async () => {
-      const tables = await API.getTables()
-      set({
-        list: tables,
-        selected: {},
-        draft: {},
-      })
-    },
-    delete: async table => {
-      await API.deleteTable({
-        tableId: table?._id,
-        tableRev: table?._rev,
-      })
-      update(state => ({
-        ...state,
-        list: state.list.filter(existing => existing._id !== table._id),
-        selected: {},
-      }))
-    },
-    saveField: async ({
-      originalName,
-      field,
-      primaryDisplay = false,
-      indexes,
-    }) => {
-      let promise
-      update(state => {
-        // delete the original if renaming
-        // need to handle if the column had no name, empty string
-        if (originalName != null && originalName !== field.name) {
-          delete state.draft.schema[originalName]
-          state.draft._rename = {
-            old: originalName,
-            updated: field.name,
-          }
-        }
-
-        // Optionally set display column
-        if (primaryDisplay) {
-          state.draft.primaryDisplay = field.name
-        } else if (state.draft.primaryDisplay === originalName) {
-          const fields = Object.keys(state.draft.schema)
-          // pick another display column randomly if unselecting
-          state.draft.primaryDisplay = fields.filter(
-            name => name !== originalName || name !== field
-          )[0]
-        }
-
-        if (indexes) {
-          state.draft.indexes = indexes
-        }
-
-        state.draft.schema = {
-          ...state.draft.schema,
-          [field.name]: cloneDeep(field),
-        }
-        promise = save(state.draft)
-        return state
-      })
-      if (promise) {
-        await promise
-      }
-    },
-    deleteField: async field => {
-      let promise
-      update(state => {
-        delete state.draft.schema[field.name]
-        promise = save(state.draft)
-        return state
-      })
-      if (promise) {
-        await promise
-      }
-    },
+    delete: deleteTable,
+    saveField,
+    deleteField,
+    replaceTable,
   }
 }
 

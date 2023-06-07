@@ -22,12 +22,6 @@ serviceAccount:
 
 podAnnotations: {}
 
-# logAnnotations:
-#   co.elastic.logs/multiline.type: pattern
-#   co.elastic.logs/multiline.pattern: '^[[:space:]]'
-#   co.elastic.logs/multiline.negate: false
-#   co.elastic.logs/multiline.match: after
-
 podSecurityContext:
   {}
   # fsGroup: 2000
@@ -80,13 +74,12 @@ tolerations: []
 affinity: {}
 
 globals:
-  appVersion: "latest"
+  appVersion: "" # Use as an override to .Chart.AppVersion
   budibaseEnv: PRODUCTION
-  tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS"
+  tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
   enableAnalytics: "1"
   sentryDSN: ""
   posthogToken: "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
-  logLevel: info
   selfHosted: "1" # set to 0 for budibase cloud environment, set to 1 for self-hosted setup
   multiTenancy: "0" # set to 0 to disable multiple orgs, set to 1 to enable multiple orgs
   accountPortalUrl: ""
@@ -102,16 +95,17 @@ globals:
   createSecrets: true # creates an internal API key, JWT secrets and redis password for you
 
   # if createSecrets is set to false, you can hard-code your secrets here
+  apiEncryptionKey: ""
   internalApiKey: ""
   jwtSecret: ""
   cdnUrl: ""
+  # fallback values used during live rotation
+  internalApiKeyFallback: ""
+  jwtSecretFallback: ""
 
   smtp:
     enabled: false
 
-#  elasticApmEnabled:
-#  elasticApmSecretToken:
-#  elasticApmServerUrl:
 #  globalAgentHttpProxy:
 #  globalAgentHttpsProxy:
 #  globalAgentNoProxy:
@@ -124,19 +118,40 @@ services:
   proxy:
     port: 10000
     replicaCount: 1
+    upstreams:
+      apps: 'http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}'
+      worker: 'http://worker-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.worker.port }}'
+      minio: 'http://minio-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.objectStore.port }}'
+      couchdb: 'http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}'
     resources: {}
+#    annotations:
+#      co.elastic.logs/module: nginx
+#      co.elastic.logs/fileset.stdout: access
+#      co.elastic.logs/fileset.stderr: error
 
   apps:
     port: 4002
     replicaCount: 1
     logLevel: info
+    httpLogging: 1
     resources: {}
 #    nodeDebug: "" # set the value of NODE_DEBUG
-
+#    annotations:
+#      co.elastic.logs/multiline.type: pattern
+#      co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#      co.elastic.logs/multiline.negate: false
+#      co.elastic.logs/multiline.match: after
   worker:
     port: 4003
     replicaCount: 1
+    logLevel: info
+    httpLogging: 1
     resources: {}
+#    annotations:
+#      co.elastic.logs/multiline.type: pattern
+#      co.elastic.logs/multiline.pattern: '^[[:space:]]'
+#      co.elastic.logs/multiline.negate: false
+#      co.elastic.logs/multiline.match: after
 
   couchdb:
     enabled: true
@@ -167,6 +182,7 @@ services:
     resources: {}
 
   objectStore:
+    # Set to false if using another object store such as S3
     minio: true
     browser: true
     port: 9000
@@ -182,6 +198,13 @@ services:
     ##   set, choosing the default provisioner.
     storageClass: ""
     resources: {}
+    cloudfront:
+      # Set the url of a distribution to enable cloudfront
+      cdn: ""
+      # ID of public key stored in cloudfront
+      publicKeyId: ""
+      # Base64 encoded private key for the above public key
+      privateKey64: ""
 
 # Override values in couchDB subchart
 couchdb:
@@ -225,7 +248,7 @@ couchdb:
   ## The CouchDB image
   image:
     repository: couchdb
-    tag: 3.2.1
+    tag: 3.1.1
     pullPolicy: IfNotPresent
 
   ## Experimental integration with Lucene-powered fulltext search
@@ -319,6 +342,7 @@ couchdb:
 
   ## Configure liveness and readiness probe values
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  # FOR COUCHDB
   livenessProbe:
     enabled: true
     failureThreshold: 3

@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { goto, beforeUrlChange } from "@roxi/routify"
   import {
     Icon,
     Select,
@@ -12,6 +12,8 @@
     Heading,
     Tabs,
     Tab,
+    Modal,
+    ModalContent,
   } from "@budibase/bbui"
   import { notifications, Divider } from "@budibase/bbui"
   import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
@@ -29,11 +31,44 @@
 
   export let query
 
+  const resumeNavigation = () => {
+    if (typeof navigateTo == "string") {
+      $goto(typeof navigateTo == "string" ? `${navigateTo}` : navigateTo)
+    }
+  }
+
+  const transformerDocs = "https://docs.budibase.com/docs/transformers"
+
   let fields = query?.schema ? schemaToFields(query.schema) : []
   let parameters
   let data = []
   let saveId
-  const transformerDocs = "https://docs.budibase.com/docs/transformers"
+  let currentTab = "JSON"
+  let saveModal
+  let override = false
+  let navigateTo = null
+
+  // seed the transformer
+  if (query && !query.transformer) {
+    query.transformer = "return data"
+  }
+
+  // initialise a new empty schema
+  if (query && !query.schema) {
+    query.schema = {}
+  }
+
+  let queryStr = JSON.stringify(query)
+
+  $beforeUrlChange(event => {
+    const updated = JSON.stringify(query)
+
+    if (updated !== queryStr && !override) {
+      navigateTo = event.type == "pushstate" ? event.url : null
+      saveModal.show()
+      return false
+    } else return true
+  })
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fieldsToSchema(fields)
@@ -58,11 +93,6 @@
     }
   }
 
-  // seed the transformer
-  if (query && !query.transformer) {
-    query.transformer = "return data"
-  }
-
   function resetDependentFields() {
     if (query.fields.extra) {
       query.fields.extra = {}
@@ -83,143 +113,209 @@
         return
       }
       data = response.rows
+      // need to merge fields that already exist/might have changed
+      if (fields) {
+        for (let key of Object.keys(response.schema)) {
+          if (fields[key]) {
+            response.schema[key] = fields[key]
+          }
+        }
+      }
       fields = response.schema
+      currentTab = "JSON"
       notifications.success("Query executed successfully")
     } catch (error) {
       notifications.error(`Query Error: ${error.message}`)
     }
   }
 
+  // return the query.
   async function saveQuery() {
     try {
-      const { _id } = await queries.save(query.datasourceId, query)
-      saveId = _id
-      notifications.success(`Query saved successfully.`)
-      $goto(`../${_id}`)
+      const response = await queries.save(query.datasourceId, query)
+      saveId = response._id
+
+      if (response?._rev) {
+        queryStr = JSON.stringify(query)
+      }
+
+      return response
     } catch (error) {
-      notifications.error("Error creating query")
+      notifications.error("Error saving query")
     }
   }
 </script>
 
-<Layout gap="S" noPadding>
-  <Heading size="M">Query {integrationInfo?.friendlyName}</Heading>
-  <Divider />
-  <Heading size="S">Config</Heading>
-  <div class="config">
-    <div class="config-field">
-      <Label>Query Name</Label>
-      <Input bind:value={query.name} />
-    </div>
-    {#if queryConfig}
+<Modal
+  bind:this={saveModal}
+  on:hide={() => {
+    navigateTo = null
+  }}
+>
+  <ModalContent
+    title="You have unsaved changes"
+    confirmText="Save and Continue"
+    cancelText="Discard Changes"
+    size="L"
+    onConfirm={async () => {
+      await saveQuery()
+      override = true
+      resumeNavigation()
+    }}
+    onCancel={async () => {
+      override = true
+      resumeNavigation()
+    }}
+  >
+    <Body>Leaving this section will mean losing and changes to your query</Body>
+  </ModalContent>
+</Modal>
+
+<div class="wrapper">
+  <Layout gap="S" noPadding>
+    <Heading size="M">Query {integrationInfo?.friendlyName}</Heading>
+    <Divider />
+    <Heading size="S">Config</Heading>
+    <div class="config">
       <div class="config-field">
-        <Label>Function</Label>
-        <Select
-          bind:value={query.queryVerb}
-          on:change={resetDependentFields}
-          options={Object.keys(queryConfig)}
-          getOptionLabel={verb =>
-            queryConfig[verb]?.displayName || capitalise(verb)}
-        />
-      </div>
-      <div class="config-field">
-        <AccessLevelSelect {saveId} {query} label="Access Level" />
-      </div>
-      {#if integrationInfo?.extra && query.queryVerb}
-        <ExtraQueryConfig
-          {query}
-          {populateExtraQuery}
-          config={integrationInfo.extra}
-        />
-      {/if}
-      {#key query.parameters}
-        <BindingBuilder
-          queryBindings={query.parameters}
-          bindable={false}
-          on:change={e => {
-            query.parameters = e.detail.map(binding => {
-              return {
-                name: binding.name,
-                default: binding.value,
-              }
-            })
+        <Label>Query Name</Label>
+        <Input
+          value={query.name}
+          on:input={e => {
+            let newValue = e.target.value || ""
+            query.name = newValue.trim()
           }}
         />
-      {/key}
-    {/if}
-  </div>
-  {#if shouldShowQueryConfig}
-    <Divider />
-    <div class="config">
-      <Heading size="S">Fields</Heading>
-      <Body size="S">Fill in the fields specific to this query.</Body>
-      <IntegrationQueryEditor
-        {datasource}
-        {query}
-        height={200}
-        schema={queryConfig[query.queryVerb]}
-        bind:parameters
-      />
-      <Divider />
-    </div>
-    <div class="config">
-      <div class="help-heading">
-        <Heading size="S">Transformer</Heading>
-        <Icon
-          on:click={() => window.open(transformerDocs)}
-          hoverable
-          name="Help"
-          size="L"
-        />
       </div>
-      <Body size="S"
-        >Add a JavaScript function to transform the query result.</Body
-      >
-      <CodeMirrorEditor
-        height={200}
-        label="Transformer"
-        value={query.transformer}
-        resize="vertical"
-        on:change={e => (query.transformer = e.detail)}
-      />
-      <Divider />
-    </div>
-    <div class="viewer-controls">
-      <Heading size="S">Results</Heading>
-      <ButtonGroup gap="M">
-        <Button cta disabled={queryInvalid} on:click={saveQuery}>
-          Save Query
-        </Button>
-        <Button secondary on:click={previewQuery}>Run Query</Button>
-      </ButtonGroup>
-    </div>
-    <Body size="S">
-      Below, you can preview the results from your query and change the schema.
-    </Body>
-    <section class="viewer">
-      {#if data}
-        <Tabs selected="JSON">
-          <Tab title="JSON">
-            <JSONPreview data={data[0]} minHeight="120" />
-          </Tab>
-          <Tab title="Schema">
-            <KeyValueBuilder
-              bind:object={fields}
-              name="field"
-              headings
-              options={SchemaTypeOptions}
+      {#if queryConfig}
+        <div class="config-field">
+          <Label>Function</Label>
+          <Select
+            bind:value={query.queryVerb}
+            on:change={resetDependentFields}
+            options={Object.keys(queryConfig)}
+            getOptionLabel={verb =>
+              queryConfig[verb]?.displayName || capitalise(verb)}
+          />
+        </div>
+        <div class="config-field">
+          <AccessLevelSelect {saveId} {query} label="Access Level" />
+        </div>
+        {#if integrationInfo?.extra && query.queryVerb}
+          <ExtraQueryConfig
+            {query}
+            {populateExtraQuery}
+            config={integrationInfo.extra}
+          />
+        {/if}
+        {#key query.parameters}
+          <div class="binding-wrap">
+            <BindingBuilder
+              queryBindings={query.parameters}
+              bindable={false}
+              on:change={e => {
+                query.parameters = e.detail.map(binding => {
+                  return {
+                    name: binding.name,
+                    default: binding.value,
+                  }
+                })
+              }}
             />
-          </Tab>
-          <Tab title="Preview">
-            <ExternalDataSourceTable {query} {data} />
-          </Tab>
-        </Tabs>
+          </div>
+        {/key}
       {/if}
-    </section>
-  {/if}
-</Layout>
+    </div>
+    {#if shouldShowQueryConfig}
+      <Divider />
+      <div class="config">
+        <Heading size="S">Fields</Heading>
+        <Body size="S">Fill in the fields specific to this query.</Body>
+        <IntegrationQueryEditor
+          {datasource}
+          {query}
+          height={200}
+          schema={queryConfig[query.queryVerb]}
+          bind:parameters
+        />
+        <Divider />
+      </div>
+      <div class="config">
+        <div class="help-heading">
+          <Heading size="S">Transformer</Heading>
+          <Icon
+            on:click={() => window.open(transformerDocs)}
+            hoverable
+            name="Help"
+            size="L"
+          />
+        </div>
+        <Body size="S"
+          >Add a JavaScript function to transform the query result.</Body
+        >
+        <CodeMirrorEditor
+          height={200}
+          label="Transformer"
+          value={query.transformer}
+          resize="vertical"
+          on:change={e => (query.transformer = e.detail)}
+        />
+        <Divider />
+      </div>
+      <div class="viewer-controls">
+        <Heading size="S">Results</Heading>
+        <ButtonGroup gap="XS">
+          <Button
+            cta
+            disabled={queryInvalid}
+            on:click={async () => {
+              await saveQuery()
+              notifications.success(`Query saved successfully`)
+              // Go to the correct URL if we just created a new query
+              if (!query._rev) {
+                $goto(`../../${query._id}`)
+              }
+            }}
+          >
+            Save Query
+          </Button>
+          <Button secondary on:click={previewQuery}>Run Query</Button>
+        </ButtonGroup>
+      </div>
+      <Body size="S">
+        Below, you can preview the results from your query and change the
+        schema.
+      </Body>
+      <section class="viewer">
+        {#if data}
+          <Tabs bind:selected={currentTab}>
+            <Tab title="JSON">
+              <JSONPreview data={data[0]} minHeight="120" />
+            </Tab>
+            <Tab title="Schema">
+              <KeyValueBuilder
+                bind:object={fields}
+                name="field"
+                headings
+                options={SchemaTypeOptions}
+              />
+            </Tab>
+            <Tab title="Preview">
+              <ExternalDataSourceTable {query} {data} />
+            </Tab>
+          </Tabs>
+        {/if}
+      </section>
+    {/if}
+  </Layout>
+</div>
 
 <style>
+  .wrapper {
+    width: 640px;
+    margin: auto;
+  }
+
   .config {
     display: grid;
     grid-gap: var(--spacing-s);
@@ -250,5 +346,10 @@
     gap: var(--spacing-m);
     min-width: 150px;
     align-items: center;
+  }
+
+  .binding-wrap :global(div.container) {
+    padding-left: 0px;
+    padding-right: 0px;
   }
 </style>

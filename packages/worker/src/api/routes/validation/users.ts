@@ -17,13 +17,22 @@ let schema: any = {
   roles: Joi.object().pattern(/.*/, Joi.string()).required().unknown(true),
 }
 
-export const buildUserSaveValidation = (isSelf = false) => {
-  if (!isSelf) {
-    schema = {
-      ...schema,
-      _id: Joi.string(),
-      _rev: Joi.string(),
-    }
+export const buildSelfSaveValidation = () => {
+  schema = {
+    password: Joi.string().optional(),
+    forceResetPassword: Joi.boolean().optional(),
+    firstName: Joi.string().allow("").optional(),
+    lastName: Joi.string().allow("").optional(),
+    onboardedAt: Joi.string().optional(),
+  }
+  return auth.joiValidator.body(Joi.object(schema).required().unknown(false))
+}
+
+export const buildUserSaveValidation = () => {
+  schema = {
+    ...schema,
+    _id: Joi.string(),
+    _rev: Joi.string(),
   }
   return auth.joiValidator.body(Joi.object(schema).required().unknown(true))
 }

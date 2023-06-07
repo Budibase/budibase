@@ -1,25 +1,35 @@
 <script>
   import {
     notifications,
-    Input,
     Button,
     Layout,
     Body,
     Heading,
-    ActionButton,
+    Icon,
   } from "@budibase/bbui"
   import { organisation, auth } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
+  import { TestimonialPage } from "@budibase/frontend-core/src/components"
+  import { FancyForm, FancyInput } from "@budibase/bbui"
 
   let email = ""
+  let form
+  let error
+  let submitted = false
 
   async function forgot() {
+    form.validate()
+    if (error) {
+      return
+    }
+    submitted = true
     try {
       await auth.forgotPassword(email)
       notifications.success("Email sent - please check your inbox")
     } catch (err) {
+      submitted = false
       notifications.error("Unable to send reset password link")
     }
   }
@@ -33,45 +43,70 @@
   })
 </script>
 
-<div class="login">
-  <div class="main">
-    <Layout>
-      <Layout noPadding justifyItems="center">
-        <img alt="logo" src={$organisation.logoUrl || Logo} />
-      </Layout>
-      <Layout gap="XS" noPadding>
-        <Heading textAlign="center">Forgotten your password?</Heading>
-        <Body size="S" textAlign="center">
-          No problem! Just enter your account's email address and we'll send you
-          a link to reset it.
-        </Body>
-        <Input label="Email" bind:value={email} />
-      </Layout>
-      <Layout gap="XS" nopadding>
-        <Button cta on:click={forgot} disabled={!email}>
-          Reset your password
-        </Button>
-        <ActionButton quiet on:click={() => $goto("../")}>Back</ActionButton>
-      </Layout>
+<TestimonialPage>
+  <Layout gap="S" noPadding>
+    <img alt="logo" src={$organisation.logoUrl || Logo} />
+    <span class="heading-wrap">
+      <Heading size="M">
+        <div class="heading-content">
+          <span class="back-chev" on:click={() => $goto("../")}>
+            <Icon name="ChevronLeft" size="XL" />
+          </span>
+          Forgot your password?
+        </div>
+      </Heading>
+    </span>
+    <Layout gap="XS" noPadding>
+      <Body size="M">
+        No problem! Just enter your account's email address and we'll send you a
+        link to reset it.
+      </Body>
     </Layout>
-  </div>
-</div>
+
+    <Layout gap="S" noPadding>
+      <FancyForm bind:this={form}>
+        <FancyInput
+          label="Email"
+          value={email}
+          on:change={e => {
+            email = e.detail
+          }}
+          validate={() => {
+            if (!email) {
+              return "Please enter your email"
+            }
+            return null
+          }}
+          {error}
+          disabled={submitted}
+        />
+      </FancyForm>
+    </Layout>
+    <div>
+      <Button
+        size="L"
+        disabled={!email || error || submitted}
+        cta
+        on:click={forgot}
+      >
+        Reset password
+      </Button>
+    </div>
+  </Layout>
+</TestimonialPage>
 
 <style>
-  .login {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .main {
-    width: 300px;
-  }
-
   img {
-    width: 48px;
+    width: 46px;
+  }
+  .back-chev {
+    display: inline-block;
+    cursor: pointer;
+    margin-left: -5px;
+  }
+  .heading-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>

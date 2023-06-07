@@ -1,37 +1,44 @@
 import { Document } from "../document"
 
-export interface SSOProfile {
-  id: string
-  name?: {
-    givenName?: string
-    familyName?: string
-  }
-  _json: {
-    email: string
-    picture: string
-  }
-  provider?: string
+// SSO
+
+export interface SSOProfileJson {
+  email?: string
+  picture?: string
 }
 
-export interface ThirdPartyUser extends Document {
-  thirdPartyProfile?: SSOProfile["_json"]
-  firstName?: string
-  lastName?: string
-  pictureUrl?: string
-  profile?: SSOProfile
-  oauth2?: any
-  provider?: string
-  providerType?: string
-  email: string
-  userId?: string
-  forceResetPassword?: boolean
-  userGroups?: string[]
+export interface OAuth2 {
+  accessToken: string
+  refreshToken?: string
 }
 
-export interface User extends ThirdPartyUser {
+export enum SSOProviderType {
+  OIDC = "oidc",
+  GOOGLE = "google",
+}
+
+export interface UserSSO {
+  provider: string // the individual provider e.g. Okta, Auth0, Google
+  providerType: SSOProviderType
+  oauth2?: OAuth2
+  thirdPartyProfile?: SSOProfileJson
+}
+
+export type SSOUser = User & UserSSO
+
+export function isSSOUser(user: User): user is SSOUser {
+  return !!(user as SSOUser).providerType
+}
+
+// USER
+
+export interface User extends Document {
   tenantId: string
   email: string
   userId?: string
+  firstName?: string
+  lastName?: string
+  pictureUrl?: string
   forceResetPassword?: boolean
   roles: UserRoles
   builder?: {
@@ -41,19 +48,24 @@ export interface User extends ThirdPartyUser {
     global: boolean
   }
   password?: string
-  status?: string
+  status?: UserStatus
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
   dayPassRecordedAt?: string
-  account?: {
-    authType: string
-  }
+  userGroups?: string[]
+  onboardedAt?: string
+  scimInfo?: { isSync: true } & Record<string, any>
+}
+
+export enum UserStatus {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
 }
 
 export interface UserRoles {
   [key: string]: string
 }
 
-// utility types
+// UTILITY TYPES
 
 export interface BuilderUser extends User {
   builder: {
@@ -68,4 +80,8 @@ export interface AdminUser extends User {
   builder: {
     global: boolean
   }
+}
+
+export function isUser(user: object): user is User {
+  return !!(user as User).roles
 }

@@ -1,23 +1,25 @@
-import { getAllApps, queryGlobalView } from "../db"
-import { options } from "../middleware/passport/jwt"
-import { Header, Cookie, MAX_VALID_DATE } from "../constants"
+import { getAllApps } from "../db"
+import { Header, MAX_VALID_DATE, DocumentType, SEPARATOR } from "../constants"
 import env from "../environment"
-import * as userCache from "../cache/user"
-import { getSessionsForUser, invalidateSessions } from "../security/sessions"
-import * as events from "../events"
 import * as tenancy from "../tenancy"
+import * as context from "../context"
 import {
   App,
-  BBContext,
-  PlatformLogoutOpts,
+  AuditedEventFriendlyName,
+  Ctx,
+  Event,
   TenantResolutionStrategy,
 } from "@budibase/types"
 import { SetOption } from "cookies"
-import { DocumentType, SEPARATOR, ViewName } from "../constants"
 const jwt = require("jsonwebtoken")
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
+
+const BUILDER_PREVIEW_PATH = "/app/preview"
+const BUILDER_PREFIX = "/builder"
+const BUILDER_APP_PREFIX = `${BUILDER_PREFIX}/app/`
+const PUBLIC_API_PREFIX = "/api/public/v"
 
 function confirmAppId(possibleAppId: string | undefined) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
@@ -25,11 +27,11 @@ function confirmAppId(possibleAppId: string | undefined) {
     : undefined
 }
 
-async function resolveAppUrl(ctx: BBContext) {
+export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
-  let tenantId: string | null = tenancy.getTenantId()
+  let tenantId: string | null = context.getTenantId()
   if (env.MULTI_TENANCY) {
     // always use the tenant id from the subdomain in multi tenancy
     // this ensures the logged-in user tenant id doesn't overwrite
@@ -40,8 +42,9 @@ async function resolveAppUrl(ctx: BBContext) {
   }
 
   // search prod apps for a url that matches
-  const apps: App[] = await tenancy.doInTenant(tenantId, () =>
-    getAllApps({ dev: false })
+  const apps: App[] = await context.doInTenant(
+    tenantId,
+    () => getAllApps({ dev: false }) as Promise<App[]>
   )
   const app = apps.filter(
     a => a.url && a.url.toLowerCase() === possibleAppUrl
@@ -50,7 +53,7 @@ async function resolveAppUrl(ctx: BBContext) {
   return app && app.appId ? app.appId : undefined
 }
 
-export function isServingApp(ctx: BBContext) {
+export function isServingApp(ctx: Ctx) {
   // dev app
   if (ctx.path.startsWith(`/${APP_PREFIX}`)) {
     return true
@@ -62,14 +65,26 @@ export function isServingApp(ctx: BBContext) {
   return false
 }
 
+export function isServingBuilder(ctx: Ctx): boolean {
+  return ctx.path.startsWith(BUILDER_APP_PREFIX)
+}
+
+export function isServingBuilderPreview(ctx: Ctx): boolean {
+  return ctx.path.startsWith(BUILDER_PREVIEW_PATH)
+}
+
+export function isPublicApiRequest(ctx: Ctx): boolean {
+  return ctx.path.startsWith(PUBLIC_API_PREFIX)
+}
+
 /**
  * Given a request tries to find the appId, which can be located in various places
  * @param {object} ctx The main request body to look through.
  * @returns {string|undefined} If an appId was found it will be returned.
  */
-export async function getAppIdFromCtx(ctx: BBContext) {
+export async function getAppIdFromCtx(ctx: Ctx) {
   // look in headers
-  const options = [ctx.headers[Header.APP_ID]]
+  const options = [ctx.request.headers[Header.APP_ID]]
   let appId
   for (let option of options) {
     appId = confirmAppId(option as string)
@@ -83,20 +98,39 @@ export async function getAppIdFromCtx(ctx: BBContext) {
     appId = confirmAppId(ctx.request.body.appId)
   }
 
-  // look in the url - dev app
-  let appPath =
-    ctx.request.headers.referrer ||
-    ctx.path.split("/").filter(subPath => subPath.startsWith(APP_PREFIX))
-  if (!appId && appPath.length) {
-    appId = confirmAppId(appPath[0])
+  // look in the path
+  const pathId = parseAppIdFromUrl(ctx.path)
+  if (!appId && pathId) {
+    appId = confirmAppId(pathId)
   }
 
-  // look in the url - prod app
-  if (!appId && ctx.path.startsWith(PROD_APP_PREFIX)) {
+  // lookup using custom url - prod apps only
+  // filter out the builder preview path which collides with the prod app path
+  // to ensure we don't load all apps excessively
+  const isBuilderPreview = ctx.path.startsWith(BUILDER_PREVIEW_PATH)
+  const isViewingProdApp =
+    ctx.path.startsWith(PROD_APP_PREFIX) && !isBuilderPreview
+  if (!appId && isViewingProdApp) {
     appId = confirmAppId(await resolveAppUrl(ctx))
   }
 
+  // look in the referer - builder only
+  // make sure this is performed after prod app url resolution, in case the
+  // referer header is present from a builder redirect
+  const referer = ctx.request.headers.referer
+  if (!appId && referer?.includes(BUILDER_APP_PREFIX)) {
+    const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
+    appId = confirmAppId(refererId)
+  }
+
   return appId
+}
+
+function parseAppIdFromUrl(url?: string) {
+  if (!url) {
+    return
+  }
+  return url.split("/").find(subPath => subPath.startsWith(APP_PREFIX))
 }
 
 /**
@@ -107,7 +141,30 @@ export function openJwt(token: string) {
   if (!token) {
     return token
   }
-  return jwt.verify(token, options.secretOrKey)
+  try {
+    return jwt.verify(token, env.JWT_SECRET)
+  } catch (e) {
+    if (env.JWT_SECRET_FALLBACK) {
+      // fallback to enable rotation
+      return jwt.verify(token, env.JWT_SECRET_FALLBACK)
+    } else {
+      throw e
+    }
+  }
+}
+
+export function isValidInternalAPIKey(apiKey: string) {
+  if (env.INTERNAL_API_KEY && env.INTERNAL_API_KEY === apiKey) {
+    return true
+  }
+  // fallback to enable rotation
+  if (
+    env.INTERNAL_API_KEY_FALLBACK &&
+    env.INTERNAL_API_KEY_FALLBACK === apiKey
+  ) {
+    return true
+  }
+  return false
 }
 
 /**
@@ -115,7 +172,7 @@ export function openJwt(token: string) {
  * @param {object} ctx The request which is to be manipulated.
  * @param {string} name The name of the cookie to get.
  */
-export function getCookie(ctx: BBContext, name: string) {
+export function getCookie(ctx: Ctx, name: string) {
   const cookie = ctx.cookies.get(name)
 
   if (!cookie) {
@@ -133,13 +190,13 @@ export function getCookie(ctx: BBContext, name: string) {
  * @param {object} opts options like whether to sign.
  */
 export function setCookie(
-  ctx: BBContext,
+  ctx: Ctx,
   value: any,
   name = "builder",
   opts = { sign: true }
 ) {
   if (value && opts && opts.sign) {
-    value = jwt.sign(value, options.secretOrKey)
+    value = jwt.sign(value, env.JWT_SECRET)
   }
 
   const config: SetOption = {
@@ -159,7 +216,7 @@ export function setCookie(
 /**
  * Utility function, simply calls setCookie with an empty string for value
  */
-export function clearCookie(ctx: BBContext, name: string) {
+export function clearCookie(ctx: Ctx, name: string) {
   setCookie(ctx, null, name)
 }
 
@@ -169,60 +226,14 @@ export function clearCookie(ctx: BBContext, name: string) {
  * @param {object} ctx The koa context object to be tested.
  * @return {boolean} returns true if the call is from the client lib (a built app rather than the builder).
  */
-export function isClient(ctx: BBContext) {
+export function isClient(ctx: Ctx) {
   return ctx.headers[Header.TYPE] === "client"
-}
-
-async function getBuilders() {
-  const builders = await queryGlobalView(ViewName.USER_BY_BUILDERS, {
-    include_docs: false,
-  })
-
-  if (!builders) {
-    return []
-  }
-
-  if (Array.isArray(builders)) {
-    return builders
-  } else {
-    return [builders]
-  }
-}
-
-export async function getBuildersCount() {
-  const builders = await getBuilders()
-  return builders.length
-}
-
-/**
- * Logs a user out from budibase. Re-used across account portal and builder.
- */
-export async function platformLogout(opts: PlatformLogoutOpts) {
-  const ctx = opts.ctx
-  const userId = opts.userId
-  const keepActiveSession = opts.keepActiveSession
-
-  if (!ctx) throw new Error("Koa context must be supplied to logout.")
-
-  const currentSession = getCookie(ctx, Cookie.Auth)
-  let sessions = await getSessionsForUser(userId)
-
-  if (keepActiveSession) {
-    sessions = sessions.filter(
-      session => session.sessionId !== currentSession.sessionId
-    )
-  } else {
-    // clear cookies
-    clearCookie(ctx, Cookie.Auth)
-    clearCookie(ctx, Cookie.CurrentApp)
-  }
-
-  const sessionIds = sessions.map(({ sessionId }) => sessionId)
-  await invalidateSessions(userId, { sessionIds, reason: "logout" })
-  await events.auth.logout()
-  await userCache.invalidateUser(userId)
 }
 
 export function timeout(timeMs: number) {
   return new Promise(resolve => setTimeout(resolve, timeMs))
+}
+
+export function isAudited(event: Event) {
+  return !!AuditedEventFriendlyName[event]
 }

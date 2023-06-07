@@ -21,6 +21,7 @@ import {
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
+import { environment, licensing } from "stores/portal"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -53,8 +54,13 @@ export const getBindableProperties = (asset, componentId) => {
  * Gets all rest bindable data fields
  */
 export const getRestBindings = () => {
+  const environmentVariablesEnabled = get(licensing).environmentVariablesEnabled
   const userBindings = getUserBindings()
-  return [...userBindings, ...getAuthBindings()]
+  return [
+    ...userBindings,
+    ...getAuthBindings(),
+    ...(environmentVariablesEnabled ? getEnvironmentBindings() : []),
+  ]
 }
 
 /**
@@ -71,7 +77,7 @@ export const getAuthBindings = () => {
       runtime: `${safeUser}.${safeOAuth2}.${safeAccessToken}`,
       readable: `Current User.OAuthToken`,
       key: "accessToken",
-      display: { name: "OAuthToken" },
+      display: { name: "OAuthToken", type: "text" },
     },
   ]
 
@@ -89,6 +95,20 @@ export const getAuthBindings = () => {
   return bindings
 }
 
+export const getEnvironmentBindings = () => {
+  let envVars = get(environment).variables
+  return envVars.map(variable => {
+    return {
+      type: "context",
+      runtimeBinding: `env.${makePropSafe(variable.name)}`,
+      readableBinding: `env.${variable.name}`,
+      category: "Environment",
+      icon: "Key",
+      display: { type: "string", name: variable.name },
+    }
+  })
+}
+
 /**
  * Utility - convert a key/value map to an array of custom 'context' bindings
  * @param {object} valueMap Key/value pairings
@@ -100,7 +120,7 @@ export const toBindingsArray = (valueMap, prefix, category) => {
     return []
   }
   return Object.keys(valueMap).reduce((acc, binding) => {
-    if (!binding || !valueMap[binding]) {
+    if (!binding) {
       return acc
     }
 
@@ -378,6 +398,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
           providerId,
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
+          component: component._component,
           category: component._instanceName,
           icon: def.icon,
           display: {
@@ -413,6 +434,9 @@ export const getUserBindings = () => {
       providerId: "user",
       category: "Current User",
       icon: "User",
+      display: {
+        name: key,
+      },
     })
     return acc
   }, [])
@@ -488,21 +512,24 @@ const getSelectedRowsBindings = asset => {
   return bindings
 }
 
+export const makeStateBinding = key => {
+  return {
+    type: "context",
+    runtimeBinding: `${makePropSafe("state")}.${makePropSafe(key)}`,
+    readableBinding: `State.${key}`,
+    category: "State",
+    icon: "AutomatedSegment",
+    display: { name: key },
+  }
+}
+
 /**
  * Gets all state bindings that are globally available.
  */
 const getStateBindings = () => {
   let bindings = []
   if (get(store).clientFeatures?.state) {
-    const safeState = makePropSafe("state")
-    bindings = getAllStateVariables().map(key => ({
-      type: "context",
-      runtimeBinding: `${safeState}.${makePropSafe(key)}`,
-      readableBinding: `State.${key}`,
-      category: "State",
-      icon: "AutomatedSegment",
-      display: { name: key },
-    }))
+    bindings = getAllStateVariables().map(makeStateBinding)
   }
   return bindings
 }
@@ -526,7 +553,7 @@ const getUrlBindings = asset => {
     readableBinding: `URL.${param}`,
     category: "URL",
     icon: "RailTop",
-    display: { type: "string" },
+    display: { type: "string", name: param },
   }))
   const queryParamsBinding = {
     type: "context",
@@ -534,7 +561,7 @@ const getUrlBindings = asset => {
     readableBinding: "Query params",
     category: "URL",
     icon: "RailTop",
-    display: { type: "object" },
+    display: { type: "object", name: "Query params" },
   }
   return urlParamBindings.concat([queryParamsBinding])
 }
@@ -565,7 +592,6 @@ export const getEventContextBindings = (
   actionId
 ) => {
   let bindings = []
-
   // Check if any context bindings are provided by the component for this
   // setting
   const component = findComponent(asset.props, componentId)
@@ -581,6 +607,9 @@ export const getEventContextBindings = (
         )}`,
         category: component._instanceName,
         icon: def.icon,
+        display: {
+          name: contextEntry.label,
+        },
       })
     })
   }
@@ -604,6 +633,9 @@ export const getEventContextBindings = (
           runtimeBinding: `actions.${idx}.${contextValue.value}`,
           category: "Actions",
           icon: "JourneyAction",
+          display: {
+            name: contextValue.label,
+          },
         })
       })
     }

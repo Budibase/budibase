@@ -6,7 +6,8 @@ let userClient: Client,
   appClient: Client,
   cacheClient: Client,
   writethroughClient: Client,
-  lockClient: Client
+  lockClient: Client,
+  socketClient: Client
 
 async function init() {
   userClient = await new Client(utils.Databases.USER_CACHE).init()
@@ -14,19 +15,25 @@ async function init() {
   appClient = await new Client(utils.Databases.APP_METADATA).init()
   cacheClient = await new Client(utils.Databases.GENERIC_CACHE).init()
   lockClient = await new Client(utils.Databases.LOCKS).init()
-  writethroughClient = await new Client(
-    utils.Databases.WRITE_THROUGH,
-    utils.SelectableDatabase.WRITE_THROUGH
+  writethroughClient = await new Client(utils.Databases.WRITE_THROUGH).init()
+  socketClient = await new Client(
+    utils.Databases.SOCKET_IO,
+    utils.SelectableDatabase.SOCKET_IO
   ).init()
 }
 
-process.on("exit", async () => {
+export async function shutdown() {
   if (userClient) await userClient.finish()
   if (sessionClient) await sessionClient.finish()
   if (appClient) await appClient.finish()
   if (cacheClient) await cacheClient.finish()
   if (writethroughClient) await writethroughClient.finish()
   if (lockClient) await lockClient.finish()
+  if (socketClient) await socketClient.finish()
+}
+
+process.on("exit", async () => {
+  await shutdown()
 })
 
 export async function getUserClient() {
@@ -69,4 +76,11 @@ export async function getLockClient() {
     await init()
   }
   return lockClient
+}
+
+export async function getSocketClient() {
+  if (!socketClient) {
+    await init()
+  }
+  return socketClient
 }

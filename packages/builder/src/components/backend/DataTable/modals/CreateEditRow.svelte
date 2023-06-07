@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { tables, rows } from "stores/backend"
+  import { tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import { API } from "api"
@@ -23,26 +23,23 @@
   async function saveRow() {
     errors = []
     try {
-      await API.saveRow({ ...row, tableId: table._id })
+      const res = await API.saveRow({ ...row, tableId: table._id })
       notifications.success("Row saved successfully")
-      rows.save()
-      dispatch("updaterows")
+      dispatch("updaterows", res._id)
     } catch (error) {
-      if (error.handled) {
-        const response = error.json
-        if (response?.errors) {
-          errors = response.errors
-        } else if (response?.validationErrors) {
-          const mappedErrors = {}
-          for (let field in response.validationErrors) {
-            mappedErrors[
-              field
-            ] = `${field} ${response.validationErrors[field][0]}`
-          }
-          errors = mappedErrors
+      const response = error.json
+      if (error.handled && response?.errors) {
+        errors = response.errors
+      } else if (error.handled && response?.validationErrors) {
+        const mappedErrors = {}
+        for (let field in response.validationErrors) {
+          mappedErrors[
+            field
+          ] = `${field} ${response.validationErrors[field][0]}`
         }
+        errors = mappedErrors
       } else {
-        notifications.error("Failed to save row")
+        notifications.error(`Failed to save row - ${error.message}`)
       }
       // Prevent modal closing if there were errors
       return false

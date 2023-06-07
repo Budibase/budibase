@@ -1,75 +1,118 @@
-export default function positionDropdown(element, { anchor, align, maxWidth }) {
-  let positionSide = "top"
-  let maxHeight = 0
-  let dimensions = getDimensions(anchor)
+export default function positionDropdown(element, opts) {
+  let resizeObserver
+  let latestOpts = opts
 
-  function getDimensions() {
+  // We need a static reference to this function so that we can properly
+  // clean up the scroll listener.
+  const scrollUpdate = () => {
+    updatePosition(latestOpts)
+  }
+
+  // Updates the position of the dropdown
+  const updatePosition = opts => {
     const {
-      bottom,
-      top: spaceAbove,
-      left,
-      width,
-    } = anchor.getBoundingClientRect()
-    const spaceBelow = window.innerHeight - bottom
-    const containerRect = element.getBoundingClientRect()
+      anchor,
+      align,
+      maxHeight,
+      maxWidth,
+      useAnchorWidth,
+      offset = 5,
+    } = opts
+    if (!anchor) {
+      return
+    }
 
-    let y
+    // Compute bounds
+    const anchorBounds = anchor.getBoundingClientRect()
+    const elementBounds = element.getBoundingClientRect()
+    let styles = {
+      maxHeight: null,
+      minWidth: null,
+      maxWidth,
+      left: null,
+      top: null,
+    }
 
-    if (spaceAbove > spaceBelow) {
-      positionSide = "bottom"
-      maxHeight = spaceAbove - 20
-      y = window.innerHeight - spaceAbove + 5
+    // Determine vertical styles
+    if (align === "right-outside") {
+      styles.top = anchorBounds.top
+    } else if (window.innerHeight - anchorBounds.bottom < 100) {
+      styles.top = anchorBounds.top - elementBounds.height - offset
+      styles.maxHeight = maxHeight || 240
     } else {
-      positionSide = "top"
-      y = bottom + 5
-      maxHeight = spaceBelow - 20
+      styles.top = anchorBounds.bottom + offset
+      styles.maxHeight =
+        maxHeight || window.innerHeight - anchorBounds.bottom - 20
     }
 
-    return {
-      [positionSide]: y,
-      left,
-      width,
-      containerWidth: containerRect.width,
+    // Determine horizontal styles
+    if (!maxWidth && useAnchorWidth) {
+      styles.maxWidth = anchorBounds.width
     }
+    if (useAnchorWidth) {
+      styles.minWidth = anchorBounds.width
+    }
+    if (align === "right") {
+      styles.left = anchorBounds.left + anchorBounds.width - elementBounds.width
+    } else if (align === "right-outside") {
+      styles.left = anchorBounds.right + offset
+    } else if (align === "left-outside") {
+      styles.left = anchorBounds.left - elementBounds.width - offset
+    } else {
+      styles.left = anchorBounds.left
+    }
+
+    // Apply styles
+    Object.entries(styles).forEach(([style, value]) => {
+      if (value) {
+        element.style[style] = `${value.toFixed(0)}px`
+      } else {
+        element.style[style] = null
+      }
+    })
   }
 
-  function calcLeftPosition() {
-    let left
+  // The actual svelte action callback which creates observers on the relevant
+  // DOM elements
+  const update = newOpts => {
+    latestOpts = newOpts
 
-    if (align == "right") {
-      left = dimensions.left + dimensions.width - dimensions.containerWidth
-    } else if (align == "right-side") {
-      left = dimensions.left + dimensions.width
-    } else {
-      left = dimensions.left
+    // Cleanup old state
+    if (resizeObserver) {
+      resizeObserver.disconnect()
     }
 
-    return left
+    // Do nothing if no anchor
+    const { anchor } = newOpts
+    if (!anchor) {
+      return
+    }
+
+    // Observe both anchor and element and resize the popover as appropriate
+    resizeObserver = new ResizeObserver(() => updatePosition(newOpts))
+    resizeObserver.observe(anchor)
+    resizeObserver.observe(element)
+    resizeObserver.observe(document.body)
   }
 
+  // Apply initial styles which don't need to change
   element.style.position = "absolute"
   element.style.zIndex = "9999"
-  if (maxWidth) {
-    element.style.maxWidth = `${maxWidth}px`
-  }
-  element.style.minWidth = `${dimensions.width}px`
-  element.style.maxHeight = `${maxHeight.toFixed(0)}px`
-  element.style.transformOrigin = `center ${positionSide}`
-  element.style[positionSide] = `${dimensions[positionSide]}px`
-  element.style.left = `${calcLeftPosition(dimensions).toFixed(0)}px`
 
-  const resizeObserver = new ResizeObserver(entries => {
-    entries.forEach(() => {
-      dimensions = getDimensions()
-      element.style[positionSide] = `${dimensions[positionSide]}px`
-      element.style.left = `${calcLeftPosition(dimensions).toFixed(0)}px`
-    })
-  })
-  resizeObserver.observe(anchor)
-  resizeObserver.observe(element)
+  // Set up a scroll listener
+  document.addEventListener("scroll", scrollUpdate, true)
+
+  // Perform initial update
+  update(opts)
+
   return {
+    update,
     destroy() {
-      resizeObserver.disconnect()
+      // Cleanup
+      if (resizeObserver) {
+        resizeObserver.disconnect()
+      }
+      document.removeEventListener("scroll", scrollUpdate, true)
     },
   }
 }

@@ -6,11 +6,11 @@ import {
   SearchFilters,
   SortDirection,
 } from "@budibase/types"
+import { db as dbCore } from "@budibase/backend-core"
 import { QueryOptions } from "../../definitions/datasource"
 import { isIsoDateString, SqlClient } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import environment from "../../environment"
-import { removeKeyNumbering } from "./utils"
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -23,9 +23,6 @@ const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
 const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
 
 function likeKey(client: string, key: string): string {
-  if (!key.includes(" ")) {
-    return key
-  }
   let start: string, end: string
   switch (client) {
     case SqlClient.MY_SQL:
@@ -93,10 +90,15 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
 function generateSelectStatement(
   json: QueryJson,
   knex: Knex
-): (string | Knex.Raw)[] {
+): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
+
+  if (!resource) {
+    return "*"
+  }
+
   const schema = meta?.table?.schema
-  return resource!.fields.map(field => {
+  return resource.fields.map(field => {
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
     const columnName = fieldNames[1]
@@ -134,7 +136,7 @@ class InternalBuilder {
       fn: (key: string, value: any) => void
     ) {
       for (let [key, value] of Object.entries(structure)) {
-        const updatedKey = removeKeyNumbering(key)
+        const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
           fn(`${opts.tableName}.${updatedKey}`, value)
@@ -154,7 +156,7 @@ class InternalBuilder {
         const rawFnc = `${fnc}Raw`
         // @ts-ignore
         query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
-          `%${value}%`,
+          `%${value.toLowerCase()}%`,
         ])
       }
     }
@@ -200,7 +202,7 @@ class InternalBuilder {
           let statement = ""
           for (let i in value) {
             if (typeof value[i] === "string") {
-              value[i] = `%"${value[i]}"%`
+              value[i] = `%"${value[i].toLowerCase()}"%`
             } else {
               value[i] = `%${value[i]}%`
             }
@@ -235,7 +237,9 @@ class InternalBuilder {
         } else {
           const rawFnc = `${fnc}Raw`
           // @ts-ignore
-          query = query[rawFnc](`LOWER(${key}) LIKE ?`, [`${value}%`])
+          query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
+            `${value.toLowerCase()}%`,
+          ])
         }
       })
     }
@@ -244,6 +248,19 @@ class InternalBuilder {
     }
     if (filters.range) {
       iterate(filters.range, (key, value) => {
+        const isEmptyObject = (val: any) => {
+          return (
+            val &&
+            Object.keys(val).length === 0 &&
+            Object.getPrototypeOf(val) === Object.prototype
+          )
+        }
+        if (isEmptyObject(value.low)) {
+          value.low = ""
+        }
+        if (isEmptyObject(value.high)) {
+          value.high = ""
+        }
         if (value.low && value.high) {
           // Use a between operator if we have 2 valid range values
           const fnc = allOr ? "orWhereBetween" : "whereBetween"
@@ -300,7 +317,8 @@ class InternalBuilder {
     const table = json.meta?.table
     if (sort) {
       for (let [key, value] of Object.entries(sort)) {
-        const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
+        const direction =
+          value.direction === SortDirection.ASCENDING ? "asc" : "desc"
         query = query.orderBy(`${table?.name}.${key}`, direction)
       }
     } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
@@ -313,7 +331,8 @@ class InternalBuilder {
   addRelationships(
     query: KnexQuery,
     fromTable: string,
-    relationships: RelationshipsJson[] | undefined
+    relationships: RelationshipsJson[] | undefined,
+    schema: string | undefined
   ): KnexQuery {
     if (!relationships) {
       return query
@@ -337,9 +356,13 @@ class InternalBuilder {
     }
     for (let [key, relationships] of Object.entries(tableSets)) {
       const { toTable, throughTable } = JSON.parse(key)
+      const toTableWithSchema = schema ? `${schema}.${toTable}` : toTable
+      const throughTableWithSchema = schema
+        ? `${schema}.${throughTable}`
+        : throughTable
       if (!throughTable) {
         // @ts-ignore
-        query = query.leftJoin(toTable, function () {
+        query = query.leftJoin(toTableWithSchema, function () {
           for (let relationship of relationships) {
             const from = relationship.from,
               to = relationship.to
@@ -350,7 +373,7 @@ class InternalBuilder {
       } else {
         query = query
           // @ts-ignore
-          .leftJoin(throughTable, function () {
+          .leftJoin(throughTableWithSchema, function () {
             for (let relationship of relationships) {
               const fromPrimary = relationship.fromPrimary
               const from = relationship.from
@@ -362,7 +385,7 @@ class InternalBuilder {
               )
             }
           })
-          .leftJoin(toTable, function () {
+          .leftJoin(toTableWithSchema, function () {
             for (let relationship of relationships) {
               const toPrimary = relationship.toPrimary
               const to = relationship.to
@@ -388,6 +411,7 @@ class InternalBuilder {
         delete parsedBody[key]
       }
     }
+
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.insert(parsedBody)
@@ -456,7 +480,12 @@ class InternalBuilder {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    query = this.addRelationships(preQuery, tableName, relationships)
+    query = this.addRelationships(
+      preQuery,
+      tableName,
+      relationships,
+      endpoint.schema
+    )
     return this.addFilters(query, filters, { relationship: true })
   }
 
@@ -487,7 +516,7 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.delete()
     } else {
-      return query.delete().returning("*")
+      return query.delete().returning(generateSelectStatement(json, knex))
     }
   }
 }

@@ -12,7 +12,8 @@
   $: id = dragInfo?.id || id
 
   // Set ephemeral grid styles on the dragged component
-  $: componentStore.actions.getComponentInstance(id)?.setEphemeralStyles({
+  $: instance = componentStore.actions.getComponentInstance(id)
+  $: $instance?.setEphemeralStyles({
     ...gridStyles,
     ...(gridStyles ? { "z-index": 999 } : null),
   })

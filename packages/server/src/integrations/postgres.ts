@@ -6,6 +6,8 @@ import {
   SqlQuery,
   Table,
   DatasourcePlus,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -18,7 +20,7 @@ import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
-const { Client, types } = require("pg")
+import { Client, types } from "pg"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -50,6 +52,10 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+  },
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -114,7 +120,7 @@ const SCHEMA: Integration = {
 }
 
 class PostgresIntegration extends Sql implements DatasourcePlus {
-  private readonly client: any
+  private readonly client: Client
   private readonly config: PostgresConfig
   private index: number = 1
   private open: boolean
@@ -123,14 +129,15 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
   COLUMNS_SQL!: string
 
-  PRIMARY_KEYS_SQL = `
-  select tc.table_schema, tc.table_name, kc.column_name as primary_key 
-  from information_schema.table_constraints tc
-  join 
-    information_schema.key_column_usage kc on kc.table_name = tc.table_name 
-    and kc.table_schema = tc.table_schema 
-    and kc.constraint_name = tc.constraint_name
-  where tc.constraint_type = 'PRIMARY KEY';
+  PRIMARY_KEYS_SQL = () => `
+  SELECT pg_namespace.nspname table_schema
+     , pg_class.relname table_name
+     , pg_attribute.attname primary_key
+  FROM pg_class
+  JOIN pg_index ON pg_class.oid = pg_index.indrelid AND pg_index.indisprimary
+  JOIN pg_attribute ON pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey)
+  JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+  WHERE pg_namespace.nspname = '${this.config.schema}';
   `
 
   constructor(config: PostgresConfig) {
@@ -150,6 +157,21 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     this.open = false
   }
 
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      await this.openConnection()
+      response.connected = true
+    } catch (e: any) {
+      response.error = e.message as string
+    } finally {
+      await this.closeConnection()
+    }
+    return response
+  }
+
   getBindingIdentifier(): string {
     return `$${this.index++}`
   }
@@ -163,7 +185,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     if (!this.config.schema) {
       this.config.schema = "public"
     }
-    this.client.query(`SET search_path TO ${this.config.schema}`)
+    await this.client.query(`SET search_path TO ${this.config.schema}`)
     this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     this.open = true
   }
@@ -221,7 +243,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     let tableKeys: { [key: string]: string[] } = {}
     await this.openConnection()
     try {
-      const primaryKeysResponse = await this.client.query(this.PRIMARY_KEYS_SQL)
+      const primaryKeysResponse = await this.client.query(
+        this.PRIMARY_KEYS_SQL()
+      )
       for (let table of primaryKeysResponse.rows) {
         const tableName = table.table_name
         if (!tableKeys[tableName]) {
@@ -262,15 +286,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           column.identity_start ||
           column.identity_increment
         )
-        const constraints = {
-          presence: column.is_nullable === "NO",
-        }
-        const hasDefault =
+        const hasDefault = column.column_default != null
+        const hasNextVal =
           typeof column.column_default === "string" &&
           column.column_default.startsWith("nextval")
         const isGenerated =
           column.is_generated && column.is_generated !== "NEVER"
-        const isAuto: boolean = hasDefault || identity || isGenerated
+        const isAuto: boolean = hasNextVal || identity || isGenerated
+        const required = column.is_nullable === "NO"
+        const constraints = {
+          presence: required && !hasDefault && !isGenerated,
+        }
         tables[tableName].schema[columnName] = {
           autocolumn: isAuto,
           name: columnName,
@@ -286,6 +312,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     } catch (err) {
       // @ts-ignore
       throw new Error(err)
+    } finally {
+      await this.closeConnection()
+    }
+  }
+
+  async getTableNames() {
+    try {
+      await this.openConnection()
+      const columnsResponse: { rows: PostgresColumn[] } =
+        await this.client.query(this.COLUMNS_SQL)
+      return columnsResponse.rows.map(row => row.table_name)
     } finally {
       await this.closeConnection()
     }

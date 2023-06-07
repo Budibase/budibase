@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "builderStore"
+  import { automationStore, selectedAutomation } from "builderStore"
   import {
     Icon,
     Divider,
@@ -17,42 +17,39 @@
   import ActionModal from "./ActionModal.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+  import {
+    ActionStepID,
+    TriggerStepID,
+    Features,
+  } from "constants/backend/automations"
   import { permissions } from "stores/backend"
 
   export let block
   export let testDataModal
   export let idx
+
   let selected
   let webhookModal
   let actionModal
-  let blockComplete
+  let open = true
   let showLooping = false
   let role
 
-  $: automationId = $automationStore.selectedAutomation?.automation._id
+  $: collectBlockExists = $selectedAutomation.definition.steps.some(
+    step => step.stepId === ActionStepID.COLLECT
+  )
+  $: automationId = $selectedAutomation?._id
   $: showBindingPicker =
     block.stepId === ActionStepID.CREATE_ROW ||
     block.stepId === ActionStepID.UPDATE_ROW
-
   $: isTrigger = block.type === "TRIGGER"
-
-  $: selected = $automationStore.selectedBlock?.id === block.id
-  $: steps =
-    $automationStore.selectedAutomation?.automation?.definition?.steps ?? []
-
+  $: steps = $selectedAutomation?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block.id)
   $: lastStep = !isTrigger && blockIdx + 1 === steps.length
-
-  $: totalBlocks =
-    $automationStore.selectedAutomation?.automation?.definition?.steps.length +
-    1
-
-  $: loopingSelected =
-    $automationStore.selectedAutomation?.automation.definition.steps.find(
-      x => x.blockToLoop === block.id
-    )
-
+  $: totalBlocks = $selectedAutomation?.definition?.steps.length + 1
+  $: loopBlock = $selectedAutomation?.definition.steps.find(
+    x => x.blockToLoop === block.id
+  )
   $: isAppAction = block?.stepId === TriggerStepID.APP
   $: isAppAction && setPermissions(role)
   $: isAppAction && getPermissions(automationId)
@@ -81,76 +78,54 @@
   }
 
   async function removeLooping() {
-    loopingSelected = false
-    let loopBlock =
-      $automationStore.selectedAutomation?.automation.definition.steps.find(
-        x => x.blockToLoop === block.id
-      )
-    automationStore.actions.deleteAutomationBlock(loopBlock)
-    await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
+    let loopBlock = $selectedAutomation?.definition.steps.find(
+      x => x.blockToLoop === block.id
     )
+    try {
+      await automationStore.actions.deleteAutomationBlock(loopBlock)
+    } catch (error) {
+      notifications.error("Error saving automation")
+    }
   }
 
   async function deleteStep() {
-    let loopBlock =
-      $automationStore.selectedAutomation?.automation.definition.steps.find(
-        x => x.blockToLoop === block.id
-      )
+    let loopBlock = $selectedAutomation?.definition.steps.find(
+      x => x.blockToLoop === block.id
+    )
 
     try {
       if (loopBlock) {
-        automationStore.actions.deleteAutomationBlock(loopBlock)
+        await automationStore.actions.deleteAutomationBlock(loopBlock)
       }
-      automationStore.actions.deleteAutomationBlock(block)
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
+      await automationStore.actions.deleteAutomationBlock(block)
     } catch (error) {
-      notifications.error("Error saving notification")
+      notifications.error("Error saving automation")
     }
   }
-  function toggleFieldControl(evt) {
-    onSelect(block)
-    let rowControl
-    if (evt.detail === "Use values") {
-      rowControl = false
-    } else {
-      rowControl = true
-    }
-    automationStore.actions.toggleFieldControl(rowControl)
-    automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
+
+  /**
+   * "rowControl" appears to be the name of the flag used to determine whether
+   * a certain automation block uses values or bindings as inputs
+   */
+  function toggleRowControl(evt) {
+    const rowControl = evt.detail !== "Use values"
+    automationStore.actions.toggleRowControl(block, rowControl)
   }
 
   async function addLooping() {
-    loopingSelected = true
     const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
-
-    const loopBlock = $automationStore.selectedAutomation.constructBlock(
+    const loopBlock = automationStore.actions.constructBlock(
       "ACTION",
       "LOOP",
       loopDefinition
     )
     loopBlock.blockToLoop = block.id
-    block.loopBlock = loopBlock.id
-    automationStore.actions.addBlockToAutomation(loopBlock, blockIdx)
-    await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
-  }
-
-  async function onSelect(block) {
-    await automationStore.update(state => {
-      state.selectedBlock = block
-      return state
-    })
+    await automationStore.actions.addBlockToAutomation(loopBlock, blockIdx)
   }
 </script>
 
 <div class={`block ${block.type} hoverable`} class:selected on:click={() => {}}>
-  {#if loopingSelected}
+  {#if loopBlock}
     <div class="blockSection">
       <div
         on:click={() => {
@@ -174,13 +149,8 @@
         </div>
 
         <div class="blockTitle">
-          <div
-            style="margin-left: 10px;"
-            on:click={() => {
-              onSelect(block)
-            }}
-          >
-            <Icon name={showLooping ? "ChevronUp" : "ChevronDown"} />
+          <div style="margin-left: 10px;" on:click={() => {}}>
+            <Icon hoverable name={showLooping ? "ChevronDown" : "ChevronUp"} />
           </div>
         </div>
       </div>
@@ -198,9 +168,7 @@
               $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
                 .properties
             )}
-            block={$automationStore.selectedAutomation?.automation.definition.steps.find(
-              x => x.blockToLoop === block.id
-            )}
+            block={loopBlock}
             {webhookModal}
           />
         </Layout>
@@ -209,22 +177,28 @@
     {/if}
   {/if}
 
-  <FlowItemHeader bind:blockComplete {block} {testDataModal} {idx} />
-  {#if !blockComplete}
+  <FlowItemHeader
+    {open}
+    {block}
+    {testDataModal}
+    {idx}
+    on:toggle={() => (open = !open)}
+  />
+  {#if open}
     <Divider noMargin />
     <div class="blockSection">
       <Layout noPadding gap="S">
         {#if !isTrigger}
           <div>
             <div class="block-options">
-              {#if !loopingSelected}
-                <ActionButton on:click={() => addLooping()} icon="Reuse"
-                  >Add Looping</ActionButton
-                >
+              {#if block?.features?.[Features.LOOPING] || !block.features}
+                <ActionButton on:click={() => addLooping()} icon="Reuse">
+                  Add Looping
+                </ActionButton>
               {/if}
               {#if showBindingPicker}
                 <Select
-                  on:change={toggleFieldControl}
+                  on:change={toggleRowControl}
                   defaultValue="Use values"
                   autoWidth
                   value={block.rowControl ? "Use bindings" : "Use values"}
@@ -250,27 +224,34 @@
           {webhookModal}
         />
         {#if lastStep}
-          <Button on:click={() => testDataModal.show()} cta
-            >Finish and test automation</Button
-          >
+          <Button on:click={() => testDataModal.show()} cta>
+            Finish and test automation
+          </Button>
         {/if}
       </Layout>
     </div>
   {/if}
-
-  <Modal bind:this={actionModal} width="30%">
-    <ActionModal {blockIdx} bind:blockComplete />
-  </Modal>
-
-  <Modal bind:this={webhookModal} width="30%">
-    <CreateWebhookModal />
-  </Modal>
 </div>
-<div class="separator" />
-<Icon on:click={() => actionModal.show()} hoverable name="AddCircle" size="S" />
-{#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
+{#if !collectBlockExists || !lastStep}
   <div class="separator" />
+  <Icon
+    on:click={() => actionModal.show()}
+    hoverable
+    name="AddCircle"
+    size="S"
+  />
+  {#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
+    <div class="separator" />
+  {/if}
 {/if}
+
+<Modal bind:this={actionModal} width="30%">
+  <ActionModal {lastStep} {blockIdx} />
+</Modal>
+
+<Modal bind:this={webhookModal} width="30%">
+  <CreateWebhookModal />
+</Modal>
 
 <style>
   .delete-padding {

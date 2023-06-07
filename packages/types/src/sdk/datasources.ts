@@ -1,5 +1,7 @@
 import { Table } from "../documents"
 
+export const PASSWORD_REPLACEMENT = "--secret-value--"
+
 export enum Operation {
   CREATE = "CREATE",
   READ = "READ",
@@ -33,6 +35,7 @@ export enum DatasourceFieldType {
   OBJECT = "object",
   JSON = "json",
   FILE = "file",
+  FIELD_GROUP = "fieldGroup",
 }
 
 export enum SourceName {
@@ -52,7 +55,6 @@ export enum SourceName {
   FIRESTORE = "FIRESTORE",
   REDIS = "REDIS",
   SNOWFLAKE = "SNOWFLAKE",
-  UNKNOWN = "unknown",
 }
 
 export enum IncludeRelationship {
@@ -69,6 +71,11 @@ export enum FilterType {
   EMPTY = "empty",
   NOT_EMPTY = "notEmpty",
   ONE_OF = "oneOf",
+}
+
+export enum DatasourceFeature {
+  CONNECTION_CHECKING = "connection",
+  FETCH_TABLE_NAMES = "fetch_table_names",
 }
 
 export interface StepDefinition {
@@ -95,20 +102,36 @@ export interface ExtraQueryConfig {
   }
 }
 
+export interface DatasourceConfig {
+  [key: string]: {
+    type: string
+    display?: string
+    required?: boolean
+    default?: any
+    deprecated?: boolean
+  }
+}
+
 export interface Integration {
   docs: string
   plus?: boolean
   auth?: { type: string }
+  features?: Partial<Record<DatasourceFeature, boolean>>
   relationships?: boolean
   description: string
   friendlyName: string
   type?: string
   iconUrl?: string
-  datasource: {}
+  datasource: DatasourceConfig
   query: {
     [key: string]: QueryDefinition
   }
   extra?: ExtraQueryConfig
+}
+
+export type ConnectionInfo = {
+  connected: boolean
+  error?: string
 }
 
 export interface IntegrationBase {
@@ -116,6 +139,7 @@ export interface IntegrationBase {
   read?(query: any): Promise<any[] | any>
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
+  testConnection?(): Promise<ConnectionInfo>
 }
 
 export interface DatasourcePlus extends IntegrationBase {
@@ -127,4 +151,5 @@ export interface DatasourcePlus extends IntegrationBase {
   getBindingIdentifier(): string
   getStringConcat(parts: string[]): string
   buildSchema(datasourceId: string, entities: Record<string, Table>): any
+  getTableNames(): Promise<string[]>
 }

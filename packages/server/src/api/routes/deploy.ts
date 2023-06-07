@@ -16,6 +16,5 @@ router
     authorized(permissions.BUILDER),
     controller.deploymentProgress
   )
-  .post("/api/deploy", authorized(permissions.BUILDER), controller.deployApp)
 
-export = router
+export default router

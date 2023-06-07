@@ -3,10 +3,12 @@ import {
   QueryType,
   IntegrationBase,
   DatasourceFieldType,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 
-const AWS = require("aws-sdk")
-const csv = require("csvtojson")
+import AWS from "aws-sdk"
+import csv from "csvtojson"
 
 interface S3Config {
   region: string
@@ -22,6 +24,9 @@ const SCHEMA: Integration = {
     "Amazon Simple Storage Service (Amazon S3) is an object storage service that offers industry-leading scalability, data availability, security, and performance.",
   friendlyName: "Amazon S3",
   type: "Object store",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     region: {
       type: "string",
@@ -107,6 +112,7 @@ const SCHEMA: Integration = {
     readCsv: {
       displayName: "Read CSV",
       type: QueryType.FIELDS,
+      readable: true,
       fields: {
         bucket: {
           type: DatasourceFieldType.STRING,
@@ -151,7 +157,7 @@ const SCHEMA: Integration = {
 
 class S3Integration implements IntegrationBase {
   private readonly config: S3Config
-  private client: any
+  private client
 
   constructor(config: S3Config) {
     this.config = config
@@ -162,6 +168,19 @@ class S3Integration implements IntegrationBase {
     }
 
     this.client = new AWS.S3(this.config)
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      await this.client.listBuckets().promise()
+      response.connected = true
+    } catch (e: any) {
+      response.error = e.message as string
+    }
+    return response
   }
 
   async create(query: {

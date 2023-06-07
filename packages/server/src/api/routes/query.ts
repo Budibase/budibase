@@ -58,4 +58,4 @@ router
     queryController.executeV2 as any
   )
 
-export = router
+export default router

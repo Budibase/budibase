@@ -1,4 +1,6 @@
 import { objectStore, roles, constants } from "@budibase/backend-core"
+import { FieldType as FieldTypes } from "@budibase/types"
+export { FieldType as FieldTypes, RelationshipTypes } from "@budibase/types"
 
 export enum FilterTypes {
   STRING = "string",
@@ -22,43 +24,20 @@ export const NoEmptyFilterStrings = [
   FilterTypes.NOT_CONTAINS,
 ]
 
-export enum FieldTypes {
-  STRING = "string",
-  BARCODEQR = "barcodeqr",
-  LONGFORM = "longform",
-  OPTIONS = "options",
-  NUMBER = "number",
-  BOOLEAN = "boolean",
-  ARRAY = "array",
-  DATETIME = "datetime",
-  ATTACHMENT = "attachment",
-  LINK = "link",
-  FORMULA = "formula",
-  AUTO = "auto",
-  JSON = "json",
-  INTERNAL = "internal",
-}
-
 export const CanSwitchTypes = [
-  [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
+  [FieldTypes.JSON, FieldTypes.ARRAY],
   [
-    exports.FieldTypes.STRING,
-    exports.FieldTypes.OPTIONS,
-    exports.FieldTypes.LONGFORM,
-    exports.FieldTypes.BARCODEQR,
+    FieldTypes.STRING,
+    FieldTypes.OPTIONS,
+    FieldTypes.LONGFORM,
+    FieldTypes.BARCODEQR,
   ],
-  [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
+  [FieldTypes.BOOLEAN, FieldTypes.NUMBER],
 ]
 
 export const SwitchableTypes = CanSwitchTypes.reduce((prev, current) =>
   prev ? prev.concat(current) : current
 )
-
-export enum RelationshipTypes {
-  ONE_TO_MANY = "one-to-many",
-  MANY_TO_ONE = "many-to-one",
-  MANY_TO_MANY = "many-to-many",
-}
 
 export enum FormulaTypes {
   STATIC = "static",
@@ -99,9 +78,9 @@ export const USERS_TABLE_SCHEMA = {
   // TODO: ADMIN PANEL - when implemented this doesn't need to be carried out
   schema: {
     email: {
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         email: true,
         length: {
           maximum: "",
@@ -114,27 +93,27 @@ export const USERS_TABLE_SCHEMA = {
     firstName: {
       name: "firstName",
       fieldName: "firstName",
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
       },
     },
     lastName: {
       name: "lastName",
       fieldName: "lastName",
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
       },
     },
     roleId: {
       fieldName: "roleId",
       name: "roleId",
-      type: exports.FieldTypes.OPTIONS,
+      type: FieldTypes.OPTIONS,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
         inclusion: Object.values(roles.BUILTIN_ROLE_IDS),
       },
@@ -142,9 +121,9 @@ export const USERS_TABLE_SCHEMA = {
     status: {
       fieldName: "status",
       name: "status",
-      type: exports.FieldTypes.OPTIONS,
+      type: FieldTypes.OPTIONS,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
         inclusion: Object.values(constants.UserStatus),
       },
@@ -202,3 +181,4 @@ export enum AutomationErrors {
 // pass through the list from the auth/core lib
 export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 export const MAX_AUTOMATION_RECURRING_ERRORS = 5
+export const GOOGLE_SHEETS_PRIMARY_KEY = "rowNumber"

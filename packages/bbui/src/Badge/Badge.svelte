@@ -10,10 +10,13 @@
   export let green = false
   export let active = false
   export let inactive = false
+  export let hoverable = false
 </script>
 
 <span
+  on:click
   class="spectrum-Label"
+  class:hoverable
   class:spectrum-Label--small={size === "S"}
   class:spectrum-Label--large={size === "L"}
   class:spectrum-Label--grey={grey}
@@ -27,3 +30,13 @@
 >
   <slot />
 </span>
+
+<style>
+  .spectrum-Label--grey {
+    background-color: var(--spectrum-global-color-gray-500);
+    font-weight: 600;
+  }
+  .hoverable:hover {
+    cursor: pointer;
+  }
+</style>

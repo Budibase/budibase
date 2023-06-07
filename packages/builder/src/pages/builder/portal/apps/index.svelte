@@ -11,58 +11,32 @@
     Body,
     Search,
   } from "@budibase/bbui"
-  import TemplateDisplay from "components/common/TemplateDisplay.svelte"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
-  import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
+  import AccountLockedModal from "components/portal/licensing/AccountLockedModal.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import {
-    apps,
-    auth,
-    admin,
-    templates,
-    licensing,
-    groups,
-  } from "stores/portal"
+  import { apps, auth, admin, licensing, environment } from "stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
   import Logo from "assets/bb-space-man.svg"
-  import AccessFilter from "./_components/AcessFilter.svelte"
 
   let sortBy = "name"
   let template
-  let selectedApp
   let creationModal
-  let updatingModal
   let appLimitModal
+  let accountLockedModal
   let creatingApp = false
-  let loaded = $apps?.length || $templates?.length
   let searchTerm = ""
-  let cloud = $admin.cloud
   let creatingFromTemplate = false
   let automationErrors
   let accessFilterList = null
 
-  const resolveWelcomeMessage = (auth, apps) => {
-    const userWelcome = auth?.user?.firstName
-      ? `Welcome ${auth?.user?.firstName}!`
-      : "Welcome back!"
-    return apps?.length ? userWelcome : "Let's create your first app!"
-  }
-  $: welcomeHeader = resolveWelcomeMessage($auth, $apps)
-  $: welcomeBody = $apps?.length
-    ? "Manage your apps and get a head start with templates"
-    : "Start from scratch or get a head start with one of our templates"
-
-  $: createAppButtonText = $apps?.length
-    ? "Create new app"
-    : "Start from scratch"
-
+  $: welcomeHeader = `Welcome ${$auth?.user?.firstName || "back"}`
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(
     app =>
@@ -75,9 +49,12 @@
           )
         : true)
   )
-  $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
-  $: unlocked = lockedApps?.length === 0
   $: automationErrors = getAutomationErrors(enrichedApps)
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
+
+  const usersLimitLockAction = $licensing?.errUserLimit
+    ? () => accountLockedModal.show()
+    : null
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -121,10 +98,9 @@
 
   const goToAutomationError = appId => {
     const params = new URLSearchParams({
-      tab: "Automation History",
       open: "error",
     })
-    $goto(`../overview/${appId}?${params.toString()}`)
+    $goto(`../overview/${appId}/automation-history?${params.toString()}`)
   }
 
   const errorCount = errors => {
@@ -146,15 +122,6 @@
       template = null
       creationModal.show()
       creatingApp = true
-    }
-  }
-
-  const initiateAppsExport = () => {
-    try {
-      window.location = `/api/cloud/export`
-      notifications.success("Apps exported successfully")
-    } catch (err) {
-      notifications.error(`Error exporting apps: ${err}`)
     }
   }
 
@@ -207,24 +174,6 @@
     creatingApp = false
   }
 
-  const appOverview = app => {
-    $goto(`../overview/${app.devId}`)
-  }
-
-  const editApp = app => {
-    if (app.lockedOther) {
-      notifications.error(
-        `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
-      )
-      return
-    }
-    $goto(`../../app/${app.devId}`)
-  }
-
-  const accessFilterAction = accessFilter => {
-    accessFilterList = accessFilter.detail
-  }
-
   function createAppFromTemplateUrl(templateKey) {
     // validate the template key just to make sure
     const templateParts = templateKey.split("/")
@@ -240,37 +189,25 @@
 
   onMount(async () => {
     try {
-      await apps.load()
-      await templates.load()
-      // always load latest
-      await licensing.init()
-
-      if ($licensing.groupsEnabled) {
-        await groups.actions.init()
-      }
-
-      if ($templates?.length === 0) {
-        notifications.error(
-          "There was a problem loading quick start templates."
-        )
-      }
+      await environment.loadVariables()
       // If the portal is loaded from an external URL with a template param
       const initInfo = await auth.getInitInfo()
       if (initInfo?.init_template) {
         creatingFromTemplate = true
         createAppFromTemplateUrl(initInfo.init_template)
-        return
+      }
+      if (usersLimitLockAction) {
+        usersLimitLockAction()
       }
     } catch (error) {
-      notifications.error("Error loading apps and templates")
+      notifications.error("Error getting init info")
     }
-    loaded = true
   })
 </script>
 
-<Page wide>
-  <Layout noPadding gap="M">
-    {#if loaded}
+{#if $apps.length}
+  <Page>
+    <Layout noPadding gap="L">
       {#each Object.keys(automationErrors || {}) as appId}
         <Notification
           wide
@@ -293,71 +230,39 @@
           <Layout noPadding gap="XS">
             <Heading size="L">{welcomeHeader}</Heading>
             <Body size="M">
-              {welcomeBody}
+              Manage your apps and get a head start with templates
             </Body>
           </Layout>
-          {#if !$apps?.length}
-            <div class="buttons">
-              <Button
-                dataCy="create-app-btn"
-                size="M"
-                icon="Add"
-                cta
-                on:click={initiateAppCreation}
-              >
-                {createAppButtonText}
-              </Button>
-              <Button
-                dataCy="import-app-btn"
-                icon="Import"
-                size="L"
-                quiet
-                secondary
-                on:click={initiateAppImport}
-              >
-                Import app
-              </Button>
-            </div>
-          {/if}
         </div>
       </div>
-
-      {#if !$apps?.length && $templates?.length}
-        <TemplateDisplay templates={$templates} />
-      {/if}
 
       {#if enrichedApps.length}
         <Layout noPadding gap="L">
           <div class="title">
             <div class="buttons">
               <Button
-                dataCy="create-app-btn"
                 size="M"
-                icon="Add"
                 cta
-                on:click={initiateAppCreation}
+                on:click={usersLimitLockAction || initiateAppCreation}
               >
-                {createAppButtonText}
+                Create new app
               </Button>
               {#if $apps?.length > 0}
                 <Button
-                  icon="Experience"
                   size="M"
-                  quiet
                   secondary
-                  on:click={$goto("/builder/portal/apps/templates")}
+                  on:click={usersLimitLockAction ||
+                    $goto("/builder/portal/apps/templates")}
                 >
-                  Templates
+                  View templates
                 </Button>
               {/if}
               {#if !$apps?.length}
                 <Button
-                  dataCy="import-app-btn"
-                  icon="Import"
                   size="L"
                   quiet
                   secondary
-                  on:click={initiateAppImport}
+                  on:click={usersLimitLockAction || initiateAppImport}
                 >
                   Import app
                 </Button>
@@ -365,56 +270,39 @@
             </div>
             {#if enrichedApps.length > 1}
               <div class="app-actions">
-                {#if cloud}
-                  <Button
-                    size="M"
-                    icon="Export"
-                    quiet
-                    secondary
-                    on:click={initiateAppsExport}
-                  >
-                    Export apps
-                  </Button>
-                {/if}
-                <div class="filter">
-                  {#if $licensing.groupsEnabled}
-                    <AccessFilter on:change={accessFilterAction} />
-                  {/if}
-                  <Select
-                    quiet
-                    autoWidth
-                    bind:value={sortBy}
-                    placeholder={null}
-                    options={[
-                      { label: "Sort by name", value: "name" },
-                      { label: "Sort by recently updated", value: "updated" },
-                      { label: "Sort by status", value: "status" },
-                    ]}
-                  />
-                  <Search placeholder="Search" bind:value={searchTerm} />
-                </div>
+                <Select
+                  autoWidth
+                  bind:value={sortBy}
+                  placeholder={null}
+                  options={[
+                    { label: "Sort by name", value: "name" },
+                    { label: "Sort by recently updated", value: "updated" },
+                    { label: "Sort by status", value: "status" },
+                  ]}
+                />
+                <Search placeholder="Search" bind:value={searchTerm} />
               </div>
             {/if}
           </div>
 
-          <div class="appTable" class:unlocked>
+          <div class="app-table">
             {#each filteredApps as app (app.appId)}
-              <AppRow {app} {editApp} {appOverview} />
+              <AppRow {app} lockedAction={usersLimitLockAction} />
             {/each}
           </div>
         </Layout>
       {/if}
-    {/if}
 
-    {#if creatingFromTemplate}
-      <div class="empty-wrapper">
-        <img class="img-logo img-size" alt="logo" src={Logo} />
-        <p>Creating your Budibase app from your selected template...</p>
-        <Spinner size="10" />
-      </div>
-    {/if}
-  </Layout>
-</Page>
+      {#if creatingFromTemplate}
+        <div class="empty-wrapper">
+          <img class="img-logo img-size" alt="logo" src={Logo} />
+          <p>Creating your Budibase app from your selected template...</p>
+          <Spinner size="10" />
+        </div>
+      {/if}
+    </Layout>
+  </Page>
+{/if}
 
 <Modal
   bind:this={creationModal}
@@ -425,25 +313,14 @@
   <CreateAppModal {template} />
 </Modal>
 
-<Modal bind:this={updatingModal} padding={false} width="600px">
-  <UpdateAppModal app={selectedApp} />
-</Modal>
-
 <AppLimitModal bind:this={appLimitModal} />
+<AccountLockedModal
+  bind:this={accountLockedModal}
+  onConfirm={() =>
+    isOwner ? $licensing.goToUpgradePage() : $licensing.goToPricingPage()}
+/>
 
 <style>
-  .appTable {
-    border-top: var(--border-light);
-  }
-  .app-actions {
-    display: flex;
-  }
-  .app-actions :global(> button) {
-    margin-right: 10px;
-  }
-  .title .welcome > .buttons {
-    padding-top: var(--spacing-l);
-  }
   .title {
     display: flex;
     flex-direction: row;
@@ -460,46 +337,26 @@
     gap: var(--spacing-xl);
     flex-wrap: wrap;
   }
-  @media (max-width: 1000px) {
-    .img-logo {
-      display: none;
-    }
-  }
-  .filter {
+  .app-actions {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xl);
+    flex-wrap: wrap;
   }
-  .appTable {
-    display: grid;
-    grid-template-rows: auto;
-    grid-template-columns: 1fr 1fr 1fr 1fr auto;
-    align-items: center;
+  .app-actions :global(.spectrum-Textfield) {
+    max-width: 180px;
   }
 
-  .appTable.unlocked {
-    grid-template-columns: 1fr 1fr auto 1fr auto;
+  .app-table {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-xl);
   }
 
-  .appTable :global(> div) {
-    height: 70px;
-    display: grid;
-    align-items: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .appTable :global(> div) {
-    border-bottom: var(--border-light);
-  }
-
-  @media (max-width: 640px) {
-    .appTable {
-      grid-template-columns: 1fr auto !important;
-    }
-  }
   .empty-wrapper {
     flex: 1 1 auto;
     height: 100%;
@@ -511,5 +368,27 @@
   .img-size {
     width: 160px;
     height: 160px;
+  }
+
+  @media (max-width: 1000px) {
+    .img-logo {
+      display: none;
+    }
+  }
+  @media (max-width: 640px) {
+    .app-actions {
+      margin-top: var(--spacing-xl);
+      margin-bottom: calc(-1 * var(--spacing-m));
+    }
+    .app-actions :global(.spectrum-Textfield) {
+      max-width: none;
+    }
+    /*  Hide download apps icon */
+    .app-actions :global(> .spectrum-Icon) {
+      display: none;
+    }
+    .app-actions > :global(*) {
+      flex: 1 1 auto;
+    }
   }
 </style>

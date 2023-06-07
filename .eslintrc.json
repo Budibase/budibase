@@ -16,7 +16,8 @@
     "dist",
     "public",
     "*.spec.js",
-    "bundle.js"
+    "bundle.js",
+    "packages/pro"
   ],
   "plugins": ["svelte3"],
   "extends": ["eslint:recommended"],

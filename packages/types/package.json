@@ -1,24 +1,37 @@
 {
   "name": "@budibase/types",
-  "version": "2.2.8",
+  "version": "0.0.0",
   "description": "Budibase types",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "types": "dist/mjs/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/mjs/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "tsc -p tsconfig.build.json",
-    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput"
+    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig-cjs.build.json",
+    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
+    "dev:builder": "yarn prebuild && concurrently \"tsc -p tsconfig.build.json --watch\" \"tsc -p tsconfig-cjs.build.json --watch\""
   },
   "jest": {},
   "devDependencies": {
-    "@budibase/nano": "10.1.1",
+    "@budibase/nano": "10.1.2",
     "@types/json5": "2.2.0",
     "@types/koa": "2.13.4",
     "@types/node": "14.18.20",
     "@types/pouchdb": "6.4.0",
+    "@types/redlock": "4.0.3",
+    "concurrently": "^7.6.0",
+    "koa-body": "4.2.0",
     "rimraf": "3.0.2",
     "typescript": "4.7.3"
+  },
+  "dependencies": {
+    "scim-patch": "^0.7.0"
   }
 }

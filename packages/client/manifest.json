@@ -17,10 +17,7 @@
     "description": "This component is specific only to layouts",
     "icon": "Sandbox",
     "hasChildren": true,
-    "styles": [
-      "padding",
-      "background"
-    ],
+    "styles": ["padding", "background"],
     "settings": [
       {
         "type": "text",
@@ -36,23 +33,14 @@
         "type": "select",
         "label": "Navigation",
         "key": "navigation",
-        "options": [
-          "Top",
-          "Left",
-          "None"
-        ],
+        "options": ["Top", "Left", "None"],
         "defaultValue": "Top"
       },
       {
         "type": "select",
         "label": "Width",
         "key": "width",
-        "options": [
-          "Small",
-          "Medium",
-          "Large",
-          "Max"
-        ],
+        "options": ["Small", "Medium", "Large", "Max"],
         "defaultValue": "Large"
       },
       {
@@ -89,13 +77,7 @@
       "width": 400,
       "height": 200
     },
-    "styles": [
-      "padding",
-      "size",
-      "background",
-      "border",
-      "shadow"
-    ],
+    "styles": ["padding", "size", "background", "border", "shadow"],
     "settings": [
       {
         "type": "select",
@@ -121,7 +103,7 @@
       },
       {
         "type": "select",
-        "label": "Horiz. Align",
+        "label": "Horiz. align",
         "key": "hAlign",
         "showInBar": true,
         "barStyle": "buttons",
@@ -155,7 +137,7 @@
       },
       {
         "type": "select",
-        "label": "Vert. Align",
+        "label": "Vert. align",
         "key": "vAlign",
         "showInBar": true,
         "barStyle": "buttons",
@@ -245,7 +227,7 @@
       },
       {
         "type": "event",
-        "label": "On Click",
+        "label": "On click",
         "key": "onClick"
       }
     ]
@@ -255,9 +237,7 @@
     "description": "Add a section to your application",
     "icon": "ColumnTwoB",
     "hasChildren": true,
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
     "showEmptyState": false,
     "size": {
       "width": 400,
@@ -317,7 +297,7 @@
             "value": "warning"
           },
           {
-            "label": "Over Background",
+            "label": "Over background",
             "value": "overBackground"
           }
         ],
@@ -367,7 +347,7 @@
       },
       {
         "type": "event",
-        "label": "On Click",
+        "label": "On click",
         "key": "onClick"
       }
     ]
@@ -376,9 +356,7 @@
     "name": "Divider",
     "description": "A basic divider",
     "icon": "Separator",
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
     "size": {
       "width": 400,
       "height": 10
@@ -415,9 +393,8 @@
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
     "icon": "JourneyData",
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
+    "requiredAncestors": ["dataprovider"],
     "hasChildren": true,
     "size": {
       "width": 400,
@@ -432,7 +409,7 @@
       },
       {
         "type": "text",
-        "label": "Empty Text",
+        "label": "Empty text",
         "key": "noRowsMessage",
         "defaultValue": "No rows found"
       },
@@ -460,7 +437,7 @@
       },
       {
         "type": "select",
-        "label": "Horiz. Align",
+        "label": "Horiz. align",
         "key": "hAlign",
         "showInBar": true,
         "barStyle": "buttons",
@@ -494,7 +471,7 @@
       },
       {
         "type": "select",
-        "label": "Vert. Align",
+        "label": "Vert. align",
         "key": "vAlign",
         "showInBar": true,
         "barStyle": "buttons",
@@ -561,7 +538,7 @@
         "type": "static",
         "values": [
           {
-            "label": "Row Index",
+            "label": "Row index",
             "key": "index",
             "type": "number"
           }
@@ -574,9 +551,7 @@
     "name": "Stacked List",
     "icon": "TaskList",
     "description": "A basic card component that can contain content and actions.",
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -606,9 +581,7 @@
     "name": "Vertical Card",
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewColumn",
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "text",
@@ -627,7 +600,7 @@
       },
       {
         "type": "text",
-        "label": "Link Text",
+        "label": "Link text",
         "key": "linkText"
       },
       {
@@ -638,38 +611,28 @@
       },
       {
         "type": "color",
-        "label": "Link Color",
+        "label": "Link color",
         "key": "linkColor",
         "defaultValue": "#000"
       },
       {
         "type": "color",
-        "label": "Hover Color",
+        "label": "Hover color",
         "key": "linkHoverColor",
         "defaultValue": "#222"
       },
       {
         "type": "select",
-        "label": "Image Height",
+        "label": "Image height",
         "key": "imageHeight",
-        "options": [
-          "auto",
-          "12rem",
-          "16rem",
-          "20rem",
-          "24rem"
-        ],
+        "options": ["auto", "12rem", "16rem", "20rem", "24rem"],
         "defaultValue": "auto"
       },
       {
         "type": "select",
-        "label": "Card Width",
+        "label": "Card width",
         "key": "cardWidth",
-        "options": [
-          "16rem",
-          "20rem",
-          "24rem"
-        ],
+        "options": ["16rem", "20rem", "24rem"],
         "defaultValue": "20rem"
       }
     ]
@@ -678,9 +641,7 @@
     "name": "Paragraph",
     "description": "A component for displaying paragraph text.",
     "icon": "TextParagraph",
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
     "editable": true,
     "size": {
       "width": 400,
@@ -701,7 +662,7 @@
         "barStyle": "picker",
         "options": [
           {
-            "label": "Extra Small",
+            "label": "Extra small",
             "value": "XS"
           },
           {
@@ -717,7 +678,7 @@
             "value": "L"
           },
           {
-            "label": "Extra Large",
+            "label": "Extra large",
             "value": "XL"
           },
           {
@@ -803,9 +764,7 @@
     "name": "Headline",
     "icon": "TextBold",
     "description": "A component for displaying heading text",
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
     "editable": true,
     "size": {
       "width": 400,
@@ -826,7 +785,7 @@
         "barStyle": "picker",
         "options": [
           {
-            "label": "Extra Small",
+            "label": "Extra small",
             "value": "XS"
           },
           {
@@ -842,7 +801,7 @@
             "value": "L"
           },
           {
-            "label": "Extra Large",
+            "label": "Extra large",
             "value": "XL"
           },
           {
@@ -967,12 +926,12 @@
       },
       {
         "type": "boolean",
-        "label": "Show delete icon",
+        "label": "Allow delete",
         "key": "closable"
       },
       {
         "type": "event",
-        "label": "On click delete icon",
+        "label": "On click delete",
         "key": "onClick",
         "dependsOn": "closable"
       }
@@ -982,9 +941,7 @@
     "name": "Image",
     "description": "A basic component for displaying images",
     "icon": "Image",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "size": {
       "width": 400,
       "height": 300
@@ -1002,9 +959,8 @@
     "name": "Background Image",
     "description": "A background image",
     "icon": "Images",
-    "styles": [
-      "size"
-    ],
+    "hasChildren": true,
+    "styles": ["size"],
     "size": {
       "width": 400,
       "height": 300
@@ -1023,7 +979,7 @@
         "defaultValue": "center center",
         "options": [
           {
-            "label": "Center Top",
+            "label": "Center top",
             "value": "center top"
           },
           {
@@ -1031,31 +987,31 @@
             "value": "center center"
           },
           {
-            "label": "Center Bottom",
+            "label": "Center bottom",
             "value": "center bottom"
           },
           {
-            "label": "Left Top",
+            "label": "Left top",
             "value": "left top"
           },
           {
-            "label": "Left Center",
+            "label": "Left center",
             "value": "left center"
           },
           {
-            "label": "Left Bottom",
+            "label": "Left bottom",
             "value": "left bottom"
           },
           {
-            "label": "Right Top",
+            "label": "Right top",
             "value": "right top"
           },
           {
-            "label": "Right Center",
+            "label": "Right center",
             "value": "right center"
           },
           {
-            "label": "Right Bottom",
+            "label": "Right bottom",
             "value": "right bottom"
           }
         ]
@@ -1152,7 +1108,7 @@
       },
       {
         "type": "event",
-        "label": "On Click",
+        "label": "On click",
         "key": "onClick"
       }
     ]
@@ -1162,9 +1118,7 @@
     "name": "Nav Bar",
     "description": "A component for handling the navigation within your app.",
     "icon": "BreadcrumbNavigation",
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
     "hasChildren": true,
     "settings": [
       {
@@ -1203,7 +1157,7 @@
       },
       {
         "type": "boolean",
-        "label": "New Tab",
+        "label": "New tab",
         "key": "openInNewTab"
       },
       {
@@ -1325,7 +1279,7 @@
       },
       {
         "type": "text",
-        "label": "Link Text",
+        "label": "Link text",
         "key": "linkText"
       },
       {
@@ -1336,19 +1290,19 @@
       },
       {
         "type": "color",
-        "label": "Link Color",
+        "label": "Link color",
         "key": "linkColor",
         "defaultValue": "#000"
       },
       {
         "type": "color",
-        "label": "Hover Color",
+        "label": "Hover color",
         "key": "linkHoverColor",
         "defaultValue": "#222"
       },
       {
         "type": "select",
-        "label": "Card Width",
+        "label": "Card width",
         "key": "cardWidth",
         "options": [
           "24rem",
@@ -1363,27 +1317,16 @@
       },
       {
         "type": "select",
-        "label": "Image Width",
+        "label": "Image width",
         "key": "imageWidth",
-        "options": [
-          "auto",
-          "8rem",
-          "12rem",
-          "16rem"
-        ],
+        "options": ["auto", "8rem", "12rem", "16rem"],
         "defaultValue": "8rem"
       },
       {
         "type": "select",
-        "label": "Image Height",
+        "label": "Image height",
         "key": "imageHeight",
-        "options": [
-          "auto",
-          "8rem",
-          "12rem",
-          "16rem",
-          "auto"
-        ],
+        "options": ["auto", "8rem", "12rem", "16rem", "auto"],
         "defaultValue": "auto"
       }
     ]
@@ -1424,9 +1367,7 @@
     "name": "Embed",
     "icon": "Code",
     "description": "Embed content from 3rd party sources",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "size": {
       "width": 400,
       "height": 100
@@ -1444,6 +1385,7 @@
     "name": "Bar Chart",
     "description": "Bar chart",
     "icon": "GraphBarVertical",
+    "requiredAncestors": ["dataprovider"],
     "size": {
       "width": 600,
       "height": 400
@@ -1462,14 +1404,14 @@
       },
       {
         "type": "field",
-        "label": "Label Col.",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "multifield",
-        "label": "Data Cols.",
+        "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
         "required": true
@@ -1478,21 +1420,17 @@
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": [
-          "Default",
-          "Thousands",
-          "Millions"
-        ],
+        "options": ["Default", "Thousands", "Millions"],
         "defaultValue": "Default"
       },
       {
         "type": "text",
-        "label": "Y Axis Label",
+        "label": "Y axis label",
         "key": "yAxisLabel"
       },
       {
         "type": "text",
-        "label": "X Axis Label",
+        "label": "X axis label",
         "key": "xAxisLabel"
       },
       {
@@ -1584,7 +1522,7 @@
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -1610,6 +1548,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -1624,14 +1563,14 @@
       },
       {
         "type": "field",
-        "label": "Label Col.",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "multifield",
-        "label": "Data Cols.",
+        "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
         "required": true
@@ -1640,21 +1579,17 @@
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": [
-          "Default",
-          "Thousands",
-          "Millions"
-        ],
+        "options": ["Default", "Thousands", "Millions"],
         "defaultValue": "Default"
       },
       {
         "type": "text",
-        "label": "Y Axis Label",
+        "label": "Y axis label",
         "key": "yAxisLabel"
       },
       {
         "type": "text",
-        "label": "X Axis Label",
+        "label": "X axis label",
         "key": "xAxisLabel"
       },
       {
@@ -1736,16 +1671,12 @@
         "type": "select",
         "label": "Curve",
         "key": "curve",
-        "options": [
-          "Smooth",
-          "Straight",
-          "Stepline"
-        ],
+        "options": ["Smooth", "Straight", "Stepline"],
         "defaultValue": "Smooth"
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -1771,6 +1702,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -1785,14 +1717,14 @@
       },
       {
         "type": "field",
-        "label": "Label Col.",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "multifield",
-        "label": "Data Cols.",
+        "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
         "required": true
@@ -1801,21 +1733,17 @@
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": [
-          "Default",
-          "Thousands",
-          "Millions"
-        ],
+        "options": ["Default", "Thousands", "Millions"],
         "defaultValue": "Default"
       },
       {
         "type": "text",
-        "label": "Y Axis Label",
+        "label": "Y axis label",
         "key": "yAxisLabel"
       },
       {
         "type": "text",
-        "label": "X Axis Label",
+        "label": "X axis label",
         "key": "xAxisLabel"
       },
       {
@@ -1897,16 +1825,12 @@
         "type": "select",
         "label": "Curve",
         "key": "curve",
-        "options": [
-          "Smooth",
-          "Straight",
-          "Stepline"
-        ],
+        "options": ["Smooth", "Straight", "Stepline"],
         "defaultValue": "Smooth"
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -1944,6 +1868,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -1958,14 +1883,14 @@
       },
       {
         "type": "field",
-        "label": "Label Col.",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "Data Col.",
+        "label": "Data columns",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
         "required": true
@@ -2047,7 +1972,7 @@
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -2073,6 +1998,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -2087,14 +2013,14 @@
       },
       {
         "type": "field",
-        "label": "Label Col.",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "Data Col.",
+        "label": "Data columns",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
         "required": true
@@ -2176,7 +2102,7 @@
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -2202,6 +2128,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -2216,35 +2143,35 @@
       },
       {
         "type": "field",
-        "label": "Date Col.",
+        "label": "Date column",
         "key": "dateColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "Open Col.",
+        "label": "Open column",
         "key": "openColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "Close Col.",
+        "label": "Close column",
         "key": "closeColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "High Col.",
+        "label": "High column",
         "key": "highColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
         "type": "field",
-        "label": "Low Col.",
+        "label": "Low column",
         "key": "lowColumn",
         "dependsOn": "dataProvider",
         "required": true
@@ -2253,21 +2180,17 @@
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": [
-          "Default",
-          "Thousands",
-          "Millions"
-        ],
+        "options": ["Default", "Thousands", "Millions"],
         "defaultValue": "Default"
       },
       {
         "type": "text",
-        "label": "Y Axis Label",
+        "label": "Y axis label",
         "key": "yAxisLabel"
       },
       {
         "type": "text",
-        "label": "X Axis Label",
+        "label": "X axis label",
         "key": "xAxisLabel"
       },
       {
@@ -2293,19 +2216,14 @@
     "name": "Form",
     "icon": "Form",
     "hasChildren": true,
-    "illegalChildren": [
-      "section",
-      "form"
-    ],
+    "illegalChildren": ["section", "form"],
     "actions": [
       "ValidateForm",
       "ClearForm",
       "ChangeFormStep",
       "UpdateFieldValue"
     ],
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "size": {
       "width": 400,
       "height": 400
@@ -2315,10 +2233,7 @@
         "type": "select",
         "label": "Type",
         "key": "actionType",
-        "options": [
-          "Create",
-          "Update"
-        ],
+        "options": ["Create", "Update"],
         "defaultValue": "Create"
       },
       {
@@ -2388,14 +2303,8 @@
     "name": "Form Step",
     "icon": "AssetsAdded",
     "hasChildren": true,
-    "illegalChildren": [
-      "section",
-      "form",
-      "form step"
-    ],
-    "styles": [
-      "size"
-    ],
+    "illegalChildren": ["section", "form", "form step"],
+    "styles": ["size"],
     "size": {
       "width": 400,
       "height": 400
@@ -2413,12 +2322,8 @@
   "fieldgroup": {
     "name": "Field Group",
     "icon": "Group",
-    "illegalChildren": [
-      "section"
-    ],
-    "styles": [
-      "size"
-    ],
+    "illegalChildren": ["section"],
+    "styles": ["size"],
     "hasChildren": true,
     "size": {
       "width": 400,
@@ -2448,12 +2353,10 @@
     ]
   },
   "stringfield": {
-    "skeleton": false,
     "name": "Text Field",
     "icon": "Text",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -2483,7 +2386,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -2540,12 +2443,10 @@
     ]
   },
   "numberfield": {
-    "skeleton": false,
     "name": "Number Field",
     "icon": "123",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -2575,7 +2476,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -2598,12 +2499,10 @@
     ]
   },
   "passwordfield": {
-    "skeleton": false,
     "name": "Password Field",
     "icon": "LockClosed",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -2633,7 +2532,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -2656,12 +2555,10 @@
     ]
   },
   "optionsfield": {
-    "skeleton": false,
     "name": "Options Picker",
     "icon": "Menu",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -2687,7 +2584,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -2750,7 +2647,7 @@
       },
       {
         "type": "boolean",
-        "label": "Sort in alphabetical order",
+        "label": "Alphabetical",
         "key": "sort",
         "defaultValue": true
       },
@@ -2783,7 +2680,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Options Provider",
+        "label": "Options provider",
         "key": "dataProvider",
         "required": true,
         "dependsOn": {
@@ -2793,7 +2690,7 @@
       },
       {
         "type": "field",
-        "label": "Label Column",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": {
           "setting": "optionsSource",
@@ -2802,7 +2699,7 @@
       },
       {
         "type": "field",
-        "label": "Value Column",
+        "label": "Value column",
         "key": "valueColumn",
         "dependsOn": {
           "setting": "optionsSource",
@@ -2825,12 +2722,10 @@
     ]
   },
   "multifieldselect": {
-    "skeleton": false,
     "name": "Multi-select Picker",
     "icon": "ViewList",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -2861,7 +2756,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -2946,7 +2841,7 @@
       },
       {
         "type": "dataProvider",
-        "label": "Options Provider",
+        "label": "Options provider",
         "key": "dataProvider",
         "required": true,
         "dependsOn": {
@@ -2956,7 +2851,7 @@
       },
       {
         "type": "field",
-        "label": "Label Column",
+        "label": "Label column",
         "key": "labelColumn",
         "dependsOn": {
           "setting": "optionsSource",
@@ -2965,7 +2860,7 @@
       },
       {
         "type": "field",
-        "label": "Value Column",
+        "label": "Value column",
         "key": "valueColumn",
         "dependsOn": {
           "setting": "optionsSource",
@@ -2988,10 +2883,10 @@
     ]
   },
   "booleanfield": {
-    "skeleton": false,
     "name": "Checkbox",
     "icon": "SelectBox",
     "editable": true,
+    "requiredAncestors": ["form"],
     "size": {
       "width": 20,
       "height": 20
@@ -3044,7 +2939,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3067,12 +2962,10 @@
     ]
   },
   "longformfield": {
-    "skeleton": false,
     "name": "Long Form Field",
     "icon": "TextAlignLeft",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3103,7 +2996,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3147,12 +3040,10 @@
     ]
   },
   "datetimefield": {
-    "skeleton": false,
     "name": "Date Picker",
     "icon": "Date",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3189,7 +3080,7 @@
       },
       {
         "type": "boolean",
-        "label": "24-Hour time",
+        "label": "24-hour time",
         "key": "time24hr",
         "defaultValue": false
       },
@@ -3206,7 +3097,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3229,19 +3120,16 @@
     ]
   },
   "codescanner": {
-    "skeleton": false,
     "name": "Barcode/QR Scanner",
     "icon": "Camera",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "size": {
       "width": 400,
       "height": 50
     },
     "settings": [
       {
-        "type": "field/barcode/qr",
+        "type": "field/barcodeqr",
         "label": "Field",
         "key": "field",
         "required": true
@@ -3269,7 +3157,7 @@
       },
       {
         "type": "boolean",
-        "label": "Allow manual entry",
+        "label": "Manual entry",
         "key": "allowManualEntry",
         "defaultValue": false
       },
@@ -3283,14 +3171,13 @@
   "embeddedmap": {
     "name": "Embedded Map",
     "icon": "Location",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "draggable": false,
     "size": {
       "width": 400,
       "height": 320
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "dataProvider",
@@ -3299,25 +3186,25 @@
       },
       {
         "type": "field",
-        "label": "Latitude Key",
+        "label": "Latitude key",
         "key": "latitudeKey",
         "dependsOn": "dataProvider"
       },
       {
         "type": "field",
-        "label": "Longitude Key",
+        "label": "Longitude key",
         "key": "longitudeKey",
         "dependsOn": "dataProvider"
       },
       {
         "type": "field",
-        "label": "Title Key",
+        "label": "Title key",
         "key": "titleKey",
         "dependsOn": "dataProvider"
       },
       {
         "type": "event",
-        "label": "On Click Marker",
+        "label": "On click marker",
         "key": "onClickMarker",
         "context": [
           {
@@ -3328,13 +3215,13 @@
       },
       {
         "type": "boolean",
-        "label": "Enable creating markers",
+        "label": "Enable adding",
         "key": "creationEnabled",
         "defaultValue": false
       },
       {
         "type": "event",
-        "label": "On Create Marker",
+        "label": "On create marker",
         "key": "onCreateMarker",
         "dependsOn": "creationEnabled",
         "context": [
@@ -3374,13 +3261,13 @@
       },
       {
         "type": "text",
-        "label": "Default Location (when empty)",
+        "label": "Default location",
         "key": "defaultLocation",
         "placeholder": "51.5072,-0.1276"
       },
       {
         "type": "number",
-        "label": "Default Location Zoom Level (0-100)",
+        "label": "Default zoom (0-100)",
         "key": "zoomLevel",
         "placeholder": 50,
         "max": 100,
@@ -3388,19 +3275,17 @@
       },
       {
         "type": "text",
-        "label": "Map Attribution",
+        "label": "Map attribution",
         "key": "mapAttribution",
         "defaultValue": "OpenStreetMap contributors"
       }
     ]
   },
   "attachmentfield": {
-    "skeleton": false,
     "name": "Attachment",
     "icon": "Attach",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3425,13 +3310,13 @@
       },
       {
         "type": "number",
-        "label": "No. of attachment",
+        "label": "Max attachments",
         "key": "maximum",
         "min": 1
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3439,6 +3324,12 @@
             "key": "value"
           }
         ]
+      },
+      {
+        "type": "boolean",
+        "label": "Compact",
+        "key": "compact",
+        "defaultValue": false
       },
       {
         "type": "boolean",
@@ -3454,12 +3345,10 @@
     ]
   },
   "relationshipfield": {
-    "skeleton": false,
     "name": "Relationship Picker",
     "icon": "TaskList",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3489,7 +3378,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3518,13 +3407,11 @@
     ]
   },
   "jsonfield": {
-    "skeleton": false,
     "name": "JSON Field",
     "icon": "Brackets",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "editable": true,
+    "requiredAncestors": ["form"],
     "size": {
       "width": 400,
       "height": 100
@@ -3553,7 +3440,7 @@
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3573,9 +3460,7 @@
   "s3upload": {
     "name": "S3 File Upload",
     "icon": "UploadToCloud",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "editable": true,
     "size": {
       "width": 400,
@@ -3595,7 +3480,7 @@
       },
       {
         "type": "dataSource/s3",
-        "label": "S3 Datasource",
+        "label": "S3 datasource",
         "key": "datasourceId",
         "info": "This component can't be used with S3 datasources that use custom endpoints"
       },
@@ -3606,12 +3491,12 @@
       },
       {
         "type": "text",
-        "label": "File Name",
+        "label": "File name",
         "key": "key"
       },
       {
         "type": "event",
-        "label": "On Change",
+        "label": "On change",
         "key": "onChange",
         "context": [
           {
@@ -3636,13 +3521,9 @@
   "dataprovider": {
     "name": "Data Provider",
     "icon": "Data",
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
     "hasChildren": true,
-    "actions": [
-      "RefreshDatasource"
-    ],
+    "actions": ["RefreshDatasource"],
     "size": {
       "width": 400,
       "height": 100
@@ -3661,17 +3542,14 @@
       },
       {
         "type": "field/sortable",
-        "label": "Sort Column",
+        "label": "Sort column",
         "key": "sortColumn"
       },
       {
         "type": "select",
-        "label": "Sort Order",
+        "label": "Sort order",
         "key": "sortOrder",
-        "options": [
-          "Ascending",
-          "Descending"
-        ],
+        "options": ["Ascending", "Descending"],
         "defaultValue": "Ascending"
       },
       {
@@ -3720,12 +3598,10 @@
     }
   },
   "table": {
-    "skeleton": false,
     "name": "Table",
     "icon": "Table",
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
+    "requiredAncestors": ["dataprovider"],
     "hasChildren": true,
     "showEmptyState": false,
     "size": {
@@ -3780,12 +3656,17 @@
       },
       {
         "type": "boolean",
-        "label": "Allow row selection",
+        "label": "Row selection",
         "key": "allowSelectRows",
         "defaultValue": false,
         "info": "Row selection is only compatible with internal or SQL tables"
       },
-
+      {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No rows found"
+      },
       {
         "section": true,
         "name": "On Row Click",
@@ -3810,9 +3691,8 @@
   "daterangepicker": {
     "name": "Date Range",
     "icon": "Calendar",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
+    "requiredAncestors": ["dataprovider"],
     "hasChildren": false,
     "size": {
       "width": 200,
@@ -3851,9 +3731,7 @@
   "spectrumcard": {
     "name": "Card",
     "icon": "PersonalizationField",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "size": {
       "width": 300,
       "height": 120
@@ -3890,7 +3768,7 @@
       {
         "type": "boolean",
         "key": "linkPeek",
-        "label": "Open link in modal"
+        "label": "Open in modal"
       },
       {
         "type": "boolean",
@@ -3899,7 +3777,7 @@
       },
       {
         "type": "boolean",
-        "label": "Use button for click action",
+        "label": "Show button",
         "key": "showButton"
       },
       {
@@ -3922,6 +3800,7 @@
       "width": 100,
       "height": 35
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "dataProvider",
@@ -3970,7 +3849,7 @@
     "settings": [
       {
         "type": "select",
-        "label": "Chart Type",
+        "label": "Chart type",
         "key": "chartType",
         "required": true,
         "options": [
@@ -4014,21 +3893,19 @@
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "nested": true
       },
       {
         "type": "field",
-        "label": "Sort Column",
+        "label": "Sort column",
         "key": "sortColumn"
       },
       {
         "type": "select",
-        "label": "Sort Order",
+        "label": "Sort order",
         "key": "sortOrder",
-        "options": [
-          "Ascending",
-          "Descending"
-        ],
+        "options": ["Ascending", "Descending"],
         "defaultValue": "Ascending"
       },
       {
@@ -4114,7 +3991,7 @@
       },
       {
         "type": "boolean",
-        "label": "Data Labels",
+        "label": "Data labels",
         "key": "dataLabels",
         "defaultValue": false
       },
@@ -4141,14 +4018,14 @@
         "settings": [
           {
             "type": "field",
-            "label": "Label Col.",
+            "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "Data Col.",
+            "label": "Data column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
             "required": true
@@ -4166,14 +4043,14 @@
         "settings": [
           {
             "type": "field",
-            "label": "Label Col.",
+            "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "Data Col.",
+            "label": "Data column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
             "required": true
@@ -4191,14 +4068,14 @@
         "settings": [
           {
             "type": "field",
-            "label": "Label Col.",
+            "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "multifield",
-            "label": "Data Cols.",
+            "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
             "required": true
@@ -4207,21 +4084,17 @@
             "type": "select",
             "label": "Format",
             "key": "yAxisUnits",
-            "options": [
-              "Default",
-              "Thousands",
-              "Millions"
-            ],
+            "options": ["Default", "Thousands", "Millions"],
             "defaultValue": "Default"
           },
           {
             "type": "text",
-            "label": "Y Axis Label",
+            "label": "Y axis label",
             "key": "yAxisLabel"
           },
           {
             "type": "text",
-            "label": "X Axis Label",
+            "label": "X axis label",
             "key": "xAxisLabel"
           },
           {
@@ -4249,14 +4122,14 @@
         "settings": [
           {
             "type": "field",
-            "label": "Label Col.",
+            "label": "Label column",
             "key": "labelColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "multifield",
-            "label": "Data Cols.",
+            "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
             "required": true
@@ -4265,32 +4138,24 @@
             "type": "select",
             "label": "Format",
             "key": "yAxisUnits",
-            "options": [
-              "Default",
-              "Thousands",
-              "Millions"
-            ],
+            "options": ["Default", "Thousands", "Millions"],
             "defaultValue": "Default"
           },
           {
             "type": "text",
-            "label": "Y Axis Label",
+            "label": "Y axis label",
             "key": "yAxisLabel"
           },
           {
             "type": "text",
-            "label": "X Axis Label",
+            "label": "X axis label",
             "key": "xAxisLabel"
           },
           {
             "type": "select",
             "label": "Curve",
             "key": "curve",
-            "options": [
-              "Smooth",
-              "Straight",
-              "Stepline"
-            ],
+            "options": ["Smooth", "Straight", "Stepline"],
             "defaultValue": "Smooth"
           }
         ]
@@ -4306,14 +4171,14 @@
         "settings": [
           {
             "type": "field",
-            "label": "Label Col.",
+            "label": "Label columns",
             "key": "labelColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "multifield",
-            "label": "Data Cols.",
+            "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
             "required": true
@@ -4322,32 +4187,24 @@
             "type": "select",
             "label": "Format",
             "key": "yAxisUnits",
-            "options": [
-              "Default",
-              "Thousands",
-              "Millions"
-            ],
+            "options": ["Default", "Thousands", "Millions"],
             "defaultValue": "Default"
           },
           {
             "type": "text",
-            "label": "Y Axis Label",
+            "label": "Y axis label",
             "key": "yAxisLabel"
           },
           {
             "type": "text",
-            "label": "X Axis Label",
+            "label": "X axis label",
             "key": "xAxisLabel"
           },
           {
             "type": "select",
             "label": "Curve",
             "key": "curve",
-            "options": [
-              "Smooth",
-              "Straight",
-              "Stepline"
-            ],
+            "options": ["Smooth", "Straight", "Stepline"],
             "defaultValue": "Smooth"
           },
           {
@@ -4375,35 +4232,35 @@
         "settings": [
           {
             "type": "field",
-            "label": "Date Col.",
+            "label": "Date column",
             "key": "dateColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "Open Col.",
+            "label": "Open column",
             "key": "openColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "Close Col.",
+            "label": "Close column",
             "key": "closeColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "High Col.",
+            "label": "High column",
             "key": "highColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
             "type": "field",
-            "label": "Low Col.",
+            "label": "Low column",
             "key": "lowColumn",
             "dependsOn": "dataSource",
             "required": true
@@ -4412,21 +4269,17 @@
             "type": "select",
             "label": "Format",
             "key": "yAxisUnits",
-            "options": [
-              "Default",
-              "Thousands",
-              "Millions"
-            ],
+            "options": ["Default", "Thousands", "Millions"],
             "defaultValue": "Default"
           },
           {
             "type": "text",
-            "label": "Y Axis Label",
+            "label": "Y axis label",
             "key": "yAxisLabel"
           },
           {
             "type": "text",
-            "label": "X Axis Label",
+            "label": "X axis label",
             "key": "xAxisLabel"
           }
         ]
@@ -4437,9 +4290,7 @@
     "block": true,
     "name": "Table block",
     "icon": "Table",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "size": {
       "width": 600,
       "height": 400
@@ -4462,7 +4313,7 @@
           },
           {
             "type": "columns",
-            "label": "Table Columns",
+            "label": "Columns",
             "key": "tableColumns",
             "dependsOn": "dataSource",
             "placeholder": "All columns",
@@ -4470,17 +4321,14 @@
           },
           {
             "type": "field/sortable",
-            "label": "Sort By",
+            "label": "Sort by",
             "key": "sortColumn"
           },
           {
             "type": "select",
-            "label": "Sort Order",
+            "label": "Sort order",
             "key": "sortOrder",
-            "options": [
-              "Ascending",
-              "Descending"
-            ],
+            "options": ["Ascending", "Descending"],
             "defaultValue": "Ascending"
           },
           {
@@ -4501,7 +4349,7 @@
           },
           {
             "type": "number",
-            "label": "Scroll Limit",
+            "label": "Scroll limit",
             "key": "rowCount",
             "defaultValue": 8
           },
@@ -4523,21 +4371,28 @@
           },
           {
             "type": "boolean",
-            "label": "Allow row selection",
+            "label": "Row selection",
             "key": "allowSelectRows",
             "info": "Row selection is only compatible with internal or SQL tables"
           },
           {
             "type": "filter",
             "label": "Filtering",
-            "key": "filter"
+            "key": "filter",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "label": "Empty text",
+            "key": "noRowsMessage",
+            "defaultValue": "No rows found"
           },
           {
             "type": "searchfield",
-            "label": "Search Fields",
+            "label": "Search fields",
             "key": "searchColumns",
             "placeholder": "Choose search fields",
-            "info": "Only the first 5 search fields will be used"
+            "info": "Only the first 5 fields will be used"
           }
         ]
       },
@@ -4546,6 +4401,8 @@
         "name": "On row click",
         "settings": [
           {
+            "label": "Behaviour",
+            "labelHidden": true,
             "type": "radio",
             "key": "clickBehaviour",
             "sendEvents": true,
@@ -4563,6 +4420,8 @@
             ]
           },
           {
+            "label": "Actions",
+            "labelHidden": true,
             "type": "event",
             "key": "onClick",
             "nested": true,
@@ -4576,6 +4435,48 @@
                 "key": "row"
               }
             ]
+          },
+          {
+            "label": "Fields",
+            "type": "fieldConfiguration",
+            "key": "sidePanelFields",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
+          },
+          {
+            "label": "Show delete",
+            "type": "boolean",
+            "key": "sidePanelShowDelete",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
+          },
+          {
+            "label": "Save label",
+            "type": "text",
+            "key": "sidePanelSaveLabel",
+            "defaultValue": "Save",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
+          },
+          {
+            "label": "Delete label",
+            "type": "text",
+            "key": "sidePanelDeleteLabel",
+            "defaultValue": "Delete",
+            "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
           }
         ]
       },
@@ -4586,7 +4487,7 @@
           {
             "type": "boolean",
             "key": "showTitleButton",
-            "label": "Show button above table",
+            "label": "Show button",
             "defaultValue": false
           },
           {
@@ -4599,7 +4500,7 @@
           {
             "type": "radio",
             "key": "titleButtonClickBehaviour",
-            "label": "On Click",
+            "label": "Behaviour",
             "dependsOn": "showTitleButton",
             "defaultValue": "actions",
             "info": "New row side panel is only compatible with internal or SQL tables",
@@ -4616,6 +4517,7 @@
           },
           {
             "type": "event",
+            "label": "On click",
             "key": "onClickTitleButton",
             "nested": true,
             "dependsOn": {
@@ -4631,9 +4533,7 @@
     "block": true,
     "name": "Cards block",
     "icon": "PersonalizationField",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "size": {
       "width": 600,
       "height": 400
@@ -4652,29 +4552,27 @@
       },
       {
         "type": "searchfield",
-        "label": "Search Columns",
+        "label": "Search columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns",
-        "info": "Only the first 5 search columns will be used"
+        "info": "Max 5 columns will be used"
       },
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "nested": true
       },
       {
         "type": "field/sortable",
-        "label": "Sort Column",
+        "label": "Sort column",
         "key": "sortColumn"
       },
       {
         "type": "select",
-        "label": "Sort Order",
+        "label": "Sort order",
         "key": "sortOrder",
-        "options": [
-          "Ascending",
-          "Descending"
-        ],
+        "options": ["Ascending", "Descending"],
         "defaultValue": "Descending"
       },
       {
@@ -4687,6 +4585,12 @@
         "type": "boolean",
         "label": "Paginate",
         "key": "paginate"
+      },
+      {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No rows found"
       },
       {
         "section": true,
@@ -4727,7 +4631,7 @@
           {
             "type": "boolean",
             "key": "cardPeek",
-            "label": "Open link in modal"
+            "label": "Open in modal"
           },
           {
             "type": "url",
@@ -4742,7 +4646,7 @@
           },
           {
             "type": "boolean",
-            "label": "Use button for click action",
+            "label": "Add button",
             "key": "showCardButton"
           },
           {
@@ -4767,11 +4671,11 @@
           {
             "type": "boolean",
             "key": "showTitleButton",
-            "label": "Show link button"
+            "label": "Show button"
           },
           {
             "type": "boolean",
-            "label": "Open link in modal",
+            "label": "Open in modal",
             "key": "titleButtonPeek"
           },
           {
@@ -4792,7 +4696,7 @@
         "settings": [
           {
             "type": "field",
-            "label": "ID column for linking (appended to URL)",
+            "label": "ID column",
             "key": "linkColumn",
             "placeholder": "Default"
           }
@@ -4808,9 +4712,7 @@
     "block": true,
     "name": "Repeater block",
     "icon": "ViewList",
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
     "hasChildren": true,
     "size": {
       "width": 400,
@@ -4826,21 +4728,19 @@
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "filter",
+        "nested": true
       },
       {
         "type": "field/sortable",
-        "label": "Sort Column",
+        "label": "Sort column",
         "key": "sortColumn"
       },
       {
         "type": "select",
-        "label": "Sort Order",
+        "label": "Sort order",
         "key": "sortOrder",
-        "options": [
-          "Ascending",
-          "Descending"
-        ],
+        "options": ["Ascending", "Descending"],
         "defaultValue": "Descending"
       },
       {
@@ -4860,7 +4760,7 @@
         "settings": [
           {
             "type": "text",
-            "label": "Empty Text",
+            "label": "Empty text",
             "key": "noRowsMessage",
             "defaultValue": "No rows found"
           },
@@ -4888,7 +4788,7 @@
           },
           {
             "type": "select",
-            "label": "Horiz. Align",
+            "label": "Horiz. align",
             "key": "hAlign",
             "showInBar": true,
             "barStyle": "buttons",
@@ -4922,7 +4822,7 @@
           },
           {
             "type": "select",
-            "label": "Vert. Align",
+            "label": "Vert. align",
             "key": "vAlign",
             "showInBar": true,
             "barStyle": "buttons",
@@ -5035,9 +4935,7 @@
   "markdownviewer": {
     "name": "Markdown Viewer",
     "icon": "Preview",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "size": {
       "width": 400,
       "height": 100
@@ -5054,9 +4952,7 @@
   "formblock": {
     "name": "Form Block",
     "icon": "Form",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "block": true,
     "info": "Form blocks are only compatible with internal or SQL tables",
     "size": {
@@ -5068,11 +4964,7 @@
         "type": "select",
         "label": "Type",
         "key": "actionType",
-        "options": [
-          "Create",
-          "Update",
-          "View"
-        ],
+        "options": ["Create", "Update", "View"],
         "defaultValue": "Create"
       },
       {
@@ -5114,11 +5006,22 @@
         "defaultValue": "spectrum--medium"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "We couldn't find a row to display",
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "Create",
+          "invert": true
+        }
+      },
+      {
         "section": true,
         "name": "Fields",
         "settings": [
           {
-            "type": "multifield",
+            "type": "fieldConfiguration",
             "label": "Fields",
             "key": "fields",
             "selectAllFields": true
@@ -5168,13 +5071,35 @@
             }
           },
           {
+            "type": "text",
+            "key": "saveButtonLabel",
+            "label": "Save button label",
+            "nested": true,
+            "defaultValue": "Save",
+            "dependsOn": {
+              "setting": "showSaveButton",
+              "value": true
+            }
+          },
+          {
             "type": "boolean",
-            "label": "Show delete button",
+            "label": "Allow delete",
             "key": "showDeleteButton",
             "defaultValue": false,
             "dependsOn": {
               "setting": "actionType",
               "value": "Update"
+            }
+          },
+          {
+            "type": "text",
+            "key": "deleteButtonLabel",
+            "label": "Delete button label",
+            "nested": true,
+            "defaultValue": "Delete",
+            "dependsOn": {
+              "setting": "showDeleteButton",
+              "value": true
             }
           },
           {
@@ -5206,10 +5131,7 @@
     "name": "Side Panel",
     "icon": "RailRight",
     "hasChildren": true,
-    "illegalChildren": [
-      "section",
-      "sidepanel"
-    ],
+    "illegalChildren": ["section", "sidepanel"],
     "showEmptyState": false,
     "draggable": false,
     "info": "Side panels are hidden by default. They will only be revealed when triggered by the 'Open Side Panel' action."
@@ -5236,12 +5158,18 @@
         "defaultValue": "426px"
       },
       {
+        "type": "text",
+        "label": "Empty text",
+        "key": "noRowsMessage",
+        "defaultValue": "No data"
+      },
+      {
         "section": true,
         "name": "Cards",
         "settings": [
           {
             "type": "field",
-            "label": "Search Field",
+            "label": "Search field",
             "key": "cardSearchField",
             "nested": true
           },

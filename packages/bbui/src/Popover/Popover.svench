@@ -29,7 +29,6 @@
     font-size: var(--font-size-m);
     margin: 0 0 var(--spacing-l) 0;
     font-weight: 600;
-    font-family: var(--font-sans);
   }
 
   .input-group-column {

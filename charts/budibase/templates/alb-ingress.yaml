@@ -14,6 +14,12 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
     alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }} 
     {{- end }}
+    {{- if .Values.ingress.sslPolicy }}
+    alb.ingress.kubernetes.io/actions.ssl-policy: {{ .Values.ingress.sslPolicy }}
+    {{- end }}
+    {{- if .Values.ingress.securityGroups }}
+    alb.ingress.kubernetes.io/security-groups: {{ .Values.ingress.securityGroups }}
+    {{- end }}
 spec:
   rules:
     - http:

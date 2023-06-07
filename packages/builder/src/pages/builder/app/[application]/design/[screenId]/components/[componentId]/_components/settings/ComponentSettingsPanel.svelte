@@ -10,6 +10,8 @@
     getBindableProperties,
     getComponentBindableProperties,
   } from "builderStore/dataBinding"
+  import { ActionButton } from "@budibase/bbui"
+  import { capitalise } from "helpers"
 
   $: componentInstance = $selectedComponent
   $: componentDefinition = store.actions.components.getDefinition(
@@ -25,32 +27,69 @@
   )
   $: isScreen = $selectedComponent?._id === $selectedScreen?.props._id
   $: title = isScreen ? "Screen" : $selectedComponent?._instanceName
+
+  let section = "settings"
+  const tabs = ["settings", "styles", "conditions"]
+
+  $: id = $selectedComponent?._id
+  $: id, (section = tabs[0])
 </script>
 
 {#if $selectedComponent}
   {#key $selectedComponent._id}
-    <Panel {title} icon={componentDefinition?.icon} borderLeft>
-      {#if componentDefinition.info}
-        <ComponentInfoSection {componentDefinition} />
+    <Panel {title} icon={componentDefinition?.icon} borderLeft wide>
+      <span slot="panel-header-content">
+        <div class="settings-tabs">
+          {#each tabs as tab}
+            <ActionButton
+              size="M"
+              quiet
+              selected={section === tab}
+              on:click={() => {
+                section = tab
+              }}
+            >
+              {capitalise(tab)}
+            </ActionButton>
+          {/each}
+        </div>
+      </span>
+      {#if section == "settings"}
+        {#if componentDefinition?.info}
+          <ComponentInfoSection {componentDefinition} />
+        {/if}
+        <ComponentSettingsSection
+          {componentInstance}
+          {componentDefinition}
+          {bindings}
+          {componentBindings}
+          {isScreen}
+        />
       {/if}
-      <ComponentSettingsSection
-        {componentInstance}
-        {componentDefinition}
-        {bindings}
-        {componentBindings}
-        {isScreen}
-      />
-      <DesignSection {componentInstance} {componentDefinition} {bindings} />
-      <CustomStylesSection
-        {componentInstance}
-        {componentDefinition}
-        {bindings}
-      />
-      <ConditionalUISection
-        {componentInstance}
-        {componentDefinition}
-        {bindings}
-      />
+      {#if section == "styles"}
+        <DesignSection {componentInstance} {componentDefinition} {bindings} />
+        <CustomStylesSection
+          {componentInstance}
+          {componentDefinition}
+          {bindings}
+        />
+      {/if}
+      {#if section == "conditions"}
+        <ConditionalUISection
+          {componentInstance}
+          {componentDefinition}
+          {bindings}
+        />
+      {/if}
     </Panel>
   {/key}
 {/if}
+
+<style>
+  .settings-tabs {
+    display: flex;
+    gap: var(--spacing-s);
+    padding: 0 var(--spacing-l);
+    padding-bottom: var(--spacing-l);
+  }
+</style>

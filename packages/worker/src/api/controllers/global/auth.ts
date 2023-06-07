@@ -1,65 +1,85 @@
 import {
-  auth,
+  auth as authCore,
   constants,
   context,
-  db as dbCore,
   events,
-  tenancy,
-  users as usersCore,
-  utils,
+  utils as utilsCore,
+  configs,
 } from "@budibase/backend-core"
-import { EmailTemplatePurpose } from "../../../constants"
-import { isEmailConfigured, sendEmail } from "../../../utilities/email"
-import { checkResetPasswordCode } from "../../../utilities/redis"
+import {
+  ConfigType,
+  User,
+  Ctx,
+  LoginRequest,
+  SSOUser,
+  PasswordResetRequest,
+  PasswordResetUpdateRequest,
+  GoogleInnerConfig,
+} from "@budibase/types"
 import env from "../../../environment"
-import sdk from "../../../sdk"
-import { Config, ConfigType, User } from "@budibase/types"
 
-const { setCookie, getCookie, clearCookie, hash, platformLogout } = utils
+import * as authSdk from "../../../sdk/auth"
+import * as userSdk from "../../../sdk/users"
+
 const { Cookie, Header } = constants
-const { passport, ssoCallbackUrl, google, oidc } = auth
+const { passport, ssoCallbackUrl, google, oidc } = authCore
+const { setCookie, getCookie, clearCookie } = utilsCore
 
-export async function googleCallbackUrl(config?: { callbackURL?: string }) {
-  return ssoCallbackUrl(tenancy.getGlobalDB(), config, ConfigType.GOOGLE)
-}
+// LOGIN / LOGOUT
 
-export async function oidcCallbackUrl(config?: { callbackURL?: string }) {
-  return ssoCallbackUrl(tenancy.getGlobalDB(), config, ConfigType.OIDC)
-}
-
-async function authInternal(ctx: any, user: any, err = null, info = null) {
+async function passportCallback(
+  ctx: Ctx,
+  user: User,
+  err: any = null,
+  info: { message: string } | null = null
+) {
   if (err) {
-    console.error("Authentication error", err)
+    console.error("Authentication error")
+    console.error(err)
+    console.trace(err)
+    return ctx.throw(403, info ? info : "Unauthorized")
+  }
+  if (!user) {
+    console.error("Authentication error - no user provided")
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
-  if (!user) {
-    return ctx.throw(403, info ? info : "Unauthorized")
-  }
+  const token = await authSdk.loginUser(user)
 
   // set a cookie for browser access
-  setCookie(ctx, user.token, Cookie.Auth, { sign: false })
+  setCookie(ctx, token, Cookie.Auth, { sign: false })
   // set the token in a header as well for APIs
-  ctx.set(Header.TOKEN, user.token)
-  // get rid of any app cookies on login
-  // have to check test because this breaks cypress
-  if (!env.isTest()) {
-    clearCookie(ctx, Cookie.CurrentApp)
-  }
+  ctx.set(Header.TOKEN, token)
 }
 
-export const authenticate = async (ctx: any, next: any) => {
+export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
+  const email = ctx.request.body.username
+
+  const user = await userSdk.getUserByEmail(email)
+  if (user && (await userSdk.isPreventPasswordActions(user))) {
+    ctx.throw(403, "Invalid credentials")
+  }
+
   return passport.authenticate(
     "local",
     async (err: any, user: User, info: any) => {
-      await authInternal(ctx, user, err, info)
-      await context.identity.doInUserContext(user, async () => {
-        await events.auth.login("local")
+      await passportCallback(ctx, user, err, info)
+      await context.identity.doInUserContext(user, ctx, async () => {
+        await events.auth.login("local", user.email)
       })
       ctx.status = 200
     }
   )(ctx, next)
 }
+
+export const logout = async (ctx: any) => {
+  if (ctx.user && ctx.user._id) {
+    await authSdk.logout({ ctx, userId: ctx.user._id })
+  }
+  ctx.body = { message: "User logged out." }
+}
+
+// INIT
 
 export const setInitInfo = (ctx: any) => {
   const initInfo = ctx.request.body
@@ -76,32 +96,16 @@ export const getInitInfo = (ctx: any) => {
   }
 }
 
+// PASSWORD MANAGEMENT
+
 /**
  * Reset the user password, used as part of a forgotten password flow.
  */
-export const reset = async (ctx: any) => {
+export const reset = async (ctx: Ctx<PasswordResetRequest>) => {
   const { email } = ctx.request.body
-  const configured = await isEmailConfigured()
-  if (!configured) {
-    ctx.throw(
-      400,
-      "Please contact your platform administrator, SMTP is not configured."
-    )
-  }
-  try {
-    const user = (await usersCore.getGlobalUserByEmail(email)) as User
-    // only if user exists, don't error though if they don't
-    if (user) {
-      await sendEmail(email, EmailTemplatePurpose.PASSWORD_RECOVERY, {
-        user,
-        subject: "{{ company }} platform password reset",
-      })
-      await events.user.passwordResetRequested(user)
-    }
-  } catch (err) {
-    console.log(err)
-    // don't throw any kind of error to the user, this might give away something
-  }
+
+  await authSdk.reset(email)
+
   ctx.body = {
     message: "Please check your email for a reset link.",
   }
@@ -110,32 +114,21 @@ export const reset = async (ctx: any) => {
 /**
  * Perform the user password update if the provided reset code is valid.
  */
-export const resetUpdate = async (ctx: any) => {
+export const resetUpdate = async (ctx: Ctx<PasswordResetUpdateRequest>) => {
   const { resetCode, password } = ctx.request.body
   try {
-    const { userId } = await checkResetPasswordCode(resetCode)
-    const db = tenancy.getGlobalDB()
-    const user = await db.get(userId)
-    user.password = await hash(password)
-    await db.put(user)
+    await authSdk.resetUpdate(resetCode, password)
     ctx.body = {
       message: "password reset successfully.",
     }
-    // remove password from the user before sending events
-    delete user.password
-    await events.user.passwordReset(user)
   } catch (err) {
-    console.error(err)
+    console.warn(err)
+    // hide any details of the error for security
     ctx.throw(400, "Cannot reset password.")
   }
 }
 
-export const logout = async (ctx: any) => {
-  if (ctx.user && ctx.user._id) {
-    await platformLogout({ ctx, userId: ctx.user._id })
-  }
-  ctx.body = { message: "User logged out." }
-}
+// DATASOURCE
 
 export const datasourcePreAuth = async (ctx: any, next: any) => {
   const provider = ctx.params.provider
@@ -163,22 +156,26 @@ export const datasourceAuth = async (ctx: any, next: any) => {
   return handler.postAuth(passport, ctx, next)
 }
 
+// GOOGLE SSO
+
+export async function googleCallbackUrl(config?: GoogleInnerConfig) {
+  return ssoCallbackUrl(ConfigType.GOOGLE, config)
+}
+
 /**
  * The initial call that google authentication makes to take you to the google login screen.
  * On a successful login, you will be redirected to the googleAuth callback route.
  */
 export const googlePreAuth = async (ctx: any, next: any) => {
-  const db = tenancy.getGlobalDB()
-
-  const config = await dbCore.getScopedConfig(db, {
-    type: ConfigType.GOOGLE,
-    workspace: ctx.query.workspace,
-  })
+  const config = await configs.getGoogleConfig()
+  if (!config) {
+    return ctx.throw(400, "Google config not found")
+  }
   let callbackUrl = await googleCallbackUrl(config)
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
-    sdk.users.save
+    userSdk.save
   )
 
   return passport.authenticate(strategy, {
@@ -188,72 +185,74 @@ export const googlePreAuth = async (ctx: any, next: any) => {
   })(ctx, next)
 }
 
-export const googleAuth = async (ctx: any, next: any) => {
-  const db = tenancy.getGlobalDB()
-
-  const config = await dbCore.getScopedConfig(db, {
-    type: ConfigType.GOOGLE,
-    workspace: ctx.query.workspace,
-  })
+export const googleCallback = async (ctx: any, next: any) => {
+  const config = await configs.getGoogleConfig()
+  if (!config) {
+    return ctx.throw(400, "Google config not found")
+  }
   const callbackUrl = await googleCallbackUrl(config)
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
-    sdk.users.save
+    userSdk.save
   )
 
   return passport.authenticate(
     strategy,
-    { successRedirect: "/", failureRedirect: "/error" },
-    async (err: any, user: User, info: any) => {
-      await authInternal(ctx, user, err, info)
-      await context.identity.doInUserContext(user, async () => {
-        await events.auth.login("google-internal")
+    {
+      successRedirect: env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT,
+      failureRedirect: env.PASSPORT_GOOGLEAUTH_FAILURE_REDIRECT,
+    },
+    async (err: any, user: SSOUser, info: any) => {
+      await passportCallback(ctx, user, err, info)
+      await context.identity.doInUserContext(user, ctx, async () => {
+        await events.auth.login("google-internal", user.email)
       })
-      ctx.redirect("/")
+      ctx.redirect(env.PASSPORT_GOOGLEAUTH_SUCCESS_REDIRECT)
     }
   )(ctx, next)
 }
 
-export const oidcStrategyFactory = async (ctx: any, configId: any) => {
-  const db = tenancy.getGlobalDB()
-  const config = await dbCore.getScopedConfig(db, {
-    type: ConfigType.OIDC,
-    group: ctx.query.group,
-  })
+// OIDC SSO
 
-  const chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
-  let callbackUrl = await oidcCallbackUrl(chosenConfig)
+export async function oidcCallbackUrl() {
+  return ssoCallbackUrl(ConfigType.OIDC)
+}
+
+export const oidcStrategyFactory = async (ctx: any, configId: any) => {
+  const config = await configs.getOIDCConfig()
+  if (!config) {
+    return ctx.throw(400, "OIDC config not found")
+  }
+
+  let callbackUrl = await oidcCallbackUrl()
 
   //Remote Config
-  const enrichedConfig = await oidc.fetchStrategyConfig(
-    chosenConfig,
-    callbackUrl
-  )
-  return oidc.strategyFactory(enrichedConfig, sdk.users.save)
+  const enrichedConfig = await oidc.fetchStrategyConfig(config, callbackUrl)
+  return oidc.strategyFactory(enrichedConfig, userSdk.save)
 }
 
 /**
  * The initial call that OIDC authentication makes to take you to the configured OIDC login screen.
  * On a successful login, you will be redirected to the oidcAuth callback route.
  */
-export const oidcPreAuth = async (ctx: any, next: any) => {
+export const oidcPreAuth = async (ctx: Ctx, next: any) => {
   const { configId } = ctx.params
+  if (!configId) {
+    ctx.throw(400, "OIDC config id is required")
+  }
   const strategy = await oidcStrategyFactory(ctx, configId)
 
   setCookie(ctx, configId, Cookie.OIDC_CONFIG)
 
-  const db = tenancy.getGlobalDB()
-  const config = await dbCore.getScopedConfig(db, {
-    type: ConfigType.OIDC,
-    group: ctx.query.group,
-  })
-
-  const chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
+  const config = await configs.getOIDCConfigById(configId)
+  if (!config) {
+    return ctx.throw(400, "OIDC config not found")
+  }
 
   let authScopes =
-    chosenConfig.scopes?.length > 0
-      ? chosenConfig.scopes
+    config.scopes?.length > 0
+      ? config.scopes
       : ["profile", "email", "offline_access"]
 
   return passport.authenticate(strategy, {
@@ -262,19 +261,22 @@ export const oidcPreAuth = async (ctx: any, next: any) => {
   })(ctx, next)
 }
 
-export const oidcAuth = async (ctx: any, next: any) => {
+export const oidcCallback = async (ctx: any, next: any) => {
   const configId = getCookie(ctx, Cookie.OIDC_CONFIG)
   const strategy = await oidcStrategyFactory(ctx, configId)
 
   return passport.authenticate(
     strategy,
-    { successRedirect: "/", failureRedirect: "/error" },
-    async (err: any, user: any, info: any) => {
-      await authInternal(ctx, user, err, info)
-      await context.identity.doInUserContext(user, async () => {
-        await events.auth.login("oidc")
+    {
+      successRedirect: env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT,
+      failureRedirect: env.PASSPORT_OIDCAUTH_FAILURE_REDIRECT,
+    },
+    async (err: any, user: SSOUser, info: any) => {
+      await passportCallback(ctx, user, err, info)
+      await context.identity.doInUserContext(user, ctx, async () => {
+        await events.auth.login("oidc", user.email)
       })
-      ctx.redirect("/")
+      ctx.redirect(env.PASSPORT_OIDCAUTH_SUCCESS_REDIRECT)
     }
   )(ctx, next)
 }

@@ -3,6 +3,7 @@ import { writable } from "svelte/store"
 export const BANNER_TYPES = {
   INFO: "info",
   NEGATIVE: "negative",
+  WARNING: "warning",
 }
 
 export function createBannerStore() {
@@ -38,7 +39,8 @@ export function createBannerStore() {
   const queue = async entries => {
     const priority = {
       [BANNER_TYPES.NEGATIVE]: 0,
-      [BANNER_TYPES.INFO]: 1,
+      [BANNER_TYPES.WARNING]: 1,
+      [BANNER_TYPES.INFO]: 2,
     }
     banner.update(store => {
       const sorted = [...store.messages, ...entries].sort((a, b) => {

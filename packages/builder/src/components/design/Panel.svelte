@@ -3,7 +3,6 @@
 
   export let title
   export let icon
-  export let expandable = false
   export let showAddButton = false
   export let showBackButton = false
   export let showCloseButton = false
@@ -12,12 +11,13 @@
   export let onClickCloseButton
   export let borderLeft = false
   export let borderRight = false
+  export let wide = false
 
-  let wide = false
+  $: customHeaderContent = $$slots["panel-header-content"]
 </script>
 
 <div class="panel" class:wide class:borderLeft class:borderRight>
-  <div class="header">
+  <div class="header" class:custom={customHeaderContent}>
     {#if showBackButton}
       <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
     {/if}
@@ -27,13 +27,6 @@
     <div class="title">
       <Heading size="XXS">{title || ""}</Heading>
     </div>
-    {#if expandable}
-      <Icon
-        name={wide ? "Minimize" : "Maximize"}
-        hoverable
-        on:click={() => (wide = !wide)}
-      />
-    {/if}
     {#if showAddButton}
       <div class="add-button" on:click={onClickAddButton}>
         <Icon name="Add" />
@@ -43,6 +36,13 @@
       <Icon name="Close" hoverable on:click={onClickCloseButton} />
     {/if}
   </div>
+
+  {#if customHeaderContent}
+    <span class="custom-content-wrap">
+      <slot name="panel-header-content" />
+    </span>
+  {/if}
+
   <div class="body">
     <slot />
   </div>
@@ -51,12 +51,14 @@
 <style>
   .panel {
     width: 260px;
+    flex: 0 0 260px;
     background: var(--background);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     transition: width 130ms ease-out;
+    overflow: hidden;
   }
   .panel.borderLeft {
     border-left: var(--border-light);
@@ -65,7 +67,8 @@
     border-right: var(--border-light);
   }
   .panel.wide {
-    width: 420px;
+    width: 310px;
+    flex: 0 0 310px;
   }
   .header {
     flex: 0 0 48px;
@@ -113,5 +116,11 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+  }
+  .header.custom {
+    border: none;
+  }
+  .custom-content-wrap {
+    border-bottom: var(--border-light);
   }
 </style>

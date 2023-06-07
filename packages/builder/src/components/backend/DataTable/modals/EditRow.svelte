@@ -13,7 +13,7 @@
   }
 </script>
 
-<Button data-cy="edit-row" secondary small on:click={showModal}>Edit</Button>
+<Button secondary small on:click={showModal}>Edit</Button>
 <Modal bind:this={modal}>
   <svelte:component this={modalContentComponent} {row} />
 </Modal>

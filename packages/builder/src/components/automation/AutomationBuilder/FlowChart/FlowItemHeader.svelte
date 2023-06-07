@@ -2,21 +2,22 @@
   import { automationStore } from "builderStore"
   import { Icon, Body, Detail, StatusLight } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
+  import { createEventDispatcher } from "svelte"
 
   export let block
-  export let blockComplete
+  export let open
   export let showTestStatus = false
-  export let showParameters = {}
   export let testResult
   export let isTrigger
   export let idx
 
+  const dispatch = createEventDispatcher()
+
   $: {
     if (!testResult) {
-      testResult =
-        $automationStore.selectedAutomation?.testResults?.steps.filter(step =>
-          block.id ? step.id === block.id : step.stepId === block.stepId
-        )[0]
+      testResult = $automationStore.testResults?.steps?.filter(step =>
+        block.id ? step.id === block.id : step.stepId === block.stepId
+      )?.[0]
     }
   }
   $: isTrigger = isTrigger || block.type === "TRIGGER"
@@ -45,13 +46,7 @@
 </script>
 
 <div class="blockSection">
-  <div
-    on:click={() => {
-      blockComplete = !blockComplete
-      showParameters[block.id] = blockComplete
-    }}
-    class="splitHeader"
-  >
+  <div on:click={() => dispatch("toggle")} class="splitHeader">
     <div class="center-items">
       {#if externalActions[block.stepId]}
         <img
@@ -99,7 +94,7 @@
           onSelect(block)
         }}
       >
-        <Icon hoverable name={blockComplete ? "ChevronUp" : "ChevronDown"} />
+        <Icon hoverable name={open ? "ChevronUp" : "ChevronDown"} />
       </div>
     </div>
   </div>

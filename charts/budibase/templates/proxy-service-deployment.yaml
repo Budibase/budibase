@@ -4,12 +4,15 @@ metadata:
   annotations:
     kompose.cmd: kompose convert
     kompose.version: 1.21.0 (992df58d8)
-{{ if .Values.globals.logAnnotations }}
-{{ toYaml .Values.globals.logAnnotations | indent 4 }}
+{{ if .Values.services.proxy.deploymentAnnotations }}
+{{- toYaml .Values.services.proxy.deploymentAnnotations | indent 4 -}}
 {{ end }}
   creationTimestamp: null
   labels:
     app.kubernetes.io/name: budibase-proxy
+{{ if .Values.services.proxy.deploymentLabels }}
+{{- toYaml .Values.services.proxy.deploymentLabels | indent 4 -}}
+{{ end }}
   name: proxy-service
 spec:
   replicas: {{ .Values.services.proxy.replicaCount }}
@@ -23,16 +26,45 @@ spec:
       annotations:
         kompose.cmd: kompose convert
         kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.services.proxy.templateAnnotations }}
+{{- toYaml .Values.services.proxy.templateAnnotations | indent 8 -}}
+{{ end }}
       creationTimestamp: null
       labels:
         app.kubernetes.io/name: budibase-proxy
+{{ if .Values.services.proxy.templateLabels }}
+{{- toYaml .Values.services.proxy.templateLabels | indent 8 -}}
+{{ end }}
     spec:
       containers:
-      - image: budibase/proxy:{{ .Values.services.proxy.tag | default "k8s" }}
+      - image: budibase/proxy:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         name: proxy-service
         ports:
         - containerPort: {{ .Values.services.proxy.port }}
+        env:
+        - name: APPS_UPSTREAM_URL
+          value: {{ tpl .Values.services.proxy.upstreams.apps . | quote }}
+        - name: WORKER_UPSTREAM_URL
+          value: {{ tpl .Values.services.proxy.upstreams.worker . | quote }}
+        - name: MINIO_UPSTREAM_URL
+          value: {{ tpl .Values.services.proxy.upstreams.minio . | quote }}
+        - name: COUCHDB_UPSTREAM_URL
+          value: {{ .Values.services.couchdb.url | default (tpl .Values.services.proxy.upstreams.couchdb .) | quote }}
+        {{ if .Values.services.proxy.proxyRateLimitWebhooksPerSecond }}
+        - name: PROXY_RATE_LIMIT_WEBHOOKS_PER_SECOND
+          value: {{ .Values.services.proxy.proxyRateLimitWebhooksPerSecond | quote }}
+        {{ end }}
+        {{ if .Values.services.proxy.proxyRateLimitApiPerSecond }}
+        - name: PROXY_RATE_LIMIT_API_PER_SECOND
+          value: {{ .Values.services.proxy.proxyRateLimitApiPerSecond | quote }}
+        {{ end }}
+        - name: RESOLVER
+          {{ if .Values.services.proxy.resolver }}
+          value: {{ .Values.services.proxy.resolver }}
+          {{ else }}
+          value: kube-dns.kube-system.svc.{{ .Values.services.dns }}
+          {{ end }}
         {{ with .Values.services.proxy.resources }}
         resources:
         {{- toYaml . | nindent 10 }}
@@ -46,6 +78,9 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      {{ if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{ end }} 
       {{ if .Values.imagePullSecrets }}
       imagePullSecrets:
       {{- toYaml .Values.imagePullSecrets | nindent 6 }}

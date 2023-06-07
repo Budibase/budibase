@@ -1,13 +1,9 @@
-// need to load environment first
-import * as env from "./environment"
-
-// enable APM if configured
-if (process.env.ELASTIC_APM_ENABLED) {
-  const apm = require("elastic-apm-node").start({
-    serviceName: process.env.SERVICE,
-    environment: process.env.BUDIBASE_ENVIRONMENT,
-  })
+if (process.env.DD_APM_ENABLED) {
+  require("./ddApm")
 }
+
+// need to load environment first
+import env from "./environment"
 
 import { ExtendableContext } from "koa"
 import * as db from "./db"
@@ -19,26 +15,35 @@ import * as api from "./api"
 import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
-import { events, logging } from "@budibase/backend-core"
-import { initialise as initialiseWebsockets } from "./websocket"
+import { initialise as initialiseWebsockets } from "./websockets"
+import { events, logging, middleware, timers } from "@budibase/backend-core"
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
 const destroyable = require("server-destroy")
+const { userAgent } = require("koa-useragent")
 
 const app = new Koa()
 
+let mbNumber = parseInt(env.HTTP_MB_LIMIT || "10")
+if (!mbNumber || isNaN(mbNumber)) {
+  mbNumber = 10
+}
 // set up top level koa middleware
 app.use(
   koaBody({
     multipart: true,
-    formLimit: "10mb",
-    jsonLimit: "10mb",
-    textLimit: "10mb",
+    formLimit: `${mbNumber}mb`,
+    jsonLimit: `${mbNumber}mb`,
+    textLimit: `${mbNumber}mb`,
     // @ts-ignore
     enableTypes: ["json", "form", "text"],
     parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
   })
 )
+
+app.use(middleware.correlation)
+app.use(middleware.pino)
+app.use(userAgent)
 
 if (env.isProd()) {
   env._set("NODE_ENV", "production")
@@ -56,10 +61,10 @@ if (env.isProd()) {
 
 const server = http.createServer(app.callback())
 destroyable(server)
-initialiseWebsockets(server)
 
 let shuttingDown = false,
   errCode = 0
+
 server.on("close", async () => {
   // already in process
   if (shuttingDown) {
@@ -67,9 +72,10 @@ server.on("close", async () => {
   }
   shuttingDown = true
   console.log("Server Closed")
+  timers.cleanup()
   await automations.shutdown()
   await redis.shutdown()
-  await events.shutdown()
+  events.shutdown()
   await Thread.shutdown()
   api.shutdown()
   if (!env.isTest()) {
@@ -77,7 +83,7 @@ server.on("close", async () => {
   }
 })
 
-export = server.listen(env.PORT || 0, async () => {
+export default server.listen(env.PORT || 0, async () => {
   await startup(app, server)
 })
 

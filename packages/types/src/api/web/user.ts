@@ -1,6 +1,6 @@
 import { User } from "../../documents"
 
-export interface CreateUserResponse {
+export interface SaveUserResponse {
   _id: string
   _rev: string
   email: string
@@ -16,20 +16,25 @@ export interface BulkUserRequest {
     userIds: string[]
   }
   create?: {
+    roles?: any[]
     users: User[]
     groups: any[]
   }
 }
 
+export interface BulkUserCreated {
+  successful: UserDetails[]
+  unsuccessful: { email: string; reason: string }[]
+}
+
+export interface BulkUserDeleted {
+  successful: UserDetails[]
+  unsuccessful: { _id: string; email: string; reason: string }[]
+}
+
 export interface BulkUserResponse {
-  created?: {
-    successful: UserDetails[]
-    unsuccessful: { email: string; reason: string }[]
-  }
-  deleted?: {
-    successful: UserDetails[]
-    unsuccessful: { _id: string; email: string; reason: string }[]
-  }
+  created?: BulkUserCreated
+  deleted?: BulkUserDeleted
   message?: string
 }
 
@@ -49,11 +54,34 @@ export interface SearchUsersRequest {
   page?: string
   email?: string
   appId?: string
-  userIds?: string[]
+  paginated?: boolean
 }
 
 export interface CreateAdminUserRequest {
   email: string
   password: string
   tenantId: string
+}
+
+export interface CreateAdminUserResponse {
+  _id: string
+  _rev: string
+  email: string
+}
+
+export interface AcceptUserInviteRequest {
+  inviteCode: string
+  password: string
+  firstName: string
+  lastName: string
+}
+
+export interface AcceptUserInviteResponse {
+  _id: string
+  _rev: string
+  email: string
+}
+
+export interface SyncUserRequest {
+  previousUser?: User
 }

@@ -64,7 +64,6 @@
       // reload
       await datasources.fetch()
       await queries.fetch()
-      await datasources.select(datasourceId)
 
       if (navigateDatasource) {
         $goto(`./datasource/${datasourceId}`)

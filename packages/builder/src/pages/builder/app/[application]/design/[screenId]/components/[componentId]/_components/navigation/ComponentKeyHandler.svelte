@@ -12,30 +12,30 @@
   let componentToEject
 
   const keyHandlers = {
-    ["^ArrowUp"]: async component => {
+    ["Ctrl+ArrowUp"]: async component => {
       await store.actions.components.moveUp(component)
     },
-    ["^ArrowDown"]: async component => {
+    ["Ctrl+ArrowDown"]: async component => {
       await store.actions.components.moveDown(component)
     },
-    ["^c"]: component => {
+    ["Ctrl+c"]: component => {
       store.actions.components.copy(component, false)
     },
-    ["^x"]: component => {
+    ["Ctrl+x"]: component => {
       store.actions.components.copy(component, true)
     },
-    ["^v"]: async component => {
+    ["Ctrl+v"]: async component => {
       await store.actions.components.paste(component, "inside")
     },
-    ["^d"]: async component => {
+    ["Ctrl+d"]: async component => {
       store.actions.components.copy(component)
       await store.actions.components.paste(component, "below")
     },
-    ["^e"]: component => {
+    ["Ctrl+e"]: component => {
       componentToEject = component
       confirmEjectDialog.show()
     },
-    ["^Enter"]: () => {
+    ["Ctrl+Enter"]: () => {
       $goto("./new")
     },
     ["Delete"]: component => {
@@ -53,14 +53,19 @@
       store.actions.components.selectNext()
     },
     ["Escape"]: () => {
-      if (!$isActive("/new")) {
-        return false
+      if ($isActive("./new")) {
+        $goto("./")
       }
-      $goto("./")
     },
   }
 
-  const handleKeyAction = async (event, component, key, ctrlKey = false) => {
+  const handleKeyAction = async ({
+    event,
+    component,
+    key,
+    ctrlKey = false,
+    shiftKey = false,
+  }) => {
     if (!component || !key) {
       return false
     }
@@ -69,9 +74,12 @@
       if (key === "Backspace") {
         key = "Delete"
       }
-      // Prefix key with a caret for ctrl modifier
+      // Prefix keys for modifiers
+      if (shiftKey) {
+        key = "Shift+" + key
+      }
       if (ctrlKey) {
-        key = "^" + key
+        key = "Ctrl+" + key
       }
       const handler = keyHandlers[key]
       if (!handler) {
@@ -93,23 +101,35 @@
     }
     // Ignore events when typing
     const activeTag = document.activeElement?.tagName.toLowerCase()
-    if (["input", "textarea"].indexOf(activeTag) !== -1 && e.key !== "Escape") {
+    const inCodeEditor =
+      document.activeElement?.classList?.contains("cm-content")
+    if (
+      (inCodeEditor || ["input", "textarea"].indexOf(activeTag) !== -1) &&
+      e.key !== "Escape"
+    ) {
       return
     }
     // Key events are always for the selected component
-    return await handleKeyAction(
-      e,
-      $selectedComponent,
-      e.key,
-      e.ctrlKey || e.metaKey
-    )
+    return await handleKeyAction({
+      event: e,
+      component: $selectedComponent,
+      key: e.key,
+      ctrlKey: e.ctrlKey || e.metaKey,
+      shiftKey: e.shiftKey,
+    })
   }
 
   const handleComponentMenu = async e => {
     // Menu events can be for any component
-    const { id, key, ctrlKey } = e.detail
+    const { id, key, ctrlKey, shiftKey } = e.detail
     const component = findComponent($selectedScreen.props, id)
-    return await handleKeyAction(null, component, key, ctrlKey)
+    return await handleKeyAction({
+      event: null,
+      component,
+      key,
+      ctrlKey,
+      shiftKey,
+    })
   }
 
   onMount(() => {

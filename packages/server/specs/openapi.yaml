@@ -85,6 +85,12 @@ components:
             updatedAt: 2022-02-22T13:00:54.035Z
             createdAt: 2022-02-11T18:02:26.961Z
             status: development
+    deploymentOutput:
+      value:
+        data:
+          _id: ef12381f934b4f129675cdbb76eff3c2
+          status: SUCCESS
+          appUrl: /app-url
     inputRow:
       value:
         _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
@@ -290,6 +296,152 @@ components:
               name: Admin
               permissionId: admin
               inherits: POWER
+    metrics:
+      value: >
+        # HELP budibase_os_uptime Time in seconds that the host operating system
+        has been up.
+
+        # TYPE budibase_os_uptime counter
+
+        budibase_os_uptime 54958
+
+        # HELP budibase_os_free_mem Bytes of memory free for usage on the host operating system.
+
+        # TYPE budibase_os_free_mem gauge
+
+        budibase_os_free_mem 804507648
+
+        # HELP budibase_os_total_mem Total bytes of memory on the host operating system.
+
+        # TYPE budibase_os_total_mem gauge
+
+        budibase_os_total_mem 16742404096
+
+        # HELP budibase_os_used_mem Total bytes of memory in use on the host operating system.
+
+        # TYPE budibase_os_used_mem gauge
+
+        budibase_os_used_mem 15937896448
+
+        # HELP budibase_os_load1 Host operating system load average.
+
+        # TYPE budibase_os_load1 gauge
+
+        budibase_os_load1 1.91
+
+        # HELP budibase_os_load5 Host operating system load average.
+
+        # TYPE budibase_os_load5 gauge
+
+        budibase_os_load5 1.75
+
+        # HELP budibase_os_load15 Host operating system load average.
+
+        # TYPE budibase_os_load15 gauge
+
+        budibase_os_load15 1.56
+
+        # HELP budibase_tenant_user_count The number of users created.
+
+        # TYPE budibase_tenant_user_count gauge
+
+        budibase_tenant_user_count 1
+
+        # HELP budibase_tenant_app_count The number of apps created by a user.
+
+        # TYPE budibase_tenant_app_count gauge
+
+        budibase_tenant_app_count 2
+
+        # HELP budibase_tenant_production_app_count The number of apps a user has published.
+
+        # TYPE budibase_tenant_production_app_count gauge
+
+        budibase_tenant_production_app_count 1
+
+        # HELP budibase_tenant_dev_app_count The number of apps a user has unpublished in development.
+
+        # TYPE budibase_tenant_dev_app_count gauge
+
+        budibase_tenant_dev_app_count 1
+
+        # HELP budibase_tenant_db_count The number of couchdb databases including global tables such as _users.
+
+        # TYPE budibase_tenant_db_count gauge
+
+        budibase_tenant_db_count 3
+
+        # HELP budibase_quota_usage_apps The number of apps created.
+
+        # TYPE budibase_quota_usage_apps gauge
+
+        budibase_quota_usage_apps 1
+
+        # HELP budibase_quota_limit_apps The limit on the number of apps that can be created.
+
+        # TYPE budibase_quota_limit_apps gauge
+
+        budibase_quota_limit_apps 9007199254740991
+
+        # HELP budibase_quota_usage_rows The number of database rows used from the quota.
+
+        # TYPE budibase_quota_usage_rows gauge
+
+        budibase_quota_usage_rows 0
+
+        # HELP budibase_quota_limit_rows The limit on the number of rows that can be created.
+
+        # TYPE budibase_quota_limit_rows gauge
+
+        budibase_quota_limit_rows 9007199254740991
+
+        # HELP budibase_quota_usage_plugins The number of plugins in use.
+
+        # TYPE budibase_quota_usage_plugins gauge
+
+        budibase_quota_usage_plugins 0
+
+        # HELP budibase_quota_limit_plugins The limit on the number of plugins that can be created.
+
+        # TYPE budibase_quota_limit_plugins gauge
+
+        budibase_quota_limit_plugins 9007199254740991
+
+        # HELP budibase_quota_usage_user_groups The number of user groups created.
+
+        # TYPE budibase_quota_usage_user_groups gauge
+
+        budibase_quota_usage_user_groups 0
+
+        # HELP budibase_quota_limit_user_groups The limit on the number of user groups that can be created.
+
+        # TYPE budibase_quota_limit_user_groups gauge
+
+        budibase_quota_limit_user_groups 9007199254740991
+
+        # HELP budibase_quota_usage_queries The number of queries used in the current month.
+
+        # TYPE budibase_quota_usage_queries gauge
+
+        budibase_quota_usage_queries 0
+
+        # HELP budibase_quota_limit_queries The limit on the number of queries for the current month.
+
+        # TYPE budibase_quota_limit_queries gauge
+
+        budibase_quota_limit_queries 9007199254740991
+
+        # HELP budibase_quota_usage_automations The number of automations used in the current month.
+
+        # TYPE budibase_quota_usage_automations gauge
+
+        budibase_quota_usage_automations 0
+
+        # HELP budibase_quota_limit_automations The limit on the number of automations that can be created.
+
+        # TYPE budibase_quota_limit_automations gauge
+
+        budibase_quota_limit_automations 9007199254740991
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
@@ -409,6 +561,30 @@ components:
               - createdAt
               - updatedAt
               - version
+      required:
+        - data
+    deploymentOutput:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            _id:
+              description: The ID of the app.
+              type: string
+            status:
+              description: Status of the deployment, whether it succeeded or failed
+              type: string
+              enum:
+                - SUCCESS
+                - FAILURE
+            appUrl:
+              description: The URL of the published app
+              type: string
+          required:
+            - _id
+            - status
+            - appUrl
       required:
         - data
     row:
@@ -579,7 +755,6 @@ components:
                     type: string
                     enum:
                       - string
-                      - barcodeqr
                       - longform
                       - options
                       - number
@@ -592,6 +767,7 @@ components:
                       - auto
                       - json
                       - internal
+                      - barcodeqr
                     description: Defines the type of the column, most explain themselves, a link
                       column is a relationship.
                   constraints:
@@ -742,7 +918,6 @@ components:
                         type: string
                         enum:
                           - string
-                          - barcodeqr
                           - longform
                           - options
                           - number
@@ -755,6 +930,7 @@ components:
                           - auto
                           - json
                           - internal
+                          - barcodeqr
                         description: Defines the type of the column, most explain themselves, a link
                           column is a relationship.
                       constraints:
@@ -912,7 +1088,6 @@ components:
                           type: string
                           enum:
                             - string
-                            - barcodeqr
                             - longform
                             - options
                             - number
@@ -925,6 +1100,7 @@ components:
                             - auto
                             - json
                             - internal
+                            - barcodeqr
                           description: Defines the type of the column, most explain themselves, a link
                             column is a relationship.
                         constraints:
@@ -1373,7 +1549,7 @@ security:
 paths:
   /applications:
     post:
-      operationId: create
+      operationId: appCreate
       summary: Create an application
       tags:
         - applications
@@ -1397,7 +1573,7 @@ paths:
                   $ref: "#/components/examples/application"
   "/applications/{appId}":
     put:
-      operationId: update
+      operationId: appUpdate
       summary: Update an application
       tags:
         - applications
@@ -1420,7 +1596,7 @@ paths:
                 application:
                   $ref: "#/components/examples/application"
     delete:
-      operationId: destroy
+      operationId: appDestroy
       summary: Delete an application
       tags:
         - applications
@@ -1437,7 +1613,7 @@ paths:
                 application:
                   $ref: "#/components/examples/application"
     get:
-      operationId: getById
+      operationId: appGetById
       summary: Retrieve an application
       tags:
         - applications
@@ -1453,9 +1629,38 @@ paths:
               examples:
                 application:
                   $ref: "#/components/examples/application"
+  "/applications/{appId}/unpublish":
+    post:
+      operationId: appUnpublish
+      summary: Unpublish an application
+      tags:
+        - applications
+      parameters:
+        - $ref: "#/components/parameters/appIdUrl"
+      responses:
+        "204":
+          description: The app was published successfully.
+  "/applications/{appId}/publish":
+    post:
+      operationId: appPublish
+      summary: Unpublish an application
+      tags:
+        - applications
+      parameters:
+        - $ref: "#/components/parameters/appIdUrl"
+      responses:
+        "200":
+          description: Returns the deployment object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/deploymentOutput"
+              examples:
+                deployment:
+                  $ref: "#/components/examples/deploymentOutput"
   /applications/search:
     post:
-      operationId: search
+      operationId: appSearch
       summary: Search for applications
       description: Based on application properties (currently only name) search for
         applications.
@@ -1478,9 +1683,26 @@ paths:
               examples:
                 applications:
                   $ref: "#/components/examples/applications"
+  /metrics:
+    get:
+      operationId: metricsGet
+      summary: Retrieve Budibase tenant metrics
+      description: Output metrics in OpenMetrics format compatible with Prometheus
+      tags:
+        - metrics
+      responses:
+        "200":
+          description: Returns tenant metrics.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                metrics:
+                  $ref: "#/components/examples/metrics"
   "/queries/{queryId}":
     post:
-      operationId: execute
+      operationId: queryExecute
       summary: Execute a query
       description: Queries which have been created within a Budibase app can be
         executed using this,
@@ -1509,7 +1731,7 @@ paths:
                   $ref: "#/components/examples/sqlResponse"
   /queries/search:
     post:
-      operationId: search
+      operationId: querySearch
       summary: Search for queries
       description: Based on query properties (currently only name) search for queries.
       tags:
@@ -1534,7 +1756,7 @@ paths:
                   $ref: "#/components/examples/queries"
   "/tables/{tableId}/rows":
     post:
-      operationId: create
+      operationId: rowCreate
       summary: Create a row
       description: Creates a row within the specified table.
       tags:
@@ -1565,7 +1787,7 @@ paths:
                   $ref: "#/components/examples/row"
   "/tables/{tableId}/rows/{rowId}":
     put:
-      operationId: update
+      operationId: rowUpdate
       summary: Update a row
       description: Updates a row within the specified table.
       tags:
@@ -1595,7 +1817,7 @@ paths:
                 row:
                   $ref: "#/components/examples/row"
     delete:
-      operationId: destroy
+      operationId: rowDestroy
       summary: Delete a row
       description: Deletes a row within the specified table.
       tags:
@@ -1616,7 +1838,7 @@ paths:
                 row:
                   $ref: "#/components/examples/row"
     get:
-      operationId: getById
+      operationId: rowGetById
       summary: Retrieve a row
       description: This gets a single row, it will be enriched with the full related
         rows, rather than the squashed "primaryDisplay" format returned by the
@@ -1639,7 +1861,7 @@ paths:
                   $ref: "#/components/examples/enrichedRow"
   "/tables/{tableId}/rows/search":
     post:
-      operationId: search
+      operationId: rowSearch
       summary: Search for rows
       tags:
         - rows
@@ -1665,7 +1887,7 @@ paths:
                   $ref: "#/components/examples/rows"
   /tables:
     post:
-      operationId: create
+      operationId: tableCreate
       summary: Create a table
       description: Create a table, this could be internal or external.
       tags:
@@ -1693,7 +1915,7 @@ paths:
                   $ref: "#/components/examples/table"
   "/tables/{tableId}":
     put:
-      operationId: update
+      operationId: tableUpdate
       summary: Update a table
       description: Update a table, this could be internal or external.
       tags:
@@ -1720,7 +1942,7 @@ paths:
                 table:
                   $ref: "#/components/examples/table"
     delete:
-      operationId: destroy
+      operationId: tableDestroy
       summary: Delete a table
       description: Delete a table, this could be internal or external.
       tags:
@@ -1739,7 +1961,7 @@ paths:
                 table:
                   $ref: "#/components/examples/table"
     get:
-      operationId: getById
+      operationId: tableGetById
       summary: Retrieve a table
       description: Lookup a table, this could be internal or external.
       tags:
@@ -1759,7 +1981,7 @@ paths:
                   $ref: "#/components/examples/table"
   /tables/search:
     post:
-      operationId: search
+      operationId: tableSearch
       summary: Search for tables
       description: Based on table properties (currently only name) search for tables.
         This could be an internal or an external table.
@@ -1785,7 +2007,7 @@ paths:
                   $ref: "#/components/examples/tables"
   /users:
     post:
-      operationId: create
+      operationId: userCreate
       summary: Create a user
       tags:
         - users
@@ -1807,7 +2029,7 @@ paths:
                   $ref: "#/components/examples/user"
   "/users/{userId}":
     put:
-      operationId: update
+      operationId: userUpdate
       summary: Update a user
       tags:
         - users
@@ -1830,7 +2052,7 @@ paths:
                 user:
                   $ref: "#/components/examples/user"
     delete:
-      operationId: destroy
+      operationId: userDestroy
       summary: Delete a user
       tags:
         - users
@@ -1847,7 +2069,7 @@ paths:
                 user:
                   $ref: "#/components/examples/user"
     get:
-      operationId: getById
+      operationId: userGetById
       summary: Retrieve a user
       tags:
         - users
@@ -1865,7 +2087,7 @@ paths:
                   $ref: "#/components/examples/user"
   /users/search:
     post:
-      operationId: search
+      operationId: userSearch
       summary: Search for users
       description: Based on user properties (currently only name) search for users.
       tags:

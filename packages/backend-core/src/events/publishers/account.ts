@@ -7,23 +7,29 @@ import {
   AccountVerifiedEvent,
 } from "@budibase/types"
 
-export async function created(account: Account) {
+async function created(account: Account) {
   const properties: AccountCreatedEvent = {
     tenantId: account.tenantId,
   }
   await publishEvent(Event.ACCOUNT_CREATED, properties)
 }
 
-export async function deleted(account: Account) {
+async function deleted(account: Account) {
   const properties: AccountDeletedEvent = {
     tenantId: account.tenantId,
   }
   await publishEvent(Event.ACCOUNT_DELETED, properties)
 }
 
-export async function verified(account: Account) {
+async function verified(account: Account) {
   const properties: AccountVerifiedEvent = {
     tenantId: account.tenantId,
   }
   await publishEvent(Event.ACCOUNT_VERIFIED, properties)
+}
+
+export default {
+  created,
+  deleted,
+  verified,
 }

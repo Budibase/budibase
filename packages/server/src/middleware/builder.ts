@@ -9,8 +9,8 @@ import {
   checkDebounce,
   setDebounce,
 } from "../utilities/redis"
-import { db as dbCore, cache, permissions } from "@budibase/backend-core"
-import { BBContext, Database } from "@budibase/types"
+import { db as dbCore, cache } from "@budibase/backend-core"
+import { UserCtx, Database } from "@budibase/types"
 
 const DEBOUNCE_TIME_SEC = 30
 
@@ -23,7 +23,7 @@ const DEBOUNCE_TIME_SEC = 30
  * through the authorized middleware                *
  ****************************************************/
 
-async function checkDevAppLocks(ctx: BBContext) {
+async function checkDevAppLocks(ctx: UserCtx) {
   const appId = ctx.appId
 
   // if any public usage, don't proceed
@@ -35,15 +35,14 @@ async function checkDevAppLocks(ctx: BBContext) {
   if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
     return
   }
-  if (!(await doesUserHaveLock(appId, ctx.user))) {
-    ctx.throw(400, "User does not hold app lock.")
-  }
 
-  // they do have lock, update it
-  await updateLock(appId, ctx.user)
+  // If this user already owns the lock, then update it
+  if (await doesUserHaveLock(appId, ctx.user)) {
+    await updateLock(appId, ctx.user)
+  }
 }
 
-async function updateAppUpdatedAt(ctx: BBContext) {
+async function updateAppUpdatedAt(ctx: UserCtx) {
   const appId = ctx.appId
   // if debouncing skip this update
   // get methods also aren't updating
@@ -51,26 +50,40 @@ async function updateAppUpdatedAt(ctx: BBContext) {
     return
   }
   await dbCore.doWithDB(appId, async (db: Database) => {
-    const metadata = await db.get(DocumentType.APP_METADATA)
-    metadata.updatedAt = new Date().toISOString()
+    try {
+      const metadata = await db.get(DocumentType.APP_METADATA)
+      metadata.updatedAt = new Date().toISOString()
 
-    metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user?.userId!)
+      metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user?.userId!)
 
-    const response = await db.put(metadata)
-    metadata._rev = response.rev
-    await cache.app.invalidateAppMetadata(appId, metadata)
-    // set a new debounce record with a short TTL
-    await setDebounce(appId, DEBOUNCE_TIME_SEC)
+      const response = await db.put(metadata)
+      metadata._rev = response.rev
+      await cache.app.invalidateAppMetadata(appId, metadata)
+      // set a new debounce record with a short TTL
+      await setDebounce(appId, DEBOUNCE_TIME_SEC)
+    } catch (err: any) {
+      // if a 409 occurs, then multiple clients connected at the same time - ignore
+      if (err?.status === 409) {
+        return
+      } else {
+        throw err
+      }
+    }
   })
 }
 
-export = async function builder(ctx: BBContext, permType: string) {
+export default async function builder(ctx: UserCtx) {
   const appId = ctx.appId
   // this only functions within an app context
   if (!appId) {
     return
   }
-  const isBuilderApi = permType === permissions.PermissionType.BUILDER
+
+  // check authenticated
+  if (!ctx.isAuthenticated) {
+    return ctx.throw(403, "Session not authenticated")
+  }
+
   const referer = ctx.headers["referer"]
 
   const overviewPath = "/builder/portal/overview/"
@@ -82,7 +95,7 @@ export = async function builder(ctx: BBContext, permType: string) {
   const hasAppId = !referer ? false : referer.includes(appId)
   const editingApp = referer ? hasAppId : false
   // check this is a builder call and editing
-  if (!isBuilderApi || !editingApp) {
+  if (!editingApp) {
     return
   }
   // check locks

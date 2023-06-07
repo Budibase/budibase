@@ -10,7 +10,7 @@ import {
   User,
 } from "@budibase/types"
 
-export async function created(role: Role, timestamp?: string | number) {
+async function created(role: Role, timestamp?: string | number) {
   const properties: RoleCreatedEvent = {
     roleId: role._id as string,
     permissionId: role.permissionId,
@@ -19,7 +19,7 @@ export async function created(role: Role, timestamp?: string | number) {
   await publishEvent(Event.ROLE_CREATED, properties, timestamp)
 }
 
-export async function updated(role: Role) {
+async function updated(role: Role) {
   const properties: RoleUpdatedEvent = {
     roleId: role._id as string,
     permissionId: role.permissionId,
@@ -28,7 +28,7 @@ export async function updated(role: Role) {
   await publishEvent(Event.ROLE_UPDATED, properties)
 }
 
-export async function deleted(role: Role) {
+async function deleted(role: Role) {
   const properties: RoleDeletedEvent = {
     roleId: role._id as string,
     permissionId: role.permissionId,
@@ -37,7 +37,7 @@ export async function deleted(role: Role) {
   await publishEvent(Event.ROLE_DELETED, properties)
 }
 
-export async function assigned(user: User, roleId: string, timestamp?: number) {
+async function assigned(user: User, roleId: string, timestamp?: number) {
   const properties: RoleAssignedEvent = {
     userId: user._id as string,
     roleId,
@@ -45,10 +45,18 @@ export async function assigned(user: User, roleId: string, timestamp?: number) {
   await publishEvent(Event.ROLE_ASSIGNED, properties, timestamp)
 }
 
-export async function unassigned(user: User, roleId: string) {
+async function unassigned(user: User, roleId: string) {
   const properties: RoleUnassignedEvent = {
     userId: user._id as string,
     roleId,
   }
   await publishEvent(Event.ROLE_UNASSIGNED, properties)
+}
+
+export default {
+  created,
+  updated,
+  deleted,
+  assigned,
+  unassigned,
 }

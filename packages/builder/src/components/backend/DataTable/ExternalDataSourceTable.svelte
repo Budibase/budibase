@@ -3,6 +3,7 @@
 
   export let query = {}
   export let data = []
+  export let editRows = false
 
   let loading = false
   let error = false
@@ -12,7 +13,14 @@
 {#if error}
   <div class="errors">{error}</div>
 {/if}
-<Table schema={query.schema} {data} {loading} {type} rowCount={5} />
+<Table
+  schema={query.schema}
+  {data}
+  {loading}
+  {type}
+  rowCount={5}
+  allowEditing={editRows}
+/>
 
 <style>
   .errors {

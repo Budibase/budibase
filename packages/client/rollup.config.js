@@ -5,6 +5,7 @@ import svelte from "rollup-plugin-svelte"
 import { terser } from "rollup-plugin-terser"
 import postcss from "rollup-plugin-postcss"
 import svg from "rollup-plugin-svg"
+import image from "@rollup/plugin-image"
 import json from "rollup-plugin-json"
 import nodePolyfills from "rollup-plugin-polyfill-node"
 import path from "path"
@@ -16,7 +17,21 @@ const ignoredWarnings = [
   "css-unused-selector",
   "module-script-reactive-declaration",
   "a11y-no-onchange",
+  "a11y-click-events-have-key-events",
 ]
+
+const devPaths = production
+  ? []
+  : [
+      {
+        find: "@budibase/shared-core",
+        replacement: path.resolve("../shared-core/dist/mjs/src/index"),
+      },
+      {
+        find: "@budibase/types",
+        replacement: path.resolve("../types/dist/mjs/index"),
+      },
+    ]
 
 export default {
   input: "src/index.js",
@@ -67,6 +82,7 @@ export default {
           find: "sdk",
           replacement: path.resolve("./src/sdk"),
         },
+        ...devPaths,
       ],
     }),
     svelte({
@@ -87,6 +103,9 @@ export default {
       dedupe: ["svelte", "svelte/internal"],
     }),
     svg(),
+    image({
+      exclude: "**/*.svg",
+    }),
     json(),
     production && terser(),
     !production && visualizer(),

@@ -12,6 +12,11 @@ export interface CreateAppBackupRequest {
   name: string
 }
 
+export interface CreateAppBackupResponse {
+  backupId: string
+  message: string
+}
+
 export interface UpdateAppBackupRequest {
   name: string
 }

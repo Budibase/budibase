@@ -34,4 +34,4 @@ router
   .get("/api/global/template/:id", controller.find)
   .delete("/api/global/template/:id/:rev", adminOnly, controller.destroy)
 
-export = router
+export default router

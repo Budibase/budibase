@@ -2,6 +2,7 @@ import { datasources, tables } from "../stores/backend"
 import { IntegrationNames } from "../constants/backend"
 import { get } from "svelte/store"
 import cloneDeep from "lodash/cloneDeepWith"
+import { API } from "api"
 
 function prepareData(config) {
   let datasource = {}
@@ -36,4 +37,10 @@ export async function saveDatasource(config, skipFetch = false) {
 export async function createRestDatasource(integration) {
   const config = cloneDeep(integration)
   return saveDatasource(config)
+}
+
+export async function validateDatasourceConfig(config) {
+  const datasource = prepareData(config)
+  const resp = await API.validateDatasource(datasource)
+  return resp
 }

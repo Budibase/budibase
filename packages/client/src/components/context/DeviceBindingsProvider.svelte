@@ -4,7 +4,7 @@
 
   let width = window.innerWidth
   let height = window.innerHeight
-  const tabletBreakpoint = 768
+  const tabletBreakpoint = 720
   const desktopBreakpoint = 1280
   const resizeObserver = new ResizeObserver(entries => {
     if (entries?.[0]) {
@@ -21,11 +21,11 @@
   }
 
   onMount(() => {
-    resizeObserver.observe(document.getElementById("clip-root"))
+    resizeObserver.observe(document.getElementById("app-body"))
   })
 
   onDestroy(() => {
-    resizeObserver.unobserve(document.getElementById("clip-root"))
+    resizeObserver.unobserve(document.getElementById("app-body"))
   })
 </script>
 

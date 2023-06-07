@@ -9,7 +9,7 @@ const read = [],
  * @openapi
  * /tables/{tableId}/rows:
  *   post:
- *     operationId: create
+ *     operationId: rowCreate
  *     summary: Create a row
  *     description: Creates a row within the specified table.
  *     tags:
@@ -44,7 +44,7 @@ write.push(new Endpoint("post", "/tables/:tableId/rows", controller.create))
  * @openapi
  * /tables/{tableId}/rows/{rowId}:
  *   put:
- *     operationId: update
+ *     operationId: rowUpdate
  *     summary: Update a row
  *     description: Updates a row within the specified table.
  *     tags:
@@ -81,7 +81,7 @@ write.push(
  * @openapi
  * /tables/{tableId}/rows/{rowId}:
  *   delete:
- *     operationId: destroy
+ *     operationId: rowDestroy
  *     summary: Delete a row
  *     description: Deletes a row within the specified table.
  *     tags:
@@ -109,7 +109,7 @@ write.push(
  * @openapi
  * /tables/{tableId}/rows/{rowId}:
  *   get:
- *     operationId: getById
+ *     operationId: rowGetById
  *     summary: Retrieve a row
  *     description: This gets a single row, it will be enriched with the full related rows, rather than
  *       the squashed "primaryDisplay" format returned by the search endpoint.
@@ -136,7 +136,7 @@ read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
  * @openapi
  * /tables/{tableId}/rows/search:
  *   post:
- *     operationId: search
+ *     operationId: rowSearch
  *     summary: Search for rows
  *     tags:
  *       - rows

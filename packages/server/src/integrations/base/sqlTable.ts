@@ -3,7 +3,7 @@ import { Operation, QueryJson, RenameColumn, Table } from "@budibase/types"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
-const { FieldTypes, RelationshipTypes } = require("../../constants")
+import { FieldTypes, RelationshipTypes } from "../../constants"
 
 function generateSchema(
   schema: CreateTableBuilder,
@@ -79,10 +79,17 @@ function generateSchema(
           if (!relatedTable) {
             throw "Referenced table doesn't exist"
           }
-          schema.integer(column.foreignKey).unsigned()
+          const relatedPrimary = relatedTable.primary[0]
+          const externalType = relatedTable.schema[relatedPrimary].externalType
+          if (externalType) {
+            schema.specificType(column.foreignKey, externalType)
+          } else {
+            schema.integer(column.foreignKey).unsigned()
+          }
+
           schema
             .foreign(column.foreignKey)
-            .references(`${tableName}.${relatedTable.primary[0]}`)
+            .references(`${tableName}.${relatedPrimary}`)
         }
         break
     }
@@ -199,4 +206,3 @@ class SqlTableQueryBuilder {
 }
 
 export default SqlTableQueryBuilder
-module.exports = SqlTableQueryBuilder

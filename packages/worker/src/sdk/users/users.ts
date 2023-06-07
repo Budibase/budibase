@@ -1,41 +1,43 @@
 import env from "../../environment"
-import * as apps from "../../utilities/appService"
 import * as eventHelpers from "./events"
 import {
   accounts,
   cache,
   constants,
   db as dbUtils,
-  deprovisioning,
   events,
   HTTPError,
-  migrations,
   sessions,
   tenancy,
+  platform,
   users as usersCore,
   utils,
   ViewName,
+  env as coreEnv,
+  context,
+  EmailUnavailableError,
 } from "@budibase/backend-core"
 import {
   AccountMetadata,
   AllDocsResponse,
-  BulkUserResponse,
   CloudAccount,
-  CreateUserResponse,
   InviteUsersRequest,
   InviteUsersResponse,
-  MigrationType,
+  isSSOAccount,
+  isSSOUser,
+  PlatformUser,
   PlatformUserByEmail,
   RowResponse,
-  SearchUsersRequest,
   User,
-  ThirdPartyUser,
+  SaveUserOpts,
+  BulkUserCreated,
+  BulkUserDeleted,
+  Account,
 } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
-import { groups as groupsSdk } from "@budibase/pro"
-
-const PAGE_LIMIT = 8
+import * as pro from "@budibase/pro"
+import * as accountSdk from "../accounts"
 
 export const allUsers = async () => {
   const db = tenancy.getGlobalDB()
@@ -54,89 +56,73 @@ export const countUsersByApp = async (appId: string) => {
   }
 }
 
-export const paginatedUsers = async ({
-  page,
-  email,
-  appId,
-  userIds,
-}: SearchUsersRequest = {}) => {
-  const db = tenancy.getGlobalDB()
-  // get one extra document, to have the next page
+export const getUsersByAppAccess = async (appId?: string) => {
   const opts: any = {
     include_docs: true,
-    limit: PAGE_LIMIT + 1,
+    limit: 50,
   }
-  // add a startkey if the page was specified (anchor)
-  if (page) {
-    opts.startkey = page
-  }
-  // property specifies what to use for the page/anchor
-  let userList,
-    property = "_id",
-    getKey
-  if (appId) {
-    userList = await usersCore.searchGlobalUsersByApp(appId, opts)
-    getKey = (doc: any) => usersCore.getGlobalUserByAppPage(appId, doc)
-  } else if (email) {
-    userList = await usersCore.searchGlobalUsersByEmail(email, opts)
-    property = "email"
-  } else {
-    // no search, query allDocs
-    const response = await db.allDocs(dbUtils.getGlobalUserParams(null, opts))
-    userList = response.rows.map((row: any) => row.doc)
-  }
-  return dbUtils.pagination(userList, PAGE_LIMIT, {
-    paginate: true,
-    property,
-    getKey,
-  })
+  let response: User[] = await usersCore.searchGlobalUsersByAppAccess(
+    appId,
+    opts
+  )
+  return response
+}
+
+export async function getUserByEmail(email: string) {
+  return usersCore.getGlobalUserByEmail(email)
 }
 
 /**
  * Gets a user by ID from the global database, based on the current tenancy.
  */
 export const getUser = async (userId: string) => {
-  const db = tenancy.getGlobalDB()
-  let user = await db.get(userId)
+  const user = await usersCore.getById(userId)
   if (user) {
     delete user.password
   }
   return user
 }
 
-export interface SaveUserOpts {
-  hashPassword?: boolean
-  requirePassword?: boolean
-  currentUserId?: string
-}
-
 const buildUser = async (
-  user: User | ThirdPartyUser,
+  user: User,
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
   },
   tenantId: string,
-  dbUser?: any
+  dbUser?: any,
+  account?: Account
 ): Promise<User> => {
-  let fullUser = user as User
-  let { password, _id } = fullUser
+  let { password, _id } = user
+
+  // don't require a password if the db user doesn't already have one
+  if (dbUser && !dbUser.password) {
+    opts.requirePassword = false
+  }
 
   let hashedPassword
   if (password) {
+    if (await isPreventPasswordActions(user, account)) {
+      throw new HTTPError("Password change is disabled for this user", 400)
+    }
     hashedPassword = opts.hashPassword ? await utils.hash(password) : password
   } else if (dbUser) {
     hashedPassword = dbUser.password
-  } else if (opts.requirePassword) {
+  }
+
+  // passwords are never required if sso is enforced
+  const requirePasswords =
+    opts.requirePassword && !(await pro.features.isSSOEnforced())
+  if (!hashedPassword && requirePasswords) {
     throw "Password must be specified."
   }
 
   _id = _id || dbUtils.generateGlobalUserID()
 
-  fullUser = {
+  const fullUser = {
     createdAt: Date.now(),
     ...dbUser,
-    ...fullUser,
+    ...user,
     _id,
     password: hashedPassword,
     tenantId,
@@ -153,12 +139,28 @@ const buildUser = async (
   return fullUser
 }
 
+// lookup, could be email or userId, either will return a doc
+export const getPlatformUser = async (
+  identifier: string
+): Promise<PlatformUser | null> => {
+  // use the view here and allow to find anyone regardless of casing
+  // Use lowercase to ensure email login is case insensitive
+  const response = dbUtils.queryPlatformView(
+    ViewName.PLATFORM_USERS_LOWERCASE,
+    {
+      keys: [identifier.toLowerCase()],
+      include_docs: true,
+    }
+  ) as Promise<PlatformUser>
+  return response
+}
+
 const validateUniqueUser = async (email: string, tenantId: string) => {
   // check budibase users in other tenants
   if (env.MULTI_TENANCY) {
-    const tenantUser = await tenancy.getTenantUser(email)
+    const tenantUser = await getPlatformUser(email)
     if (tenantUser != null && tenantUser.tenantId !== tenantId) {
-      throw `Unavailable`
+      throw new EmailUnavailableError(email)
     }
   }
 
@@ -166,15 +168,41 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const account = await accounts.getAccount(email)
     if (account && account.verified && account.tenantId !== tenantId) {
-      throw `Unavailable`
+      throw new EmailUnavailableError(email)
     }
   }
 }
 
+export async function isPreventPasswordActions(user: User, account?: Account) {
+  // when in maintenance mode we allow sso users with the admin role
+  // to perform any password action - this prevents lockout
+  if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE && user.admin?.global) {
+    return false
+  }
+
+  // SSO is enforced for all users
+  if (await pro.features.isSSOEnforced()) {
+    return true
+  }
+
+  // Check local sso
+  if (isSSOUser(user)) {
+    return true
+  }
+
+  // Check account sso
+  if (!account) {
+    account = await accountSdk.api.getAccountByTenantId(tenancy.getTenantId())
+  }
+  return !!(account && account.email === user.email && isSSOAccount(account))
+}
+
+// TODO: The single save should re-use the bulk insert with a single
+// user so that we don't need to duplicate logic
 export const save = async (
-  user: User | ThirdPartyUser,
+  user: User,
   opts: SaveUserOpts = {}
-): Promise<CreateUserResponse> => {
+): Promise<User> => {
   // default booleans to true
   if (opts.hashPassword == null) {
     opts.hashPassword = true
@@ -185,7 +213,7 @@ export const save = async (
   const tenantId = tenancy.getTenantId()
   const db = tenancy.getGlobalDB()
 
-  let { email, _id, userGroups = [] } = user
+  let { email, _id, userGroups = [], roles } = user
 
   if (!email && !_id) {
     throw new Error("_id or email is required")
@@ -213,73 +241,60 @@ export const save = async (
     // no id was specified - load from email instead
     dbUser = await usersCore.getGlobalUserByEmail(email)
     if (dbUser && dbUser._id !== _id) {
-      throw `Unavailable`
+      throw new EmailUnavailableError(email)
     }
   }
 
-  await validateUniqueUser(email, tenantId)
+  const change = dbUser ? 0 : 1 // no change if there is existing user
+  return pro.quotas.addUsers(change, async () => {
+    await validateUniqueUser(email, tenantId)
 
-  let builtUser = await buildUser(user, opts, tenantId, dbUser)
-  // don't allow a user to update its own roles/perms
-  if (opts.currentUserId && opts.currentUserId === dbUser?._id) {
-    builtUser.builder = dbUser.builder
-    builtUser.admin = dbUser.admin
-    builtUser.roles = dbUser.roles
-  }
+    let builtUser = await buildUser(user, opts, tenantId, dbUser)
+    // don't allow a user to update its own roles/perms
+    if (opts.currentUserId && opts.currentUserId === dbUser?._id) {
+      builtUser.builder = dbUser.builder
+      builtUser.admin = dbUser.admin
+      builtUser.roles = dbUser.roles
+    }
 
-  // make sure we set the _id field for a new user
-  // Also if this is a new user, associate groups with them
-  let groupPromises = []
-  if (!_id) {
-    _id = builtUser._id!
+    if (!dbUser && roles?.length) {
+      builtUser.roles = { ...roles }
+    }
 
-    if (userGroups.length > 0) {
-      for (let groupId of userGroups) {
-        groupPromises.push(groupsSdk.addUsers(groupId, [_id]))
+    // make sure we set the _id field for a new user
+    // Also if this is a new user, associate groups with them
+    let groupPromises = []
+    if (!_id) {
+      _id = builtUser._id!
+
+      if (userGroups.length > 0) {
+        for (let groupId of userGroups) {
+          groupPromises.push(pro.groups.addUsers(groupId, [_id]))
+        }
       }
     }
-  }
 
-  try {
-    // save the user to db
-    let response = await db.put(builtUser)
-    builtUser._rev = response.rev
+    try {
+      // save the user to db
+      let response = await db.put(builtUser)
+      builtUser._rev = response.rev
 
-    await eventHelpers.handleSaveEvents(builtUser, dbUser)
-    await addTenant(tenantId, _id, email)
-    await cache.user.invalidateUser(response.id)
-    // let server know to sync user
-    await apps.syncUserInApps(_id)
+      await eventHelpers.handleSaveEvents(builtUser, dbUser)
+      await platform.users.addUser(tenantId, builtUser._id!, builtUser.email)
+      await cache.user.invalidateUser(response.id)
 
-    await Promise.all(groupPromises)
+      await Promise.all(groupPromises)
 
-    return {
-      _id: response.id,
-      _rev: response.rev,
-      email,
+      // finally returned the saved user from the db
+      return db.get(builtUser._id!)
+    } catch (err: any) {
+      if (err.status === 409) {
+        throw "User exists already"
+      } else {
+        throw err
+      }
     }
-  } catch (err: any) {
-    if (err.status === 409) {
-      throw "User exists already"
-    } else {
-      throw err
-    }
-  }
-}
-
-export const addTenant = async (
-  tenantId: string,
-  _id: string,
-  email: string
-) => {
-  if (env.MULTI_TENANCY) {
-    const afterCreateTenant = () =>
-      migrations.backPopulateMigrations({
-        type: MigrationType.GLOBAL,
-        tenantId,
-      })
-    await tenancy.tryAddTenant(tenantId, _id, email, afterCreateTenant)
-  }
+  })
 }
 
 const getExistingTenantUsers = async (emails: string[]): Promise<User[]> => {
@@ -365,7 +380,7 @@ const searchExistingEmails = async (emails: string[]) => {
 export const bulkCreate = async (
   newUsersRequested: User[],
   groups: string[]
-): Promise<BulkUserResponse["created"]> => {
+): Promise<BulkUserCreated> => {
   const tenantId = tenancy.getTenantId()
 
   let usersToSave: any[] = []
@@ -392,53 +407,57 @@ export const bulkCreate = async (
     newUsers.push(newUser)
   }
 
-  // create the promises array that will be called by bulkDocs
-  newUsers.forEach((user: any) => {
-    usersToSave.push(
-      buildUser(
-        user,
-        {
-          hashPassword: true,
-          requirePassword: user.requirePassword,
-        },
-        tenantId
+  const account = await accountSdk.api.getAccountByTenantId(tenantId)
+  return pro.quotas.addUsers(newUsers.length, async () => {
+    // create the promises array that will be called by bulkDocs
+    newUsers.forEach((user: any) => {
+      usersToSave.push(
+        buildUser(
+          user,
+          {
+            hashPassword: true,
+            requirePassword: user.requirePassword,
+          },
+          tenantId,
+          undefined, // no dbUser
+          account
+        )
       )
-    )
-  })
+    })
 
-  const usersToBulkSave = await Promise.all(usersToSave)
-  await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
+    const usersToBulkSave = await Promise.all(usersToSave)
+    await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
 
-  // Post-processing of bulk added users, e.g. events and cache operations
-  for (const user of usersToBulkSave) {
-    // TODO: Refactor to bulk insert users into the info db
-    // instead of relying on looping tenant creation
-    await addTenant(tenantId, user._id, user.email)
-    await eventHelpers.handleSaveEvents(user, undefined)
-    await apps.syncUserInApps(user._id)
-  }
+    // Post-processing of bulk added users, e.g. events and cache operations
+    for (const user of usersToBulkSave) {
+      // TODO: Refactor to bulk insert users into the info db
+      // instead of relying on looping tenant creation
+      await platform.users.addUser(tenantId, user._id, user.email)
+      await eventHelpers.handleSaveEvents(user, undefined)
+    }
 
-  const saved = usersToBulkSave.map(user => {
+    const saved = usersToBulkSave.map(user => {
+      return {
+        _id: user._id,
+        email: user.email,
+      }
+    })
+
+    // now update the groups
+    if (Array.isArray(saved) && groups) {
+      const groupPromises = []
+      const createdUserIds = saved.map(user => user._id)
+      for (let groupId of groups) {
+        groupPromises.push(pro.groups.addUsers(groupId, createdUserIds))
+      }
+      await Promise.all(groupPromises)
+    }
+
     return {
-      _id: user._id,
-      email: user.email,
+      successful: saved,
+      unsuccessful,
     }
   })
-
-  // now update the groups
-  if (Array.isArray(saved) && groups) {
-    const groupPromises = []
-    const createdUserIds = saved.map(user => user._id)
-    for (let groupId of groups) {
-      groupPromises.push(groupsSdk.addUsers(groupId, createdUserIds))
-    }
-    await Promise.all(groupPromises)
-  }
-
-  return {
-    successful: saved,
-    unsuccessful,
-  }
 }
 
 /**
@@ -463,10 +482,10 @@ const getAccountHolderFromUserIds = async (
 
 export const bulkDelete = async (
   userIds: string[]
-): Promise<BulkUserResponse["deleted"]> => {
+): Promise<BulkUserDeleted> => {
   const db = tenancy.getGlobalDB()
 
-  const response: BulkUserResponse["deleted"] = {
+  const response: BulkUserDeleted = {
     successful: [],
     unsuccessful: [],
   }
@@ -500,6 +519,8 @@ export const bulkDelete = async (
     _deleted: true,
   }))
   const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
+
+  await pro.quotas.removeUsers(toDelete.length)
   for (let user of usersToDelete) {
     await bulkDeleteProcessing(user)
   }
@@ -529,9 +550,11 @@ export const bulkDelete = async (
   return response
 }
 
-export const destroy = async (id: string, currentUser: any) => {
+// TODO: The single delete should re-use the bulk delete with a single
+// user so that we don't need to duplicate logic
+export const destroy = async (id: string) => {
   const db = tenancy.getGlobalDB()
-  const dbUser = await db.get(id)
+  const dbUser = (await db.get(id)) as User
   const userId = dbUser._id as string
 
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
@@ -539,7 +562,7 @@ export const destroy = async (id: string, currentUser: any) => {
     const email = dbUser.email
     const account = await accounts.getAccount(email)
     if (account) {
-      if (email === currentUser.email) {
+      if (dbUser.userId === context.getIdentity()!._id) {
         throw new HTTPError('Please visit "Account" to delete this user', 400)
       } else {
         throw new HTTPError("Account holder cannot be deleted", 400)
@@ -547,25 +570,22 @@ export const destroy = async (id: string, currentUser: any) => {
     }
   }
 
-  await deprovisioning.removeUserFromInfoDB(dbUser)
+  await platform.users.removeUser(dbUser)
 
   await db.remove(userId, dbUser._rev)
 
+  await pro.quotas.removeUsers(1)
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "deletion" })
-  // let server know to sync user
-  await apps.syncUserInApps(userId)
 }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
   const userId = dbUser._id as string
-  await deprovisioning.removeUserFromInfoDB(dbUser)
+  await platform.users.removeUser(dbUser)
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(userId)
   await sessions.invalidateSessions(userId, { reason: "bulk-deletion" })
-  // let server know to sync user
-  await apps.syncUserInApps(userId)
 }
 
 export const invite = async (
@@ -605,7 +625,7 @@ export const invite = async (
       }
       await sendEmail(user.email, EmailTemplatePurpose.INVITATION, opts)
       response.successful.push({ email: user.email })
-      await events.user.invited()
+      await events.user.invited(user.email)
     } catch (e) {
       console.error(`Failed to send email invitation email=${user.email}`, e)
       response.unsuccessful.push({

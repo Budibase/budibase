@@ -1,16 +1,22 @@
 import { Document } from "../document"
 import { View } from "./view"
 import { RenameColumn } from "../../sdk"
+import { FieldType } from "./row"
+
+export enum RelationshipTypes {
+  ONE_TO_MANY = "one-to-many",
+  MANY_TO_ONE = "many-to-one",
+  MANY_TO_MANY = "many-to-many",
+}
 
 export interface FieldSchema {
-  // TODO: replace with field types enum when done
-  type: string
+  type: FieldType
   externalType?: string
   fieldName?: string
   name: string
   sortable?: boolean
   tableId?: string
-  relationshipType?: string
+  relationshipType?: RelationshipTypes
   through?: string
   foreignKey?: string
   icon?: string
@@ -25,6 +31,8 @@ export interface FieldSchema {
   timeOnly?: boolean
   lastID?: number
   useRichText?: boolean | null
+  order?: number
+  width?: number
   meta?: {
     toTable: string
     toKey: string
@@ -69,7 +77,9 @@ export interface Table extends Document {
   constrained?: string[]
   sql?: boolean
   indexes?: { [key: string]: any }
-  dataImport?: { [key: string]: any }
+  rows?: { [key: string]: any }
+  created?: boolean
+  rowHeight?: number
 }
 
 export interface TableRequest extends Table {

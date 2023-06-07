@@ -1,0 +1,20 @@
+{
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": ["build", "test"]
+      }
+    }
+  },
+  "targetDefaults": {
+    "dev:builder": {
+      "dependsOn": [
+        {
+          "projects": ["@budibase/string-templates"],
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

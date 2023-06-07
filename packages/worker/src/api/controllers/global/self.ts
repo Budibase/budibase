@@ -1,18 +1,16 @@
-import sdk from "../../../sdk"
+import * as userSdk from "../../../sdk/users"
 import {
-  events,
   featureFlags,
   tenancy,
-  constants,
   db as dbCore,
   utils,
-  cache,
   encryption,
+  auth as authCore,
 } from "@budibase/backend-core"
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
-const { hash, platformLogout, getCookie, clearCookie, newid } = utils
-const { user: userCache } = cache
+import { UpdateSelfRequest, UpdateSelfResponse, UserCtx } from "@budibase/types"
+const { newid } = utils
 
 function newTestApiKey() {
   return env.ENCRYPTED_TEST_PUBLIC_API_KEY
@@ -72,16 +70,6 @@ export async function fetchAPIKey(ctx: any) {
   ctx.body = cleanupDevInfo(devInfo)
 }
 
-const checkCurrentApp = (ctx: any) => {
-  const appCookie = getCookie(ctx, constants.Cookie.CurrentApp)
-  if (appCookie && !tenancy.isUserInAppTenant(appCookie.appId)) {
-    // there is a currentapp cookie from another tenant
-    // remove the cookie as this is incompatible with the builder
-    // due to builder and admin permissions being removed
-    clearCookie(ctx, constants.Cookie.CurrentApp)
-  }
-}
-
 /**
  * Add the attributes that are session based to the current user.
  */
@@ -93,17 +81,6 @@ const addSessionAttributesToUser = (ctx: any) => {
   ctx.body.csrfToken = ctx.user.csrfToken
 }
 
-const sanitiseUserUpdate = (ctx: any) => {
-  const allowed = ["firstName", "lastName", "password", "forceResetPassword"]
-  const resp: { [key: string]: any } = {}
-  for (let [key, value] of Object.entries(ctx.request.body)) {
-    if (allowed.includes(key)) {
-      resp[key] = value
-    }
-  }
-  return resp
-}
-
 export async function getSelf(ctx: any) {
   if (!ctx.user) {
     ctx.throw(403, "User not logged in")
@@ -113,10 +90,8 @@ export async function getSelf(ctx: any) {
     id: userId,
   }
 
-  checkCurrentApp(ctx)
-
   // get the main body of the user
-  const user = await sdk.users.getUser(userId)
+  const user = await userSdk.getUser(userId)
   ctx.body = await groups.enrichUserRolesFromGroups(user)
 
   // add the feature flags for this tenant
@@ -126,39 +101,29 @@ export async function getSelf(ctx: any) {
   addSessionAttributesToUser(ctx)
 }
 
-export async function updateSelf(ctx: any) {
-  const db = tenancy.getGlobalDB()
-  const user = await db.get(ctx.user._id)
-  let passwordChange = false
+export async function updateSelf(
+  ctx: UserCtx<UpdateSelfRequest, UpdateSelfResponse>
+) {
+  const update = ctx.request.body
 
-  const userUpdateObj = sanitiseUserUpdate(ctx)
-  if (userUpdateObj.password) {
-    // changing password
-    passwordChange = true
-    userUpdateObj.password = await hash(userUpdateObj.password)
+  let user = await userSdk.getUser(ctx.user._id!)
+  user = {
+    ...user,
+    ...update,
+  }
+  user = await userSdk.save(user, { requirePassword: false })
+
+  if (update.password) {
     // Log all other sessions out apart from the current one
-    await platformLogout({
+    await authCore.platformLogout({
       ctx,
-      userId: ctx.user._id,
+      userId: ctx.user._id!,
       keepActiveSession: true,
     })
   }
 
-  const response = await db.put({
-    ...user,
-    ...userUpdateObj,
-  })
-  await userCache.invalidateUser(user._id)
   ctx.body = {
-    _id: response.id,
-    _rev: response.rev,
-  }
-
-  // remove the old password from the user before sending events
-  user._rev = response.rev
-  delete user.password
-  await events.user.updated(user)
-  if (passwordChange) {
-    await events.user.passwordUpdated(user)
+    _id: user._id!,
+    _rev: user._rev!,
   }
 }

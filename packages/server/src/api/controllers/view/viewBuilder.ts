@@ -6,6 +6,7 @@ type ViewTemplateOpts = {
   groupBy: string
   filters: ViewFilter[]
   calculation: string
+  groupByMulti: boolean
 }
 
 const TOKEN_MAP: Record<string, string> = {
@@ -38,6 +39,12 @@ function isEmptyExpression(key: string) {
 const GROUP_PROPERTY: Record<string, { type: string }> = {
   group: {
     type: "string",
+  },
+}
+
+const GROUP_PROPERTY_MULTI: Record<string, { type: string }> = {
+  group: {
+    type: "array",
   },
 }
 
@@ -136,13 +143,10 @@ function parseEmitExpression(field: string, groupBy: string) {
  * filters: Array of filter objects containing predicates that are parsed into a JS expression
  * calculation: an optional calculation to be performed over the view data.
  */
-export = function ({
-  field,
-  tableId,
-  groupBy,
-  filters = [],
-  calculation,
-}: ViewTemplateOpts) {
+export default function (
+  { field, tableId, groupBy, filters = [], calculation }: ViewTemplateOpts,
+  groupByMulti?: boolean
+) {
   // first filter can't have a conjunction
   if (filters && filters.length > 0 && filters[0].conjunction) {
     delete filters[0].conjunction
@@ -151,9 +155,11 @@ export = function ({
   let schema = null,
     statFilter = null
 
+  let groupBySchema = groupByMulti ? GROUP_PROPERTY_MULTI : GROUP_PROPERTY
+
   if (calculation) {
     schema = {
-      ...(groupBy ? GROUP_PROPERTY : FIELD_PROPERTY),
+      ...(groupBy ? groupBySchema : FIELD_PROPERTY),
       ...SCHEMA_MAP[calculation],
     }
     if (

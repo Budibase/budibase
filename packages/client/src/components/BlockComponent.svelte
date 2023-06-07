@@ -24,7 +24,6 @@
   // to render this part of the block, taking advantage of binding enrichment
   $: id = `${block.id}-${context ?? rand}`
   $: instance = {
-    _blockElementHasChildren: $$slots?.default ?? false,
     _component: `@budibase/standard-components/${type}`,
     _id: id,
     _instanceName: name || type[0].toUpperCase() + type.slice(1),

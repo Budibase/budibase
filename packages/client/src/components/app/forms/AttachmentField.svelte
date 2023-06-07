@@ -6,6 +6,7 @@
   export let field
   export let label
   export let disabled = false
+  export let compact = false
   export let validation
   export let extensions
   export let onChange
@@ -89,6 +90,7 @@
         {handleTooManyFiles}
         {maximum}
         {extensions}
+        {compact}
       />
     {/if}
   </div>
@@ -96,6 +98,6 @@
 
 <style>
   .minHeightWrapper {
-    min-height: 220px;
+    min-height: 80px;
   }
 </style>

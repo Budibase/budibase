@@ -34,7 +34,7 @@ GO
 CREATE TABLE people
 (
   name varchar(30) NOT NULL,
-  age varchar(20),
+  age int default 20 NOT NULL,
   CONSTRAINT pk_people PRIMARY KEY NONCLUSTERED (name, age)
 );
   
@@ -50,22 +50,22 @@ VALUES
   ('Processing', 1);
 
 INSERT INTO people (name, age)
-VALUES ('Bob', '30'),
-  ('Bert', '10'),
-  ('Jack', '12'),
-  ('Mike', '31'),
-  ('Dave', '44'),
-  ('Jim', '43'),
-  ('Kerry', '32'),
-  ('Julie', '12'),
-  ('Kim', '55'),
-  ('Andy', '33'),
-  ('John', '22'),
-  ('Ruth', '66'),
-  ('Robert', '88'),
-  ('Bobert', '99'),
-  ('Jan', '22'),
-  ('Megan', '11');
+VALUES ('Bob', 30),
+  ('Bert', 10),
+  ('Jack', 12),
+  ('Mike', 31),
+  ('Dave', 44),
+  ('Jim', 43),
+  ('Kerry', 32),
+  ('Julie', 12),
+  ('Kim', 55),
+  ('Andy', 33),
+  ('John', 22),
+  ('Ruth', 66),
+  ('Robert', 88),
+  ('Bobert', 99),
+  ('Jan', 22),
+  ('Megan', 11);
 
 
 IF OBJECT_ID ('Chains.sizes', 'U') IS NOT NULL

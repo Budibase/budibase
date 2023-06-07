@@ -5,6 +5,9 @@ export interface AutomationCreatedEvent extends BaseEvent {
   automationId: string
   triggerId: string
   triggerType: string
+  audited: {
+    name: string
+  }
 }
 
 export interface AutomationTriggerUpdatedEvent extends BaseEvent {
@@ -19,6 +22,9 @@ export interface AutomationDeletedEvent extends BaseEvent {
   automationId: string
   triggerId: string
   triggerType: string
+  audited: {
+    name: string
+  }
 }
 
 export interface AutomationTestedEvent extends BaseEvent {
@@ -35,6 +41,9 @@ export interface AutomationStepCreatedEvent extends BaseEvent {
   triggerType: string
   stepId: string
   stepType: string
+  audited: {
+    name: string
+  }
 }
 
 export interface AutomationStepDeletedEvent extends BaseEvent {
@@ -44,6 +53,9 @@ export interface AutomationStepDeletedEvent extends BaseEvent {
   triggerType: string
   stepId: string
   stepType: string
+  audited: {
+    name: string
+  }
 }
 
 export interface AutomationsRunEvent extends BaseEvent {

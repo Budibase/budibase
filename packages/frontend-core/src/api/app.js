@@ -22,11 +22,11 @@ export const buildAppEndpoints = API => ({
   },
 
   /**
-   * Deploys the current app.
+   * Publishes the current app.
    */
-  deployAppChanges: async () => {
+  publishAppChanges: async appId => {
     return await API.post({
-      url: "/api/deploy",
+      url: `/api/applications/${appId}/publish`,
     })
   },
 
@@ -98,8 +98,8 @@ export const buildAppEndpoints = API => ({
    * @param appId the production ID of the app to unpublish
    */
   unpublishApp: async appId => {
-    return await API.delete({
-      url: `/api/applications/${appId}?unpublish=1`,
+    return await API.post({
+      url: `/api/applications/${appId}/unpublish`,
     })
   },
 
@@ -150,6 +150,12 @@ export const buildAppEndpoints = API => ({
   fetchComponentLibDefinitions: async appId => {
     return await API.get({
       url: `/api/${appId}/components/definitions`,
+    })
+  },
+
+  addSampleData: async appId => {
+    return await API.post({
+      url: `/api/applications/${appId}/sample`,
     })
   },
 })

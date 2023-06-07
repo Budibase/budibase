@@ -2,8 +2,6 @@ import env from "../environment"
 
 const SLOT_REFRESH_MS = 2000
 const CONNECT_TIMEOUT_MS = 10000
-const REDIS_URL = !env.REDIS_URL ? "localhost:6379" : env.REDIS_URL
-const REDIS_PASSWORD = !env.REDIS_PASSWORD ? "budibase" : env.REDIS_PASSWORD
 export const SEPARATOR = "-"
 
 /**
@@ -29,6 +27,7 @@ export enum Databases {
   GENERIC_CACHE = "data_cache",
   WRITE_THROUGH = "writeThrough",
   LOCKS = "locks",
+  SOCKET_IO = "socket_io",
 }
 
 /**
@@ -42,7 +41,7 @@ export enum Databases {
  */
 export enum SelectableDatabase {
   DEFAULT = 0,
-  WRITE_THROUGH = 1,
+  SOCKET_IO = 1,
   UNUSED_1 = 2,
   UNUSED_2 = 3,
   UNUSED_3 = 4,
@@ -59,9 +58,9 @@ export enum SelectableDatabase {
   UNUSED_14 = 15,
 }
 
-export function getRedisOptions(clustered = false) {
-  let password = REDIS_PASSWORD
-  let url: string[] | string = REDIS_URL.split("//")
+export function getRedisOptions() {
+  let password = env.REDIS_PASSWORD
+  let url: string[] | string = env.REDIS_URL.split("//")
   // get rid of the protocol
   url = url.length > 1 ? url[1] : url[0]
   // check for a password etc
@@ -78,14 +77,14 @@ export function getRedisOptions(clustered = false) {
   let redisProtocolUrl
 
   // fully qualified redis URL
-  if (/rediss?:\/\//.test(REDIS_URL)) {
-    redisProtocolUrl = REDIS_URL
+  if (/rediss?:\/\//.test(env.REDIS_URL)) {
+    redisProtocolUrl = env.REDIS_URL
   }
 
   const opts: any = {
     connectTimeout: CONNECT_TIMEOUT_MS,
   }
-  if (clustered) {
+  if (env.REDIS_CLUSTERED) {
     opts.redisOptions = {}
     opts.redisOptions.tls = {}
     opts.redisOptions.password = password
@@ -96,7 +95,7 @@ export function getRedisOptions(clustered = false) {
     opts.port = port
     opts.password = password
   }
-  return { opts, host, port, redisProtocolUrl }
+  return { opts, host, port: parseInt(port), redisProtocolUrl }
 }
 
 export function addDbPrefix(db: string, key: string) {

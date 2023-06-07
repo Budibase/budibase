@@ -9,7 +9,7 @@
   }
 </script>
 
-<Panel borderLeft title="Navigation" icon="InfoOutline">
+<Panel borderLeft title="Navigation" icon="InfoOutline" wide>
   <Layout paddingX="L" paddingY="XL" gap="S">
     {#if $selectedScreen.layoutId}
       <Banner

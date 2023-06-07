@@ -19,28 +19,28 @@ import {
 
 /* eslint-disable */
 
-export async function created(view: View, timestamp?: string | number) {
+async function created(view: View, timestamp?: string | number) {
   const properties: ViewCreatedEvent = {
     tableId: view.tableId,
   }
   await publishEvent(Event.VIEW_CREATED, properties, timestamp)
 }
 
-export async function updated(view: View) {
+async function updated(view: View) {
   const properties: ViewUpdatedEvent = {
     tableId: view.tableId,
   }
   await publishEvent(Event.VIEW_UPDATED, properties)
 }
 
-export async function deleted(view: View) {
+async function deleted(view: View) {
   const properties: ViewDeletedEvent = {
     tableId: view.tableId,
   }
   await publishEvent(Event.VIEW_DELETED, properties)
 }
 
-export async function exported(table: Table, format: TableExportFormat) {
+async function exported(table: Table, format: TableExportFormat) {
   const properties: ViewExportedEvent = {
     tableId: table._id as string,
     format,
@@ -48,31 +48,28 @@ export async function exported(table: Table, format: TableExportFormat) {
   await publishEvent(Event.VIEW_EXPORTED, properties)
 }
 
-export async function filterCreated(view: View, timestamp?: string | number) {
+async function filterCreated(view: View, timestamp?: string | number) {
   const properties: ViewFilterCreatedEvent = {
     tableId: view.tableId,
   }
   await publishEvent(Event.VIEW_FILTER_CREATED, properties, timestamp)
 }
 
-export async function filterUpdated(view: View) {
+async function filterUpdated(view: View) {
   const properties: ViewFilterUpdatedEvent = {
     tableId: view.tableId,
   }
   await publishEvent(Event.VIEW_FILTER_UPDATED, properties)
 }
 
-export async function filterDeleted(view: View) {
+async function filterDeleted(view: View) {
   const properties: ViewFilterDeletedEvent = {
     tableId: view.tableId,
   }
   await publishEvent(Event.VIEW_FILTER_DELETED, properties)
 }
 
-export async function calculationCreated(
-  view: View,
-  timestamp?: string | number
-) {
+async function calculationCreated(view: View, timestamp?: string | number) {
   const properties: ViewCalculationCreatedEvent = {
     tableId: view.tableId,
     calculation: view.calculation as ViewCalculation,
@@ -80,7 +77,7 @@ export async function calculationCreated(
   await publishEvent(Event.VIEW_CALCULATION_CREATED, properties, timestamp)
 }
 
-export async function calculationUpdated(view: View) {
+async function calculationUpdated(view: View) {
   const properties: ViewCalculationUpdatedEvent = {
     tableId: view.tableId,
     calculation: view.calculation as ViewCalculation,
@@ -88,10 +85,23 @@ export async function calculationUpdated(view: View) {
   await publishEvent(Event.VIEW_CALCULATION_UPDATED, properties)
 }
 
-export async function calculationDeleted(existingView: View) {
+async function calculationDeleted(existingView: View) {
   const properties: ViewCalculationDeletedEvent = {
     tableId: existingView.tableId,
     calculation: existingView.calculation as ViewCalculation,
   }
   await publishEvent(Event.VIEW_CALCULATION_DELETED, properties)
+}
+
+export default {
+  created,
+  updated,
+  deleted,
+  exported,
+  filterCreated,
+  filterUpdated,
+  filterDeleted,
+  calculationCreated,
+  calculationUpdated,
+  calculationDeleted,
 }

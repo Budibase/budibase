@@ -37,7 +37,7 @@
 
 <style>
   .spectrum-Tags-item {
-    margin-top: 0;
     margin-bottom: 0;
+    margin-top: 0;
   }
 </style>

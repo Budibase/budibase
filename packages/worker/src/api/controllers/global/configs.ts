@@ -2,142 +2,122 @@ import * as email from "../../../utilities/email"
 import env from "../../../environment"
 import { googleCallbackUrl, oidcCallbackUrl } from "./auth"
 import {
-  events,
   cache,
+  configs,
+  db as dbCore,
+  env as coreEnv,
+  events,
   objectStore,
   tenancy,
-  db as dbCore,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import {
-  Database,
-  Config as ConfigDoc,
+  Config,
   ConfigType,
-  SSOType,
-  GoogleConfig,
-  OIDCConfig,
-  SettingsConfig,
-  BBContext,
+  Ctx,
+  GetPublicOIDCConfigResponse,
+  GetPublicSettingsResponse,
+  GoogleInnerConfig,
+  isGoogleConfig,
+  isOIDCConfig,
+  isSettingsConfig,
+  isSMTPConfig,
+  OIDCConfigs,
+  SettingsBrandingConfig,
+  SettingsInnerConfig,
+  SSOConfig,
+  SSOConfigType,
+  UserCtx,
 } from "@budibase/types"
+import * as pro from "@budibase/pro"
 
-const getEventFns = async (db: Database, config: ConfigDoc) => {
+const getEventFns = async (config: Config, existing?: Config) => {
   const fns = []
-  const type = config.type
 
-  let existing
-  if (config._id) {
-    existing = await db.get(config._id)
-  }
-
-  const ssoType = type as SSOType
   if (!existing) {
-    switch (config.type) {
-      case ConfigType.SMTP: {
-        fns.push(events.email.SMTPCreated)
-        break
+    if (isSMTPConfig(config)) {
+      fns.push(events.email.SMTPCreated)
+    } else if (isGoogleConfig(config)) {
+      fns.push(() => events.auth.SSOCreated(ConfigType.GOOGLE))
+      if (config.config.activated) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.GOOGLE))
       }
-      case ConfigType.GOOGLE: {
-        const googleCfg = config as GoogleConfig
-        fns.push(() => events.auth.SSOCreated(ssoType))
-        if (googleCfg.config.activated) {
-          fns.push(() => events.auth.SSOActivated(ssoType))
-        }
-        break
+    } else if (isOIDCConfig(config)) {
+      fns.push(() => events.auth.SSOCreated(ConfigType.OIDC))
+      if (config.config.configs[0].activated) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.OIDC))
       }
-      case ConfigType.OIDC: {
-        const oidcCfg = config as OIDCConfig
-        fns.push(() => events.auth.SSOCreated(ssoType))
-        if (oidcCfg.config.configs[0].activated) {
-          fns.push(() => events.auth.SSOActivated(ssoType))
-        }
-        break
+    } else if (isSettingsConfig(config)) {
+      // company
+      const company = config.config.company
+      if (company && company !== "Budibase") {
+        fns.push(events.org.nameUpdated)
       }
-      case ConfigType.SETTINGS: {
-        // company
-        const settingsCfg = config as SettingsConfig
-        const company = settingsCfg.config.company
-        if (company && company !== "Budibase") {
-          fns.push(events.org.nameUpdated)
-        }
 
-        // logo
-        const logoUrl = settingsCfg.config.logoUrl
-        if (logoUrl) {
-          fns.push(events.org.logoUpdated)
-        }
+      // logo
+      const logoUrl = config.config.logoUrl
+      if (logoUrl) {
+        fns.push(events.org.logoUpdated)
+      }
 
-        // platform url
-        const platformUrl = settingsCfg.config.platformUrl
-        if (
-          platformUrl &&
-          platformUrl !== "http://localhost:10000" &&
-          env.SELF_HOSTED
-        ) {
-          fns.push(events.org.platformURLUpdated)
-        }
-        break
+      // platform url
+      const platformUrl = config.config.platformUrl
+      if (
+        platformUrl &&
+        platformUrl !== "http://localhost:10000" &&
+        env.SELF_HOSTED
+      ) {
+        fns.push(events.org.platformURLUpdated)
       }
     }
   } else {
-    switch (config.type) {
-      case ConfigType.SMTP: {
-        fns.push(events.email.SMTPUpdated)
-        break
+    if (isSMTPConfig(config)) {
+      fns.push(events.email.SMTPUpdated)
+    } else if (isGoogleConfig(config)) {
+      fns.push(() => events.auth.SSOUpdated(ConfigType.GOOGLE))
+      if (!existing.config.activated && config.config.activated) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.GOOGLE))
+      } else if (existing.config.activated && !config.config.activated) {
+        fns.push(() => events.auth.SSODeactivated(ConfigType.GOOGLE))
       }
-      case ConfigType.GOOGLE: {
-        const googleCfg = config as GoogleConfig
-        fns.push(() => events.auth.SSOUpdated(ssoType))
-        if (!existing.config.activated && googleCfg.config.activated) {
-          fns.push(() => events.auth.SSOActivated(ssoType))
-        } else if (existing.config.activated && !googleCfg.config.activated) {
-          fns.push(() => events.auth.SSODeactivated(ssoType))
-        }
-        break
+    } else if (isOIDCConfig(config)) {
+      fns.push(() => events.auth.SSOUpdated(ConfigType.OIDC))
+      if (
+        !existing.config.configs[0].activated &&
+        config.config.configs[0].activated
+      ) {
+        fns.push(() => events.auth.SSOActivated(ConfigType.OIDC))
+      } else if (
+        existing.config.configs[0].activated &&
+        !config.config.configs[0].activated
+      ) {
+        fns.push(() => events.auth.SSODeactivated(ConfigType.OIDC))
       }
-      case ConfigType.OIDC: {
-        const oidcCfg = config as OIDCConfig
-        fns.push(() => events.auth.SSOUpdated(ssoType))
-        if (
-          !existing.config.configs[0].activated &&
-          oidcCfg.config.configs[0].activated
-        ) {
-          fns.push(() => events.auth.SSOActivated(ssoType))
-        } else if (
-          existing.config.configs[0].activated &&
-          !oidcCfg.config.configs[0].activated
-        ) {
-          fns.push(() => events.auth.SSODeactivated(ssoType))
-        }
-        break
+    } else if (isSettingsConfig(config)) {
+      // company
+      const existingCompany = existing.config.company
+      const company = config.config.company
+      if (company && company !== "Budibase" && existingCompany !== company) {
+        fns.push(events.org.nameUpdated)
       }
-      case ConfigType.SETTINGS: {
-        // company
-        const settingsCfg = config as SettingsConfig
-        const existingCompany = existing.config.company
-        const company = settingsCfg.config.company
-        if (company && company !== "Budibase" && existingCompany !== company) {
-          fns.push(events.org.nameUpdated)
-        }
 
-        // logo
-        const existingLogoUrl = existing.config.logoUrl
-        const logoUrl = settingsCfg.config.logoUrl
-        if (logoUrl && existingLogoUrl !== logoUrl) {
-          fns.push(events.org.logoUpdated)
-        }
+      // logo
+      const existingLogoUrl = existing.config.logoUrl
+      const logoUrl = config.config.logoUrl
+      if (logoUrl && existingLogoUrl !== logoUrl) {
+        fns.push(events.org.logoUpdated)
+      }
 
-        // platform url
-        const existingPlatformUrl = existing.config.platformUrl
-        const platformUrl = settingsCfg.config.platformUrl
-        if (
-          platformUrl &&
-          platformUrl !== "http://localhost:10000" &&
-          existingPlatformUrl !== platformUrl &&
-          env.SELF_HOSTED
-        ) {
-          fns.push(events.org.platformURLUpdated)
-        }
-        break
+      // platform url
+      const existingPlatformUrl = existing.config.platformUrl
+      const platformUrl = config.config.platformUrl
+      if (
+        platformUrl &&
+        platformUrl !== "http://localhost:10000" &&
+        existingPlatformUrl !== platformUrl &&
+        env.SELF_HOSTED
+      ) {
+        fns.push(events.org.platformURLUpdated)
       }
     }
   }
@@ -145,31 +125,144 @@ const getEventFns = async (db: Database, config: ConfigDoc) => {
   return fns
 }
 
-export async function save(ctx: BBContext) {
-  const db = tenancy.getGlobalDB()
-  const { type, workspace, user, config } = ctx.request.body
-  let eventFns = await getEventFns(db, ctx.request.body)
-  // Config does not exist yet
-  if (!ctx.request.body._id) {
-    ctx.request.body._id = dbCore.generateConfigID({
-      type,
-      workspace,
-      user,
-    })
+type SSOConfigs = { [key in SSOConfigType]: SSOConfig | undefined }
+
+async function getSSOConfigs(): Promise<SSOConfigs> {
+  const google = await configs.getGoogleConfig()
+  const oidc = await configs.getOIDCConfig()
+  return {
+    [ConfigType.GOOGLE]: google,
+    [ConfigType.OIDC]: oidc,
   }
+}
+
+async function hasActivatedConfig(ssoConfigs?: SSOConfigs) {
+  if (!ssoConfigs) {
+    ssoConfigs = await getSSOConfigs()
+  }
+  return !!Object.values(ssoConfigs).find(c => c?.activated)
+}
+
+async function verifySettingsConfig(
+  config: SettingsInnerConfig & SettingsBrandingConfig,
+  existingConfig?: SettingsInnerConfig & SettingsBrandingConfig
+) {
+  if (config.isSSOEnforced) {
+    const valid = await hasActivatedConfig()
+    if (!valid) {
+      throw new Error("Cannot enforce SSO without an activated configuration")
+    }
+  }
+
+  // always preserve file attributes
+  // these should be set via upload instead
+  // only allow for deletion by checking empty string to bypass this behaviour
+
+  if (existingConfig && config.logoUrl !== "") {
+    config.logoUrl = existingConfig.logoUrl
+    config.logoUrlEtag = existingConfig.logoUrlEtag
+  }
+  if (existingConfig && config.faviconUrl !== "") {
+    config.faviconUrl = existingConfig.faviconUrl
+    config.faviconUrlEtag = existingConfig.faviconUrlEtag
+  }
+}
+
+async function verifySSOConfig(type: SSOConfigType, config: SSOConfig) {
+  const settings = await configs.getSettingsConfig()
+  if (settings.isSSOEnforced && !config.activated) {
+    // config is being saved as deactivated
+    // ensure there is at least one other activated sso config
+    const ssoConfigs = await getSSOConfigs()
+
+    // overwrite the config being updated
+    // to reflect the desired state
+    ssoConfigs[type] = config
+
+    const activated = await hasActivatedConfig(ssoConfigs)
+    if (!activated) {
+      throw new Error(
+        "Configuration cannot be deactivated while SSO is enforced"
+      )
+    }
+  }
+}
+
+async function verifyGoogleConfig(config: GoogleInnerConfig) {
+  await verifySSOConfig(ConfigType.GOOGLE, config)
+}
+
+async function verifyOIDCConfig(config: OIDCConfigs) {
+  await verifySSOConfig(ConfigType.OIDC, config.configs[0])
+}
+
+export async function save(ctx: UserCtx<Config>) {
+  const body = ctx.request.body
+  const type = body.type
+  const config = body.config
+
+  const existingConfig = await configs.getConfig(type)
+  let eventFns = await getEventFns(ctx.request.body, existingConfig)
+
+  if (existingConfig) {
+    body._rev = existingConfig._rev
+  }
+
   try {
     // verify the configuration
     switch (type) {
       case ConfigType.SMTP:
         await email.verifyConfig(config)
         break
+      case ConfigType.SETTINGS:
+        await verifySettingsConfig(config, existingConfig?.config)
+        break
+      case ConfigType.GOOGLE:
+        await verifyGoogleConfig(config)
+        break
+      case ConfigType.OIDC:
+        await verifyOIDCConfig(config)
+        break
     }
   } catch (err: any) {
     ctx.throw(400, err)
   }
 
+  // Ignore branding changes if the license does not permit it
+  // Favicon and Logo Url are excluded.
   try {
-    const response = await db.put(ctx.request.body)
+    const brandingEnabled = await pro.features.isBrandingEnabled()
+    if (existingConfig?.config && !brandingEnabled) {
+      const {
+        emailBrandingEnabled,
+        testimonialsEnabled,
+        platformTitle,
+        metaDescription,
+        loginHeading,
+        loginButton,
+        metaImageUrl,
+        metaTitle,
+      } = existingConfig.config
+
+      body.config = {
+        ...body.config,
+        emailBrandingEnabled,
+        testimonialsEnabled,
+        platformTitle,
+        metaDescription,
+        loginHeading,
+        loginButton,
+        metaImageUrl,
+        metaTitle,
+      }
+    }
+  } catch (e) {
+    console.error("There was an issue retrieving the license", e)
+  }
+
+  try {
+    body._id = configs.generateConfigID(type)
+    const response = await configs.save(body)
     await cache.bustCache(cache.CacheKey.CHECKLIST)
     await cache.bustCache(cache.CacheKey.ANALYTICS_ENABLED)
 
@@ -187,44 +280,11 @@ export async function save(ctx: BBContext) {
   }
 }
 
-export async function fetch(ctx: BBContext) {
-  const db = tenancy.getGlobalDB()
-  const response = await db.allDocs(
-    dbCore.getConfigParams(
-      { type: ctx.params.type },
-      {
-        include_docs: true,
-      }
-    )
-  )
-  ctx.body = response.rows.map(row => row.doc)
-}
-
-/**
- * Gets the most granular config for a particular configuration type.
- * The hierarchy is type -> workspace -> user.
- */
-export async function find(ctx: BBContext) {
-  const db = tenancy.getGlobalDB()
-
-  const { userId, workspaceId } = ctx.query
-  if (workspaceId && userId) {
-    const workspace = await db.get(workspaceId as string)
-    const userInWorkspace = workspace.users.some(
-      (workspaceUser: any) => workspaceUser === userId
-    )
-    if (!ctx.user!.admin && !userInWorkspace) {
-      ctx.throw(400, `User is not in specified workspace: ${workspace}.`)
-    }
-  }
-
+export async function find(ctx: UserCtx) {
   try {
     // Find the config with the most granular scope based on context
-    const scopedConfig = await dbCore.getScopedFullConfig(db, {
-      type: ctx.params.type,
-      user: userId,
-      workspace: workspaceId,
-    })
+    const type = ctx.params.type
+    const scopedConfig = await configs.getConfig(type)
 
     if (scopedConfig) {
       ctx.body = scopedConfig
@@ -237,102 +297,104 @@ export async function find(ctx: BBContext) {
   }
 }
 
-export async function publicOidc(ctx: BBContext) {
-  const db = tenancy.getGlobalDB()
+export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
   try {
     // Find the config with the most granular scope based on context
-    const oidcConfig = await dbCore.getScopedFullConfig(db, {
-      type: ConfigType.OIDC,
-    })
+    const config = await configs.getOIDCConfig()
 
-    if (!oidcConfig) {
-      ctx.body = {}
+    if (!config) {
+      ctx.body = []
     } else {
-      ctx.body = oidcConfig.config.configs.map((config: any) => ({
-        logo: config.logo,
-        name: config.name,
-        uuid: config.uuid,
-      }))
+      ctx.body = [
+        {
+          logo: config.logo,
+          name: config.name,
+          uuid: config.uuid,
+        },
+      ]
     }
   } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-export async function publicSettings(ctx: BBContext) {
-  const db = tenancy.getGlobalDB()
-
+export async function publicSettings(
+  ctx: Ctx<void, GetPublicSettingsResponse>
+) {
   try {
-    // Find the config with the most granular scope based on context
-    const publicConfig = await dbCore.getScopedFullConfig(db, {
+    // settings
+    const configDoc = await configs.getSettingsConfigDoc()
+    const config = configDoc.config
+
+    const branding = await pro.branding.getBrandingConfig(config)
+
+    // enrich the logo url - empty url means deleted
+    if (config.logoUrl && config.logoUrl !== "") {
+      config.logoUrl = objectStore.getGlobalFileUrl(
+        "settings",
+        "logoUrl",
+        config.logoUrlEtag
+      )
+    }
+
+    // enrich the favicon url - empty url means deleted
+    const faviconUrl =
+      branding.faviconUrl && branding.faviconUrl !== ""
+        ? objectStore.getGlobalFileUrl(
+            "settings",
+            "faviconUrl",
+            branding.faviconUrlEtag
+          )
+        : undefined
+
+    // google
+    const googleConfig = await configs.getGoogleConfig()
+    const googleDatasourceConfigured =
+      !!(await configs.getGoogleDatasourceConfig())
+    const preActivated = googleConfig && googleConfig.activated == null
+    const google = preActivated || !!googleConfig?.activated
+    const _googleCallbackUrl = await googleCallbackUrl(googleConfig)
+
+    // oidc
+    const oidcConfig = await configs.getOIDCConfig()
+    const oidc = oidcConfig?.activated || false
+    const _oidcCallbackUrl = await oidcCallbackUrl()
+
+    // sso enforced
+    const isSSOEnforced = await pro.features.isSSOEnforced({ config })
+
+    ctx.body = {
       type: ConfigType.SETTINGS,
-    })
-
-    const googleConfig = await dbCore.getScopedFullConfig(db, {
-      type: ConfigType.GOOGLE,
-    })
-
-    const oidcConfig = await dbCore.getScopedFullConfig(db, {
-      type: ConfigType.OIDC,
-    })
-
-    let config
-    if (!publicConfig) {
-      config = {
-        config: {},
-      }
-    } else {
-      config = publicConfig
+      _id: configDoc._id,
+      _rev: configDoc._rev,
+      config: {
+        ...config,
+        ...branding,
+        ...{ faviconUrl },
+        google,
+        googleDatasourceConfigured,
+        oidc,
+        isSSOEnforced,
+        oidcCallbackUrl: _oidcCallbackUrl,
+        googleCallbackUrl: _googleCallbackUrl,
+      },
     }
-
-    // google button flag
-    if (googleConfig && googleConfig.config) {
-      // activated by default for configs pre-activated flag
-      config.config.google =
-        googleConfig.config.activated == null || googleConfig.config.activated
-    } else {
-      config.config.google = false
-    }
-
-    // callback urls
-    config.config.oidcCallbackUrl = await oidcCallbackUrl()
-    config.config.googleCallbackUrl = await googleCallbackUrl()
-
-    // oidc button flag
-    if (oidcConfig && oidcConfig.config) {
-      config.config.oidc = oidcConfig.config.configs[0].activated
-    } else {
-      config.config.oidc = false
-    }
-
-    ctx.body = config
   } catch (err: any) {
     ctx.throw(err.status, err)
   }
 }
 
-export async function upload(ctx: BBContext) {
-  if (ctx.request.files == null || ctx.request.files.file.length > 1) {
+export async function upload(ctx: UserCtx) {
+  if (ctx.request.files == null || Array.isArray(ctx.request.files.file)) {
     ctx.throw(400, "One file must be uploaded.")
   }
-  const file = ctx.request.files.file
+  const file = ctx.request.files.file as any
   const { type, name } = ctx.params
 
-  let bucket
-  if (env.SELF_HOSTED) {
-    bucket = objectStore.ObjectStoreBuckets.GLOBAL
-  } else {
-    bucket = objectStore.ObjectStoreBuckets.GLOBAL_CLOUD
-  }
+  let bucket = coreEnv.GLOBAL_BUCKET_NAME
+  const key = objectStore.getGlobalFileS3Key(type, name)
 
-  let key
-  if (env.MULTI_TENANCY) {
-    key = `${tenancy.getTenantId()}/${type}/${name}`
-  } else {
-    key = `${type}/${name}`
-  }
-
-  await objectStore.upload({
+  const result = await objectStore.upload({
     bucket,
     filename: key,
     path: file.path,
@@ -340,33 +402,34 @@ export async function upload(ctx: BBContext) {
   })
 
   // add to configuration structure
-  // TODO: right now this only does a global level
-  const db = tenancy.getGlobalDB()
-  let cfgStructure = await dbCore.getScopedFullConfig(db, { type })
-  if (!cfgStructure) {
-    cfgStructure = {
-      _id: dbCore.generateConfigID({ type }),
+  let config = await configs.getConfig(type)
+  if (!config) {
+    config = {
+      _id: configs.generateConfigID(type),
+      type,
       config: {},
     }
   }
-  let url
-  if (env.SELF_HOSTED) {
-    url = `/${bucket}/${key}`
-  } else {
-    url = `${env.CDN_URL}/${key}`
+
+  // save the Etag for cache bursting
+  const etag = result.ETag
+  if (etag) {
+    config.config[`${name}Etag`] = etag.replace(/"/g, "")
   }
 
-  cfgStructure.config[`${name}`] = url
-  // write back to db with url updated
-  await db.put(cfgStructure)
+  // save the file key
+  config.config[`${name}`] = key
+
+  // write back to db
+  await configs.save(config)
 
   ctx.body = {
     message: "File has been uploaded and url stored to config.",
-    url,
+    url: objectStore.getGlobalFileUrl(type, name, etag),
   }
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: UserCtx) {
   const db = tenancy.getGlobalDB()
   const { id, rev } = ctx.params
   try {
@@ -378,8 +441,7 @@ export async function destroy(ctx: BBContext) {
   }
 }
 
-export async function configChecklist(ctx: BBContext) {
-  const db = tenancy.getGlobalDB()
+export async function configChecklist(ctx: Ctx) {
   const tenantId = tenancy.getTenantId()
 
   try {
@@ -394,19 +456,13 @@ export async function configChecklist(ctx: BBContext) {
         }
 
         // They have set up SMTP
-        const smtpConfig = await dbCore.getScopedFullConfig(db, {
-          type: ConfigType.SMTP,
-        })
+        const smtpConfig = await configs.getSMTPConfig()
 
         // They have set up Google Auth
-        const googleConfig = await dbCore.getScopedFullConfig(db, {
-          type: ConfigType.GOOGLE,
-        })
+        const googleConfig = await configs.getGoogleConfig()
 
         // They have set up OIDC
-        const oidcConfig = await dbCore.getScopedFullConfig(db, {
-          type: ConfigType.OIDC,
-        })
+        const oidcConfig = await configs.getOIDCConfig()
 
         // They have set up a global user
         const userExists = await checkAnyUserExists()

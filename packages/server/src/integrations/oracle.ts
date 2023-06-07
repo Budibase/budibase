@@ -7,6 +7,8 @@ import {
   SqlQuery,
   Table,
   DatasourcePlus,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -24,12 +26,7 @@ import {
   ExecuteOptions,
   Result,
 } from "oracledb"
-import {
-  OracleTable,
-  OracleColumn,
-  OracleColumnsResponse,
-  OracleConstraint,
-} from "./base/types"
+import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
 let oracledb: any
 try {
   oracledb = require("oracledb")
@@ -53,6 +50,10 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "Oracle Database is an object-relational database management system developed by Oracle Corporation",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+  },
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -67,6 +68,7 @@ const SCHEMA: Integration = {
     database: {
       type: DatasourceFieldType.STRING,
       required: true,
+      display: "Service Name",
     },
     user: {
       type: DatasourceFieldType.STRING,
@@ -247,7 +249,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     )
   }
 
-  private internalConvertType(column: OracleColumn): { type: string } {
+  private internalConvertType(column: OracleColumn): { type: FieldTypes } {
     if (this.isBooleanType(column)) {
       return { type: FieldTypes.BOOLEAN }
     }
@@ -322,6 +324,37 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     const final = finaliseExternalTables(tables, entities)
     this.tables = final.tables
     this.schemaErrors = final.errors
+  }
+
+  async getTableNames() {
+    const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
+      sql: this.COLUMNS_SQL,
+    })
+    return (columnsResponse.rows || []).map(row => row.TABLE_NAME)
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    let connection
+    try {
+      connection = await this.getConnection()
+      response.connected = true
+    } catch (err: any) {
+      response.connected = false
+      response.error = err.message
+    } finally {
+      if (connection) {
+        try {
+          await connection.close()
+        } catch (err: any) {
+          response.connected = false
+          response.error = err.message
+        }
+      }
+    }
+    return response
   }
 
   private async internalQuery<T>(query: SqlQuery): Promise<Result<T>> {

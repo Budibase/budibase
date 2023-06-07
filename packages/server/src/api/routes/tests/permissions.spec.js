@@ -15,8 +15,11 @@ describe("/permission", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+  
+  beforeEach(async () => {
     table = await config.createTable()
     row = await config.createRow()
     perms = await config.addPermission(STD_ROLE_ID, table._id)
@@ -92,7 +95,7 @@ describe("/permission", () => {
   describe("check public user allowed", () => {
     it("should be able to read the row", async () => {
       // replicate changes before checking permissions
-      await config.deploy()
+      await config.publish()
 
       const res = await request
         .get(`/api/${table._id}/rows`)

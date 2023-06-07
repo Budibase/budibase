@@ -106,4 +106,8 @@
     border: var(--border-light);
     border-radius: 4px;
   }
+
+  .control :global(.spectrum-Textfield-input) {
+    padding-right: 40px;
+  }
 </style>

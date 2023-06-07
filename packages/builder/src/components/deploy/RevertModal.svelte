@@ -1,13 +1,15 @@
 <script>
   import {
-    Icon,
     Input,
     Modal,
     notifications,
     ModalContent,
+    ActionButton,
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import { API } from "api"
+
+  export let disabled = false
 
   let revertModal
   let appName
@@ -28,13 +30,15 @@
   }
 </script>
 
-<Icon
-  name="Revert"
-  hoverable
-  on:click={revertModal.show}
+<ActionButton
+  quiet
+  icon="Revert"
+  size="M"
   tooltip="Revert changes"
-  dataCy="revert-application-topnav"
+  on:click={revertModal.show}
+  {disabled}
 />
+
 <Modal bind:this={revertModal}>
   <ModalContent
     title="Revert Changes"

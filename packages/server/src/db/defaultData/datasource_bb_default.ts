@@ -1,8 +1,4 @@
-import {
-  FieldTypes,
-  AutoFieldSubTypes,
-  RelationshipTypes,
-} from "../../constants"
+import { FieldTypes, AutoFieldSubTypes } from "../../constants"
 import { importToRows } from "../../api/controllers/table/utils"
 import { cloneDeep } from "lodash/fp"
 import LinkDocument from "../linkedRows/LinkDocument"
@@ -11,7 +7,7 @@ import { employeeImport } from "./employeeImport"
 import { jobsImport } from "./jobsImport"
 import { expensesImport } from "./expensesImport"
 import { db as dbCore } from "@budibase/backend-core"
-import { Table, Row } from "@budibase/types"
+import { Table, Row, RelationshipTypes } from "@budibase/types"
 
 export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
 export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
@@ -38,7 +34,7 @@ function syncLastIds(table: Table, rowCount: number) {
   })
 }
 
-function tableImport(table: Table, data: Row) {
+function tableImport(table: Table, data: Row[]) {
   const cloneTable = cloneDeep(table)
   const rowDocs = importToRows(data, cloneTable)
   syncLastIds(cloneTable, rowDocs.length)
@@ -190,7 +186,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
   },
 }
 
-export const DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
+export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
   _id: DEFAULT_EMPLOYEE_TABLE_ID,
   type: "internal",
   views: {},
@@ -287,7 +283,7 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
       sortable: false,
     },
     "Badge Photo": {
-      type: "attachment",
+      type: FieldTypes.ATTACHMENT,
       constraints: {
         type: FieldTypes.ARRAY,
         presence: false,
@@ -466,7 +462,7 @@ export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
       // sortable: true,
     },
     "Works End": {
-      type: "datetime",
+      type: FieldTypes.DATETIME,
       constraints: {
         type: "string",
         length: {},
@@ -480,7 +476,7 @@ export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
       ignoreTimezones: true,
     },
     "Updated Price": {
-      type: "number",
+      type: FieldTypes.NUMBER,
       constraints: {
         type: "number",
         presence: false,

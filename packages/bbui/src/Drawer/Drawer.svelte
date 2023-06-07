@@ -3,11 +3,13 @@
   import Button from "../Button/Button.svelte"
   import Body from "../Typography/Body.svelte"
   import Heading from "../Typography/Heading.svelte"
+  import { setContext } from "svelte"
 
   export let title
   export let fillWidth
   export let left = "314px"
-  export let width = "calc(100% - 576px)"
+  export let width = "calc(100% - 626px)"
+  export let headless = false
 
   let visible = false
 
@@ -24,6 +26,11 @@
     }
     visible = false
   }
+
+  setContext("drawer-actions", {
+    hide,
+    show,
+  })
 
   const easeInOutQuad = x => {
     return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2
@@ -47,27 +54,34 @@
     <section
       class:fillWidth
       class="drawer"
+      class:headless
       transition:slide|local
       style={`width: ${width}; left: ${left};`}
     >
-      <header>
-        <div class="text">
-          <Heading size="XS">{title}</Heading>
-          <Body size="S">
-            <slot name="description" />
-          </Body>
-        </div>
-        <div class="buttons">
-          <Button secondary quiet on:click={hide}>Cancel</Button>
-          <slot name="buttons" />
-        </div>
-      </header>
+      {#if !headless}
+        <header>
+          <div class="text">
+            <Heading size="XS">{title}</Heading>
+            <Body size="S">
+              <slot name="description" />
+            </Body>
+          </div>
+          <div class="buttons">
+            <Button secondary quiet on:click={hide}>Cancel</Button>
+            <slot name="buttons" />
+          </div>
+        </header>
+      {/if}
       <slot name="body" />
     </section>
   </Portal>
 {/if}
 
 <style>
+  .drawer.headless :global(.drawer-contents) {
+    height: calc(40vh + 75px);
+  }
+
   .buttons {
     display: flex;
     gap: var(--spacing-m);

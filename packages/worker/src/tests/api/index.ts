@@ -10,6 +10,13 @@ import { MigrationAPI } from "./migrations"
 import { StatusAPI } from "./status"
 import { RestoreAPI } from "./restore"
 import { TenantAPI } from "./tenants"
+import { GroupsAPI } from "./groups"
+import { RolesAPI } from "./roles"
+import { TemplatesAPI } from "./templates"
+import { LicenseAPI } from "./license"
+import { AuditLogAPI } from "./auditLogs"
+import { ScimUsersAPI } from "./scim/users"
+import { ScimGroupsAPI } from "./scim/groups"
 
 export default class API {
   accounts: AccountAPI
@@ -23,6 +30,13 @@ export default class API {
   status: StatusAPI
   restore: RestoreAPI
   tenants: TenantAPI
+  groups: GroupsAPI
+  roles: RolesAPI
+  templates: TemplatesAPI
+  license: LicenseAPI
+  auditLogs: AuditLogAPI
+  scimUsersAPI: ScimUsersAPI
+  scimGroupsAPI: ScimGroupsAPI
 
   constructor(config: TestConfiguration) {
     this.accounts = new AccountAPI(config)
@@ -36,5 +50,12 @@ export default class API {
     this.status = new StatusAPI(config)
     this.restore = new RestoreAPI(config)
     this.tenants = new TenantAPI(config)
+    this.groups = new GroupsAPI(config)
+    this.roles = new RolesAPI(config)
+    this.templates = new TemplatesAPI(config)
+    this.license = new LicenseAPI(config)
+    this.auditLogs = new AuditLogAPI(config)
+    this.scimUsersAPI = new ScimUsersAPI(config)
+    this.scimGroupsAPI = new ScimGroupsAPI(config)
   }
 }

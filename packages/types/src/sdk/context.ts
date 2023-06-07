@@ -1,5 +1,5 @@
 import { User, Account } from "../documents"
-import { IdentityType } from "./events"
+import { IdentityType, HostInfo } from "./events"
 
 export interface BaseContext {
   _id: string
@@ -16,6 +16,7 @@ export interface UserContext extends BaseContext, User {
   _id: string
   tenantId: string
   account?: Account
+  hostInfo: HostInfo
 }
 
 export type IdentityContext = BaseContext | AccountUserContext | UserContext

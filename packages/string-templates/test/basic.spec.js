@@ -221,3 +221,9 @@ describe("check find hbs blocks function", () => {
   })
 })
 
+describe("should leave HBS blocks if not found using option", () => {
+  it("should replace one, leave one", async () => {
+    const output = await processString("{{ a }}, {{ b }}", { b: 1 }, { onlyFound: true })
+    expect(output).toBe("{{ a }}, 1")
+  })
+})

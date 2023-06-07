@@ -10,8 +10,9 @@ import * as structures from "../../tests/utilities/structures"
 import { MIGRATIONS } from "../"
 import * as helpers from "./helpers"
 
-const { mocks } = require("@budibase/backend-core/tests")
-const timestamp = mocks.date.MOCK_DATE.toISOString()
+import tk from "timekeeper"
+const timestamp = new Date().toISOString()
+tk.freeze(timestamp)
 
 const clearMigrations = async () => {
   const dbs = [context.getDevAppDB(), context.getProdAppDB()]
@@ -92,24 +93,16 @@ describe("migrations", () => {
       await clearMigrations()
       const appId = config.prodAppId
       const roles = { [appId]: "role_12345" }
-      await config.createUser(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        false,
-        true,
-        roles
-      ) // admin only
-      await config.createUser(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        false,
-        false,
-        roles
-      ) // non admin non builder
+      await config.createUser({
+        builder: false,
+        admin: true,
+        roles,
+      }) // admin only
+      await config.createUser({
+        builder: false,
+        admin: false,
+        roles,
+      }) // non admin non builder
       await config.createTable()
       await config.createRow()
       await config.createRow()

@@ -8,6 +8,7 @@
   import { onDestroy } from "svelte"
 
   export let label = ""
+  export let labelHidden = false
   export let componentInstance = {}
   export let control = null
   export let key = ""
@@ -20,6 +21,7 @@
   export let componentBindings = []
   export let nested = false
   export let highlighted = false
+  export let propertyFocus = false
   export let info = null
 
   $: nullishValue = value == null || value === ""
@@ -71,20 +73,25 @@
     if (highlighted) {
       store.actions.settings.highlight(null)
     }
+    // To fix focus 'affect' when property is target of a drawer other actions in the builder.
+    if (propertyFocus) {
+      store.actions.settings.propertyFocus(null)
+    }
   })
 </script>
 
 <div
   class="property-control"
+  class:wide={!label || labelHidden}
   class:highlighted={highlighted && nullishValue}
-  data-cy={`setting-${key}`}
+  class:property-focus={propertyFocus}
 >
-  {#if type !== "boolean" && label}
+  {#if label && !labelHidden}
     <div class="label">
-      <Label>{label}</Label>
+      <Label size="M">{label}</Label>
     </div>
   {/if}
-  <div data-cy={`${key}-prop-control`} class="control">
+  <div id={`${key}-prop-control`} class="control">
     <svelte:component
       this={control}
       {componentInstance}
@@ -94,7 +101,6 @@
       onChange={handleChange}
       bindings={allBindings}
       name={key}
-      text={label}
       {nested}
       {key}
       {type}
@@ -109,28 +115,46 @@
 <style>
   .property-control {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    align-items: start;
     transition: background 130ms ease-out, border-color 130ms ease-out;
     border-left: 4px solid transparent;
-    margin: -6px calc(-1 * var(--spacing-xl));
-    padding: 6px var(--spacing-xl) 6px calc(var(--spacing-xl) - 4px);
+    margin: 0 calc(-1 * var(--spacing-xl));
+    padding: 0 var(--spacing-xl) 0 calc(var(--spacing-xl) - 4px);
+    gap: 8px;
+  }
+  .property-control :global(.spectrum-FieldLabel) {
+    white-space: normal;
   }
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
-    border-color: var(--spectrum-global-color-blue-400);
+    border-color: var(--spectrum-global-color-static-red-600);
   }
+
+  .property-control.property-focus :global(input) {
+    border-color: var(
+      --spectrum-textfield-m-border-color-down,
+      var(--spectrum-alias-border-color-mouse-focus)
+    );
+  }
+
   .label {
-    padding-bottom: var(--spectrum-global-dimension-size-65);
+    margin-top: 16px;
+    transform: translateY(-50%);
   }
   .control {
     position: relative;
   }
+  .property-control.wide .control {
+    grid-column: 1 / -1;
+  }
   .text {
-    margin-top: var(--spectrum-global-dimension-size-65);
     font-size: var(--spectrum-global-dimension-font-size-75);
     color: var(--grey-6);
+    grid-column: 2 / 2;
+  }
+  .property-control.wide .text {
+    grid-column: 1 / -1;
   }
 </style>

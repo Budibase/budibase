@@ -1,18 +1,16 @@
-import { BBContext } from "@budibase/types"
-import { deprovisioning } from "@budibase/backend-core"
-import { quotas } from "@budibase/pro"
+import { UserCtx } from "@budibase/types"
+import * as tenantSdk from "../../../sdk/tenants"
 
-const _delete = async (ctx: BBContext) => {
+export async function destroy(ctx: UserCtx) {
   const user = ctx.user!
   const tenantId = ctx.params.tenantId
 
-  if (tenantId !== user.tenantId) {
+  if (!ctx.internal && tenantId !== user.tenantId) {
     ctx.throw(403, "Tenant ID does not match current user")
   }
 
   try {
-    await quotas.bustCache()
-    await deprovisioning.deleteTenant(tenantId)
+    await tenantSdk.deleteTenant(tenantId)
     ctx.status = 204
   } catch (err) {
     ctx.log.error(err)
@@ -20,4 +18,6 @@ const _delete = async (ctx: BBContext) => {
   }
 }
 
-export { _delete as delete }
+export async function info(ctx: UserCtx) {
+  ctx.body = await tenantSdk.tenantInfo(ctx.params.tenantId)
+}

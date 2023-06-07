@@ -1,5 +1,6 @@
 import TestConfig from "../../../../tests/utilities/TestConfiguration"
 import env from "../../../../environment"
+import supertest from "supertest"
 export * as structures from "../../../../tests/utilities/structures"
 
 function user() {
@@ -44,7 +45,8 @@ export function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-let request: any, config: any
+let request: supertest.SuperTest<supertest.Test> | undefined | null,
+  config: TestConfig | null
 
 export function beforeAll() {
   config = new TestConfig()
@@ -63,16 +65,16 @@ export function afterAll() {
 
 export function getRequest() {
   if (!request) {
-    exports.beforeAll()
+    beforeAll()
   }
-  return request
+  return request!
 }
 
 export function getConfig() {
   if (!config) {
-    exports.beforeAll()
+    beforeAll()
   }
-  return config
+  return config!
 }
 
 export async function switchToSelfHosted(func: any) {

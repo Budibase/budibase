@@ -28,6 +28,7 @@
       "dataprovider",
       "repeater",
       "table",
+      "spreadsheet",
       "dynamicfilter",
       "daterangepicker"
     ]

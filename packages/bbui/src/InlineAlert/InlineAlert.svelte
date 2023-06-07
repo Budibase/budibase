@@ -7,7 +7,7 @@
   export let message = ""
   export let onConfirm = undefined
   export let buttonText = ""
-
+  export let cta = false
   $: icon = selectIcon(type)
   // if newlines used, convert them to different elements
   $: split = message.split("\n")
@@ -41,7 +41,9 @@
   {/each}
   {#if onConfirm}
     <div class="spectrum-InLineAlert-footer button">
-      <Button secondary on:click={onConfirm}>{buttonText || "OK"}</Button>
+      <Button {cta} secondary={cta ? false : true} on:click={onConfirm}
+        >{buttonText || "OK"}</Button
+      >
     </div>
   {/if}
 </div>
@@ -56,5 +58,7 @@
     --spectrum-semantic-positive-icon-color: #2d9d78;
     --spectrum-semantic-negative-icon-color: #e34850;
     min-width: 100px;
+    margin: 0;
+    border-width: 1px;
   }
 </style>

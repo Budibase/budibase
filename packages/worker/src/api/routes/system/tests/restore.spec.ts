@@ -25,12 +25,12 @@ describe("/api/system/restore", () => {
     })
 
     it("restores in self host", async () => {
-      config.modeSelf()
+      config.selfHosted()
       const res = await config.api.restore.restored()
       expect(res.body).toEqual({
         message: "System prepared after restore.",
       })
-      config.modeCloud()
+      config.cloudHosted()
     })
   })
 })

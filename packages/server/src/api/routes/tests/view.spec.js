@@ -28,8 +28,11 @@ describe("/views", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
+  })
+  
+  beforeEach(async() => {
     table = await config.createTable(priceTable())
   })
 
@@ -111,8 +114,8 @@ describe("/views", () => {
       expect(res.body.tableId).toBe(table._id)
 
       const updatedTable = await config.getTable(table._id)
-      expect(updatedTable.views).toEqual({
-        TestView: {
+      const expectedObj = expect.objectContaining({
+        TestView: expect.objectContaining({
           field: "Price",
           calculation: "stats",
           tableId: table._id,
@@ -140,8 +143,9 @@ describe("/views", () => {
               type: "string",
             },
           },
-        },
+        }),
       })
+      expect(updatedTable.views).toEqual(expectedObj)
     })
   })
 

@@ -17,13 +17,14 @@ import URLSelect from "./controls/URLSelect.svelte"
 import OptionsEditor from "./controls/OptionsEditor/OptionsEditor.svelte"
 import FormFieldSelect from "./controls/FormFieldSelect.svelte"
 import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelte"
-import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
 import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
+import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
 
 const componentMap = {
-  text: DrawerBindableCombobox,
+  text: DrawerBindableInput,
   select: Select,
   radio: RadioGroup,
   dataSource: DataSourceSelect,
@@ -43,6 +44,7 @@ const componentMap = {
   section: SectionSelect,
   filter: FilterEditor,
   url: URLSelect,
+  fieldConfiguration: FieldConfiguration,
   columns: ColumnEditor,
   "columns/basic": BasicColumnEditor,
   "field/sortable": SortableFieldSelect,
@@ -56,7 +58,7 @@ const componentMap = {
   "field/link": FormFieldSelect,
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,
-  "field/barcode/qr": FormFieldSelect,
+  "field/barcodeqr": FormFieldSelect,
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,

@@ -4,13 +4,19 @@ import {
   AutomationActionStepId,
   AutomationStepSchema,
   AutomationStepInput,
+  AutomationStepType,
+  AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
   name: "Zapier Webhook",
   stepId: AutomationActionStepId.zapier,
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   internal: false,
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   description: "Trigger a Zapier Zap via webhooks",
   tagline: "Trigger a Zapier Zap",
   icon: "ri-flashlight-line",
@@ -19,27 +25,31 @@ export const definition: AutomationStepSchema = {
     inputs: {
       properties: {
         url: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Webhook URL",
         },
+        body: {
+          type: AutomationIOType.JSON,
+          title: "Payload",
+        },
         value1: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Payload Value 1",
         },
         value2: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Payload Value 2",
         },
         value3: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Payload Value 3",
         },
         value4: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Payload Value 4",
         },
         value5: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Payload Value 5",
         },
       },
@@ -48,11 +58,11 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         httpStatus: {
-          type: "number",
+          type: AutomationIOType.NUMBER,
           description: "The HTTP status code of the request",
         },
         response: {
-          type: "string",
+          type: AutomationIOType.STRING,
           description: "The response from Zapier",
         },
       },
@@ -61,24 +71,53 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  const { url, value1, value2, value3, value4, value5 } = inputs
+  //TODO - Remove deprecated values 1,2,3,4,5 after November 2023
+  const { url, value1, value2, value3, value4, value5, body } = inputs
 
+  let payload = {}
+  try {
+    payload = body?.value ? JSON.parse(body?.value) : {}
+  } catch (err) {
+    return {
+      httpStatus: 400,
+      response: "Invalid payload JSON",
+      success: false,
+    }
+  }
+
+  if (!url?.trim()?.length) {
+    return {
+      httpStatus: 400,
+      response: "Missing Webhook URL",
+      success: false,
+    }
+  }
   // send the platform to make sure zaps always work, even
   // if no values supplied
-  const response = await fetch(url, {
-    method: "post",
-    body: JSON.stringify({
-      platform: "budibase",
-      value1,
-      value2,
-      value3,
-      value4,
-      value5,
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
+  let response
+  try {
+    response = await fetch(url, {
+      method: "post",
+      body: JSON.stringify({
+        platform: "budibase",
+        value1,
+        value2,
+        value3,
+        value4,
+        value5,
+        ...payload,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+  } catch (err: any) {
+    return {
+      httpStatus: 400,
+      response: err.message,
+      success: false,
+    }
+  }
 
   const { status, message } = await getFetchResponse(response)
 

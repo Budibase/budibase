@@ -3,8 +3,10 @@ import * as userController from "../user"
 import { FieldTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import { BBContext, Row, Table } from "@budibase/types"
-export { removeKeyNumbering } from "../../../integrations/base/utils"
+import { Row, Table } from "@budibase/types"
+import { Format } from "../view/exporters"
+import { UserCtx } from "@budibase/types"
+import sdk from "../../../sdk"
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
 
@@ -20,12 +22,11 @@ validateJs.extend(validateJs.validators.datetime, {
 
 export async function getDatasourceAndQuery(json: any) {
   const datasourceId = json.endpoint.datasourceId
-  const db = context.getAppDB()
-  const datasource = await db.get(datasourceId)
+  const datasource = await sdk.datasources.get(datasourceId)
   return makeExternalQuery(datasource, json)
 }
 
-export async function findRow(ctx: BBContext, tableId: string, rowId: string) {
+export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
   const db = context.getAppDB()
   let row
   // TODO remove special user case in future
@@ -55,22 +56,22 @@ export async function validate({
 }) {
   let fetchedTable: Table
   if (!table) {
-    const db = context.getAppDB()
-    fetchedTable = await db.get(tableId)
+    fetchedTable = await sdk.tables.getTable(tableId)
   } else {
     fetchedTable = table
   }
   const errors: any = {}
   for (let fieldName of Object.keys(fetchedTable.schema)) {
-    const constraints = cloneDeep(fetchedTable.schema[fieldName].constraints)
-    const type = fetchedTable.schema[fieldName].type
+    const column = fetchedTable.schema[fieldName]
+    const constraints = cloneDeep(column.constraints)
+    const type = column.type
     // formulas shouldn't validated, data will be deleted anyway
-    if (type === FieldTypes.FORMULA) {
+    if (type === FieldTypes.FORMULA || column.autocolumn) {
       continue
     }
-    // special case for options, need to always allow unselected (null)
+    // special case for options, need to always allow unselected (empty)
     if (type === FieldTypes.OPTIONS && constraints.inclusion) {
-      constraints.inclusion.push(null)
+      constraints.inclusion.push(null, "")
     }
     let res
 
@@ -115,4 +116,53 @@ export async function validate({
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
+}
+
+export function cleanExportRows(
+  rows: any[],
+  schema: any,
+  format: string,
+  columns: string[]
+) {
+  let cleanRows = [...rows]
+
+  const relationships = Object.entries(schema)
+    .filter((entry: any[]) => entry[1].type === FieldTypes.LINK)
+    .map(entry => entry[0])
+
+  relationships.forEach(column => {
+    cleanRows.forEach(row => {
+      delete row[column]
+    })
+    delete schema[column]
+  })
+
+  if (format === Format.CSV) {
+    // Intended to append empty values in export
+    const schemaKeys = Object.keys(schema)
+    for (let key of schemaKeys) {
+      if (columns?.length && columns.indexOf(key) > 0) {
+        continue
+      }
+      for (let row of cleanRows) {
+        if (row[key] == null) {
+          row[key] = undefined
+        }
+      }
+    }
+  }
+
+  return cleanRows
+}
+
+export function getTableId(ctx: any) {
+  if (ctx.request.body && ctx.request.body.tableId) {
+    return ctx.request.body.tableId
+  }
+  if (ctx.params && ctx.params.tableId) {
+    return ctx.params.tableId
+  }
+  if (ctx.params && ctx.params.viewName) {
+    return ctx.params.viewName
+  }
 }

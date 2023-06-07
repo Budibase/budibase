@@ -1,38 +1,25 @@
 <script>
-  import { goto } from "@roxi/routify"
   import { tables, views, database } from "stores/backend"
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
+  import { goto, isActive } from "@roxi/routify"
 
-  const alphabetical = (a, b) => a.name?.toLowerCase() > b.name?.toLowerCase()
+  const alphabetical = (a, b) =>
+    a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
 
   export let sourceId
 
-  $: selectedView = $views.selected && $views.selected.name
   $: sortedTables = $tables.list
     .filter(table => table.sourceId === sourceId)
     .sort(alphabetical)
 
-  function selectTable(table) {
-    tables.select(table)
-    $goto(`./table/${table._id}`)
-  }
-
-  function selectView(view) {
-    views.select(view)
-    $goto(`./view/${view.name}`)
-  }
-
-  function onClickView(table, viewName) {
-    if (selectedView === viewName) {
-      return
+  const selectTable = tableId => {
+    tables.select(tableId)
+    if (!$isActive("./table/:tableId")) {
+      $goto(`./table/${tableId}`)
     }
-    selectView({
-      name: viewName,
-      ...table.views[viewName],
-    })
   }
 </script>
 
@@ -44,8 +31,9 @@
         border={idx > 0}
         icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
         text={table.name}
-        selected={$tables.selected?._id === table._id}
-        on:click={() => selectTable(table)}
+        selected={$isActive("./table/:tableId") &&
+          $tables.selected?._id === table._id}
+        on:click={() => selectTable(table._id)}
       >
         {#if table._id !== TableNames.USERS}
           <EditTablePopover {table} />
@@ -56,8 +44,8 @@
           indentLevel={2}
           icon="Remove"
           text={viewName}
-          selected={selectedView === viewName}
-          on:click={() => onClickView(table, viewName)}
+          selected={$isActive("./view") && $views.selected?.name === viewName}
+          on:click={() => $goto(`./view/${encodeURIComponent(viewName)}`)}
         >
           <EditViewPopover
             view={{ name: viewName, ...table.views[viewName] }}

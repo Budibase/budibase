@@ -1,6 +1,6 @@
 import { bootstrap } from "global-agent"
 const fixPath = require("fix-path")
-const { checkDevelopmentEnvironment } = require("./utilities/fileSystem")
+import { checkDevelopmentEnvironment } from "./utilities/fileSystem"
 
 function runServer() {
   // this will shutdown the system if development environment not ready

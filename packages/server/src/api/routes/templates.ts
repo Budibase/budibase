@@ -13,4 +13,4 @@ router
     controller.downloadTemplate
   )
 
-export = router
+export default router

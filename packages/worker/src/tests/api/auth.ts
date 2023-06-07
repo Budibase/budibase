@@ -1,20 +1,39 @@
 import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
+import { TestAPI, TestAPIOpts } from "./base"
 
 export class AuthAPI extends TestAPI {
   constructor(config: TestConfiguration) {
     super(config)
   }
 
-  updatePassword = (code: string) => {
+  updatePassword = (
+    resetCode: string,
+    password: string,
+    opts?: TestAPIOpts
+  ) => {
     return this.request
       .post(`/api/global/auth/${this.config.getTenantId()}/reset/update`)
       .send({
-        password: "newpassword",
-        resetCode: code,
+        password,
+        resetCode,
       })
       .expect("Content-Type", /json/)
-      .expect(200)
+      .expect(opts?.status ? opts.status : 200)
+  }
+
+  login = (
+    tenantId: string,
+    email: string,
+    password: string,
+    opts?: TestAPIOpts
+  ) => {
+    return this.request
+      .post(`/api/global/auth/${tenantId}/login`)
+      .send({
+        username: email,
+        password: password,
+      })
+      .expect(opts?.status ? opts.status : 200)
   }
 
   logout = () => {
@@ -24,22 +43,33 @@ export class AuthAPI extends TestAPI {
       .expect(200)
   }
 
-  requestPasswordReset = async (sendMailMock: any) => {
+  requestPasswordReset = async (
+    sendMailMock: any,
+    email: string,
+    opts?: TestAPIOpts
+  ) => {
     await this.config.saveSmtpConfig()
     await this.config.saveSettingsConfig()
-    await this.config.createUser()
+
     const res = await this.request
       .post(`/api/global/auth/${this.config.getTenantId()}/reset`)
       .send({
-        email: "test@test.com",
+        email: email,
       })
       .expect("Content-Type", /json/)
-      .expect(200)
-    const emailCall = sendMailMock.mock.calls[0][0]
-    const parts = emailCall.html.split(
-      `http://localhost:10000/builder/auth/reset?code=`
-    )
-    const code = parts[1].split('"')[0].split("&")[0]
+      .expect(opts?.status ? opts.status : 200)
+
+    let code: string | undefined
+    if (res.status === 200) {
+      if (sendMailMock.mock.calls.length) {
+        const emailCall = sendMailMock.mock.calls[0][0]
+        const parts = emailCall.html.split(
+          `http://localhost:10000/builder/auth/reset?code=`
+        )
+        code = parts[1].split('"')[0].split("&")[0]
+      }
+    }
+
     return { code, res }
   }
 }

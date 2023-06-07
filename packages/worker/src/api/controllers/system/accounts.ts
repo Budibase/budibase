@@ -1,21 +1,23 @@
-import { Account, AccountMetadata } from "@budibase/types"
-import sdk from "../../../sdk"
+import { Account, AccountMetadata, Ctx } from "@budibase/types"
+import * as accounts from "../../../sdk/accounts"
 
-export const save = async (ctx: any) => {
+export const save = async (ctx: Ctx<Account, AccountMetadata>) => {
   const account = ctx.request.body as Account
   let metadata: AccountMetadata = {
-    _id: sdk.accounts.formatAccountMetadataId(account.accountId),
+    _id: accounts.metadata.formatAccountMetadataId(account.accountId),
     email: account.email,
   }
 
-  metadata = await sdk.accounts.saveMetadata(metadata)
+  metadata = await accounts.metadata.saveMetadata(metadata)
 
   ctx.body = metadata
   ctx.status = 200
 }
 
 export const destroy = async (ctx: any) => {
-  const accountId = sdk.accounts.formatAccountMetadataId(ctx.params.accountId)
-  await sdk.accounts.destroyMetadata(accountId)
+  const accountId = accounts.metadata.formatAccountMetadataId(
+    ctx.params.accountId
+  )
+  await accounts.metadata.destroyMetadata(accountId)
   ctx.status = 204
 }

@@ -1,4 +1,4 @@
-import sdk from "../../../../sdk"
+import * as accounts from "../../../../sdk/accounts"
 import { TestConfiguration, structures } from "../../../../tests"
 import { v4 as uuid } from "uuid"
 
@@ -24,8 +24,8 @@ describe("accounts", () => {
 
         const response = await config.api.accounts.saveMetadata(account)
 
-        const id = sdk.accounts.formatAccountMetadataId(account.accountId)
-        const metadata = await sdk.accounts.getMetadata(id)
+        const id = accounts.metadata.formatAccountMetadataId(account.accountId)
+        const metadata = await accounts.metadata.getMetadata(id)
         expect(response).toStrictEqual(metadata)
       })
     })
@@ -37,7 +37,7 @@ describe("accounts", () => {
 
         await config.api.accounts.destroyMetadata(account.accountId)
 
-        const deleted = await sdk.accounts.getMetadata(account.accountId)
+        const deleted = await accounts.metadata.getMetadata(account.accountId)
         expect(deleted).toBe(undefined)
       })
 

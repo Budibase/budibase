@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "2.2.8",
+  "version": "0.0.0",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -9,20 +9,7 @@
     "dev:builder": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
-    "test": "jest",
-    "cy:setup": "ts-node ./cypress/ts/setup.ts",
-    "cy:setup:ci": "node ./cypress/setup.js",
-    "cy:open": "cypress open",
-    "cy:run": "cypress run",
-    "cy:run:ci": "cypress run --headed --browser chrome --spec cypress/integration/createApp.spec.js",
-    "cy:run:ci:record": "xvfb-run cypress run --headed --browser chrome --record",
-    "cy:test": "start-server-and-test cy:setup http://localhost:4100/builder cy:run",
-    "cy:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:run:ci",
-    "cy:ci:record": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:run:ci:record; npm run cy:ci:report",
-    "cy:ci:report": "mochawesome-merge cypress/reports/*.json > cypress/reports/testReport.json && marge cypress/reports/testReport.json --reportDir cypress/reports --inline",
-    "cy:ci:notify": "node scripts/cypressResultsWebhook",
-    "cy:debug": "start-server-and-test cy:setup http://localhost:4100/builder cy:open",
-    "cy:debug:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:open"
+    "test": "vitest run"
   },
   "jest": {
     "globals": {
@@ -71,23 +58,36 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^2.2.8",
-    "@budibase/client": "^2.2.8",
-    "@budibase/frontend-core": "^2.2.8",
-    "@budibase/string-templates": "^2.2.8",
+    "@budibase/bbui": "0.0.0",
+    "@budibase/frontend-core": "0.0.0",
+    "@budibase/shared-core": "0.0.0",
+    "@budibase/string-templates": "0.0.0",
+    "@budibase/types": "0.0.0",
+    "@codemirror/autocomplete": "^6.7.1",
+    "@codemirror/commands": "^6.2.4",
+    "@codemirror/lang-javascript": "^6.1.8",
+    "@codemirror/language": "^6.6.0",
+    "@codemirror/state": "^6.2.0",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/view": "^6.11.2",
+    "@fortawesome/fontawesome-svg-core": "^6.2.1",
+    "@fortawesome/free-brands-svg-icons": "^6.2.1",
+    "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@sentry/browser": "5.19.1",
+    "@spectrum-css/accordion": "^3.0.24",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
     "codemirror": "^5.59.0",
     "dayjs": "^1.11.2",
     "downloadjs": "1.4.7",
+    "fast-json-patch": "^3.1.1",
     "lodash": "4.17.21",
     "posthog-js": "^1.36.0",
     "remixicon": "2.5.0",
     "shortid": "2.2.15",
     "svelte-dnd-action": "^0.9.8",
     "svelte-loading-spinners": "^0.1.1",
-    "svelte-portal": "0.1.0",
+    "svelte-portal": "1.0.0",
     "uuid": "8.3.1",
     "yup": "0.29.2"
   },
@@ -100,13 +100,14 @@
     "@roxi/routify": "2.18.5",
     "@sveltejs/vite-plugin-svelte": "1.0.1",
     "@testing-library/jest-dom": "^5.11.10",
-    "@testing-library/svelte": "^3.0.0",
+    "@testing-library/svelte": "^3.2.2",
     "babel-jest": "^26.6.3",
     "cypress": "^9.3.1",
     "cypress-multi-reporters": "^1.6.0",
     "cypress-terminal-report": "^1.4.1",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.6.3",
+    "jsdom": "^21.1.1",
     "mochawesome": "^7.1.3",
     "mochawesome-merge": "^4.2.1",
     "mochawesome-report-generator": "^6.2.0",
@@ -120,7 +121,34 @@
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
     "typescript": "4.7.3",
-    "vite": "^3.0.8"
+    "vite": "^3.0.8",
+    "vitest": "^0.29.2"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates",
+              "@budibase/shared-core"
+            ],
+            "target": "build"
+          }
+        ]
+      },
+      "test": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/shared-core",
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   },
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"
 }

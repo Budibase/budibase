@@ -11,14 +11,31 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionTitle = option => option
+  export let sort = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => dispatch("change", e.target.value)
+
+  const getSortedOptions = (options, getLabel, sort) => {
+    if (!options?.length || !Array.isArray(options)) {
+      return []
+    }
+    if (!sort) {
+      return options
+    }
+    return [...options].sort((a, b) => {
+      const labelA = getLabel(a)
+      const labelB = getLabel(b)
+      return labelA > labelB ? 1 : -1
+    })
+  }
+
+  $: parsedOptions = getSortedOptions(options, getOptionLabel, sort)
 </script>
 
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>
-  {#if options && Array.isArray(options)}
-    {#each options as option}
+  {#if parsedOptions && Array.isArray(parsedOptions)}
+    {#each parsedOptions as option}
       <div
         title={getOptionTitle(option)}
         class="spectrum-Radio spectrum-FieldGroup-item spectrum-Radio--emphasized"

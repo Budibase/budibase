@@ -2,4 +2,5 @@ import BudibaseEmitter from "./BudibaseEmitter"
 
 const emitter = new BudibaseEmitter()
 
-export = emitter
+export { init } from "./docUpdates"
+export default emitter

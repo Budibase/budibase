@@ -3,7 +3,6 @@ import ColorPicker from "components/design/settings/controls/ColorPicker.svelte"
 
 export const margin = {
   label: "Margin",
-  columns: "1fr 1fr",
   settings: [
     {
       label: "Top",
@@ -90,7 +89,6 @@ export const margin = {
 
 export const padding = {
   label: "Padding",
-  columns: "1fr 1fr",
   settings: [
     {
       label: "Top",
@@ -177,7 +175,6 @@ export const padding = {
 
 export const size = {
   label: "Size",
-  columns: "1fr 1fr",
   settings: [
     {
       label: "Width",
@@ -196,7 +193,6 @@ export const size = {
 
 export const background = {
   label: "Background",
-  columns: "auto 1fr",
   settings: [
     {
       label: "Color",
@@ -285,7 +281,6 @@ export const background = {
 
 export const border = {
   label: "Border",
-  columns: "1fr 1fr",
   settings: [
     {
       label: "Color",

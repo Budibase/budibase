@@ -1,69 +1,149 @@
 name: Budibase CI
 
-on: 
- # Trigger the workflow on push or pull request,
- # but only for the master branch
- push:
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the master branch
+  push:
     branches:
       - master
-      - develop 
- pull_request:
+      - develop
+  pull_request:
     branches:
       - master
-      - develop 
-      - release 
- workflow_dispatch:
+      - develop
+  workflow_dispatch:
 
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.x
+          cache: "yarn"
+      - run: yarn
+      - run: yarn lint
+
   build:
     runs-on: ubuntu-latest
-
-    services:
-      couchdb:
-        image: ibmcom/couchdb3
-        env:
-          COUCHDB_PASSWORD: budibase
-          COUCHDB_USER: budibase
-        ports:
-          - 4567:5984
-
-    strategy:
-      matrix:
-        node-version: [14.x]
-
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.x
+          cache: "yarn"
+      - run: yarn
+      # Run build all the projects
+      - run: yarn build
+      # Check the types of the projects built via esbuild
+      - run: yarn check:types
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
+  test-libraries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.x
+          cache: "yarn"
+      - run: yarn
+      - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          name: codecov-umbrella
+          verbose: true
 
-    - name: Install Pro
-      run: yarn install:pro $BRANCH $BASE_BRANCH
+  test-services:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.x
+          cache: "yarn"
+      - run: yarn
+      - run: yarn test --scope=@budibase/worker --scope=@budibase/server
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
+          name: codecov-umbrella
+          verbose: true
 
-    - run: yarn
-    - run: yarn bootstrap
-    - run: yarn lint
-    - run: yarn build
-    - run: yarn test
-      env:
-        CI: true
-        name: Budibase CI
-    - uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        files: ./packages/server/coverage/clover.xml,./packages/worker/coverage/clover.xml,./packages/backend-core/coverage/clover.xml
-        name: codecov-umbrella
-        verbose: true 
+  test-pro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.x
+          cache: "yarn"
+      - run: yarn
+      - run: yarn test --scope=@budibase/pro
 
-    - name: QA Core Integration Tests
-      run: | 
-        cd qa-core
-        yarn
-        yarn api:test:ci
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.x
+          cache: "yarn"
+      - run: yarn
+      - run: yarn build
+      - name: Run tests
+        run: |
+          cd qa-core
+          yarn setup
+          yarn test:ci
+        env:
+          BB_ADMIN_USER_EMAIL: admin
+          BB_ADMIN_USER_PASSWORD: admin
+
+  check-pro-submodule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
+      - name: Check submodule
+        run: |
+          cd packages/pro
+          git fetch
+          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/develop; then
+            echo "Current commit has not been merged to develop"
+            echo "Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md"
+            exit 1
+          else
+            echo "All good, the submodule had been merged!"
+          fi

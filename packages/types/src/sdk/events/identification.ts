@@ -34,6 +34,11 @@ export enum IdentityType {
   INSTALLATION = "installation",
 }
 
+export interface HostInfo {
+  ipAddress?: string
+  userAgent?: string
+}
+
 export interface Identity {
   id: string
   type: IdentityType
@@ -41,6 +46,9 @@ export interface Identity {
   environment: string
   installationId?: string
   tenantId?: string
+  // usable - no unique format
+  realTenantId?: string
+  hostInfo?: HostInfo
 }
 
 export interface UserIdentity extends Identity {

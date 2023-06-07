@@ -128,6 +128,7 @@ class InMemoryQueue {
 
   on() {
     // do nothing
+    return this
   }
 
   async waitForCompletion() {
@@ -137,4 +138,4 @@ class InMemoryQueue {
   }
 }
 
-export = InMemoryQueue
+export default InMemoryQueue

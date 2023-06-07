@@ -1,13 +1,27 @@
+import * as setup from "../../tests/utilities"
 import { checkSlashesInUrl } from "../../../../utilities"
+import supertest from "supertest"
 
-export function generateMakeRequest(apiKey: string, setup: any) {
-  const request = setup.getRequest()
-  const config = setup.getConfig()
+export type HttpMethod = "post" | "get" | "put" | "delete" | "patch"
+
+export type MakeRequestResponse = (
+  method: HttpMethod,
+  endpoint: string,
+  body?: any,
+  intAppId?: string
+) => Promise<supertest.Response>
+
+export function generateMakeRequest(
+  apiKey: string,
+  isInternal = false
+): MakeRequestResponse {
+  const request = setup.getRequest()!
+  const config = setup.getConfig()!
   return async (
-    method: string,
+    method: HttpMethod,
     endpoint: string,
     body?: any,
-    intAppId: string = config.getAppId()
+    intAppId: string | null = config.getAppId()
   ) => {
     const extraHeaders: any = {
       "x-budibase-api-key": apiKey,
@@ -15,9 +29,12 @@ export function generateMakeRequest(apiKey: string, setup: any) {
     if (intAppId) {
       extraHeaders["x-budibase-app-id"] = intAppId
     }
-    const req = request[method](
-      checkSlashesInUrl(`/api/public/v1/${endpoint}`)
-    ).set(config.defaultHeaders(extraHeaders))
+
+    const url = isInternal
+      ? endpoint
+      : checkSlashesInUrl(`/api/public/v1/${endpoint}`)
+
+    const req = request[method](url).set(config.defaultHeaders(extraHeaders))
     if (body) {
       req.send(body)
     }

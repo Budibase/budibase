@@ -7,6 +7,7 @@ import {
 import { FieldTypes, FormulaTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
 import { Table, Row } from "@budibase/types"
+import * as linkRows from "../../../db/linkedRows"
 const { isEqual } = require("lodash")
 const { cloneDeep } = require("lodash/fp")
 
@@ -16,7 +17,10 @@ const { cloneDeep } = require("lodash/fp")
  * updated.
  * NOTE: this will only for affect static formulas.
  */
-export async function updateRelatedFormula(table: Table, enrichedRows: Row[]) {
+export async function updateRelatedFormula(
+  table: Table,
+  enrichedRows: Row[] | Row
+) {
   const db = context.getAppDB()
   // no formula to update, we're done
   if (!table.relatedFormula) {
@@ -35,7 +39,13 @@ export async function updateRelatedFormula(table: Table, enrichedRows: Row[]) {
         if (!relatedRows[relatedTableId]) {
           relatedRows[relatedTableId] = []
         }
-        relatedRows[relatedTableId] = relatedRows[relatedTableId].concat(field)
+        // filter down to the rows which are not already included in related
+        const currentIds = relatedRows[relatedTableId].map(row => row._id)
+        const uniqueRelatedRows = field.filter(
+          (row: Row) => !currentIds.includes(row._id)
+        )
+        relatedRows[relatedTableId] =
+          relatedRows[relatedTableId].concat(uniqueRelatedRows)
       }
     }
     for (let tableId of table.relatedFormula) {
@@ -155,7 +165,11 @@ export async function finaliseRow(
   enrichedRow = await processFormulas(table, enrichedRow, { dynamic: false })
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
-    await exports.updateRelatedFormula(table, enrichedRow)
+    await updateRelatedFormula(table, enrichedRow)
   }
-  return { row: enrichedRow, table }
+  const squashed = await linkRows.squashLinksToPrimaryDisplay(
+    table,
+    enrichedRow
+  )
+  return { row: enrichedRow, squashed, table }
 }

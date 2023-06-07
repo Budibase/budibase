@@ -1,7 +1,9 @@
-const { roles } = require("@budibase/backend-core")
+const { roles, utils } = require("@budibase/backend-core")
 const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { BUILTIN_ROLE_IDS } = roles
+
+jest.setTimeout(30000)
 
 jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {
@@ -19,14 +21,14 @@ describe("/users", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 
   describe("fetch", () => {
     it("returns a list of users from an instance db", async () => {
-      await config.createUser("uuidx")
-      await config.createUser("uuidy")
+      await config.createUser({ id: "uuidx" })
+      await config.createUser({ id: "uuidy" })
       const res = await request
         .get(`/api/users/metadata`)
         .set(config.defaultHeaders())
@@ -53,8 +55,9 @@ describe("/users", () => {
 
   describe("update", () => {
     it("should be able to update the user", async () => {
-      const user = await config.createUser()
+      const user = await config.createUser({ id: `us_update${utils.newid()}` })
       user.roleId = BUILTIN_ROLE_IDS.BASIC
+      delete user._rev
       const res = await request
         .put(`/api/users/metadata`)
         .set(config.defaultHeaders())
@@ -62,6 +65,46 @@ describe("/users", () => {
         .expect(200)
         .expect("Content-Type", /json/)
       expect(res.body.ok).toEqual(true)
+    })
+
+    it("should be able to update the user multiple times", async () => {
+      const user = await config.createUser()
+      delete user._rev
+
+      const res1 = await request
+        .put(`/api/users/metadata`)
+        .set(config.defaultHeaders())
+        .send({ ...user, roleId: BUILTIN_ROLE_IDS.BASIC })
+        .expect(200)
+        .expect("Content-Type", /json/)
+
+      const res = await request
+        .put(`/api/users/metadata`)
+        .set(config.defaultHeaders())
+        .send({ ...user, _rev: res1.body.rev, roleId: BUILTIN_ROLE_IDS.POWER })
+        .expect(200)
+        .expect("Content-Type", /json/)
+
+      expect(res.body.ok).toEqual(true)
+    })
+
+    it("should require the _rev field for multiple updates", async () => {
+      const user = await config.createUser()
+      delete user._rev
+
+      await request
+        .put(`/api/users/metadata`)
+        .set(config.defaultHeaders())
+        .send({ ...user, roleId: BUILTIN_ROLE_IDS.BASIC })
+        .expect(200)
+        .expect("Content-Type", /json/)
+
+      await request
+        .put(`/api/users/metadata`)
+        .set(config.defaultHeaders())
+        .send({ ...user, roleId: BUILTIN_ROLE_IDS.POWER })
+        .expect(409)
+        .expect("Content-Type", /json/)
     })
   })
 
@@ -88,6 +131,78 @@ describe("/users", () => {
       expect(res.body._id).toEqual(user._id)
       expect(res.body.roleId).toEqual(BUILTIN_ROLE_IDS.ADMIN)
       expect(res.body.tableId).toBeDefined()
+    })
+  })
+
+  describe("setFlag", () => {
+    it("should throw an error if a flag is not provided", async () => {
+      await config.createUser()
+      const res = await request
+        .post(`/api/users/flags`)
+        .set(config.defaultHeaders())
+        .send({ value: "test" })
+        .expect(400)
+        .expect("Content-Type", /json/)
+      expect(res.body.message).toEqual(
+        "Must supply a 'flag' field in request body."
+      )
+    })
+
+    it("should be able to set a flag on the user", async () => {
+      await config.createUser()
+      const res = await request
+        .post(`/api/users/flags`)
+        .set(config.defaultHeaders())
+        .send({ value: "test", flag: "test" })
+        .expect(200)
+        .expect("Content-Type", /json/)
+      expect(res.body.message).toEqual("Flag set successfully")
+    })
+  })
+
+  describe("getFlags", () => {
+    it("should get flags for a specific user", async () => {
+      let flagData = { value: "test", flag: "test" }
+      await config.createUser()
+      await request
+        .post(`/api/users/flags`)
+        .set(config.defaultHeaders())
+        .send(flagData)
+        .expect(200)
+        .expect("Content-Type", /json/)
+
+      const res = await request
+        .get(`/api/users/flags`)
+        .set(config.defaultHeaders())
+        .expect(200)
+        .expect("Content-Type", /json/)
+      expect(res.body[flagData.value]).toEqual(flagData.flag)
+    })
+  })
+
+  describe("setFlag", () => {
+    it("should throw an error if a flag is not provided", async () => {
+      await config.createUser()
+      const res = await request
+        .post(`/api/users/flags`)
+        .set(config.defaultHeaders())
+        .send({ value: "test" })
+        .expect(400)
+        .expect("Content-Type", /json/)
+      expect(res.body.message).toEqual(
+        "Must supply a 'flag' field in request body."
+      )
+    })
+
+    it("should be able to set a flag on the user", async () => {
+      await config.createUser()
+      const res = await request
+        .post(`/api/users/flags`)
+        .set(config.defaultHeaders())
+        .send({ value: "test", flag: "test" })
+        .expect(200)
+        .expect("Content-Type", /json/)
+      expect(res.body.message).toEqual("Flag set successfully")
     })
   })
 })

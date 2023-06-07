@@ -1,128 +1,110 @@
 <script>
-  import {
-    Layout,
-    Detail,
-    Heading,
-    Button,
-    Modal,
-    ActionGroup,
-    ActionButton,
-  } from "@budibase/bbui"
+  import { Layout, Detail, Button, Modal } from "@budibase/bbui"
   import TemplateCard from "components/common/TemplateCard.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import { licensing } from "stores/portal"
+  import { Content, SideNav, SideNavItem } from "components/portal/page"
 
   export let templates
 
-  let selectedTemplateCategory
+  let selectedCategory
   let creationModal
   let template
 
-  const groupTemplatesByCategory = (templates, categoryFilter) => {
-    let grouped = templates.reduce((acc, template) => {
-      if (
-        typeof categoryFilter === "string" &&
-        [categoryFilter].indexOf(template.category) < 0
-      ) {
-        return acc
+  $: categories = getCategories(templates)
+  $: filteredCategories = getFilteredCategories(categories, selectedCategory)
+
+  const getCategories = templates => {
+    let categories = {}
+    templates?.forEach(template => {
+      if (!categories[template.category]) {
+        categories[template.category] = []
       }
-
-      acc[template.category] = !acc[template.category]
-        ? []
-        : acc[template.category]
-      acc[template.category].push(template)
-
-      return acc
-    }, {})
-    return grouped
+      categories[template.category].push(template)
+    })
+    categories = Object.entries(categories).map(
+      ([category, categoryTemplates]) => {
+        return {
+          name: category,
+          templates: categoryTemplates,
+        }
+      }
+    )
+    categories.sort((a, b) => {
+      return a.name < b.name ? -1 : 1
+    })
+    return categories
   }
 
-  $: filteredTemplates = groupTemplatesByCategory(
-    templates,
-    selectedTemplateCategory
-  )
-
-  $: filteredTemplateCategories = filteredTemplates
-    ? Object.keys(filteredTemplates).sort()
-    : []
-
-  $: templateCategories = templates
-    ? Object.keys(groupTemplatesByCategory(templates)).sort()
-    : []
+  const getFilteredCategories = (categories, selectedCategory) => {
+    if (!selectedCategory) {
+      return categories
+    }
+    return categories.filter(x => x.name === selectedCategory)
+  }
 
   const stopAppCreation = () => {
     template = null
   }
 </script>
 
-<div class="template-header">
-  <Layout noPadding gap="S">
-    <Heading size="S">Templates</Heading>
-    <div class="template-category-filters spectrum-ActionGroup">
-      <ActionGroup>
-        <ActionButton
-          selected={!selectedTemplateCategory}
-          on:click={() => {
-            selectedTemplateCategory = null
-          }}
-        >
-          All
-        </ActionButton>
-        {#each templateCategories as templateCategoryKey}
-          <ActionButton
-            dataCy={templateCategoryKey}
-            selected={templateCategoryKey == selectedTemplateCategory}
-            on:click={() => {
-              selectedTemplateCategory = templateCategoryKey
-            }}
-          >
-            {templateCategoryKey}
-          </ActionButton>
-        {/each}
-      </ActionGroup>
-    </div>
-  </Layout>
-</div>
-
-<div class="template-categories">
-  <Layout gap="XL" noPadding>
-    {#each filteredTemplateCategories as templateCategoryKey}
-      <div class="template-category" data-cy={templateCategoryKey}>
-        <Detail size="M">{templateCategoryKey}</Detail>
-        <div class="template-grid">
-          {#each filteredTemplates[templateCategoryKey] as templateEntry}
-            <TemplateCard
-              name={templateEntry.name}
-              imageSrc={templateEntry.image}
-              backgroundColour={templateEntry.background}
-              icon={templateEntry.icon}
-            >
-              {#if !($licensing?.usageMetrics?.apps >= 100)}
-                <Button
-                  cta
-                  on:click={() => {
-                    template = templateEntry
-                    creationModal.show()
-                  }}
-                >
-                  Use template
-                </Button>
-              {/if}
-              <a
-                href={templateEntry.url}
-                target="_blank"
-                class="overlay-preview-link spectrum-Button spectrum-Button--sizeM spectrum-Button--secondary"
-                on:click|stopPropagation
+<Content>
+  <div slot="side-nav">
+    <SideNav>
+      <SideNavItem
+        on:click={() => (selectedCategory = null)}
+        text="All"
+        active={selectedCategory == null}
+      />
+      {#each categories as category}
+        <SideNavItem
+          on:click={() => (selectedCategory = category.name)}
+          text={category.name}
+          active={selectedCategory === category.name}
+        />
+      {/each}
+    </SideNav>
+  </div>
+  <div class="template-categories">
+    <Layout gap="XL" noPadding>
+      {#each filteredCategories as category}
+        <div class="template-category">
+          <Detail size="M">{category.name}</Detail>
+          <div class="template-grid">
+            {#each category.templates as templateEntry}
+              <TemplateCard
+                name={templateEntry.name}
+                imageSrc={templateEntry.image}
+                backgroundColour={templateEntry.background}
+                icon={templateEntry.icon}
               >
-                Details
-              </a>
-            </TemplateCard>
-          {/each}
+                {#if !($licensing?.usageMetrics?.apps >= 100)}
+                  <Button
+                    cta
+                    on:click={() => {
+                      template = templateEntry
+                      creationModal.show()
+                    }}
+                  >
+                    Use template
+                  </Button>
+                {/if}
+                <a
+                  href={templateEntry.url}
+                  target="_blank"
+                  class="overlay-preview-link spectrum-Button spectrum-Button--sizeM spectrum-Button--secondary"
+                  on:click|stopPropagation
+                >
+                  Details
+                </a>
+              </TemplateCard>
+            {/each}
+          </div>
         </div>
-      </div>
-    {/each}
-  </Layout>
-</div>
+      {/each}
+    </Layout>
+  </div>
+</Content>
 
 <Modal
   bind:this={creationModal}

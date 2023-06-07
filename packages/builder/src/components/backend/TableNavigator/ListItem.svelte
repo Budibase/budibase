@@ -6,13 +6,7 @@
   export let indented
 </script>
 
-<div
-  data-cy="table-nav-item"
-  class:indented
-  class:selected
-  on:click
-  class={className}
->
+<div class:indented class:selected on:click class={className}>
   <i class={icon} />
   <span>{title}</span>
   <slot />

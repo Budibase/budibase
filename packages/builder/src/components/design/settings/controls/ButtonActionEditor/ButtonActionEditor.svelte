@@ -42,29 +42,22 @@
       return
     }
     try {
-      await automationStore.actions.create({
-        name: parameters.newAutomationName,
-      })
-      const appActionDefinition = $automationStore.blockDefinitions.TRIGGER.APP
-      const newBlock = $automationStore.selectedAutomation.constructBlock(
+      let trigger = automationStore.actions.constructBlock(
         "TRIGGER",
         "APP",
-        appActionDefinition
+        $automationStore.blockDefinitions.TRIGGER.APP
       )
-
-      newBlock.inputs = {
+      trigger.inputs = {
         fields: Object.keys(parameters.fields ?? {}).reduce((fields, key) => {
           fields[key] = "string"
           return fields
         }, {}),
       }
-
-      automationStore.actions.addBlockToAutomation(newBlock)
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
+      const automation = await automationStore.actions.create(
+        parameters.newAutomationName,
+        trigger
       )
-      parameters.automationId =
-        $automationStore.selectedAutomation.automation._id
+      parameters.automationId = automation._id
       delete parameters.newAutomationName
     } catch (error) {
       notifications.error("Error creating automation")
@@ -97,6 +90,7 @@
 
 <style>
   .action-count {
+    padding-top: 6px;
     padding-bottom: var(--spacing-s);
     font-weight: 600;
   }

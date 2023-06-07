@@ -109,6 +109,12 @@ const createBuilderStore = () => {
       // Notify the builder so we can reload component definitions
       eventStore.actions.dispatchEvent("reload-plugin")
     },
+    addParentComponent: (componentId, parentType) => {
+      eventStore.actions.dispatchEvent("add-parent-component", {
+        componentId,
+        parentType,
+      })
+    },
   }
   return {
     ...store,

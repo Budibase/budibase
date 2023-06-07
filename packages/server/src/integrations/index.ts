@@ -14,13 +14,13 @@ import firebase from "./firebase"
 import redis from "./redis"
 import snowflake from "./snowflake"
 import oracle from "./oracle"
-import { getPlugins } from "../api/controllers/plugin"
 import { SourceName, Integration, PluginType } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
-const environment = require("../environment")
-const { cloneDeep } = require("lodash")
+import env from "../environment"
+import { cloneDeep } from "lodash"
+import sdk from "../sdk"
 
-const DEFINITIONS: { [key: string]: Integration } = {
+const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.POSTGRES]: postgres.schema,
   [SourceName.DYNAMODB]: dynamodb.schema,
   [SourceName.MONGODB]: mongodb.schema,
@@ -36,9 +36,10 @@ const DEFINITIONS: { [key: string]: Integration } = {
   [SourceName.GOOGLE_SHEETS]: googlesheets.schema,
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
+  [SourceName.ORACLE]: undefined,
 }
 
-const INTEGRATIONS: { [key: string]: any } = {
+const INTEGRATIONS: Record<SourceName, any> = {
   [SourceName.POSTGRES]: postgres.integration,
   [SourceName.DYNAMODB]: dynamodb.integration,
   [SourceName.MONGODB]: mongodb.integration,
@@ -55,6 +56,7 @@ const INTEGRATIONS: { [key: string]: any } = {
   [SourceName.REDIS]: redis.integration,
   [SourceName.FIRESTORE]: firebase.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
+  [SourceName.ORACLE]: undefined,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
@@ -67,10 +69,22 @@ if (
   INTEGRATIONS[SourceName.ORACLE] = oracle.integration
 }
 
+export async function getDefinition(
+  source: SourceName
+): Promise<Integration | undefined> {
+  // check if its integrated, faster
+  const definition = DEFINITIONS[source]
+  if (definition) {
+    return definition
+  }
+  const allDefinitions = await getDefinitions()
+  return allDefinitions[source]
+}
+
 export async function getDefinitions() {
   const pluginSchemas: { [key: string]: Integration } = {}
-  if (environment.SELF_HOSTED) {
-    const plugins = await getPlugins(PluginType.DATASOURCE)
+  if (env.SELF_HOSTED) {
+    const plugins = await sdk.plugins.fetch(PluginType.DATASOURCE)
     // extract the actual schema from each custom
     for (let plugin of plugins) {
       const sourceId = plugin.name
@@ -89,20 +103,16 @@ export async function getDefinitions() {
   }
 }
 
-export async function getIntegration(integration: string) {
+export async function getIntegration(integration: SourceName) {
   if (INTEGRATIONS[integration]) {
     return INTEGRATIONS[integration]
   }
-  if (environment.SELF_HOSTED) {
-    const plugins = await getPlugins(PluginType.DATASOURCE)
+  if (env.SELF_HOSTED) {
+    const plugins = await sdk.plugins.fetch(PluginType.DATASOURCE)
     for (let plugin of plugins) {
       if (plugin.name === integration) {
         // need to use commonJS require due to its dynamic runtime nature
-        const retrieved: any = await getDatasourcePlugin(
-          plugin.name,
-          plugin.jsUrl,
-          plugin.schema?.hash
-        )
+        const retrieved = await getDatasourcePlugin(plugin)
         if (retrieved.integration) {
           return retrieved.integration
         } else {

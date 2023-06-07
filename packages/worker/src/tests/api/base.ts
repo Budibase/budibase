@@ -1,4 +1,5 @@
 import TestConfiguration from "../TestConfiguration"
+import { SuperTest, Test } from "supertest"
 
 export interface TestAPIOpts {
   headers?: any
@@ -7,7 +8,7 @@ export interface TestAPIOpts {
 
 export abstract class TestAPI {
   config: TestConfiguration
-  request: any
+  request: SuperTest<Test>
 
   protected constructor(config: TestConfiguration) {
     this.config = config

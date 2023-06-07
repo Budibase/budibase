@@ -1,9 +1,22 @@
 {
-  "version": "2.2.8",
+  "version": "2.7.5",
   "npmClient": "yarn",
   "packages": [
-    "packages/*"
+    "packages/backend-core",
+    "packages/bbui",
+    "packages/builder",
+    "packages/cli",
+    "packages/client",
+    "packages/frontend-core",
+    "packages/sdk",
+    "packages/server",
+    "packages/shared-core",
+    "packages/string-templates",
+    "packages/types",
+    "packages/worker",
+    "packages/pro/packages/pro"
   ],
+  "useWorkspaces": true,
   "command": {
     "publish": {
       "ignoreChanges": [
@@ -13,6 +26,9 @@
         "# We ignore every JSON file, except for built-in-modules, built-ins and plugins defined in babel-preset-env/data.",
         "@(!(built-in-modules|built-ins|plugins|package)).json"
       ]
+    },
+    "run": {
+      "loadEnvFiles": false
     }
   }
 }

@@ -1,30 +1,49 @@
 <script>
   import { Heading, Body, Layout, Button, Modal } from "@budibase/bbui"
-  import { automationStore } from "builderStore"
+  import { automationStore, selectedAutomation } from "builderStore"
   import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
   import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import TestPanel from "components/automation/AutomationBuilder/TestPanel.svelte"
-  import { onMount } from "svelte"
+  import { onDestroy, onMount } from "svelte"
+  import { syncURLToState } from "helpers/urlStateSync"
+  import * as routify from "@roxi/routify"
+  import { store } from "builderStore"
+  import { redirect } from "@roxi/routify"
 
-  $: automation =
-    $automationStore.selectedAutomation?.automation ||
-    $automationStore.automations[0]
+  // Prevent access for other users than the lock holder
+  $: {
+    if (!$store.hasLock) {
+      $redirect("../data")
+    }
+  }
+
+  // Keep URL and state in sync for selected screen ID
+  const stopSyncing = syncURLToState({
+    urlParam: "automationId",
+    stateKey: "selectedAutomationId",
+    validate: id => $automationStore.automations.some(x => x._id === id),
+    fallbackUrl: "./index",
+    store: automationStore,
+    up: automationStore.actions.select,
+    routify,
+  })
 
   let modal
   let webhookModal
+
   onMount(() => {
     $automationStore.showTestPanel = false
   })
+
+  onDestroy(stopSyncing)
 </script>
 
 <!-- routify:options index=3 -->
 <div class="root">
-  <div class="nav">
-    <AutomationPanel {modal} {webhookModal} />
-  </div>
+  <AutomationPanel {modal} {webhookModal} />
   <div class="content">
-    {#if automation}
+    {#if $automationStore.automations?.length}
       <slot />
     {:else}
       <div class="centered">
@@ -40,9 +59,9 @@
             </svg>
             <Heading size="M">You have no automations</Heading>
             <Body size="M">Let's fix that. Call the bots!</Body>
-            <Button on:click={() => modal.show()} size="M" cta
-              >Create automation</Button
-            >
+            <Button on:click={() => modal.show()} size="M" cta>
+              Create automation
+            </Button>
           </Layout>
         </div>
       </div>
@@ -51,7 +70,7 @@
 
   {#if $automationStore.showTestPanel}
     <div class="setup">
-      <TestPanel {automation} />
+      <TestPanel automation={$selectedAutomation} />
     </div>
   {/if}
   <Modal bind:this={modal}>
@@ -71,22 +90,8 @@
     grid-template-columns: 260px minmax(510px, 1fr) fit-content(500px);
     overflow: hidden;
   }
-
-  .nav {
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    border-right: var(--border-light);
-    background-color: var(--background);
-    padding-bottom: 60px;
-    overflow: hidden;
-  }
-
   .content {
     position: relative;
-    padding-top: var(--spacing-l);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;

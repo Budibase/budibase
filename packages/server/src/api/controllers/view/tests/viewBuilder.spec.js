@@ -1,4 +1,4 @@
-const viewTemplate = require("../viewBuilder");
+const viewTemplate = require("../viewBuilder").default;
 
 describe("viewBuilder", () => {
 

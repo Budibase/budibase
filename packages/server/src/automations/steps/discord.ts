@@ -4,6 +4,9 @@ import {
   AutomationActionStepId,
   AutomationStepSchema,
   AutomationStepInput,
+  AutomationStepType,
+  AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 const DEFAULT_USERNAME = "Budibase Automate"
@@ -15,26 +18,29 @@ export const definition: AutomationStepSchema = {
   description: "Send a message to a Discord server",
   icon: "ri-discord-line",
   stepId: AutomationActionStepId.discord,
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   internal: false,
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   inputs: {},
   schema: {
     inputs: {
       properties: {
         url: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Discord Webhook URL",
         },
         username: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Bot Name",
         },
         avatar_url: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Bot Avatar URL",
         },
         content: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Message",
         },
       },
@@ -43,15 +49,15 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         httpStatus: {
-          type: "number",
+          type: AutomationIOType.NUMBER,
           description: "The HTTP status code of the request",
         },
         response: {
-          type: "string",
+          type: AutomationIOType.STRING,
           description: "The response from the Discord Webhook",
         },
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the message sent successfully",
         },
       },
@@ -67,17 +73,33 @@ export async function run({ inputs }: AutomationStepInput) {
   if (!avatar_url) {
     avatar_url = DEFAULT_AVATAR_URL
   }
-  const response = await fetch(url, {
-    method: "post",
-    body: JSON.stringify({
-      username,
-      avatar_url,
-      content,
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
+  if (!url?.trim()?.length) {
+    return {
+      httpStatus: 400,
+      response: "Missing Webhook URL",
+      success: false,
+    }
+  }
+  let response
+  try {
+    response = await fetch(url, {
+      method: "post",
+      body: JSON.stringify({
+        username,
+        avatar_url,
+        content,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+  } catch (err: any) {
+    return {
+      httpStatus: 400,
+      response: err.message,
+      success: false,
+    }
+  }
 
   const { status, message } = await getFetchResponse(response)
   return {

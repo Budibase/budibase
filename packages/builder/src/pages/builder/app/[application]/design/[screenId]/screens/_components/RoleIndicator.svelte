@@ -20,6 +20,7 @@
   class="container"
   on:mouseover={() => (showTooltip = true)}
   on:mouseleave={() => (showTooltip = false)}
+  on:focus
   style="--color: {color};"
 >
   <StatusLight square {color} />

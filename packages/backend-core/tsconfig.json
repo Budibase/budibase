@@ -7,7 +7,6 @@
       "@budibase/types": ["../types/src"]
     }
   },
-  "references": [
-    { "path": "../types" },
-  ]
+
+  "exclude": ["node_modules", "dist"]
 }

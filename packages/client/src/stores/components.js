@@ -8,7 +8,7 @@ import Router from "../components/Router.svelte"
 import * as AppComponents from "../components/app/index.js"
 import { ScreenslotType } from "../constants.js"
 
-const budibasePrefix = "@budibase/standard-components/"
+export const BudibasePrefix = "@budibase/standard-components/"
 
 const createComponentStore = () => {
   const store = writable({
@@ -107,12 +107,12 @@ const createComponentStore = () => {
 
     // Screenslot is an edge case
     if (type === ScreenslotType) {
-      type = `${budibasePrefix}${type}`
+      type = `${BudibasePrefix}${type}`
     }
 
     // Handle built-in components
-    if (type.startsWith(budibasePrefix)) {
-      type = type.replace(budibasePrefix, "")
+    if (type.startsWith(BudibasePrefix)) {
+      type = type.replace(BudibasePrefix, "")
       return type ? Manifest[type] : null
     }
 
@@ -130,7 +130,7 @@ const createComponentStore = () => {
     }
 
     // Handle budibase components
-    if (type.startsWith(budibasePrefix)) {
+    if (type.startsWith(BudibasePrefix)) {
       const split = type.split("/")
       const name = split[split.length - 1]
       return AppComponents[name]
@@ -145,7 +145,7 @@ const createComponentStore = () => {
     if (!id) {
       return null
     }
-    return get(store).mountedComponents[id]
+    return derived(store, $store => $store.mountedComponents[id])
   }
 
   const registerCustomComponent = ({ Component, schema, version }) => {

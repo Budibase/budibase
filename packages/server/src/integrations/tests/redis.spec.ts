@@ -3,17 +3,17 @@ import { default as RedisIntegration } from "../redis"
 
 class TestConfiguration {
   integration: any
-  redis: any
 
   constructor(config: any = {}) {
     this.integration = new RedisIntegration.integration(config)
-    this.redis = new Redis({
+    // have to kill the basic integration before replacing it
+    this.integration.client.quit()
+    this.integration.client = new Redis({
       data: {
         test: "test",
         result: "1",
       },
     })
-    this.integration.client = this.redis
   }
 }
 
@@ -24,13 +24,17 @@ describe("Redis Integration", () => {
     config = new TestConfiguration()
   })
 
+  afterAll(() => {
+    config.integration.disconnect()
+  })
+
   it("calls the create method with the correct params", async () => {
     const body = {
       key: "key",
       value: "value",
     }
     await config.integration.create(body)
-    expect(await config.redis.get("key")).toEqual("value")
+    expect(await config.integration.client.get("key")).toEqual("value")
   })
 
   it("calls the read method with the correct params", async () => {
@@ -46,7 +50,7 @@ describe("Redis Integration", () => {
       key: "test",
     }
     await config.integration.delete(body)
-    expect(await config.redis.get(body.key)).toEqual(null)
+    expect(await config.integration.client.get(body.key)).toEqual(null)
   })
 
   it("calls the pipeline method with the correct params", async () => {

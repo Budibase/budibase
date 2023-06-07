@@ -1,11 +1,11 @@
 import {
-  FieldTypes,
-  FormulaTypes,
   AutoFieldDefaultNames,
   AutoFieldSubTypes,
+  FieldTypes,
+  FormulaTypes,
 } from "../../constants"
 import { processStringSync } from "@budibase/string-templates"
-import { FieldSchema, Table, Row } from "@budibase/types"
+import { FieldSchema, FieldType, Row, Table } from "@budibase/types"
 
 /**
  * If the subtype has been lost for any reason this works out what
@@ -50,6 +50,7 @@ export function processFormulas(
     const isStatic = schema.formulaType === FormulaTypes.STATIC
     if (
       schema.type !== FieldTypes.FORMULA ||
+      schema.formula == null ||
       (dynamic && isStatic) ||
       (!dynamic && !isStatic)
     ) {
@@ -57,13 +58,11 @@ export function processFormulas(
     }
     // iterate through rows and process formula
     for (let i = 0; i < rowArray.length; i++) {
-      if (schema.formula) {
-        let row = rowArray[i]
-        let context = contextRows ? contextRows[i] : row
-        rowArray[i] = {
-          ...row,
-          [column]: processStringSync(schema.formula, context),
-        }
+      let row = rowArray[i]
+      let context = contextRows ? contextRows[i] : row
+      rowArray[i] = {
+        ...row,
+        [column]: processStringSync(schema.formula, context),
       }
     }
   }

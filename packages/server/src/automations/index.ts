@@ -6,7 +6,7 @@ import BullQueue from "bull"
 export { automationQueue } from "./bullboard"
 export { shutdown } from "./bullboard"
 export { TRIGGER_DEFINITIONS } from "./triggers"
-export { ACTION_DEFINITIONS } from "./actions"
+export { BUILTIN_ACTION_DEFINITIONS, getActionDefinitions } from "./actions"
 
 /**
  * This module is built purely to kick off the worker farm and manage the inputs/outputs

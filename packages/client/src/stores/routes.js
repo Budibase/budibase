@@ -66,22 +66,27 @@ const createRouteStore = () => {
       return state
     })
   }
-  const navigate = (url, peek) => {
+  const navigate = (url, peek, externalNewTab) => {
     if (get(builderStore).inBuilder) {
       return
     }
     if (url) {
       // If we're already peeking, don't peek again
       const isPeeking = get(store).queryParams?.peek
-      if (peek && !isPeeking) {
+      const external = !url.startsWith("/")
+      if (peek && !isPeeking && !external) {
         peekStore.actions.showPeek(url)
-      } else {
-        const external = !url.startsWith("/")
-        if (external) {
-          window.location.href = url
-        } else {
-          push(url)
+      } else if (external) {
+        if (url.startsWith("www")) {
+          url = `https://${url}`
         }
+        if (externalNewTab) {
+          window.open(url, "_blank")
+        } else {
+          window.location.href = url
+        }
+      } else {
+        push(url)
       }
     }
   }

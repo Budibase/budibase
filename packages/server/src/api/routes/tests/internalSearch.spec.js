@@ -1,6 +1,7 @@
+const fetch = require("node-fetch")
+fetch.mockSearch()
 const search = require("../../controllers/row/internalSearch")
 // this will be mocked out for _search endpoint
-const fetch = require("node-fetch")
 const PARAMS = {
   tableId: "ta_12345679abcdef",
   version: "1",
@@ -20,7 +21,7 @@ function checkLucene(resp, expected, params = PARAMS) {
     expect(json.bookmark).toBe(PARAMS.bookmark)
   }
   expect(json.include_docs).toBe(true)
-  expect(json.q).toBe(`(${expected}) AND tableId:"${params.tableId}"`)
+  expect(json.q).toBe(`${expected} AND tableId:"${params.tableId}"`)
   expect(json.limit).toBe(params.limit || 50)
 }
 
@@ -59,7 +60,7 @@ describe("internal search", () => {
         "column": "1",
       }
     }, PARAMS)
-    checkLucene(response, `column:"2" OR !column:"1"`)
+    checkLucene(response, `(column:"2" OR !column:"1")`)
   })
 
   it("test AND query", async () => {
@@ -71,7 +72,7 @@ describe("internal search", () => {
         "column": "1",
       }
     }, PARAMS)
-    checkLucene(response, `*:* AND column:"2" AND !column:"1"`)
+    checkLucene(response, `(*:* AND column:"2" AND !column:"1")`)
   })
 
   it("test pagination query", async () => {
@@ -104,7 +105,7 @@ describe("internal search", () => {
         "column": "",
       },
     }, PARAMS)
-    checkLucene(response, `*:* AND !column:["" TO *]`, PARAMS)
+    checkLucene(response, `*:* AND (*:* -column:["" TO *])`, PARAMS)
   })
 
   it("test notEmpty query", async () => {
@@ -132,7 +133,7 @@ describe("internal search", () => {
         "colArr": [1, 2, 3],
       },
     }, PARAMS)
-    checkLucene(response, `*:* AND column:a AND colArr:(1 AND 2 AND 3)`, PARAMS)
+    checkLucene(response, `(*:* AND column:a AND colArr:(1 AND 2 AND 3))`, PARAMS)
   })
 
   it("test multiple of same column", async () => {
@@ -144,7 +145,7 @@ describe("internal search", () => {
         "3:column": "c",
       },
     }, PARAMS)
-    checkLucene(response, `column:"a" OR column:"b" OR column:"c"`, PARAMS)
+    checkLucene(response, `(column:"a" OR column:"b" OR column:"c")`, PARAMS)
   })
 
   it("check a weird case for lucene building", async () => {
@@ -191,6 +192,6 @@ describe("internal search", () => {
       expect(json.bookmark).toBe(PARAMS.bookmark)
     }
     expect(json.include_docs).toBe(true)
-    expect(json.q).toBe(`(*:* AND column:"1") AND tableId:${PARAMS.tableId}`)
+    expect(json.q).toBe(`*:* AND column:"1" AND tableId:${PARAMS.tableId}`)
   })
 })

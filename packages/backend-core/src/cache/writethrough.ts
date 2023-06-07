@@ -1,7 +1,8 @@
 import BaseCache from "./base"
 import { getWritethroughClient } from "../redis/init"
 import { logWarn } from "../logging"
-import { Database } from "@budibase/types"
+import { Database, Document, LockName, LockType } from "@budibase/types"
+import * as locks from "../redis/redlockImpl"
 
 const DEFAULT_WRITE_RATE_MS = 10000
 let CACHE: BaseCache | null = null
@@ -27,44 +28,63 @@ function makeCacheItem(doc: any, lastWrite: number | null = null): CacheItem {
   return { doc, lastWrite: lastWrite || Date.now() }
 }
 
-export async function put(
+async function put(
   db: Database,
-  doc: any,
+  doc: Document,
   writeRateMs: number = DEFAULT_WRITE_RATE_MS
 ) {
   const cache = await getCache()
   const key = doc._id
-  let cacheItem: CacheItem | undefined = await cache.get(makeCacheKey(db, key))
+  let cacheItem: CacheItem | undefined
+  if (key) {
+    cacheItem = await cache.get(makeCacheKey(db, key))
+  }
   const updateDb = !cacheItem || cacheItem.lastWrite < Date.now() - writeRateMs
   let output = doc
   if (updateDb) {
-    const writeDb = async (toWrite: any) => {
-      // doc should contain the _id and _rev
-      const response = await db.put(toWrite)
-      output = {
-        ...doc,
-        _id: response.id,
-        _rev: response.rev,
+    const lockResponse = await locks.doWithLock(
+      {
+        type: LockType.TRY_ONCE,
+        name: LockName.PERSIST_WRITETHROUGH,
+        resource: key,
+        ttl: 15000,
+      },
+      async () => {
+        const writeDb = async (toWrite: any) => {
+          // doc should contain the _id and _rev
+          const response = await db.put(toWrite, { force: true })
+          output = {
+            ...doc,
+            _id: response.id,
+            _rev: response.rev,
+          }
+        }
+        try {
+          await writeDb(doc)
+        } catch (err: any) {
+          if (err.status !== 409) {
+            throw err
+          } else {
+            // Swallow 409s but log them
+            logWarn(`Ignoring conflict in write-through cache`)
+          }
+        }
       }
-    }
-    try {
-      await writeDb(doc)
-    } catch (err: any) {
-      if (err.status !== 409) {
-        throw err
-      } else {
-        // Swallow 409s but log them
-        logWarn(`Ignoring conflict in write-through cache`)
-      }
+    )
+
+    if (!lockResponse.executed) {
+      logWarn(`Ignoring redlock conflict in write-through cache`)
     }
   }
   // if we are updating the DB then need to set the lastWrite to now
   cacheItem = makeCacheItem(output, updateDb ? null : cacheItem?.lastWrite)
-  await cache.store(makeCacheKey(db, key), cacheItem)
+  if (output._id) {
+    await cache.store(makeCacheKey(db, output._id), cacheItem)
+  }
   return { ok: true, id: output._id, rev: output._rev }
 }
 
-export async function get(db: Database, id: string): Promise<any> {
+async function get(db: Database, id: string): Promise<any> {
   const cache = await getCache()
   const cacheKey = makeCacheKey(db, id)
   let cacheItem: CacheItem = await cache.get(cacheKey)
@@ -76,11 +96,7 @@ export async function get(db: Database, id: string): Promise<any> {
   return cacheItem.doc
 }
 
-export async function remove(
-  db: Database,
-  docOrId: any,
-  rev?: any
-): Promise<void> {
+async function remove(db: Database, docOrId: any, rev?: any): Promise<void> {
   const cache = await getCache()
   if (!docOrId) {
     throw new Error("No ID/Rev provided.")

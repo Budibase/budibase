@@ -1,4 +1,4 @@
-export = {
+export default {
   OK: 200,
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,

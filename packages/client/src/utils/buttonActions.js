@@ -87,6 +87,20 @@ const duplicateRowHandler = async (action, context) => {
   }
 }
 
+const fetchRowHandler = async action => {
+  const { tableId, rowId } = action.parameters
+
+  if (tableId && rowId) {
+    try {
+      const row = await API.fetchRow({ tableId, rowId })
+
+      return { row }
+    } catch (error) {
+      return false
+    }
+  }
+}
+
 const deleteRowHandler = async action => {
   const { tableId, revId, rowId, notificationOverride } = action.parameters
   if (tableId && rowId) {
@@ -108,13 +122,23 @@ const deleteRowHandler = async action => {
 }
 
 const triggerAutomationHandler = async action => {
-  const { fields, notificationOverride } = action.parameters
+  const { fields, notificationOverride, timeout } = action.parameters
   if (fields) {
     try {
-      await API.triggerAutomation({
+      const result = await API.triggerAutomation({
         automationId: action.parameters.automationId,
         fields,
+        timeout,
       })
+
+      // Value will exist if automation is synchronous, so return it.
+      if (result.value) {
+        if (!notificationOverride) {
+          notificationStore.actions.success("Automation ran successfully")
+        }
+        return { result }
+      }
+
       if (!notificationOverride) {
         notificationStore.actions.success("Automation triggered")
       }
@@ -124,10 +148,9 @@ const triggerAutomationHandler = async action => {
     }
   }
 }
-
 const navigationHandler = action => {
-  const { url, peek } = action.parameters
-  routeStore.actions.navigate(url, peek)
+  const { url, peek, externalNewTab } = action.parameters
+  routeStore.actions.navigate(url, peek, externalNewTab)
 }
 
 const queryExecutionHandler = async action => {
@@ -327,6 +350,8 @@ const showNotificationHandler = action => {
   notificationStore.actions[type]?.(message, autoDismiss)
 }
 
+const promptUserHandler = () => {}
+
 const OpenSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
@@ -339,6 +364,7 @@ const CloseSidePanelHandler = () => {
 }
 
 const handlerMap = {
+  ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
   ["Delete Row"]: deleteRowHandler,
@@ -357,6 +383,7 @@ const handlerMap = {
   ["Export Data"]: exportDataHandler,
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
+  ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: OpenSidePanelHandler,
   ["Close Side Panel"]: CloseSidePanelHandler,
 }
@@ -366,6 +393,7 @@ const confirmTextMap = {
   ["Save Row"]: "Are you sure you want to save this row?",
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
+  ["Prompt User"]: "Are you sure you want to continue?",
 }
 
 /**
@@ -417,8 +445,12 @@ export const enrichButtonActions = (actions, context) => {
           return new Promise(resolve => {
             const defaultText = confirmTextMap[action["##eventHandlerType"]]
             const confirmText = action.parameters?.confirmText || defaultText
+
+            const defaultTitleText = action["##eventHandlerType"]
+            const customTitleText =
+              action.parameters?.customTitleText || defaultTitleText
             confirmationStore.actions.showConfirmation(
-              action["##eventHandlerType"],
+              customTitleText,
               confirmText,
               async () => {
                 // When confirmed, execute this action immediately,
@@ -429,7 +461,7 @@ export const enrichButtonActions = (actions, context) => {
                   buttonContext.push(result)
                   const newContext = { ...context, actions: buttonContext }
 
-                  // Enrich and call the next button action
+                  // Enrich and call the next button action if there is more than one action remaining
                   const next = enrichButtonActions(
                     actions.slice(i + 1),
                     newContext

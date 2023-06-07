@@ -1,5 +1,6 @@
 import { Operation, SortDirection } from "./datasources"
 import { Row, Table } from "../documents"
+import { SortType } from "../api"
 
 export interface SearchFilters {
   allOr?: boolean
@@ -42,7 +43,10 @@ export interface SearchFilters {
 }
 
 export interface SortJson {
-  [key: string]: SortDirection
+  [key: string]: {
+    direction: SortDirection
+    type?: SortType
+  }
 }
 
 export interface PaginationJson {

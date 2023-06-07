@@ -2,14 +2,51 @@ import { getFrontendStore } from "./store/frontend"
 import { getAutomationStore } from "./store/automation"
 import { getTemporalStore } from "./store/temporal"
 import { getThemeStore } from "./store/theme"
+import { getUserStore } from "./store/users"
 import { derived } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
+import { createHistoryStore } from "builderStore/store/history"
+import { get } from "svelte/store"
 
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
 export const temporalStore = getTemporalStore()
+export const userStore = getUserStore()
+
+// Setup history for screens
+export const screenHistoryStore = createHistoryStore({
+  getDoc: id => get(store).screens?.find(screen => screen._id === id),
+  selectDoc: store.actions.screens.select,
+  afterAction: () => {
+    // Ensure a valid component is selected
+    if (!get(selectedComponent)) {
+      store.update(state => ({
+        ...state,
+        selectedComponentId: get(selectedScreen)?.props._id,
+      }))
+    }
+  },
+})
+store.actions.screens.save = screenHistoryStore.wrapSaveDoc(
+  store.actions.screens.save
+)
+store.actions.screens.delete = screenHistoryStore.wrapDeleteDoc(
+  store.actions.screens.delete
+)
+
+// Setup history for automations
+export const automationHistoryStore = createHistoryStore({
+  getDoc: automationStore.actions.getDefinition,
+  selectDoc: automationStore.actions.select,
+})
+automationStore.actions.save = automationHistoryStore.wrapSaveDoc(
+  automationStore.actions.save
+)
+automationStore.actions.delete = automationHistoryStore.wrapDeleteDoc(
+  automationStore.actions.delete
+)
 
 export const selectedScreen = derived(store, $store => {
   return $store.screens.find(screen => screen._id === $store.selectedScreenId)
@@ -71,3 +108,13 @@ export const selectedComponentPath = derived(
     ).map(component => component._id)
   }
 )
+
+// Derived automation state
+export const selectedAutomation = derived(automationStore, $automationStore => {
+  if (!$automationStore.selectedAutomationId) {
+    return null
+  }
+  return $automationStore.automations?.find(
+    x => x._id === $automationStore.selectedAutomationId
+  )
+})

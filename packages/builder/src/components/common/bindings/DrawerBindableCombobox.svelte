@@ -5,7 +5,7 @@
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
 
   export let panel = ClientBindingPanel
@@ -22,6 +22,7 @@
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
+  let valid = true
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
@@ -32,6 +33,10 @@
     onChange(tempValue)
     bindingDrawer.hide()
   }
+
+  setContext("binding-drawer-actions", {
+    save: handleClose,
+  })
 
   const onChange = (value, optionPicked) => {
     // Add HBS braces if picking binding
@@ -62,15 +67,10 @@
     on:pick={e => onChange(e.detail, true)}
     on:blur={() => dispatch("blur")}
     {placeholder}
-    options={allOptions}
     {error}
   />
   {#if !disabled}
-    <div
-      class="icon"
-      on:click={bindingDrawer.show}
-      data-cy="text-binding-button"
-    >
+    <div class="icon" on:click={bindingDrawer.show}>
       <Icon size="S" name="FlashOn" />
     </div>
   {/if}
@@ -80,12 +80,16 @@
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={handleClose}>Save</Button>
+
+  <Button cta slot="buttons" on:click={handleClose} disabled={!valid}>
+    Save
+  </Button>
   <svelte:component
     this={panel}
     slot="body"
     value={readableValue}
     close={handleClose}
+    bind:valid
     on:change={event => (tempValue = event.detail)}
     {bindings}
     {allowJS}

@@ -1,6 +1,6 @@
 {
   "name": "@budibase/client",
-  "version": "2.2.8",
+  "version": "0.0.0",
   "license": "MPL-2.0",
   "module": "dist/budibase-client.js",
   "main": "dist/budibase-client.js",
@@ -19,9 +19,11 @@
     "dev:builder": "rollup -cw"
   },
   "dependencies": {
-    "@budibase/bbui": "^2.2.8",
-    "@budibase/frontend-core": "^2.2.8",
-    "@budibase/string-templates": "^2.2.8",
+    "@budibase/bbui": "0.0.0",
+    "@budibase/frontend-core": "0.0.0",
+    "@budibase/shared-core": "0.0.0",
+    "@budibase/string-templates": "0.0.0",
+    "@budibase/types": "0.0.0",
     "@spectrum-css/button": "^3.0.3",
     "@spectrum-css/card": "^3.0.3",
     "@spectrum-css/divider": "^1.0.3",
@@ -39,7 +41,6 @@
     "sanitize-html": "^2.7.0",
     "screenfull": "^6.0.1",
     "shortid": "^2.2.15",
-    "socket.io-client": "^4.5.1",
     "svelte": "^3.49.0",
     "svelte-apexcharts": "^1.0.2",
     "svelte-flatpickr": "^3.1.0",
@@ -48,6 +49,7 @@
   "devDependencies": {
     "@rollup/plugin-alias": "^3.1.5",
     "@rollup/plugin-commonjs": "^18.0.0",
+    "@rollup/plugin-image": "^3.0.2",
     "@rollup/plugin-node-resolve": "^11.2.1",
     "postcss": "^8.2.10",
     "rollup": "^2.44.0",
@@ -61,6 +63,21 @@
   },
   "resolutions": {
     "loader-utils": "1.4.1"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates",
+              "@budibase/shared-core"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }

@@ -4,11 +4,11 @@ import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
+const ENCODED_SPACE = encodeURIComponent(" ")
 
 const SQL_NUMBER_TYPE_MAP = {
   integer: FieldTypes.NUMBER,
   int: FieldTypes.NUMBER,
-  bigint: FieldTypes.NUMBER,
   decimal: FieldTypes.NUMBER,
   smallint: FieldTypes.NUMBER,
   real: FieldTypes.NUMBER,
@@ -47,6 +47,7 @@ const SQL_STRING_TYPE_MAP = {
   blob: FieldTypes.STRING,
   long: FieldTypes.STRING,
   text: FieldTypes.STRING,
+  bigint: FieldTypes.STRING,
 }
 
 const SQL_BOOLEAN_TYPE_MAP = {
@@ -79,6 +80,10 @@ export function isExternalTable(tableId: string) {
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
+  // encode spaces
+  if (tableName.includes(" ")) {
+    tableName = encodeURIComponent(tableName)
+  }
   return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
 }
 
@@ -90,6 +95,10 @@ export function breakExternalTableId(tableId: string | undefined) {
   let datasourceId = parts.shift()
   // if they need joined
   let tableName = parts.join(DOUBLE_SEPARATOR)
+  // if contains encoded spaces, decode it
+  if (tableName.includes(ENCODED_SPACE)) {
+    tableName = decodeURIComponent(tableName)
+  }
   return { datasourceId, tableName }
 }
 
@@ -141,11 +150,17 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
 export function convertSqlType(type: string) {
   let foundType = FieldTypes.STRING
   const lcType = type.toLowerCase()
+  let matchingTypes = []
   for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
     if (lcType.includes(external)) {
-      foundType = internal
-      break
+      matchingTypes.push({ external, internal })
     }
+  }
+  //Set the foundType based the longest match
+  if (matchingTypes.length > 0) {
+    foundType = matchingTypes.reduce((acc, val) => {
+      return acc.external.length >= val.external.length ? acc : val
+    }).internal
   }
   const schema: any = { type: foundType }
   if (foundType === FieldTypes.DATETIME) {
@@ -194,9 +209,9 @@ export function isIsoDateString(str: string) {
  * @param column The column to check, to see if it is a valid relationship.
  * @param tableIds The IDs of the tables which currently exist.
  */
-function shouldCopyRelationship(
+export function shouldCopyRelationship(
   column: { type: string; tableId?: string },
-  tableIds: [string]
+  tableIds: string[]
 ) {
   return (
     column.type === FieldTypes.LINK &&
@@ -213,18 +228,19 @@ function shouldCopyRelationship(
  * @param column The column to check for options or boolean type.
  * @param fetchedColumn The fetched column to check for the type in the external database.
  */
-function shouldCopySpecialColumn(
+export function shouldCopySpecialColumn(
   column: { type: string },
   fetchedColumn: { type: string } | undefined
 ) {
+  const isFormula = column.type === FieldTypes.FORMULA
   const specialTypes = [
     FieldTypes.OPTIONS,
     FieldTypes.LONGFORM,
     FieldTypes.ARRAY,
     FieldTypes.FORMULA,
   ]
-  // column has been deleted, remove
-  if (column && !fetchedColumn) {
+  // column has been deleted, remove - formulas will never exist, always copy
+  if (!isFormula && column && !fetchedColumn) {
     return false
   }
   const fetchedIsNumber =
@@ -250,8 +266,11 @@ function copyExistingPropsOver(
   tableIds: [string]
 ) {
   if (entities && entities[tableName]) {
-    if (entities[tableName].primaryDisplay) {
+    if (entities[tableName]?.primaryDisplay) {
       table.primaryDisplay = entities[tableName].primaryDisplay
+    }
+    if (entities[tableName]?.created) {
+      table.created = entities[tableName]?.created
     }
     const existingTableSchema = entities[tableName].schema
     for (let key in existingTableSchema) {

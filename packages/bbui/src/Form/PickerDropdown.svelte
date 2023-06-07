@@ -21,7 +21,6 @@
   export let getSecondaryOptionColour = () => {}
   export let getSecondaryOptionIcon = () => {}
   export let quiet = false
-  export let dataCy
   export let autofocus
   export let primaryOptions = []
   export let secondaryOptions = []
@@ -98,7 +97,6 @@
   <PickerDropdown
     {searchTerm}
     {autocomplete}
-    {dataCy}
     {error}
     {disabled}
     {readonly}

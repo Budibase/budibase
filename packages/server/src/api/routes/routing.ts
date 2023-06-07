@@ -11,4 +11,4 @@ router
   // gets the full structure, not just the correct screen ID for user role
   .get("/api/routing", authorized(permissions.BUILDER), controller.fetch)
 
-export = router
+export default router

@@ -35,7 +35,7 @@
   }
 </script>
 
-<Panel title={$selectedLayout?.name} icon="Experience" borderLeft>
+<Panel title={$selectedLayout?.name} icon="Experience" borderLeft wide>
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Banner type="warning" showCloseButton={false}>
       Custom layouts are being deprecated. They will be removed in a future

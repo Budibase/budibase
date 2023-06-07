@@ -9,6 +9,7 @@ export interface QueryEvent {
   pagination?: any
   transformer: any
   queryId: string
+  environmentVariables?: Record<string, string>
   ctx?: any
 }
 

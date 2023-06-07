@@ -7,6 +7,7 @@ export interface Customer {
 
 export interface Subscription {
   amount: number
+  currency: string
   quantity: number
   duration: PriceDuration
   cancelAt: number | null | undefined

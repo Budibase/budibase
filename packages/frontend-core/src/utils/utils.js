@@ -86,3 +86,23 @@ export const throttle = (callback, minDelay = 1000) => {
   }
   return invoke
 }
+
+/**
+ * Utility to debounce DOM activities using requestAnimationFrame
+ * @param callback the function to run
+ * @returns {Function}
+ */
+export const domDebounce = callback => {
+  let active = false
+  let lastParams
+  return (...params) => {
+    lastParams = params
+    if (!active) {
+      active = true
+      requestAnimationFrame(() => {
+        callback(...lastParams)
+        active = false
+      })
+    }
+  }
+}

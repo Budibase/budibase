@@ -24,4 +24,4 @@ router
   // this shouldn't have authorisation, right now its always public
   .post("/api/webhooks/trigger/:instance/:id", controller.trigger)
 
-export = router
+export default router

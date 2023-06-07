@@ -1,7 +1,13 @@
 import fetch from "node-fetch"
 import env from "../environment"
 import { checkSlashesInUrl } from "./index"
-import { db as dbCore, constants, tenancy } from "@budibase/backend-core"
+import {
+  db as dbCore,
+  constants,
+  tenancy,
+  logging,
+  env as coreEnv,
+} from "@budibase/backend-core"
 import { updateAppRole } from "./global"
 import { BBContext, User } from "@budibase/types"
 
@@ -10,7 +16,7 @@ export function request(ctx?: BBContext, request?: any) {
     request.headers = {}
   }
   if (!ctx) {
-    request.headers[constants.Header.API_KEY] = env.INTERNAL_API_KEY
+    request.headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEY
     if (tenancy.isTenantIdSet()) {
       request.headers[constants.Header.TENANT_ID] = tenancy.getTenantId()
     }
@@ -27,6 +33,10 @@ export function request(ctx?: BBContext, request?: any) {
   if (ctx && ctx.headers) {
     request.headers = ctx.headers
   }
+
+  // add x-budibase-correlation-id header
+  logging.correlation.setHeader(request.headers)
+
   return request
 }
 

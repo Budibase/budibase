@@ -20,6 +20,12 @@
     x =>
       x._id !== BUDIBASE_INTERNAL_DB_ID && x.type !== BUDIBASE_DATASOURCE_TYPE
   )
+  // Ensure query params exist so they can be bound
+  $: {
+    if (!parameters.queryParams) {
+      parameters.queryParams = {}
+    }
+  }
 
   function fetchQueryDefinition(query) {
     const source = $datasources.list.find(

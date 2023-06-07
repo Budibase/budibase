@@ -16,6 +16,7 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
 
+  export let fieldName = null
   export let rules = []
   export let bindings = []
   export let type
@@ -65,6 +66,14 @@
       label: "Must not contain",
       value: "notContains",
     },
+    MaxFileSize: {
+      label: "Max file size (MB)",
+      value: "maxFileSize",
+    },
+    MaxUploadSize: {
+      label: "Max total upload size (MB)",
+      value: "maxUploadSize",
+    },
   }
   const ConstraintMap = {
     ["string"]: [
@@ -94,7 +103,11 @@
       Constraints.Equal,
       Constraints.NotEqual,
     ],
-    ["attachment"]: [Constraints.Required],
+    ["attachment"]: [
+      Constraints.Required,
+      Constraints.MaxFileSize,
+      Constraints.MaxUploadSize,
+    ],
     ["link"]: [
       Constraints.Required,
       Constraints.Contains,
@@ -112,7 +125,7 @@
   }
 
   $: dataSourceSchema = getDataSourceSchema($currentAsset, $selectedComponent)
-  $: field = $selectedComponent?.field
+  $: field = fieldName || $selectedComponent?.field
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
   $: fieldType = type?.split("/")[1] || "string"
   $: constraintOptions = getConstraintsForType(fieldType)
@@ -128,8 +141,12 @@
     const formParent = findClosestMatchingComponent(
       asset.props,
       component._id,
-      component => component._component.endsWith("/form")
+      component =>
+        component._component.endsWith("/form") ||
+        component._component.endsWith("/formblock") ||
+        component._component.endsWith("/tableblock")
     )
+
     return getSchemaForDatasource(asset, formParent?.dataSource)
   }
 
@@ -283,7 +300,7 @@
                     disabled={rule.constraint === "required"}
                     on:change={e => (rule.value = e.detail)}
                   />
-                {:else if rule.type !== "array" && ["maxLength", "minLength", "regex", "notRegex", "contains", "notContains"].includes(rule.constraint)}
+                {:else if rule.type !== "array" && ["maxUploadSize", "maxFileSize", "maxLength", "minLength", "regex", "notRegex", "contains", "notContains"].includes(rule.constraint)}
                   <!-- Certain constraints always need string values-->
                   <Input
                     bind:value={rule.value}
@@ -376,7 +393,7 @@
     gap: var(--spacing-l);
     display: grid;
     align-items: center;
-    grid-template-columns: 190px 120px 1fr 1fr auto auto;
+    grid-template-columns: 200px 120px 1fr 1fr auto auto;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }

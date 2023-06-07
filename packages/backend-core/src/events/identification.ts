@@ -10,21 +10,18 @@ import {
   isCloudAccount,
   isSSOAccount,
   TenantGroup,
-  SettingsConfig,
   CloudAccount,
   UserIdentity,
   InstallationGroup,
   UserContext,
   Group,
+  isSSOUser,
 } from "@budibase/types"
 import { processors } from "./processors"
-import * as dbUtils from "../db/utils"
-import { Config } from "../constants"
 import { newid } from "../utils"
 import * as installation from "../installation"
+import * as configs from "../configs"
 import { withCache, TTL, CacheKey } from "../cache/generic"
-
-const pkg = require("../../package.json")
 
 /**
  * An identity can be:
@@ -33,7 +30,7 @@ const pkg = require("../../package.json")
  * - tenant
  * - installation
  */
-export const getCurrentIdentity = async (): Promise<Identity> => {
+const getCurrentIdentity = async (): Promise<Identity> => {
   let identityContext = identityCtx.getIdentity()
   const environment = getDeploymentEnvironment()
 
@@ -66,6 +63,7 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
       hosting,
       installationId,
       tenantId,
+      realTenantId: context.getTenantId(),
       environment,
     }
   } else if (identityType === IdentityType.USER) {
@@ -88,20 +86,22 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
       installationId,
       tenantId,
       environment,
+      realTenantId: context.getTenantId(),
+      hostInfo: userContext.hostInfo,
     }
   } else {
     throw new Error("Unknown identity type")
   }
 }
 
-export const identifyInstallationGroup = async (
+const identifyInstallationGroup = async (
   installId: string,
   timestamp?: string | number
 ): Promise<void> => {
   const id = installId
   const type = IdentityType.INSTALLATION
   const hosting = getHostingFromEnv()
-  const version = pkg.version
+  const version = env.VERSION
   const environment = getDeploymentEnvironment()
 
   const group: InstallationGroup = {
@@ -118,7 +118,7 @@ export const identifyInstallationGroup = async (
   await identify({ ...group, id: `$${type}_${id}` }, timestamp)
 }
 
-export const identifyTenantGroup = async (
+const identifyTenantGroup = async (
   tenantId: string,
   account: Account | undefined,
   timestamp?: string | number
@@ -156,7 +156,7 @@ export const identifyTenantGroup = async (
   await identify({ ...group, id: `$${type}_${id}` }, timestamp)
 }
 
-export const identifyUser = async (
+const identifyUser = async (
   user: User,
   account: CloudAccount | undefined,
   timestamp?: string | number
@@ -166,7 +166,10 @@ export const identifyUser = async (
   const type = IdentityType.USER
   let builder = user.builder?.global || false
   let admin = user.admin?.global || false
-  let providerType = user.providerType
+  let providerType
+  if (isSSOUser(user)) {
+    providerType = user.providerType
+  }
   const accountHolder = account?.budibaseUserId === user._id || false
   const verified =
     account && account?.budibaseUserId === user._id ? account.verified : false
@@ -191,7 +194,7 @@ export const identifyUser = async (
   await identify(identity, timestamp)
 }
 
-export const identifyAccount = async (account: Account) => {
+const identifyAccount = async (account: Account) => {
   let id = account.accountId
   const tenantId = account.tenantId
   let type = IdentityType.USER
@@ -224,17 +227,11 @@ export const identifyAccount = async (account: Account) => {
   await identify(identity)
 }
 
-export const identify = async (
-  identity: Identity,
-  timestamp?: string | number
-) => {
+const identify = async (identity: Identity, timestamp?: string | number) => {
   await processors.identify(identity, timestamp)
 }
 
-export const identifyGroup = async (
-  group: Group,
-  timestamp?: string | number
-) => {
+const identifyGroup = async (group: Group, timestamp?: string | number) => {
   await processors.identifyGroup(group, timestamp)
 }
 
@@ -250,7 +247,7 @@ const getHostingFromEnv = () => {
   return env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
 }
 
-export const getInstallationId = async () => {
+const getInstallationId = async () => {
   if (isAccountPortal()) {
     return "account-portal"
   }
@@ -272,9 +269,7 @@ const getUniqueTenantId = async (tenantId: string): Promise<string> => {
   return context.doInTenant(tenantId, () => {
     return withCache(CacheKey.UNIQUE_TENANT_ID, TTL.ONE_DAY, async () => {
       const db = context.getGlobalDB()
-      const config: SettingsConfig = await dbUtils.getScopedFullConfig(db, {
-        type: Config.SETTINGS,
-      })
+      const config = await configs.getSettingsConfigDoc()
 
       let uniqueTenantId: string
       if (config.config.uniqueTenantId) {
@@ -299,4 +294,16 @@ const formatDistinctId = (id: string, type: IdentityType) => {
   } else {
     return id
   }
+}
+
+export default {
+  getCurrentIdentity,
+  identifyInstallationGroup,
+  identifyTenantGroup,
+  identifyUser,
+  identifyAccount,
+  identify,
+  identifyGroup,
+  getInstallationId,
+  getUniqueTenantId,
 }

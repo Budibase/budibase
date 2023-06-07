@@ -1,118 +1,140 @@
 <script>
-  import {
-    Button,
-    Heading,
-    notifications,
-    Layout,
-    Input,
-    Body,
-    ActionButton,
-    Modal,
-  } from "@budibase/bbui"
+  import { Button, Heading, notifications, Layout, Body } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { API } from "api"
   import { admin, auth } from "stores/portal"
-  import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
-  import ImportAppsModal from "./_components/ImportAppsModal.svelte"
   import Logo from "assets/bb-emblem.svg"
-  import { onMount } from "svelte"
+  import { FancyForm, FancyInput } from "@budibase/bbui"
+  import { TestimonialPage } from "@budibase/frontend-core/src/components"
+  import { passwordsMatch, handleError } from "../auth/_components/utils"
 
-  let adminUser = {}
-  let error
-  let modal
+  let form
+  let errors = {}
+  let formData = {}
+  let submitted = false
 
   $: tenantId = $auth.tenantId
-  $: multiTenancyEnabled = $admin.multiTenancy
-  $: cloud = $admin.cloud
-  $: imported = $admin.importComplete
 
   async function save() {
+    form.validate()
+    if (Object.keys(errors).length > 0) {
+      return
+    }
+    submitted = true
     try {
-      adminUser.tenantId = tenantId
+      let adminUser = { ...formData, tenantId }
+      delete adminUser.confirmationPassword
       // Save the admin user
       await API.createAdminUser(adminUser)
       notifications.success("Admin user created")
       await admin.init()
       $goto("../portal")
     } catch (error) {
+      submitted = false
       notifications.error("Failed to create admin user")
     }
   }
-
-  onMount(async () => {
-    if (!cloud) {
-      try {
-        await admin.checkImportComplete()
-      } catch (error) {
-        notifications.error("Error checking import status")
-      }
-    }
-  })
 </script>
 
-<Modal bind:this={modal} padding={false} width="600px">
-  <ImportAppsModal />
-</Modal>
-<section>
-  <div class="container">
-    <Layout>
+<TestimonialPage>
+  <Layout gap="M" noPadding>
+    <Layout justifyItems="center" noPadding>
       <img alt="logo" src={Logo} />
-      <Layout gap="XS" justifyItems="center" noPadding>
-        <Heading size="M">Create an admin user</Heading>
-        <Body size="M" textAlign="center">
-          The admin user has access to everything in Budibase.
-        </Body>
-      </Layout>
-      <Layout gap="XS" noPadding>
-        <Input label="Email" bind:value={adminUser.email} />
-        <PasswordRepeatInput bind:password={adminUser.password} bind:error />
-      </Layout>
-      <Layout gap="XS" noPadding>
-        <Button cta disabled={error} on:click={save}>
-          Create super admin user
-        </Button>
-        {#if multiTenancyEnabled}
-          <ActionButton
-            quiet
-            on:click={() => {
-              admin.unload()
-              $goto("../auth/org")
-            }}
-          >
-            Change organisation
-          </ActionButton>
-        {:else if !cloud && !imported}
-          <ActionButton
-            quiet
-            on:click={() => {
-              modal.show()
-            }}
-          >
-            Import from cloud
-          </ActionButton>
-        {/if}
-      </Layout>
+      <Heading size="M">Create an admin user</Heading>
+      <Body>The admin user has access to everything in Budibase.</Body>
     </Layout>
-  </div>
-</section>
+    <Layout gap="S" noPadding>
+      <FancyForm bind:this={form}>
+        <FancyInput
+          label="Email"
+          value={formData.email}
+          on:change={e => {
+            formData = {
+              ...formData,
+              email: e.detail,
+            }
+          }}
+          validate={() => {
+            let fieldError = {
+              email: !formData.email ? "Please enter a valid email" : undefined,
+            }
+            errors = handleError({ ...errors, ...fieldError })
+          }}
+          disabled={submitted}
+          error={errors.email}
+        />
+        <FancyInput
+          label="Password"
+          value={formData.password}
+          type="password"
+          on:change={e => {
+            formData = {
+              ...formData,
+              password: e.detail,
+            }
+          }}
+          validate={() => {
+            let fieldError = {}
+
+            fieldError["password"] = !formData.password
+              ? "Please enter a password"
+              : undefined
+
+            fieldError["confirmationPassword"] =
+              !passwordsMatch(
+                formData.password,
+                formData.confirmationPassword
+              ) && formData.confirmationPassword
+                ? "Passwords must match"
+                : undefined
+
+            errors = handleError({ ...errors, ...fieldError })
+          }}
+          error={errors.password}
+          disabled={submitted}
+        />
+        <FancyInput
+          label="Repeat Password"
+          value={formData.confirmationPassword}
+          type="password"
+          on:change={e => {
+            formData = {
+              ...formData,
+              confirmationPassword: e.detail,
+            }
+          }}
+          validate={() => {
+            let fieldError = {
+              confirmationPassword:
+                !passwordsMatch(
+                  formData.password,
+                  formData.confirmationPassword
+                ) && formData.password
+                  ? "Passwords must match"
+                  : undefined,
+            }
+            errors = handleError({ ...errors, ...fieldError })
+          }}
+          error={errors.confirmationPassword}
+          disabled={submitted}
+        />
+      </FancyForm>
+    </Layout>
+    <Layout gap="XS" noPadding justifyItems="center">
+      <Button
+        cta
+        size="L"
+        disabled={Object.keys(errors).length > 0 || submitted}
+        on:click={save}
+      >
+        Create super admin user
+      </Button>
+    </Layout>
+  </Layout>
+</TestimonialPage>
 
 <style>
-  section {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-  }
-  .container {
-    margin: 0 auto;
-    width: 260px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-  }
   img {
     width: 48px;
-    margin: 0 auto;
   }
 </style>

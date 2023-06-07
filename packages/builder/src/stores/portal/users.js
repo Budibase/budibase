@@ -1,6 +1,7 @@
 import { writable } from "svelte/store"
 import { API } from "api"
 import { update } from "lodash"
+import { licensing } from "."
 
 export function createUsersStore() {
   const { subscribe, set } = writable({})
@@ -26,14 +27,34 @@ export function createUsersStore() {
     return await API.getUsers()
   }
 
+  // One or more users.
+  async function onboard(payload) {
+    return await API.onboardUsers(payload)
+  }
+
   async function invite(payload) {
     return API.inviteUsers(payload)
   }
-  async function acceptInvite(inviteCode, password) {
+
+  async function acceptInvite(inviteCode, password, firstName, lastName) {
     return API.acceptInvite({
       inviteCode,
       password,
+      firstName,
+      lastName: !lastName?.trim() ? undefined : lastName,
     })
+  }
+
+  async function fetchInvite(inviteCode) {
+    return API.getUserInvite(inviteCode)
+  }
+
+  async function getInvites() {
+    return API.getUserInvites()
+  }
+
+  async function updateInvite(invite) {
+    return API.updateUserInvite(invite)
   }
 
   async function create(data) {
@@ -93,6 +114,14 @@ export function createUsersStore() {
   const getUserRole = ({ admin, builder }) =>
     admin?.global ? "admin" : builder?.global ? "developer" : "appUser"
 
+  const refreshUsage =
+    fn =>
+    async (...args) => {
+      const response = await fn(...args)
+      await licensing.setQuotaUsage()
+      return response
+    }
+
   return {
     subscribe,
     search,
@@ -100,12 +129,17 @@ export function createUsersStore() {
     getUserRole,
     fetch,
     invite,
-    acceptInvite,
-    create,
-    save,
-    bulkDelete,
+    onboard,
+    fetchInvite,
+    getInvites,
+    updateInvite,
     getUserCountByApp,
-    delete: del,
+    // any operation that adds or deletes users
+    acceptInvite,
+    create: refreshUsage(create),
+    save: refreshUsage(save),
+    bulkDelete: refreshUsage(bulkDelete),
+    delete: refreshUsage(del),
   }
 }
 

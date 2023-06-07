@@ -1,12 +1,6 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
-  import {
-    notifications,
-    Input,
-    ModalContent,
-    Dropzone,
-    Toggle,
-  } from "@budibase/bbui"
+  import { notifications, Input, ModalContent, Dropzone } from "@budibase/bbui"
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { apps, admin, auth } from "stores/portal"
@@ -22,11 +16,18 @@
 
   let creating = false
   let defaultAppName
-  let includeSampleDB = true
 
   const values = writable({ name: "", url: null })
   const validation = createValidationStore()
-  $: validation.check($values)
+
+  $: {
+    const { url } = $values
+
+    validation.check({
+      ...$values,
+      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
+    })
+  }
 
   onMount(async () => {
     const lastChar = $auth.user?.firstName
@@ -87,7 +88,11 @@
     appValidation.url(validation, { apps: applications })
     appValidation.file(validation, { template })
     // init validation
-    validation.check($values)
+    const { url } = $values
+    validation.check({
+      ...$values,
+      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
+    })
   }
 
   async function createNewApp() {
@@ -105,8 +110,6 @@
         data.append("templateName", template.name)
         data.append("templateKey", template.key)
         data.append("templateFile", $values.file)
-      } else {
-        data.append("sampleData", includeSampleDB)
       }
 
       // Create App
@@ -201,15 +204,6 @@
       </div>
     {/if}
   </span>
-  {#if !template && !template?.fromFile}
-    <span>
-      <Toggle
-        text="Include sample data"
-        bind:value={includeSampleDB}
-        disabled={creating}
-      />
-    </span>
-  {/if}
 </ModalContent>
 
 <style>

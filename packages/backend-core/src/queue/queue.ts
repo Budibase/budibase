@@ -4,7 +4,7 @@ import { JobQueue } from "./constants"
 import InMemoryQueue from "./inMemoryQueue"
 import BullQueue from "bull"
 import { addListeners, StalledFn } from "./listeners"
-const { opts: redisOpts, redisProtocolUrl } = getRedisOptions()
+import * as timers from "../timers"
 
 const CLEANUP_PERIOD_MS = 60 * 1000
 let QUEUES: BullQueue.Queue[] | InMemoryQueue[] = []
@@ -20,6 +20,7 @@ export function createQueue<T>(
   jobQueue: JobQueue,
   opts: { removeStalledCb?: StalledFn } = {}
 ): BullQueue.Queue<T> {
+  const { opts: redisOpts, redisProtocolUrl } = getRedisOptions()
   const queueConfig: any = redisProtocolUrl || { redis: redisOpts }
   let queue: any
   if (!env.isTest()) {
@@ -29,8 +30,8 @@ export function createQueue<T>(
   }
   addListeners(queue, jobQueue, opts?.removeStalledCb)
   QUEUES.push(queue)
-  if (!cleanupInterval) {
-    cleanupInterval = setInterval(cleanup, CLEANUP_PERIOD_MS)
+  if (!cleanupInterval && !env.isTest()) {
+    cleanupInterval = timers.set(cleanup, CLEANUP_PERIOD_MS)
     // fire off an initial cleanup
     cleanup().catch(err => {
       console.error(`Unable to cleanup automation queue initially - ${err}`)
@@ -40,8 +41,10 @@ export function createQueue<T>(
 }
 
 export async function shutdown() {
+  if (cleanupInterval) {
+    timers.clear(cleanupInterval)
+  }
   if (QUEUES.length) {
-    clearInterval(cleanupInterval)
     for (let queue of QUEUES) {
       await queue.close()
     }

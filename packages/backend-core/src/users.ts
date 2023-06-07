@@ -1,22 +1,63 @@
 import {
-  ViewName,
-  getUsersByAppParams,
-  getProdAppID,
+  directCouchFind,
+  DocumentType,
   generateAppUserID,
+  getGlobalUserParams,
+  getProdAppID,
+  getUsersByAppParams,
+  pagination,
   queryGlobalView,
+  queryGlobalViewRaw,
+  SEPARATOR,
   UNICODE_MAX,
+  ViewName,
 } from "./db"
-import { BulkDocsResponse, User } from "@budibase/types"
+import { BulkDocsResponse, SearchUsersRequest, User } from "@budibase/types"
 import { getGlobalDB } from "./context"
+import * as context from "./context"
 
-export const bulkGetGlobalUsersById = async (userIds: string[]) => {
+type GetOpts = { cleanup?: boolean }
+
+function removeUserPassword(users: User | User[]) {
+  if (Array.isArray(users)) {
+    return users.map(user => {
+      if (user) {
+        delete user.password
+        return user
+      }
+    })
+  } else if (users) {
+    delete users.password
+    return users
+  }
+  return users
+}
+
+export const bulkGetGlobalUsersById = async (
+  userIds: string[],
+  opts?: GetOpts
+) => {
   const db = getGlobalDB()
-  return (
+  let users = (
     await db.allDocs({
       keys: userIds,
       include_docs: true,
     })
   ).rows.map(row => row.doc) as User[]
+  if (opts?.cleanup) {
+    users = removeUserPassword(users) as User[]
+  }
+  return users
+}
+
+export const getAllUserIds = async () => {
+  const db = getGlobalDB()
+  const startKey = `${DocumentType.USER}${SEPARATOR}`
+  const response = await db.allDocs({
+    startkey: startKey,
+    endkey: `${startKey}${UNICODE_MAX}`,
+  })
+  return response.rows.map(row => row.id)
 }
 
 export const bulkUpdateGlobalUsers = async (users: User[]) => {
@@ -24,13 +65,22 @@ export const bulkUpdateGlobalUsers = async (users: User[]) => {
   return (await db.bulkDocs(users)) as BulkDocsResponse
 }
 
+export async function getById(id: string, opts?: GetOpts): Promise<User> {
+  const db = context.getGlobalDB()
+  let user = await db.get(id)
+  if (opts?.cleanup) {
+    user = removeUserPassword(user)
+  }
+  return user
+}
+
 /**
  * Given an email address this will use a view to search through
  * all the users to find one with this email address.
- * @param {string} email the email to lookup the user by.
  */
 export const getGlobalUserByEmail = async (
-  email: String
+  email: String,
+  opts?: GetOpts
 ): Promise<User | undefined> => {
   if (email == null) {
     throw "Must supply an email address to view"
@@ -46,10 +96,19 @@ export const getGlobalUserByEmail = async (
     throw new Error(`Multiple users found with email address: ${email}`)
   }
 
-  return response
+  let user = response as User
+  if (opts?.cleanup) {
+    user = removeUserPassword(user) as User
+  }
+
+  return user
 }
 
-export const searchGlobalUsersByApp = async (appId: any, opts: any) => {
+export const searchGlobalUsersByApp = async (
+  appId: any,
+  opts: any,
+  getOpts?: GetOpts
+) => {
   if (typeof appId !== "string") {
     throw new Error("Must provide a string based app ID")
   }
@@ -58,10 +117,54 @@ export const searchGlobalUsersByApp = async (appId: any, opts: any) => {
   })
   params.startkey = opts && opts.startkey ? opts.startkey : params.startkey
   let response = await queryGlobalView(ViewName.USER_BY_APP, params)
+
   if (!response) {
     response = []
   }
-  return Array.isArray(response) ? response : [response]
+  let users: User[] = Array.isArray(response) ? response : [response]
+  if (getOpts?.cleanup) {
+    users = removeUserPassword(users) as User[]
+  }
+  return users
+}
+
+/*
+  Return any user who potentially has access to the application
+  Admins, developers and app users with the explicitly role.
+*/
+export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
+  const roleSelector = `roles.${appId}`
+
+  let orQuery: any[] = [
+    {
+      "builder.global": true,
+    },
+    {
+      "admin.global": true,
+    },
+  ]
+
+  if (appId) {
+    const roleCheck = {
+      [roleSelector]: {
+        $exists: true,
+      },
+    }
+    orQuery.push(roleCheck)
+  }
+
+  let searchOptions = {
+    selector: {
+      $or: orQuery,
+      _id: {
+        $regex: "^us_",
+      },
+    },
+    limit: opts?.limit || 50,
+  }
+
+  const resp = await directCouchFind(context.getGlobalDBName(), searchOptions)
+  return resp?.rows
 }
 
 export const getGlobalUserByAppPage = (appId: string, user: User) => {
@@ -74,7 +177,11 @@ export const getGlobalUserByAppPage = (appId: string, user: User) => {
 /**
  * Performs a starts with search on the global email view.
  */
-export const searchGlobalUsersByEmail = async (email: string, opts: any) => {
+export const searchGlobalUsersByEmail = async (
+  email: string,
+  opts: any,
+  getOpts?: GetOpts
+) => {
   if (typeof email !== "string") {
     throw new Error("Must provide a string to search by")
   }
@@ -89,5 +196,55 @@ export const searchGlobalUsersByEmail = async (email: string, opts: any) => {
   if (!response) {
     response = []
   }
-  return Array.isArray(response) ? response : [response]
+  let users: User[] = Array.isArray(response) ? response : [response]
+  if (getOpts?.cleanup) {
+    users = removeUserPassword(users) as User[]
+  }
+  return users
+}
+
+const PAGE_LIMIT = 8
+export const paginatedUsers = async ({
+  page,
+  email,
+  appId,
+}: SearchUsersRequest = {}) => {
+  const db = getGlobalDB()
+  // get one extra document, to have the next page
+  const opts: any = {
+    include_docs: true,
+    limit: PAGE_LIMIT + 1,
+  }
+  // add a startkey if the page was specified (anchor)
+  if (page) {
+    opts.startkey = page
+  }
+  // property specifies what to use for the page/anchor
+  let userList: User[],
+    property = "_id",
+    getKey
+  if (appId) {
+    userList = await searchGlobalUsersByApp(appId, opts)
+    getKey = (doc: any) => getGlobalUserByAppPage(appId, doc)
+  } else if (email) {
+    userList = await searchGlobalUsersByEmail(email, opts)
+    property = "email"
+  } else {
+    // no search, query allDocs
+    const response = await db.allDocs(getGlobalUserParams(null, opts))
+    userList = response.rows.map((row: any) => row.doc)
+  }
+  return pagination(userList, PAGE_LIMIT, {
+    paginate: true,
+    property,
+    getKey,
+  })
+}
+
+export async function getUserCount() {
+  const response = await queryGlobalViewRaw(ViewName.USER_BY_EMAIL, {
+    limit: 0, // to be as fast as possible - we just want the total rows count
+    include_docs: false,
+  })
+  return response.total_rows
 }

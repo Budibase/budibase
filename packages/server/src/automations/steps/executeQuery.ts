@@ -3,8 +3,12 @@ import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationCustomIOType,
+  AutomationFeature,
+  AutomationIOType,
   AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -12,22 +16,25 @@ export const definition: AutomationStepSchema = {
   tagline: "Execute Data Connector",
   icon: "Data",
   description: "Execute a query in an external data connector",
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   stepId: AutomationActionStepId.EXECUTE_QUERY,
   internal: true,
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   inputs: {},
   schema: {
     inputs: {
       properties: {
         query: {
-          type: "object",
+          type: AutomationIOType.OBJECT,
           properties: {
             queryId: {
-              type: "string",
-              customType: "query",
+              type: AutomationIOType.STRING,
+              customType: AutomationCustomIOType.QUERY,
             },
           },
-          customType: "queryParams",
+          customType: AutomationCustomIOType.QUERY_PARAMS,
           title: "Parameters",
           required: ["queryId"],
         },
@@ -37,21 +44,21 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         response: {
-          type: "object",
+          type: AutomationIOType.OBJECT,
           description: "The response from the datasource execution",
         },
         info: {
-          type: "object",
+          type: AutomationIOType.OBJECT,
           description:
             "Some query types may return extra data, like headers from a REST query",
         },
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the action was successful",
         },
       },
+      required: ["response", "success"],
     },
-    required: ["response", "success"],
   },
 }
 

@@ -2,7 +2,6 @@ import {
   utils,
   constants,
   roles,
-  db as dbCore,
   tenancy,
   context,
 } from "@budibase/backend-core"
@@ -10,31 +9,13 @@ import { generateUserMetadataID, isDevAppID } from "../db/utils"
 import { getCachedSelf } from "../utilities/global"
 import env from "../environment"
 import { isWebhookEndpoint } from "./utils"
-import { BBContext } from "@budibase/types"
+import { UserCtx } from "@budibase/types"
 
-export = async (ctx: BBContext, next: any) => {
+export default async (ctx: UserCtx, next: any) => {
   // try to get the appID from the request
   let requestAppId = await utils.getAppIdFromCtx(ctx)
-  // get app cookie if it exists
-  let appCookie: { appId?: string } | undefined
-  try {
-    appCookie = utils.getCookie(ctx, constants.Cookie.CurrentApp)
-  } catch (err) {
-    utils.clearCookie(ctx, constants.Cookie.CurrentApp)
-  }
-  if (!appCookie && !requestAppId) {
+  if (!requestAppId) {
     return next()
-  }
-  // check the app exists referenced in cookie
-  if (appCookie) {
-    const appId = appCookie.appId
-    const exists = await dbCore.dbExists(appId)
-    if (!exists) {
-      utils.clearCookie(ctx, constants.Cookie.CurrentApp)
-      return next()
-    }
-    // if the request app ID wasn't set, update it with the cookie
-    requestAppId = requestAppId || appId
   }
 
   // deny access to application preview
@@ -44,14 +25,13 @@ export = async (ctx: BBContext, next: any) => {
       !isWebhookEndpoint(ctx) &&
       (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
     ) {
-      utils.clearCookie(ctx, constants.Cookie.CurrentApp)
       return ctx.redirect("/")
     }
   }
 
   let appId: string | undefined,
     roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
-  if (!ctx.user) {
+  if (!ctx.user?._id) {
     // not logged in, try to set a cookie for public apps
     appId = requestAppId
   } else if (requestAppId != null) {
@@ -96,7 +76,7 @@ export = async (ctx: BBContext, next: any) => {
     // need to judge this only based on the request app ID,
     if (
       env.MULTI_TENANCY &&
-      ctx.user &&
+      ctx.user?._id &&
       requestAppId &&
       !tenancy.isUserInAppTenant(requestAppId, ctx.user)
     ) {
@@ -125,14 +105,6 @@ export = async (ctx: BBContext, next: any) => {
         roleId,
         role: await roles.getRole(roleId),
       }
-    }
-    if (
-      (requestAppId !== appId ||
-        appCookie == null ||
-        appCookie.appId !== requestAppId) &&
-      !skipCookie
-    ) {
-      utils.setCookie(ctx, { appId }, constants.Cookie.CurrentApp)
     }
 
     return next()
