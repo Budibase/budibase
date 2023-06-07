@@ -10,6 +10,7 @@
   export let validate = null
   export let compress = false
   export let lighter = false
+  export let indeterminate = false
 
   const dispatch = createEventDispatcher()
 
@@ -34,7 +35,7 @@
   on:click={onChange}
 >
   <span>
-    <Checkbox {disabled} {value} />
+    <Checkbox {disabled} {value} {indeterminate} />
   </span>
   <div class="text">
     {#if text}
