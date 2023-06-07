@@ -1,6 +1,6 @@
 require("svelte/register")
 
-import { resolve, join } from "../../../utilities/centralPath"
+import { join } from "../../../utilities/centralPath"
 const uuid = require("uuid")
 import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
@@ -49,7 +49,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
     return
   }
 
-  let builderPath = resolve(TOP_LEVEL_PATH, "new_design_ui")
+  let builderPath = join(TOP_LEVEL_PATH, "new_design_ui")
 
   // // download it from S3
   if (!fs.existsSync(builderPath)) {
