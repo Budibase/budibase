@@ -309,7 +309,6 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
 }
 
-
 const preSaveAction: Partial<Record<SourceName, any>> = {
   [SourceName.GOOGLE_SHEETS]: async (datasource: Datasource) => {
     await googleSetupCreationAuth(datasource.config as any)
