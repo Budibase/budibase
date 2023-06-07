@@ -1,6 +1,5 @@
 import {
   ConnectionInfo,
-  Datasource,
   DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
@@ -20,15 +19,13 @@ import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId, finaliseExternalTables } from "./utils"
 import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
-import { cache, configs, context, HTTPError } from "@budibase/backend-core"
+import { configs, HTTPError } from "@budibase/backend-core"
 import { dataFilters } from "@budibase/shared-core"
 import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
-import sdk from "../sdk"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
   auth: OAuthClientConfig
-  continueSetupId?: string
 }
 
 interface OAuthClientConfig {
@@ -75,7 +72,7 @@ const SCHEMA: Integration = {
   },
   datasource: {
     spreadsheetId: {
-      display: "Spreadsheet URL",
+      display: "Google Sheet URL",
       type: DatasourceFieldType.STRING,
       required: true,
     },
@@ -150,7 +147,6 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async testConnection(): Promise<ConnectionInfo> {
     try {
-      await setupCreationAuth(this.config)
       await this.connect()
       return { connected: true }
     } catch (e: any) {
@@ -567,18 +563,6 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     } else {
       throw new Error("Row does not exist.")
     }
-  }
-}
-
-export async function setupCreationAuth(datasouce: GoogleSheetsConfig) {
-  if (datasouce.continueSetupId) {
-    const appId = context.getAppId()
-    const tokens = await cache.get(
-      `datasource:creation:${appId}:google:${datasouce.continueSetupId}`
-    )
-
-    datasouce.auth = tokens.tokens
-    delete datasouce.continueSetupId
   }
 }
 
