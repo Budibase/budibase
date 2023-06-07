@@ -153,7 +153,11 @@
     <Layout noPadding no>
       <Body size="S">Select which spreadsheets you want to connect.</Body>
 
-      <FancyCheckboxGroup options={allSheets} bind:selected={selectedSheets} />
+      <FancyCheckboxGroup
+        options={allSheets}
+        bind:selected={selectedSheets}
+        selectAllText="Select all sheets"
+      />
     </Layout>
   {/if}
 </ModalContent>
