@@ -14,6 +14,7 @@
   $: updateSelected(selectedBooleans)
   $: dispatch("change", selected)
   $: allSelected = selected?.length === options.length
+  $: noneSelected = !selected?.length
 
   function reset() {
     return Array(options.length).fill(true)
@@ -48,6 +49,7 @@
           text={selectAllText}
           compress
           lighter
+          indeterminate={!allSelected && !noneSelected}
         />
       </div>
     {/if}
