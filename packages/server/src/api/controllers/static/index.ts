@@ -67,7 +67,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
 }
 
 export const serveBuilder = async function (ctx: any) {
-  const builderPath = resolve(TOP_LEVEL_PATH, "builder")
+  const builderPath = join(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
 }
 
