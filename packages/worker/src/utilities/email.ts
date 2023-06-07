@@ -29,7 +29,7 @@ type SendEmailOpts = {
     startTime: Date
     endTime: Date
     summary: string
-    location: string
+    location?: string
     url?: string
   }
 }
