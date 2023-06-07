@@ -28,7 +28,7 @@ RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.
 
 COPY package.json .
 COPY dist/yarn.lock .
-RUN yarn install --frozen-lockfile --production=true
+RUN yarn install --production=true
 # Remove unneeded data from file system to reduce image size
 RUN yarn cache clean && apt-get remove -y --purge --auto-remove g++ make python \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp

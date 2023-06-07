@@ -11,14 +11,14 @@ RUN chmod +x /cleanup.sh
 # build server
 WORKDIR /app
 ADD packages/server .
-COPY dist/yarn.lock .
-RUN yarn install --frozen-lockfile --production=true && /cleanup.sh
+COPY yarn.lock .
+RUN yarn install --production=true && /cleanup.sh
 
 # build worker
 WORKDIR /worker
 ADD packages/worker .
-COPY dist/yarn.lock .
-RUN yarn install --frozen-lockfile --production=true && /cleanup.sh
+COPY yarn.lock .
+RUN yarn install --production=true && /cleanup.sh
 
 FROM budibase/couchdb
 ARG TARGETARCH
