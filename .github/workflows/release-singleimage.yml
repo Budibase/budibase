@@ -24,6 +24,8 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v2
         with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
 
       - name: Fail if tag is not in master
