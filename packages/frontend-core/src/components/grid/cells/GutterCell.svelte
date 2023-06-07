@@ -70,10 +70,12 @@
           color="var(--spectrum-global-color-red-400)"
         />
       </div>
-    {:else if $config.allowExpandRows}
+    {:else}
       <div
         class="expand"
-        class:visible={!disableExpand && (rowFocused || rowHovered)}
+        class:visible={$config.allowExpandRows &&
+          !disableExpand &&
+          (rowFocused || rowHovered)}
       >
         <Icon name="Maximize" hoverable size="S" on:click={expand} />
       </div>

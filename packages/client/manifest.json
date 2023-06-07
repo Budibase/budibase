@@ -5225,5 +5225,25 @@
       "type": "schema",
       "suffix": "repeater"
     }
+  },
+  "gridblock": {
+    "block": true,
+    "name": "Grid block",
+    "icon": "Table",
+    "styles": [
+      "size"
+    ],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "settings": [
+      {
+        "type": "table",
+        "label": "Table",
+        "key": "table",
+        "required": true
+      }
+    ]
   }
 }
