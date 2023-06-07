@@ -23,6 +23,7 @@
   export let disableSorting = false
   export let customPlaceholder = false
   export let allowEditing = true
+  export let allowClickRows
 
   const dispatch = createEventDispatcher()
 
@@ -112,6 +113,7 @@
         {customPlaceholder}
         allowEditRows={allowEditing}
         showAutoColumns={!hideAutocolumns}
+        {allowClickRows}
         on:clickrelationship={e => selectRelationship(e.detail)}
         on:sort
       >

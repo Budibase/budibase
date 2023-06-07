@@ -14,9 +14,16 @@ import { deleteEntityMetadata } from "../../utilities"
 import { MetadataTypes } from "../../constants"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events } from "@budibase/backend-core"
-import { automations } from "@budibase/pro"
-import { Automation, BBContext } from "@budibase/types"
+import { automations, features } from "@budibase/pro"
+import {
+  Automation,
+  AutomationActionStepId,
+  AutomationResults,
+  BBContext,
+} from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
+import sdk from "../../sdk"
+import { db as dbCore } from "@budibase/backend-core"
 
 async function getActionDefinitions() {
   return removeDeprecated(await actionDefs())
@@ -257,13 +264,34 @@ export async function getDefinitionList(ctx: BBContext) {
 export async function trigger(ctx: BBContext) {
   const db = context.getAppDB()
   let automation = await db.get(ctx.params.id)
-  await triggers.externalTrigger(automation, {
-    ...ctx.request.body,
-    appId: ctx.appId,
-  })
-  ctx.body = {
-    message: `Automation ${automation._id} has been triggered.`,
-    automation,
+
+  let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
+  if (hasCollectStep && (await features.isSyncAutomationsEnabled())) {
+    const response: AutomationResults = await triggers.externalTrigger(
+      automation,
+      {
+        fields: ctx.request.body.fields,
+        timeout: ctx.request.body.timeout * 1000 || 120000,
+      },
+      { getResponses: true }
+    )
+
+    let collectedValue = response.steps.find(
+      step => step.stepId === AutomationActionStepId.COLLECT
+    )
+    ctx.body = collectedValue?.outputs
+  } else {
+    if (ctx.appId && !dbCore.isProdAppID(ctx.appId)) {
+      ctx.throw(400, "Only apps in production support this endpoint")
+    }
+    await triggers.externalTrigger(automation, {
+      ...ctx.request.body,
+      appId: ctx.appId,
+    })
+    ctx.body = {
+      message: `Automation ${automation._id} has been triggered.`,
+      automation,
+    }
   }
 }
 

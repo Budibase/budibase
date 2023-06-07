@@ -214,8 +214,7 @@ export const deriveStores = context => {
   const addRow = async (row, idx, bubble = false) => {
     try {
       // Create row
-      let newRow = await API.saveRow({ ...row, tableId: get(tableId) })
-      newRow = await fetchRow(newRow._id)
+      const newRow = await API.saveRow({ ...row, tableId: get(tableId) })
 
       // Update state
       if (idx != null) {
@@ -268,32 +267,36 @@ export const deriveStores = context => {
     return res?.rows?.[0]
   }
 
-  // Refreshes a specific row, handling updates, addition or deletion
-  const refreshRow = async id => {
-    // Fetch row from the server again
-    const newRow = await fetchRow(id)
-
+  // Replaces a row in state with the newly defined row, handling updates,
+  // addition and deletion
+  const replaceRow = (id, row) => {
     // Get index of row to check if it exists
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[id]
 
     // Process as either an update, addition or deletion
-    if (newRow) {
+    if (row) {
       if (index != null) {
         // An existing row was updated
         rows.update(state => {
-          state[index] = { ...newRow }
+          state[index] = { ...row }
           return state
         })
       } else {
         // A new row was created
-        handleNewRows([newRow])
+        handleNewRows([row])
       }
     } else if (index != null) {
       // A row was removed
       handleRemoveRows([$rows[index]])
     }
+  }
+
+  // Refreshes a specific row
+  const refreshRow = async id => {
+    const row = await fetchRow(id)
+    replaceRow(id, row)
   }
 
   // Refreshes all data
@@ -338,17 +341,18 @@ export const deriveStores = context => {
         ...state,
         [rowId]: true,
       }))
-      const newRow = { ...row, ...get(rowChangeCache)[rowId] }
-      const saved = await API.saveRow(newRow)
+      const saved = await API.saveRow({ ...row, ...get(rowChangeCache)[rowId] })
 
       // Update state after a successful change
-      rows.update(state => {
-        state[index] = {
-          ...newRow,
-          _rev: saved._rev,
-        }
-        return state.slice()
-      })
+      if (saved?._id) {
+        rows.update(state => {
+          state[index] = saved
+          return state.slice()
+        })
+      } else if (saved?.id) {
+        // Handle users table edge case
+        await refreshRow(saved.id)
+      }
       rowChangeCache.update(state => {
         delete state[rowId]
         return state
@@ -432,6 +436,9 @@ export const deriveStores = context => {
 
   // Checks if we have a row with a certain ID
   const hasRow = id => {
+    if (id === NewRowID) {
+      return true
+    }
     return get(rowLookupMap)[id] != null
   }
 
@@ -459,6 +466,7 @@ export const deriveStores = context => {
         hasRow,
         loadNextPage,
         refreshRow,
+        replaceRow,
         refreshData,
         refreshTableDefinition,
       },

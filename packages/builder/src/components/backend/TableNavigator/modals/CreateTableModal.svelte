@@ -28,6 +28,7 @@
     ? selectedSource._id
     : BUDIBASE_INTERNAL_DB_ID
 
+  export let promptUpload = false
   export let name
   export let beforeSave = async () => {}
   export let afterSave = async table => {
@@ -136,7 +137,13 @@
       <Label grey extraSmall
         >Create a Table from a CSV or JSON file (Optional)</Label
       >
-      <TableDataImport bind:rows bind:schema bind:allValid bind:displayColumn />
+      <TableDataImport
+        {promptUpload}
+        bind:rows
+        bind:schema
+        bind:allValid
+        bind:displayColumn
+      />
     </Layout>
   </div>
 </ModalContent>

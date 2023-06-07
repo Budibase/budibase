@@ -11,7 +11,6 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
-import { getLicensedConfig } from "../../../utilities/configs"
 import {
   Config,
   ConfigType,
@@ -24,6 +23,7 @@ import {
   isSettingsConfig,
   isSMTPConfig,
   OIDCConfigs,
+  SettingsBrandingConfig,
   SettingsInnerConfig,
   SSOConfig,
   SSOConfigType,
@@ -143,12 +143,28 @@ async function hasActivatedConfig(ssoConfigs?: SSOConfigs) {
   return !!Object.values(ssoConfigs).find(c => c?.activated)
 }
 
-async function verifySettingsConfig(config: SettingsInnerConfig) {
+async function verifySettingsConfig(
+  config: SettingsInnerConfig & SettingsBrandingConfig,
+  existingConfig?: SettingsInnerConfig & SettingsBrandingConfig
+) {
   if (config.isSSOEnforced) {
     const valid = await hasActivatedConfig()
     if (!valid) {
       throw new Error("Cannot enforce SSO without an activated configuration")
     }
+  }
+
+  // always preserve file attributes
+  // these should be set via upload instead
+  // only allow for deletion by checking empty string to bypass this behaviour
+
+  if (existingConfig && config.logoUrl !== "") {
+    config.logoUrl = existingConfig.logoUrl
+    config.logoUrlEtag = existingConfig.logoUrlEtag
+  }
+  if (existingConfig && config.faviconUrl !== "") {
+    config.faviconUrl = existingConfig.faviconUrl
+    config.faviconUrlEtag = existingConfig.faviconUrlEtag
   }
 }
 
@@ -199,7 +215,7 @@ export async function save(ctx: UserCtx<Config>) {
         await email.verifyConfig(config)
         break
       case ConfigType.SETTINGS:
-        await verifySettingsConfig(config)
+        await verifySettingsConfig(config, existingConfig?.config)
         break
       case ConfigType.GOOGLE:
         await verifyGoogleConfig(config)
@@ -321,14 +337,15 @@ export async function publicSettings(
       )
     }
 
-    if (branding.faviconUrl && branding.faviconUrl !== "") {
-      // @ts-ignore
-      config.faviconUrl = objectStore.getGlobalFileUrl(
-        "settings",
-        "faviconUrl",
-        branding.faviconUrl
-      )
-    }
+    // enrich the favicon url - empty url means deleted
+    const faviconUrl =
+      branding.faviconUrl && branding.faviconUrl !== ""
+        ? objectStore.getGlobalFileUrl(
+            "settings",
+            "faviconUrl",
+            branding.faviconUrlEtag
+          )
+        : undefined
 
     // google
     const googleConfig = await configs.getGoogleConfig()
@@ -353,6 +370,7 @@ export async function publicSettings(
       config: {
         ...config,
         ...branding,
+        ...{ faviconUrl },
         google,
         googleDatasourceConfigured,
         oidc,

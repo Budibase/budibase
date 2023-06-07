@@ -57,7 +57,7 @@ export const expectedSchemaFields = {
     running_time_secs: "number",
     title: "string",
     year: "number",
-    _id: "json",
+    _id: "string",
   },
   postgres: {
     address: "string",

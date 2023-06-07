@@ -87,7 +87,7 @@ describe("/datasources", () => {
         expect(contents.rows.length).toEqual(1)
 
         // update the datasource to remove the variables
-        datasource.config.dynamicVariables = []
+        datasource.config!.dynamicVariables = []
         const res = await request
           .put(`/api/datasources/${datasource._id}`)
           .send(datasource)

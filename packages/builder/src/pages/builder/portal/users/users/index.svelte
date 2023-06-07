@@ -88,6 +88,16 @@
     },
   }
 
+  const getPendingSchema = tblSchema => {
+    if (!tblSchema) {
+      return {}
+    }
+    let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
+    pendingSchema.email.displayName = "Pending Invites"
+    return pendingSchema
+  }
+
+  $: pendingSchema = getPendingSchema(schema)
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
   $: {
@@ -110,6 +120,24 @@
       }
     })
   }
+  let invitesLoaded = false
+  let pendingInvites = []
+  let parsedInvites = []
+
+  const invitesToSchema = invites => {
+    return invites.map(invite => {
+      const { admin, builder, userGroups, apps } = invite.info
+
+      return {
+        email: invite.email,
+        builder,
+        admin,
+        userGroups: userGroups,
+        apps: apps ? [...new Set(Object.keys(apps))] : undefined,
+      }
+    })
+  }
+  $: parsedInvites = invitesToSchema(pendingInvites)
 
   const updateFetch = email => {
     fetch.update({
@@ -144,6 +172,7 @@
     }))
     try {
       inviteUsersResponse = await users.invite(payload)
+      pendingInvites = await users.getInvites()
       inviteConfirmationModal.show()
     } catch (error) {
       notifications.error("Error inviting user")
@@ -232,12 +261,13 @@
     try {
       await groups.actions.init()
       groupsLoaded = true
+
+      pendingInvites = await users.getInvites()
+      invitesLoaded = true
     } catch (error) {
       notifications.error("Error fetching user group data")
     }
   })
-
-  let staticUserLimit = $licensing.license.quotas.usage.static.users.value
 </script>
 
 <Layout noPadding gap="M">
@@ -246,7 +276,7 @@
     <Body>Add users and control who gets access to your published apps</Body>
   </Layout>
   <Divider />
-  {#if $licensing.warnUserLimit}
+  {#if $licensing.errUserLimit}
     <InlineAlert
       type="error"
       onConfirm={() => {
@@ -258,13 +288,9 @@
       }}
       buttonText={isOwner ? "Upgrade" : "View plans"}
       cta
-      header={`Users will soon be limited to ${staticUserLimit}`}
-      message={`Our free plan is going to be limited to ${staticUserLimit} users in ${$licensing.userLimitDays}.
-    
-    This means any users exceeding the limit will be de-activated.
-
-    De-activated users will not able to access the builder or any published apps until you upgrade to one of our paid plans.
-    `}
+      header="Account de-activated"
+      message="Due to the free plan user limit being exceeded, your account has been de-activated.
+      Upgrade your plan to re-activate your account."
     />
   {/if}
   <div class="controls">
@@ -324,6 +350,15 @@
       goToNextPage={fetch.nextPage}
     />
   </div>
+  <Table
+    schema={pendingSchema}
+    data={parsedInvites}
+    allowEditColumns={false}
+    allowEditRows={false}
+    {customRenderers}
+    loading={!invitesLoaded}
+    allowClickRows={false}
+  />
 </Layout>
 
 <Modal bind:this={createUserModal}>

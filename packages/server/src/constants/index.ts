@@ -1,4 +1,5 @@
 import { objectStore, roles, constants } from "@budibase/backend-core"
+import { FieldType as FieldTypes } from "@budibase/types"
 export { FieldType as FieldTypes, RelationshipTypes } from "@budibase/types"
 
 export enum FilterTypes {
@@ -24,14 +25,14 @@ export const NoEmptyFilterStrings = [
 ]
 
 export const CanSwitchTypes = [
-  [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
+  [FieldTypes.JSON, FieldTypes.ARRAY],
   [
-    exports.FieldTypes.STRING,
-    exports.FieldTypes.OPTIONS,
-    exports.FieldTypes.LONGFORM,
-    exports.FieldTypes.BARCODEQR,
+    FieldTypes.STRING,
+    FieldTypes.OPTIONS,
+    FieldTypes.LONGFORM,
+    FieldTypes.BARCODEQR,
   ],
-  [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
+  [FieldTypes.BOOLEAN, FieldTypes.NUMBER],
 ]
 
 export const SwitchableTypes = CanSwitchTypes.reduce((prev, current) =>
@@ -77,9 +78,9 @@ export const USERS_TABLE_SCHEMA = {
   // TODO: ADMIN PANEL - when implemented this doesn't need to be carried out
   schema: {
     email: {
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         email: true,
         length: {
           maximum: "",
@@ -92,27 +93,27 @@ export const USERS_TABLE_SCHEMA = {
     firstName: {
       name: "firstName",
       fieldName: "firstName",
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
       },
     },
     lastName: {
       name: "lastName",
       fieldName: "lastName",
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
       },
     },
     roleId: {
       fieldName: "roleId",
       name: "roleId",
-      type: exports.FieldTypes.OPTIONS,
+      type: FieldTypes.OPTIONS,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
         inclusion: Object.values(roles.BUILTIN_ROLE_IDS),
       },
@@ -120,9 +121,9 @@ export const USERS_TABLE_SCHEMA = {
     status: {
       fieldName: "status",
       name: "status",
-      type: exports.FieldTypes.OPTIONS,
+      type: FieldTypes.OPTIONS,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
         inclusion: Object.values(constants.UserStatus),
       },

@@ -12,7 +12,7 @@ const parseArrayString = value => {
       result = JSON.parse(value.replace(/'/g, '"'))
       return result
     } catch (e) {
-      logging.logAlert("Could not parse row value", e)
+      logging.logWarn("Could not parse row value", e)
     }
   }
   return value

@@ -3,6 +3,7 @@ import {
   Event,
   User,
   UserCreatedEvent,
+  UserDataCollaborationEvent,
   UserDeletedEvent,
   UserInviteAcceptedEvent,
   UserInvitedEvent,
@@ -173,6 +174,15 @@ async function passwordReset(user: User) {
   await publishEvent(Event.USER_PASSWORD_RESET, properties)
 }
 
+// COLLABORATION
+
+async function dataCollaboration(users: number) {
+  const properties: UserDataCollaborationEvent = {
+    users,
+  }
+  await publishEvent(Event.USER_DATA_COLLABORATION, properties)
+}
+
 export default {
   created,
   updated,
@@ -188,4 +198,5 @@ export default {
   passwordUpdated,
   passwordResetRequested,
   passwordReset,
+  dataCollaboration,
 }

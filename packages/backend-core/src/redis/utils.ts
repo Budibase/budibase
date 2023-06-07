@@ -27,6 +27,7 @@ export enum Databases {
   GENERIC_CACHE = "data_cache",
   WRITE_THROUGH = "writeThrough",
   LOCKS = "locks",
+  SOCKET_IO = "socket_io",
 }
 
 /**
@@ -40,7 +41,7 @@ export enum Databases {
  */
 export enum SelectableDatabase {
   DEFAULT = 0,
-  WRITE_THROUGH = 1,
+  SOCKET_IO = 1,
   UNUSED_1 = 2,
   UNUSED_2 = 3,
   UNUSED_3 = 4,
@@ -94,7 +95,7 @@ export function getRedisOptions() {
     opts.port = port
     opts.password = password
   }
-  return { opts, host, port, redisProtocolUrl }
+  return { opts, host, port: parseInt(port), redisProtocolUrl }
 }
 
 export function addDbPrefix(db: string, key: string) {

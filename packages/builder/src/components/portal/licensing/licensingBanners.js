@@ -3,7 +3,6 @@ import { temporalStore } from "builderStore"
 import { admin, auth, licensing } from "stores/portal"
 import { get } from "svelte/store"
 import { BANNER_TYPES } from "@budibase/bbui"
-import { capitalise } from "helpers"
 
 const oneDayInSeconds = 86400
 
@@ -146,23 +145,19 @@ const buildUsersAboveLimitBanner = EXPIRY_KEY => {
   const userLicensing = get(licensing)
   return {
     key: EXPIRY_KEY,
-    type: BANNER_TYPES.WARNING,
+    type: BANNER_TYPES.NEGATIVE,
     onChange: () => {
       defaultCacheFn(EXPIRY_KEY)
     },
     criteria: () => {
-      return userLicensing.warnUserLimit
+      return userLicensing.errUserLimit
     },
-    message: `${capitalise(
-      userLicensing.license.plan.type
-    )} plan changes - Users will be limited to ${
-      userLicensing.userLimit
-    } users in ${userLicensing.userLimitDays}`,
+    message: "Your Budibase account is de-activated. Upgrade your plan",
     ...{
-      extraButtonText: "Find out more",
+      extraButtonText: "View plans",
       extraButtonAction: () => {
         defaultCacheFn(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER)
-        window.location.href = "/builder/portal/users/users"
+        window.location.href = "https://budibase.com/pricing/"
       },
     },
     showCloseButton: true,
