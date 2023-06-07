@@ -11,7 +11,7 @@ import { BuildSchemaErrors, InvalidColumns } from "../../constants"
 import { getIntegration } from "../../integrations"
 import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
-import { db as dbCore, context, events } from "@budibase/backend-core"
+import { db as dbCore, context, events, cache } from "@budibase/backend-core"
 import {
   UserCtx,
   Datasource,
@@ -25,9 +25,11 @@ import {
   FetchDatasourceInfoResponse,
   IntegrationBase,
   DatasourcePlus,
+  SourceName,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
+import { setupCreationAuth as googleSetupCreationAuth } from "src/integrations/googlesheets"
 
 
 function getErrorTables(errors: any, errorType: string) {
@@ -307,6 +309,12 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
 }
 
+const preSaveAction: Partial<Record<SourceName, any>> = {
+  [SourceName.GOOGLE_SHEETS]: async (datasource: Datasource) => {
+    await googleSetupCreationAuth(datasource.config as any)
+  },
+}
+
 export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
@@ -326,6 +334,10 @@ export async function save(
     schemaError = error
     datasource.entities = tables
     setDefaultDisplayColumns(datasource)
+  }
+
+  if (preSaveAction[datasource.source]) {
+    await preSaveAction[datasource.source](datasource)
   }
 
   const dbResp = await db.put(datasource)
