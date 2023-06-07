@@ -54,7 +54,7 @@ jobs:
           echo "Syncing yarn workspace"
           yarn
       - run: yarn lint
-      - run: yarn build --configuration=production
+      - run: yarn build
       - run: yarn build:sdk
 
       - name: Publish budibase packages to NPM
