@@ -21,7 +21,7 @@ import { buildExternalTableId, finaliseExternalTables } from "./utils"
 import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
-import { dataFilters } from "@budibase/shared-core"
+import { dataFilters, utils } from "@budibase/shared-core"
 import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
 import sdk from "../sdk"
 
@@ -277,17 +277,21 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     await this.connect()
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, Table> = {}
-    for (let sheet of sheets) {
-      // must fetch rows to determine schema
-      await sheet.getRows()
+    await utils.parallelForeach(
+      sheets,
+      async sheet => {
+        // must fetch rows to determine schema
+        await sheet.getRows({ limit: 0, offset: 0 })
 
-      const id = buildExternalTableId(datasourceId, sheet.title)
-      tables[sheet.title] = this.getTableSchema(
-        sheet.title,
-        sheet.headerValues,
-        id
-      )
-    }
+        const id = buildExternalTableId(datasourceId, sheet.title)
+        tables[sheet.title] = this.getTableSchema(
+          sheet.title,
+          sheet.headerValues,
+          id
+        )
+      },
+      10
+    )
     const final = finaliseExternalTables(tables, entities)
     this.tables = final.tables
     this.schemaErrors = final.errors
