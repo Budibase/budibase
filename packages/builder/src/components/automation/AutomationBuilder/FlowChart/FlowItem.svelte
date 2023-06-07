@@ -17,7 +17,11 @@
   import ActionModal from "./ActionModal.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+  import {
+    ActionStepID,
+    TriggerStepID,
+    Features,
+  } from "constants/backend/automations"
   import { permissions } from "stores/backend"
 
   export let block
@@ -31,6 +35,9 @@
   let showLooping = false
   let role
 
+  $: collectBlockExists = $selectedAutomation.definition.steps.some(
+    step => step.stepId === ActionStepID.COLLECT
+  )
   $: automationId = $selectedAutomation?._id
   $: showBindingPicker =
     block.stepId === ActionStepID.CREATE_ROW ||
@@ -184,7 +191,7 @@
         {#if !isTrigger}
           <div>
             <div class="block-options">
-              {#if !loopBlock}
+              {#if block?.features?.[Features.LOOPING] || !block.features}
                 <ActionButton on:click={() => addLooping()} icon="Reuse">
                   Add Looping
                 </ActionButton>
@@ -224,20 +231,27 @@
       </Layout>
     </div>
   {/if}
-
-  <Modal bind:this={actionModal} width="30%">
-    <ActionModal {blockIdx} />
-  </Modal>
-
-  <Modal bind:this={webhookModal} width="30%">
-    <CreateWebhookModal />
-  </Modal>
 </div>
-<div class="separator" />
-<Icon on:click={() => actionModal.show()} hoverable name="AddCircle" size="S" />
-{#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
+{#if !collectBlockExists || !lastStep}
   <div class="separator" />
+  <Icon
+    on:click={() => actionModal.show()}
+    hoverable
+    name="AddCircle"
+    size="S"
+  />
+  {#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
+    <div class="separator" />
+  {/if}
 {/if}
+
+<Modal bind:this={actionModal} width="30%">
+  <ActionModal {lastStep} {blockIdx} />
+</Modal>
+
+<Modal bind:this={webhookModal} width="30%">
+  <CreateWebhookModal />
+</Modal>
 
 <style>
   .delete-padding {

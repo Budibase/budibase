@@ -8,7 +8,6 @@
   import { onMount } from "svelte"
 
   export let integration
-  export let modal
 
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)
@@ -21,7 +20,6 @@
 
 <ModalContent
   title={`Connect to ${IntegrationNames[datasource.type]}`}
-  onCancel={() => modal.show()}
   cancelText="Back"
   size="L"
 >

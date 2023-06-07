@@ -58,4 +58,10 @@ export default class AccountAPI {
     }
     return [response, json]
   }
+
+  async delete(accountID: string) {
+    const [response, json] = await this.client.del(`/api/accounts/${accountID}`)
+    expect(response).toHaveStatusCode(200)
+    return response
+  }
 }

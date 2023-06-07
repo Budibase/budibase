@@ -1,4 +1,6 @@
 import {
+  ConnectionInfo,
+  DatasourceFeature,
   DatasourceFieldType,
   Document,
   Integration,
@@ -18,6 +20,9 @@ const SCHEMA: Integration = {
   type: "Non-relational",
   description:
     "Apache CouchDB is an open-source document-oriented NoSQL database, implemented in Erlang.",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     url: {
       type: DatasourceFieldType.STRING,
@@ -61,12 +66,23 @@ const SCHEMA: Integration = {
 }
 
 class CouchDBIntegration implements IntegrationBase {
-  private config: CouchDBConfig
-  private readonly client: any
+  private readonly client: dbCore.DatabaseImpl
 
   constructor(config: CouchDBConfig) {
-    this.config = config
     this.client = dbCore.DatabaseWithConnection(config.database, config.url)
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      const result = await this.query("exists", "validation error", {})
+      response.connected = result === true
+    } catch (e: any) {
+      response.error = e.message as string
+    }
+    return response
   }
 
   async query(
@@ -75,7 +91,7 @@ class CouchDBIntegration implements IntegrationBase {
     query: { json?: object; id?: string }
   ) {
     try {
-      return await this.client[command](query.id || query.json)
+      return await (this.client as any)[command](query.id || query.json)
     } catch (err) {
       console.error(errorMsg, err)
       throw err

@@ -6,6 +6,7 @@ export enum LockType {
    * No retries will take place and no error will be thrown.
    */
   TRY_ONCE = "try_once",
+  TRY_TWICE = "try_twice",
   DEFAULT = "default",
   DELAY_500 = "delay_500",
   CUSTOM = "custom",

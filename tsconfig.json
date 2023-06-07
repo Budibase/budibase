@@ -1,9 +1,0 @@
-{
-  "references": [
-    { "path": "./packages/types" },
-    { "path": "./packages/backend-core" },
-    { "path": "./packages/server" },
-    { "path": "./packages/worker" }
-  ],
-  "files" :[]
-}

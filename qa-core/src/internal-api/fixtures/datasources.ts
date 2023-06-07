@@ -1,5 +1,9 @@
+import { Datasource } from "@budibase/types"
+import { DatasourceRequest } from "../../types"
+import { generator } from "../../shared"
+
 // Add information about the data source to the fixtures file from 1password
-export const mongoDB = () => {
+export const mongoDB = (): DatasourceRequest => {
   return {
     datasource: {
       name: "MongoDB",
@@ -15,7 +19,7 @@ export const mongoDB = () => {
   }
 }
 
-export const postgresSQL = () => {
+export const postgresSQL = (): DatasourceRequest => {
   return {
     datasource: {
       name: "PostgresSQL",
@@ -34,7 +38,7 @@ export const postgresSQL = () => {
     fetchSchema: true,
   }
 }
-export const mariaDB = () => {
+export const mariaDB = (): DatasourceRequest => {
   return {
     datasource: {
       name: "MariaDB",
@@ -54,7 +58,7 @@ export const mariaDB = () => {
   }
 }
 
-export const restAPI = () => {
+export const restAPI = (): DatasourceRequest => {
   return {
     datasource: {
       name: "RestAPI",
@@ -68,4 +72,51 @@ export const restAPI = () => {
     },
     fetchSchema: false,
   }
+}
+
+export const generateRelationshipForMySQL = (
+  updatedDataSourceJson: any
+): Datasource => {
+  const entities = updatedDataSourceJson!.datasource!.entities!
+  const datasourceId = updatedDataSourceJson!.datasource!._id!
+  const relationShipBody = {
+    ...updatedDataSourceJson.datasource,
+    entities: {
+      ...updatedDataSourceJson.datasource.entities,
+      employees: {
+        ...entities.employees,
+        schema: {
+          ...entities.employees.schema,
+          salaries: {
+            tableId: `${datasourceId}__salaries`,
+            name: "salaries",
+            relationshipType: "many-to-one",
+            fieldName: "salary",
+            type: "link",
+            main: true,
+            _id: generator.string(),
+            foreignKey: "emp_no",
+          },
+        },
+      },
+      titles: {
+        ...entities.titles,
+        schema: {
+          ...entities.titles.schema,
+          employees: {
+            tableId: `${datasourceId}__employees`,
+            name: "employees",
+            relationshipType: "one-to-many",
+            fieldName: "emp_no",
+            type: "link",
+            main: true,
+            _id: generator.string(),
+            foreignKey: "emp_no",
+          },
+        },
+      },
+    },
+  }
+
+  return relationShipBody
 }

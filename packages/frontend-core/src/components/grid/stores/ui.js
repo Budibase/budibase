@@ -25,14 +25,33 @@ export const createStores = () => {
     null
   )
 
+  // Toggles whether a certain row ID is selected or not
+  const toggleSelectedRow = id => {
+    selectedRows.update(state => {
+      let newState = {
+        ...state,
+        [id]: !state[id],
+      }
+      if (!newState[id]) {
+        delete newState[id]
+      }
+      return newState
+    })
+  }
+
   return {
     focusedCellId,
     focusedCellAPI,
     focusedRowId,
     previousFocusedRowId,
-    selectedRows,
     hoveredRowId,
     rowHeight,
+    selectedRows: {
+      ...selectedRows,
+      actions: {
+        toggleRow: toggleSelectedRow,
+      },
+    },
   }
 }
 

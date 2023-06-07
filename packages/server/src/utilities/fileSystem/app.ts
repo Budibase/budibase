@@ -35,10 +35,20 @@ export const getComponentLibraryManifest = async (library: string) => {
   const filename = "manifest.json"
 
   if (env.isDev() || env.isTest()) {
-    const path = join(NODE_MODULES_PATH, "@budibase", "client", filename)
-    // always load from new so that updates are refreshed
-    delete require.cache[require.resolve(path)]
-    return require(path)
+    const paths = [
+      join(TOP_LEVEL_PATH, "packages/client", filename),
+      join(process.cwd(), "client", filename),
+    ]
+    for (let path of paths) {
+      if (fs.existsSync(path)) {
+        // always load from new so that updates are refreshed
+        delete require.cache[require.resolve(path)]
+        return require(path)
+      }
+    }
+    throw new Error(
+      `Unable to find ${filename} in development environment (may need to build).`
+    )
   }
 
   if (!appId) {

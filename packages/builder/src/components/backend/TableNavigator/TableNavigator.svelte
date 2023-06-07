@@ -6,7 +6,8 @@
   import NavItem from "components/common/NavItem.svelte"
   import { goto, isActive } from "@roxi/routify"
 
-  const alphabetical = (a, b) => a.name?.toLowerCase() > b.name?.toLowerCase()
+  const alphabetical = (a, b) =>
+    a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
 
   export let sourceId
 

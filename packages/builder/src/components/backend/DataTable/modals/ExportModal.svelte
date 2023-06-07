@@ -113,17 +113,26 @@
       })
       download(data, `export.${exportFormat}`)
     } else if (filters || sorting) {
-      const data = await API.exportRows({
-        tableId: view,
-        format: exportFormat,
-        search: {
-          query: luceneFilter,
-          sort: sorting?.sortColumn,
-          sortOrder: sorting?.sortOrder,
-          paginate: false,
-        },
-      })
-      download(data, `export.${exportFormat}`)
+      let response
+      try {
+        response = await API.exportRows({
+          tableId: view,
+          format: exportFormat,
+          search: {
+            query: luceneFilter,
+            sort: sorting?.sortColumn,
+            sortOrder: sorting?.sortOrder,
+            paginate: false,
+          },
+        })
+      } catch (e) {
+        console.error("Failed to export", e)
+        notifications.error("Export Failed")
+      }
+      if (response) {
+        download(response, `export.${exportFormat}`)
+        notifications.success("Export Successful")
+      }
     } else {
       await exportView()
     }

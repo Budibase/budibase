@@ -33,7 +33,7 @@ export const backfill = async (appDb: any, timestamp: string | number) => {
         datasource = {
           type: "unknown",
           _id: query.datasourceId,
-          source: SourceName.UNKNOWN,
+          source: "unknown" as SourceName,
         }
       } else {
         throw e

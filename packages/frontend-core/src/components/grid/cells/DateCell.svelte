@@ -1,17 +1,22 @@
 <script>
   import dayjs from "dayjs"
   import { CoreDatePicker, Icon } from "@budibase/bbui"
+  import { onMount } from "svelte"
 
   export let value
   export let schema
   export let onChange
   export let focused = false
   export let readonly = false
+  export let api
 
-  // adding the 0- will turn a string like 00:00:00 into a valid ISO
+  let flatpickr
+  let isOpen
+
+  // Adding the 0- will turn a string like 00:00:00 into a valid ISO
   // date, but will make actual ISO dates invalid
-  $: time = new Date(`0-${value}`)
-  $: timeOnly = !isNaN(time) || schema?.timeOnly
+  $: isTimeValue = !isNaN(new Date(`0-${value}`))
+  $: timeOnly = isTimeValue || schema?.timeOnly
   $: dateOnly = schema?.dateOnly
   $: format = timeOnly
     ? "HH:mm:ss"
@@ -19,12 +24,45 @@
     ? "MMM D YYYY"
     : "MMM D YYYY, HH:mm"
   $: editable = focused && !readonly
+  $: displayValue = getDisplayValue(value, format, timeOnly, isTimeValue)
+
+  const getDisplayValue = (value, format, timeOnly, isTimeValue) => {
+    if (!value) {
+      return ""
+    }
+    // Parse full date strings
+    if (!timeOnly || !isTimeValue) {
+      return dayjs(value).format(format)
+    }
+    // Otherwise must be a time string
+    return dayjs(`0-${value}`).format(format)
+  }
+
+  // Ensure we close flatpickr when unselected
+  $: {
+    if (!focused) {
+      flatpickr?.close()
+    }
+  }
+
+  const onKeyDown = () => {
+    return isOpen
+  }
+
+  onMount(() => {
+    api = {
+      onKeyDown,
+      focus: () => flatpickr?.open(),
+      blur: () => flatpickr?.close(),
+      isActive: () => isOpen,
+    }
+  })
 </script>
 
 <div class="container">
   <div class="value">
     {#if value}
-      {dayjs(timeOnly ? time : value).format(format)}
+      {displayValue}
     {/if}
   </div>
   {#if editable}
@@ -42,6 +80,10 @@
       {timeOnly}
       time24hr
       ignoreTimezones={schema.ignoreTimezones}
+      bind:flatpickr
+      on:open={() => (isOpen = true)}
+      on:close={() => (isOpen = false)}
+      useKeyboardShortcuts={false}
     />
   </div>
 {/if}

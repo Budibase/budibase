@@ -11,6 +11,7 @@
   export let selected
   export let rowFocused
   export let rowIdx
+  export let topRow = false
   export let focused
   export let selectedUser
   export let column
@@ -32,6 +33,7 @@
   $: readonly =
     column.schema.autocolumn ||
     column.schema.disabled ||
+    column.schema.type === "formula" ||
     (!$config.allowEditRows && row._id)
 
   // Register this cell API if the row is focused
@@ -67,6 +69,7 @@
   {highlighted}
   {selected}
   {rowIdx}
+  {topRow}
   {focused}
   {selectedUser}
   {readonly}

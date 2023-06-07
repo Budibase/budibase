@@ -7,6 +7,7 @@ export enum AutomationIOType {
   BOOLEAN = "boolean",
   NUMBER = "number",
   ARRAY = "array",
+  JSON = "json",
 }
 
 export enum AutomationCustomIOType {
@@ -56,6 +57,8 @@ export enum AutomationActionStepId {
   FILTER = "FILTER",
   QUERY_ROWS = "QUERY_ROWS",
   LOOP = "LOOP",
+  COLLECT = "COLLECT",
+  OPENAI = "OPENAI",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -121,6 +124,11 @@ export interface AutomationStepSchema {
     outputs: InputOutputBlock
   }
   custom?: boolean
+  features?: Partial<Record<AutomationFeature, boolean>>
+}
+
+export enum AutomationFeature {
+  LOOPING = "LOOPING",
 }
 
 export interface AutomationStep extends AutomationStepSchema {

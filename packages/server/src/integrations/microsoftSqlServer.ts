@@ -8,6 +8,8 @@ import {
   QueryType,
   SqlQuery,
   DatasourcePlus,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -18,7 +20,6 @@ import {
 } from "./utils"
 import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
-
 const sqlServer = require("mssql")
 const DEFAULT_SCHEMA = "dbo"
 
@@ -39,6 +40,10 @@ const SCHEMA: Integration = {
     "Microsoft SQL Server is a relational database management system developed by Microsoft. ",
   friendlyName: "MS SQL Server",
   type: "Relational",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+  },
   datasource: {
     user: {
       type: DatasourceFieldType.STRING,
@@ -119,6 +124,19 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     if (!this.pool) {
       this.pool = new sqlServer.ConnectionPool(clientCfg)
     }
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      await this.connect()
+      response.connected = true
+    } catch (e: any) {
+      response.error = e.message as string
+    }
+    return response
   }
 
   getBindingIdentifier(): string {
@@ -266,6 +284,20 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     const final = finaliseExternalTables(tables, entities)
     this.tables = final.tables
     this.schemaErrors = final.errors
+  }
+
+  async queryTableNames() {
+    let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
+    const schema = this.config.schema || DEFAULT_SCHEMA
+    return tableInfo
+      .filter((record: any) => record.TABLE_SCHEMA === schema)
+      .map((record: any) => record.TABLE_NAME)
+      .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
+  }
+
+  async getTableNames() {
+    await this.connect()
+    return this.queryTableNames()
   }
 
   async read(query: SqlQuery | string) {
