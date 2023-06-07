@@ -29,6 +29,7 @@ import {
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 
+
 function getErrorTables(errors: any, errorType: string) {
   return Object.entries(errors)
     .filter(entry => entry[1] === errorType)
