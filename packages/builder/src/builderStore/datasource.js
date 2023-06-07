@@ -46,7 +46,9 @@ export async function validateDatasourceConfig(config) {
 }
 
 export async function getDatasourceInfo(config) {
-  const datasource = prepareData(config)
-  const resp = await API.fetchInfoForDatasource(datasource)
-  return resp
+  let datasource = config
+  if (!config._id) {
+    datasource = prepareData(config)
+  }
+  return await API.fetchInfoForDatasource(datasource)
 }
