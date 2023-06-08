@@ -135,7 +135,7 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
   // specific to REST datasources, fix the auth configs again if required
   if (hasAuthConfigs(update)) {
     const configs = update.config.authConfigs as RestAuthConfig[]
-    const oldConfigs = old.config?.authConfigs as RestAuthConfig[] || []
+    const oldConfigs = (old.config?.authConfigs as RestAuthConfig[]) || []
     for (let config of configs) {
       if (config.type !== RestAuthType.BASIC) {
         continue
