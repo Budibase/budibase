@@ -17,6 +17,7 @@
     appStore,
     devToolsStore,
     environmentStore,
+    devToolsEnabled,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -47,10 +48,7 @@
   let permissionError = false
 
   // Determine if we should show devtools or not
-  $: showDevTools =
-    !$builderStore.inBuilder &&
-    $devToolsStore.enabled &&
-    !$routeStore.queryParams?.peek
+  $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
 
   // Handle no matching route
   $: {
