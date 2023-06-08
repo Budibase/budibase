@@ -21,6 +21,7 @@
 
   import { saveDatasource } from "builderStore/datasource"
   import { DatasourceFeature } from "@budibase/types"
+  import { API } from "api"
 
   export let integration
   export let continueSetupId = false
@@ -50,20 +51,6 @@
   let allSheets
   let selectedSheets
 
-  const saveDatasourceAndRedirect = async () => {
-    try {
-      const resp = await saveDatasource(datasource, {
-        tablesFilter: selectedSheets,
-      })
-      $goto(`./datasource/${resp._id}`)
-      notifications.success(`Datasource created successfully.`)
-    } catch (err) {
-      notifications.error(err?.message ?? "Error saving datasource")
-      // prevent the modal from closing
-      return false
-    }
-  }
-
   $: modalConfig = {
     [GoogleDatasouceConfigStep.AUTH]: {
       title: `Connect to ${integrationName}`,
@@ -82,8 +69,21 @@
           }
         }
 
+        try {
+          const resp = await saveDatasource(datasource, {
+            tablesFilter: selectedSheets,
+            skipFetch: true,
+          })
+          datasource = resp
+        } catch (err) {
+          notifications.error(err?.message ?? "Error saving datasource")
+          // prevent the modal from closing
+          return false
+        }
+
         if (!integration.features[DatasourceFeature.FETCH_TABLE_NAMES]) {
-          saveDatasourceAndRedirect()
+          $goto(`./datasource/${datasource._id}`)
+          notifications.success(`Datasource created successfully.`)
           return
         }
 
@@ -107,7 +107,23 @@
         ? "Fetch sheets"
         : "Continue without fetching",
       onConfirm: async () => {
-        await saveDatasourceAndRedirect()
+        try {
+          if (selectedSheets.length) {
+            await API.buildDatasourceSchema({
+              datasourceId: datasource._id,
+              tablesFilter: selectedSheets,
+            })
+          }
+
+          $goto(`./datasource/${datasource._id}`)
+        } catch (err) {
+          notifications.error(err?.message ?? "Error fetching the sheets")
+          // prevent the modal from closing
+          return false
+        }
+      },
+      onCancel: async () => {
+        $goto(`./datasource/${datasource._id}`)
       },
     },
   }
@@ -120,6 +136,7 @@
   confirmText={modalConfig[step].confirmButtonText}
   showConfirmButton={!!modalConfig[step].onConfirm}
   onConfirm={modalConfig[step].onConfirm}
+  onCancel={modalConfig[step].onCancel}
   disabled={!isValid}
 >
   {#if step === GoogleDatasouceConfigStep.AUTH}
