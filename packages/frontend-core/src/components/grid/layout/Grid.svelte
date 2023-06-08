@@ -35,11 +35,10 @@
   export let tableId = null
   export let schemaOverrides = null
   export let allowAddRows = true
-  export let allowAddColumns = true
-  export let allowEditColumns = true
   export let allowExpandRows = true
   export let allowEditRows = true
   export let allowDeleteRows = true
+  export let allowSchemaChanges = true
   export let stripeRows = false
   export let collaboration = true
   export let showAvatars = true
@@ -53,8 +52,7 @@
   const schemaOverridesStore = writable(schemaOverrides)
   const config = writable({
     allowAddRows,
-    allowAddColumns,
-    allowEditColumns,
+    allowSchemaChanges,
     allowExpandRows,
     allowEditRows,
     allowDeleteRows,
@@ -88,8 +86,7 @@
   $: schemaOverridesStore.set(schemaOverrides)
   $: config.set({
     allowAddRows,
-    allowAddColumns,
-    allowEditColumns,
+    allowSchemaChanges,
     allowExpandRows,
     allowEditRows,
     allowDeleteRows,

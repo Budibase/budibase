@@ -21,9 +21,8 @@
     {allowEditRows}
     {allowDeleteRows}
     showControls={false}
-    allowAddColumns={false}
-    allowEditColumns={false}
     allowExpandRows={false}
+    allowSchemaChanges={false}
   />
 </div>
 
