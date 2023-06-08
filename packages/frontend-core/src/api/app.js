@@ -124,6 +124,15 @@ export const buildAppEndpoints = API => ({
   },
 
   /**
+   * Gets application diagnostics.
+   */
+  fetchDiagnostics: async () => {
+    return await API.get({
+      url: `/api/dev/diagnostics`,
+    })
+  },
+
+  /**
    * Syncs an app with the production database.
    * @param appId the ID of the app to sync
    */
