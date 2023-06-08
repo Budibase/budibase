@@ -2,6 +2,7 @@
   import { onMount } from "svelte"
   import { fade, fly } from "svelte/transition"
   import { store, selectedScreen } from "builderStore"
+  import { ProgressCircle } from "@budibase/bbui"
 
   $: route = $selectedScreen?.routing.route || "/"
   $: src = `/${$store.appId}#${route}`
@@ -32,6 +33,10 @@
     class="container spectrum {$store.theme}"
     transition:fly={{ duration: 260, y: 130 }}
   >
+    <div class="header placeholder" />
+    <div class="loading placeholder">
+      <ProgressCircle />
+    </div>
     <iframe {src} />
   </div>
 </div>
@@ -65,5 +70,22 @@
     width: 100%;
     border: none;
     outline: none;
+    z-index: 1;
+  }
+  .header {
+    height: 60px;
+    width: 100%;
+    background: black;
+    top: 0;
+    position: absolute;
+  }
+  .loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateY(-50%) translateX(-50%);
+  }
+  .placeholder {
+    z-index: 0;
   }
 </style>
