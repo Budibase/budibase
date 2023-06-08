@@ -25,25 +25,24 @@ function runBuild(entry, outfile) {
     minify: !isDev,
     sourcemap: isDev,
     tsconfig,
-    plugins: [
-      TsconfigPathsPlugin({ tsconfig }),
-      NodeResolve({
-        extensions: [".ts", ".js"],
-        onResolved: resolved => {
-          if (resolved.includes("node_modules") && !resolved.includes("/@budibase/pro/")) {
-            return {
-              external: true,
-            }
-          }
-          return resolved
-        },
-      }),
-    ],
+    plugins: [TsconfigPathsPlugin({ tsconfig })],
     target: "node14",
     preserveSymlinks: true,
     loader: {
       ".svelte": "copy",
     },
+    external: [
+      "deasync",
+      "mock-aws-s3",
+      "nock",
+      "lerna",
+      "dd-trace",
+      "pg",
+      "@bull-board/koa",
+      "koa2-ratelimit",
+      "fsevents",
+      "knex",
+    ],
   }
 
   build({
