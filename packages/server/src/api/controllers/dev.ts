@@ -127,3 +127,21 @@ export async function getBudibaseVersion(ctx: any) {
   }
   await events.installation.versionChecked(version)
 }
+
+export async function troubleshootingInfo(ctx: any) {
+  const os = require("os")
+  const process = require("process")
+
+  ctx.body = {
+    budibaseVersion: envCore.VERSION,
+    hosting: envCore.DEPLOYMENT_ENVIRONMENT,
+    nodeVersion: process.version,
+    platform: process.platform,
+    cpuArch: process.arch,
+    cpuCores: os.cpus().length,
+    cpuInfo: os.cpus()[0].model,
+    totalMemory: os.totalmem(),
+    freeMemory: os.freemem(),
+    uptime: os.uptime(), 
+  }
+}

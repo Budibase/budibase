@@ -24,6 +24,11 @@ router
     authorized(permissions.BUILDER),
     controller.getBudibaseVersion
   )
+  .get(
+    "/api/dev/diagnostics",
+    authorized(permissions.BUILDER),
+    controller.troubleshootingInfo
+  )
   .delete(
     "/api/dev/:appId/lock",
     authorized(permissions.BUILDER),
