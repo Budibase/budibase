@@ -88,7 +88,7 @@
     "mode:cloud": "yarn env:selfhost:disable && yarn env:multi:enable && yarn env:account:disable",
     "mode:account": "yarn mode:cloud && yarn env:account:enable",
     "security:audit": "node scripts/audit.js",
-    "postinstall": "husky install",
+    "postinstall": "if test \"$NODE_ENV\" != \"production\" ; then  husky install ; fi",
     "submodules:load": "git submodule init && git submodule update && yarn",
     "submodules:unload": "git submodule deinit --all && yarn"
   },
