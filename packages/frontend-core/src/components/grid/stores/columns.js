@@ -46,7 +46,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { table, columns, stickyColumn, API, dispatch } = context
+  const { table, columns, stickyColumn, API, dispatch, config } = context
 
   // Updates the tables primary display column
   const changePrimaryDisplay = async column => {
@@ -95,7 +95,9 @@ export const deriveStores = context => {
     dispatch("updatetable", newTable)
 
     // Update server
-    await API.saveTable(newTable)
+    if (get(config).allowSchemaChanges) {
+      await API.saveTable(newTable)
+    }
   }
 
   return {

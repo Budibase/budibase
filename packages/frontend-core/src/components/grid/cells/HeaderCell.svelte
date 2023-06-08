@@ -163,7 +163,7 @@
     <MenuItem
       icon="Edit"
       on:click={editColumn}
-      disabled={!$config.allowEditColumns || column.schema.disabled}
+      disabled={!$config.allowSchemaChanges || column.schema.disabled}
     >
       Edit column
     </MenuItem>
@@ -171,7 +171,7 @@
       icon="Label"
       on:click={makeDisplayColumn}
       disabled={idx === "sticky" ||
-        !$config.allowEditColumns ||
+        !$config.allowSchemaChanges ||
         bannedDisplayColumnTypes.includes(column.schema.type)}
     >
       Use as display column

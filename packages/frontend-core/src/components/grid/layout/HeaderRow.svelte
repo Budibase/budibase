@@ -29,7 +29,7 @@
       {/each}
     </div>
   </GridScrollWrapper>
-  {#if $config.allowAddColumns}
+  {#if $config.allowSchemaChanges}
     <div
       class="add"
       style="left:{left}px"
