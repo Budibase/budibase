@@ -1,7 +1,7 @@
 name: Budibase Release Selfhost
 
 on:
- workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   release:
@@ -16,8 +16,10 @@ jobs:
           fi
 
       - uses: actions/checkout@v2
-        with: 
-          fetch_depth: 0
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          fetch-depth: 0
 
       - name: Fail if tag is not in master
         run: |
@@ -38,7 +40,7 @@ jobs:
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
       - name: Tag and release Docker images (Self Host)
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
           release_tag=v${{ env.RELEASE_VERSION }}
@@ -52,7 +54,7 @@ jobs:
           docker tag budibase/apps:$release_tag budibase/apps:$SELFHOST_TAG
           docker tag budibase/worker:$release_tag budibase/worker:$SELFHOST_TAG
           docker tag budibase/proxy:$release_tag budibase/proxy:$SELFHOST_TAG
-          
+
           # Push images
           docker push budibase/apps:$SELFHOST_TAG
           docker push budibase/worker:$SELFHOST_TAG
@@ -74,15 +76,15 @@ jobs:
           yarn
           yarn specs
           popd
-      
-      - name: Setup Helm 
+
+      - name: Setup Helm
         uses: azure/setup-helm@v1
         id: helm-install
 
       # due to helm repo index issue: https://github.com/helm/helm/issues/7363
       # we need to create new package in a different dir, merge the index and move the package back
       - name: Build and release helm chart
-        run: | 
+        run: |
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
           git reset --hard
