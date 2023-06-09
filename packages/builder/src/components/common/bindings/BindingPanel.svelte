@@ -19,7 +19,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import { store } from "builderStore"
+
   import { convertToJS } from "@budibase/string-templates"
   import { admin } from "stores/portal"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
