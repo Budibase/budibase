@@ -121,12 +121,21 @@ export const deriveStores = context => {
     })
 
     // Subscribe to changes of this fetch model
-    unsubscribe = newFetch.subscribe($fetch => {
+    unsubscribe = newFetch.subscribe(async $fetch => {
       if ($fetch.loaded && !$fetch.loading) {
         hasNextPage.set($fetch.hasNextPage)
         const $instanceLoaded = get(instanceLoaded)
         const resetRows = $fetch.resetKey !== lastResetKey
+        const previousResetKey = lastResetKey
         lastResetKey = $fetch.resetKey
+
+        // If resetting rows due to a table change, wipe data and wait for
+        // derived stores to compute. This prevents stale data being passed
+        // to cells when we save the new schema.
+        if (!$instanceLoaded && previousResetKey) {
+          rows.set([])
+          await tick()
+        }
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
