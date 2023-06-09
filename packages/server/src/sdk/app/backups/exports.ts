@@ -18,7 +18,8 @@ import { join } from "path"
 import env from "../../../environment"
 
 const uuid = require("uuid/v4")
-const tar = require("tar")
+import tar from "tar"
+
 const MemoryStream = require("memorystream")
 
 interface DBDumpOpts {
@@ -33,13 +34,14 @@ interface ExportOpts extends DBDumpOpts {
 }
 
 function tarFilesToTmp(tmpDir: string, files: string[]) {
-  const exportFile = join(budibaseTempDir(), `${uuid()}.tar.gz`)
+  const fileName = `${uuid()}.tar.gz`
+  const exportFile = join(budibaseTempDir(), fileName)
   tar.create(
     {
       sync: true,
       gzip: true,
       file: exportFile,
-      recursive: true,
+      noDirRecurse: false,
       cwd: tmpDir,
     },
     files
@@ -124,6 +126,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
       )
     }
   }
+
   const downloadedPath = join(tmpPath, appPath)
   if (fs.existsSync(downloadedPath)) {
     const allFiles = fs.readdirSync(downloadedPath)
