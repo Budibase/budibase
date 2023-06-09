@@ -10,7 +10,7 @@
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import GoogleButton from "../_components/GoogleButton.svelte"
   import { organisation } from "stores/portal"
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
   import {
     validateDatasourceConfig,
     getDatasourceInfo,
@@ -34,6 +34,7 @@
   onMount(async () => {
     await organisation.init()
   })
+
   const integrationName = IntegrationNames[IntegrationTypes.GOOGLE_SHEETS]
 
   export const GoogleDatasouceConfigStep = {
@@ -82,7 +83,6 @@
         }
 
         if (!integration.features[DatasourceFeature.FETCH_TABLE_NAMES]) {
-          $goto(`./datasource/${datasource._id}`)
           notifications.success(`Datasource created successfully.`)
           return
         }
@@ -115,18 +115,22 @@
             })
           }
 
-          $goto(`./datasource/${datasource._id}`)
+          return
         } catch (err) {
           notifications.error(err?.message ?? "Error fetching the sheets")
           // prevent the modal from closing
           return false
         }
       },
-      onCancel: async () => {
-        $goto(`./datasource/${datasource._id}`)
-      },
     },
   }
+
+  // This will handle the user closing the modal pressing outside the modal
+  onDestroy(async () => {
+    if (step === GoogleDatasouceConfigStep.SET_SHEETS) {
+      await $goto(`./datasource/${datasource._id}`)
+    }
+  })
 </script>
 
 <ModalContent
@@ -136,7 +140,6 @@
   confirmText={modalConfig[step].confirmButtonText}
   showConfirmButton={!!modalConfig[step].onConfirm}
   onConfirm={modalConfig[step].onConfirm}
-  onCancel={modalConfig[step].onCancel}
   disabled={!isValid}
 >
   {#if step === GoogleDatasouceConfigStep.AUTH}
