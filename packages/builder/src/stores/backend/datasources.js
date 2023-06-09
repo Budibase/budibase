@@ -14,10 +14,9 @@ export function createDatasourcesStore() {
   const derivedStore = derived(store, $store => ({
     ...$store,
     selected: $store.list?.find(ds => ds._id === $store.selectedDatasourceId),
-    hasDefaultData:
-      $store.list.findIndex(
-        datasource => datasource._id === DEFAULT_BB_DATASOURCE_ID
-      ) !== -1,
+    hasDefaultData: $store.list.some(
+      datasource => datasource._id === DEFAULT_BB_DATASOURCE_ID
+    ),
   }))
 
   const fetch = async () => {
@@ -70,7 +69,6 @@ export function createDatasourcesStore() {
   }
 
   const create = async ({ integration, fields }) => {
-    const isSheets = integration.name === IntegrationTypes.GOOGLE_SHEETS
     const datasource = {
       type: "datasource",
       source: integration.name,
@@ -79,17 +77,15 @@ export function createDatasourcesStore() {
       plus: integration.plus && integration.name !== IntegrationTypes.REST,
     }
 
-    if (
-      integration.features?.[DatasourceFeature.CONNECTION_CHECKING] &&
-      !isSheets
-    ) {
+    if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
       const { connected } = await API.validateDatasource(datasource)
       if (!connected) throw "Unable to connect"
     }
 
     const response = await API.createDatasource({
       datasource,
-      fetchSchema: integration.plus && !isSheets,
+      fetchSchema:
+        integration.plus && integration.name !== IntegrationTypes.GOOGLE_SHEETS,
     })
 
     return updateDatasource(response)

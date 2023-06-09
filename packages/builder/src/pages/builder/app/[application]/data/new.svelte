@@ -4,8 +4,10 @@
     tables,
     datasources,
     sortedIntegrations as integrations,
+    integrations as integrationsStore,
   } from "stores/backend"
 
+  import { IntegrationTypes } from "constants/backend"
   import { Icon, Modal, notifications, Heading, Body } from "@budibase/bbui"
   import { params, goto } from "@roxi/routify"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
@@ -14,25 +16,38 @@
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons/index.js"
   import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
-  import { onMount } from "svelte"
 
   let internalTableModal
   let externalDatasourceModal
   let disabled = false
   let promptUpload = false
-
   $: hasData = $datasources.list.length > 1 || $tables.list.length > 1
 
-  let continueGoogleSetup
+  const getGoogleSetupId = params => {
+    const id = params["?continue_google_setup"]
+    $goto("./new")
+    return id
+  }
 
-  onMount(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    continueGoogleSetup = urlParams.get("continue_google_setup")
-
-    if (continueGoogleSetup) {
-      handleIntegrationSelect(IntegrationTypes.GOOGLE_SHEETS)
+  const handleOpenGoogle = (
+    setupId,
+    integrationsStore,
+    externalDatasourceModal
+  ) => {
+    if (setupId && integrationsStore && externalDatasourceModal) {
+      externalDatasourceModal.show({
+        ...integrationsStore[IntegrationTypes.GOOGLE_SHEETS],
+        name: IntegrationTypes.GOOGLE_SHEETS,
+      })
     }
-  })
+  }
+
+  $: googleSetupId = getGoogleSetupId($params)
+  $: handleOpenGoogle(
+    googleSetupId,
+    $integrationsStore,
+    externalDatasourceModal
+  )
 
   const createSampleData = async () => {
     disabled = true
@@ -69,9 +84,9 @@
 </Modal>
 
 <CreateExternalDatasourceModal
-  continueGoogleSetupId={continueGoogleSetup}
+  {googleSetupId}
   on:hide={() => {
-    continueGoogleSetup = false
+    googleSetupId = false
   }}
   bind:disabled
   bind:this={externalDatasourceModal}

@@ -14,7 +14,7 @@
   import IntegrationConfigForm from "./_IntegrationConfigForm.svelte"
 
   export let disabled = false
-  export let continueGoogleSetup = false
+  export let googleSetupId = false
 
   let modal
   let integration
@@ -67,7 +67,10 @@
 
 <Modal on:hide bind:this={modal}>
   {#if integration?.auth?.type === "google"}
-    <GoogleDatasourceConfigModal {integration} />
+    <GoogleDatasourceConfigModal
+      continueSetupId={googleSetupId}
+      {integration}
+    />
   {:else}
     <ModalContent
       title={`Connect to ${integration.friendlyName}`}
