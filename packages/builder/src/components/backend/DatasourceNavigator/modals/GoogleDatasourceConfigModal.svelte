@@ -29,6 +29,8 @@
   let datasource = cloneDeep(integration)
   datasource.config.continueSetupId = continueSetupId
 
+  let { schema } = datasource
+
   $: isGoogleConfigured = !!$organisation.googleDatasourceConfigured
 
   onMount(async () => {
@@ -164,7 +166,7 @@
       <Body size="S">Add the URL of the sheet you want to connect.</Body>
 
       <IntegrationConfigForm
-        schema={datasource.schema}
+        {schema}
         bind:datasource
         creating={true}
         on:valid={e => (isValid = e.detail)}
