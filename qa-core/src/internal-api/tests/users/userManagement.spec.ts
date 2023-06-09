@@ -94,6 +94,11 @@ describe("Internal API - User Management & Permissions", () => {
       lastName: "newLastName",
     }
     await config.api.self.changeUserInfo(body)
+
+    const [changedUserInfoResponse, changedUserInfoJson] =
+      await config.api.self.getSelf()
+    expect(changedUserInfoJson.firstName).toEqual("newFirstName")
+    expect(changedUserInfoJson.lastName).toEqual("newLastName")
   })
 
   it("Generate API key", async () => {
@@ -102,5 +107,9 @@ describe("Internal API - User Management & Permissions", () => {
 
   it("Change Password", async () => {
     await config.api.self.changeSelfPassword()
+    const [changedUserInfoResponse, changedUserInfoJson] =
+      await config.api.self.getSelf()
+
+    await config.login(changedUserInfoJson.email!, "newPassword")
   })
 })
