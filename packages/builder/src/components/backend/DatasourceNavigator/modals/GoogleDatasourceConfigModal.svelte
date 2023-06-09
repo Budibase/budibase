@@ -6,6 +6,7 @@
     Link,
     notifications,
     FancyCheckboxGroup,
+    InlineAlert,
   } from "@budibase/bbui"
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import GoogleButton from "../_components/GoogleButton.svelte"
@@ -53,6 +54,7 @@
 
   let allSheets
   let selectedSheets
+  let setSheetsErrorTitle, setSheetsErrorMessage
 
   $: modalConfig = {
     [GoogleDatasouceConfigStep.AUTH]: {
@@ -119,7 +121,19 @@
 
           return
         } catch (err) {
-          notifications.error(err?.message ?? "Error fetching the sheets")
+          const message = err?.message ?? "Error fetching the sheets"
+          // Handling message with format: Error title - error description
+          const indexSeparator = message.indexOf(" - ")
+          if (indexSeparator >= 0) {
+            setSheetsErrorTitle = message.substr(0, indexSeparator)
+            setSheetsErrorMessage =
+              message[indexSeparator + 3].toUpperCase() +
+              message.substr(indexSeparator + 4)
+          } else {
+            setSheetsErrorTitle = null
+            setSheetsErrorMessage = message
+          }
+
           // prevent the modal from closing
           return false
         }
@@ -182,6 +196,14 @@
         bind:selected={selectedSheets}
         selectAllText="Select all sheets"
       />
+
+      {#if setSheetsErrorTitle || setSheetsErrorMessage}
+        <InlineAlert
+          type="error"
+          header={setSheetsErrorTitle}
+          message={setSheetsErrorMessage}
+        />
+      {/if}
     </Layout>
   {/if}
 </ModalContent>
