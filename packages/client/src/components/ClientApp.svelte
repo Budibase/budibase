@@ -105,6 +105,7 @@
     lang="en"
     dir="ltr"
     class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
+    class:builder={$builderStore.inBuilder}
   >
     <DeviceBindingsProvider>
       <UserBindingsProvider>
@@ -221,11 +222,13 @@
     overflow: hidden;
     height: 100%;
     width: 100%;
-    background: transparent;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
+  }
+  #spectrum-root.builder {
+    background: transparent;
   }
 
   #clip-root {
