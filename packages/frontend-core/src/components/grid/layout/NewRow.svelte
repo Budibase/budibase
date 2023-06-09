@@ -148,9 +148,9 @@
     class:floating={offset > 0}
     style="--offset:{offset}px; --sticky-width:{width}px;"
   >
-    <div class="underlay sticky" transition:fade={{ duration: 130 }} />
-    <div class="underlay" transition:fade={{ duration: 130 }} />
-    <div class="sticky-column" transition:fade={{ duration: 130 }}>
+    <div class="underlay sticky" transition:fade|local={{ duration: 130 }} />
+    <div class="underlay" transition:fade|local={{ duration: 130 }} />
+    <div class="sticky-column" transition:fade|local={{ duration: 130 }}>
       <GutterCell on:expand={addViaModal} rowHovered>
         <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
         {#if isAdding}
@@ -179,7 +179,7 @@
         </DataCell>
       {/if}
     </div>
-    <div class="normal-columns" transition:fade={{ duration: 130 }}>
+    <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally wheelInteractive>
         <div class="row">
           {#each $renderedColumns as column, columnIdx}
@@ -209,7 +209,7 @@
         </div>
       </GridScrollWrapper>
     </div>
-    <div class="buttons" transition:fade={{ duration: 130 }}>
+    <div class="buttons" transition:fade|local={{ duration: 130 }}>
       <Button size="M" cta on:click={addRow} disabled={isAdding}>
         <div class="button-with-keys">
           Save
