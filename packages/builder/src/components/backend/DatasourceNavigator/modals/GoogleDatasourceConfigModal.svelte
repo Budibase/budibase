@@ -10,7 +10,7 @@
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import GoogleButton from "../_components/GoogleButton.svelte"
   import { organisation } from "stores/portal"
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
   import {
     validateDatasourceConfig,
     getDatasourceInfo,
@@ -21,6 +21,7 @@
 
   import { saveDatasource } from "builderStore/datasource"
   import { DatasourceFeature } from "@budibase/types"
+  import { API } from "api"
 
   export let integration
   export let continueSetupId = false
@@ -28,11 +29,14 @@
   let datasource = cloneDeep(integration)
   datasource.config.continueSetupId = continueSetupId
 
+  let { schema } = datasource
+
   $: isGoogleConfigured = !!$organisation.googleDatasourceConfigured
 
   onMount(async () => {
     await organisation.init()
   })
+
   const integrationName = IntegrationNames[IntegrationTypes.GOOGLE_SHEETS]
 
   export const GoogleDatasouceConfigStep = {
@@ -49,20 +53,6 @@
 
   let allSheets
   let selectedSheets
-
-  const saveDatasourceAndRedirect = async () => {
-    try {
-      const resp = await saveDatasource(datasource, {
-        tablesFilter: selectedSheets,
-      })
-      $goto(`./datasource/${resp._id}`)
-      notifications.success(`Datasource created successfully.`)
-    } catch (err) {
-      notifications.error(err?.message ?? "Error saving datasource")
-      // prevent the modal from closing
-      return false
-    }
-  }
 
   $: modalConfig = {
     [GoogleDatasouceConfigStep.AUTH]: {
@@ -82,8 +72,20 @@
           }
         }
 
+        try {
+          const resp = await saveDatasource(datasource, {
+            tablesFilter: selectedSheets,
+            skipFetch: true,
+          })
+          datasource = resp
+        } catch (err) {
+          notifications.error(err?.message ?? "Error saving datasource")
+          // prevent the modal from closing
+          return false
+        }
+
         if (!integration.features[DatasourceFeature.FETCH_TABLE_NAMES]) {
-          saveDatasourceAndRedirect()
+          notifications.success(`Datasource created successfully.`)
           return
         }
 
@@ -107,10 +109,30 @@
         ? "Fetch sheets"
         : "Continue without fetching",
       onConfirm: async () => {
-        await saveDatasourceAndRedirect()
+        try {
+          if (selectedSheets.length) {
+            await API.buildDatasourceSchema({
+              datasourceId: datasource._id,
+              tablesFilter: selectedSheets,
+            })
+          }
+
+          return
+        } catch (err) {
+          notifications.error(err?.message ?? "Error fetching the sheets")
+          // prevent the modal from closing
+          return false
+        }
       },
     },
   }
+
+  // This will handle the user closing the modal pressing outside the modal
+  onDestroy(async () => {
+    if (step === GoogleDatasouceConfigStep.SET_SHEETS) {
+      await $goto(`./datasource/${datasource._id}`)
+    }
+  })
 </script>
 
 <ModalContent
@@ -144,7 +166,7 @@
       <Body size="S">Add the URL of the sheet you want to connect.</Body>
 
       <IntegrationConfigForm
-        schema={datasource.schema}
+        {schema}
         bind:datasource
         creating={true}
         on:valid={e => (isValid = e.detail)}
