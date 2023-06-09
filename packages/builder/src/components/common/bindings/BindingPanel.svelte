@@ -343,7 +343,6 @@
             secondary
             quiet
             on:click={() => {
-              // store.actions.settings.propertyFocus(null)
               drawerActions.hide()
             }}
           >

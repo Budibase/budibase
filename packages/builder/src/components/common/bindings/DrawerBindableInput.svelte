@@ -34,7 +34,6 @@
 
   const saveBinding = () => {
     onChange(tempValue)
-    // store.actions.settings.propertyFocus(null)
     onBlur()
     bindingDrawer.hide()
   }
@@ -68,7 +67,6 @@
     <div
       class="icon"
       on:click={() => {
-        //store.actions.settings.propertyFocus(key)
         bindingDrawer.show()
       }}
     >
