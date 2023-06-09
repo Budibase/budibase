@@ -71,6 +71,9 @@
         tourStep.onComplete()
       }
       popover.hide()
+      if (tourStep.endRoute) {
+        $goto(tourStep.endRoute)
+      }
     }
   }
 

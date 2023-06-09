@@ -59,6 +59,7 @@
       text={screen.routing.route}
       on:click={() => store.actions.screens.select(screen._id)}
       rightAlignIcon
+      showTooltip
     >
       <ScreenDropdownMenu screenId={screen._id} />
       <RoleIndicator slot="right" roleId={screen.routing.roleId} />

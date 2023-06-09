@@ -14,6 +14,7 @@ export const definition: AutomationStepSchema = {
   description: "Delay the automation until an amount of time has passed",
   stepId: AutomationActionStepId.DELAY,
   internal: true,
+  features: {},
   inputs: {},
   schema: {
     inputs: {

@@ -71,6 +71,7 @@ const environment = {
   BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
   PLUGINS_DIR: process.env.PLUGINS_DIR || "/plugins",
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
@@ -79,6 +80,7 @@ const environment = {
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   SELF_HOSTED: process.env.SELF_HOSTED,
   HTTP_MB_LIMIT: process.env.HTTP_MB_LIMIT,
+  FORKED_PROCESS_NAME: process.env.FORKED_PROCESS_NAME || "main",
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {
@@ -96,6 +98,8 @@ const environment = {
   isInThread: () => {
     return process.env.FORKED_PROCESS
   },
+  TOP_LEVEL_PATH:
+    process.env.TOP_LEVEL_PATH || process.env.SERVER_TOP_LEVEL_PATH,
 }
 
 // threading can cause memory issues with node-ts in development

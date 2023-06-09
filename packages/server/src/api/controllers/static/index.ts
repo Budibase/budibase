@@ -1,6 +1,6 @@
 require("svelte/register")
 
-import { resolve, join } from "../../../utilities/centralPath"
+import { join } from "../../../utilities/centralPath"
 const uuid = require("uuid")
 import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
@@ -49,7 +49,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
     return
   }
 
-  let builderPath = resolve(TOP_LEVEL_PATH, "new_design_ui")
+  let builderPath = join(TOP_LEVEL_PATH, "new_design_ui")
 
   // // download it from S3
   if (!fs.existsSync(builderPath)) {
@@ -67,7 +67,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
 }
 
 export const serveBuilder = async function (ctx: any) {
-  const builderPath = resolve(TOP_LEVEL_PATH, "builder")
+  const builderPath = join(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
 }
 
@@ -134,7 +134,7 @@ export const serveApp = async function (ctx: any) {
             ? objectStore.getGlobalFileUrl("settings", "logoUrl")
             : "",
       })
-      const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+      const appHbs = loadHandlebarsFile(`${__dirname}/app.hbs`)
       ctx.body = await processString(appHbs, {
         head,
         body: html,
@@ -161,7 +161,7 @@ export const serveApp = async function (ctx: any) {
             : "",
       })
 
-      const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+      const appHbs = loadHandlebarsFile(`${__dirname}/app.hbs`)
       ctx.body = await processString(appHbs, {
         head,
         body: html,
@@ -177,7 +177,7 @@ export const serveBuilderPreview = async function (ctx: any) {
 
   if (!env.isJest()) {
     let appId = context.getAppId()
-    const previewHbs = loadHandlebarsFile(`${__dirname}/templates/preview.hbs`)
+    const previewHbs = loadHandlebarsFile(`${__dirname}/preview.hbs`)
     ctx.body = await processString(previewHbs, {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
     })

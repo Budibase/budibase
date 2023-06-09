@@ -16,6 +16,7 @@ import {
   View,
 } from "@budibase/types"
 import { cleanExportRows } from "../row/utils"
+import { builderSocket } from "../../../websockets"
 
 const { cloneDeep, isEqual } = require("lodash")
 
@@ -48,7 +49,7 @@ export async function save(ctx: Ctx) {
   if (!view.meta.schema) {
     view.meta.schema = table.schema
   }
-  table.views[viewName] = view.meta
+  table.views[viewName] = { ...view.meta, name: viewName }
   if (originalName) {
     delete table.views[originalName]
     existingTable.views[viewName] = existingTable.views[originalName]
@@ -56,10 +57,8 @@ export async function save(ctx: Ctx) {
   await db.put(table)
   await handleViewEvents(existingTable.views[viewName], table.views[viewName])
 
-  ctx.body = {
-    ...table.views[viewToSave.name],
-    name: viewToSave.name,
-  }
+  ctx.body = table.views[viewName]
+  builderSocket?.emitTableUpdate(ctx, table)
 }
 
 export async function calculationEvents(existingView: View, newView: View) {
@@ -128,6 +127,7 @@ export async function destroy(ctx: Ctx) {
   await events.view.deleted(view)
 
   ctx.body = view
+  builderSocket?.emitTableUpdate(ctx, table)
 }
 
 export async function exportView(ctx: Ctx) {

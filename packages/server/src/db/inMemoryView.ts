@@ -25,6 +25,7 @@ export async function runView(
       }))
     )
     let fn = (doc: Document, emit: any) => emit(doc._id)
+    // BUDI-7060 -> indirect eval call appears to cause issues in cloud
     eval("fn = " + view?.map?.replace("function (doc)", "function (doc, emit)"))
     const queryFns: any = {
       meta: view.meta,

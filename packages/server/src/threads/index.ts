@@ -1,5 +1,7 @@
 import workerFarm from "worker-farm"
 import env from "../environment"
+import { AutomationJob } from "@budibase/types"
+import { QueryEvent } from "./definitions"
 
 export const ThreadType = {
   QUERY: "query",
@@ -36,6 +38,9 @@ export class Thread {
     this.count = opts.count ? opts.count : 1
     this.disableThreading = this.shouldDisableThreading()
     if (!this.disableThreading) {
+      console.debug(
+        `[${env.FORKED_PROCESS_NAME}] initialising worker farm type=${type}`
+      )
       const workerOpts: any = {
         autoStart: true,
         maxConcurrentWorkers: this.count,
@@ -43,6 +48,7 @@ export class Thread {
           env: {
             ...process.env,
             FORKED_PROCESS: "1",
+            FORKED_PROCESS_NAME: type,
           },
         },
       }
@@ -52,6 +58,10 @@ export class Thread {
       }
       this.workers = workerFarm(workerOpts, typeToFile(type), ["execute"])
       Thread.workerRefs.push(this.workers)
+    } else {
+      console.debug(
+        `[${env.FORKED_PROCESS_NAME}] skipping worker farm type=${type}`
+      )
     }
   }
 
@@ -64,15 +74,13 @@ export class Thread {
     )
   }
 
-  run(data: any) {
+  run(job: AutomationJob | QueryEvent) {
     const timeout = this.timeoutMs
     return new Promise((resolve, reject) => {
       function fire(worker: any) {
-        worker.execute(data, (err: any, response: any) => {
+        worker.execute(job, (err: any, response: any) => {
           if (err && err.type === "TimeoutError") {
-            reject(
-              new Error(`Query response time exceeded ${timeout}ms timeout.`)
-            )
+            reject(new Error(`Thread timeout exceeded ${timeout}ms timeout.`))
           } else if (err) {
             reject(err)
           } else {

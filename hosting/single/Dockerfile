@@ -5,18 +5,22 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 
 # add pin script
 WORKDIR /
-ADD scripts/pinVersions.js scripts/cleanup.sh ./
+ADD scripts/cleanup.sh ./
 RUN chmod +x /cleanup.sh
 
 # build server
 WORKDIR /app
 ADD packages/server .
-RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+COPY yarn.lock .
+RUN yarn install --production=true
+RUN /cleanup.sh
 
 # build worker
 WORKDIR /worker
 ADD packages/worker .
-RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+COPY yarn.lock .
+RUN yarn install --production=true
+RUN /cleanup.sh
 
 FROM budibase/couchdb
 ARG TARGETARCH
@@ -31,9 +35,7 @@ COPY --from=build /worker /worker
 
 # install base dependencies
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server && \
-  apt-add-repository 'deb http://security.debian.org/debian-security bullseye-security/updates main' && \
-  apt-get update
+  apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server
 
 # install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx
 WORKDIR /nodejs

@@ -4,8 +4,11 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
+
+  import { store } from "builderStore"
+
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
 
   export let panel = ClientBindingPanel
@@ -20,6 +23,7 @@
   export let allowHelpers = true
   export let updateOnChange = true
   export let drawerLeft
+  export let key
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -32,9 +36,14 @@
 
   const saveBinding = () => {
     onChange(tempValue)
+    store.actions.settings.propertyFocus(null)
     onBlur()
     bindingDrawer.hide()
   }
+
+  setContext("binding-drawer-actions", {
+    save: saveBinding,
+  })
 
   const onChange = value => {
     currentVal = readableToRuntimeBinding(bindings, value)
@@ -58,12 +67,24 @@
     {updateOnChange}
   />
   {#if !disabled}
-    <div class="icon" on:click={bindingDrawer.show}>
+    <div
+      class="icon"
+      on:click={() => {
+        store.actions.settings.propertyFocus(key)
+        bindingDrawer.show()
+      }}
+    >
       <Icon size="S" name="FlashOn" />
     </div>
   {/if}
 </div>
-<Drawer {fillWidth} bind:this={bindingDrawer} {title} left={drawerLeft}>
+<Drawer
+  {fillWidth}
+  bind:this={bindingDrawer}
+  {title}
+  left={drawerLeft}
+  headless
+>
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>

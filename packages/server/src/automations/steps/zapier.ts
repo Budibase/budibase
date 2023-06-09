@@ -6,6 +6,7 @@ import {
   AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -13,6 +14,9 @@ export const definition: AutomationStepSchema = {
   stepId: AutomationActionStepId.zapier,
   type: AutomationStepType.ACTION,
   internal: false,
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   description: "Trigger a Zapier Zap via webhooks",
   tagline: "Trigger a Zapier Zap",
   icon: "ri-flashlight-line",
@@ -23,6 +27,10 @@ export const definition: AutomationStepSchema = {
         url: {
           type: AutomationIOType.STRING,
           title: "Webhook URL",
+        },
+        body: {
+          type: AutomationIOType.JSON,
+          title: "Payload",
         },
         value1: {
           type: AutomationIOType.STRING,
@@ -63,7 +71,19 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  const { url, value1, value2, value3, value4, value5 } = inputs
+  //TODO - Remove deprecated values 1,2,3,4,5 after November 2023
+  const { url, value1, value2, value3, value4, value5, body } = inputs
+
+  let payload = {}
+  try {
+    payload = body?.value ? JSON.parse(body?.value) : {}
+  } catch (err) {
+    return {
+      httpStatus: 400,
+      response: "Invalid payload JSON",
+      success: false,
+    }
+  }
 
   if (!url?.trim()?.length) {
     return {
@@ -85,6 +105,7 @@ export async function run({ inputs }: AutomationStepInput) {
         value3,
         value4,
         value5,
+        ...payload,
       }),
       headers: {
         "Content-Type": "application/json",

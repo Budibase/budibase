@@ -86,6 +86,7 @@ const getCurrentIdentity = async (): Promise<Identity> => {
       installationId,
       tenantId,
       environment,
+      realTenantId: context.getTenantId(),
       hostInfo: userContext.hostInfo,
     }
   } else {

@@ -28,13 +28,16 @@
   let inviting = false
   let searchFocus = false
 
+  // Initially filter entities without app access
+  // Show all when false
+  let filterByAppAccess = true
+
   let appInvites = []
   let filteredInvites = []
   let filteredUsers = []
   let filteredGroups = []
   let selectedGroup
   let userOnboardResponse = null
-
   let userLimitReachedModal
 
   $: queryIsEmail = emailValidator(query) === true
@@ -52,15 +55,32 @@
   }
 
   const filterInvites = async query => {
-    appInvites = await getInvites()
-    if (!query || query == "") {
-      filteredInvites = appInvites
+    if (!prodAppId) {
       return
     }
-    filteredInvites = appInvites.filter(invite => invite.email.includes(query))
+
+    appInvites = await getInvites()
+
+    //On Focus behaviour
+    if (!filterByAppAccess && !query) {
+      filteredInvites =
+        appInvites.length > 100 ? appInvites.slice(0, 100) : [...appInvites]
+      return
+    }
+
+    filteredInvites = appInvites.filter(invite => {
+      const inviteInfo = invite.info?.apps
+      if (!query && inviteInfo && prodAppId) {
+        return Object.keys(inviteInfo).includes(prodAppId)
+      }
+      return invite.email.includes(query)
+    })
   }
 
-  $: filterInvites(query)
+  $: filterByAppAccess, prodAppId, filterInvites(query)
+  $: if (searchFocus === true) {
+    filterByAppAccess = false
+  }
 
   const usersFetch = fetchData({
     API,
@@ -79,9 +99,9 @@
     }
     await usersFetch.update({
       query: {
-        appId: query ? null : prodAppId,
+        appId: query || !filterByAppAccess ? null : prodAppId,
         email: query,
-        paginated: query ? null : false,
+        paginated: query || !filterByAppAccess ? null : false,
       },
     })
     await usersFetch.refresh()
@@ -107,7 +127,12 @@
   }
 
   const debouncedUpdateFetch = Utils.debounce(searchUsers, 250)
-  $: debouncedUpdateFetch(query, $store.builderSidePanel, loaded)
+  $: debouncedUpdateFetch(
+    query,
+    $store.builderSidePanel,
+    loaded,
+    filterByAppAccess
+  )
 
   const updateAppUser = async (user, role) => {
     if (!prodAppId) {
@@ -182,9 +207,10 @@
   }
 
   const searchGroups = (userGroups, query) => {
-    let filterGroups = query?.length
-      ? userGroups
-      : getAppGroups(userGroups, prodAppId)
+    let filterGroups =
+      query?.length || !filterByAppAccess
+        ? userGroups
+        : getAppGroups(userGroups, prodAppId)
     return filterGroups
       .filter(group => {
         if (!query?.length) {
@@ -214,7 +240,7 @@
   }
 
   // Adds the 'role' attribute and sets it to the current app.
-  $: enrichedGroups = getEnrichedGroups($groups)
+  $: enrichedGroups = getEnrichedGroups($groups, filterByAppAccess)
   $: filteredGroups = searchGroups(enrichedGroups, query)
   $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
   $: allUsers = [...filteredUsers, ...groupUsers]
@@ -226,7 +252,7 @@
     specific roles for the app.
   */
   const buildGroupUsers = (userGroups, filteredUsers) => {
-    if (query) {
+    if (query || !filterByAppAccess) {
       return []
     }
     // Must exclude users who have explicit privileges
@@ -321,12 +347,12 @@
         [prodAppId]: role,
       },
     })
-    await filterInvites()
+    await filterInvites(query)
   }
 
   const onUninviteAppUser = async invite => {
     await uninviteAppUser(invite)
-    await filterInvites()
+    await filterInvites(query)
   }
 
   // Purge only the app from the invite or recind the invite if only 1 app remains?
@@ -351,7 +377,6 @@
 
   onMount(() => {
     rendered = true
-    searchFocus = true
   })
 
   function handleKeyDown(evt) {
@@ -417,7 +442,6 @@
         autocomplete="off"
         disabled={inviting}
         value={query}
-        autofocus
         on:input={e => {
           query = e.target.value.trim()
         }}
@@ -428,16 +452,20 @@
 
     <span
       class="search-input-icon"
-      class:searching={query}
+      class:searching={query || !filterByAppAccess}
       on:click={() => {
+        if (!filterByAppAccess) {
+          filterByAppAccess = true
+        }
         if (!query) {
           return
         }
         query = null
         userOnboardResponse = null
+        filterByAppAccess = true
       }}
     >
-      <Icon name={query ? "Close" : "Search"} />
+      <Icon name={!filterByAppAccess || query ? "Close" : "Search"} />
     </span>
   </div>
 
@@ -555,7 +583,7 @@
 
         {#if filteredUsers?.length}
           <div class="auth-entity-section">
-            <div class="auth-entity-header ">
+            <div class="auth-entity-header">
               <div class="auth-entity-title">Users</div>
               <div class="auth-entity-access-title">Access</div>
             </div>
@@ -696,7 +724,7 @@
     max-width: calc(100vw - 40px);
     background: var(--background);
     border-left: var(--border-light);
-    z-index: 3;
+    z-index: 999;
     display: flex;
     flex-direction: column;
     overflow-y: auto;

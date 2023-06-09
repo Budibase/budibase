@@ -11,8 +11,8 @@
     ActionButton,
     Drawer,
     Modal,
-    Detail,
     notifications,
+    Icon,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation } from "builderStore"
@@ -27,9 +27,18 @@
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
+  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
+  import {
+    bindingsToCompletions,
+    jsAutocomplete,
+    EditorModes,
+  } from "components/common/CodeEditor"
   import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
   import { LuceneUtils } from "@budibase/frontend-core"
-  import { getSchemaForTable } from "builderStore/dataBinding"
+  import {
+    getSchemaForTable,
+    getEnvironmentBindings,
+  } from "builderStore/dataBinding"
   import { Utils } from "@budibase/frontend-core"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
@@ -43,7 +52,6 @@
   let webhookModal
   let drawer
   let fillWidth = true
-  let codeBindingOpen = false
   let inputData
 
   $: filters = lookForFilters(schemaProperties) || []
@@ -61,11 +69,63 @@
   $: isTrigger = block?.type === "TRIGGER"
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
 
+  /**
+   * TODO - Remove after November 2023
+   * *******************************
+   * Code added to provide backwards compatibility between Values 1,2,3,4,5
+   * and the new JSON body.
+   */
+  let deprecatedSchemaProperties
+  $: {
+    if (block?.stepId === "integromat" || block?.stepId === "zapier") {
+      deprecatedSchemaProperties = schemaProperties.filter(
+        prop => !prop[0].startsWith("value")
+      )
+      if (!deprecatedSchemaProperties.map(entry => entry[0]).includes("body")) {
+        deprecatedSchemaProperties.push([
+          "body",
+          {
+            title: "Payload",
+            type: "json",
+          },
+        ])
+      }
+    } else {
+      deprecatedSchemaProperties = schemaProperties
+    }
+  }
+  /****************************************************/
+
   const getInputData = (testData, blockInputs) => {
     let newInputData = testData || blockInputs
     if (block.event === "app:trigger" && !newInputData?.fields) {
       newInputData = cloneDeep(blockInputs)
     }
+
+    /**
+     * TODO - Remove after November 2023
+     * *******************************
+     * Code added to provide backwards compatibility between Values 1,2,3,4,5
+     * and the new JSON body.
+     */
+    if (
+      (block?.stepId === "integromat" || block?.stepId === "zapier") &&
+      !newInputData?.body?.value
+    ) {
+      let deprecatedValues = {
+        ...newInputData,
+      }
+      delete deprecatedValues.url
+      delete deprecatedValues.body
+      newInputData = {
+        url: newInputData.url,
+        body: {
+          value: JSON.stringify(deprecatedValues),
+        },
+      }
+    }
+    /**********************************/
+
     inputData = newInputData
     setDefaultEnumValues()
   }
@@ -158,6 +218,19 @@
       }
       const outputs = Object.entries(schema)
 
+      let bindingIcon = ""
+      let bindindingRank = 0
+
+      if (idx === 0) {
+        bindingIcon = automation.trigger.icon
+      } else if (isLoopBlock) {
+        bindingIcon = "Reuse"
+        bindindingRank = idx + 1
+      } else {
+        bindingIcon = allSteps[idx].icon
+        bindindingRank = idx - loopBlockCount
+      }
+
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
           let runtimeName = isLoopBlock
@@ -166,17 +239,24 @@
             ? `steps[${idx - loopBlockCount}].${name}`
             : `steps.${idx - loopBlockCount}.${name}`
           const runtime = idx === 0 ? `trigger.${name}` : runtimeName
+          const categoryName =
+            idx === 0
+              ? "Trigger outputs"
+              : isLoopBlock
+              ? "Loop Outputs"
+              : `Step ${idx - loopBlockCount} outputs`
           return {
-            label: runtime,
+            readableBinding: runtime,
+            runtimeBinding: runtime,
             type: value.type,
             description: value.description,
-            category:
-              idx === 0
-                ? "Trigger outputs"
-                : isLoopBlock
-                ? "Loop Outputs"
-                : `Step ${idx - loopBlockCount} outputs`,
-            path: runtime,
+            icon: bindingIcon,
+            category: categoryName,
+            display: {
+              type: value.type,
+              name: name,
+              rank: bindindingRank,
+            },
           }
         })
       )
@@ -185,15 +265,12 @@
     // Environment bindings
     if ($licensing.environmentVariablesEnabled) {
       bindings = bindings.concat(
-        $environment.variables.map(variable => {
+        getEnvironmentBindings().map(binding => {
           return {
-            label: `env.${variable.name}`,
-            path: `env.${variable.name}`,
-            icon: "Key",
-            category: "Environment",
+            ...binding,
             display: {
-              type: "string",
-              name: variable.name,
+              ...binding.display,
+              rank: 98,
             },
           }
         })
@@ -239,7 +316,7 @@
 </script>
 
 <div class="fields">
-  {#each schemaProperties as [key, value]}
+  {#each deprecatedSchemaProperties as [key, value]}
     <div class="block-field">
       {#if key !== "fields"}
         <Label
@@ -255,6 +332,28 @@
           placeholder={false}
           options={value.enum}
           getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
+        />
+      {:else if value.type === "json"}
+        <Editor
+          editorHeight="250"
+          editorWidth="448"
+          mode="json"
+          value={inputData[key]?.value}
+          on:change={e => {
+            /**
+             * TODO - Remove after November 2023
+             * *******************************
+             * Code added to provide backwards compatibility between Values 1,2,3,4,5
+             * and the new JSON body.
+             */
+            delete inputData.value1
+            delete inputData.value2
+            delete inputData.value3
+            delete inputData.value4
+            delete inputData.value5
+            /***********************/
+            onChange(e, key)
+          }}
         />
       {:else if value.customType === "column"}
         <Select
@@ -363,25 +462,27 @@
         <SchemaSetup on:change={e => onChange(e, key)} value={inputData[key]} />
       {:else if value.customType === "code"}
         <CodeEditorModal>
-          <ActionButton
-            on:click={() => (codeBindingOpen = !codeBindingOpen)}
-            quiet
-            icon={codeBindingOpen ? "ChevronDown" : "ChevronRight"}
-          >
-            <Detail size="S">Bindings</Detail>
-          </ActionButton>
-          {#if codeBindingOpen}
-            <pre>{JSON.stringify(bindings, null, 2)}</pre>
-          {/if}
-          <Editor
-            mode="javascript"
+          <CodeEditor
+            value={inputData[key]}
             on:change={e => {
               // need to pass without the value inside
-              onChange({ detail: e.detail.value }, key)
-              inputData[key] = e.detail.value
+              onChange({ detail: e.detail }, key)
+              inputData[key] = e.detail
             }}
-            value={inputData[key]}
+            completions={[
+              jsAutocomplete([
+                ...bindingsToCompletions(bindings, EditorModes.JS),
+              ]),
+            ]}
+            mode={EditorModes.JS}
+            height={500}
           />
+          <div class="messaging">
+            <Icon name="FlashOn" />
+            <div class="messaging-wrap">
+              <div>Add available bindings by typing <strong>$</strong></div>
+            </div>
+          </div>
         </CodeEditorModal>
       {:else if value.customType === "loopOption"}
         <Select
@@ -431,6 +532,11 @@
 {/if}
 
 <style>
+  .messaging {
+    display: flex;
+    align-items: center;
+    margin-top: var(--spacing-xl);
+  }
   .fields {
     display: flex;
     flex-direction: column;
