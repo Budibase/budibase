@@ -26,7 +26,6 @@
   let selectedTables = []
   let tableList = []
 
-  $: console.log(selectedTables)
   $: name =
     IntegrationNames[datasource?.type] || datasource?.name || datasource?.type
   $: datasourcePlus = datasource?.plus
@@ -38,7 +37,7 @@
     : "Save and continue to query"
 
   async function validateConfig() {
-    if (!integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
+    if (!integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
       return true
     }
     const displayError = message =>
