@@ -59,9 +59,12 @@ export default class AccountAPI {
     return [response, json]
   }
 
-  async delete(accountID: string) {
+  async delete(accountID: string, opts: APIRequestOpts = { doExpect: true }) {
     const [response, json] = await this.client.del(`/api/accounts/${accountID}`)
-    expect(response).toHaveStatusCode(200)
+
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(200)
+    }
     return response
   }
 }
