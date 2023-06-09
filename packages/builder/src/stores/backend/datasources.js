@@ -1,5 +1,5 @@
 import { writable, derived, get } from "svelte/store"
-import { IntegrationTypes, DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
+import { IntegrationTypes } from "constants/backend"
 import { queries, tables } from "./"
 import { API } from "api"
 import { DatasourceFeature } from "@budibase/types"
@@ -14,9 +14,6 @@ export function createDatasourcesStore() {
   const derivedStore = derived(store, $store => ({
     ...$store,
     selected: $store.list?.find(ds => ds._id === $store.selectedDatasourceId),
-    hasDefaultData: $store.list.some(
-      datasource => datasource._id === DEFAULT_BB_DATASOURCE_ID
-    ),
   }))
 
   const fetch = async () => {
@@ -38,6 +35,7 @@ export function createDatasourcesStore() {
 
   const updateDatasource = response => {
     const { datasource, error } = response
+
     store.update(state => {
       const currentIdx = state.list.findIndex(ds => ds._id === datasource._id)
       const sources = state.list
@@ -68,6 +66,15 @@ export function createDatasourcesStore() {
       .length
   }
 
+  const isDatasourceInvalid = async datasource => {
+    if (datasource.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
+      const { connected } = await API.validateDatasource(datasource)
+      if (!connected) return true
+    }
+
+    return false
+  }
+
   const create = async ({ integration, fields }) => {
     const datasource = {
       type: "datasource",
@@ -77,9 +84,8 @@ export function createDatasourcesStore() {
       plus: integration.plus && integration.name !== IntegrationTypes.REST,
     }
 
-    if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
-      const { connected } = await API.validateDatasource(datasource)
-      if (!connected) throw "Unable to connect"
+    if (await isDatasourceInvalid(datasource)) {
+      throw "Unable to connect"
     }
 
     const response = await API.createDatasource({
@@ -91,8 +97,13 @@ export function createDatasourcesStore() {
     return updateDatasource(response)
   }
 
-  const save = async body => {
-    const response = await API.updateDatasource(body)
+  const save = async datasource => {
+    if (await isDatasourceInvalid(datasource)) {
+      throw "Unable to connect"
+    }
+
+    const response = await API.updateDatasource(datasource)
+
     return updateDatasource(response)
   }
 
@@ -161,6 +172,7 @@ export function createDatasourcesStore() {
     delete: deleteDatasource,
     removeSchemaError,
     replaceDatasource,
+    find,
   }
 }
 

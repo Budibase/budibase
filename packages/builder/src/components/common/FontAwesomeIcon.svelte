@@ -9,6 +9,8 @@
     faFileArrowUp,
     faChevronLeft,
     faCircleInfo,
+    faCircleCheck,
+    faGear,
   } from "@fortawesome/free-solid-svg-icons"
   import { faGithub, faDiscord } from "@fortawesome/free-brands-svg-icons"
 
@@ -22,7 +24,9 @@
     faEnvelope,
     faFileArrowUp,
     faChevronLeft,
-    faCircleInfo
+    faCircleInfo,
+    faCircleCheck,
+    faGear
   )
   dom.watch()
 </script>

@@ -4,14 +4,12 @@
     tables,
     datasources,
     sortedIntegrations as integrations,
-    integrations as integrationsStore,
   } from "stores/backend"
-
-  import { IntegrationTypes } from "constants/backend"
+  import { hasData, hasDefaultData } from "stores/selectors"
   import { Icon, Modal, notifications, Heading, Body } from "@budibase/bbui"
   import { params, goto } from "@roxi/routify"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
-  import CreateExternalDatasourceModal from "./_CreateExternalDatasourceModal.svelte"
+  import CreateExternalDatasourceModal from "./_components/CreateExternalDatasourceModal.svelte"
   import DatasourceOption from "./_components/DatasourceOption.svelte"
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons/index.js"
@@ -21,33 +19,6 @@
   let externalDatasourceModal
   let disabled = false
   let promptUpload = false
-  $: hasData = $datasources.list.length > 1 || $tables.list.length > 1
-
-  const getGoogleSetupId = params => {
-    const id = params["?continue_google_setup"]
-    $goto("./new")
-    return id
-  }
-
-  const handleOpenGoogle = (
-    setupId,
-    integrationsStore,
-    externalDatasourceModal
-  ) => {
-    if (setupId && integrationsStore && externalDatasourceModal) {
-      externalDatasourceModal.show({
-        ...integrationsStore[IntegrationTypes.GOOGLE_SHEETS],
-        name: IntegrationTypes.GOOGLE_SHEETS,
-      })
-    }
-  }
-
-  $: googleSetupId = getGoogleSetupId($params)
-  $: handleOpenGoogle(
-    googleSetupId,
-    $integrationsStore,
-    externalDatasourceModal
-  )
 
   const createSampleData = async () => {
     disabled = true
@@ -74,7 +45,7 @@
   }
 
   const handleInternalTableSave = table => {
-    notifications.success(`Table created successfully.`)
+    notifications.success("Table created successfully")
     $goto(`./table/${table._id}`)
   }
 </script>
@@ -84,17 +55,13 @@
 </Modal>
 
 <CreateExternalDatasourceModal
-  {googleSetupId}
-  on:hide={() => {
-    googleSetupId = false
-  }}
   bind:disabled
   bind:this={externalDatasourceModal}
 />
 
 <div class="page">
   <div class="closeButton">
-    {#if hasData}
+    {#if hasData($datasources, $tables)}
       <Icon hoverable name="Close" on:click={$goto("./table")} />
     {/if}
   </div>
@@ -126,7 +93,7 @@
       on:click={createSampleData}
       title="Use sample data"
       description="Non-relational"
-      disabled={disabled || $datasources.hasDefaultData}
+      disabled={disabled || hasDefaultData($datasources)}
     >
       <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
     </DatasourceOption>

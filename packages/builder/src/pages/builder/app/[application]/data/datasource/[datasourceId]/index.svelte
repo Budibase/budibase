@@ -11,7 +11,6 @@
     Modal,
   } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
-  import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import RestExtraConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/rest/RestExtraConfigForm.svelte"
   import PlusConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/PlusConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
@@ -20,8 +19,7 @@
   import { isEqual } from "lodash"
   import { cloneDeep } from "lodash/fp"
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
-  import { API } from "api"
-  import { DatasourceFeature } from "@budibase/types"
+  import EditDatasourceConfig from "./_components/EditDatasourceConfig.svelte"
 
   const querySchema = {
     name: {},
@@ -30,7 +28,6 @@
 
   let importQueriesModal
   let changed = false
-  let isValid = true
   let integration, baseDatasource, datasource
   let queryList
 
@@ -47,30 +44,7 @@
     }
   }
 
-  async function validateConfig() {
-    const displayError = message =>
-      notifications.error(message ?? "Error validating datasource")
-
-    let connected = false
-    try {
-      const resp = await API.validateDatasource(datasource)
-      if (!resp.connected) {
-        displayError(`Unable to connect - ${resp.error}`)
-      }
-      connected = resp.connected
-    } catch (err) {
-      displayError(err?.message)
-    }
-    return connected
-  }
-
   const saveDatasource = async () => {
-    if (integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
-      const valid = await validateConfig()
-      if (!valid) {
-        return false
-      }
-    }
     try {
       // Create datasource
       await datasources.save(datasource)
@@ -114,21 +88,8 @@
           />
           <Heading size="M">{$datasources.selected?.name}</Heading>
         </header>
-        <Body size="M">{integration.description}</Body>
       </Layout>
-      <Divider />
-      <div class="config-header">
-        <Heading size="S">Configuration</Heading>
-        <Button disabled={!changed || !isValid} cta on:click={saveDatasource}>
-          Save
-        </Button>
-      </div>
-      <IntegrationConfigForm
-        on:change={hasChanged}
-        schema={integration.datasource}
-        bind:datasource
-        on:valid={e => (isValid = e.detail)}
-      />
+      <EditDatasourceConfig {datasource} />
       {#if datasource.plus}
         <PlusConfigForm bind:datasource save={saveDatasource} />
       {/if}
@@ -191,12 +152,6 @@
     display: flex;
     gap: var(--spacing-l);
     align-items: center;
-  }
-
-  .config-header {
-    display: flex;
-    justify-content: space-between;
-    margin: 0 0 var(--spacing-xs) 0;
   }
 
   .query-header {
