@@ -14,7 +14,7 @@ ENV SERVICE=app-service
 ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
 ENV TENANT_FEATURE_FLAGS=*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
-
+ENV TOP_LEVEL_PATH=/
 
 # handle node-gyp
 RUN apt-get update \
@@ -27,7 +27,8 @@ COPY scripts/integrations/oracle/ scripts/integrations/oracle/
 RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh 
 
 COPY package.json .
-RUN yarn install --frozen-lockfile --production=true
+COPY dist/yarn.lock .
+RUN yarn install --production=true
 # Remove unneeded data from file system to reduce image size
 RUN yarn cache clean && apt-get remove -y --purge --auto-remove g++ make python \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp

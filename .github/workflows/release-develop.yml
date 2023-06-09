@@ -22,6 +22,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Fail if not a tag
+        run: |
+          if [[ $GITHUB_REF != refs/tags/* ]]; then 
+            echo "Workflow Dispatch can only be run on tags" 
+            exit 1 
+          fi
+
       - uses: actions/checkout@v2
         with:
           submodules: true
@@ -41,19 +48,8 @@ jobs:
 
       - run: yarn install --frozen-lockfile
       - name: Update versions
-        run: |
-          version=$(cat lerna.json \
-            | grep version \
-            | head -1 \
-            | awk -F: '{gsub(/"/,"",$2);gsub(/[[:space:]]*/,"",$2); print $2}' \
-            | sed 's/[",]//g')
-          echo "Setting version $version"
-          yarn lerna exec "yarn version --no-git-tag-version --new-version=$version"
-          echo "Updating dependencies"
-          node scripts/syncLocalDependencies.js $version
-          echo "Syncing yarn workspace"
-          yarn
-      - run: yarn build --configuration=production
+        run: ./scripts/updateVersions.sh
+      - run: yarn build
       - run: yarn build:sdk
 
       - name: Publish budibase packages to NPM
