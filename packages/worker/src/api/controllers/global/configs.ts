@@ -280,13 +280,38 @@ export async function save(ctx: UserCtx<Config>) {
   }
 }
 
+const parseScopedConfigFileUrls = (cfg: any, type: string) => {
+  if (!cfg) {
+    return {}
+  }
+  if (type === ConfigType.OIDC_LOGOS) {
+    const logoConfig = { ...cfg?.config }
+    const parsedConfig = Object.keys(logoConfig).reduce(
+      (acc: any, key: string) => {
+        if (!key.endsWith("Etag")) {
+          const etag = logoConfig[`${key}Etag`]
+          const objectStoreUrl = objectStore.getGlobalFileUrl(type, key, etag)
+          acc[key] = objectStoreUrl
+        } else {
+          acc[key] = logoConfig[key]
+        }
+        return acc
+      },
+      {}
+    )
+    return parsedConfig
+  }
+  return cfg.config
+}
+
 export async function find(ctx: UserCtx) {
   try {
     // Find the config with the most granular scope based on context
     const type = ctx.params.type
-    const scopedConfig = await configs.getConfig(type)
+    let scopedConfig = await configs.getConfig(type)
 
     if (scopedConfig) {
+      scopedConfig.config = parseScopedConfigFileUrls(scopedConfig, type)
       ctx.body = scopedConfig
     } else {
       // don't throw an error, there simply is nothing to return
@@ -302,12 +327,21 @@ export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
     // Find the config with the most granular scope based on context
     const config = await configs.getOIDCConfig()
 
+    const oidcLogoConfig = await configs.getConfig(ConfigType.OIDC_LOGOS)
+    let logoUrls
+    if (oidcLogoConfig) {
+      logoUrls = parseScopedConfigFileUrls(
+        oidcLogoConfig,
+        ConfigType.OIDC_LOGOS
+      )
+    }
+
     if (!config) {
       ctx.body = []
     } else {
       ctx.body = [
         {
-          logo: config.logo,
+          logo: logoUrls ? logoUrls[config.logo] : config.logo,
           name: config.name,
           uuid: config.uuid,
         },

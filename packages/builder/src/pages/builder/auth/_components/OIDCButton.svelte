@@ -12,6 +12,8 @@
   export let samePage
 
   $: show = $organisation.oidc
+  $: oidcLogoCheck = $oidc.logo
+  $: console.log(oidcLogoCheck)
 
   let preDefinedIcons = {
     Oidc: OidcLogo,
@@ -29,9 +31,12 @@
     }
   })
 
-  $: src = !$oidc.logo
+  $: src = !oidcLogoCheck
     ? OidcLogo
-    : preDefinedIcons[$oidc.logo] || `/global/logos_oidc/${$oidc.logo}`
+    : preDefinedIcons[$oidc.logo] || oidcLogoCheck
+  // $: src = !$oidc.logo
+  // ? OidcLogo
+  // : preDefinedIcons[$oidc.logo] || `/global/logos_oidc/${$oidc.logo}`
 </script>
 
 {#if show}
