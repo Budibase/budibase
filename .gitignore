@@ -109,3 +109,5 @@ budibase-component
 budibase-datasource
 
 *.iml
+
+packages/pro
