@@ -9,7 +9,7 @@ import {
   env as coreEnv,
 } from "@budibase/backend-core"
 import { updateAppRole } from "./global"
-import { BBContext, User } from "@budibase/types"
+import { BBContext, User, EmailInvite } from "@budibase/types"
 
 export function request(ctx?: BBContext, request?: any) {
   if (!request.headers) {
@@ -65,15 +65,25 @@ async function checkResponse(
 }
 
 // have to pass in the tenant ID as this could be coming from an automation
-export async function sendSmtpEmail(
-  to: string,
-  from: string,
-  subject: string,
-  contents: string,
-  cc: string,
-  bcc: string,
+export async function sendSmtpEmail({
+  to,
+  from,
+  subject,
+  contents,
+  cc,
+  bcc,
+  automation,
+  invite,
+}: {
+  to: string
+  from: string
+  subject: string
+  contents: string
+  cc: string
+  bcc: string
   automation: boolean
-) {
+  invite?: EmailInvite
+}) {
   // tenant ID will be set in header
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
@@ -88,6 +98,7 @@ export async function sendSmtpEmail(
         bcc,
         purpose: "custom",
         automation,
+        invite,
       },
     })
   )

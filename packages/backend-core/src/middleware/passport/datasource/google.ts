@@ -1,10 +1,11 @@
 import * as google from "../sso/google"
 import { Cookie } from "../../../constants"
-import { clearCookie, getCookie } from "../../../utils"
 import * as configs from "../../../configs"
-import { BBContext, SSOProfile } from "@budibase/types"
+import * as cache from "../../../cache"
+import * as utils from "../../../utils"
+import { UserCtx, SSOProfile } from "@budibase/types"
 import { ssoSaveUserNoOp } from "../sso/sso"
-import { cache, utils } from "../../../"
+
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
 type Passport = {
@@ -22,7 +23,7 @@ async function fetchGoogleCreds() {
 
 export async function preAuth(
   passport: Passport,
-  ctx: BBContext,
+  ctx: UserCtx,
   next: Function
 ) {
   // get the relevant config
@@ -49,7 +50,7 @@ export async function preAuth(
 
 export async function postAuth(
   passport: Passport,
-  ctx: BBContext,
+  ctx: UserCtx,
   next: Function
 ) {
   // get the relevant config
@@ -57,7 +58,7 @@ export async function postAuth(
   const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
-  const authStateCookie = getCookie(ctx, Cookie.DatasourceAuth)
+  const authStateCookie = utils.getCookie(ctx, Cookie.DatasourceAuth)
 
   return passport.authenticate(
     new GoogleStrategy(
@@ -72,7 +73,7 @@ export async function postAuth(
         _profile: SSOProfile,
         done: Function
       ) => {
-        clearCookie(ctx, Cookie.DatasourceAuth)
+        utils.clearCookie(ctx, Cookie.DatasourceAuth)
         done(null, { accessToken, refreshToken })
       }
     ),
