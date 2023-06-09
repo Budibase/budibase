@@ -28,7 +28,7 @@ on:
         required: true
 
 jobs:
-  tag-prerelease:
+  tag-release:
     runs-on: ubuntu-latest
 
     steps:
@@ -43,9 +43,11 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - run: yarn
-      - name: Tag prerelease
+      - name: Tag release
         run: |
           # setup the username and email.
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
-          ./scripts/versionCommit.sh ${{ github.event.inputs.versioning }}
+          BUMP_TYPE_INPUT=${{ github.event.inputs.versioning }}
+          BUMP_TYPE=${BUMP_TYPE_INPUT:-"patch"}
+          ./scripts/versionCommit.sh $BUMP_TYPE
