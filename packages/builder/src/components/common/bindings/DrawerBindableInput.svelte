@@ -5,8 +5,6 @@
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
 
-  import { store } from "builderStore"
-
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
