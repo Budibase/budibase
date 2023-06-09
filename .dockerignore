@@ -1,5 +1,8 @@
 **/node_modules/
-**/dist
+# We cannot ignore this as it's breaking the multistage dockerfile
+**/dist/
+# !/packages/worker/dist/
+
 .git
 npm-debug.log
 .coverage
@@ -8,3 +11,16 @@ npm-debug.log
 .aws
 
 Dockerfile
+
+.dockerignore
+
+.github/
+.husky/
+.vscode/
+charts/
+docs/
+examples/
+hosting/
+i18n/
+qa-core/
+specs/

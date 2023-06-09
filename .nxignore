@@ -12,3 +12,5 @@ node_modules
 
 packages/server/builder/*
 packages/server/client/*
+
+.dockerignore
