@@ -53,7 +53,7 @@
     icon="Close"
     on:click={() => window.parent.closePreview?.()}
   >
-    Exit preview
+    Close preview
   </ActionButton>
 </div>
 
