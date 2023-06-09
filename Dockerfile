@@ -1,9 +1,9 @@
 FROM node:14-slim as builder
 
-RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3
+RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
 
 
-WORKDIR /app
+WORKDIR /builder
 
 COPY package.json .
 COPY yarn.lock .
@@ -25,14 +25,16 @@ COPY packages/pro/packages/pro/package.json packages/pro/packages/pro/
 
 # We will never want to sync pro, but the script is still required
 RUN mkdir scripts && echo '' > scripts/syncProPackage.js
-RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile && yarn cache clean
 
-COPY . .
+COPY packages/ packages/
+COPY scripts/build.js scripts/build.js
+COPY nx.json .
 
-RUN yarn build
+RUN yarn build --projects=@budibase/worker
 
 COPY scripts/clean-dependencies.sh scripts/clean-dependencies.sh
-RUN . scripts/clean-dependencies.sh packages/worker/package.json
+RUN ./scripts/clean-dependencies.sh packages/worker/package.json
 
 
 FROM node:14-alpine as runner
@@ -49,26 +51,24 @@ RUN apk add --no-cache --virtual .gyp python3 make g++
 RUN yarn global add pm2
 
 
-COPY package.json .
-COPY yarn.lock .
-
-COPY --from=builder packages/worker/package.json packages/worker/
+COPY --from=builder /builder/package.json .
+COPY --from=builder /builder/yarn.lock .
+COPY --from=builder /builder/packages/worker/package.json packages/worker/
 
 # We will never want to sync pro, but the script is still required
-RUN echo '' > scripts/syncProPackage.js
+RUN mkdir scripts && echo '' > scripts/syncProPackage.js
 
 # We want the clean in the same
 RUN yarn install --production=true --frozen-lockfile && apk del .gyp \
     && yarn cache clean
 
-COPY --from=builder /app/packages/worker/dist packages/worker/dist
-
+COPY --from=builder /builder/packages/worker/dist packages/worker/dist
 
 COPY lerna.json .
 
-# WORKDIR /app/packages/worker
+WORKDIR /app/packages/worker
 
-COPY packages/worker/docker_run.sh packages/worker/
+COPY packages/worker/docker_run.sh .
 
 EXPOSE 4001
 
@@ -82,4 +82,4 @@ ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
 ENV TENANT_FEATURE_FLAGS=*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
 
-CMD ["./packages/worker/docker_run.sh"]
+CMD ["./docker_run.sh"]
