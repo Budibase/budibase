@@ -253,7 +253,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    transition: filter 130ms ease-out;
+    transition: filter 260ms ease-out;
   }
   .root.blur {
     filter: blur(8px);
