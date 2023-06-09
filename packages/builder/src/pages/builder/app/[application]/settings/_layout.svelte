@@ -1,27 +1,10 @@
 <script>
-  import {
-    Content,
-    SideNav,
-    SideNavItem,
-    Breadcrumbs,
-    Breadcrumb,
-    Header,
-  } from "components/portal/page"
-  import {
-    Page,
-    Layout,
-    Button,
-    Icon,
-    ActionMenu,
-    MenuItem,
-    Helpers,
-    Input,
-    Modal,
-    notifications,
-  } from "@budibase/bbui"
-  import EditableIcon from "components/common/EditableIcon.svelte"
-  import { url, isActive, goto } from "@roxi/routify"
-  import { apps } from "stores/portal"
+  import { Content, SideNav, SideNavItem } from "components/portal/page"
+  import { Page, Layout } from "@budibase/bbui"
+  import { url, isActive } from "@roxi/routify"
+
+  $: $url(), console.log("Hello ", $url())
+  $: console.log($isActive("./automation-history"))
 </script>
 
 <!-- routify:options index=4 -->
