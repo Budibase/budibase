@@ -1,4 +1,4 @@
-import { db as dbCore, objectStore } from "@budibase/backend-core"
+import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { streamFile, createTempFolder } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets } from "../../../constants"
@@ -31,6 +31,7 @@ interface ExportOpts extends DBDumpOpts {
   tar?: boolean
   excludeRows?: boolean
   excludeLogs?: boolean
+  encryptPassword?: string
 }
 
 function tarFilesToTmp(tmpDir: string, files: string[]) {
@@ -150,7 +151,15 @@ export async function exportApp(appId: string, config?: ExportOpts) {
     const tarPath = tarFilesToTmp(tmpPath, fs.readdirSync(tmpPath))
     // cleanup the tmp export files as tarball returned
     fs.rmSync(tmpPath, { recursive: true, force: true })
-    return tarPath
+    if (!config.encryptPassword) {
+      return tarPath
+    }
+
+    const encryptedTarPath = await encryption.encryptFile(
+      tarPath,
+      config.encryptPassword
+    )
+    return encryptedTarPath
   }
   // tar not requested, turn the directory where export is
   else {
@@ -164,11 +173,20 @@ export async function exportApp(appId: string, config?: ExportOpts) {
  * @param {boolean} excludeRows Flag to state whether the export should include data.
  * @returns {*} a readable stream of the backup which is written in real time
  */
-export async function streamExportApp(appId: string, excludeRows: boolean) {
+export async function streamExportApp({
+  appId,
+  excludeRows,
+  encryptPassword,
+}: {
+  appId: string
+  excludeRows: boolean
+  encryptPassword: string
+}) {
   const tmpPath = await exportApp(appId, {
     excludeRows,
     excludeLogs: true,
     tar: true,
+    encryptPassword,
   })
   return streamFile(tmpPath)
 }

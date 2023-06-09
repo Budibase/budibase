@@ -1,4 +1,6 @@
 import crypto from "crypto"
+import fs from "fs"
+import zlib from "zlib"
 import env from "../environment"
 
 const ALGO = "aes-256-ctr"
@@ -59,4 +61,25 @@ export function decrypt(
   const base = decipher.update(Buffer.from(encrypted, "hex"))
   const final = decipher.final()
   return Buffer.concat([base, final]).toString()
+}
+
+export async function encryptFile(filePath: string, secret: string) {
+  const outputFilePath = `${filePath}.enc`
+
+  const inputFile = fs.createReadStream(filePath)
+  const outputFile = fs.createWriteStream(outputFilePath)
+
+  const salt = crypto.randomBytes(RANDOM_BYTES)
+  const stretched = stretchString(secret, salt)
+  const cipher = crypto.createCipheriv(ALGO, stretched, salt)
+
+  const encrypted = inputFile.pipe(cipher).pipe(zlib.createGzip())
+
+  encrypted.pipe(outputFile)
+
+  return new Promise<string>(r => {
+    outputFile.on("finish", () => {
+      r(outputFilePath)
+    })
+  })
 }
