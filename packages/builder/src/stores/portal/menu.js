@@ -58,6 +58,10 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
         title: "Environment",
         href: "/builder/portal/settings/environment",
       },
+      {
+        title: "Diagnostics",
+        href: "/builder/portal/settings/diagnostics",
+      },
     ]
     if (!$admin.cloud) {
       settingsSubPages.push({
@@ -84,14 +88,6 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
       accountSubPages.push({
         title: "Audit Logs",
         href: "/builder/portal/account/auditLogs",
-      })
-      accountSubPages.push({
-        title: "Diagnostics",
-        href: "/builder/portal/account/diagnostics",
-      })
-      accountSubPages.push({
-        title: "Logs",
-        href: "/builder/portal/account/debugLogs",
       })
     }
     if ($admin.cloud && $auth?.user?.accountPortalAccess) {
