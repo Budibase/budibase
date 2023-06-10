@@ -1,11 +1,14 @@
 import fetch from "node-fetch"
 import env from "../../environment"
+import os from "os"
+import process from "process"
 import { checkSlashesInUrl } from "../../utilities"
 import { request } from "../../utilities/workerRequests"
 import { clearLock as redisClearLock } from "../../utilities/redis"
 import { DocumentType } from "../../db/utils"
 import { context, env as envCore } from "@budibase/backend-core"
 import { events, db as dbCore, cache } from "@budibase/backend-core"
+
 
 async function redirect(ctx: any, method: string, path: string = "global") {
   const { devPath } = ctx.params
@@ -128,9 +131,9 @@ export async function getBudibaseVersion(ctx: any) {
   await events.installation.versionChecked(version)
 }
 
-export async function troubleshootingInfo(ctx: any) {
-  const os = require("os")
-  const process = require("process")
+export async function systemDebugInfo(ctx: any) {
+  const { days, hours, minutes } = secondsToHMS(os.uptime())
+  const totalMemory = convertBytes(os.totalmem())
 
   ctx.body = {
     budibaseVersion: envCore.VERSION,
@@ -140,8 +143,32 @@ export async function troubleshootingInfo(ctx: any) {
     cpuArch: process.arch,
     cpuCores: os.cpus().length,
     cpuInfo: os.cpus()[0].model,
-    totalMemory: os.totalmem(),
-    freeMemory: os.freemem(),
-    uptime: os.uptime(), 
+    totalMemory: `${totalMemory.gb}GB`,
+    uptime: `${days} day(s), ${hours} hour(s), ${minutes} minute(s)`, 
   }
+}
+
+function secondsToHMS(seconds: number) {
+  const MINUTE_IN_SECONDS = 60
+  const HOUR_IN_SECONDS = 3600
+  const DAY_IN_SECONDS = HOUR_IN_SECONDS * 24
+
+  const minutes = Math.floor((seconds / MINUTE_IN_SECONDS) % 60);
+  const hours = Math.floor((seconds / HOUR_IN_SECONDS) % 24);
+  const days = Math.floor(seconds / DAY_IN_SECONDS) 
+
+  return {
+    days,
+    hours,
+    minutes,
+    seconds
+  }
+}
+
+function convertBytes(bytes: number) {
+    const kb = bytes / 1024;
+    const mb = kb / 1024;
+    const gb = mb / 1024;
+
+    return { gb, mb, kb }
 }

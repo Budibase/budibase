@@ -124,11 +124,11 @@ export const buildAppEndpoints = API => ({
   },
 
   /**
-   * Gets application diagnostics.
+   * Gets budibase platform debug information.
    */
-  fetchDiagnostics: async () => {
+  fetchSystemDebugInfo: async () => {
     return await API.get({
-      url: `/api/dev/diagnostics`,
+      url: `/api/dev/debug`,
     })
   },
 
