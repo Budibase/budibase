@@ -58,15 +58,15 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
         title: "Environment",
         href: "/builder/portal/settings/environment",
       },
-      {
-        title: "Diagnostics",
-        href: "/builder/portal/settings/diagnostics",
-      },
     ]
     if (!$admin.cloud) {
       settingsSubPages.push({
         title: "Version",
         href: "/builder/portal/settings/version",
+      })
+      settingsSubPages.push({
+        title: "Diagnostics",
+        href: "/builder/portal/settings/diagnostics",
       })
     }
     menu.push({
