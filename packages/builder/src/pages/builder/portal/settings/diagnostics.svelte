@@ -4,11 +4,9 @@
     Heading,
     Body,
     Helpers,
-    Button,
     Divider,
     notifications,
     Icon,
-    Input,
     TextArea,
   } from "@budibase/bbui"
   import { auth, admin } from "stores/portal"

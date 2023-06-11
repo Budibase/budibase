@@ -9,7 +9,6 @@ import { DocumentType } from "../../db/utils"
 import { context, env as envCore } from "@budibase/backend-core"
 import { events, db as dbCore, cache } from "@budibase/backend-core"
 
-
 async function redirect(ctx: any, method: string, path: string = "global") {
   const { devPath } = ctx.params
   const queryString = ctx.originalUrl.split("?")[1] || ""
@@ -144,7 +143,7 @@ export async function systemDebugInfo(ctx: any) {
     cpuCores: os.cpus().length,
     cpuInfo: os.cpus()[0].model,
     totalMemory: `${totalMemory.gb}GB`,
-    uptime: `${days} day(s), ${hours} hour(s), ${minutes} minute(s)`, 
+    uptime: `${days} day(s), ${hours} hour(s), ${minutes} minute(s)`,
   }
 }
 
@@ -153,22 +152,22 @@ function secondsToHMS(seconds: number) {
   const HOUR_IN_SECONDS = 3600
   const DAY_IN_SECONDS = HOUR_IN_SECONDS * 24
 
-  const minutes = Math.floor((seconds / MINUTE_IN_SECONDS) % 60);
-  const hours = Math.floor((seconds / HOUR_IN_SECONDS) % 24);
-  const days = Math.floor(seconds / DAY_IN_SECONDS) 
+  const minutes = Math.floor((seconds / MINUTE_IN_SECONDS) % 60)
+  const hours = Math.floor((seconds / HOUR_IN_SECONDS) % 24)
+  const days = Math.floor(seconds / DAY_IN_SECONDS)
 
   return {
     days,
     hours,
     minutes,
-    seconds
+    seconds,
   }
 }
 
 function convertBytes(bytes: number) {
-    const kb = bytes / 1024;
-    const mb = kb / 1024;
-    const gb = mb / 1024;
+  const kb = bytes / 1024
+  const mb = kb / 1024
+  const gb = mb / 1024
 
-    return { gb, mb, kb }
+  return { gb, mb, kb }
 }
