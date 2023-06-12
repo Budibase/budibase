@@ -36,8 +36,8 @@ export function getSecret(secretOption: SecretOption): string {
   return secret
 }
 
-function stretchString(string: string, salt: Buffer) {
-  return crypto.pbkdf2Sync(string, salt, ITERATIONS, STRETCH_LENGTH, "sha512")
+function stretchString(secret: string, salt: Buffer) {
+  return crypto.pbkdf2Sync(secret, salt, ITERATIONS, STRETCH_LENGTH, "sha512")
 }
 
 export function encrypt(
