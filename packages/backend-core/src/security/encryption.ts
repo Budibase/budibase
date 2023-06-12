@@ -150,7 +150,7 @@ function readBytes(stream: fs.ReadStream, length: number) {
       reject(new Error("Insufficient data in the stream."))
     })
 
-    stream.on("error", (error: any) => {
+    stream.on("error", error => {
       reject(error)
     })
   })
