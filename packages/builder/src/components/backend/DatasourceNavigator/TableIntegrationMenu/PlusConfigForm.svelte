@@ -170,7 +170,6 @@
     <Button
       secondary
       on:click={async () => {
-        console.log(datasource)
         const info = await getDatasourceInfo(datasource)
         tableList = info.tableNames
         confirmDialog.show()
