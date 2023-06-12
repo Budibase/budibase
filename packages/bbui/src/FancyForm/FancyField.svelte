@@ -11,8 +11,7 @@
   export let value
   export let ref
   export let autoHeight
-  export let compress
-  export let lighter
+  export let compact = false
 
   const formContext = getContext("fancy-form")
   const id = Math.random()
@@ -40,12 +39,11 @@
 <div
   bind:this={ref}
   class="fancy-field"
-  class:compress
   class:error
   class:disabled
   class:focused
   class:clickable
-  class:lighter
+  class:compact
   class:auto-height={autoHeight}
 >
   <div class="content" on:click>
@@ -65,7 +63,6 @@
 
 <style>
   .fancy-field {
-    max-width: var(--fancy-field-max-width);
     background: var(--spectrum-global-color-gray-75);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
@@ -73,12 +70,12 @@
     transition: border-color 130ms ease-out, background 130ms ease-out,
       background 130ms ease-out;
     color: var(--spectrum-global-color-gray-800);
+    --padding: 16px;
+    --height: 64px;
   }
-  .lighter {
-    background: var(--spectrum-global-color-gray-100) !important;
-  }
-  .compress {
-    margin-bottom: -1px;
+  .fancy-field.compact {
+    --padding: 8px;
+    --height: 36px;
   }
   .fancy-field:hover {
     border-color: var(--spectrum-global-color-gray-400);
@@ -101,8 +98,8 @@
   }
   .content {
     position: relative;
-    height: var(--fancy-field-height);
-    padding: 0 var(--fancy-field-padding);
+    height: var(--height);
+    padding: 0 var(--padding);
   }
   .fancy-field.auto-height .content {
     height: auto;
@@ -113,7 +110,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: var(--fancy-field-padding);
+    gap: var(--padding);
   }
   .field {
     flex: 1 1 auto;

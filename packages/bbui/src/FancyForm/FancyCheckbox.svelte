@@ -8,9 +8,8 @@
   export let disabled = false
   export let error = null
   export let validate = null
-  export let compress = false
-  export let lighter = false
   export let indeterminate = false
+  export let compact = false
 
   const dispatch = createEventDispatcher()
 
@@ -29,15 +28,14 @@
   {value}
   {validate}
   {disabled}
-  {compress}
-  {lighter}
+  {compact}
   clickable
   on:click={onChange}
 >
   <span>
     <Checkbox {disabled} {value} {indeterminate} />
   </span>
-  <div class="text">
+  <div class="text" class:compact>
     {#if text}
       {text}
     {/if}
@@ -51,12 +49,17 @@
   }
   .text {
     font-size: 15px;
+    line-height: 17px;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
+  }
+  .text.compact {
+    font-size: 13px;
+    line-height: 15px;
   }
   .text > :global(*) {
     font-size: inherit !important;

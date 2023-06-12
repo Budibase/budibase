@@ -40,27 +40,29 @@
 </script>
 
 {#if options && Array.isArray(options)}
-  <FancyForm compact noMaxWidth on:change>
-    {#if showSelectAll}
-      <div class="checkbox-item">
+  <div class="checkbox-group" class:has-select-all={showSelectAll}>
+    <FancyForm on:change>
+      {#if showSelectAll}
         <FancyCheckbox
           bind:value={allSelected}
           on:change={toggleSelectAll}
           text={selectAllText}
-          compress
-          lighter
           indeterminate={!allSelected && !noneSelected}
+          compact
         />
-      </div>
-    {/if}
-    {#each options as option, i}
-      <FancyCheckbox bind:value={selectedBooleans[i]} text={option} compress />
-    {/each}
-  </FancyForm>
+      {/if}
+      {#each options as option, i}
+        <FancyCheckbox bind:value={selectedBooleans[i]} text={option} compact />
+      {/each}
+    </FancyForm>
+  </div>
 {/if}
 
 <style>
-  .checkbox-item:hover {
-    background-color: rgba(255, 255, 255, 0.01);
+  .checkbox-group.has-select-all :global(.fancy-field:first-of-type) {
+    background: var(--spectrum-global-color-gray-100);
+  }
+  .checkbox-group.has-select-all :global(.fancy-field:first-of-type:hover) {
+    background: var(--spectrum-global-color-gray-200);
   }
 </style>
