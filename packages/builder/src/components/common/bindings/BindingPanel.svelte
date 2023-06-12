@@ -19,7 +19,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import { store } from "builderStore"
+
   import { convertToJS } from "@budibase/string-templates"
   import { admin } from "stores/portal"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
@@ -343,7 +343,6 @@
             secondary
             quiet
             on:click={() => {
-              store.actions.settings.propertyFocus(null)
               drawerActions.hide()
             }}
           >
