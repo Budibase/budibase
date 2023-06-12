@@ -1,26 +1,25 @@
 <script>
   import {
-    ModalContent,
     Body,
-    Layout,
-    Link,
-    notifications,
     FancyCheckboxGroup,
     InlineAlert,
+    Layout,
+    Link,
+    ModalContent,
+    notifications,
   } from "@budibase/bbui"
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import GoogleButton from "../_components/GoogleButton.svelte"
   import { organisation } from "stores/portal"
-  import { onMount, onDestroy } from "svelte"
+  import { onDestroy, onMount } from "svelte"
   import {
-    validateDatasourceConfig,
     getDatasourceInfo,
+    saveDatasource,
+    validateDatasourceConfig,
   } from "builderStore/datasource"
   import cloneDeep from "lodash/cloneDeepWith"
   import IntegrationConfigForm from "../TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { goto } from "@roxi/routify"
-
-  import { saveDatasource } from "builderStore/datasource"
   import { DatasourceFeature } from "@budibase/types"
   import { API } from "api"
 
@@ -75,11 +74,10 @@
         }
 
         try {
-          const resp = await saveDatasource(datasource, {
+          datasource = await saveDatasource(datasource, {
             tablesFilter: selectedSheets,
             skipFetch: true,
           })
-          datasource = resp
         } catch (err) {
           notifications.error(err?.message ?? "Error saving datasource")
           // prevent the modal from closing
@@ -142,9 +140,9 @@
   }
 
   // This will handle the user closing the modal pressing outside the modal
-  onDestroy(async () => {
+  onDestroy(() => {
     if (step === GoogleDatasouceConfigStep.SET_SHEETS) {
-      await $goto(`./datasource/${datasource._id}`)
+      $goto(`./datasource/${datasource._id}`)
     }
   })
 </script>
