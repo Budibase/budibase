@@ -1,4 +1,4 @@
-import { db as dbCore, objectStore } from "@budibase/backend-core"
+import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
 import { Database, Row } from "@budibase/types"
 import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
@@ -20,6 +20,7 @@ type TemplateType = {
   file?: {
     type: string
     path: string
+    password?: string
   }
   key?: string
 }
@@ -123,6 +124,15 @@ export function untarFile(file: { path: string }) {
   return tmpPath
 }
 
+async function decryptFiles(path: string) {
+  for (let file of fs.readdirSync(path)) {
+    const inputPath = join(path, file)
+    const outputPath = inputPath.replace(/\.enc$/, "")
+    await encryption.decryptFile(inputPath, outputPath, "password")
+    fs.rmSync(inputPath)
+  }
+}
+
 export function getGlobalDBFile(tmpPath: string) {
   return fs.readFileSync(join(tmpPath, GLOBAL_DB_EXPORT_FILE), "utf8")
 }
@@ -143,6 +153,9 @@ export async function importApp(
     template.file && fs.lstatSync(template.file.path).isDirectory()
   if (template.file && (isTar || isDirectory)) {
     const tmpPath = isTar ? untarFile(template.file) : template.file.path
+    if (isTar && template.file.password) {
+      await decryptFiles(tmpPath)
+    }
     const contents = fs.readdirSync(tmpPath)
     // have to handle object import
     if (contents.length) {
