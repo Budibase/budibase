@@ -84,7 +84,7 @@ export async function encryptFile(
   outputFile.write(salt)
   outputFile.write(iv)
 
-  inputFile.pipe(cipher).pipe(outputFile)
+  inputFile.pipe(zlib.createGzip()).pipe(cipher).pipe(outputFile)
 
   return new Promise<{ filename: string; dir: string }>(r => {
     outputFile.on("finish", () => {
@@ -120,7 +120,7 @@ export async function decryptFile(
   const stretched = stretchString(secret, salt)
   const decipher = crypto.createDecipheriv(ALGO, stretched, iv)
 
-  inputFile.pipe(decipher).pipe(outputFile)
+  inputFile.pipe(decipher).pipe(zlib.createGunzip()).pipe(outputFile)
 
   return new Promise<void>(r => {
     outputFile.on("finish", () => {
