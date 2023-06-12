@@ -23,10 +23,11 @@ function prepareData(config) {
   return datasource
 }
 
-export async function saveDatasource(config, skipFetch = false) {
+export async function saveDatasource(config, { skipFetch, tablesFilter } = {}) {
   const datasource = prepareData(config)
   // Create datasource
-  const resp = await datasources.save(datasource, !skipFetch && datasource.plus)
+  const fetchSchema = !skipFetch && datasource.plus
+  const resp = await datasources.save(datasource, { fetchSchema, tablesFilter })
 
   // update the tables incase datasource plus
   await tables.fetch()
@@ -41,6 +42,13 @@ export async function createRestDatasource(integration) {
 
 export async function validateDatasourceConfig(config) {
   const datasource = prepareData(config)
-  const resp = await API.validateDatasource(datasource)
-  return resp
+  return await API.validateDatasource(datasource)
+}
+
+export async function getDatasourceInfo(config) {
+  let datasource = config
+  if (!config._id) {
+    datasource = prepareData(config)
+  }
+  return await API.fetchInfoForDatasource(datasource)
 }
