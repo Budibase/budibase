@@ -11,7 +11,7 @@ async function deleteAccount() {
   // @ts-ignore
   const accountID = global.qa.accountId
   // can't run 'expect' blocks in teardown
-  await accountsApi.accounts.delete(accountID, { doExpect: false })
+  await accountsApi.accounts.delete(accountID)
 }
 
 async function teardown() {
