@@ -76,7 +76,7 @@
   {/if}
 </div>
 
-<Drawer bind:this={bindingDrawer} {title}>
+<Drawer bind:this={bindingDrawer} {title} headless>
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>
