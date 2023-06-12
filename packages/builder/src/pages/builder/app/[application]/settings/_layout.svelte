@@ -1,10 +1,17 @@
 <script>
   import { Content, SideNav, SideNavItem } from "components/portal/page"
   import { Page, Layout } from "@budibase/bbui"
-  import { url, isActive } from "@roxi/routify"
+  import { url, isActive, layout } from "@roxi/routify"
+  import { capitalise } from "helpers"
 
-  $: $url(), console.log("Hello ", $url())
-  $: console.log($isActive("./automation-history"))
+  // $: $url(), console.log("Hello ", $url())
+  // $: console.log("is auto", $isActive("./automation-history"))
+  // $: selected = capitalise(
+  //   $layout.children.find(layout => $isActive(layout.path))?.title ?? "settings"
+  // )
+  // $: console.log("Settings Selected ", selected)
+
+  // if updated to Settings and automation-history is not selected, switch to ./automation-history
 </script>
 
 <!-- routify:options index=4 -->

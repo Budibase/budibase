@@ -13,6 +13,7 @@
   import { store } from "builderStore"
   import { apps } from "stores/portal"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
+  import { API } from "api"
 
   let updatingModal
 
@@ -20,6 +21,14 @@
   $: app = filteredApps.length ? filteredApps[0] : {}
   $: appUrl = `${window.origin}/app${app?.url}`
   $: appDeployed = app?.status === AppStatus.DEPLOYED
+
+  const initialiseApp = async () => {
+    // In order for these changes to make it back into the app, the app package must be reinitialied
+    // could this have negative side affects???
+    console.log("Reinitialise")
+    const applicationPkg = await API.fetchAppPackage(app.devId)
+    await store.actions.initialise(applicationPkg)
+  }
 </script>
 
 <Layout noPadding>
@@ -68,7 +77,12 @@
 </Layout>
 
 <Modal bind:this={updatingModal} padding={false} width="600px">
-  <UpdateAppModal {app} />
+  <UpdateAppModal
+    {app}
+    onUpdateComplete={async () => {
+      await initialiseApp()
+    }}
+  />
 </Modal>
 
 <style>
