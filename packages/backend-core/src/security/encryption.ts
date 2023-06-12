@@ -116,6 +116,8 @@ export async function decryptFile(
 
   return new Promise<void>(r => {
     outputFile.on("finish", () => {
+      inputFile.close()
+      outputFile.close()
       r()
     })
   })
