@@ -96,27 +96,34 @@ export async function encryptFile(
   })
 }
 
+async function getSaltAndIV(path: string) {
+  const fileStream = fs.createReadStream(path)
+
+  const salt = await readBytes(fileStream, SALT_LENGTH)
+  const iv = await readBytes(fileStream, IV_LENGTH)
+  fileStream.close()
+  return { salt, iv }
+}
+
 export async function decryptFile(
   inputPath: string,
   outputPath: string,
   secret: string
 ) {
-  const inputFile = fs.createReadStream(inputPath)
-  const outputFile = fs.createWriteStream(outputPath)
+  const { salt, iv } = await getSaltAndIV(inputPath)
+  const inputFile = fs.createReadStream(inputPath, {
+    start: SALT_LENGTH + IV_LENGTH,
+  })
 
-  const salt = await readBytes(inputFile, SALT_LENGTH)
-  const iv = await readBytes(inputFile, IV_LENGTH)
+  const outputFile = fs.createWriteStream(outputPath)
 
   const stretched = stretchString(secret, salt)
   const decipher = crypto.createDecipheriv(ALGO, stretched, iv)
 
-  fs.createReadStream(inputPath, { start: SALT_LENGTH + IV_LENGTH })
-    .pipe(decipher)
-    .pipe(outputFile)
+  inputFile.pipe(decipher).pipe(outputFile)
 
   return new Promise<void>(r => {
     outputFile.on("finish", () => {
-      inputFile.close()
       outputFile.close()
       r()
     })
