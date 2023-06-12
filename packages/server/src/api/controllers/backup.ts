@@ -4,7 +4,7 @@ import { DocumentType } from "../../db/utils"
 import { isQsTrue } from "../../utilities"
 
 export async function exportAppDump(ctx: any) {
-  let { appId, excludeRows = false, encryptPassword = "password" } = ctx.query
+  let { appId, excludeRows = false, encryptPassword } = ctx.query
   // remove the 120 second limit for the request
   ctx.req.setTimeout(0)
   const appName = decodeURI(ctx.query.appname)
