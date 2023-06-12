@@ -333,7 +333,7 @@
               : null}>{value.title || (key === "row" ? "Table" : key)}</Label
           >
         {/if}
-        {#if value.type === "string" && value.enum && canShowField(key)}
+        {#if value.type === "string" && value.enum && canShowField(key, value)}
           <Select
             on:change={e => onChange(e, key)}
             value={inputData[key]}
