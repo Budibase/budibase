@@ -4,13 +4,14 @@ import { DocumentType } from "../../db/utils"
 import { isQsTrue } from "../../utilities"
 
 export async function exportAppDump(ctx: any) {
-  let { appId, excludeRows = false, encryptPassword } = ctx.query
+  let { appId, excludeRows = false, encryptPassword = "password" } = ctx.query
   // remove the 120 second limit for the request
   ctx.req.setTimeout(0)
   const appName = decodeURI(ctx.query.appname)
   excludeRows = isQsTrue(excludeRows)
-  const extension = encryptPassword ? "enc.tar.gz" : "tar.gz"
-  const backupIdentifier = `${appName}-export-${new Date().getTime()}.${extension}`
+  const backupIdentifier = `${appName}-export-${new Date().getTime()}${
+    encryptPassword ? "-enc" : ""
+  }.tar.gz`
   ctx.attachment(backupIdentifier)
   ctx.body = await sdk.backups.streamExportApp({
     appId,

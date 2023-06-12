@@ -7,8 +7,10 @@ import { join } from "path"
 const ALGO = "aes-256-ctr"
 const SEPARATOR = "-"
 const ITERATIONS = 10000
-const RANDOM_BYTES = 16
 const STRETCH_LENGTH = 32
+
+const SALT_LENGTH = 16
+const IV_LENGTH = 16
 
 export enum SecretOption {
   API = "api",
@@ -42,7 +44,7 @@ export function encrypt(
   input: string,
   secretOption: SecretOption = SecretOption.API
 ) {
-  const salt = crypto.randomBytes(RANDOM_BYTES)
+  const salt = crypto.randomBytes(SALT_LENGTH)
   const stretched = stretchString(getSecret(secretOption), salt)
   const cipher = crypto.createCipheriv(ALGO, stretched, salt)
   const base = cipher.update(input)
@@ -74,13 +76,15 @@ export async function encryptFile(
   const inputFile = fs.createReadStream(filePath)
   const outputFile = fs.createWriteStream(join(dir, outputFileName))
 
-  const salt = crypto.randomBytes(RANDOM_BYTES)
+  const salt = crypto.randomBytes(SALT_LENGTH)
+  const iv = crypto.randomBytes(IV_LENGTH)
   const stretched = stretchString(secret, salt)
-  const cipher = crypto.createCipheriv(ALGO, stretched, salt)
+  const cipher = crypto.createCipheriv(ALGO, stretched, iv)
 
-  const encrypted = inputFile.pipe(cipher).pipe(zlib.createGzip())
+  outputFile.write(salt)
+  outputFile.write(iv)
 
-  encrypted.pipe(outputFile)
+  inputFile.pipe(cipher).pipe(outputFile)
 
   return new Promise<{ filename: string; dir: string }>(r => {
     outputFile.on("finish", () => {
@@ -88,6 +92,57 @@ export async function encryptFile(
         filename: outputFileName,
         dir,
       })
+    })
+  })
+}
+
+export async function decryptFile(
+  inputPath: string,
+  outputPath: string,
+  secret: string
+) {
+  const inputFile = fs.createReadStream(inputPath)
+  const outputFile = fs.createWriteStream(outputPath)
+
+  const salt = await readBytes(inputFile, SALT_LENGTH)
+  const iv = await readBytes(inputFile, IV_LENGTH)
+
+  const stretched = stretchString(secret, salt)
+  const decipher = crypto.createDecipheriv(ALGO, stretched, iv)
+
+  fs.createReadStream(inputPath, { start: SALT_LENGTH + IV_LENGTH })
+    .pipe(decipher)
+    .pipe(outputFile)
+
+  return new Promise<void>(r => {
+    outputFile.on("finish", () => {
+      r()
+    })
+  })
+}
+
+function readBytes(stream: fs.ReadStream, length: number) {
+  return new Promise<Buffer>((resolve, reject) => {
+    let bytesRead = 0
+    const data: Buffer[] = []
+
+    stream.on("readable", () => {
+      let chunk
+
+      while ((chunk = stream.read(length - bytesRead)) !== null) {
+        data.push(chunk)
+        bytesRead += chunk.length
+      }
+
+      resolve(Buffer.concat(data))
+    })
+
+    stream.on("end", () => {
+      reject(new Error("Insufficient data in the stream."))
+    })
+
+    stream.on("error", (error: any) => {
+      reject(error)
     })
   })
 }
