@@ -96,15 +96,15 @@ export default async (ctx: UserCtx, next: any) => {
       const userId = ctx.user
         ? generateUserMetadataID(ctx.user._id!)
         : undefined
-      ctx.user = {
+      let role = (ctx.user = {
         ...ctx.user!,
         // override userID with metadata one
         _id: userId,
         userId,
         globalId,
         roleId,
-        role: await roles.getRole(roleId),
-      }
+        role: await roles.getRole(roleId, { defaultPublic: true }),
+      })
     }
 
     return next()
