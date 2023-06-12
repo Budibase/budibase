@@ -36,7 +36,7 @@
     .map(([name, categoryBindings]) => ({
       name,
       bindings: categoryBindings?.filter(binding => {
-        return binding.readableBinding.match(searchRgx)
+        return !search || binding.readableBinding.match(searchRgx)
       }),
     }))
     .filter(category => {
@@ -46,7 +46,11 @@
       )
     })
   $: filteredHelpers = helpers?.filter(helper => {
-    return helper.label.match(searchRgx) || helper.description.match(searchRgx)
+    return (
+      !search ||
+      helper.label.match(searchRgx) ||
+      helper.description.match(searchRgx)
+    )
   })
 
   const getHelperExample = (helper, js) => {
@@ -124,9 +128,6 @@
       <span
         class="search-input-icon"
         on:click={() => {
-          if (!search) {
-            return
-          }
           search = null
         }}
         class:searching={search}
