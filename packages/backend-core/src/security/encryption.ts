@@ -2,6 +2,7 @@ import crypto from "crypto"
 import fs from "fs"
 import zlib from "zlib"
 import env from "../environment"
+import { join } from "path"
 
 const ALGO = "aes-256-ctr"
 const SEPARATOR = "-"
@@ -63,11 +64,15 @@ export function decrypt(
   return Buffer.concat([base, final]).toString()
 }
 
-export async function encryptFile(filePath: string, secret: string) {
-  const outputFilePath = `${filePath}.enc`
+export async function encryptFile(
+  { dir, filename }: { dir: string; filename: string },
+  secret: string
+) {
+  const outputFileName = `${filename}.enc`
 
+  const filePath = join(dir, filename)
   const inputFile = fs.createReadStream(filePath)
-  const outputFile = fs.createWriteStream(outputFilePath)
+  const outputFile = fs.createWriteStream(join(dir, outputFileName))
 
   const salt = crypto.randomBytes(RANDOM_BYTES)
   const stretched = stretchString(secret, salt)
@@ -77,9 +82,12 @@ export async function encryptFile(filePath: string, secret: string) {
 
   encrypted.pipe(outputFile)
 
-  return new Promise<string>(r => {
+  return new Promise<{ filename: string; dir: string }>(r => {
     outputFile.on("finish", () => {
-      r(outputFilePath)
+      r({
+        filename: outputFileName,
+        dir,
+      })
     })
   })
 }

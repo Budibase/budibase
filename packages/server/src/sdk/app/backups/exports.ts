@@ -145,21 +145,28 @@ export async function exportApp(appId: string, config?: ExportOpts) {
     filter: defineFilter(config?.excludeRows, config?.excludeLogs),
     exportPath: dbPath,
   })
+
+  if (config?.encryptPassword) {
+    for (let file of fs.readdirSync(tmpPath)) {
+      const path = join(tmpPath, file)
+
+      await encryption.encryptFile(
+        { dir: tmpPath, filename: file },
+        config.encryptPassword
+      )
+
+      fs.rmSync(path)
+    }
+  }
+
   // if tar requested, return where the tarball is
   if (config?.tar) {
     // now the tmpPath contains both the DB export and attachments, tar this
     const tarPath = tarFilesToTmp(tmpPath, fs.readdirSync(tmpPath))
     // cleanup the tmp export files as tarball returned
     fs.rmSync(tmpPath, { recursive: true, force: true })
-    if (!config.encryptPassword) {
-      return tarPath
-    }
 
-    const encryptedTarPath = await encryption.encryptFile(
-      tarPath,
-      config.encryptPassword
-    )
-    return encryptedTarPath
+    return tarPath
   }
   // tar not requested, turn the directory where export is
   else {
