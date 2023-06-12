@@ -237,9 +237,15 @@ export async function exportRows(ctx: UserCtx) {
     ctx.request.body = {
       query: {
         oneOf: {
-          _id: ctx.request.body.rows.map(
-            (row: string) => JSON.parse(decodeURI(row))[0]
-          ),
+          _id: ctx.request.body.rows.map((row: string) => {
+            const ids = JSON.parse(
+              decodeURI(row).replace(/'/g, `"`).replace(/%2C/g, ",")
+            )
+            if (ids.length > 1) {
+              ctx.throw(400, "Export data does not support composite keys.")
+            }
+            return ids[0]
+          }),
         },
       },
     }
