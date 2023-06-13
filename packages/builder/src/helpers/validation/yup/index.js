@@ -35,7 +35,7 @@ export const createValidationStore = () => {
         propertyValidator = string().email().nullable()
         break
       case "password":
-        propertyValidator = string().min(8)
+        propertyValidator = string().nullable()
         break
       default:
         propertyValidator = string().nullable()
@@ -43,6 +43,13 @@ export const createValidationStore = () => {
 
     if (required) {
       propertyValidator = propertyValidator.required()
+    }
+
+    // We want to do this after the possible required validation, to prioritise the required error
+    switch (type) {
+      case "password":
+        propertyValidator = propertyValidator.min(8)
+        break
     }
 
     validator[propertyName] = propertyValidator
