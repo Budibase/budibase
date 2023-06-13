@@ -13,18 +13,10 @@
   let includeInternalTablesRows = true
   let encypt = true
 
-  let password
+  let password = null
   const validation = createValidationStore()
   validation.addValidatorType("password", "password", "true")
-
-  function validate() {
-    return validation.check({ password })
-  }
-  $: {
-    if ($validation.errors.length) {
-      validate()
-    }
-  }
+  $: validation.observe("password", password)
 
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
   let currentStep = Step.SET_PASSWORD
@@ -42,17 +34,19 @@
           return false
         }
       },
+      isValid: true,
     },
     [Step.SET_PASSWORD]: {
       title: "Add password to encrypt your export",
       confirmText: exportButtonText,
       onConfirm: async () => {
-        await validate()
+        await validation.check({ password })
         if (!$validation.valid) {
           return false
         }
         exportApp()
       },
+      isValid: $validation.valid,
     },
   }
 
@@ -67,6 +61,7 @@
   title={stepConfig[currentStep].title}
   confirmText={stepConfig[currentStep].confirmText}
   onConfirm={stepConfig[currentStep].onConfirm}
+  disabled={!stepConfig[currentStep].isValid}
 >
   {#if currentStep === Step.CONFIG}
     <Body>
