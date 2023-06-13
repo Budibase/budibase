@@ -34,6 +34,9 @@ export const createValidationStore = () => {
       case "email":
         propertyValidator = string().email().nullable()
         break
+      case "password":
+        propertyValidator = string().min(8)
+        break
       default:
         propertyValidator = string().nullable()
     }
