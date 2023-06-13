@@ -1,10 +1,18 @@
 <script>
-  import { ModalContent, Toggle, Body, InlineAlert } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Toggle,
+    Body,
+    InlineAlert,
+    Input,
+  } from "@budibase/bbui"
 
   export let app
   export let published
   let includeInternalTablesRows = true
   let encypt = true
+  let password
+  let passwordError
 
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
   let currentStep = Step.CONFIG
@@ -27,6 +35,10 @@
       title: "Add password to encrypt your export",
       confirmText: exportButtonText,
       onConfirm: () => {
+        if (!password) {
+          passwordError = "Password is required"
+          return false
+        }
         exportApp()
       },
     },
@@ -44,6 +56,7 @@
   confirmText={stepConfig[currentStep].confirmText}
   onConfirm={stepConfig[currentStep].onConfirm}
 >
+  {#if currentStep === Step.CONFIG}
   <Body>
     <Toggle
       text="Export rows from internal tables"
@@ -54,6 +67,15 @@
   {#if !encypt}
     <InlineAlert
       header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
+      />
+    {/if}
+  {/if}
+  {#if currentStep === Step.SET_PASSWORD}
+    <Input
+      label="Password"
+      placeholder="Type here..."
+      bind:value={password}
+      error={passwordError}
     />
   {/if}
 </ModalContent>
