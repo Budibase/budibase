@@ -1,4 +1,5 @@
 import { GenericContainer } from "testcontainers"
+import postgres from "../../../../packages/server/src/integrations/postgres"
 
 jest.unmock("pg")
 
