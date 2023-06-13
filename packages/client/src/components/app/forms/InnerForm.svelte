@@ -283,7 +283,7 @@
 
       // Skip if the value is the same
       if (!skipCheck && fieldState.value === value) {
-        return true
+        return false
       }
 
       // Update field state
@@ -295,7 +295,7 @@
         return state
       })
 
-      return !error
+      return true
     }
 
     // Clears the value of a certain field back to the default value
@@ -376,8 +376,9 @@
       deregister,
       validate: () => {
         // Validate the field by force setting the same value again
-        const { fieldState } = get(getField(field))
-        return setValue(fieldState.value, true)
+        const fieldInfo = getField(field)
+        setValue(get(fieldInfo).fieldState.value, true)
+        return !get(fieldInfo).fieldState.error
       },
     }
   }
