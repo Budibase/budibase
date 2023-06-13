@@ -97,7 +97,7 @@
     "koa2-ratelimit": "1.1.1",
     "lodash": "4.17.21",
     "memorystream": "0.3.1",
-    "mongodb": "4.9",
+    "mongodb": "5.6",
     "mssql": "6.2.3",
     "mysql2": "2.3.3",
     "node-fetch": "2.6.7",
