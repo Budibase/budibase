@@ -62,7 +62,10 @@
   }
 
   const previewApp = () => {
-    window.open(`/${application}`)
+    store.update(state => ({
+      ...state,
+      showPreview: true,
+    }))
   }
 
   const viewApp = () => {

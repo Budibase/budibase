@@ -1,7 +1,6 @@
 import { createAPIClient } from "@budibase/frontend-core"
-import { notificationStore } from "../stores/notification.js"
 import { authStore } from "../stores/auth.js"
-import { devToolsStore } from "../stores/devTools.js"
+import { notificationStore, devToolsEnabled, devToolsStore } from "../stores/"
 import { get } from "svelte/store"
 
 export const API = createAPIClient({
@@ -25,9 +24,10 @@ export const API = createAPIClient({
     }
 
     // Add role header
-    const devToolsState = get(devToolsStore)
-    if (devToolsState.enabled && devToolsState.role) {
-      headers["x-budibase-role"] = devToolsState.role
+    const $devToolsStore = get(devToolsStore)
+    const $devToolsEnabled = get(devToolsEnabled)
+    if ($devToolsEnabled && $devToolsStore.role) {
+      headers["x-budibase-role"] = $devToolsStore.role
     }
   },
 
