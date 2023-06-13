@@ -165,7 +165,7 @@ export async function getRole(
     // finalise the ID
     role._id = getExternalRoleID(role._id)
   } catch (err) {
-    if (opts?.defaultPublic) {
+    if (!isBuiltin(roleId) && opts?.defaultPublic) {
       return cloneDeep(BUILTIN_ROLES.PUBLIC)
     }
     // only throw an error if there is no role at all
