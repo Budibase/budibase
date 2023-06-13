@@ -141,6 +141,17 @@
   })
 </script>
 
+<!-- New row FAB -->
+{#if !visible}
+  <div
+    class="new-row-fab"
+    on:click={() => dispatch("add-row-inline")}
+    transition:fade|local={{ duration: 130 }}
+  >
+    <Icon name="Add" size="S" />
+  </div>
+{/if}
+
 <!-- Only show new row functionality if we have any columns -->
 {#if visible}
   <div
@@ -227,6 +238,23 @@
 {/if}
 
 <style>
+  /* New row FAB */
+  .new-row-fab {
+    position: absolute;
+    top: var(--default-row-height);
+    left: calc(var(--gutter-width) / 2);
+    transform: translateX(8px) translateY(-50%);
+    background: var(--cell-background);
+    padding: 4px;
+    border-radius: 50%;
+    border: var(--cell-border);
+    z-index: 10;
+  }
+  .new-row-fab:hover {
+    background: var(--cell-background-hover);
+    cursor: pointer;
+  }
+
   .container {
     position: absolute;
     top: var(--default-row-height);

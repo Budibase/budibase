@@ -10,10 +10,13 @@
   export let allowDeleteRows
 
   const component = getContext("component")
-  const { styleable, API } = getContext("sdk")
+  const { styleable, API, builderStore } = getContext("sdk")
 </script>
 
-<div use:styleable={$component.styles}>
+<div
+  use:styleable={$component.styles}
+  class:in-builder={$builderStore.inBuilder}
+>
   <Grid
     tableId={table?.tableId}
     {API}
@@ -32,5 +35,8 @@
     flex-direction: column;
     align-items: stretch;
     border: 1px solid var(--spectrum-global-color-gray-300);
+  }
+  div.in-builder :global(*) {
+    pointer-events: none;
   }
 </style>
