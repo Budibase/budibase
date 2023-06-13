@@ -1,19 +1,36 @@
 <script>
-  import {
-    ModalContent,
-    Toggle,
-    Body,
-    InlineAlert,
-    Divider,
-  } from "@budibase/bbui"
+  import { ModalContent, Toggle, Body, InlineAlert } from "@budibase/bbui"
 
   export let app
   export let published
   let includeInternalTablesRows = true
   let encypt = true
 
-  $: title = published ? "Export published app" : "Export latest app"
-  $: confirmText = published ? "Export published" : "Export latest"
+  const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
+  let currentStep = Step.CONFIG
+
+  $: exportButtonText = published ? "Export published" : "Export latest"
+  $: stepConfig = {
+    [Step.CONFIG]: {
+      title: published ? "Export published app" : "Export latest app",
+      confirmText: encypt ? "Continue" : exportButtonText,
+      onConfirm: () => {
+        if (!encypt) {
+          exportApp()
+        } else {
+          currentStep = Step.SET_PASSWORD
+          return false
+        }
+      },
+    },
+    [Step.SET_PASSWORD]: {
+      title: "Add password to encrypt your export",
+      confirmText: exportButtonText,
+      onConfirm: () => {
+        exportApp()
+      },
+    },
+  }
 
   const exportApp = () => {
     const id = published ? app.prodId : app.devId
@@ -22,7 +39,11 @@
   }
 </script>
 
-<ModalContent {title} {confirmText} onConfirm={exportApp}>
+<ModalContent
+  title={stepConfig[currentStep].title}
+  confirmText={stepConfig[currentStep].confirmText}
+  onConfirm={stepConfig[currentStep].onConfirm}
+>
   <Body>
     <Toggle
       text="Export rows from internal tables"
