@@ -232,7 +232,7 @@
     border-bottom: 2px solid var(--spectrum-global-color-gray-200);
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
-    background: var(--background);
+    background: var(--spectrum-global-color-gray-100);
     z-index: 2;
   }
   .controls-left,
