@@ -328,3 +328,22 @@ export function finaliseExternalTables(
     .reduce((r, [k, v]) => ({ ...r, [k]: v }), {})
   return { tables: finalTables, errors }
 }
+
+/**
+ * Checks if the provided input is an object, but specifically not a date type object.
+ * Used during coercion of types and relationship handling, dates are considered valid
+ * and can be used as a display field, but objects and arrays cannot.
+ * @param test
+ */
+export function getPrimaryDisplay(test: any): string | undefined {
+  if (test instanceof Date) {
+    return test.toISOString()
+  }
+  if (Array.isArray(test) && test[0] && typeof test[0] !== "object") {
+    return test.join(", ")
+  }
+  if (typeof test === "object") {
+    return undefined
+  }
+  return test as string
+}
