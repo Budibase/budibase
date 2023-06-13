@@ -1,22 +1,27 @@
 <script>
   import {
-    ModalContent,
     Body,
+    FancyCheckboxGroup,
+    InlineAlert,
     Layout,
     Link,
+    ModalContent,
     notifications,
   } from "@budibase/bbui"
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import GoogleButton from "../_components/GoogleButton.svelte"
   import { organisation } from "stores/portal"
-  import { onMount } from "svelte"
-  import { validateDatasourceConfig } from "builderStore/datasource"
+  import { onDestroy, onMount } from "svelte"
+  import {
+    getDatasourceInfo,
+    saveDatasource,
+    validateDatasourceConfig,
+  } from "builderStore/datasource"
   import cloneDeep from "lodash/cloneDeepWith"
   import IntegrationConfigForm from "../TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { goto } from "@roxi/routify"
-
-  import { saveDatasource } from "builderStore/datasource"
   import { DatasourceFeature } from "@budibase/types"
+  import { API } from "api"
 
   export let integration
   export let continueSetupId = false
@@ -24,16 +29,20 @@
   let datasource = cloneDeep(integration)
   datasource.config.continueSetupId = continueSetupId
 
+  let { schema } = datasource
+
   $: isGoogleConfigured = !!$organisation.googleDatasourceConfigured
 
   onMount(async () => {
     await organisation.init()
   })
+
   const integrationName = IntegrationNames[IntegrationTypes.GOOGLE_SHEETS]
 
   export const GoogleDatasouceConfigStep = {
-    AUTH: "Auth",
-    SET_URL: "Set_url",
+    AUTH: "auth",
+    SET_URL: "set_url",
+    SET_SHEETS: "set_sheets",
   }
 
   let step = continueSetupId
@@ -42,12 +51,21 @@
 
   let isValid = false
 
-  const modalConfig = {
-    [GoogleDatasouceConfigStep.AUTH]: {},
+  let allSheets
+  let selectedSheets
+  let setSheetsErrorTitle, setSheetsErrorMessage
+
+  $: modalConfig = {
+    [GoogleDatasouceConfigStep.AUTH]: {
+      title: `Connect to ${integrationName}`,
+    },
     [GoogleDatasouceConfigStep.SET_URL]: {
+      title: `Connect your spreadsheet`,
       confirmButtonText: "Connect",
       onConfirm: async () => {
-        if (integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
+        const checkConnection =
+          integration.features[DatasourceFeature.CONNECTION_CHECKING]
+        if (checkConnection) {
           const resp = await validateDatasourceConfig(datasource)
           if (!resp.connected) {
             notifications.error(`Unable to connect - ${resp.error}`)
@@ -56,21 +74,81 @@
         }
 
         try {
-          const resp = await saveDatasource(datasource)
-          $goto(`./datasource/${resp._id}`)
-          notifications.success(`Datasource created successfully.`)
+          datasource = await saveDatasource(datasource, {
+            tablesFilter: selectedSheets,
+            skipFetch: true,
+          })
         } catch (err) {
           notifications.error(err?.message ?? "Error saving datasource")
+          // prevent the modal from closing
+          return false
+        }
+
+        if (!integration.features[DatasourceFeature.FETCH_TABLE_NAMES]) {
+          notifications.success(`Datasource created successfully.`)
+          return
+        }
+
+        const info = await getDatasourceInfo(datasource)
+        allSheets = info.tableNames
+
+        step = GoogleDatasouceConfigStep.SET_SHEETS
+        notifications.success(
+          checkConnection
+            ? "Connection Successful"
+            : `Datasource created successfully.`
+        )
+
+        // prevent the modal from closing
+        return false
+      },
+    },
+    [GoogleDatasouceConfigStep.SET_SHEETS]: {
+      title: `Choose your sheets`,
+      confirmButtonText: selectedSheets?.length
+        ? "Fetch sheets"
+        : "Continue without fetching",
+      onConfirm: async () => {
+        try {
+          if (selectedSheets.length) {
+            await API.buildDatasourceSchema({
+              datasourceId: datasource._id,
+              tablesFilter: selectedSheets,
+            })
+          }
+
+          return
+        } catch (err) {
+          const message = err?.message ?? "Error fetching the sheets"
+          // Handling message with format: Error title - error description
+          const indexSeparator = message.indexOf(" - ")
+          if (indexSeparator >= 0) {
+            setSheetsErrorTitle = message.substr(0, indexSeparator)
+            setSheetsErrorMessage =
+              message[indexSeparator + 3].toUpperCase() +
+              message.substr(indexSeparator + 4)
+          } else {
+            setSheetsErrorTitle = null
+            setSheetsErrorMessage = message
+          }
+
           // prevent the modal from closing
           return false
         }
       },
     },
   }
+
+  // This will handle the user closing the modal pressing outside the modal
+  onDestroy(() => {
+    if (step === GoogleDatasouceConfigStep.SET_SHEETS) {
+      $goto(`./datasource/${datasource._id}`)
+    }
+  })
 </script>
 
 <ModalContent
-  title={`Connect to ${integrationName}`}
+  title={modalConfig[step].title}
   cancelText="Cancel"
   size="L"
   confirmText={modalConfig[step].confirmButtonText}
@@ -100,11 +178,30 @@
       <Body size="S">Add the URL of the sheet you want to connect.</Body>
 
       <IntegrationConfigForm
-        schema={datasource.schema}
+        {schema}
         bind:datasource
         creating={true}
         on:valid={e => (isValid = e.detail)}
       />
+    </Layout>
+  {/if}
+  {#if step === GoogleDatasouceConfigStep.SET_SHEETS}
+    <Layout noPadding no>
+      <Body size="S">Select which spreadsheets you want to connect.</Body>
+
+      <FancyCheckboxGroup
+        options={allSheets}
+        bind:selected={selectedSheets}
+        selectAllText="Select all sheets"
+      />
+
+      {#if setSheetsErrorTitle || setSheetsErrorMessage}
+        <InlineAlert
+          type="error"
+          header={setSheetsErrorTitle}
+          message={setSheetsErrorMessage}
+        />
+      {/if}
     </Layout>
   {/if}
 </ModalContent>

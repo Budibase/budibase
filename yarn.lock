@@ -7989,12 +7989,10 @@ bson@*:
   resolved "https://registry.yarnpkg.com/bson/-/bson-5.0.1.tgz#4cd3eeeabf6652ef0d6ab600f9a18212d39baac3"
   integrity sha512-y09gBGusgHtinMon/GVbv1J6FrXhnr/+6hqLlSmEFzkz6PodqF6TxjyvfvY3AfO+oG1mgUtbC86xSbOlwvM62Q==
 
-bson@^4.7.0:
-  version "4.7.2"
-  resolved "https://registry.yarnpkg.com/bson/-/bson-4.7.2.tgz#320f4ad0eaf5312dd9b45dc369cc48945e2a5f2e"
-  integrity sha512-Ry9wCtIZ5kGqkJoi6aD8KjxFZEx78guTQDnpXWiNthsxzrxAK/i8E6pCHAIZTbaEFWcOCvbecMukfK7XUvyLpQ==
-  dependencies:
-    buffer "^5.6.0"
+bson@^5.3.0:
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/bson/-/bson-5.3.0.tgz#37b006df4cd91ed125cb686467c1dd6d4606b514"
+  integrity sha512-ukmCZMneMlaC5ebPHXIkP8YJzNl5DC41N5MAIvKDqLggdao342t4McltoJBQfQya/nHBWAcSsYRqlXPoQkTJag==
 
 buffer-alloc-unsafe@^1.1.0:
   version "1.1.0"
@@ -18210,7 +18208,7 @@ moment@^2.29.4:
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
   integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
 
-mongodb-connection-string-url@^2.5.3:
+mongodb-connection-string-url@^2.6.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/mongodb-connection-string-url/-/mongodb-connection-string-url-2.6.0.tgz#57901bf352372abdde812c81be47b75c6b2ec5cf"
   integrity sha512-WvTZlI9ab0QYtTYnuMLgobULWhokRjtC7db9LtcVfJ+Hsnyr5eo6ZtNAt3Ly24XZScGMelOcGtm7lSn0332tPQ==
@@ -18218,15 +18216,14 @@ mongodb-connection-string-url@^2.5.3:
     "@types/whatwg-url" "^8.2.1"
     whatwg-url "^11.0.0"
 
-mongodb@4.9:
-  version "4.9.1"
-  resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-4.9.1.tgz#0c769448228bcf9a6aa7d16daa3625b48312479e"
-  integrity sha512-ZhgI/qBf84fD7sI4waZBoLBNJYPQN5IOC++SBCiPiyhzpNKOxN/fi0tBHvH2dEC42HXtNEbFB0zmNz4+oVtorQ==
+mongodb@5.6:
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-5.6.0.tgz#caff5278341bfc0f1ef6f394bb403d207de03d1e"
+  integrity sha512-z8qVs9NfobHJm6uzK56XBZF8XwM9H294iRnB7wNjF0SnY93si5HPziIJn+qqvUR5QOff/4L0gCD6SShdR/GtVQ==
   dependencies:
-    bson "^4.7.0"
-    denque "^2.1.0"
-    mongodb-connection-string-url "^2.5.3"
-    socks "^2.7.0"
+    bson "^5.3.0"
+    mongodb-connection-string-url "^2.6.0"
+    socks "^2.7.1"
   optionalDependencies:
     saslprep "^1.0.3"
 
@@ -23100,7 +23097,7 @@ socks-proxy-agent@^7.0.0:
     debug "^4.3.3"
     socks "^2.6.2"
 
-socks@^2.3.3, socks@^2.6.2, socks@^2.7.0:
+socks@^2.3.3, socks@^2.6.2, socks@^2.7.1:
   version "2.7.1"
   resolved "https://registry.yarnpkg.com/socks/-/socks-2.7.1.tgz#d8e651247178fde79c0663043e07240196857d55"
   integrity sha512-7maUZy1N7uo6+WVEX6psASxtNlKaNVMlGQKkG/63nEDdLOWNbiUMoLK7X4uYoLhQstau72mLgfEWcXcwsaHbYQ==

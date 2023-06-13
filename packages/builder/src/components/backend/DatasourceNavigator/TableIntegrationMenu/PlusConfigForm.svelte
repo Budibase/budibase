@@ -8,7 +8,7 @@
     notifications,
     Modal,
     Table,
-    Toggle,
+    FancyCheckboxGroup,
   } from "@budibase/bbui"
   import { datasources, integrations, tables } from "stores/backend"
   import CreateEditRelationship from "components/backend/Datasources/CreateEditRelationship.svelte"
@@ -16,7 +16,7 @@
   import ArrayRenderer from "components/common/renderers/ArrayRenderer.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { goto } from "@roxi/routify"
-  import ValuesList from "components/common/ValuesList.svelte"
+  import { getDatasourceInfo } from "builderStore/datasource"
 
   export let datasource
   export let save
@@ -34,7 +34,7 @@
   let selectedFromRelationship, selectedToRelationship
   let confirmDialog
   let specificTables = null
-  let requireSpecificTables = false
+  let tableList
 
   $: integration = datasource && $integrations[datasource.source]
   $: plusTables = datasource?.plus
@@ -153,30 +153,28 @@
   warning={false}
   title="Confirm table fetch"
 >
-  <Toggle
-    bind:value={requireSpecificTables}
-    on:change={e => {
-      requireSpecificTables = e.detail
-      specificTables = null
-    }}
-    thin
-    text="Fetch listed tables only (one per line)"
-  />
-  {#if requireSpecificTables}
-    <ValuesList label="" bind:values={specificTables} />
-  {/if}
-  <br />
   <Body>
     If you have fetched tables from this database before, this action may
     overwrite any changes you made after your initial fetch.
   </Body>
+  <br />
+  <div class="table-checkboxes">
+    <FancyCheckboxGroup options={tableList} bind:selected={specificTables} />
+  </div>
 </ConfirmDialog>
 
 <Divider />
 <div class="query-header">
   <Heading size="S">Tables</Heading>
   <div class="table-buttons">
-    <Button secondary on:click={() => confirmDialog.show()}>
+    <Button
+      secondary
+      on:click={async () => {
+        const info = await getDatasourceInfo(datasource)
+        tableList = info.tableNames
+        confirmDialog.show()
+      }}
+    >
       Fetch tables
     </Button>
     <Button cta icon="Add" on:click={createNewTable}>New table</Button>
@@ -245,5 +243,9 @@
   .table-buttons {
     display: flex;
     gap: var(--spacing-m);
+  }
+
+  .table-checkboxes {
+    width: 100%;
   }
 </style>
