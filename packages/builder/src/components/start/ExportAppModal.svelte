@@ -6,16 +6,28 @@
     InlineAlert,
     Input,
   } from "@budibase/bbui"
+  import { createValidationStore } from "helpers/validation/yup"
 
   export let app
   export let published
   let includeInternalTablesRows = true
   let encypt = true
+
   let password
-  let passwordError
+  const validation = createValidationStore()
+  validation.addValidatorType("password", "password", "true")
+
+  function validate() {
+    return validation.check({ password })
+  }
+  $: {
+    if ($validation.errors.length) {
+      validate()
+    }
+  }
 
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
-  let currentStep = Step.CONFIG
+  let currentStep = Step.SET_PASSWORD
 
   $: exportButtonText = published ? "Export published" : "Export latest"
   $: stepConfig = {
@@ -34,9 +46,9 @@
     [Step.SET_PASSWORD]: {
       title: "Add password to encrypt your export",
       confirmText: exportButtonText,
-      onConfirm: () => {
-        if (!password) {
-          passwordError = "Password is required"
+      onConfirm: async () => {
+        await validate()
+        if (!$validation.valid) {
           return false
         }
         exportApp()
@@ -57,25 +69,26 @@
   onConfirm={stepConfig[currentStep].onConfirm}
 >
   {#if currentStep === Step.CONFIG}
-  <Body>
-    <Toggle
-      text="Export rows from internal tables"
-      bind:value={includeInternalTablesRows}
-    />
-    <Toggle text="Encrypt my export" bind:value={encypt} />
-  </Body>
-  {#if !encypt}
-    <InlineAlert
-      header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
+    <Body>
+      <Toggle
+        text="Export rows from internal tables"
+        bind:value={includeInternalTablesRows}
+      />
+      <Toggle text="Encrypt my export" bind:value={encypt} />
+    </Body>
+    {#if !encypt}
+      <InlineAlert
+        header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
       />
     {/if}
   {/if}
   {#if currentStep === Step.SET_PASSWORD}
     <Input
+      type="password"
       label="Password"
       placeholder="Type here..."
       bind:value={password}
-      error={passwordError}
+      error={$validation.errors.password}
     />
   {/if}
 </ModalContent>
