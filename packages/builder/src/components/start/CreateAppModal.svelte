@@ -17,6 +17,7 @@
   import TemplateCard from "components/common/TemplateCard.svelte"
   import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
   import { Roles } from "constants/backend"
+  import { lowercase } from "helpers"
 
   export let template
 
@@ -190,8 +191,11 @@
         try {
           await createNewApp()
         } catch (e) {
-          console.log(e)
-          notifications.error("Error creating app")
+          let message = "Error creating app"
+          if (e.message) {
+            message += `: ${lowercase(e.message)}`
+          }
+          notifications.error(message)
           return false
         }
       },
