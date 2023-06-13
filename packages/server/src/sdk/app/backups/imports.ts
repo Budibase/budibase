@@ -134,7 +134,7 @@ async function decryptFiles(path: string, password: string) {
     }
   } catch (err: any) {
     if (err.message === "incorrect header check") {
-      throw new Error("Wrong password")
+      throw new Error("File cannot be imported")
     }
     throw err
   }
