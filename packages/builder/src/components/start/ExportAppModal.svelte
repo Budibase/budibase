@@ -19,7 +19,7 @@
   $: validation.observe("password", password)
 
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
-  let currentStep = Step.SET_PASSWORD
+  let currentStep = Step.CONFIG
 
   $: exportButtonText = published ? "Export published" : "Export latest"
   $: stepConfig = {
@@ -44,16 +44,20 @@
         if (!$validation.valid) {
           return false
         }
-        exportApp()
+        exportApp(password)
       },
       isValid: $validation.valid,
     },
   }
 
-  const exportApp = () => {
+  const exportApp = password => {
     const id = published ? app.prodId : app.devId
     const appName = encodeURIComponent(app.name)
-    window.location = `/api/backups/export?appId=${id}&appname=${appName}&excludeRows=${!includeInternalTablesRows}`
+    let url = `/api/backups/export?appId=${id}&appname=${appName}&excludeRows=${!includeInternalTablesRows}`
+    if (password) {
+      url += `&encryptPassword=${password}`
+    }
+    window.location = url
   }
 </script>
 
