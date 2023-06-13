@@ -10,7 +10,7 @@ export async function exportAppDump(ctx: any) {
   const appName = decodeURI(ctx.query.appname)
   excludeRows = isQsTrue(excludeRows)
   const backupIdentifier = `${appName}-export-${new Date().getTime()}${
-    encryptPassword ? "-enc" : ""
+    encryptPassword ? ".enc" : ""
   }.tar.gz`
   ctx.attachment(backupIdentifier)
   ctx.body = await sdk.backups.streamExportApp({
