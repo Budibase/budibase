@@ -120,12 +120,34 @@ export async function decryptFile(
   const stretched = stretchString(secret, salt)
   const decipher = crypto.createDecipheriv(ALGO, stretched, iv)
 
-  inputFile.pipe(decipher).pipe(zlib.createGunzip()).pipe(outputFile)
+  const unzip = zlib.createGunzip()
 
-  return new Promise<void>(r => {
+  inputFile.pipe(decipher).pipe(unzip).pipe(outputFile)
+
+  return new Promise<void>((res, rej) => {
     outputFile.on("finish", () => {
       outputFile.close()
-      r()
+      res()
+    })
+
+    inputFile.on("error", e => {
+      outputFile.close()
+      rej(e)
+    })
+
+    decipher.on("error", e => {
+      outputFile.close()
+      rej(e)
+    })
+
+    unzip.on("error", e => {
+      outputFile.close()
+      rej(e)
+    })
+
+    outputFile.on("error", e => {
+      outputFile.close()
+      rej(e)
     })
   })
 }
