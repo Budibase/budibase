@@ -404,12 +404,22 @@
     }
   }
 
+  const handleScrollToField = ({ field }) => {
+    //Field State fieldId = 'id-cd97d1bfff4d84287a51395153b04684b'
+    //Button component id =    'c72dfc2367edd4088ac983f4a7ea21ac3'
+    //TODO - magic here
+
+    const fieldId = get(getField(field)).fieldState.fieldId
+    document.getElementById(fieldId).scrollIntoView({ behavior: "smooth" })
+  }
+
   // Action context to pass to children
   const actions = [
     { type: ActionTypes.ValidateForm, callback: formApi.validate },
     { type: ActionTypes.ClearForm, callback: formApi.reset },
     { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
     { type: ActionTypes.UpdateFieldValue, callback: handleUpdateFieldValue },
+    { type: ActionTypes.ScrollTo, callback: handleScrollToField },
   ]
 </script>
 
