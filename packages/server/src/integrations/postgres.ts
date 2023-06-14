@@ -322,7 +322,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       await this.openConnection()
       const columnsResponse: { rows: PostgresColumn[] } =
         await this.client.query(this.COLUMNS_SQL)
-      return columnsResponse.rows.map(row => row.table_name)
+      const names = columnsResponse.rows.map(row => row.table_name)
+      return [...new Set(names)]
     } finally {
       await this.closeConnection()
     }
