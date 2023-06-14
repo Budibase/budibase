@@ -1728,45 +1728,6 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.7.7-alpha.7":
-  version "0.0.0"
-  dependencies:
-    "@budibase/nano" "10.1.2"
-    "@budibase/pouchdb-replication-stream" "1.2.10"
-    "@budibase/types" "0.0.0"
-    "@shopify/jest-koa-mocks" "5.0.1"
-    "@techpass/passport-openidconnect" "0.3.2"
-    aws-cloudfront-sign "2.2.0"
-    aws-sdk "2.1030.0"
-    bcrypt "5.0.1"
-    bcryptjs "2.4.3"
-    bull "4.10.1"
-    correlation-id "4.0.0"
-    dotenv "16.0.1"
-    emitter-listener "1.1.2"
-    ioredis "5.3.2"
-    joi "17.6.0"
-    jsonwebtoken "9.0.0"
-    koa-passport "4.1.4"
-    koa-pino-logger "4.0.0"
-    lodash "4.17.21"
-    lodash.isarguments "3.1.0"
-    node-fetch "2.6.7"
-    passport-google-oauth "2.0.0"
-    passport-jwt "4.0.0"
-    passport-local "1.0.0"
-    passport-oauth2-refresh "^2.1.0"
-    pino "8.11.0"
-    pino-http "8.3.3"
-    posthog-node "1.3.0"
-    pouchdb "7.3.0"
-    pouchdb-find "7.2.2"
-    redlock "4.2.0"
-    sanitize-s3-objectkey "0.0.1"
-    semver "7.3.7"
-    tar-fs "2.1.1"
-    uuid "8.3.2"
-
 "@budibase/bbui@^0.9.139":
   version "0.9.190"
   resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.190.tgz#e1ec400ac90f556bfbc80fc23a04506f1585ea81"
@@ -1867,30 +1828,6 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@develop":
-  version "2.7.7-alpha.7"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.7.7-alpha.7.tgz#4305d797f44fa02b4ed5c671e03469a20963e385"
-  integrity sha512-MXIy7eZImdtcoQaYu5brCmTQaTUxxifKXK88RT3azrq0zLc04AHqDWnbpssaN9rfGW6zTTXRLCYBYVNPH84BuQ==
-  dependencies:
-    "@budibase/backend-core" "2.7.7-alpha.7"
-    "@budibase/shared-core" "2.7.7-alpha.7"
-    "@budibase/string-templates" "2.7.7-alpha.7"
-    "@budibase/types" "2.7.7-alpha.7"
-    "@koa/router" "8.0.8"
-    bull "4.10.1"
-    joi "17.6.0"
-    jsonwebtoken "8.5.1"
-    lru-cache "^7.14.1"
-    memorystream "^0.3.1"
-    node-fetch "^2.6.1"
-    scim-patch "^0.7.0"
-    scim2-parse-filter "^0.2.8"
-
-"@budibase/shared-core@2.7.7-alpha.7":
-  version "0.0.0"
-  dependencies:
-    "@budibase/types" "0.0.0"
-
 "@budibase/standard-components@^0.9.139":
   version "0.9.139"
   resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.139.tgz#cf8e2b759ae863e469e50272b3ca87f2827e66e3"
@@ -1908,21 +1845,6 @@
     dayjs "^1.10.5"
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
-
-"@budibase/string-templates@2.7.7-alpha.7":
-  version "0.0.0"
-  dependencies:
-    "@budibase/handlebars-helpers" "^0.11.8"
-    dayjs "^1.10.4"
-    handlebars "^4.7.6"
-    handlebars-utils "^1.0.6"
-    lodash "^4.17.20"
-    vm2 "^3.9.15"
-
-"@budibase/types@2.7.7-alpha.7":
-  version "0.0.0"
-  dependencies:
-    scim-patch "^0.7.0"
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
@@ -2566,11 +2488,6 @@
     js-yaml "^3.13.1"
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
-
-"@fontsource/source-sans-pro@^5.0.3":
-  version "5.0.3"
-  resolved "https://registry.yarnpkg.com/@fontsource/source-sans-pro/-/source-sans-pro-5.0.3.tgz#7d6e84a8169ba12fa5e6ce70757aa2ca7e74d855"
-  integrity sha512-mQnjuif/37VxwRloHZ+wQdoozd2VPWutbFSt1AuSkk7nFXIBQxHJLw80rgCF/osL0t7N/3Gx1V7UJuOX2zxzhQ==
 
 "@fortawesome/fontawesome-common-types@6.3.0":
   version "6.3.0"
@@ -3628,6 +3545,11 @@
   resolved "https://registry.yarnpkg.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.14.tgz#add4c98d341472a289190b424efbdb096991bb24"
   integrity sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==
 
+"@jridgewell/sourcemap-codec@^1.4.13":
+  version "1.4.15"
+  resolved "https://registry.yarnpkg.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz#d7c6e6755c78567a951e04ab52ef0fd26de59f32"
+  integrity sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==
+
 "@jridgewell/trace-mapping@0.3.9":
   version "0.3.9"
   resolved "https://registry.yarnpkg.com/@jridgewell/trace-mapping/-/trace-mapping-0.3.9.tgz#6534fd5933a53ba7cbf3a17615e273a0d1273ff9"
@@ -4413,7 +4335,7 @@
   dependencies:
     slash "^3.0.0"
 
-"@rollup/plugin-commonjs@^16.0.0":
+"@rollup/plugin-commonjs@16.0.0", "@rollup/plugin-commonjs@^16.0.0":
   version "16.0.0"
   resolved "https://registry.yarnpkg.com/@rollup/plugin-commonjs/-/plugin-commonjs-16.0.0.tgz#169004d56cd0f0a1d0f35915d31a036b0efe281f"
   integrity sha512-LuNyypCP3msCGVQJ7ki8PqYdpjfEkE/xtFa5DqlF+7IBD0JsfMZ87C58heSwIMint58sAUZbt3ITqOmdQv/dXw==
@@ -4495,6 +4417,22 @@
   dependencies:
     "@rollup/pluginutils" "^3.1.0"
     magic-string "^0.25.7"
+
+"@rollup/plugin-replace@^5.0.2":
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/@rollup/plugin-replace/-/plugin-replace-5.0.2.tgz#45f53501b16311feded2485e98419acb8448c61d"
+  integrity sha512-M9YXNekv/C/iHHK+cvORzfRYfPbq0RDD8r0G+bMiTXjNGKulPnCT9O3Ss46WfhI6ZOCgApOP7xAdmCQJ+U2LAA==
+  dependencies:
+    "@rollup/pluginutils" "^5.0.1"
+    magic-string "^0.27.0"
+
+"@rollup/plugin-typescript@8.3.0":
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/@rollup/plugin-typescript/-/plugin-typescript-8.3.0.tgz#bc1077fa5897b980fc27e376c4e377882c63e68b"
+  integrity sha512-I5FpSvLbtAdwJ+naznv+B4sjXZUcIvLLceYpITAn7wAP8W0wqc5noLdGIp9HGVntNhRWXctwPYrSSFQxtl0FPA==
+  dependencies:
+    "@rollup/pluginutils" "^3.1.0"
+    resolve "^1.17.0"
 
 "@rollup/pluginutils@^3.0.8", "@rollup/pluginutils@^3.1.0":
   version "3.1.0"
@@ -5720,6 +5658,13 @@
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@types/http-errors/-/http-errors-2.0.1.tgz#20172f9578b225f6c7da63446f56d4ce108d5a65"
   integrity sha512-/K3ds8TRAfBvi5vfjuz8y6+GiAYBZ0x4tXv1Av6CWBWn0IlADc+ZX9pMq7oU0fNQPnBwIZl3rmeLp6SBApbxSQ==
+
+"@types/ioredis@4.28.10":
+  version "4.28.10"
+  resolved "https://registry.yarnpkg.com/@types/ioredis/-/ioredis-4.28.10.tgz#40ceb157a4141088d1394bb87c98ed09a75a06ff"
+  integrity sha512-69LyhUgrXdgcNDv7ogs1qXZomnfOEnSmrmMFqKgt1XMJxmoOSG/u3wYy13yACIfKuMJ8IhKgHafDO3sx19zVQQ==
+  dependencies:
+    "@types/node" "*"
 
 "@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0", "@types/istanbul-lib-coverage@^2.0.1":
   version "2.0.4"
@@ -8463,7 +8408,7 @@ chmodr@1.2.0:
   resolved "https://registry.yarnpkg.com/chmodr/-/chmodr-1.2.0.tgz#720e96caa09b7f1cdbb01529b7d0ab6bc5e118b9"
   integrity sha512-Y5uI7Iq/Az6HgJEL6pdw7THVd7jbVOTPwsmcPOBjQL8e3N+pz872kzK5QxYGEy21iRys+iHWV0UZQXDFJo1hyA==
 
-chokidar@3.5.3, chokidar@^3.0.0, chokidar@^3.5.1, chokidar@^3.5.2, chokidar@^3.5.3:
+chokidar@3.5.3, chokidar@^3.0.0, chokidar@^3.5.1, chokidar@^3.5.2:
   version "3.5.3"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.3.tgz#1cf37c8707b932bd1af1ae22c0432e2acd1903bd"
   integrity sha512-Dr3sfKRP6oTcjf2JmUmFJfeVMvXBdegxB0iVQ5eb2V10uFJUCAS8OByZdVAyVb8xXNz3GjjTgj9kLWsZTqE6kw==
@@ -11907,7 +11852,7 @@ fast-glob@3.2.7:
     merge2 "^1.3.0"
     micromatch "^4.0.4"
 
-fast-glob@^3.0.3, fast-glob@^3.2.11:
+fast-glob@^3.0.3:
   version "3.2.12"
   resolved "https://registry.yarnpkg.com/fast-glob/-/fast-glob-3.2.12.tgz#7f39ec99c2e6ab030337142da9e0c18f37afae80"
   integrity sha512-DVj4CQIYYow0BlaelwK1pHl5n5cRSJfM60UA0zK891sVInoPri2Ekj7+e1CT3/3qxXenpI+nBBmQAcJPJgaj4w==
@@ -12518,7 +12463,7 @@ fs.realpath@^1.0.0:
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
 
-fsevents@^2.1.2, fsevents@^2.3.2, fsevents@~2.3.2:
+fsevents@^2.1.2, fsevents@^2.3.2, fsevents@~2.3.1, fsevents@~2.3.2:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.2.tgz#8a526f78b8fdf4623b709e0b975c52c24c02fd1a"
   integrity sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==
@@ -17555,6 +17500,13 @@ magic-string@^0.26.2:
   dependencies:
     sourcemap-codec "^1.4.8"
 
+magic-string@^0.27.0:
+  version "0.27.0"
+  resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.27.0.tgz#e4a3413b4bab6d98d2becffd48b4a257effdbbf3"
+  integrity sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==
+  dependencies:
+    "@jridgewell/sourcemap-codec" "^1.4.13"
+
 make-dir@3.1.0, make-dir@^3.0.0, make-dir@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/make-dir/-/make-dir-3.1.0.tgz#415e967046b3a7f1d185277d84aa58203726a13f"
@@ -22393,6 +22345,13 @@ rollup-pluginutils@^2.3.1, rollup-pluginutils@^2.5.0, rollup-pluginutils@^2.6.0,
   dependencies:
     estree-walker "^0.6.1"
 
+rollup@2.45.2:
+  version "2.45.2"
+  resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.45.2.tgz#8fb85917c9f35605720e92328f3ccbfba6f78b48"
+  integrity sha512-kRRU7wXzFHUzBIv0GfoFFIN3m9oteY4uAsKllIpQDId5cfnkWF2J130l+27dzDju0E6MScKiV0ZM5Bw8m4blYQ==
+  optionalDependencies:
+    fsevents "~2.3.1"
+
 rollup@^2.36.2, rollup@^2.44.0, rollup@^2.45.2, rollup@^2.79.1:
   version "2.79.1"
   resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.79.1.tgz#bedee8faef7c9f93a2647ac0108748f497f081c7"
@@ -24422,7 +24381,7 @@ timed-out@^4.0.1:
   resolved "https://registry.yarnpkg.com/timed-out/-/timed-out-4.0.1.tgz#f32eacac5a175bea25d7fab565ab3ed8741ef56f"
   integrity sha512-G7r3AhovYtr5YKOWQkta8RKAPb+J9IsO4uVmzjl8AZwfhs8UcUwTiD6gcJYSgOtzyjvQKrKYn41syHbUWMkafA==
 
-timekeeper@2.2.0:
+timekeeper@2.2.0, timekeeper@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/timekeeper/-/timekeeper-2.2.0.tgz#9645731fce9e3280a18614a57a9d1b72af3ca368"
   integrity sha512-W3AmPTJWZkRwu+iSNxPIsLZ2ByADsOLbbLxe46UJyWj3mlYLlwucKiq+/dPm0l9wTzqoF3/2PH0AGFCebjq23A==
@@ -25442,16 +25401,6 @@ vite-node@0.29.8:
     pathe "^1.1.0"
     picocolors "^1.0.0"
     vite "^3.0.0 || ^4.0.0"
-
-vite-plugin-static-copy@^0.16.0:
-  version "0.16.0"
-  resolved "https://registry.yarnpkg.com/vite-plugin-static-copy/-/vite-plugin-static-copy-0.16.0.tgz#2f65227037f17fc99c0782fd0b344e962935e69e"
-  integrity sha512-dMVEg5Z2SwYRgQnHZaeokvSKB4p/TOTf65JU4sP3U6ccSBsukqdtDOjpmT+xzTFHAA8WJjcS31RMLjUdWQCBzw==
-  dependencies:
-    chokidar "^3.5.3"
-    fast-glob "^3.2.11"
-    fs-extra "^11.1.0"
-    picocolors "^1.0.0"
 
 "vite@^3.0.0 || ^4.0.0":
   version "4.2.2"
