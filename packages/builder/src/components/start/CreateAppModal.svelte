@@ -185,7 +185,7 @@
       isValid: $validation.valid,
     },
     [Step.SET_PASSWORD]: {
-      title: "Confirm password",
+      title: "Provide the export password",
       confirmText: "Import app",
       onConfirm: async () => {
         try {
@@ -264,7 +264,8 @@
   {#if currentStep === Step.SET_PASSWORD}
     <Input
       autofocus={true}
-      label="Exported password"
+      label="Imported file password"
+      type="password"
       bind:value={$values.encryptionPassword}
       disabled={creating}
       on:blur={() => ($encryptionValidation.touched.encryptionPassword = true)}
