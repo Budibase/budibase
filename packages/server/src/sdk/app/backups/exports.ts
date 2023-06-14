@@ -187,7 +187,7 @@ export async function streamExportApp({
 }: {
   appId: string
   excludeRows: boolean
-  encryptPassword: string
+  encryptPassword?: string
 }) {
   const tmpPath = await exportApp(appId, {
     excludeRows,
