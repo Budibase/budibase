@@ -20,7 +20,7 @@
     await downloadFile(url, { excludeRows })
   }
 
-  export async function downloadFile(url, body) {
+  async function downloadFile(url, body) {
     try {
       const response = await fetch(url, {
         method: "POST",
