@@ -22,6 +22,7 @@
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
   import { API } from "api"
   import { DatasourceFeature } from "@budibase/types"
+  import Spinner from "components/common/Spinner.svelte"
 
   const querySchema = {
     name: {},
@@ -129,7 +130,12 @@
           cta
           on:click={saveDatasource}
         >
-          Save
+          <div class="save-button-content">
+            {#if loading}
+              <Spinner size="10">Save</Spinner>
+            {/if}
+            Save
+          </div>
         </Button>
       </div>
       <IntegrationConfigForm
@@ -224,5 +230,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-m);
+  }
+
+  .save-button-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
   }
 </style>
