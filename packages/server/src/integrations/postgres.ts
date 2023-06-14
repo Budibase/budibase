@@ -20,7 +20,7 @@ import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
-import { Client, types } from "pg"
+import { Client, ClientConfig, types } from "pg"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -144,7 +144,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     super(SqlClient.POSTGRES)
     this.config = config
 
-    let newConfig = {
+    let newConfig: ClientConfig = {
       ...this.config,
       ssl: this.config.ssl
         ? {
