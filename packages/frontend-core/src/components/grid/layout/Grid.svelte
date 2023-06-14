@@ -57,6 +57,7 @@
     allowEditRows,
     allowDeleteRows,
     stripeRows,
+    showControls,
   })
 
   // Build up context
@@ -91,6 +92,7 @@
     allowEditRows,
     allowDeleteRows,
     stripeRows,
+    showControls,
   })
 
   // Set context for children to consume

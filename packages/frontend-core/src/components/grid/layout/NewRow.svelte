@@ -26,6 +26,8 @@
     maxScrollTop,
     rowVerticalInversionIndex,
     columnHorizontalInversionIndex,
+    config,
+    selectedRows,
   } = getContext("grid")
 
   let visible = false
@@ -37,6 +39,7 @@
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $tableId, (visible = false)
   $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
+  $: selectedRowCount = Object.values($selectedRows).length
 
   const shouldInvertY = (offset, inversionIndex, rows) => {
     if (offset === 0) {
@@ -142,7 +145,7 @@
 </script>
 
 <!-- New row FAB -->
-{#if !visible}
+{#if !visible && !$config.showControls && !selectedRowCount}
   <div
     class="new-row-fab"
     on:click={() => dispatch("add-row-inline")}
@@ -243,7 +246,7 @@
     position: absolute;
     top: var(--default-row-height);
     left: calc(var(--gutter-width) / 2);
-    transform: translateX(8px) translateY(-50%);
+    transform: translateX(6px) translateY(-50%);
     background: var(--cell-background);
     padding: 4px;
     border-radius: 50%;

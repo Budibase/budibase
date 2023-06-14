@@ -26,7 +26,7 @@
   } = getContext("grid")
 
   $: rowCount = $rows.length
-  $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
+  $: selectedRowCount = Object.values($selectedRows).length
   $: width = GutterWidth + ($stickyColumn?.width || 0)
 
   const selectAll = () => {

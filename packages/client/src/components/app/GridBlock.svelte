@@ -5,9 +5,10 @@
   import { Grid } from "@budibase/frontend-core"
 
   export let table
-  export let allowAddRows
-  export let allowEditRows
-  export let allowDeleteRows
+  export let allowAddRows = true
+  export let allowEditRows = true
+  export let allowDeleteRows = true
+  export let stripeRows = false
 
   const component = getContext("component")
   const { styleable, API, builderStore } = getContext("sdk")
@@ -23,6 +24,7 @@
     {allowAddRows}
     {allowEditRows}
     {allowDeleteRows}
+    {stripeRows}
     showControls={false}
     allowExpandRows={false}
     allowSchemaChanges={false}
