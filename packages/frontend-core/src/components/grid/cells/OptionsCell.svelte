@@ -240,7 +240,7 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--cell-spacing);
-    background-color: var(--background);
+    background-color: var(--grid-background-alt);
   }
   .option:hover,
   .option.focused {

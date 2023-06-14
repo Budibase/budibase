@@ -453,7 +453,7 @@
       var(--max-cell-render-height) + var(--row-height) -
         var(--max-relationship-height)
     );
-    background: var(--background);
+    background: var(--grid-background-alt);
     border: var(--cell-border);
     box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
     display: flex;

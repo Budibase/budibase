@@ -168,6 +168,18 @@
 
 <style>
   .grid {
+    /* Variables */
+    --grid-background: var(--spectrum-global-color-gray-50);
+    --grid-background-alt: var(--spectrum-global-color-gray-100);
+    --cell-background: var(--grid-background);
+    --cell-background-hover: var(--grid-background-alt);
+    --cell-background-alt: var(--cell-background);
+    --cell-padding: 8px;
+    --cell-spacing: 4px;
+    --cell-border: 1px solid var(--spectrum-global-color-gray-200);
+    --cell-font-size: 14px;
+    --controls-height: 50px;
+
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
@@ -175,17 +187,7 @@
     align-items: stretch;
     position: relative;
     overflow: hidden;
-    background: var(--cell-background);
-
-    /* Variables */
-    --cell-background: var(--spectrum-global-color-gray-50);
-    --cell-background-hover: var(--spectrum-global-color-gray-100);
-    --cell-background-alt: var(--cell-background);
-    --cell-padding: 8px;
-    --cell-spacing: 4px;
-    --cell-border: 1px solid var(--spectrum-global-color-gray-200);
-    --cell-font-size: 14px;
-    --controls-height: 50px;
+    background: var(--grid-background);
   }
   .grid,
   .grid :global(*) {
@@ -234,7 +236,7 @@
     border-bottom: 2px solid var(--spectrum-global-color-gray-200);
     padding: var(--cell-padding);
     gap: var(--cell-spacing);
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--grid-background-alt);
     z-index: 2;
   }
   .controls-left,
@@ -270,7 +272,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--grid-background-alt);
     opacity: 0.6;
   }
 </style>

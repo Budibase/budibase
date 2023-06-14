@@ -159,7 +159,7 @@
     z-index: 1;
   }
   .header :global(.cell) {
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--grid-background-alt);
   }
   .row {
     display: flex;
