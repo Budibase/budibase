@@ -333,17 +333,22 @@ export function finaliseExternalTables(
  * Checks if the provided input is an object, but specifically not a date type object.
  * Used during coercion of types and relationship handling, dates are considered valid
  * and can be used as a display field, but objects and arrays cannot.
- * @param test
+ * @param testValue an unknown type which this function will attempt to extract
+ * a valid primary display string from.
  */
-export function getPrimaryDisplay(test: any): string | undefined {
-  if (test instanceof Date) {
-    return test.toISOString()
+export function getPrimaryDisplay(testValue: unknown): string | undefined {
+  if (testValue instanceof Date) {
+    return testValue.toISOString()
   }
-  if (Array.isArray(test) && test[0] && typeof test[0] !== "object") {
-    return test.join(", ")
+  if (
+    Array.isArray(testValue) &&
+    testValue[0] &&
+    typeof testValue[0] !== "object"
+  ) {
+    return testValue.join(", ")
   }
-  if (typeof test === "object") {
+  if (typeof testValue === "object") {
     return undefined
   }
-  return test as string
+  return testValue as string
 }
