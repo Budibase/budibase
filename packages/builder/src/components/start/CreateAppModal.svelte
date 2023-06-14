@@ -124,7 +124,7 @@
         data.append("templateName", template.name)
         data.append("templateKey", template.key)
         data.append("templateFile", $values.file)
-        if ($values.encryptionPassword.trim()) {
+        if ($values.encryptionPassword?.trim()) {
           data.append("encryptionPassword", $values.encryptionPassword.trim())
         }
       }
