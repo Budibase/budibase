@@ -16,9 +16,8 @@
 
   const exportApp = async () => {
     const id = published ? app.prodId : app.devId
-    const appName = encodeURIComponent(app.name)
-    const url = `/api/backups/export?appId=${id}&appname=${appName}&excludeRows=${excludeRows}`
-    await downloadFile(url)
+    const url = `/api/backups/export?appId=${id}`
+    await downloadFile(url, { excludeRows })
   }
 
   export async function downloadFile(url, body) {
