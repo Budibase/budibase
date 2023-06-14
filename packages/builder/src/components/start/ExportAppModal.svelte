@@ -54,7 +54,10 @@
   const exportApp = async () => {
     const id = published ? app.prodId : app.devId
     const url = `/api/backups/export?appId=${id}`
-    await downloadFile(url, { excludeRows, encryptPassword: password })
+    await downloadFile(url, {
+      excludeRows: !includeInternalTablesRows,
+      encryptPassword: password,
+    })
   }
 
   export async function downloadFile(url, body) {
