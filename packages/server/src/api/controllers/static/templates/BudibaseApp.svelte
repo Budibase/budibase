@@ -40,7 +40,7 @@
   {#if favicon !== ""}
     <link rel="icon" type="image/png" href={favicon} />
   {:else}
-    <link rel="icon" type="image/png" href="/builder/bblogoimgur.png" />
+    <link rel="icon" type="image/png" href="/builder/bblogo.png" />
   {/if}
 
   <link href="/builder/fonts/source-sans-pro/400.css" rel="stylesheet" />
