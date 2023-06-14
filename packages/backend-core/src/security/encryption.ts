@@ -125,9 +125,14 @@ export async function decryptFile(
   inputFile.pipe(decipher).pipe(unzip).pipe(outputFile)
 
   return new Promise<void>((res, rej) => {
-    inputFile.on("finish", () => {
+    outputFile.on("finish", () => {
       outputFile.close()
       res()
+    })
+
+    inputFile.on("error", e => {
+      outputFile.close()
+      rej(e)
     })
 
     decipher.on("error", e => {
@@ -136,6 +141,11 @@ export async function decryptFile(
     })
 
     unzip.on("error", e => {
+      outputFile.close()
+      rej(e)
+    })
+
+    outputFile.on("error", e => {
       outputFile.close()
       rej(e)
     })
