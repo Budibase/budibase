@@ -51,11 +51,7 @@
         notifications.error("Error exporting the app.")
       }
     } catch (error) {
-      let message = "Error downloading the exported app"
-      if (error.message) {
-        message += `: ${error.message}`
-      }
-      notifications.error("Error downloading the exported app", message)
+      notifications.error(error.message ?? "Error downloading the exported app")
     }
   }
 </script>
