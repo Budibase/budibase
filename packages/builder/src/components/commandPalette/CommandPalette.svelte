@@ -69,7 +69,7 @@
       name: "App",
       description: "",
       icon: "Play",
-      action: () => window.open(`/${$store.appId}`),
+      action: () => store.update(state => ({ ...state, showPreview: true })),
     },
     {
       type: "Preview",

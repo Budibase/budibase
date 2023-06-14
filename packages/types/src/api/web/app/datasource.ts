@@ -12,6 +12,7 @@ export interface UpdateDatasourceResponse {
 export interface CreateDatasourceRequest {
   datasource: Datasource
   fetchSchema?: boolean
+  tablesFilter: string[]
 }
 
 export interface VerifyDatasourceRequest {
