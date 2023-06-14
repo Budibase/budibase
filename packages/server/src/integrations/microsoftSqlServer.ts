@@ -276,6 +276,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       }
       tables[tableName] = {
         _id: buildExternalTableId(datasourceId, tableName),
+        sourceId: datasourceId,
         primary: primaryKeys,
         name: tableName,
         schema,

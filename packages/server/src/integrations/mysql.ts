@@ -259,6 +259,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         if (!tables[tableName]) {
           tables[tableName] = {
             _id: buildExternalTableId(datasourceId, tableName),
+            sourceId: datasourceId,
             primary: primaryKeys,
             name: tableName,
             schema,

@@ -278,6 +278,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
             primary: tableKeys[tableName] || [],
             name: tableName,
             schema: {},
+            sourceId: datasourceId,
           }
         }
 

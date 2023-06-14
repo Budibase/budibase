@@ -279,6 +279,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           primary: [],
           name: oracleTable.name,
           schema: {},
+          sourceId: datasourceId,
         }
         tables[oracleTable.name] = table
       }

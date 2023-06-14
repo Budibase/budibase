@@ -281,11 +281,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       await sheet.getRows()
 
       const id = buildExternalTableId(datasourceId, sheet.title)
-      tables[sheet.title] = this.getTableSchema(
-        sheet.title,
-        sheet.headerValues,
-        id
-      )
+      tables[sheet.title] = {
+        ...this.getTableSchema(sheet.title, sheet.headerValues, id),
+        sourceId: datasourceId,
+      }
     }
     const final = finaliseExternalTables(tables, entities)
     this.tables = final.tables
