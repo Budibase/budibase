@@ -8,7 +8,7 @@
   $: platformTitle =
     !$auth.user && platformTitleText ? platformTitleText : "Budibase"
 
-  $: faviconUrl = $organisation.faviconUrl || "https://i.imgur.com/Xhdt1YP.png"
+  $: faviconUrl = $organisation.faviconUrl || "/builder/bblogo.png"
 
   onMount(async () => {
     await organisation.init()
@@ -27,6 +27,6 @@
     <link rel="icon" href={faviconUrl} />
   {:else}
     <!-- A default must be set or the browser defaults to favicon.ico behaviour -->
-    <link rel="icon" href={"https://i.imgur.com/Xhdt1YP.png"} />
+    <link rel="icon" href={"/builder/bblogo.png"} />
   {/if}
 </svelte:head>
