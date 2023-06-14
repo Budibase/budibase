@@ -1,6 +1,7 @@
 import { svelte } from "@sveltejs/vite-plugin-svelte"
 import replace from "@rollup/plugin-replace"
 import { defineConfig, loadEnv } from "vite"
+import { viteStaticCopy } from "vite-plugin-static-copy"
 import path from "path"
 
 const ignoredWarnings = [
@@ -59,6 +60,18 @@ export default defineConfig(({ mode }) => {
         ),
         "process.env.SENTRY_DSN": JSON.stringify(process.env.SENTRY_DSN),
       }),
+      viteStaticCopy({
+        targets: [
+          {
+            src: "../../node_modules/@fontsource/source-sans-pro",
+            dest: "fonts"
+          },
+          {
+            src: "../../node_modules/remixicon/fonts/*",
+            dest: "fonts",
+          }
+        ]
+      })
     ],
     optimizeDeps: {
       exclude: ["@roxi/routify"],

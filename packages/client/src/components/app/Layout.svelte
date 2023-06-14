@@ -181,7 +181,7 @@
               <div class="logo">
                 {#if !hideLogo}
                   <img
-                    src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
+                    src={logoUrl || "/builder/bblogoimgur.png"}
                     alt={title}
                   />
                 {/if}
