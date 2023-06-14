@@ -5261,6 +5261,12 @@
         "label": "Delete rows",
         "key": "allowDeleteRows",
         "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Stripe rows",
+        "key": "stripeRows",
+        "defaultValue": false
       }
     ]
   }
