@@ -5,6 +5,7 @@
     Body,
     InlineAlert,
     Input,
+    notifications,
   } from "@budibase/bbui"
   import { createValidationStore } from "helpers/validation/yup"
 
@@ -50,14 +51,49 @@
     },
   }
 
-  const exportApp = password => {
+  const exportApp = async () => {
     const id = published ? app.prodId : app.devId
-    const appName = encodeURIComponent(app.name)
-    let url = `/api/backups/export?appId=${id}&appname=${appName}&excludeRows=${!includeInternalTablesRows}`
-    if (password) {
-      url += `&encryptPassword=${password}`
+    const url = `/api/backups/export?appId=${id}`
+    await downloadFile(url, { excludeRows, encryptPassword: password })
+  }
+
+  export async function downloadFile(url, body) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (response.ok) {
+        const contentDisposition = response.headers.get("Content-Disposition")
+
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
+          contentDisposition
+        )
+
+        const filename = matches[1].replace(/['"]/g, "")
+
+        const url = URL.createObjectURL(await response.blob())
+
+        const link = document.createElement("a")
+        link.href = url
+        link.download = filename
+        link.click()
+
+        URL.revokeObjectURL(url)
+      } else {
+        notifications.error("Error exporting the app.")
+      }
+    } catch (error) {
+      let message = "Error downloading the exported app"
+      if (error.message) {
+        message += `: ${error.message}`
+      }
+      notifications.error("Error downloading the exported app", message)
     }
-    window.location = url
   }
 </script>
 
