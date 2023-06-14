@@ -1,14 +1,22 @@
 import sdk from "../../sdk"
-import { events, context } from "@budibase/backend-core"
+import { events, context, db } from "@budibase/backend-core"
 import { DocumentType } from "../../db/utils"
-import { isQsTrue } from "../../utilities"
+import { Ctx } from "@budibase/types"
 
-export async function exportAppDump(ctx: any) {
-  let { appId, excludeRows } = ctx.query
+interface ExportAppDumpRequest {
+  excludeRows: boolean
+}
+
+export async function exportAppDump(ctx: Ctx<ExportAppDumpRequest>) {
+  const { appId } = ctx.query as any
+  const { excludeRows } = ctx.request.body
+
+  const [app] = await db.getAppsByIDs([appId])
+  const appName = app.name
+
   // remove the 120 second limit for the request
   ctx.req.setTimeout(0)
-  const appName = decodeURI(ctx.query.appname)
-  excludeRows = isQsTrue(excludeRows)
+
   const backupIdentifier = `${appName}-export-${new Date().getTime()}.tar.gz`
   ctx.attachment(backupIdentifier)
   ctx.body = await sdk.backups.streamExportApp(appId, excludeRows)
