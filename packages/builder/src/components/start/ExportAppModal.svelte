@@ -51,7 +51,7 @@
         notifications.error("Error exporting the app.")
       }
     } catch (error) {
-      notifications.error(error.message ?? "Error downloading the exported app")
+      notifications.error(error.message || "Error downloading the exported app")
     }
   }
 </script>
