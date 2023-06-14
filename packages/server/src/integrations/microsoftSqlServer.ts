@@ -2,7 +2,7 @@ import {
   DatasourceFieldType,
   Integration,
   Operation,
-  Table,
+  ExternalTable,
   TableSchema,
   QueryJson,
   QueryType,
@@ -97,7 +97,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   private index: number = 0
   private readonly pool: any
   private client: any
-  public tables: Record<string, Table> = {}
+  public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
   MASTER_TABLES = [
@@ -220,7 +220,10 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
    * @param {*} datasourceId - datasourceId to fetch
    * @param entities - the tables that are to be built
    */
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, ExternalTable>
+  ) {
     await this.connect()
     let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
     if (tableInfo == null || !Array.isArray(tableInfo)) {
@@ -233,7 +236,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       .map((record: any) => record.TABLE_NAME)
       .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
 
-    const tables: Record<string, Table> = {}
+    const tables: Record<string, ExternalTable> = {}
     for (let tableName of tableNames) {
       // get the column definition (type)
       const definition = await this.runSQL(this.getDefinitionSQL(tableName))

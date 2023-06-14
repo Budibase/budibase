@@ -4,7 +4,7 @@ import {
   QueryType,
   QueryJson,
   SqlQuery,
-  Table,
+  ExternalTable,
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
@@ -124,7 +124,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   private readonly config: PostgresConfig
   private index: number = 1
   private open: boolean
-  public tables: Record<string, Table> = {}
+  public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
   COLUMNS_SQL!: string
@@ -239,7 +239,10 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
    * @param {*} datasourceId - datasourceId to fetch
    * @param entities - the tables that are to be built
    */
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, ExternalTable>
+  ) {
     let tableKeys: { [key: string]: string[] } = {}
     await this.openConnection()
     try {
@@ -265,7 +268,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const columnsResponse: { rows: PostgresColumn[] } =
         await this.client.query(this.COLUMNS_SQL)
 
-      const tables: { [key: string]: Table } = {}
+      const tables: { [key: string]: ExternalTable } = {}
 
       for (let column of columnsResponse.rows) {
         const tableName: string = column.table_name
