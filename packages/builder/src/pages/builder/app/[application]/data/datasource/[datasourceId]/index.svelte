@@ -65,7 +65,7 @@
   }
 
   const saveDatasource = async () => {
-    if (integration.features[DatasourceFeature.CONNECTION_CHECKING]) {
+    if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
       const valid = await validateConfig()
       if (!valid) {
         return false
