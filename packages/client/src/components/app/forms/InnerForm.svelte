@@ -405,12 +405,10 @@
   }
 
   const handleScrollToField = ({ field }) => {
-    //Field State fieldId = 'id-cd97d1bfff4d84287a51395153b04684b'
-    //Button component id =    'c72dfc2367edd4088ac983f4a7ea21ac3'
-    //TODO - magic here
-
     const fieldId = get(getField(field)).fieldState.fieldId
-    document.getElementById(fieldId).scrollIntoView({ behavior: "smooth" })
+    const label = document.querySelector(`label[for="${fieldId}"]`)
+    document.getElementById(fieldId).focus({ preventScroll: true })
+    label.scrollIntoView({ behavior: "smooth" })
   }
 
   // Action context to pass to children
