@@ -1,5 +1,6 @@
 import {
   ConnectionInfo,
+  Datasource,
   DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
@@ -19,13 +20,15 @@ import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId, finaliseExternalTables } from "./utils"
 import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
-import { configs, HTTPError } from "@budibase/backend-core"
-import { dataFilters } from "@budibase/shared-core"
+import { cache, configs, context, HTTPError } from "@budibase/backend-core"
+import { dataFilters, utils } from "@budibase/shared-core"
 import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
+import sdk from "../sdk"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
   auth: OAuthClientConfig
+  continueSetupId?: string
 }
 
 interface OAuthClientConfig {
@@ -72,7 +75,7 @@ const SCHEMA: Integration = {
   },
   datasource: {
     spreadsheetId: {
-      display: "Google Sheet URL",
+      display: "Spreadsheet URL",
       type: DatasourceFieldType.STRING,
       required: true,
     },
@@ -207,6 +210,8 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async connect() {
     try {
+      await setupCreationAuth(this.config)
+
       // Initialise oAuth client
       let googleConfig = await configs.getGoogleDatasourceConfig()
       if (!googleConfig) {
@@ -269,24 +274,24 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   }
 
   async buildSchema(datasourceId: string, entities: Record<string, Table>) {
-    // not fully configured yet
-    if (!this.config.auth) {
-      return
-    }
     await this.connect()
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, Table> = {}
-    for (let sheet of sheets) {
-      // must fetch rows to determine schema
-      await sheet.getRows()
+    await utils.parallelForeach(
+      sheets,
+      async sheet => {
+        // must fetch rows to determine schema
+        await sheet.getRows({ limit: 0, offset: 0 })
 
-      const id = buildExternalTableId(datasourceId, sheet.title)
-      tables[sheet.title] = this.getTableSchema(
-        sheet.title,
-        sheet.headerValues,
-        id
-      )
-    }
+        const id = buildExternalTableId(datasourceId, sheet.title)
+        tables[sheet.title] = this.getTableSchema(
+          sheet.title,
+          sheet.headerValues,
+          id
+        )
+      },
+      10
+    )
     const final = finaliseExternalTables(tables, entities)
     this.tables = final.tables
     this.schemaErrors = final.errors
@@ -563,6 +568,18 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     } else {
       throw new Error("Row does not exist.")
     }
+  }
+}
+
+export async function setupCreationAuth(datasouce: GoogleSheetsConfig) {
+  if (datasouce.continueSetupId) {
+    const appId = context.getAppId()
+    const tokens = await cache.get(
+      `datasource:creation:${appId}:google:${datasouce.continueSetupId}`
+    )
+
+    datasouce.auth = tokens.tokens
+    delete datasouce.continueSetupId
   }
 }
 
