@@ -5,11 +5,12 @@ import { Ctx } from "@budibase/types"
 
 interface ExportAppDumpRequest {
   excludeRows: boolean
+  encryptPassword?: string
 }
 
 export async function exportAppDump(ctx: Ctx<ExportAppDumpRequest>) {
   const { appId } = ctx.query as any
-  const { excludeRows } = ctx.request.body
+  const { excludeRows, encryptPassword } = ctx.request.body
 
   const [app] = await db.getAppsByIDs([appId])
   const appName = app.name
@@ -17,9 +18,14 @@ export async function exportAppDump(ctx: Ctx<ExportAppDumpRequest>) {
   // remove the 120 second limit for the request
   ctx.req.setTimeout(0)
 
-  const backupIdentifier = `${appName}-export-${new Date().getTime()}.tar.gz`
+  const extension = encryptPassword ? "enc.tar.gz" : "tar.gz"
+  const backupIdentifier = `${appName}-export-${new Date().getTime()}.${extension}`
   ctx.attachment(backupIdentifier)
-  ctx.body = await sdk.backups.streamExportApp(appId, excludeRows)
+  ctx.body = await sdk.backups.streamExportApp({
+    appId,
+    excludeRows,
+    encryptPassword,
+  })
 
   await context.doInAppContext(appId, async () => {
     const appDb = context.getAppDB()
