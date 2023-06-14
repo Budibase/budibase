@@ -43,10 +43,10 @@
     <link rel="icon" type="image/png" href="/builder/bblogoimgur.png" />
   {/if}
 
-	<link href="/builder/fonts/source-sans-pro/400.css" rel="stylesheet" />
-	<link href="/builder/fonts/source-sans-pro/600.css" rel="stylesheet" />
-	<link href="/builder/fonts/source-sans-pro/700.css" rel="stylesheet" />
-	<link href="/builder/fonts/remixicon.css" rel="stylesheet" />
+  <link href="/builder/fonts/source-sans-pro/400.css" rel="stylesheet" />
+  <link href="/builder/fonts/source-sans-pro/600.css" rel="stylesheet" />
+  <link href="/builder/fonts/source-sans-pro/700.css" rel="stylesheet" />
+  <link href="/builder/fonts/remixicon.css" rel="stylesheet" />
 
   <style>
     html,
