@@ -73,10 +73,6 @@
     if (highlighted) {
       store.actions.settings.highlight(null)
     }
-    // To fix focus 'affect' when property is target of a drawer other actions in the builder.
-    if (propertyFocus) {
-      store.actions.settings.propertyFocus(null)
-    }
   })
 </script>
 
