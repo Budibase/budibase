@@ -124,12 +124,19 @@ export function untarFile(file: { path: string }) {
   return tmpPath
 }
 
-async function decryptFiles(path: string) {
-  for (let file of fs.readdirSync(path)) {
-    const inputPath = join(path, file)
-    const outputPath = inputPath.replace(/\.enc$/, "")
-    await encryption.decryptFile(inputPath, outputPath, "password")
-    fs.rmSync(inputPath)
+async function decryptFiles(path: string, password: string) {
+  try {
+    for (let file of fs.readdirSync(path)) {
+      const inputPath = join(path, file)
+      const outputPath = inputPath.replace(/\.enc$/, "")
+      await encryption.decryptFile(inputPath, outputPath, password)
+      fs.rmSync(inputPath)
+    }
+  } catch (err: any) {
+    if (err.message === "incorrect header check") {
+      throw new Error("File cannot be imported")
+    }
+    throw err
   }
 }
 
@@ -154,7 +161,7 @@ export async function importApp(
   if (template.file && (isTar || isDirectory)) {
     const tmpPath = isTar ? untarFile(template.file) : template.file.path
     if (isTar && template.file.password) {
-      await decryptFiles(tmpPath)
+      await decryptFiles(tmpPath, template.file.password)
     }
     const contents = fs.readdirSync(tmpPath)
     // have to handle object import
