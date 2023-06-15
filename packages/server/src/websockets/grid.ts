@@ -4,7 +4,7 @@ import { permissions } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import { getTableId } from "../api/controllers/row/utils"
-import { Row, Table } from "@budibase/types"
+import { Row, SocketMessageOptions, Table } from "@budibase/types"
 import { Socket } from "socket.io"
 import { GridSocketEvent } from "@budibase/shared-core"
 
@@ -29,27 +29,51 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
-  emitRowUpdate(ctx: any, row: Row) {
+  emitRowUpdate(ctx: any, row: Row, options?: SocketMessageOptions) {
     const tableId = getTableId(ctx)
-    this.emitToRoom(ctx, tableId, GridSocketEvent.RowChange, {
-      id: row._id,
-      row,
-    })
+    this.emitToRoom(
+      ctx,
+      tableId,
+      GridSocketEvent.RowChange,
+      {
+        id: row._id,
+        row,
+      },
+      options
+    )
   }
 
-  emitRowDeletion(ctx: any, id: string) {
+  emitRowDeletion(ctx: any, id: string, options?: SocketMessageOptions) {
     const tableId = getTableId(ctx)
-    this.emitToRoom(ctx, tableId, GridSocketEvent.RowChange, { id, row: null })
+    this.emitToRoom(
+      ctx,
+      tableId,
+      GridSocketEvent.RowChange,
+      { id, row: null },
+      options
+    )
   }
 
-  emitTableUpdate(ctx: any, table: Table) {
-    this.emitToRoom(ctx, table._id!, GridSocketEvent.TableChange, {
-      id: table._id,
-      table,
-    })
+  emitTableUpdate(ctx: any, table: Table, options?: SocketMessageOptions) {
+    this.emitToRoom(
+      ctx,
+      table._id!,
+      GridSocketEvent.TableChange,
+      {
+        id: table._id,
+        table,
+      },
+      options
+    )
   }
 
-  emitTableDeletion(ctx: any, id: string) {
-    this.emitToRoom(ctx, id, GridSocketEvent.TableChange, { id, table: null })
+  emitTableDeletion(ctx: any, id: string, options?: SocketMessageOptions) {
+    this.emitToRoom(
+      ctx,
+      id,
+      GridSocketEvent.TableChange,
+      { id, table: null },
+      options
+    )
   }
 }

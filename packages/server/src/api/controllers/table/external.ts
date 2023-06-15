@@ -26,6 +26,7 @@ import {
   RelationshipTypes,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { builderSocket } from "../../../websockets"
 const { cloneDeep } = require("lodash/fp")
 
 async function makeTableRequest(
@@ -317,6 +318,13 @@ export async function save(ctx: UserCtx) {
   // store it into couch now for budibase reference
   datasource.entities[tableToSave.name] = tableToSave
   await db.put(datasource)
+
+  // Since tables are stored inside datasources, we need to notify clients
+  // that the datasource definition changed
+  const updatedDatasource = await db.get(datasource._id)
+  builderSocket?.emitDatasourceUpdate(ctx, updatedDatasource, {
+    includeOriginator: true,
+  })
 
   return tableToSave
 }
