@@ -15,6 +15,7 @@ export const createStores = () => {
   const hoveredRowId = writable(null)
   const rowHeight = writable(DefaultRowHeight)
   const previousFocusedRowId = writable(null)
+  const gridFocused = writable(false)
 
   // Derive the current focused row ID
   const focusedRowId = derived(
@@ -46,6 +47,7 @@ export const createStores = () => {
     previousFocusedRowId,
     hoveredRowId,
     rowHeight,
+    gridFocused,
     selectedRows: {
       ...selectedRows,
       actions: {
