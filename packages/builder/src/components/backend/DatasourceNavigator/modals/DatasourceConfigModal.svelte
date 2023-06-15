@@ -57,6 +57,12 @@
   }
 
   async function saveDatasource() {
+    if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
+      const valid = await validateConfig()
+      if (!valid) {
+        return false
+      }
+    }
     try {
       if (!datasource.name) {
         datasource.name = name
