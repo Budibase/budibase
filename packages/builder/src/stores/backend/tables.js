@@ -1,5 +1,4 @@
 import { get, writable, derived } from "svelte/store"
-import { datasources } from "./"
 import { cloneDeep } from "lodash/fp"
 import { API } from "api"
 import { SWITCHABLE_TYPES } from "constants/backend"
@@ -63,7 +62,6 @@ export function createTablesStore() {
 
     const savedTable = await API.saveTable(updatedTable)
     replaceTable(savedTable._id, savedTable)
-    await datasources.fetch()
     select(savedTable._id)
     return savedTable
   }

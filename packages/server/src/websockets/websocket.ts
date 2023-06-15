@@ -9,7 +9,7 @@ import { createAdapter } from "@socket.io/redis-adapter"
 import { Socket } from "socket.io"
 import { getSocketPubSubClients } from "../utilities/redis"
 import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
-import { SocketSession } from "@budibase/types"
+import { SocketSession, SocketMessageOptions } from "@budibase/types"
 
 export class BaseSocket {
   io: Server
@@ -276,12 +276,24 @@ export class BaseSocket {
     this.io.sockets.emit(event, payload)
   }
 
-  // Emit an event to everyone in a room, including metadata of whom
-  // the originator of the request was
-  emitToRoom(ctx: any, room: string, event: string, payload: any) {
+  // Emit an event to everyone in a room
+  emitToRoom(
+    ctx: any,
+    room: string,
+    event: string,
+    payload: any,
+    options?: SocketMessageOptions
+  ) {
+    // By default, we include the session API of the originator so that they can ignore
+    // this event. If we want to include the originator then we leave it unset to that all
+    // clients will react to it.
+    let apiSessionId = null
+    if (!options?.includeOriginator) {
+      apiSessionId = ctx.headers?.[Header.SESSION_ID]
+    }
     this.io.in(room).emit(event, {
       ...payload,
-      apiSessionId: ctx.headers?.[Header.SESSION_ID],
+      apiSessionId,
     })
   }
 }
