@@ -26,13 +26,16 @@ export const buildDatasourceEndpoints = API => ({
    * Creates a datasource
    * @param datasource the datasource to create
    * @param fetchSchema whether to fetch the schema or not
+   * @param tablesFilter a list of tables to actually fetch rather than simply
+   * all that are accessible.
    */
-  createDatasource: async ({ datasource, fetchSchema }) => {
+  createDatasource: async ({ datasource, fetchSchema, tablesFilter }) => {
     return await API.post({
       url: "/api/datasources",
       body: {
         datasource,
         fetchSchema,
+        tablesFilter,
       },
     })
   },
@@ -66,6 +69,17 @@ export const buildDatasourceEndpoints = API => ({
   validateDatasource: async datasource => {
     return await API.post({
       url: `/api/datasources/verify`,
+      body: { datasource },
+    })
+  },
+
+  /**
+   * Fetch table names available within the datasource, for filtering out undesired tables
+   * @param datasource the datasource configuration to use for fetching tables
+   */
+  fetchInfoForDatasource: async datasource => {
+    return await API.post({
+      url: `/api/datasources/info`,
       body: { datasource },
     })
   },

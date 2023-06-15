@@ -44,7 +44,7 @@
 <div tabindex="-1" class="exampleApp">
   <div class="page">
     <div class="header">
-      <img alt="Budibase Logo" src={"https://i.imgur.com/Xhdt1YP.png"} />
+      <img alt="Budibase Logo" src={"/builder/bblogo.png"} />
       <h1>{name}</h1>
     </div>
     <div class="nav">Home</div>
