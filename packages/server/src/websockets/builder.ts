@@ -3,13 +3,7 @@ import { BaseSocket } from "./websocket"
 import { permissions, events } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
-import {
-  Datasource,
-  Table,
-  SocketSession,
-  ContextUser,
-  SocketMessageOptions,
-} from "@budibase/types"
+import { Datasource, Table, SocketSession, ContextUser } from "@budibase/types"
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
@@ -72,61 +66,33 @@ export default class BuilderSocket extends BaseSocket {
     }
   }
 
-  emitTableUpdate(ctx: any, table: Table, options?: SocketMessageOptions) {
-    this.emitToRoom(
-      ctx,
-      ctx.appId,
-      BuilderSocketEvent.TableChange,
-      {
-        id: table._id,
-        table,
-      },
-      options
-    )
-    gridSocket?.emitTableUpdate(ctx, table, options)
+  emitTableUpdate(ctx: any, table: Table) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.TableChange, {
+      id: table._id,
+      table,
+    })
+    gridSocket?.emitTableUpdate(ctx, table)
   }
 
-  emitTableDeletion(ctx: any, id: string, options?: SocketMessageOptions) {
-    this.emitToRoom(
-      ctx,
-      ctx.appId,
-      BuilderSocketEvent.TableChange,
-      {
-        id,
-        table: null,
-      },
-      options
-    )
-    gridSocket?.emitTableDeletion(ctx, id, options)
+  emitTableDeletion(ctx: any, id: string) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.TableChange, {
+      id,
+      table: null,
+    })
+    gridSocket?.emitTableDeletion(ctx, id)
   }
 
-  emitDatasourceUpdate(
-    ctx: any,
-    datasource: Datasource,
-    options?: SocketMessageOptions
-  ) {
-    this.emitToRoom(
-      ctx,
-      ctx.appId,
-      BuilderSocketEvent.DatasourceChange,
-      {
-        id: datasource._id,
-        datasource,
-      },
-      options
-    )
+  emitDatasourceUpdate(ctx: any, datasource: Datasource) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.DatasourceChange, {
+      id: datasource._id,
+      datasource,
+    })
   }
 
-  emitDatasourceDeletion(ctx: any, id: string, options?: SocketMessageOptions) {
-    this.emitToRoom(
-      ctx,
-      ctx.appId,
-      BuilderSocketEvent.DatasourceChange,
-      {
-        id,
-        datasource: null,
-      },
-      options
-    )
+  emitDatasourceDeletion(ctx: any, id: string) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.DatasourceChange, {
+      id,
+      datasource: null,
+    })
   }
 }

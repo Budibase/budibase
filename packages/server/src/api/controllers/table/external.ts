@@ -322,9 +322,7 @@ export async function save(ctx: UserCtx) {
   // Since tables are stored inside datasources, we need to notify clients
   // that the datasource definition changed
   const updatedDatasource = await db.get(datasource._id)
-  builderSocket?.emitDatasourceUpdate(ctx, updatedDatasource, {
-    includeOriginator: true,
-  })
+  builderSocket?.emitDatasourceUpdate(ctx, updatedDatasource)
 
   return tableToSave
 }
@@ -351,6 +349,11 @@ export async function destroy(ctx: UserCtx) {
   }
 
   await db.put(datasource)
+
+  // Since tables are stored inside datasources, we need to notify clients
+  // that the datasource definition changed
+  const updatedDatasource = await db.get(datasource._id)
+  builderSocket?.emitDatasourceUpdate(ctx, updatedDatasource)
 
   return tableToDelete
 }
