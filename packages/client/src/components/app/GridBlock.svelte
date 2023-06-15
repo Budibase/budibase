@@ -37,6 +37,8 @@
     flex-direction: column;
     align-items: stretch;
     border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 4px;
+    overflow: hidden;
   }
   div.in-builder :global(*) {
     pointer-events: none;
