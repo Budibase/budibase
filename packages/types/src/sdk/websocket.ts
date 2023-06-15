@@ -7,7 +7,3 @@ export interface SocketSession {
   room?: string
   connectedAt: number
 }
-
-export interface SocketMessageOptions {
-  includeOriginator?: boolean
-}
