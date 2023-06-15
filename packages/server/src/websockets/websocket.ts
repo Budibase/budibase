@@ -276,7 +276,8 @@ export class BaseSocket {
     this.io.sockets.emit(event, payload)
   }
 
-  // Emit an event to everyone in a room
+  // Emit an event to everyone in a room, including metadata of whom
+  // the originator of the request was
   emitToRoom(ctx: any, room: string, event: string, payload: any) {
     this.io.in(room).emit(event, {
       ...payload,
