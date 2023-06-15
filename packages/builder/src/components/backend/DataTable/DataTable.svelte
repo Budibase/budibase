@@ -30,8 +30,11 @@
   const handleGridTableUpdate = async e => {
     tables.replaceTable(id, e.detail)
 
-    // We need to refresh datasources when an external table changes
-    if (e.detail?.type === "external") {
+    // We need to refresh datasources when an external table changes.
+    // Type "external" may exist - sometimes type is "table" and sometimes it
+    // is "external" - it has different meanings in different endpoints.
+    // If we check both these then we hopefully catch all external tables.
+    if (e.detail?.type === "external" || e.detail?.sql) {
       await datasources.fetch()
     }
   }
