@@ -4,20 +4,60 @@
     Toggle,
     Body,
     InlineAlert,
+    Input,
     notifications,
   } from "@budibase/bbui"
+  import { createValidationStore } from "helpers/validation/yup"
 
   export let app
   export let published
-  let excludeRows = false
+  let includeInternalTablesRows = true
+  let encypt = true
 
-  $: title = published ? "Export published app" : "Export latest app"
-  $: confirmText = published ? "Export published" : "Export latest"
+  let password = null
+  const validation = createValidationStore()
+  validation.addValidatorType("password", "password", true)
+  $: validation.observe("password", password)
+
+  const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
+  let currentStep = Step.CONFIG
+
+  $: exportButtonText = published ? "Export published" : "Export latest"
+  $: stepConfig = {
+    [Step.CONFIG]: {
+      title: published ? "Export published app" : "Export latest app",
+      confirmText: encypt ? "Continue" : exportButtonText,
+      onConfirm: () => {
+        if (!encypt) {
+          exportApp()
+        } else {
+          currentStep = Step.SET_PASSWORD
+          return false
+        }
+      },
+      isValid: true,
+    },
+    [Step.SET_PASSWORD]: {
+      title: "Add password to encrypt your export",
+      confirmText: exportButtonText,
+      onConfirm: async () => {
+        await validation.check({ password })
+        if (!$validation.valid) {
+          return false
+        }
+        exportApp(password)
+      },
+      isValid: $validation.valid,
+    },
+  }
 
   const exportApp = async () => {
     const id = published ? app.prodId : app.devId
     const url = `/api/backups/export?appId=${id}`
-    await downloadFile(url, { excludeRows })
+    await downloadFile(url, {
+      excludeRows: !includeInternalTablesRows,
+      encryptPassword: password,
+    })
   }
 
   async function downloadFile(url, body) {
@@ -56,13 +96,33 @@
   }
 </script>
 
-<ModalContent {title} {confirmText} onConfirm={exportApp}>
-  <InlineAlert
-    header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
-  />
-  <Body
-    >Apps can be exported with or without data that is within internal tables -
-    select this below.</Body
-  >
-  <Toggle text="Exclude Rows" bind:value={excludeRows} />
+<ModalContent
+  title={stepConfig[currentStep].title}
+  confirmText={stepConfig[currentStep].confirmText}
+  onConfirm={stepConfig[currentStep].onConfirm}
+  disabled={!stepConfig[currentStep].isValid}
+>
+  {#if currentStep === Step.CONFIG}
+    <Body>
+      <Toggle
+        text="Export rows from internal tables"
+        bind:value={includeInternalTablesRows}
+      />
+      <Toggle text="Encrypt my export" bind:value={encypt} />
+    </Body>
+    {#if !encypt}
+      <InlineAlert
+        header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
+      />
+    {/if}
+  {/if}
+  {#if currentStep === Step.SET_PASSWORD}
+    <Input
+      type="password"
+      label="Password"
+      placeholder="Type here..."
+      bind:value={password}
+      error={$validation.errors.password}
+    />
+  {/if}
 </ModalContent>
