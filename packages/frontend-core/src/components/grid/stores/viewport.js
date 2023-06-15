@@ -110,9 +110,10 @@ export const deriveStores = context => {
   const rowVerticalInversionIndex = derived(
     [visualRowCapacity, rowHeight],
     ([$visualRowCapacity, $rowHeight]) => {
-      return (
-        $visualRowCapacity - Math.ceil(MaxCellRenderHeight / $rowHeight) - 2
-      )
+      const maxCellRenderRows = Math.ceil(MaxCellRenderHeight / $rowHeight)
+      const topIdx = $visualRowCapacity - maxCellRenderRows - 2
+      const bottomIdx = maxCellRenderRows + 1
+      return Math.max(topIdx, bottomIdx)
     }
   )
 
