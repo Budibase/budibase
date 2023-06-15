@@ -114,6 +114,25 @@ describe("lucene", () => {
       expect(resp.rows.length).toBe(2)
     })
 
+    it("should return all rows when doing a one of search against falsey value", async () => {
+      const builder = new QueryBuilder(dbName, INDEX_NAME)
+      builder.addOneOf("property", null)
+      let resp = await builder.run()
+      expect(resp.rows.length).toBe(3)
+
+      builder.addOneOf("property", undefined)
+      resp = await builder.run()
+      expect(resp.rows.length).toBe(3)
+
+      builder.addOneOf("property", "")
+      resp = await builder.run()
+      expect(resp.rows.length).toBe(3)
+
+      builder.addOneOf("property", [])
+      resp = await builder.run()
+      expect(resp.rows.length).toBe(0)
+    })
+
     it("should be able to perform a contains search", async () => {
       const builder = new QueryBuilder(dbName, INDEX_NAME)
       builder.addContains("property", ["word"])
