@@ -16,7 +16,6 @@
     "packages/worker",
     "packages/pro/packages/pro"
   ],
-  "useWorkspaces": true,
   "command": {
     "publish": {
       "ignoreChanges": [
