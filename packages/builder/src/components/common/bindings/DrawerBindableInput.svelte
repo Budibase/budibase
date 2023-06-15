@@ -5,8 +5,6 @@
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
 
-  import { store } from "builderStore"
-
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
@@ -36,7 +34,6 @@
 
   const saveBinding = () => {
     onChange(tempValue)
-    store.actions.settings.propertyFocus(null)
     onBlur()
     bindingDrawer.hide()
   }
@@ -70,7 +67,6 @@
     <div
       class="icon"
       on:click={() => {
-        store.actions.settings.propertyFocus(key)
         bindingDrawer.show()
       }}
     >
