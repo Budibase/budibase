@@ -11,7 +11,6 @@
     try {
       const promises = [licensing.init()]
 
-      console.log($admin)
       if (!$admin.offlineMode) {
         promises.push(templates.load())
       }
