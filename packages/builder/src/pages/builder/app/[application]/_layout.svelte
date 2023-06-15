@@ -178,7 +178,9 @@
         <Heading size="XS">{$store.name}</Heading>
       </div>
       <div class="toprightnav">
-        <UserAvatars users={$userStore} />
+        <span class:nav-lock={!$store.hasLock}>
+          <UserAvatars users={$userStore} />
+        </span>
         <AppActions {application} />
       </div>
     {/if}
@@ -226,6 +228,7 @@
     flex: 0 0 60px;
     background: var(--background);
     padding: 0 var(--spacing-xl);
+    padding-right: 0px;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     flex-direction: row;
@@ -266,7 +269,10 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-l);
+  }
+
+  .toprightnav :global(.avatars) {
+    margin-right: var(--spacing-l);
   }
 
   .secondary-editor {
