@@ -208,7 +208,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
   let application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
-  const license = await licensing.getLicense()
+  const license = await licensing.getCachedLicense()
 
   // Enrich plugin URLs
   application.usedPlugins = objectStore.enrichPluginURLs(
