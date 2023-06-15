@@ -80,6 +80,7 @@
     loading,
     rowHeight,
     contentLines,
+    gridFocused,
   } = context
 
   // Keep stores up to date
@@ -116,6 +117,8 @@
   class:is-reordering={$isReordering}
   class:stripe={$config.stripeRows}
   style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
+  on:mouseenter={() => gridFocused.set(true)}
+  on:mouseleave={() => gridFocused.set(false)}
 >
   {#if showControls}
     <div class="controls">
