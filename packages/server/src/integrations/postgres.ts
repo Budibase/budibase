@@ -42,6 +42,8 @@ interface PostgresConfig {
   schema: string
   ssl?: boolean
   ca?: string
+  clientKey?: string
+  clientCert?: string
   rejectUnauthorized?: boolean
 }
 
@@ -98,6 +100,19 @@ const SCHEMA: Integration = {
       required: false,
     },
     ca: {
+      display: "Server CA",
+      type: DatasourceFieldType.LONGFORM,
+      default: false,
+      required: false,
+    },
+    clientKey: {
+      display: "Client key",
+      type: DatasourceFieldType.LONGFORM,
+      default: false,
+      required: false,
+    },
+    clientCert: {
+      display: "Client cert",
       type: DatasourceFieldType.LONGFORM,
       default: false,
       required: false,
@@ -150,6 +165,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         ? {
             rejectUnauthorized: this.config.rejectUnauthorized,
             ca: this.config.ca,
+            key: this.config.clientKey,
+            cert: this.config.clientCert,
           }
         : undefined,
     }
