@@ -19,6 +19,7 @@ import {
   breakRowIdField,
   convertRowId,
   generateRowIdField,
+  getPrimaryDisplay,
   isRowId,
   isSQL,
 } from "../../../integrations/utils"
@@ -391,7 +392,10 @@ export class ExternalRequest {
           }
         }
         relatedRow = processFormulas(linkedTable, relatedRow)
-        const relatedDisplay = display ? relatedRow[display] : undefined
+        let relatedDisplay
+        if (display) {
+          relatedDisplay = getPrimaryDisplay(relatedRow[display])
+        }
         row[relationship.column][key] = {
           primaryDisplay: relatedDisplay || "Invalid display column",
           _id: relatedRow._id,
