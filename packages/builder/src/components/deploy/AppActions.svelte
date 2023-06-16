@@ -59,7 +59,6 @@
     $store.upgradableVersion !== $store.version
 
   const initialiseApp = async () => {
-    console.log("AppActions :: Reinitialise")
     const applicationPkg = await API.fetchAppPackage($store.devId)
     await store.actions.initialise(applicationPkg)
   }
@@ -72,8 +71,6 @@
         })
       : ""
   }
-
-  $: deploymentString = updateDeploymentString(deployments)
 
   const reviewPendingDeployments = (deployments, newDeployments) => {
     if (deployments.length > 0) {
@@ -185,8 +182,10 @@
       {#if updateAvailable}
         <div class="app-action-button version" on:click={versionModal.show}>
           <div class="app-action">
-            <StatusLight notice />
-            Update
+            <ActionButton quiet>
+              <StatusLight notice />
+              Update
+            </ActionButton>
           </div>
         </div>
       {/if}
@@ -196,41 +195,44 @@
           : TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT}
       >
         <div class="app-action-button users">
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <div
-            class="app-action"
-            id="builder-app-users-button"
-            on:click={() => {
-              store.update(state => {
-                state.builderSidePanel = true
-                return state
-              })
-            }}
-          >
-            <Icon name={"UserGroup"} />
-            Users
+          <div class="app-action" id="builder-app-users-button">
+            <ActionButton
+              quiet
+              icon="UserGroup"
+              on:click={() => {
+                store.update(state => {
+                  state.builderSidePanel = true
+                  return state
+                })
+              }}
+            >
+              Users
+            </ActionButton>
           </div>
         </div>
       </TourWrap>
 
       <div class="app-action-button preview">
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <div class="app-action" on:click={previewApp}>
-          <Icon name={"PlayCircle"} />
-
-          Preview
+        <div class="app-action">
+          <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
+            Preview
+          </ActionButton>
         </div>
       </div>
 
-      <div class="app-action-button publish app-action-popover">
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <div
+        class="app-action-button publish app-action-popover"
+        on:click={() => {
+          if (!appActionPopoverOpen) {
+            appActionPopover.show()
+          } else {
+            appActionPopover.hide()
+          }
+        }}
+      >
         <div bind:this={appActionPopoverAnchor}>
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <div
-            class="app-action"
-            on:click={() => {
-              appActionPopover.show()
-            }}
-          >
+          <div class="app-action">
             <Icon name={isPublished ? "GlobeCheck" : "GlobeStrike"} />
             <TourWrap tourStepKey={TOUR_STEP_KEYS.BUILDER_APP_PUBLISH}>
               <span class="publish-open" id="builder-app-publish-button">
@@ -248,7 +250,7 @@
           align="right"
           disabled={!isPublished}
           anchor={appActionPopoverAnchor}
-          offset={10}
+          offset={35}
           on:close={() => {
             appActionPopoverOpen = false
           }}
@@ -283,7 +285,9 @@
               <Body size="S">
                 <span class="publish-popover-status">
                   {#if isPublished}
-                    <span class="status-text">{deploymentString}</span>
+                    <span class="status-text">
+                      {updateDeploymentString(deployments)}
+                    </span>
                     <span class="unpublish-link">
                       <Link quiet on:click={unpublishApp}>Unpublish</Link>
                     </span>
@@ -297,16 +301,18 @@
               </Body>
               <div class="action-buttons">
                 {#if $store.hasLock}
-                  <Button
-                    secondary
-                    icon="Code"
-                    on:click={() => {
-                      $goto("./settings/embed")
-                      appActionPopover.hide()
-                    }}
-                  >
-                    Embed
-                  </Button>
+                  {#if isPublished}
+                    <ActionButton
+                      quiet
+                      icon="Code"
+                      on:click={() => {
+                        $goto("./settings/embed")
+                        appActionPopover.hide()
+                      }}
+                    >
+                      Embed
+                    </ActionButton>
+                  {/if}
                   <Button
                     cta
                     on:click={publishApp}
@@ -350,6 +356,7 @@
 <style>
   .app-action-popover-content {
     padding: var(--spacing-xl);
+    width: 360px;
   }
 
   .app-action-popover-content :global(.icon svg.spectrum-Icon) {
@@ -410,17 +417,22 @@
     height: 100%;
     display: flex;
     align-items: center;
-    padding: 0px var(--spacing-l);
-    /* border-left: var(--border-light); */
+    padding-right: var(--spacing-m);
   }
 
-  .app-action-button:hover {
+  .app-action-button.publish:hover {
     background-color: var(--spectrum-global-color-gray-200);
     cursor: pointer;
   }
 
   .app-action-button.publish {
     border-left: var(--border-light);
+    padding: 0px var(--spacing-l);
+  }
+
+  .app-action-button.version :global(.spectrum-ActionButton-label) {
+    display: flex;
+    gap: var(--spectrum-actionbutton-icon-gap);
   }
 
   .app-action {

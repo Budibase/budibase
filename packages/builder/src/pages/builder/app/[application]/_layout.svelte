@@ -171,7 +171,9 @@
         {:else}
           <div class="secondary-editor">
             <Icon name="LockClosed" />
-            Another user is currently editing your screens and automations
+            <div class="secondary-editor-body">
+              Another user is currently editing your screens and automations
+            </div>
           </div>
         {/if}
       </div>

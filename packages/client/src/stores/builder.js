@@ -53,9 +53,9 @@ const createBuilderStore = () => {
     notifyLoaded: () => {
       eventStore.actions.dispatchEvent("preview-loaded")
     },
-    analyticsPing: async () => {
+    analyticsPing: async ({ embedded }) => {
       try {
-        await API.analyticsPing({ source: "app" })
+        await API.analyticsPing({ source: "app", embedded })
       } catch (error) {
         // Do nothing
       }

@@ -15,10 +15,10 @@
 
   $: filteredApps = $apps.filter(app => app.devId == $store.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}
-  $: appUrl = `${window.origin}/app${app?.url}`
+  $: appUrl = `${window.origin}/embed${app?.url}`
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 
-  $: embed = `<iframe width="560" height="315" frameborder="0" allow="clipboard-write" src="${appUrl}" ></iframe>`
+  $: embed = `<iframe width="800" height="600" frameborder="0" allow="clipboard-write" src="${appUrl}" ></iframe>`
 </script>
 
 <Layout noPadding>
