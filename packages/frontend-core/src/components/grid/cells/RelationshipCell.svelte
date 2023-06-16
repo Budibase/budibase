@@ -460,6 +460,8 @@
     flex-direction: column;
     align-items: stretch;
     padding: 0 0 8px 0;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
   .dropdown.invertY {
     transform: translateY(-100%);
