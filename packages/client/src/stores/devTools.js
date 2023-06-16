@@ -4,6 +4,7 @@ import { authStore } from "./auth"
 import { API } from "../api"
 
 const initialState = {
+  enabled: false,
   visible: false,
   allowSelection: false,
   role: null,
@@ -11,6 +12,13 @@ const initialState = {
 
 const createDevToolStore = () => {
   const store = createLocalStorageStore("bb-devtools", initialState)
+
+  const setEnabled = enabled => {
+    store.update(state => ({
+      ...state,
+      enabled,
+    }))
+  }
 
   const setVisible = visible => {
     store.update(state => ({
@@ -38,7 +46,7 @@ const createDevToolStore = () => {
 
   return {
     subscribe: store.subscribe,
-    actions: { setVisible, setAllowSelection, changeRole },
+    actions: { setEnabled, setVisible, setAllowSelection, changeRole },
   }
 }
 

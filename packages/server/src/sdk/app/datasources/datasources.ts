@@ -164,6 +164,5 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
       delete update.config[key]
     }
   }
-
   return update
 }

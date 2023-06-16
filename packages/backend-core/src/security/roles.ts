@@ -140,13 +140,9 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
  * Gets the role object, this is mainly useful for two purposes, to check if the level exists and
  * to check if the role inherits any others.
  * @param {string|null} roleId The level ID to lookup.
- * @param {object|null} opts options for the function, like whether to halt errors, instead return public.
  * @returns {Promise<Role|object|null>} The role object, which may contain an "inherits" property.
  */
-export async function getRole(
-  roleId?: string,
-  opts?: { defaultPublic?: boolean }
-): Promise<RoleDoc | undefined> {
+export async function getRole(roleId?: string): Promise<RoleDoc | undefined> {
   if (!roleId) {
     return undefined
   }
@@ -165,9 +161,6 @@ export async function getRole(
     // finalise the ID
     role._id = getExternalRoleID(role._id)
   } catch (err) {
-    if (!isBuiltin(roleId) && opts?.defaultPublic) {
-      return cloneDeep(BUILTIN_ROLES.PUBLIC)
-    }
     // only throw an error if there is no role at all
     if (Object.keys(role).length === 0) {
       throw err

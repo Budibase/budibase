@@ -60,16 +60,8 @@ export default class AccountAPI {
   }
 
   async delete(accountID: string) {
-    const [response, json] = await this.client.del(
-      `/api/accounts/${accountID}`,
-      {
-        internal: true,
-      }
-    )
-    // can't use expect here due to use in global teardown
-    if (response.status !== 204) {
-      throw new Error(`Could not delete accountId=${accountID}`)
-    }
+    const [response, json] = await this.client.del(`/api/accounts/${accountID}`)
+    expect(response).toHaveStatusCode(200)
     return response
   }
 }

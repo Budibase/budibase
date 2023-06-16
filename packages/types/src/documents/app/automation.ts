@@ -1,6 +1,5 @@
 import { Document } from "../document"
 import { EventEmitter } from "events"
-import { User } from "../global"
 
 export enum AutomationIOType {
   OBJECT = "object",
@@ -9,7 +8,6 @@ export enum AutomationIOType {
   NUMBER = "number",
   ARRAY = "array",
   JSON = "json",
-  DATE = "date",
 }
 
 export enum AutomationCustomIOType {
@@ -68,33 +66,6 @@ export enum AutomationActionStepId {
   integromat = "integromat",
 }
 
-export interface EmailInvite {
-  startTime: Date
-  endTime: Date
-  summary: string
-  location?: string
-  url?: string
-}
-
-export interface SendEmailOpts {
-  // workspaceId If finer grain controls being used then this will lookup config for workspace.
-  workspaceId?: string
-  // user If sending to an existing user the object can be provided, this is used in the context.
-  user: User
-  // from If sending from an address that is not what is configured in the SMTP config.
-  from?: string
-  // contents If sending a custom email then can supply contents which will be added to it.
-  contents?: string
-  // subject A custom subject can be specified if the config one is not desired.
-  subject?: string
-  // info Pass in a structure of information to be stored alongside the invitation.
-  info?: any
-  cc?: boolean
-  bcc?: boolean
-  automation?: boolean
-  invite?: EmailInvite
-}
-
 export const AutomationStepIdArray = [
   ...Object.values(AutomationActionStepId),
   ...Object.values(AutomationTriggerStepId),
@@ -119,7 +90,6 @@ interface BaseIOStructure {
   customType?: AutomationCustomIOType
   title?: string
   description?: string
-  dependsOn?: string
   enum?: string[]
   pretty?: string[]
   properties?: {

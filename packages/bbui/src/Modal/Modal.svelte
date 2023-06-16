@@ -8,7 +8,6 @@
 
   export let fixed = false
   export let inline = false
-  export let disableCancel = false
 
   const dispatch = createEventDispatcher()
   let visible = fixed || inline
@@ -39,7 +38,7 @@
   }
 
   export function cancel() {
-    if (!visible || disableCancel) {
+    if (!visible) {
       return
     }
     dispatch("cancel")

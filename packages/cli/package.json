@@ -49,7 +49,7 @@
     "pouchdb": "7.3.0",
     "pouchdb-replication-stream": "1.2.9",
     "randomstring": "1.1.5",
-    "tar": "6.1.15",
+    "tar": "6.1.11",
     "yaml": "^2.1.1"
   },
   "devDependencies": {
