@@ -5,6 +5,7 @@
     notifications,
     ModalContent,
     ActionButton,
+    Link,
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import { API } from "api"
@@ -28,16 +29,15 @@
       notifications.error(`Error reverting changes: ${error}`)
     }
   }
-</script>
 
-<ActionButton
-  quiet
-  icon="Revert"
-  size="M"
-  tooltip="Revert changes"
-  on:click={revertModal.show}
-  {disabled}
-/>
+  export const hide = () => {
+    revertModal.hide()
+  }
+
+  export const show = () => {
+    revertModal.show()
+  }
+</script>
 
 <Modal bind:this={revertModal}>
   <ModalContent

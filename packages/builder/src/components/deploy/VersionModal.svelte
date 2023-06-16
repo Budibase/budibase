@@ -70,9 +70,7 @@
 </script>
 
 {#if !hideIcon && updateAvailable}
-  <StatusLight hoverable on:click={updateModal.show} notice>
-    Update available
-  </StatusLight>
+  <StatusLight hoverable on:click={updateModal.show} notice>Update</StatusLight>
 {/if}
 <Modal bind:this={updateModal}>
   <ModalContent

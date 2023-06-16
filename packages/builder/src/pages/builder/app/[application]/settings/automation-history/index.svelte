@@ -191,13 +191,6 @@
       </div>
     </div>
 
-    <!-- 
-      From the apps list header
-      isOwner = $auth.accountPortalAccess && $admin.cloud
-      isOwner ? $licensing.goToUpgradePage() : $licensing.goToPricingPage() 
-    -->
-    {` acc portal access ${$auth.user.accountPortalAccess} `}
-    <!-- {#if (licensePlan?.type !== Constants.PlanType.ENTERPRISE && $auth.user.accountPortalAccess) || !$admin.cloud} -->
     {#if (!$licensing.isEnterprisePlan && $auth.user.accountPortalAccess) || !$admin.cloud}
       <Button secondary on:click={$licensing.goToUpgradePage()}>
         Get more history
