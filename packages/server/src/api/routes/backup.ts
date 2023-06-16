@@ -5,7 +5,7 @@ import { permissions } from "@budibase/backend-core"
 
 const router: Router = new Router()
 
-router.post(
+router.get(
   "/api/backups/export",
   authorized(permissions.BUILDER),
   controller.exportAppDump

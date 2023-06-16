@@ -10,7 +10,7 @@
   },
   "scripts": {
     "setup": "yarn && node scripts/createEnv.js",
-    "test": "jest --runInBand --json --outputFile=testResults.json --forceExit",
+    "test": "jest --runInBand --json --outputFile=testResults.json",
     "test:watch": "yarn run test --watch",
     "test:debug": "DEBUG=1 yarn run test",
     "test:notify": "node scripts/testResultsWebhook",

@@ -24,7 +24,6 @@
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import UserAvatars from "./_components/UserAvatars.svelte"
   import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
-  import PreviewOverlay from "./_components/PreviewOverlay.svelte"
 
   export let application
 
@@ -141,7 +140,7 @@
   <BuilderSidePanel />
 {/if}
 
-<div class="root" class:blur={$store.showPreview}>
+<div class="root">
   <div class="top-nav">
     {#if $store.initialised}
       <div class="topleftnav">
@@ -231,10 +230,6 @@
   {/await}
 </div>
 
-{#if $store.showPreview}
-  <PreviewOverlay />
-{/if}
-
 <svelte:window on:keydown={handleKeyDown} />
 <Modal bind:this={commandPaletteModal}>
   <CommandPalette />
@@ -253,10 +248,6 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    transition: filter 260ms ease-out;
-  }
-  .root.blur {
-    filter: blur(8px);
   }
 
   .top-nav {

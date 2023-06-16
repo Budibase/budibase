@@ -103,7 +103,7 @@ export default async (ctx: UserCtx, next: any) => {
         userId,
         globalId,
         roleId,
-        role: await roles.getRole(roleId, { defaultPublic: true }),
+        role: await roles.getRole(roleId),
       }
     }
 
