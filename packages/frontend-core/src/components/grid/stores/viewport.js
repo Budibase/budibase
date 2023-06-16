@@ -108,12 +108,17 @@ export const deriveStores = context => {
   // Determine the row index at which we should start vertically inverting cell
   // dropdowns
   const rowVerticalInversionIndex = derived(
-    [visualRowCapacity, rowHeight],
-    ([$visualRowCapacity, $rowHeight]) => {
-      const maxCellRenderRows = Math.ceil(MaxCellRenderHeight / $rowHeight)
-      const topIdx = $visualRowCapacity - maxCellRenderRows - 2
-      const bottomIdx = maxCellRenderRows + 1
-      return Math.max(topIdx, bottomIdx)
+    [height, rowHeight, scrollTop],
+    ([$height, $rowHeight, $scrollTop]) => {
+      const offset = $scrollTop % $rowHeight
+      const minBottom =
+        $height - ScrollBarSize * 3 - MaxCellRenderHeight + offset
+      return Math.floor(minBottom / $rowHeight)
+
+      // const maxCellRenderRows = Math.ceil(MaxCellRenderHeight / $rowHeight)
+      // const topIdx = $visualRowCapacity - maxCellRenderRows - 2
+      // const bottomIdx = maxCellRenderRows + 1
+      // return Math.max(topIdx, bottomIdx)
     }
   )
 
@@ -126,7 +131,7 @@ export const deriveStores = context => {
       let inversionIdx = $renderedColumns.length
       for (let i = $renderedColumns.length - 1; i >= 0; i--, inversionIdx--) {
         const rightEdge = $renderedColumns[i].left + $renderedColumns[i].width
-        if (rightEdge + MaxCellRenderWidthOverflow < cutoff) {
+        if (rightEdge + MaxCellRenderWidthOverflow <= cutoff) {
           break
         }
       }

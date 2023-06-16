@@ -39,6 +39,7 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     overflow: hidden;
+    min-height: 410px;
   }
   div.in-builder :global(*) {
     pointer-events: none;
