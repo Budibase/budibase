@@ -31,6 +31,7 @@ function runBuild(entry, outfile) {
     loader: {
       ".svelte": "copy",
     },
+    packages: "external",
     external: [
       "deasync",
       "mock-aws-s3",
