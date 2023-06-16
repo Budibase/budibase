@@ -42,6 +42,7 @@ function runBuild(entry, outfile) {
       "koa2-ratelimit",
       "fsevents",
       "knex",
+      "aws-sdk",
     ],
   }
 
