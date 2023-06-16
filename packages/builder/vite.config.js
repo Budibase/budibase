@@ -64,11 +64,11 @@ export default defineConfig(({ mode }) => {
         targets: [
           {
             src: "../../node_modules/@fontsource/source-sans-pro",
-            dest: "fonts",
+            dest: isProduction ? "fonts" : "builder/fonts",
           },
           {
             src: "../../node_modules/remixicon/fonts/*",
-            dest: "fonts",
+            dest: isProduction ? "fonts" : "builder/fonts",
           },
         ],
       }),
