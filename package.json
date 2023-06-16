@@ -2,7 +2,6 @@
   "name": "root",
   "private": true,
   "devDependencies": {
-    "@esbuild-plugins/node-resolve": "^0.2.2",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
     "@nx/js": "16.2.1",
     "@rollup/plugin-json": "^4.0.2",
