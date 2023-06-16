@@ -58,7 +58,7 @@ export const createValidationStore = () => {
   const observe = async (propertyName, value) => {
     const values = get(validation).values
     let fieldIsValid
-    if (!values.hasOwnProperty(propertyName)) {
+    if (!Object.prototype.hasOwnProperty.call(values, propertyName)) {
       // Initial setup
       values[propertyName] = value
       return
