@@ -17,7 +17,6 @@
     appStore,
     devToolsStore,
     environmentStore,
-    devToolsEnabled,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -48,7 +47,10 @@
   let permissionError = false
 
   // Determine if we should show devtools or not
-  $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
+  $: showDevTools =
+    !$builderStore.inBuilder &&
+    $devToolsStore.enabled &&
+    !$routeStore.queryParams?.peek
 
   // Handle no matching route
   $: {
@@ -105,7 +107,6 @@
     lang="en"
     dir="ltr"
     class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
-    class:builder={$builderStore.inBuilder}
   >
     <DeviceBindingsProvider>
       <UserBindingsProvider>
@@ -222,13 +223,11 @@
     overflow: hidden;
     height: 100%;
     width: 100%;
+    background: transparent;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-  }
-  #spectrum-root.builder {
-    background: transparent;
   }
 
   #clip-root {

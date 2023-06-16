@@ -1,6 +1,6 @@
 import { getRoutingInfo } from "../../utilities/routing"
 import { roles } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
+import { BBContext } from "@budibase/types"
 
 const URL_SEPARATOR = "/"
 
@@ -56,11 +56,11 @@ async function getRoutingStructure() {
   return { routes: routing.json }
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: BBContext) {
   ctx.body = await getRoutingStructure()
 }
 
-export async function clientFetch(ctx: UserCtx) {
+export async function clientFetch(ctx: BBContext) {
   const routing = await getRoutingStructure()
   let roleId = ctx.user?.role?._id
   const roleIds = (await roles.getUserRoleHierarchy(roleId, {

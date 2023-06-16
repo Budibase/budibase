@@ -22,7 +22,6 @@
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
   import { API } from "api"
   import { DatasourceFeature } from "@budibase/types"
-  import Spinner from "components/common/Spinner.svelte"
 
   const querySchema = {
     name: {},
@@ -34,7 +33,6 @@
   let isValid = true
   let integration, baseDatasource, datasource
   let queryList
-  let loading = false
 
   $: baseDatasource = $datasources.selected
   $: queryList = $queries.list.filter(
@@ -67,11 +65,9 @@
   }
 
   const saveDatasource = async () => {
-    loading = true
     if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
       const valid = await validateConfig()
       if (!valid) {
-        loading = false
         return false
       }
     }
@@ -86,8 +82,6 @@
       baseDatasource = cloneDeep(datasource)
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
-    } finally {
-      loading = false
     }
   }
 
@@ -125,17 +119,8 @@
       <Divider />
       <div class="config-header">
         <Heading size="S">Configuration</Heading>
-        <Button
-          disabled={!changed || !isValid || loading}
-          cta
-          on:click={saveDatasource}
-        >
-          <div class="save-button-content">
-            {#if loading}
-              <Spinner size="10">Save</Spinner>
-            {/if}
-            Save
-          </div>
+        <Button disabled={!changed || !isValid} cta on:click={saveDatasource}>
+          Save
         </Button>
       </div>
       <IntegrationConfigForm
@@ -230,11 +215,5 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-m);
-  }
-
-  .save-button-content {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
   }
 </style>

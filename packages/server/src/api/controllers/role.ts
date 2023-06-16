@@ -4,7 +4,7 @@ import {
   getUserMetadataParams,
   InternalTables,
 } from "../../db/utils"
-import { UserCtx, Database } from "@budibase/types"
+import { BBContext, Database } from "@budibase/types"
 
 const UpdateRolesOptions = {
   CREATED: "created",
@@ -38,15 +38,15 @@ async function updateRolesOnUserTable(
   }
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: BBContext) {
   ctx.body = await roles.getAllRoles()
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: BBContext) {
   ctx.body = await roles.getRole(ctx.params.roleId)
 }
 
-export async function save(ctx: UserCtx) {
+export async function save(ctx: BBContext) {
   const db = context.getAppDB()
   let { _id, name, inherits, permissionId } = ctx.request.body
   let isCreate = false
@@ -72,7 +72,7 @@ export async function save(ctx: UserCtx) {
   ctx.message = `Role '${role.name}' created successfully.`
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: BBContext) {
   const db = context.getAppDB()
   const roleId = ctx.params.roleId
   const role = await db.get(roleId)

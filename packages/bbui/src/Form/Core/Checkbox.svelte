@@ -9,7 +9,6 @@
   export let text = null
   export let disabled = false
   export let size
-  export let indeterminate = false
 
   const dispatch = createEventDispatcher()
   const onChange = event => {
@@ -23,7 +22,6 @@
   class="spectrum-Checkbox spectrum-Checkbox--emphasized {sizeClass}"
   class:is-invalid={!!error}
   class:checked={value}
-  class:is-indeterminate={indeterminate}
 >
   <input
     checked={value}

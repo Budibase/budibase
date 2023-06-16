@@ -57,10 +57,7 @@ export function createDatasourcesStore() {
     return updateDatasource(response)
   }
 
-  const save = async (body, { fetchSchema, tablesFilter } = {}) => {
-    if (fetchSchema == null) {
-      fetchSchema = false
-    }
+  const save = async (body, fetchSchema = false) => {
     let response
     if (body._id) {
       response = await API.updateDatasource(body)
@@ -68,7 +65,6 @@ export function createDatasourcesStore() {
       response = await API.createDatasource({
         datasource: body,
         fetchSchema,
-        tablesFilter,
       })
     }
     return updateDatasource(response)

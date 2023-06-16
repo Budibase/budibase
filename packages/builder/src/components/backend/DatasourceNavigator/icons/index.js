@@ -44,9 +44,6 @@ export default ICONS
 
 export function getIcon(integrationType, schema) {
   const integrationList = get(integrations)
-  if (!integrationList) {
-    return
-  }
   if (integrationList[integrationType]?.iconUrl) {
     return { url: integrationList[integrationType].iconUrl }
   } else if (schema?.custom || !ICONS[integrationType]) {
