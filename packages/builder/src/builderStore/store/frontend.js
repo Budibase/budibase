@@ -74,6 +74,7 @@ const INITIAL_FRONTEND_STATE = {
   propertyFocus: null,
   builderSidePanel: false,
   hasLock: true,
+  showPreview: false,
 
   // URL params
   selectedScreenId: null,
