@@ -23,6 +23,7 @@
     scrollLeft,
     dispatch,
     contentLines,
+    isDragging,
   } = getContext("grid")
 
   $: rowCount = $rows.length
@@ -71,8 +72,8 @@
         {@const cellId = `${row._id}-${$stickyColumn?.name}`}
         <div
           class="row"
-          on:mouseenter={() => ($hoveredRowId = row._id)}
-          on:mouseleave={() => ($hoveredRowId = null)}
+          on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
+          on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
         >
           <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
           {#if $stickyColumn}
@@ -96,8 +97,10 @@
       {#if $config.allowAddRows && ($renderedColumns.length || $stickyColumn)}
         <div
           class="row new"
-          on:mouseenter={() => ($hoveredRowId = BlankRowID)}
-          on:mouseleave={() => ($hoveredRowId = null)}
+          on:mouseenter={$isDragging
+            ? null
+            : () => ($hoveredRowId = BlankRowID)}
+          on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
           on:click={() => dispatch("add-row-inline")}
         >
           <GutterCell disableExpand rowHovered={$hoveredRowId === BlankRowID}>
