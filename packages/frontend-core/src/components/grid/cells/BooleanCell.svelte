@@ -44,4 +44,10 @@
   .boolean-cell.editable {
     pointer-events: all;
   }
+  .boolean-cell :global(.spectrum-Checkbox-box:before),
+  .boolean-cell :global(.spectrum-Checkbox-box:after),
+  .boolean-cell :global(.spectrum-Checkbox-checkmark),
+  .boolean-cell :global(.spectrum-Checkbox-partialCheckmark) {
+    transition: none;
+  }
 </style>
