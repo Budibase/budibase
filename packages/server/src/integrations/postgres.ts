@@ -20,7 +20,7 @@ import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
-import { Client, types } from "pg"
+import { Client, ClientConfig, types } from "pg"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -42,6 +42,8 @@ interface PostgresConfig {
   schema: string
   ssl?: boolean
   ca?: string
+  clientKey?: string
+  clientCert?: string
   rejectUnauthorized?: boolean
 }
 
@@ -98,6 +100,19 @@ const SCHEMA: Integration = {
       required: false,
     },
     ca: {
+      display: "Server CA",
+      type: DatasourceFieldType.LONGFORM,
+      default: false,
+      required: false,
+    },
+    clientKey: {
+      display: "Client key",
+      type: DatasourceFieldType.LONGFORM,
+      default: false,
+      required: false,
+    },
+    clientCert: {
+      display: "Client cert",
       type: DatasourceFieldType.LONGFORM,
       default: false,
       required: false,
@@ -144,12 +159,14 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     super(SqlClient.POSTGRES)
     this.config = config
 
-    let newConfig = {
+    let newConfig: ClientConfig = {
       ...this.config,
       ssl: this.config.ssl
         ? {
             rejectUnauthorized: this.config.rejectUnauthorized,
             ca: this.config.ca,
+            key: this.config.clientKey,
+            cert: this.config.clientCert,
           }
         : undefined,
     }
@@ -322,7 +339,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       await this.openConnection()
       const columnsResponse: { rows: PostgresColumn[] } =
         await this.client.query(this.COLUMNS_SQL)
-      return columnsResponse.rows.map(row => row.table_name)
+      const names = columnsResponse.rows.map(row => row.table_name)
+      return [...new Set(names)]
     } finally {
       await this.closeConnection()
     }
