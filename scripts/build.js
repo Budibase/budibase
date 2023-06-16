@@ -36,14 +36,9 @@ function runBuild(entry, outfile) {
       "deasync",
       "mock-aws-s3",
       "nock",
-      "lerna",
-      "dd-trace",
-      "pg",
-      "@bull-board/koa",
-      "koa2-ratelimit",
-      "fsevents",
-      "knex",
-      "aws-sdk",
+      "pino",
+      "koa-pino-logger",
+      "bull",
     ],
   }
 
