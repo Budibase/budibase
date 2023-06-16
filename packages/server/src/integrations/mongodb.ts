@@ -351,7 +351,7 @@ const SCHEMA: Integration = getSchema()
 
 class MongoIntegration implements IntegrationBase {
   private config: MongoDBConfig
-  private client: MongoClient
+  private client: any
 
   constructor(config: MongoDBConfig) {
     this.config = config
@@ -372,8 +372,6 @@ class MongoIntegration implements IntegrationBase {
       response.connected = true
     } catch (e: any) {
       response.error = e.message as string
-    } finally {
-      await this.client.close()
     }
     return response
   }
@@ -382,7 +380,7 @@ class MongoIntegration implements IntegrationBase {
     return this.client.connect()
   }
 
-  createObjectIds(json: any) {
+  createObjectIds(json: any): object {
     const self = this
     function interpolateObjectIds(json: any) {
       for (let field of Object.keys(json)) {
