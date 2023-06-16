@@ -223,6 +223,8 @@
     overflow-y: auto;
     border: var(--cell-border);
     box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
   .options.invertX {
     left: auto;
