@@ -31,6 +31,7 @@ function runBuild(entry, outfile) {
     loader: {
       ".svelte": "copy",
     },
+    metafile: true,
     packages: "external",
     external: [
       "deasync",
@@ -51,7 +52,7 @@ function runBuild(entry, outfile) {
     ...sharedConfig,
     platform: "node",
     outfile,
-  }).then(() => {
+  }).then(result => {
     glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
       for (const file of files) {
         fs.copyFileSync(file, `${process.cwd()}/dist/${path.basename(file)}`)
@@ -62,6 +63,11 @@ function runBuild(entry, outfile) {
         `Build successfully in ${(Date.now() - start) / 1000} seconds`
       )
     })
+
+    fs.writeFileSync(
+      `dist/${path.basename(outfile)}.meta.json`,
+      JSON.stringify(result.metafile)
+    )
   })
 }
 
