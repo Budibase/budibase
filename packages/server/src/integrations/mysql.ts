@@ -91,7 +91,7 @@ const SCHEMA: Integration = {
   },
 }
 
-function bindingTypeCoerce(bindings: any[]) {
+export function bindingTypeCoerce(bindings: any[]) {
   for (let i = 0; i < bindings.length; i++) {
     const binding = bindings[i]
     if (typeof binding !== "string") {
@@ -109,7 +109,12 @@ function bindingTypeCoerce(bindings: any[]) {
       dayjs(binding).isValid() &&
       !binding.includes(",")
     ) {
-      bindings[i] = dayjs(binding).toDate()
+      let value: any
+      value = new Date(binding)
+      if (isNaN(value)) {
+        value = binding
+      }
+      bindings[i] = value
     }
   }
   return bindings
