@@ -11,6 +11,7 @@ const { build } = require("esbuild")
 const {
   default: TsconfigPathsPlugin,
 } = require("@esbuild-plugins/tsconfig-paths")
+const { nodeExternalsPlugin } = require("esbuild-node-externals")
 
 var argv = require("minimist")(process.argv.slice(2))
 
@@ -24,14 +25,13 @@ function runBuild(entry, outfile) {
     minify: !isDev,
     sourcemap: isDev,
     tsconfig,
-    plugins: [TsconfigPathsPlugin({ tsconfig })],
+    plugins: [TsconfigPathsPlugin({ tsconfig }), nodeExternalsPlugin()],
     target: "node14",
     preserveSymlinks: true,
     loader: {
       ".svelte": "copy",
     },
     metafile: true,
-    packages: "external",
     external: [
       "deasync",
       "mock-aws-s3",
