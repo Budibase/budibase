@@ -2489,6 +2489,11 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@fontsource/source-sans-pro@^5.0.3":
+  version "5.0.3"
+  resolved "https://registry.yarnpkg.com/@fontsource/source-sans-pro/-/source-sans-pro-5.0.3.tgz#7d6e84a8169ba12fa5e6ce70757aa2ca7e74d855"
+  integrity sha512-mQnjuif/37VxwRloHZ+wQdoozd2VPWutbFSt1AuSkk7nFXIBQxHJLw80rgCF/osL0t7N/3Gx1V7UJuOX2zxzhQ==
+
 "@fortawesome/fontawesome-common-types@6.3.0":
   version "6.3.0"
   resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-common-types/-/fontawesome-common-types-6.3.0.tgz#51f734e64511dbc3674cd347044d02f4dd26e86b"
@@ -8406,7 +8411,7 @@ chmodr@1.2.0:
   resolved "https://registry.yarnpkg.com/chmodr/-/chmodr-1.2.0.tgz#720e96caa09b7f1cdbb01529b7d0ab6bc5e118b9"
   integrity sha512-Y5uI7Iq/Az6HgJEL6pdw7THVd7jbVOTPwsmcPOBjQL8e3N+pz872kzK5QxYGEy21iRys+iHWV0UZQXDFJo1hyA==
 
-chokidar@3.5.3, chokidar@^3.0.0, chokidar@^3.5.1, chokidar@^3.5.2:
+chokidar@3.5.3, chokidar@^3.0.0, chokidar@^3.5.1, chokidar@^3.5.2, chokidar@^3.5.3:
   version "3.5.3"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.3.tgz#1cf37c8707b932bd1af1ae22c0432e2acd1903bd"
   integrity sha512-Dr3sfKRP6oTcjf2JmUmFJfeVMvXBdegxB0iVQ5eb2V10uFJUCAS8OByZdVAyVb8xXNz3GjjTgj9kLWsZTqE6kw==
@@ -11850,7 +11855,7 @@ fast-glob@3.2.7:
     merge2 "^1.3.0"
     micromatch "^4.0.4"
 
-fast-glob@^3.0.3:
+fast-glob@^3.0.3, fast-glob@^3.2.11:
   version "3.2.12"
   resolved "https://registry.yarnpkg.com/fast-glob/-/fast-glob-3.2.12.tgz#7f39ec99c2e6ab030337142da9e0c18f37afae80"
   integrity sha512-DVj4CQIYYow0BlaelwK1pHl5n5cRSJfM60UA0zK891sVInoPri2Ekj7+e1CT3/3qxXenpI+nBBmQAcJPJgaj4w==
@@ -25422,6 +25427,16 @@ vite-node@0.29.8:
     pathe "^1.1.0"
     picocolors "^1.0.0"
     vite "^3.0.0 || ^4.0.0"
+
+vite-plugin-static-copy@^0.16.0:
+  version "0.16.0"
+  resolved "https://registry.yarnpkg.com/vite-plugin-static-copy/-/vite-plugin-static-copy-0.16.0.tgz#2f65227037f17fc99c0782fd0b344e962935e69e"
+  integrity sha512-dMVEg5Z2SwYRgQnHZaeokvSKB4p/TOTf65JU4sP3U6ccSBsukqdtDOjpmT+xzTFHAA8WJjcS31RMLjUdWQCBzw==
+  dependencies:
+    chokidar "^3.5.3"
+    fast-glob "^3.2.11"
+    fs-extra "^11.1.0"
+    picocolors "^1.0.0"
 
 "vite@^3.0.0 || ^4.0.0":
   version "4.2.2"
