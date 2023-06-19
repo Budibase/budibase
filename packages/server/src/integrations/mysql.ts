@@ -329,8 +329,8 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   async getExternalSchema() {
     try {
       const [databaseResult] = await this.internalQuery({
-      sql: `SHOW CREATE DATABASE ${this.config.database}`,
-    })
+        sql: `SHOW CREATE DATABASE ${this.config.database}`,
+      })
       let dumpContent = [databaseResult["Create Database"]]
 
       const tablesResult = await this.internalQuery({
@@ -350,7 +350,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       }
 
       const schema = dumpContent.join("\n")
-    return schema
+      return schema
     } finally {
       this.disconnect()
     }
