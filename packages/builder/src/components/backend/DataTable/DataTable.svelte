@@ -36,7 +36,6 @@
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
-    columnWhitelist={["email", "firstName", "lastName"]}
     on:updatetable={e => tables.replaceTable(id, e.detail)}
   >
     <svelte:fragment slot="controls">
