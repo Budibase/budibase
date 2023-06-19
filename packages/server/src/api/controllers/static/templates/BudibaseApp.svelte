@@ -40,19 +40,14 @@
   {#if favicon !== ""}
     <link rel="icon" type="image/png" href={favicon} />
   {:else}
-    <link rel="icon" type="image/png" href="https://i.imgur.com/Xhdt1YP.png" />
+    <link rel="icon" type="image/png" href="/builder/bblogo.png" />
   {/if}
 
-  <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap"
-    rel="stylesheet"
-  />
-  <link
-    href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"
-    rel="stylesheet"
-  />
+  <link href="/builder/fonts/source-sans-pro/400.css" rel="stylesheet" />
+  <link href="/builder/fonts/source-sans-pro/600.css" rel="stylesheet" />
+  <link href="/builder/fonts/source-sans-pro/700.css" rel="stylesheet" />
+  <link href="/builder/fonts/remixicon.css" rel="stylesheet" />
+
   <style>
     html,
     body {

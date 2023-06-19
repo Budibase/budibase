@@ -204,6 +204,12 @@
     })
     return columns
       .sort((a, b) => {
+        if (a.divider) {
+          return a
+        }
+        if (b.divider) {
+          return b
+        }
         const orderA = a.order || Number.MAX_SAFE_INTEGER
         const orderB = b.order || Number.MAX_SAFE_INTEGER
         const nameA = getDisplayName(a)

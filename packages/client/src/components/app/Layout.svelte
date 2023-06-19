@@ -180,10 +180,7 @@
               {/if}
               <div class="logo">
                 {#if !hideLogo}
-                  <img
-                    src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
-                    alt={title}
-                  />
+                  <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
                 {/if}
                 {#if !hideTitle && title}
                   <Heading size="S">{title}</Heading>
