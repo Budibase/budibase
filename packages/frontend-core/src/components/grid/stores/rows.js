@@ -4,6 +4,8 @@ import { notifications } from "@budibase/bbui"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import { tick } from "svelte"
 
+const SuppressErrors = true
+
 export const createStores = () => {
   const rows = writable([])
   const table = writable(null)
@@ -209,7 +211,10 @@ export const deriveStores = context => {
   const addRow = async (row, idx, bubble = false) => {
     try {
       // Create row
-      const newRow = await API.saveRow({ ...row, tableId: get(tableId) })
+      const newRow = await API.saveRow(
+        { ...row, tableId: get(tableId) },
+        SuppressErrors
+      )
 
       // Update state
       if (idx != null) {
@@ -336,7 +341,10 @@ export const deriveStores = context => {
         ...state,
         [rowId]: true,
       }))
-      const saved = await API.saveRow({ ...row, ...get(rowChangeCache)[rowId] })
+      const saved = await API.saveRow(
+        { ...row, ...get(rowChangeCache)[rowId] },
+        SuppressErrors
+      )
 
       // Update state after a successful change
       if (saved?._id) {
