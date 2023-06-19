@@ -1,12 +1,6 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
-  import {
-    notifications,
-    Input,
-    ModalContent,
-    Dropzone,
-    Modal,
-  } from "@budibase/bbui"
+  import { notifications, Input, ModalContent, Dropzone } from "@budibase/bbui"
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { apps, admin, auth } from "stores/portal"
