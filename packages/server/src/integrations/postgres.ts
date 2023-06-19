@@ -21,6 +21,7 @@ import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
 import { Client, ClientConfig, types } from "pg"
+import { exec } from "child_process"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -380,6 +381,34 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const response = await this.internalQuery(input)
       return response.rows.length ? response.rows : [{ [operation]: true }]
     }
+  }
+
+  async getSchema() {
+    const dumpCommandParts = [
+      `PGPASSWORD="${this.config.password}"`,
+      `pg_dump -U ${this.config.user} -h ${this.config.host} -p ${this.config.port} -d ${this.config.database} --schema-only`,
+    ]
+
+    const dumpCommand = dumpCommandParts.join(" ")
+
+    return new Promise<string>((res, rej) => {
+      exec(dumpCommand, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error generating dump: ${error.message}`)
+          rej(error.message)
+          return
+        }
+
+        if (stderr) {
+          console.error(`pg_dump error: ${stderr}`)
+          rej(stderr)
+          return
+        }
+
+        res(stdout)
+        console.log("SQL dump generated successfully!")
+      })
+    })
   }
 }
 
