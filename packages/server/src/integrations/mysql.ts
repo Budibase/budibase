@@ -39,6 +39,7 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     host: {
@@ -323,6 +324,14 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     } finally {
       await this.disconnect()
     }
+  }
+
+  async getExternalSchema() {
+    const [result] = await this.internalQuery({
+      sql: `SHOW CREATE DATABASE ${this.config.database}`,
+    })
+    const schema = result["Create Database"]
+    return schema
   }
 }
 
