@@ -1,5 +1,5 @@
 {
-  "version": "2.7.25-alpha.6",
+  "version": "2.7.25-alpha.7",
   "npmClient": "yarn",
   "useNx": true,
   "packages": [
