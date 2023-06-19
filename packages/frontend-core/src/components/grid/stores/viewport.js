@@ -111,14 +111,19 @@ export const deriveStores = context => {
     [height, rowHeight, scrollTop],
     ([$height, $rowHeight, $scrollTop]) => {
       const offset = $scrollTop % $rowHeight
+
+      // Compute the last row index with space to render popovers below it
       const minBottom =
         $height - ScrollBarSize * 3 - MaxCellRenderHeight + offset
-      return Math.floor(minBottom / $rowHeight)
+      const lastIdx = Math.floor(minBottom / $rowHeight)
 
-      // const maxCellRenderRows = Math.ceil(MaxCellRenderHeight / $rowHeight)
-      // const topIdx = $visualRowCapacity - maxCellRenderRows - 2
-      // const bottomIdx = maxCellRenderRows + 1
-      // return Math.max(topIdx, bottomIdx)
+      // Compute the first row index with space to render popovers above it
+      const minTop = MaxCellRenderHeight + offset
+      const firstIdx = Math.ceil(minTop / $rowHeight)
+
+      // Use the greater of the two indices so that we prefer content below,
+      // unless there is room to render the entire popover above
+      return Math.max(lastIdx, firstIdx)
     }
   )
 
