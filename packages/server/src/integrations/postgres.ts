@@ -60,6 +60,7 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     host: {
