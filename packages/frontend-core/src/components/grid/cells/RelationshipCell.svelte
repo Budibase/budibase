@@ -245,7 +245,13 @@
   })
 </script>
 
-<div class="wrapper" class:editable class:focused style="--color:{color};">
+<div
+  class="wrapper"
+  class:editable
+  class:focused
+  class:invertY
+  style="--color:{color};"
+>
   <div class="container" bind:this={container}>
     <div
       class="values"
@@ -351,6 +357,10 @@
     z-index: 1;
     max-height: none;
     overflow: visible;
+  }
+  .wrapper.invertY {
+    top: auto;
+    bottom: 0;
   }
 
   .container {
