@@ -5243,11 +5243,10 @@
         "required": true
       },
       {
-        "type": "multifield",
+        "type": "columns/basic",
         "label": "Columns",
-        "key": "columnWhitelist",
-        "dependsOn": "table",
-        "placeholder": "All columns"
+        "key": "columns",
+        "dependsOn": "table"
       },
       {
         "type": "filter",

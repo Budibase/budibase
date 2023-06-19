@@ -13,10 +13,23 @@
   export let initialSortColumn = null
   export let initialSortOrder = null
   export let initialRowHeight = null
-  export let columnWhitelist = null
+  export let columns = null
 
   const component = getContext("component")
   const { styleable, API, builderStore } = getContext("sdk")
+
+  $: columnWhitelist = columns?.map(col => col.name)
+  $: schemaOverrides = getSchemaOverrides(columns)
+
+  const getSchemaOverrides = columns => {
+    let overrides = {}
+    columns?.forEach(column => {
+      overrides[column.name] = {
+        displayName: column.displayName || column.name,
+      }
+    })
+    return overrides
+  }
 </script>
 
 <div
@@ -35,6 +48,7 @@
     {initialSortOrder}
     {initialRowHeight}
     {columnWhitelist}
+    {schemaOverrides}
     showControls={false}
     allowExpandRows={false}
     allowSchemaChanges={false}

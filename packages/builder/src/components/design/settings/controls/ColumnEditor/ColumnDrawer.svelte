@@ -142,10 +142,10 @@
         <div class="column">
           <div class="wide">
             <Body size="S">
-              By default, all table columns will automatically be shown.
+              By default, all columns will automatically be shown.
               <br />
-              You can manually control which columns are included in your table,
-              and their appearance, by adding them below.
+              You can manually control which columns are included by adding them
+              below.
             </Body>
           </div>
         </div>

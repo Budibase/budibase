@@ -13,7 +13,6 @@
   export let componentInstance
   export let value = []
   export let allowCellEditing = true
-  export let subject = "Table"
 
   const dispatch = createEventDispatcher()
 
@@ -78,10 +77,7 @@
 <div class="column-editor">
   <ActionButton on:click={open}>Configure columns</ActionButton>
 </div>
-<Drawer bind:this={drawer} title="{subject} Columns">
-  <svelte:fragment slot="description">
-    Configure the columns in your {subject.toLowerCase()}.
-  </svelte:fragment>
+<Drawer bind:this={drawer} title="Columns">
   <Button cta slot="buttons" on:click={save}>Save</Button>
   <ColumnDrawer
     slot="body"
