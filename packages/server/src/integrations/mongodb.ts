@@ -489,7 +489,11 @@ class MongoIntegration implements IntegrationBase {
 
       switch (query.extra.actionType) {
         case "find": {
-          return await collection.find(json).toArray()
+          if (json) {
+            return await collection.find(json).toArray()
+          } else {
+            return await collection.find().toArray()
+          }
         }
         case "findOne": {
           return await collection.findOne(json)
