@@ -33,22 +33,6 @@
       selected: allLarge,
     },
   ]
-
-  const changeColumnWidth = async width => {
-    columns.update(state => {
-      state.forEach(column => {
-        column.width = width
-      })
-      return state
-    })
-    if ($stickyColumn) {
-      stickyColumn.update(state => ({
-        ...state,
-        width,
-      }))
-    }
-    await columns.actions.saveChanges()
-  }
 </script>
 
 <div bind:this={anchor}>
@@ -70,7 +54,7 @@
     {#each sizeOptions as option}
       <ActionButton
         quiet
-        on:click={() => changeColumnWidth(option.size)}
+        on:click={() => columns.actions.changeAllColumnWidths(option.size)}
         selected={option.selected}
       >
         {option.label}

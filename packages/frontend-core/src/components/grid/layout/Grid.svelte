@@ -29,7 +29,6 @@
     GutterWidth,
     DefaultRowHeight,
   } from "../lib/constants"
-  import { memo } from "../../../utils"
 
   export let API = null
   export let tableId = null
@@ -43,48 +42,26 @@
   export let collaboration = true
   export let showAvatars = true
   export let showControls = true
-  export let filter = null
-  export let sortColumn = null
-  export let sortOrder = null
+  export let initialFilter = null
+  export let initialSortColumn = null
+  export let initialSortOrder = null
+  export let initialRowHeight = null
 
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
-
-  // Stores derived from props.
-  // We use memo here to ensure redundant store reactions don't fire and cause
-  // wasted API calls.
-  const tableIdStore = memo(tableId)
-  const schemaOverridesStore = memo(schemaOverrides)
-  const filterStore = memo(filter)
-  const sortStore = memo({
-    column: sortColumn,
-    order: sortOrder,
-  })
-  const config = memo({
-    allowAddRows,
-    allowExpandRows,
-    allowEditRows,
-    allowDeleteRows,
-    allowSchemaChanges,
-    stripeRows,
-    showControls,
-  })
 
   // Build up context
   let context = {
     API: API || createAPIClient(),
     rand,
-    config,
-    tableId: tableIdStore,
-    schemaOverrides: schemaOverridesStore,
-    filter: filterStore,
-    sort: sortStore,
+    props: $$props,
   }
   context = { ...context, ...createEventManagers() }
   context = attachStores(context)
 
   // Reference some stores for local use
   const {
+    config,
     isResizing,
     isReordering,
     ui,
@@ -95,22 +72,23 @@
     gridFocused,
   } = context
 
-  // Keep prop-derived stores up to date
-  $: tableIdStore.set(tableId)
-  $: schemaOverridesStore.set(schemaOverrides)
-  $: filterStore.set(filter)
-  $: sortStore.set({
-    column: sortColumn,
-    order: sortOrder,
-  })
+  // Keep config store up to date with props
   $: config.set({
+    tableId,
+    schemaOverrides,
     allowAddRows,
-    allowSchemaChanges,
     allowExpandRows,
     allowEditRows,
     allowDeleteRows,
+    allowSchemaChanges,
     stripeRows,
+    collaboration,
+    showAvatars,
     showControls,
+    initialFilter,
+    initialSortColumn,
+    initialSortOrder,
+    initialRowHeight,
   })
 
   // Set context for children to consume

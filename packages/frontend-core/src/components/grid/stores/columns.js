@@ -56,6 +56,23 @@ export const deriveStores = context => {
     })
   }
 
+  // Updates the width of all columns
+  const changeAllColumnWidths = async width => {
+    columns.update(state => {
+      return state.map(col => ({
+        ...col,
+        width,
+      }))
+    })
+    if (get(stickyColumn)) {
+      stickyColumn.update(state => ({
+        ...state,
+        width,
+      }))
+    }
+    await saveChanges()
+  }
+
   // Persists column changes by saving metadata against table schema
   const saveChanges = async () => {
     const $columns = get(columns)
@@ -107,6 +124,7 @@ export const deriveStores = context => {
         saveChanges,
         saveTable,
         changePrimaryDisplay,
+        changeAllColumnWidths,
       },
     },
   }

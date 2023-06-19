@@ -5230,9 +5230,7 @@
     "block": true,
     "name": "Grid block",
     "icon": "Table",
-    "styles": [
-      "size"
-    ],
+    "styles": ["size"],
     "size": {
       "width": 600,
       "height": 400
@@ -5246,21 +5244,47 @@
         "required": true
       },
       {
+        "type": "columns",
+        "label": "Columns",
+        "key": "columns",
+        "dependsOn": "table"
+      },
+      {
         "type": "filter",
         "label": "Filtering",
-        "key": "filter"
+        "key": "initialFilter"
       },
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "initialSortColumn"
       },
       {
         "type": "select",
         "label": "Sort order",
-        "key": "sortOrder",
+        "key": "initialSortOrder",
         "options": ["Ascending", "Descending"],
         "defaultValue": "Ascending"
+      },
+      {
+        "type": "select",
+        "label": "Row height",
+        "key": "initialRowHeight",
+        "placeholder": "Default",
+        "options": [
+          {
+            "label": "Small",
+            "value": 36
+          },
+          {
+            "label": "Medium",
+            "value": 64
+          },
+          {
+            "label": "Large",
+            "value": 92
+          }
+        ]
       },
       {
         "type": "boolean",
