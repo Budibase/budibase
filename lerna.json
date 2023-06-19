@@ -1,6 +1,7 @@
 {
   "version": "2.7.25-alpha.3",
   "npmClient": "yarn",
+  "useNx": true,
   "packages": [
     "packages/backend-core",
     "packages/bbui",
