@@ -5256,7 +5256,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "initialSortColumn"
+        "key": "initialSortColumn",
+        "placeholder": "Default"
       },
       {
         "type": "select",
