@@ -33,6 +33,7 @@
   export let API = null
   export let tableId = null
   export let schemaOverrides = null
+  export let columnWhitelist = null
   export let allowAddRows = true
   export let allowExpandRows = true
   export let allowEditRows = true
@@ -76,6 +77,7 @@
   $: config.set({
     tableId,
     schemaOverrides,
+    columnWhitelist,
     allowAddRows,
     allowExpandRows,
     allowEditRows,

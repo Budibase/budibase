@@ -11,6 +11,8 @@ export const createStores = context => {
   const initialSortOrder = getProp("initialSortOrder")
   const initialFilter = getProp("initialFilter")
   const initialRowHeight = getProp("initialRowHeight")
+  const schemaOverrides = getProp("schemaOverrides")
+  const columnWhitelist = getProp("columnWhitelist")
 
   return {
     config,
@@ -19,5 +21,7 @@ export const createStores = context => {
     initialSortOrder,
     initialFilter,
     initialRowHeight,
+    schemaOverrides,
+    columnWhitelist,
   }
 }

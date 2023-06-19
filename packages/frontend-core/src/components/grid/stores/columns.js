@@ -131,11 +131,12 @@ export const deriveStores = context => {
 }
 
 export const initialise = context => {
-  const { table, columns, stickyColumn, schemaOverrides } = context
+  const { table, columns, stickyColumn, schemaOverrides, columnWhitelist } =
+    context
 
   const schema = derived(
-    [table, schemaOverrides],
-    ([$table, $schemaOverrides]) => {
+    [table, schemaOverrides, columnWhitelist],
+    ([$table, $schemaOverrides, $columnWhitelist]) => {
       if (!$table?.schema) {
         return null
       }
@@ -162,6 +163,16 @@ export const initialise = context => {
           }
         }
       })
+
+      // Apply whitelist if specified
+      if ($columnWhitelist?.length) {
+        Object.keys(newSchema).forEach(key => {
+          if (!$columnWhitelist.includes(key)) {
+            delete newSchema[key]
+          }
+        })
+      }
+
       return newSchema
     }
   )
@@ -229,7 +240,7 @@ export const initialise = context => {
     }
     stickyColumn.set({
       name: primaryDisplay,
-      label: $schema[primaryDisplay].name || primaryDisplay,
+      label: $schema[primaryDisplay].displayName || primaryDisplay,
       schema: $schema[primaryDisplay],
       width: $schema[primaryDisplay].width || DefaultColumnWidth,
       visible: true,
