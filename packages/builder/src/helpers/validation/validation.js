@@ -6,7 +6,6 @@ export function createValidationStore(initialValue, ...validators) {
   let touched = false
 
   const value = writable(initialValue || "")
-  const error = derived(value, $v => validate($v, validators))
   const touchedStore = derived(value, () => {
     if (!touched) {
       touched = true
@@ -14,6 +13,10 @@ export function createValidationStore(initialValue, ...validators) {
     }
     return touched
   })
+  const error = derived(
+    [value, touchedStore],
+    ([$v, $t]) => $t && validate($v, validators)
+  )
 
   return [value, error, touchedStore]
 }

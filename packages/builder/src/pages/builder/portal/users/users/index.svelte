@@ -373,7 +373,7 @@
   <OnboardingTypeModal {chooseCreationType} />
 </Modal>
 
-<Modal bind:this={passwordModal}>
+<Modal bind:this={passwordModal} disableCancel={true}>
   <PasswordModal
     createUsersResponse={bulkSaveResponse}
     userData={userData.users}

@@ -1,11 +1,16 @@
 import crypto from "crypto"
+import fs from "fs"
+import zlib from "zlib"
 import env from "../environment"
+import { join } from "path"
 
 const ALGO = "aes-256-ctr"
 const SEPARATOR = "-"
 const ITERATIONS = 10000
-const RANDOM_BYTES = 16
 const STRETCH_LENGTH = 32
+
+const SALT_LENGTH = 16
+const IV_LENGTH = 16
 
 export enum SecretOption {
   API = "api",
@@ -31,15 +36,15 @@ export function getSecret(secretOption: SecretOption): string {
   return secret
 }
 
-function stretchString(string: string, salt: Buffer) {
-  return crypto.pbkdf2Sync(string, salt, ITERATIONS, STRETCH_LENGTH, "sha512")
+function stretchString(secret: string, salt: Buffer) {
+  return crypto.pbkdf2Sync(secret, salt, ITERATIONS, STRETCH_LENGTH, "sha512")
 }
 
 export function encrypt(
   input: string,
   secretOption: SecretOption = SecretOption.API
 ) {
-  const salt = crypto.randomBytes(RANDOM_BYTES)
+  const salt = crypto.randomBytes(SALT_LENGTH)
   const stretched = stretchString(getSecret(secretOption), salt)
   const cipher = crypto.createCipheriv(ALGO, stretched, salt)
   const base = cipher.update(input)
@@ -59,4 +64,116 @@ export function decrypt(
   const base = decipher.update(Buffer.from(encrypted, "hex"))
   const final = decipher.final()
   return Buffer.concat([base, final]).toString()
+}
+
+export async function encryptFile(
+  { dir, filename }: { dir: string; filename: string },
+  secret: string
+) {
+  const outputFileName = `${filename}.enc`
+
+  const filePath = join(dir, filename)
+  const inputFile = fs.createReadStream(filePath)
+  const outputFile = fs.createWriteStream(join(dir, outputFileName))
+
+  const salt = crypto.randomBytes(SALT_LENGTH)
+  const iv = crypto.randomBytes(IV_LENGTH)
+  const stretched = stretchString(secret, salt)
+  const cipher = crypto.createCipheriv(ALGO, stretched, iv)
+
+  outputFile.write(salt)
+  outputFile.write(iv)
+
+  inputFile.pipe(zlib.createGzip()).pipe(cipher).pipe(outputFile)
+
+  return new Promise<{ filename: string; dir: string }>(r => {
+    outputFile.on("finish", () => {
+      r({
+        filename: outputFileName,
+        dir,
+      })
+    })
+  })
+}
+
+async function getSaltAndIV(path: string) {
+  const fileStream = fs.createReadStream(path)
+
+  const salt = await readBytes(fileStream, SALT_LENGTH)
+  const iv = await readBytes(fileStream, IV_LENGTH)
+  fileStream.close()
+  return { salt, iv }
+}
+
+export async function decryptFile(
+  inputPath: string,
+  outputPath: string,
+  secret: string
+) {
+  const { salt, iv } = await getSaltAndIV(inputPath)
+  const inputFile = fs.createReadStream(inputPath, {
+    start: SALT_LENGTH + IV_LENGTH,
+  })
+
+  const outputFile = fs.createWriteStream(outputPath)
+
+  const stretched = stretchString(secret, salt)
+  const decipher = crypto.createDecipheriv(ALGO, stretched, iv)
+
+  const unzip = zlib.createGunzip()
+
+  inputFile.pipe(decipher).pipe(unzip).pipe(outputFile)
+
+  return new Promise<void>((res, rej) => {
+    outputFile.on("finish", () => {
+      outputFile.close()
+      res()
+    })
+
+    inputFile.on("error", e => {
+      outputFile.close()
+      rej(e)
+    })
+
+    decipher.on("error", e => {
+      outputFile.close()
+      rej(e)
+    })
+
+    unzip.on("error", e => {
+      outputFile.close()
+      rej(e)
+    })
+
+    outputFile.on("error", e => {
+      outputFile.close()
+      rej(e)
+    })
+  })
+}
+
+function readBytes(stream: fs.ReadStream, length: number) {
+  return new Promise<Buffer>((resolve, reject) => {
+    let bytesRead = 0
+    const data: Buffer[] = []
+
+    stream.on("readable", () => {
+      let chunk
+
+      while ((chunk = stream.read(length - bytesRead)) !== null) {
+        data.push(chunk)
+        bytesRead += chunk.length
+      }
+
+      resolve(Buffer.concat(data))
+    })
+
+    stream.on("end", () => {
+      reject(new Error("Insufficient data in the stream."))
+    })
+
+    stream.on("error", error => {
+      reject(error)
+    })
+  })
 }
