@@ -1,3 +1,4 @@
+import fs from "fs"
 import {
   Integration,
   DatasourceFieldType,
@@ -22,6 +23,7 @@ import { escapeDangerousCharacters } from "../utilities"
 
 import { Client, ClientConfig, types } from "pg"
 import { exec } from "child_process"
+import { storeTempFile } from "../utilities/fileSystem"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -385,11 +387,36 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
   async getSchema() {
     const dumpCommandParts = [
-      `PGPASSWORD="${this.config.password}"`,
-      `pg_dump -U ${this.config.user} -h ${this.config.host} -p ${this.config.port} -d ${this.config.database} --schema-only`,
+      `user=${this.config.user}`,
+      `host=${this.config.host}`,
+      `port=${this.config.port}`,
+      `dbname=${this.config.database}`,
     ]
 
-    const dumpCommand = dumpCommandParts.join(" ")
+    if (this.config.ssl) {
+      dumpCommandParts.push("sslmode=verify-ca")
+      if (this.config.ca) {
+        const caFilePath = storeTempFile(this.config.ca)
+        fs.chmodSync(caFilePath, "0600")
+        dumpCommandParts.push(`sslrootcert=${caFilePath}`)
+      }
+
+      if (this.config.clientCert) {
+        const clientCertFilePath = storeTempFile(this.config.clientCert)
+        fs.chmodSync(clientCertFilePath, "0600")
+        dumpCommandParts.push(`sslcert=${clientCertFilePath}`)
+      }
+
+      if (this.config.clientKey) {
+        const clientKeyFilePath = storeTempFile(this.config.clientKey)
+        fs.chmodSync(clientKeyFilePath, "0600")
+        dumpCommandParts.push(`sslkey=${clientKeyFilePath}`)
+      }
+    }
+
+    const dumpCommand = `PGPASSWORD="${
+      this.config.password
+    }" pg_dump --schema-only "${dumpCommandParts.join(" ")}"`
 
     return new Promise<string>((res, rej) => {
       exec(dumpCommand, (error, stdout, stderr) => {
