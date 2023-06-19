@@ -42,6 +42,8 @@
   let candidateIndex
   let lastSearchId
   let searching = false
+  let valuesHeight = 0
+  let container
 
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
@@ -138,6 +140,8 @@
 
   const open = async () => {
     isOpen = true
+    valuesHeight = container.getBoundingClientRect().height
+    console.log(valuesHeight)
 
     // Find the primary display for the related table
     if (!primaryDisplay) {
@@ -243,7 +247,7 @@
 </script>
 
 <div class="wrapper" class:editable class:focused style="--color:{color};">
-  <div class="container">
+  <div class="container" bind:this={container}>
     <div
       class="values"
       class:wrap={editable || contentLines > 1}
@@ -290,6 +294,7 @@
       class:invertY
       on:wheel|stopPropagation
       use:clickOutside={close}
+      style="--values-height:{valuesHeight}px;"
     >
       <div class="search">
         <Input

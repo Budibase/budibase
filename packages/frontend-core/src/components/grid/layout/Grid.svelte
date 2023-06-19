@@ -1,6 +1,5 @@
 <script>
   import { setContext, onMount } from "svelte"
-  import { writable } from "svelte/store"
   import { fade } from "svelte/transition"
   import { clickOutside, ProgressCircle } from "@budibase/bbui"
   import { createEventManagers } from "../lib/events"
@@ -30,6 +29,7 @@
     GutterWidth,
     DefaultRowHeight,
   } from "../lib/constants"
+  import { memo } from "../../../utils"
 
   export let API = null
   export let tableId = null
@@ -43,19 +43,29 @@
   export let collaboration = true
   export let showAvatars = true
   export let showControls = true
+  export let filter = null
+  export let sortColumn = null
+  export let sortOrder = null
 
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
 
-  // State stores
-  const tableIdStore = writable(tableId)
-  const schemaOverridesStore = writable(schemaOverrides)
-  const config = writable({
+  // Stores derived from props.
+  // We use memo here to ensure redundant store reactions don't fire and cause
+  // wasted API calls.
+  const tableIdStore = memo(tableId)
+  const schemaOverridesStore = memo(schemaOverrides)
+  const filterStore = memo(filter)
+  const sortStore = memo({
+    column: sortColumn,
+    order: sortOrder,
+  })
+  const config = memo({
     allowAddRows,
-    allowSchemaChanges,
     allowExpandRows,
     allowEditRows,
     allowDeleteRows,
+    allowSchemaChanges,
     stripeRows,
     showControls,
   })
@@ -67,6 +77,8 @@
     config,
     tableId: tableIdStore,
     schemaOverrides: schemaOverridesStore,
+    filter: filterStore,
+    sort: sortStore,
   }
   context = { ...context, ...createEventManagers() }
   context = attachStores(context)
@@ -83,9 +95,14 @@
     gridFocused,
   } = context
 
-  // Keep stores up to date
+  // Keep prop-derived stores up to date
   $: tableIdStore.set(tableId)
   $: schemaOverridesStore.set(schemaOverrides)
+  $: filterStore.set(filter)
+  $: sortStore.set({
+    column: sortColumn,
+    order: sortOrder,
+  })
   $: config.set({
     allowAddRows,
     allowSchemaChanges,
@@ -115,10 +132,10 @@
   id="grid-{rand}"
   class:is-resizing={$isResizing}
   class:is-reordering={$isReordering}
-  class:stripe={$config.stripeRows}
-  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
+  class:stripe={stripeRows}
   on:mouseenter={() => gridFocused.set(true)}
   on:mouseleave={() => gridFocused.set(false)}
+  style="--row-height:{$rowHeight}px; --default-row-height:{DefaultRowHeight}px; --gutter-width:{GutterWidth}px; --max-cell-render-height:{MaxCellRenderHeight}px; --max-cell-render-width-overflow:{MaxCellRenderWidthOverflow}px; --content-lines:{$contentLines};"
 >
   {#if showControls}
     <div class="controls">
@@ -170,6 +187,7 @@
 </div>
 
 <style>
+  /* Core grid */
   .grid {
     /* Variables */
     --grid-background: var(--spectrum-global-color-gray-50);
@@ -182,7 +200,6 @@
     --cell-border: 1px solid var(--spectrum-global-color-gray-200);
     --cell-font-size: 14px;
     --controls-height: 50px;
-
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
@@ -206,6 +223,7 @@
     --cell-background-alt: var(--spectrum-global-color-gray-75);
   }
 
+  /* Data layers */
   .grid-data-outer,
   .grid-data-inner {
     flex: 1 1 auto;

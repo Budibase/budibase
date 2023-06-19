@@ -5237,12 +5237,30 @@
       "width": 600,
       "height": 400
     },
+    "info": "Grid Block is only compatible with internal or SQL tables",
     "settings": [
       {
         "type": "table",
         "label": "Table",
         "key": "table",
         "required": true
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Ascending"
       },
       {
         "type": "boolean",

@@ -2,19 +2,13 @@ import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch/fetchData"
 import { notifications } from "@budibase/bbui"
 import { NewRowID, RowPageSize } from "../lib/constants"
-
-const initialSortState = {
-  column: null,
-  order: "ascending",
-}
+import { tick } from "svelte"
 
 export const createStores = () => {
   const rows = writable([])
   const table = writable(null)
-  const filter = writable([])
   const loading = writable(false)
   const loaded = writable(false)
-  const sort = writable(initialSortState)
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
@@ -46,10 +40,8 @@ export const createStores = () => {
     rows,
     rowLookupMap,
     table,
-    filter,
     loaded,
     loading,
-    sort,
     rowChangeCache,
     inProgressChanges,
     hasNextPage,
@@ -97,15 +89,18 @@ export const deriveStores = context => {
   // Reset everything when table ID changes
   let unsubscribe = null
   let lastResetKey = null
-  tableId.subscribe($tableId => {
+  tableId.subscribe(async $tableId => {
     // Unsub from previous fetch if one exists
     unsubscribe?.()
     fetch.set(null)
     instanceLoaded.set(false)
     loading.set(true)
 
-    // Reset state
-    filter.set([])
+    // Tick to allow other reactive logic to update stores when table ID changes
+    // before proceeding. This allows us to wipe filters etc if needed.
+    await tick()
+    const $filter = get(filter)
+    const $sort = get(sort)
 
     // Create new fetch model
     const newFetch = fetchData({
@@ -115,9 +110,9 @@ export const deriveStores = context => {
         tableId: $tableId,
       },
       options: {
-        filter: [],
-        sortColumn: initialSortState.column,
-        sortOrder: initialSortState.order,
+        filter: $filter,
+        sortColumn: $sort.column,
+        sortOrder: $sort.order,
         limit: RowPageSize,
         paginate: true,
       },
