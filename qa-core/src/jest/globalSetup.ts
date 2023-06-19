@@ -1,3 +1,4 @@
+process.env.DISABLE_PINO_LOGGER = "1"
 import { DEFAULT_TENANT_ID, logging } from "@budibase/backend-core"
 import { AccountInternalAPI } from "../account-api"
 import * as fixtures from "../internal-api/fixtures"
