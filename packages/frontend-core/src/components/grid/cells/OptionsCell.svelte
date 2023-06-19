@@ -132,10 +132,7 @@
             {option}
           </div>
           {#if values.includes(option)}
-            <Icon
-              name="Checkmark"
-              color="var(--spectrum-global-color-blue-400)"
-            />
+            <Icon name="Checkmark" color="var(--accent-color)" />
           {/if}
         </div>
       {/each}
