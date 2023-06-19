@@ -75,7 +75,9 @@
   }
 </script>
 
-<ActionButton on:click={open}>Configure columns</ActionButton>
+<div class="column-editor">
+  <ActionButton on:click={open}>Configure columns</ActionButton>
+</div>
 <Drawer bind:this={drawer} title="{subject} Columns">
   <svelte:fragment slot="description">
     Configure the columns in your {subject.toLowerCase()}.
@@ -89,3 +91,9 @@
     {allowCellEditing}
   />
 </Drawer>
+
+<style>
+  .column-editor :global(.spectrum-ActionButton) {
+    width: 100%;
+  }
+</style>
