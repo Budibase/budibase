@@ -323,11 +323,7 @@
                 </span>
               </div>
               {#if isRowSelected(row)}
-                <Icon
-                  size="S"
-                  name="Checkmark"
-                  color="var(--spectrum-global-color-blue-400)"
-                />
+                <Icon size="S" name="Checkmark" color="var(--accent-color)" />
               {/if}
             </div>
           {/each}

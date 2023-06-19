@@ -190,6 +190,7 @@
   /* Core grid */
   .grid {
     /* Variables */
+    --accent-color: var(--primaryColor, var(--spectrum-global-color-blue-400));
     --grid-background: var(--spectrum-global-color-gray-50);
     --grid-background-alt: var(--spectrum-global-color-gray-100);
     --cell-background: var(--grid-background);
