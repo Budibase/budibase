@@ -141,7 +141,6 @@
   const open = async () => {
     isOpen = true
     valuesHeight = container.getBoundingClientRect().height
-    console.log(valuesHeight)
 
     // Find the primary display for the related table
     if (!primaryDisplay) {
@@ -345,7 +344,7 @@
     min-height: var(--row-height);
     max-height: var(--row-height);
     overflow: hidden;
-    --max-relationship-height: 120px;
+    --max-relationship-height: 96px;
   }
   .wrapper.focused {
     position: absolute;
@@ -455,8 +454,7 @@
     left: 0;
     width: 100%;
     max-height: calc(
-      var(--max-cell-render-height) + var(--row-height) -
-        var(--max-relationship-height)
+      var(--max-cell-render-height) + var(--row-height) - var(--values-height)
     );
     background: var(--grid-background-alt);
     border: var(--cell-border);
