@@ -197,10 +197,12 @@
       Move right
     </MenuItem>
     <MenuItem
-      disabled={idx === "sticky"}
+      disabled={idx === "sticky" || !$config.showControls}
       icon="VisibilityOff"
-      on:click={hideColumn}>Hide column</MenuItem
+      on:click={hideColumn}
     >
+      Hide column
+    </MenuItem>
   </Menu>
 </Popover>
 

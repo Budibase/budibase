@@ -13,6 +13,7 @@
   export let initialSortColumn = null
   export let initialSortOrder = null
   export let initialRowHeight = null
+  export let columnWhitelist = null
 
   const component = getContext("component")
   const { styleable, API, builderStore } = getContext("sdk")
@@ -33,6 +34,7 @@
     {initialSortColumn}
     {initialSortOrder}
     {initialRowHeight}
+    {columnWhitelist}
     showControls={false}
     allowExpandRows={false}
     allowSchemaChanges={false}

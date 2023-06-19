@@ -5227,9 +5227,8 @@
     }
   },
   "gridblock": {
-    "block": true,
     "name": "Grid block",
-    "icon": "Table",
+    "icon": "ViewTable",
     "styles": ["size"],
     "size": {
       "width": 600,
@@ -5244,10 +5243,11 @@
         "required": true
       },
       {
-        "type": "columns",
+        "type": "multifield",
         "label": "Columns",
-        "key": "columns",
-        "dependsOn": "table"
+        "key": "columnWhitelist",
+        "dependsOn": "table",
+        "placeholder": "All columns"
       },
       {
         "type": "filter",
