@@ -1,5 +1,5 @@
 {
-  "version": "2.7.24",
+  "version": "2.7.25-alpha.1",
   "npmClient": "yarn",
   "packages": [
     "packages/backend-core",
@@ -16,6 +16,7 @@
     "packages/worker",
     "packages/pro/packages/pro"
   ],
+  "useWorkspaces": true,
   "command": {
     "publish": {
       "ignoreChanges": [
