@@ -63,12 +63,18 @@ describe("getExternalSchema", () => {
     it("can export a database with tables", async () => {
       const integration = new postgres.integration(config)
 
-      integration.internalQuery({
+      await integration.internalQuery({
         sql: `
-      CREATE TABLE IF NOT EXISTS "users" (
+      CREATE TABLE "users" (
+      "id" SERIAL,
+      "name" VARCHAR(100) NOT NULL,
+      "role" VARCHAR(15) NOT NULL,
+      PRIMARY KEY ("id")
+    );
+      CREATE TABLE "products" (
 	    "id" SERIAL,
 	    "name" VARCHAR(100) NOT NULL,
-	    "role" VARCHAR(15) NOT NULL,
+	    "price" DECIMAL NOT NULL,
 	    PRIMARY KEY ("id")
     );`,
       })
@@ -98,6 +104,41 @@ describe("getExternalSchema", () => {
         SET default_table_access_method = heap;
 
         --
+        -- Name: products; Type: TABLE; Schema: public; Owner: postgres
+        --
+
+        CREATE TABLE public.products (
+            id integer NOT NULL,
+            name character varying(100) NOT NULL,
+            price numeric NOT NULL
+        );
+
+
+        ALTER TABLE public.products OWNER TO postgres;
+
+        --
+        -- Name: products_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+        --
+
+        CREATE SEQUENCE public.products_id_seq
+            AS integer
+            START WITH 1
+            INCREMENT BY 1
+            NO MINVALUE
+            NO MAXVALUE
+            CACHE 1;
+
+
+        ALTER TABLE public.products_id_seq OWNER TO postgres;
+
+        --
+        -- Name: products_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+        --
+
+        ALTER SEQUENCE public.products_id_seq OWNED BY public.products.id;
+
+
+        --
         -- Name: users; Type: TABLE; Schema: public; Owner: postgres
         --
 
@@ -133,10 +174,25 @@ describe("getExternalSchema", () => {
 
 
         --
+        -- Name: products id; Type: DEFAULT; Schema: public; Owner: postgres
+        --
+
+        ALTER TABLE ONLY public.products ALTER COLUMN id SET DEFAULT nextval('public.products_id_seq'::regclass);
+
+
+        --
         -- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
         --
 
         ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+        --
+        -- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+        --
+
+        ALTER TABLE ONLY public.products
+            ADD CONSTRAINT products_pkey PRIMARY KEY (id);
 
 
         --
@@ -158,8 +214,9 @@ describe("getExternalSchema", () => {
     it("does not export a data", async () => {
       const integration = new postgres.integration(config)
 
-      integration.internalQuery({
-        sql: `INSERT INTO "users" ("name", "role") VALUES ('John Doe', 'Administrator');`,
+      await integration.internalQuery({
+        sql: `INSERT INTO "users" ("name", "role") VALUES ('John Doe', 'Administrator');
+        INSERT INTO "products" ("name", "price") VALUES ('Book', 7.68);`,
       })
 
       const result = await integration.getExternalSchema()
@@ -187,6 +244,41 @@ describe("getExternalSchema", () => {
         SET default_table_access_method = heap;
 
         --
+        -- Name: products; Type: TABLE; Schema: public; Owner: postgres
+        --
+
+        CREATE TABLE public.products (
+            id integer NOT NULL,
+            name character varying(100) NOT NULL,
+            price numeric NOT NULL
+        );
+
+
+        ALTER TABLE public.products OWNER TO postgres;
+
+        --
+        -- Name: products_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+        --
+
+        CREATE SEQUENCE public.products_id_seq
+            AS integer
+            START WITH 1
+            INCREMENT BY 1
+            NO MINVALUE
+            NO MAXVALUE
+            CACHE 1;
+
+
+        ALTER TABLE public.products_id_seq OWNER TO postgres;
+
+        --
+        -- Name: products_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+        --
+
+        ALTER SEQUENCE public.products_id_seq OWNED BY public.products.id;
+
+
+        --
         -- Name: users; Type: TABLE; Schema: public; Owner: postgres
         --
 
@@ -222,10 +314,25 @@ describe("getExternalSchema", () => {
 
 
         --
+        -- Name: products id; Type: DEFAULT; Schema: public; Owner: postgres
+        --
+
+        ALTER TABLE ONLY public.products ALTER COLUMN id SET DEFAULT nextval('public.products_id_seq'::regclass);
+
+
+        --
         -- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
         --
 
         ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+        --
+        -- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+        --
+
+        ALTER TABLE ONLY public.products
+            ADD CONSTRAINT products_pkey PRIMARY KEY (id);
 
 
         --
