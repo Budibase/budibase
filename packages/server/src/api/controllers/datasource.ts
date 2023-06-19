@@ -26,6 +26,7 @@ import {
   IntegrationBase,
   DatasourcePlus,
   SourceName,
+  Ctx,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
@@ -439,5 +440,20 @@ export async function query(ctx: UserCtx) {
     ctx.body = await getDatasourceAndQuery(queryJson)
   } catch (err: any) {
     ctx.throw(400, err)
+  }
+}
+
+export async function getExternalSchema(ctx: Ctx) {
+  const { datasource } = ctx.request.body
+  const enrichedDatasource = await getAndMergeDatasource(datasource)
+  const connector = await getConnector(enrichedDatasource)
+
+  if (!connector.getExternalSchema) {
+    ctx.throw(400, "Datasource does not support exporting external schema")
+  }
+  const response = await connector.getExternalSchema()
+
+  ctx.body = {
+    schema: response,
   }
 }

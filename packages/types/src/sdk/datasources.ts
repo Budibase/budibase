@@ -140,6 +140,7 @@ export interface IntegrationBase {
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
   testConnection?(): Promise<ConnectionInfo>
+  getExternalSchema?(): Promise<string>
 }
 
 export interface DatasourcePlus extends IntegrationBase {
