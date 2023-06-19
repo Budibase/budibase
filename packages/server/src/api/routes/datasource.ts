@@ -66,5 +66,10 @@ router
     authorized(permissions.BUILDER),
     datasourceController.destroy
   )
+  .get(
+    "/api/datasources/:datasourceId/external-schema",
+    authorized(permissions.BUILDER),
+    datasourceController.getExternalSchema
+  )
 
 export default router

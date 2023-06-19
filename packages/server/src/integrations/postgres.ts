@@ -181,6 +181,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     const response: ConnectionInfo = {
       connected: false,
     }
+
     try {
       await this.openConnection()
       response.connected = true
@@ -385,7 +386,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
   }
 
-  async getSchema() {
+  async getExternalSchema() {
     const dumpCommandParts = [
       `user=${this.config.user}`,
       `host=${this.config.host}`,
