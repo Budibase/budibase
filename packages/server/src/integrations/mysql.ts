@@ -327,11 +327,33 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   }
 
   async getExternalSchema() {
-    const [result] = await this.internalQuery({
+    try {
+      const [databaseResult] = await this.internalQuery({
       sql: `SHOW CREATE DATABASE ${this.config.database}`,
     })
-    const schema = result["Create Database"]
+      let dumpContent = [databaseResult["Create Database"]]
+
+      const tablesResult = await this.internalQuery({
+        sql: `SHOW TABLES`,
+      })
+
+      for (const row of tablesResult) {
+        const tableName = row[`Tables_in_${this.config.database}`]
+
+        const createTableResults = await this.internalQuery({
+          sql: `SHOW CREATE TABLE \`${tableName}\``,
+        })
+
+        const createTableStatement = createTableResults[0]["Create Table"]
+
+        dumpContent.push(createTableStatement)
+      }
+
+      const schema = dumpContent.join("\n")
     return schema
+    } finally {
+      this.disconnect()
+    }
   }
 }
 
