@@ -193,5 +193,9 @@ export const initialise = context => {
   })
 
   // Reset row height when initial row height prop changes
-  initialRowHeight.subscribe(rowHeight.set)
+  initialRowHeight.subscribe(height => {
+    if (height) {
+      rowHeight.set(height)
+    }
+  })
 }
