@@ -196,6 +196,8 @@ export const initialise = context => {
   initialRowHeight.subscribe(height => {
     if (height) {
       rowHeight.set(height)
+    } else {
+      rowHeight.set(get(table)?.rowHeight || DefaultRowHeight)
     }
   })
 }
