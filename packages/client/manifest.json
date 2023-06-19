@@ -5228,13 +5228,13 @@
   },
   "gridblock": {
     "name": "Grid block",
-    "icon": "ViewTable",
+    "icon": "Table",
     "styles": ["size"],
     "size": {
       "width": 600,
       "height": 400
     },
-    "info": "Grid Block is only compatible with internal or SQL tables",
+    "info": "Grid Blocks are only compatible with internal or SQL tables",
     "settings": [
       {
         "type": "table",
@@ -5306,7 +5306,7 @@
       },
       {
         "type": "boolean",
-        "label": "Stripe rows",
+        "label": "High contrast",
         "key": "stripeRows",
         "defaultValue": false
       }
