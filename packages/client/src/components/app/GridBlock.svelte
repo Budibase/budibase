@@ -9,9 +9,10 @@
   export let allowEditRows = true
   export let allowDeleteRows = true
   export let stripeRows = false
-  export let filter = null
-  export let sortColumn = null
-  export let sortOrder = null
+  export let initialFilter = null
+  export let initialSortColumn = null
+  export let initialSortOrder = null
+  export let initialRowHeight = null
 
   const component = getContext("component")
   const { styleable, API, builderStore } = getContext("sdk")
@@ -28,9 +29,10 @@
     {allowEditRows}
     {allowDeleteRows}
     {stripeRows}
-    {filter}
-    {sortColumn}
-    {sortOrder}
+    {initialFilter}
+    {initialSortColumn}
+    {initialSortOrder}
+    {initialRowHeight}
     showControls={false}
     allowExpandRows={false}
     allowSchemaChanges={false}

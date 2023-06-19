@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 
 // A simple svelte store which deeply compares all changes and ensures that
 // subscribed children will only fire when a new value is actually set
@@ -32,4 +32,12 @@ export const memo = initialValue => {
       tryUpdateValue(newValue, currentValue)
     },
   }
+}
+
+// Enriched version of svelte's derived store which returns a memo
+export const derivedMemo = (store, derivation) => {
+  const derivedStore = derived(store, derivation)
+  const memoStore = memo(get(derivedStore))
+  derivedStore.subscribe(memoStore.set)
+  return memoStore
 }
