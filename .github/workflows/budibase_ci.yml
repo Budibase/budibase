@@ -146,7 +146,7 @@ jobs:
       - name: Check pro commit
         id: get_pro_commits
         run: |
-          cd submodule
+          cd packages/pro
           pro_commit=$(git rev-parse HEAD)
           latest_commit=$(git rev-parse origin/develop)
           echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
