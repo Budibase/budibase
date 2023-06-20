@@ -43,6 +43,7 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     user: {
@@ -335,6 +336,81 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     const processFn = (result: any) =>
       result.recordset ? result.recordset : [{ [operation]: true }]
     return this.queryWithReturning(json, queryFn, processFn)
+  }
+
+  async getExternalSchema() {
+    // Query to retrieve table schema
+    const query = `
+  SELECT
+    t.name AS TableName,
+    c.name AS ColumnName,
+    ty.name AS DataType,
+    c.max_length AS MaxLength,
+    c.is_nullable AS IsNullable,
+    c.is_identity AS IsIdentity
+  FROM
+    sys.tables t
+    INNER JOIN sys.columns c ON t.object_id = c.object_id
+    INNER JOIN sys.types ty ON c.system_type_id = ty.system_type_id
+  WHERE
+    t.is_ms_shipped = 0
+  ORDER BY
+    t.name, c.column_id
+`
+
+    await this.connect()
+
+    const result = await this.internalQuery({
+      sql: query,
+    })
+
+    const scriptParts = []
+    const tables: any = {}
+    for (const row of result.recordset) {
+      const {
+        TableName,
+        ColumnName,
+        DataType,
+        MaxLength,
+        IsNullable,
+        IsIdentity,
+      } = row
+
+      if (!tables[TableName]) {
+        tables[TableName] = {
+          columns: [],
+        }
+      }
+
+      const columnDefinition = `${ColumnName} ${DataType}${
+        MaxLength ? `(${MaxLength})` : ""
+      }${IsNullable ? " NULL" : " NOT NULL"}`
+
+      tables[TableName].columns.push(columnDefinition)
+
+      if (IsIdentity) {
+        tables[TableName].identityColumn = ColumnName
+      }
+    }
+
+    // Generate SQL statements for table creation
+    for (const tableName in tables) {
+      const { columns, identityColumn } = tables[tableName]
+
+      let createTableStatement = `CREATE TABLE [${tableName}] (\n`
+      createTableStatement += columns.join(",\n")
+
+      if (identityColumn) {
+        createTableStatement += `,\n CONSTRAINT [PK_${tableName}] PRIMARY KEY (${identityColumn})`
+      }
+
+      createTableStatement += "\n);"
+
+      scriptParts.push(createTableStatement)
+    }
+
+    const schema = scriptParts.join("\n")
+    return schema
   }
 }
 
