@@ -140,15 +140,19 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
-      # - name: Fetch develop branch
-      #   run: git fetch origin develop
-
       - name: Check pro commit
         id: get_pro_commits
         run: |
           cd packages/pro
           pro_commit=$(git rev-parse HEAD)
-          latest_commit=$(git rev-parse origin/develop)
+
+          echo "Running on branch ${{ github.ref }}
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            latest_commit=$(git rev-parse origin/master)
+          else
+            latest_commit=$(git rev-parse origin/develop)
+          fi
+
           echo "pro_commit=$pro_commit"
           echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
           echo "latest_commit=$latest_commit"
