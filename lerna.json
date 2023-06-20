@@ -1,6 +1,7 @@
 {
-  "version": "2.7.25-alpha.5",
+  "version": "2.7.25-alpha.7",
   "npmClient": "yarn",
+  "useNx": true,
   "packages": [
     "packages/backend-core",
     "packages/bbui",
@@ -16,7 +17,6 @@
     "packages/worker",
     "packages/pro/packages/pro"
   ],
-  "useWorkspaces": true,
   "command": {
     "publish": {
       "ignoreChanges": [
