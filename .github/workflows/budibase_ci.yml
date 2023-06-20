@@ -140,8 +140,8 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
-      - name: Fetch develop branch
-        run: git fetch origin develop
+      # - name: Fetch develop branch
+      #   run: git fetch origin develop
 
       - name: Check pro commit
         id: get_pro_commits
