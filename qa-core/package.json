@@ -10,6 +10,7 @@
   },
   "scripts": {
     "setup": "yarn && node scripts/createEnv.js",
+    "user": "yarn && node scripts/createEnv.js && node scripts/createUser.js",
     "test": "jest --runInBand --json --outputFile=testResults.json --forceExit",
     "test:watch": "yarn run test --watch",
     "test:debug": "DEBUG=1 yarn run test",
