@@ -135,15 +135,31 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
-      - name: Check submodule
+
+      - name: Fetch develop branch
+        run: git fetch origin develop
+
+      - name: Check pro commit
+        id: pro_commit
         run: |
-          cd packages/pro
-          git fetch
-          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/develop; then
-            echo "Current commit has not been merged to develop"
-            echo "Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md"
-            exit 1
-          else
-            echo "All good, the submodule had been merged!"
-          fi
+          cd submodule
+          pro_commit=$(git rev-parse HEAD)
+          latest_commit=$(git rev-parse origin/develop)
+          echo "::set-output name=pro_commit::$pro_commit"
+          echo "::set-output name=latest_commit::$latest_commit"
+
+      - name: Check submodule merged to develop
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const submoduleCommit = '${{ steps.pro_commit.outputs.pro_commit }}';
+            const latestCommit = '${{ steps.pro_commit.outputs.latest_commit }}';
+
+            if (submoduleCommit !== latestCommit) {
+              console.error('Submodule commit does not match the latest commit on the develop branch.');
+              console.error('Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md')
+              process.exit(1);
+            } else {
+              console.log('All good, the submodule had been merged and setup correctly!')
+            }
