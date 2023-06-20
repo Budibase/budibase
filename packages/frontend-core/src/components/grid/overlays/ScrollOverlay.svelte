@@ -16,6 +16,7 @@
     scrollTop,
     height,
     isDragging,
+    menu,
   } = getContext("grid")
 
   // State for dragging bars
@@ -45,6 +46,13 @@
   $: availWidth = renderWidth - barWidth
   $: barLeft = ScrollBarSize + availWidth * ($scrollLeft / $maxScrollLeft)
 
+  // Helper to close the context menu if it's open
+  const closeMenu = () => {
+    if ($menu.visible) {
+      menu.actions.close()
+    }
+  }
+
   // V scrollbar drag handlers
   const startVDragging = e => {
     e.preventDefault()
@@ -53,6 +61,7 @@
     document.addEventListener("mousemove", moveVDragging)
     document.addEventListener("mouseup", stopVDragging)
     isDraggingV = true
+    closeMenu()
   }
   const moveVDragging = domDebounce(e => {
     const delta = e.clientY - initialMouse
@@ -77,6 +86,7 @@
     document.addEventListener("mousemove", moveHDragging)
     document.addEventListener("mouseup", stopHDragging)
     isDraggingH = true
+    closeMenu()
   }
   const moveHDragging = domDebounce(e => {
     const delta = e.clientX - initialMouse
