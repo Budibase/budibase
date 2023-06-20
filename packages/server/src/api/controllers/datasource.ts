@@ -26,7 +26,6 @@ import {
   IntegrationBase,
   DatasourcePlus,
   SourceName,
-  Ctx,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
@@ -443,7 +442,7 @@ export async function query(ctx: UserCtx) {
   }
 }
 
-export async function getExternalSchema(ctx: Ctx) {
+export async function getExternalSchema(ctx: UserCtx) {
   const { datasource } = ctx.request.body
   const enrichedDatasource = await getAndMergeDatasource(datasource)
   const connector = await getConnector(enrichedDatasource)
