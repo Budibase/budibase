@@ -82,6 +82,11 @@
     align-items: center;
   }
 
+  /* Disable pointer events for non-focused cells */
+  .cell:not(.focused) :global(*) {
+    pointer-events: none;
+  }
+
   /* Cell border */
   .cell.focused:after,
   .cell.error:after,
