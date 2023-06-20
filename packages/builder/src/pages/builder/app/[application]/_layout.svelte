@@ -4,15 +4,12 @@
   import { auth } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
-    ActionMenu,
-    MenuItem,
     Icon,
     Tabs,
     Tab,
     Heading,
     Modal,
     notifications,
-    Button,
   } from "@budibase/bbui"
   import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"

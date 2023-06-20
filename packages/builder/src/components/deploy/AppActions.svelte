@@ -3,7 +3,6 @@
     notifications,
     Popover,
     Layout,
-    Heading,
     Body,
     Button,
     ActionButton,
@@ -22,7 +21,6 @@
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { API } from "api"
   import { onMount } from "svelte"
-  import DeployModal from "components/deploy/DeployModal.svelte"
   import { apps } from "stores/portal"
   import {
     store,
@@ -31,7 +29,7 @@
   } from "builderStore"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
-  import { url, goto } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import { isEqual, cloneDeep } from "lodash"
 
   export let application
@@ -79,7 +77,7 @@
   let appMetaUpdated = false
   let appMetaInitialised = false
 
-  const unsub = store.subscribe(state => {
+  store.subscribe(state => {
     let { name, url: appUrl, navigation, theme, customTheme, icon } = state
     const update = {
       name,
@@ -218,7 +216,7 @@
     try {
       publishing = true
 
-      let published = await API.publishAppChanges($store.appId)
+      await API.publishAppChanges($store.appId)
 
       notifications.send("App published", {
         type: "success",
