@@ -1,3 +1,4 @@
+import fs from "fs"
 import {
   Integration,
   DatasourceFieldType,
@@ -21,6 +22,8 @@ import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
 import { Client, ClientConfig, types } from "pg"
+import { exec } from "child_process"
+import { storeTempFile } from "../utilities/fileSystem"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -57,6 +60,7 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     host: {
@@ -178,6 +182,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     const response: ConnectionInfo = {
       connected: false,
     }
+
     try {
       await this.openConnection()
       response.connected = true
@@ -380,6 +385,59 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const response = await this.internalQuery(input)
       return response.rows.length ? response.rows : [{ [operation]: true }]
     }
+  }
+
+  async getExternalSchema() {
+    const dumpCommandParts = [
+      `user=${this.config.user}`,
+      `host=${this.config.host}`,
+      `port=${this.config.port}`,
+      `dbname=${this.config.database}`,
+    ]
+
+    if (this.config.ssl) {
+      dumpCommandParts.push("sslmode=verify-ca")
+      if (this.config.ca) {
+        const caFilePath = storeTempFile(this.config.ca)
+        fs.chmodSync(caFilePath, "0600")
+        dumpCommandParts.push(`sslrootcert=${caFilePath}`)
+      }
+
+      if (this.config.clientCert) {
+        const clientCertFilePath = storeTempFile(this.config.clientCert)
+        fs.chmodSync(clientCertFilePath, "0600")
+        dumpCommandParts.push(`sslcert=${clientCertFilePath}`)
+      }
+
+      if (this.config.clientKey) {
+        const clientKeyFilePath = storeTempFile(this.config.clientKey)
+        fs.chmodSync(clientKeyFilePath, "0600")
+        dumpCommandParts.push(`sslkey=${clientKeyFilePath}`)
+      }
+    }
+
+    const dumpCommand = `PGPASSWORD="${
+      this.config.password
+    }" pg_dump --schema-only "${dumpCommandParts.join(" ")}"`
+
+    return new Promise<string>((res, rej) => {
+      exec(dumpCommand, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error generating dump: ${error.message}`)
+          rej(error.message)
+          return
+        }
+
+        if (stderr) {
+          console.error(`pg_dump error: ${stderr}`)
+          rej(stderr)
+          return
+        }
+
+        res(stdout)
+        console.log("SQL dump generated successfully!")
+      })
+    })
   }
 }
 

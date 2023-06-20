@@ -21,7 +21,7 @@ export const createValidationStore = () => {
     validator[propertyName] = propertyValidator
   }
 
-  const addValidatorType = (propertyName, type, required) => {
+  const addValidatorType = (propertyName, type, required, options) => {
     if (!type || !propertyName) {
       return
     }
@@ -45,11 +45,8 @@ export const createValidationStore = () => {
       propertyValidator = propertyValidator.required()
     }
 
-    // We want to do this after the possible required validation, to prioritise the required error
-    switch (type) {
-      case "password":
-        propertyValidator = propertyValidator.min(8)
-        break
+    if (options?.minLength) {
+      propertyValidator = propertyValidator.min(options.minLength)
     }
 
     validator[propertyName] = propertyValidator
