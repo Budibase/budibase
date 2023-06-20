@@ -309,7 +309,7 @@
   }
 
   function canShowField(key, value) {
-    const dependsOn = value.dependsOn
+    const dependsOn = value?.dependsOn
     return !dependsOn || !!inputData[dependsOn]
   }
 
