@@ -16,7 +16,7 @@
 
   let password = null
   const validation = createValidationStore()
-  validation.addValidatorType("password", "password", true)
+  validation.addValidatorType("password", "password", true, { minLength: 8 })
   $: validation.observe("password", password)
 
   const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
