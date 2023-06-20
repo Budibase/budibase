@@ -18,6 +18,7 @@
     updateModal.hide()
   }
 
+  export let onComplete = () => {}
   export let hideIcon = false
 
   let updateModal
@@ -47,6 +48,7 @@
       notifications.success(
         `App updated successfully to version ${$store.upgradableVersion}`
       )
+      onComplete()
     } catch (err) {
       notifications.error(`Error updating app: ${err}`)
     }

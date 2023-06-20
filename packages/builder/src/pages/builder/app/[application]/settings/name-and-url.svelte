@@ -23,9 +23,6 @@
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 
   const initialiseApp = async () => {
-    // In order for these changes to make it back into the app, the app package must be reinitialied
-    // could this have negative side affects???
-    console.log("Reinitialise")
     const applicationPkg = await API.fetchAppPackage(app.devId)
     await store.actions.initialise(applicationPkg)
   }

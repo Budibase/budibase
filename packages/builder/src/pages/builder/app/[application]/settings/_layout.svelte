@@ -68,7 +68,7 @@
 
 <style>
   .delete-action :global(span) {
-    color: #ee4331;
+    color: var(--spectrum-global-color-red-400);
   }
   .delete-action {
     display: contents;
