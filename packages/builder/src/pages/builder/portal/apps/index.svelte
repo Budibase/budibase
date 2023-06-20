@@ -103,7 +103,6 @@
     $goto(
       `/builder/app/${appId}/settings/automation-history?${params.toString()}`
     )
-    // $goto(`../overview/${appId}/automation-history?${params.toString()}`)
   }
 
   const errorCount = errors => {

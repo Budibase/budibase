@@ -143,7 +143,7 @@
 {/if}
 
 <div class="root" class:blur={$store.showPreview}>
-  <div class="top-nav">
+  <div class="top-nav" class:has-lock={$store.hasLock}>
     {#if $store.initialised}
       <div class="topleftnav">
         <span class="back-to-apps">
@@ -171,7 +171,10 @@
         {:else}
           <div class="secondary-editor">
             <Icon name="LockClosed" />
-            <div class="secondary-editor-body">
+            <div
+              class="secondary-editor-body"
+              title="Another user is currently editing your screens and automations"
+            >
               Another user is currently editing your screens and automations
             </div>
           </div>
@@ -184,7 +187,7 @@
         <span class:nav-lock={!$store.hasLock}>
           <UserAvatars users={$userStore} />
         </span>
-        <AppActions {application} />
+        <AppActions {application} {loaded} />
       </div>
     {/if}
   </div>
@@ -239,7 +242,6 @@
     flex: 0 0 60px;
     background: var(--background);
     padding: 0 var(--spacing-xl);
-    padding-right: 0px;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     flex-direction: row;
@@ -247,6 +249,10 @@
     align-items: stretch;
     border-bottom: var(--border-light);
     z-index: 2;
+  }
+
+  .top-nav.has-lock {
+    padding-right: 0px;
   }
 
   .topcenternav {
@@ -259,16 +265,17 @@
 
   .topcenternav :global(.spectrum-Heading) {
     flex: 1 1 auto;
-    /* width: 0; */
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding: 0px var(--spacing-m);
   }
 
   .topleftnav {
     display: flex;
     position: relative;
     margin-bottom: -2px;
+    overflow: hidden;
   }
 
   .topleftnav :global(.spectrum-Tabs-itemLabel) {
@@ -291,6 +298,15 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
+    min-width: 0px;
+    overflow: hidden;
+  }
+
+  .secondary-editor-body {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0px;
   }
 
   .body {

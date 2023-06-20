@@ -346,7 +346,7 @@
           customPlaceholder
           allowEditRows={false}
           customRenderers={customAppTableRenderers}
-          on:click={e => $goto(`../../overview/${e.detail.devId}`)}
+          on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
         >
           <div class="placeholder" slot="placeholder">
             <Heading size="S">

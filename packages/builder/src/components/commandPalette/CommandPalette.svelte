@@ -55,7 +55,7 @@
       name: "Automations",
       description: "",
       icon: "Compass",
-      action: () => $goto("./automate"),
+      action: () => $goto("./automation"),
     },
     {
       type: "Publish",
@@ -127,7 +127,7 @@
       type: "Automation",
       name: automation.name,
       icon: "ShareAndroid",
-      action: () => $goto(`./automate/${automation._id}`),
+      action: () => $goto(`./automation/${automation._id}`),
     })),
     ...Constants.Themes.map(theme => ({
       type: "Change Builder Theme",

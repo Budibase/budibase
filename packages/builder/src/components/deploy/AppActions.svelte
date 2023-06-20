@@ -24,12 +24,18 @@
   import { onMount } from "svelte"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import { apps } from "stores/portal"
-  import { store } from "builderStore"
+  import {
+    store,
+    screenHistoryStore,
+    automationHistoryStore,
+  } from "builderStore"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
   import { url, goto } from "@roxi/routify"
+  import { isEqual, cloneDeep } from "lodash"
 
   export let application
+  export let loaded
 
   let unpublishModal
   let updateAppModal
@@ -40,7 +46,7 @@
   let appActionPopoverOpen = false
   let appActionPopoverAnchor
 
-  let publishing
+  let publishing = false
 
   $: filteredApps = $apps.filter(app => app.devId === application)
   $: selectedApp = filteredApps?.length ? filteredApps[0] : null
@@ -57,6 +63,81 @@
     $store.upgradableVersion &&
     $store.version &&
     $store.upgradableVersion !== $store.version
+
+  let cachedVersion = $store.version + ""
+  let versionAltered = false
+  let screensAltered = false
+  let automationsAltered = false
+
+  let publishRecord = {
+    screenHistory: null,
+    automationHistory: null,
+  }
+
+  //Meta Changes
+  let appMeta = {}
+  let appMetaUpdated = false
+  let appMetaInitialised = false
+
+  const unsub = store.subscribe(state => {
+    let { name, url: appUrl, navigation, theme, customTheme, icon } = state
+    const update = {
+      name,
+      url: appUrl,
+      navigation: { ...cloneDeep(navigation) },
+      theme,
+      customTheme,
+      icon,
+    }
+
+    if (!isEqual(update, appMeta)) {
+      if (!appMetaInitialised) {
+        appMetaInitialised = true
+      } else {
+        appMetaUpdated = true
+      }
+      appMeta = {
+        ...(appMeta || {}),
+        ...update,
+      }
+    }
+  })
+
+  const monitorHistoryStore = (historyStore, publishedHistoryId, cb) => {
+    if (!historyStore.history.length || historyStore.loading) {
+      return
+    }
+    if (!historyStore.canUndo) {
+      cb(publishedHistoryId != -1)
+      return
+    }
+    const historyEntry = historyStore.history[historyStore.position - 1]
+
+    if (historyEntry) {
+      cb(publishedHistoryId != historyEntry.id)
+    }
+  }
+
+  $: monitorHistoryStore(
+    $screenHistoryStore,
+    publishRecord.screenHistory,
+    updated => {
+      screensAltered = updated
+    }
+  )
+
+  $: monitorHistoryStore(
+    $automationHistoryStore,
+    publishRecord.automationHistory,
+    updated => {
+      automationsAltered = updated
+    }
+  )
+
+  $: versionAltered = cachedVersion != $store.version
+  $: altered =
+    screensAltered || appMetaUpdated || automationsAltered || versionAltered
+  $: canPublish = (!isPublished || altered) && !publishing && loaded
 
   const initialiseApp = async () => {
     const applicationPkg = await API.fetchAppPackage($store.devId)
@@ -112,6 +193,27 @@
     }
   }
 
+  const resetAppHistory = (historyStore, historyKey) => {
+    if (historyStore.history.length) {
+      const historyEntryPos = historyStore.position
+      const historyEntry = historyStore.history[historyEntryPos - 1]
+
+      publishRecord = {
+        ...publishRecord,
+        [historyKey]: historyEntry?.id || -1,
+      }
+    }
+  }
+
+  const resetStateTracking = () => {
+    resetAppHistory($automationHistoryStore, "automationHistory")
+    resetAppHistory($screenHistoryStore, "screenHistory")
+    automationsAltered = false
+    screensAltered = false
+    appMetaUpdated = false
+    cachedVersion = $store.version + ""
+  }
+
   async function publishApp() {
     try {
       publishing = true
@@ -124,7 +226,9 @@
       })
 
       await completePublish()
+      resetStateTracking()
     } catch (error) {
+      console.error(error)
       analytics.captureException(error)
       notifications.error("Error publishing app")
     }
@@ -153,6 +257,7 @@
         type: "success",
         icon: "GlobeStrike",
       })
+      publishRecord = {}
     } catch (err) {
       notifications.error("Error unpublishing app")
     }
@@ -176,7 +281,7 @@
 </script>
 
 {#if $store.hasLock}
-  <div class="action-top-nav">
+  <div class="action-top-nav" class:has-lock={$store.hasLock}>
     <div class="action-buttons">
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       {#if updateAvailable}
@@ -317,7 +422,7 @@
                     cta
                     on:click={publishApp}
                     id={"builder-app-publish-button"}
-                    disabled={publishing}
+                    disabled={!canPublish}
                   >
                     Publish
                   </Button>
@@ -349,8 +454,20 @@
     />
   </Modal>
 
-  <RevertModal bind:this={revertModal} />
-  <VersionModal hideIcon bind:this={versionModal} />
+  <RevertModal bind:this={revertModal} onComplete={resetStateTracking} />
+  <VersionModal
+    hideIcon
+    bind:this={versionModal}
+    onComplete={resetStateTracking}
+  />
+{:else}
+  <div class="app-action-button preview-locked">
+    <div class="app-action">
+      <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
+        Preview
+      </ActionButton>
+    </div>
+  </div>
 {/if}
 
 <style>
@@ -385,7 +502,7 @@
     cursor: pointer;
   }
   .app-action-popover-content .status-text {
-    color: #1ca872;
+    color: var(--spectrum-global-color-green-500);
     border-right: 1px solid var(--spectrum-global-color-gray-500);
     padding-right: var(--spacing-m);
   }
@@ -401,7 +518,7 @@
     .publish-popover-status
     .unpublish-link
     :global(.spectrum-Link) {
-    color: #ee4331;
+    color: var(--spectrum-global-color-red-400);
   }
   .publish-popover-status {
     display: flex;
@@ -433,6 +550,10 @@
   .app-action-button.version :global(.spectrum-ActionButton-label) {
     display: flex;
     gap: var(--spectrum-actionbutton-icon-gap);
+  }
+
+  .app-action-button.preview-locked {
+    padding-right: 0px;
   }
 
   .app-action {
