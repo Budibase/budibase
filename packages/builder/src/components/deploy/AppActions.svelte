@@ -22,15 +22,10 @@
   import { API } from "api"
   import { onMount } from "svelte"
   import { apps } from "stores/portal"
-  import {
-    store,
-    screenHistoryStore,
-    automationHistoryStore,
-  } from "builderStore"
+  import { store } from "builderStore"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
-  import { isEqual, cloneDeep } from "lodash"
 
   export let application
   export let loaded
@@ -62,80 +57,7 @@
     $store.version &&
     $store.upgradableVersion !== $store.version
 
-  let cachedVersion = $store.version + ""
-  let versionAltered = false
-  let screensAltered = false
-  let automationsAltered = false
-
-  let publishRecord = {
-    screenHistory: null,
-    automationHistory: null,
-  }
-
-  //Meta Changes
-  let appMeta = {}
-  let appMetaUpdated = false
-  let appMetaInitialised = false
-
-  store.subscribe(state => {
-    let { name, url: appUrl, navigation, theme, customTheme, icon } = state
-    const update = {
-      name,
-      url: appUrl,
-      navigation: { ...cloneDeep(navigation) },
-      theme,
-      customTheme,
-      icon,
-    }
-
-    if (!isEqual(update, appMeta)) {
-      if (!appMetaInitialised) {
-        appMetaInitialised = true
-      } else {
-        appMetaUpdated = true
-      }
-      appMeta = {
-        ...(appMeta || {}),
-        ...update,
-      }
-    }
-  })
-
-  const monitorHistoryStore = (historyStore, publishedHistoryId, cb) => {
-    if (!historyStore.history.length || historyStore.loading) {
-      return
-    }
-    if (!historyStore.canUndo) {
-      cb(publishedHistoryId != -1)
-      return
-    }
-    const historyEntry = historyStore.history[historyStore.position - 1]
-
-    if (historyEntry) {
-      cb(publishedHistoryId != historyEntry.id)
-    }
-  }
-
-  $: monitorHistoryStore(
-    $screenHistoryStore,
-    publishRecord.screenHistory,
-    updated => {
-      screensAltered = updated
-    }
-  )
-
-  $: monitorHistoryStore(
-    $automationHistoryStore,
-    publishRecord.automationHistory,
-    updated => {
-      automationsAltered = updated
-    }
-  )
-
-  $: versionAltered = cachedVersion != $store.version
-  $: altered =
-    screensAltered || appMetaUpdated || automationsAltered || versionAltered
-  $: canPublish = (!isPublished || altered) && !publishing && loaded
+  $: canPublish = !publishing && loaded
 
   const initialiseApp = async () => {
     const applicationPkg = await API.fetchAppPackage($store.devId)
@@ -191,27 +113,6 @@
     }
   }
 
-  const resetAppHistory = (historyStore, historyKey) => {
-    if (historyStore.history.length) {
-      const historyEntryPos = historyStore.position
-      const historyEntry = historyStore.history[historyEntryPos - 1]
-
-      publishRecord = {
-        ...publishRecord,
-        [historyKey]: historyEntry?.id || -1,
-      }
-    }
-  }
-
-  const resetStateTracking = () => {
-    resetAppHistory($automationHistoryStore, "automationHistory")
-    resetAppHistory($screenHistoryStore, "screenHistory")
-    automationsAltered = false
-    screensAltered = false
-    appMetaUpdated = false
-    cachedVersion = $store.version + ""
-  }
-
   async function publishApp() {
     try {
       publishing = true
@@ -224,7 +125,6 @@
       })
 
       await completePublish()
-      resetStateTracking()
     } catch (error) {
       console.error(error)
       analytics.captureException(error)
@@ -255,7 +155,6 @@
         type: "success",
         icon: "GlobeStrike",
       })
-      publishRecord = {}
     } catch (err) {
       notifications.error("Error unpublishing app")
     }
@@ -452,12 +351,8 @@
     />
   </Modal>
 
-  <RevertModal bind:this={revertModal} onComplete={resetStateTracking} />
-  <VersionModal
-    hideIcon
-    bind:this={versionModal}
-    onComplete={resetStateTracking}
-  />
+  <RevertModal bind:this={revertModal} />
+  <VersionModal hideIcon bind:this={versionModal} />
 {:else}
   <div class="app-action-button preview-locked">
     <div class="app-action">
