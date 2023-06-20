@@ -13,7 +13,6 @@
 
   $: show = $organisation.oidc
   $: oidcLogoCheck = $oidc.logo
-  $: console.log(oidcLogoCheck)
 
   let preDefinedIcons = {
     Oidc: OidcLogo,
@@ -34,9 +33,6 @@
   $: src = !oidcLogoCheck
     ? OidcLogo
     : preDefinedIcons[$oidc.logo] || oidcLogoCheck
-  // $: src = !$oidc.logo
-  // ? OidcLogo
-  // : preDefinedIcons[$oidc.logo] || `/global/logos_oidc/${$oidc.logo}`
 </script>
 
 {#if show}
