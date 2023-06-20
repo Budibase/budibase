@@ -82,6 +82,10 @@ export interface Table extends Document {
   rowHeight?: number
 }
 
+export interface ExternalTable extends Table {
+  sourceId: string
+}
+
 export interface TableRequest extends Table {
   _rename?: RenameColumn
   created?: boolean
