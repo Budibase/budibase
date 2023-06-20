@@ -1,5 +1,4 @@
 import { writable } from "svelte/store"
-import { tick } from "svelte"
 
 export const createStores = () => {
   const menu = writable({
