@@ -142,21 +142,21 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Check pro commit
-        id: pro_commit
+        id: get_pro_commits
         run: |
           cd submodule
           pro_commit=$(git rev-parse HEAD)
           latest_commit=$(git rev-parse origin/develop)
-          echo "::set-output name=pro_commit::$pro_commit"
-          echo "::set-output name=latest_commit::$latest_commit"
+          echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
+          echo "latest_commit=$latest_commit" >> "$GITHUB_OUTPUT"
 
       - name: Check submodule merged to develop
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const submoduleCommit = '${{ steps.pro_commit.outputs.pro_commit }}';
-            const latestCommit = '${{ steps.pro_commit.outputs.latest_commit }}';
+            const submoduleCommit = '${{ steps.get_pro_commits.outputs.pro_commit }}';
+            const latestCommit = '${{ steps.get_pro_commits.outputs.latest_commit }}';
 
             if (submoduleCommit !== latestCommit) {
               console.error('Submodule commit does not match the latest commit on the develop branch.');
