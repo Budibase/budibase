@@ -1,13 +1,7 @@
 <script>
   import { Content, SideNav, SideNavItem } from "components/portal/page"
-  import { Page, Layout, Input, notifications } from "@budibase/bbui"
-  import { url, isActive, layout, goto } from "@roxi/routify"
-  import { capitalise } from "helpers"
-
-  import { store } from "builderStore"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { apps } from "stores/portal"
-  import { API } from "api"
+  import { Page, Layout } from "@budibase/bbui"
+  import { url, isActive } from "@roxi/routify"
   import DeleteModal from "components/deploy/DeleteModal.svelte"
 
   let deleteModal

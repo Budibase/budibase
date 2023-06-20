@@ -1,5 +1,5 @@
 <script>
-  import { Layout, Input, notifications } from "@budibase/bbui"
+  import { Input, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"

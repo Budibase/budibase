@@ -1,12 +1,5 @@
 <script>
-  import {
-    redirect,
-    isChangingPage,
-    page,
-    isActive,
-    layout,
-    route,
-  } from "@roxi/routify"
+  import { redirect } from "@roxi/routify"
 
   $redirect("../settings/automation-history")
 </script>
