@@ -23,8 +23,6 @@
     exportPublishedVersion = !!opts?.published
     exportModal.show()
   }
-
-  // $: embed = `<iframe width="560" height="315" frameborder="0" allow="clipboard-write" src="${appUrl}" ></iframe>`
 </script>
 
 <Modal bind:this={exportModal} padding={false}>
