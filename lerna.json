@@ -2,7 +2,6 @@
   "version": "2.7.25-alpha.8",
   "npmClient": "yarn",
   "packages": ["packages/*"],
-  "useWorkspaces": true,
   "useNx": true,
   "command": {
     "publish": {
