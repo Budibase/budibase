@@ -67,7 +67,7 @@ router
     datasourceController.destroy
   )
   .get(
-    "/api/datasources/:datasourceId/external-schema",
+    "/api/datasources/:datasourceId/schema/external",
     authorized(permissions.BUILDER),
     datasourceController.getExternalSchema
   )
