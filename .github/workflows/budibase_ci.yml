@@ -146,6 +146,11 @@ jobs:
           cd packages/pro
           pro_commit=$(git rev-parse HEAD)
 
+          branch=${{ github.head_ref || github.ref_name  }}
+          echo "branch=$branch"
+          echo "head_ref=$github.head_ref"
+          echo "ref_name=$github.ref_name"
+
           echo "Running on branch ${{ github.ref }}
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
             latest_commit=$(git rev-parse origin/master)
