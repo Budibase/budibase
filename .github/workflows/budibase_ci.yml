@@ -138,6 +138,8 @@ jobs:
 
       - name: Fetch develop branch
         run: git fetch origin develop
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Check pro commit
         id: pro_commit
