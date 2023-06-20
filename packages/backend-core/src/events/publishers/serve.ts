@@ -17,12 +17,12 @@ async function servedBuilder(timezone: string) {
 async function servedApp(
   app: App,
   timezone: string,
-  embed: boolean | undefined
+  embed?: boolean | undefined
 ) {
   const properties: AppServedEvent = {
     appVersion: app.version,
     timezone,
-    embed,
+    embed: embed === true,
   }
   await publishEvent(Event.SERVED_APP, properties)
 }
