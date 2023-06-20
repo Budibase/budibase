@@ -8,10 +8,10 @@ const path = require("path")
 
 const { build } = require("esbuild")
 
-const { default: NodeResolve } = require("@esbuild-plugins/node-resolve")
 const {
   default: TsconfigPathsPlugin,
 } = require("@esbuild-plugins/tsconfig-paths")
+const { nodeExternalsPlugin } = require("esbuild-node-externals")
 
 var argv = require("minimist")(process.argv.slice(2))
 
@@ -25,32 +25,28 @@ function runBuild(entry, outfile) {
     minify: !isDev,
     sourcemap: isDev,
     tsconfig,
-    plugins: [
-      TsconfigPathsPlugin({ tsconfig }),
-      NodeResolve({
-        extensions: [".ts", ".js"],
-        onResolved: resolved => {
-          if (resolved.includes("node_modules") && !resolved.includes("/@budibase/pro/")) {
-            return {
-              external: true,
-            }
-          }
-          return resolved
-        },
-      }),
-    ],
+    plugins: [TsconfigPathsPlugin({ tsconfig }), nodeExternalsPlugin()],
     target: "node14",
     preserveSymlinks: true,
     loader: {
       ".svelte": "copy",
     },
+    metafile: true,
+    external: [
+      "deasync",
+      "mock-aws-s3",
+      "nock",
+      "pino",
+      "koa-pino-logger",
+      "bull",
+    ],
   }
 
   build({
     ...sharedConfig,
     platform: "node",
     outfile,
-  }).then(() => {
+  }).then(result => {
     glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
       for (const file of files) {
         fs.copyFileSync(file, `${process.cwd()}/dist/${path.basename(file)}`)
@@ -61,6 +57,11 @@ function runBuild(entry, outfile) {
         `Build successfully in ${(Date.now() - start) / 1000} seconds`
       )
     })
+
+    fs.writeFileSync(
+      `dist/${path.basename(outfile)}.meta.json`,
+      JSON.stringify(result.metafile)
+    )
   })
 }
 
