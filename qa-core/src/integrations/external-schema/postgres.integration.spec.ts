@@ -61,7 +61,7 @@ describe("getExternalSchema", () => {
       `)
     })
 
-    it.only("can export a database with tables", async () => {
+    it("can export a database with tables", async () => {
       const integration = new postgres.integration(config)
 
       await integration.internalQuery(
@@ -265,7 +265,8 @@ describe("getExternalSchema", () => {
         CREATE TABLE public.products (
             id integer NOT NULL,
             name character varying(100) NOT NULL,
-            price numeric NOT NULL
+            price numeric NOT NULL,
+            owner integer
         );
 
 
@@ -356,6 +357,14 @@ describe("getExternalSchema", () => {
 
         ALTER TABLE ONLY public.users
             ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+        --
+        -- Name: products fk_owner; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+        --
+
+        ALTER TABLE ONLY public.products
+            ADD CONSTRAINT fk_owner FOREIGN KEY (owner) REFERENCES public.users(id);
 
 
         --
