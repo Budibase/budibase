@@ -20,7 +20,7 @@ import {
 } from "./utils"
 import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
-const sqlServer = require("mssql")
+import sqlServer from "mssql"
 const DEFAULT_SCHEMA = "dbo"
 
 interface MSSQLConfig {
@@ -96,8 +96,8 @@ const SCHEMA: Integration = {
 class SqlServerIntegration extends Sql implements DatasourcePlus {
   private readonly config: MSSQLConfig
   private index: number = 0
-  private readonly pool: any
-  private client: any
+  private readonly pool: sqlServer.ConnectionPool
+  private client?: sqlServer.ConnectionPool
   public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
@@ -116,15 +116,15 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     this.config = config
     const clientCfg = {
       ...this.config,
+      port: +this.config,
       options: {
         encrypt: this.config.encrypt,
         enableArithAbort: true,
       },
     }
     delete clientCfg.encrypt
-    if (!this.pool) {
-      this.pool = new sqlServer.ConnectionPool(clientCfg)
-    }
+
+    this.pool = new sqlServer.ConnectionPool(clientCfg)
   }
 
   async testConnection() {
@@ -161,7 +161,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     query: SqlQuery,
     operation: string | undefined = undefined
   ) {
-    const client = this.client
+    const client = this.client!
     const request = client.request()
     this.index = 0
     try {
