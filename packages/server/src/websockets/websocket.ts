@@ -4,12 +4,18 @@ import Koa from "koa"
 import Cookies from "cookies"
 import { userAgent } from "koa-useragent"
 import { auth, Header, redis } from "@budibase/backend-core"
-import currentApp from "../middleware/currentapp"
 import { createAdapter } from "@socket.io/redis-adapter"
 import { Socket } from "socket.io"
 import { getSocketPubSubClients } from "../utilities/redis"
 import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
 import { SocketSession } from "@budibase/types"
+import { v4 as uuid } from "uuid"
+
+const anonUser = () => ({
+  _id: uuid(),
+  email: "user@mail.com",
+  firstName: "Anonymous",
+})
 
 export class BaseSocket {
   io: Server
@@ -34,7 +40,6 @@ export class BaseSocket {
     const middlewares = [
       userAgent,
       authenticate,
-      currentApp,
       ...(additionalMiddlewares || []),
     ]
 
@@ -70,7 +75,8 @@ export class BaseSocket {
               // Middlewares are finished
               // Extract some data from our enriched koa context to persist
               // as metadata for the socket
-              const { _id, email, firstName, lastName } = ctx.user
+              const user = ctx.user?._id ? ctx.user : anonUser()
+              const { _id, email, firstName, lastName } = user
               socket.data = {
                 _id,
                 email,
@@ -78,6 +84,8 @@ export class BaseSocket {
                 lastName,
                 sessionId: socket.id,
                 connectedAt: Date.now(),
+                isAuthenticated: ctx.isAuthenticated,
+                roleId: ctx.roleId,
               }
               next()
             }

@@ -1,6 +1,6 @@
 import authorized from "../middleware/authorized"
 import { BaseSocket } from "./websocket"
-import { permissions } from "@budibase/backend-core"
+import { context, permissions } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import { getTableId } from "../api/controllers/row/utils"
@@ -8,20 +8,49 @@ import { Row, Table } from "@budibase/types"
 import { Socket } from "socket.io"
 import { GridSocketEvent } from "@budibase/shared-core"
 
+const { PermissionType, PermissionLevel } = permissions
+
 export default class GridSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
-    super(app, server, "/socket/grid", [authorized(permissions.BUILDER)])
+    super(app, server, "/socket/grid")
   }
 
   async onConnect(socket: Socket) {
     // Initial identification of connected spreadsheet
-    socket.on(GridSocketEvent.SelectTable, async ({ tableId }, callback) => {
-      await this.joinRoom(socket, tableId)
+    socket.on(
+      GridSocketEvent.SelectTable,
+      async ({ tableId, appId }, callback) => {
+        // Check if the user has permission to read this resource
+        const middleware = authorized(
+          PermissionType.TABLE,
+          PermissionLevel.READ
+        )
+        const ctx = {
+          appId,
+          resourceId: tableId,
+          roleId: socket.data.roleId,
+          user: { _id: socket.data._id },
+          isAuthenticated: socket.data.isAuthenticated,
+          request: {
+            url: "/fake",
+          },
+          get: () => null,
+          throw: () => {
+            // If they don't have access, immediately disconnect them
+            socket.disconnect(true)
+          },
+        }
+        await context.doInAppContext(appId, async () => {
+          await middleware(ctx, async () => {
+            await this.joinRoom(socket, tableId)
 
-      // Reply with all users in current room
-      const sessions = await this.getRoomSessions(tableId)
-      callback({ users: sessions })
-    })
+            // Reply with all users in current room
+            const sessions = await this.getRoomSessions(tableId)
+            callback({ users: sessions })
+          })
+        })
+      }
+    )
 
     // Handle users selecting a new cell
     socket.on(GridSocketEvent.SelectCell, ({ cellId }) => {
