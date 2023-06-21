@@ -234,6 +234,14 @@ export const createAPIClient = config => {
     invalidateCache: () => {
       cache = {}
     },
+
+    // Generic utility to extract the current app ID. Assumes that any client
+    // that exists in an app context will be attaching our app ID header.
+    getAppID: () => {
+      let headers = {}
+      config?.attachHeaders(headers)
+      return headers?.["x-budibase-app-id"]
+    },
   }
 
   // Attach all endpoints
