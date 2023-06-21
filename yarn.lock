@@ -5755,13 +5755,14 @@
   resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
   integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
 
-"@types/mssql@6.0.7":
-  version "6.0.7"
-  resolved "https://registry.yarnpkg.com/@types/mssql/-/mssql-6.0.7.tgz#47202e4d782a7414f4b51c8de22f0dc7a76d2469"
-  integrity sha512-OWu9DNlRrbSz/cCn5RbYxm9S/Y+tiFHNEQXfSnZzyJKGeEo4edA1JDgVvu90RKPc+d703RsbllyXkZ8MNjNOSA==
+"@types/mssql@8.1.2":
+  version "8.1.2"
+  resolved "https://registry.yarnpkg.com/@types/mssql/-/mssql-8.1.2.tgz#00cbe3ce95586e40b47e3744ba02a54695c62de8"
+  integrity sha512-hoDM+mZUClfXu0J1pyVdbhv2Ve0dl0TdagAE3M5rd1slqoVEEHuNObPD+giwtJgyo99CcS58qbF9ektVKdxSfQ==
   dependencies:
     "@types/node" "*"
     "@types/tedious" "*"
+    tarn "^3.0.1"
 
 "@types/node-fetch@2.6.1":
   version "2.6.1"
@@ -23996,7 +23997,7 @@ tarn@^1.1.5:
   resolved "https://registry.yarnpkg.com/tarn/-/tarn-1.1.5.tgz#7be88622e951738b9fa3fb77477309242cdddc2d"
   integrity sha512-PMtJ3HCLAZeedWjJPgGnCvcphbCOMbtZpjKgLq3qM5Qq9aQud+XHrL0WlrlgnTyS8U+jrjGbEXprFcQrxPy52g==
 
-tarn@^3.0.2:
+tarn@^3.0.1, tarn@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/tarn/-/tarn-3.0.2.tgz#73b6140fbb881b71559c4f8bfde3d9a4b3d27693"
   integrity sha512-51LAVKUSZSVfI05vjPESNc5vwqqZpbXCsU+/+wxlOrUjk2SnFTt97v9ZgQrD4YmxYW1Px6w2KjaDitCfkvgxMQ==
