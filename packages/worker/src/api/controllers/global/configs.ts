@@ -28,6 +28,8 @@ import {
   SSOConfig,
   SSOConfigType,
   UserCtx,
+  OIDCLogosConfig,
+  OIDCInnerConfig,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 
@@ -280,28 +282,27 @@ export async function save(ctx: UserCtx<Config>) {
   }
 }
 
-const parseScopedConfigFileUrls = (cfg: any, type: string) => {
-  if (!cfg) {
-    return {}
+function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
+  if (!oidcLogos) {
+    return
   }
-  if (type === ConfigType.OIDC_LOGOS) {
-    const logoConfig = { ...cfg?.config }
-    const parsedConfig = Object.keys(logoConfig).reduce(
-      (acc: any, key: string) => {
-        if (!key.endsWith("Etag")) {
-          const etag = logoConfig[`${key}Etag`]
-          const objectStoreUrl = objectStore.getGlobalFileUrl(type, key, etag)
-          acc[key] = objectStoreUrl
-        } else {
-          acc[key] = logoConfig[key]
-        }
-        return acc
-      },
-      {}
-    )
-    return parsedConfig
-  }
-  return cfg.config
+  oidcLogos.config = Object.keys(oidcLogos.config).reduce(
+    (acc: any, key: string) => {
+      if (!key.endsWith("Etag")) {
+        const etag = oidcLogos.config[`${key}Etag`]
+        const objectStoreUrl = objectStore.getGlobalFileUrl(
+          oidcLogos.type,
+          key,
+          etag
+        )
+        acc[key] = objectStoreUrl
+      } else {
+        acc[key] = oidcLogos.config[key]
+      }
+      return acc
+    },
+    {}
+  )
 }
 
 export async function find(ctx: UserCtx) {
@@ -311,7 +312,9 @@ export async function find(ctx: UserCtx) {
     let scopedConfig = await configs.getConfig(type)
 
     if (scopedConfig) {
-      scopedConfig.config = parseScopedConfigFileUrls(scopedConfig, type)
+      if (type === ConfigType.OIDC_LOGOS) {
+        enrichOIDCLogos(scopedConfig)
+      }
       ctx.body = scopedConfig
     } else {
       // don't throw an error, there simply is nothing to return
@@ -326,14 +329,10 @@ export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
   try {
     // Find the config with the most granular scope based on context
     const config = await configs.getOIDCConfig()
+    const oidcLogoConfig = await configs.getOIDCLogosDoc()
 
-    const oidcLogoConfig = await configs.getConfig(ConfigType.OIDC_LOGOS)
-    let logoUrls
     if (oidcLogoConfig) {
-      logoUrls = parseScopedConfigFileUrls(
-        oidcLogoConfig,
-        ConfigType.OIDC_LOGOS
-      )
+      enrichOIDCLogos(oidcLogoConfig)
     }
 
     if (!config) {
@@ -341,7 +340,9 @@ export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
     } else {
       ctx.body = [
         {
-          logo: logoUrls ? logoUrls[config.logo] : config.logo,
+          logo: oidcLogoConfig
+            ? oidcLogoConfig.config[config.logo]
+            : config.logo,
           name: config.name,
           uuid: config.uuid,
         },
