@@ -9,7 +9,7 @@
   export let rowFocused = false
   export let rowHovered = false
   export let rowSelected = false
-  export let disableExpand = false
+  export let expandable = false
   export let disableNumber = false
   export let defaultHeight = false
   export let disabled = false
@@ -22,13 +22,6 @@
     const id = row?._id
     if (id) {
       selectedRows.actions.toggleRow(id)
-    }
-  }
-
-  const expand = () => {
-    svelteDispatch("expand")
-    if (row) {
-      dispatch("edit-row", row)
     }
   }
 </script>
@@ -71,13 +64,13 @@
         />
       </div>
     {:else}
-      <div
-        class="expand"
-        class:visible={$config.allowExpandRows &&
-          !disableExpand &&
-          (rowFocused || rowHovered)}
-      >
-        <Icon name="Maximize" hoverable size="S" on:click={expand} />
+      <div class="expand" class:visible={$config.allowExpandRows && expandable}>
+        <Icon
+          size="S"
+          name="Maximize"
+          hoverable
+          on:click={() => svelteDispatch("expand")}
+        />
       </div>
     {/if}
   </div>
