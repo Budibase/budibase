@@ -20,6 +20,12 @@ export default class GridSocket extends BaseSocket {
     socket.on(
       GridSocketEvent.SelectTable,
       async ({ tableId, appId }, callback) => {
+        // Ignore if no table or app specified
+        if (!tableId || !appId) {
+          socket.disconnect(true)
+          return
+        }
+
         // Check if the user has permission to read this resource
         const middleware = authorized(
           PermissionType.TABLE,
@@ -42,10 +48,11 @@ export default class GridSocket extends BaseSocket {
         }
         await context.doInAppContext(appId, async () => {
           await middleware(ctx, async () => {
-            await this.joinRoom(socket, tableId)
+            const room = `${appId}-${tableId}`
+            await this.joinRoom(socket, room)
 
             // Reply with all users in current room
-            const sessions = await this.getRoomSessions(tableId)
+            const sessions = await this.getRoomSessions(room)
             callback({ users: sessions })
           })
         })
@@ -60,7 +67,8 @@ export default class GridSocket extends BaseSocket {
 
   emitRowUpdate(ctx: any, row: Row) {
     const tableId = getTableId(ctx)
-    this.emitToRoom(ctx, tableId, GridSocketEvent.RowChange, {
+    const room = `${ctx.appId}-${tableId}`
+    this.emitToRoom(ctx, room, GridSocketEvent.RowChange, {
       id: row._id,
       row,
     })
@@ -68,17 +76,20 @@ export default class GridSocket extends BaseSocket {
 
   emitRowDeletion(ctx: any, id: string) {
     const tableId = getTableId(ctx)
-    this.emitToRoom(ctx, tableId, GridSocketEvent.RowChange, { id, row: null })
+    const room = `${ctx.appId}-${tableId}`
+    this.emitToRoom(ctx, room, GridSocketEvent.RowChange, { id, row: null })
   }
 
   emitTableUpdate(ctx: any, table: Table) {
-    this.emitToRoom(ctx, table._id!, GridSocketEvent.TableChange, {
+    const room = `${ctx.appId}-${table._id}`
+    this.emitToRoom(ctx, room, GridSocketEvent.TableChange, {
       id: table._id,
       table,
     })
   }
 
   emitTableDeletion(ctx: any, id: string) {
-    this.emitToRoom(ctx, id, GridSocketEvent.TableChange, { id, table: null })
+    const room = `${ctx.appId}-${id}`
+    this.emitToRoom(ctx, room, GridSocketEvent.TableChange, { id, table: null })
   }
 }
