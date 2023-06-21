@@ -51,7 +51,6 @@
 >
   <div class="header row">
     <GutterCell
-      disableExpand
       disableNumber
       on:select={selectAll}
       defaultHeight
@@ -103,7 +102,7 @@
           on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
           on:click={() => dispatch("add-row-inline")}
         >
-          <GutterCell disableExpand rowHovered={$hoveredRowId === BlankRowID}>
+          <GutterCell rowHovered={$hoveredRowId === BlankRowID}>
             <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
           </GutterCell>
           {#if $stickyColumn}

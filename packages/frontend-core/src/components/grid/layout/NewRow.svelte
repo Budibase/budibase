@@ -145,7 +145,7 @@
 </script>
 
 <!-- New row FAB -->
-{#if !visible && !$config.showControls && !selectedRowCount}
+{#if !visible && !selectedRowCount}
   <div
     class="new-row-fab"
     on:click={() => dispatch("add-row-inline")}
@@ -165,7 +165,7 @@
     <div class="underlay sticky" transition:fade|local={{ duration: 130 }} />
     <div class="underlay" transition:fade|local={{ duration: 130 }} />
     <div class="sticky-column" transition:fade|local={{ duration: 130 }}>
-      <GutterCell on:expand={addViaModal} rowHovered>
+      <GutterCell expandable on:expand={addViaModal} rowHovered>
         <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
         {#if isAdding}
           <div in:fade={{ duration: 130 }} class="loading-overlay" />
