@@ -1,22 +1,21 @@
-import { GenericContainer } from "testcontainers"
+import { GenericContainer, StartedTestContainer } from "testcontainers"
 import postgres from "../../../../packages/server/src/integrations/postgres"
 
 jest.unmock("pg")
 
 describe("getExternalSchema", () => {
   describe("postgres", () => {
-    let host: string
-    let port: number
     let config: any
+    let container: StartedTestContainer
 
     beforeAll(async () => {
-      const container = await new GenericContainer("postgres")
+      container = await new GenericContainer("postgres")
         .withExposedPorts(5432)
         .withEnv("POSTGRES_PASSWORD", "password")
         .start()
 
-      host = container.getContainerIpAddress()
-      port = container.getMappedPort(5432)
+      const host = container.getContainerIpAddress()
+      const port = container.getMappedPort(5432)
 
       config = {
         host,
@@ -29,6 +28,8 @@ describe("getExternalSchema", () => {
         rejectUnauthorized: false,
       }
     })
+
+    afterAll(() => container.stop())
 
     it("can export an empty database", async () => {
       const integration = new postgres.integration(config)
@@ -60,24 +61,29 @@ describe("getExternalSchema", () => {
       `)
     })
 
-    it("can export a database with tables", async () => {
+    it.only("can export a database with tables", async () => {
       const integration = new postgres.integration(config)
 
-      await integration.internalQuery({
-        sql: `
-      CREATE TABLE "users" (
-      "id" SERIAL,
-      "name" VARCHAR(100) NOT NULL,
-      "role" VARCHAR(15) NOT NULL,
-      PRIMARY KEY ("id")
-    );
-      CREATE TABLE "products" (
-	    "id" SERIAL,
-	    "name" VARCHAR(100) NOT NULL,
-	    "price" DECIMAL NOT NULL,
-	    PRIMARY KEY ("id")
-    );`,
-      })
+      await integration.internalQuery(
+        {
+          sql: `
+          CREATE TABLE "users" (
+            "id" SERIAL,
+            "name" VARCHAR(100) NOT NULL,
+            "role" VARCHAR(15) NOT NULL,
+            PRIMARY KEY ("id")
+          );
+            CREATE TABLE "products" (
+            "id" SERIAL,
+            "name" VARCHAR(100) NOT NULL,
+            "price" DECIMAL NOT NULL,
+            "owner" INTEGER NULL,
+            PRIMARY KEY ("id")
+          );
+          ALTER TABLE "products" ADD CONSTRAINT "fk_owner" FOREIGN KEY ("owner") REFERENCES "users" ("id");`,
+        },
+        false
+      )
 
       const result = await integration.getExternalSchema()
       expect(result).toMatchInlineSnapshot(`
@@ -110,7 +116,8 @@ describe("getExternalSchema", () => {
         CREATE TABLE public.products (
             id integer NOT NULL,
             name character varying(100) NOT NULL,
-            price numeric NOT NULL
+            price numeric NOT NULL,
+            owner integer
         );
 
 
@@ -201,6 +208,14 @@ describe("getExternalSchema", () => {
 
         ALTER TABLE ONLY public.users
             ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+        --
+        -- Name: products fk_owner; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+        --
+
+        ALTER TABLE ONLY public.products
+            ADD CONSTRAINT fk_owner FOREIGN KEY (owner) REFERENCES public.users(id);
 
 
         --
