@@ -27,6 +27,7 @@
     rowVerticalInversionIndex,
     columnHorizontalInversionIndex,
     selectedRows,
+    config,
   } = getContext("grid")
 
   let visible = false
@@ -77,7 +78,7 @@
   }
 
   const startAdding = async () => {
-    if (visible) {
+    if (visible || !$renderedColumns.length) {
       return
     }
 
@@ -131,9 +132,6 @@
         e.preventDefault()
         clear()
       }
-    } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      addRow()
     }
   }
 
@@ -144,7 +142,7 @@
 </script>
 
 <!-- New row FAB -->
-{#if !visible && !selectedRowCount}
+{#if !visible && !selectedRowCount && $config.allowAddRows && $renderedColumns.length}
   <div
     class="new-row-fab"
     on:click={() => dispatch("add-row-inline")}
