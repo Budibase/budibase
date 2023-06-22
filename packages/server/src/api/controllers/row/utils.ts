@@ -24,12 +24,7 @@ function isForeignKey(key: string, table: Table) {
   const relationships = Object.values(table.schema).filter(
     column => column.type === FieldType.LINK
   )
-  for (let relationship of relationships) {
-    if (relationship.foreignKey === key) {
-      return true
-    }
-  }
-  return false
+  return relationships.some(relationship => relationship.foreignKey === key)
 }
 
 export async function getDatasourceAndQuery(json: any) {
