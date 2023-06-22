@@ -38,6 +38,9 @@
     showAvatars={false}
     on:updatetable={e => tables.replaceTable(id, e.detail)}
   >
+    <svelte:fragment slot="filter">
+      <GridFilterButton />
+    </svelte:fragment>
     <svelte:fragment slot="controls">
       {#if isInternal}
         <GridCreateViewButton />
@@ -52,7 +55,6 @@
         <GridImportButton />
       {/if}
       <GridExportButton />
-      <GridFilterButton />
       <GridAddColumnModal />
       <GridEditColumnModal />
       {#if isUsersTable}
