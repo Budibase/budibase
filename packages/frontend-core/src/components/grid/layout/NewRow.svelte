@@ -78,7 +78,7 @@
   }
 
   const startAdding = async () => {
-    if (visible || !$renderedColumns.length) {
+    if (visible || !firstColumn) {
       return
     }
 
@@ -142,7 +142,7 @@
 </script>
 
 <!-- New row FAB -->
-{#if !visible && !selectedRowCount && $config.allowAddRows && $renderedColumns.length}
+{#if !visible && !selectedRowCount && $config.allowAddRows && firstColumn}
   <div
     class="new-row-fab"
     on:click={() => dispatch("add-row-inline")}
