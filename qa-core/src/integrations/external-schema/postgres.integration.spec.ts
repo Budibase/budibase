@@ -1,4 +1,4 @@
-import { GenericContainer, StartedTestContainer } from "testcontainers"
+import { GenericContainer } from "testcontainers"
 import postgres from "../../../../packages/server/src/integrations/postgres"
 
 jest.unmock("pg")
@@ -6,10 +6,9 @@ jest.unmock("pg")
 describe("getExternalSchema", () => {
   describe("postgres", () => {
     let config: any
-    let container: StartedTestContainer
 
     beforeAll(async () => {
-      container = await new GenericContainer("postgres")
+      const container = await new GenericContainer("postgres")
         .withExposedPorts(5432)
         .withEnv("POSTGRES_PASSWORD", "password")
         .start()
@@ -28,8 +27,6 @@ describe("getExternalSchema", () => {
         rejectUnauthorized: false,
       }
     })
-
-    afterAll(() => container.stop())
 
     it("can export an empty database", async () => {
       const integration = new postgres.integration(config)

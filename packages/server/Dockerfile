@@ -26,7 +26,7 @@ RUN apt-get install unzip libaio1
 COPY scripts/integrations/oracle/ scripts/integrations/oracle/
 RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh 
 
-# Add the PostgreSQL repository
+# Install postgres client for pg_dump utils
 RUN apt update && apt upgrade -y \
     && apt install software-properties-common apt-transport-https curl gpg -y \
     && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
