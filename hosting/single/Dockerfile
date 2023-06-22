@@ -1,7 +1,7 @@
 FROM node:14-slim as build
 
 # install node-gyp dependencies
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-utils cron g++ make python postgresql-client
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-utils cron g++ make python
 
 # add pin script
 WORKDIR /
