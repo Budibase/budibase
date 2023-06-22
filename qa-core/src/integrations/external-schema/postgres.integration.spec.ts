@@ -7,10 +7,11 @@ describe("getExternalSchema", () => {
   describe("postgres", () => {
     let config: any
 
+    // Remove versioning from the outputs to prevent failures when running different pg_dump versions
     function stripResultsVersions(sql: string) {
       const result = sql
         .replace(/\n[^\n]+Dumped from database version[^\n]+\n/, "")
-        .replace(/\n[^\n]+umped by pg_dump version[^\n]+\n/, "")
+        .replace(/\n[^\n]+Dumped by pg_dump version[^\n]+\n/, "")
         .toString()
       return result
     }
