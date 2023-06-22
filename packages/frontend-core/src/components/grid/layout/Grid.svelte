@@ -16,11 +16,8 @@
   import UserAvatars from "./UserAvatars.svelte"
   import KeyboardManager from "../overlays/KeyboardManager.svelte"
   import SortButton from "../controls/SortButton.svelte"
-  import AddColumnButton from "../controls/AddColumnButton.svelte"
   import HideColumnsButton from "../controls/HideColumnsButton.svelte"
-  import AddRowButton from "../controls/AddRowButton.svelte"
-  import RowHeightButton from "../controls/RowHeightButton.svelte"
-  import ColumnWidthButton from "../controls/ColumnWidthButton.svelte"
+  import SizeButton from "../controls/SizeButton.svelte"
   import NewRow from "./NewRow.svelte"
   import { createGridWebsocket } from "../lib/websocket"
   import {
@@ -120,13 +117,11 @@
   {#if showControls}
     <div class="controls">
       <div class="controls-left">
-        <AddRowButton />
-        <AddColumnButton />
-        <slot name="controls" />
+        <slot name="filter" />
         <SortButton />
         <HideColumnsButton />
-        <ColumnWidthButton />
-        <RowHeightButton />
+        <SizeButton />
+        <slot name="controls" />
       </div>
       <div class="controls-right">
         {#if showAvatars}
@@ -276,5 +271,13 @@
     height: 100%;
     background: var(--grid-background-alt);
     opacity: 0.6;
+  }
+
+  /* Disable checkbox animation anywhere in the grid data */
+  .grid-data-outer :global(.spectrum-Checkbox-box:before),
+  .grid-data-outer :global(.spectrum-Checkbox-box:after),
+  .grid-data-outer :global(.spectrum-Checkbox-checkmark),
+  .grid-data-outer :global(.spectrum-Checkbox-partialCheckmark) {
+    transition: none;
   }
 </style>
