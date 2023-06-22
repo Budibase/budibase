@@ -147,6 +147,7 @@
     class="new-row-fab"
     on:click={() => dispatch("add-row-inline")}
     transition:fade|local={{ duration: 130 }}
+    class:offset={!$stickyColumn}
   >
     <Icon name="Add" size="S" />
   </div>
@@ -253,6 +254,9 @@
   .new-row-fab:hover {
     background: var(--cell-background-hover);
     cursor: pointer;
+  }
+  .new-row-fab.offset {
+    margin-left: -6px;
   }
 
   .container {
