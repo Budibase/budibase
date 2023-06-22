@@ -3,10 +3,10 @@ import * as userController from "../user"
 import { FieldTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import { Row, Table } from "@budibase/types"
+import { FieldType, Row, Table, UserCtx } from "@budibase/types"
 import { Format } from "../view/exporters"
-import { UserCtx } from "@budibase/types"
 import sdk from "../../../sdk"
+
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
 
@@ -19,6 +19,18 @@ validateJs.extend(validateJs.validators.datetime, {
     return new Date(value).toISOString()
   },
 })
+
+function isForeignKey(key: string, table: Table) {
+  const relationships = Object.values(table.schema).filter(
+    column => column.type === FieldType.LINK
+  )
+  for (let relationship of relationships) {
+    if (relationship.foreignKey === key) {
+      return true
+    }
+  }
+  return false
+}
 
 export async function getDatasourceAndQuery(json: any) {
   const datasourceId = json.endpoint.datasourceId
@@ -65,6 +77,10 @@ export async function validate({
     const column = fetchedTable.schema[fieldName]
     const constraints = cloneDeep(column.constraints)
     const type = column.type
+    // foreign keys are likely to be enriched
+    if (isForeignKey(fieldName, fetchedTable)) {
+      continue
+    }
     // formulas shouldn't validated, data will be deleted anyway
     if (type === FieldTypes.FORMULA || column.autocolumn) {
       continue
