@@ -18,13 +18,23 @@ ENV TOP_LEVEL_PATH=/
 
 # handle node-gyp
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends g++ make python postgresql-client
+    && apt-get install -y --no-install-recommends g++ make python
 RUN yarn global add pm2
 
 # Install client for oracle datasource
 RUN apt-get install unzip libaio1
 COPY scripts/integrations/oracle/ scripts/integrations/oracle/
 RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh 
+
+# Add the PostgreSQL repository
+RUN apt update && apt upgrade -y \
+    && apt install software-properties-common apt-transport-https curl gpg -y \
+    && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
+    && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
+    && apt update -y \
+    && apt install postgresql-client-15 -y \
+    && apt remove software-properties-common apt-transport-https curl gpg -y
+
 
 COPY package.json .
 COPY dist/yarn.lock .
