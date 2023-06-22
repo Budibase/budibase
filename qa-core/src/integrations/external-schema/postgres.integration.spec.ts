@@ -7,7 +7,16 @@ describe("getExternalSchema", () => {
   describe("postgres", () => {
     let config: any
 
+    function stripResultsVersions(sql: string) {
+      const result = sql
+        .replace(/\n[^\n]+Dumped from database version[^\n]+\n/, "")
+        .replace(/\n[^\n]+umped by pg_dump version[^\n]+\n/, "")
+        .toString()
+      return result
+    }
+
     beforeAll(async () => {
+      // This is left on propose without a tag, so if a new version introduces a breaking change we will be notified
       const container = await new GenericContainer("postgres")
         .withExposedPorts(5432)
         .withEnv("POSTGRES_PASSWORD", "password")
@@ -31,14 +40,11 @@ describe("getExternalSchema", () => {
     it("can export an empty database", async () => {
       const integration = new postgres.integration(config)
       const result = await integration.getExternalSchema()
-      expect(result).toMatchInlineSnapshot(`
+
+      expect(stripResultsVersions(result)).toMatchInlineSnapshot(`
         "--
         -- PostgreSQL database dump
         --
-
-        -- Dumped from database version 15.3 (Debian 15.3-1.pgdg120+1)
-        -- Dumped by pg_dump version 15.3
-
         SET statement_timeout = 0;
         SET lock_timeout = 0;
         SET idle_in_transaction_session_timeout = 0;
@@ -83,14 +89,10 @@ describe("getExternalSchema", () => {
       )
 
       const result = await integration.getExternalSchema()
-      expect(result).toMatchInlineSnapshot(`
+      expect(stripResultsVersions(result)).toMatchInlineSnapshot(`
         "--
         -- PostgreSQL database dump
         --
-
-        -- Dumped from database version 15.3 (Debian 15.3-1.pgdg120+1)
-        -- Dumped by pg_dump version 15.3
-
         SET statement_timeout = 0;
         SET lock_timeout = 0;
         SET idle_in_transaction_session_timeout = 0;
@@ -235,14 +237,10 @@ describe("getExternalSchema", () => {
       )
 
       const result = await integration.getExternalSchema()
-      expect(result).toMatchInlineSnapshot(`
+      expect(stripResultsVersions(result)).toMatchInlineSnapshot(`
         "--
         -- PostgreSQL database dump
         --
-
-        -- Dumped from database version 15.3 (Debian 15.3-1.pgdg120+1)
-        -- Dumped by pg_dump version 15.3
-
         SET statement_timeout = 0;
         SET lock_timeout = 0;
         SET idle_in_transaction_session_timeout = 0;
