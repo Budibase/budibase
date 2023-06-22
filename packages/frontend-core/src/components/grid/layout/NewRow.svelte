@@ -26,7 +26,6 @@
     maxScrollTop,
     rowVerticalInversionIndex,
     columnHorizontalInversionIndex,
-    config,
     selectedRows,
   } = getContext("grid")
 
