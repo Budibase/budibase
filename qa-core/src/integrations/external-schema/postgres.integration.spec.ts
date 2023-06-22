@@ -229,10 +229,13 @@ describe("getExternalSchema", () => {
     it("does not export a data", async () => {
       const integration = new postgres.integration(config)
 
-      await integration.internalQuery({
-        sql: `INSERT INTO "users" ("name", "role") VALUES ('John Doe', 'Administrator');
+      await integration.internalQuery(
+        {
+          sql: `INSERT INTO "users" ("name", "role") VALUES ('John Doe', 'Administrator');
         INSERT INTO "products" ("name", "price") VALUES ('Book', 7.68);`,
-      })
+        },
+        false
+      )
 
       const result = await integration.getExternalSchema()
       expect(result).toMatchInlineSnapshot(`
