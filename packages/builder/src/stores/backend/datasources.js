@@ -117,6 +117,10 @@ export function createDatasourcesStore() {
         ...state,
         list: [...state.list, datasource],
       }))
+
+      // If this is a new datasource then we should refresh the tables list,
+      // because otherwise we'll never see the new tables
+      tables.fetch()
     }
 
     // Update existing datasource
