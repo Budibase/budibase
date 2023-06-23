@@ -5,18 +5,26 @@ jest.unmock("pg")
 
 describe("getExternalSchema", () => {
   describe("postgres", () => {
-    let host: string
-    let port: number
     let config: any
 
+    // Remove versioning from the outputs to prevent failures when running different pg_dump versions
+    function stripResultsVersions(sql: string) {
+      const result = sql
+        .replace(/\n[^\n]+Dumped from database version[^\n]+\n/, "")
+        .replace(/\n[^\n]+Dumped by pg_dump version[^\n]+\n/, "")
+        .toString()
+      return result
+    }
+
     beforeAll(async () => {
+      // This is left on propose without a tag, so if a new version introduces a breaking change we will be notified
       const container = await new GenericContainer("postgres")
         .withExposedPorts(5432)
         .withEnv("POSTGRES_PASSWORD", "password")
         .start()
 
-      host = container.getContainerIpAddress()
-      port = container.getMappedPort(5432)
+      const host = container.getContainerIpAddress()
+      const port = container.getMappedPort(5432)
 
       config = {
         host,
@@ -33,14 +41,11 @@ describe("getExternalSchema", () => {
     it("can export an empty database", async () => {
       const integration = new postgres.integration(config)
       const result = await integration.getExternalSchema()
-      expect(result).toMatchInlineSnapshot(`
+
+      expect(stripResultsVersions(result)).toMatchInlineSnapshot(`
         "--
         -- PostgreSQL database dump
         --
-
-        -- Dumped from database version 15.3 (Debian 15.3-1.pgdg120+1)
-        -- Dumped by pg_dump version 15.3
-
         SET statement_timeout = 0;
         SET lock_timeout = 0;
         SET idle_in_transaction_session_timeout = 0;
@@ -63,31 +68,32 @@ describe("getExternalSchema", () => {
     it("can export a database with tables", async () => {
       const integration = new postgres.integration(config)
 
-      await integration.internalQuery({
-        sql: `
-      CREATE TABLE "users" (
-      "id" SERIAL,
-      "name" VARCHAR(100) NOT NULL,
-      "role" VARCHAR(15) NOT NULL,
-      PRIMARY KEY ("id")
-    );
-      CREATE TABLE "products" (
-	    "id" SERIAL,
-	    "name" VARCHAR(100) NOT NULL,
-	    "price" DECIMAL NOT NULL,
-	    PRIMARY KEY ("id")
-    );`,
-      })
+      await integration.internalQuery(
+        {
+          sql: `
+          CREATE TABLE "users" (
+            "id" SERIAL,
+            "name" VARCHAR(100) NOT NULL,
+            "role" VARCHAR(15) NOT NULL,
+            PRIMARY KEY ("id")
+          );
+            CREATE TABLE "products" (
+            "id" SERIAL,
+            "name" VARCHAR(100) NOT NULL,
+            "price" DECIMAL NOT NULL,
+            "owner" INTEGER NULL,
+            PRIMARY KEY ("id")
+          );
+          ALTER TABLE "products" ADD CONSTRAINT "fk_owner" FOREIGN KEY ("owner") REFERENCES "users" ("id");`,
+        },
+        false
+      )
 
       const result = await integration.getExternalSchema()
-      expect(result).toMatchInlineSnapshot(`
+      expect(stripResultsVersions(result)).toMatchInlineSnapshot(`
         "--
         -- PostgreSQL database dump
         --
-
-        -- Dumped from database version 15.3 (Debian 15.3-1.pgdg120+1)
-        -- Dumped by pg_dump version 15.3
-
         SET statement_timeout = 0;
         SET lock_timeout = 0;
         SET idle_in_transaction_session_timeout = 0;
@@ -110,7 +116,8 @@ describe("getExternalSchema", () => {
         CREATE TABLE public.products (
             id integer NOT NULL,
             name character varying(100) NOT NULL,
-            price numeric NOT NULL
+            price numeric NOT NULL,
+            owner integer
         );
 
 
@@ -201,6 +208,14 @@ describe("getExternalSchema", () => {
 
         ALTER TABLE ONLY public.users
             ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+        --
+        -- Name: products fk_owner; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+        --
+
+        ALTER TABLE ONLY public.products
+            ADD CONSTRAINT fk_owner FOREIGN KEY (owner) REFERENCES public.users(id);
 
 
         --
@@ -214,20 +229,19 @@ describe("getExternalSchema", () => {
     it("does not export a data", async () => {
       const integration = new postgres.integration(config)
 
-      await integration.internalQuery({
-        sql: `INSERT INTO "users" ("name", "role") VALUES ('John Doe', 'Administrator');
+      await integration.internalQuery(
+        {
+          sql: `INSERT INTO "users" ("name", "role") VALUES ('John Doe', 'Administrator');
         INSERT INTO "products" ("name", "price") VALUES ('Book', 7.68);`,
-      })
+        },
+        false
+      )
 
       const result = await integration.getExternalSchema()
-      expect(result).toMatchInlineSnapshot(`
+      expect(stripResultsVersions(result)).toMatchInlineSnapshot(`
         "--
         -- PostgreSQL database dump
         --
-
-        -- Dumped from database version 15.3 (Debian 15.3-1.pgdg120+1)
-        -- Dumped by pg_dump version 15.3
-
         SET statement_timeout = 0;
         SET lock_timeout = 0;
         SET idle_in_transaction_session_timeout = 0;
@@ -250,7 +264,8 @@ describe("getExternalSchema", () => {
         CREATE TABLE public.products (
             id integer NOT NULL,
             name character varying(100) NOT NULL,
-            price numeric NOT NULL
+            price numeric NOT NULL,
+            owner integer
         );
 
 
@@ -341,6 +356,14 @@ describe("getExternalSchema", () => {
 
         ALTER TABLE ONLY public.users
             ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+        --
+        -- Name: products fk_owner; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+        --
+
+        ALTER TABLE ONLY public.products
+            ADD CONSTRAINT fk_owner FOREIGN KEY (owner) REFERENCES public.users(id);
 
 
         --
