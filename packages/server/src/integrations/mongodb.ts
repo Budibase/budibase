@@ -383,7 +383,7 @@ class MongoIntegration implements IntegrationBase {
   createObjectIds(json: any): object {
     const self = this
     function interpolateObjectIds(json: any) {
-      for (let field of Object.keys(json)) {
+      for (let field of Object.keys(json || {})) {
         if (json[field] instanceof Object) {
           json[field] = self.createObjectIds(json[field])
         }
