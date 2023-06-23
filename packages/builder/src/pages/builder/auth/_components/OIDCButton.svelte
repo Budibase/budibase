@@ -12,7 +12,6 @@
   export let samePage
 
   $: show = $organisation.oidc
-  $: oidcLogoCheck = $oidc.logo
 
   let preDefinedIcons = {
     Oidc: OidcLogo,
@@ -30,14 +29,13 @@
     }
   })
 
-  $: src = !oidcLogoCheck
-    ? OidcLogo
-    : preDefinedIcons[$oidc.logo] || oidcLogoCheck
+  $: oidcLogoImageURL = preDefinedIcons[$oidc.logo] ?? $oidc.logo
+  $: logoSrc = oidcLogoImageURL ?? OidcLogo
 </script>
 
 {#if show}
   <FancyButton
-    icon={src}
+    icon={logoSrc}
     on:click={() => {
       const url = `/api/global/auth/${$auth.tenantId}/oidc/configs/${$oidc.uuid}`
       if (samePage) {

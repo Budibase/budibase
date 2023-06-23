@@ -327,23 +327,21 @@ export async function find(ctx: UserCtx) {
 export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
   try {
     // Find the config with the most granular scope based on context
-    const config = await configs.getOIDCConfig()
-    const oidcLogoConfig = await configs.getOIDCLogosDoc()
+    const oidcConfig = await configs.getOIDCConfig()
+    const oidcCustomLogos = await configs.getOIDCLogosDoc()
 
-    if (oidcLogoConfig) {
-      enrichOIDCLogos(oidcLogoConfig)
+    if (oidcCustomLogos) {
+      enrichOIDCLogos(oidcCustomLogos)
     }
 
-    if (!config) {
+    if (!oidcConfig) {
       ctx.body = []
     } else {
       ctx.body = [
         {
-          logo: oidcLogoConfig
-            ? oidcLogoConfig.config[config.logo]
-            : config.logo,
-          name: config.name,
-          uuid: config.uuid,
+          logo: oidcCustomLogos?.config[oidcConfig.logo] ?? oidcConfig.logo,
+          name: oidcConfig.name,
+          uuid: oidcConfig.uuid,
         },
       ]
     }
