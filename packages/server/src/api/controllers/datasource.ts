@@ -183,9 +183,7 @@ export async function buildSchemaFromDb(ctx: UserCtx) {
 
   let { tables, error } = await buildSchemaHelper(datasource)
   if (tablesFilter) {
-    if (!datasource.entities) {
-      datasource.entities = {}
-    }
+    datasource.entities = {}
     for (let key in tables) {
       if (
         tablesFilter.some(
@@ -200,7 +198,7 @@ export async function buildSchemaFromDb(ctx: UserCtx) {
   }
 
   setDefaultDisplayColumns(datasource)
-  const dbResp = await db.put(datasource)
+  const dbResp = await db.put(sdk.tables.checkExternalTableSchemas(datasource))
   datasource._rev = dbResp.rev
   const cleanedDatasource = await sdk.datasources.removeSecretSingle(datasource)
 
@@ -286,7 +284,9 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
     datasource.config!.auth = auth
   }
 
-  const response = await db.put(datasource)
+  const response = await db.put(
+    sdk.tables.checkExternalTableSchemas(datasource)
+  )
   await events.datasource.updated(datasource)
   datasource._rev = response.rev
 
@@ -327,7 +327,7 @@ export async function save(
     setDefaultDisplayColumns(datasource)
   }
 
-  const dbResp = await db.put(datasource)
+  const dbResp = await db.put(sdk.tables.checkExternalTableSchemas(datasource))
   await events.datasource.created(datasource)
   datasource._rev = dbResp.rev
 

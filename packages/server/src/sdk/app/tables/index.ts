@@ -7,6 +7,7 @@ import {
 } from "../../../integrations/utils"
 import { Table, Database } from "@budibase/types"
 import datasources from "../datasources"
+import { checkExternalTableSchemas } from "./validation"
 
 async function getAllInternalTables(db?: Database): Promise<Table[]> {
   if (!db) {
@@ -60,4 +61,5 @@ export default {
   getAllExternalTables,
   getExternalTable,
   getTable,
+  checkExternalTableSchemas,
 }
