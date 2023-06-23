@@ -99,9 +99,15 @@
   bind:this={button}
 >
   {#if fieldIcon}
-    <span class="option-extra icon">
-      <Icon size="S" name={fieldIcon} />
-    </span>
+    {#if !useOptionIconImage}
+      <span class="option-extra icon">
+        <Icon size="S" name={fieldIcon} />
+      </span>
+    {:else}
+      <span class="option-extra icon field-icon">
+        <img src={fieldIcon} alt="icon" width="15" height="15" />
+      </span>
+    {/if}
   {/if}
   {#if fieldColour}
     <span class="option-extra">
@@ -310,5 +316,9 @@
     font-style: italic;
     max-width: 170px;
     font-size: 12px;
+  }
+
+  .option-extra.icon.field-icon {
+    display: flex;
   }
 </style>
