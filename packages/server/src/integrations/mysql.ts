@@ -4,7 +4,7 @@ import {
   QueryType,
   QueryJson,
   SqlQuery,
-  Table,
+  ExternalTable,
   TableSchema,
   DatasourcePlus,
   DatasourceFeature,
@@ -91,7 +91,7 @@ const SCHEMA: Integration = {
   },
 }
 
-function bindingTypeCoerce(bindings: any[]) {
+export function bindingTypeCoerce(bindings: any[]) {
   for (let i = 0; i < bindings.length; i++) {
     const binding = bindings[i]
     if (typeof binding !== "string") {
@@ -109,7 +109,12 @@ function bindingTypeCoerce(bindings: any[]) {
       dayjs(binding).isValid() &&
       !binding.includes(",")
     ) {
-      bindings[i] = dayjs(binding).toDate()
+      let value: any
+      value = new Date(binding)
+      if (isNaN(value)) {
+        value = binding
+      }
+      bindings[i] = value
     }
   }
   return bindings
@@ -118,7 +123,7 @@ function bindingTypeCoerce(bindings: any[]) {
 class MySQLIntegration extends Sql implements DatasourcePlus {
   private config: MySQLConfig
   private client?: mysql.Connection
-  public tables: Record<string, Table> = {}
+  public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
   constructor(config: MySQLConfig) {
@@ -215,8 +220,11 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     }
   }
 
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
-    const tables: { [key: string]: Table } = {}
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, ExternalTable>
+  ) {
+    const tables: { [key: string]: ExternalTable } = {}
     await this.connect()
 
     try {
@@ -254,6 +262,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         if (!tables[tableName]) {
           tables[tableName] = {
             _id: buildExternalTableId(datasourceId, tableName),
+            sourceId: datasourceId,
             primary: primaryKeys,
             name: tableName,
             schema,

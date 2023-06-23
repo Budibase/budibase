@@ -12,7 +12,7 @@
   import { automationStore, selectedAutomation } from "builderStore"
   import { admin, licensing } from "stores/portal"
   import { externalActions } from "./ExternalActions"
-  import { TriggerStepID } from "constants/backend/automations"
+  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { checkForCollectStep } from "builderStore/utils"
 
   export let blockIdx
@@ -149,7 +149,7 @@
           <div class="item-body">
             <Icon name={action.icon} />
             <Body size="XS">{action.name}</Body>
-            {#if isDisabled && !syncAutomationsEnabled}
+            {#if isDisabled && !syncAutomationsEnabled && action.stepId === ActionStepID.COLLECT}
               <div class="tag-color">
                 <Tags>
                   <Tag icon="LockClosed">Business</Tag>
