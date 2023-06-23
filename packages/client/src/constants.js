@@ -29,6 +29,7 @@ export const ActionTypes = {
   SetDataProviderSorting: "SetDataProviderSorting",
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
+  ScrollTo: "ScrollTo",
 }
 
 export const DNDPlaceholderID = "dnd-placeholder"
