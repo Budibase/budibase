@@ -3544,7 +3544,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -4323,7 +4324,8 @@
           {
             "type": "field/sortable",
             "label": "Sort by",
-            "key": "sortColumn"
+            "key": "sortColumn",
+            "placeholder": "None"
           },
           {
             "type": "select",
@@ -4567,7 +4569,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -4735,7 +4738,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
