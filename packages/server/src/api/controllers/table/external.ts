@@ -1,32 +1,34 @@
 import {
-  buildExternalTableId,
   breakExternalTableId,
+  buildExternalTableId,
 } from "../../../integrations/utils"
 import {
+  foreignKeyStructure,
   generateForeignKey,
   generateJunctionTableName,
-  foreignKeyStructure,
   hasTypeChanged,
   setStaticSchemas,
 } from "./utils"
 import { FieldTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { handleRequest } from "../row/external"
-import { events, context } from "@budibase/backend-core"
-import { parse, isRows, isSchema } from "../../../utilities/schema"
+import { context, events } from "@budibase/backend-core"
+import { isRows, isSchema, parse } from "../../../utilities/schema"
 import {
+  AutoReason,
   Datasource,
-  Table,
-  QueryJson,
-  Operation,
-  RenameColumn,
   FieldSchema,
-  UserCtx,
-  TableRequest,
+  Operation,
+  QueryJson,
   RelationshipTypes,
+  RenameColumn,
+  Table,
+  TableRequest,
+  UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
+
 const { cloneDeep } = require("lodash/fp")
 
 async function makeTableRequest(
@@ -317,7 +319,7 @@ export async function save(ctx: UserCtx) {
   delete tableToSave._rename
   // store it into couch now for budibase reference
   datasource.entities[tableToSave.name] = tableToSave
-  await db.put(datasource)
+  await db.put(sdk.tables.checkExternalTableSchemas(datasource))
 
   // Since tables are stored inside datasources, we need to notify clients
   // that the datasource definition changed
@@ -348,7 +350,7 @@ export async function destroy(ctx: UserCtx) {
     datasource.entities = tables
   }
 
-  await db.put(datasource)
+  await db.put(sdk.tables.checkExternalTableSchemas(datasource))
 
   // Since tables are stored inside datasources, we need to notify clients
   // that the datasource definition changed
