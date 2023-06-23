@@ -25,7 +25,7 @@
     values: {},
     errors: {},
     valid: true,
-    currentStep: 1,
+    currentStep: get(currentStep),
   })
 
   // Reactive derived stores to derive form state from field array
