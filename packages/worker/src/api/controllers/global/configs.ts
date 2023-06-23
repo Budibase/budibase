@@ -29,7 +29,6 @@ import {
   SSOConfigType,
   UserCtx,
   OIDCLogosConfig,
-  OIDCInnerConfig,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 
