@@ -95,19 +95,7 @@
   },
   "workspaces": {
     "packages": [
-      "packages/backend-core",
-      "packages/bbui",
-      "packages/builder",
-      "packages/cli",
-      "packages/client",
-      "packages/frontend-core",
-      "packages/sdk",
-      "packages/server",
-      "packages/shared-core",
-      "packages/string-templates",
-      "packages/types",
-      "packages/worker",
-      "packages/pro/packages/pro"
+      "packages/*"
     ]
   },
   "resolutions": {
