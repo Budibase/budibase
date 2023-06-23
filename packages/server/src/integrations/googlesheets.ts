@@ -12,7 +12,7 @@ import {
   Row,
   SearchFilters,
   SortJson,
-  Table,
+  ExternalTable,
   TableRequest,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
@@ -136,7 +136,7 @@ const SCHEMA: Integration = {
 class GoogleSheetsIntegration implements DatasourcePlus {
   private readonly config: GoogleSheetsConfig
   private client: GoogleSpreadsheet
-  public tables: Record<string, Table> = {}
+  public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
   constructor(config: GoogleSheetsConfig) {
@@ -248,12 +248,18 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return sheets.map(s => s.title)
   }
 
-  getTableSchema(title: string, headerValues: string[], id?: string) {
+  getTableSchema(
+    title: string,
+    headerValues: string[],
+    datasourceId: string,
+    id?: string
+  ) {
     // base table
-    const table: Table = {
+    const table: ExternalTable = {
       name: title,
       primary: [GOOGLE_SHEETS_PRIMARY_KEY],
       schema: {},
+      sourceId: datasourceId,
     }
     if (id) {
       table._id = id
@@ -268,14 +274,17 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return table
   }
 
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, ExternalTable>
+  ) {
     // not fully configured yet
     if (!this.config.auth) {
       return
     }
     await this.connect()
     const sheets = this.client.sheetsByIndex
-    const tables: Record<string, Table> = {}
+    const tables: Record<string, ExternalTable> = {}
     for (let sheet of sheets) {
       // must fetch rows to determine schema
       await sheet.getRows()
@@ -284,6 +293,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       tables[sheet.title] = this.getTableSchema(
         sheet.title,
         sheet.headerValues,
+        datasourceId,
         id
       )
     }
