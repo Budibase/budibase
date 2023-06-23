@@ -21,7 +21,6 @@
   export let allowHelpers = true
   export let updateOnChange = true
   export let drawerLeft
-  export let key
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
