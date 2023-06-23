@@ -90,8 +90,7 @@
       builderStore.actions.notifyLoaded()
     } else {
       builderStore.actions.analyticsPing({
-        source: "app",
-        ...{ embedded: $appStore.embedded || undefined },
+        embedded: !!$appStore.embedded,
       })
     }
   })
@@ -169,7 +168,7 @@
                         <Layout justifyItems="center" gap="S">
                           {@html ErrorSVG}
                           <Heading size="L">
-                            Your application could not be loaded
+                            This Budibase app is not publicly accessible
                           </Heading>
                         </Layout>
                       </div>

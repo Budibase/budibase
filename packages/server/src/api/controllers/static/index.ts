@@ -100,9 +100,8 @@ export const deleteObjects = async function (ctx: any) {
 }
 
 export const serveApp = async function (ctx: any) {
-  const bbHeaderEmbed = ctx.request.get("x-budibase-embed")
-    ? ctx.get("x-budibase-embed").toLowerCase() == "true"
-    : false
+  const bbHeaderEmbed =
+    ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
 
   //Public Settings
   const { config } = await configs.getSettingsConfigDoc()

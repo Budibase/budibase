@@ -76,11 +76,8 @@ export const createLicensingStore = () => {
       await actions.setQuotaUsage()
     },
     setNavigation: () => {
-      //"/builder/portal/account/upgrade"
       const adminStore = get(admin)
       const authStore = get(auth)
-
-      //Add cloud check here too???
 
       const upgradeUrl = authStore?.user?.accountPortalAccess
         ? `${adminStore.accountPortalUrl}/portal/upgrade`

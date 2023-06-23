@@ -46,7 +46,9 @@ const loadBudibase = async () => {
   appStore.actions.setAppId(window["##BUDIBASE_APP_ID##"])
 
   // Set the flag used to determine if the app is being loaded via an iframe
-  appStore.actions.setAppEmbedded(window["##BUDIBASE_APP_EMBEDDED##"] == "true")
+  appStore.actions.setAppEmbedded(
+    window["##BUDIBASE_APP_EMBEDDED##"] === "true"
+  )
 
   // Fetch environment info
   if (!get(environmentStore)?.loaded) {
