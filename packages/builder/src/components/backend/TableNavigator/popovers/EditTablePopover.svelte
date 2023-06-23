@@ -65,6 +65,7 @@
     const updatedTable = cloneDeep(table)
     updatedTable.name = updatedName
     await tables.save(updatedTable)
+    await datasources.fetch()
     notifications.success("Table renamed successfully")
   }
 

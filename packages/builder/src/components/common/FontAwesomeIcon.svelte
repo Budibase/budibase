@@ -9,6 +9,18 @@
     faFileArrowUp,
     faChevronLeft,
     faCircleInfo,
+    faBold,
+    faItalic,
+    faHeading,
+    faQuoteLeft,
+    faListUl,
+    faListOl,
+    faLink,
+    faImage,
+    faEye,
+    faColumns,
+    faArrowsAlt,
+    faQuestionCircle,
   } from "@fortawesome/free-solid-svg-icons"
   import { faGithub, faDiscord } from "@fortawesome/free-brands-svg-icons"
 
@@ -22,7 +34,22 @@
     faEnvelope,
     faFileArrowUp,
     faChevronLeft,
-    faCircleInfo
+    faCircleInfo,
+
+    // -- Required for easyMDE use in the builder.
+    faBold,
+    faItalic,
+    faHeading,
+    faQuoteLeft,
+    faListUl,
+    faListOl,
+    faLink,
+    faImage,
+    faEye,
+    faColumns,
+    faArrowsAlt,
+    faQuestionCircle
+    // --
   )
   dom.watch()
 </script>
