@@ -2,7 +2,6 @@ import ClientApp from "./components/ClientApp.svelte"
 import {
   builderStore,
   appStore,
-  devToolsStore,
   blockStore,
   componentStore,
   environmentStore,
@@ -50,11 +49,6 @@ const loadBudibase = async () => {
   if (!get(environmentStore)?.loaded) {
     await environmentStore.actions.fetchEnvironment()
   }
-
-  // Enable dev tools or not. We need to be using a dev app and not inside
-  // the builder preview to enable them.
-  const enableDevTools = !get(builderStore).inBuilder && get(appStore).isDevApp
-  devToolsStore.actions.setEnabled(enableDevTools)
 
   // Register handler for runtime events from the builder
   window.handleBuilderRuntimeEvent = (type, data) => {

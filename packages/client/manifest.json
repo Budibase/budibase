@@ -2221,7 +2221,8 @@
       "ValidateForm",
       "ClearForm",
       "ChangeFormStep",
-      "UpdateFieldValue"
+      "UpdateFieldValue",
+      "ScrollTo"
     ],
     "styles": ["size"],
     "size": {

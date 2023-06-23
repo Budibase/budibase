@@ -57,11 +57,12 @@ class BudibasePublicAPIClient {
       }
       const message = `${method} ${url} - ${response.status}`
 
+      const isDebug = process.env.LOG_LEVEL === "debug"
       if (response.status > 499) {
         console.error(message, data)
       } else if (response.status >= 400) {
         console.warn(message, data)
-      } else {
+      } else if (isDebug) {
         console.debug(message, data)
       }
 
