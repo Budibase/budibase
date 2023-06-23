@@ -5,6 +5,7 @@ import {
   GoogleInnerConfig,
   OIDCConfig,
   OIDCInnerConfig,
+  OIDCLogosConfig,
   SCIMConfig,
   SCIMInnerConfig,
   SettingsConfig,
@@ -190,6 +191,10 @@ export function getDefaultGoogleConfig(): GoogleInnerConfig | undefined {
 }
 
 // OIDC
+
+export async function getOIDCLogosDoc(): Promise<OIDCLogosConfig | undefined> {
+  return getConfig<OIDCLogosConfig>(ConfigType.OIDC_LOGOS)
+}
 
 async function getOIDCConfigDoc(): Promise<OIDCConfig | undefined> {
   return getConfig<OIDCConfig>(ConfigType.OIDC)
