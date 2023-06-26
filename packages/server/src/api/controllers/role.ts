@@ -55,11 +55,19 @@ export async function save(ctx: UserCtx) {
   const db = context.getAppDB()
   let { _id, name, inherits, permissionId, version } = ctx.request.body
   let isCreate = false
-  if (!_id || version === roles.RoleVersion.VERSION_2) {
+
+  if (_id && roles.isBuiltin(_id)) {
+    ctx.throw(400, "Cannot update builtin roles.")
+  }
+
+  // if not id found, then its creation
+  if (!_id) {
     _id = generateRoleID(name)
     isCreate = true
-  } else if (roles.isBuiltin(_id)) {
-    ctx.throw(400, "Cannot update builtin roles.")
+  }
+  // version 2 roles need updated to add back role_
+  else if (version === roles.RoleVersion.VERSION_2) {
+    _id = generateRoleID(name)
   }
 
   const role = new roles.Role(_id, name, permissionId).addInheritance(inherits)
