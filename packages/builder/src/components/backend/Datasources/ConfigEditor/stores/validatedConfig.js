@@ -71,34 +71,38 @@ export const createValidatedConfigStore = (integration, config) => {
   const combined = derived(
     [configStore, errorsStore, selectedValidatorsStore],
     ([$configStore, $errorsStore, $selectedValidatorsStore]) => {
-      const validatedConfig = Object.entries(integration.datasource).map(
-        ([key, properties]) => {
-          const getValue = () => {
-            if (properties.type === "fieldGroup") {
-              return Object.entries(properties.fields).map(
-                ([fieldKey, fieldProperties]) => {
-                  return {
-                    key: fieldKey,
-                    name: capitalise(fieldProperties.display || fieldKey),
-                    type: fieldProperties.type,
-                    value: $configStore[fieldKey],
-                  }
-                }
-              )
-            }
+      const validatedConfig = []
 
-            return $configStore[key]
-          }
-
-          return {
-            key,
-            value: getValue(),
-            error: $errorsStore[key],
-            name: capitalise(properties.display || key),
-            type: properties.type,
-          }
+      Object.entries(integration.datasource).forEach(([key, properties]) => {
+        if (integration.name === "REST" && key !== "rejectUnauthorized") {
+          return
         }
-      )
+
+        const getValue = () => {
+          if (properties.type === "fieldGroup") {
+            return Object.entries(properties.fields).map(
+              ([fieldKey, fieldProperties]) => {
+                return {
+                  key: fieldKey,
+                  name: capitalise(fieldProperties.display || fieldKey),
+                  type: fieldProperties.type,
+                  value: $configStore[fieldKey],
+                }
+              }
+            )
+          }
+
+          return $configStore[key]
+        }
+
+        validatedConfig.push({
+          key,
+          value: getValue(),
+          error: $errorsStore[key],
+          name: capitalise(properties.display || key),
+          type: properties.type,
+        })
+      })
 
       const allFieldsActive =
         Object.keys($selectedValidatorsStore).length ===
