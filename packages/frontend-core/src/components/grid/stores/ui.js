@@ -8,13 +8,16 @@ import {
   NewRowID,
 } from "../lib/constants"
 
-export const createStores = () => {
+export const createStores = context => {
+  const { props } = context
   const focusedCellId = writable(null)
   const focusedCellAPI = writable(null)
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
-  const rowHeight = writable(DefaultRowHeight)
+  const rowHeight = writable(props.initialRowHeight || DefaultRowHeight)
   const previousFocusedRowId = writable(null)
+  const gridFocused = writable(false)
+  const isDragging = writable(false)
 
   // Derive the current focused row ID
   const focusedRowId = derived(
@@ -46,6 +49,8 @@ export const createStores = () => {
     previousFocusedRowId,
     hoveredRowId,
     rowHeight,
+    gridFocused,
+    isDragging,
     selectedRows: {
       ...selectedRows,
       actions: {
@@ -94,9 +99,9 @@ export const deriveStores = context => {
 
   // Derive the amount of content lines to show in cells depending on row height
   const contentLines = derived(rowHeight, $rowHeight => {
-    if ($rowHeight === LargeRowHeight) {
+    if ($rowHeight >= LargeRowHeight) {
       return 3
-    } else if ($rowHeight === MediumRowHeight) {
+    } else if ($rowHeight >= MediumRowHeight) {
       return 2
     }
     return 1
@@ -129,6 +134,7 @@ export const initialise = context => {
     hoveredRowId,
     table,
     rowHeight,
+    initialRowHeight,
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
@@ -184,5 +190,14 @@ export const initialise = context => {
   // Pull row height from table
   table.subscribe($table => {
     rowHeight.set($table?.rowHeight || DefaultRowHeight)
+  })
+
+  // Reset row height when initial row height prop changes
+  initialRowHeight.subscribe(height => {
+    if (height) {
+      rowHeight.set(height)
+    } else {
+      rowHeight.set(get(table)?.rowHeight || DefaultRowHeight)
+    }
   })
 }

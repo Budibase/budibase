@@ -3,7 +3,7 @@ import { createWebsocket } from "../../../utils"
 import { SocketEvent, GridSocketEvent } from "@budibase/shared-core"
 
 export const createGridWebsocket = context => {
-  const { rows, tableId, users, focusedCellId, table } = context
+  const { rows, tableId, users, focusedCellId, table, API } = context
   const socket = createWebsocket("/socket/grid")
 
   const connectToTable = tableId => {
@@ -11,9 +11,10 @@ export const createGridWebsocket = context => {
       return
     }
     // Identify which table we are editing
+    const appId = API.getAppID()
     socket.emit(
       GridSocketEvent.SelectTable,
-      { tableId },
+      { tableId, appId },
       ({ users: gridUsers }) => {
         users.set(gridUsers)
       }
