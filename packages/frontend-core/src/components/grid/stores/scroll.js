@@ -1,6 +1,6 @@
 import { writable, derived, get } from "svelte/store"
 import { tick } from "svelte"
-import { Padding, GutterWidth } from "../lib/constants"
+import { Padding, GutterWidth, FocusedCellMinOffset } from "../lib/constants"
 
 export const createStores = () => {
   const scroll = writable({
@@ -138,14 +138,13 @@ export const initialise = context => {
     const $scroll = get(scroll)
     const $bounds = get(bounds)
     const $rowHeight = get(rowHeight)
-    const verticalOffset = 60
 
     // Ensure vertical position is viewable
     if ($focusedRow) {
       // Ensure row is not below bottom of screen
       const rowYPos = $focusedRow.__idx * $rowHeight
       const bottomCutoff =
-        $scroll.top + $bounds.height - $rowHeight - verticalOffset
+        $scroll.top + $bounds.height - $rowHeight - FocusedCellMinOffset
       let delta = rowYPos - bottomCutoff
       if (delta > 0) {
         scroll.update(state => ({
@@ -156,7 +155,7 @@ export const initialise = context => {
 
       // Ensure row is not above top of screen
       else {
-        const delta = $scroll.top - rowYPos + verticalOffset
+        const delta = $scroll.top - rowYPos + FocusedCellMinOffset
         if (delta > 0) {
           scroll.update(state => ({
             ...state,
@@ -171,13 +170,12 @@ export const initialise = context => {
     const $visibleColumns = get(visibleColumns)
     const columnName = $focusedCellId?.split("-")[1]
     const column = $visibleColumns.find(col => col.name === columnName)
-    const horizontalOffset = 50
     if (!column) {
       return
     }
 
     // Ensure column is not cutoff on left edge
-    let delta = $scroll.left - column.left + horizontalOffset
+    let delta = $scroll.left - column.left + FocusedCellMinOffset
     if (delta > 0) {
       scroll.update(state => ({
         ...state,
@@ -188,7 +186,7 @@ export const initialise = context => {
     // Ensure column is not cutoff on right edge
     else {
       const rightEdge = column.left + column.width
-      const rightBound = $bounds.width + $scroll.left - horizontalOffset
+      const rightBound = $bounds.width + $scroll.left - FocusedCellMinOffset
       delta = rightEdge - rightBound
       if (delta > 0) {
         scroll.update(state => ({

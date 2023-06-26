@@ -15,11 +15,18 @@
     scrollLeft,
     scrollTop,
     height,
+    isDragging,
+    menu,
   } = getContext("grid")
 
   // State for dragging bars
   let initialMouse
   let initialScroll
+  let isDraggingV = false
+  let isDraggingH = false
+
+  // Update state to reflect if we are dragging
+  $: isDragging.set(isDraggingV || isDraggingH)
 
   // Calculate V scrollbar size and offset
   // Terminology is the same for both axes:
@@ -39,6 +46,13 @@
   $: availWidth = renderWidth - barWidth
   $: barLeft = ScrollBarSize + availWidth * ($scrollLeft / $maxScrollLeft)
 
+  // Helper to close the context menu if it's open
+  const closeMenu = () => {
+    if ($menu.visible) {
+      menu.actions.close()
+    }
+  }
+
   // V scrollbar drag handlers
   const startVDragging = e => {
     e.preventDefault()
@@ -46,6 +60,8 @@
     initialScroll = $scrollTop
     document.addEventListener("mousemove", moveVDragging)
     document.addEventListener("mouseup", stopVDragging)
+    isDraggingV = true
+    closeMenu()
   }
   const moveVDragging = domDebounce(e => {
     const delta = e.clientY - initialMouse
@@ -59,6 +75,7 @@
   const stopVDragging = () => {
     document.removeEventListener("mousemove", moveVDragging)
     document.removeEventListener("mouseup", stopVDragging)
+    isDraggingV = false
   }
 
   // H scrollbar drag handlers
@@ -68,6 +85,8 @@
     initialScroll = $scrollLeft
     document.addEventListener("mousemove", moveHDragging)
     document.addEventListener("mouseup", stopHDragging)
+    isDraggingH = true
+    closeMenu()
   }
   const moveHDragging = domDebounce(e => {
     const delta = e.clientX - initialMouse
@@ -81,6 +100,7 @@
   const stopHDragging = () => {
     document.removeEventListener("mousemove", moveHDragging)
     document.removeEventListener("mouseup", stopHDragging)
+    isDraggingH = false
   }
 </script>
 
@@ -89,6 +109,7 @@
     class="v-scrollbar"
     style="--size:{ScrollBarSize}px; top:{barTop}px; height:{barHeight}px;"
     on:mousedown={startVDragging}
+    class:dragging={isDraggingV}
   />
 {/if}
 {#if $showHScrollbar}
@@ -96,6 +117,7 @@
     class="h-scrollbar"
     style="--size:{ScrollBarSize}px; left:{barLeft}px; width:{barWidth}px;"
     on:mousedown={startHDragging}
+    class:dragging={isDraggingH}
   />
 {/if}
 
@@ -103,11 +125,12 @@
   div {
     position: absolute;
     background: var(--spectrum-global-color-gray-500);
-    opacity: 0.7;
+    opacity: 0.5;
     border-radius: 4px;
     transition: opacity 130ms ease-out;
   }
-  div:hover {
+  div:hover,
+  div.dragging {
     opacity: 1;
   }
   .v-scrollbar {
