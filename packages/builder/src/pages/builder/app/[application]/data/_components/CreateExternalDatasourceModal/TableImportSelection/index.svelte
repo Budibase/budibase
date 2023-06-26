@@ -32,7 +32,7 @@
 
 <ModalContent
   {title}
-  cancelText="Cancel"
+  cancelText="Skip"
   size="L"
   {confirmText}
   onConfirm={() => store.importSelectedTables(onComplete)}
