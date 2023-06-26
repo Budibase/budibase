@@ -16,14 +16,16 @@ export const buildRowEndpoints = API => ({
   /**
    * Creates or updates a row in a table.
    * @param row the row to save
+   * @param suppressErrors whether or not to suppress error notifications
    */
-  saveRow: async row => {
+  saveRow: async (row, suppressErrors = false) => {
     if (!row?.tableId) {
       return
     }
     return await API.post({
       url: `/api/${row.tableId}/rows`,
       body: row,
+      suppressErrors,
     })
   },
 

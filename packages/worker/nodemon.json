@@ -1,5 +1,5 @@
 {
-  "watch": ["src", "../backend-core", "../pro/packages/pro"],
+  "watch": ["src", "../backend-core", "../pro"],
   "ext": "js,ts,json",
   "ignore": [
     "src/**/*.spec.ts",

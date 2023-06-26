@@ -14,6 +14,7 @@
 
   export let tableId
   export let tableType
+
   let rows = []
   let allValid = false
   let displayColumn = null

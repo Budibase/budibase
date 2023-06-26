@@ -65,6 +65,6 @@
     margin-left: -1px;
     width: 2px;
     height: 100%;
-    background: var(--spectrum-global-color-blue-400);
+    background: var(--accent-color);
   }
 </style>
