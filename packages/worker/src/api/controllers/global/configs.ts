@@ -282,10 +282,10 @@ export async function save(ctx: UserCtx<Config>) {
 }
 
 function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
-  if (!oidcLogos?.config) {
+  if (!oidcLogos) {
     return
   }
-  oidcLogos.config = Object.keys(oidcLogos.config).reduce(
+  oidcLogos.config = Object.keys(oidcLogos.config || {}).reduce(
     (acc: any, key: string) => {
       if (!key.endsWith("Etag")) {
         const etag = oidcLogos.config[`${key}Etag`]
