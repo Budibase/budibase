@@ -56,6 +56,7 @@
     "lint:eslint": "eslint packages && eslint qa-core",
     "lint:prettier": "prettier --check \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\" && prettier --check \"qa-core/**/*.{js,ts,svelte}\"",
     "lint": "yarn run lint:eslint && yarn run lint:prettier",
+    "lint:pro": "yarn eslint packages/pro && yarn prettier --check packages/pro",
     "lint:fix:eslint": "eslint --fix packages qa-core",
     "lint:fix:prettier": "prettier --write \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\" && prettier --write \"qa-core/**/*.{js,ts,svelte}\"",
     "lint:fix": "yarn run lint:fix:prettier && yarn run lint:fix:eslint",
