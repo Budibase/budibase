@@ -1,9 +1,11 @@
 import {
+  AutoReason,
   Datasource,
+  FieldSchema,
   FieldType,
   RelationshipTypes,
-  AutoReason,
 } from "@budibase/types"
+import { FieldTypes } from "../../../constants"
 
 function checkForeignKeysAreAutoColumns(datasource: Datasource) {
   if (!datasource.entities) {
@@ -39,7 +41,8 @@ function checkForeignKeysAreAutoColumns(datasource: Datasource) {
       const shouldBeForeign = foreignKeys.find(
         options => options.tableId === table._id && options.key === column.name
       )
-      if (shouldBeForeign) {
+      // don't change already auto-columns to it, e.g. primary keys that are foreign
+      if (shouldBeForeign && !column.autocolumn) {
         column.autocolumn = true
         column.autoReason = AutoReason.FOREIGN_KEY
       } else if (column.autoReason === AutoReason.FOREIGN_KEY) {
@@ -50,6 +53,13 @@ function checkForeignKeysAreAutoColumns(datasource: Datasource) {
   }
 
   return datasource
+}
+
+export function isEditableColumn(column: FieldSchema) {
+  const isAutoColumn =
+    column.autocolumn && column.autoReason !== AutoReason.FOREIGN_KEY
+  const isFormula = column.type === FieldTypes.FORMULA
+  return !(isAutoColumn || isFormula)
 }
 
 export function checkExternalTableSchemas(datasource: Datasource) {
