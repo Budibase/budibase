@@ -282,7 +282,7 @@ export async function save(ctx: UserCtx<Config>) {
 }
 
 function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
-  if (!oidcLogos) {
+  if (!oidcLogos?.config) {
     return
   }
   oidcLogos.config = Object.keys(oidcLogos.config).reduce(
