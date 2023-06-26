@@ -32,7 +32,7 @@
       </header>
       <Body size="M">
         Budibase internal tables are part of your app, so the data will be
-        stored in your apps context.
+        stored in your app's context.
       </Body>
     </Layout>
     <Divider />

@@ -37,6 +37,14 @@ COPY --from=build /worker /worker
 RUN apt-get update && \
   apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server
 
+# Install postgres client for pg_dump utils
+RUN apt install software-properties-common apt-transport-https gpg -y \
+    && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
+    && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
+    && apt update -y \
+    && apt install postgresql-client-15 -y \
+    && apt remove software-properties-common apt-transport-https gpg -y
+
 # install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx
 WORKDIR /nodejs
 RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh && \

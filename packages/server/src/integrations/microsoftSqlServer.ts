@@ -2,7 +2,7 @@ import {
   DatasourceFieldType,
   Integration,
   Operation,
-  Table,
+  ExternalTable,
   TableSchema,
   QueryJson,
   QueryType,
@@ -43,6 +43,7 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     user: {
@@ -97,7 +98,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   private index: number = 0
   private readonly pool: any
   private client: any
-  public tables: Record<string, Table> = {}
+  public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
   MASTER_TABLES = [
@@ -220,7 +221,10 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
    * @param {*} datasourceId - datasourceId to fetch
    * @param entities - the tables that are to be built
    */
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, ExternalTable>
+  ) {
     await this.connect()
     let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
     if (tableInfo == null || !Array.isArray(tableInfo)) {
@@ -233,7 +237,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       .map((record: any) => record.TABLE_NAME)
       .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
 
-    const tables: Record<string, Table> = {}
+    const tables: Record<string, ExternalTable> = {}
     for (let tableName of tableNames) {
       // get the column definition (type)
       const definition = await this.runSQL(this.getDefinitionSQL(tableName))
@@ -276,6 +280,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       }
       tables[tableName] = {
         _id: buildExternalTableId(datasourceId, tableName),
+        sourceId: datasourceId,
         primary: primaryKeys,
         name: tableName,
         schema,
@@ -335,6 +340,81 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     const processFn = (result: any) =>
       result.recordset ? result.recordset : [{ [operation]: true }]
     return this.queryWithReturning(json, queryFn, processFn)
+  }
+
+  async getExternalSchema() {
+    // Query to retrieve table schema
+    const query = `
+  SELECT
+    t.name AS TableName,
+    c.name AS ColumnName,
+    ty.name AS DataType,
+    c.max_length AS MaxLength,
+    c.is_nullable AS IsNullable,
+    c.is_identity AS IsIdentity
+  FROM
+    sys.tables t
+    INNER JOIN sys.columns c ON t.object_id = c.object_id
+    INNER JOIN sys.types ty ON c.system_type_id = ty.system_type_id
+  WHERE
+    t.is_ms_shipped = 0
+  ORDER BY
+    t.name, c.column_id
+`
+
+    await this.connect()
+
+    const result = await this.internalQuery({
+      sql: query,
+    })
+
+    const scriptParts = []
+    const tables: any = {}
+    for (const row of result.recordset) {
+      const {
+        TableName,
+        ColumnName,
+        DataType,
+        MaxLength,
+        IsNullable,
+        IsIdentity,
+      } = row
+
+      if (!tables[TableName]) {
+        tables[TableName] = {
+          columns: [],
+        }
+      }
+
+      const columnDefinition = `${ColumnName} ${DataType}${
+        MaxLength ? `(${MaxLength})` : ""
+      }${IsNullable ? " NULL" : " NOT NULL"}`
+
+      tables[TableName].columns.push(columnDefinition)
+
+      if (IsIdentity) {
+        tables[TableName].identityColumn = ColumnName
+      }
+    }
+
+    // Generate SQL statements for table creation
+    for (const tableName in tables) {
+      const { columns, identityColumn } = tables[tableName]
+
+      let createTableStatement = `CREATE TABLE [${tableName}] (\n`
+      createTableStatement += columns.join(",\n")
+
+      if (identityColumn) {
+        createTableStatement += `,\n CONSTRAINT [PK_${tableName}] PRIMARY KEY (${identityColumn})`
+      }
+
+      createTableStatement += "\n);"
+
+      scriptParts.push(createTableStatement)
+    }
+
+    const schema = scriptParts.join("\n")
+    return schema
   }
 }
 

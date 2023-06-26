@@ -385,7 +385,7 @@ class MongoIntegration implements IntegrationBase {
   createObjectIds(json: any) {
     const self = this
     function interpolateObjectIds(json: any) {
-      for (let field of Object.keys(json)) {
+      for (let field of Object.keys(json || {})) {
         if (json[field] instanceof Object) {
           json[field] = self.createObjectIds(json[field])
         }
@@ -489,7 +489,11 @@ class MongoIntegration implements IntegrationBase {
 
       switch (query.extra.actionType) {
         case "find": {
-          return await collection.find(json).toArray()
+          if (json) {
+            return await collection.find(json).toArray()
+          } else {
+            return await collection.find().toArray()
+          }
         }
         case "findOne": {
           return await collection.findOne(json)

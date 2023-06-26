@@ -247,7 +247,7 @@
               >
                 Create new app
               </Button>
-              {#if $apps?.length > 0}
+              {#if $apps?.length > 0 && !$admin.offlineMode}
                 <Button
                   size="M"
                   secondary
