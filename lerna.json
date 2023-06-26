@@ -1,22 +1,10 @@
 {
-  "version": "2.7.25-alpha.9",
+  "version": "2.7.34-alpha.6",
   "npmClient": "yarn",
-  "useNx": true,
   "packages": [
-    "packages/backend-core",
-    "packages/bbui",
-    "packages/builder",
-    "packages/cli",
-    "packages/client",
-    "packages/frontend-core",
-    "packages/sdk",
-    "packages/server",
-    "packages/shared-core",
-    "packages/string-templates",
-    "packages/types",
-    "packages/worker",
-    "packages/pro/packages/pro"
+    "packages/*"
   ],
+  "useNx": true,
   "command": {
     "publish": {
       "ignoreChanges": [

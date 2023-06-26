@@ -10,7 +10,7 @@
   quiet
   size="M"
   on:click={() => dispatch("add-column")}
-  disabled={!$config.allowAddColumns}
+  disabled={!$config.allowSchemaChanges}
 >
   Add column
 </ActionButton>

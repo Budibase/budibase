@@ -1,19 +1,23 @@
 import { generator } from "../../shared"
 import { CreateAppRequest } from "../../types"
 
+function uniqueWord() {
+  return generator.word() + generator.hash()
+}
+
 export const generateApp = (
   overrides: Partial<CreateAppRequest> = {}
 ): CreateAppRequest => ({
-  name: generator.word() + generator.hash(),
-  url: `/${generator.word() + generator.hash()}`,
+  name: uniqueWord(),
+  url: `/${uniqueWord()}`,
   ...overrides,
 })
 
 // Applications type doesn't work here, save to add useTemplate parameter?
 export const appFromTemplate = (): CreateAppRequest => {
   return {
-    name: generator.word(),
-    url: `/${generator.word()}`,
+    name: uniqueWord(),
+    url: `/${uniqueWord()}`,
     // @ts-ignore
     useTemplate: "true",
     templateName: "Near Miss Register",

@@ -138,10 +138,12 @@
     top: 100%;
     left: 0;
     width: 320px;
-    background: var(--background);
+    background: var(--grid-background-alt);
     border: var(--cell-border);
     padding: var(--cell-padding);
     box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
   .dropzone.invertX {
     left: auto;
