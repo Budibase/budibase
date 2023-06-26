@@ -12,6 +12,7 @@
     config,
     hoveredRowId,
     dispatch,
+    isDragging,
   } = getContext("grid")
 
   let body
@@ -47,8 +48,8 @@
         class="blank"
         class:highlighted={$hoveredRowId === BlankRowID}
         style="width:{renderColumnsWidth}px"
-        on:mouseenter={() => ($hoveredRowId = BlankRowID)}
-        on:mouseleave={() => ($hoveredRowId = null)}
+        on:mouseenter={$isDragging ? null : () => ($hoveredRowId = BlankRowID)}
+        on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
         on:click={() => dispatch("add-row-inline")}
       />
     {/if}

@@ -12,6 +12,7 @@
     bounds,
     hoveredRowId,
     hiddenColumnsWidth,
+    menu,
   } = getContext("grid")
 
   export let scrollVertically = false
@@ -30,6 +31,11 @@
   const handleWheel = e => {
     e.preventDefault()
     debouncedHandleWheel(e.deltaX, e.deltaY, e.clientY)
+
+    // If a context menu was visible, hide it
+    if ($menu.visible) {
+      menu.actions.close()
+    }
   }
   const debouncedHandleWheel = domDebounce((deltaX, deltaY, clientY) => {
     const { top, left } = $scroll
