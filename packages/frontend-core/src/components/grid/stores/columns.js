@@ -46,7 +46,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { table, columns, stickyColumn, API, dispatch } = context
+  const { table, columns, stickyColumn, API, dispatch, config } = context
 
   // Updates the tables primary display column
   const changePrimaryDisplay = async column => {
@@ -54,6 +54,23 @@ export const deriveStores = context => {
       ...get(table),
       primaryDisplay: column,
     })
+  }
+
+  // Updates the width of all columns
+  const changeAllColumnWidths = async width => {
+    columns.update(state => {
+      return state.map(col => ({
+        ...col,
+        width,
+      }))
+    })
+    if (get(stickyColumn)) {
+      stickyColumn.update(state => ({
+        ...state,
+        width,
+      }))
+    }
+    await saveChanges()
   }
 
   // Persists column changes by saving metadata against table schema
@@ -91,7 +108,9 @@ export const deriveStores = context => {
     table.set(newTable)
 
     // Update server
-    await API.saveTable(newTable)
+    if (get(config).allowSchemaChanges) {
+      await API.saveTable(newTable)
+    }
 
     // Broadcast change to external state can be updated, as this change
     // will not be received by the builder websocket because we caused it ourselves
@@ -105,17 +124,19 @@ export const deriveStores = context => {
         saveChanges,
         saveTable,
         changePrimaryDisplay,
+        changeAllColumnWidths,
       },
     },
   }
 }
 
 export const initialise = context => {
-  const { table, columns, stickyColumn, schemaOverrides } = context
+  const { table, columns, stickyColumn, schemaOverrides, columnWhitelist } =
+    context
 
   const schema = derived(
-    [table, schemaOverrides],
-    ([$table, $schemaOverrides]) => {
+    [table, schemaOverrides, columnWhitelist],
+    ([$table, $schemaOverrides, $columnWhitelist]) => {
       if (!$table?.schema) {
         return null
       }
@@ -142,6 +163,16 @@ export const initialise = context => {
           }
         }
       })
+
+      // Apply whitelist if specified
+      if ($columnWhitelist?.length) {
+        Object.keys(newSchema).forEach(key => {
+          if (!$columnWhitelist.includes(key)) {
+            delete newSchema[key]
+          }
+        })
+      }
+
       return newSchema
     }
   )
@@ -209,7 +240,7 @@ export const initialise = context => {
     }
     stickyColumn.set({
       name: primaryDisplay,
-      label: $schema[primaryDisplay].name || primaryDisplay,
+      label: $schema[primaryDisplay].displayName || primaryDisplay,
       schema: $schema[primaryDisplay],
       width: $schema[primaryDisplay].width || DefaultColumnWidth,
       visible: true,
