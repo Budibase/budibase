@@ -12,8 +12,10 @@
     customQueryText,
   } from "helpers/data/utils"
   import IntegrationIcon from "./IntegrationIcon.svelte"
+  import { TableNames } from "constants"
 
   let openDataSources = []
+
   $: enrichedDataSources = enrichDatasources(
     $datasources,
     $params,
@@ -69,6 +71,13 @@
   function selectDatasource(datasource) {
     openNode(datasource)
     $goto(`./datasource/${datasource._id}`)
+  }
+
+  const selectTable = tableId => {
+    tables.select(tableId)
+    if (!$isActive("./table/:tableId")) {
+      $goto(`./table/${tableId}`)
+    }
   }
 
   function closeNode(datasource) {
@@ -151,9 +160,16 @@
 
 {#if $database?._id}
   <div class="hierarchy-items-container">
+    <NavItem
+      icon="UserGroup"
+      text="Users"
+      selected={$isActive("./table/:tableId") &&
+        $tables.selected?._id === TableNames.USERS}
+      on:click={() => selectTable(TableNames.USERS)}
+    />
     {#each enrichedDataSources as datasource, idx}
       <NavItem
-        border={idx > 0}
+        border
         text={datasource.name}
         opened={datasource.open}
         selected={$isActive("./datasource") && datasource.selected}
@@ -174,7 +190,7 @@
       </NavItem>
 
       {#if datasource.open}
-        <TableNavigator sourceId={datasource._id} />
+        <TableNavigator sourceId={datasource._id} {selectTable} />
         {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
           <NavItem
             indentLevel={1}
