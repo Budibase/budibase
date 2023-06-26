@@ -21,6 +21,7 @@ import {
   basicScreen,
   basicLayout,
   basicWebhook,
+  basicAutomationLog,
 } from "./structures"
 import {
   constants,
@@ -48,6 +49,7 @@ import {
   Table,
   SearchFilters,
   UserRoles,
+  Automation,
 } from "@budibase/types"
 import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
 
@@ -718,6 +720,24 @@ class TestConfiguration {
       },
     })
     return { datasource, query: basedOnQuery }
+  }
+
+  // AUTOMATION LOG
+
+  async createAutomationLog(automation: Automation) {
+    return await context.doInAppContext(this.getProdAppId(), async () => {
+      return await pro.sdk.automations.logs.storeLog(
+        automation,
+        basicAutomationLog(automation._id!)
+      )
+    })
+  }
+
+  async getAutomationLogs() {
+    const now = new Date()
+    return await pro.sdk.automations.logs.logSearch({
+      startDate: new Date(now.getTime() - 100000).toISOString(),
+    })
   }
 
   // QUERY
