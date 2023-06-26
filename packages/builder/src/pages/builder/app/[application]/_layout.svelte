@@ -295,8 +295,9 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
-    min-width: 0px;
+    min-width: 0;
     overflow: hidden;
+    margin-left: var(--spacing-xl);
   }
 
   .secondary-editor-body {
