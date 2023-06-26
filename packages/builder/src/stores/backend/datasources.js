@@ -61,7 +61,7 @@ export function createDatasourcesStore() {
       hasDefaultData: list?.some(
         datasource => datasource._id === DEFAULT_BB_DATASOURCE_ID
       ),
-      hasData: !!internalDS?.entities?.length || list?.length > 1,
+      hasData: list?.length > 0,
     }
   })
 
