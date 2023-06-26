@@ -122,18 +122,8 @@ export function createDatasourcesStore() {
   }
 
   const update = async ({ integration, datasource }) => {
+    console.log(integration, datasource)
     if (await isDatasourceInvalid(integration, datasource)) {
-      throw new Error("Unable to connect")
-    }
-
-    const response = await API.updateDatasource(datasource)
-
-    return updateDatasource(response)
-  }
-
-  // TODO deprecate
-  const save = async datasource => {
-    if (await isDatasourceInvalid(datasource)) {
       throw new Error("Unable to connect")
     }
 
@@ -213,7 +203,6 @@ export function createDatasourcesStore() {
     updateSchema,
     create,
     update,
-    save,
     delete: deleteDatasource,
     removeSchemaError,
     replaceDatasource,

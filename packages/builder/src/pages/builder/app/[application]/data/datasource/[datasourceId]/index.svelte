@@ -50,7 +50,7 @@
   const saveDatasource = async () => {
     try {
       // Create datasource
-      await datasources.save(datasource)
+      await datasources.update({ datasource, integration })
       if (datasource?.plus) {
         await tables.fetch()
       }
