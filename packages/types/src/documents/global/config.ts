@@ -79,6 +79,12 @@ export interface OIDCConfigs {
   configs: OIDCInnerConfig[]
 }
 
+export interface OIDCLogosInnerConfig {
+  [key: string]: string
+}
+
+export interface OIDCLogosConfig extends Config<OIDCLogosInnerConfig> {}
+
 export interface OIDCInnerConfig {
   configUrl: string
   clientID: string
