@@ -16,8 +16,7 @@
     "dist",
     "public",
     "*.spec.js",
-    "bundle.js",
-    "packages/pro"
+    "bundle.js"
   ],
   "plugins": ["svelte3"],
   "extends": ["eslint:recommended"],
@@ -30,9 +29,7 @@
       "files": ["**/*.ts"],
       "parser": "@typescript-eslint/parser",
       "plugins": [],
-      "extends": [
-        "eslint:recommended"
-      ],
+      "extends": ["eslint:recommended"],
       "rules": {
         "no-unused-vars": "off",
         "no-inner-declarations": "off",
