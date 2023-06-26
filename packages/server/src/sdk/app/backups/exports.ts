@@ -1,4 +1,4 @@
-import { db as dbCore, objectStore } from "@budibase/backend-core"
+import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { streamFile, createTempFolder } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets } from "../../../constants"
@@ -18,7 +18,8 @@ import { join } from "path"
 import env from "../../../environment"
 
 const uuid = require("uuid/v4")
-const tar = require("tar")
+import tar from "tar"
+
 const MemoryStream = require("memorystream")
 
 interface DBDumpOpts {
@@ -30,16 +31,18 @@ interface ExportOpts extends DBDumpOpts {
   tar?: boolean
   excludeRows?: boolean
   excludeLogs?: boolean
+  encryptPassword?: string
 }
 
 function tarFilesToTmp(tmpDir: string, files: string[]) {
-  const exportFile = join(budibaseTempDir(), `${uuid()}.tar.gz`)
+  const fileName = `${uuid()}.tar.gz`
+  const exportFile = join(budibaseTempDir(), fileName)
   tar.create(
     {
       sync: true,
       gzip: true,
       file: exportFile,
-      recursive: true,
+      noDirRecurse: false,
       cwd: tmpDir,
     },
     files
@@ -124,6 +127,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
       )
     }
   }
+
   const downloadedPath = join(tmpPath, appPath)
   if (fs.existsSync(downloadedPath)) {
     const allFiles = fs.readdirSync(downloadedPath)
@@ -141,12 +145,27 @@ export async function exportApp(appId: string, config?: ExportOpts) {
     filter: defineFilter(config?.excludeRows, config?.excludeLogs),
     exportPath: dbPath,
   })
+
+  if (config?.encryptPassword) {
+    for (let file of fs.readdirSync(tmpPath)) {
+      const path = join(tmpPath, file)
+
+      await encryption.encryptFile(
+        { dir: tmpPath, filename: file },
+        config.encryptPassword
+      )
+
+      fs.rmSync(path)
+    }
+  }
+
   // if tar requested, return where the tarball is
   if (config?.tar) {
     // now the tmpPath contains both the DB export and attachments, tar this
     const tarPath = tarFilesToTmp(tmpPath, fs.readdirSync(tmpPath))
     // cleanup the tmp export files as tarball returned
     fs.rmSync(tmpPath, { recursive: true, force: true })
+
     return tarPath
   }
   // tar not requested, turn the directory where export is
@@ -161,11 +180,20 @@ export async function exportApp(appId: string, config?: ExportOpts) {
  * @param {boolean} excludeRows Flag to state whether the export should include data.
  * @returns {*} a readable stream of the backup which is written in real time
  */
-export async function streamExportApp(appId: string, excludeRows: boolean) {
+export async function streamExportApp({
+  appId,
+  excludeRows,
+  encryptPassword,
+}: {
+  appId: string
+  excludeRows: boolean
+  encryptPassword?: string
+}) {
   const tmpPath = await exportApp(appId, {
     excludeRows,
     excludeLogs: true,
     tar: true,
+    encryptPassword,
   })
   return streamFile(tmpPath)
 }

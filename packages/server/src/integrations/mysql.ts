@@ -39,6 +39,7 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     host: {
@@ -326,6 +327,36 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       return await this.queryWithReturning(json, queryFn)
     } finally {
       await this.disconnect()
+    }
+  }
+
+  async getExternalSchema() {
+    try {
+      const [databaseResult] = await this.internalQuery({
+        sql: `SHOW CREATE DATABASE ${this.config.database}`,
+      })
+      let dumpContent = [databaseResult["Create Database"]]
+
+      const tablesResult = await this.internalQuery({
+        sql: `SHOW TABLES`,
+      })
+
+      for (const row of tablesResult) {
+        const tableName = row[`Tables_in_${this.config.database}`]
+
+        const createTableResults = await this.internalQuery({
+          sql: `SHOW CREATE TABLE \`${tableName}\``,
+        })
+
+        const createTableStatement = createTableResults[0]["Create Table"]
+
+        dumpContent.push(createTableStatement)
+      }
+
+      const schema = dumpContent.join("\n")
+      return schema
+    } finally {
+      this.disconnect()
     }
   }
 }

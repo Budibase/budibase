@@ -1,7 +1,9 @@
+import tk from "timekeeper"
 import * as setup from "./utilities"
 import { events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { mocks } from "@budibase/backend-core/tests"
 
 describe("/backups", () => {
   let request = setup.getRequest()
@@ -16,7 +18,7 @@ describe("/backups", () => {
   describe("exportAppDump", () => {
     it("should be able to export app", async () => {
       const res = await request
-        .get(`/api/backups/export?appId=${config.getAppId()}&appname=test`)
+        .post(`/api/backups/export?appId=${config.getAppId()}`)
         .set(config.defaultHeaders())
         .expect(200)
       expect(res.headers["content-type"]).toEqual("application/gzip")
@@ -26,9 +28,23 @@ describe("/backups", () => {
     it("should apply authorization to endpoint", async () => {
       await checkBuilderEndpoint({
         config,
-        method: "GET",
+        method: "POST",
         url: `/api/backups/export?appId=${config.getAppId()}`,
       })
+    })
+
+    it("should infer the app name from the app", async () => {
+      tk.freeze(mocks.date.MOCK_DATE)
+
+      const res = await request
+        .post(`/api/backups/export?appId=${config.getAppId()}`)
+        .set(config.defaultHeaders())
+
+      expect(res.headers["content-disposition"]).toEqual(
+        `attachment; filename="${
+          config.getApp()!.name
+        }-export-${mocks.date.MOCK_DATE.getTime()}.tar.gz"`
+      )
     })
   })
 

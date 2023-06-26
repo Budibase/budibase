@@ -46,6 +46,7 @@ export function createAdminStore() {
       store.accountPortalUrl = environment.accountPortalUrl
       store.isDev = environment.isDev
       store.baseUrl = environment.baseUrl
+      store.offlineMode = environment.offlineMode
       return store
     })
   }

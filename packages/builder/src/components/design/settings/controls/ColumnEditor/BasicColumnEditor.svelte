@@ -2,9 +2,4 @@
   import ColumnEditor from "./ColumnEditor.svelte"
 </script>
 
-<ColumnEditor
-  {...$$props}
-  on:change
-  allowCellEditing={false}
-  subject="Dynamic Filter"
-/>
+<ColumnEditor {...$$props} on:change allowCellEditing={false} />
