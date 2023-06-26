@@ -1,7 +1,7 @@
 <script>
   import { Modal, notifications } from "@budibase/bbui"
   import { integrationForDatasource } from "stores/selectors"
-  import { datasources, integrations, tables } from "stores/backend"
+  import { datasources, integrations } from "stores/backend"
   import DatasourceConfigEditor from "components/backend/Datasources/ConfigEditor/index.svelte"
   import EditDatasourceConfigButton from "./EditDatasourceConfigButton.svelte"
 
@@ -18,14 +18,8 @@
         datasource: { ...datasource, config, name },
       })
 
-      if (datasource?.plus) {
-        await tables.fetch()
-      }
-
-      await datasources.fetch()
-
       notifications.success(
-        `Datasource ${datasource.name} updated successfully.`
+        `Datasource ${datasource.name} updated successfully`
       )
     } catch (err) {
       notifications.error(err?.message ?? "Error saving datasource")

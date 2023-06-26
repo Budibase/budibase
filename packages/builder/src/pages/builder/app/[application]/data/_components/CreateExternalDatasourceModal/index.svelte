@@ -66,7 +66,7 @@
       })
       store.setDatasource(datasource)
 
-      notifications.success("Datasource created successfully.")
+      notifications.success("Datasource created successfully")
     } catch (e) {
       notifications.error(`Error creating datasource: ${e.message}`)
     }

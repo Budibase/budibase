@@ -31,16 +31,9 @@
         config: get(configStore).config,
         name: get(nameStore).name,
       })
-    } else {
-      notifications.send("Invalid fields", {
-        type: "error",
-        icon: "Alert",
-        autoDismiss: true,
-      })
-
-      // Prevent modal closing
-      return false
     }
+
+    return false
   }
 
   let createVariableModal

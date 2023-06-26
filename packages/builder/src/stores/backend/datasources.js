@@ -92,7 +92,6 @@ export function createDatasourcesStore() {
   const isDatasourceInvalid = async (integration, datasource) => {
     if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
       const { connected } = await API.validateDatasource(datasource)
-      console.log(connected)
       if (!connected) return true
     }
 
@@ -122,7 +121,6 @@ export function createDatasourcesStore() {
   }
 
   const update = async ({ integration, datasource }) => {
-    console.log(integration, datasource)
     if (await isDatasourceInvalid(integration, datasource)) {
       throw new Error("Unable to connect")
     }
