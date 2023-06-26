@@ -30,6 +30,7 @@ import { cloneDeep } from "lodash/fp"
 import { processDates, processFormulas } from "../../../utilities/rowProcessor"
 import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
+import { isEditableColumn } from "../../../sdk/app/tables/validation"
 
 export interface ManyRelationship {
   tableId?: string
@@ -298,8 +299,7 @@ export class ExternalRequest {
       if (
         row[key] == null ||
         newRow[key] ||
-        field.autocolumn ||
-        field.type === FieldTypes.FORMULA
+        !sdk.tables.isEditableColumn(field)
       ) {
         continue
       }
