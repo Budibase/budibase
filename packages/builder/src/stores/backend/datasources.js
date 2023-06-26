@@ -1,9 +1,14 @@
 import { writable, derived, get } from "svelte/store"
-import { IntegrationTypes, DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
+import {
+  IntegrationTypes,
+  DEFAULT_BB_DATASOURCE_ID,
+  BUDIBASE_INTERNAL_DB_ID,
+} from "constants/backend"
 import { queries, tables } from "./"
 import { API } from "api"
 import { DatasourceFeature } from "@budibase/types"
 import { notifications } from "@budibase/bbui"
+import { TableNames } from "constants"
 
 export class ImportTableError extends Error {
   constructor(message) {
@@ -24,13 +29,42 @@ export function createDatasourcesStore() {
     schemaError: null,
   })
 
-  const derivedStore = derived(store, $store => ({
-    ...$store,
-    selected: $store.list?.find(ds => ds._id === $store.selectedDatasourceId),
-    hasDefaultData: $store.list.some(
-      datasource => datasource._id === DEFAULT_BB_DATASOURCE_ID
-    ),
-  }))
+  const derivedStore = derived([store, tables], ([$store, $tables]) => {
+    // Set the internal datasource entities from the table list, which we're
+    // able to keep updated unlike the egress generated definition of the
+    // internal datasource
+    let internalDS = $store.list?.find(ds => ds._id === BUDIBASE_INTERNAL_DB_ID)
+    let otherDS = $store.list?.find(ds => ds._id !== BUDIBASE_INTERNAL_DB_ID)
+    if (internalDS) {
+      internalDS = {
+        ...internalDS,
+        entities: $tables.list?.filter(table => {
+          return (
+            table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+            table._id !== TableNames.USERS
+          )
+        }),
+      }
+    }
+
+    // Build up enriched DS list
+    // Only add the internal DS if we have at least one non-users table
+    let list = []
+    if (internalDS?.entities?.length) {
+      list.push(internalDS)
+    }
+    list = list.concat(otherDS || [])
+
+    return {
+      ...$store,
+      list,
+      selected: list?.find(ds => ds._id === $store.selectedDatasourceId),
+      hasDefaultData: list?.some(
+        datasource => datasource._id === DEFAULT_BB_DATASOURCE_ID
+      ),
+      hasData: !!internalDS?.entities?.length || list?.length > 1,
+    }
+  })
 
   const fetch = async () => {
     const datasources = await API.getDatasources()
