@@ -14,7 +14,7 @@ jest.mock("../../../utilities/redis", () => ({
 import { clearAllApps, checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
-import { events, utils } from "@budibase/backend-core"
+import { events, utils, context } from "@budibase/backend-core"
 import env from "../../../environment"
 
 jest.setTimeout(15000)
@@ -322,6 +322,41 @@ describe("/applications", () => {
         .expect(200)
       expect(events.app.deleted).toBeCalledTimes(1)
       expect(events.app.unpublished).toBeCalledTimes(1)
+    })
+  })
+
+  describe("app sync", () => {
+    it("should not sync automation logs", async () => {
+      // setup the apps
+      await config.createApp("testing-auto-logs")
+      const automation = await config.createAutomation()
+      await config.publish()
+      await context.doInAppContext(config.getProdAppId(), () => {
+        return config.createAutomationLog(automation)
+      })
+
+      // do the sync
+      const appId = config.getAppId()
+      await request
+        .post(`/api/applications/${appId}/sync`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      // does exist in prod
+      await context.doInAppContext(config.getProdAppId(), async () => {
+        const logs = await config.getAutomationLogs()
+        expect(logs.data.length).toBe(1)
+      })
+
+      // delete prod app so we revert to dev log search
+      await config.unpublish()
+
+      // doesn't exist in dev
+      await context.doInAppContext(config.getAppId(), async () => {
+        const logs = await config.getAutomationLogs()
+        expect(logs.data.length).toBe(0)
+      })
     })
   })
 })
