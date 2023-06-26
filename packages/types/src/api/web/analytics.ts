@@ -6,4 +6,5 @@ export enum PingSource {
 export interface AnalyticsPingRequest {
   source: PingSource
   timezone: string
+  embedded?: boolean
 }
