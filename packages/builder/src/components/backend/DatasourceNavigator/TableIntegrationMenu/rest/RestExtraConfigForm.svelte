@@ -45,6 +45,9 @@
     <Heading size="S">Headers</Heading>
     <Badge quiet grey>Optional</Badge>
   </div>
+  <div class="headerRight">
+    <slot name="headerRight" />
+  </div>
 </div>
 <Body size="S">
   Headers enable you to provide additional information about the request, such
@@ -69,6 +72,9 @@
     <Heading size="S">Authentication</Heading>
     <Badge quiet grey>Optional</Badge>
   </div>
+  <div class="headerRight">
+    <slot name="headerRight" />
+  </div>
 </div>
 <Body size="S">
   Create an authentication config that can be shared with queries.
@@ -80,6 +86,9 @@
   <div class="badge">
     <Heading size="S">Variables</Heading>
     <Badge quiet grey>Optional</Badge>
+  </div>
+  <div class="headerRight">
+    <slot name="headerRight" />
   </div>
 </div>
 <Body size="S"
@@ -110,6 +119,7 @@
 
 <style>
   .section-header {
+    width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -119,5 +129,9 @@
   .badge {
     display: flex;
     gap: var(--spacing-m);
+  }
+
+  .headerRight {
+    margin-left: auto;
   }
 </style>

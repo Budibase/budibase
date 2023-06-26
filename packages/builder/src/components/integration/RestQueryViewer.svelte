@@ -176,7 +176,10 @@
       notifications.success(`Request saved successfully`)
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)
-        datasource = await datasources.save(datasource)
+        datasource = await datasources.update({
+          integration: integrationInfo,
+          datasource,
+        })
       }
       prettifyQueryRequestBody(
         query,
