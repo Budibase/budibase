@@ -72,7 +72,9 @@
       </MenuItem>
       <MenuItem
         icon="Maximize"
-        disabled={isNewRow || !$config.allowEditRows}
+        disabled={isNewRow ||
+          !$config.allowEditRows ||
+          !$config.allowExpandRows}
         on:click={() => dispatch("edit-row", $focusedRow)}
         on:click={menu.actions.close}
       >

@@ -44,13 +44,15 @@
   <Grid
     {API}
     tableId={id}
-    tableType={$tables.selected?.type}
     allowAddRows={!isUsersTable}
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatetable={handleGridTableUpdate}
   >
+    <svelte:fragment slot="filter">
+      <GridFilterButton />
+    </svelte:fragment>
     <svelte:fragment slot="controls">
       {#if isInternal}
         <GridCreateViewButton />
@@ -65,7 +67,6 @@
         <GridImportButton />
       {/if}
       <GridExportButton />
-      <GridFilterButton />
       <GridAddColumnModal />
       <GridEditColumnModal />
       {#if isUsersTable}
