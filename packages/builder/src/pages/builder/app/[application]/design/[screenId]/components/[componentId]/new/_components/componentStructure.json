@@ -3,6 +3,7 @@
     "name": "Blocks",
     "icon": "Article",
     "children": [
+      "gridblock",
       "tableblock",
       "cardsblock",
       "repeaterblock",

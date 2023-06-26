@@ -136,8 +136,10 @@ export default class DataFetch {
       this.options.sortOrder = "ascending"
     }
 
-    // If no sort column, use the primary display and fallback to first column
-    if (!this.options.sortColumn) {
+    // If no sort column, or an invalid sort column is provided, use the primary
+    // display and fallback to first column
+    const sortValid = this.options.sortColumn && schema[this.options.sortColumn]
+    if (!sortValid) {
       let newSortColumn
       if (definition?.primaryDisplay && schema[definition.primaryDisplay]) {
         newSortColumn = definition.primaryDisplay

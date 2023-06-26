@@ -163,7 +163,7 @@
     <MenuItem
       icon="Edit"
       on:click={editColumn}
-      disabled={!$config.allowEditColumns || column.schema.disabled}
+      disabled={!$config.allowSchemaChanges || column.schema.disabled}
     >
       Edit column
     </MenuItem>
@@ -171,7 +171,7 @@
       icon="Label"
       on:click={makeDisplayColumn}
       disabled={idx === "sticky" ||
-        !$config.allowEditColumns ||
+        !$config.allowSchemaChanges ||
         bannedDisplayColumnTypes.includes(column.schema.type)}
     >
       Use as display column
@@ -197,10 +197,12 @@
       Move right
     </MenuItem>
     <MenuItem
-      disabled={idx === "sticky"}
+      disabled={idx === "sticky" || !$config.showControls}
       icon="VisibilityOff"
-      on:click={hideColumn}>Hide column</MenuItem
+      on:click={hideColumn}
     >
+      Hide column
+    </MenuItem>
   </Menu>
 </Popover>
 
@@ -218,7 +220,7 @@
   .header-cell :global(.cell) {
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--grid-background-alt);
   }
 
   .name {

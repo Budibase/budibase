@@ -5230,5 +5230,91 @@
       "type": "schema",
       "suffix": "repeater"
     }
+  },
+  "gridblock": {
+    "name": "Grid block",
+    "icon": "Table",
+    "styles": ["size"],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "info": "Grid Blocks are only compatible with internal or SQL tables",
+    "settings": [
+      {
+        "type": "table",
+        "label": "Table",
+        "key": "table",
+        "required": true
+      },
+      {
+        "type": "columns/basic",
+        "label": "Columns",
+        "key": "columns",
+        "dependsOn": "table"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "initialFilter"
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort column",
+        "key": "initialSortColumn",
+        "placeholder": "Default"
+      },
+      {
+        "type": "select",
+        "label": "Sort order",
+        "key": "initialSortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Ascending"
+      },
+      {
+        "type": "select",
+        "label": "Row height",
+        "key": "initialRowHeight",
+        "placeholder": "Default",
+        "options": [
+          {
+            "label": "Small",
+            "value": 36
+          },
+          {
+            "label": "Medium",
+            "value": 64
+          },
+          {
+            "label": "Large",
+            "value": 92
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Add rows",
+        "key": "allowAddRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Edit rows",
+        "key": "allowEditRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Delete rows",
+        "key": "allowDeleteRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "High contrast",
+        "key": "stripeRows",
+        "defaultValue": false
+      }
+    ]
   }
 }
