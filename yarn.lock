@@ -13523,11 +13523,6 @@ humanize-ms@^1.2.0, humanize-ms@^1.2.1:
   dependencies:
     ms "^2.0.0"
 
-husky@^7.0.1:
-  version "7.0.4"
-  resolved "https://registry.yarnpkg.com/husky/-/husky-7.0.4.tgz#242048245dc49c8fb1bf0cc7cfb98dd722531535"
-  integrity sha512-vbaCKN2QLtP/vD4yvs6iz6hBEo6wkSzs8HpRah1Z6aGmF2KW5PdYuAd7uX5a+OyBZHBhd+TFLqgjUgytQr4RvQ==
-
 husky@^8.0.3:
   version "8.0.3"
   resolved "https://registry.yarnpkg.com/husky/-/husky-8.0.3.tgz#4936d7212e46d1dea28fef29bb3a108872cd9184"
@@ -24520,7 +24515,7 @@ tsconfig-paths@^3.10.1:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
-tsconfig-paths@^4.1.2:
+tsconfig-paths@^4.1.2, tsconfig-paths@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/tsconfig-paths/-/tsconfig-paths-4.2.0.tgz#ef78e19039133446d244beac0fd6a1632e2d107c"
   integrity sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg==
