@@ -71,6 +71,11 @@
       "component": "UpdateFieldValue"
     },
     {
+      "name": "Scroll To Field",
+      "type": "form",
+      "component": "ScrollTo"
+    },
+    {
       "name": "Validate Form",
       "type": "form",
       "component": "ValidateForm"

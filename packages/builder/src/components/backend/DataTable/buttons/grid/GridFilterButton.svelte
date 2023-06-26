@@ -4,6 +4,9 @@
 
   const { columns, tableId, filter, table } = getContext("grid")
 
+  // Wipe filter whenever table ID changes to avoid using stale filters
+  $: $tableId, filter.set([])
+
   const onFilter = e => {
     filter.set(e.detail || [])
   }

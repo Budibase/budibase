@@ -93,6 +93,7 @@
     try {
       await beforeSave()
       table = await tables.save(newTable)
+      await datasources.fetch()
       await afterSave(table)
     } catch (e) {
       notifications.error(e)
