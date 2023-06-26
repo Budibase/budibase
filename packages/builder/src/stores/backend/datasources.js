@@ -3,7 +3,6 @@ import { IntegrationTypes, DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
 import { queries, tables } from "./"
 import { API } from "api"
 import { DatasourceFeature } from "@budibase/types"
-import { notifications } from "@budibase/bbui"
 
 export class ImportTableError extends Error {
   constructor(message) {
@@ -90,41 +89,44 @@ export function createDatasourcesStore() {
       .length
   }
 
-  const create = async ({ integration, fields }) => {
-    try {
-      const datasource = {
-        type: "datasource",
-        source: integration.name,
-        config: fields,
-        name: `${integration.friendlyName}-${
-          sourceCount(integration.name) + 1
-        }`,
-        plus: integration.plus && integration.name !== IntegrationTypes.REST,
-      }
-
-      if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
-        const { connected } = await API.validateDatasource(datasource)
-        if (!connected) throw new Error("Unable to connect")
-      }
-
-      const response = await API.createDatasource({
-        datasource,
-        fetchSchema:
-          integration.plus &&
-          integration.name !== IntegrationTypes.GOOGLE_SHEETS,
-      })
-
-      notifications.success("Datasource created successfully.")
-
-      return updateDatasource(response)
-    } catch (e) {
-      notifications.error(`Error creating datasource: ${e.message}`)
-      throw e
+  const isDatasourceInvalid = async (integration, datasource) => {
+    if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
+      const { connected } = await API.validateDatasource(datasource)
+      if (!connected) return true
     }
+
+    return false
   }
 
-  const save = async body => {
-    const response = await API.updateDatasource(body)
+  const create = async ({ integration, config }) => {
+    const datasource = {
+      type: "datasource",
+      source: integration.name,
+      config,
+      name: `${integration.friendlyName}-${sourceCount(integration.name) + 1}`,
+      plus: integration.plus && integration.name !== IntegrationTypes.REST,
+    }
+
+    if (await isDatasourceInvalid(integration, datasource)) {
+      throw new Error("Unable to connect")
+    }
+
+    const response = await API.createDatasource({
+      datasource,
+      fetchSchema:
+        integration.plus && integration.name !== IntegrationTypes.GOOGLE_SHEETS,
+    })
+
+    return updateDatasource(response)
+  }
+
+  const update = async ({ integration, datasource }) => {
+    if (await isDatasourceInvalid(integration, datasource)) {
+      throw new Error("Unable to connect")
+    }
+
+    const response = await API.updateDatasource(datasource)
+
     return updateDatasource(response)
   }
 
@@ -198,7 +200,7 @@ export function createDatasourcesStore() {
     select,
     updateSchema,
     create,
-    save,
+    update,
     delete: deleteDatasource,
     removeSchemaError,
     replaceDatasource,
