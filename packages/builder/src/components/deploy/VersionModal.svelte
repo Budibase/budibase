@@ -18,6 +18,7 @@
     updateModal.hide()
   }
 
+  export let onComplete = () => {}
   export let hideIcon = false
 
   let updateModal
@@ -47,6 +48,7 @@
       notifications.success(
         `App updated successfully to version ${$store.upgradableVersion}`
       )
+      onComplete()
     } catch (err) {
       notifications.error(`Error updating app: ${err}`)
     }
@@ -70,9 +72,7 @@
 </script>
 
 {#if !hideIcon && updateAvailable}
-  <StatusLight hoverable on:click={updateModal.show} notice>
-    Update available
-  </StatusLight>
+  <StatusLight hoverable on:click={updateModal.show} notice>Update</StatusLight>
 {/if}
 <Modal bind:this={updateModal}>
   <ModalContent

@@ -22,7 +22,7 @@
   }
 
   const goToOverview = () => {
-    $goto(`../overview/${app.devId}`)
+    $goto(`../../app/${app.devId}/settings`)
   }
 </script>
 

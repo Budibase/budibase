@@ -34,6 +34,8 @@
   export let navWidth
   export let pageWidth
 
+  export let embedded = false
+
   const NavigationClasses = {
     Top: "top",
     Left: "left",
@@ -186,9 +188,11 @@
                   <Heading size="S">{title}</Heading>
                 {/if}
               </div>
-              <div class="portal">
-                <Icon hoverable name="Apps" on:click={navigateToPortal} />
-              </div>
+              {#if !embedded}
+                <div class="portal">
+                  <Icon hoverable name="Apps" on:click={navigateToPortal} />
+                </div>
+              {/if}
             </div>
             <div
               class="mobile-click-handler"

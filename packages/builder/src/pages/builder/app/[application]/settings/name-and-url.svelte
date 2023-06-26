@@ -10,14 +10,22 @@
     Icon,
   } from "@budibase/bbui"
   import { AppStatus } from "constants"
-  import { overview } from "stores/portal"
+  import { store } from "builderStore"
+  import { apps } from "stores/portal"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
+  import { API } from "api"
 
   let updatingModal
 
-  $: app = $overview.selectedApp
+  $: filteredApps = $apps.filter(app => app.devId == $store.appId)
+  $: app = filteredApps.length ? filteredApps[0] : {}
   $: appUrl = `${window.origin}/app${app?.url}`
   $: appDeployed = app?.status === AppStatus.DEPLOYED
+
+  const initialiseApp = async () => {
+    const applicationPkg = await API.fetchAppPackage(app.devId)
+    await store.actions.initialise(applicationPkg)
+  }
 </script>
 
 <Layout noPadding>
@@ -66,7 +74,12 @@
 </Layout>
 
 <Modal bind:this={updatingModal} padding={false} width="600px">
-  <UpdateAppModal app={$overview.selectedApp} />
+  <UpdateAppModal
+    {app}
+    onUpdateComplete={async () => {
+      await initialiseApp()
+    }}
+  />
 </Modal>
 
 <style>
