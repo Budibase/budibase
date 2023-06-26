@@ -107,14 +107,14 @@ export const deriveStores = context => {
     // Update local state
     table.set(newTable)
 
-    // Broadcast change to external state can be updated, as this change
-    // will not be received by the builder websocket because we caused it ourselves
-    dispatch("updatetable", newTable)
-
     // Update server
     if (get(config).allowSchemaChanges) {
       await API.saveTable(newTable)
     }
+
+    // Broadcast change to external state can be updated, as this change
+    // will not be received by the builder websocket because we caused it ourselves
+    dispatch("updatetable", newTable)
   }
 
   return {

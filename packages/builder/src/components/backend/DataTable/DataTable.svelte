@@ -1,5 +1,5 @@
 <script>
-  import { tables } from "stores/backend"
+  import { datasources, tables } from "stores/backend"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
@@ -26,6 +26,18 @@
   $: id = $tables.selected?._id
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.type !== "external"
+
+  const handleGridTableUpdate = async e => {
+    tables.replaceTable(id, e.detail)
+
+    // We need to refresh datasources when an external table changes.
+    // Type "external" may exist - sometimes type is "table" and sometimes it
+    // is "external" - it has different meanings in different endpoints.
+    // If we check both these then we hopefully catch all external tables.
+    if (e.detail?.type === "external" || e.detail?.sql) {
+      await datasources.fetch()
+    }
+  }
 </script>
 
 <div class="wrapper">
@@ -36,7 +48,7 @@
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
-    on:updatetable={e => tables.replaceTable(id, e.detail)}
+    on:updatetable={handleGridTableUpdate}
   >
     <svelte:fragment slot="filter">
       <GridFilterButton />
