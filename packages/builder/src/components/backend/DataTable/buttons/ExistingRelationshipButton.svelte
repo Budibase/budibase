@@ -1,8 +1,10 @@
 <script>
+  import { get } from "svelte/store"
   import { ActionButton, Modal, notifications } from "@budibase/bbui"
   import CreateEditRelationship from "../../Datasources/CreateEditRelationship.svelte"
-  import { datasources } from "../../../../stores/backend"
+  import { datasources, integrations } from "../../../../stores/backend"
   import { createEventDispatcher } from "svelte"
+  import { integrationForDatasource } from "stores/selectors"
 
   export let table
   const dispatch = createEventDispatcher()
@@ -27,7 +29,10 @@
   async function saveRelationship() {
     try {
       // Create datasource
-      await datasources.save(datasource)
+      await datasources.update({
+        datasource,
+        integration: integrationForDatasource(get(integrations), datasource),
+      })
       notifications.success(`Relationship information saved.`)
       dispatch("updatecolumns")
     } catch (err) {
