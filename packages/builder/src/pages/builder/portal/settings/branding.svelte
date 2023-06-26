@@ -277,20 +277,18 @@
           allowClear={true}
         />
       </div>
-      {#if !isCloud}
-        <div class="field">
-          <Label size="L">Title</Label>
-          <Input
-            on:change={e => {
-              let clone = { ...config }
-              clone.platformTitle = e.detail ? e.detail : ""
-              config = clone
-            }}
-            value={config.platformTitle || ""}
-            disabled={!brandingEnabled || saving}
-          />
-        </div>
-      {/if}
+      <div class="field">
+        <Label size="L">Title</Label>
+        <Input
+          on:change={e => {
+            let clone = { ...config }
+            clone.platformTitle = e.detail ? e.detail : ""
+            config = clone
+          }}
+          value={config.platformTitle || ""}
+          disabled={!brandingEnabled || saving}
+        />
+      </div>
       <div>
         <Toggle
           text={"Remove Budibase brand from emails"}
@@ -305,54 +303,52 @@
       </div>
     </div>
 
-    {#if !isCloud}
-      <Divider />
-      <Layout gap="XS" noPadding>
-        <Heading size="S">Login page</Heading>
-        <Body />
-      </Layout>
-      <div class="login">
-        <div class="fields">
-          <div class="field">
-            <Label size="L">Header</Label>
-            <Input
-              on:change={e => {
-                let clone = { ...config }
-                clone.loginHeading = e.detail ? e.detail : ""
-                config = clone
-              }}
-              value={config.loginHeading || ""}
-              disabled={!brandingEnabled || saving}
-            />
-          </div>
+    <Divider />
+    <Layout gap="XS" noPadding>
+      <Heading size="S">Login page</Heading>
+      <Body />
+    </Layout>
+    <div class="login">
+      <div class="fields">
+        <div class="field">
+          <Label size="L">Header</Label>
+          <Input
+            on:change={e => {
+              let clone = { ...config }
+              clone.loginHeading = e.detail ? e.detail : ""
+              config = clone
+            }}
+            value={config.loginHeading || ""}
+            disabled={!brandingEnabled || saving}
+          />
+        </div>
 
-          <div class="field">
-            <Label size="L">Button</Label>
-            <Input
-              on:change={e => {
-                let clone = { ...config }
-                clone.loginButton = e.detail ? e.detail : ""
-                config = clone
-              }}
-              value={config.loginButton || ""}
-              disabled={!brandingEnabled || saving}
-            />
-          </div>
-          <div>
-            <Toggle
-              text={"Remove customer testimonials"}
-              on:change={e => {
-                let clone = { ...config }
-                clone.testimonialsEnabled = !e.detail
-                config = clone
-              }}
-              value={!config.testimonialsEnabled}
-              disabled={!brandingEnabled || saving}
-            />
-          </div>
+        <div class="field">
+          <Label size="L">Button</Label>
+          <Input
+            on:change={e => {
+              let clone = { ...config }
+              clone.loginButton = e.detail ? e.detail : ""
+              config = clone
+            }}
+            value={config.loginButton || ""}
+            disabled={!brandingEnabled || saving}
+          />
+        </div>
+        <div>
+          <Toggle
+            text={"Remove customer testimonials"}
+            on:change={e => {
+              let clone = { ...config }
+              clone.testimonialsEnabled = !e.detail
+              config = clone
+            }}
+            value={!config.testimonialsEnabled}
+            disabled={!brandingEnabled || saving}
+          />
         </div>
       </div>
-    {/if}
+    </div>
     <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">Application previews</Heading>
