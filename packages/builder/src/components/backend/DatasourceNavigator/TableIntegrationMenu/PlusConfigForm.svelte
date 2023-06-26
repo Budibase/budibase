@@ -16,7 +16,6 @@
   import ArrayRenderer from "components/common/renderers/ArrayRenderer.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { goto } from "@roxi/routify"
-  import { getDatasourceInfo } from "builderStore/datasource"
 
   export let datasource
   export let save
@@ -170,8 +169,7 @@
     <Button
       secondary
       on:click={async () => {
-        const info = await getDatasourceInfo(datasource)
-        tableList = info.tableNames
+        tableList = await datasources.getTableNames(datasource)
         confirmDialog.show()
       }}
     >
