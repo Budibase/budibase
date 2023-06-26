@@ -12,11 +12,11 @@
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./_components/StatusRenderer.svelte"
   import HistoryDetailsPanel from "./_components/HistoryDetailsPanel.svelte"
-  import { automationStore } from "builderStore"
+  import { automationStore, store } from "builderStore"
   import { createPaginationStore } from "helpers/pagination"
   import { getContext, onDestroy, onMount } from "svelte"
   import dayjs from "dayjs"
-  import { auth, licensing, admin, overview } from "stores/portal"
+  import { auth, licensing, admin } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import Portal from "svelte-portal"
 
@@ -35,7 +35,6 @@
   let loaded = false
 
   $: licensePlan = $auth.user?.license?.plan
-  $: app = $overview.selectedApp
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
 
@@ -191,7 +190,8 @@
         />
       </div>
     </div>
-    {#if (licensePlan?.type !== Constants.PlanType.ENTERPRISE && $auth.user.accountPortalAccess) || !$admin.cloud}
+
+    {#if (!$licensing.isEnterprisePlan && $auth.user.accountPortalAccess) || !$admin.cloud}
       <Button secondary on:click={$licensing.goToUpgradePage()}>
         Get more history
       </Button>
@@ -227,7 +227,7 @@
 {#if selectedHistory}
   <Portal target="#side-panel">
     <HistoryDetailsPanel
-      appId={app.devId}
+      appId={$store.appId}
       bind:history={selectedHistory}
       close={sidePanel.close}
     />
