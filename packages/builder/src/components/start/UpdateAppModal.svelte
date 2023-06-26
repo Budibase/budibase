@@ -14,6 +14,7 @@
   import EditableIcon from "../common/EditableIcon.svelte"
 
   export let app
+  export let onUpdateComplete
 
   const values = writable({
     name: app.name,
@@ -54,6 +55,9 @@
           color: $values.iconColor,
         },
       })
+      if (typeof onUpdateComplete == "function") {
+        onUpdateComplete()
+      }
     } catch (error) {
       console.error(error)
       notifications.error("Error updating app")

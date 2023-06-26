@@ -13,7 +13,8 @@
     Tag,
     Table,
   } from "@budibase/bbui"
-  import { backups, licensing, auth, admin, overview } from "stores/portal"
+  import { backups, licensing, auth, admin } from "stores/portal"
+  import { store } from "builderStore"
   import { createPaginationStore } from "helpers/pagination"
   import TimeAgoRenderer from "./_components/TimeAgoRenderer.svelte"
   import AppSizeRenderer from "./_components/AppSizeRenderer.svelte"
@@ -50,7 +51,6 @@
     },
   ]
 
-  $: app = $overview.selectedApp
   $: page = $pageInfo.page
   $: fetchBackups(filterOpt, page, startDate, endDate)
 
@@ -101,7 +101,7 @@
 
   async function fetchBackups(filters, page, startDate, endDate) {
     const response = await backups.searchBackups({
-      appId: app.instance._id,
+      appId: $store.appId,
       ...filters,
       page,
       startDate,
@@ -117,7 +117,7 @@
     try {
       loading = true
       let response = await backups.createManualBackup({
-        appId: app.instance._id,
+        appId: $store.appId,
       })
       await fetchBackups(filterOpt, page)
       notifications.success(response.message)
@@ -143,20 +143,20 @@
   async function handleButtonClick({ detail }) {
     if (detail.type === "backupDelete") {
       await backups.deleteBackup({
-        appId: app.instance._id,
+        appId: $store.appId,
         backupId: detail.backupId,
       })
       await fetchBackups(filterOpt, page)
     } else if (detail.type === "backupRestore") {
       await backups.restoreBackup({
-        appId: app.instance._id,
+        appId: $store.appId,
         backupId: detail.backupId,
         name: detail.restoreBackupName,
       })
       await fetchBackups(filterOpt, page)
     } else if (detail.type === "backupUpdate") {
       await backups.updateBackup({
-        appId: app.instance._id,
+        appId: $store.appId,
         backupId: detail.backupId,
         name: detail.name,
       })
@@ -331,10 +331,6 @@
   .pro-buttons {
     display: flex;
     gap: var(--spacing-m);
-  }
-
-  .table {
-    overflow-x: scroll;
   }
 
   .center {

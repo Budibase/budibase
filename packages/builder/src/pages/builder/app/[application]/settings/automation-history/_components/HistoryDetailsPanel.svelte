@@ -47,7 +47,7 @@
         <Button
           secondary
           on:click={() => {
-            $goto(`../../../../app/${appId}/automate/${history.automationId}`)
+            $goto(`/builder/app/${appId}/automation/${history.automationId}`)
           }}
         >
           Edit automation
