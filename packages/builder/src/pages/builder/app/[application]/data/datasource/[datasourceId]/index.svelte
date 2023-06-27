@@ -9,6 +9,7 @@
   import RestHeadersPanel from "./_components/panels/Headers.svelte"
   import RestAuthenticationPanel from "./_components/panels/Authentication/index.svelte"
   import RestVariablesPanel from "./_components/panels/Variables/index.svelte"
+  import PromptQueryModal from "./_components/PromptQueryModal.svelte"
 
   let selectedPanel = null
   let panelOptions = []
@@ -40,6 +41,8 @@
     }
   }
 </script>
+
+<PromptQueryModal />
 
 <section>
   <Layout noPadding>

@@ -22,7 +22,11 @@
     store.stage === null ? modal?.hide() : modal?.show()
 
     if (store.finished) {
-      goto(`./datasource/${store.datasource._id}`)
+      const queryString =
+        store.datasource.plus || store.datasource.source === "REST"
+          ? ""
+          : "?promptQuery=true"
+      goto(`./datasource/${store.datasource._id}${queryString}`)
     }
   }
 
