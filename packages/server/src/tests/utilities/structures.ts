@@ -243,7 +243,9 @@ export function collectAutomation(tableId?: string): Automation {
   return automation as Automation
 }
 
-export function basicAutomationLog(automationId: string): AutomationResults {
+export function basicAutomationResults(
+  automationId: string
+): AutomationResults {
   return {
     automationId,
     status: AutomationStatus.SUCCESS,

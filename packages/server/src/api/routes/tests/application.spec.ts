@@ -325,7 +325,7 @@ describe("/applications", () => {
     })
   })
 
-  describe("app sync", () => {
+  describe("POST /api/applications/:appId/sync", () => {
     it("should not sync automation logs", async () => {
       // setup the apps
       await config.createApp("testing-auto-logs")
@@ -344,19 +344,15 @@ describe("/applications", () => {
         .expect(200)
 
       // does exist in prod
-      await context.doInAppContext(config.getProdAppId(), async () => {
-        const logs = await config.getAutomationLogs()
-        expect(logs.data.length).toBe(1)
-      })
+      const prodLogs = await config.getAutomationLogs()
+      expect(prodLogs.data.length).toBe(1)
 
       // delete prod app so we revert to dev log search
       await config.unpublish()
 
       // doesn't exist in dev
-      await context.doInAppContext(config.getAppId(), async () => {
-        const logs = await config.getAutomationLogs()
-        expect(logs.data.length).toBe(0)
-      })
+      const devLogs = await config.getAutomationLogs()
+      expect(devLogs.data.length).toBe(0)
     })
   })
 })
