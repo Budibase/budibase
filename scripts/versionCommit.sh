@@ -11,7 +11,7 @@ node ./bumpVersion.js $1
 
 
 NEW_VERSION=$(node -p "require('../lerna.json').version")
-git add lerna.json
+git add ../lerna.json
 git commit -m "Bump version to $NEW_VERSION"
 git tag v$NEW_VERSION
 git push
