@@ -15,7 +15,7 @@
   async function updateDatasourceSchema() {
     try {
       await datasources.updateSchema(datasource, specificTables)
-      notifications.success(`Datasource ${name} tables updated successfully.`)
+      notifications.success(`Datasource ${name} tables updated successfully`)
       await tables.fetch()
     } catch (error) {
       notifications.error(

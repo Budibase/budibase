@@ -100,7 +100,7 @@ export function createDatasourcesStore() {
 
   const create = async ({ integration, config }) => {
     const count = sourceCount(integration.name)
-    const nameModifier = count === 0 ? "" : `-${count + 1}`
+    const nameModifier = count === 0 ? "" : ` ${count + 1}`
 
     const datasource = {
       type: "datasource",

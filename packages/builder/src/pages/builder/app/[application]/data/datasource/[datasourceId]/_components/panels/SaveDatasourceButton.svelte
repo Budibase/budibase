@@ -18,7 +18,7 @@
       )
       await datasources.update({ datasource: updatedDatasource, integration })
       notifications.success(
-        `Datasource ${updatedDatasource.name} updated successfully.`
+        `Datasource ${updatedDatasource.name} updated successfully`
       )
     } catch (error) {
       notifications.error(`Error saving datasource: ${error.message}`)

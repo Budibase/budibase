@@ -64,7 +64,7 @@
   const afterSave = async ({ action }) => {
     await tablesStore.fetch()
     await datasourcesStore.fetch()
-    notifications.success(`Relationship ${action} successfully.`)
+    notifications.success(`Relationship ${action} successfully`)
   }
 
   const onError = async ({ action, err }) => {
