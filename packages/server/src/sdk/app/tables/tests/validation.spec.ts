@@ -1,6 +1,7 @@
-import { checkExternalTableSchemas } from "../validation"
+import { populateExternalTableSchemas } from "../validation"
 import { cloneDeep } from "lodash/fp"
-import { Datasource } from "@budibase/types"
+import { Datasource, Table } from "@budibase/types"
+import { isEqual } from "lodash"
 
 const SCHEMA = {
   entities: {
@@ -71,28 +72,58 @@ const SCHEMA = {
   },
 }
 
+const OTHER_CLIENT_COLS = ["idC", "Name", "project"]
+const OTHER_PROJECT_COLS = ["idP", "Name", "client"]
+
 describe("validation and update of external table schemas", () => {
   function getForeignKeyColumn(datasource: Datasource) {
     return datasource.entities!["project"].schema.idC
   }
 
+  function checkOtherColumns(
+    table: Table,
+    compareTable: Table,
+    columnsToCheck: string[]
+  ) {
+    for (let columnName of columnsToCheck) {
+      const columnA = table.schema[columnName]
+      const columnB = table.schema[columnName]
+      expect(isEqual(columnA, columnB)).toBe(true)
+    }
+  }
+
+  function noOtherTableChanges(response: any) {
+    checkOtherColumns(
+      response.entities!.client!,
+      SCHEMA.entities.client as Table,
+      OTHER_CLIENT_COLS
+    )
+    checkOtherColumns(
+      response.entities!.project!,
+      SCHEMA.entities.project as Table,
+      OTHER_PROJECT_COLS
+    )
+  }
+
   it("should correctly set utilised foreign keys to autocolumns", () => {
-    const response = checkExternalTableSchemas(cloneDeep(SCHEMA) as any)
+    const response = populateExternalTableSchemas(cloneDeep(SCHEMA) as any)
     const foreignKey = getForeignKeyColumn(response)
     expect(foreignKey.autocolumn).toBe(true)
     expect(foreignKey.autoReason).toBe("foreign_key")
+    noOtherTableChanges(response)
   })
 
   it("should correctly unset foreign keys when no longer used", () => {
-    const setResponse = checkExternalTableSchemas(cloneDeep(SCHEMA) as any)
+    const setResponse = populateExternalTableSchemas(cloneDeep(SCHEMA) as any)
     const beforeFk = getForeignKeyColumn(setResponse)
     delete setResponse.entities!.client.schema.project
     delete setResponse.entities!.project.schema.client
-    const response = checkExternalTableSchemas(cloneDeep(setResponse))
+    const response = populateExternalTableSchemas(cloneDeep(setResponse))
     const afterFk = getForeignKeyColumn(response)
     expect(beforeFk.autocolumn).toBe(true)
     expect(beforeFk.autoReason).toBe("foreign_key")
     expect(afterFk.autocolumn).toBeUndefined()
     expect(afterFk.autoReason).toBeUndefined()
+    noOtherTableChanges(response)
   })
 })
