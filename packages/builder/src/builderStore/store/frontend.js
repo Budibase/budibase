@@ -74,6 +74,7 @@ const INITIAL_FRONTEND_STATE = {
   propertyFocus: null,
   builderSidePanel: false,
   hasLock: true,
+  showPreview: false,
 
   // URL params
   selectedScreenId: null,
@@ -116,10 +117,13 @@ export const getFrontendStore = () => {
     reset: () => {
       store.set({ ...INITIAL_FRONTEND_STATE })
       websocket?.disconnect()
+      websocket = null
     },
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath, hasLock } = pkg
-      websocket = createBuilderWebsocket(application.appId)
+      if (!websocket) {
+        websocket = createBuilderWebsocket(application.appId)
+      }
       await store.actions.components.refreshDefinitions(application.appId)
 
       // Reset store state

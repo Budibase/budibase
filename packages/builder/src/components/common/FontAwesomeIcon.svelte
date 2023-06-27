@@ -21,6 +21,8 @@
     faColumns,
     faArrowsAlt,
     faQuestionCircle,
+    faCircleCheck,
+    faGear,
   } from "@fortawesome/free-solid-svg-icons"
   import { faGithub, faDiscord } from "@fortawesome/free-brands-svg-icons"
 
@@ -48,8 +50,11 @@
     faEye,
     faColumns,
     faArrowsAlt,
-    faQuestionCircle
+    faQuestionCircle,
     // --
+
+    faCircleCheck,
+    faGear
   )
   dom.watch()
 </script>

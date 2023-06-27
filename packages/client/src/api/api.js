@@ -1,7 +1,6 @@
 import { createAPIClient } from "@budibase/frontend-core"
-import { notificationStore } from "../stores/notification.js"
 import { authStore } from "../stores/auth.js"
-import { devToolsStore } from "../stores/devTools.js"
+import { notificationStore, devToolsEnabled, devToolsStore } from "../stores/"
 import { get } from "svelte/store"
 
 export const API = createAPIClient({
@@ -25,9 +24,10 @@ export const API = createAPIClient({
     }
 
     // Add role header
-    const devToolsState = get(devToolsStore)
-    if (devToolsState.enabled && devToolsState.role) {
-      headers["x-budibase-role"] = devToolsState.role
+    const $devToolsStore = get(devToolsStore)
+    const $devToolsEnabled = get(devToolsEnabled)
+    if ($devToolsEnabled && $devToolsStore.role) {
+      headers["x-budibase-role"] = $devToolsStore.role
     }
   },
 
@@ -35,7 +35,8 @@ export const API = createAPIClient({
   // We could also log these to sentry.
   // Or we could check error.status and redirect to login on a 403 etc.
   onError: error => {
-    const { status, method, url, message, handled } = error || {}
+    const { status, method, url, message, handled, suppressErrors } =
+      error || {}
     const ignoreErrorUrls = [
       "bbtel",
       "/api/global/self",
@@ -49,7 +50,7 @@ export const API = createAPIClient({
     }
 
     // Notify all errors
-    if (message) {
+    if (message && !suppressErrors) {
       // Don't notify if the URL contains the word analytics as it may be
       // blocked by browser extensions
       let ignore = false

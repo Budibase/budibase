@@ -405,12 +405,20 @@
     }
   }
 
+  const handleScrollToField = ({ field }) => {
+    const fieldId = get(getField(field)).fieldState.fieldId
+    const label = document.querySelector(`label[for="${fieldId}"]`)
+    document.getElementById(fieldId).focus({ preventScroll: true })
+    label.scrollIntoView({ behavior: "smooth" })
+  }
+
   // Action context to pass to children
   const actions = [
     { type: ActionTypes.ValidateForm, callback: formApi.validate },
     { type: ActionTypes.ClearForm, callback: formApi.reset },
     { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
     { type: ActionTypes.UpdateFieldValue, callback: handleUpdateFieldValue },
+    { type: ActionTypes.ScrollTo, callback: handleScrollToField },
   ]
 </script>
 

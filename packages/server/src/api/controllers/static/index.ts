@@ -100,6 +100,9 @@ export const deleteObjects = async function (ctx: any) {
 }
 
 export const serveApp = async function (ctx: any) {
+  const bbHeaderEmbed =
+    ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
+
   //Public Settings
   const { config } = await configs.getSettingsConfigDoc()
   const branding = await pro.branding.getBrandingConfig(config)
@@ -140,6 +143,7 @@ export const serveApp = async function (ctx: any) {
         body: html,
         style: css.code,
         appId,
+        embedded: bbHeaderEmbed,
       })
     } else {
       // just return the app info for jest to assert on
