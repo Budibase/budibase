@@ -57,6 +57,7 @@ export default class DataFetch {
       cursor: null,
       cursors: [],
       resetKey: Math.random(),
+      error: null,
     })
 
     // Merge options with their default values
@@ -252,6 +253,10 @@ export default class DataFetch {
     try {
       return await this.API.fetchTableDefinition(datasource.tableId)
     } catch (error) {
+      this.store.update(state => ({
+        ...state,
+        error,
+      }))
       return null
     }
   }

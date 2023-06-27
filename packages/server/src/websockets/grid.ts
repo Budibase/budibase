@@ -1,12 +1,15 @@
 import authorized from "../middleware/authorized"
+import currentApp from "../middleware/currentapp"
 import { BaseSocket } from "./websocket"
-import { context, permissions } from "@budibase/backend-core"
+import { auth, permissions } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import { getTableId } from "../api/controllers/row/utils"
 import { Row, Table } from "@budibase/types"
 import { Socket } from "socket.io"
 import { GridSocketEvent } from "@budibase/shared-core"
+import { userAgent } from "koa-useragent"
+import { createContext, runMiddlewares } from "./middleware"
 
 const { PermissionType, PermissionLevel } = permissions
 
@@ -26,28 +29,27 @@ export default class GridSocket extends BaseSocket {
           return
         }
 
-        // Check if the user has permission to read this resource
-        const middleware = authorized(
-          PermissionType.TABLE,
-          PermissionLevel.READ
-        )
-        const ctx = {
-          appId,
+        // Create context
+        const ctx = createContext(this.app, socket, {
           resourceId: tableId,
-          roleId: socket.data.roleId,
-          user: { _id: socket.data._id },
-          isAuthenticated: socket.data.isAuthenticated,
-          request: {
-            url: "/fake",
-          },
-          get: () => null,
-          throw: () => {
-            // If they don't have access, immediately disconnect them
-            socket.disconnect(true)
-          },
-        }
-        await context.doInAppContext(appId, async () => {
-          await middleware(ctx, async () => {
+          appId,
+        })
+
+        // Construct full middleware chain to assess permissions
+        const middlewares = [
+          userAgent,
+          auth.buildAuthMiddleware([], {
+            publicAllowed: true,
+          }),
+          currentApp,
+          authorized(PermissionType.TABLE, PermissionLevel.READ),
+        ]
+
+        // Run all koa middlewares
+        try {
+          await runMiddlewares(ctx, middlewares, async () => {
+            // Middlewares are finished and we have permission
+            // Join room for this resource
             const room = `${appId}-${tableId}`
             await this.joinRoom(socket, room)
 
@@ -55,7 +57,9 @@ export default class GridSocket extends BaseSocket {
             const sessions = await this.getRoomSessions(room)
             callback({ users: sessions })
           })
-        })
+        } catch (error) {
+          socket.disconnect(true)
+        }
       }
     )
 

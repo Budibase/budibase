@@ -20,6 +20,7 @@ export interface App extends Document {
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
   icon?: AppIcon
+  features?: AppFeatures
 }
 
 export interface AppInstance {
@@ -59,4 +60,8 @@ export interface AppCustomTheme {
 export interface AppIcon {
   name: string
   color: string
+}
+
+export interface AppFeatures {
+  componentValidation?: boolean
 }
