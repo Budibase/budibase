@@ -15,7 +15,6 @@ const anonUser = () => ({
   _id: uuid(),
   email: "user@mail.com",
   firstName: "Anonymous",
-  tenantId: "default",
 })
 
 export class BaseSocket {
