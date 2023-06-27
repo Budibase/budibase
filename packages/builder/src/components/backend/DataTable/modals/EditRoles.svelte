@@ -109,8 +109,6 @@
       return "Select a unique role name."
     } else if (invalidRoleName) {
       return "Please enter a role name consisting of only alphanumeric symbols and underscores"
-    } else {
-      return null
     }
   }
 

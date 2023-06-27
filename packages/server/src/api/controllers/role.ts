@@ -29,10 +29,10 @@ async function updateRolesOnUserTable(
         roleVersion === roles.RoleIDVersion.NAME
           ? roles.getExternalRoleID(roleId, roleVersion)
           : roleId
-      const indexOf = constraints.inclusion.indexOf(updatedRoleId)
-      if (remove && indexOf !== -1) {
-        constraints.inclusion.splice(indexOf, 1)
-      } else if (!remove && indexOf === -1) {
+      const indexOfRoleId = constraints.inclusion.indexOf(updatedRoleId)
+      if (remove && indexOfRoleId !== -1) {
+        constraints.inclusion.splice(indexOfRoleId, 1)
+      } else if (!remove && indexOfRoleId === -1) {
         constraints.inclusion.push(updatedRoleId)
       }
       break
