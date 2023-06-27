@@ -15,7 +15,7 @@ async function updateRolesOnUserTable(
   db: Database,
   roleId: string,
   updateOption: string,
-  roleVersion?: number
+  roleVersion: string | undefined
 ) {
   const table = await db.get(InternalTables.USER_METADATA)
   const schema = table.schema
@@ -26,7 +26,7 @@ async function updateRolesOnUserTable(
       updated = true
       const constraints = schema[prop].constraints
       const updatedRoleId =
-        roleVersion === roles.RoleVersion.VERSION_2
+        roleVersion === roles.RoleIDVersion.NAME
           ? roles.getExternalRoleID(roleId, roleVersion)
           : roleId
       const indexOf = constraints.inclusion.indexOf(updatedRoleId)
@@ -66,7 +66,7 @@ export async function save(ctx: UserCtx) {
     isCreate = true
   }
   // version 2 roles need updated to add back role_
-  else if (version === roles.RoleVersion.VERSION_2) {
+  else if (version === roles.RoleIDVersion.NAME) {
     _id = generateRoleID(name)
   }
 
