@@ -12,9 +12,9 @@
 
   let selectedPanel = null
   let panelOptions = []
-  $: integration = datasource && $integrations[datasource.source]
 
-  $: datasource = $datasources.selected
+  // datasources.selected can return null temporarily on datasource deletion
+  $: datasource = $datasources.selected || {}
 
   $: getOptions(datasource)
 
