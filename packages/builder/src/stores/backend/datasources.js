@@ -58,9 +58,7 @@ export function createDatasourcesStore() {
       ...$store,
       list,
       selected: list?.find(ds => ds._id === $store.selectedDatasourceId),
-      hasDefaultData: list?.some(
-        datasource => datasource._id === DEFAULT_BB_DATASOURCE_ID
-      ),
+      hasDefaultData: list?.some(ds => ds._id === DEFAULT_BB_DATASOURCE_ID),
       hasData: list?.length > 0,
     }
   })
