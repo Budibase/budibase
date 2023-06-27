@@ -18,7 +18,7 @@
   $: appUrl = `${window.origin}/embed${app?.url}`
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 
-  $: embed = `<iframe width="800" height="600" frameborder="0" allow="clipboard-write;camera" src="${appUrl}"></iframe>`
+  $: embed = `<iframe width="800" height="600" frameborder="0" allow="clipboard-write;camera;geolocation;fullscreen" src="${appUrl}"></iframe>`
 </script>
 
 <Layout noPadding>
