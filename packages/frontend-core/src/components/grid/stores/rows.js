@@ -14,6 +14,7 @@ export const createStores = () => {
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
+  const error = writable(null)
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(
@@ -47,6 +48,7 @@ export const createStores = () => {
     rowChangeCache,
     inProgressChanges,
     hasNextPage,
+    error,
   }
 }
 
@@ -68,6 +70,7 @@ export const deriveStores = context => {
     inProgressChanges,
     previousFocusedRowId,
     hasNextPage,
+    error,
   } = context
   const instanceLoaded = writable(false)
   const fetch = writable(null)
@@ -122,7 +125,17 @@ export const deriveStores = context => {
 
     // Subscribe to changes of this fetch model
     unsubscribe = newFetch.subscribe(async $fetch => {
-      if ($fetch.loaded && !$fetch.loading) {
+      if ($fetch.error) {
+        // Present a helpful error to the user
+        let message = "An unknown error occurred"
+        if ($fetch.error.status === 403) {
+          message = "You don't have access to this data"
+        } else if ($fetch.error.message) {
+          message = $fetch.error.message
+        }
+        error.set(message)
+      } else if ($fetch.loaded && !$fetch.loading) {
+        error.set(null)
         hasNextPage.set($fetch.hasNextPage)
         const $instanceLoaded = get(instanceLoaded)
         const resetRows = $fetch.resetKey !== lastResetKey
