@@ -392,7 +392,7 @@ class MongoIntegration implements IntegrationBase {
     )
   }
 
-  createObjectIds(json: any): object {
+  createObjectIds(json: any): any {
     const self = this
 
     function interpolateObjectIds(json: any) {
