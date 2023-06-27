@@ -68,6 +68,7 @@
     rowHeight,
     contentLines,
     gridFocused,
+    error,
   } = context
 
   // Keep config store up to date with props
@@ -149,8 +150,15 @@
         </div>
       </div>
     </div>
+  {:else if $error}
+    <div class="grid-error">
+      <div class="grid-error-title">There was a problem loading your grid</div>
+      <div class="grid-error-subtitle">
+        {$error}
+      </div>
+    </div>
   {/if}
-  {#if $loading}
+  {#if $loading && !$error}
     <div in:fade|local={{ duration: 130 }} class="grid-loading">
       <ProgressCircle />
     </div>
@@ -271,6 +279,25 @@
     height: 100%;
     background: var(--grid-background-alt);
     opacity: 0.6;
+  }
+
+  /* Error */
+  .grid-error {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+  .grid-error-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .grid-error-subtitle {
+    font-size: 16px;
   }
 
   /* Disable checkbox animation anywhere in the grid data */
