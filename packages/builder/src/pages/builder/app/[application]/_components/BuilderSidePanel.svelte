@@ -40,6 +40,8 @@
   let userOnboardResponse = null
   let userLimitReachedModal
 
+  let inviteFailureResponse = ""
+
   $: queryIsEmail = emailValidator(query) === true
   $: prodAppId = apps.getProdAppID($store.appId)
   $: promptInvite = showInvite(
@@ -308,19 +310,6 @@
     let userInviteResponse
     try {
       userInviteResponse = await users.onboard(payload)
-
-      const newUser = userInviteResponse?.successful.find(
-        user => user.email === newUserEmail
-      )
-      if (newUser) {
-        notifications.success(
-          userInviteResponse.created
-            ? "User created successfully"
-            : "User invite successful"
-        )
-      } else {
-        throw new Error("User invite failed")
-      }
     } catch (error) {
       console.error(error.message)
       notifications.error("Error inviting user")
@@ -331,12 +320,31 @@
 
   const onInviteUser = async () => {
     userOnboardResponse = await inviteUser()
+    const originalQuery = query + ""
+    query = null
 
-    const userInviteSuccess = userOnboardResponse?.successful
-    if (userInviteSuccess && userInviteSuccess[0].email === query) {
-      query = null
-      query = userInviteSuccess[0].email
+    const newUser = userOnboardResponse?.successful.find(
+      user => user.email === originalQuery
+    )
+    if (newUser) {
+      query = originalQuery
+      notifications.success(
+        userOnboardResponse.created
+          ? "User created successfully"
+          : "User invite successful"
+      )
+    } else {
+      const failedUser = userOnboardResponse?.unsuccessful.find(
+        user => user.email === originalQuery
+      )
+      inviteFailureResponse =
+        failedUser?.reason === "Unavailable"
+          ? "Email already in use. Please use a different email."
+          : failedUser?.reason
+
+      notifications.error(inviteFailureResponse)
     }
+    userOnboardResponse = null
   }
 
   const onUpdateUserInvite = async (invite, role) => {
