@@ -168,7 +168,6 @@
     "openapi-types": "9.3.1",
     "openapi-typescript": "5.2.0",
     "path-to-regexp": "6.2.0",
-    "prettier": "2.5.1",
     "rimraf": "3.0.2",
     "supertest": "6.2.2",
     "swagger-jsdoc": "6.1.0",
