@@ -3,9 +3,11 @@
   import AuthTypeRenderer from "./AuthTypeRenderer.svelte"
   import RestAuthenticationModal from "./RestAuthenticationModal.svelte"
   import { Helpers } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
 
-  export let configs = []
+  export let authConfigs = []
 
+  const dispatch = createEventDispatcher()
   let currentConfig = null
   let modal
 
@@ -20,8 +22,10 @@
   }
 
   const onConfirm = config => {
+    let newAuthConfigs
+
     if (currentConfig) {
-      configs = configs.map(c => {
+      newAuthConfigs = authConfigs.map(c => {
         // replace the current config with the new one
         if (c._id === currentConfig._id) {
           return config
@@ -30,27 +34,36 @@
       })
     } else {
       config._id = Helpers.uuid()
-      configs = [...configs, config]
+      newAuthConfigs = [...authConfigs, config]
     }
+
+    dispatch("change", newAuthConfigs)
   }
 
   const onRemove = () => {
-    configs = configs.filter(c => {
+    const newAuthConfigs = authConfigs.filter(c => {
       return c._id !== currentConfig._id
     })
+
+    dispatch("change", newAuthConfigs)
   }
 </script>
 
 <Modal bind:this={modal}>
-  <RestAuthenticationModal {configs} {currentConfig} {onConfirm} {onRemove} />
+  <RestAuthenticationModal
+    configs={authConfigs}
+    {currentConfig}
+    {onConfirm}
+    {onRemove}
+  />
 </Modal>
 
 <Layout gap="S" noPadding>
-  {#if configs && configs.length > 0}
+  {#if authConfigs && authConfigs.length > 0}
     <Table
       on:click={({ detail }) => openConfigModal(detail)}
       {schema}
-      data={configs}
+      data={authConfigs}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}

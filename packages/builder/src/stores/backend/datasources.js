@@ -125,11 +125,14 @@ export function createDatasourcesStore() {
   }
 
   const create = async ({ integration, config }) => {
+    const count = sourceCount(integration.name)
+    const nameModifier = count === 0 ? "" : ` ${count + 1}`
+
     const datasource = {
       type: "datasource",
       source: integration.name,
       config,
-      name: `${integration.friendlyName}-${sourceCount(integration.name) + 1}`,
+      name: `${integration.friendlyName}${nameModifier}`,
       plus: integration.plus && integration.name !== IntegrationTypes.REST,
     }
 

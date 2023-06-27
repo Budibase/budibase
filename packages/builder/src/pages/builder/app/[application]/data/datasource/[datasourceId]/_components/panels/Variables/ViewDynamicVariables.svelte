@@ -1,14 +1,13 @@
 <script>
   import { Body, Table, BoldRenderer, CodeRenderer } from "@budibase/bbui"
-  import { queries as queriesStore } from "stores/backend"
+  import { queries } from "stores/backend"
   import { goto } from "@roxi/routify"
 
   export let datasource
-  export let queries
 
   let dynamicVariables = []
 
-  $: enrichDynamicVariables(datasource, queries)
+  $: enrichDynamicVariables(datasource, $queries.list)
 
   const dynamicVariableSchema = {
     name: "",
@@ -18,7 +17,7 @@
 
   const onClick = dynamicVariable => {
     const queryId = dynamicVariable.queryId
-    queriesStore.select({ _id: queryId })
+    queries.select({ _id: queryId })
     $goto(`./${queryId}`)
   }
 
