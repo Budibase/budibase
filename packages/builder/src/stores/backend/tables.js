@@ -67,12 +67,12 @@ export function createTablesStore() {
   }
 
   const deleteTable = async table => {
-    if (!table?._id || !table?._rev) {
+    if (!table?._id) {
       return
     }
     await API.deleteTable({
       tableId: table._id,
-      tableRev: table._rev,
+      tableRev: table._rev || "rev",
     })
     replaceTable(table._id, null)
   }
