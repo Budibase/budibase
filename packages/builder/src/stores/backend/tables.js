@@ -161,6 +161,13 @@ export function createTablesStore() {
     }
   }
 
+  const removeDatasourceTables = datasourceId => {
+    store.update(state => ({
+      ...state,
+      list: state.list.filter(table => table.sourceId !== datasourceId),
+    }))
+  }
+
   return {
     ...store,
     subscribe: derivedStore.subscribe,
@@ -172,6 +179,7 @@ export function createTablesStore() {
     saveField,
     deleteField,
     replaceTable,
+    removeDatasourceTables,
   }
 }
 
