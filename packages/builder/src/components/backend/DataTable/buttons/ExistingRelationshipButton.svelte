@@ -1,18 +1,14 @@
 <script>
-  import { get } from "svelte/store"
-  import { ActionButton, Modal, notifications } from "@budibase/bbui"
-  import CreateEditRelationship from "../../Datasources/CreateEditRelationship.svelte"
-  import { datasources, integrations } from "../../../../stores/backend"
+  import { ActionButton, notifications } from "@budibase/bbui"
+  import CreateEditRelationshipModal from "../../Datasources/CreateEditRelationshipModal.svelte"
+  import { datasources } from "../../../../stores/backend"
   import { createEventDispatcher } from "svelte"
-  import { integrationForDatasource } from "stores/selectors"
 
   export let table
   const dispatch = createEventDispatcher()
 
   $: datasource = findDatasource(table?._id)
-  $: plusTables = datasource?.plus
-    ? Object.values(datasource?.entities || {})
-    : []
+  $: tables = datasource?.plus ? Object.values(datasource?.entities || {}) : []
 
   let modal
 
@@ -26,34 +22,32 @@
     })
   }
 
-  async function saveRelationship() {
-    try {
-      // Create datasource
-      await datasources.update({
-        datasource,
-        integration: integrationForDatasource(get(integrations), datasource),
-      })
-      notifications.success(`Relationship information saved.`)
-      dispatch("updatecolumns")
-    } catch (err) {
-      notifications.error(`Error saving relationship info: ${err}`)
-    }
+  const afterSave = ({ action }) => {
+    notifications.success(`Relationship ${action} successfully.`)
+    dispatch("updatecolumns")
+  }
+
+  const onError = err => {
+    notifications.error(`Error saving relationship info: ${err}`)
   }
 </script>
 
 {#if datasource}
   <div>
-    <ActionButton icon="DataCorrelated" primary quiet on:click={modal.show}>
+    <ActionButton
+      icon="DataCorrelated"
+      primary
+      quiet
+      on:click={() => modal.show({ fromTable: table })}
+    >
       Define relationship
     </ActionButton>
   </div>
-  <Modal bind:this={modal}>
-    <CreateEditRelationship
-      {datasource}
-      save={saveRelationship}
-      close={modal.hide}
-      {plusTables}
-      selectedFromTable={table}
-    />
-  </Modal>
+  <CreateEditRelationshipModal
+    bind:this={modal}
+    {datasource}
+    {tables}
+    {afterSave}
+    {onError}
+  />
 {/if}
