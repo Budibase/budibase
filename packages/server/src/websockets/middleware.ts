@@ -48,8 +48,8 @@ export const createContext = (
 }
 
 /**
- * Runs a list of middlewares, nesting each callback inside each other mimic
- * how the real middlewares run and ensuring that app or tenant context work
+ * Runs a list of middlewares, nesting each callback inside each other to mimic
+ * how the real middlewares run and ensuring that app and tenant contexts work
  * as expected
  * @param ctx the Koa context
  * @param middlewares the array of middlewares to run
