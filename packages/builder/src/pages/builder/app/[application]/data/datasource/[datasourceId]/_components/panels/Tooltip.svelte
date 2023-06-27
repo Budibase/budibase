@@ -1,5 +1,4 @@
 <script>
-  import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
   import { ActionButton } from "@budibase/bbui"
 
   export let title = ""
