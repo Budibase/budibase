@@ -308,6 +308,9 @@ async function performAppCreate(ctx: UserCtx) {
       customTheme: {
         buttonBorderRadius: "16px",
       },
+      features: {
+        componentValidation: true,
+      },
     }
 
     // If we used a template or imported an app there will be an existing doc.
