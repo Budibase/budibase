@@ -5,7 +5,7 @@ import {
   getBasePermissions,
 } from "../../utilities/security"
 import { removeFromArray } from "../../utilities"
-import { BBContext, Database, Role } from "@budibase/types"
+import { UserCtx, Database, Role } from "@budibase/types"
 
 const PermissionUpdateType = {
   REMOVE: "remove",
@@ -38,12 +38,12 @@ async function updatePermissionOnRole(
   const isABuiltin = roles.isBuiltin(roleId)
   const dbRoleId = roles.getDBRoleID(roleId)
   const dbRoles = await getAllDBRoles(db)
-  const docUpdates = []
+  const docUpdates: Role[] = []
 
   // the permission is for a built in, make sure it exists
   if (isABuiltin && !dbRoles.some(role => role._id === dbRoleId)) {
     const builtin = roles.getBuiltinRoles()[roleId]
-    builtin._id = roles.getDBRoleID(builtin._id)
+    builtin._id = roles.getDBRoleID(builtin._id!)
     dbRoles.push(builtin)
   }
 
@@ -88,22 +88,23 @@ async function updatePermissionOnRole(
 
   const response = await db.bulkDocs(docUpdates)
   return response.map((resp: any) => {
-    resp._id = roles.getExternalRoleID(resp.id)
+    const version = docUpdates.find(role => role._id === resp.id)?.version
+    resp._id = roles.getExternalRoleID(resp.id, version)
     delete resp.id
     return resp
   })
 }
 
-export function fetchBuiltin(ctx: BBContext) {
+export function fetchBuiltin(ctx: UserCtx) {
   ctx.body = Object.values(permissions.getBuiltinPermissions())
 }
 
-export function fetchLevels(ctx: BBContext) {
+export function fetchLevels(ctx: UserCtx) {
   // for now only provide the read/write perms externally
   ctx.body = SUPPORTED_LEVELS
 }
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: UserCtx) {
   const db = context.getAppDB()
   const dbRoles: Role[] = await getAllDBRoles(db)
   let permissions: any = {}
@@ -112,7 +113,7 @@ export async function fetch(ctx: BBContext) {
     if (!role.permissions) {
       continue
     }
-    const roleId = roles.getExternalRoleID(role._id)
+    const roleId = roles.getExternalRoleID(role._id!, role.version)
     if (!roleId) {
       ctx.throw(400, "Unable to retrieve role")
     }
@@ -132,7 +133,7 @@ export async function fetch(ctx: BBContext) {
   ctx.body = finalPermissions
 }
 
-export async function getResourcePerms(ctx: BBContext) {
+export async function getResourcePerms(ctx: UserCtx) {
   const resourceId = ctx.params.resourceId
   const db = context.getAppDB()
   const body = await db.allDocs(
@@ -154,14 +155,14 @@ export async function getResourcePerms(ctx: BBContext) {
         rolePerms[resourceId] &&
         rolePerms[resourceId].indexOf(level) !== -1
       ) {
-        permissions[level] = roles.getExternalRoleID(role._id)!
+        permissions[level] = roles.getExternalRoleID(role._id, role.version)!
       }
     }
   }
   ctx.body = Object.assign(getBasePermissions(resourceId), permissions)
 }
 
-export async function addPermission(ctx: BBContext) {
+export async function addPermission(ctx: UserCtx) {
   ctx.body = await updatePermissionOnRole(
     ctx.appId,
     ctx.params,
@@ -169,7 +170,7 @@ export async function addPermission(ctx: BBContext) {
   )
 }
 
-export async function removePermission(ctx: BBContext) {
+export async function removePermission(ctx: UserCtx) {
   ctx.body = await updatePermissionOnRole(
     ctx.appId,
     ctx.params,
