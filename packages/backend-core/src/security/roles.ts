@@ -1,5 +1,5 @@
 import { BuiltinPermissionID, PermissionLevel } from "./permissions"
-import { generateRoleID, getRoleParams, DocumentType, SEPARATOR } from "../db"
+import { prefixRoleID, getRoleParams, DocumentType, SEPARATOR } from "../db"
 import { getAppDB } from "../context"
 import { doWithDB } from "../db"
 import { Screen, Role as RoleDoc } from "@budibase/types"
@@ -169,7 +169,7 @@ export async function getRole(
     )
   } else {
     // make sure has the prefix (if it has it then it won't be added)
-    roleId = generateRoleID(roleId)
+    roleId = prefixRoleID(roleId)
   }
   try {
     const db = getAppDB()
@@ -402,7 +402,7 @@ export function getDBRoleID(roleName: string) {
   if (roleName?.startsWith(DocumentType.ROLE)) {
     return roleName
   }
-  return generateRoleID(roleName)
+  return prefixRoleID(roleName)
 }
 
 /**

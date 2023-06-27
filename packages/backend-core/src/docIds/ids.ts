@@ -90,6 +90,13 @@ export function generateRoleID(name: string) {
 }
 
 /**
+ * Utility function to be more verbose.
+ */
+export function prefixRoleID(name: string) {
+  return generateRoleID(name)
+}
+
+/**
  * Generates a new dev info document ID - this is scoped to a user.
  * @returns {string} The new dev info ID which info for dev (like api key) can be stored under.
  */
