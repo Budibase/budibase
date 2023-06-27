@@ -21,7 +21,7 @@ import {
   basicScreen,
   basicLayout,
   basicWebhook,
-  basicAutomationLog,
+  basicAutomationResults,
 } from "./structures"
 import {
   constants,
@@ -728,15 +728,17 @@ class TestConfiguration {
     return await context.doInAppContext(this.getProdAppId(), async () => {
       return await pro.sdk.automations.logs.storeLog(
         automation,
-        basicAutomationLog(automation._id!)
+        basicAutomationResults(automation._id!)
       )
     })
   }
 
   async getAutomationLogs() {
-    const now = new Date()
-    return await pro.sdk.automations.logs.logSearch({
-      startDate: new Date(now.getTime() - 100000).toISOString(),
+    return context.doInAppContext(this.appId, async () => {
+      const now = new Date()
+      return await pro.sdk.automations.logs.logSearch({
+        startDate: new Date(now.getTime() - 100000).toISOString(),
+      })
     })
   }
 
