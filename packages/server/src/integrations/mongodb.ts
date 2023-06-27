@@ -351,7 +351,7 @@ const SCHEMA: Integration = getSchema()
 
 class MongoIntegration implements IntegrationBase {
   private config: MongoDBConfig
-  private client: any
+  private client: MongoClient
 
   constructor(config: MongoDBConfig) {
     this.config = config
@@ -372,6 +372,8 @@ class MongoIntegration implements IntegrationBase {
       response.connected = true
     } catch (e: any) {
       response.error = e.message as string
+    } finally {
+      await this.client.close()
     }
     return response
   }
@@ -502,7 +504,11 @@ class MongoIntegration implements IntegrationBase {
 
       switch (query.extra.actionType) {
         case "find": {
-          return await collection.find(json).toArray()
+          if (json) {
+            return await collection.find(json).toArray()
+          } else {
+            return await collection.find().toArray()
+          }
         }
         case "findOne": {
           return await collection.findOne(json)

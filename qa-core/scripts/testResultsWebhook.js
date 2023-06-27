@@ -15,6 +15,12 @@ async function generateReport() {
   return JSON.parse(report)
 }
 
+const env = process.argv.slice(2)[0]
+
+if (!env) {
+  throw new Error("environment argument is required")
+}
+
 async function discordResultsNotification(report) {
   const {
     numTotalTestSuites,
@@ -39,8 +45,8 @@ async function discordResultsNotification(report) {
       content: `**Nightly Tests Status**: ${OUTCOME}`,
       embeds: [
         {
-          title: "Budi QA Bot",
-          description: `Nightly Tests`,
+          title: `Budi QA Bot - ${env}`,
+          description: `API Integration Tests`,
           url: GITHUB_ACTIONS_RUN_URL,
           color: OUTCOME === "success" ? 3066993 : 15548997,
           timestamp: new Date(),

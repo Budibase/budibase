@@ -115,7 +115,18 @@ function checkAppName(
   }
 }
 
-async function createInstance(appId: string, template: any) {
+interface AppTemplate {
+  templateString: string
+  useTemplate: string
+  file?: {
+    type: string
+    path: string
+    password?: string
+  }
+  key?: string
+}
+
+async function createInstance(appId: string, template: AppTemplate) {
   const db = context.getAppDB()
   await db.put({
     _id: "_design/database",
@@ -240,19 +251,24 @@ export async function fetchAppPackage(ctx: UserCtx) {
 async function performAppCreate(ctx: UserCtx) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   const name = ctx.request.body.name,
-    possibleUrl = ctx.request.body.url
+    possibleUrl = ctx.request.body.url,
+    encryptionPassword = ctx.request.body.encryptionPassword
+
   checkAppName(ctx, apps, name)
   const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
   checkAppUrl(ctx, apps, url)
 
   const { useTemplate, templateKey, templateString } = ctx.request.body
-  const instanceConfig: any = {
+  const instanceConfig: AppTemplate = {
     useTemplate,
     key: templateKey,
     templateString,
   }
   if (ctx.request.files && ctx.request.files.templateFile) {
-    instanceConfig.file = ctx.request.files.templateFile
+    instanceConfig.file = {
+      ...(ctx.request.files.templateFile as any),
+      password: encryptionPassword,
+    }
   }
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))

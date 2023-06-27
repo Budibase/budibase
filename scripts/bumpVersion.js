@@ -1,7 +1,7 @@
 const fs = require("fs")
 const semver = require("semver")
 
-const filePath = "lerna.json"
+const filePath = "../lerna.json"
 const versionBump = process.argv[2] || "patch"
 
 // Read and parse lerna.json file

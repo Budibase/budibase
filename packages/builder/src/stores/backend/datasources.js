@@ -1,6 +1,20 @@
 import { writable, derived, get } from "svelte/store"
+import { IntegrationTypes, DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
 import { queries, tables } from "./"
 import { API } from "api"
+import { DatasourceFeature } from "@budibase/types"
+
+export class ImportTableError extends Error {
+  constructor(message) {
+    super(message)
+    const [title, description] = message.split(" - ")
+
+    this.name = "TableSelectionError"
+    // Capitalize the first character of both the title and description
+    this.title = title[0].toUpperCase() + title.substr(1)
+    this.description = description[0].toUpperCase() + description.substr(1)
+  }
+}
 
 export function createDatasourcesStore() {
   const store = writable({
@@ -8,9 +22,13 @@ export function createDatasourcesStore() {
     selectedDatasourceId: null,
     schemaError: null,
   })
+
   const derivedStore = derived(store, $store => ({
     ...$store,
     selected: $store.list?.find(ds => ds._id === $store.selectedDatasourceId),
+    hasDefaultData: $store.list.some(
+      datasource => datasource._id === DEFAULT_BB_DATASOURCE_ID
+    ),
   }))
 
   const fetch = async () => {
@@ -50,23 +68,65 @@ export function createDatasourcesStore() {
   }
 
   const updateSchema = async (datasource, tablesFilter) => {
-    const response = await API.buildDatasourceSchema({
-      datasourceId: datasource?._id,
-      tablesFilter,
+    try {
+      const response = await API.buildDatasourceSchema({
+        datasourceId: datasource?._id,
+        tablesFilter,
+      })
+      updateDatasource(response)
+    } catch (e) {
+      // buildDatasourceSchema call returns user presentable errors with two parts divided with a " - ".
+      if (e.message.split(" - ").length === 2) {
+        throw new ImportTableError(e.message)
+      } else {
+        throw e
+      }
+    }
+  }
+
+  const sourceCount = source => {
+    return get(store).list.filter(datasource => datasource.source === source)
+      .length
+  }
+
+  const isDatasourceInvalid = async (integration, datasource) => {
+    if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
+      const { connected } = await API.validateDatasource(datasource)
+      if (!connected) return true
+    }
+
+    return false
+  }
+
+  const create = async ({ integration, config }) => {
+    const datasource = {
+      type: "datasource",
+      source: integration.name,
+      config,
+      name: `${integration.friendlyName}-${sourceCount(integration.name) + 1}`,
+      plus: integration.plus && integration.name !== IntegrationTypes.REST,
+    }
+
+    if (await isDatasourceInvalid(integration, datasource)) {
+      throw new Error("Unable to connect")
+    }
+
+    const response = await API.createDatasource({
+      datasource,
+      fetchSchema:
+        integration.plus && integration.name !== IntegrationTypes.GOOGLE_SHEETS,
     })
+
     return updateDatasource(response)
   }
 
-  const save = async (body, fetchSchema = false) => {
-    let response
-    if (body._id) {
-      response = await API.updateDatasource(body)
-    } else {
-      response = await API.createDatasource({
-        datasource: body,
-        fetchSchema,
-      })
+  const update = async ({ integration, datasource }) => {
+    if (await isDatasourceInvalid(integration, datasource)) {
+      throw new Error("Unable to connect")
     }
+
+    const response = await API.updateDatasource(datasource)
+
     return updateDatasource(response)
   }
 
@@ -128,16 +188,23 @@ export function createDatasourcesStore() {
     }
   }
 
+  const getTableNames = async datasource => {
+    const info = await API.fetchInfoForDatasource(datasource)
+    return info.tableNames || []
+  }
+
   return {
     subscribe: derivedStore.subscribe,
     fetch,
     init: fetch,
     select,
     updateSchema,
-    save,
+    create,
+    update,
     delete: deleteDatasource,
     removeSchemaError,
     replaceDatasource,
+    getTableNames,
   }
 }
 

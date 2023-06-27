@@ -76,7 +76,13 @@ export const createLicensingStore = () => {
       await actions.setQuotaUsage()
     },
     setNavigation: () => {
-      const upgradeUrl = `${get(admin).accountPortalUrl}/portal/upgrade`
+      const adminStore = get(admin)
+      const authStore = get(auth)
+
+      const upgradeUrl = authStore?.user?.accountPortalAccess
+        ? `${adminStore.accountPortalUrl}/portal/upgrade`
+        : "/builder/portal/account/upgrade"
+
       const goToUpgradePage = () => {
         window.location.href = upgradeUrl
       }

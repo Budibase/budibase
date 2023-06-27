@@ -31,4 +31,6 @@ const config: Config.InitialOptions = {
   coverageReporters: ["lcov", "json", "clover"],
 }
 
+process.env.DISABLE_PINO_LOGGER = "1"
+
 export default config

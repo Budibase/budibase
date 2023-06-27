@@ -1,10 +1,10 @@
 {
-  "watch": ["src", "../backend-core", "../pro/packages/pro"],
+  "watch": ["src", "../backend-core", "../pro"],
   "ext": "js,ts,json",
   "ignore": [
     "src/**/*.spec.ts",
     "src/**/*.spec.js",
     "../backend-core/dist/**/*"
   ],
-  "exec": "node ./scripts/build.js && node ./dist/index.js"
+  "exec": "yarn build && node ./dist/index.js"
 }
