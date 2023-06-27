@@ -25,11 +25,11 @@ const EXTERNAL_BUILTIN_ROLE_IDS = [
   BUILTIN_IDS.PUBLIC,
 ]
 
-export const RoleVersion = {
+export const RoleIDVersion = {
   // original version, with a UUID based ID
-  VERSION_1: undefined,
+  UUID: undefined,
   // new version - with name based ID
-  VERSION_2: 2,
+  NAME: "name",
 }
 
 export class Role implements RoleDoc {
@@ -38,7 +38,7 @@ export class Role implements RoleDoc {
   name: string
   permissionId: string
   inherits?: string
-  version?: number
+  version?: string
   permissions = {}
 
   constructor(id: string, name: string, permissionId: string) {
@@ -46,7 +46,7 @@ export class Role implements RoleDoc {
     this.name = name
     this.permissionId = permissionId
     // version for managing the ID - removing the role_ when responding
-    this.version = RoleVersion.VERSION_2
+    this.version = RoleIDVersion.NAME
   }
 
   addInheritance(inherits: string) {
@@ -408,11 +408,11 @@ export function getDBRoleID(roleName: string) {
 /**
  * Remove the "role_" from builtin role IDs that have been written to the DB (for permissions).
  */
-export function getExternalRoleID(roleId: string, version?: number) {
+export function getExternalRoleID(roleId: string, version?: string) {
   // for built-in roles we want to remove the DB role ID element (role_)
   if (
     (roleId.startsWith(DocumentType.ROLE) && isBuiltin(roleId)) ||
-    version === RoleVersion.VERSION_2
+    version === RoleIDVersion.NAME
   ) {
     return roleId.split(`${DocumentType.ROLE}${SEPARATOR}`)[1]
   }
