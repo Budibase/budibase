@@ -9,6 +9,7 @@ import {
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
+  SourceName,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -21,7 +22,7 @@ import dayjs from "dayjs"
 import { NUMBER_REGEX } from "../utilities"
 import Sql from "./base/sql"
 import { MySQLColumn } from "./base/types"
-
+import { getReadableErrorMessage } from "./base/errorMapping"
 import mysql from "mysql2/promise"
 
 interface MySQLConfig extends mysql.ConnectionOptions {
@@ -174,7 +175,12 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       )
       response.connected = result?.checkRes == 2
     } catch (e: any) {
-      response.error = e.message as string
+      let readableMessage = getReadableErrorMessage(SourceName.MYSQL, e.errno)
+      if (readableMessage) {
+        response.error = readableMessage
+      } else {
+        response.error = e.message as string
+      }
     }
     return response
   }
@@ -213,6 +219,13 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       // Node MySQL is callback based, so we must wrap our call in a promise
       const response = await this.client!.query(query.sql, bindings)
       return response[0]
+    } catch (err: any) {
+      let readableMessage = getReadableErrorMessage(SourceName.MYSQL, err.errno)
+      if (readableMessage) {
+        throw new Error(readableMessage)
+      } else {
+        throw new Error(err.message as string)
+      }
     } finally {
       if (opts?.connect && this.client) {
         await this.disconnect()
