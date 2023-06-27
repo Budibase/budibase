@@ -151,9 +151,17 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   async connect() {
     try {
       this.client = await this.pool.connect()
-    } catch (err) {
-      // @ts-ignore
-      throw new Error(err)
+    } catch (err: any) {
+      if (err?.originalError?.errors?.length) {
+        const messages = []
+        if (err.message) {
+          messages.push(err.message)
+        }
+        messages.push(...err.originalError.errors.map((e: any) => e.message))
+        throw new Error(messages.join("\n"))
+      }
+
+      throw err
     }
   }
 
