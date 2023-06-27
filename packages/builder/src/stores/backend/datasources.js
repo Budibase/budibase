@@ -4,7 +4,7 @@ import {
   DEFAULT_BB_DATASOURCE_ID,
   BUDIBASE_INTERNAL_DB_ID,
 } from "constants/backend"
-import { queries, tables } from "./"
+import { tables, queries } from "./"
 import { API } from "api"
 import { DatasourceFeature } from "@budibase/types"
 import { TableNames } from "constants"
@@ -33,7 +33,7 @@ export function createDatasourcesStore() {
     // able to keep updated unlike the egress generated definition of the
     // internal datasource
     let internalDS = $store.list?.find(ds => ds._id === BUDIBASE_INTERNAL_DB_ID)
-    let otherDS = $store.list?.find(ds => ds._id !== BUDIBASE_INTERNAL_DB_ID)
+    let otherDS = $store.list?.filter(ds => ds._id !== BUDIBASE_INTERNAL_DB_ID)
     if (internalDS) {
       internalDS = {
         ...internalDS,
@@ -84,20 +84,14 @@ export function createDatasourcesStore() {
 
   const updateDatasource = response => {
     const { datasource, error } = response
-    store.update(state => {
-      const currentIdx = state.list.findIndex(ds => ds._id === datasource._id)
-      const sources = state.list
-      if (currentIdx >= 0) {
-        sources.splice(currentIdx, 1, datasource)
-      } else {
-        sources.push(datasource)
-      }
-      return {
-        list: sources,
-        selectedDatasourceId: datasource._id,
+    if (error) {
+      store.update(state => ({
+        ...state,
         schemaError: error,
-      }
-    })
+      }))
+    }
+    replaceDatasource(datasource._id, datasource)
+    select(datasource._id)
     return datasource
   }
 
@@ -165,18 +159,14 @@ export function createDatasourcesStore() {
   }
 
   const deleteDatasource = async datasource => {
+    if (!datasource?._id || !datasource?._rev) {
+      return
+    }
     await API.deleteDatasource({
-      datasourceId: datasource?._id,
-      datasourceRev: datasource?._rev,
+      datasourceId: datasource._id,
+      datasourceRev: datasource._rev,
     })
-    store.update(state => {
-      const sources = state.list.filter(
-        existing => existing._id !== datasource._id
-      )
-      return { list: sources, selected: null }
-    })
-    await queries.fetch()
-    await tables.fetch()
+    replaceDatasource(datasource._id, null)
   }
 
   const removeSchemaError = () => {
@@ -185,7 +175,6 @@ export function createDatasourcesStore() {
     })
   }
 
-  // Handles external updates of datasources
   const replaceDatasource = (datasourceId, datasource) => {
     if (!datasourceId) {
       return
@@ -197,6 +186,8 @@ export function createDatasourcesStore() {
         ...state,
         list: state.list.filter(x => x._id !== datasourceId),
       }))
+      tables.removeDatasourceTables(datasourceId)
+      queries.removeDatasourceQueries(datasourceId)
       return
     }
 
