@@ -69,7 +69,7 @@
         $goto(`./datasource/${datasourceId}`)
       }
 
-      notifications.success(`Imported successfully.`)
+      notifications.success("Imported successfully")
       return true
     } catch (error) {
       notifications.error("Error importing queries")
