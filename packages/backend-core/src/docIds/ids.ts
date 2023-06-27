@@ -81,8 +81,19 @@ export function generateAppUserID(prodAppId: string, userId: string) {
  * Generates a new role ID.
  * @returns {string} The new role ID which the role doc can be stored under.
  */
-export function generateRoleID(id?: any) {
-  return `${DocumentType.ROLE}${SEPARATOR}${id || newid()}`
+export function generateRoleID(name: string) {
+  const prefix = `${DocumentType.ROLE}${SEPARATOR}`
+  if (name.startsWith(prefix)) {
+    return name
+  }
+  return `${prefix}${name}`
+}
+
+/**
+ * Utility function to be more verbose.
+ */
+export function prefixRoleID(name: string) {
+  return generateRoleID(name)
 }
 
 /**

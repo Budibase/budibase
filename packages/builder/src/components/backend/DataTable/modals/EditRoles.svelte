@@ -12,15 +12,14 @@
   let selectedRole = BASE_ROLE
   let errors = []
   let builtInRoles = ["Admin", "Power", "Basic", "Public"]
+  let validRegex = /^[a-zA-Z0-9_]*$/
   // Don't allow editing of public role
   $: editableRoles = $roles.filter(role => role._id !== "PUBLIC")
   $: selectedRoleId = selectedRole._id
   $: otherRoles = editableRoles.filter(role => role._id !== selectedRoleId)
   $: isCreating = selectedRoleId == null || selectedRoleId === ""
 
-  $: hasUniqueRoleName = !otherRoles
-    ?.map(role => role.name)
-    ?.includes(selectedRole.name)
+  $: roleNameError = getRoleNameError(selectedRole.name)
 
   $: valid =
     selectedRole.name &&
@@ -101,6 +100,18 @@
     }
   }
 
+  const getRoleNameError = name => {
+    const hasUniqueRoleName = !otherRoles
+      ?.map(role => role.name)
+      ?.includes(name)
+    const invalidRoleName = !validRegex.test(name)
+    if (!hasUniqueRoleName) {
+      return "Select a unique role name."
+    } else if (invalidRoleName) {
+      return "Please enter a role name consisting of only alphanumeric symbols and underscores"
+    }
+  }
+
   onMount(fetchBasePermissions)
 </script>
 
@@ -108,7 +119,7 @@
   title="Edit Roles"
   confirmText={isCreating ? "Create" : "Save"}
   onConfirm={saveRole}
-  disabled={!valid || !hasUniqueRoleName}
+  disabled={!valid || roleNameError}
 >
   {#if errors.length}
     <ErrorsBox {errors} />
@@ -129,7 +140,7 @@
       label="Name"
       bind:value={selectedRole.name}
       disabled={shouldDisableRoleInput}
-      error={!hasUniqueRoleName ? "Select a unique role name." : null}
+      error={roleNameError}
     />
     <Select
       label="Inherits Role"

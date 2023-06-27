@@ -19,6 +19,7 @@ jest.mock("@budibase/backend-core", () => {
 
 let appId: string
 let appDb: Database
+const ROLE_NAME = "newRole"
 
 async function addAppMetadata() {
   await appDb.put({
@@ -34,7 +35,7 @@ describe("/api/global/roles", () => {
   const config = new TestConfiguration()
 
   const role = new roles.Role(
-    db.generateRoleID("newRole"),
+    db.generateRoleID(ROLE_NAME),
     roles.BUILTIN_ROLE_IDS.BASIC,
     permissions.BuiltinPermissionID.READ_ONLY
   )
@@ -66,7 +67,7 @@ describe("/api/global/roles", () => {
       const res = await config.api.roles.get()
       expect(res.body).toBeDefined()
       expect(res.body[appId].roles.length).toEqual(5)
-      expect(res.body[appId].roles.map((r: any) => r._id)).toContain(role._id)
+      expect(res.body[appId].roles.map((r: any) => r._id)).toContain(ROLE_NAME)
     })
   })
 
