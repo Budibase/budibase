@@ -29,10 +29,11 @@ describe("/roles", () => {
 
   describe("create", () => {
     it("returns a success message when role is successfully created", async () => {
-      const res = await createRole()
+      const role = basicRole()
+      const res = await createRole(role)
 
       expect(res.res.statusMessage).toEqual(
-        "Role 'NewRole' created successfully."
+        `Role '${role.name}' created successfully.`
       )
       expect(res.body._id).toBeDefined()
       expect(res.body._rev).toBeDefined()
@@ -44,12 +45,13 @@ describe("/roles", () => {
 
   describe("update", () => {
     it("updates a role", async () => {
-      let res = await createRole()
+      const role = basicRole()
+      let res = await createRole(role)
       jest.clearAllMocks()
       res = await createRole(res.body)
 
       expect(res.res.statusMessage).toEqual(
-        "Role 'NewRole' created successfully."
+        `Role '${role.name}' created successfully.`
       )
       expect(res.body._id).toBeDefined()
       expect(res.body._rev).toBeDefined()
@@ -86,7 +88,7 @@ describe("/roles", () => {
       expect(powerUserRole.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
       expect(powerUserRole.permissionId).toEqual(BuiltinPermissionID.POWER)
 
-      const customRoleFetched = res.body.find(r => r._id === customRole._id)
+      const customRoleFetched = res.body.find(r => r._id === customRole.name)
       expect(customRoleFetched).toBeDefined()
       expect(customRoleFetched.inherits).toEqual(BUILTIN_ROLE_IDS.BASIC)
       expect(customRoleFetched.permissionId).toEqual(
