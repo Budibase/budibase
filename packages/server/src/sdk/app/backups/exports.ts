@@ -22,12 +22,12 @@ import tar from "tar"
 
 const MemoryStream = require("memorystream")
 
-interface DBDumpOpts {
+export interface DBDumpOpts {
   filter?: any
   exportPath?: string
 }
 
-interface ExportOpts extends DBDumpOpts {
+export interface ExportOpts extends DBDumpOpts {
   tar?: boolean
   excludeRows?: boolean
   excludeLogs?: boolean
@@ -57,7 +57,10 @@ function tarFilesToTmp(tmpDir: string, files: string[]) {
  * a filter function or the name of the export.
  * @return {*} either a readable stream or a string
  */
-export async function exportDB(dbName: string, opts: DBDumpOpts = {}) {
+export async function exportDB(
+  dbName: string,
+  opts: DBDumpOpts = {}
+): Promise<DBDumpOpts> {
   const exportOpts = {
     filter: opts?.filter,
     batch_size: 1000,
@@ -178,6 +181,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
  * Streams a backup of the database state for an app
  * @param {string} appId The ID of the app which is to be backed up.
  * @param {boolean} excludeRows Flag to state whether the export should include data.
+ * @param {string} encryptPassword password for encrypting the export.
  * @returns {*} a readable stream of the backup which is written in real time
  */
 export async function streamExportApp({

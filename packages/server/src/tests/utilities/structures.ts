@@ -282,9 +282,10 @@ export function basicLinkedRow(
 
 export function basicRole() {
   return {
-    name: "NewRole",
+    name: `NewRole_${utils.newid()}`,
     inherits: roles.BUILTIN_ROLE_IDS.BASIC,
     permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+    version: "name",
   }
 }
 
