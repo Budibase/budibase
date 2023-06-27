@@ -1,9 +1,7 @@
 {
-  "version": "2.7.34-alpha.9",
+  "version": "2.7.35",
   "npmClient": "yarn",
-  "packages": [
-    "packages/*"
-  ],
+  "packages": ["packages/*"],
   "useNx": true,
   "command": {
     "publish": {

@@ -9,6 +9,8 @@ import {
 import {
   Automation,
   AutomationActionStepId,
+  AutomationResults,
+  AutomationStatus,
   AutomationStep,
   AutomationStepType,
   AutomationTrigger,
@@ -239,6 +241,23 @@ export function collectAutomation(tableId?: string): Automation {
     },
   }
   return automation as Automation
+}
+
+export function basicAutomationResults(
+  automationId: string
+): AutomationResults {
+  return {
+    automationId,
+    status: AutomationStatus.SUCCESS,
+    trigger: "trigger",
+    steps: [
+      {
+        stepId: AutomationActionStepId.SERVER_LOG,
+        inputs: {},
+        outputs: {},
+      },
+    ],
+  }
 }
 
 export function basicRow(tableId: string) {

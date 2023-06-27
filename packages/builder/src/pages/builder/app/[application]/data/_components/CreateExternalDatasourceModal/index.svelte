@@ -33,7 +33,7 @@
       // A REST integration is created immediately, we don't need to display a config modal.
       loading = true
       datasources
-        .create({ integration, fields: configFromIntegration(integration) })
+        .create({ integration, config: configFromIntegration(integration) })
         .then(datasource => {
           store.setIntegration(integration)
           store.setDatasource(datasource)
