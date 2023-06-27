@@ -319,7 +319,7 @@ export async function save(ctx: UserCtx) {
   delete tableToSave._rename
   // store it into couch now for budibase reference
   datasource.entities[tableToSave.name] = tableToSave
-  await db.put(sdk.tables.checkExternalTableSchemas(datasource))
+  await db.put(sdk.tables.populateExternalTableSchemas(datasource))
 
   // Since tables are stored inside datasources, we need to notify clients
   // that the datasource definition changed
@@ -350,7 +350,7 @@ export async function destroy(ctx: UserCtx) {
     datasource.entities = tables
   }
 
-  await db.put(sdk.tables.checkExternalTableSchemas(datasource))
+  await db.put(sdk.tables.populateExternalTableSchemas(datasource))
 
   // Since tables are stored inside datasources, we need to notify clients
   // that the datasource definition changed

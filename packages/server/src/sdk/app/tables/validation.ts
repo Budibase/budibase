@@ -62,6 +62,6 @@ export function isEditableColumn(column: FieldSchema) {
   return !(isAutoColumn || isFormula)
 }
 
-export function checkExternalTableSchemas(datasource: Datasource) {
+export function populateExternalTableSchemas(datasource: Datasource) {
   return checkForeignKeysAreAutoColumns(datasource)
 }
