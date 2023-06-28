@@ -83,4 +83,10 @@ export const buildDatasourceEndpoints = API => ({
       body: { datasource },
     })
   },
+
+  fetchExternalSchema: async datasourceId => {
+    return await API.get({
+      url: `/api/datasources/${datasourceId}/schema/external`,
+    })
+  },
 })
