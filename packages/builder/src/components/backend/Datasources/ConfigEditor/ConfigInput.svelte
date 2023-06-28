@@ -4,11 +4,13 @@
   import LongFormField from "./fields/LongForm.svelte"
   import FieldGroupField from "./fields/FieldGroup.svelte"
   import StringField from "./fields/String.svelte"
+  import SelectField from "./fields/Select.svelte"
 
   export let type
   export let value
   export let error
   export let name
+  export let config
   export let showModal = () => {}
 
   const selectComponent = type => {
@@ -20,6 +22,8 @@
       return LongFormField
     } else if (type === "fieldGroup") {
       return FieldGroupField
+    } else if (type === "select") {
+      return SelectField
     } else {
       return StringField
     }
@@ -34,6 +38,7 @@
   {value}
   {error}
   {name}
+  {config}
   {showModal}
   on:blur
   on:change
