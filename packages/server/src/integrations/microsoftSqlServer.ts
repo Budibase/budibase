@@ -10,6 +10,7 @@ import {
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
+  SourceName,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -20,6 +21,7 @@ import {
 } from "./utils"
 import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
+import { getReadableErrorMessage } from "./base/errorMapping"
 import sqlServer from "mssql"
 const DEFAULT_SCHEMA = "dbo"
 
@@ -252,9 +254,16 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           ? `${query.sql}; SELECT SCOPE_IDENTITY() AS id;`
           : query.sql
       return await request.query(sql)
-    } catch (err) {
-      // @ts-ignore
-      throw new Error(err)
+    } catch (err: any) {
+      let readableMessage = getReadableErrorMessage(
+        SourceName.SQL_SERVER,
+        err.number
+      )
+      if (readableMessage) {
+        throw new Error(readableMessage)
+      } else {
+        throw new Error(err.message as string)
+      }
     }
   }
 
