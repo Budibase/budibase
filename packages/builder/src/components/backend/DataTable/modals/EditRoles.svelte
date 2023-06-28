@@ -84,7 +84,7 @@
       await roles.save(selectedRole)
       notifications.success("Role saved successfully")
     } catch (error) {
-      notifications.error(`Error deleting role - ${error.message}`)
+      notifications.error(`Error saving role - ${error.message}`)
       return false
     }
   }
