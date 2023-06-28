@@ -75,7 +75,11 @@ export const createAPIClient = config => {
   let cache = {}
 
   // Generates an error object from an API response
-  const makeErrorFromResponse = async (response, method) => {
+  const makeErrorFromResponse = async (
+    response,
+    method,
+    suppressErrors = false
+  ) => {
     // Try to read a message from the error
     let message = response.statusText
     let json = null
@@ -96,6 +100,7 @@ export const createAPIClient = config => {
       url: response.url,
       method,
       handled: true,
+      suppressErrors,
     }
   }
 
@@ -119,6 +124,7 @@ export const createAPIClient = config => {
     json = true,
     external = false,
     parseResponse,
+    suppressErrors = false,
   }) => {
     // Ensure we don't do JSON processing if sending a GET request
     json = json && method !== "GET"
@@ -174,7 +180,7 @@ export const createAPIClient = config => {
       }
     } else {
       delete cache[url]
-      throw await makeErrorFromResponse(response, method)
+      throw await makeErrorFromResponse(response, method, suppressErrors)
     }
   }
 
@@ -227,6 +233,14 @@ export const createAPIClient = config => {
     },
     invalidateCache: () => {
       cache = {}
+    },
+
+    // Generic utility to extract the current app ID. Assumes that any client
+    // that exists in an app context will be attaching our app ID header.
+    getAppID: () => {
+      let headers = {}
+      config?.attachHeaders(headers)
+      return headers?.["x-budibase-app-id"]
     },
   }
 

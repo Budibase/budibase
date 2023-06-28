@@ -9,7 +9,7 @@ import {
 import env from "../environment"
 import { groups } from "@budibase/pro"
 import { UserCtx, ContextUser, User, UserGroup } from "@budibase/types"
-import { global } from "yargs"
+import { cloneDeep } from "lodash"
 
 export function updateAppRole(
   user: ContextUser,
@@ -65,16 +65,20 @@ export async function processUser(
   user: ContextUser,
   opts: { appId?: string; groups?: UserGroup[] } = {}
 ) {
-  if (user) {
-    delete user.password
+  let clonedUser = cloneDeep(user)
+  if (clonedUser) {
+    delete clonedUser.password
   }
   const appId = opts.appId || context.getAppId()
-  user = updateAppRole(user, { appId })
-  if (!user.roleId && user?.userGroups?.length) {
-    user = await checkGroupRoles(user, { appId, groups: opts?.groups })
+  clonedUser = updateAppRole(clonedUser, { appId })
+  if (!clonedUser.roleId && clonedUser?.userGroups?.length) {
+    clonedUser = await checkGroupRoles(clonedUser, {
+      appId,
+      groups: opts?.groups,
+    })
   }
 
-  return user
+  return clonedUser
 }
 
 export async function getCachedSelf(ctx: UserCtx, appId: string) {

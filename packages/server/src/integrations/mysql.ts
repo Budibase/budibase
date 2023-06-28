@@ -4,7 +4,7 @@ import {
   QueryType,
   QueryJson,
   SqlQuery,
-  Table,
+  ExternalTable,
   TableSchema,
   DatasourcePlus,
   DatasourceFeature,
@@ -40,6 +40,7 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     host: {
@@ -124,7 +125,7 @@ export function bindingTypeCoerce(bindings: any[]) {
 class MySQLIntegration extends Sql implements DatasourcePlus {
   private config: MySQLConfig
   private client?: mysql.Connection
-  public tables: Record<string, Table> = {}
+  public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
   constructor(config: MySQLConfig) {
@@ -233,8 +234,11 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     }
   }
 
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
-    const tables: { [key: string]: Table } = {}
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, ExternalTable>
+  ) {
+    const tables: { [key: string]: ExternalTable } = {}
     await this.connect()
 
     try {
@@ -272,6 +276,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         if (!tables[tableName]) {
           tables[tableName] = {
             _id: buildExternalTableId(datasourceId, tableName),
+            sourceId: datasourceId,
             primary: primaryKeys,
             name: tableName,
             schema,
@@ -335,6 +340,36 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       return await this.queryWithReturning(json, queryFn)
     } finally {
       await this.disconnect()
+    }
+  }
+
+  async getExternalSchema() {
+    try {
+      const [databaseResult] = await this.internalQuery({
+        sql: `SHOW CREATE DATABASE ${this.config.database}`,
+      })
+      let dumpContent = [databaseResult["Create Database"]]
+
+      const tablesResult = await this.internalQuery({
+        sql: `SHOW TABLES`,
+      })
+
+      for (const row of tablesResult) {
+        const tableName = row[`Tables_in_${this.config.database}`]
+
+        const createTableResults = await this.internalQuery({
+          sql: `SHOW CREATE TABLE \`${tableName}\``,
+        })
+
+        const createTableStatement = createTableResults[0]["Create Table"]
+
+        dumpContent.push(createTableStatement)
+      }
+
+      const schema = dumpContent.join("\n")
+      return schema
+    } finally {
+      this.disconnect()
     }
   }
 }

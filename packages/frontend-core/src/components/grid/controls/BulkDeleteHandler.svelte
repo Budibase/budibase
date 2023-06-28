@@ -6,15 +6,9 @@
 
   let modal
 
-  $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
+  $: selectedRowCount = Object.values($selectedRows).length
   $: rowsToDelete = Object.entries($selectedRows)
-    .map(entry => {
-      if (entry[1] === true) {
-        return $rows.find(x => x._id === entry[0])
-      } else {
-        return null
-      }
-    })
+    .map(entry => $rows.find(x => x._id === entry[0]))
     .filter(x => x != null)
 
   // Deletion callback when confirmed
