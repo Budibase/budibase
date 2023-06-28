@@ -96,7 +96,6 @@ const SCHEMA: Integration = {
 class SqlServerIntegration extends Sql implements DatasourcePlus {
   private readonly config: MSSQLConfig
   private index: number = 0
-  private readonly pool: sqlServer.ConnectionPool
   private client?: sqlServer.ConnectionPool
   public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
@@ -114,17 +113,6 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   constructor(config: MSSQLConfig) {
     super(SqlClient.MS_SQL)
     this.config = config
-    const clientCfg = {
-      ...this.config,
-      port: +this.config,
-      options: {
-        encrypt: this.config.encrypt,
-        enableArithAbort: true,
-      },
-    }
-    delete clientCfg.encrypt
-
-    this.pool = new sqlServer.ConnectionPool(clientCfg)
   }
 
   async testConnection() {
@@ -150,7 +138,19 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
   async connect() {
     try {
-      this.client = await this.pool.connect()
+      const clientCfg = {
+        ...this.config,
+        port: +this.config,
+        options: {
+          encrypt: this.config.encrypt,
+          enableArithAbort: true,
+        },
+      }
+      delete clientCfg.encrypt
+
+      const pool = new sqlServer.ConnectionPool(clientCfg)
+
+      this.client = await pool.connect()
     } catch (err: any) {
       if (err?.originalError?.errors?.length) {
         const messages = []
