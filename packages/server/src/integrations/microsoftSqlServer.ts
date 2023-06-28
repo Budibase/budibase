@@ -182,7 +182,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     } catch (err: any) {
       let readableMessage = getReadableErrorMessage(
         SourceName.SQL_SERVER,
-        err.errno
+        err.number
       )
       if (readableMessage) {
         throw new Error(readableMessage)

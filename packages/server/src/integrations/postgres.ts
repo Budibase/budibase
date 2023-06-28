@@ -247,7 +247,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       await this.closeConnection()
       let readableMessage = getReadableErrorMessage(
         SourceName.POSTGRES,
-        err.errno
+        err.code
       )
       if (readableMessage) {
         throw new Error(readableMessage)
