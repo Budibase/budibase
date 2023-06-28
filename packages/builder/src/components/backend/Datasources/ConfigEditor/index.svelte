@@ -28,9 +28,11 @@
     nameStore.markActive()
 
     if ((await configStore.validate()) && (await nameStore.validate())) {
+      const { config } = get(configStore)
+      const { name } = get(nameStore)
       return onSubmit({
-        config: get(configStore).config,
-        name: get(nameStore).name,
+        config,
+        name,
       })
     }
 
