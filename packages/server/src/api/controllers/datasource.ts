@@ -441,3 +441,18 @@ export async function query(ctx: UserCtx) {
     ctx.throw(400, err)
   }
 }
+
+export async function getExternalSchema(ctx: UserCtx) {
+  const { datasource } = ctx.request.body
+  const enrichedDatasource = await getAndMergeDatasource(datasource)
+  const connector = await getConnector(enrichedDatasource)
+
+  if (!connector.getExternalSchema) {
+    ctx.throw(400, "Datasource does not support exporting external schema")
+  }
+  const response = await connector.getExternalSchema()
+
+  ctx.body = {
+    schema: response,
+  }
+}

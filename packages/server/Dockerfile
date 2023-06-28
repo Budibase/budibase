@@ -26,11 +26,21 @@ RUN apt-get install unzip libaio1
 COPY scripts/integrations/oracle/ scripts/integrations/oracle/
 RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh 
 
+# Install postgres client for pg_dump utils
+RUN apt update && apt upgrade -y \
+    && apt install software-properties-common apt-transport-https curl gpg -y \
+    && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
+    && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
+    && apt update -y \
+    && apt install postgresql-client-15 -y \
+    && apt remove software-properties-common apt-transport-https curl gpg -y
+
+
 COPY package.json .
 COPY dist/yarn.lock .
-RUN yarn install --production=true
-# Remove unneeded data from file system to reduce image size
-RUN yarn cache clean && apt-get remove -y --purge --auto-remove g++ make python \
+RUN yarn install --production=true \
+    # Remove unneeded data from file system to reduce image size
+    && yarn cache clean && apt-get remove -y --purge --auto-remove g++ make python \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
 
 COPY dist/ dist/

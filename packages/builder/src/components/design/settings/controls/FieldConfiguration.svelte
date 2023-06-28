@@ -1,7 +1,7 @@
 <script>
   import { Button, ActionButton, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import ColumnDrawer from "./ColumnDrawer.svelte"
+  import ColumnDrawer from "./ColumnEditor/ColumnDrawer.svelte"
   import { cloneDeep } from "lodash/fp"
   import {
     getDatasourceForProvider,

@@ -34,7 +34,7 @@ yarn unlink
 yarn link
 cd -
 
-if [ -d packages/pro/packages ]; then
+if [ -d packages/pro/src ]; then
   pro_loaded_locally=true
 else
   pro_loaded_locally=false
@@ -42,7 +42,7 @@ fi
 
 if [ $pro_loaded_locally = true ]; then
   echo "Linking pro"
-  cd packages/pro/packages/pro
+  cd packages/pro
   yarn unlink
   yarn link
   cd -

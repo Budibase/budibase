@@ -46,6 +46,7 @@
 
   let dataLoaded = false
   let permissionError = false
+  let embedNoScreens = false
 
   // Determine if we should show devtools or not
   $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
@@ -68,6 +69,8 @@
         // If the user is logged in but has no screens, they don't have
         // permission to use the app
         permissionError = true
+      } else if ($appStore.embedded) {
+        embedNoScreens = true
       } else {
         // If they have no screens and are not logged in, it probably means
         // they should log in to gain access
@@ -86,7 +89,9 @@
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
     } else {
-      builderStore.actions.analyticsPing({ source: "app" })
+      builderStore.actions.analyticsPing({
+        embedded: !!$appStore.embedded,
+      })
     }
   })
 </script>
@@ -156,6 +161,15 @@
                           <Body size="S">
                             Get in touch with support if this issue persists
                           </Body>
+                        </Layout>
+                      </div>
+                    {:else if embedNoScreens}
+                      <div class="error">
+                        <Layout justifyItems="center" gap="S">
+                          {@html ErrorSVG}
+                          <Heading size="L">
+                            This Budibase app is not publicly accessible
+                          </Heading>
                         </Layout>
                       </div>
                     {:else}

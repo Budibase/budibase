@@ -57,6 +57,7 @@ export default class DataFetch {
       cursor: null,
       cursors: [],
       resetKey: Math.random(),
+      error: null,
     })
 
     // Merge options with their default values
@@ -136,8 +137,10 @@ export default class DataFetch {
       this.options.sortOrder = "ascending"
     }
 
-    // If no sort column, use the primary display and fallback to first column
-    if (!this.options.sortColumn) {
+    // If no sort column, or an invalid sort column is provided, use the primary
+    // display and fallback to first column
+    const sortValid = this.options.sortColumn && schema[this.options.sortColumn]
+    if (!sortValid) {
       let newSortColumn
       if (definition?.primaryDisplay && schema[definition.primaryDisplay]) {
         newSortColumn = definition.primaryDisplay
@@ -250,6 +253,10 @@ export default class DataFetch {
     try {
       return await this.API.fetchTableDefinition(datasource.tableId)
     } catch (error) {
+      this.store.update(state => ({
+        ...state,
+        error,
+      }))
       return null
     }
   }

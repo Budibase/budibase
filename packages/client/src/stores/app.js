@@ -5,6 +5,7 @@ const initialState = {
   appId: null,
   isDevApp: false,
   clientLoadTime: window.INIT_TIME ? Date.now() - window.INIT_TIME : null,
+  embedded: false,
 }
 
 const createAppStore = () => {
@@ -46,9 +47,20 @@ const createAppStore = () => {
     })
   }
 
+  const setAppEmbedded = embeddded => {
+    store.update(state => {
+      if (state) {
+        state.embedded = embeddded
+      } else {
+        state = { embeddded }
+      }
+      return state
+    })
+  }
+
   return {
     subscribe: derivedStore.subscribe,
-    actions: { setAppId, fetchAppDefinition },
+    actions: { setAppId, setAppEmbedded, fetchAppDefinition },
   }
 }
 
