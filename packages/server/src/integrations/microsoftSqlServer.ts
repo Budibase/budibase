@@ -38,9 +38,11 @@ interface MSSQLConfig {
   schema: string
   encrypt?: boolean
   authType?: MSSQLConfigAuthType
-  adConfig_clientId: string
-  adConfig_clientSecret: string
-  adConfig_tenantId: string
+  adConfig?: {
+    clientId: string
+    clientSecret: string
+    tenantId: string
+  }
 }
 
 const SCHEMA: Integration = {
@@ -95,7 +97,7 @@ const SCHEMA: Integration = {
       default: true,
       display: "Configure Active Directory",
       hidden: "'{{authType}}' !== 'Active Directory'",
-      config: { openByDefault: true },
+      config: { openByDefault: true, nestedFields: true },
       fields: {
         clientId: {
           type: DatasourceFieldType.STRING,
@@ -161,7 +163,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       await this.connect()
       response.connected = true
     } catch (e: any) {
-      response.error = e.message as string
+      response.error = e.message
     }
     return response
   }
@@ -187,11 +189,12 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       delete clientCfg.encrypt
 
       if (this.config.authType === MSSQLConfigAuthType.ACTIVE_DIRECTORY) {
+        const { clientId, tenantId, clientSecret } = this.config.adConfig!
         const clientApp = new ConfidentialClientApplication({
           auth: {
-            clientId: this.config.adConfig_clientId,
-            authority: `https://login.microsoftonline.com/${this.config.adConfig_tenantId}`,
-            clientSecret: this.config.adConfig_clientSecret,
+            clientId,
+            authority: `https://login.microsoftonline.com/${tenantId}`,
+            clientSecret,
           },
         })
 
