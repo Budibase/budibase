@@ -26,7 +26,6 @@
         $integrations[datasource.source].relationships === false
           ? ["Tables", "Queries"]
           : ["Tables", "Relationships", "Queries"]
-      // TODO what is this for?
       selectedPanel = panelOptions.includes(selectedPanel)
         ? selectedPanel
         : "Tables"
