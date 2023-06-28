@@ -9,6 +9,7 @@ import {
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
+  SourceName,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -22,6 +23,7 @@ import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
 import { Client, ClientConfig, types } from "pg"
+import { getReadableErrorMessage } from "./base/errorMapping"
 import { exec } from "child_process"
 import { storeTempFile } from "../utilities/fileSystem"
 
@@ -187,6 +189,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       await this.openConnection()
       response.connected = true
     } catch (e: any) {
+      console.log(e)
       response.error = e.message as string
     } finally {
       await this.closeConnection()
@@ -245,10 +248,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
     try {
       return await client.query(query.sql, query.bindings || [])
-    } catch (err) {
+    } catch (err: any) {
       await this.closeConnection()
-      // @ts-ignore
-      throw new Error(err)
+      let readableMessage = getReadableErrorMessage(
+        SourceName.POSTGRES,
+        err.code
+      )
+      if (readableMessage) {
+        throw new Error(readableMessage)
+      } else {
+        throw new Error(err.message as string)
+      }
     } finally {
       if (close) {
         await this.closeConnection()
