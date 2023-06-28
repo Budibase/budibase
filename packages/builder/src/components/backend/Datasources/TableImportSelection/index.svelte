@@ -6,6 +6,7 @@
     Layout,
     ModalContent,
   } from "@budibase/bbui"
+  import Spinner from "components/common/Spinner.svelte"
   import { IntegrationTypes } from "constants/backend"
   import { createTableSelectionStore } from "./tableSelectionStore"
 
@@ -19,9 +20,10 @@
   $: tableType = isSheets ? "sheets" : "tables"
   $: title = `Choose your ${tableType}`
 
-  $: confirmText = $store.hasSelected
-    ? `Fetch ${tableType}`
-    : "Continue without fetching"
+  $: confirmText =
+    $store.loading || $store.hasSelected
+      ? `Fetch ${tableType}`
+      : "Continue without fetching"
 
   $: description = isSheets
     ? "Select which spreadsheets you want to connect."
@@ -39,7 +41,9 @@
   disabled={$store.loading}
 >
   {#if $store.loading}
-    <p>loading...</p>
+    <div class="loading">
+      <Spinner size="20" />
+    </div>
   {:else}
     <Layout noPadding no>
       <Body size="S">{description}</Body>
@@ -60,3 +64,10 @@
     </Layout>
   {/if}
 </ModalContent>
+
+<style>
+  .loading {
+    display: flex;
+    justify-content: center;
+  }
+</style>

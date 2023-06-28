@@ -32,10 +32,10 @@ export const createTableSelectionStore = (integration, datasource) => {
       } else {
         notifications.error("Error fetching tables.")
       }
-    }
 
-    // Prevent modal closing
-    return false
+      // Prevent modal closing
+      return false
+    }
   }
 
   const combined = derived(

@@ -5,7 +5,7 @@
   import GoogleAuthPrompt from "./GoogleAuthPrompt.svelte"
 
   import { get } from "svelte/store"
-  import TableImportSelection from "./TableImportSelection/index.svelte"
+  import TableImportSelection from "components/backend/Datasources/TableImportSelection/index.svelte"
   import DatasourceConfigEditor from "components/backend/Datasources/ConfigEditor/index.svelte"
   import { datasources } from "stores/backend"
   import { createOnGoogleAuthStore } from "./stores/onGoogleAuth.js"
