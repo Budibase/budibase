@@ -118,9 +118,15 @@ interface DatasourceSelectFieldConfig extends DatasourceBasicFieldConfig {
   config: { options: string[] }
 }
 
+interface DatasourceFieldGroupConfig extends DatasourceBasicFieldConfig {
+  type: DatasourceFieldType.FIELD_GROUP
+  config: { openByDefault?: boolean }
+}
+
 type DatasourceFieldConfig =
-  | DatasourceBasicFieldConfig
   | DatasourceSelectFieldConfig
+  | DatasourceFieldGroupConfig
+  | DatasourceBasicFieldConfig
 
 export interface DatasourceConfig {
   [key: string]: DatasourceFieldConfig & {
