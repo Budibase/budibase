@@ -1,9 +1,5 @@
-import { roles, context, events } from "@budibase/backend-core"
-import {
-  generateRoleID,
-  getUserMetadataParams,
-  InternalTables,
-} from "../../db/utils"
+import { roles, context, events, db as dbCore } from "@budibase/backend-core"
+import { getUserMetadataParams, InternalTables } from "../../db/utils"
 import { UserCtx, Database } from "@budibase/types"
 
 const UpdateRolesOptions = {
@@ -55,6 +51,7 @@ export async function save(ctx: UserCtx) {
   const db = context.getAppDB()
   let { _id, name, inherits, permissionId, version } = ctx.request.body
   let isCreate = false
+  const isNewVersion = version === roles.RoleIDVersion.NAME
 
   if (_id && roles.isBuiltin(_id)) {
     ctx.throw(400, "Cannot update builtin roles.")
@@ -62,12 +59,20 @@ export async function save(ctx: UserCtx) {
 
   // if not id found, then its creation
   if (!_id) {
-    _id = generateRoleID(name)
+    _id = dbCore.generateRoleID(name)
     isCreate = true
   }
   // version 2 roles need updated to add back role_
-  else if (version === roles.RoleIDVersion.NAME) {
-    _id = generateRoleID(name)
+  else if (isNewVersion) {
+    _id = dbCore.prefixRoleID(_id)
+  }
+
+  let dbRole
+  if (!isCreate) {
+    dbRole = await db.get(_id)
+  }
+  if (dbRole && dbRole.name !== name && isNewVersion) {
+    ctx.throw(400, "Cannot change custom role name")
   }
 
   const role = new roles.Role(_id, name, permissionId).addInheritance(inherits)
@@ -98,7 +103,7 @@ export async function destroy(ctx: UserCtx) {
     ctx.throw(400, "Cannot delete builtin role.")
   } else {
     // make sure has the prefix (if it has it then it won't be added)
-    roleId = generateRoleID(roleId)
+    roleId = dbCore.generateRoleID(roleId)
   }
   const role = await db.get(roleId)
   // first check no users actively attached to role
