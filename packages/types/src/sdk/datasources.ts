@@ -36,6 +36,7 @@ export enum DatasourceFieldType {
   JSON = "json",
   FILE = "file",
   FIELD_GROUP = "fieldGroup",
+  SELECT = "select",
 }
 
 export enum SourceName {
@@ -103,13 +104,36 @@ export interface ExtraQueryConfig {
   }
 }
 
+interface DatasourceBasicFieldConfig {
+  type: DatasourceFieldType
+  display?: string
+  required?: boolean
+  default?: any
+  deprecated?: boolean
+  hidden?: string
+}
+
+interface DatasourceSelectFieldConfig extends DatasourceBasicFieldConfig {
+  type: DatasourceFieldType.SELECT
+  config: { options: string[] }
+}
+
+interface DatasourceFieldGroupConfig extends DatasourceBasicFieldConfig {
+  type: DatasourceFieldType.FIELD_GROUP
+  config: {
+    openByDefault?: boolean
+    nestedFields?: boolean
+  }
+}
+
+type DatasourceFieldConfig =
+  | DatasourceSelectFieldConfig
+  | DatasourceFieldGroupConfig
+  | DatasourceBasicFieldConfig
+
 export interface DatasourceConfig {
-  [key: string]: {
-    type: string
-    display?: string
-    required?: boolean
-    default?: any
-    deprecated?: boolean
+  [key: string]: DatasourceFieldConfig & {
+    fields?: DatasourceConfig
   }
 }
 

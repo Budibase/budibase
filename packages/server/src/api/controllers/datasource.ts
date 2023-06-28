@@ -11,7 +11,7 @@ import { BuildSchemaErrors, InvalidColumns } from "../../constants"
 import { getIntegration } from "../../integrations"
 import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
-import { db as dbCore, context, events, cache } from "@budibase/backend-core"
+import { db as dbCore, context, events } from "@budibase/backend-core"
 import {
   UserCtx,
   Datasource,
@@ -427,8 +427,8 @@ export async function destroy(ctx: UserCtx) {
 }
 
 export async function find(ctx: UserCtx) {
-  const database = context.getAppDB()
-  const datasource = await database.get(ctx.params.datasourceId)
+  const db = context.getAppDB()
+  const datasource = await db.get(ctx.params.datasourceId)
   ctx.body = await sdk.datasources.removeSecretSingle(datasource)
 }
 
@@ -443,7 +443,8 @@ export async function query(ctx: UserCtx) {
 }
 
 export async function getExternalSchema(ctx: UserCtx) {
-  const { datasource } = ctx.request.body
+  const db = context.getAppDB()
+  const datasource = await db.get(ctx.params.datasourceId)
   const enrichedDatasource = await getAndMergeDatasource(datasource)
   const connector = await getConnector(enrichedDatasource)
 
