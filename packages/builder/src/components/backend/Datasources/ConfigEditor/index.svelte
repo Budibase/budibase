@@ -6,6 +6,7 @@
     Layout,
     ModalContent,
   } from "@budibase/bbui"
+  import { processStringSync } from "@budibase/string-templates"
   import CreateEditVariableModal from "components/portal/environment/CreateEditVariableModal.svelte"
   import ConfigInput from "./ConfigInput.svelte"
   import { createValidatedConfigStore } from "./stores/validatedConfig"
@@ -81,17 +82,19 @@
     />
   {/if}
 
-  {#each $configStore.validatedConfig as { type, key, value, error, name }}
-    <ConfigInput
-      {type}
-      {value}
-      {error}
-      {name}
-      showModal={() =>
-        showModal(newValue => configStore.updateFieldValue(key, newValue))}
-      on:blur={() => configStore.markFieldActive(key)}
-      on:change={e => configStore.updateFieldValue(key, e.detail)}
-    />
+  {#each $configStore.validatedConfig as { type, key, value, error, name, hidden }}
+    {#if hidden === undefined || !eval(processStringSync(hidden, $configStore.config))}
+      <ConfigInput
+        {type}
+        {value}
+        {error}
+        {name}
+        showModal={() =>
+          showModal(newValue => configStore.updateFieldValue(key, newValue))}
+        on:blur={() => configStore.markFieldActive(key)}
+        on:change={e => configStore.updateFieldValue(key, e.detail)}
+      />
+    {/if}
   {/each}
 </ModalContent>
 

@@ -110,7 +110,8 @@ export interface DatasourceConfig {
     required?: boolean
     default?: any
     deprecated?: boolean
-  }
+    hidden?: string
+  } & { fields?: DatasourceConfig }
 }
 
 export interface Integration {
