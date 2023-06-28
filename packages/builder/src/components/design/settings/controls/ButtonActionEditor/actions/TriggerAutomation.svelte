@@ -1,5 +1,5 @@
 <script>
-  import { Select, Label, Input, Checkbox, Icon } from "@budibase/bbui"
+  import { Select, Label, Input, Checkbox, Icon, Body } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
@@ -77,13 +77,16 @@
       />
     </div>
   </div>
-  <div class="params">
-    <!-- {#if parameters.synchronous}
+  <div class="fields">
+    <Label small />
+    {#if parameters.synchronous}
       <div class="synchronous-info">
-        <Icon name="Info" />
-        <div>This automation will run synchronously</div>
+        <Icon size="XS" name="Info" />
+        <Body size="XS">This automation will run synchronously</Body>
       </div>
-    {/if}  -->
+    {/if}
+  </div>
+  <div class="fields">
     {#if parameters.synchronous}
       <Label small>Timeout</Label>
 
@@ -151,6 +154,8 @@
   .synchronous-info {
     display: flex;
     gap: var(--spacing-s);
+
+    margin-top: calc(var(--spacing-m) * -1);
   }
 
   .fields {
