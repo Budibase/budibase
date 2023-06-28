@@ -1,6 +1,5 @@
 import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch/fetchData"
-import { notifications } from "@budibase/bbui"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import { tick } from "svelte"
 
@@ -66,11 +65,13 @@ export const deriveStores = context => {
     validation,
     focusedCellId,
     columns,
+    stickyColumn,
     rowChangeCache,
     inProgressChanges,
     previousFocusedRowId,
     hasNextPage,
     error,
+    notifications,
   } = context
   const instanceLoaded = writable(false)
   const fetch = writable(null)
@@ -203,10 +204,23 @@ export const deriveStores = context => {
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
     if (error?.json?.validationErrors) {
-      // Normal validation error
+      // Normal validation errors
       const keys = Object.keys(error.json.validationErrors)
       const $columns = get(columns)
+
+      // Filter out missing columns from columns that we have
+      let erroredColumns = []
+      let missingColumns = []
       for (let column of keys) {
+        if (columns.actions.hasColumn(column)) {
+          erroredColumns.push(column)
+        } else {
+          missingColumns.push(column)
+        }
+      }
+
+      // Process errors for columns that we have
+      for (let column of erroredColumns) {
         validation.actions.setError(
           `${rowId}-${column}`,
           `${column} ${error.json.validationErrors[column]}`
@@ -221,8 +235,16 @@ export const deriveStores = context => {
           })
         }
       }
+
+      // Notify about missing columns
+      for (let column of missingColumns) {
+        get(notifications).error(`${column} is required but is missing`)
+      }
+
       // Focus the first cell with an error
-      focusedCellId.set(`${rowId}-${keys[0]}`)
+      if (erroredColumns.length) {
+        focusedCellId.set(`${rowId}-${erroredColumns[0]}`)
+      }
     } else {
       // Some other error - just update the current cell
       validation.actions.setError(get(focusedCellId), error?.message || "Error")
@@ -250,7 +272,7 @@ export const deriveStores = context => {
       }
 
       // Refresh row to ensure data is in the correct format
-      notifications.success("Row created successfully")
+      get(notifications).success("Row created successfully")
       return newRow
     } catch (error) {
       if (bubble) {
