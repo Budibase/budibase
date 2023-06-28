@@ -64,8 +64,10 @@
 </script>
 
 <div class="root">
-  <div class="params">
-    <Label small>Automation</Label>
+  <div class="fields">
+    <div class:title-padding={parameters.synchronous}>
+      <Label small>Automation</Label>
+    </div>
     <div style="width: 100%">
       <Select
         on:change={onChange}
@@ -75,26 +77,22 @@
         getOptionLabel={x => x.name}
         getOptionValue={x => x._id}
       />
+      {#if parameters.synchronous}
+        <div class="synchronous-info">
+          <Icon size="XS" name="Info" />
+          <Body size="XS">This automation will run synchronously</Body>
+        </div>
+      {/if}
     </div>
   </div>
-  <div class="fields">
-    <Label small />
-    {#if parameters.synchronous}
-      <div class="synchronous-info">
-        <Icon size="XS" name="Info" />
-        <Body size="XS">This automation will run synchronously</Body>
-      </div>
-    {/if}
-  </div>
-  <div class="fields">
-    {#if parameters.synchronous}
+  {#if parameters.synchronous}
+    <div class="fields">
       <Label small>Timeout</Label>
-
       <div class="timeout-width">
         <Input type="number" {error} bind:value={parameters.timeout} />
       </div>
-    {/if}
-  </div>
+    </div>
+  {/if}
   <div class="fields">
     {#if selectedSchema && selectedSchema.length}
       {#each selectedSchema as field, idx}
@@ -144,18 +142,20 @@
     margin-top: var(--spacing-l);
   }
 
+  .title-padding {
+    padding-bottom: 20px;
+  }
+
   .params {
     display: flex;
     flex-wrap: nowrap;
-    align-items: center;
     gap: 25px;
   }
 
   .synchronous-info {
     display: flex;
     gap: var(--spacing-s);
-
-    margin-top: calc(var(--spacing-m) * -1);
+    margin-top: var(--spacing-s);
   }
 
   .fields {
@@ -163,7 +163,7 @@
     display: grid;
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
-    grid-template-columns: 0.1fr 0.5fr 0.5fr;
+    grid-template-columns: 15% auto auto;
     align-items: center;
   }
 </style>
