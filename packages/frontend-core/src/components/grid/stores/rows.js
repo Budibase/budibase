@@ -65,7 +65,6 @@ export const deriveStores = context => {
     validation,
     focusedCellId,
     columns,
-    stickyColumn,
     rowChangeCache,
     inProgressChanges,
     previousFocusedRowId,
