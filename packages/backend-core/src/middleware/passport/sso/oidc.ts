@@ -88,6 +88,30 @@ function getEmail(profile: SSOProfile, jwtClaims: JwtClaims) {
   )
 }
 
+class B64OIDCStrategy extends OIDCStrategy {
+  constructor(options: any, verify: Function) {
+    super(options, verify)
+  }
+
+  authenticate(req: any, options?: any) {
+    options = options || {};
+
+    if (options.state) {
+      options.state = Buffer.from(options.state, "utf8").toString("base64")
+    }
+
+    super.authenticate(req, options);
+  }
+
+  complete(req: any, options: any, callback: Function) {
+    if (req.query.state) {
+      req.query.state = Buffer.from(req.query.state, "base64").toString("utf8");
+    }
+
+    super.complete(req, options, callback);
+  }
+}
+
 /**
  * Create an instance of the oidc passport strategy. This wrapper fetches the configuration
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
@@ -99,7 +123,7 @@ export async function strategyFactory(
 ) {
   try {
     const verify = buildVerifyFn(saveUserFn)
-    const strategy = new OIDCStrategy(config, verify)
+    const strategy = new B64OIDCStrategy(config, verify)
     strategy.name = "oidc"
     return strategy
   } catch (err: any) {
