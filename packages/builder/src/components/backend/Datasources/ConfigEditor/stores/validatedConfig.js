@@ -101,6 +101,7 @@ export const createValidatedConfigStore = (integration, config) => {
           error: $errorsStore[key],
           name: capitalise(properties.display || key),
           type: properties.type,
+          hidden: properties.hidden,
         })
       })
 
