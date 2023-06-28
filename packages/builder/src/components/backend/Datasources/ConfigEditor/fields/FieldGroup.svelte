@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { Label, Input, Layout, Accordion } from "@budibase/bbui"
+  import { Layout, Accordion } from "@budibase/bbui"
+  import ConfigInput from "../ConfigInput.svelte"
 
   export let value
   export let name
@@ -27,23 +28,10 @@
 >
   <Layout gap="S">
     {#each value as field}
-      <div class="form-row">
-        <Label>{field.name}</Label>
-        <Input
-          type={field.type}
-          on:change={e => handleChange(field.key, e.detail)}
-          value={field.value}
-        />
-      </div>
+      <ConfigInput
+        {...field}
+        on:change={e => handleChange(field.key, e.detail)}
+      />
     {/each}
   </Layout>
 </Accordion>
-
-<style>
-  .form-row {
-    display: grid;
-    grid-template-columns: 20% 1fr;
-    grid-gap: var(--spacing-l);
-    align-items: center;
-  }
-</style>
