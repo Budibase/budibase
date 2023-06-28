@@ -82,13 +82,14 @@
     />
   {/if}
 
-  {#each $configStore.validatedConfig as { type, key, value, error, name, hidden }}
+  {#each $configStore.validatedConfig as { type, key, value, error, name, hidden, config }}
     {#if hidden === undefined || !eval(processStringSync(hidden, $configStore.config))}
       <ConfigInput
         {type}
         {value}
         {error}
         {name}
+        {config}
         showModal={() =>
           showModal(newValue => configStore.updateFieldValue(key, newValue))}
         on:blur={() => configStore.markFieldActive(key)}
