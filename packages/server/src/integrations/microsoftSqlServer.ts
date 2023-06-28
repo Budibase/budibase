@@ -76,6 +76,33 @@ const SCHEMA: Integration = {
       type: DatasourceFieldType.BOOLEAN,
       default: true,
     },
+    authType: {
+      type: DatasourceFieldType.SELECT,
+      config: { options: ["Active Directory"] },
+    },
+    adAuthConfig: {
+      type: DatasourceFieldType.FIELD_GROUP,
+      default: true,
+      display: "Configure Active Directory",
+      hidden: "'{{authType}}' !== 'Active Directory'",
+      fields: {
+        clientId: {
+          type: DatasourceFieldType.STRING,
+          required: false,
+          display: "Client ID",
+        },
+        clientSecret: {
+          type: DatasourceFieldType.STRING,
+          required: false,
+          display: "Client secret",
+        },
+        tenantId: {
+          type: DatasourceFieldType.STRING,
+          required: false,
+          display: "Tenant ID",
+        },
+      },
+    },
   },
   query: {
     create: {
