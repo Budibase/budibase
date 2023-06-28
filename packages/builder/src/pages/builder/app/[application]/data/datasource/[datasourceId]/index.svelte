@@ -10,6 +10,7 @@
   import RestAuthenticationPanel from "./_components/panels/Authentication/index.svelte"
   import RestVariablesPanel from "./_components/panels/Variables/index.svelte"
   import PromptQueryModal from "./_components/PromptQueryModal.svelte"
+  import { helpers } from "@budibase/shared-core"
 
   let selectedPanel = null
   let panelOptions = []
@@ -38,6 +39,10 @@
     } else {
       panelOptions = ["Queries"]
       selectedPanel = "Queries"
+    }
+    // always the last option for SQL
+    if (helpers.isSQL(datasource)) {
+      panelOptions.push("Settings")
     }
   }
 </script>
@@ -82,6 +87,8 @@
       <RestAuthenticationPanel {datasource} />
     {:else if selectedPanel === "Variables"}
       <RestVariablesPanel {datasource} />
+    {:else if selectedPanel === "Settings"}
+      <Body>Settings</Body>
     {:else}
       <Body>Something went wrong</Body>
     {/if}
