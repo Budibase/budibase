@@ -97,7 +97,10 @@ const SCHEMA: Integration = {
       default: true,
       display: "Configure Active Directory",
       hidden: "'{{authType}}' !== 'Active Directory'",
-      config: { openByDefault: true, nestedFields: true },
+      config: {
+        openByDefault: true,
+        nestedFields: true,
+      },
       fields: {
         clientId: {
           type: DatasourceFieldType.STRING,
