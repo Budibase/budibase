@@ -90,6 +90,7 @@ const SCHEMA: Integration = {
     },
     authType: {
       type: DatasourceFieldType.SELECT,
+      display: "Advanced auth",
       config: { options: [MSSQLConfigAuthType.ACTIVE_DIRECTORY] },
     },
     adConfig: {
