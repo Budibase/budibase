@@ -28,7 +28,7 @@
     nameStore.markActive()
 
     if ((await configStore.validate()) && (await nameStore.validate())) {
-      return await onSubmit({
+      return onSubmit({
         config: get(configStore).config,
         name: get(nameStore).name,
       })

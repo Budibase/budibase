@@ -23,6 +23,12 @@ import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
 import sqlServer from "mssql"
 const DEFAULT_SCHEMA = "dbo"
 
+import { ConfidentialClientApplication } from "@azure/msal-node"
+
+enum MSSQLConfigAuthType {
+  ACTIVE_DIRECTORY = "Active Directory",
+}
+
 interface MSSQLConfig {
   user: string
   password: string
@@ -31,6 +37,10 @@ interface MSSQLConfig {
   database: string
   schema: string
   encrypt?: boolean
+  authType?: MSSQLConfigAuthType
+  adConfig_clientId: string
+  adConfig_clientSecret: string
+  adConfig_tenantId: string
 }
 
 const SCHEMA: Integration = {
@@ -78,9 +88,9 @@ const SCHEMA: Integration = {
     },
     authType: {
       type: DatasourceFieldType.SELECT,
-      config: { options: ["Active Directory"] },
+      config: { options: [MSSQLConfigAuthType.ACTIVE_DIRECTORY] },
     },
-    adAuthConfig: {
+    adConfig: {
       type: DatasourceFieldType.FIELD_GROUP,
       default: true,
       display: "Configure Active Directory",
@@ -89,17 +99,17 @@ const SCHEMA: Integration = {
       fields: {
         clientId: {
           type: DatasourceFieldType.STRING,
-          required: false,
+          required: true,
           display: "Client ID",
         },
         clientSecret: {
-          type: DatasourceFieldType.STRING,
-          required: false,
+          type: DatasourceFieldType.PASSWORD,
+          required: true,
           display: "Client secret",
         },
         tenantId: {
           type: DatasourceFieldType.STRING,
-          required: false,
+          required: true,
           display: "Tenant ID",
         },
       },
@@ -166,7 +176,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
   async connect() {
     try {
-      const clientCfg = {
+      const clientCfg: MSSQLConfig & sqlServer.config = {
         ...this.config,
         port: +this.config,
         options: {
@@ -175,6 +185,27 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         },
       }
       delete clientCfg.encrypt
+
+      if (this.config.authType === MSSQLConfigAuthType.ACTIVE_DIRECTORY) {
+        const clientApp = new ConfidentialClientApplication({
+          auth: {
+            clientId: this.config.adConfig_clientId,
+            authority: `https://login.microsoftonline.com/${this.config.adConfig_tenantId}`,
+            clientSecret: this.config.adConfig_clientSecret,
+          },
+        })
+
+        const response = await clientApp.acquireTokenByClientCredential({
+          scopes: ["https://database.windows.net/.default"],
+        })
+
+        clientCfg.authentication = {
+          type: "azure-active-directory-access-token",
+          options: {
+            token: response!.accessToken,
+          },
+        }
+      }
 
       const pool = new sqlServer.ConnectionPool(clientCfg)
 
