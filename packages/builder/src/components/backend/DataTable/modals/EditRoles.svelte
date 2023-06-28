@@ -84,7 +84,7 @@
       await roles.save(selectedRole)
       notifications.success("Role saved successfully")
     } catch (error) {
-      notifications.error("Error saving role")
+      notifications.error(`Error saving role - ${error.message}`)
       return false
     }
   }
@@ -96,7 +96,8 @@
       changeRole()
       notifications.success("Role deleted successfully")
     } catch (error) {
-      notifications.error("Error deleting role")
+      notifications.error(`Error deleting role - ${error.message}`)
+      return false
     }
   }
 
@@ -139,7 +140,7 @@
     <Input
       label="Name"
       bind:value={selectedRole.name}
-      disabled={shouldDisableRoleInput}
+      disabled={!!selectedRoleId}
       error={roleNameError}
     />
     <Select
