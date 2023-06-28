@@ -206,14 +206,7 @@ export const deriveStores = context => {
       focusedCellId.set(`${rowId}-${keys[0]}`)
     } else {
       // Some other error - just update the current cell
-      if (get(focusedCellId)) {
-        validation.actions.setError(
-          get(focusedCellId),
-          error?.message || "Error"
-        )
-      } else {
-        notifications.error(error?.message || "Error")
-      }
+      validation.actions.setError(get(focusedCellId), error?.message || "Error")
     }
   }
 
