@@ -18,7 +18,7 @@
     "lerna": "7.0.2",
     "madge": "^6.0.0",
     "minimist": "^1.2.8",
-    "prettier": "^2.3.1",
+    "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
     "rimraf": "^3.0.2",
     "rollup-plugin-replace": "^2.2.0",

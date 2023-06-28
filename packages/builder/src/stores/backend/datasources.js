@@ -115,13 +115,15 @@ export function createDatasourcesStore() {
       .length
   }
 
-  const isDatasourceInvalid = async (integration, datasource) => {
+  const checkDatasourceValidity = async (integration, datasource) => {
     if (integration.features?.[DatasourceFeature.CONNECTION_CHECKING]) {
-      const { connected } = await API.validateDatasource(datasource)
-      if (!connected) return true
-    }
+      const { connected, error } = await API.validateDatasource(datasource)
+      if (connected) {
+        return
+      }
 
-    return false
+      throw new Error(`Unable to connect: ${error}`)
+    }
   }
 
   const create = async ({ integration, config }) => {
@@ -136,7 +138,7 @@ export function createDatasourcesStore() {
       plus: integration.plus && integration.name !== IntegrationTypes.REST,
     }
 
-    if (await isDatasourceInvalid(integration, datasource)) {
+    if (await checkDatasourceValidity(integration, datasource)) {
       throw new Error("Unable to connect")
     }
 
@@ -150,7 +152,7 @@ export function createDatasourcesStore() {
   }
 
   const update = async ({ integration, datasource }) => {
-    if (await isDatasourceInvalid(integration, datasource)) {
+    if (await checkDatasourceValidity(integration, datasource)) {
       throw new Error("Unable to connect")
     }
 

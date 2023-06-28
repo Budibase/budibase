@@ -46,6 +46,19 @@ export const createValidatedConfigStore = (integration, config) => {
         value.forEach(field => {
           newStore[field.key] = field.value
         })
+        if (!integration.datasource[key].config?.nestedFields) {
+          value.forEach(field => {
+            newStore[field.key] = field.value
+          })
+        } else {
+          newStore[key] = value.reduce(
+            (p, field) => ({
+              ...p,
+              [field.key]: field.value,
+            }),
+            {}
+          )
+        }
       } else {
         newStore[key] = value
       }
@@ -101,6 +114,8 @@ export const createValidatedConfigStore = (integration, config) => {
           error: $errorsStore[key],
           name: capitalise(properties.display || key),
           type: properties.type,
+          hidden: properties.hidden,
+          config: properties.config,
         })
       })
 
