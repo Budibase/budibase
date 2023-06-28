@@ -120,7 +120,10 @@ interface DatasourceSelectFieldConfig extends DatasourceBasicFieldConfig {
 
 interface DatasourceFieldGroupConfig extends DatasourceBasicFieldConfig {
   type: DatasourceFieldType.FIELD_GROUP
-  config: { openByDefault?: boolean; nestedFields?: boolean }
+  config: {
+    openByDefault?: boolean
+    nestedFields?: boolean
+  }
 }
 
 type DatasourceFieldConfig =
