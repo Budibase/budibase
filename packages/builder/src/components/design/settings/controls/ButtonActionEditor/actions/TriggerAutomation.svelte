@@ -11,7 +11,6 @@
     NEW: "new",
     EXISTING: "existing",
   }
-  $: console.log(parameters.fields)
   let automationStatus = parameters.automationId
     ? AUTOMATION_STATUS.EXISTING
     : AUTOMATION_STATUS.NEW
