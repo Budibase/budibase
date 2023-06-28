@@ -4,6 +4,7 @@
 
   export let value
   export let name
+  export let config
 
   let dispatch = createEventDispatcher()
 
@@ -20,7 +21,8 @@
 </script>
 
 <Accordion
-  initialOpen={Object.values(value).some(properties => !!properties.value)}
+  initialOpen={config?.openByDefault ||
+    Object.values(value).some(properties => !!properties.value)}
   header={name}
 >
   <Layout gap="S">
