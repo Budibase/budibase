@@ -92,13 +92,20 @@
     },
   }
 
+  function downloadWithBlob(data, filename) {
+    download(new Blob([data], { type: "text/plain" }), filename)
+  }
+
   async function exportView() {
     try {
       const data = await API.exportView({
         viewName: view,
         format: exportFormat,
       })
-      download(data, `export.${exportFormat === "csv" ? "csv" : "json"}`)
+      downloadWithBlob(
+        data,
+        `export.${exportFormat === "csv" ? "csv" : "json"}`
+      )
     } catch (error) {
       notifications.error(`Unable to export ${exportFormat.toUpperCase()} data`)
     }
@@ -111,7 +118,7 @@
         rows: selectedRows.map(row => row._id),
         format: exportFormat,
       })
-      download(data, `export.${exportFormat}`)
+      downloadWithBlob(data, `export.${exportFormat}`)
     } else if (filters || sorting) {
       let response
       try {
@@ -130,7 +137,7 @@
         notifications.error("Export Failed")
       }
       if (response) {
-        download(response, `export.${exportFormat}`)
+        downloadWithBlob(response, `export.${exportFormat}`)
         notifications.success("Export Successful")
       }
     } else {
