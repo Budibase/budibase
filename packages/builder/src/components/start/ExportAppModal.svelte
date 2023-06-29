@@ -1,6 +1,7 @@
 <script>
   import {
     ModalContent,
+    keepOpen,
     Toggle,
     Body,
     InlineAlert,
@@ -32,7 +33,7 @@
           exportApp()
         } else {
           currentStep = Step.SET_PASSWORD
-          return false
+          return keepOpen
         }
       },
       isValid: true,
@@ -43,7 +44,7 @@
       onConfirm: async () => {
         await validation.check({ password })
         if (!$validation.valid) {
-          return false
+          return keepOpen
         }
         exportApp(password)
       },

@@ -1,5 +1,6 @@
 <script>
   import {
+    keepOpen,
     Modal,
     notifications,
     Body,
@@ -36,7 +37,7 @@
       })
     }
 
-    return false
+    return keepOpen
   }
 
   let createVariableModal
