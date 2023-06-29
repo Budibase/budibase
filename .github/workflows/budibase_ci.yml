@@ -169,17 +169,13 @@ jobs:
 
   check-pro-submodule:
     runs-on: ubuntu-latest
+    if: github.repository == github.event.pull_request.head.repo.full_name
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
-        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.repository != github.event.pull_request.head.repo.full_name
 
       - name: Check pro commit
         id: get_pro_commits
