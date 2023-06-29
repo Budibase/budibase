@@ -4,7 +4,7 @@
   </a>
 </p>
 <h1 align="center">
-  Budibase
+  Budibase - test
 </h1>
 
 <h3 align="center">
