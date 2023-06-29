@@ -47,7 +47,7 @@
 
   async function updateApp() {
     try {
-      await apps.update(app.instance._id, {
+      await apps.update(app.devId, {
         name: $values.name?.trim(),
         url: $values.url?.trim(),
         icon: {
