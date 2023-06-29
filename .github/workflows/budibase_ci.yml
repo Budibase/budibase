@@ -26,16 +26,17 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Fetch pro submodule if running in BB
-        env:
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        run: |
-          if [ "$GITHUB_REPOSITORY" = "Budibase/budibase" ]; then
-            GIT_TERMINAL_PROMPT=0 git -c "http.extraheader=Authorization: Bearer $PERSONAL_ACCESS_TOKEN"  git submodule update --init --recursive
-          else
-            echo "Submodule fetch skipped."
-          fi
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: ${{ github.repository == "Budibase/budibase" }}
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: ${{ github.repository != "Budibase/budibase" }}
+
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
