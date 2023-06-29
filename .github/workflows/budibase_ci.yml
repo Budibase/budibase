@@ -48,10 +48,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -66,10 +72,16 @@ jobs:
   test-libraries:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -86,10 +98,16 @@ jobs:
   test-services:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -106,10 +124,16 @@ jobs:
   test-pro:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -121,10 +145,16 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -144,11 +174,16 @@ jobs:
   check-pro-submodule:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repo and submodules
         uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
 
       - name: Check pro commit
         id: get_pro_commits
