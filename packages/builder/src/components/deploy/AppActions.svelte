@@ -348,7 +348,7 @@
         name: $store.name,
         url: $store.url,
         icon: $store.icon,
-        devId: $store.appId,
+        appId: $store.appId,
       }}
       onUpdateComplete={async () => {
         await initialiseApp()
