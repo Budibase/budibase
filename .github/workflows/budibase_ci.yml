@@ -34,8 +34,6 @@ jobs:
           else
             echo "Submodule fetch skipped."
           fi
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
