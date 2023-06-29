@@ -32,7 +32,7 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           if [ "$GITHUB_REPOSITORY" = "Budibase/budibase" ]; then
-            git submodule update --init --recursive
+            GIT_TERMINAL_PROMPT=0 git -c "http.extraheader=Authorization: Bearer $PERSONAL_ACCESS_TOKEN"  git submodule update --init --recursive
           else
             echo "Submodule fetch skipped."
           fi
