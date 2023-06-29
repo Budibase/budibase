@@ -184,13 +184,17 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
   async connect() {
     try {
+      const encrypt = this.config.encrypt
       const clientCfg: MSSQLConfig & sqlServer.config = {
         ...this.config,
-        port: +this.config,
+        port: +this.config.port,
         options: {
-          encrypt: this.config.encrypt,
+          encrypt: encrypt,
           enableArithAbort: true,
         },
+      }
+      if (encrypt) {
+        clientCfg.options!.trustServerCertificate = true
       }
       delete clientCfg.encrypt
 
