@@ -58,7 +58,7 @@ describe("datasource validators", () => {
       const result = await integration.testConnection()
       expect(result).toEqual({
         connected: false,
-        error: "ConnectionError: Login failed for user 'sa'.",
+        error: "Login failed for user 'sa'.",
       })
     })
   })
