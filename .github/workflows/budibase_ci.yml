@@ -27,8 +27,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Fetch pro submodule if running in BB
+        run: |
+          if [ "$GITHUB_REPOSITORY" = "Budibase/budibase" ]; then
+            git submodule update --init --recursive
+          else
+            echo "Submodule fetch skipped."
+          fi
         with:
-          submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
