@@ -3,14 +3,8 @@
   import { Page, Layout } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "components/deploy/DeleteModal.svelte"
-  import { apps } from "stores/portal"
-  import { store } from "builderStore"
 
   let deleteModal
-
-  $: filteredApps = $apps.filter(app => app.devId === $store.appId)
-  $: selectedApp = filteredApps?.length ? filteredApps[0] : null
-  $: isPublished = selectedApp?.status === "published"
 </script>
 
 <!-- routify:options index=4 -->
@@ -49,16 +43,14 @@
             url={$url("./version")}
             active={$isActive("./version")}
           />
-          {#if !isPublished}
-            <div class="delete-action">
-              <SideNavItem
-                text="Delete app"
-                on:click={() => {
-                  deleteModal.show()
-                }}
-              />
-            </div>
-          {/if}
+          <div class="delete-action">
+            <SideNavItem
+              text="Delete app"
+              on:click={() => {
+                deleteModal.show()
+              }}
+            />
+          </div>
         </SideNav>
         <slot />
       </Content>
