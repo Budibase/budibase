@@ -275,7 +275,7 @@
                     }
                   }}
                 >
-                  {selectedApp ? `${selectedApp?.url}` : ""}
+                  {$store.url}
                   {#if isPublished}
                     <Icon size="S" name="LinkOut" />
                   {:else}
@@ -344,7 +344,12 @@
 
   <Modal bind:this={updateAppModal} padding={false} width="600px">
     <UpdateAppModal
-      app={selectedApp}
+      app={{
+        name: $store.name,
+        url: $store.url,
+        icon: $store.icon,
+        appId: $store.appId,
+      }}
       onUpdateComplete={async () => {
         await initialiseApp()
       }}

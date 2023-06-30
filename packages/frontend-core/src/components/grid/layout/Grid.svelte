@@ -44,6 +44,8 @@
   export let initialSortColumn = null
   export let initialSortOrder = null
   export let initialRowHeight = null
+  export let notifySuccess = null
+  export let notifyError = null
 
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
@@ -89,6 +91,8 @@
     initialSortColumn,
     initialSortOrder,
     initialRowHeight,
+    notifySuccess,
+    notifyError,
   })
 
   // Set context for children to consume

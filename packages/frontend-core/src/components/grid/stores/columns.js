@@ -35,10 +35,20 @@ export const createStores = () => {
     []
   )
 
+  // Checks if we have a certain column by name
+  const hasColumn = column => {
+    const $columns = get(columns)
+    const $sticky = get(stickyColumn)
+    return $columns.some(col => col.name === column) || $sticky?.name === column
+  }
+
   return {
     columns: {
       ...columns,
       subscribe: enrichedColumns.subscribe,
+      actions: {
+        hasColumn,
+      },
     },
     stickyColumn,
     visibleColumns,
@@ -121,6 +131,7 @@ export const deriveStores = context => {
     columns: {
       ...columns,
       actions: {
+        ...columns.actions,
         saveChanges,
         saveTable,
         changePrimaryDisplay,
