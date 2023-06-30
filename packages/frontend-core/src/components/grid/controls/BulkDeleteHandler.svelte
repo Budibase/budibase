@@ -1,8 +1,8 @@
 <script>
-  import { Modal, ModalContent, notifications } from "@budibase/bbui"
+  import { Modal, ModalContent } from "@budibase/bbui"
   import { getContext, onMount } from "svelte"
 
-  const { selectedRows, rows, subscribe } = getContext("grid")
+  const { selectedRows, rows, subscribe, notifications } = getContext("grid")
 
   let modal
 
@@ -15,7 +15,7 @@
   const performDeletion = async () => {
     const count = rowsToDelete.length
     await rows.actions.deleteRows(rowsToDelete)
-    notifications.success(`Deleted ${count} row${count === 1 ? "" : "s"}`)
+    $notifications.success(`Deleted ${count} row${count === 1 ? "" : "s"}`)
   }
 
   onMount(() => subscribe("request-bulk-delete", () => modal?.show()))

@@ -16,7 +16,7 @@
   export let columns = null
 
   const component = getContext("component")
-  const { styleable, API, builderStore } = getContext("sdk")
+  const { styleable, API, builderStore, notificationStore } = getContext("sdk")
 
   $: columnWhitelist = columns?.map(col => col.name)
   $: schemaOverrides = getSchemaOverrides(columns)
@@ -52,6 +52,8 @@
     showControls={false}
     allowExpandRows={false}
     allowSchemaChanges={false}
+    notifySuccess={notificationStore.actions.success}
+    notifyError={notificationStore.actions.error}
   />
 </div>
 

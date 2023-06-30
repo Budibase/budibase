@@ -71,6 +71,7 @@
     timeOnly,
     enableTime,
     time24hr,
+    disabled,
   }
 
   const handleChange = event => {
