@@ -52,6 +52,9 @@
     // Build up list of illegal children from ancestors
     let illegalChildren = definition.illegalChildren || []
     path.forEach(ancestor => {
+      if (ancestor._component === `@budibase/standard-components/sidepanel`) {
+        illegalChildren = []
+      }
       const def = store.actions.components.getDefinition(ancestor._component)
       const blacklist = def?.illegalChildren?.map(x => {
         return `@budibase/standard-components/${x}`
