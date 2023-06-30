@@ -184,12 +184,13 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
   async connect() {
     try {
-      const encrypt = this.config.encrypt
+      // if encrypt is undefined, then default is to encrypt
+      const encrypt = this.config.encrypt === undefined || this.config.encrypt
       const clientCfg: MSSQLConfig & sqlServer.config = {
         ...this.config,
         port: +this.config.port,
         options: {
-          encrypt: encrypt,
+          encrypt,
           enableArithAbort: true,
         },
       }
