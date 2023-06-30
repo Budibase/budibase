@@ -1,11 +1,5 @@
 <script>
-  import {
-    clickOutside,
-    Menu,
-    MenuItem,
-    Helpers,
-    notifications,
-  } from "@budibase/bbui"
+  import { clickOutside, Menu, MenuItem, Helpers } from "@budibase/bbui"
   import { getContext } from "svelte"
   import { NewRowID } from "../lib/constants"
 
@@ -22,6 +16,7 @@
     dispatch,
     focusedCellAPI,
     focusedRowId,
+    notifications,
   } = getContext("grid")
 
   $: style = makeStyle($menu)
@@ -34,7 +29,7 @@
   const deleteRow = () => {
     rows.actions.deleteRows([$focusedRow])
     menu.actions.close()
-    notifications.success("Deleted 1 row")
+    $notifications.success("Deleted 1 row")
   }
 
   const duplicate = async () => {
@@ -48,7 +43,7 @@
 
   const copyToClipboard = async value => {
     await Helpers.copyToClipboard(value)
-    notifications.success("Copied to clipboard")
+    $notifications.success("Copied to clipboard")
   }
 </script>
 
