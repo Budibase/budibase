@@ -203,7 +203,9 @@ export async function buildSchemaFromDb(ctx: UserCtx) {
   datasource.entities = tables
 
   setDefaultDisplayColumns(datasource)
-  const dbResp = await db.put(datasource)
+  const dbResp = await db.put(
+    sdk.tables.populateExternalTableSchemas(datasource)
+  )
   datasource._rev = dbResp.rev
   const cleanedDatasource = await sdk.datasources.removeSecretSingle(datasource)
 
@@ -289,7 +291,9 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
     datasource.config!.auth = auth
   }
 
-  const response = await db.put(datasource)
+  const response = await db.put(
+    sdk.tables.populateExternalTableSchemas(datasource)
+  )
   await events.datasource.updated(datasource)
   datasource._rev = response.rev
 
@@ -344,7 +348,9 @@ export async function save(
     await preSaveAction[datasource.source](datasource)
   }
 
-  const dbResp = await db.put(datasource)
+  const dbResp = await db.put(
+    sdk.tables.populateExternalTableSchemas(datasource)
+  )
   await events.datasource.created(datasource)
   datasource._rev = dbResp.rev
 
