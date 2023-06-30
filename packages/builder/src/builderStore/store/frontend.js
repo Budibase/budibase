@@ -235,6 +235,7 @@ export const getFrontendStore = () => {
           legalDirectChildren = []
         ) => {
           const type = component._component
+
           if (illegalChildren.includes(type)) {
             return type
           }
@@ -248,10 +249,13 @@ export const getFrontendStore = () => {
             return
           }
 
+          if (type === "@budibase/standard-components/sidepanel") {
+            illegalChildren = []
+          }
+
           const definition = store.actions.components.getDefinition(
             component._component
           )
-
           // Reset whitelist for direct children
           legalDirectChildren = []
           if (definition?.legalDirectChildren?.length) {
