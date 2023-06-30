@@ -19,11 +19,10 @@
 
   $: filteredApps = $apps.filter(app => app.devId == $store.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}
-  $: appUrl = `${window.origin}/app${app?.url}`
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 
   const initialiseApp = async () => {
-    const applicationPkg = await API.fetchAppPackage(app.devId)
+    const applicationPkg = await API.fetchAppPackage($store.appId)
     await store.actions.initialise(applicationPkg)
   }
 </script>
@@ -37,7 +36,7 @@
 
   <Layout noPadding gap="XXS">
     <Label size="L">Name</Label>
-    <Body>{app?.name}</Body>
+    <Body>{$store?.name}</Body>
   </Layout>
 
   <Layout noPadding gap="XS">
@@ -45,15 +44,15 @@
     <div class="icon">
       <Icon
         size="L"
-        name={app?.icon?.name || "Apps"}
-        color={app?.icon?.color}
+        name={$store?.icon?.name || "Apps"}
+        color={$store?.icon?.color}
       />
     </div>
   </Layout>
 
   <Layout noPadding gap="XXS">
     <Label size="L">URL</Label>
-    <Body>{appUrl}</Body>
+    <Body>{$store.url}</Body>
   </Layout>
 
   <div>
@@ -75,7 +74,12 @@
 
 <Modal bind:this={updatingModal} padding={false} width="600px">
   <UpdateAppModal
-    {app}
+    app={{
+      name: $store.name,
+      url: $store.url,
+      icon: $store.icon,
+      appId: $store.appId,
+    }}
     onUpdateComplete={async () => {
       await initialiseApp()
     }}

@@ -155,6 +155,7 @@ export const getFrontendStore = () => {
           ...INITIAL_FRONTEND_STATE.features,
           ...application.features,
         },
+        icon: application.icon || {},
         initialised: true,
       }))
       screenHistoryStore.reset()
