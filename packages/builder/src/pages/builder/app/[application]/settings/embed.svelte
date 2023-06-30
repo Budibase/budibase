@@ -39,7 +39,7 @@
             notifications.success("Copied")
           }}
         >
-          Copy Code
+          Copy code
         </Button>
       </div>
     {:else}
