@@ -4,12 +4,14 @@
   import { IntegrationTypes } from "constants/backend"
   import GoogleAuthPrompt from "./GoogleAuthPrompt.svelte"
 
-  import TableImportSelection from "./TableImportSelection/index.svelte"
-  import DatasourceConfigEditor from "./DatasourceConfigEditor/index.svelte"
+  import { get } from "svelte/store"
+  import TableImportSelection from "components/backend/Datasources/TableImportSelection/index.svelte"
+  import DatasourceConfigEditor from "components/backend/Datasources/ConfigEditor/index.svelte"
   import { datasources } from "stores/backend"
   import { createOnGoogleAuthStore } from "./stores/onGoogleAuth.js"
   import { createDatasourceCreationStore } from "./stores/datasourceCreation.js"
   import { configFromIntegration } from "stores/selectors"
+  import { notifications } from "@budibase/bbui"
 
   export let loading = false
   const store = createDatasourceCreationStore()
@@ -20,7 +22,11 @@
     store.stage === null ? modal?.hide() : modal?.show()
 
     if (store.finished) {
-      goto(`./datasource/${store.datasource._id}`)
+      const queryString =
+        store.datasource.plus || store.datasource.source === "REST"
+          ? ""
+          : "?promptQuery=true"
+      goto(`./datasource/${store.datasource._id}${queryString}`)
     }
   }
 
@@ -31,7 +37,7 @@
       // A REST integration is created immediately, we don't need to display a config modal.
       loading = true
       datasources
-        .create({ integration, fields: configFromIntegration(integration) })
+        .create({ integration, config: configFromIntegration(integration) })
         .then(datasource => {
           store.setIntegration(integration)
           store.setDatasource(datasource)
@@ -55,6 +61,23 @@
     store.setConfig(config)
     store.editConfigStage()
   })
+
+  const createDatasource = async config => {
+    try {
+      const datasource = await datasources.create({
+        integration: get(store).integration,
+        config,
+      })
+      store.setDatasource(datasource)
+
+      notifications.success("Datasource created successfully")
+    } catch (e) {
+      notifications.error(`Error creating datasource: ${e.message}`)
+    }
+
+    // Prevent modal closing
+    return false
+  }
 </script>
 
 <Modal on:hide={store.cancel} bind:this={modal}>
@@ -64,7 +87,7 @@
     <DatasourceConfigEditor
       integration={$store.integration}
       config={$store.config}
-      onDatasourceCreated={store.setDatasource}
+      onSubmit={({ config }) => createDatasource(config)}
     />
   {:else if $store.stage === "selectTables"}
     <TableImportSelection

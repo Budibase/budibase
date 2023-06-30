@@ -28,6 +28,7 @@ import {
   SSOConfig,
   SSOConfigType,
   UserCtx,
+  OIDCLogosConfig,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 
@@ -280,13 +281,39 @@ export async function save(ctx: UserCtx<Config>) {
   }
 }
 
+function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
+  if (!oidcLogos) {
+    return
+  }
+  oidcLogos.config = Object.keys(oidcLogos.config || {}).reduce(
+    (acc: any, key: string) => {
+      if (!key.endsWith("Etag")) {
+        const etag = oidcLogos.config[`${key}Etag`]
+        const objectStoreUrl = objectStore.getGlobalFileUrl(
+          oidcLogos.type,
+          key,
+          etag
+        )
+        acc[key] = objectStoreUrl
+      } else {
+        acc[key] = oidcLogos.config[key]
+      }
+      return acc
+    },
+    {}
+  )
+}
+
 export async function find(ctx: UserCtx) {
   try {
     // Find the config with the most granular scope based on context
     const type = ctx.params.type
-    const scopedConfig = await configs.getConfig(type)
+    let scopedConfig = await configs.getConfig(type)
 
     if (scopedConfig) {
+      if (type === ConfigType.OIDC_LOGOS) {
+        enrichOIDCLogos(scopedConfig)
+      }
       ctx.body = scopedConfig
     } else {
       // don't throw an error, there simply is nothing to return
@@ -300,16 +327,21 @@ export async function find(ctx: UserCtx) {
 export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
   try {
     // Find the config with the most granular scope based on context
-    const config = await configs.getOIDCConfig()
+    const oidcConfig = await configs.getOIDCConfig()
+    const oidcCustomLogos = await configs.getOIDCLogosDoc()
 
-    if (!config) {
+    if (oidcCustomLogos) {
+      enrichOIDCLogos(oidcCustomLogos)
+    }
+
+    if (!oidcConfig) {
       ctx.body = []
     } else {
       ctx.body = [
         {
-          logo: config.logo,
-          name: config.name,
-          uuid: config.uuid,
+          logo: oidcCustomLogos?.config[oidcConfig.logo] ?? oidcConfig.logo,
+          name: oidcConfig.name,
+          uuid: oidcConfig.uuid,
         },
       ]
     }

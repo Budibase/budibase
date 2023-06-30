@@ -13,16 +13,19 @@
   export let disableValidation = false
   export let editAutoColumns = false
 
+  // We export this store so that when we remount the inner form we can still
+  // persist what step we're on
+  export let currentStep
+
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
 
   let fields = []
-  const currentStep = writable(1)
   const formState = writable({
     values: {},
     errors: {},
     valid: true,
-    currentStep: 1,
+    currentStep: get(currentStep),
   })
 
   // Reactive derived stores to derive form state from field array

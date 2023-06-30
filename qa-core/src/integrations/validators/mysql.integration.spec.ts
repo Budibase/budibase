@@ -63,7 +63,7 @@ describe("datasource validators", () => {
       expect(result).toEqual({
         connected: false,
         error:
-          "Access denied for user 'root'@'172.17.0.1' (using password: YES)",
+          "Access denied for the specified user. User does not have the necessary privileges or the provided credentials are incorrect. Please verify the credentials, and ensure that the user has appropriate permissions.",
       })
     })
   })

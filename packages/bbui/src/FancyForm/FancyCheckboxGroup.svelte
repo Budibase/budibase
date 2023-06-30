@@ -8,7 +8,7 @@
   export let showSelectAll = true
   export let selectAllText = "Select all"
 
-  let selectedBooleans = reset()
+  let selectedBooleans = options.map(x => selected.indexOf(x) > -1)
   const dispatch = createEventDispatcher()
 
   $: updateSelected(selectedBooleans)

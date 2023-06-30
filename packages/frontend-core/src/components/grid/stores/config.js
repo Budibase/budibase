@@ -13,6 +13,8 @@ export const createStores = context => {
   const initialRowHeight = getProp("initialRowHeight")
   const schemaOverrides = getProp("schemaOverrides")
   const columnWhitelist = getProp("columnWhitelist")
+  const notifySuccess = getProp("notifySuccess")
+  const notifyError = getProp("notifyError")
 
   return {
     config,
@@ -23,5 +25,7 @@ export const createStores = context => {
     initialRowHeight,
     schemaOverrides,
     columnWhitelist,
+    notifySuccess,
+    notifyError,
   }
 }

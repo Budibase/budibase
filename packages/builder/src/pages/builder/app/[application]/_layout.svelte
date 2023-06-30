@@ -4,8 +4,6 @@
   import { auth } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
-    ActionMenu,
-    MenuItem,
     Icon,
     Tabs,
     Tab,
@@ -142,56 +140,17 @@
 {/if}
 
 <div class="root" class:blur={$store.showPreview}>
-  <div class="top-nav">
+  <div class="top-nav" class:has-lock={$store.hasLock}>
     {#if $store.initialised}
       <div class="topleftnav">
-        <ActionMenu>
-          <div slot="control">
-            <Icon size="M" hoverable name="ShowMenu" />
-          </div>
-          <MenuItem on:click={() => $goto("../../portal/apps")}>
-            Exit to portal
-          </MenuItem>
-          <MenuItem
-            on:click={() => $goto(`../../portal/overview/${application}`)}
-          >
-            Overview
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/access`)}
-          >
-            Access
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/automation-history`)}
-          >
-            Automation history
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/backups`)}
-          >
-            Backups
-          </MenuItem>
-
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/name-and-url`)}
-          >
-            Name and URL
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/version`)}
-          >
-            Version
-          </MenuItem>
-        </ActionMenu>
-        <Heading size="XS">{$store.name}</Heading>
-      </div>
-      <div class="topcenternav">
+        <span class="back-to-apps">
+          <Icon
+            size="S"
+            hoverable
+            name="BackAndroid"
+            on:click={() => $goto("../../portal/apps")}
+          />
+        </span>
         {#if $store.hasLock}
           <Tabs {selected} size="M">
             {#each $layout.children as { path, title }}
@@ -209,13 +168,23 @@
         {:else}
           <div class="secondary-editor">
             <Icon name="LockClosed" />
-            Another user is currently editing your screens and automations
+            <div
+              class="secondary-editor-body"
+              title="Another user is currently editing your screens and automations"
+            >
+              Another user is currently editing your screens and automations
+            </div>
           </div>
         {/if}
       </div>
+      <div class="topcenternav">
+        <Heading size="XS">{$store.name}</Heading>
+      </div>
       <div class="toprightnav">
-        <UserAvatars users={$userStore} />
-        <AppActions {application} />
+        <span class:nav-lock={!$store.hasLock}>
+          <UserAvatars users={$userStore} />
+        </span>
+        <AppActions {application} {loaded} />
       </div>
     {/if}
   </div>
@@ -241,6 +210,13 @@
 </Modal>
 
 <style>
+  .back-to-apps {
+    display: contents;
+  }
+  .back-to-apps :global(.icon) {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
   .loading {
     min-height: 100%;
     height: 100%;
@@ -272,27 +248,34 @@
     z-index: 2;
   }
 
-  .topleftnav {
+  .top-nav.has-lock {
+    padding-right: 0px;
+  }
+
+  .topcenternav {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xl);
   }
-  .topleftnav :global(.spectrum-Heading) {
+
+  .topcenternav :global(.spectrum-Heading) {
     flex: 1 1 auto;
-    width: 0;
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding: 0px var(--spacing-m);
   }
 
-  .topcenternav {
+  .topleftnav {
     display: flex;
     position: relative;
     margin-bottom: -2px;
+    overflow: hidden;
   }
-  .topcenternav :global(.spectrum-Tabs-itemLabel) {
+
+  .topleftnav :global(.spectrum-Tabs-itemLabel) {
     font-weight: 600;
   }
 
@@ -301,7 +284,10 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-l);
+  }
+
+  .toprightnav :global(.avatars) {
+    margin-right: var(--spacing-l);
   }
 
   .secondary-editor {
@@ -309,6 +295,16 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
+    min-width: 0;
+    overflow: hidden;
+    margin-left: var(--spacing-xl);
+  }
+
+  .secondary-editor-body {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0px;
   }
 
   .body {

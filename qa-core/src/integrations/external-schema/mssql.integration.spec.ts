@@ -5,7 +5,7 @@ import mssql from "../../../../packages/server/src/integrations/microsoftSqlServ
 jest.unmock("mssql")
 
 describe("getExternalSchema", () => {
-  describe("postgres", () => {
+  describe("mssql", () => {
     let config: any
 
     beforeAll(async () => {

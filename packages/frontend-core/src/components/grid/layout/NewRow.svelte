@@ -78,6 +78,11 @@
   }
 
   const startAdding = async () => {
+    // Attempt to submit if already adding a row
+    if (visible && !isAdding) {
+      await addRow()
+      return
+    }
     if (visible || !firstColumn) {
       return
     }

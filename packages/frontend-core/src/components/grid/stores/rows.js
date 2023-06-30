@@ -1,6 +1,5 @@
 import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch/fetchData"
-import { notifications } from "@budibase/bbui"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import { tick } from "svelte"
 
@@ -14,6 +13,7 @@ export const createStores = () => {
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
+  const error = writable(null)
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(
@@ -47,6 +47,7 @@ export const createStores = () => {
     rowChangeCache,
     inProgressChanges,
     hasNextPage,
+    error,
   }
 }
 
@@ -68,6 +69,8 @@ export const deriveStores = context => {
     inProgressChanges,
     previousFocusedRowId,
     hasNextPage,
+    error,
+    notifications,
   } = context
   const instanceLoaded = writable(false)
   const fetch = writable(null)
@@ -122,7 +125,17 @@ export const deriveStores = context => {
 
     // Subscribe to changes of this fetch model
     unsubscribe = newFetch.subscribe(async $fetch => {
-      if ($fetch.loaded && !$fetch.loading) {
+      if ($fetch.error) {
+        // Present a helpful error to the user
+        let message = "An unknown error occurred"
+        if ($fetch.error.status === 403) {
+          message = "You don't have access to this data"
+        } else if ($fetch.error.message) {
+          message = $fetch.error.message
+        }
+        error.set(message)
+      } else if ($fetch.loaded && !$fetch.loading) {
+        error.set(null)
         hasNextPage.set($fetch.hasNextPage)
         const $instanceLoaded = get(instanceLoaded)
         const resetRows = $fetch.resetKey !== lastResetKey
@@ -190,10 +203,23 @@ export const deriveStores = context => {
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
     if (error?.json?.validationErrors) {
-      // Normal validation error
+      // Normal validation errors
       const keys = Object.keys(error.json.validationErrors)
       const $columns = get(columns)
+
+      // Filter out missing columns from columns that we have
+      let erroredColumns = []
+      let missingColumns = []
       for (let column of keys) {
+        if (columns.actions.hasColumn(column)) {
+          erroredColumns.push(column)
+        } else {
+          missingColumns.push(column)
+        }
+      }
+
+      // Process errors for columns that we have
+      for (let column of erroredColumns) {
         validation.actions.setError(
           `${rowId}-${column}`,
           `${column} ${error.json.validationErrors[column]}`
@@ -208,8 +234,16 @@ export const deriveStores = context => {
           })
         }
       }
+
+      // Notify about missing columns
+      for (let column of missingColumns) {
+        get(notifications).error(`${column} is required but is missing`)
+      }
+
       // Focus the first cell with an error
-      focusedCellId.set(`${rowId}-${keys[0]}`)
+      if (erroredColumns.length) {
+        focusedCellId.set(`${rowId}-${erroredColumns[0]}`)
+      }
     } else {
       // Some other error - just update the current cell
       validation.actions.setError(get(focusedCellId), error?.message || "Error")
@@ -237,7 +271,7 @@ export const deriveStores = context => {
       }
 
       // Refresh row to ensure data is in the correct format
-      notifications.success("Row created successfully")
+      get(notifications).success("Row created successfully")
       return newRow
     } catch (error) {
       if (bubble) {

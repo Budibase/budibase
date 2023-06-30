@@ -95,7 +95,6 @@
     "lodash": "4.17.21",
     "nodemon": "2.0.15",
     "pouchdb-adapter-memory": "7.2.2",
-    "prettier": "2.3.1",
     "rimraf": "3.0.2",
     "supertest": "6.2.2",
     "timekeeper": "2.2.0",

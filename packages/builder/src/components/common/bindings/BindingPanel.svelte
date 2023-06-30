@@ -469,10 +469,12 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
+    overflow: hidden;
   }
   .overlay-wrap {
     position: relative;
     flex: 1;
+    overflow: hidden;
   }
   .mode-overlay {
     position: absolute;
