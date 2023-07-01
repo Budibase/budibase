@@ -14,6 +14,9 @@ import firebase from "./firebase"
 import redis from "./redis"
 import snowflake from "./snowflake"
 import oracle from "./oracle"
+import clickhouse from "./clickhouse"
+
+import { getPlugins } from "../api/controllers/plugin"
 import { SourceName, Integration, PluginType } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
@@ -37,6 +40,7 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
   [SourceName.ORACLE]: undefined,
+  [SourceName.CLICKHOUSE]: clickhouse.schema,
 }
 
 const INTEGRATIONS: Record<SourceName, any> = {
@@ -57,6 +61,7 @@ const INTEGRATIONS: Record<SourceName, any> = {
   [SourceName.FIRESTORE]: firebase.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
   [SourceName.ORACLE]: undefined,
+  [SourceName.CLICKHOUSE]: clickhouse.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
