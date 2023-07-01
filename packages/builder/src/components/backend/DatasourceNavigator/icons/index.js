@@ -16,6 +16,7 @@ import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
 import Custom from "./Custom.svelte"
+import ClickHouse from "./ClickHouse.svelte"
 import { integrations } from "stores/backend"
 import { get } from "svelte/store"
 
@@ -37,6 +38,7 @@ const ICONS = {
   FIRESTORE: Firebase,
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
+  CLICKHOUSE: ClickHouse,
   CUSTOM: Custom,
 }
 

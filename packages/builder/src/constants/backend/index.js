@@ -197,6 +197,7 @@ export const IntegrationTypes = {
   FIRESTORE: "FIRESTORE",
   REDIS: "REDIS",
   SNOWFLAKE: "SNOWFLAKE",
+  CLICKHOUSE: "CLICKHOUSE",
 }
 
 export const IntegrationNames = {
@@ -217,6 +218,7 @@ export const IntegrationNames = {
   [IntegrationTypes.FIRESTORE]: "Firestore",
   [IntegrationTypes.REDIS]: "Redis",
   [IntegrationTypes.SNOWFLAKE]: "Snowflake",
+  [IntegrationTypes.CLICKHOUSE]: "ClickHouse",
 }
 
 export const SchemaTypeOptions = [
