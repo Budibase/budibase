@@ -3,7 +3,6 @@
   import { GutterWidth } from "../lib/constants"
 
   const {
-    columns,
     resize,
     renderedColumns,
     stickyColumn,
@@ -11,7 +10,6 @@
     scrollLeft,
   } = getContext("grid")
 
-  $: cutoff = $scrollLeft + GutterWidth + ($columns[0]?.width || 0)
   $: offset = GutterWidth + ($stickyColumn?.width || 0)
   $: activeColumn = $resize.column
 

@@ -139,7 +139,6 @@
 
 <div class="action-top-nav">
   <div class="action-buttons">
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
     {#if updateAvailable && $isOnlyUser}
       <div class="app-action-button version" on:click={versionModal.show}>
         <div class="app-action">
@@ -181,7 +180,6 @@
       </div>
     </div>
 
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="app-action-button publish app-action-popover"
       on:click={() => {
@@ -221,7 +219,6 @@
       >
         <div class="app-action-popover-content">
           <Layout noPadding gap="M">
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <Body size="M">
               <span
                 class="app-link"

@@ -27,7 +27,6 @@
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
   $: isJS = isJSBinding(value)
-  $: allOptions = buildOptions(options, bindings, appendBindingsAsOptions)
 
   const handleClose = () => {
     onChange(tempValue)
