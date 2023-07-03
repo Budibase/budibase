@@ -2,13 +2,8 @@
   import { getContext } from "svelte"
   import { GutterWidth } from "../lib/constants"
 
-  const {
-    resize,
-    renderedColumns,
-    stickyColumn,
-    isReordering,
-    scrollLeft,
-  } = getContext("grid")
+  const { resize, renderedColumns, stickyColumn, isReordering, scrollLeft } =
+    getContext("grid")
 
   $: offset = GutterWidth + ($stickyColumn?.width || 0)
   $: activeColumn = $resize.column
