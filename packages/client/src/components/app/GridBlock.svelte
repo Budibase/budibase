@@ -23,10 +23,13 @@
 
   const getSchemaOverrides = columns => {
     let overrides = {}
+    let order = 0
     columns?.forEach(column => {
       overrides[column.name] = {
         displayName: column.displayName || column.name,
+        order: order,
       }
+      order += 1
     })
     return overrides
   }
