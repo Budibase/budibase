@@ -105,12 +105,7 @@ export async function syncUsersToAllApps(userIds: string[]) {
       promises.push(syncUsersToApp(appId, finalUsers, groups))
     }
   }
-  const resp = await Promise.allSettled(promises)
-  const failed = resp.filter(promise => promise.status === "rejected")
-  if (failed.length > 0) {
-    const reasons = failed.map(fail => (fail as PromiseRejectedResult).reason)
-    logging.logAlert("Failed to sync users to apps", reasons)
-  }
+  return await Promise.allSettled(promises)
 }
 
 export async function syncApp(
