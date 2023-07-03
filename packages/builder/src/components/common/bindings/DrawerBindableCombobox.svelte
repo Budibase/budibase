@@ -68,6 +68,7 @@
     on:blur={() => dispatch("blur")}
     {placeholder}
     {error}
+    options={allOptions}
   />
   {#if !disabled}
     <div class="icon" on:click={bindingDrawer.show}>
