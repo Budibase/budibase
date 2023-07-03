@@ -2,29 +2,17 @@
   import { store, selectedScreen } from "builderStore"
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
-  import { Layout, Button, Detail, notifications } from "@budibase/bbui"
-  import Logo from "assets/bb-space-man.svg"
-  import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
-  import { Roles } from "constants/backend"
+  import { Body } from "@budibase/bbui"
+  import CreationPage from "components/common/CreationPage.svelte"
+  import blankImage from "./blank.png"
+  import tableImage from "./table.png"
+  import CreateScreenModal from "./_components/CreateScreenModal.svelte"
 
   let loaded = false
-
-  const createFirstScreen = async () => {
-    let screen = createFromScratchScreen.create()
-    screen.routing.route = "/home"
-    screen.routing.roldId = Roles.BASIC
-    screen.routing.homeScreen = true
-    try {
-      const savedScreen = await store.actions.screens.save(screen)
-      notifications.success("Screen created successfully")
-      $redirect(`./${savedScreen._id}`)
-    } catch (err) {
-      console.error("Could not create screen", err)
-      notifications.error("Error creating screen")
-    }
-  }
+  let createScreenModal
 
   onMount(() => {
+    loaded = true
     if ($selectedScreen) {
       $redirect(`./${$selectedScreen._id}`)
     } else if ($store.screens?.length) {
@@ -36,32 +24,84 @@
 </script>
 
 {#if loaded}
-  <div class="centered">
-    <Layout gap="S" justifyItems="center">
-      <img class="img-size" alt="logo" src={Logo} />
-      <div class="new-screen-text">
-        <Detail size="L">LET’S BRING THIS APP TO LIFE</Detail>
+  <CreationPage showClose={false} heading="Create your first screen">
+    <div class="subHeading">
+      <Body size="L">Start from scratch or create screens from your data</Body>
+    </div>
+
+    <div class="cards">
+      <div class="card" on:click={() => createScreenModal.show("blank")}>
+        <div class="image">
+          <img alt="" src={blankImage} />
+        </div>
+        <div class="text">
+          <Body size="S">Blank screen</Body>
+          <Body size="XS">Add an empty blank screen</Body>
+        </div>
       </div>
-      <Button on:click={createFirstScreen} size="M" cta icon="Add">
-        Create first screen
-      </Button>
-    </Layout>
-  </div>
+
+      <div class="card" on:click={() => createScreenModal.show("table")}>
+        <div class="image">
+          <img alt="" src={tableImage} />
+        </div>
+        <div class="text">
+          <Body size="S">Table</Body>
+          <Body size="XS">View, edit and delete rows on a table</Body>
+        </div>
+      </div>
+    </div>
+  </CreationPage>
 {/if}
 
+<CreateScreenModal bind:this={createScreenModal} />
+
 <style>
-  .centered {
-    width: 100%;
-    height: 100%;
-    display: grid;
-    place-items: center;
-  }
-  .new-screen-text {
-    width: 150px;
+  .subHeading :global(p) {
     text-align: center;
-    font-weight: 600;
+    margin-top: 12px;
+    margin-bottom: 24px;
+    color: var(--grey-6);
   }
-  .img-size {
-    width: 170px;
+
+  .cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .card {
+    margin: 12px;
+    max-width: 235px;
+    transition: filter 150ms;
+  }
+
+  .card:hover {
+    filter: brightness(1.1);
+    cursor: pointer;
+  }
+
+  .image {
+    border-radius: 4px 4px 0 0;
+    width: 100%;
+    max-height: 127px;
+    overflow: hidden;
+  }
+
+  .image img {
+    width: 100%;
+  }
+
+  .text {
+    border: 1px solid var(--grey-4);
+    border-radius: 0 0 4px 4px;
+    padding: 8px 16px 13px 16px;
+  }
+
+  .text :global(p:nth-child(1)) {
+    margin-bottom: 6px;
+  }
+
+  .text :global(p:nth-child(2)) {
+    color: var(--grey-6);
   }
 </style>

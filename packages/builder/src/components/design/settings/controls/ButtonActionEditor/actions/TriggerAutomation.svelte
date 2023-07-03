@@ -145,12 +145,6 @@
     padding-bottom: 20px;
   }
 
-  .params {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 25px;
-  }
-
   .synchronous-info {
     display: flex;
     gap: var(--spacing-s);
