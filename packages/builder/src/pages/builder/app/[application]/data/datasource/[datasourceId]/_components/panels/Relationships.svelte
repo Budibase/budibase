@@ -25,11 +25,12 @@
       Object.values(schema).forEach(column => {
         if (column.type !== "link") return
 
-        relatedColumns[column._id] ??= {}
-        relatedColumns[column._id].through =
-          relatedColumns[column._id].through || column.through
+        const relationshipId = column._id
+        relatedColumns[relationshipId] ??= {}
+        relatedColumns[relationshipId].through =
+          relatedColumns[relationshipId].through || column.through
 
-        relatedColumns[column._id][column.main ? "from" : "to"] = {
+        relatedColumns[relationshipId][column.main ? "from" : "to"] = {
           ...column,
           tableName,
         }
