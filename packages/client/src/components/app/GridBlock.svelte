@@ -26,6 +26,7 @@
     columns?.forEach(column => {
       overrides[column.name] = {
         displayName: column.displayName || column.name,
+        visible: true,
       }
     })
     return overrides
