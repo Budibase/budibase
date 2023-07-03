@@ -19,25 +19,27 @@
   $: relationships = getRelationships(tables)
 
   function getRelationships(tables) {
-    const relatedColumns = {}
+    const relatedColumns = []
 
-    tables.forEach(({ name: tableName, schema }) => {
+    tables.forEach(({ name: tableName, schema, sourceId }) => {
       Object.values(schema).forEach(column => {
-        if (column.type !== "link") return
+        if (column.type !== "link" || !column.main) return
 
-        const relationshipId = column._id
-        relatedColumns[relationshipId] ??= {}
-        relatedColumns[relationshipId].through =
-          relatedColumns[relationshipId].through || column.through
+        const to = tables.find(
+          t => column.tableId === `${t.sourceId}__${t.name}`
+        )
 
-        relatedColumns[relationshipId][column.main ? "from" : "to"] = {
-          ...column,
-          tableName,
-        }
+        relatedColumns.push({
+          from: {
+            ...column,
+            tableName,
+          },
+          to: { ...to, tableName },
+        })
       })
     })
 
-    return Object.values(relatedColumns).map(({ from, to, through }) => {
+    return relatedColumns.map(({ from, to, through }) => {
       return {
         tables: `${from.tableName} ${through ? "↔" : "→"} ${to.tableName}`,
         columns: `${from.name} to ${to.name}`,
