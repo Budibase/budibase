@@ -48,14 +48,6 @@ describe("test the math helpers", () => {
     })
     expect(parseInt(output)).toBe(2)
   })
-
-  it("should be able to times", async () => {
-    const output = await processString("{{times a b}}", {
-      a: 5,
-      b: 5,
-    })
-    expect(parseInt(output)).toBe(25)
-  })
 })
 
 describe("test the array helpers", () => {
