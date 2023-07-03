@@ -1,12 +1,5 @@
 import env from "../../../environment"
-import {
-  db as dbCore,
-  context,
-  docUpdates,
-  constants,
-  logging,
-  roles,
-} from "@budibase/backend-core"
+import { db as dbCore, context, logging, roles } from "@budibase/backend-core"
 import { User, ContextUser, UserGroup } from "@budibase/types"
 import { sdk as proSdk } from "@budibase/pro"
 import sdk from "../../"
@@ -105,7 +98,14 @@ export async function syncUsersToAllApps(userIds: string[]) {
       promises.push(syncUsersToApp(appId, finalUsers, groups))
     }
   }
-  return await Promise.allSettled(promises)
+  const resp = await Promise.allSettled(promises)
+  const failed = resp.filter(promise => promise.status === "rejected")
+  const reasons = failed
+    .map(fail => (fail as PromiseRejectedResult).reason)
+    .filter(reason => !dbCore.is409Error(reason))
+  if (reasons.length > 0) {
+    logging.logWarn("Failed to sync users to apps", reasons)
+  }
 }
 
 export async function syncApp(
