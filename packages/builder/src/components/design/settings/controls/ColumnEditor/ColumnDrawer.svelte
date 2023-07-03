@@ -111,7 +111,7 @@
             {#each columns as column (column.id)}
               <div class="column" animate:flip={{ duration: flipDurationMs }}>
                 <div
-                  hide={!allowReorder || null}
+                  class:hide={!allowReorder}
                   class="handle"
                   aria-label="drag-handle"
                   style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
@@ -195,7 +195,7 @@
     display: grid;
     place-items: center;
   }
-  .handle[hide] {
+  .handle.hide {
     visibility: hidden;
   }
   .wide {
