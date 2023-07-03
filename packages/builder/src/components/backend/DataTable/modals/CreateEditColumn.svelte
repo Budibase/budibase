@@ -186,7 +186,10 @@
         saveColumn.type === LINK_TYPE &&
         saveColumn.relationshipType === RelationshipTypes.MANY_TO_MANY
       ) {
-        dispatch("updatetables")
+        // Fetching the new tables
+        tables.fetch()
+        // Fetching the new relationships
+        datasources.fetch()
       }
       if (originalName) {
         notifications.success("Column updated successfully")
