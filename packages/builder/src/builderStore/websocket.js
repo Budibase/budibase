@@ -31,7 +31,7 @@ export const createBuilderWebsocket = appId => {
   })
   socket.onOther(BuilderSocketEvent.LockTransfer, ({ userId }) => {
     if (userId === get(auth)?.user?._id) {
-      notifications.success("You can now edit screens and automations")
+      notifications.success("You can now edit automations")
       store.update(state => ({
         ...state,
         hasLock: true,
@@ -39,14 +39,17 @@ export const createBuilderWebsocket = appId => {
     }
   })
 
-  // Table events
+  // Data section events
   socket.onOther(BuilderSocketEvent.TableChange, ({ id, table }) => {
     tables.replaceTable(id, table)
   })
-
-  // Datasource events
   socket.onOther(BuilderSocketEvent.DatasourceChange, ({ id, datasource }) => {
     datasources.replaceDatasource(id, datasource)
+  })
+
+  // Design section events
+  socket.onOther(BuilderSocketEvent.ScreenChange, ({ id, screen }) => {
+    store.actions.screens.replace(id, screen)
   })
 
   return socket
