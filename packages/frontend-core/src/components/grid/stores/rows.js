@@ -246,6 +246,14 @@ export const deriveStores = context => {
       }
     } else {
       // Some other error - just update the current cell
+      if (get(focusedCellId)) {
+        validation.actions.setError(
+          get(focusedCellId),
+          error?.message || "Error"
+        )
+      } else {
+        get(notifications).error(error?.message || "An unknown error occurred")
+      }
       validation.actions.setError(get(focusedCellId), error?.message || "Error")
     }
   }
