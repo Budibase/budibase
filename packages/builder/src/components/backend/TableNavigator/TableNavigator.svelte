@@ -10,17 +10,13 @@
     a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
 
   export let sourceId
+  export let selectTable
 
   $: sortedTables = $tables.list
-    .filter(table => table.sourceId === sourceId)
+    .filter(
+      table => table.sourceId === sourceId && table._id !== TableNames.USERS
+    )
     .sort(alphabetical)
-
-  const selectTable = tableId => {
-    tables.select(tableId)
-    if (!$isActive("./table/:tableId")) {
-      $goto(`./table/${tableId}`)
-    }
-  }
 </script>
 
 {#if $database?._id}

@@ -4,11 +4,12 @@ import {
   QueryType,
   QueryJson,
   SqlQuery,
-  Table,
+  ExternalTable,
   TableSchema,
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
+  SourceName,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -21,7 +22,7 @@ import dayjs from "dayjs"
 import { NUMBER_REGEX } from "../utilities"
 import Sql from "./base/sql"
 import { MySQLColumn } from "./base/types"
-
+import { getReadableErrorMessage } from "./base/errorMapping"
 import mysql from "mysql2/promise"
 
 interface MySQLConfig extends mysql.ConnectionOptions {
@@ -39,6 +40,7 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     host: {
@@ -123,7 +125,7 @@ export function bindingTypeCoerce(bindings: any[]) {
 class MySQLIntegration extends Sql implements DatasourcePlus {
   private config: MySQLConfig
   private client?: mysql.Connection
-  public tables: Record<string, Table> = {}
+  public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
   constructor(config: MySQLConfig) {
@@ -174,7 +176,12 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       )
       response.connected = result?.checkRes == 2
     } catch (e: any) {
-      response.error = e.message as string
+      let readableMessage = getReadableErrorMessage(SourceName.MYSQL, e.errno)
+      if (readableMessage) {
+        response.error = readableMessage
+      } else {
+        response.error = e.message as string
+      }
     }
     return response
   }
@@ -213,6 +220,13 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       // Node MySQL is callback based, so we must wrap our call in a promise
       const response = await this.client!.query(query.sql, bindings)
       return response[0]
+    } catch (err: any) {
+      let readableMessage = getReadableErrorMessage(SourceName.MYSQL, err.errno)
+      if (readableMessage) {
+        throw new Error(readableMessage)
+      } else {
+        throw new Error(err.message as string)
+      }
     } finally {
       if (opts?.connect && this.client) {
         await this.disconnect()
@@ -220,8 +234,11 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     }
   }
 
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
-    const tables: { [key: string]: Table } = {}
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, ExternalTable>
+  ) {
+    const tables: { [key: string]: ExternalTable } = {}
     await this.connect()
 
     try {
@@ -259,6 +276,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         if (!tables[tableName]) {
           tables[tableName] = {
             _id: buildExternalTableId(datasourceId, tableName),
+            sourceId: datasourceId,
             primary: primaryKeys,
             name: tableName,
             schema,
@@ -322,6 +340,36 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       return await this.queryWithReturning(json, queryFn)
     } finally {
       await this.disconnect()
+    }
+  }
+
+  async getExternalSchema() {
+    try {
+      const [databaseResult] = await this.internalQuery({
+        sql: `SHOW CREATE DATABASE ${this.config.database}`,
+      })
+      let dumpContent = [databaseResult["Create Database"]]
+
+      const tablesResult = await this.internalQuery({
+        sql: `SHOW TABLES`,
+      })
+
+      for (const row of tablesResult) {
+        const tableName = row[`Tables_in_${this.config.database}`]
+
+        const createTableResults = await this.internalQuery({
+          sql: `SHOW CREATE TABLE \`${tableName}\``,
+        })
+
+        const createTableStatement = createTableResults[0]["Create Table"]
+
+        dumpContent.push(createTableStatement)
+      }
+
+      const schema = dumpContent.join("\n")
+      return schema
+    } finally {
+      this.disconnect()
     }
   }
 }

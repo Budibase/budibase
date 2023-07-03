@@ -1,6 +1,6 @@
 <script>
   import { notifications } from "@budibase/bbui"
-  import { apps, templates, licensing, groups } from "stores/portal"
+  import { admin, apps, templates, licensing, groups } from "stores/portal"
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
 
@@ -9,14 +9,18 @@
 
   onMount(async () => {
     try {
-      // Always load latest
-      await Promise.all([
-        licensing.init(),
-        templates.load(),
-        groups.actions.init(),
-      ])
+      const promises = [licensing.init()]
 
-      if ($templates?.length === 0) {
+      if (!$admin.offlineMode) {
+        promises.push(templates.load())
+      }
+
+      promises.push(groups.actions.init())
+
+      // Always load latest
+      await Promise.all(promises)
+
+      if (!$admin.offlineMode && $templates?.length === 0) {
         notifications.error("There was a problem loading quick start templates")
       }
 

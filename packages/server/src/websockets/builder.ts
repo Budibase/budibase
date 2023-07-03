@@ -18,13 +18,19 @@ export default class BuilderSocket extends BaseSocket {
     // Initial identification of selected app
     socket?.on(BuilderSocketEvent.SelectApp, async ({ appId }, callback) => {
       await this.joinRoom(socket, appId)
-
-      // Reply with all users in current room
       const sessions = await this.getRoomSessions(appId)
-      callback({ users: sessions })
 
-      // Track usage
-      await events.user.dataCollaboration(sessions.length)
+      // Track collaboration usage by unique users
+      let userIdMap: any = {}
+      sessions?.forEach(session => {
+        if (session._id) {
+          userIdMap[session._id] = true
+        }
+      })
+      await events.user.dataCollaboration(Object.keys(userIdMap).length)
+
+      // Reply with all current sessions
+      callback({ users: sessions })
     })
   }
 

@@ -3,12 +3,13 @@
   import { ActionButton, Popover, Toggle, Icon } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
 
-  const { columns, stickyColumn, compact } = getContext("grid")
+  const { columns, stickyColumn } = getContext("grid")
 
   let open = false
   let anchor
 
   $: anyHidden = $columns.some(col => !col.visible)
+  $: text = getText($columns)
 
   const toggleVisibility = (column, visible) => {
     columns.update(state => {
@@ -38,6 +39,11 @@
     })
     columns.actions.saveChanges()
   }
+
+  const getText = columns => {
+    const hidden = columns.filter(col => !col.visible).length
+    return hidden ? `Hide columns (${hidden})` : "Hide columns"
+  }
 </script>
 
 <div bind:this={anchor}>
@@ -48,13 +54,12 @@
     on:click={() => (open = !open)}
     selected={open || anyHidden}
     disabled={!$columns.length}
-    tooltip={$compact ? "Columns" : ""}
   >
-    {$compact ? "" : "Columns"}
+    {text}
   </ActionButton>
 </div>
 
-<Popover bind:open {anchor} align={$compact ? "right" : "left"}>
+<Popover bind:open {anchor} align="left">
   <div class="content">
     <div class="columns">
       {#if $stickyColumn}

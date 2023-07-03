@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { ActionButton, Popover, Select } from "@budibase/bbui"
 
-  const { sort, columns, stickyColumn, compact } = getContext("grid")
+  const { sort, columns, stickyColumn } = getContext("grid")
 
   let open = false
   let anchor
@@ -90,13 +90,12 @@
     on:click={() => (open = !open)}
     selected={open}
     disabled={!columnOptions.length}
-    tooltip={$compact ? "Sort" : ""}
   >
-    {$compact ? "" : "Sort"}
+    Sort
   </ActionButton>
 </div>
 
-<Popover bind:open {anchor} align={$compact ? "right" : "left"}>
+<Popover bind:open {anchor} align="left">
   <div class="content">
     <Select
       placeholder={null}

@@ -16,6 +16,7 @@
     focusedRow,
     columnHorizontalInversionIndex,
     contentLines,
+    isDragging,
   } = getContext("grid")
 
   $: rowSelected = !!$selectedRows[row._id]
@@ -27,8 +28,8 @@
 <div
   class="row"
   on:focus
-  on:mouseenter={() => ($hoveredRowId = row._id)}
-  on:mouseleave={() => ($hoveredRowId = null)}
+  on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
+  on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
 >
   {#each $renderedColumns as column, columnIdx (column.name)}
     {@const cellId = `${row._id}-${column.name}`}

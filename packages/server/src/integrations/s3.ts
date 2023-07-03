@@ -29,24 +29,24 @@ const SCHEMA: Integration = {
   },
   datasource: {
     region: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: false,
       default: "us-east-1",
     },
     accessKeyId: {
-      type: "password",
+      type: DatasourceFieldType.PASSWORD,
       required: true,
     },
     secretAccessKey: {
-      type: "password",
+      type: DatasourceFieldType.PASSWORD,
       required: true,
     },
     endpoint: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: false,
     },
     signatureVersion: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: false,
       default: "v4",
     },

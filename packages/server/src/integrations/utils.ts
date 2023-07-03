@@ -1,6 +1,7 @@
 import { SourceName, SqlQuery, Datasource, Table } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
 import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
+import { helpers } from "@budibase/shared-core"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -178,18 +179,7 @@ export function getSqlQuery(query: SqlQuery | string): SqlQuery {
   }
 }
 
-export function isSQL(datasource: Datasource): boolean {
-  if (!datasource || !datasource.source) {
-    return false
-  }
-  const SQL = [
-    SourceName.POSTGRES,
-    SourceName.SQL_SERVER,
-    SourceName.MYSQL,
-    SourceName.ORACLE,
-  ]
-  return SQL.indexOf(datasource.source) !== -1
-}
+export const isSQL = helpers.isSQL
 
 export function isIsoDateString(str: string) {
   if (!/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(str)) {

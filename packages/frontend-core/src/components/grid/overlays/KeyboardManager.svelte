@@ -15,6 +15,7 @@
     selectedRows,
     config,
     menu,
+    gridFocused,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -24,6 +25,11 @@
 
   // Global key listener which intercepts all key events
   const handleKeyDown = e => {
+    // Ignore completely if the grid is not focused
+    if (!$gridFocused) {
+      return
+    }
+
     // Avoid processing events sourced from certain origins
     if (e.target?.closest) {
       for (let selector of ignoredOriginSelectors) {

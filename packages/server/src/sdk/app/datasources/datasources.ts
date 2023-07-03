@@ -36,11 +36,14 @@ export function checkDatasourceTypes(schema: Integration, config: any) {
 async function enrichDatasourceWithValues(datasource: Datasource) {
   const cloned = cloneDeep(datasource)
   const env = await getEnvironmentVariables()
+  //Do not process entities, as we do not want to process formulas
+  const { entities, ...clonedWithoutEntities } = cloned
   const processed = processObjectSync(
-    cloned,
+    clonedWithoutEntities,
     { env },
     { onlyFound: true }
   ) as Datasource
+  processed.entities = entities
   const definition = await getDefinition(processed.source)
   processed.config = checkDatasourceTypes(definition!, processed.config)
   return {
