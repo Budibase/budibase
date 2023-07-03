@@ -3,7 +3,13 @@ import { BaseSocket } from "./websocket"
 import { permissions, events } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
-import { Datasource, Table, SocketSession, ContextUser } from "@budibase/types"
+import {
+  Datasource,
+  Table,
+  SocketSession,
+  ContextUser,
+  Screen,
+} from "@budibase/types"
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
@@ -99,6 +105,20 @@ export default class BuilderSocket extends BaseSocket {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.DatasourceChange, {
       id,
       datasource: null,
+    })
+  }
+
+  emitScreenUpdate(ctx: any, screen: Screen) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.ScreenChange, {
+      id: screen._id,
+      screen,
+    })
+  }
+
+  emitScreenDeletion(ctx: any, id: string) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.ScreenChange, {
+      id,
+      screen: null,
     })
   }
 }

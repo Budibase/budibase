@@ -151,31 +151,19 @@
             on:click={() => $goto("../../portal/apps")}
           />
         </span>
-        {#if $store.hasLock}
-          <Tabs {selected} size="M">
-            {#each $layout.children as { path, title }}
-              <TourWrap tourStepKey={`builder-${title}-section`}>
-                <Tab
-                  quiet
-                  selected={$isActive(path)}
-                  on:click={topItemNavigate(path)}
-                  title={capitalise(title)}
-                  id={`builder-${title}-tab`}
-                />
-              </TourWrap>
-            {/each}
-          </Tabs>
-        {:else}
-          <div class="secondary-editor">
-            <Icon name="LockClosed" />
-            <div
-              class="secondary-editor-body"
-              title="Another user is currently editing your screens and automations"
-            >
-              Another user is currently editing your screens and automations
-            </div>
-          </div>
-        {/if}
+        <Tabs {selected} size="M">
+          {#each $layout.children as { path, title }}
+            <TourWrap tourStepKey={`builder-${title}-section`}>
+              <Tab
+                quiet
+                selected={$isActive(path)}
+                on:click={topItemNavigate(path)}
+                title={capitalise(title)}
+                id={`builder-${title}-tab`}
+              />
+            </TourWrap>
+          {/each}
+        </Tabs>
       </div>
       <div class="topcenternav">
         <Heading size="XS">{$store.name}</Heading>

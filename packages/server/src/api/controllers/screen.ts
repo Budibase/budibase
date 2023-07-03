@@ -8,6 +8,7 @@ import {
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
 import { Plugin, ScreenProps, BBContext } from "@budibase/types"
+import { builderSocket } from "../../websockets"
 
 export async function fetch(ctx: BBContext) {
   const db = context.getAppDB()
@@ -87,13 +88,17 @@ export async function save(ctx: BBContext) {
   if (eventFn) {
     await eventFn(screen)
   }
-  ctx.message = `Screen ${screen.name} saved.`
-  ctx.body = {
+  const savedScreen = {
     ...screen,
     _id: response.id,
     _rev: response.rev,
+  }
+  ctx.message = `Screen ${screen.name} saved.`
+  ctx.body = {
+    ...savedScreen,
     pluginAdded,
   }
+  builderSocket?.emitScreenUpdate(ctx, savedScreen)
 }
 
 export async function destroy(ctx: BBContext) {
@@ -108,6 +113,7 @@ export async function destroy(ctx: BBContext) {
     message: "Screen deleted successfully",
   }
   ctx.status = 200
+  builderSocket?.emitScreenDeletion(ctx, id)
 }
 
 function findPlugins(component: ScreenProps, foundPlugins: string[]) {
