@@ -9,6 +9,8 @@ import {
 import {
   Automation,
   AutomationActionStepId,
+  AutomationResults,
+  AutomationStatus,
   AutomationStep,
   AutomationStepType,
   AutomationTrigger,
@@ -241,6 +243,23 @@ export function collectAutomation(tableId?: string): Automation {
   return automation as Automation
 }
 
+export function basicAutomationResults(
+  automationId: string
+): AutomationResults {
+  return {
+    automationId,
+    status: AutomationStatus.SUCCESS,
+    trigger: "trigger",
+    steps: [
+      {
+        stepId: AutomationActionStepId.SERVER_LOG,
+        inputs: {},
+        outputs: {},
+      },
+    ],
+  }
+}
+
 export function basicRow(tableId: string) {
   return {
     name: "Test Contact",
@@ -263,9 +282,10 @@ export function basicLinkedRow(
 
 export function basicRole() {
   return {
-    name: "NewRole",
+    name: `NewRole_${utils.newid()}`,
     inherits: roles.BUILTIN_ROLE_IDS.BASIC,
     permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+    version: "name",
   }
 }
 

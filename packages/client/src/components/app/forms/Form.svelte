@@ -2,6 +2,7 @@
   import { getContext } from "svelte"
   import InnerForm from "./InnerForm.svelte"
   import { Helpers } from "@budibase/bbui"
+  import { writable } from "svelte/store"
 
   export let dataSource
   export let theme
@@ -23,6 +24,7 @@
   let loaded = false
   let schema
   let table
+  let currentStep = writable(1)
 
   $: fetchSchema(dataSource)
   $: schemaKey = generateSchemaKey(schema)
@@ -92,6 +94,7 @@
       {initialValues}
       {disableValidation}
       {editAutoColumns}
+      {currentStep}
     >
       <slot />
     </InnerForm>

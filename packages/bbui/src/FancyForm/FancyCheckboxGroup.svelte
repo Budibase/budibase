@@ -8,11 +8,10 @@
   export let showSelectAll = true
   export let selectAllText = "Select all"
 
-  let selectedBooleans = reset()
+  let selectedBooleans = options.map(x => selected.indexOf(x) > -1)
   const dispatch = createEventDispatcher()
 
   $: updateSelected(selectedBooleans)
-  $: dispatch("change", selected)
   $: allSelected = selected?.length === options.length
   $: noneSelected = !selected?.length
 
@@ -28,6 +27,7 @@
       }
     }
     selected = array
+    dispatch("change", selected)
   }
 
   function toggleSelectAll() {
@@ -36,6 +36,7 @@
     } else {
       selectedBooleans = reset()
     }
+    dispatch("change", selected)
   }
 </script>
 

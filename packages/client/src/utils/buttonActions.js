@@ -153,6 +153,17 @@ const navigationHandler = action => {
   routeStore.actions.navigate(url, peek, externalNewTab)
 }
 
+const scrollHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ScrollTo,
+    {
+      field: action.parameters.field,
+    }
+  )
+}
+
 const queryExecutionHandler = async action => {
   const { datasourceId, queryId, queryParams, notificationOverride } =
     action.parameters
@@ -369,6 +380,7 @@ const handlerMap = {
   ["Duplicate Row"]: duplicateRowHandler,
   ["Delete Row"]: deleteRowHandler,
   ["Navigate To"]: navigationHandler,
+  ["Scroll To Field"]: scrollHandler,
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,

@@ -5,7 +5,7 @@ import {
   QueryJson,
   QueryType,
   SqlQuery,
-  Table,
+  ExternalTable,
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
@@ -108,7 +108,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
   private readonly config: OracleConfig
   private index: number = 1
 
-  public tables: Record<string, Table> = {}
+  public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
   private readonly COLUMNS_SQL = `
@@ -262,13 +262,16 @@ class OracleIntegration extends Sql implements DatasourcePlus {
    * @param {*} datasourceId - datasourceId to fetch
    * @param entities - the tables that are to be built
    */
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, ExternalTable>
+  ) {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: this.COLUMNS_SQL,
     })
     const oracleTables = this.mapColumns(columnsResponse)
 
-    const tables: { [key: string]: Table } = {}
+    const tables: { [key: string]: ExternalTable } = {}
 
     // iterate each table
     Object.values(oracleTables).forEach(oracleTable => {
@@ -279,6 +282,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           primary: [],
           name: oracleTable.name,
           schema: {},
+          sourceId: datasourceId,
         }
         tables[oracleTable.name] = table
       }

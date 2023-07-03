@@ -61,6 +61,9 @@ const INITIAL_FRONTEND_STATE = {
     showNotificationAction: false,
     sidePanel: false,
   },
+  features: {
+    componentValidation: false,
+  },
   errors: [],
   hasAppPackage: false,
   libraries: null,
@@ -117,10 +120,13 @@ export const getFrontendStore = () => {
     reset: () => {
       store.set({ ...INITIAL_FRONTEND_STATE })
       websocket?.disconnect()
+      websocket = null
     },
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath, hasLock } = pkg
-      websocket = createBuilderWebsocket(application.appId)
+      if (!websocket) {
+        websocket = createBuilderWebsocket(application.appId)
+      }
       await store.actions.components.refreshDefinitions(application.appId)
 
       // Reset store state
@@ -145,6 +151,11 @@ export const getFrontendStore = () => {
         navigation: application.navigation || {},
         usedPlugins: application.usedPlugins || [],
         hasLock,
+        features: {
+          ...INITIAL_FRONTEND_STATE.features,
+          ...application.features,
+        },
+        icon: application.icon || {},
         initialised: true,
       }))
       screenHistoryStore.reset()
@@ -225,6 +236,7 @@ export const getFrontendStore = () => {
           legalDirectChildren = []
         ) => {
           const type = component._component
+
           if (illegalChildren.includes(type)) {
             return type
           }
@@ -238,10 +250,13 @@ export const getFrontendStore = () => {
             return
           }
 
+          if (type === "@budibase/standard-components/sidepanel") {
+            illegalChildren = []
+          }
+
           const definition = store.actions.components.getDefinition(
             component._component
           )
-
           // Reset whitelist for direct children
           legalDirectChildren = []
           if (definition?.legalDirectChildren?.length) {
@@ -280,9 +295,12 @@ export const getFrontendStore = () => {
         }
       },
       save: async screen => {
-        // Validate screen structure
-        // Temporarily disabled to accommodate migration issues
-        // store.actions.screens.validate(screen)
+        const state = get(store)
+
+        // Validate screen structure if the app supports it
+        if (state.features?.componentValidation) {
+          store.actions.screens.validate(screen)
+        }
 
         // Check screen definition for any component settings which need updated
         store.actions.screens.enrichEmptySettings(screen)
@@ -293,7 +311,6 @@ export const getFrontendStore = () => {
         const routesResponse = await API.fetchAppRoutes()
 
         // If plugins changed we need to fetch the latest app metadata
-        const state = get(store)
         let usedPlugins = state.usedPlugins
         if (savedScreen.pluginAdded) {
           const { application } = await API.fetchAppPackage(state.appId)
