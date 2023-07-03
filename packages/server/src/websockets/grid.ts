@@ -69,6 +69,13 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
+  async updateUser(socket: Socket, patch: Object) {
+    await super.updateUser(socket, {
+      ...socket.data.gridMetadata,
+      ...patch,
+    })
+  }
+
   emitRowUpdate(ctx: any, row: Row) {
     const tableId = getTableId(ctx)
     const room = `${ctx.appId}-${tableId}`

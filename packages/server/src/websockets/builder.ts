@@ -78,6 +78,13 @@ export default class BuilderSocket extends BaseSocket {
     }
   }
 
+  async updateUser(socket: Socket, patch: Object) {
+    await super.updateUser(socket, {
+      ...socket.data.builderMetadata,
+      ...patch,
+    })
+  }
+
   emitTableUpdate(ctx: any, table: Table) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.TableChange, {
       id: table._id,
