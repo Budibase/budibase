@@ -245,8 +245,7 @@ export const deriveStores = context => {
         focusedCellId.set(`${rowId}-${erroredColumns[0]}`)
       }
     } else {
-      // Some other error - just update the current cell
-      validation.actions.setError(get(focusedCellId), error?.message || "Error")
+      get(notifications).error(error?.message || "An unknown error occurred")
     }
   }
 
