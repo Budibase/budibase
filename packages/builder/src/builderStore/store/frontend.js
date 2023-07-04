@@ -38,6 +38,7 @@ import {
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { getComponentFieldOptions } from "helpers/formFields"
 import { createBuilderWebsocket } from "builderStore/websocket"
+import { BuilderSocketEvent } from "@budibase/shared-core"
 
 const INITIAL_FRONTEND_STATE = {
   initialised: false,
@@ -1391,6 +1392,13 @@ export const getFrontendStore = () => {
       stop: () => {
         store.actions.preview.sendEvent("dragging-new-component", {
           dragging: false,
+        })
+      },
+    },
+    websocket: {
+      selectResource: id => {
+        websocket.emit(BuilderSocketEvent.SelectResource, {
+          resourceId: id,
         })
       },
     },

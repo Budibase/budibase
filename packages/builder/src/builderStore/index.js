@@ -118,3 +118,16 @@ export const selectedAutomation = derived(automationStore, $automationStore => {
     x => x._id === $automationStore.selectedAutomationId
   )
 })
+
+// Derive map of resource IDs to other users.
+// We only ever care about a single user in each resource, so if multiple users
+// share the same datasource we can just overwrite them.
+export const userSelectedResourceMap = derived(userStore, $userStore => {
+  let map = {}
+  $userStore.forEach(user => {
+    if (user.selectedResourceId) {
+      map[user.selectedResourceId] = user
+    }
+  })
+  return map
+})
