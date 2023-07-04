@@ -5274,7 +5274,7 @@
       {
         "type": "select",
         "label": "Row height",
-        "key": "initialRowHeight",
+        "key": "fixedRowHeight",
         "placeholder": "Default",
         "options": [
           {

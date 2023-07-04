@@ -12,7 +12,7 @@
   export let initialFilter = null
   export let initialSortColumn = null
   export let initialSortOrder = null
-  export let initialRowHeight = null
+  export let fixedRowHeight = null
   export let columns = null
 
   const component = getContext("component")
@@ -47,7 +47,7 @@
     {initialFilter}
     {initialSortColumn}
     {initialSortOrder}
-    {initialRowHeight}
+    {fixedRowHeight}
     {columnWhitelist}
     {schemaOverrides}
     showControls={false}

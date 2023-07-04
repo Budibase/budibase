@@ -8,7 +8,8 @@
     SmallRowHeight,
   } from "../lib/constants"
 
-  const { stickyColumn, columns, rowHeight, table } = getContext("grid")
+  const { stickyColumn, columns, rowHeight, table, fixedRowHeight } =
+    getContext("grid")
 
   // Some constants for column width options
   const smallColSize = 120
@@ -86,6 +87,7 @@
       <div class="options">
         {#each rowSizeOptions as option}
           <ActionButton
+            disabled={$fixedRowHeight}
             quiet
             selected={$rowHeight === option.size}
             on:click={() => changeRowHeight(option.size)}
@@ -118,14 +120,14 @@
 <style>
   .content {
     padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
   .size {
     display: flex;
     flex-direction: column;
     gap: 8px;
-  }
-  .size:first-child {
-    margin-bottom: 16px;
   }
   .options {
     display: flex;
