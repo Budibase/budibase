@@ -69,8 +69,8 @@
       </svg>
     </div>
   {/if}
-  {#if showTooltip && tooltip}
-    <div class="tooltip">
+  {#if tooltip}
+    <div class="tooltip" class:visible={showTooltip}>
       <Tooltip textWrapping={true} direction={"bottom"} text={tooltip} />
     </div>
   {/if}
@@ -98,7 +98,13 @@
     text-align: center;
     transform: translateX(-50%);
     left: 50%;
-    top: calc(100% - 3px);
+    top: 100%;
+    opacity: 0;
+    transition: opacity 130ms ease-out;
+    pointer-events: none;
+  }
+  .tooltip.visible {
+    opacity: 1;
   }
   .tooltip-icon {
     padding-left: var(--spacing-m);
