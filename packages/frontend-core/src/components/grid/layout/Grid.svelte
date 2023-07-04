@@ -43,7 +43,7 @@
   export let initialFilter = null
   export let initialSortColumn = null
   export let initialSortOrder = null
-  export let initialRowHeight = null
+  export let fixedRowHeight = null
   export let notifySuccess = null
   export let notifyError = null
 
@@ -90,7 +90,7 @@
     initialFilter,
     initialSortColumn,
     initialSortOrder,
-    initialRowHeight,
+    fixedRowHeight,
     notifySuccess,
     notifyError,
   })
