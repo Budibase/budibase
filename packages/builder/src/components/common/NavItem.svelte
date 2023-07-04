@@ -133,6 +133,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
+    position: relative;
   }
   .nav-item.scrollable {
     flex-direction: column;
@@ -172,10 +173,12 @@
     height: 28px;
     border: 2px solid var(--selected-by-color);
     left: 0;
+    top: 0;
     border-radius: 2px;
   }
   .selected-by-label {
     position: absolute;
+    top: 0;
     right: 0;
     background: var(--selected-by-color);
     padding: 2px 4px;

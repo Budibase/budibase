@@ -216,7 +216,7 @@
 
 <style>
   .hierarchy-items-container {
-    margin: 0 calc(-1 * var(--spacing-xl));
+    margin: 0 calc(-1 * var(--spacing-l));
   }
   .datasource-icon {
     display: grid;
