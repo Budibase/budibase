@@ -13,6 +13,7 @@
   export let componentInstance
   export let value = []
   export let allowCellEditing = true
+  export let allowReorder = true
 
   const dispatch = createEventDispatcher()
 
@@ -85,6 +86,7 @@
     {options}
     {schema}
     {allowCellEditing}
+    {allowReorder}
   />
 </Drawer>
 

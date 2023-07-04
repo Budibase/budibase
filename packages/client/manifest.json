@@ -5248,7 +5248,7 @@
         "required": true
       },
       {
-        "type": "columns/basic",
+        "type": "columns/grid",
         "label": "Columns",
         "key": "columns",
         "dependsOn": "table"
@@ -5274,7 +5274,7 @@
       {
         "type": "select",
         "label": "Row height",
-        "key": "initialRowHeight",
+        "key": "fixedRowHeight",
         "placeholder": "Default",
         "options": [
           {

@@ -18,6 +18,7 @@
   export let options = []
   export let schema = {}
   export let allowCellEditing = true
+  export let allowReorder = true
 
   const flipDurationMs = 150
   let dragDisabled = true
@@ -110,6 +111,7 @@
             {#each columns as column (column.id)}
               <div class="column" animate:flip={{ duration: flipDurationMs }}>
                 <div
+                  class:hide={!allowReorder}
                   class="handle"
                   aria-label="drag-handle"
                   style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
@@ -192,6 +194,9 @@
   .handle {
     display: grid;
     place-items: center;
+  }
+  .handle.hide {
+    visibility: hidden;
   }
   .wide {
     grid-column: 2 / -1;
