@@ -5,6 +5,8 @@
   import { isActive, goto, redirect } from "@roxi/routify"
   import BetaButton from "./_components/BetaButton.svelte"
   import { datasources } from "stores/backend"
+  import { onDestroy } from "svelte"
+  import { store } from "builderStore"
 
   $: {
     // If we ever don't have any data other than the users table, prompt the
@@ -13,6 +15,10 @@
       $redirect("./new")
     }
   }
+
+  onDestroy(() => {
+    store.actions.websocket.selectResource(null)
+  })
 </script>
 
 <!-- routify:options index=1 -->

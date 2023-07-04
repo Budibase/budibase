@@ -13,7 +13,7 @@ import {
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
-import { BuilderSocketEvent } from "@budibase/shared-core"
+import { BuilderSocketEvent, GridSocketEvent } from "@budibase/shared-core"
 
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
@@ -37,6 +37,11 @@ export default class BuilderSocket extends BaseSocket {
 
       // Reply with all current sessions
       callback({ users: sessions })
+    })
+
+    // Handle users selecting a new cell
+    socket?.on(BuilderSocketEvent.SelectResource, ({ resourceId }) => {
+      this.updateUser(socket, { selectedResourceId: resourceId })
     })
   }
 

@@ -88,6 +88,7 @@ export enum BuilderSocketEvent {
   LockTransfer = "LockTransfer",
   ScreenChange = "ScreenChange",
   AppMetadataChange = "AppMetadataChange",
+  SelectResource = "SelectResource",
 }
 
 export const SocketSessionTTL = 60
