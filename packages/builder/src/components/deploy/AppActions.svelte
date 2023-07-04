@@ -14,13 +14,12 @@
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-
   import { processStringSync } from "@budibase/string-templates"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import analytics, { Events, EventSource } from "analytics"
   import { API } from "api"
   import { apps } from "stores/portal"
-  import { deploymentStore, store } from "builderStore"
+  import { deploymentStore, store, isOnlyUser } from "builderStore"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
@@ -141,7 +140,7 @@
 <div class="action-top-nav">
   <div class="action-buttons">
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    {#if updateAvailable}
+    {#if updateAvailable && $isOnlyUser}
       <div class="app-action-button version" on:click={versionModal.show}>
         <div class="app-action">
           <ActionButton quiet>
