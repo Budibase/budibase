@@ -11,6 +11,7 @@
   let layoutMap = {
     mainSidebar: 2,
     sidebarMain: 2,
+    oneColumn: 1,
     twoColumns: 2,
     threeColumns: 3,
   }
@@ -53,6 +54,9 @@
   }
   .sidebarMain {
     grid-template-columns: 1fr 3fr;
+  }
+  .oneColumn {
+    grid-template-columns: 1fr;
   }
   .twoColumns {
     grid-template-columns: 1fr 1fr;
