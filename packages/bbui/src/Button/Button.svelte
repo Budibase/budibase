@@ -52,8 +52,13 @@
   {#if $$slots}
     <span class="spectrum-Button-label"><slot /></span>
   {/if}
-  {#if !disabled && tooltip}
-    <div class="tooltip-icon">
+  {#if tooltip}
+    <div
+      class="tooltip-icon"
+      on:mouseover={() => (showTooltip = true)}
+      on:focus={() => (showTooltip = true)}
+      on:mouseleave={() => (showTooltip = false)}
+    >
       <svg
         class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
         focusable="false"
@@ -98,6 +103,8 @@
   .tooltip-icon {
     padding-left: var(--spacing-m);
     line-height: 0;
+    pointer-events: all !important;
+    z-index: 1;
   }
   .spectrum-Button--primary.new-styles {
     background: var(--spectrum-global-color-gray-800);
