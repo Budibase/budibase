@@ -1,7 +1,9 @@
 <script>
   import { getContext, setContext } from "svelte"
+  import Section from "../Section.svelte"
 
   export let labelPosition = "above"
+  export let type = "oneColumn"
 
   const { styleable } = getContext("sdk")
   const component = getContext("component")
@@ -13,7 +15,13 @@
     class="spectrum-Form"
     class:spectrum-Form--labelsAbove={labelPosition === "above"}
   >
-    <slot />
+    {#if labelPosition === "above" && type !== "oneColumn"}
+      <Section {type}>
+        <slot />
+      </Section>
+    {:else}
+      <slot />
+    {/if}
   </div>
 </div>
 
