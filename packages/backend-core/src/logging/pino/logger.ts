@@ -1,12 +1,17 @@
-import env from "../../environment"
 import pino, { LoggerOptions } from "pino"
+import path from "path"
+import fs from "fs"
+import * as rfs from "rotating-file-stream"
+
+import { IdentityType } from "@budibase/types"
+
+import env from "../../environment"
 import * as context from "../../context"
 import * as correlation from "../correlation"
-import { IdentityType } from "@budibase/types"
 import { LOG_CONTEXT } from "../index"
 
-import path from "path"
 import { budibaseTempDir } from "../../objectStore"
+import environment from "../../environment"
 
 // LOGGER
 
@@ -25,7 +30,8 @@ if (!env.DISABLE_PINO_LOGGER) {
     timestamp: () => `,"timestamp":"${new Date(Date.now()).toISOString()}"`,
   }
 
-  if (env.isDev()) {
+  let outFile: rfs.RotatingFileStream | undefined
+  if (!env.isDev()) {
     pinoOptions.transport = {
       target: "pino-pretty",
       options: {
@@ -33,15 +39,23 @@ if (!env.DISABLE_PINO_LOGGER) {
       },
     }
   } else {
-    pinoOptions.transport = {
-      target: "pino/file",
-      options: {
-        destination: path.join(budibaseTempDir(), "pino.logs"),
-      },
-    }
+    const fileName = path.join(
+      budibaseTempDir(),
+      "logs",
+      `${environment.SERVICE_NAME}.logs`
+    )
+    outFile = rfs.createStream(fileName, {
+      size: "10M",
+
+      teeToStdout: true,
+    })
+
+    outFile.on("rotation", () => {
+      fs.copyFileSync(fileName, `${fileName}.bak`)
+    })
   }
 
-  pinoInstance = pino(pinoOptions)
+  pinoInstance = outFile ? pino(pinoOptions, outFile) : pino(pinoOptions)
 
   // CONSOLE OVERRIDES
 

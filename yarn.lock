@@ -23197,6 +23197,11 @@ rollup@^3.18.0:
   optionalDependencies:
     fsevents "~2.3.2"
 
+rotating-file-stream@3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/rotating-file-stream/-/rotating-file-stream-3.1.0.tgz#6cf50e1671de82a396de6d31d39a6f2445f45fba"
+  integrity sha512-TkMF6cP1/QDcon9D71mjxHoflNuznNOrY5JJQfuxkKklZRmoow/lWBLNxXVjb6KcjAU8BDCV145buLgOx9Px1Q==
+
 rrweb-cssom@^0.6.0:
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/rrweb-cssom/-/rrweb-cssom-0.6.0.tgz#ed298055b97cbddcdeb278f904857629dec5e0e1"
