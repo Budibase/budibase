@@ -1,5 +1,5 @@
 <script>
-  import ScreenDetailsModal from "./ScreenDetailsModal.svelte"
+  import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import ScreenRoleModal from "./ScreenRoleModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
