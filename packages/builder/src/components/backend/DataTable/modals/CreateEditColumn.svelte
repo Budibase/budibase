@@ -182,6 +182,15 @@
         indexes,
       })
       dispatch("updatecolumns")
+      if (
+        saveColumn.type === LINK_TYPE &&
+        saveColumn.relationshipType === RelationshipTypes.MANY_TO_MANY
+      ) {
+        // Fetching the new tables
+        tables.fetch()
+        // Fetching the new relationships
+        datasources.fetch()
+      }
       if (originalName) {
         notifications.success("Column updated successfully")
       } else {
