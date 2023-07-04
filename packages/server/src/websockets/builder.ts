@@ -9,6 +9,7 @@ import {
   SocketSession,
   ContextUser,
   Screen,
+  App,
 } from "@budibase/types"
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
@@ -131,6 +132,26 @@ export default class BuilderSocket extends BaseSocket {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.ScreenChange, {
       id,
       screen: null,
+    })
+  }
+
+  emitAppMetadataUpdate(ctx: any, metadata: Partial<App>) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppMetadataChange, {
+      metadata,
+    })
+  }
+
+  emitAppPublish(ctx: any) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppPublishChange, {
+      published: true,
+      user: ctx.user,
+    })
+  }
+
+  emitAppUnpublish(ctx: any) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppPublishChange, {
+      published: false,
+      user: ctx.user,
     })
   }
 }

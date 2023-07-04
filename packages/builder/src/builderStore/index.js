@@ -3,6 +3,7 @@ import { getAutomationStore } from "./store/automation"
 import { getTemporalStore } from "./store/temporal"
 import { getThemeStore } from "./store/theme"
 import { getUserStore } from "./store/users"
+import { getDeploymentStore } from "./store/deployments"
 import { derived } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
@@ -14,6 +15,7 @@ export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
 export const temporalStore = getTemporalStore()
 export const userStore = getUserStore()
+export const deploymentStore = getDeploymentStore()
 
 // Setup history for screens
 export const screenHistoryStore = createHistoryStore({
@@ -130,4 +132,8 @@ export const userSelectedResourceMap = derived(userStore, $userStore => {
     }
   })
   return map
+})
+
+export const isOnlyUser = derived(userStore, $userStore => {
+  return $userStore.length === 1
 })
