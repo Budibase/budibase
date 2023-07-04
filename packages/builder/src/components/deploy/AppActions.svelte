@@ -253,7 +253,15 @@
                     <Link quiet on:click={unpublishApp}>Unpublish</Link>
                   </span>
                   <span class="revert-link">
-                    <Link quiet secondary on:click={revertApp}>Revert</Link>
+                    <Link
+                      disabled={!$isOnlyUser}
+                      quiet
+                      secondary
+                      on:click={revertApp}
+                      tooltip="Unavailable - another user is editing your app"
+                    >
+                      Revert
+                    </Link>
                   </span>
                 {:else}
                   <span class="status-text unpublished">Not published</span>

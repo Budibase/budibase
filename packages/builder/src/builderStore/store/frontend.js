@@ -1404,7 +1404,6 @@ export const getFrontendStore = () => {
     },
     metadata: {
       replace: metadata => {
-        console.log("NEW METADATA", metadata)
         store.update(state => ({
           ...state,
           ...metadata,
