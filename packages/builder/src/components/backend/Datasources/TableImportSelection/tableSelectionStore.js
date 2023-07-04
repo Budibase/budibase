@@ -10,7 +10,11 @@ export const createTableSelectionStore = (integration, datasource) => {
 
   datasources.getTableNames(datasource).then(tableNames => {
     tableNamesStore.set(tableNames)
-    selectedTableNamesStore.set(tableNames.filter(t => datasource.entities[t]))
+
+    selectedTableNamesStore.set(
+      tableNames.filter(tableName => datasource.entities[tableName])
+    )
+
     loadingStore.set(false)
   })
 
