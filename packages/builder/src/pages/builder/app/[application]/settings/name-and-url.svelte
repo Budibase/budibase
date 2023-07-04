@@ -63,7 +63,7 @@
       }}
       disabled={appDeployed}
       tooltip={appDeployed
-        ? "You must unpublish your app to make changes to these settings"
+        ? "You must unpublish your app to make changes"
         : null}
       icon={appDeployed ? "HelpOutline" : null}
     >

@@ -1,7 +1,12 @@
 <script>
-  import { store, automationStore, userStore } from "builderStore"
+  import {
+    store,
+    automationStore,
+    userStore,
+    deploymentStore,
+  } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { auth } from "stores/portal"
+  import { auth, apps } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
     Icon,
@@ -44,6 +49,8 @@
       await automationStore.actions.fetch()
       await roles.fetch()
       await flags.fetch()
+      await apps.load()
+      await deploymentStore.actions.load()
       loaded = true
       return pkg
     } catch (error) {
@@ -69,18 +76,13 @@
 
   // Event handler for the command palette
   const handleKeyDown = e => {
-    if (e.key === "k" && (e.ctrlKey || e.metaKey) && $store.hasLock) {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault()
       commandPaletteModal.toggle()
     }
   }
 
   const initTour = async () => {
-    // Skip tour if we don't have the lock
-    if (!$store.hasLock) {
-      return
-    }
-
     // Check if onboarding is enabled.
     if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
       if (!$auth.user?.onboardedAt) {
@@ -140,7 +142,7 @@
 {/if}
 
 <div class="root" class:blur={$store.showPreview}>
-  <div class="top-nav" class:has-lock={$store.hasLock}>
+  <div class="top-nav">
     {#if $store.initialised}
       <div class="topleftnav">
         <span class="back-to-apps">
@@ -169,7 +171,7 @@
         <Heading size="XS">{$store.name}</Heading>
       </div>
       <div class="toprightnav">
-        <span class:nav-lock={!$store.hasLock}>
+        <span>
           <UserAvatars users={$userStore} />
         </span>
         <AppActions {application} {loaded} />
@@ -234,10 +236,6 @@
     align-items: stretch;
     border-bottom: var(--border-light);
     z-index: 2;
-  }
-
-  .top-nav.has-lock {
-    padding-right: 0px;
   }
 
   .topcenternav {
