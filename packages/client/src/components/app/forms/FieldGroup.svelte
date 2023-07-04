@@ -15,18 +15,13 @@
     class="spectrum-Form"
     class:spectrum-Form--labelsAbove={labelPosition === "above"}
   >
-    <Section {type}>
-      {#if type === "oneColumn"}
-        <div
-          class="spectrum-Form"
-          class:spectrum-Form--labelsAbove={labelPosition === "above"}
-        >
-          <slot />
-        </div>
-      {:else}
+    {#if labelPosition === "above" && type !== "oneColumn"}
+      <Section {type}>
         <slot />
-      {/if}
-    </Section>
+      </Section>
+    {:else}
+      <slot />
+    {/if}
   </div>
 </div>
 

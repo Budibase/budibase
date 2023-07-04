@@ -2355,7 +2355,11 @@
         "type": "section",
         "label": "Type",
         "key": "type",
-        "defaultValue": "oneColumn"
+        "defaultValue": "oneColumn",
+        "dependsOn": {
+          "setting": "labelPosition",
+          "value": "above"
+        }
       }
     ]
   },
