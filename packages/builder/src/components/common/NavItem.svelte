@@ -175,6 +175,7 @@
     left: 0;
     top: 0;
     border-radius: 2px;
+    pointer-events: none;
   }
   .selected-by-label {
     position: absolute;
