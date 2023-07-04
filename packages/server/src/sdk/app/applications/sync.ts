@@ -102,7 +102,7 @@ export async function syncUsersToAllApps(userIds: string[]) {
   const failed = resp.filter(promise => promise.status === "rejected")
   const reasons = failed
     .map(fail => (fail as PromiseRejectedResult).reason)
-    .filter(reason => !dbCore.is409Error(reason))
+    .filter(reason => !dbCore.isDocumentConflictError(reason))
   if (reasons.length > 0) {
     logging.logWarn("Failed to sync users to apps", reasons)
   }
