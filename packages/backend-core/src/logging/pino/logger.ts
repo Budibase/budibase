@@ -5,6 +5,9 @@ import * as correlation from "../correlation"
 import { IdentityType } from "@budibase/types"
 import { LOG_CONTEXT } from "../index"
 
+import path from "path"
+import { budibaseTempDir } from "../../objectStore"
+
 // LOGGER
 
 let pinoInstance: pino.Logger | undefined
@@ -27,6 +30,13 @@ if (!env.DISABLE_PINO_LOGGER) {
       target: "pino-pretty",
       options: {
         singleLine: true,
+      },
+    }
+  } else {
+    pinoOptions.transport = {
+      target: "pino/file",
+      options: {
+        destination: path.join(budibaseTempDir(), "pino.logs"),
       },
     }
   }
