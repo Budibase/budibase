@@ -14,7 +14,7 @@ export const createStores = context => {
   const focusedCellAPI = writable(null)
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
-  const rowHeight = writable(props.initialRowHeight || DefaultRowHeight)
+  const rowHeight = writable(props.fixedRowHeight || DefaultRowHeight)
   const previousFocusedRowId = writable(null)
   const gridFocused = writable(false)
   const isDragging = writable(false)
@@ -134,7 +134,7 @@ export const initialise = context => {
     hoveredRowId,
     table,
     rowHeight,
-    initialRowHeight,
+    fixedRowHeight,
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
@@ -187,13 +187,15 @@ export const initialise = context => {
     }
   })
 
-  // Pull row height from table
+  // Pull row height from table as long as we don't have a fixed height
   table.subscribe($table => {
-    rowHeight.set($table?.rowHeight || DefaultRowHeight)
+    if (!get(fixedRowHeight)) {
+      rowHeight.set($table?.rowHeight || DefaultRowHeight)
+    }
   })
 
   // Reset row height when initial row height prop changes
-  initialRowHeight.subscribe(height => {
+  fixedRowHeight.subscribe(height => {
     if (height) {
       rowHeight.set(height)
     } else {
