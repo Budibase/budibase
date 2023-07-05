@@ -406,10 +406,6 @@
     gap: var(--spectrum-actionbutton-icon-gap);
   }
 
-  .app-action-button.preview-locked {
-    padding-right: 0px;
-  }
-
   .app-action {
     display: flex;
     align-items: center;

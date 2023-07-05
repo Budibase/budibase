@@ -276,23 +276,6 @@
     margin-right: var(--spacing-l);
   }
 
-  .secondary-editor {
-    align-self: center;
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    min-width: 0;
-    overflow: hidden;
-    margin-left: var(--spacing-xl);
-  }
-
-  .secondary-editor-body {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0px;
-  }
-
   .body {
     flex: 1 1 auto;
     z-index: 1;

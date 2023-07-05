@@ -2,7 +2,6 @@
   import { Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { helpers } from "@budibase/shared-core"
-  import { UserAvatar } from "@budibase/frontend-core"
 
   export let icon
   export let withArrow = false
@@ -114,11 +113,6 @@
   {#if selectedBy}
     <div class="selected-by-label">{helpers.getUserLabel(selectedBy)}</div>
   {/if}
-  <!--{#if selectedBy}-->
-  <!--  <div class="avatar">-->
-  <!--    <UserAvatar size="S" user={selectedBy} tooltipDirection="left" />-->
-  <!--  </div>-->
-  <!--{/if}-->
 </div>
 
 <style>
@@ -194,9 +188,6 @@
   }
   .nav-item.selectedBy:hover .selected-by-label {
     opacity: 1;
-  }
-  .avatar {
-    align-self: center;
   }
 
   /* Needed to fully display the actions icon */
