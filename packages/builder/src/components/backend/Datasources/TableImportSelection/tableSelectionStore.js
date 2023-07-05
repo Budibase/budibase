@@ -1,6 +1,6 @@
 import { derived, writable, get } from "svelte/store"
 import { notifications } from "@budibase/bbui"
-import { datasources, ImportTableError } from "stores/backend"
+import { datasources, ImportTableError, tables } from "stores/backend"
 
 export const createTableSelectionStore = (integration, datasource) => {
   const tableNamesStore = writable([])
@@ -27,7 +27,7 @@ export const createTableSelectionStore = (integration, datasource) => {
 
     try {
       await datasources.updateSchema(datasource, get(selectedTableNamesStore))
-
+      await tables.fetch()
       notifications.success(`Tables fetched successfully.`)
       await onComplete()
     } catch (err) {
