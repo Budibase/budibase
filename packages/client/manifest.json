@@ -4490,6 +4490,16 @@
               "setting": "clickBehaviour",
               "value": "details"
             }
+          },
+          {
+            "type": "boolean",
+            "label": "Do not display default save notification",
+            "key": "notificationOverride",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
           }
         ]
       },
@@ -5126,6 +5136,16 @@
               "setting": "actionType",
               "value": "View",
               "invert": true
+            }
+          },
+          {
+            "type": "boolean",
+            "label": "Do not display default save notification",
+            "key": "notificationOverride",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "showSaveButton",
+              "value": true
             }
           }
         ]
