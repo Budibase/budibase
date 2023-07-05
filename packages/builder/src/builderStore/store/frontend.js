@@ -358,30 +358,28 @@ export const getFrontendStore = () => {
         if (!screenId) {
           return
         }
-
-        // Handle deletion
         if (!screen) {
+          // Screen deletion
           store.update(state => ({
             ...state,
             screens: state.screens.filter(x => x._id !== screenId),
           }))
-          return
+        } else {
+          const index = get(store).screens.findIndex(x => x._id === screen._id)
+          if (index === -1) {
+            // Screen addition
+            store.update(state => ({
+              ...state,
+              screens: [...state.screens, screen],
+            }))
+          } else {
+            // Screen update
+            store.update(state => {
+              state.screens[index] = screen
+              return state
+            })
+          }
         }
-
-        // Add new datasource
-        const index = get(store).screens.findIndex(x => x._id === screen._id)
-        if (index === -1) {
-          store.update(state => ({
-            ...state,
-            screens: [...state.screens, screen],
-          }))
-        }
-
-        // Update existing datasource
-        store.update(state => {
-          state.screens[index] = screen
-          return state
-        })
       },
       delete: async screens => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
