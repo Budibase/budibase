@@ -48,8 +48,8 @@ function httpLogging() {
 }
 
 function getPackageJsonFields(): {
-  VERSION: string | undefined
-  SERVICE_NAME: string | undefined
+  VERSION: string
+  SERVICE_NAME: string
 } {
   function findFileInAncestors(
     fileName: string,
@@ -79,7 +79,7 @@ function getPackageJsonFields(): {
     }
   } catch {
     // throwing an error here is confusing/causes backend-core to be hard to import
-    return { VERSION: undefined, SERVICE_NAME: undefined }
+    return { VERSION: "", SERVICE_NAME: "" }
   }
 }
 
