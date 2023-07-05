@@ -57,7 +57,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # setup the username and email.
-          git config --global user.name "Budibase Staging Release Bot"
+          git config --global user.name "Budibase Staging Release Bot[bot]"
           git config --global user.email "<>"
           git submodule foreach git commit -a -m 'Release process'
           git commit -a -m 'Release process'

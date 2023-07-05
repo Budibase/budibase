@@ -37,6 +37,6 @@ jobs:
         run: |
           cd scripts
           # setup the username and email.
-          git config --global user.name "Budibase Staging Release Bot"
+          git config --global user.name "Budibase Staging Release Bot[bot]"
           git config --global user.email "<>"
           ./versionCommit.sh prerelease
