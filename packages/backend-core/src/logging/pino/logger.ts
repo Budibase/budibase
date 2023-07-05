@@ -1,7 +1,5 @@
 import pino, { LoggerOptions } from "pino"
-import path from "path"
-import fs from "fs"
-import * as rfs from "rotating-file-stream"
+import pinoPretty from "pino-pretty"
 
 import { IdentityType } from "@budibase/types"
 
@@ -10,8 +8,7 @@ import * as context from "../../context"
 import * as correlation from "../correlation"
 import { LOG_CONTEXT } from "../index"
 
-import { budibaseTempDir } from "../../objectStore"
-import pinoPretty from "pino-pretty"
+import { localFileDestination } from "../localLogging"
 
 // LOGGER
 
@@ -69,20 +66,6 @@ if (!env.DISABLE_PINO_LOGGER) {
 
   function isMessage(obj: any) {
     return typeof obj === "string"
-  }
-
-  function localFileDestination() {
-    const fileName = path.join(budibaseTempDir(), `budibase.logs`)
-    const outFile = rfs.createStream(fileName, {
-      size: env.ROLLING_LOG_MAX_SIZE,
-      teeToStdout: true,
-    })
-
-    outFile.on("rotation", () => {
-      fs.copyFileSync(fileName, `${fileName}.bak`)
-    })
-
-    return outFile
   }
 
   /**
