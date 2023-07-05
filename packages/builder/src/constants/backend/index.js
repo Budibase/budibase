@@ -56,11 +56,6 @@ export const FIELDS = {
   BIGINT: {
     name: "BigInt",
     type: "bigint",
-    constraints: {
-      type: "bigint",
-      presence: false,
-      numericality: { greaterThanOrEqualTo: "", lessThanOrEqualTo: "" },
-    },
   },
   BOOLEAN: {
     name: "Boolean",
