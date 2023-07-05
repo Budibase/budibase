@@ -71,8 +71,10 @@ export default class GridSocket extends BaseSocket {
 
   async updateUser(socket: Socket, patch: Object) {
     await super.updateUser(socket, {
-      ...socket.data.gridMetadata,
-      ...patch,
+      gridMetadata: {
+        ...socket.data.gridMetadata,
+        ...patch,
+      },
     })
   }
 
