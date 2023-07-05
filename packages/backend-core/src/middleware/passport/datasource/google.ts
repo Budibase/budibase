@@ -1,10 +1,11 @@
 import * as google from "../sso/google"
 import { Cookie } from "../../../constants"
-import { clearCookie, getCookie } from "../../../utils"
-import { doWithDB } from "../../../db"
 import * as configs from "../../../configs"
-import { BBContext, Database, SSOProfile } from "@budibase/types"
+import * as cache from "../../../cache"
+import * as utils from "../../../utils"
+import { UserCtx, SSOProfile } from "@budibase/types"
 import { ssoSaveUserNoOp } from "../sso/sso"
+
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
 type Passport = {
@@ -22,7 +23,7 @@ async function fetchGoogleCreds() {
 
 export async function preAuth(
   passport: Passport,
-  ctx: BBContext,
+  ctx: UserCtx,
   next: Function
 ) {
   // get the relevant config
@@ -36,8 +37,8 @@ export async function preAuth(
     ssoSaveUserNoOp
   )
 
-  if (!ctx.query.appId || !ctx.query.datasourceId) {
-    ctx.throw(400, "appId and datasourceId query params not present.")
+  if (!ctx.query.appId) {
+    ctx.throw(400, "appId query param not present.")
   }
 
   return passport.authenticate(strategy, {
@@ -49,7 +50,7 @@ export async function preAuth(
 
 export async function postAuth(
   passport: Passport,
-  ctx: BBContext,
+  ctx: UserCtx,
   next: Function
 ) {
   // get the relevant config
@@ -57,7 +58,7 @@ export async function postAuth(
   const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
-  const authStateCookie = getCookie(ctx, Cookie.DatasourceAuth)
+  const authStateCookie = utils.getCookie(ctx, Cookie.DatasourceAuth)
 
   return passport.authenticate(
     new GoogleStrategy(
@@ -69,33 +70,26 @@ export async function postAuth(
       (
         accessToken: string,
         refreshToken: string,
-        profile: SSOProfile,
+        _profile: SSOProfile,
         done: Function
       ) => {
-        clearCookie(ctx, Cookie.DatasourceAuth)
+        utils.clearCookie(ctx, Cookie.DatasourceAuth)
         done(null, { accessToken, refreshToken })
       }
     ),
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, tokens: string[]) => {
       const baseUrl = `/builder/app/${authStateCookie.appId}/data`
-      // update the DB for the datasource with all the user info
-      await doWithDB(authStateCookie.appId, async (db: Database) => {
-        let datasource
-        try {
-          datasource = await db.get(authStateCookie.datasourceId)
-        } catch (err: any) {
-          if (err.status === 404) {
-            ctx.redirect(baseUrl)
-          }
+
+      const id = utils.newid()
+      await cache.store(
+        `datasource:creation:${authStateCookie.appId}:google:${id}`,
+        {
+          tokens,
         }
-        if (!datasource.config) {
-          datasource.config = {}
-        }
-        datasource.config.auth = { type: "google", ...tokens }
-        await db.put(datasource)
-        ctx.redirect(`${baseUrl}/datasource/${authStateCookie.datasourceId}`)
-      })
+      )
+
+      ctx.redirect(`${baseUrl}/new?continue_google_setup=${id}`)
     }
   )(ctx, next)
 }

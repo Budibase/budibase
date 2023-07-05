@@ -13,16 +13,19 @@
   export let disableValidation = false
   export let editAutoColumns = false
 
+  // We export this store so that when we remount the inner form we can still
+  // persist what step we're on
+  export let currentStep
+
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
 
   let fields = []
-  const currentStep = writable(1)
   const formState = writable({
     values: {},
     errors: {},
     valid: true,
-    currentStep: 1,
+    currentStep: get(currentStep),
   })
 
   // Reactive derived stores to derive form state from field array
@@ -405,12 +408,20 @@
     }
   }
 
+  const handleScrollToField = ({ field }) => {
+    const fieldId = get(getField(field)).fieldState.fieldId
+    const label = document.querySelector(`label[for="${fieldId}"]`)
+    document.getElementById(fieldId).focus({ preventScroll: true })
+    label.scrollIntoView({ behavior: "smooth" })
+  }
+
   // Action context to pass to children
   const actions = [
     { type: ActionTypes.ValidateForm, callback: formApi.validate },
     { type: ActionTypes.ClearForm, callback: formApi.reset },
     { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
     { type: ActionTypes.UpdateFieldValue, callback: handleUpdateFieldValue },
+    { type: ActionTypes.ScrollTo, callback: handleScrollToField },
   ]
 </script>
 

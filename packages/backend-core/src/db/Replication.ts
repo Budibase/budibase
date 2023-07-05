@@ -57,6 +57,9 @@ class Replication {
   appReplicateOpts() {
     return {
       filter: (doc: any) => {
+        if (doc._id && doc._id.startsWith(DocumentType.AUTOMATION_LOG)) {
+          return false
+        }
         return doc._id !== DocumentType.APP_METADATA
       },
     }

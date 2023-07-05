@@ -2,8 +2,17 @@
   import { Button, Layout } from "@budibase/bbui"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "components/design/Panel.svelte"
-  import { isActive, goto } from "@roxi/routify"
+  import { isActive, goto, redirect } from "@roxi/routify"
   import BetaButton from "./_components/BetaButton.svelte"
+  import { datasources } from "stores/backend"
+
+  $: {
+    // If we ever don't have any data other than the users table, prompt the
+    // user to add some
+    if (!$datasources.hasData) {
+      $redirect("./new")
+    }
+  }
 </script>
 
 <!-- routify:options index=1 -->

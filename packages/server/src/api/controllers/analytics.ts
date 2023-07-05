@@ -12,6 +12,7 @@ export const isEnabled = async (ctx: any) => {
 
 export const ping = async (ctx: any) => {
   const body = ctx.request.body as AnalyticsPingRequest
+
   switch (body.source) {
     case PingSource.APP: {
       const db = context.getAppDB({ skip_setup: true })
@@ -21,7 +22,7 @@ export const ping = async (ctx: any) => {
       if (isDevAppID(appId)) {
         await events.serve.servedAppPreview(appInfo, body.timezone)
       } else {
-        await events.serve.servedApp(appInfo, body.timezone)
+        await events.serve.servedApp(appInfo, body.timezone, body.embedded)
       }
       break
     }
