@@ -2,7 +2,12 @@
   import { getContext } from "svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import HeaderCell from "../cells/HeaderCell.svelte"
-  import { Icon } from "@budibase/bbui"
+  import {
+    Icon,
+    AbsTooltip,
+    TooltipType,
+    TooltipDirection,
+  } from "@budibase/bbui"
 
   const {
     renderedColumns,
@@ -30,13 +35,19 @@
     </div>
   </GridScrollWrapper>
   {#if $config.allowSchemaChanges}
-    <div
-      class="add"
-      style="left:{left}px"
-      on:click={() => dispatch("add-column")}
+    <AbsTooltip
+      text="Click here to create your first column"
+      direction={TooltipDirection.Bottom}
+      type={TooltipType.Info}
     >
-      <Icon name="Add" />
-    </div>
+      <div
+        class="add"
+        style="left:{left}px"
+        on:click={() => dispatch("add-column")}
+      >
+        <Icon name="Add" />
+      </div>
+    </AbsTooltip>
   {/if}
 </div>
 
