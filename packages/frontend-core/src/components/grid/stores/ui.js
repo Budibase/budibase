@@ -70,6 +70,9 @@ export const deriveStores = context => {
     rowHeight,
     stickyColumn,
     width,
+    columns,
+    stickyColumns,
+    config,
   } = context
 
   // Derive the row that contains the selected cell
@@ -112,7 +115,25 @@ export const deriveStores = context => {
     return ($stickyColumn?.width || 0) + $width + GutterWidth < 1100
   })
 
+  // Derive if we're able to add rows
+  const canAddRows = derived(
+    [config, columns, stickyColumn],
+    ([$config, $columns, $stickyColumn]) => {
+      // Check if we have a normal column
+      let allCols = $columns || []
+      if ($stickyColumn) {
+        allCols = [...allCols, $stickyColumn]
+      }
+      const normalCols = allCols.filter(column => {
+        return column.visible && !column.schema?.autocolumn
+      })
+      // Check if we're allowed to add rows
+      return $config.allowAddRows && normalCols.length > 0
+    }
+  )
+
   return {
+    canAddRows,
     focusedRow,
     contentLines,
     compact,
