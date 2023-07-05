@@ -33,7 +33,7 @@
         <Tooltip
           direction={tooltipDirection}
           textWrapping
-          text={user.email}
+          text={helpers.getUserLabel(user)}
           size="S"
         />
       </div>
@@ -46,13 +46,15 @@
     position: relative;
   }
   .tooltip {
-    display: none;
     position: absolute;
     top: 0;
     left: 50%;
     white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 130ms ease-out;
   }
   .user-avatar:hover .tooltip {
-    display: block;
+    opacity: 1;
   }
 </style>
