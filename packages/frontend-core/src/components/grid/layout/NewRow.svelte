@@ -27,7 +27,6 @@
     rowVerticalInversionIndex,
     columnHorizontalInversionIndex,
     selectedRows,
-    config,
   } = getContext("grid")
 
   let visible = false
@@ -147,7 +146,7 @@
 </script>
 
 <!-- New row FAB -->
-{#if !visible && !selectedRowCount && $config.allowAddRows && firstColumn}
+{#if !visible && !selectedRowCount}
   <div
     class="new-row-fab"
     on:click={() => dispatch("add-row-inline")}
