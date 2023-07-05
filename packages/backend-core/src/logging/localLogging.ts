@@ -2,8 +2,8 @@ import fs from "fs"
 import path from "path"
 import * as rfs from "rotating-file-stream"
 
-import { env } from "process"
-import { budibaseTempDir } from "src/objectStore"
+import env from "../environment"
+import { budibaseTempDir } from "../objectStore"
 
 export function localFileDestination() {
   const fileName = path.join(budibaseTempDir(), `budibase.logs`)
