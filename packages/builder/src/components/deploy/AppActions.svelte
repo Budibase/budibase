@@ -87,7 +87,7 @@
     try {
       publishing = true
       await API.publishAppChanges($store.appId)
-      notifications.send("App published", {
+      notifications.send("App published successfully", {
         type: "success",
         icon: "GlobeCheck",
       })

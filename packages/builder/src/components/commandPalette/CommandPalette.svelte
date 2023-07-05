@@ -208,8 +208,8 @@
 
   async function deployApp() {
     try {
-      await API.deployAppChanges()
-      notifications.success("Application published successfully")
+      await API.publishAppChanges($store.appId)
+      notifications.success("App published successfully")
     } catch (error) {
       notifications.error("Error publishing app")
     }
