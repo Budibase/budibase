@@ -11,7 +11,6 @@ import * as correlation from "../correlation"
 import { LOG_CONTEXT } from "../index"
 
 import { budibaseTempDir } from "../../objectStore"
-import environment from "../../environment"
 import pinoPretty from "pino-pretty"
 
 // LOGGER
@@ -72,14 +71,9 @@ if (!env.DISABLE_PINO_LOGGER) {
   }
 
   function localFileDestination() {
-    const fileName = path.join(
-      budibaseTempDir(),
-      "logs",
-      `${environment.SERVICE_NAME}.logs`
-    )
+    const fileName = path.join(budibaseTempDir(), "logs", `budibase.logs`)
     const outFile = rfs.createStream(fileName, {
       size: "10M",
-
       teeToStdout: true,
     })
 
