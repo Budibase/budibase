@@ -58,7 +58,6 @@
   button {
     position: relative;
   }
-
   .spectrum-Button-label {
     white-space: nowrap;
     overflow: hidden;
@@ -83,12 +82,6 @@
   }
   button:hover .tooltip {
     opacity: 1;
-  }
-  .tooltip-icon {
-    padding-left: var(--spacing-m);
-    line-height: 0;
-    pointer-events: all !important;
-    z-index: 1;
   }
   .spectrum-Button--primary.new-styles {
     background: var(--spectrum-global-color-gray-800);
