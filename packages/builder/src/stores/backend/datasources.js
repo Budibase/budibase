@@ -144,8 +144,7 @@ export function createDatasourcesStore() {
 
     const response = await API.createDatasource({
       datasource,
-      fetchSchema:
-        integration.plus && integration.name !== IntegrationTypes.GOOGLE_SHEETS,
+      fetchSchema: integration.plus,
     })
 
     return updateDatasource(response)

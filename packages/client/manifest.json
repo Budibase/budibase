@@ -2350,6 +2350,16 @@
             "value": "above"
           }
         ]
+      },
+      {
+        "type": "section",
+        "label": "Type",
+        "key": "type",
+        "defaultValue": "oneColumn",
+        "dependsOn": {
+          "setting": "labelPosition",
+          "value": "above"
+        }
       }
     ]
   },
