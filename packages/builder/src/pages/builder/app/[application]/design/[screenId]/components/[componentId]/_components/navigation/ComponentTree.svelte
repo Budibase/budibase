@@ -18,8 +18,6 @@
 
   let closedNodes = {}
 
-  $: currentScreen = get(selectedScreen)
-
   $: filteredComponents = components?.filter(component => {
     return (
       !$store.componentToPaste?.isCut ||

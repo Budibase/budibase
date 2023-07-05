@@ -1333,7 +1333,7 @@ export const getFrontendStore = () => {
     links: {
       save: async (url, title) => {
         const navigation = get(store).navigation
-        let links = [...navigation?.links]
+        let links = [...(navigation?.links ?? [])]
 
         // Skip if we have an identical link
         if (links.find(link => link.url === url && link.text === title)) {

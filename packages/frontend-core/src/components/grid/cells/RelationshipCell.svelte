@@ -258,7 +258,7 @@
       class:wrap={editable || contentLines > 1}
       on:wheel={e => (focused ? e.stopPropagation() : null)}
     >
-      {#each value || [] as relationship, idx}
+      {#each value || [] as relationship}
         {#if relationship.primaryDisplay}
           <div class="badge">
             <span
