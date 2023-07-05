@@ -12,6 +12,7 @@ import { LOG_CONTEXT } from "../index"
 
 import { budibaseTempDir } from "../../objectStore"
 import environment from "../../environment"
+import pinoPretty from "pino-pretty"
 
 // LOGGER
 
@@ -30,32 +31,20 @@ if (!env.DISABLE_PINO_LOGGER) {
     timestamp: () => `,"timestamp":"${new Date(Date.now()).toISOString()}"`,
   }
 
-  let outFile: rfs.RotatingFileStream | undefined
-  if (!env.isDev()) {
-    pinoOptions.transport = {
-      target: "pino-pretty",
-      options: {
-        singleLine: true,
-      },
-    }
-  } else {
-    const fileName = path.join(
-      budibaseTempDir(),
-      "logs",
-      `${environment.SERVICE_NAME}.logs`
-    )
-    outFile = rfs.createStream(fileName, {
-      size: "10M",
+  const destinations: pino.DestinationStream[] = []
 
-      teeToStdout: true,
-    })
-
-    outFile.on("rotation", () => {
-      fs.copyFileSync(fileName, `${fileName}.bak`)
-    })
+  if (env.isDev()) {
+    destinations.push(pinoPretty({ singleLine: true }))
   }
 
-  pinoInstance = outFile ? pino(pinoOptions, outFile) : pino(pinoOptions)
+  // TODO
+  if (true) {
+    destinations.push(localFileDestination())
+  }
+
+  pinoInstance = destinations.length
+    ? pino(pinoOptions, pino.multistream(destinations))
+    : pino(pinoOptions)
 
   // CONSOLE OVERRIDES
 
@@ -80,6 +69,25 @@ if (!env.DISABLE_PINO_LOGGER) {
 
   function isMessage(obj: any) {
     return typeof obj === "string"
+  }
+
+  function localFileDestination() {
+    const fileName = path.join(
+      budibaseTempDir(),
+      "logs",
+      `${environment.SERVICE_NAME}.logs`
+    )
+    const outFile = rfs.createStream(fileName, {
+      size: "10M",
+
+      teeToStdout: true,
+    })
+
+    outFile.on("rotation", () => {
+      fs.copyFileSync(fileName, `${fileName}.bak`)
+    })
+
+    return outFile
   }
 
   /**
