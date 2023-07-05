@@ -16,8 +16,6 @@
   export let tooltip = undefined
   export let newStyles = true
   export let id
-
-  let showTooltip = false
 </script>
 
 <button
@@ -35,9 +33,6 @@
   class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
   {disabled}
   on:click|preventDefault
-  on:mouseover={() => (showTooltip = true)}
-  on:focus={() => (showTooltip = true)}
-  on:mouseleave={() => (showTooltip = false)}
 >
   {#if icon}
     <svg
@@ -53,24 +48,7 @@
     <span class="spectrum-Button-label"><slot /></span>
   {/if}
   {#if tooltip}
-    <div
-      class="tooltip-icon"
-      on:mouseover={() => (showTooltip = true)}
-      on:focus={() => (showTooltip = true)}
-      on:mouseleave={() => (showTooltip = false)}
-    >
-      <svg
-        class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
-        focusable="false"
-        aria-hidden="true"
-        aria-label="Info"
-      >
-        <use xlink:href="#spectrum-icon-18-InfoOutline" />
-      </svg>
-    </div>
-  {/if}
-  {#if tooltip}
-    <div class="tooltip" class:visible={showTooltip}>
+    <div class="tooltip">
       <Tooltip textWrapping={true} direction={"bottom"} text={tooltip} />
     </div>
   {/if}
@@ -103,7 +81,7 @@
     transition: opacity 130ms ease-out;
     pointer-events: none;
   }
-  .tooltip.visible {
+  button:hover .tooltip {
     opacity: 1;
   }
   .tooltip-icon {
