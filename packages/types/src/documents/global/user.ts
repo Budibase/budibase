@@ -43,9 +43,11 @@ export interface User extends Document {
   roles: UserRoles
   builder?: {
     global: boolean
+    apps?: string[]
   }
   admin?: {
     global: boolean
+    apps?: string[]
   }
   password?: string
   status?: UserStatus

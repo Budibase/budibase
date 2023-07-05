@@ -8,6 +8,8 @@ import env from "../../../environment"
 import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
+  AddAppBuilderRequest,
+  RemoveAppBuilderRequest,
   BulkUserRequest,
   BulkUserResponse,
   CloudAccount,
@@ -431,3 +433,9 @@ export const inviteAccept = async (
     ctx.throw(400, "Unable to create new user, invitation invalid.")
   }
 }
+
+export const addAppBuilder = async (ctx: Ctx<AddAppBuilderRequest, void>) => {}
+
+export const removeAppBuilder = async (
+  ctx: Ctx<RemoveAppBuilderRequest, void>
+) => {}
