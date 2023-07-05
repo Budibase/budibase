@@ -258,7 +258,7 @@
                       quiet
                       secondary
                       on:click={revertApp}
-                      tooltip="Unavailable - another user is editing your app"
+                      tooltip="Unavailable - another user is editing this app"
                     >
                       Revert
                     </Link>
