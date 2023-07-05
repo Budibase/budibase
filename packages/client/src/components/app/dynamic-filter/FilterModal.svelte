@@ -115,7 +115,7 @@
     </Body>
     {#if filters?.length}
       <div class="fields">
-        {#each filters as filter, idx}
+        {#each filters as filter}
           <Select
             bind:value={filter.field}
             options={fieldOptions}
