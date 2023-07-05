@@ -21,6 +21,7 @@
   import { Constants, Utils } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
   import { roles } from "stores/backend"
+  import { fly } from "svelte/transition"
 
   let query = null
   let loaded = false
@@ -418,16 +419,14 @@
 <svelte:window on:keydown={handleKeyDown} />
 
 <div
+  transition:fly={{ x: 400, duration: 260 }}
   id="builder-side-panel-container"
-  class:open={$store.builderSidePanel}
-  use:clickOutside={$store.builderSidePanel
-    ? () => {
-        store.update(state => {
-          state.builderSidePanel = false
-          return state
-        })
-      }
-    : () => {}}
+  use:clickOutside={() => {
+    store.update(state => {
+      state.builderSidePanel = false
+      return state
+    })
+  }}
 >
   <div class="builder-side-panel-header">
     <Heading size="S">Users</Heading>
@@ -737,12 +736,11 @@
     flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
-    transition: transform 130ms ease-out;
     position: absolute;
     width: 400px;
     right: 0;
-    transform: translateX(100%);
     height: 100%;
+    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
   }
 
   .builder-side-panel-header,
@@ -790,11 +788,6 @@
 
   #builder-side-panel-container .search :global(input::placeholder) {
     font-style: normal;
-  }
-
-  #builder-side-panel-container.open {
-    transform: translateX(0);
-    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
   }
 
   .builder-side-panel-header {
