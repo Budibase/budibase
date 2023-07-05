@@ -47,8 +47,8 @@ jobs:
         run: |
           cd scripts
           # setup the username and email.
-          git config --global user.name "Budibase Staging Release Bot[bot]"
-          git config --global user.email "<>"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           BUMP_TYPE_INPUT=${{ github.event.inputs.versioning }}
           BUMP_TYPE=${BUMP_TYPE_INPUT:-"patch"}
           ./versionCommit.sh $BUMP_TYPE
