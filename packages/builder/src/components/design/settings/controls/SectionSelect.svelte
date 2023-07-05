@@ -17,6 +17,10 @@
       name: "Sidebar with Main",
       icon: "ColumnTwoC",
     },
+    oneColumn: {
+      name: "One column",
+      icon: "LoupeView",
+    },
     twoColumns: {
       name: "Two columns",
       icon: "ColumnTwoA",
