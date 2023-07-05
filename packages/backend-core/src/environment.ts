@@ -47,7 +47,10 @@ function httpLogging() {
   return process.env.HTTP_LOGGING
 }
 
-function findVersion() {
+function getPackageJsonFields(): {
+  VERSION: string | undefined
+  SERVICE_NAME: string | undefined
+} {
   function findFileInAncestors(
     fileName: string,
     currentDir: string
@@ -69,10 +72,14 @@ function findVersion() {
   try {
     const packageJsonFile = findFileInAncestors("package.json", process.cwd())
     const content = readFileSync(packageJsonFile!, "utf-8")
-    return JSON.parse(content).version
+    const parsedContent = JSON.parse(content)
+    return {
+      VERSION: parsedContent.version,
+      SERVICE_NAME: parsedContent.name.replace(/@budibase\//, ""),
+    }
   } catch {
     // throwing an error here is confusing/causes backend-core to be hard to import
-    return undefined
+    return { VERSION: undefined, SERVICE_NAME: undefined }
   }
 }
 
@@ -154,7 +161,7 @@ const environment = {
   ENABLE_SSO_MAINTENANCE_MODE: selfHosted
     ? process.env.ENABLE_SSO_MAINTENANCE_MODE
     : false,
-  VERSION: findVersion(),
+  ...getPackageJsonFields(),
   DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
   _set(key: any, value: any) {
     process.env[key] = value
