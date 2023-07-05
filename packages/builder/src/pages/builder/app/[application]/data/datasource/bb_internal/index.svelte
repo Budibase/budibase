@@ -6,12 +6,15 @@
   import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
   import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
+  import { TableNames } from "constants"
 
   let modal
 
   $: internalTablesBySourceId = $tables.list.filter(
     table =>
-      table.type !== "external" && table.sourceId === BUDIBASE_INTERNAL_DB_ID
+      table.type !== "external" &&
+      table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+      table._id !== TableNames.USERS
   )
 
   onMount(() => {
@@ -32,7 +35,7 @@
       </header>
       <Body size="M">
         Budibase internal tables are part of your app, so the data will be
-        stored in your apps context.
+        stored in your app's context.
       </Body>
     </Layout>
     <Divider />

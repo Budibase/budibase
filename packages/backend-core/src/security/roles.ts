@@ -1,5 +1,5 @@
 import { BuiltinPermissionID, PermissionLevel } from "./permissions"
-import { generateRoleID, getRoleParams, DocumentType, SEPARATOR } from "../db"
+import { prefixRoleID, getRoleParams, DocumentType, SEPARATOR } from "../db"
 import { getAppDB } from "../context"
 import { doWithDB } from "../db"
 import { Screen, Role as RoleDoc } from "@budibase/types"
@@ -25,18 +25,28 @@ const EXTERNAL_BUILTIN_ROLE_IDS = [
   BUILTIN_IDS.PUBLIC,
 ]
 
+export const RoleIDVersion = {
+  // original version, with a UUID based ID
+  UUID: undefined,
+  // new version - with name based ID
+  NAME: "name",
+}
+
 export class Role implements RoleDoc {
   _id: string
   _rev?: string
   name: string
   permissionId: string
   inherits?: string
+  version?: string
   permissions = {}
 
   constructor(id: string, name: string, permissionId: string) {
     this._id = id
     this.name = name
     this.permissionId = permissionId
+    // version for managing the ID - removing the role_ when responding
+    this.version = RoleIDVersion.NAME
   }
 
   addInheritance(inherits: string) {
@@ -140,9 +150,13 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
  * Gets the role object, this is mainly useful for two purposes, to check if the level exists and
  * to check if the role inherits any others.
  * @param {string|null} roleId The level ID to lookup.
+ * @param {object|null} opts options for the function, like whether to halt errors, instead return public.
  * @returns {Promise<Role|object|null>} The role object, which may contain an "inherits" property.
  */
-export async function getRole(roleId?: string): Promise<RoleDoc | undefined> {
+export async function getRole(
+  roleId?: string,
+  opts?: { defaultPublic?: boolean }
+): Promise<RoleDoc | undefined> {
   if (!roleId) {
     return undefined
   }
@@ -153,14 +167,20 @@ export async function getRole(roleId?: string): Promise<RoleDoc | undefined> {
     role = cloneDeep(
       Object.values(BUILTIN_ROLES).find(role => role._id === roleId)
     )
+  } else {
+    // make sure has the prefix (if it has it then it won't be added)
+    roleId = prefixRoleID(roleId)
   }
   try {
     const db = getAppDB()
     const dbRole = await db.get(getDBRoleID(roleId))
     role = Object.assign(role, dbRole)
     // finalise the ID
-    role._id = getExternalRoleID(role._id)
+    role._id = getExternalRoleID(role._id, role.version)
   } catch (err) {
+    if (!isBuiltin(roleId) && opts?.defaultPublic) {
+      return cloneDeep(BUILTIN_ROLES.PUBLIC)
+    }
     // only throw an error if there is no role at all
     if (Object.keys(role).length === 0) {
       throw err
@@ -254,6 +274,9 @@ export async function getAllRoles(appId?: string) {
         })
       )
       roles = body.rows.map((row: any) => row.doc)
+      roles.forEach(
+        role => (role._id = getExternalRoleID(role._id!, role.version))
+      )
     }
     const builtinRoles = getBuiltinRoles()
 
@@ -261,14 +284,15 @@ export async function getAllRoles(appId?: string) {
     for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
       const builtinRole = builtinRoles[builtinRoleId]
       const dbBuiltin = roles.filter(
-        dbRole => getExternalRoleID(dbRole._id) === builtinRoleId
+        dbRole =>
+          getExternalRoleID(dbRole._id!, dbRole.version) === builtinRoleId
       )[0]
       if (dbBuiltin == null) {
         roles.push(builtinRole || builtinRoles.BASIC)
       } else {
         // remove role and all back after combining with the builtin
         roles = roles.filter(role => role._id !== dbBuiltin._id)
-        dbBuiltin._id = getExternalRoleID(dbBuiltin._id)
+        dbBuiltin._id = getExternalRoleID(dbBuiltin._id!, dbBuiltin.version)
         roles.push(Object.assign(builtinRole, dbBuiltin))
       }
     }
@@ -374,19 +398,22 @@ export class AccessController {
 /**
  * Adds the "role_" for builtin role IDs which are to be written to the DB (for permissions).
  */
-export function getDBRoleID(roleId?: string) {
-  if (roleId?.startsWith(DocumentType.ROLE)) {
-    return roleId
+export function getDBRoleID(roleName: string) {
+  if (roleName?.startsWith(DocumentType.ROLE)) {
+    return roleName
   }
-  return generateRoleID(roleId)
+  return prefixRoleID(roleName)
 }
 
 /**
  * Remove the "role_" from builtin role IDs that have been written to the DB (for permissions).
  */
-export function getExternalRoleID(roleId?: string) {
+export function getExternalRoleID(roleId: string, version?: string) {
   // for built-in roles we want to remove the DB role ID element (role_)
-  if (roleId?.startsWith(DocumentType.ROLE) && isBuiltin(roleId)) {
+  if (
+    (roleId.startsWith(DocumentType.ROLE) && isBuiltin(roleId)) ||
+    version === RoleIDVersion.NAME
+  ) {
     return roleId.split(`${DocumentType.ROLE}${SEPARATOR}`)[1]
   }
   return roleId

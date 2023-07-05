@@ -10,6 +10,7 @@ import {
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
+  SourceName,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -20,8 +21,15 @@ import {
 } from "./utils"
 import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
-const sqlServer = require("mssql")
+import { getReadableErrorMessage } from "./base/errorMapping"
+import sqlServer from "mssql"
 const DEFAULT_SCHEMA = "dbo"
+
+import { ConfidentialClientApplication } from "@azure/msal-node"
+
+enum MSSQLConfigAuthType {
+  ACTIVE_DIRECTORY = "Active Directory",
+}
 
 interface MSSQLConfig {
   user: string
@@ -31,6 +39,12 @@ interface MSSQLConfig {
   database: string
   schema: string
   encrypt?: boolean
+  authType?: MSSQLConfigAuthType
+  adConfig?: {
+    clientId: string
+    clientSecret: string
+    tenantId: string
+  }
 }
 
 const SCHEMA: Integration = {
@@ -43,6 +57,7 @@ const SCHEMA: Integration = {
   features: {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
     [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+    [DatasourceFeature.EXPORT_SCHEMA]: true,
   },
   datasource: {
     user: {
@@ -75,6 +90,38 @@ const SCHEMA: Integration = {
       type: DatasourceFieldType.BOOLEAN,
       default: true,
     },
+    authType: {
+      type: DatasourceFieldType.SELECT,
+      display: "Advanced auth",
+      config: { options: [MSSQLConfigAuthType.ACTIVE_DIRECTORY] },
+    },
+    adConfig: {
+      type: DatasourceFieldType.FIELD_GROUP,
+      default: true,
+      display: "Configure Active Directory",
+      hidden: "'{{authType}}' !== 'Active Directory'",
+      config: {
+        openByDefault: true,
+        nestedFields: true,
+      },
+      fields: {
+        clientId: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+          display: "Client ID",
+        },
+        clientSecret: {
+          type: DatasourceFieldType.PASSWORD,
+          required: true,
+          display: "Client secret",
+        },
+        tenantId: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+          display: "Tenant ID",
+        },
+      },
+    },
   },
   query: {
     create: {
@@ -95,8 +142,7 @@ const SCHEMA: Integration = {
 class SqlServerIntegration extends Sql implements DatasourcePlus {
   private readonly config: MSSQLConfig
   private index: number = 0
-  private readonly pool: any
-  private client: any
+  private client?: sqlServer.ConnectionPool
   public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
@@ -113,17 +159,6 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   constructor(config: MSSQLConfig) {
     super(SqlClient.MS_SQL)
     this.config = config
-    const clientCfg = {
-      ...this.config,
-      options: {
-        encrypt: this.config.encrypt,
-        enableArithAbort: true,
-      },
-    }
-    delete clientCfg.encrypt
-    if (!this.pool) {
-      this.pool = new sqlServer.ConnectionPool(clientCfg)
-    }
   }
 
   async testConnection() {
@@ -134,7 +169,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       await this.connect()
       response.connected = true
     } catch (e: any) {
-      response.error = e.message as string
+      response.error = e.message
     }
     return response
   }
@@ -149,10 +184,57 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
   async connect() {
     try {
-      this.client = await this.pool.connect()
-    } catch (err) {
-      // @ts-ignore
-      throw new Error(err)
+      // if encrypt is undefined, then default is to encrypt
+      const encrypt = this.config.encrypt === undefined || this.config.encrypt
+      const clientCfg: MSSQLConfig & sqlServer.config = {
+        ...this.config,
+        port: +this.config.port,
+        options: {
+          encrypt,
+          enableArithAbort: true,
+        },
+      }
+      if (encrypt) {
+        clientCfg.options!.trustServerCertificate = true
+      }
+      delete clientCfg.encrypt
+
+      if (this.config.authType === MSSQLConfigAuthType.ACTIVE_DIRECTORY) {
+        const { clientId, tenantId, clientSecret } = this.config.adConfig!
+        const clientApp = new ConfidentialClientApplication({
+          auth: {
+            clientId,
+            authority: `https://login.microsoftonline.com/${tenantId}`,
+            clientSecret,
+          },
+        })
+
+        const response = await clientApp.acquireTokenByClientCredential({
+          scopes: ["https://database.windows.net/.default"],
+        })
+
+        clientCfg.authentication = {
+          type: "azure-active-directory-access-token",
+          options: {
+            token: response!.accessToken,
+          },
+        }
+      }
+
+      const pool = new sqlServer.ConnectionPool(clientCfg)
+
+      this.client = await pool.connect()
+    } catch (err: any) {
+      if (err?.originalError?.errors?.length) {
+        const messages = []
+        if (err.message) {
+          messages.push(err.message)
+        }
+        messages.push(...err.originalError.errors.map((e: any) => e.message))
+        throw new Error(messages.join("\n"))
+      }
+
+      throw err
     }
   }
 
@@ -160,7 +242,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     query: SqlQuery,
     operation: string | undefined = undefined
   ) {
-    const client = this.client
+    const client = this.client!
     const request = client.request()
     this.index = 0
     try {
@@ -177,9 +259,16 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           ? `${query.sql}; SELECT SCOPE_IDENTITY() AS id;`
           : query.sql
       return await request.query(sql)
-    } catch (err) {
-      // @ts-ignore
-      throw new Error(err)
+    } catch (err: any) {
+      let readableMessage = getReadableErrorMessage(
+        SourceName.SQL_SERVER,
+        err.number
+      )
+      if (readableMessage) {
+        throw new Error(readableMessage)
+      } else {
+        throw new Error(err.message as string)
+      }
     }
   }
 
@@ -339,6 +428,81 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     const processFn = (result: any) =>
       result.recordset ? result.recordset : [{ [operation]: true }]
     return this.queryWithReturning(json, queryFn, processFn)
+  }
+
+  async getExternalSchema() {
+    // Query to retrieve table schema
+    const query = `
+  SELECT
+    t.name AS TableName,
+    c.name AS ColumnName,
+    ty.name AS DataType,
+    c.max_length AS MaxLength,
+    c.is_nullable AS IsNullable,
+    c.is_identity AS IsIdentity
+  FROM
+    sys.tables t
+    INNER JOIN sys.columns c ON t.object_id = c.object_id
+    INNER JOIN sys.types ty ON c.system_type_id = ty.system_type_id
+  WHERE
+    t.is_ms_shipped = 0
+  ORDER BY
+    t.name, c.column_id
+`
+
+    await this.connect()
+
+    const result = await this.internalQuery({
+      sql: query,
+    })
+
+    const scriptParts = []
+    const tables: any = {}
+    for (const row of result.recordset) {
+      const {
+        TableName,
+        ColumnName,
+        DataType,
+        MaxLength,
+        IsNullable,
+        IsIdentity,
+      } = row
+
+      if (!tables[TableName]) {
+        tables[TableName] = {
+          columns: [],
+        }
+      }
+
+      const columnDefinition = `${ColumnName} ${DataType}${
+        MaxLength ? `(${MaxLength})` : ""
+      }${IsNullable ? " NULL" : " NOT NULL"}`
+
+      tables[TableName].columns.push(columnDefinition)
+
+      if (IsIdentity) {
+        tables[TableName].identityColumn = ColumnName
+      }
+    }
+
+    // Generate SQL statements for table creation
+    for (const tableName in tables) {
+      const { columns, identityColumn } = tables[tableName]
+
+      let createTableStatement = `CREATE TABLE [${tableName}] (\n`
+      createTableStatement += columns.join(",\n")
+
+      if (identityColumn) {
+        createTableStatement += `,\n CONSTRAINT [PK_${tableName}] PRIMARY KEY (${identityColumn})`
+      }
+
+      createTableStatement += "\n);"
+
+      scriptParts.push(createTableStatement)
+    }
+
+    const schema = scriptParts.join("\n")
+    return schema
   }
 }
 

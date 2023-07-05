@@ -11,6 +11,7 @@
   import TemplateCard from "components/common/TemplateCard.svelte"
   import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
   import { Roles } from "constants/backend"
+  import { lowercase } from "helpers"
 
   export let template
 
@@ -19,6 +20,7 @@
 
   const values = writable({ name: "", url: null })
   const validation = createValidationStore()
+  const encryptionValidation = createValidationStore()
 
   $: {
     const { url } = $values
@@ -27,7 +29,10 @@
       ...$values,
       url: url?.[0] === "/" ? url.substring(1, url.length) : url,
     })
+    encryptionValidation.check({ ...$values })
   }
+
+  $: encryptedFile = $values.file?.name?.endsWith(".enc.tar.gz")
 
   onMount(async () => {
     const lastChar = $auth.user?.firstName
@@ -87,6 +92,9 @@
     appValidation.name(validation, { apps: applications })
     appValidation.url(validation, { apps: applications })
     appValidation.file(validation, { template })
+
+    encryptionValidation.addValidatorType("encryptionPassword", "text", true)
+
     // init validation
     const { url } = $values
     validation.check({
@@ -110,6 +118,9 @@
         data.append("templateName", template.name)
         data.append("templateKey", template.key)
         data.append("templateFile", $values.file)
+        if ($values.encryptionPassword?.trim()) {
+          data.append("encryptionPassword", $values.encryptionPassword.trim())
+        }
       }
 
       // Create App
@@ -143,67 +154,119 @@
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
       creating = false
-      console.error(error)
-      notifications.error("Error creating app")
+      throw error
     }
+  }
+
+  const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
+  let currentStep = Step.CONFIG
+  $: stepConfig = {
+    [Step.CONFIG]: {
+      title: "Create your app",
+      confirmText: template?.fromFile ? "Import app" : "Create app",
+      onConfirm: async () => {
+        if (encryptedFile) {
+          currentStep = Step.SET_PASSWORD
+          return false
+        } else {
+          try {
+            await createNewApp()
+          } catch (error) {
+            notifications.error("Error creating app")
+          }
+        }
+      },
+      isValid: $validation.valid,
+    },
+    [Step.SET_PASSWORD]: {
+      title: "Provide the export password",
+      confirmText: "Import app",
+      onConfirm: async () => {
+        try {
+          await createNewApp()
+        } catch (e) {
+          let message = "Error creating app"
+          if (e.message) {
+            message += `: ${lowercase(e.message)}`
+          }
+          notifications.error(message)
+          return false
+        }
+      },
+      isValid: $encryptionValidation.valid,
+    },
   }
 </script>
 
 <ModalContent
-  title={"Create your app"}
-  confirmText={template?.fromFile ? "Import app" : "Create app"}
-  onConfirm={createNewApp}
-  disabled={!$validation.valid}
+  title={stepConfig[currentStep].title}
+  confirmText={stepConfig[currentStep].confirmText}
+  onConfirm={stepConfig[currentStep].onConfirm}
+  disabled={!stepConfig[currentStep].isValid}
 >
-  {#if template && !template?.fromFile}
-    <TemplateCard
-      name={template.name}
-      imageSrc={template.image}
-      backgroundColour={template.background}
-      overlayEnabled={false}
-      icon={template.icon}
-    />
-  {/if}
-  {#if template?.fromFile}
-    <Dropzone
-      error={$validation.touched.file && $validation.errors.file}
-      gallery={false}
-      label="File to import"
-      value={[$values.file]}
-      on:change={e => {
-        $values.file = e.detail?.[0]
-        $validation.touched.file = true
-      }}
-    />
-  {/if}
-  <Input
-    autofocus={true}
-    bind:value={$values.name}
-    disabled={creating}
-    error={$validation.touched.name && $validation.errors.name}
-    on:blur={() => ($validation.touched.name = true)}
-    on:change={nameToUrl($values.name)}
-    label="Name"
-    placeholder={defaultAppName}
-  />
-  <span>
-    <Input
-      bind:value={$values.url}
-      disabled={creating}
-      error={$validation.touched.url && $validation.errors.url}
-      on:blur={() => ($validation.touched.url = true)}
-      on:change={tidyUrl($values.url)}
-      label="URL"
-      placeholder={$values.url
-        ? $values.url
-        : `/${resolveAppUrl(template, $values.name)}`}
-    />
-    {#if $values.url && $values.url !== "" && !$validation.errors.url}
-      <div class="app-server" title={appUrl}>
-        {appUrl}
-      </div>
+  {#if currentStep === Step.CONFIG}
+    {#if template && !template?.fromFile}
+      <TemplateCard
+        name={template.name}
+        imageSrc={template.image}
+        backgroundColour={template.background}
+        overlayEnabled={false}
+        icon={template.icon}
+      />
     {/if}
-  </span>
+    {#if template?.fromFile}
+      <Dropzone
+        error={$validation.touched.file && $validation.errors.file}
+        gallery={false}
+        label="File to import"
+        value={[$values.file]}
+        on:change={e => {
+          $values.file = e.detail?.[0]
+          $validation.touched.file = true
+        }}
+      />
+    {/if}
+    <Input
+      autofocus={true}
+      bind:value={$values.name}
+      disabled={creating}
+      error={$validation.touched.name && $validation.errors.name}
+      on:blur={() => ($validation.touched.name = true)}
+      on:change={nameToUrl($values.name)}
+      label="Name"
+      placeholder={defaultAppName}
+    />
+    <span>
+      <Input
+        bind:value={$values.url}
+        disabled={creating}
+        error={$validation.touched.url && $validation.errors.url}
+        on:blur={() => ($validation.touched.url = true)}
+        on:change={tidyUrl($values.url)}
+        label="URL"
+        placeholder={$values.url
+          ? $values.url
+          : `/${resolveAppUrl(template, $values.name)}`}
+      />
+      {#if $values.url && $values.url !== "" && !$validation.errors.url}
+        <div class="app-server" title={appUrl}>
+          {appUrl}
+        </div>
+      {/if}
+    </span>
+  {/if}
+  {#if currentStep === Step.SET_PASSWORD}
+    <Input
+      autofocus={true}
+      label="Imported file password"
+      type="password"
+      bind:value={$values.encryptionPassword}
+      disabled={creating}
+      on:blur={() => ($encryptionValidation.touched.encryptionPassword = true)}
+      error={$encryptionValidation.touched.encryptionPassword &&
+        $encryptionValidation.errors.encryptionPassword}
+    />
+  {/if}
 </ModalContent>
 
 <style>

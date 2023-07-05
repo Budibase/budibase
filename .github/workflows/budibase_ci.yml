@@ -1,5 +1,9 @@
 name: Budibase CI
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   # Trigger the workflow on push or pull request,
   # but only for the master branch
@@ -22,7 +26,16 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -34,10 +47,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -52,10 +71,16 @@ jobs:
   test-libraries:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -72,10 +97,16 @@ jobs:
   test-services:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -91,11 +122,14 @@ jobs:
 
   test-pro:
     runs-on: ubuntu-latest
+    if: github.repository == github.event.pull_request.head.repo.full_name
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -107,10 +141,16 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
         with:
@@ -129,21 +169,47 @@ jobs:
 
   check-pro-submodule:
     runs-on: ubuntu-latest
+    if: github.repository == github.event.pull_request.head.repo.full_name
     steps:
-      - name: Checkout code
+      - name: Checkout repo and submodules
         uses: actions/checkout@v3
         with:
           submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
-      - name: Check submodule
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Check pro commit
+        id: get_pro_commits
         run: |
           cd packages/pro
-          git fetch
-          if ! git merge-base --is-ancestor $(git log -n 1 --pretty=format:%H) origin/develop; then
-            echo "Current commit has not been merged to develop"
-            echo "Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md"
-            exit 1
+          pro_commit=$(git rev-parse HEAD)
+
+          branch="${{ github.base_ref || github.ref_name  }}"
+          echo "Running on branch `$branch` (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
+
+          if [[ $branch == "master" ]]; then
+            base_commit=$(git rev-parse origin/master)
           else
-            echo "All good, the submodule had been merged!"
+            base_commit=$(git rev-parse origin/develop)
           fi
+
+          echo "pro_commit=$pro_commit"
+          echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
+          echo "base_commit=$base_commit"
+          echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
+
+      - name: Check submodule merged to develop
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const submoduleCommit = '${{ steps.get_pro_commits.outputs.pro_commit }}';
+            const baseCommit = '${{ steps.get_pro_commits.outputs.base_commit }}';
+
+            if (submoduleCommit !== baseCommit) {
+              console.error('Submodule commit does not match the latest commit on the develop branch.');
+              console.error('Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md')
+              process.exit(1);
+            } else {
+              console.log('All good, the submodule had been merged and setup correctly!')
+            }
