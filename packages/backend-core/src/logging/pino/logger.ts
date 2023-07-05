@@ -24,7 +24,9 @@ if (!env.DISABLE_PINO_LOGGER) {
         return { level: label.toUpperCase() }
       },
       bindings: () => {
-        return {}
+        return {
+          service: env.SERVICE_NAME,
+        }
       },
     },
     timestamp: () => `,"timestamp":"${new Date(Date.now()).toISOString()}"`,
@@ -36,8 +38,7 @@ if (!env.DISABLE_PINO_LOGGER) {
     destinations.push(pinoPretty({ singleLine: true }))
   }
 
-  // TODO
-  if (true) {
+  if (env.SELF_HOSTED) {
     destinations.push(localFileDestination())
   }
 
@@ -71,9 +72,9 @@ if (!env.DISABLE_PINO_LOGGER) {
   }
 
   function localFileDestination() {
-    const fileName = path.join(budibaseTempDir(), "logs", `budibase.logs`)
+    const fileName = path.join(budibaseTempDir(), `budibase.logs`)
     const outFile = rfs.createStream(fileName, {
-      size: "10M",
+      size: env.ROLLING_LOG_MAX_SIZE,
       teeToStdout: true,
     })
 

@@ -75,7 +75,7 @@ function getPackageJsonFields(): {
     const parsedContent = JSON.parse(content)
     return {
       VERSION: parsedContent.version,
-      SERVICE_NAME: parsedContent.name.replace(/@budibase\//, ""),
+      SERVICE_NAME: parsedContent.name,
     }
   } catch {
     // throwing an error here is confusing/causes backend-core to be hard to import
@@ -168,6 +168,7 @@ const environment = {
     // @ts-ignore
     environment[key] = value
   },
+  ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "100M",
 }
 
 // clean up any environment variable edge cases
