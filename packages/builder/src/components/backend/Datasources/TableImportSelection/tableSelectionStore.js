@@ -1,5 +1,5 @@
 import { derived, writable, get } from "svelte/store"
-import { notifications } from "@budibase/bbui"
+import { keepOpen, notifications } from "@budibase/bbui"
 import { datasources, ImportTableError } from "stores/backend"
 
 export const createTableSelectionStore = (integration, datasource) => {
@@ -37,8 +37,7 @@ export const createTableSelectionStore = (integration, datasource) => {
         notifications.error("Error fetching tables.")
       }
 
-      // Prevent modal closing
-      return false
+      return keepOpen
     }
   }
 
