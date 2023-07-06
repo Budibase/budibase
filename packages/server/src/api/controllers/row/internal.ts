@@ -14,8 +14,8 @@ import {
 } from "../../../utilities/rowProcessor"
 import { FieldTypes } from "../../../constants"
 import * as utils from "./utils"
-import { fullSearch, paginatedSearch } from "./internalSearch"
-import { getGlobalUsersFromMetadata } from "../../../utilities/global"
+// import { fullSearch, paginatedSearch } from "./internalSearch"
+// import { getGlobalUsersFromMetadata } from "../../../utilities/global"
 import * as inMemoryViews from "../../../db/inMemoryView"
 import env from "../../../environment"
 import {
@@ -36,6 +36,7 @@ import {
   Row,
   Table,
 } from "@budibase/types"
+import { sqlSearch } from "./internalSql"
 
 import { cleanExportRows } from "./utils"
 
@@ -355,43 +356,44 @@ export async function bulkDestroy(ctx: UserCtx) {
 }
 
 export async function search(ctx: UserCtx) {
-  // Fetch the whole table when running in cypress, as search doesn't work
-  if (!env.COUCH_DB_URL && env.isCypress()) {
-    return { rows: await fetch(ctx) }
-  }
-
-  const { tableId } = ctx.params
-  const db = context.getAppDB()
-  const { paginate, query, ...params } = ctx.request.body
-  params.version = ctx.version
-  params.tableId = tableId
-
-  let table
-  if (params.sort && !params.sortType) {
-    table = await db.get(tableId)
-    const schema = table.schema
-    const sortField = schema[params.sort]
-    params.sortType = sortField.type == "number" ? "number" : "string"
-  }
-
-  let response
-  if (paginate) {
-    response = await paginatedSearch(query, params)
-  } else {
-    response = await fullSearch(query, params)
-  }
-
-  // Enrich search results with relationships
-  if (response.rows && response.rows.length) {
-    // enrich with global users if from users table
-    if (tableId === InternalTables.USER_METADATA) {
-      response.rows = await getGlobalUsersFromMetadata(response.rows)
-    }
-    table = table || (await db.get(tableId))
-    response.rows = await outputProcessing(table, response.rows)
-  }
-
-  return response
+  return sqlSearch(ctx)
+  // // Fetch the whole table when running in cypress, as search doesn't work
+  // if (!env.COUCH_DB_URL && env.isCypress()) {
+  //   return { rows: await fetch(ctx) }
+  // }
+  //
+  // const { tableId } = ctx.params
+  // const db = context.getAppDB()
+  // const { paginate, query, ...params } = ctx.request.body
+  // params.version = ctx.version
+  // params.tableId = tableId
+  //
+  // let table
+  // if (params.sort && !params.sortType) {
+  //   table = await db.get(tableId)
+  //   const schema = table.schema
+  //   const sortField = schema[params.sort]
+  //   params.sortType = sortField.type == "number" ? "number" : "string"
+  // }
+  //
+  // let response
+  // if (paginate) {
+  //   response = await paginatedSearch(query, params)
+  // } else {
+  //   response = await fullSearch(query, params)
+  // }
+  //
+  // // Enrich search results with relationships
+  // if (response.rows && response.rows.length) {
+  //   // enrich with global users if from users table
+  //   if (tableId === InternalTables.USER_METADATA) {
+  //     response.rows = await getGlobalUsersFromMetadata(response.rows)
+  //   }
+  //   table = table || (await db.get(tableId))
+  //   response.rows = await outputProcessing(table, response.rows)
+  // }
+  //
+  // return response
 }
 
 export async function exportRows(ctx: UserCtx) {
@@ -404,7 +406,7 @@ export async function exportRows(ctx: UserCtx) {
   }
   const { columns, query } = ctx.request.body
 
-  let result
+  let result: Row[] = []
   if (rowIds) {
     let response = (
       await db.allDocs({
@@ -413,7 +415,7 @@ export async function exportRows(ctx: UserCtx) {
       })
     ).rows.map(row => row.doc)
 
-    result = await outputProcessing(table, response)
+    result = (await outputProcessing(table, response)) as Row[]
   } else if (query) {
     let searchResponse = await search(ctx)
     result = searchResponse.rows

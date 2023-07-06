@@ -8,6 +8,7 @@ chown -R couchdb:couchdb ${DATA_DIR}/couch
 /build-target-paths.sh
 /opt/clouseau/bin/clouseau > /dev/stdout 2>&1 &
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
+/opt/sqs/sqs --server "http://localhost:5984" --data-dir ${DATA_DIR}/sqs --bind-address=0.0.0.0 &
 sleep 10
 curl -X PUT http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@localhost:5984/_users
 curl -X PUT http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@localhost:5984/_replicator

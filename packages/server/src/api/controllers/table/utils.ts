@@ -27,6 +27,7 @@ import {
   SourceName,
   Table,
 } from "@budibase/types"
+import { addTableToSqlite } from "./sqlite"
 
 export async function clearColumns(table: any, columnNames: any) {
   const db: Database = context.getAppDB()
@@ -293,6 +294,7 @@ class TableSaveFunctions {
   async after(table: any) {
     table = await handleSearchIndexes(table)
     table = await handleDataImport(this.user, table, this.importRows)
+    await addTableToSqlite(table)
     return table
   }
 

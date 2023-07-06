@@ -1,11 +1,26 @@
-import { InternalTables } from "../../../db/utils"
-import * as userController from "../user"
-import { FieldTypes } from "../../../constants"
+import { InternalTables } from "../../../../db/utils"
+import * as userController from "../../user"
+import { FieldTypes } from "../../../../constants"
 import { context } from "@budibase/backend-core"
-import { makeExternalQuery } from "../../../integrations/base/query"
-import { FieldType, Row, Table, UserCtx } from "@budibase/types"
-import { Format } from "../view/exporters"
-import sdk from "../../../sdk"
+import { makeExternalQuery } from "../../../../integrations/base/query"
+import {
+  FieldType,
+  RelationshipsJson,
+  Row,
+  Table,
+  UserCtx,
+} from "@budibase/types"
+import { Format } from "../../view/exporters"
+import sdk from "../../../../sdk"
+import {
+  processDates,
+  processFormulas,
+} from "../../../../utilities/rowProcessor"
+import {
+  squashRelationshipColumns,
+  updateRelationshipColumns,
+} from "./sqlUtils"
+import { basicProcessing, generateIdForRow, fixArrayTypes } from "./basic"
 
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
@@ -176,4 +191,66 @@ export function getTableId(ctx: any) {
   if (ctx.params && ctx.params.viewName) {
     return ctx.params.viewName
   }
+}
+
+export function sqlOutputProcessing(
+  rows: Row[] = [],
+  table: Table,
+  tables: Record<string, Table>,
+  relationships: RelationshipsJson[],
+  opts?: { internal?: boolean }
+) {
+  if (!rows || rows.length === 0 || rows[0].read === true) {
+    return []
+  }
+  let finalRows: { [key: string]: Row } = {}
+  for (let row of rows) {
+    let rowId = row._id
+    if (!rowId) {
+      rowId = generateIdForRow(row, table)
+      row._id = rowId
+    }
+    // this is a relationship of some sort
+    if (finalRows[rowId]) {
+      finalRows = updateRelationshipColumns(
+        table,
+        tables,
+        row,
+        finalRows,
+        relationships
+      )
+      continue
+    }
+    const thisRow = fixArrayTypes(
+      basicProcessing({
+        row,
+        table,
+        isLinked: false,
+        internal: opts?.internal,
+      }),
+      table
+    )
+    if (thisRow._id == null) {
+      throw "Unable to generate row ID for SQL rows"
+    }
+    finalRows[thisRow._id] = thisRow
+    // do this at end once its been added to the final rows
+    finalRows = updateRelationshipColumns(
+      table,
+      tables,
+      row,
+      finalRows,
+      relationships,
+      opts
+    )
+  }
+
+  // Process some additional data types
+  let finalRowArray = Object.values(finalRows)
+  finalRowArray = processDates(table, finalRowArray)
+  finalRowArray = processFormulas(table, finalRowArray) as Row[]
+
+  return finalRowArray.map((row: Row) =>
+    squashRelationshipColumns(table, tables, row, relationships)
+  )
 }

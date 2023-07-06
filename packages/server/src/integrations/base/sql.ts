@@ -564,8 +564,12 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         throw `Operation type is not supported by SQL query builder`
     }
 
-    // @ts-ignore
-    return query.toSQL().toNative()
+    if (opts?.disablePreparedStatements) {
+      return query.toString()
+    } else {
+      // @ts-ignore
+      return query.toSQL().toNative()
+    }
   }
 
   async getReturningRow(queryFn: Function, json: QueryJson) {

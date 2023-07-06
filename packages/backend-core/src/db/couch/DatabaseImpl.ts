@@ -16,6 +16,7 @@ import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { WriteStream, ReadStream } from "fs"
 import { newid } from "../../docIds/newid"
+import { SQLITE_DESIGN_DOC_ID } from "../../constants"
 
 function buildNano(couchInfo: { url: string; cookie: string }) {
   return Nano({
@@ -178,6 +179,21 @@ export class DatabaseImpl implements Database {
   async allDocs<T>(params: DatabaseQueryOpts): Promise<AllDocsResponse<T>> {
     const db = await this.checkSetup()
     return this.updateOutput(() => db.list(params))
+  }
+
+  async sql<T>(sql: string): Promise<T> {
+    const dbName = this.name
+    const url = `/${dbName}/${SQLITE_DESIGN_DOC_ID}`
+    const response = await directCouchUrlCall({
+      url: `${this.couchInfo.sqlUrl}/${url}`,
+      method: "POST",
+      cookie: this.couchInfo.cookie,
+      body: sql,
+    })
+    if (response.status > 300) {
+      throw new Error(await response.text())
+    }
+    return (await response.json()) as T
   }
 
   async query<T>(

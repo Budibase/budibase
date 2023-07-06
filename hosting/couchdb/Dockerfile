@@ -3,6 +3,7 @@ FROM couchdb:3.2.1
 ENV COUCHDB_USER admin
 ENV COUCHDB_PASSWORD admin
 EXPOSE 5984
+EXPOSE 4984
 
 RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common wget unzip curl && \
     wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - && \
@@ -28,8 +29,11 @@ ADD clouseau/log4j.properties clouseau/clouseau.ini ./
 WORKDIR /opt/couchdb
 ADD couch/vm.args couch/local.ini ./etc/
 
+WORKDIR /opt/sqs
+ADD sqlite/sqs sqlite/better_sqlite3.node ./
+
 WORKDIR /
 ADD build-target-paths.sh .
 ADD runner.sh ./bbcouch-runner.sh
-RUN chmod +x ./bbcouch-runner.sh /opt/clouseau/bin/clouseau ./build-target-paths.sh
+RUN chmod +x ./bbcouch-runner.sh /opt/clouseau/bin/clouseau ./build-target-paths.sh /opt/sqs/sqs
 CMD ["./bbcouch-runner.sh"]

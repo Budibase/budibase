@@ -2,6 +2,7 @@ import { Document } from "../document"
 
 export interface LinkDocument extends Document {
   type: string
+  tableId: string
   doc1: {
     rowId: string
     fieldName: string

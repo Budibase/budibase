@@ -74,6 +74,7 @@ export interface Table extends Document {
   type?: string
   views?: { [key: string]: View }
   name: string
+  originalName?: string
   primary?: string[]
   schema: TableSchema
   primaryDisplay?: string

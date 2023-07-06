@@ -1,4 +1,4 @@
-import { generateLinkID } from "../utils"
+import { generateLinkID, generateJunctionTableID } from "../utils"
 import { FieldTypes } from "../../constants"
 import { LinkDocument } from "@budibase/types"
 
@@ -17,6 +17,7 @@ import { LinkDocument } from "@budibase/types"
 class LinkDocumentImpl implements LinkDocument {
   _id: string
   type: string
+  tableId: string
   doc1: {
     rowId: string
     fieldName: string
@@ -44,16 +45,20 @@ class LinkDocumentImpl implements LinkDocument {
       fieldName2
     )
     this.type = FieldTypes.LINK
-    this.doc1 = {
+    this.tableId = generateJunctionTableID(tableId1, tableId2)
+    const docA = {
       tableId: tableId1,
       fieldName: fieldName1,
       rowId: rowId1,
     }
-    this.doc2 = {
+    const docB = {
       tableId: tableId2,
       fieldName: fieldName2,
       rowId: rowId2,
     }
+    // have to determine which one will be doc1 - very important for SQL linking
+    this.doc1 = docA.tableId > docB.tableId ? docA : docB
+    this.doc2 = docA.tableId > docB.tableId ? docB : docA
   }
 }
 
