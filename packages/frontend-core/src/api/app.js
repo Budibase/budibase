@@ -128,7 +128,7 @@ export const buildAppEndpoints = API => ({
    */
   fetchSystemDebugInfo: async () => {
     return await API.get({
-      url: `/api/dev/debug`,
+      url: `/api/debug/diagnostics`,
     })
   },
 
