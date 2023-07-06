@@ -57,7 +57,7 @@
     position: absolute;
     top: 0;
     width: 2px;
-    background: var(--spectrum-global-color-blue-400);
+    background: var(--accent-color);
     margin-left: -2px;
   }
 </style>

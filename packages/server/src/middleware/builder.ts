@@ -86,12 +86,6 @@ export default async function builder(ctx: UserCtx) {
 
   const referer = ctx.headers["referer"]
 
-  const overviewPath = "/builder/portal/overview/"
-  const overviewContext = !referer ? false : referer.includes(overviewPath)
-  if (overviewContext) {
-    return
-  }
-
   const hasAppId = !referer ? false : referer.includes(appId)
   const editingApp = referer ? hasAppId : false
   // check this is a builder call and editing

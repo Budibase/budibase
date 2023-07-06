@@ -26,6 +26,8 @@
     maxScrollTop,
     rowVerticalInversionIndex,
     columnHorizontalInversionIndex,
+    selectedRows,
+    config,
   } = getContext("grid")
 
   let visible = false
@@ -37,6 +39,7 @@
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $tableId, (visible = false)
   $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
+  $: selectedRowCount = Object.values($selectedRows).length
 
   const shouldInvertY = (offset, inversionIndex, rows) => {
     if (offset === 0) {
@@ -75,7 +78,12 @@
   }
 
   const startAdding = async () => {
-    if (visible) {
+    // Attempt to submit if already adding a row
+    if (visible && !isAdding) {
+      await addRow()
+      return
+    }
+    if (visible || !firstColumn) {
       return
     }
 
@@ -129,9 +137,6 @@
         e.preventDefault()
         clear()
       }
-    } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      addRow()
     }
   }
 
@@ -141,6 +146,18 @@
   })
 </script>
 
+<!-- New row FAB -->
+{#if !visible && !selectedRowCount && $config.allowAddRows && firstColumn}
+  <div
+    class="new-row-fab"
+    on:click={() => dispatch("add-row-inline")}
+    transition:fade|local={{ duration: 130 }}
+    class:offset={!$stickyColumn}
+  >
+    <Icon name="Add" size="S" />
+  </div>
+{/if}
+
 <!-- Only show new row functionality if we have any columns -->
 {#if visible}
   <div
@@ -148,10 +165,10 @@
     class:floating={offset > 0}
     style="--offset:{offset}px; --sticky-width:{width}px;"
   >
-    <div class="underlay sticky" transition:fade={{ duration: 130 }} />
-    <div class="underlay" transition:fade={{ duration: 130 }} />
-    <div class="sticky-column" transition:fade={{ duration: 130 }}>
-      <GutterCell on:expand={addViaModal} rowHovered>
+    <div class="underlay sticky" transition:fade|local={{ duration: 130 }} />
+    <div class="underlay" transition:fade|local={{ duration: 130 }} />
+    <div class="sticky-column" transition:fade|local={{ duration: 130 }}>
+      <GutterCell expandable on:expand={addViaModal} rowHovered>
         <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
         {#if isAdding}
           <div in:fade={{ duration: 130 }} class="loading-overlay" />
@@ -179,7 +196,7 @@
         </DataCell>
       {/if}
     </div>
-    <div class="normal-columns" transition:fade={{ duration: 130 }}>
+    <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally wheelInteractive>
         <div class="row">
           {#each $renderedColumns as column, columnIdx}
@@ -209,7 +226,7 @@
         </div>
       </GridScrollWrapper>
     </div>
-    <div class="buttons" transition:fade={{ duration: 130 }}>
+    <div class="buttons" transition:fade|local={{ duration: 130 }}>
       <Button size="M" cta on:click={addRow} disabled={isAdding}>
         <div class="button-with-keys">
           Save
@@ -227,6 +244,26 @@
 {/if}
 
 <style>
+  /* New row FAB */
+  .new-row-fab {
+    position: absolute;
+    top: var(--default-row-height);
+    left: calc(var(--gutter-width) / 2);
+    transform: translateX(6px) translateY(-50%);
+    background: var(--cell-background);
+    padding: 4px;
+    border-radius: 50%;
+    border: var(--cell-border);
+    z-index: 10;
+  }
+  .new-row-fab:hover {
+    background: var(--cell-background-hover);
+    cursor: pointer;
+  }
+  .new-row-fab.offset {
+    margin-left: -6px;
+  }
+
   .container {
     position: absolute;
     top: var(--default-row-height);

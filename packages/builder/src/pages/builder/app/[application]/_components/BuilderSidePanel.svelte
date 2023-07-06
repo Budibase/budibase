@@ -14,17 +14,16 @@
   import { groups, licensing, apps, users, auth, admin } from "stores/portal"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "api"
-  import { onMount } from "svelte"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "components/common/RoleSelect.svelte"
   import UpgradeModal from "components/common/users/UpgradeModal.svelte"
   import { Constants, Utils } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
   import { roles } from "stores/backend"
+  import { fly } from "svelte/transition"
 
   let query = null
   let loaded = false
-  let rendered = false
   let inviting = false
   let searchFocus = false
 
@@ -39,6 +38,8 @@
   let selectedGroup
   let userOnboardResponse = null
   let userLimitReachedModal
+
+  let inviteFailureResponse = ""
 
   $: queryIsEmail = emailValidator(query) === true
   $: prodAppId = apps.getProdAppID($store.appId)
@@ -308,19 +309,6 @@
     let userInviteResponse
     try {
       userInviteResponse = await users.onboard(payload)
-
-      const newUser = userInviteResponse?.successful.find(
-        user => user.email === newUserEmail
-      )
-      if (newUser) {
-        notifications.success(
-          userInviteResponse.created
-            ? "User created successfully"
-            : "User invite successful"
-        )
-      } else {
-        throw new Error("User invite failed")
-      }
     } catch (error) {
       console.error(error.message)
       notifications.error("Error inviting user")
@@ -331,12 +319,31 @@
 
   const onInviteUser = async () => {
     userOnboardResponse = await inviteUser()
+    const originalQuery = query + ""
+    query = null
 
-    const userInviteSuccess = userOnboardResponse?.successful
-    if (userInviteSuccess && userInviteSuccess[0].email === query) {
-      query = null
-      query = userInviteSuccess[0].email
+    const newUser = userOnboardResponse?.successful.find(
+      user => user.email === originalQuery
+    )
+    if (newUser) {
+      query = originalQuery
+      notifications.success(
+        userOnboardResponse.created
+          ? "User created successfully"
+          : "User invite successful"
+      )
+    } else {
+      const failedUser = userOnboardResponse?.unsuccessful.find(
+        user => user.email === originalQuery
+      )
+      inviteFailureResponse =
+        failedUser?.reason === "Unavailable"
+          ? "Email already in use. Please use a different email."
+          : failedUser?.reason
+
+      notifications.error(inviteFailureResponse)
     }
+    userOnboardResponse = null
   }
 
   const onUpdateUserInvite = async (invite, role) => {
@@ -375,10 +382,6 @@
 
   $: initSidePanel($store.builderSidePanel)
 
-  onMount(() => {
-    rendered = true
-  })
-
   function handleKeyDown(evt) {
     if (evt.key === "Enter" && queryIsEmail && !inviting) {
       onInviteUser()
@@ -410,16 +413,14 @@
 <svelte:window on:keydown={handleKeyDown} />
 
 <div
+  transition:fly={{ x: 400, duration: 260 }}
   id="builder-side-panel-container"
-  class:open={$store.builderSidePanel}
-  use:clickOutside={$store.builderSidePanel
-    ? () => {
-        store.update(state => {
-          state.builderSidePanel = false
-          return state
-        })
-      }
-    : () => {}}
+  use:clickOutside={() => {
+    store.update(state => {
+      state.builderSidePanel = false
+      return state
+    })
+  }}
 >
   <div class="builder-side-panel-header">
     <Heading size="S">Users</Heading>
@@ -729,12 +730,11 @@
     flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
-    transition: transform 130ms ease-out;
     position: absolute;
     width: 400px;
     right: 0;
-    transform: translateX(100%);
     height: 100%;
+    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
   }
 
   .builder-side-panel-header,
@@ -782,11 +782,6 @@
 
   #builder-side-panel-container .search :global(input::placeholder) {
     font-style: normal;
-  }
-
-  #builder-side-panel-container.open {
-    transform: translateX(0);
-    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
   }
 
   .builder-side-panel-header {

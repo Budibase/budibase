@@ -132,10 +132,7 @@
             {option}
           </div>
           {#if values.includes(option)}
-            <Icon
-              name="Checkmark"
-              color="var(--spectrum-global-color-blue-400)"
-            />
+            <Icon name="Checkmark" color="var(--accent-color)" />
           {/if}
         </div>
       {/each}
@@ -223,6 +220,8 @@
     overflow-y: auto;
     border: var(--cell-border);
     box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
   .options.invertX {
     left: auto;
@@ -240,7 +239,7 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--cell-spacing);
-    background-color: var(--background);
+    background-color: var(--grid-background-alt);
   }
   .option:hover,
   .option.focused {

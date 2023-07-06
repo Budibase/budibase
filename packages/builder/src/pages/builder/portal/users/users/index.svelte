@@ -183,7 +183,7 @@
     const currentUserEmails = (await users.fetch())?.map(x => x.email) || []
     const newUsers = []
 
-    for (const user of userData?.users) {
+    for (const user of userData?.users ?? []) {
       const { email } = user
 
       if (
@@ -373,7 +373,7 @@
   <OnboardingTypeModal {chooseCreationType} />
 </Modal>
 
-<Modal bind:this={passwordModal}>
+<Modal bind:this={passwordModal} disableCancel={true}>
   <PasswordModal
     createUsersResponse={bulkSaveResponse}
     userData={userData.users}

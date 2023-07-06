@@ -1,5 +1,4 @@
 import { get, writable, derived } from "svelte/store"
-import { datasources } from "./"
 import { cloneDeep } from "lodash/fp"
 import { API } from "api"
 import { SWITCHABLE_TYPES } from "constants/backend"
@@ -63,18 +62,17 @@ export function createTablesStore() {
 
     const savedTable = await API.saveTable(updatedTable)
     replaceTable(savedTable._id, savedTable)
-    await datasources.fetch()
     select(savedTable._id)
     return savedTable
   }
 
   const deleteTable = async table => {
-    if (!table?._id || !table?._rev) {
+    if (!table?._id) {
       return
     }
     await API.deleteTable({
       tableId: table._id,
-      tableRev: table._rev,
+      tableRev: table._rev || "rev",
     })
     replaceTable(table._id, null)
   }
@@ -163,6 +161,13 @@ export function createTablesStore() {
     }
   }
 
+  const removeDatasourceTables = datasourceId => {
+    store.update(state => ({
+      ...state,
+      list: state.list.filter(table => table.sourceId !== datasourceId),
+    }))
+  }
+
   return {
     ...store,
     subscribe: derivedStore.subscribe,
@@ -174,6 +179,7 @@ export function createTablesStore() {
     saveField,
     deleteField,
     replaceTable,
+    removeDatasourceTables,
   }
 }
 

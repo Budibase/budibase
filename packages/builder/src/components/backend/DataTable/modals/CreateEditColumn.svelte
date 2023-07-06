@@ -57,7 +57,6 @@
 
   let table = $tables.selected
   let confirmDeleteDialog
-  let deletion
   let savingColumn
   let deleteColName
   let jsonSchemaModal
@@ -182,6 +181,15 @@
         indexes,
       })
       dispatch("updatecolumns")
+      if (
+        saveColumn.type === LINK_TYPE &&
+        saveColumn.relationshipType === RelationshipTypes.MANY_TO_MANY
+      ) {
+        // Fetching the new tables
+        tables.fetch()
+        // Fetching the new relationships
+        datasources.fetch()
+      }
       if (originalName) {
         notifications.success("Column updated successfully")
       } else {
@@ -206,7 +214,6 @@
         notifications.success(`Column ${editableColumn.name} deleted`)
         confirmDeleteDialog.hide()
         hide()
-        deletion = false
         dispatch("updatecolumns")
       }
     } catch (error) {
@@ -257,13 +264,11 @@
 
   function confirmDelete() {
     confirmDeleteDialog.show()
-    deletion = true
   }
 
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
     deleteColName = ""
-    deletion = false
   }
 
   function getRelationshipOptions(field) {

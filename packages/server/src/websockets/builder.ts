@@ -3,11 +3,18 @@ import { BaseSocket } from "./websocket"
 import { permissions, events } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
-import { Datasource, Table, SocketSession, ContextUser } from "@budibase/types"
+import {
+  Datasource,
+  Table,
+  SocketSession,
+  ContextUser,
+  Screen,
+  App,
+} from "@budibase/types"
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
-import { BuilderSocketEvent } from "@budibase/shared-core"
+import { BuilderSocketEvent, GridSocketEvent } from "@budibase/shared-core"
 
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
@@ -18,13 +25,24 @@ export default class BuilderSocket extends BaseSocket {
     // Initial identification of selected app
     socket?.on(BuilderSocketEvent.SelectApp, async ({ appId }, callback) => {
       await this.joinRoom(socket, appId)
-
-      // Reply with all users in current room
       const sessions = await this.getRoomSessions(appId)
-      callback({ users: sessions })
 
-      // Track usage
-      await events.user.dataCollaboration(sessions.length)
+      // Track collaboration usage by unique users
+      let userIdMap: any = {}
+      sessions?.forEach(session => {
+        if (session._id) {
+          userIdMap[session._id] = true
+        }
+      })
+      await events.user.dataCollaboration(Object.keys(userIdMap).length)
+
+      // Reply with all current sessions
+      callback({ users: sessions })
+    })
+
+    // Handle users selecting a new cell
+    socket?.on(BuilderSocketEvent.SelectResource, ({ resourceId }) => {
+      this.updateUser(socket, { selectedResourceId: resourceId })
     })
   }
 
@@ -66,6 +84,15 @@ export default class BuilderSocket extends BaseSocket {
     }
   }
 
+  async updateUser(socket: Socket, patch: Object) {
+    await super.updateUser(socket, {
+      builderMetadata: {
+        ...socket.data.builderMetadata,
+        ...patch,
+      },
+    })
+  }
+
   emitTableUpdate(ctx: any, table: Table) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.TableChange, {
       id: table._id,
@@ -93,6 +120,40 @@ export default class BuilderSocket extends BaseSocket {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.DatasourceChange, {
       id,
       datasource: null,
+    })
+  }
+
+  emitScreenUpdate(ctx: any, screen: Screen) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.ScreenChange, {
+      id: screen._id,
+      screen,
+    })
+  }
+
+  emitScreenDeletion(ctx: any, id: string) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.ScreenChange, {
+      id,
+      screen: null,
+    })
+  }
+
+  emitAppMetadataUpdate(ctx: any, metadata: Partial<App>) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppMetadataChange, {
+      metadata,
+    })
+  }
+
+  emitAppPublish(ctx: any) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppPublishChange, {
+      published: true,
+      user: ctx.user,
+    })
+  }
+
+  emitAppUnpublish(ctx: any) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppPublishChange, {
+      published: false,
+      user: ctx.user,
     })
   }
 }

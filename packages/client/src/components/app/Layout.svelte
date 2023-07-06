@@ -34,6 +34,8 @@
   export let navWidth
   export let pageWidth
 
+  export let embedded = false
+
   const NavigationClasses = {
     Top: "top",
     Left: "left",
@@ -180,18 +182,17 @@
               {/if}
               <div class="logo">
                 {#if !hideLogo}
-                  <img
-                    src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
-                    alt={title}
-                  />
+                  <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
                 {/if}
                 {#if !hideTitle && title}
                   <Heading size="S">{title}</Heading>
                 {/if}
               </div>
-              <div class="portal">
-                <Icon hoverable name="Apps" on:click={navigateToPortal} />
-              </div>
+              {#if !embedded}
+                <div class="portal">
+                  <Icon hoverable name="Apps" on:click={navigateToPortal} />
+                </div>
+              {/if}
             </div>
             <div
               class="mobile-click-handler"

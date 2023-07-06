@@ -1,57 +1,59 @@
 import env from "../../environment"
 import {
+  createAllSearchIndex,
   createLinkView,
   createRoutingView,
-  createAllSearchIndex,
 } from "../../db/views/staticViews"
-import { createApp, deleteApp } from "../../utilities/fileSystem"
 import {
+  backupClientLibrary,
+  createApp,
+  deleteApp,
+  revertClientLibrary,
+  updateClientLibrary,
+} from "../../utilities/fileSystem"
+import {
+  AppStatus,
+  DocumentType,
   generateAppID,
+  generateDevAppID,
   getLayoutParams,
   getScreenParams,
-  generateDevAppID,
-  DocumentType,
-  AppStatus,
 } from "../../db/utils"
 import {
-  db as dbCore,
-  roles,
   cache,
-  tenancy,
   context,
+  db as dbCore,
+  env as envCore,
+  ErrorCode,
   events,
   migrations,
   objectStore,
-  ErrorCode,
-  env as envCore,
+  roles,
+  tenancy,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import {
-  DEFAULT_BB_DATASOURCE_ID,
   buildDefaultDocs,
+  DEFAULT_BB_DATASOURCE_ID,
 } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { stringToReadStream, isQsTrue } from "../../utilities"
-import { getLocksById, doesUserHaveLock } from "../../utilities/redis"
-import {
-  updateClientLibrary,
-  backupClientLibrary,
-  revertClientLibrary,
-} from "../../utilities/fileSystem"
+import { stringToReadStream } from "../../utilities"
+import { doesUserHaveLock, getLocksById } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
 import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
-import { quotas, groups } from "@budibase/pro"
+import { groups, licensing, quotas } from "@budibase/pro"
 import {
   App,
   Layout,
-  Screen,
   MigrationType,
-  Database,
+  PlanType,
+  Screen,
   UserCtx,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
+import { builderSocket } from "../../websockets"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -114,7 +116,18 @@ function checkAppName(
   }
 }
 
-async function createInstance(appId: string, template: any) {
+interface AppTemplate {
+  templateString: string
+  useTemplate: string
+  file?: {
+    type: string
+    path: string
+    password?: string
+  }
+  key?: string
+}
+
+async function createInstance(appId: string, template: AppTemplate) {
   const db = context.getAppDB()
   await db.put({
     _id: "_design/database",
@@ -207,6 +220,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
   let application = await db.get(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
+  const license = await licensing.cache.getCachedLicense()
 
   // Enrich plugin URLs
   application.usedPlugins = objectStore.enrichPluginURLs(
@@ -227,6 +241,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
 
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
+    licenseType: license?.plan.type || PlanType.FREE,
     screens,
     layouts,
     clientLibPath,
@@ -237,19 +252,24 @@ export async function fetchAppPackage(ctx: UserCtx) {
 async function performAppCreate(ctx: UserCtx) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   const name = ctx.request.body.name,
-    possibleUrl = ctx.request.body.url
+    possibleUrl = ctx.request.body.url,
+    encryptionPassword = ctx.request.body.encryptionPassword
+
   checkAppName(ctx, apps, name)
   const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
   checkAppUrl(ctx, apps, url)
 
   const { useTemplate, templateKey, templateString } = ctx.request.body
-  const instanceConfig: any = {
+  const instanceConfig: AppTemplate = {
     useTemplate,
     key: templateKey,
     templateString,
   }
   if (ctx.request.files && ctx.request.files.templateFile) {
-    instanceConfig.file = ctx.request.files.templateFile
+    instanceConfig.file = {
+      ...(ctx.request.files.templateFile as any),
+      password: encryptionPassword,
+    }
   }
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))
@@ -288,6 +308,9 @@ async function performAppCreate(ctx: UserCtx) {
       theme: "spectrum--light",
       customTheme: {
         buttonBorderRadius: "16px",
+      },
+      features: {
+        componentValidation: true,
       },
     }
 
@@ -417,6 +440,14 @@ export async function update(ctx: UserCtx) {
   await events.app.updated(app)
   ctx.status = 200
   ctx.body = app
+  builderSocket?.emitAppMetadataUpdate(ctx, {
+    theme: app.theme,
+    customTheme: app.customTheme,
+    navigation: app.navigation,
+    name: app.name,
+    url: app.url,
+    icon: app.icon,
+  })
 }
 
 export async function updateClient(ctx: UserCtx) {
@@ -547,6 +578,7 @@ export async function unpublish(ctx: UserCtx) {
   await unpublishApp(ctx)
   await postDestroyApp(ctx)
   ctx.status = 204
+  builderSocket?.emitAppUnpublish(ctx)
 }
 
 export async function sync(ctx: UserCtx) {

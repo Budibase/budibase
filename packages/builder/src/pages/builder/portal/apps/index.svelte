@@ -30,7 +30,6 @@
   let creationModal
   let appLimitModal
   let accountLockedModal
-  let creatingApp = false
   let searchTerm = ""
   let creatingFromTemplate = false
   let automationErrors
@@ -100,7 +99,9 @@
     const params = new URLSearchParams({
       open: "error",
     })
-    $goto(`../overview/${appId}/automation-history?${params.toString()}`)
+    $goto(
+      `/builder/app/${appId}/settings/automation-history?${params.toString()}`
+    )
   }
 
   const errorCount = errors => {
@@ -121,14 +122,12 @@
     } else {
       template = null
       creationModal.show()
-      creatingApp = true
     }
   }
 
   const initiateAppImport = () => {
     template = { fromFile: true }
     creationModal.show()
-    creatingApp = true
   }
 
   const autoCreateApp = async () => {
@@ -171,7 +170,6 @@
 
   const stopAppCreation = () => {
     template = null
-    creatingApp = false
   }
 
   function createAppFromTemplateUrl(templateKey) {
@@ -247,7 +245,7 @@
               >
                 Create new app
               </Button>
-              {#if $apps?.length > 0}
+              {#if $apps?.length > 0 && !$admin.offlineMode}
                 <Button
                   size="M"
                   secondary

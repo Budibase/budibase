@@ -1,7 +1,7 @@
 <script>
-  import { Select, Label, Input, Checkbox, Icon } from "@budibase/bbui"
+  import { Select, Label, Input, Checkbox, Icon, Body } from "@budibase/bbui"
   import { automationStore } from "builderStore"
-  import SaveFields from "./SaveFields.svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
 
   export let parameters = {}
@@ -11,11 +11,9 @@
     NEW: "new",
     EXISTING: "existing",
   }
-
   let automationStatus = parameters.automationId
     ? AUTOMATION_STATUS.EXISTING
     : AUTOMATION_STATUS.NEW
-
   $: {
     if (automationStatus === AUTOMATION_STATUS.NEW) {
       parameters.synchronous = false
@@ -23,6 +21,7 @@
     parameters.synchronous = automations.find(
       automation => automation._id === parameters.automationId
     )?.synchronous
+    parameters
   }
   $: automations = $automationStore.automations
     .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
@@ -42,35 +41,15 @@
         synchronous: hasCollectBlock,
       }
     })
-  $: hasAutomations = automations && automations.length > 0
+
   $: selectedAutomation = automations?.find(
     a => a._id === parameters?.automationId
   )
   $: selectedSchema = selectedAutomation?.schema
-
   $: error = parameters.timeout > 120 ? "Timeout must be less than 120s" : null
 
-  const onFieldsChanged = e => {
-    parameters.fields = Object.entries(e.detail || {}).reduce(
-      (acc, [key, value]) => {
-        acc[key.trim()] = value
-        return acc
-      },
-      {}
-    )
-  }
-
-  const setNew = () => {
-    automationStatus = AUTOMATION_STATUS.NEW
-    parameters.automationId = undefined
-    parameters.fields = {}
-  }
-
-  const setExisting = () => {
-    automationStatus = AUTOMATION_STATUS.EXISTING
-    parameters.newAutomationName = ""
-    parameters.fields = {}
-    parameters.automationId = automations[0]?._id
+  const onFieldsChanged = field => {
+    parameters.fields = { ...parameters.fields, ...field }
   }
 
   const onChange = value => {
@@ -83,30 +62,11 @@
 </script>
 
 <div class="root">
-  <div class="radios">
-    <div class="radio-container" on:click={setNew}>
-      <input
-        type="radio"
-        value={AUTOMATION_STATUS.NEW}
-        bind:group={automationStatus}
-      />
-      <Label small>Create a new automation</Label>
+  <div class="fields">
+    <div class:title-padding={parameters.synchronous}>
+      <Label small>Automation</Label>
     </div>
-    <div class="radio-container" on:click={hasAutomations ? setExisting : null}>
-      <input
-        type="radio"
-        value={AUTOMATION_STATUS.EXISTING}
-        bind:group={automationStatus}
-        disabled={!hasAutomations}
-      />
-      <Label small grey={!hasAutomations}>Use an existing automation</Label>
-    </div>
-  </div>
-
-  <div class="params">
-    <Label small>Automation</Label>
-
-    {#if automationStatus === AUTOMATION_STATUS.EXISTING}
+    <div style="width: 100%">
       <Select
         on:change={onChange}
         bind:value={parameters.automationId}
@@ -115,42 +75,46 @@
         getOptionLabel={x => x.name}
         getOptionValue={x => x._id}
       />
-    {:else}
-      <Input
-        bind:value={parameters.newAutomationName}
-        placeholder="Enter automation name"
-      />
-    {/if}
-
-    {#if parameters.synchronous}
-      <Label small />
-
-      <div class="synchronous-info">
-        <Icon name="Info" />
-        <div>
-          <i
-            >This automation will run synchronously as it contains a Collect
-            step</i
-          >
+      {#if parameters.synchronous}
+        <div class="synchronous-info">
+          <Icon size="XS" name="Info" />
+          <Body size="XS">This automation will run synchronously</Body>
         </div>
-      </div>
-      <Label small />
-
+      {/if}
+    </div>
+  </div>
+  {#if parameters.synchronous}
+    <div class="fields">
+      <Label small>Timeout</Label>
       <div class="timeout-width">
-        <Input
-          label="Timeout in seconds (120 max)"
-          type="number"
-          {error}
-          bind:value={parameters.timeout}
-        />
+        <Input type="number" {error} bind:value={parameters.timeout} />
       </div>
+    </div>
+  {/if}
+  <div class="fields">
+    {#if selectedSchema && selectedSchema.length}
+      {#each selectedSchema as field, idx}
+        {#if idx === 0}
+          <Label small>Fields</Label>
+        {:else}
+          <Label small />
+        {/if}
+        <Input disabled value={field.name} />
+        <DrawerBindableInput
+          value={parameters.fields && parameters.fields[field.name]}
+          {bindings}
+          on:change={event => onFieldsChanged({ [field.name]: event.detail })}
+        />
+      {/each}
     {/if}
+  </div>
+
+  <div class="param-margin">
     <Label small />
     <Checkbox
       text="Do not display default notification"
       bind:value={parameters.notificationOverride}
     />
-    <br />
     <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
 
     {#if parameters.confirm}
@@ -160,18 +124,6 @@
         bind:value={parameters.confirmText}
       />
     {/if}
-  </div>
-
-  <div class="fields">
-    {#key parameters.automationId}
-      <SaveFields
-        schemaFields={selectedSchema}
-        parameterFields={parameters.fields}
-        fieldLabel="Field"
-        on:change={onFieldsChanged}
-        {bindings}
-      />
-    {/key}
   </div>
 </div>
 
@@ -184,17 +136,18 @@
     width: 30%;
   }
 
-  .params {
-    display: grid;
-    column-gap: var(--spacing-l);
-    row-gap: var(--spacing-s);
-    grid-template-columns: 60px 1fr;
-    align-items: center;
+  .param-margin {
+    margin-top: var(--spacing-l);
+  }
+
+  .title-padding {
+    padding-bottom: 20px;
   }
 
   .synchronous-info {
     display: flex;
     gap: var(--spacing-s);
+    margin-top: var(--spacing-s);
   }
 
   .fields {
@@ -202,29 +155,7 @@
     display: grid;
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
-    grid-template-columns: 60px 1fr auto 1fr auto;
+    grid-template-columns: 15% auto auto;
     align-items: center;
-  }
-
-  .radios,
-  .radio-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-  }
-  .radios {
-    gap: var(--spacing-m);
-    margin-bottom: var(--spacing-l);
-  }
-  .radio-container {
-    gap: var(--spacing-m);
-  }
-  .radio-container :global(label) {
-    margin: 0;
-  }
-
-  input[type="radio"]:checked {
-    background: var(--blue);
   }
 </style>

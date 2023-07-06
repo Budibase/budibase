@@ -29,7 +29,7 @@
       {/each}
     </div>
   </GridScrollWrapper>
-  {#if $config.allowAddColumns}
+  {#if $config.allowSchemaChanges}
     <div
       class="add"
       style="left:{left}px"
@@ -42,7 +42,7 @@
 
 <style>
   .header {
-    background: var(--background);
+    background: var(--grid-background-alt);
     border-bottom: var(--cell-border);
     position: relative;
     height: var(--default-row-height);
@@ -60,7 +60,7 @@
     border-left: var(--cell-border);
     border-right: var(--cell-border);
     border-bottom: var(--cell-border);
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--grid-background-alt);
     z-index: 1;
   }
   .add:hover {

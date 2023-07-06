@@ -93,7 +93,7 @@ describe("datasource validators", () => {
       const result = await integration.testConnection()
       expect(result).toEqual({
         connected: false,
-        error: "Error: getaddrinfo ENOTFOUND http",
+        error: "getaddrinfo ENOTFOUND http",
       })
     })
   })
