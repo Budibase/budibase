@@ -351,7 +351,7 @@ const SCHEMA: Integration = getSchema()
 
 class MongoIntegration implements IntegrationBase {
   private config: MongoDBConfig
-  private client: any
+  private client: MongoClient
 
   constructor(config: MongoDBConfig) {
     this.config = config
@@ -372,6 +372,8 @@ class MongoIntegration implements IntegrationBase {
       response.connected = true
     } catch (e: any) {
       response.error = e.message as string
+    } finally {
+      await this.client.close()
     }
     return response
   }
@@ -380,18 +382,26 @@ class MongoIntegration implements IntegrationBase {
     return this.client.connect()
   }
 
-  createObjectIds(json: any): object {
+  matchId(value?: string) {
+    return value?.match(/(?<=objectid\(['"]).*(?=['"]\))/gi)?.[0]
+  }
+
+  hasObjectId(value?: any): boolean {
+    return (
+      typeof value === "string" && value.toLowerCase().startsWith("objectid")
+    )
+  }
+
+  createObjectIds(json: any): any {
     const self = this
+
     function interpolateObjectIds(json: any) {
-      for (let field of Object.keys(json)) {
+      for (let field of Object.keys(json || {})) {
         if (json[field] instanceof Object) {
           json[field] = self.createObjectIds(json[field])
         }
-        if (
-          typeof json[field] === "string" &&
-          json[field].toLowerCase().startsWith("objectid")
-        ) {
-          const id = json[field].match(/(?<=objectid\(['"]).*(?=['"]\))/gi)?.[0]
+        if (self.hasObjectId(json[field])) {
+          const id = self.matchId(json[field])
           if (id) {
             json[field] = ObjectId.createFromHexString(id)
           }
@@ -402,7 +412,14 @@ class MongoIntegration implements IntegrationBase {
 
     if (Array.isArray(json)) {
       for (let i = 0; i < json.length; i++) {
-        json[i] = interpolateObjectIds(json[i])
+        if (self.hasObjectId(json[i])) {
+          const id = self.matchId(json[i])
+          if (id) {
+            json[i] = ObjectId.createFromHexString(id)
+          }
+        } else {
+          json[i] = interpolateObjectIds(json[i])
+        }
       }
       return json
     }
@@ -487,7 +504,11 @@ class MongoIntegration implements IntegrationBase {
 
       switch (query.extra.actionType) {
         case "find": {
-          return await collection.find(json).toArray()
+          if (json) {
+            return await collection.find(json).toArray()
+          } else {
+            return await collection.find().toArray()
+          }
         }
         case "findOne": {
           return await collection.findOne(json)

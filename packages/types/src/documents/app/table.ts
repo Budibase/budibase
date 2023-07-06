@@ -9,6 +9,10 @@ export enum RelationshipTypes {
   MANY_TO_MANY = "many-to-many",
 }
 
+export enum AutoReason {
+  FOREIGN_KEY = "foreign_key",
+}
+
 export interface FieldSchema {
   type: FieldType
   externalType?: string
@@ -21,6 +25,7 @@ export interface FieldSchema {
   foreignKey?: string
   icon?: string
   autocolumn?: boolean
+  autoReason?: AutoReason
   subtype?: string
   throughFrom?: string
   throughTo?: string
@@ -80,6 +85,10 @@ export interface Table extends Document {
   rows?: { [key: string]: any }
   created?: boolean
   rowHeight?: number
+}
+
+export interface ExternalTable extends Table {
+  sourceId: string
 }
 
 export interface TableRequest extends Table {

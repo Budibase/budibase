@@ -38,6 +38,7 @@ import {
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { getComponentFieldOptions } from "helpers/formFields"
 import { createBuilderWebsocket } from "builderStore/websocket"
+import { BuilderSocketEvent } from "@budibase/shared-core"
 
 const INITIAL_FRONTEND_STATE = {
   initialised: false,
@@ -61,6 +62,9 @@ const INITIAL_FRONTEND_STATE = {
     showNotificationAction: false,
     sidePanel: false,
   },
+  features: {
+    componentValidation: false,
+  },
   errors: [],
   hasAppPackage: false,
   libraries: null,
@@ -74,6 +78,7 @@ const INITIAL_FRONTEND_STATE = {
   propertyFocus: null,
   builderSidePanel: false,
   hasLock: true,
+  showPreview: false,
 
   // URL params
   selectedScreenId: null,
@@ -116,10 +121,13 @@ export const getFrontendStore = () => {
     reset: () => {
       store.set({ ...INITIAL_FRONTEND_STATE })
       websocket?.disconnect()
+      websocket = null
     },
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath, hasLock } = pkg
-      websocket = createBuilderWebsocket(application.appId)
+      if (!websocket) {
+        websocket = createBuilderWebsocket(application.appId)
+      }
       await store.actions.components.refreshDefinitions(application.appId)
 
       // Reset store state
@@ -144,6 +152,11 @@ export const getFrontendStore = () => {
         navigation: application.navigation || {},
         usedPlugins: application.usedPlugins || [],
         hasLock,
+        features: {
+          ...INITIAL_FRONTEND_STATE.features,
+          ...application.features,
+        },
+        icon: application.icon || {},
         initialised: true,
       }))
       screenHistoryStore.reset()
@@ -224,6 +237,7 @@ export const getFrontendStore = () => {
           legalDirectChildren = []
         ) => {
           const type = component._component
+
           if (illegalChildren.includes(type)) {
             return type
           }
@@ -237,10 +251,13 @@ export const getFrontendStore = () => {
             return
           }
 
+          if (type === "@budibase/standard-components/sidepanel") {
+            illegalChildren = []
+          }
+
           const definition = store.actions.components.getDefinition(
             component._component
           )
-
           // Reset whitelist for direct children
           legalDirectChildren = []
           if (definition?.legalDirectChildren?.length) {
@@ -279,9 +296,12 @@ export const getFrontendStore = () => {
         }
       },
       save: async screen => {
-        // Validate screen structure
-        // Temporarily disabled to accommodate migration issues
-        // store.actions.screens.validate(screen)
+        const state = get(store)
+
+        // Validate screen structure if the app supports it
+        if (state.features?.componentValidation) {
+          store.actions.screens.validate(screen)
+        }
 
         // Check screen definition for any component settings which need updated
         store.actions.screens.enrichEmptySettings(screen)
@@ -292,7 +312,6 @@ export const getFrontendStore = () => {
         const routesResponse = await API.fetchAppRoutes()
 
         // If plugins changed we need to fetch the latest app metadata
-        const state = get(store)
         let usedPlugins = state.usedPlugins
         if (savedScreen.pluginAdded) {
           const { application } = await API.fetchAppPackage(state.appId)
@@ -334,6 +353,33 @@ export const getFrontendStore = () => {
           return
         }
         return await sequentialScreenPatch(patchFn, screenId)
+      },
+      replace: async (screenId, screen) => {
+        if (!screenId) {
+          return
+        }
+        if (!screen) {
+          // Screen deletion
+          store.update(state => ({
+            ...state,
+            screens: state.screens.filter(x => x._id !== screenId),
+          }))
+        } else {
+          const index = get(store).screens.findIndex(x => x._id === screen._id)
+          if (index === -1) {
+            // Screen addition
+            store.update(state => ({
+              ...state,
+              screens: [...state.screens, screen],
+            }))
+          } else {
+            // Screen update
+            store.update(state => {
+              state.screens[index] = screen
+              return state
+            })
+          }
+        }
       },
       delete: async screens => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
@@ -1287,7 +1333,7 @@ export const getFrontendStore = () => {
     links: {
       save: async (url, title) => {
         const navigation = get(store).navigation
-        let links = [...navigation?.links]
+        let links = [...(navigation?.links ?? [])]
 
         // Skip if we have an identical link
         if (links.find(link => link.url === url && link.text === title)) {
@@ -1345,6 +1391,21 @@ export const getFrontendStore = () => {
         store.actions.preview.sendEvent("dragging-new-component", {
           dragging: false,
         })
+      },
+    },
+    websocket: {
+      selectResource: id => {
+        websocket.emit(BuilderSocketEvent.SelectResource, {
+          resourceId: id,
+        })
+      },
+    },
+    metadata: {
+      replace: metadata => {
+        store.update(state => ({
+          ...state,
+          ...metadata,
+        }))
       },
     },
   }

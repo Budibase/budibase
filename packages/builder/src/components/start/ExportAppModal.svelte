@@ -1,27 +1,129 @@
 <script>
-  import { ModalContent, Toggle, Body, InlineAlert } from "@budibase/bbui"
+  import {
+    ModalContent,
+    keepOpen,
+    Toggle,
+    Body,
+    InlineAlert,
+    Input,
+    notifications,
+  } from "@budibase/bbui"
+  import { createValidationStore } from "helpers/validation/yup"
 
   export let app
   export let published
-  let excludeRows = false
+  let includeInternalTablesRows = true
+  let encypt = true
 
-  $: title = published ? "Export published app" : "Export latest app"
-  $: confirmText = published ? "Export published" : "Export latest"
+  let password = null
+  const validation = createValidationStore()
+  validation.addValidatorType("password", "password", true, { minLength: 8 })
+  $: validation.observe("password", password)
 
-  const exportApp = () => {
+  const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
+  let currentStep = Step.CONFIG
+
+  $: exportButtonText = published ? "Export published" : "Export latest"
+  $: stepConfig = {
+    [Step.CONFIG]: {
+      title: published ? "Export published app" : "Export latest app",
+      confirmText: encypt ? "Continue" : exportButtonText,
+      onConfirm: () => {
+        if (!encypt) {
+          exportApp()
+        } else {
+          currentStep = Step.SET_PASSWORD
+          return keepOpen
+        }
+      },
+      isValid: true,
+    },
+    [Step.SET_PASSWORD]: {
+      title: "Add password to encrypt your export",
+      confirmText: exportButtonText,
+      onConfirm: async () => {
+        await validation.check({ password })
+        if (!$validation.valid) {
+          return keepOpen
+        }
+        exportApp(password)
+      },
+      isValid: $validation.valid,
+    },
+  }
+
+  const exportApp = async () => {
     const id = published ? app.prodId : app.devId
-    const appName = encodeURIComponent(app.name)
-    window.location = `/api/backups/export?appId=${id}&appname=${appName}&excludeRows=${excludeRows}`
+    const url = `/api/backups/export?appId=${id}`
+    await downloadFile(url, {
+      excludeRows: !includeInternalTablesRows,
+      encryptPassword: password,
+    })
+  }
+
+  async function downloadFile(url, body) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (response.ok) {
+        const contentDisposition = response.headers.get("Content-Disposition")
+
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
+          contentDisposition
+        )
+
+        const filename = matches[1].replace(/['"]/g, "")
+
+        const url = URL.createObjectURL(await response.blob())
+
+        const link = document.createElement("a")
+        link.href = url
+        link.download = filename
+        link.click()
+
+        URL.revokeObjectURL(url)
+      } else {
+        notifications.error("Error exporting the app.")
+      }
+    } catch (error) {
+      notifications.error(error.message || "Error downloading the exported app")
+    }
   }
 </script>
 
-<ModalContent {title} {confirmText} onConfirm={exportApp}>
-  <InlineAlert
-    header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
-  />
-  <Body
-    >Apps can be exported with or without data that is within internal tables -
-    select this below.</Body
-  >
-  <Toggle text="Exclude Rows" bind:value={excludeRows} />
+<ModalContent
+  title={stepConfig[currentStep].title}
+  confirmText={stepConfig[currentStep].confirmText}
+  onConfirm={stepConfig[currentStep].onConfirm}
+  disabled={!stepConfig[currentStep].isValid}
+>
+  {#if currentStep === Step.CONFIG}
+    <Body>
+      <Toggle
+        text="Export rows from internal tables"
+        bind:value={includeInternalTablesRows}
+      />
+      <Toggle text="Encrypt my export" bind:value={encypt} />
+    </Body>
+    {#if !encypt}
+      <InlineAlert
+        header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
+      />
+    {/if}
+  {/if}
+  {#if currentStep === Step.SET_PASSWORD}
+    <Input
+      type="password"
+      label="Password"
+      placeholder="Type here..."
+      bind:value={password}
+      error={$validation.errors.password}
+    />
+  {/if}
 </ModalContent>

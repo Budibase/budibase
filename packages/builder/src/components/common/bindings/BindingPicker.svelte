@@ -36,7 +36,7 @@
     .map(([name, categoryBindings]) => ({
       name,
       bindings: categoryBindings?.filter(binding => {
-        return binding.readableBinding.match(searchRgx)
+        return !search || binding.readableBinding.match(searchRgx)
       }),
     }))
     .filter(category => {
@@ -46,7 +46,11 @@
       )
     })
   $: filteredHelpers = helpers?.filter(helper => {
-    return helper.label.match(searchRgx) || helper.description.match(searchRgx)
+    return (
+      !search ||
+      helper.label.match(searchRgx) ||
+      helper.description.match(searchRgx)
+    )
   })
 
   const getHelperExample = (helper, js) => {
@@ -84,6 +88,7 @@
         {/if}
         {#if hoverTarget.description}
           <div class="helper__description">
+            <!-- eslint-disable-next-line svelte/no-at-html-tags-->
             {@html hoverTarget.description}
           </div>
         {/if}
@@ -120,13 +125,9 @@
         />
       </span>
 
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
       <span
         class="search-input-icon"
         on:click={() => {
-          if (!search) {
-            return
-          }
           search = null
         }}
         class:searching={search}
@@ -161,7 +162,6 @@
           </div>
           <ul>
             {#each category.bindings as binding}
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
               <li
                 class="binding"
                 on:mouseenter={e => {

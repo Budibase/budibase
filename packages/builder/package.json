@@ -9,7 +9,8 @@
     "dev:builder": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "jest": {
     "globals": {
@@ -70,6 +71,7 @@
     "@codemirror/state": "^6.2.0",
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.11.2",
+    "@fontsource/source-sans-pro": "^5.0.3",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-brands-svg-icons": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
@@ -122,6 +124,7 @@
     "tsconfig-paths": "4.0.0",
     "typescript": "4.7.3",
     "vite": "^3.0.8",
+    "vite-plugin-static-copy": "^0.16.0",
     "vitest": "^0.29.2"
   },
   "nx": {

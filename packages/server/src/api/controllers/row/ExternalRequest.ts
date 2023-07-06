@@ -19,6 +19,7 @@ import {
   breakRowIdField,
   convertRowId,
   generateRowIdField,
+  getPrimaryDisplay,
   isRowId,
   isSQL,
 } from "../../../integrations/utils"
@@ -29,6 +30,7 @@ import { cloneDeep } from "lodash/fp"
 import { processDates, processFormulas } from "../../../utilities/rowProcessor"
 import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
+import { isEditableColumn } from "../../../sdk/app/tables/validation"
 
 export interface ManyRelationship {
   tableId?: string
@@ -297,8 +299,7 @@ export class ExternalRequest {
       if (
         row[key] == null ||
         newRow[key] ||
-        field.autocolumn ||
-        field.type === FieldTypes.FORMULA
+        !sdk.tables.isEditableColumn(field)
       ) {
         continue
       }
@@ -391,7 +392,10 @@ export class ExternalRequest {
           }
         }
         relatedRow = processFormulas(linkedTable, relatedRow)
-        const relatedDisplay = display ? relatedRow[display] : undefined
+        let relatedDisplay
+        if (display) {
+          relatedDisplay = getPrimaryDisplay(relatedRow[display])
+        }
         row[relationship.column][key] = {
           primaryDisplay: relatedDisplay || "Invalid display column",
           _id: relatedRow._id,

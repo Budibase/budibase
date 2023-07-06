@@ -12,8 +12,11 @@
     customQueryText,
   } from "helpers/data/utils"
   import IntegrationIcon from "./IntegrationIcon.svelte"
+  import { TableNames } from "constants"
+  import { userSelectedResourceMap } from "builderStore"
 
   let openDataSources = []
+
   $: enrichedDataSources = enrichDatasources(
     $datasources,
     $params,
@@ -69,6 +72,13 @@
   function selectDatasource(datasource) {
     openNode(datasource)
     $goto(`./datasource/${datasource._id}`)
+  }
+
+  const selectTable = tableId => {
+    tables.select(tableId)
+    if (!$isActive("./table/:tableId")) {
+      $goto(`./table/${tableId}`)
+    }
   }
 
   function closeNode(datasource) {
@@ -151,15 +161,24 @@
 
 {#if $database?._id}
   <div class="hierarchy-items-container">
-    {#each enrichedDataSources as datasource, idx}
+    <NavItem
+      icon="UserGroup"
+      text="Users"
+      selected={$isActive("./table/:tableId") &&
+        $tables.selected?._id === TableNames.USERS}
+      on:click={() => selectTable(TableNames.USERS)}
+      selectedBy={$userSelectedResourceMap[TableNames.USERS]}
+    />
+    {#each enrichedDataSources as datasource}
       <NavItem
-        border={idx > 0}
+        border
         text={datasource.name}
         opened={datasource.open}
         selected={$isActive("./datasource") && datasource.selected}
         withArrow={true}
         on:click={() => selectDatasource(datasource)}
         on:iconClick={() => toggleNode(datasource)}
+        selectedBy={$userSelectedResourceMap[datasource._id]}
       >
         <div class="datasource-icon" slot="icon">
           <IntegrationIcon
@@ -174,7 +193,7 @@
       </NavItem>
 
       {#if datasource.open}
-        <TableNavigator sourceId={datasource._id} />
+        <TableNavigator sourceId={datasource._id} {selectTable} />
         {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
           <NavItem
             indentLevel={1}
@@ -185,6 +204,7 @@
             selected={$isActive("./query/:queryId") &&
               $queries.selectedQueryId === query._id}
             on:click={() => $goto(`./query/${query._id}`)}
+            selectedBy={$userSelectedResourceMap[query._id]}
           >
             <EditQueryPopover {query} />
           </NavItem>
@@ -196,7 +216,7 @@
 
 <style>
   .hierarchy-items-container {
-    margin: 0 calc(-1 * var(--spacing-xl));
+    margin: 0 calc(-1 * var(--spacing-l));
   }
   .datasource-icon {
     display: grid;

@@ -7,6 +7,7 @@ export interface BuilderServedEvent extends BaseEvent {
 export interface AppServedEvent extends BaseEvent {
   appVersion: string
   timezone: string
+  embed?: boolean
 }
 
 export interface AppPreviewServedEvent extends BaseEvent {

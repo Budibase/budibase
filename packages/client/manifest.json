@@ -2216,12 +2216,13 @@
     "name": "Form",
     "icon": "Form",
     "hasChildren": true,
-    "illegalChildren": ["section", "form"],
+    "illegalChildren": ["section", "form", "formblock"],
     "actions": [
       "ValidateForm",
       "ClearForm",
       "ChangeFormStep",
-      "UpdateFieldValue"
+      "UpdateFieldValue",
+      "ScrollTo"
     ],
     "styles": ["size"],
     "size": {
@@ -2303,7 +2304,7 @@
     "name": "Form Step",
     "icon": "AssetsAdded",
     "hasChildren": true,
-    "illegalChildren": ["section", "form", "form step"],
+    "illegalChildren": ["section", "form", "formstep", "formblock"],
     "styles": ["size"],
     "size": {
       "width": 400,
@@ -2349,6 +2350,16 @@
             "value": "above"
           }
         ]
+      },
+      {
+        "type": "section",
+        "label": "Type",
+        "key": "type",
+        "defaultValue": "oneColumn",
+        "dependsOn": {
+          "setting": "labelPosition",
+          "value": "above"
+        }
       }
     ]
   },
@@ -3543,7 +3554,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -4322,7 +4334,8 @@
           {
             "type": "field/sortable",
             "label": "Sort by",
-            "key": "sortColumn"
+            "key": "sortColumn",
+            "placeholder": "None"
           },
           {
             "type": "select",
@@ -4566,7 +4579,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -4734,7 +4748,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -5225,5 +5240,91 @@
       "type": "schema",
       "suffix": "repeater"
     }
+  },
+  "gridblock": {
+    "name": "Grid block",
+    "icon": "Table",
+    "styles": ["size"],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "info": "Grid Blocks are only compatible with internal or SQL tables",
+    "settings": [
+      {
+        "type": "table",
+        "label": "Table",
+        "key": "table",
+        "required": true
+      },
+      {
+        "type": "columns/grid",
+        "label": "Columns",
+        "key": "columns",
+        "dependsOn": "table"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "initialFilter"
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort column",
+        "key": "initialSortColumn",
+        "placeholder": "Default"
+      },
+      {
+        "type": "select",
+        "label": "Sort order",
+        "key": "initialSortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Ascending"
+      },
+      {
+        "type": "select",
+        "label": "Row height",
+        "key": "fixedRowHeight",
+        "placeholder": "Default",
+        "options": [
+          {
+            "label": "Small",
+            "value": 36
+          },
+          {
+            "label": "Medium",
+            "value": 64
+          },
+          {
+            "label": "Large",
+            "value": 92
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Add rows",
+        "key": "allowAddRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Edit rows",
+        "key": "allowEditRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Delete rows",
+        "key": "allowDeleteRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "High contrast",
+        "key": "stripeRows",
+        "defaultValue": false
+      }
+    ]
   }
 }

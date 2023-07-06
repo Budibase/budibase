@@ -27,7 +27,6 @@
   $: nullishValue = value == null || value === ""
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
-  $: tempValue = safeValue
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
   const getAllBindings = (bindings, componentBindings, nested) => {
@@ -73,10 +72,6 @@
     if (highlighted) {
       store.actions.settings.highlight(null)
     }
-    // To fix focus 'affect' when property is target of a drawer other actions in the builder.
-    if (propertyFocus) {
-      store.actions.settings.propertyFocus(null)
-    }
   })
 </script>
 
@@ -108,6 +103,7 @@
     />
   </div>
   {#if info}
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     <div class="text">{@html info}</div>
   {/if}
 </div>

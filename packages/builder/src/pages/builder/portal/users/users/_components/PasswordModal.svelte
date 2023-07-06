@@ -3,6 +3,7 @@
   import PasswordCopyTableRenderer from "./PasswordCopyTableRenderer.svelte"
   import { parseToCsv } from "helpers/data/utils"
   import { onMount } from "svelte"
+  import InviteResponseRenderer from "./InviteResponseRenderer.svelte"
 
   export let userData
   export let createUsersResponse
@@ -96,7 +97,7 @@
 </script>
 
 <ModalContent
-  size="M"
+  size="L"
   {title}
   confirmText="Done"
   showCancelButton={false}
@@ -113,6 +114,9 @@
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
+      customRenderers={[
+        { column: "reason", component: InviteResponseRenderer },
+      ]}
     />
   {/if}
   {#if hasSuccess}

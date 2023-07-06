@@ -3,7 +3,7 @@ const path = require("path")
 const { execSync } = require("child_process")
 
 let version = "0.0.0"
-const localPro = fs.existsSync("packages/pro/packages")
+const localPro = fs.existsSync("packages/pro/src")
 if (!localPro) {
   const branchName = execSync("git rev-parse --abbrev-ref HEAD")
     .toString()

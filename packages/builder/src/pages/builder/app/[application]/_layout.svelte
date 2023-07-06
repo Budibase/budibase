@@ -1,11 +1,14 @@
 <script>
-  import { store, automationStore, userStore } from "builderStore"
+  import {
+    store,
+    automationStore,
+    userStore,
+    deploymentStore,
+  } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { auth } from "stores/portal"
+  import { auth, apps } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
-    ActionMenu,
-    MenuItem,
     Icon,
     Tabs,
     Tab,
@@ -24,6 +27,7 @@
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import UserAvatars from "./_components/UserAvatars.svelte"
   import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
+  import PreviewOverlay from "./_components/PreviewOverlay.svelte"
 
   export let application
 
@@ -45,6 +49,8 @@
       await automationStore.actions.fetch()
       await roles.fetch()
       await flags.fetch()
+      await apps.load()
+      await deploymentStore.actions.load()
       loaded = true
       return pkg
     } catch (error) {
@@ -70,18 +76,13 @@
 
   // Event handler for the command palette
   const handleKeyDown = e => {
-    if (e.key === "k" && (e.ctrlKey || e.metaKey) && $store.hasLock) {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault()
       commandPaletteModal.toggle()
     }
   }
 
   const initTour = async () => {
-    // Skip tour if we don't have the lock
-    if (!$store.hasLock) {
-      return
-    }
-
     // Check if onboarding is enabled.
     if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
       if (!$auth.user?.onboardedAt) {
@@ -140,81 +141,40 @@
   <BuilderSidePanel />
 {/if}
 
-<div class="root">
+<div class="root" class:blur={$store.showPreview}>
   <div class="top-nav">
     {#if $store.initialised}
       <div class="topleftnav">
-        <ActionMenu>
-          <div slot="control">
-            <Icon size="M" hoverable name="ShowMenu" />
-          </div>
-          <MenuItem on:click={() => $goto("../../portal/apps")}>
-            Exit to portal
-          </MenuItem>
-          <MenuItem
-            on:click={() => $goto(`../../portal/overview/${application}`)}
-          >
-            Overview
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/access`)}
-          >
-            Access
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/automation-history`)}
-          >
-            Automation history
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/backups`)}
-          >
-            Backups
-          </MenuItem>
-
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/name-and-url`)}
-          >
-            Name and URL
-          </MenuItem>
-          <MenuItem
-            on:click={() =>
-              $goto(`../../portal/overview/${application}/version`)}
-          >
-            Version
-          </MenuItem>
-        </ActionMenu>
-        <Heading size="XS">{$store.name}</Heading>
+        <span class="back-to-apps">
+          <Icon
+            size="S"
+            hoverable
+            name="BackAndroid"
+            on:click={() => $goto("../../portal/apps")}
+          />
+        </span>
+        <Tabs {selected} size="M">
+          {#each $layout.children as { path, title }}
+            <TourWrap tourStepKey={`builder-${title}-section`}>
+              <Tab
+                quiet
+                selected={$isActive(path)}
+                on:click={topItemNavigate(path)}
+                title={capitalise(title)}
+                id={`builder-${title}-tab`}
+              />
+            </TourWrap>
+          {/each}
+        </Tabs>
       </div>
       <div class="topcenternav">
-        {#if $store.hasLock}
-          <Tabs {selected} size="M">
-            {#each $layout.children as { path, title }}
-              <TourWrap tourStepKey={`builder-${title}-section`}>
-                <Tab
-                  quiet
-                  selected={$isActive(path)}
-                  on:click={topItemNavigate(path)}
-                  title={capitalise(title)}
-                  id={`builder-${title}-tab`}
-                />
-              </TourWrap>
-            {/each}
-          </Tabs>
-        {:else}
-          <div class="secondary-editor">
-            <Icon name="LockClosed" />
-            Another user is currently editing your screens and automations
-          </div>
-        {/if}
+        <Heading size="XS">{$store.name}</Heading>
       </div>
       <div class="toprightnav">
-        <UserAvatars users={$userStore} />
-        <AppActions {application} />
+        <span>
+          <UserAvatars users={$userStore} />
+        </span>
+        <AppActions {application} {loaded} />
       </div>
     {/if}
   </div>
@@ -230,12 +190,23 @@
   {/await}
 </div>
 
+{#if $store.showPreview}
+  <PreviewOverlay />
+{/if}
+
 <svelte:window on:keydown={handleKeyDown} />
 <Modal bind:this={commandPaletteModal}>
   <CommandPalette />
 </Modal>
 
 <style>
+  .back-to-apps {
+    display: contents;
+  }
+  .back-to-apps :global(.icon) {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
   .loading {
     min-height: 100%;
     height: 100%;
@@ -248,6 +219,10 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+    transition: filter 260ms ease-out;
+  }
+  .root.blur {
+    filter: blur(8px);
   }
 
   .top-nav {
@@ -263,27 +238,30 @@
     z-index: 2;
   }
 
-  .topleftnav {
+  .topcenternav {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xl);
   }
-  .topleftnav :global(.spectrum-Heading) {
+
+  .topcenternav :global(.spectrum-Heading) {
     flex: 1 1 auto;
-    width: 0;
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding: 0px var(--spacing-m);
   }
 
-  .topcenternav {
+  .topleftnav {
     display: flex;
     position: relative;
     margin-bottom: -2px;
+    overflow: hidden;
   }
-  .topcenternav :global(.spectrum-Tabs-itemLabel) {
+
+  .topleftnav :global(.spectrum-Tabs-itemLabel) {
     font-weight: 600;
   }
 
@@ -292,14 +270,10 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-l);
   }
 
-  .secondary-editor {
-    align-self: center;
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
+  .toprightnav :global(.avatars) {
+    margin-right: var(--spacing-l);
   }
 
   .body {

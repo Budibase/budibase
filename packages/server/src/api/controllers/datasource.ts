@@ -11,7 +11,7 @@ import { BuildSchemaErrors, InvalidColumns } from "../../constants"
 import { getIntegration } from "../../integrations"
 import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
-import { db as dbCore, context, events, cache } from "@budibase/backend-core"
+import { db as dbCore, context, events } from "@budibase/backend-core"
 import {
   UserCtx,
   Datasource,
@@ -103,6 +103,22 @@ async function buildSchemaHelper(datasource: Datasource) {
   return { tables: connector.tables, error }
 }
 
+async function buildFilteredSchema(datasource: Datasource, filter?: string[]) {
+  let { tables, error } = await buildSchemaHelper(datasource)
+  let finalTables = tables
+  if (filter) {
+    finalTables = {}
+    for (let key in tables) {
+      if (
+        filter.some((filter: any) => filter.toLowerCase() === key.toLowerCase())
+      ) {
+        finalTables[key] = tables[key]
+      }
+    }
+  }
+  return { tables: finalTables, error }
+}
+
 export async function fetch(ctx: UserCtx) {
   // Get internal tables
   const db = context.getAppDB()
@@ -174,43 +190,30 @@ export async function information(
   }
   const tableNames = await connector.getTableNames()
   ctx.body = {
-    tableNames,
+    tableNames: tableNames.sort(),
   }
 }
 
 export async function buildSchemaFromDb(ctx: UserCtx) {
   const db = context.getAppDB()
-  const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   const tablesFilter = ctx.request.body.tablesFilter
+  const datasource = await sdk.datasources.get(ctx.params.datasourceId)
 
-  let { tables, error } = await buildSchemaHelper(datasource)
-  if (tablesFilter) {
-    if (!datasource.entities) {
-      datasource.entities = {}
-    }
-    for (let key in tables) {
-      if (
-        tablesFilter.some(
-          (filter: any) => filter.toLowerCase() === key.toLowerCase()
-        )
-      ) {
-        datasource.entities[key] = tables[key]
-      }
-    }
-  } else {
-    datasource.entities = tables
-  }
+  const { tables, error } = await buildFilteredSchema(datasource, tablesFilter)
+  datasource.entities = tables
 
   setDefaultDisplayColumns(datasource)
-  const dbResp = await db.put(datasource)
+  const dbResp = await db.put(
+    sdk.tables.populateExternalTableSchemas(datasource)
+  )
   datasource._rev = dbResp.rev
   const cleanedDatasource = await sdk.datasources.removeSecretSingle(datasource)
 
-  const response: any = { datasource: cleanedDatasource }
+  const res: any = { datasource: cleanedDatasource }
   if (error) {
-    response.error = error
+    res.error = error
   }
-  ctx.body = response
+  ctx.body = res
 }
 
 /**
@@ -288,7 +291,9 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
     datasource.config!.auth = auth
   }
 
-  const response = await db.put(datasource)
+  const response = await db.put(
+    sdk.tables.populateExternalTableSchemas(datasource)
+  )
   await events.datasource.updated(datasource)
   datasource._rev = response.rev
 
@@ -320,6 +325,7 @@ export async function save(
   const db = context.getAppDB()
   const plus = ctx.request.body.datasource.plus
   const fetchSchema = ctx.request.body.fetchSchema
+  const tablesFilter = ctx.request.body.tablesFilter
 
   const datasource = {
     _id: generateDatasourceID({ plus }),
@@ -329,7 +335,10 @@ export async function save(
 
   let schemaError = null
   if (fetchSchema) {
-    const { tables, error } = await buildSchemaHelper(datasource)
+    const { tables, error } = await buildFilteredSchema(
+      datasource,
+      tablesFilter
+    )
     schemaError = error
     datasource.entities = tables
     setDefaultDisplayColumns(datasource)
@@ -339,7 +348,9 @@ export async function save(
     await preSaveAction[datasource.source](datasource)
   }
 
-  const dbResp = await db.put(datasource)
+  const dbResp = await db.put(
+    sdk.tables.populateExternalTableSchemas(datasource)
+  )
   await events.datasource.created(datasource)
   datasource._rev = dbResp.rev
 
@@ -422,8 +433,8 @@ export async function destroy(ctx: UserCtx) {
 }
 
 export async function find(ctx: UserCtx) {
-  const database = context.getAppDB()
-  const datasource = await database.get(ctx.params.datasourceId)
+  const db = context.getAppDB()
+  const datasource = await db.get(ctx.params.datasourceId)
   ctx.body = await sdk.datasources.removeSecretSingle(datasource)
 }
 
@@ -434,5 +445,21 @@ export async function query(ctx: UserCtx) {
     ctx.body = await getDatasourceAndQuery(queryJson)
   } catch (err: any) {
     ctx.throw(400, err)
+  }
+}
+
+export async function getExternalSchema(ctx: UserCtx) {
+  const db = context.getAppDB()
+  const datasource = await db.get(ctx.params.datasourceId)
+  const enrichedDatasource = await getAndMergeDatasource(datasource)
+  const connector = await getConnector(enrichedDatasource)
+
+  if (!connector.getExternalSchema) {
+    ctx.throw(400, "Datasource does not support exporting external schema")
+  }
+  const response = await connector.getExternalSchema()
+
+  ctx.body = {
+    schema: response,
   }
 }

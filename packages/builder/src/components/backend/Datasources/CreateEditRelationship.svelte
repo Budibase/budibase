@@ -1,6 +1,7 @@
 <script>
   import { RelationshipTypes } from "constants/backend"
   import {
+    keepOpen,
     Button,
     Input,
     ModalContent,
@@ -59,7 +60,6 @@
   $: valid = getErrorCount(errors) === 0 && allRequiredAttributesSet()
   $: isManyToMany = relationshipType === RelationshipTypes.MANY_TO_MANY
   $: isManyToOne = relationshipType === RelationshipTypes.MANY_TO_ONE
-  $: toRelationship.relationshipType = fromRelationship?.relationshipType
 
   function getTable(id) {
     return plusTables.find(table => table._id === id)
@@ -180,6 +180,16 @@
     return getErrorCount(errors) === 0
   }
 
+  function otherRelationshipType(type) {
+    if (type === RelationshipTypes.MANY_TO_ONE) {
+      return RelationshipTypes.ONE_TO_MANY
+    } else if (type === RelationshipTypes.ONE_TO_MANY) {
+      return RelationshipTypes.MANY_TO_ONE
+    } else if (type === RelationshipTypes.MANY_TO_MANY) {
+      return RelationshipTypes.MANY_TO_MANY
+    }
+  }
+
   function buildRelationships() {
     const id = Helpers.uuid()
     //Map temporary variables
@@ -200,6 +210,7 @@
       ...toRelationship,
       tableId: fromId,
       name: fromColumn,
+      relationshipType: otherRelationshipType(relationshipType),
       through: throughId,
       type: "link",
       _id: id,
@@ -267,7 +278,7 @@
 
   async function saveRelationship() {
     if (!validate()) {
-      return false
+      return keepOpen
     }
     buildRelationships()
     removeExistingRelationship()

@@ -78,9 +78,6 @@
   }
 
   async function removeLooping() {
-    let loopBlock = $selectedAutomation?.definition.steps.find(
-      x => x.blockToLoop === block.id
-    )
     try {
       await automationStore.actions.deleteAutomationBlock(loopBlock)
     } catch (error) {
@@ -89,10 +86,6 @@
   }
 
   async function deleteStep() {
-    let loopBlock = $selectedAutomation?.definition.steps.find(
-      x => x.blockToLoop === block.id
-    )
-
     try {
       if (loopBlock) {
         await automationStore.actions.deleteAutomationBlock(loopBlock)
@@ -168,8 +161,8 @@
               $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
                 .properties
             )}
-            block={loopBlock}
             {webhookModal}
+            block={loopBlock}
           />
         </Layout>
       </div>
@@ -191,7 +184,7 @@
         {#if !isTrigger}
           <div>
             <div class="block-options">
-              {#if block?.features?.[Features.LOOPING] || !block.features}
+              {#if !loopBlock && (block?.features?.[Features.LOOPING] || !block.features)}
                 <ActionButton on:click={() => addLooping()} icon="Reuse">
                   Add Looping
                 </ActionButton>
