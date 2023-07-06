@@ -20,7 +20,7 @@ jobs:
           # days after being marked as stale to close
           days-before-close: 30
           close-issue-label: closed-stale
-          close-issue-message: This issue has been automatically closed it has not had recent activity."
+          close-issue-message: This issue has been automatically closed it has not had any activity in 90 days."
           days-before-pr-close: 7
 
           # exemptions
