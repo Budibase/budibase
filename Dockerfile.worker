@@ -21,7 +21,7 @@ COPY packages/shared-core/package.json packages/shared-core/
 COPY packages/string-templates/package.json packages/string-templates/
 COPY packages/types/package.json packages/types/
 COPY packages/worker/package.json packages/worker/
-COPY packages/pro/packages/pro/package.json packages/pro/packages/pro/
+COPY packages/pro/package.json packages/pro/
 
 # We will never want to sync pro, but the script is still required
 RUN mkdir scripts && echo '' > scripts/syncProPackage.js

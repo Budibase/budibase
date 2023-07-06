@@ -54,7 +54,6 @@ function runBuild(entry, outfile) {
       "mock-aws-s3",
       "nock",
       "pino",
-      "koa-pino-logger",
       "bull",
     ],
   }
