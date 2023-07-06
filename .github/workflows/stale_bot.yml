@@ -12,7 +12,7 @@ jobs:
         with:
           # stale rules
           days-before-stale: 60
-          days-before-pr-stale: 30
+          days-before-pr-stale: 7
           stale-issue-label: stale
           stale-issue-message: "This issue has been automatically marked as stale because it has not had any activity for 60 days."
 
