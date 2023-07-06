@@ -24,14 +24,16 @@
   $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
   // LICENSE KEY
+
   $: activateDisabled = !licenseKey || licenseKeyDisabled
   let licenseKeyDisabled = false
   let licenseKeyType = "text"
   let licenseKey = ""
   let deleteLicenseKeyModal
 
-  // OFFLINE LICENSE
-  let installationIdentifier = undefined
+  // OFFLINE
+
+  let installationIdentifier = "aW5zdGFsbGF0aW9uSWQ9M2MwYmYyZjMtOGJlZi00YTBkLTllN2UtZTU4NmUxMDg2ZjVhLGluc3RhbGxhdGlvblRlbmFudElkPWU5ZWUwNDI0LTE4N2UtNDNhMS1hMDY1LTNiODhmZmE4YzJhZg==\n"
   let offlineLicense = undefined
   const offlineLicenseExtensions = [
     ".txt",
@@ -108,9 +110,9 @@
     }
   }
 
-  async function activateOfflineLicense(offlineLicense) {
+  async function activateOfflineLicense(offlineLicenseToken) {
     try {
-      await API.activateOfflineLicense({ offlineLicense })
+      await API.activateOfflineLicense({ offlineLicenseToken })
       await auth.getSelf()
       await getOfflineLicense()
       notifications.success("Successfully activated")
@@ -134,10 +136,16 @@
 
   async function onOfflineLicenseChange(event) {
     if (event.detail) {
+      // prevent file preview jitter by assigning constant
+      // as soon as possible
+      offlineLicense = {
+        name: "license"
+      }
       const reader = new FileReader()
       reader.readAsText(event.detail)
       reader.onload = () => activateOfflineLicense(reader.result)
     } else {
+      offlineLicense = undefined
       await deleteOfflineLicense()
     }
   }
@@ -178,6 +186,7 @@
         {:else}
           To manage your plan visit your
           <Link size="L" href={upgradeUrl}>account</Link>
+          <div>&nbsp</div>
         {/if}
       </Body>
     </Layout>
@@ -270,7 +279,7 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 100px 1fr;
+    grid-template-columns: 300px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
   }
