@@ -60,7 +60,7 @@ function runBuild(
     },
     metafile,
     external: bundle
-      ? ["deasync", "mock-aws-s3", "nock", "pino", "koa-pino-logger", "bull"]
+      ? ["deasync", "mock-aws-s3", "nock", "pino", "bull"]
       : undefined,
   }
 

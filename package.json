@@ -51,7 +51,7 @@
     "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && lerna run --stream dev:builder --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
     "dev:server": "yarn run kill-server && lerna run --stream dev:builder --scope @budibase/worker --scope @budibase/server",
     "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
-    "dev:docker": "yarn build:docker:pre && docker-compose -f hosting/docker-compose.build.yaml -f hosting/docker-compose.dev.yaml --env-file hosting/.env up --build --scale proxy-service=0",
+    "dev:docker": "docker-compose -f hosting/docker-compose.build.yaml -f hosting/docker-compose.dev.yaml --env-file hosting/.env up --build --scale proxy-service=0",
     "test": "lerna run --stream test --stream",
     "lint:eslint": "eslint packages qa-core --max-warnings=0",
     "lint:prettier": "prettier --check \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\" && prettier --check \"qa-core/**/*.{js,ts,svelte}\"",

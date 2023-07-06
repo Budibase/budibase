@@ -4,7 +4,9 @@ version: "3"
 
 services:
   app-service:
-    build: ../packages/server
+    build:
+      context: ..
+      dockerfile: Dockerfile.server
     container_name: build-bbapps
     environment:
       SELF_HOSTED: 1
@@ -33,7 +35,9 @@ services:
   #      - /some/path/to/plugins:/plugins
 
   worker-service:
-    build: ../packages/worker
+    build:
+      context: ..
+      dockerfile: Dockerfile.worker
     container_name: build-bbworker
     environment:
       SELF_HOSTED: 1
