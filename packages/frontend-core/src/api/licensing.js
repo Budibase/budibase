@@ -27,11 +27,11 @@ export const buildLicensingEndpoints = API => ({
 
   // OFFLINE LICENSE
 
-  activateOfflineLicense: async ({ offlineLicense }) => {
+  activateOfflineLicense: async ({ offlineLicenseToken }) => {
     return API.post({
       url: "/api/global/license/offline",
       body: {
-        offlineLicense
+        offlineLicenseToken
       },
     })
   },
