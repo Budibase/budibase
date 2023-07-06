@@ -8,8 +8,8 @@ const activateLicenseKeyValidator = middleware.joiValidator.body(Joi.object({
   }).required())
 
 const activateOfflineLicenseValidator = middleware.joiValidator.body(Joi.object({
-    offlineLicense: Joi.string().required(),
-  }).required())
+    offlineLicenseToken: Joi.string().required(),
+}).required())
 
 const router: Router = new Router()
 
