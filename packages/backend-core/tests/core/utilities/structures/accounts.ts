@@ -44,6 +44,13 @@ export const cloudAccount = (): CloudAccount => {
   }
 }
 
+export const unverifiedAccount = (): Account => {
+  return {
+    ...account(),
+    verified: false,
+  }
+}
+
 function providerType(): AccountSSOProviderType {
   return _.sample(
     Object.values(AccountSSOProviderType)
