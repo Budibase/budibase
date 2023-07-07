@@ -90,6 +90,6 @@
   .spectrum-Popover {
     min-width: var(--spectrum-global-dimension-size-2000);
     border-color: var(--spectrum-global-color-gray-300);
-    overflow: visible;
+    overflow: auto;
   }
 </style>

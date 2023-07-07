@@ -6,7 +6,7 @@
     Icon,
     AbsTooltip,
     TooltipType,
-    TooltipDirection,
+    TooltipPosition,
   } from "@budibase/bbui"
 
   const {
@@ -37,7 +37,7 @@
   {#if $config.allowSchemaChanges}
     <AbsTooltip
       text="Click here to create your first column"
-      direction={TooltipDirection.Bottom}
+      position={TooltipPosition.Bottom}
       type={TooltipType.Info}
     >
       <div

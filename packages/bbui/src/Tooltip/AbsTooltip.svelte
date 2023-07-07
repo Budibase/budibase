@@ -1,5 +1,5 @@
 <script context="module">
-  export const TooltipDirection = {
+  export const TooltipPosition = {
     Top: "top",
     Right: "right",
     Bottom: "bottom",
@@ -19,8 +19,8 @@
   import { fade } from "svelte/transition"
   import "@spectrum-css/tooltip/dist/index-vars.css"
 
-  export let direction = TooltipDirection.Top
-  export let type = TooltipType.Positive
+  export let position = TooltipPosition.Top
+  export let type = TooltipType.Default
   export let text = ""
 
   let wrapper
@@ -35,16 +35,16 @@
     }
     const bounds = node.getBoundingClientRect()
 
-    if (direction === TooltipDirection.Top) {
+    if (position === TooltipPosition.Top) {
       left = bounds.left + bounds.width / 2
       top = bounds.top
-    } else if (direction === TooltipDirection.Right) {
+    } else if (position === TooltipPosition.Right) {
       left = bounds.left + bounds.width
       top = bounds.top + bounds.height / 2
-    } else if (direction === TooltipDirection.Bottom) {
+    } else if (position === TooltipPosition.Bottom) {
       left = bounds.left + bounds.width / 2
       top = bounds.top + bounds.height
-    } else if (direction === TooltipDirection.Left) {
+    } else if (position === TooltipPosition.Left) {
       left = bounds.left
       top = bounds.top + bounds.height / 2
     } else {
@@ -58,25 +58,29 @@
   }
 </script>
 
-<div
-  bind:this={wrapper}
-  class="abs-tooltip"
-  on:mouseover={show}
-  on:mouseleave={hide}
->
+{#if text}
+  <div
+    bind:this={wrapper}
+    class="abs-tooltip"
+    on:mouseover={show}
+    on:mouseleave={hide}
+  >
+    <slot />
+  </div>
+  {#if visible}
+    <Portal target=".spectrum">
+      <span
+        class="spectrum-Tooltip spectrum-Tooltip--{type} spectrum-Tooltip--{position} is-open"
+        style="left:{left}px;top:{top}px;"
+        transition:fade|local={{ duration: 130 }}
+      >
+        <span class="spectrum-Tooltip-label">{text}</span>
+        <span class="spectrum-Tooltip-tip" />
+      </span>
+    </Portal>
+  {/if}
+{:else}
   <slot />
-</div>
-{#if visible}
-  <Portal target=".spectrum">
-    <span
-      class="spectrum-Tooltip spectrum-Tooltip--{type} spectrum-Tooltip--{direction} is-open"
-      style="left:{left}px;top:{top}px;"
-      transition:fade|local={{ duration: 130 }}
-    >
-      <span class="spectrum-Tooltip-label">{text}</span>
-      <span class="spectrum-Tooltip-tip" />
-    </span>
-  </Portal>
 {/if}
 
 <style>
@@ -85,7 +89,7 @@
   }
   .spectrum-Tooltip {
     position: absolute;
-    z-index: 999;
+    z-index: 9999;
     pointer-events: none;
     margin: 0;
     max-width: 280px;
