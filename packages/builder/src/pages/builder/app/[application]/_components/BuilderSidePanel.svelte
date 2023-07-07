@@ -14,7 +14,6 @@
   import { groups, licensing, apps, users, auth, admin } from "stores/portal"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "api"
-  import { onMount } from "svelte"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "components/common/RoleSelect.svelte"
   import UpgradeModal from "components/common/users/UpgradeModal.svelte"
@@ -25,7 +24,6 @@
 
   let query = null
   let loaded = false
-  let rendered = false
   let inviting = false
   let searchFocus = false
 
@@ -383,10 +381,6 @@
   }
 
   $: initSidePanel($store.builderSidePanel)
-
-  onMount(() => {
-    rendered = true
-  })
 
   function handleKeyDown(evt) {
     if (evt.key === "Enter" && queryIsEmail && !inviting) {

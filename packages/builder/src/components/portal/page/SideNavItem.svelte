@@ -14,7 +14,6 @@
       {text || ""}
     </a>
   {:else}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="text" on:click class:active class:disabled>
       {text || ""}
     </div>
