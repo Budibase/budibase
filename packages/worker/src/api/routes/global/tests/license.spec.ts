@@ -21,9 +21,6 @@ describe("/api/global/license", () => {
 
   describe("POST /api/global/license/refresh", () => {})
 
-  describe("GET /api/global/license/info", () => {})
-
-  describe("DELETE /api/global/license/info", () => {})
 
   describe("GET /api/global/license/usage", () => {})
 })
