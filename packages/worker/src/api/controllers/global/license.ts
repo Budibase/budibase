@@ -11,12 +11,12 @@ import {
 
 export async function activateLicenseKey(ctx: UserCtx<ActivateLicenseKeyRequest>) {
   const { licenseKey } = ctx.request.body
-  await licensing.activateLicenseKey(licenseKey)
+  await licensing.keys.activateLicenseKey(licenseKey)
   ctx.status = 200
 }
 
 export async function getLicenseKey(ctx: UserCtx<void, GetLicenseKeyResponse>) {
-  const licenseKey = await licensing.getLicenseKey()
+  const licenseKey = await licensing.keys.getLicenseKey()
   if (licenseKey) {
     ctx.body = { licenseKey: "*" }
     ctx.status = 200
@@ -26,7 +26,7 @@ export async function getLicenseKey(ctx: UserCtx<void, GetLicenseKeyResponse>) {
 }
 
 export async function deleteLicenseKey(ctx: UserCtx<void, void>) {
-  await licensing.deleteLicenseKey()
+  await licensing.keys.deleteLicenseKey()
   ctx.status = 204
 }
 
@@ -34,12 +34,12 @@ export async function deleteLicenseKey(ctx: UserCtx<void, void>) {
 
 export async function activateOfflineLicense(ctx: UserCtx<ActivateOfflineLicenseRequest>) {
   const { offlineLicenseToken } = ctx.request.body
-  await licensing.activateOfflineLicense(offlineLicenseToken)
+  await licensing.offline.activateOfflineLicense(offlineLicenseToken)
   ctx.status = 200
 }
 
 export async function getOfflineLicense(ctx: UserCtx<void, GetOfflineLicenseResponse>) {
-  const offlineLicenseToken = await licensing.getOfflineLicenseToken()
+  const offlineLicenseToken = await licensing.offline.getOfflineLicenseToken()
   if (offlineLicenseToken) {
     ctx.body = { offlineLicenseToken: "*" }
     ctx.status = 200
@@ -49,7 +49,7 @@ export async function getOfflineLicense(ctx: UserCtx<void, GetOfflineLicenseResp
 }
 
 export async function deleteOfflineLicense(ctx: UserCtx<void, void>) {
-  await licensing.deleteOfflineLicenseToken()
+  await licensing.offline.deleteOfflineLicenseToken()
   ctx.status = 204
 }
 
