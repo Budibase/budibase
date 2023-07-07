@@ -22,11 +22,14 @@
   export let position = TooltipPosition.Top
   export let type = TooltipType.Default
   export let text = ""
+  export let fixed = false
 
   let wrapper
-  let visible = false
+  let hovered = false
   let left = 0
   let top = 0
+
+  $: visible = hovered || fixed
 
   const show = () => {
     const node = wrapper?.children?.[0]
@@ -51,10 +54,10 @@
       return
     }
 
-    visible = true
+    hovered = true
   }
   const hide = () => {
-    visible = false
+    hovered = false
   }
 </script>
 
