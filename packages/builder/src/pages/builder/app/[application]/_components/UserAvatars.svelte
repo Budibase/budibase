@@ -5,6 +5,7 @@
   export let users = []
   export let order = "ltr"
   export let size = "S"
+  export let tooltipPosition = TooltipPosition.Top
 
   $: uniqueUsers = unique(users, order)
   $: avatars = getAvatars(uniqueUsers, order)
@@ -47,7 +48,7 @@
           color="var(--spectrum-global-color-gray-500)"
         />
       {:else}
-        <UserAvatar {size} {user} tooltipPosition={TooltipPosition.Bottom} />
+        <UserAvatar {size} {user} {tooltipPosition} />
       {/if}
     </span>
   {/each}
