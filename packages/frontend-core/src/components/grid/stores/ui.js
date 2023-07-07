@@ -70,8 +70,7 @@ export const deriveStores = context => {
     rowHeight,
     stickyColumn,
     width,
-    columns,
-    stickyColumns,
+    hasNonAutoColumn,
     config,
   } = context
 
@@ -117,18 +116,9 @@ export const deriveStores = context => {
 
   // Derive if we're able to add rows
   const canAddRows = derived(
-    [config, columns, stickyColumn],
-    ([$config, $columns, $stickyColumn]) => {
-      // Check if we have a normal column
-      let allCols = $columns || []
-      if ($stickyColumn) {
-        allCols = [...allCols, $stickyColumn]
-      }
-      const normalCols = allCols.filter(column => {
-        return column.visible && !column.schema?.autocolumn
-      })
-      // Check if we're allowed to add rows
-      return $config.allowAddRows && normalCols.length > 0
+    [config, hasNonAutoColumn],
+    ([$config, $hasNonAutoColumn]) => {
+      return $config.allowAddRows && $hasNonAutoColumn
     }
   )
 

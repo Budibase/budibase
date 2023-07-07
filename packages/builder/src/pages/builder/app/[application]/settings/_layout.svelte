@@ -46,7 +46,7 @@
           />
           <div class="delete-action">
             <AbsTooltip
-              position={TooltipPosition.Right}
+              position={TooltipPosition.Bottom}
               text={$isOnlyUser
                 ? null
                 : "Unavailable - another user is editing this app"}
