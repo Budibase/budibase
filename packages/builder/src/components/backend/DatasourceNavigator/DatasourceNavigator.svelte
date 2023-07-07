@@ -169,7 +169,7 @@
       on:click={() => selectTable(TableNames.USERS)}
       selectedBy={$userSelectedResourceMap[TableNames.USERS]}
     />
-    {#each enrichedDataSources as datasource, idx}
+    {#each enrichedDataSources as datasource}
       <NavItem
         border
         text={datasource.name}

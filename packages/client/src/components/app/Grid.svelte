@@ -42,7 +42,7 @@
 >
   {#if $builderStore.inBuilder}
     <div class="underlay">
-      {#each coords as coord}
+      {#each coords as _}
         <div class="placeholder" />
       {/each}
     </div>
