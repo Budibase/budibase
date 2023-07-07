@@ -64,4 +64,5 @@ export const refresh = async (ctx: any) => {
 
 export const getQuotaUsage = async (ctx: any) => {
   ctx.body = await quotas.getQuotaUsage()
+  ctx.status = 200
 }
