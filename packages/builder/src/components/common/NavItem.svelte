@@ -3,6 +3,7 @@
   import { createEventDispatcher, getContext } from "svelte"
   import { helpers } from "@budibase/shared-core"
   import { UserAvatar } from "@budibase/frontend-core"
+  import UserAvatars from "../../pages/builder/app/[application]/_components/UserAvatars.svelte"
 
   export let icon
   export let withArrow = false
@@ -102,7 +103,7 @@
     <div class="text" title={showTooltip ? text : null}>
       {text}
       {#if selectedBy}
-        <UserAvatar user={selectedBy} size="XS" />
+        <UserAvatars size="XS" users={selectedBy} />
       {/if}
     </div>
 
@@ -145,13 +146,16 @@
   }
   .nav-item.highlighted {
     background-color: var(--spectrum-global-color-gray-200);
+    --avatars-background: var(--spectrum-global-color-gray-200);
   }
   .nav-item.selected {
     background-color: var(--spectrum-global-color-gray-300);
+    --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
   }
   .nav-item:hover {
     background-color: var(--spectrum-global-color-gray-300);
+    --avatars-background: var(--spectrum-global-color-gray-300);
   }
   .nav-item:hover .actions {
     visibility: visible;
