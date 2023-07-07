@@ -36,6 +36,7 @@ export { default as Layout } from "./Layout/Layout.svelte"
 export { default as Page } from "./Layout/Page.svelte"
 export { default as Link } from "./Link/Link.svelte"
 export { default as Tooltip } from "./Tooltip/Tooltip.svelte"
+export { default as TempTooltip } from "./Tooltip/TempTooltip.svelte"
 export {
   default as AbsTooltip,
   TooltipPosition,

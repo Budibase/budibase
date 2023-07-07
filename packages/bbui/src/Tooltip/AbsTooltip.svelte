@@ -5,7 +5,6 @@
     Bottom: "bottom",
     Left: "left",
   }
-
   export const TooltipType = {
     Default: "default",
     Info: "info",
@@ -23,14 +22,27 @@
   export let type = TooltipType.Default
   export let text = ""
   export let fixed = false
+  export let color = null
 
   let wrapper
   let hovered = false
   let left = 0
   let top = 0
+  let visible = false
+  let timeout
 
-  $: visible = hovered || fixed
+  $: {
+    if (hovered || fixed) {
+      timeout = setTimeout(show, 200)
+    } else {
+      clearTimeout(timeout)
+      hide()
+    }
+  }
+  $: tooltipStyle = color ? `background:${color};` : null
+  $: tipStyle = color ? `border-top-color:${color};` : null
 
+  // Computes the position of the tooltip then shows it
   const show = () => {
     const node = wrapper?.children?.[0]
     if (!node) {
@@ -38,6 +50,7 @@
     }
     const bounds = node.getBoundingClientRect()
 
+    // Determine where to render tooltip based on position prop
     if (position === TooltipPosition.Top) {
       left = bounds.left + bounds.width / 2
       top = bounds.top
@@ -54,36 +67,36 @@
       return
     }
 
-    hovered = true
+    visible = true
   }
+
+  // Hides the tooltip
   const hide = () => {
-    hovered = false
+    visible = false
   }
 </script>
 
-{#if text}
-  <div
-    bind:this={wrapper}
-    class="abs-tooltip"
-    on:mouseover={show}
-    on:mouseleave={hide}
-  >
-    <slot />
-  </div>
-  {#if visible}
-    <Portal target=".spectrum">
-      <span
-        class="spectrum-Tooltip spectrum-Tooltip--{type} spectrum-Tooltip--{position} is-open"
-        style="left:{left}px;top:{top}px;"
-        transition:fade|local={{ duration: 130 }}
-      >
-        <span class="spectrum-Tooltip-label">{text}</span>
-        <span class="spectrum-Tooltip-tip" />
-      </span>
-    </Portal>
-  {/if}
-{:else}
+<div
+  bind:this={wrapper}
+  class="abs-tooltip"
+  on:focus={null}
+  on:mouseover={() => (hovered = true)}
+  on:mouseleave={() => (hovered = false)}
+>
   <slot />
+</div>
+
+{#if visible && text}
+  <Portal target=".spectrum">
+    <span
+      class="spectrum-Tooltip spectrum-Tooltip--{type} spectrum-Tooltip--{position} is-open"
+      style={`left:${left}px;top:${top}px;${tooltipStyle}`}
+      transition:fade|local={{ duration: 130 }}
+    >
+      <span class="spectrum-Tooltip-label">{text}</span>
+      <span class="spectrum-Tooltip-tip" style={tipStyle} />
+    </span>
+  </Portal>
 {/if}
 
 <style>
@@ -101,6 +114,8 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
   }
 
   /* Colour overrides for default type */

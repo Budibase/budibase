@@ -4,7 +4,7 @@
   import HeaderCell from "../cells/HeaderCell.svelte"
   import {
     Icon,
-    AbsTooltip,
+    TempTooltip,
     TooltipType,
     TooltipPosition,
   } from "@budibase/bbui"
@@ -16,10 +16,11 @@
     hiddenColumnsWidth,
     width,
     config,
+    hasNonAutoColumn,
   } = getContext("grid")
 
   $: columnsWidth = $renderedColumns.reduce(
-    (total, col) => (total += col.width),
+    (total, col) => total + col.width,
     0
   )
   $: end = $hiddenColumnsWidth + columnsWidth - 1 - $scroll.left
@@ -35,19 +36,23 @@
     </div>
   </GridScrollWrapper>
   {#if $config.allowSchemaChanges}
-    <AbsTooltip
-      text="Click here to create your first column"
-      position={TooltipPosition.Bottom}
-      type={TooltipType.Info}
-    >
-      <div
-        class="add"
-        style="left:{left}px"
-        on:click={() => dispatch("add-column")}
+    {#key left}
+      <TempTooltip
+        text="Click here to create your first column"
+        position={TooltipPosition.Top}
+        type={TooltipType.Info}
+        duration={3000}
+        condition={!$hasNonAutoColumn}
       >
-        <Icon name="Add" />
-      </div>
-    </AbsTooltip>
+        <div
+          class="add"
+          style="left:{left}px"
+          on:click={() => dispatch("add-column")}
+        >
+          <Icon name="Add" />
+        </div>
+      </TempTooltip>
+    {/key}
   {/if}
 </div>
 
