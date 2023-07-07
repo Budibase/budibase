@@ -138,21 +138,26 @@ export async function sqlSearch(ctx: UserCtx) {
       page: params.bookmark,
     }
   }
-  let sql = builder._query(request, {
-    disableReturning: true,
-    disablePreparedStatements: true,
-  })
+  try {
+    let sql = builder._query(request, {
+      disableReturning: true,
+      disablePreparedStatements: true,
+    })
 
-  // quick hack for docIds
-  sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
-  sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
+    // quick hack for docIds
+    sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
+    sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
 
-  const db = context.getAppDB()
-  const rows = await db.sql<Row[]>(sql)
+    const db = context.getAppDB()
+    const rows = await db.sql<Row[]>(sql)
 
-  return {
-    rows: sqlOutputProcessing(rows, table, allTablesMap, relationships, {
-      internal: true,
-    }),
+    return {
+      rows: sqlOutputProcessing(rows, table, allTablesMap, relationships, {
+        internal: true,
+      }),
+    }
+  } catch (err: any) {
+    const msg = typeof err === "string" ? err : err.message
+    throw new Error(`Unable to search by SQL - ${msg}`)
   }
 }

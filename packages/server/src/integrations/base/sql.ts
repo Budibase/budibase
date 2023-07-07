@@ -36,8 +36,11 @@ function likeKey(client: string, key: string): string {
       start = "["
       end = "]"
       break
+    case SqlClient.SQL_LITE:
+      start = end = "'"
+      break
     default:
-      throw "Unknown client"
+      throw new Error("Unknown client generating like key")
   }
   const parts = key.split(".")
   key = parts.map(part => `${start}${part}${end}`).join(".")
@@ -537,7 +540,11 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    */
   _query(json: QueryJson, opts: QueryOptions = {}) {
     const sqlClient = this.getSqlClient()
-    const client = knex({ client: sqlClient })
+    const config: { client: string, useNullAsDefault?: boolean } = { client: sqlClient }
+    if (sqlClient === SqlClient.SQL_LITE) {
+      config.useNullAsDefault = true
+    }
+    const client = knex(config)
     let query
     const builder = new InternalBuilder(sqlClient)
     switch (this._operation(json)) {

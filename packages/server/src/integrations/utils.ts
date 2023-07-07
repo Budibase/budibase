@@ -1,4 +1,4 @@
-import { SourceName, SqlQuery, Datasource, Table } from "@budibase/types"
+import { SqlQuery, Table } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
 import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 import { helpers } from "@budibase/shared-core"
@@ -74,7 +74,7 @@ export enum SqlClient {
   POSTGRES = "pg",
   MY_SQL = "mysql2",
   ORACLE = "oracledb",
-  SQL_LITE = "better-sqlite3",
+  SQL_LITE = "sqlite3",
 }
 
 export function isExternalTable(tableId: string) {
