@@ -3,7 +3,7 @@
   import { helpers } from "@budibase/shared-core"
 
   export let user
-  export let size
+  export let size = "S"
   export let tooltipPosition = TooltipPosition.Top
   export let showTooltip = true
 </script>

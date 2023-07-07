@@ -172,7 +172,7 @@
       </div>
       <div class="toprightnav">
         <span>
-          <UserAvatars users={$userStore} />
+          <UserAvatars users={$userStore} order="rtl" />
         </span>
         <AppActions {application} {loaded} />
       </div>
