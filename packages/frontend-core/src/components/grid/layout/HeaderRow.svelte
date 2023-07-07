@@ -2,12 +2,7 @@
   import { getContext } from "svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import HeaderCell from "../cells/HeaderCell.svelte"
-  import {
-    Icon,
-    TempTooltip,
-    TooltipType,
-    TooltipPosition,
-  } from "@budibase/bbui"
+  import { Icon, TempTooltip, TooltipType } from "@budibase/bbui"
 
   const {
     renderedColumns,
@@ -17,6 +12,8 @@
     width,
     config,
     hasNonAutoColumn,
+    tableId,
+    loading,
   } = getContext("grid")
 
   $: columnsWidth = $renderedColumns.reduce(
@@ -36,17 +33,15 @@
     </div>
   </GridScrollWrapper>
   {#if $config.allowSchemaChanges}
-    {#key left}
+    {#key $tableId}
       <TempTooltip
         text="Click here to create your first column"
-        position={TooltipPosition.Top}
         type={TooltipType.Info}
-        duration={3000}
-        condition={!$hasNonAutoColumn}
+        condition={!$hasNonAutoColumn && !$loading}
       >
         <div
           class="add"
-          style="left:{left}px"
+          style="left:{left}px;"
           on:click={() => dispatch("add-column")}
         >
           <Icon name="Add" />

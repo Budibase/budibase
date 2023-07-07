@@ -17,6 +17,7 @@
   import Portal from "svelte-portal"
   import { fade } from "svelte/transition"
   import "@spectrum-css/tooltip/dist/index-vars.css"
+  import { onDestroy } from "svelte"
 
   export let position = TooltipPosition.Top
   export let type = TooltipType.Default
@@ -30,20 +31,21 @@
   let top = 0
   let visible = false
   let timeout
+  let interval
 
   $: {
     if (hovered || fixed) {
+      // Debounce showing by 200ms to avoid flashing tooltip
       timeout = setTimeout(show, 200)
     } else {
-      clearTimeout(timeout)
       hide()
     }
   }
   $: tooltipStyle = color ? `background:${color};` : null
   $: tipStyle = color ? `border-top-color:${color};` : null
 
-  // Computes the position of the tooltip then shows it
-  const show = () => {
+  // Computes the position of the tooltip
+  const updateTooltipPosition = () => {
     const node = wrapper?.children?.[0]
     if (!node) {
       return
@@ -63,17 +65,27 @@
     } else if (position === TooltipPosition.Left) {
       left = bounds.left
       top = bounds.top + bounds.height / 2
-    } else {
-      return
     }
+  }
 
+  // Computes the position of the tooltip then shows it.
+  // We set up a poll to frequently update the position of the tooltip in case
+  // the target moves.
+  const show = () => {
+    updateTooltipPosition()
+    interval = setInterval(updateTooltipPosition, 100)
     visible = true
   }
 
   // Hides the tooltip
   const hide = () => {
+    clearTimeout(timeout)
+    clearInterval(interval)
     visible = false
   }
+
+  // Ensure we clean up interval and timeout
+  onDestroy(hide)
 </script>
 
 <div
@@ -109,6 +121,7 @@
     pointer-events: none;
     margin: 0;
     max-width: 280px;
+    transition: top 130ms ease-out, left 130ms ease-out;
   }
   .spectrum-Tooltip-label {
     text-overflow: ellipsis;
@@ -126,7 +139,7 @@
     border-top-color: var(--spectrum-global-color-gray-500);
   }
 
-  /* Direction styles */
+  /* Position styles */
   .spectrum-Tooltip--top {
     transform: translateX(-50%) translateY(calc(-100% - 8px));
   }
