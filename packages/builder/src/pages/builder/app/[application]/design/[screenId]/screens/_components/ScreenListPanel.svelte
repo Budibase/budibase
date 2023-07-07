@@ -2,7 +2,7 @@
   import { Search, Layout, Select, Body, Button } from "@budibase/bbui"
   import Panel from "components/design/Panel.svelte"
   import { roles } from "stores/backend"
-  import { store, sortedScreens } from "builderStore"
+  import { store, sortedScreens, userSelectedResourceMap } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
   import ScreenWizard from "./ScreenWizard.svelte"
@@ -60,6 +60,7 @@
       on:click={() => store.actions.screens.select(screen._id)}
       rightAlignIcon
       showTooltip
+      selectedBy={$userSelectedResourceMap[screen._id]}
     >
       <ScreenDropdownMenu screenId={screen._id} />
       <RoleIndicator slot="right" roleId={screen.routing.roleId} />

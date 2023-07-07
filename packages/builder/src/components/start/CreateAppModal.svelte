@@ -1,6 +1,12 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
-  import { notifications, Input, ModalContent, Dropzone } from "@budibase/bbui"
+  import {
+    notifications,
+    keepOpen,
+    Input,
+    ModalContent,
+    Dropzone,
+  } from "@budibase/bbui"
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { apps, admin, auth } from "stores/portal"
@@ -167,7 +173,7 @@
       onConfirm: async () => {
         if (encryptedFile) {
           currentStep = Step.SET_PASSWORD
-          return false
+          return keepOpen
         } else {
           try {
             await createNewApp()
@@ -190,7 +196,7 @@
             message += `: ${lowercase(e.message)}`
           }
           notifications.error(message)
-          return false
+          return keepOpen
         }
       },
       isValid: $encryptionValidation.valid,
