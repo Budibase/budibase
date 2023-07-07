@@ -38,7 +38,7 @@ export { default as Link } from "./Link/Link.svelte"
 export { default as Tooltip } from "./Tooltip/Tooltip.svelte"
 export {
   default as AbsTooltip,
-  TooltipDirection,
+  TooltipPosition,
   TooltipType,
 } from "./Tooltip/AbsTooltip.svelte"
 export { default as TooltipWrapper } from "./Tooltip/TooltipWrapper.svelte"
