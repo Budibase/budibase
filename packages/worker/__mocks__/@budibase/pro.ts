@@ -11,6 +11,7 @@ const pro = {
       activateOfflineLicense: jest.fn(),
       getOfflineLicenseToken: jest.fn(),
       deleteOfflineLicenseToken: jest.fn(),
+      getIdentifierBase64: jest.fn()
     },
     cache: {
       ...actual.licensing.cache,
