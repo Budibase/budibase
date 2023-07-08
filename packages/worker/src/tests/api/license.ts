@@ -51,4 +51,9 @@ export class LicenseAPI extends TestAPI {
       .delete("/api/global/license/offline")
       .set(this.config.defaultHeaders())
   }
+  getOfflineLicenseIdentifier = async () => {
+    return this.request
+      .get("/api/global/license/offline/identifier")
+      .set(this.config.defaultHeaders())
+  }
 }

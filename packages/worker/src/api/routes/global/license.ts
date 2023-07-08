@@ -24,5 +24,6 @@ router
   .post("/api/global/license/offline", activateOfflineLicenseValidator, controller.activateOfflineLicense)
   .get("/api/global/license/offline", controller.getOfflineLicense)
   .delete("/api/global/license/offline", controller.deleteOfflineLicense)
+  .get("/api/global/license/offline/identifier", controller.getOfflineLicenseIdentifier)
 
 export default router
