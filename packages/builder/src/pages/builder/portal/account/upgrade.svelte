@@ -33,7 +33,7 @@
 
   // OFFLINE
 
-  let installationIdentifier = "aW5zdGFsbGF0aW9uSWQ9M2MwYmYyZjMtOGJlZi00YTBkLTllN2UtZTU4NmUxMDg2ZjVhLGluc3RhbGxhdGlvblRlbmFudElkPWU5ZWUwNDI0LTE4N2UtNDNhMS1hMDY1LTNiODhmZmE4YzJhZg==\n"
+  let offlineLicenseIdentifier = ""
   let offlineLicense = undefined
   const offlineLicenseExtensions = [
     ".txt",
@@ -44,8 +44,6 @@
     if ($admin.cloud) {
       $redirect("../../portal")
     }
-
-    console.log({ offlineLicense })
   }
 
   // LICENSE KEY
@@ -110,6 +108,16 @@
     }
   }
 
+  const getOfflineLicenseIdentifier = async () => {
+    try {
+      const res = await API.getOfflineLicenseIdentifier()
+      offlineLicenseIdentifier = res.identifierBase64
+    } catch (e) {
+      console.error(e)
+      notifications.error("Error loading installation identifier")
+    }
+  }
+
   async function activateOfflineLicense(offlineLicenseToken) {
     try {
       await API.activateOfflineLicense({ offlineLicenseToken })
@@ -163,7 +171,7 @@
 
   onMount(async () => {
     if ($admin.offlineMode) {
-      await getOfflineLicense()
+      await Promise.all([getOfflineLicense(), getOfflineLicenseIdentifier()])
     } else {
       await getLicenseKey()
     }
@@ -199,7 +207,7 @@
       <Layout noPadding>
         <div class="fields">
           <div class="field">
-            <CopyInput value={installationIdentifier} />
+            <CopyInput value={offlineLicenseIdentifier} />
           </div>
         </div>
       </Layout>
