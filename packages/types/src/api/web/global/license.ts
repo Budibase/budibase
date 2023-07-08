@@ -17,3 +17,9 @@ export interface ActivateOfflineLicenseRequest {
 export interface GetOfflineLicenseResponse {
   offlineLicenseToken: string
 }
+
+// IDENTIFIER
+
+export interface GetOfflineIdentifierResponse {
+  identifierBase64: string
+}

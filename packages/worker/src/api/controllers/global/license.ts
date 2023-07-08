@@ -3,6 +3,7 @@ import {
   ActivateLicenseKeyRequest,
   ActivateOfflineLicenseRequest,
   GetLicenseKeyResponse,
+  GetOfflineIdentifierResponse,
   GetOfflineLicenseResponse,
   UserCtx,
 } from "@budibase/types"
@@ -51,6 +52,12 @@ export async function getOfflineLicense(ctx: UserCtx<void, GetOfflineLicenseResp
 export async function deleteOfflineLicense(ctx: UserCtx<void, void>) {
   await licensing.offline.deleteOfflineLicenseToken()
   ctx.status = 204
+}
+
+export async function getOfflineLicenseIdentifier(ctx: UserCtx<void, GetOfflineIdentifierResponse>) {
+  const identifierBase64 = await licensing.offline.getIdentifierBase64()
+  ctx.body = { identifierBase64 }
+  ctx.status = 200
 }
 
 // LICENSES

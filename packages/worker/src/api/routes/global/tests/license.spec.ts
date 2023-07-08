@@ -26,7 +26,7 @@ describe("/api/global/license", () => {
   })
 
   describe("GET /api/global/license/usage", () => {
-    it("returns 200", async () => {
+    it("returns 200 + usage", async () => {
       const usage = structures.quotas.usage()
       quotas.getQuotaUsage.mockResolvedValue(usage)
       const res = await config.api.license.getUsage()
@@ -79,7 +79,7 @@ describe("/api/global/license", () => {
       const res = await config.api.license.getOfflineLicense()
       expect(res.status).toBe(404)
     })
-    it("returns 200", async () => {
+    it("returns 200 + offline license token", async () => {
       licensing.offline.getOfflineLicenseToken.mockResolvedValue("offlineLicenseToken")
       const res = await config.api.license.getOfflineLicense()
       expect(res.status).toBe(200)
@@ -90,10 +90,21 @@ describe("/api/global/license", () => {
   })
 
   describe("DELETE /api/global/license/offline", () => {
-    it("deletes offline license", async () => {
+    it("returns 204", async () => {
       const res = await config.api.license.deleteOfflineLicense()
       expect(res.status).toBe(204)
       expect(licensing.offline.deleteOfflineLicenseToken).toBeCalledTimes(1)
+    })
+  })
+
+  describe("GET /api/global/license/offline/identifier", () => {
+    it("returns 200 + identifier base64", async () => {
+      licensing.offline.getIdentifierBase64.mockResolvedValue("base64")
+      const res = await config.api.license.getOfflineLicenseIdentifier()
+      expect(res.status).toBe(200)
+      expect(res.body).toEqual({
+        identifierBase64: "base64"
+      })
     })
   })
 })
