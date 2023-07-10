@@ -1,17 +1,40 @@
 <script>
   import { Layout, Body, Button } from "@budibase/bbui"
   import { downloadStream } from "@budibase/frontend-core"
+  import Spinner from "components/common/Spinner.svelte"
 
   import { API } from "api"
 
+  let loading = false
+
   async function download() {
-    downloadStream(await API.getServerLogs())
+    loading = true
+    try {
+      await downloadStream(await API.getServerLogs())
+    } finally {
+      loading = false
+    }
   }
 </script>
 
 <Layout noPadding>
   <Body>Download your latest logs to share with the Budibase team</Body>
   <div class="download-button">
-    <Button cta on:click={download}>Download system logs</Button>
+    <Button cta on:click={download} disabled={loading}>
+      <div class="button-content">
+        {#if loading}
+          <div><Spinner size="10" /></div>
+        {/if}
+        Download system logs
+      </div>
+    </Button>
   </div>
 </Layout>
+
+<style>
+  .button-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+</style>
