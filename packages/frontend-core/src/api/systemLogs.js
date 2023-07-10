@@ -1,8 +1,8 @@
 export const buildLogsEndpoints = API => ({
   /**
-   * Gets a list of datasources.
+   * Gets a stream for the system logs.
    */
-  getServerLogs: async () => {
+  getSystemLogs: async () => {
     return await API.get({
       url: "/api/global/system/logs",
       json: false,
