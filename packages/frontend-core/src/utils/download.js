@@ -12,8 +12,17 @@ export function downloadText(filename, text) {
   URL.revokeObjectURL(url)
 }
 
-export async function downloadStream(filename, streamResponse) {
+export async function downloadStream(streamResponse) {
   const blob = await streamResponse.blob()
+
+  const contentDisposition = streamResponse.headers.get("Content-Disposition")
+
+  const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
+    contentDisposition
+  )
+
+  const filename = matches[1].replace(/['"]/g, "")
+
   const resBlob = new Blob([blob])
 
   const blobUrl = URL.createObjectURL(resBlob)
