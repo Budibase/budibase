@@ -18,6 +18,8 @@ import accountRoutes from "./system/accounts"
 import restoreRoutes from "./system/restore"
 import systemLogRoutes from "./system/logs"
 
+import env from "../../environment"
+
 export const routes: Router[] = [
   configRoutes,
   userRoutes,
@@ -38,5 +40,8 @@ export const routes: Router[] = [
   restoreRoutes,
   eventRoutes,
   pro.scim,
-  systemLogRoutes,
 ]
+
+if (env.SELF_HOSTED) {
+  routes.push(systemLogRoutes)
+}
