@@ -11,7 +11,6 @@ const rollingFileName = `${logsFileName}.bak`
 export function localFileDestination() {
   const outFile = rfs.createStream(logsFileName, {
     size: env.ROLLING_LOG_MAX_SIZE,
-    teeToStdout: true,
   })
 
   outFile.on("rotation", () => {
@@ -28,6 +27,6 @@ export function getLogReadStream() {
   }
 
   const rollingContent = fs.readFileSync(rollingFileName)
-  const combinedContent = Buffer.concat([logsContent, rollingContent])
+  const combinedContent = Buffer.concat([rollingContent, logsContent])
   return combinedContent
 }
