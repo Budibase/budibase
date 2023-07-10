@@ -1,4 +1,4 @@
-export const buildLogsEndpoints = API => ({
+export const buildSystemLogsEndpoints = API => ({
   /**
    * Gets a stream for the system logs.
    */
