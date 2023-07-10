@@ -24,6 +24,7 @@ import {
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
 import { db as dbCore } from "@budibase/backend-core"
+import { builderSocket } from "../../websockets"
 
 async function getActionDefinitions() {
   return removeDeprecated(await actionDefs())
@@ -107,6 +108,7 @@ export async function create(ctx: BBContext) {
       ...response,
     },
   }
+  builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
 export function getNewSteps(oldAutomation: Automation, automation: Automation) {
@@ -187,6 +189,7 @@ export async function update(ctx: BBContext) {
       _id: response.id,
     },
   }
+  builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
 export async function fetch(ctx: BBContext) {
@@ -215,6 +218,7 @@ export async function destroy(ctx: BBContext) {
   await cleanupAutomationMetadata(automationId)
   ctx.body = await db.remove(automationId, ctx.params.rev)
   await events.automation.deleted(oldAutomation)
+  builderSocket?.emitAutomationDeletion(ctx, automationId)
 }
 
 export async function logSearch(ctx: BBContext) {

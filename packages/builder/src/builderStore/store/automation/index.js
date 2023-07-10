@@ -3,6 +3,7 @@ import { API } from "api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { selectedAutomation } from "builderStore"
+import { automationStore } from "builderStore"
 
 const initialAutomationState = {
   automations: [],
@@ -247,5 +248,40 @@ const automationActions = store => ({
       )
     }
     await store.actions.save(newAutomation)
+  },
+  replace: async (automationId, automation) => {
+    if (!automationId) {
+      return
+    }
+    if (!automation) {
+      store.update(state => {
+        // Remove the automation
+        state.automations = state.automations.filter(
+          x => x._id !== automationId
+        )
+        // Select a new automation if required
+        if (automationId === state.selectedAutomationId) {
+          store.actions.select(state.automations[0]?._id)
+        }
+        return state
+      })
+    } else {
+      const index = get(store).automations.findIndex(
+        x => x._id === automation._id
+      )
+      if (index === -1) {
+        // Automation addition
+        store.update(state => ({
+          ...state,
+          automations: [...state.automations, automation],
+        }))
+      } else {
+        // Automation update
+        store.update(state => {
+          state.automations[index] = automation
+          return state
+        })
+      }
+    }
   },
 })
