@@ -8,7 +8,7 @@ import * as context from "../../context"
 import * as correlation from "../correlation"
 import { LOG_CONTEXT } from "../index"
 
-import { localFileDestination } from "../localLogging"
+import { localFileDestination } from "../system"
 
 // LOGGER
 
