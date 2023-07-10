@@ -27,8 +27,6 @@
       value: "ADMIN",
     },
   ]
-
-  const isFullScreen = window.parent.isBuilder
 </script>
 
 <div class="dev-preview-header" class:mobile={$context.device.mobile}>
