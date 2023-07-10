@@ -10,6 +10,7 @@ import {
   ContextUser,
   Screen,
   App,
+  Automation,
 } from "@budibase/types"
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
@@ -154,6 +155,20 @@ export default class BuilderSocket extends BaseSocket {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppPublishChange, {
       published: false,
       user: ctx.user,
+    })
+  }
+
+  emitAutomationUpdate(ctx: any, automation: Automation) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AutomationChange, {
+      id: automation._id,
+      automation,
+    })
+  }
+
+  emitAutomationDeletion(ctx: any, id: string) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AutomationChange, {
+      id,
+      automation: null,
     })
   }
 }

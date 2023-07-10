@@ -8,6 +8,10 @@
   import { onDestroy, onMount } from "svelte"
   import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
+  import { store } from "builderStore"
+
+  $: automationId = $selectedAutomation?._id
+  $: store.actions.websocket.selectResource(automationId)
 
   // Keep URL and state in sync for selected screen ID
   const stopSyncing = syncURLToState({
