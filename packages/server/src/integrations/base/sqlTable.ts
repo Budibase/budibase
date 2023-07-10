@@ -53,6 +53,9 @@ function generateSchema(
           schema.float(key)
         }
         break
+      case FieldTypes.BIGINT:
+        schema.bigint(key)
+        break
       case FieldTypes.BOOLEAN:
         schema.boolean(key)
         break

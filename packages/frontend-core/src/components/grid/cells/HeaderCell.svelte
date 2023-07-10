@@ -37,8 +37,12 @@
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
   $: canMoveRight = orderable && idx < $renderedColumns.length - 1
-  $: ascendingLabel = column.schema?.type === "number" ? "low-high" : "A-Z"
-  $: descendingLabel = column.schema?.type === "number" ? "high-low" : "Z-A"
+  $: ascendingLabel = ["number", "bigint"].includes(column.schema?.type)
+    ? "low-high"
+    : "A-Z"
+  $: descendingLabel = ["number", "bigint"].includes(column.schema?.type)
+    ? "high-low"
+    : "Z-A"
 
   const editColumn = () => {
     dispatch("edit-column", column.schema)

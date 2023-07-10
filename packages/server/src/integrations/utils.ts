@@ -48,7 +48,6 @@ const SQL_STRING_TYPE_MAP = {
   blob: FieldTypes.STRING,
   long: FieldTypes.STRING,
   text: FieldTypes.STRING,
-  bigint: FieldTypes.STRING,
 }
 
 const SQL_BOOLEAN_TYPE_MAP = {
@@ -59,6 +58,7 @@ const SQL_BOOLEAN_TYPE_MAP = {
 
 const SQL_MISC_TYPE_MAP = {
   json: FieldTypes.JSON,
+  bigint: FieldTypes.BIGINT,
 }
 
 const SQL_TYPE_MAP = {
