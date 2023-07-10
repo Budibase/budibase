@@ -10,11 +10,11 @@ export interface GetLicenseKeyResponse {
 
 // OFFLINE LICENSE
 
-export interface ActivateOfflineLicenseRequest {
+export interface ActivateOfflineLicenseTokenRequest {
   offlineLicenseToken: string
 }
 
-export interface GetOfflineLicenseResponse {
+export interface GetOfflineLicenseTokenResponse {
   offlineLicenseToken: string
 }
 
