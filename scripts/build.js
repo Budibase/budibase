@@ -49,13 +49,7 @@ function runBuild(entry, outfile) {
       ".svelte": "copy",
     },
     metafile: true,
-    external: [
-      "deasync",
-      "mock-aws-s3",
-      "nock",
-      "pino",
-      "bull",
-    ],
+    external: ["deasync", "mock-aws-s3", "nock"],
   }
 
   build({
