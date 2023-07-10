@@ -21,6 +21,7 @@
   const FieldTypeToComponentMap = {
     string: "stringfield",
     number: "numberfield",
+    bigint: "bigintfield",
     options: "optionsfield",
     array: "multifieldselect",
     boolean: "booleanfield",

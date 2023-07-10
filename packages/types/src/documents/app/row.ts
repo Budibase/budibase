@@ -15,6 +15,7 @@ export enum FieldType {
   JSON = "json",
   INTERNAL = "internal",
   BARCODEQR = "barcodeqr",
+  BIGINT = "bigint",
 }
 
 export interface RowAttachment {

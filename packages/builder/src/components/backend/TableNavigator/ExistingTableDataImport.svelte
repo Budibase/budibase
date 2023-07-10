@@ -6,7 +6,6 @@
 
   let error = null
   let fileName = null
-  let fileType = null
 
   let loading = false
   let updateExistingRows = false
@@ -74,7 +73,6 @@
       const response = await parseFile(e)
       rows = response.rows
       fileName = response.fileName
-      fileType = response.fileType
     } catch (e) {
       loading = false
       error = e
