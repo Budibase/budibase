@@ -25,7 +25,7 @@
 </script>
 
 <div class="automations-list">
-  {#each $automationStore.automations.sort(aut => aut.name) as automation, idx}
+  {#each $automationStore.automations.sort(aut => aut.name) as automation}
     <NavItem
       icon="ShareAndroid"
       text={automation.name}

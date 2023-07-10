@@ -3,7 +3,6 @@ import { API } from "api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { selectedAutomation } from "builderStore"
-import { automationStore } from "builderStore"
 
 const initialAutomationState = {
   automations: [],
