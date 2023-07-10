@@ -49,6 +49,7 @@ import {
   MigrationType,
   PlanType,
   Screen,
+  SocketSession,
   UserCtx,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
@@ -178,11 +179,12 @@ export const addSampleData = async (ctx: UserCtx) => {
 export async function fetch(ctx: UserCtx) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = (await dbCore.getAllApps({ dev, all })) as App[]
+  let apps = (await dbCore.getAllApps({ dev, all })) as App[]
 
   const appIds = apps
     .filter((app: any) => app.status === "development")
     .map((app: any) => app.appId)
+
   // get the locks for all the dev apps
   if (dev || all) {
     const locks = await getLocksById(appIds)
@@ -195,6 +197,30 @@ export async function fetch(ctx: UserCtx) {
         delete app.lockedBy
       }
     }
+  }
+
+  // Get all builder sessions in each app
+  const sessions = await builderSocket?.getRoomSessions(appIds)
+  if (sessions?.length) {
+    let appSessionMap: { [key: string]: SocketSession[] } = {}
+    sessions.forEach(session => {
+      const room = session.room
+      if (!room) {
+        return
+      }
+      if (!appSessionMap[room]) {
+        appSessionMap[room] = []
+      }
+      appSessionMap[room].push(session)
+    })
+    apps.forEach(app => {
+      const sessions = appSessionMap[app.appId]
+      if (sessions?.length) {
+        app.sessions = sessions
+      } else {
+        delete app.sessions
+      }
+    })
   }
 
   ctx.body = await checkAppMetadata(apps)
