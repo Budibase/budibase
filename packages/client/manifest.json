@@ -3224,6 +3224,46 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Play sound on scan",
+        "key": "beepOnScan",
+        "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Sound pitch",
+        "key": "beepFrequency",
+        "dependsOn": "beepOnScan",
+        "defaultValue": 2637,
+        "options": [
+          {
+            "label": "Low",
+            "value": 2096
+          },
+          {
+            "label": "Regular",
+            "value": 2637
+          },
+          {
+            "label": "High",
+            "value": 3136
+          },
+          { "label": "Custom", "value": "custom" }
+        ]
+      },
+      {
+        "type": "number",
+        "label": "Sound frequency (Hz)",
+        "key": "customFrequency",
+        "defaultValue": 1046,
+        "min": 20,
+        "max": 8000,
+        "dependsOn": {
+          "setting": "beepFrequency",
+          "value": "custom"
+        }
+      },
+      {
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
