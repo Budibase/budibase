@@ -21,9 +21,9 @@ router
   .get("/api/global/license/key", controller.getLicenseKey)
   .delete("/api/global/license/key", controller.deleteLicenseKey)
   // OFFLINE LICENSE
-  .post("/api/global/license/offline", activateOfflineLicenseValidator, controller.activateOfflineLicense)
-  .get("/api/global/license/offline", controller.getOfflineLicense)
-  .delete("/api/global/license/offline", controller.deleteOfflineLicense)
+  .post("/api/global/license/offline", activateOfflineLicenseValidator, controller.activateOfflineLicenseToken)
+  .get("/api/global/license/offline", controller.getOfflineLicenseToken)
+  .delete("/api/global/license/offline", controller.deleteOfflineLicenseToken)
   .get("/api/global/license/offline/identifier", controller.getOfflineLicenseIdentifier)
 
 export default router
