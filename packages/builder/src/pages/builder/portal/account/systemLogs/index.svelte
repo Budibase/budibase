@@ -10,7 +10,7 @@
   async function download() {
     loading = true
     try {
-      await downloadStream(await API.getServerLogs())
+      await downloadStream(await API.getSystemLogs())
     } finally {
       loading = false
     }
