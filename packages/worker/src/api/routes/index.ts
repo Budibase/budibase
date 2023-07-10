@@ -16,6 +16,7 @@ import licenseRoutes from "./global/license"
 import migrationRoutes from "./system/migrations"
 import accountRoutes from "./system/accounts"
 import restoreRoutes from "./system/restore"
+import systemLogRoutes from "./system/logs"
 
 export const routes: Router[] = [
   configRoutes,
@@ -37,4 +38,5 @@ export const routes: Router[] = [
   restoreRoutes,
   eventRoutes,
   pro.scim,
+  systemLogRoutes,
 ]
