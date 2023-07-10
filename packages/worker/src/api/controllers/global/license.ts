@@ -1,10 +1,10 @@
 import { licensing, quotas } from "@budibase/pro"
 import {
   ActivateLicenseKeyRequest,
-  ActivateOfflineLicenseRequest,
+  ActivateOfflineLicenseTokenRequest,
   GetLicenseKeyResponse,
   GetOfflineIdentifierResponse,
-  GetOfflineLicenseResponse,
+  GetOfflineLicenseTokenResponse,
   UserCtx,
 } from "@budibase/types"
 
@@ -33,13 +33,13 @@ export async function deleteLicenseKey(ctx: UserCtx<void, void>) {
 
 // OFFLINE LICENSE
 
-export async function activateOfflineLicense(ctx: UserCtx<ActivateOfflineLicenseRequest>) {
+export async function activateOfflineLicenseToken(ctx: UserCtx<ActivateOfflineLicenseTokenRequest>) {
   const { offlineLicenseToken } = ctx.request.body
-  await licensing.offline.activateOfflineLicense(offlineLicenseToken)
+  await licensing.offline.activateOfflineLicenseToken(offlineLicenseToken)
   ctx.status = 200
 }
 
-export async function getOfflineLicense(ctx: UserCtx<void, GetOfflineLicenseResponse>) {
+export async function getOfflineLicenseToken(ctx: UserCtx<void, GetOfflineLicenseTokenResponse>) {
   const offlineLicenseToken = await licensing.offline.getOfflineLicenseToken()
   if (offlineLicenseToken) {
     ctx.body = { offlineLicenseToken: "*" }
@@ -49,7 +49,7 @@ export async function getOfflineLicense(ctx: UserCtx<void, GetOfflineLicenseResp
   }
 }
 
-export async function deleteOfflineLicense(ctx: UserCtx<void, void>) {
+export async function deleteOfflineLicenseToken(ctx: UserCtx<void, void>) {
   await licensing.offline.deleteOfflineLicenseToken()
   ctx.status = 204
 }
