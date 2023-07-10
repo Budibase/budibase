@@ -20,7 +20,7 @@ export function localFileDestination() {
     path: logsPath,
     maxFiles: 1,
     immutable: true,
-    history: "budibase-logs-history.txt",
+    history: budibaseLogsHistoryFileName,
     initialRotation: false,
   })
 
