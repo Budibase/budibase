@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
-    "@nx/js": "16.2.1",
+    "@nx/js": "16.5.0",
     "@rollup/plugin-json": "^4.0.2",
     "@typescript-eslint/parser": "5.45.0",
     "esbuild": "^0.17.18",
@@ -16,8 +16,8 @@
     "lerna": "7.0.2",
     "madge": "^6.0.0",
     "minimist": "^1.2.8",
-    "nx": "^16.2.1",
-    "nx-cloud": "^16.0.5",
+    "nx": "16.5.0",
+    "nx-cloud": "16.0.5",
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
     "rimraf": "^3.0.2",
@@ -108,6 +108,5 @@
     "@budibase/string-templates": "0.0.0",
     "@budibase/types": "0.0.0"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
