@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
-    "@nx/js": "16.5.0",
+    "@nx/js": "16.4.3",
     "@rollup/plugin-json": "^4.0.2",
     "@typescript-eslint/parser": "5.45.0",
     "esbuild": "^0.17.18",
@@ -16,7 +16,7 @@
     "lerna": "7.1.1",
     "madge": "^6.0.0",
     "minimist": "^1.2.8",
-    "nx": "16.5.0",
+    "nx": "16.4.3",
     "nx-cloud": "16.0.5",
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
