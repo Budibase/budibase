@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte"
-  import { Icon, Button } from "@budibase/bbui"
+  import { Icon, Button, TempTooltip, TooltipType } from "@budibase/bbui"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
   import { fade } from "svelte/transition"
@@ -27,6 +27,8 @@
     rowVerticalInversionIndex,
     columnHorizontalInversionIndex,
     selectedRows,
+    config,
+    canAddRows,
   } = getContext("grid")
 
   let visible = false
@@ -39,6 +41,7 @@
   $: $tableId, (visible = false)
   $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
   $: selectedRowCount = Object.values($selectedRows).length
+  $: hasNoRows = !$rows.length
 
   const shouldInvertY = (offset, inversionIndex, rows) => {
     if (offset === 0) {
@@ -146,16 +149,22 @@
 </script>
 
 <!-- New row FAB -->
-{#if !visible && !selectedRowCount}
-  <div
-    class="new-row-fab"
-    on:click={() => dispatch("add-row-inline")}
-    transition:fade|local={{ duration: 130 }}
-    class:offset={!$stickyColumn}
-  >
-    <Icon name="Add" size="S" />
-  </div>
-{/if}
+<TempTooltip
+  text="Click here to create your first row"
+  condition={hasNoRows}
+  type={TooltipType.Info}
+>
+  {#if !visible && !selectedRowCount && $canAddRows}
+    <div
+      class="new-row-fab"
+      on:click={() => dispatch("add-row-inline")}
+      transition:fade|local={{ duration: 130 }}
+      class:offset={!$stickyColumn}
+    >
+      <Icon name="Add" size="S" />
+    </div>
+  {/if}
+</TempTooltip>
 
 <!-- Only show new row functionality if we have any columns -->
 {#if visible}

@@ -27,8 +27,8 @@
 
   let wrapper
   let hovered = false
-  let left = 0
-  let top = 0
+  let left
+  let top
   let visible = false
   let timeout
   let interval
@@ -48,6 +48,8 @@
   const updateTooltipPosition = () => {
     const node = wrapper?.children?.[0]
     if (!node) {
+      left = null
+      top = null
       return
     }
     const bounds = node.getBoundingClientRect()
@@ -98,7 +100,7 @@
   <slot />
 </div>
 
-{#if visible && text}
+{#if visible && text && left != null && top != null}
   <Portal target=".spectrum">
     <span
       class="spectrum-Tooltip spectrum-Tooltip--{type} spectrum-Tooltip--{position} is-open"
