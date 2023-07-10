@@ -23,7 +23,7 @@
     <Button cta on:click={download} disabled={loading}>
       <div class="button-content">
         {#if loading}
-          <div><Spinner size="10" /></div>
+          <Spinner size="10" />
         {/if}
         Download system logs
       </div>
