@@ -155,7 +155,7 @@ export default class DataFetch {
     let sortType = "string"
     if (sortColumn) {
       const type = schema?.[sortColumn]?.type
-      sortType = type === "number" ? "number" : "string"
+      sortType = type === "number" || type === "bigint" ? "number" : "string"
     }
     this.options.sortType = sortType
 

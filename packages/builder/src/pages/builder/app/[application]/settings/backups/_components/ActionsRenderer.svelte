@@ -10,6 +10,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CreateRestoreModal from "./CreateRestoreModal.svelte"
   import { createEventDispatcher } from "svelte"
+  import { isOnlyUser } from "builderStore"
 
   export let row
 
@@ -45,7 +46,16 @@
     </div>
 
     {#if row.type !== "restore"}
-      <MenuItem on:click={restoreDialog.show} icon="Revert">Restore</MenuItem>
+      <MenuItem
+        on:click={restoreDialog.show}
+        icon="Revert"
+        disabled={!$isOnlyUser}
+        tooltip={$isOnlyUser
+          ? null
+          : "Unavailable - another user is editing this app"}
+      >
+        Restore
+      </MenuItem>
       <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
       <MenuItem on:click={downloadExport} icon="Download">Download</MenuItem>
     {/if}

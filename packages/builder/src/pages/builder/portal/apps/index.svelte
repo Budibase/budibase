@@ -30,7 +30,6 @@
   let creationModal
   let appLimitModal
   let accountLockedModal
-  let creatingApp = false
   let searchTerm = ""
   let creatingFromTemplate = false
   let automationErrors
@@ -123,14 +122,12 @@
     } else {
       template = null
       creationModal.show()
-      creatingApp = true
     }
   }
 
   const initiateAppImport = () => {
     template = { fromFile: true }
     creationModal.show()
-    creatingApp = true
   }
 
   const autoCreateApp = async () => {
@@ -173,7 +170,6 @@
 
   const stopAppCreation = () => {
     template = null
-    creatingApp = false
   }
 
   function createAppFromTemplateUrl(templateKey) {
