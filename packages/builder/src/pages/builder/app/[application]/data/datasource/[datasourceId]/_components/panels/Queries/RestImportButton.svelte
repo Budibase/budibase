@@ -7,7 +7,7 @@
 </script>
 
 <Modal bind:this={importQueriesModal}>
-  <ImportQueriesModal createDatasource={false} datasourceId={datasourceId} />
+  <ImportQueriesModal createDatasource={false} {datasourceId} />
 </Modal>
 
 <div class="button">
