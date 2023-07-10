@@ -15,7 +15,7 @@
     users?.forEach(user => {
       uniqueUsers[user.email] = user
     })
-    return Object.values(uniqueUsers).concat(Object.values(uniqueUsers))
+    return Object.values(uniqueUsers)
   }
 
   const getAvatars = (users, order) => {
