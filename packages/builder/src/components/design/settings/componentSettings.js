@@ -52,6 +52,7 @@ const componentMap = {
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
+  "field/bigint": FormFieldSelect,
   "field/options": FormFieldSelect,
   "field/boolean": FormFieldSelect,
   "field/longform": FormFieldSelect,

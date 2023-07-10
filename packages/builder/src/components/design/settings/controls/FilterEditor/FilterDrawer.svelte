@@ -228,7 +228,7 @@
                   on:change={event => (filter.value = event.detail)}
                   {fillWidth}
                 />
-              {:else if ["string", "longform", "number", "formula"].includes(filter.type)}
+              {:else if ["string", "longform", "number", "bigint", "formula"].includes(filter.type)}
                 <Input disabled={filter.noValue} bind:value={filter.value} />
               {:else if filter.type === "array" || (filter.type === "options" && filter.operator === "oneOf")}
                 <Multiselect

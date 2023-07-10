@@ -15,12 +15,7 @@
   {
     "name": "Layout",
     "icon": "ClassicGridView",
-    "children": [
-      "container",
-      "section",
-      "grid",
-      "sidepanel"
-    ]
+    "children": ["container", "section", "grid", "sidepanel"]
   },
   {
     "name": "Data",
@@ -63,6 +58,7 @@
       "fieldgroup",
       "stringfield",
       "numberfield",
+      "bigintfield",
       "passwordfield",
       "optionsfield",
       "booleanfield",
@@ -79,13 +75,6 @@
   {
     "name": "Chart",
     "icon": "GraphBarVertical",
-    "children": [
-      "bar",
-      "line",
-      "area",
-      "candlestick",
-      "pie",
-      "donut"
-    ]
+    "children": ["bar", "line", "area", "candlestick", "pie", "donut"]
   }
 ]

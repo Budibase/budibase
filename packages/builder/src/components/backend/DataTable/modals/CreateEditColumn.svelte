@@ -326,6 +326,7 @@
         FIELDS.NUMBER,
         FIELDS.BOOLEAN,
         FIELDS.FORMULA,
+        FIELDS.BIGINT,
       ]
       // no-sql or a spreadsheet
       if (!external || table.sql) {
