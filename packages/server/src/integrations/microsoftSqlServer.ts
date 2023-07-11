@@ -27,12 +27,14 @@ const DEFAULT_SCHEMA = "dbo"
 
 import { ConfidentialClientApplication } from "@azure/msal-node"
 
+import { utils } from "@budibase/shared-core"
+
 enum MSSQLConfigAuthType {
   AZURE_ACTIVE_DIRECTORY = "Azure Active Directory",
   LOCAL_ACTIVE_DIRECTORY = "Local Active Directory",
 }
 
-interface MSSQLConfig {
+interface BasicMSSQLConfig {
   user: string
   password: string
   server: string
@@ -41,12 +43,29 @@ interface MSSQLConfig {
   schema: string
   encrypt?: boolean
   authType?: MSSQLConfigAuthType
-  adConfig?: {
+}
+
+interface AzureADMSSQLConfig extends BasicMSSQLConfig {
+  authType: MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY
+  adConfig: {
     clientId: string
     clientSecret: string
     tenantId: string
   }
 }
+
+interface LocalADMSSQLConfig extends BasicMSSQLConfig {
+  authType: MSSQLConfigAuthType.LOCAL_ACTIVE_DIRECTORY
+  localADConfig: {
+    domain: string
+    trustServerCertificate: boolean
+  }
+}
+
+type MSSQLConfig =
+  | (BasicMSSQLConfig & { authType: undefined })
+  | AzureADMSSQLConfig
+  | LocalADMSSQLConfig
 
 const SCHEMA: Integration = {
   docs: "https://github.com/tediousjs/node-mssql",
@@ -128,6 +147,28 @@ const SCHEMA: Integration = {
         },
       },
     },
+    localADConfig: {
+      type: DatasourceFieldType.FIELD_GROUP,
+      default: true,
+      display: "Configure Local Active Directory",
+      hidden: `'{{authType}}' !== '${MSSQLConfigAuthType.LOCAL_ACTIVE_DIRECTORY}'`,
+      config: {
+        openByDefault: true,
+        nestedFields: true,
+      },
+      fields: {
+        domain: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+          display: "Domain",
+        },
+        trustServerCertificate: {
+          type: DatasourceFieldType.BOOLEAN,
+          required: true,
+          display: "Trust server certificate",
+        },
+      },
+    },
   },
   query: {
     create: {
@@ -205,26 +246,43 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       }
       delete clientCfg.encrypt
 
-      if (this.config.authType === MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY) {
-        const { clientId, tenantId, clientSecret } = this.config.adConfig!
-        const clientApp = new ConfidentialClientApplication({
-          auth: {
-            clientId,
-            authority: `https://login.microsoftonline.com/${tenantId}`,
-            clientSecret,
-          },
-        })
+      switch (this.config.authType) {
+        case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY:
+          const { clientId, tenantId, clientSecret } = this.config.adConfig
+          const clientApp = new ConfidentialClientApplication({
+            auth: {
+              clientId,
+              authority: `https://login.microsoftonline.com/${tenantId}`,
+              clientSecret,
+            },
+          })
 
-        const response = await clientApp.acquireTokenByClientCredential({
-          scopes: ["https://database.windows.net/.default"],
-        })
+          const response = await clientApp.acquireTokenByClientCredential({
+            scopes: ["https://database.windows.net/.default"],
+          })
 
-        clientCfg.authentication = {
-          type: "azure-active-directory-access-token",
-          options: {
-            token: response!.accessToken,
-          },
-        }
+          clientCfg.authentication = {
+            type: "azure-active-directory-access-token",
+            options: {
+              token: response!.accessToken,
+            },
+          }
+          break
+        case MSSQLConfigAuthType.LOCAL_ACTIVE_DIRECTORY:
+          const { domain, trustServerCertificate } = this.config.localADConfig
+          clientCfg.authentication = {
+            type: "ntml",
+            options: {
+              domain,
+            },
+          }
+          clientCfg.options ??= {}
+          clientCfg.options.trustServerCertificate = trustServerCertificate
+          break
+        case undefined:
+          break
+        default:
+          utils.unreachable(this.config)
       }
 
       const pool = new sqlServer.ConnectionPool(clientCfg)
