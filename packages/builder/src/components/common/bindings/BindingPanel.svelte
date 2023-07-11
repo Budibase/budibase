@@ -208,7 +208,9 @@
                     <div class="syntax-error">
                       Current Handlebars syntax is invalid, please check the
                       guide
-                      <a href="https://handlebarsjs.com/guide/">here</a>
+                      <a href="https://handlebarsjs.com/guide/" target="_blank"
+                        >here</a
+                      >
                       for more details.
                     </div>
                   {:else}
