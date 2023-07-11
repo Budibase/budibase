@@ -203,7 +203,7 @@
     type: instance._component,
     errorState,
     parent: id,
-    ancestors: [...$component?.ancestors, instance._component],
+    ancestors: [...($component?.ancestors ?? []), instance._component],
   })
 
   const initialise = (instance, force = false) => {

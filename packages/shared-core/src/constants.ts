@@ -86,6 +86,10 @@ export enum BuilderSocketEvent {
   TableChange = "TableChange",
   DatasourceChange = "DatasourceChange",
   LockTransfer = "LockTransfer",
+  ScreenChange = "ScreenChange",
+  AppMetadataChange = "AppMetadataChange",
+  SelectResource = "SelectResource",
+  AppPublishChange = "AppPublishChange",
 }
 
 export const SocketSessionTTL = 60

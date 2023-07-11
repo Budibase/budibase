@@ -185,7 +185,7 @@ jobs:
           pro_commit=$(git rev-parse HEAD)
 
           branch="${{ github.base_ref || github.ref_name  }}"
-          echo "Running on branch `$branch` (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
+          echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
 
           if [[ $branch == "master" ]]; then
             base_commit=$(git rev-parse origin/master)
