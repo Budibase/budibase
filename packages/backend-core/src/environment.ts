@@ -168,7 +168,7 @@ const environment = {
     // @ts-ignore
     environment[key] = value
   },
-  ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "20M",
+  ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
 }
 
 // clean up any environment variable edge cases
