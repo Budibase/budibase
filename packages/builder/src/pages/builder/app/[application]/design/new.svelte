@@ -4,17 +4,19 @@
   import blankImage from "./blank.png"
   import tableImage from "./table.png"
   import CreateScreenModal from "./_components/CreateScreenModal.svelte"
-  import { store as frontendStore } from "builderStore"
+  import { store } from "builderStore"
   import { goto } from "@roxi/routify"
 
   let createScreenModal
+
+  $: hasScreens = $store.screens?.length
 </script>
 
 <div class="page">
   <CreationPage
-    showClose={$frontendStore.screens.length > 0}
-    onClose={() => $goto(`./${$frontendStore.screens[0]._id}`)}
-    heading="Create your first screen"
+    showClose={$store.screens.length > 0}
+    onClose={() => $goto(`./${$store.screens[0]._id}`)}
+    heading={hasScreens ? "Create new screen" : "Create your first screen"}
   >
     <div class="subHeading">
       <Body size="L">Start from scratch or create screens from your data</Body>
