@@ -4493,7 +4493,7 @@
           },
           {
             "type": "boolean",
-            "label": "Hide save alert",
+            "label": "Hide notifications",
             "key": "notificationOverride",
             "defaultValue": false,
             "dependsOn": {
@@ -5140,7 +5140,7 @@
           },
           {
             "type": "boolean",
-            "label": "Hide save alert",
+            "label": "Hide notifications",
             "key": "notificationOverride",
             "defaultValue": false,
             "dependsOn": {
