@@ -6,7 +6,7 @@ export async function getLogs(ctx: UserCtx) {
 
   const { installId } = await installation.getInstall()
 
-  const fileName = `${installId}-${Date.now()}.logs`
+  const fileName = `${installId}-${Date.now()}.log`
 
   ctx.set("content-disposition", `attachment; filename=${fileName}`)
   ctx.body = logReadStream

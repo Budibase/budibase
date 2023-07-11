@@ -5,7 +5,7 @@ import * as rfs from "rotating-file-stream"
 import env from "../environment"
 import { budibaseTempDir } from "../objectStore"
 
-const logsFileName = `budibase.logs`
+const logsFileName = `budibase.log`
 const budibaseLogsHistoryFileName = "budibase-logs-history.txt"
 
 const logsPath = path.join(budibaseTempDir(), "systemlogs")
