@@ -30,7 +30,7 @@ import { buildBackupsEndpoints } from "./backups"
 import { buildEnvironmentVariableEndpoints } from "./environmentVariables"
 import { buildEventEndpoints } from "./events"
 import { buildAuditLogsEndpoints } from "./auditLogs"
-import { buildSystemLogsEndpoints } from "./systemLogs"
+import { buildLogsEndpoints } from "./logs"
 
 /**
  * Random identifier to uniquely identify a session in a tab. This is
@@ -278,6 +278,6 @@ export const createAPIClient = config => {
     ...buildEnvironmentVariableEndpoints(API),
     ...buildEventEndpoints(API),
     ...buildAuditLogsEndpoints(API),
-    ...buildSystemLogsEndpoints(API),
+    ...buildLogsEndpoints(API),
   }
 }
