@@ -19,6 +19,7 @@
   export let rowId
   export let actionUrl
   export let noRowsMessage
+  export let notificationOverride
 
   const { fetchDatasourceSchema } = getContext("sdk")
 
@@ -87,6 +88,7 @@
     showDeleteButton,
     schema,
     repeaterId,
+    notificationOverride,
   }
 
   const fetchSchema = async () => {
