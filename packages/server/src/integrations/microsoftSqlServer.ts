@@ -31,7 +31,7 @@ import { utils } from "@budibase/shared-core"
 
 enum MSSQLConfigAuthType {
   AZURE_ACTIVE_DIRECTORY = "Azure Active Directory",
-  LOCAL_ACTIVE_DIRECTORY = "Local Active Directory",
+  NTLM = "NTLM",
 }
 
 interface BasicMSSQLConfig {
@@ -54,9 +54,9 @@ interface AzureADMSSQLConfig extends BasicMSSQLConfig {
   }
 }
 
-interface LocalADMSSQLConfig extends BasicMSSQLConfig {
-  authType: MSSQLConfigAuthType.LOCAL_ACTIVE_DIRECTORY
-  localADConfig: {
+interface NTLMMSSQLConfig extends BasicMSSQLConfig {
+  authType: MSSQLConfigAuthType.NTLM
+  ntlmConfig: {
     domain: string
     trustServerCertificate: boolean
   }
@@ -65,7 +65,7 @@ interface LocalADMSSQLConfig extends BasicMSSQLConfig {
 type MSSQLConfig =
   | (BasicMSSQLConfig & { authType: undefined })
   | AzureADMSSQLConfig
-  | LocalADMSSQLConfig
+  | NTLMMSSQLConfig
 
 const SCHEMA: Integration = {
   docs: "https://github.com/tediousjs/node-mssql",
@@ -116,7 +116,7 @@ const SCHEMA: Integration = {
       config: {
         options: [
           MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY,
-          MSSQLConfigAuthType.LOCAL_ACTIVE_DIRECTORY,
+          MSSQLConfigAuthType.NTLM,
         ],
       },
     },
@@ -147,11 +147,11 @@ const SCHEMA: Integration = {
         },
       },
     },
-    localADConfig: {
+    ntlmConfig: {
       type: DatasourceFieldType.FIELD_GROUP,
       default: true,
-      display: "Configure Local Active Directory",
-      hidden: `'{{authType}}' !== '${MSSQLConfigAuthType.LOCAL_ACTIVE_DIRECTORY}'`,
+      display: "Configure NTLM",
+      hidden: `'{{authType}}' !== '${MSSQLConfigAuthType.NTLM}'`,
       config: {
         openByDefault: true,
         nestedFields: true,
@@ -268,8 +268,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
             },
           }
           break
-        case MSSQLConfigAuthType.LOCAL_ACTIVE_DIRECTORY:
-          const { domain, trustServerCertificate } = this.config.localADConfig
+        case MSSQLConfigAuthType.NTLM:
+          const { domain, trustServerCertificate } = this.config.ntlmConfig
           clientCfg.authentication = {
             type: "ntml",
             options: {
