@@ -45,7 +45,7 @@ export function getSingleFileMaxSizeInfo(totalMaxSize: string) {
     return { size: `${size / 2}${unit}`, totalHistoryFiles: 1 }
   }
 
-  return { size: `1${unit}`, totalHistoryFiles: size }
+  return { size: `1${unit}`, totalHistoryFiles: size - 1 }
 }
 
 export function localFileDestination() {
