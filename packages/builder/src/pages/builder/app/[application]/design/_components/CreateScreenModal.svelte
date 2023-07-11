@@ -1,6 +1,5 @@
 <script>
-  import ScreenDetailsModal from "./ScreenDetailsModal.svelte"
-  import NewScreenModal from "./NewScreenModal.svelte"
+  import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import ScreenRoleModal from "./ScreenRoleModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
@@ -11,11 +10,11 @@
   import { tables } from "stores/backend"
   import { Roles } from "constants/backend"
   import { capitalise } from "helpers"
+  import { goto } from "@roxi/routify"
 
   let pendingScreen
 
   // Modal refs
-  let newScreenModal
   let screenDetailsModal
   let datasourceModal
   let screenAccessRoleModal
@@ -26,16 +25,6 @@
   let blankScreenUrl = null
   let screenMode = null
 
-  // External handler to show the screen wizard
-  export const showModal = () => {
-    selectedTemplates = null
-    blankScreenUrl = null
-    screenMode = null
-    pendingScreen = null
-    screenAccessRole = Roles.BASIC
-    newScreenModal.show()
-  }
-
   // Creates an array of screens, checking and sanitising their URLs
   const createScreens = async ({ screens, screenAccessRole }) => {
     if (!screens?.length) {
@@ -43,6 +32,8 @@
     }
 
     try {
+      let screenId
+
       for (let screen of screens) {
         // Check we aren't clashing with an existing URL
         if (hasExistingUrl(screen.routing.route)) {
@@ -64,7 +55,8 @@
         screen.routing.roleId = screenAccessRole
 
         // Create the screen
-        await store.actions.screens.save(screen)
+        const response = await store.actions.screens.save(screen)
+        screenId = response._id
 
         // Add link in layout for list screens
         if (screen.props._instanceName.endsWith("List")) {
@@ -74,7 +66,10 @@
           )
         }
       }
+
+      $goto(`./${screenId}`)
     } catch (error) {
+      console.log(error)
       notifications.error("Error creating screens")
     }
   }
@@ -104,18 +99,24 @@
   }
 
   // Handler for NewScreenModal
-  const confirmScreenSelection = async mode => {
+  export const show = mode => {
+    selectedTemplates = null
+    blankScreenUrl = null
     screenMode = mode
+    pendingScreen = null
+    screenAccessRole = Roles.BASIC
 
-    if (mode === "autoCreate") {
+    if (mode === "table") {
       datasourceModal.show()
-    } else {
+    } else if (mode === "blank") {
       let templates = getTemplates($store, $tables.list)
       const blankScreenTemplate = templates.find(
         t => t.id === "createFromScratch"
       )
       pendingScreen = blankScreenTemplate.create()
       screenDetailsModal.show()
+    } else {
+      throw new Error("Invalid mode provided")
     }
   }
 
@@ -155,7 +156,7 @@
 
   // Submit screen config for creation.
   const confirmScreenCreation = async () => {
-    if (screenMode === "blankScreen") {
+    if (screenMode === "blank") {
       confirmBlankScreenCreation({
         screenUrl: blankScreenUrl,
         screenAccessRole,
@@ -166,7 +167,7 @@
   }
 
   const roleSelectBack = () => {
-    if (screenMode === "blankScreen") {
+    if (screenMode === "blank") {
       screenDetailsModal.show()
     } else {
       datasourceModal.show()
@@ -174,14 +175,9 @@
   }
 </script>
 
-<Modal bind:this={newScreenModal}>
-  <NewScreenModal onConfirm={confirmScreenSelection} />
-</Modal>
-
 <Modal bind:this={datasourceModal}>
   <DatasourceModal
     onConfirm={confirmScreenDatasources}
-    onCancel={() => newScreenModal.show()}
     initalScreens={!selectedTemplates ? [] : [...selectedTemplates]}
   />
 </Modal>
@@ -198,7 +194,6 @@
 <Modal bind:this={screenDetailsModal}>
   <ScreenDetailsModal
     onConfirm={confirmScreenBlank}
-    onCancel={() => newScreenModal.show()}
     initialUrl={blankScreenUrl}
   />
 </Modal>

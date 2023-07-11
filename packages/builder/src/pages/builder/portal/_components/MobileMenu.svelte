@@ -38,7 +38,7 @@
           />
         {/if}
       {/each}
-      {#each $menu as { title, href, subPages }}
+      {#each $menu as { title, subPages }}
         {#if subPages?.length}
           <div class="category">{title}</div>
           {#each subPages as { title, href }}

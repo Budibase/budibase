@@ -53,6 +53,7 @@ import {
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
+import { builderSocket } from "../../websockets"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -439,6 +440,14 @@ export async function update(ctx: UserCtx) {
   await events.app.updated(app)
   ctx.status = 200
   ctx.body = app
+  builderSocket?.emitAppMetadataUpdate(ctx, {
+    theme: app.theme,
+    customTheme: app.customTheme,
+    navigation: app.navigation,
+    name: app.name,
+    url: app.url,
+    icon: app.icon,
+  })
 }
 
 export async function updateClient(ctx: UserCtx) {
@@ -569,6 +578,7 @@ export async function unpublish(ctx: UserCtx) {
   await unpublishApp(ctx)
   await postDestroyApp(ctx)
   ctx.status = 204
+  builderSocket?.emitAppUnpublish(ctx)
 }
 
 export async function sync(ctx: UserCtx) {

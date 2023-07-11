@@ -1,9 +1,13 @@
 {
   "tasksRunnerOptions": {
     "default": {
-      "runner": "nx/tasks-runners/default",
+      "runner": "nx-cloud",
       "options": {
-        "cacheableOperations": ["build", "test"]
+        "cacheableOperations": [
+          "build",
+          "test"
+        ],
+        "accessToken": "YWNiYzc5NTEtMzMzZC00NDhjLTgyNjktZTllMjI1MzM4OGQxfHJlYWQtd3JpdGU="
       }
     }
   },
@@ -11,7 +15,9 @@
     "dev:builder": {
       "dependsOn": [
         {
-          "projects": ["@budibase/string-templates"],
+          "projects": [
+            "@budibase/string-templates"
+          ],
           "target": "build"
         }
       ]

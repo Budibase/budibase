@@ -7,6 +7,9 @@
   import ComponentListPanel from "./_components/navigation/ComponentListPanel.svelte"
   import ComponentSettingsPanel from "./_components/settings/ComponentSettingsPanel.svelte"
 
+  $: componentId = $store.selectedComponentId
+  $: store.actions.websocket.selectResource(componentId)
+
   const cleanUrl = url => {
     // Strip trailing slashes
     if (url?.endsWith("/index")) {

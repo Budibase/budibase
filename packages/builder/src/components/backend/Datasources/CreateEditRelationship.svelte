@@ -1,6 +1,7 @@
 <script>
   import { RelationshipTypes } from "constants/backend"
   import {
+    keepOpen,
     Button,
     Input,
     ModalContent,
@@ -277,7 +278,7 @@
 
   async function saveRelationship() {
     if (!validate()) {
-      return false
+      return keepOpen
     }
     buildRelationships()
     removeExistingRelationship()

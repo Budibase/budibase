@@ -49,7 +49,6 @@
       return datasource.config.spreadsheetId
     }
   }
-  $: subtitle = getSubtitle(datasource)
 </script>
 
 <div class="button" on:click>
