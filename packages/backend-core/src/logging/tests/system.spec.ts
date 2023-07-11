@@ -19,12 +19,12 @@ describe("system", () => {
     )
 
     it.each([
-      ["5B", "1B", 5],
-      ["17K", "1K", 17],
-      ["21M", "1M", 21],
-      ["3G", "1G", 3],
+      ["5B", "1B", 4],
+      ["17K", "1K", 16],
+      ["21M", "1M", 20],
+      ["3G", "1G", 2],
     ])(
-      "Halving an odd number (%s) returns as many files as size (%s)",
+      "Halving an odd number (%s) returns as many files as size (-1) (%s)",
       (totalValue, expectedMaxSize, totalHistoryFiles) => {
         const result = getSingleFileMaxSizeInfo(totalValue)
         expect(result).toEqual({
