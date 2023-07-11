@@ -175,6 +175,11 @@
     }
     return allBindings
   }
+
+  const toDisplay = eventKey => {
+    const type = actionTypes.find(action => action.name == eventKey)
+    return type?.displayName || type?.name
+  }
 </script>
 
 <DrawerContent>
@@ -200,7 +205,9 @@
           <ul>
             {#each category as actionType}
               <li on:click={onAddAction(actionType)}>
-                <span class="action-name">{actionType.name}</span>
+                <span class="action-name">
+                  {actionType.displayName || actionType.name}
+                </span>
               </li>
             {/each}
           </ul>
@@ -231,7 +238,7 @@
           >
             <Icon name="DragHandle" size="XL" />
             <div class="action-header">
-              {index + 1}.&nbsp;{action[EVENT_TYPE_KEY]}
+              {index + 1}.&nbsp;{toDisplay(action[EVENT_TYPE_KEY])}
             </div>
             <Icon
               name="Close"
