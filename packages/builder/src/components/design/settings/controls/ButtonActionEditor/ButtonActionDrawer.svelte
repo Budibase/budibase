@@ -16,6 +16,7 @@
     makeStateBinding,
   } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
+  import { cloneDeep } from "lodash/fp"
 
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
@@ -28,6 +29,26 @@
 
   let actionQuery
   let selectedAction = actions?.length ? actions[0] : null
+
+  const setUpdateActions = actions => {
+    return actions
+      ? cloneDeep(actions)
+          .filter(action => {
+            return (
+              action[EVENT_TYPE_KEY] === "Update State" &&
+              action.parameters?.type === "set" &&
+              action.parameters.key
+            )
+          })
+          .reduce((acc, action) => {
+            acc[action.id] = action
+            return acc
+          }, {})
+      : []
+  }
+
+  // Snapshot original action state
+  let updateStateActions = setUpdateActions(actions)
 
   $: {
     // Ensure parameters object is never null
@@ -125,8 +146,9 @@
     actions = e.detail.items
   }
 
-  const getAllBindings = (bindings, eventContextBindings, actions) => {
+  const getAllBindings = (actionBindings, eventContextBindings, actions) => {
     let allBindings = []
+    let cloneActionBindings = cloneDeep(actionBindings)
     if (!actions) {
       return []
     }
@@ -144,11 +166,19 @@
       .forEach(action => {
         // Check we have a binding for this action, and generate one if not
         const stateBinding = makeStateBinding(action.parameters.key)
-        const hasKey = bindings.some(binding => {
+        const hasKey = actionBindings.some(binding => {
           return binding.runtimeBinding === stateBinding.runtimeBinding
         })
         if (!hasKey) {
-          bindings.push(stateBinding)
+          let existing = updateStateActions[action.id]
+          if (existing) {
+            const existingBinding = makeStateBinding(existing.parameters.key)
+            cloneActionBindings = cloneActionBindings.filter(
+              binding =>
+                binding.runtimeBinding !== existingBinding.runtimeBinding
+            )
+          }
+          allBindings.push(stateBinding)
         }
       })
     // Get which indexes are asynchronous automations as we want to filter them out from the bindings
@@ -164,15 +194,16 @@
       .filter(index => index !== undefined)
 
     // Based on the above, filter out the asynchronous automations from the bindings
-    if (asynchronousAutomationIndexes) {
-      allBindings = eventContextBindings
-        .filter((binding, index) => {
+    let contextBindings = asynchronousAutomationIndexes
+      ? eventContextBindings.filter((binding, index) => {
           return !asynchronousAutomationIndexes.includes(index)
         })
-        .concat(bindings)
-    } else {
-      allBindings = eventContextBindings.concat(bindings)
-    }
+      : eventContextBindings
+
+    allBindings = contextBindings
+      .concat(cloneActionBindings)
+      .concat(allBindings)
+
     return allBindings
   }
 </script>
