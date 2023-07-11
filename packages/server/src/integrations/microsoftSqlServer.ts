@@ -28,7 +28,8 @@ const DEFAULT_SCHEMA = "dbo"
 import { ConfidentialClientApplication } from "@azure/msal-node"
 
 enum MSSQLConfigAuthType {
-  ACTIVE_DIRECTORY = "Active Directory",
+  AZURE_ACTIVE_DIRECTORY = "Azure Active Directory",
+  LOCAL_ACTIVE_DIRECTORY = "Local Active Directory",
 }
 
 interface MSSQLConfig {
@@ -93,13 +94,18 @@ const SCHEMA: Integration = {
     authType: {
       type: DatasourceFieldType.SELECT,
       display: "Advanced auth",
-      config: { options: [MSSQLConfigAuthType.ACTIVE_DIRECTORY] },
+      config: {
+        options: [
+          MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY,
+          MSSQLConfigAuthType.LOCAL_ACTIVE_DIRECTORY,
+        ],
+      },
     },
     adConfig: {
       type: DatasourceFieldType.FIELD_GROUP,
       default: true,
       display: "Configure Active Directory",
-      hidden: "'{{authType}}' !== 'Active Directory'",
+      hidden: `'{{authType}}' !== '${MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY}'`,
       config: {
         openByDefault: true,
         nestedFields: true,
@@ -199,7 +205,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       }
       delete clientCfg.encrypt
 
-      if (this.config.authType === MSSQLConfigAuthType.ACTIVE_DIRECTORY) {
+      if (this.config.authType === MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY) {
         const { clientId, tenantId, clientSecret } = this.config.adConfig!
         const clientApp = new ConfidentialClientApplication({
           auth: {
