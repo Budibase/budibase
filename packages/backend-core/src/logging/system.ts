@@ -14,11 +14,47 @@ function getFullPath(fileName: string) {
   return path.join(logsPath, fileName)
 }
 
+export function getSingleFileMaxSizeInfo(totalMaxSize: string) {
+  const regex = /(\d+)([A-Za-z])/
+  const match = totalMaxSize?.match(regex)
+  if (!match) {
+    console.warn(`totalMaxSize does not have a valid value`, {
+      totalMaxSize,
+    })
+    return undefined
+  }
+
+  const size = +match[1]
+  const unit = match[2]
+  if (size === 1) {
+    switch (unit) {
+      case "B":
+        return { size: `${size}B`, totalHistoryFiles: 1 }
+      case "K":
+        return { size: `${(size * 1000) / 2}B`, totalHistoryFiles: 1 }
+      case "M":
+        return { size: `${(size * 1000) / 2}K`, totalHistoryFiles: 1 }
+      case "G":
+        return { size: `${(size * 1000) / 2}M`, totalHistoryFiles: 1 }
+      default:
+        return undefined
+    }
+  }
+
+  if (size % 2 === 0) {
+    return { size: `${size / 2}${unit}`, totalHistoryFiles: 1 }
+  }
+
+  return { size: `1${unit}`, totalHistoryFiles: size }
+}
+
 export function localFileDestination() {
+  const fileInfo = getSingleFileMaxSizeInfo(env.ROLLING_LOG_MAX_SIZE)
   const outFile = rfs.createStream(logsFileName, {
-    size: env.ROLLING_LOG_MAX_SIZE,
+    // As we have a rolling size, we want to half the max size
+    size: fileInfo?.size,
     path: logsPath,
-    maxFiles: 1,
+    maxFiles: fileInfo?.totalHistoryFiles || 1,
     immutable: true,
     history: budibaseLogsHistoryFileName,
     initialRotation: false,
