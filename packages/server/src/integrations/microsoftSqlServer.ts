@@ -57,8 +57,8 @@ interface AzureADMSSQLConfig extends BasicMSSQLConfig {
 interface NTLMMSSQLConfig extends BasicMSSQLConfig {
   authType: MSSQLConfigAuthType.NTLM
   ntlmConfig: {
-    domain: string
-    trustServerCertificate: boolean
+    domain?: string
+    trustServerCertificate?: boolean
   }
 }
 
@@ -159,12 +159,12 @@ const SCHEMA: Integration = {
       fields: {
         domain: {
           type: DatasourceFieldType.STRING,
-          required: true,
+          required: false,
           display: "Domain",
         },
         trustServerCertificate: {
           type: DatasourceFieldType.BOOLEAN,
-          required: true,
+          required: false,
           display: "Trust server certificate",
         },
       },
@@ -271,7 +271,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         case MSSQLConfigAuthType.NTLM:
           const { domain, trustServerCertificate } = this.config.ntlmConfig
           clientCfg.authentication = {
-            type: "ntml",
+            type: "ntlm",
             options: {
               domain,
             },
