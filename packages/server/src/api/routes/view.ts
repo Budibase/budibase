@@ -13,6 +13,11 @@ router
     authorized(permissions.BUILDER),
     viewController.v2.fetch
   )
+  .post(
+    "/api/views/v2",
+    authorized(permissions.BUILDER),
+    viewController.v2.save
+  )
 
 router
   .get(
