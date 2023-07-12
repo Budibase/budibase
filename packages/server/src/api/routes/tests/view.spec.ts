@@ -158,4 +158,30 @@ describe("/views/v2", () => {
       })
     })
   })
+
+  describe("delete", () => {
+    let view: any
+
+    beforeAll(async () => {
+      table = await config.createTable(priceTable())
+      view = (await saveView(createView(table._id!))).body
+    })
+
+    it("can delete an existing view", async () => {
+      await getView({
+        tableId: view.tableId,
+        viewId: view._id,
+      }).expect(200)
+
+      await request
+        .delete(`/api/views/v2/${view.tableId}/${view._id}`)
+        .set(config.defaultHeaders())
+        .expect(204)
+
+      await getView({
+        tableId: view.tableId,
+        viewId: view._id,
+      }).expect(404)
+    })
+  })
 })

@@ -54,3 +54,8 @@ export async function save(view: ViewV2) {
     _rev: response.rev,
   }
 }
+
+export async function remove(viewId: string, rev: string) {
+  const db = context.getAppDB()
+  await db.remove(viewId, rev)
+}
