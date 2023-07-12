@@ -14,9 +14,10 @@ export async function fetch() {
   const response = await db.allDocs({
     startkey: startKey,
     endkey: `${startKey}${UNICODE_MAX}`,
+    include_docs: true,
   })
 
-  return response.rows
+  return response.rows.map(r => r.doc)
 }
 
 export async function get(viewId: string) {
