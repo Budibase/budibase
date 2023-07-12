@@ -16,8 +16,6 @@
   export let tooltip = undefined
   export let newStyles = true
   export let id
-
-  let showTooltip = false
 </script>
 
 <button
@@ -35,9 +33,6 @@
   class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
   {disabled}
   on:click|preventDefault
-  on:mouseover={() => (showTooltip = true)}
-  on:focus={() => (showTooltip = true)}
-  on:mouseleave={() => (showTooltip = false)}
 >
   {#if icon}
     <svg
@@ -52,19 +47,7 @@
   {#if $$slots}
     <span class="spectrum-Button-label"><slot /></span>
   {/if}
-  {#if !disabled && tooltip}
-    <div class="tooltip-icon">
-      <svg
-        class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
-        focusable="false"
-        aria-hidden="true"
-        aria-label="Info"
-      >
-        <use xlink:href="#spectrum-icon-18-InfoOutline" />
-      </svg>
-    </div>
-  {/if}
-  {#if showTooltip && tooltip}
+  {#if tooltip}
     <div class="tooltip">
       <Tooltip textWrapping={true} direction={"bottom"} text={tooltip} />
     </div>
@@ -75,7 +58,6 @@
   button {
     position: relative;
   }
-
   .spectrum-Button-label {
     white-space: nowrap;
     overflow: hidden;
@@ -93,11 +75,13 @@
     text-align: center;
     transform: translateX(-50%);
     left: 50%;
-    top: calc(100% - 3px);
+    top: 100%;
+    opacity: 0;
+    transition: opacity 130ms ease-out;
+    pointer-events: none;
   }
-  .tooltip-icon {
-    padding-left: var(--spacing-m);
-    line-height: 0;
+  button:hover .tooltip {
+    opacity: 1;
   }
   .spectrum-Button--primary.new-styles {
     background: var(--spectrum-global-color-gray-800);

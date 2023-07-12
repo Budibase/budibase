@@ -3,6 +3,7 @@
   import { Page, Layout } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "components/deploy/DeleteModal.svelte"
+  import { isOnlyUser } from "builderStore"
 
   let deleteModal
 </script>
@@ -49,6 +50,10 @@
               on:click={() => {
                 deleteModal.show()
               }}
+              disabled={!$isOnlyUser}
+              tooltip={$isOnlyUser
+                ? null
+                : "Unavailable - another user is editing this app"}
             />
           </div>
         </SideNav>
@@ -61,7 +66,7 @@
 <DeleteModal bind:this={deleteModal} />
 
 <style>
-  .delete-action :global(span) {
+  .delete-action :global(.text) {
     color: var(--spectrum-global-color-red-400);
   }
   .delete-action {

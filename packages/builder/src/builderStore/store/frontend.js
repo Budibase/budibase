@@ -38,6 +38,7 @@ import {
 import { makePropSafe as safe } from "@budibase/string-templates"
 import { getComponentFieldOptions } from "helpers/formFields"
 import { createBuilderWebsocket } from "builderStore/websocket"
+import { BuilderSocketEvent } from "@budibase/shared-core"
 
 const INITIAL_FRONTEND_STATE = {
   initialised: false,
@@ -352,6 +353,33 @@ export const getFrontendStore = () => {
           return
         }
         return await sequentialScreenPatch(patchFn, screenId)
+      },
+      replace: async (screenId, screen) => {
+        if (!screenId) {
+          return
+        }
+        if (!screen) {
+          // Screen deletion
+          store.update(state => ({
+            ...state,
+            screens: state.screens.filter(x => x._id !== screenId),
+          }))
+        } else {
+          const index = get(store).screens.findIndex(x => x._id === screen._id)
+          if (index === -1) {
+            // Screen addition
+            store.update(state => ({
+              ...state,
+              screens: [...state.screens, screen],
+            }))
+          } else {
+            // Screen update
+            store.update(state => {
+              state.screens[index] = screen
+              return state
+            })
+          }
+        }
       },
       delete: async screens => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
@@ -1305,7 +1333,7 @@ export const getFrontendStore = () => {
     links: {
       save: async (url, title) => {
         const navigation = get(store).navigation
-        let links = [...navigation?.links]
+        let links = [...(navigation?.links ?? [])]
 
         // Skip if we have an identical link
         if (links.find(link => link.url === url && link.text === title)) {
@@ -1363,6 +1391,21 @@ export const getFrontendStore = () => {
         store.actions.preview.sendEvent("dragging-new-component", {
           dragging: false,
         })
+      },
+    },
+    websocket: {
+      selectResource: id => {
+        websocket.emit(BuilderSocketEvent.SelectResource, {
+          resourceId: id,
+        })
+      },
+    },
+    metadata: {
+      replace: metadata => {
+        store.update(state => ({
+          ...state,
+          ...metadata,
+        }))
       },
     },
   }
