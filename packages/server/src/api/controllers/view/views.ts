@@ -1,4 +1,3 @@
-import { DocumentType, SEPARATOR } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { Ctx, ViewV2 } from "@budibase/types"
 
@@ -28,4 +27,12 @@ export async function save(ctx: Ctx<ViewV2>) {
     ...view,
     ...result,
   }
+}
+
+export async function remove(ctx: Ctx) {
+  const { viewId } = ctx.params
+  const { _rev } = await sdk.views.get(viewId)
+
+  await sdk.views.remove(viewId, _rev)
+  ctx.status = 204
 }
