@@ -9,6 +9,11 @@ const router: Router = new Router()
 
 router
   .get(
+    "/api/views/v2",
+    authorized(permissions.BUILDER),
+    viewController.v2.fetch
+  )
+  .get(
     "/api/views/export",
     authorized(permissions.BUILDER),
     viewController.v1.exportView
