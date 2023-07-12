@@ -45,6 +45,14 @@ describe("/views/v2", () => {
       .expect(200)
   }
 
+  const getView = async (viewId: string) => {
+    return request
+      .get(`/api/views/v2/${viewId}`)
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
+
   function createView(tableId: string): ViewV2 {
     return {
       name: generator.guid(),
@@ -97,6 +105,27 @@ describe("/views/v2", () => {
 
       expect(res.body.views.length).toBe(5)
       expect(res.body.views).toEqual(expect.arrayContaining([]))
+    })
+  })
+
+  describe("getView", () => {
+    let view: any
+    beforeAll(async () => {
+      view = (await saveView(createView(table._id!))).body
+    })
+
+    it("persist the view when the view is successfully created", async () => {
+      const res = await getView(view._id)
+      expect(res.status).toBe(200)
+      expect(res.body._id).toBeDefined()
+
+      expect(res.body).toEqual({
+        ...view,
+        _id: expect.any(String),
+        _rev: expect.any(String),
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+      })
     })
   })
 
