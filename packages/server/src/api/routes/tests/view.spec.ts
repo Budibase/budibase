@@ -33,9 +33,6 @@ describe("/views/v2", () => {
 
   beforeAll(async () => {
     await config.init()
-  })
-
-  beforeEach(async () => {
     table = await config.createTable(priceTable())
   })
 
@@ -48,10 +45,10 @@ describe("/views/v2", () => {
       .expect(200)
   }
 
-  function createView(): ViewV2 {
+  function createView(tableId: string): ViewV2 {
     return {
       name: generator.guid(),
-      tableId: table._id!,
+      tableId,
     }
   }
 
@@ -61,7 +58,7 @@ describe("/views/v2", () => {
     beforeAll(async () => {
       table = await config.createTable(priceTable())
       for (let id = 0; id < 10; id++) {
-        const res = await saveView(createView())
+        const res = await saveView(createView(table._id!))
         views.push(res.body)
       }
     })
@@ -80,9 +77,32 @@ describe("/views/v2", () => {
     })
   })
 
+  describe("findByTable", () => {
+    const views: any[] = []
+
+    beforeAll(async () => {
+      table = await config.createTable(priceTable())
+      for (let id = 0; id < 5; id++) {
+        const res = await saveView(createView(table._id!))
+        views.push(res.body)
+      }
+    })
+
+    it("returns all views", async () => {
+      const res = await request
+        .get(`/api/views/v2/${table._id}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body.views.length).toBe(5)
+      expect(res.body.views).toEqual(expect.arrayContaining([]))
+    })
+  })
+
   describe("create", () => {
     it("persist the view when the view is successfully created", async () => {
-      const view = createView()
+      const view = createView(table._id!)
       const res = await saveView(view)
       expect(res.status).toBe(200)
       expect(res.body._id).toBeDefined()
