@@ -10,6 +10,11 @@ export interface View {
   meta?: Record<string, any>
 }
 
+export interface ViewV2 {
+  name: string
+  tableId: string
+}
+
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
 
 export interface ViewCountOrSumSchema {

@@ -70,6 +70,7 @@ export enum DocumentType {
   USER_FLAG = "flag",
   AUTOMATION_METADATA = "meta_au",
   AUDIT_LOG = "al",
+  VIEW = "vi",
 }
 
 export const StaticDatabases = {
