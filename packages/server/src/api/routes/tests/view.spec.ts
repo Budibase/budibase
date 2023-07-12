@@ -2,7 +2,6 @@ import * as setup from "./utilities"
 import { FieldType, Table, ViewV2 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../../sdk"
-import { context } from "@budibase/backend-core"
 
 function priceTable(): Table {
   return {
@@ -57,17 +56,13 @@ describe("/views/v2", () => {
   }
 
   describe("fetch", () => {
-    const views = []
+    const views: any[] = []
 
     beforeAll(async () => {
       table = await config.createTable(priceTable())
-
       for (let id = 0; id < 10; id++) {
-        const view = createView()
-        const res = await saveView(view)
-        await context.doInAppContext(config.appId, async () => {
-          views.push(await sdk.views.get(res.body._id))
-        })
+        const res = await saveView(createView())
+        views.push(res.body)
       }
     })
 
@@ -79,7 +74,9 @@ describe("/views/v2", () => {
         .expect(200)
 
       expect(res.body.views.length).toBe(10)
-      expect(res.body.views).toEqual(expect.arrayContaining([]))
+      expect(res.body.views).toEqual(
+        expect.arrayContaining(views.map(v => expect.objectContaining(v)))
+      )
     })
   })
 
@@ -90,15 +87,10 @@ describe("/views/v2", () => {
       expect(res.status).toBe(200)
       expect(res.body._id).toBeDefined()
 
-      await context.doInAppContext(config.appId, async () => {
-        const persisted = await sdk.views.get(res.body._id)
-        expect(persisted).toEqual({
-          _id: res.body._id,
-          _rev: res.body._rev,
-          ...view,
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String),
-        })
+      expect(res.body).toEqual({
+        ...view,
+        _id: expect.any(String),
+        _rev: expect.any(String),
       })
     })
   })
