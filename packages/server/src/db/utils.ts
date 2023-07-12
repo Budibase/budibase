@@ -271,3 +271,11 @@ export function getMultiIDParams(ids: string[]) {
     include_docs: true,
   }
 }
+
+/**
+ * Generates a new view ID.
+ * @returns {string} The new view ID which the view doc can be stored under.
+ */
+export function generateViewID(): string {
+  return `${DocumentType.VIEW}${SEPARATOR}${newid()}`
+}
