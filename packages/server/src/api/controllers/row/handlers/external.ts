@@ -24,7 +24,7 @@ import {
 import sdk from "../../../../sdk"
 import * as utils from "../utils"
 
-const { cleanExportRows } = require("./utils")
+import { cleanExportRows } from "../utils"
 
 async function getRow(
   tableId: string,
@@ -227,7 +227,7 @@ export async function search(ctx: Ctx) {
 
 export async function exportRows(ctx: UserCtx) {
   const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
-  const format = ctx.query.format
+  const format = ctx.query.format as string
   const { columns } = ctx.request.body
   const datasource = await sdk.datasources.get(datasourceId!)
   if (!datasource || !datasource.entities) {
