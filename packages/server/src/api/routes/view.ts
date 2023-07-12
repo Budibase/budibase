@@ -14,12 +14,12 @@ router
     viewController.v2.fetch
   )
   .get(
-    `/api/views/v2/${DocumentType.TABLE}${SEPARATOR}:tableId`,
+    `/api/views/v2/:tableId`,
     authorized(permissions.BUILDER),
     viewController.v2.findByTable
   )
   .get(
-    `/api/views/v2/${DocumentType.VIEW}${SEPARATOR}:viewId`,
+    `/api/views/v2/:tableId/:viewId`,
     authorized(permissions.BUILDER),
     viewController.v2.find
   )
