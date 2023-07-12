@@ -18,6 +18,11 @@ router
     authorized(permissions.BUILDER),
     viewController.v2.findByTable
   )
+  .get(
+    `/api/views/v2/${DocumentType.VIEW}${SEPARATOR}:viewId`,
+    authorized(permissions.BUILDER),
+    viewController.v2.find
+  )
   .post(
     "/api/views/v2",
     authorized(permissions.BUILDER),
