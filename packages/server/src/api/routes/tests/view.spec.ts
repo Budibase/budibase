@@ -1,6 +1,6 @@
 import * as setup from "./utilities"
 import { FieldType, Table, ViewV2 } from "@budibase/types"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, structures } from "@budibase/backend-core/tests"
 import sdk from "../../../sdk"
 
 function priceTable(): Table {
@@ -45,12 +45,17 @@ describe("/views/v2", () => {
       .expect(200)
   }
 
-  const getView = async (viewId: string) => {
+  const getView = ({
+    tableId,
+    viewId,
+  }: {
+    tableId: string
+    viewId: string
+  }) => {
     return request
-      .get(`/api/views/v2/${viewId}`)
+      .get(`/api/views/v2/${tableId}/${viewId}`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(200)
   }
 
   function createView(tableId: string): ViewV2 {
@@ -114,8 +119,11 @@ describe("/views/v2", () => {
       view = (await saveView(createView(table._id!))).body
     })
 
-    it("persist the view when the view is successfully created", async () => {
-      const res = await getView(view._id)
+    it("can fetch the expected view", async () => {
+      const res = await getView({
+        tableId: view.tableId,
+        viewId: view._id,
+      }).expect(200)
       expect(res.status).toBe(200)
       expect(res.body._id).toBeDefined()
 
@@ -126,6 +134,13 @@ describe("/views/v2", () => {
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       })
+    })
+
+    it("will return 404 if the wrong table id is provided", async () => {
+      await getView({
+        tableId: structures.generator.guid(),
+        viewId: view._id,
+      }).expect(404)
     })
   })
 
