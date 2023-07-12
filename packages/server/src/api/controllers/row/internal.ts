@@ -35,6 +35,7 @@ import {
   LinkDocumentValue,
   Row,
   Table,
+  Ctx,
 } from "@budibase/types"
 
 import { cleanExportRows } from "./utils"
@@ -71,7 +72,7 @@ async function getView(db: Database, viewName: string) {
   return viewInfo
 }
 
-async function getRawTableData(ctx: UserCtx, db: Database, tableId: string) {
+async function getRawTableData(ctx: Ctx, db: Database, tableId: string) {
   let rows
   if (tableId === InternalTables.USER_METADATA) {
     await userController.fetchMetadata(ctx)
@@ -262,7 +263,7 @@ export async function fetchView(ctx: UserCtx) {
   return rows
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: Ctx) {
   const db = context.getAppDB()
 
   const tableId = ctx.params.tableId
@@ -354,7 +355,7 @@ export async function bulkDestroy(ctx: UserCtx) {
   return { response: { ok: true }, rows: processedRows }
 }
 
-export async function search(ctx: UserCtx) {
+export async function search(ctx: Ctx) {
   // Fetch the whole table when running in cypress, as search doesn't work
   if (!env.COUCH_DB_URL && env.isCypress()) {
     return { rows: await fetch(ctx) }

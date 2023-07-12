@@ -117,7 +117,7 @@ export async function destroy(ctx: any) {
   ctx.body = response
 }
 
-export async function search(ctx: any) {
+export async function search(ctx: Ctx) {
   const tableId = utils.getTableId(ctx)
   ctx.status = 200
   ctx.body = await quotas.addQuery(() => pickApi(tableId).search(ctx), {

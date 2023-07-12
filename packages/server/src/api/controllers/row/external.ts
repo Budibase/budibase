@@ -11,6 +11,7 @@ import { ExternalRequest, RunConfig } from "./ExternalRequest"
 import * as exporters from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import {
+  Ctx,
   Datasource,
   IncludeRelationship,
   Operation,
@@ -161,7 +162,7 @@ export async function bulkDestroy(ctx: UserCtx) {
   return { response: { ok: true }, rows: responses.map(resp => resp.row) }
 }
 
-export async function search(ctx: UserCtx) {
+export async function search(ctx: Ctx) {
   const tableId = ctx.params.tableId
   const { paginate, query, ...params } = ctx.request.body
   let { bookmark, limit } = params
