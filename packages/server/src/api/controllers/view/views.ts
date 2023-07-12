@@ -8,7 +8,6 @@ export async function fetch(ctx: Ctx) {
 
 export async function findByTable(ctx: Ctx) {
   const tableId = `${DocumentType.TABLE}${SEPARATOR}${ctx.params.tableId}`
-  console.error(tableId)
   ctx.body = { views: await sdk.views.findByTable(tableId) }
 }
 
