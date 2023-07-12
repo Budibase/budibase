@@ -1,6 +1,23 @@
-import { context } from "@budibase/backend-core"
+import {
+  DocumentType,
+  SEPARATOR,
+  UNICODE_MAX,
+  context,
+} from "@budibase/backend-core"
 import { ViewV2 } from "@budibase/types"
 import { generateViewID } from "../../../db/utils"
+
+export async function fetch() {
+  const db = context.getAppDB()
+
+  const startKey = `${DocumentType.VIEW}${SEPARATOR}`
+  const response = await db.allDocs({
+    startkey: startKey,
+    endkey: `${startKey}${UNICODE_MAX}`,
+  })
+
+  return response.rows
+}
 
 export async function get(viewId: string) {
   const db = context.getAppDB()

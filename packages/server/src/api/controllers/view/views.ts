@@ -2,7 +2,7 @@ import sdk from "../../../sdk"
 import { Ctx, ViewV2 } from "@budibase/types"
 
 export async function fetch(ctx: Ctx) {
-  ctx.body = await sdk.views.get(ctx.params.viewId)
+  ctx.body = { views: await sdk.views.fetch() }
 }
 
 export async function save(ctx: Ctx<ViewV2>) {
