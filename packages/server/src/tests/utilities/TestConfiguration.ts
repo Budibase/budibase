@@ -631,7 +631,7 @@ class TestConfiguration {
       tableId: this.table._id,
       name: "ViewTest",
     }
-    return this._req(view, null, controllers.view.save)
+    return this._req(view, null, controllers.view.v1.save)
   }
 
   // AUTOMATION
