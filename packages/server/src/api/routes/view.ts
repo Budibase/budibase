@@ -3,7 +3,7 @@ import * as viewController from "../controllers/view"
 import * as rowController from "../controllers/row"
 import authorized from "../../middleware/authorized"
 import { paramResource } from "../../middleware/resourceId"
-import { permissions } from "@budibase/backend-core"
+import { DocumentType, SEPARATOR, permissions } from "@budibase/backend-core"
 
 const router: Router = new Router()
 
@@ -12,6 +12,11 @@ router
     "/api/views/v2",
     authorized(permissions.BUILDER),
     viewController.v2.fetch
+  )
+  .get(
+    `/api/views/v2/${DocumentType.TABLE}${SEPARATOR}:tableId`,
+    authorized(permissions.BUILDER),
+    viewController.v2.findByTable
   )
   .post(
     "/api/views/v2",
