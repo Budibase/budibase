@@ -13,6 +13,8 @@ router
     authorized(permissions.BUILDER),
     viewController.v2.fetch
   )
+
+router
   .get(
     "/api/views/export",
     authorized(permissions.BUILDER),
