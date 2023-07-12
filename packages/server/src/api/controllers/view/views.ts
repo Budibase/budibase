@@ -6,6 +6,11 @@ export async function fetch(ctx: Ctx) {
   ctx.body = { views: await sdk.views.fetch() }
 }
 
+export async function find(ctx: Ctx) {
+  const viewId = `${DocumentType.VIEW}${SEPARATOR}${ctx.params.viewId}`
+  ctx.body = await sdk.views.get(viewId)
+}
+
 export async function findByTable(ctx: Ctx) {
   const tableId = `${DocumentType.TABLE}${SEPARATOR}${ctx.params.tableId}`
   ctx.body = { views: await sdk.views.findByTable(tableId) }
