@@ -1,6 +1,6 @@
 import { quotas } from "@budibase/pro"
-import * as internal from "./internal"
-import * as external from "./external"
+import * as internal from "./handlers/internal"
+import * as external from "./handlers/external"
 import { isExternalTable } from "../../../integrations/utils"
 import { Ctx } from "@budibase/types"
 import * as utils from "./utils"

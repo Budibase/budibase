@@ -1,6 +1,6 @@
-import { exportRows } from "../row/external"
+import { exportRows } from "../row/handlers/external"
 import sdk from "../../../sdk"
-import { ExternalRequest } from "../row/ExternalRequest"
+import { ExternalRequest } from "../row/handlers/ExternalRequest"
 
 // @ts-ignore
 sdk.datasources = {

@@ -11,7 +11,7 @@ import {
 } from "./utils"
 import { FieldTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
-import { handleRequest } from "../row/external"
+import { handleRequest } from "../row/handlers/external"
 import { context, events } from "@budibase/backend-core"
 import { isRows, isSchema, parse } from "../../../utilities/schema"
 import {

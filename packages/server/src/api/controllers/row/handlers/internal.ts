@@ -1,34 +1,34 @@
-import * as linkRows from "../../../db/linkedRows"
+import * as linkRows from "../../../../db/linkedRows"
 import {
   generateRowID,
   getRowParams,
   getTableIDFromRowID,
   DocumentType,
   InternalTables,
-} from "../../../db/utils"
-import * as userController from "../user"
+} from "../../../../db/utils"
+import * as userController from "../../user"
 import {
   inputProcessing,
   outputProcessing,
   cleanupAttachments,
-} from "../../../utilities/rowProcessor"
-import { FieldTypes } from "../../../constants"
-import * as utils from "./utils"
+} from "../../../../utilities/rowProcessor"
+import { FieldTypes } from "../../../../constants"
+import * as utils from "../utils"
 import { fullSearch, paginatedSearch } from "./internalSearch"
-import { getGlobalUsersFromMetadata } from "../../../utilities/global"
-import * as inMemoryViews from "../../../db/inMemoryView"
-import env from "../../../environment"
+import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
+import * as inMemoryViews from "../../../../db/inMemoryView"
+import env from "../../../../environment"
 import {
   migrateToInMemoryView,
   migrateToDesignView,
   getFromDesignDoc,
   getFromMemoryDoc,
-} from "../view/utils"
+} from "../../view/utils"
 import { cloneDeep } from "lodash/fp"
 import { context, db as dbCore } from "@budibase/backend-core"
-import { finaliseRow, updateRelatedFormula } from "./staticFormula"
-import { csv, json, jsonWithSchema, Format } from "../view/exporters"
-import { apiFileReturn } from "../../../utilities/fileSystem"
+import { finaliseRow, updateRelatedFormula } from "../staticFormula"
+import { csv, json, jsonWithSchema, Format } from "../../view/exporters"
+import { apiFileReturn } from "../../../../utilities/fileSystem"
 import {
   UserCtx,
   Database,
@@ -38,7 +38,7 @@ import {
   Ctx,
 } from "@budibase/types"
 
-import { cleanExportRows } from "./utils"
+import { cleanExportRows } from "../utils"
 
 const CALCULATION_TYPES = {
   SUM: "sum",

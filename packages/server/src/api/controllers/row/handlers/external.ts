@@ -2,14 +2,14 @@ import {
   FieldTypes,
   NoEmptyFilterStrings,
   SortDirection,
-} from "../../../constants"
+} from "../../../../constants"
 import {
   breakExternalTableId,
   breakRowIdField,
-} from "../../../integrations/utils"
+} from "../../../../integrations/utils"
 import { ExternalRequest, RunConfig } from "./ExternalRequest"
-import * as exporters from "../view/exporters"
-import { apiFileReturn } from "../../../utilities/fileSystem"
+import * as exporters from "../../view/exporters"
+import { apiFileReturn } from "../../../../utilities/fileSystem"
 import {
   Ctx,
   Datasource,
@@ -21,8 +21,8 @@ import {
   Table,
   UserCtx,
 } from "@budibase/types"
-import sdk from "../../../sdk"
-import * as utils from "./utils"
+import sdk from "../../../../sdk"
+import * as utils from "../utils"
 
 const { cleanExportRows } = require("./utils")
 
