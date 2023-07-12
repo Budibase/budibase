@@ -11,7 +11,7 @@ router
   .get(
     "/api/views/export",
     authorized(permissions.BUILDER),
-    viewController.exportView
+    viewController.v1.exportView
   )
   .get(
     "/api/views/:viewName",
@@ -22,13 +22,13 @@ router
     ),
     rowController.fetchView
   )
-  .get("/api/views", authorized(permissions.BUILDER), viewController.fetch)
+  .get("/api/views", authorized(permissions.BUILDER), viewController.v1.fetch)
   .delete(
     "/api/views/:viewName",
     paramResource("viewName"),
     authorized(permissions.BUILDER),
-    viewController.destroy
+    viewController.v1.destroy
   )
-  .post("/api/views", authorized(permissions.BUILDER), viewController.save)
+  .post("/api/views", authorized(permissions.BUILDER), viewController.v1.save)
 
 export default router
