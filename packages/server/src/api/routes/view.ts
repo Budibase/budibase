@@ -28,6 +28,11 @@ router
     authorized(permissions.BUILDER),
     viewController.v2.save
   )
+  .delete(
+    `/api/views/v2/:tableId/:viewId`,
+    authorized(permissions.BUILDER),
+    viewController.v2.remove
+  )
 
 router
   .get(
