@@ -7,5 +7,9 @@ export async function fetch(ctx: Ctx) {
 
 export async function save(ctx: Ctx<ViewV2>) {
   const view = ctx.request.body
-  ctx.body = await sdk.views.save(view)
+  const result = await sdk.views.save(view)
+  ctx.body = {
+    ...view,
+    ...result,
+  }
 }
