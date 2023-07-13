@@ -68,8 +68,7 @@ async function loginAsAdmin() {
 }
 
 async function loginAsAccount(account: CreateAccountRequest) {
-  const [res, cookie] = await internalApi.auth.login(
-    account.tenantId,
+  const [res, cookie] = await accountsApi.auth.login(
     account.email,
     account.password,
     API_OPTS
