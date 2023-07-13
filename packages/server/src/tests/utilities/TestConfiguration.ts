@@ -135,7 +135,10 @@ class TestConfiguration {
     }
   }
 
-  async doInContext(appId: string | null, task: any) {
+  async doInContext<T>(
+    appId: string | null,
+    task: () => Promise<T>
+  ): Promise<T> {
     if (!appId) {
       appId = this.appId
     }
