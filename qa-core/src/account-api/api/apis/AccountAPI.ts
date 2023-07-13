@@ -72,4 +72,59 @@ export default class AccountAPI {
     }
     return response
   }
+
+  async verifyAccount(
+      verificationCode: string,
+      opts: APIRequestOpts = { doExpect: true }
+  ): Promise<Response> {
+    const [response, json] = await this.client.post(
+        `/api/accounts/verify`,
+        {
+          body: { verificationCode },
+        }
+    )
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(200)
+    }
+    return response
+  }
+
+  async verifyAccountSendEmail(
+      email: string,
+      opts: APIRequestOpts = { doExpect: true }
+  ): Promise<Response> {
+    const [response, json] = await this.client.post(
+        `/api/accounts/verify/send`,
+        {
+          body: { email },
+        }
+    )
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(200)
+    }
+    return response
+  }
+
+  async search(
+      searchType: string,
+      search: 'email' | 'tenantId',
+      opts: APIRequestOpts = { doExpect: true }
+  ): Promise<Response> {
+    let body: { email?: string; tenantId?: string } = {}
+
+    if (search === 'email') {
+      body.email = searchType;
+    } else if (search === 'tenantId') {
+      body.tenantId = searchType;
+    }
+
+    const [response, json] = await this.client.post(
+        `/api/accounts/search`,
+        {body: body}
+    )
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(200)
+    }
+    return response
+  }
 }
