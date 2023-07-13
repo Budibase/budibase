@@ -14,12 +14,7 @@ router
     viewController.v2.fetch
   )
   .get(
-    `/api/views/v2/:tableId`,
-    authorized(permissions.BUILDER),
-    viewController.v2.findByTable
-  )
-  .get(
-    `/api/views/v2/:tableId/:viewId`,
+    `/api/views/v2/:viewId`,
     authorized(permissions.BUILDER),
     viewController.v2.find
   )
@@ -29,7 +24,7 @@ router
     viewController.v2.save
   )
   .delete(
-    `/api/views/v2/:tableId/:viewId`,
+    `/api/views/v2/:viewId`,
     authorized(permissions.BUILDER),
     viewController.v2.remove
   )
