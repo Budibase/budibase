@@ -1,7 +1,6 @@
 import * as setup from "./utilities"
 import { FieldType, Table, ViewV2 } from "@budibase/types"
 import { generator, structures } from "@budibase/backend-core/tests"
-import sdk from "../../../sdk"
 
 function priceTable(): Table {
   return {
@@ -45,15 +44,9 @@ describe("/views/v2", () => {
       .expect(200)
   }
 
-  const getView = ({
-    tableId,
-    viewId,
-  }: {
-    tableId: string
-    viewId: string
-  }) => {
+  const getView = (viewId: string) => {
     return request
-      .get(`/api/views/v2/${tableId}/${viewId}`)
+      .get(`/api/views/v2/${viewId}`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
   }
@@ -88,28 +81,36 @@ describe("/views/v2", () => {
         expect.arrayContaining(views.map(v => expect.objectContaining(v)))
       )
     })
-  })
 
-  describe("findByTable", () => {
-    const views: any[] = []
-
-    beforeAll(async () => {
-      table = await config.createTable(priceTable())
+    it("can filter by table id", async () => {
+      const newTable = await config.createTable(priceTable())
+      const newViews = []
       for (let id = 0; id < 5; id++) {
-        const res = await saveView(createView(table._id!))
-        views.push(res.body)
+        const res = await saveView(createView(newTable._id!))
+        newViews.push(res.body)
       }
-    })
-
-    it("returns all views", async () => {
       const res = await request
-        .get(`/api/views/v2/${table._id}`)
+        .get(`/api/views/v2?tableId=${newTable._id}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
 
       expect(res.body.views.length).toBe(5)
-      expect(res.body.views).toEqual(expect.arrayContaining([]))
+      expect(res.body.views).toEqual(
+        expect.arrayContaining(newViews.map(v => expect.objectContaining(v)))
+      )
+    })
+
+    it("can not filter by multiple table ids", async () => {
+      const res = await request
+        .get(
+          `/api/views/v2?tableId=${structures.generator.guid()}&tableId=${structures.generator.guid()}`
+        )
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res.body.message).toBe("tableId type is not valid")
     })
   })
 
@@ -120,10 +121,7 @@ describe("/views/v2", () => {
     })
 
     it("can fetch the expected view", async () => {
-      const res = await getView({
-        tableId: view.tableId,
-        viewId: view._id,
-      }).expect(200)
+      const res = await getView(view._id).expect(200)
       expect(res.status).toBe(200)
       expect(res.body._id).toBeDefined()
 
@@ -136,11 +134,8 @@ describe("/views/v2", () => {
       })
     })
 
-    it("will return 404 if the wrong table id is provided", async () => {
-      await getView({
-        tableId: structures.generator.guid(),
-        viewId: view._id,
-      }).expect(404)
+    it("will return 404 if the unnexisting id is provided", async () => {
+      await getView(structures.generator.guid()).expect(404)
     })
   })
 
@@ -168,20 +163,14 @@ describe("/views/v2", () => {
     })
 
     it("can delete an existing view", async () => {
-      await getView({
-        tableId: view.tableId,
-        viewId: view._id,
-      }).expect(200)
+      await getView(view._id).expect(200)
 
       await request
-        .delete(`/api/views/v2/${view.tableId}/${view._id}`)
+        .delete(`/api/views/v2/${view._id}`)
         .set(config.defaultHeaders())
         .expect(204)
 
-      await getView({
-        tableId: view.tableId,
-        viewId: view._id,
-      }).expect(404)
+      await getView(view._id).expect(404)
     })
   })
 })
