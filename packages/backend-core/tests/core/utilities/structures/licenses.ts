@@ -2,7 +2,7 @@ import {
   Billing,
   Customer,
   Feature,
-  License,
+  License, OfflineLicense,
   PlanModel,
   PlanType,
   PriceDuration,
@@ -11,6 +11,7 @@ import {
   Quotas,
   Subscription,
 } from "@budibase/types"
+import { generator } from "./generator"
 
 export function price(): PurchasedPrice {
   return {
@@ -127,19 +128,35 @@ export function subscription(): Subscription {
   }
 }
 
+interface GenerateLicenseOpts {
+  quotas?: Quotas
+  plan?: PurchasedPlan
+  planType?: PlanType
+  features?: Feature[]
+  billing?: Billing
+}
+
 export const license = (
-  opts: {
-    quotas?: Quotas
-    plan?: PurchasedPlan
-    planType?: PlanType
-    features?: Feature[]
-    billing?: Billing
-  } = {}
+  opts: GenerateLicenseOpts = {}
 ): License => {
   return {
     features: opts.features || [],
     quotas: opts.quotas || quotas(),
     plan: opts.plan || plan(opts.planType),
     billing: opts.billing || billing(),
+  }
+}
+
+export function offlineLicense (
+  opts: GenerateLicenseOpts = {}
+): OfflineLicense {
+  const base = license(opts)
+  return {
+    ...base,
+    expireAt: new Date().toISOString(),
+    identifier: {
+      installId: generator.guid(),
+      tenantId: generator.guid()
+    }
   }
 }
