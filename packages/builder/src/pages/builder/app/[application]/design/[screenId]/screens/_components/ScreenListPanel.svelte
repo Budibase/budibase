@@ -1,17 +1,16 @@
 <script>
   import { Search, Layout, Select, Body, Button } from "@budibase/bbui"
   import Panel from "components/design/Panel.svelte"
+  import { goto } from "@roxi/routify"
   import { roles } from "stores/backend"
   import { store, sortedScreens, userSelectedResourceMap } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
-  import ScreenWizard from "./ScreenWizard.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
   import { RoleUtils } from "@budibase/frontend-core"
 
   let searchString
   let accessRole = "all"
-  let showNewScreenModal
 
   $: filteredScreens = getFilteredScreens(
     $sortedScreens,
@@ -31,7 +30,7 @@
 
 <Panel title="Screens" borderRight>
   <Layout paddingX="L" paddingY="XL" gap="S">
-    <Button on:click={showNewScreenModal} cta>Add screen</Button>
+    <Button on:click={() => $goto("../../new")} cta>Add screen</Button>
     <Search
       placeholder="Search"
       value={searchString}
@@ -74,5 +73,3 @@
     </Layout>
   {/if}
 </Panel>
-
-<ScreenWizard bind:showModal={showNewScreenModal} />
