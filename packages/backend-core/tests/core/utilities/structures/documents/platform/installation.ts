@@ -7,6 +7,6 @@ export function install(): Installation {
     _id: "install",
     _rev: db.rev(),
     installId: generator.guid(),
-    version: generator.string()
+    version: generator.string(),
   }
 }

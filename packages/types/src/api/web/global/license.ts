@@ -5,7 +5,7 @@ export interface ActivateLicenseKeyRequest {
 }
 
 export interface GetLicenseKeyResponse {
-  licenseKey: string,
+  licenseKey: string
 }
 
 // OFFLINE LICENSE

@@ -138,9 +138,7 @@ interface GenerateLicenseOpts {
   billing?: Billing
 }
 
-export const license = (
-  opts: GenerateLicenseOpts = {}
-): License => {
+export const license = (opts: GenerateLicenseOpts = {}): License => {
   return {
     features: opts.features || [],
     quotas: opts.quotas || quotas(),
@@ -149,23 +147,21 @@ export const license = (
   }
 }
 
-export function offlineLicense (
-  opts: GenerateLicenseOpts = {}
-): OfflineLicense {
+export function offlineLicense(opts: GenerateLicenseOpts = {}): OfflineLicense {
   const base = license(opts)
   return {
     ...base,
     expireAt: new Date().toISOString(),
-    identifier: offlineIdentifier()
+    identifier: offlineIdentifier(),
   }
 }
 
 export function offlineIdentifier(
   installId: string = generator.guid(),
-  tenantId: string = generator.guid(),
+  tenantId: string = generator.guid()
 ): OfflineIdentifier {
   return {
     installId,
-    tenantId
+    tenantId,
   }
 }

@@ -37,7 +37,9 @@ describe("/api/global/license", () => {
 
   describe("POST /api/global/license/key", () => {
     it("returns 200", async () => {
-      const res = await config.api.license.activateLicenseKey({ licenseKey: "licenseKey" })
+      const res = await config.api.license.activateLicenseKey({
+        licenseKey: "licenseKey",
+      })
       expect(res.status).toBe(200)
       expect(licensing.keys.activateLicenseKey).toBeCalledWith("licenseKey")
     })
@@ -53,7 +55,7 @@ describe("/api/global/license", () => {
       const res = await config.api.license.getLicenseKey()
       expect(res.status).toBe(200)
       expect(res.body).toEqual({
-        licenseKey: "*"
+        licenseKey: "*",
       })
     })
   })
@@ -68,8 +70,12 @@ describe("/api/global/license", () => {
 
   describe("POST /api/global/license/offline", () => {
     it("activates offline license", async () => {
-      const res = await config.api.license.activateOfflineLicense({ offlineLicenseToken: "offlineLicenseToken"})
-      expect(licensing.offline.activateOfflineLicense).toBeCalledWith("offlineLicenseToken")
+      const res = await config.api.license.activateOfflineLicense({
+        offlineLicenseToken: "offlineLicenseToken",
+      })
+      expect(licensing.offline.activateOfflineLicenseToken).toBeCalledWith(
+        "offlineLicenseToken"
+      )
       expect(res.status).toBe(200)
     })
   })
@@ -80,11 +86,13 @@ describe("/api/global/license", () => {
       expect(res.status).toBe(404)
     })
     it("returns 200 + offline license token", async () => {
-      licensing.offline.getOfflineLicenseToken.mockResolvedValue("offlineLicenseToken")
+      licensing.offline.getOfflineLicenseToken.mockResolvedValue(
+        "offlineLicenseToken"
+      )
       const res = await config.api.license.getOfflineLicense()
       expect(res.status).toBe(200)
       expect(res.body).toEqual({
-        offlineLicenseToken: "*"
+        offlineLicenseToken: "*",
       })
     })
   })
@@ -103,7 +111,7 @@ describe("/api/global/license", () => {
       const res = await config.api.license.getOfflineLicenseIdentifier()
       expect(res.status).toBe(200)
       expect(res.body).toEqual({
-        identifierBase64: "base64"
+        identifierBase64: "base64",
       })
     })
   })
