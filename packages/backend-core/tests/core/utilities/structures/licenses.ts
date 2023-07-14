@@ -2,7 +2,9 @@ import {
   Billing,
   Customer,
   Feature,
-  License, OfflineLicense,
+  License,
+  OfflineIdentifier,
+  OfflineLicense,
   PlanModel,
   PlanType,
   PriceDuration,
@@ -154,9 +156,16 @@ export function offlineLicense (
   return {
     ...base,
     expireAt: new Date().toISOString(),
-    identifier: {
-      installId: generator.guid(),
-      tenantId: generator.guid()
-    }
+    identifier: offlineIdentifier()
+  }
+}
+
+export function offlineIdentifier(
+  installId: string = generator.guid(),
+  tenantId: string = generator.guid(),
+): OfflineIdentifier {
+  return {
+    installId,
+    tenantId
   }
 }
