@@ -146,6 +146,20 @@ export async function search(ctx: any) {
   })
 }
 
+export async function searchView(ctx: any) {
+  const { viewId } = ctx.params
+  const view = await sdk.views.get(viewId)
+  const tableId = view.tableId
+
+  ctx.status = 200
+  ctx.body = await quotas.addQuery(
+    () => sdk.rows.search({ tableId, query: {} }),
+    {
+      datasourceId: tableId,
+    }
+  )
+}
+
 export async function validate(ctx: Ctx) {
   const tableId = utils.getTableId(ctx)
   // external tables are hard to validate currently
