@@ -135,5 +135,5 @@ export const userSelectedResourceMap = derived(userStore, $userStore => {
 })
 
 export const isOnlyUser = derived(userStore, $userStore => {
-  return $userStore.length === 1
+  return $userStore.length < 2
 })

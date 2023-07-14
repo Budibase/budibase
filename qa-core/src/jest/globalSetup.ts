@@ -68,8 +68,7 @@ async function loginAsAdmin() {
 }
 
 async function loginAsAccount(account: CreateAccountRequest) {
-  const [res, cookie] = await internalApi.auth.login(
-    account.tenantId,
+  const [res, cookie] = await accountsApi.auth.login(
     account.email,
     account.password,
     API_OPTS
@@ -89,6 +88,8 @@ async function setup() {
     const [account, newAccount] = await createAccount()
     // @ts-ignore
     global.qa.tenantId = account.tenantId
+    // @ts-ignore
+    global.qa.email = account.email
     // @ts-ignore
     global.qa.accountId = newAccount.accountId
     await loginAsAccount(account)

@@ -20,6 +20,8 @@ export enum Header {
   TYPE = "x-budibase-type",
   PREVIEW_ROLE = "x-budibase-role",
   TENANT_ID = "x-budibase-tenant-id",
+  VERIFICATION_CODE = "x-budibase-verification-code",
+  RETURN_VERIFICATION_CODE = "x-budibase-return-verification-code",
   TOKEN = "x-budibase-token",
   CSRF_TOKEN = "x-csrf-token",
   CORRELATION_ID = "x-budibase-correlation-id",
