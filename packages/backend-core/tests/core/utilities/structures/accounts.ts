@@ -29,7 +29,7 @@ export const account = (partial: Partial<Account> = {}): Account => {
     size: "10+",
     profession: "Software Engineer",
     quotaUsage: quotas.usage(),
-    ...partial
+    ...partial,
   }
 }
 

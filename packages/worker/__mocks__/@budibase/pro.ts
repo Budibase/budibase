@@ -11,16 +11,16 @@ const pro = {
       activateOfflineLicense: jest.fn(),
       getOfflineLicenseToken: jest.fn(),
       deleteOfflineLicenseToken: jest.fn(),
-      getIdentifierBase64: jest.fn()
+      getIdentifierBase64: jest.fn(),
     },
     cache: {
       ...actual.licensing.cache,
       refresh: jest.fn(),
-    }
+    },
   },
   quotas: {
     ...actual.quotas,
-    getQuotaUsage: jest.fn()
+    getQuotaUsage: jest.fn(),
   },
 }
 

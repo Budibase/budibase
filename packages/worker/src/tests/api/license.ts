@@ -1,6 +1,9 @@
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
-import { ActivateLicenseKeyRequest, ActivateOfflineLicenseRequest } from "@budibase/types"
+import {
+  ActivateLicenseKeyRequest,
+  ActivateOfflineLicenseTokenRequest,
+} from "@budibase/types"
 
 export class LicenseAPI extends TestAPI {
   constructor(config: TestConfiguration) {
@@ -35,7 +38,7 @@ export class LicenseAPI extends TestAPI {
       .delete("/api/global/license/key")
       .set(this.config.defaultHeaders())
   }
-  activateOfflineLicense = async (body: ActivateOfflineLicenseRequest) => {
+  activateOfflineLicense = async (body: ActivateOfflineLicenseTokenRequest) => {
     return this.request
       .post("/api/global/license/offline")
       .send(body)

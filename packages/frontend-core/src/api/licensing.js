@@ -1,5 +1,4 @@
 export const buildLicensingEndpoints = API => ({
-
   // LICENSE KEY
 
   activateLicenseKey: async data => {
@@ -31,7 +30,7 @@ export const buildLicensingEndpoints = API => ({
     return API.post({
       url: "/api/global/license/offline",
       body: {
-        offlineLicenseToken
+        offlineLicenseToken,
       },
     })
   },
