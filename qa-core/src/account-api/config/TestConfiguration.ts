@@ -26,7 +26,4 @@ export default class TestConfiguration<T> extends BudibaseTestConfiguration {
         const apiKeyResponse = await this.internalApi.self.getApiKey()
         this.state.apiKey = apiKeyResponse.apiKey
     }
-
-
-
 }

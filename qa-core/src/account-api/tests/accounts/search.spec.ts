@@ -12,11 +12,32 @@ describe("Account API - Search for Account", () => {
         await config.afterAll()
     })
 
-    it("Search account by email", async () => {
-        await config.api.accounts.search(generator.email(), "email")
-    })
 
-    it("Search account by tenantId", async () => {
-        await config.api.accounts.search(generator.word(), "tenantId")
+    describe("POST /api/accounts/search", () => {
+        describe("by tenant", () => {
+            it("returns 200 + empty", async () => {
+                const tenantId = generator.string()
+                const [res, body] = await config.api.accounts.search(tenantId, "tenantId")
+                expect(res.status).toBe(200)
+                expect(body.length).toBe(0)
+            })
+
+            it("returns 200 + found", async () => {
+                const [res, body] = await config.api.accounts.search(config.state.tenantId!, "tenantId")
+                expect(res.status).toBe(200)
+                expect(body.length).toBe(1)
+                expect(body[0].tenantId).toBe(config.state.tenantId)
+            })
+        })
+
+        describe("by email", () => {
+            it("returns 200 + empty", async () => {
+                await config.api.accounts.search(generator.word(), "email")
+            })
+
+            it("returns 200 + found", async () => {
+                await config.api.accounts.search(generator.word(), "email")
+            })
+        })
     })
 })

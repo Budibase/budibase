@@ -23,6 +23,8 @@ export default class BudibaseTestConfiguration {
     // @ts-ignore
     this.state.tenantId = global.qa.tenantId
     // @ts-ignore
+    this.state.email = global.qa.email
+    // @ts-ignore
     this.state.cookie = global.qa.authCookie
   }
 
@@ -53,6 +55,7 @@ export default class BudibaseTestConfiguration {
     this.state.cookie = state.cookie
     this.state.tableId = state.tableId
     this.state.tenantId = state.tenantId
+    this.state.email = state.email
 
     await task()
 
@@ -62,6 +65,7 @@ export default class BudibaseTestConfiguration {
     this.state.cookie = original.cookie
     this.state.tableId = original.tableId
     this.state.tenantId = original.tenantId
+    this.state.email = original.email
   }
 
   async login(email: string, password: string, tenantId?: string) {
