@@ -1,5 +1,5 @@
 import { Response } from "node-fetch"
-import { Account, CreateAccountRequest } from "@budibase/types"
+import { Account, CreateAccountRequest, SearchAccountsRequest, SearchAccountsResponse } from "@budibase/types"
 import AccountInternalAPIClient from "../AccountInternalAPIClient"
 import { APIRequestOpts } from "../../../types"
 
@@ -71,5 +71,67 @@ export default class AccountAPI {
       throw new Error(`Could not delete accountId=${accountID}`)
     }
     return response
+  }
+
+  async deleteCurrentAccount() {
+    const [response, json] = await this.client.del(
+        `/api/accounts`
+    )
+    return response
+  }
+
+  async verifyAccount(
+      verificationCode: string,
+      opts: APIRequestOpts = { doExpect: true }
+  ): Promise<Response> {
+    const [response, json] = await this.client.post(
+        `/api/accounts/verify`,
+        {
+          body: { verificationCode },
+        }
+    )
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(200)
+    }
+    return response
+  }
+
+  async verifyAccountSendEmail(
+      email: string,
+      opts: APIRequestOpts = { doExpect: true }
+  ): Promise<Response> {
+    const [response, json] = await this.client.post(
+        `/api/accounts/verify/send`,
+        {
+          body: { email },
+        }
+    )
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(200)
+    }
+    return response
+  }
+
+  async search(
+      searchType: string,
+      search: 'email' | 'tenantId',
+      opts: APIRequestOpts = { doExpect: true }
+  ): Promise<[Response, SearchAccountsResponse]> {
+    let body: SearchAccountsRequest = {}
+
+    if (search === 'email') {
+      body.email = searchType;
+    } else if (search === 'tenantId') {
+      body.tenantId = searchType;
+    }
+
+    const [response, json] = await this.client.post(
+        `/api/accounts/search`,
+        {body: body}
+    )
+    if (opts.doExpect) {
+      expect(response).toHaveStatusCode(200)
+    }
+    return [response, json]
   }
 }

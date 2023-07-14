@@ -38,7 +38,7 @@ export const getValidOperatorsForType = (
   }[] = []
   if (type === "string") {
     ops = stringOps
-  } else if (type === "number") {
+  } else if (type === "number" || type === "bigint") {
     ops = numOps
   } else if (type === "options") {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
