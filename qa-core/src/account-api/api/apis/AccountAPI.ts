@@ -73,6 +73,13 @@ export default class AccountAPI {
     return response
   }
 
+  async deleteCurrentAccount() {
+    const [response, json] = await this.client.del(
+        `/api/accounts`
+    )
+    return response
+  }
+
   async verifyAccount(
       verificationCode: string,
       opts: APIRequestOpts = { doExpect: true }

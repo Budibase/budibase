@@ -43,7 +43,8 @@ export default class BudibaseTestConfiguration {
   async login(email: string, password: string, tenantId?: string) {
     if (!tenantId && this.state.tenantId) {
       tenantId = this.state.tenantId
-    } else {
+    }
+    if (!tenantId) {
       throw new Error("Could not determine tenant id")
     }
     const [res, cookie] = await this.internalApi.auth.login(

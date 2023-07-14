@@ -15,10 +15,24 @@ describe("Account API - Verify Account", () => {
 
 
     it("Verify an account", async () => {
+        // Create account
+        await config.api.accounts.create({
+            ...fixtures.accounts.generateAccount()
+        })
+        // Invite user
+
+        // Verify account via code
         await config.api.accounts.verifyAccount()
     })
 
     it("Send account verification email ", async () => {
+        // Create account
+        await config.api.accounts.create({
+            ...fixtures.accounts.generateAccount()
+        })
+        // Invite user
+
+        // Verify account via email
         await config.api.accounts.verifyAccountSendEmail()
     })
 })

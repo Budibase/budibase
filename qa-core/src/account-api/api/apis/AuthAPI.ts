@@ -18,7 +18,7 @@ export default class AuthAPI {
       `/api/auth/login`,
       {
         body: {
-          username: email,
+          email: email,
           password: password,
         },
       }
