@@ -8,7 +8,7 @@ const pro = {
       deleteLicenseKey: jest.fn(),
     },
     offline: {
-      activateOfflineLicense: jest.fn(),
+      activateOfflineLicenseToken: jest.fn(),
       getOfflineLicenseToken: jest.fn(),
       deleteOfflineLicenseToken: jest.fn(),
       getIdentifierBase64: jest.fn(),
