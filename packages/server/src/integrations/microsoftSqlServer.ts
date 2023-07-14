@@ -63,7 +63,7 @@ interface NTLMMSSQLConfig extends BasicMSSQLConfig {
 }
 
 type MSSQLConfig =
-  | (BasicMSSQLConfig & { authType: undefined })
+  | (BasicMSSQLConfig & { authType?: undefined })
   | AzureADMSSQLConfig
   | NTLMMSSQLConfig
 
