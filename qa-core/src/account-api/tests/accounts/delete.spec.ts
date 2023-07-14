@@ -13,24 +13,22 @@ describe("Account API - Delete Account", () => {
     })
 
     it("Deletes an account", async () => {
-        // Create account
-        const createAccountRequest = fixtures.accounts.generateAccount()
+        await config.doInNewState(async () => {
+            // Create account
+            const createAccountRequest = fixtures.accounts.generateAccount()
+            await config.api.accounts.create(createAccountRequest)
 
-        await config.api.accounts.create(
-            createAccountRequest
-        )
+            // Login - Get cookie
+            await config.login(
+              createAccountRequest.email,
+              createAccountRequest.password,
+              createAccountRequest.tenantId
+            )
 
-        // Login - Get cookie
-        await config.login(
-            createAccountRequest.email,
-            createAccountRequest.password,
-            createAccountRequest.tenantId
-        )
-
-        // Delete account
-        const [ res ] = await config.api.accounts.deleteCurrentAccount()
-
-        expect(res.status).toBe(204)
+            // Delete account
+            const res = await config.api.accounts.deleteCurrentAccount()
+            expect(res.status).toBe(204)
+        })
     })
 
     it("Deletes an account by ID", async () => {
