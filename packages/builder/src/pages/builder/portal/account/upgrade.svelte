@@ -11,7 +11,7 @@
     ButtonGroup,
     notifications,
     CopyInput,
-    File
+    File,
   } from "@budibase/bbui"
   import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
@@ -35,9 +35,7 @@
 
   let offlineLicenseIdentifier = ""
   let offlineLicense = undefined
-  const offlineLicenseExtensions = [
-    ".txt",
-  ]
+  const offlineLicenseExtensions = [".txt"]
 
   // Make sure page can't be visited directly in cloud
   $: {
@@ -97,7 +95,7 @@
       const license = await API.getOfflineLicense()
       if (license) {
         offlineLicense = {
-          name: "license"
+          name: "license",
         }
       } else {
         offlineLicense = undefined
@@ -147,7 +145,7 @@
       // prevent file preview jitter by assigning constant
       // as soon as possible
       offlineLicense = {
-        name: "license"
+        name: "license",
       }
       const reader = new FileReader()
       reader.readAsText(event.detail)
@@ -202,7 +200,9 @@
     {#if $admin.offlineMode}
       <Layout gap="XS" noPadding>
         <Heading size="XS">Installation identifier</Heading>
-        <Body size="S">Share this with support@budibase.com to obtain your offline license</Body>
+        <Body size="S"
+          >Share this with support@budibase.com to obtain your offline license</Body
+        >
       </Layout>
       <Layout noPadding>
         <div class="fields">
@@ -263,8 +263,12 @@
       <Layout noPadding gap="S">
         <Body size="S">You are currently on the {license.plan.type} plan</Body>
         <div>
-          <Body size="S">If you purchase or update your plan on the account</Body>
-          <Body size="S">portal, click the refresh button to sync those changes</Body>
+          <Body size="S"
+            >If you purchase or update your plan on the account</Body
+          >
+          <Body size="S"
+            >portal, click the refresh button to sync those changes</Body
+          >
         </div>
         <Body size="XS">
           {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
