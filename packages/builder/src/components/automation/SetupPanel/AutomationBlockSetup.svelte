@@ -33,6 +33,7 @@
   import {
     bindingsToCompletions,
     jsAutocomplete,
+    hbAutocomplete,
     EditorModes,
   } from "components/common/CodeEditor"
   import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
@@ -70,7 +71,10 @@
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
-
+  $: codeMode =
+    stepId === "EXECUTE_BASH" ? EditorModes.Handlebars : EditorModes.JS
+  $: buildCompletions =
+    stepId === "EXECUTE_BASH" ? hbAutocomplete : jsAutocomplete
   /**
    * TODO - Remove after November 2023
    * *******************************
@@ -497,17 +501,21 @@
                 inputData[key] = e.detail
               }}
               completions={[
-                jsAutocomplete([
-                  ...bindingsToCompletions(bindings, EditorModes.JS),
+                buildCompletions([
+                  ...bindingsToCompletions(bindings, codeMode),
                 ]),
               ]}
-              mode={EditorModes.JS}
+              mode={codeMode}
               height={500}
             />
             <div class="messaging">
               <Icon name="FlashOn" />
               <div class="messaging-wrap">
-                <div>Add available bindings by typing <strong>$</strong></div>
+                <div>
+                  Add available bindings by typing <strong
+                    >{codeMode == EditorModes.JS ? "$" : "{{"}</strong
+                  >
+                </div>
               </div>
             </div>
           </CodeEditorModal>
