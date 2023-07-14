@@ -5,6 +5,7 @@ import { isExternalTable } from "../../../integrations/utils"
 import { Ctx } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
+import sdk from "../../../sdk"
 
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
@@ -119,6 +120,17 @@ export async function destroy(ctx: any) {
 
 export async function search(ctx: any) {
   const tableId = utils.getTableId(ctx)
+  ctx.status = 200
+  ctx.body = await quotas.addQuery(() => pickApi(tableId).search(ctx), {
+    datasourceId: tableId,
+  })
+}
+
+export async function searchView(ctx: any) {
+  const { viewId } = ctx.params
+  const view = await sdk.views.get(viewId)
+  const tableId = view.tableId
+
   ctx.status = 200
   ctx.body = await quotas.addQuery(() => pickApi(tableId).search(ctx), {
     datasourceId: tableId,

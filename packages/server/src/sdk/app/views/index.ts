@@ -33,7 +33,7 @@ export async function findByTable(tableId: string) {
   return response.rows.map(r => r.doc)
 }
 
-export async function get(viewId: string) {
+export async function get(viewId: string): Promise<ViewV2> {
   const db = context.getAppDB()
   const result = await db.get(viewId)
   return result
