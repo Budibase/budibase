@@ -40,6 +40,30 @@ export default class BudibaseTestConfiguration {
 
   // AUTH
 
+  async doInNewState(task: any) {
+    return this.doWithState(task, {})
+  }
+
+  async doWithState(task: any, state: State) {
+    const original = this.state
+
+    // override the state
+    this.state.apiKey = state.apiKey
+    this.state.appId = state.appId
+    this.state.cookie = state.cookie
+    this.state.tableId = state.tableId
+    this.state.tenantId = state.tenantId
+
+    await task()
+
+    // restore the state
+    this.state.apiKey = original.apiKey
+    this.state.appId = original.appId
+    this.state.cookie = original.cookie
+    this.state.tableId = original.tableId
+    this.state.tenantId = original.tenantId
+  }
+
   async login(email: string, password: string, tenantId?: string) {
     if (!tenantId && this.state.tenantId) {
       tenantId = this.state.tenantId
