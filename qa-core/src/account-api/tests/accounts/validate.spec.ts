@@ -18,10 +18,12 @@ describe("Account API - Validate Account", () => {
 
 
     it("Validates an email", async () => {
+
         await config.api.accounts.validateEmail(email)
     })
 
     it("Validates a tenant ID", async () => {
+
         await config.api.accounts.validateTenantId(tenant)
     })
 })

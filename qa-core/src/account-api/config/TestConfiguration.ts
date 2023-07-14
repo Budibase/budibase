@@ -27,8 +27,6 @@ export default class TestConfiguration<T> extends BudibaseTestConfiguration {
         this.state.apiKey = apiKeyResponse.apiKey
     }
 
-    async setCookieAuth() {
-        const apiKeyResponse = await this.internalApi.self.getApiKey()
-        this.state.apiKey = apiKeyResponse.apiKey
-    }
+
+
 }

@@ -14,7 +14,7 @@ describe("Account API - Create Account", () => {
 
     it("Creates a new account", async () => {
         await config.api.accounts.create({
-            ...fixtures.accounts.generateAccount()
+             ...fixtures.accounts.generateAccount()
         })
     })
 })
