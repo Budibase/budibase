@@ -101,7 +101,7 @@ const fetchRowHandler = async action => {
   }
 }
 
-const deleteRowHandler = async (action, context) => {
+const deleteRowHandler = async action => {
   const { tableId, rowId: rowConfig, notificationOverride } = action.parameters
 
   if (tableId && rowConfig) {
