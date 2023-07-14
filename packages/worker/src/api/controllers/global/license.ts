@@ -10,7 +10,9 @@ import {
 
 // LICENSE KEY
 
-export async function activateLicenseKey(ctx: UserCtx<ActivateLicenseKeyRequest>) {
+export async function activateLicenseKey(
+  ctx: UserCtx<ActivateLicenseKeyRequest>
+) {
   const { licenseKey } = ctx.request.body
   await licensing.keys.activateLicenseKey(licenseKey)
   ctx.status = 200
@@ -33,13 +35,17 @@ export async function deleteLicenseKey(ctx: UserCtx<void, void>) {
 
 // OFFLINE LICENSE
 
-export async function activateOfflineLicenseToken(ctx: UserCtx<ActivateOfflineLicenseTokenRequest>) {
+export async function activateOfflineLicenseToken(
+  ctx: UserCtx<ActivateOfflineLicenseTokenRequest>
+) {
   const { offlineLicenseToken } = ctx.request.body
   await licensing.offline.activateOfflineLicenseToken(offlineLicenseToken)
   ctx.status = 200
 }
 
-export async function getOfflineLicenseToken(ctx: UserCtx<void, GetOfflineLicenseTokenResponse>) {
+export async function getOfflineLicenseToken(
+  ctx: UserCtx<void, GetOfflineLicenseTokenResponse>
+) {
   const offlineLicenseToken = await licensing.offline.getOfflineLicenseToken()
   if (offlineLicenseToken) {
     ctx.body = { offlineLicenseToken: "*" }
@@ -54,7 +60,9 @@ export async function deleteOfflineLicenseToken(ctx: UserCtx<void, void>) {
   ctx.status = 204
 }
 
-export async function getOfflineLicenseIdentifier(ctx: UserCtx<void, GetOfflineIdentifierResponse>) {
+export async function getOfflineLicenseIdentifier(
+  ctx: UserCtx<void, GetOfflineIdentifierResponse>
+) {
   const identifierBase64 = await licensing.offline.getIdentifierBase64()
   ctx.body = { identifierBase64 }
   ctx.status = 200
