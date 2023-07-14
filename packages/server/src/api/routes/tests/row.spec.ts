@@ -14,8 +14,9 @@ import {
   Row,
   Table,
   FieldType,
+  ViewV2,
 } from "@budibase/types"
-import { structures } from "@budibase/backend-core/tests"
+import { generator, structures } from "@budibase/backend-core/tests"
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -683,6 +684,59 @@ describe("/rows", () => {
       // Ensure only the _id column was exported
       expect(Object.keys(row).length).toEqual(1)
       expect(row._id).toEqual(existing._id)
+    })
+  })
+
+  describe.only("view search", () => {
+    function priceTable(): Table {
+      return {
+        name: "table",
+        type: "table",
+        schema: {
+          Price: {
+            type: FieldType.NUMBER,
+            name: "Price",
+            constraints: {},
+          },
+          Category: {
+            type: FieldType.STRING,
+            name: "Category",
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      }
+    }
+
+    it("returns table rows from view", async () => {
+      const table = await config.createTable(priceTable())
+      const rows = await Promise.all(
+        Array(10)
+          .fill({})
+          .map(() => config.createRow({ tableId: table._id }))
+      )
+      const view: ViewV2 = {
+        name: generator.guid(),
+        tableId: table._id!,
+      }
+      const createViewResponse = await request
+        .post(`/api/views/v2`)
+        .send(view)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      const response = await request
+        .get(`/api/views/v2/${createViewResponse.body._id}/search`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(response.body.rows).toHaveLength(10)
+      expect(response.body).toEqual({
+        rows: expect.arrayContaining(rows.map(expect.objectContaining)),
+      })
     })
   })
 })
