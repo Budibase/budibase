@@ -89,6 +89,8 @@ async function setup() {
     // @ts-ignore
     global.qa.tenantId = account.tenantId
     // @ts-ignore
+    global.qa.email = account.email
+    // @ts-ignore
     global.qa.accountId = newAccount.accountId
     await loginAsAccount(account)
   } else {

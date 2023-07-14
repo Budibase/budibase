@@ -1,5 +1,5 @@
 import { Response } from "node-fetch"
-import { Account, CreateAccountRequest } from "@budibase/types"
+import { Account, CreateAccountRequest, SearchAccountsRequest, SearchAccountsResponse } from "@budibase/types"
 import AccountInternalAPIClient from "../AccountInternalAPIClient"
 import { APIRequestOpts } from "../../../types"
 
@@ -116,8 +116,8 @@ export default class AccountAPI {
       searchType: string,
       search: 'email' | 'tenantId',
       opts: APIRequestOpts = { doExpect: true }
-  ): Promise<Response> {
-    let body: { email?: string; tenantId?: string } = {}
+  ): Promise<[Response, SearchAccountsResponse]> {
+    let body: SearchAccountsRequest = {}
 
     if (search === 'email') {
       body.email = searchType;
@@ -132,6 +132,6 @@ export default class AccountAPI {
     if (opts.doExpect) {
       expect(response).toHaveStatusCode(200)
     }
-    return response
+    return [response, json]
   }
 }
