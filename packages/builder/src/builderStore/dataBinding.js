@@ -491,6 +491,7 @@ const getSelectedRowsBindings = asset => {
         readableBinding: `${table._instanceName}.Selected rows`,
         category: "Selected rows",
         icon: "ViewRow",
+        display: { name: table._instanceName },
       }))
     )
 
@@ -506,6 +507,7 @@ const getSelectedRowsBindings = asset => {
         )}.${makePropSafe("selectedRows")}`,
         readableBinding: `${block._instanceName}.Selected rows`,
         category: "Selected rows",
+        display: { name: block._instanceName },
       }))
     )
   }

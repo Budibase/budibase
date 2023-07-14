@@ -5,6 +5,8 @@ import { isExternalTable } from "../../../integrations/utils"
 import { Ctx } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
+import { addRev } from "../public/utils"
+import { fixRow } from "../public/rows"
 
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
@@ -88,7 +90,22 @@ export async function destroy(ctx: any) {
   const inputs = ctx.request.body
   const tableId = utils.getTableId(ctx)
   let response, row
+
   if (inputs.rows) {
+    const targetRows = inputs.rows.map(
+      (row: { [key: string]: string | string }) => {
+        let processedRow = typeof row == "string" ? { _id: row } : row
+        return !processedRow._rev
+          ? addRev(fixRow(processedRow, ctx.params), tableId)
+          : fixRow(processedRow, ctx.params)
+      }
+    )
+
+    const rowDeletes = await Promise.all(targetRows)
+    if (rowDeletes) {
+      ctx.request.body.rows = rowDeletes
+    }
+
     let { rows } = await quotas.addQuery(
       () => pickApi(tableId).bulkDestroy(ctx),
       {
