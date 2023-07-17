@@ -15,7 +15,6 @@ import {
   TableSchema,
   View,
 } from "@budibase/types"
-import { cleanExportRows } from "../row/utils"
 import { builderSocket } from "../../../websockets"
 
 const { cloneDeep, isEqual } = require("lodash")
@@ -163,13 +162,16 @@ export async function exportView(ctx: Ctx) {
   let rows = ctx.body as Row[]
 
   let schema: TableSchema = view && view.meta && view.meta.schema
-  const tableId = ctx.params.tableId || view.meta.tableId
+  const tableId =
+    ctx.params.tableId ||
+    view?.meta?.tableId ||
+    (viewName.startsWith(DocumentType.TABLE) && viewName)
   const table: Table = await sdk.tables.getTable(tableId)
   if (!schema) {
     schema = table.schema
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, [])
+  let exportRows = sdk.rows.utils.cleanExportRows(rows, schema, format, [])
 
   if (format === Format.CSV) {
     ctx.attachment(`${viewName}.csv`)
