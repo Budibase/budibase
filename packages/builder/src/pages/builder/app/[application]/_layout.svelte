@@ -233,7 +233,7 @@
   .top-nav {
     flex: 0 0 60px;
     background: var(--background);
-    padding: 0 var(--spacing-xl);
+    padding-left: var(--spacing-xl);
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     flex-direction: row;
