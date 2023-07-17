@@ -2,7 +2,6 @@ import * as linkRows from "../../../db/linkedRows"
 import {
   generateRowID,
   getTableIDFromRowID,
-  DocumentType,
   InternalTables,
 } from "../../../db/utils"
 import * as userController from "../user"
@@ -13,14 +12,6 @@ import {
 } from "../../../utilities/rowProcessor"
 import { FieldTypes } from "../../../constants"
 import * as utils from "./utils"
-import * as inMemoryViews from "../../../db/inMemoryView"
-import env from "../../../environment"
-import {
-  migrateToInMemoryView,
-  migrateToDesignView,
-  getFromDesignDoc,
-  getFromMemoryDoc,
-} from "../view/utils"
 import { cloneDeep } from "lodash/fp"
 import { context, db as dbCore } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"

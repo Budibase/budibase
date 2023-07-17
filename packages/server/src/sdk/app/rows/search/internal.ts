@@ -8,7 +8,7 @@ import {
 } from "../../../../db/utils"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
-import { Ctx, Database, Row, UserCtx } from "@budibase/types"
+import { Ctx, Database, Row } from "@budibase/types"
 import { cleanExportRows } from "../utils"
 import {
   Format,
@@ -17,7 +17,6 @@ import {
   jsonWithSchema,
 } from "../../../../api/controllers/view/exporters"
 import { apiFileReturn } from "../../../../utilities/fileSystem"
-import * as userController from "../../../../api/controllers/user"
 import * as inMemoryViews from "../../../../db/inMemoryView"
 import {
   migrateToInMemoryView,
@@ -25,6 +24,7 @@ import {
   getFromDesignDoc,
   getFromMemoryDoc,
 } from "../../../../api/controllers/view/utils"
+import sdk from "../../../../sdk"
 
 export async function search(ctx: Ctx) {
   // Fetch the whole table when running in cypress, as search doesn't work
@@ -126,15 +126,14 @@ export async function fetch(ctx: Ctx) {
 
   const tableId = ctx.params.tableId
   let table = await db.get(tableId)
-  let rows = await getRawTableData(ctx, db, tableId)
+  let rows = await getRawTableData(db, tableId)
   return outputProcessing(table, rows)
 }
 
-async function getRawTableData(ctx: Ctx, db: Database, tableId: string) {
+async function getRawTableData(db: Database, tableId: string) {
   let rows
   if (tableId === InternalTables.USER_METADATA) {
-    await userController.fetchMetadata(ctx)
-    rows = ctx.body
+    rows = await sdk.users.fetchMetadata()
   } else {
     const response = await db.allDocs(
       getRowParams(tableId, null, {
@@ -166,7 +165,7 @@ export async function fetchView(ctx: Ctx) {
     })
   } else {
     const tableId = viewInfo.meta.tableId
-    const data = await getRawTableData(ctx, db, tableId)
+    const data = await getRawTableData(db, tableId)
     response = await inMemoryViews.runView(
       viewInfo,
       calculation as string,
