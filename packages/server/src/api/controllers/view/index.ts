@@ -162,7 +162,10 @@ export async function exportView(ctx: Ctx) {
   let rows = ctx.body as Row[]
 
   let schema: TableSchema = view && view.meta && view.meta.schema
-  const tableId = ctx.params.tableId || view.meta.tableId
+  const tableId =
+    ctx.params.tableId ||
+    view?.meta?.tableId ||
+    (viewName.startsWith(DocumentType.TABLE) && viewName)
   const table: Table = await sdk.tables.getTable(tableId)
   if (!schema) {
     schema = table.schema

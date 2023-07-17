@@ -1,4 +1,7 @@
-import { context } from "@budibase/backend-core"
+import {
+  context,
+  SearchParams as InternalSearchParams,
+} from "@budibase/backend-core"
 import env from "../../../../environment"
 import { fullSearch, paginatedSearch } from "./internalSearch"
 import {
@@ -8,7 +11,7 @@ import {
 } from "../../../../db/utils"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
-import { Ctx, Database, Row } from "@budibase/types"
+import { Database, Row } from "@budibase/types"
 import { cleanExportRows } from "../utils"
 import {
   Format,
@@ -16,7 +19,6 @@ import {
   json,
   jsonWithSchema,
 } from "../../../../api/controllers/view/exporters"
-import { apiFileReturn } from "../../../../utilities/fileSystem"
 import * as inMemoryViews from "../../../../db/inMemoryView"
 import {
   migrateToInMemoryView,
@@ -25,25 +27,36 @@ import {
   getFromMemoryDoc,
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
+import { ExportRowsParams, ExportRowsResult, SearchParams } from "../search"
 
-export async function search(ctx: Ctx) {
+export async function search(options: SearchParams) {
+  const { tableId } = options
+
   // Fetch the whole table when running in cypress, as search doesn't work
   if (!env.COUCH_DB_URL && env.isCypress()) {
-    return { rows: await fetch(ctx) }
+    return { rows: await fetch(tableId) }
   }
 
-  const { tableId } = ctx.params
   const db = context.getAppDB()
-  const { paginate, query, ...params } = ctx.request.body
-  params.version = ctx.version
-  params.tableId = tableId
+  const { paginate, query } = options
+
+  const params: InternalSearchParams<any> = {
+    tableId: options.tableId,
+    sort: options.sort,
+    sortOrder: options.sortOrder,
+    sortType: options.sortType,
+    limit: options.limit,
+    bookmark: options.bookmark,
+    version: options.version,
+    disableEscaping: options.disableEscaping,
+  }
 
   let table
   if (params.sort && !params.sortType) {
     table = await db.get(tableId)
     const schema = table.schema
     const sortField = schema[params.sort]
-    params.sortType = sortField.type == "number" ? "number" : "string"
+    params.sortType = sortField.type === "number" ? "number" : "string"
   }
 
   let response
@@ -66,15 +79,12 @@ export async function search(ctx: Ctx) {
   return response
 }
 
-export async function exportRows(ctx: Ctx) {
+export async function exportRows(
+  options: ExportRowsParams
+): Promise<ExportRowsResult> {
+  const { tableId, format, rowIds, columns, query } = options
   const db = context.getAppDB()
-  const table = await db.get(ctx.params.tableId)
-  const rowIds = ctx.request.body.rows
-  let format = ctx.query.format
-  if (typeof format !== "string") {
-    ctx.throw(400, "Format parameter is not valid")
-  }
-  const { columns, query } = ctx.request.body
+  const table = await db.get(tableId)
 
   let result
   if (rowIds) {
@@ -87,7 +97,7 @@ export async function exportRows(ctx: Ctx) {
 
     result = await outputProcessing(table, response)
   } else if (query) {
-    let searchResponse = await search(ctx)
+    let searchResponse = await search({ tableId, query })
     result = searchResponse.rows
   }
 
@@ -108,26 +118,32 @@ export async function exportRows(ctx: Ctx) {
 
   let exportRows = cleanExportRows(rows, schema, format, columns)
   if (format === Format.CSV) {
-    ctx.attachment("export.csv")
-    return apiFileReturn(csv(Object.keys(rows[0]), exportRows))
+    return {
+      fileName: "export.csv",
+      content: csv(Object.keys(rows[0]), exportRows),
+    }
   } else if (format === Format.JSON) {
-    ctx.attachment("export.json")
-    return apiFileReturn(json(exportRows))
+    return {
+      fileName: "export.json",
+      content: json(exportRows),
+    }
   } else if (format === Format.JSON_WITH_SCHEMA) {
-    ctx.attachment("export.json")
-    return apiFileReturn(jsonWithSchema(schema, exportRows))
+    return {
+      fileName: "export.json",
+      content: jsonWithSchema(schema, exportRows),
+    }
   } else {
     throw "Format not recognised"
   }
 }
 
-export async function fetch(ctx: Ctx) {
+export async function fetch(tableId: string) {
   const db = context.getAppDB()
 
-  const tableId = ctx.params.tableId
   let table = await db.get(tableId)
   let rows = await getRawTableData(db, tableId)
-  return outputProcessing(table, rows)
+  const result = await outputProcessing(table, rows)
+  return result
 }
 
 async function getRawTableData(db: Database, tableId: string) {
@@ -145,17 +161,17 @@ async function getRawTableData(db: Database, tableId: string) {
   return rows as Row[]
 }
 
-export async function fetchView(ctx: Ctx) {
-  const viewName = decodeURIComponent(ctx.params.viewName)
-
+export async function fetchView(
+  viewName: string,
+  options: { calculation: string; group: string; field: string }
+) {
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(DocumentType.TABLE)) {
-    ctx.params.tableId = viewName
-    return fetch(ctx)
+    return fetch(viewName)
   }
 
   const db = context.getAppDB()
-  const { calculation, group, field } = ctx.query
+  const { calculation, group, field } = options
   const viewInfo = await getView(db, viewName)
   let response
   if (env.SELF_HOSTED) {

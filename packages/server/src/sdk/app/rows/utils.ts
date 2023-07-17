@@ -1,3 +1,4 @@
+import { TableSchema } from "@budibase/types"
 import { FieldTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
@@ -11,9 +12,9 @@ export async function getDatasourceAndQuery(json: any) {
 
 export function cleanExportRows(
   rows: any[],
-  schema: any,
+  schema: TableSchema,
   format: string,
-  columns: string[]
+  columns?: string[]
 ) {
   let cleanRows = [...rows]
 
