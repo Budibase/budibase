@@ -28,8 +28,11 @@
 
   const eject = () => {
     // Start the new structure with the root component
-    let definition = Object.values(structureLookupMap[$component.id])[0]
-      .instance
+    const rootMap = structureLookupMap[$component.id] || {}
+    let definition = { ...Object.values(rootMap)[0]?.instance }
+    if (!definition) {
+      return
+    }
 
     // Copy styles from block to root component
     definition._styles = {
