@@ -1,4 +1,4 @@
-import { Ctx, SearchFilters } from "@budibase/types"
+import { SearchFilters } from "@budibase/types"
 import { isExternalTable } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
@@ -6,13 +6,15 @@ import { Format } from "../../../api/controllers/view/exporters"
 
 export interface SearchParams {
   tableId: string
-  paginate: boolean
-  query?: SearchFilters
-  bookmark?: number
-  limit: number
+  paginate?: boolean
+  query: SearchFilters
+  bookmark?: string
+  limit?: number
   sort?: string
   sortOrder?: string
   sortType?: string
+  version?: string
+  disableEscaping?: boolean
 }
 
 export interface ViewParams {
@@ -28,8 +30,8 @@ function pickApi(tableId: any) {
   return internal
 }
 
-export async function search(tableId: string, ctx: Ctx) {
-  return pickApi(tableId).search(ctx)
+export async function search(options: SearchParams) {
+  return pickApi(options.tableId).search(options)
 }
 
 export interface ExportRowsParams {
@@ -37,7 +39,7 @@ export interface ExportRowsParams {
   format: Format
   rowIds: string[]
   columns: string[]
-  query: string
+  query: SearchFilters
 }
 
 export interface ExportRowsResult {
