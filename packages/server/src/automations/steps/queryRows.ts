@@ -11,6 +11,7 @@ import {
   AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
+  EmptyFilterOption,
   SearchFilters,
   Table,
 } from "@budibase/types"
@@ -24,11 +25,6 @@ enum SortOrder {
 const SortOrderPretty = {
   [SortOrder.ASCENDING]: "Ascending",
   [SortOrder.DESCENDING]: "Descending",
-}
-
-enum EmptyFilterOption {
-  RETURN_ALL = "all",
-  RETURN_NONE = "none",
 }
 
 const EmptyFilterOptionPretty = {

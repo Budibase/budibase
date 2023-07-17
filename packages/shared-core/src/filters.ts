@@ -1,4 +1,10 @@
-import { Datasource, FieldType, SortDirection, SortType } from "@budibase/types"
+import {
+  Datasource,
+  FieldType,
+  SortDirection,
+  SortType,
+  EmptyFilterOption,
+} from "@budibase/types"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
 
@@ -112,6 +118,7 @@ const removeKeyNumbering = (key: string) => {
 
 type Filter = {
   operator: keyof Query
+  onEmptyFilter: EmptyFilterOption
   field: string
   type: any
   value: any
@@ -160,6 +167,7 @@ type QueryFields = {
 
 type QueryConfig = {
   allOr?: boolean
+  onEmptyFilter?: EmptyFilterOption
 }
 
 type QueryFieldsType = keyof QueryFields
@@ -184,12 +192,17 @@ export const buildLuceneQuery = (filter: Filter[]) => {
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
-      let { operator, field, type, value, externalType } = expression
+      let { operator, field, type, value, externalType, onEmptyFilter } =
+        expression
       const isHbs =
         typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
       // Parse all values into correct types
       if (operator === "allOr") {
         query.allOr = true
+        return
+      }
+      if (onEmptyFilter) {
+        query.onEmptyFilter = onEmptyFilter
         return
       }
       if (
