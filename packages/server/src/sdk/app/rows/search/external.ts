@@ -167,10 +167,10 @@ export async function fetch(tableId: string) {
   })
 }
 
-export async function fetchView(ctx: Ctx) {
+export async function fetchView(viewName: string) {
   // there are no views in external datasources, shouldn't ever be called
   // for now just fetch
-  const split = ctx.params.viewName.split("all_")
+  const split = viewName.split("all_")
   const tableId = split[1] ? split[1] : split[0]
   return fetch(tableId)
 }

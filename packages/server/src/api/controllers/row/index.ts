@@ -65,9 +65,21 @@ export const save = async (ctx: any) => {
 }
 export async function fetchView(ctx: any) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => sdk.rows.fetchView(tableId, ctx), {
-    datasourceId: tableId,
-  })
+  const viewName = decodeURIComponent(ctx.params.viewName)
+
+  const { calculation, group, field } = ctx.query
+
+  ctx.body = await quotas.addQuery(
+    () =>
+      sdk.rows.fetchView(tableId, viewName, {
+        calculation,
+        group,
+        field,
+      }),
+    {
+      datasourceId: tableId,
+    }
+  )
 }
 
 export async function fetch(ctx: any) {
