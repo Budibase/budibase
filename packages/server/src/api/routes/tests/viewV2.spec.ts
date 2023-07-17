@@ -23,7 +23,7 @@ function priceTable(): Table {
   }
 }
 
-describe("/views/v2", () => {
+describe("/v2/views", () => {
   const request = setup.getRequest()
   const config = setup.getConfig()
   let table: Table
@@ -37,7 +37,7 @@ describe("/views/v2", () => {
 
   const saveView = async (view: ViewV2) => {
     return request
-      .post(`/api/views/v2`)
+      .post(`/api/v2/views`)
       .send(view)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
@@ -46,7 +46,7 @@ describe("/views/v2", () => {
 
   const getView = (viewId: string) => {
     return request
-      .get(`/api/views/v2/${viewId}`)
+      .get(`/api/v2/views/${viewId}`)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
   }
@@ -71,7 +71,7 @@ describe("/views/v2", () => {
 
     it("returns all views", async () => {
       const res = await request
-        .get(`/api/views/v2`)
+        .get(`/api/v2/views`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -90,7 +90,7 @@ describe("/views/v2", () => {
         newViews.push(res.body)
       }
       const res = await request
-        .get(`/api/views/v2?tableId=${newTable._id}`)
+        .get(`/api/v2/views?tableId=${newTable._id}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -104,7 +104,7 @@ describe("/views/v2", () => {
     it("can not filter by multiple table ids", async () => {
       const res = await request
         .get(
-          `/api/views/v2?tableId=${structures.generator.guid()}&tableId=${structures.generator.guid()}`
+          `/api/v2/views?tableId=${structures.generator.guid()}&tableId=${structures.generator.guid()}`
         )
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
@@ -166,7 +166,7 @@ describe("/views/v2", () => {
       await getView(view._id).expect(200)
 
       await request
-        .delete(`/api/views/v2/${view._id}`)
+        .delete(`/api/v2/views/${view._id}`)
         .set(config.defaultHeaders())
         .expect(204)
 
