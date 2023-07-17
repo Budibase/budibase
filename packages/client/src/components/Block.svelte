@@ -29,7 +29,7 @@
   const eject = () => {
     // Start the new structure with the root component
     const rootMap = structureLookupMap[$component.id] || {}
-    let definition = { ...Object.values(rootMap)[0]?.instance }
+    let definition = Object.values(rootMap)[0]?.instance
     if (!definition) {
       return
     }
