@@ -14,6 +14,7 @@ import { breakExternalTableId } from "../../../../integrations/utils"
 import { cleanExportRows } from "../utils"
 import { apiFileReturn } from "../../../../utilities/fileSystem"
 import { utils } from "@budibase/shared-core"
+import { ExportRowsParams, ExportRowsResult } from "../search"
 
 export async function search(ctx: Ctx) {
   const tableId = ctx.params.tableId
@@ -78,34 +79,30 @@ export async function search(ctx: Ctx) {
   }
 }
 
-export async function exportRows(ctx: Ctx) {
-  const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
-  const format = ctx.query.format as string
-  const { columns } = ctx.request.body
+export async function exportRows(
+  options: ExportRowsParams
+): Promise<ExportRowsResult> {
+  const { tableId, format, columns, rowIds } = options
+  const { datasourceId, tableName } = breakExternalTableId(tableId)
+
   const datasource = await sdk.datasources.get(datasourceId!)
   if (!datasource || !datasource.entities) {
-    ctx.throw(400, "Datasource has not been configured for plus API.")
+    throw ctx.throw(400, "Datasource has not been configured for plus API.")
   }
 
-  if (!exporters.isFormat(format)) {
-    ctx.throw(
-      400,
-      `Format ${format} not valid. Valid values: ${Object.values(
-        exporters.Format
-      )}`
-    )
-  }
-
-  if (ctx.request.body.rows) {
+  if (rowIds?.length) {
     ctx.request.body = {
       query: {
         oneOf: {
-          _id: ctx.request.body.rows.map((row: string) => {
+          _id: rowIds.map((row: string) => {
             const ids = JSON.parse(
               decodeURI(row).replace(/'/g, `"`).replace(/%2C/g, ",")
             )
             if (ids.length > 1) {
-              ctx.throw(400, "Export data does not support composite keys.")
+              throw ctx.throw(
+                400,
+                "Export data does not support composite keys."
+              )
             }
             return ids[0]
           }),
@@ -131,14 +128,14 @@ export async function exportRows(ctx: Ctx) {
   }
 
   if (!tableName) {
-    ctx.throw(400, "Could not find table name.")
+    throw ctx.throw(400, "Could not find table name.")
   }
-  let schema = datasource.entities[tableName].schema
+  const schema = datasource.entities[tableName].schema
   let exportRows = cleanExportRows(rows, schema, format, columns)
 
   let headers = Object.keys(schema)
 
-  let content
+  let content: string
   switch (format) {
     case exporters.Format.CSV:
       content = exporters.csv(headers, exportRows)
@@ -150,15 +147,14 @@ export async function exportRows(ctx: Ctx) {
       content = exporters.jsonWithSchema(schema, exportRows)
       break
     default:
-      utils.unreachable(format)
-      break
+      throw utils.unreachable(format)
   }
 
-  const filename = `export.${format}`
-
-  // send down the file
-  ctx.attachment(filename)
-  return apiFileReturn(content)
+  const fileName = `export.${format}`
+  return {
+    fileName,
+    content,
+  }
 }
 
 export async function fetch(tableId: string) {
