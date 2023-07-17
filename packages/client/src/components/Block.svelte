@@ -53,12 +53,7 @@
   const attachChildren = (rootComponent, map) => {
     // Transform map into children array
     let id = rootComponent._id
-    const children = Object.values(map[id] || {}).map(
-      ({ order, instance }) => ({
-        order,
-        instance,
-      })
-    )
+    const children = Object.values(map[id] || {})
     if (!children.length) {
       return
     }
