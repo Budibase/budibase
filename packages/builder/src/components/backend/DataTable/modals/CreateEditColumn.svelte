@@ -57,7 +57,6 @@
 
   let table = $tables.selected
   let confirmDeleteDialog
-  let deletion
   let savingColumn
   let deleteColName
   let jsonSchemaModal
@@ -215,7 +214,6 @@
         notifications.success(`Column ${editableColumn.name} deleted`)
         confirmDeleteDialog.hide()
         hide()
-        deletion = false
         dispatch("updatecolumns")
       }
     } catch (error) {
@@ -266,13 +264,11 @@
 
   function confirmDelete() {
     confirmDeleteDialog.show()
-    deletion = true
   }
 
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
     deleteColName = ""
-    deletion = false
   }
 
   function getRelationshipOptions(field) {

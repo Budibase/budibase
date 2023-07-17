@@ -10,19 +10,17 @@
     Link,
     Modal,
     StatusLight,
+    AbsTooltip,
   } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-
   import { processStringSync } from "@budibase/string-templates"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import analytics, { Events, EventSource } from "analytics"
-  import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { API } from "api"
-  import { onMount } from "svelte"
   import { apps } from "stores/portal"
-  import { store } from "builderStore"
+  import { deploymentStore, store, isOnlyUser } from "builderStore"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
@@ -34,64 +32,37 @@
   let updateAppModal
   let revertModal
   let versionModal
-
   let appActionPopover
   let appActionPopoverOpen = false
   let appActionPopoverAnchor
-
   let publishing = false
 
   $: filteredApps = $apps.filter(app => app.devId === application)
   $: selectedApp = filteredApps?.length ? filteredApps[0] : null
-
-  $: deployments = []
-  $: latestDeployments = deployments
+  $: latestDeployments = $deploymentStore
     .filter(deployment => deployment.status === "SUCCESS")
     .sort((a, b) => a.updatedAt > b.updatedAt)
-
   $: isPublished =
     selectedApp?.status === "published" && latestDeployments?.length > 0
-
   $: updateAvailable =
     $store.upgradableVersion &&
     $store.version &&
     $store.upgradableVersion !== $store.version
-
   $: canPublish = !publishing && loaded
+  $: lastDeployed = getLastDeployedString($deploymentStore)
 
   const initialiseApp = async () => {
     const applicationPkg = await API.fetchAppPackage($store.devId)
     await store.actions.initialise(applicationPkg)
   }
 
-  const updateDeploymentString = () => {
+  const getLastDeployedString = deployments => {
     return deployments?.length
       ? processStringSync("Published {{ duration time 'millisecond' }} ago", {
           time:
             new Date().getTime() - new Date(deployments[0].updatedAt).getTime(),
         })
       : ""
-  }
-
-  const reviewPendingDeployments = (deployments, newDeployments) => {
-    if (deployments.length > 0) {
-      const pending = checkIncomingDeploymentStatus(deployments, newDeployments)
-      if (pending.length) {
-        notifications.warning(
-          "Deployment has been queued and will be processed shortly"
-        )
-      }
-    }
-  }
-
-  async function fetchDeployments() {
-    try {
-      const newDeployments = await API.getAppDeployments()
-      reviewPendingDeployments(deployments, newDeployments)
-      return newDeployments
-    } catch (err) {
-      notifications.error("Error fetching deployment overview")
-    }
   }
 
   const previewApp = () => {
@@ -116,14 +87,11 @@
   async function publishApp() {
     try {
       publishing = true
-
       await API.publishAppChanges($store.appId)
-
-      notifications.send("App published", {
+      notifications.send("App published successfully", {
         type: "success",
         icon: "GlobeCheck",
       })
-
       await completePublish()
     } catch (error) {
       console.error(error)
@@ -163,210 +131,201 @@
   const completePublish = async () => {
     try {
       await apps.load()
-      deployments = await fetchDeployments()
+      await deploymentStore.actions.load()
     } catch (err) {
       notifications.error("Error refreshing app")
     }
   }
-
-  onMount(async () => {
-    if (!$apps.length) {
-      await apps.load()
-    }
-    deployments = await fetchDeployments()
-  })
 </script>
 
-{#if $store.hasLock}
-  <div class="action-top-nav" class:has-lock={$store.hasLock}>
-    <div class="action-buttons">
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      {#if updateAvailable}
-        <div class="app-action-button version" on:click={versionModal.show}>
-          <div class="app-action">
-            <ActionButton quiet>
-              <StatusLight notice />
-              Update
-            </ActionButton>
-          </div>
-        </div>
-      {/if}
-      <TourWrap
-        tourStepKey={$store.onboarding
-          ? TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT
-          : TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT}
-      >
-        <div class="app-action-button users">
-          <div class="app-action" id="builder-app-users-button">
-            <ActionButton
-              quiet
-              icon="UserGroup"
-              on:click={() => {
-                store.update(state => {
-                  state.builderSidePanel = true
-                  return state
-                })
-              }}
-            >
-              Users
-            </ActionButton>
-          </div>
-        </div>
-      </TourWrap>
-
-      <div class="app-action-button preview">
+<div class="action-top-nav">
+  <div class="action-buttons">
+    {#if updateAvailable && $isOnlyUser}
+      <div class="app-action-button version" on:click={versionModal.show}>
         <div class="app-action">
-          <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
-            Preview
+          <ActionButton quiet>
+            <StatusLight notice />
+            Update
           </ActionButton>
         </div>
       </div>
-
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <div
-        class="app-action-button publish app-action-popover"
-        on:click={() => {
-          if (!appActionPopoverOpen) {
-            appActionPopover.show()
-          } else {
-            appActionPopover.hide()
-          }
-        }}
-      >
-        <div bind:this={appActionPopoverAnchor}>
-          <div class="app-action">
-            <Icon name={isPublished ? "GlobeCheck" : "GlobeStrike"} />
-            <TourWrap tourStepKey={TOUR_STEP_KEYS.BUILDER_APP_PUBLISH}>
-              <span class="publish-open" id="builder-app-publish-button">
-                Publish
-                <Icon
-                  name={appActionPopoverOpen ? "ChevronUp" : "ChevronDown"}
-                  size="M"
-                />
-              </span>
-            </TourWrap>
-          </div>
+    {/if}
+    <TourWrap
+      tourStepKey={$store.onboarding
+        ? TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT
+        : TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT}
+    >
+      <div class="app-action-button users">
+        <div class="app-action" id="builder-app-users-button">
+          <ActionButton
+            quiet
+            icon="UserGroup"
+            on:click={() => {
+              store.update(state => {
+                state.builderSidePanel = true
+                return state
+              })
+            }}
+          >
+            Users
+          </ActionButton>
         </div>
-        <Popover
-          bind:this={appActionPopover}
-          align="right"
-          disabled={!isPublished}
-          anchor={appActionPopoverAnchor}
-          offset={35}
-          on:close={() => {
-            appActionPopoverOpen = false
-          }}
-          on:open={() => {
-            appActionPopoverOpen = true
-          }}
-        >
-          <div class="app-action-popover-content">
-            <Layout noPadding gap="M">
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
-              <Body size="M">
-                <span
-                  class="app-link"
-                  on:click={() => {
-                    if (isPublished) {
-                      viewApp()
-                    } else {
-                      appActionPopover.hide()
-                      updateAppModal.show()
-                    }
-                  }}
-                >
-                  {$store.url}
-                  {#if isPublished}
-                    <Icon size="S" name="LinkOut" />
-                  {:else}
-                    <Icon size="S" name="Edit" />
-                  {/if}
-                </span>
-              </Body>
+      </div>
+    </TourWrap>
 
-              <Body size="S">
-                <span class="publish-popover-status">
-                  {#if isPublished}
-                    <span class="status-text">
-                      {updateDeploymentString(deployments)}
-                    </span>
-                    <span class="unpublish-link">
-                      <Link quiet on:click={unpublishApp}>Unpublish</Link>
-                    </span>
-                    <span class="revert-link">
-                      <Link quiet secondary on:click={revertApp}>Revert</Link>
-                    </span>
-                  {:else}
-                    <span class="status-text unpublished">Not published</span>
-                  {/if}
-                </span>
-              </Body>
-              <div class="action-buttons">
-                {#if $store.hasLock}
-                  {#if isPublished}
-                    <ActionButton
-                      quiet
-                      icon="Code"
-                      on:click={() => {
-                        $goto("./settings/embed")
-                        appActionPopover.hide()
-                      }}
-                    >
-                      Embed
-                    </ActionButton>
-                  {/if}
-                  <Button
-                    cta
-                    on:click={publishApp}
-                    id={"builder-app-publish-button"}
-                    disabled={!canPublish}
-                  >
-                    Publish
-                  </Button>
-                {/if}
-              </div>
-            </Layout>
-          </div>
-        </Popover>
+    <div class="app-action-button preview">
+      <div class="app-action">
+        <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
+          Preview
+        </ActionButton>
       </div>
     </div>
-  </div>
 
-  <!-- Modals -->
-  <ConfirmDialog
-    bind:this={unpublishModal}
-    title="Confirm unpublish"
-    okText="Unpublish app"
-    onOk={confirmUnpublishApp}
-  >
-    Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
-  </ConfirmDialog>
-
-  <Modal bind:this={updateAppModal} padding={false} width="600px">
-    <UpdateAppModal
-      app={{
-        name: $store.name,
-        url: $store.url,
-        icon: $store.icon,
-        appId: $store.appId,
+    <div
+      class="app-action-button publish app-action-popover"
+      on:click={() => {
+        if (!appActionPopoverOpen) {
+          appActionPopover.show()
+        } else {
+          appActionPopover.hide()
+        }
       }}
-      onUpdateComplete={async () => {
-        await initialiseApp()
-      }}
-    />
-  </Modal>
+    >
+      <div bind:this={appActionPopoverAnchor}>
+        <div class="app-action">
+          <Icon name={isPublished ? "GlobeCheck" : "GlobeStrike"} />
+          <TourWrap tourStepKey={TOUR_STEP_KEYS.BUILDER_APP_PUBLISH}>
+            <span class="publish-open" id="builder-app-publish-button">
+              Publish
+              <Icon
+                name={appActionPopoverOpen ? "ChevronUp" : "ChevronDown"}
+                size="M"
+              />
+            </span>
+          </TourWrap>
+        </div>
+      </div>
+      <Popover
+        bind:this={appActionPopover}
+        align="right"
+        disabled={!isPublished}
+        anchor={appActionPopoverAnchor}
+        offset={35}
+        on:close={() => {
+          appActionPopoverOpen = false
+        }}
+        on:open={() => {
+          appActionPopoverOpen = true
+        }}
+      >
+        <div class="app-action-popover-content">
+          <Layout noPadding gap="M">
+            <Body size="M">
+              <span
+                class="app-link"
+                on:click={() => {
+                  if (isPublished) {
+                    viewApp()
+                  } else {
+                    appActionPopover.hide()
+                    updateAppModal.show()
+                  }
+                }}
+              >
+                {$store.url}
+                {#if isPublished}
+                  <Icon size="S" name="LinkOut" />
+                {:else}
+                  <Icon size="S" name="Edit" />
+                {/if}
+              </span>
+            </Body>
 
-  <RevertModal bind:this={revertModal} />
-  <VersionModal hideIcon bind:this={versionModal} />
-{:else}
-  <div class="app-action-button preview-locked">
-    <div class="app-action">
-      <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
-        Preview
-      </ActionButton>
+            <Body size="S">
+              <span class="publish-popover-status">
+                {#if isPublished}
+                  <span class="status-text">
+                    {lastDeployed}
+                  </span>
+                  <span class="unpublish-link">
+                    <Link quiet on:click={unpublishApp}>Unpublish</Link>
+                  </span>
+                  <span class="revert-link">
+                    <AbsTooltip
+                      text={$isOnlyUser
+                        ? null
+                        : "Unavailable - another user is editing this app"}
+                    >
+                      <Link
+                        disabled={!$isOnlyUser}
+                        quiet
+                        secondary
+                        on:click={revertApp}
+                      >
+                        Revert
+                      </Link>
+                    </AbsTooltip>
+                  </span>
+                {:else}
+                  <span class="status-text unpublished">Not published</span>
+                {/if}
+              </span>
+            </Body>
+            <div class="action-buttons">
+              {#if isPublished}
+                <ActionButton
+                  quiet
+                  icon="Code"
+                  on:click={() => {
+                    $goto("./settings/embed")
+                    appActionPopover.hide()
+                  }}
+                >
+                  Embed
+                </ActionButton>
+              {/if}
+              <Button
+                cta
+                on:click={publishApp}
+                id={"builder-app-publish-button"}
+                disabled={!canPublish}
+              >
+                Publish
+              </Button>
+            </div>
+          </Layout>
+        </div>
+      </Popover>
     </div>
   </div>
-{/if}
+</div>
+
+<!-- Modals -->
+<ConfirmDialog
+  bind:this={unpublishModal}
+  title="Confirm unpublish"
+  okText="Unpublish app"
+  onOk={confirmUnpublishApp}
+>
+  Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
+</ConfirmDialog>
+
+<Modal bind:this={updateAppModal} padding={false} width="600px">
+  <UpdateAppModal
+    app={{
+      name: $store.name,
+      url: $store.url,
+      icon: $store.icon,
+      appId: $store.appId,
+    }}
+    onUpdateComplete={async () => {
+      await initialiseApp()
+    }}
+  />
+</Modal>
+
+<RevertModal bind:this={revertModal} />
+<VersionModal hideIcon bind:this={versionModal} />
 
 <style>
   .app-action-popover-content {
@@ -448,10 +407,6 @@
   .app-action-button.version :global(.spectrum-ActionButton-label) {
     display: flex;
     gap: var(--spectrum-actionbutton-icon-gap);
-  }
-
-  .app-action-button.preview-locked {
-    padding-right: 0px;
   }
 
   .app-action {
