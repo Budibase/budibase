@@ -9,22 +9,22 @@ const router: Router = new Router()
 
 router
   .get(
-    "/api/views/v2",
+    "/api/v2/views",
     authorized(permissions.BUILDER),
     viewController.v2.fetch
   )
   .get(
-    `/api/views/v2/:viewId`,
+    `/api/v2/views/:viewId`,
     authorized(permissions.BUILDER),
     viewController.v2.find
   )
   .post(
-    "/api/views/v2",
+    "/api/v2/views",
     authorized(permissions.BUILDER),
     viewController.v2.save
   )
   .delete(
-    `/api/views/v2/:viewId`,
+    `/api/v2/views/:viewId`,
     authorized(permissions.BUILDER),
     viewController.v2.remove
   )
