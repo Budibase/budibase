@@ -8,6 +8,10 @@
   export let disabled = false
   export let allowManualEntry = false
   export let scanButtonText = "Scan code"
+  export let beepOnScan = false
+  export let beepFrequency = 2637
+  export let customFrequency = 1046
+
   const dispatch = createEventDispatcher()
 
   let videoEle
@@ -21,8 +25,13 @@
     fps: 25,
     qrbox: { width: 250, height: 250 },
   }
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+
   const onScanSuccess = decodedText => {
     if (value != decodedText) {
+      if (beepOnScan) {
+        beep()
+      }
       dispatch("change", decodedText)
     }
   }
@@ -83,6 +92,27 @@
       html5QrCode = undefined
     }
     camModal.hide()
+  }
+
+  const beep = () => {
+    const oscillator = audioCtx.createOscillator()
+    const gainNode = audioCtx.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(audioCtx.destination)
+
+    const frequency =
+      beepFrequency === "custom" ? customFrequency : beepFrequency
+    oscillator.frequency.value = frequency
+    oscillator.type = "square"
+
+    const duration = 420
+    const endTime = audioCtx.currentTime + duration / 1000
+    gainNode.gain.setValueAtTime(1, audioCtx.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.001, endTime)
+
+    oscillator.start()
+    oscillator.stop(endTime)
   }
 </script>
 
