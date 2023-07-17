@@ -8,7 +8,6 @@ import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
 import { BuilderSocketEvent } from "@budibase/shared-core"
-import { hasTenantId } from "@budibase/backend-core/src/context"
 
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
@@ -29,8 +28,11 @@ export default class BuilderSocket extends BaseSocket {
         }
       })
 
-      if (context.hasTenantId()) {
-        await events.user.dataCollaboration(Object.keys(userIdMap).length)
+      const tenantId = context.getTenantIDFromAppID(appId)
+      if (tenantId) {
+        await context.doInTenant(tenantId, async () => {
+          await events.user.dataCollaboration(Object.keys(userIdMap).length)
+        })
       }
 
       // Reply with all current sessions
