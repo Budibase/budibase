@@ -24,7 +24,7 @@ import {
   getFromDesignDoc,
   getFromMemoryDoc,
 } from "../../../../api/controllers/view/utils"
-import sdk from "src/sdk"
+import sdk from "../../../../sdk"
 
 export async function search(ctx: Ctx) {
   // Fetch the whole table when running in cypress, as search doesn't work
