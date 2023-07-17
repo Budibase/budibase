@@ -19,7 +19,7 @@
     heading={hasScreens ? "Create new screen" : "Create your first screen"}
   >
     <div class="subHeading">
-      <Body size="L">Start from scratch or create screens from your data</Body>
+      <Body>Start from scratch or create screens from your data</Body>
     </div>
 
     <div class="cards">
@@ -56,18 +56,18 @@
   .subHeading :global(p) {
     text-align: center;
     margin-top: 12px;
-    margin-bottom: 24px;
-    color: var(--grey-6);
+    margin-bottom: 36px;
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .cards {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 24px;
   }
 
   .card {
-    margin: 12px;
     max-width: 235px;
     transition: filter 150ms;
   }
