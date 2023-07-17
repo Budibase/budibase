@@ -15,6 +15,7 @@
     Heading,
     Modal,
     notifications,
+    TooltipPosition,
   } from "@budibase/bbui"
   import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
@@ -172,7 +173,11 @@
       </div>
       <div class="toprightnav">
         <span>
-          <UserAvatars users={$userStore} />
+          <UserAvatars
+            users={$userStore}
+            order="rtl"
+            tooltipPosition={TooltipPosition.Bottom}
+          />
         </span>
         <AppActions {application} {loaded} />
       </div>
@@ -228,7 +233,7 @@
   .top-nav {
     flex: 0 0 60px;
     background: var(--background);
-    padding: 0 var(--spacing-xl);
+    padding-left: var(--spacing-xl);
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     flex-direction: row;
