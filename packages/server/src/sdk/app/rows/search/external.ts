@@ -7,11 +7,13 @@ import {
   Row,
   Ctx,
 } from "@budibase/types"
+import * as exporters from "../../../../api/controllers/view/exporters"
 import sdk from "../../../../sdk"
 import { handleRequest } from "../../../../api/controllers/row/external"
 import { breakExternalTableId } from "../../../../integrations/utils"
 import { cleanExportRows } from "../utils"
 import { apiFileReturn } from "../../../../utilities/fileSystem"
+import { utils } from "@budibase/shared-core"
 
 export async function search(ctx: Ctx) {
   const tableId = ctx.params.tableId
@@ -85,6 +87,15 @@ export async function exportRows(ctx: Ctx) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
 
+  if (!exporters.isFormat(format)) {
+    ctx.throw(
+      400,
+      `Format ${format} not valid. Valid values: ${Object.values(
+        exporters.Format
+      )}`
+    )
+  }
+
   if (ctx.request.body.rows) {
     ctx.request.body = {
       query: {
@@ -127,13 +138,27 @@ export async function exportRows(ctx: Ctx) {
 
   let headers = Object.keys(schema)
 
-  // @ts-ignore
-  const exporter = exporters[format]
+  let content
+  switch (format) {
+    case exporters.Format.CSV:
+      content = exporters.csv(headers, exportRows)
+      break
+    case exporters.Format.JSON:
+      content = exporters.json(exportRows)
+      break
+    case exporters.Format.JSON_WITH_SCHEMA:
+      content = exporters.jsonWithSchema(schema, exportRows)
+      break
+    default:
+      utils.unreachable(format)
+      break
+  }
+
   const filename = `export.${format}`
 
   // send down the file
   ctx.attachment(filename)
-  return apiFileReturn(exporter(headers, exportRows))
+  return apiFileReturn(content)
 }
 
 export async function fetch(ctx: Ctx) {
