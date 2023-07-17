@@ -49,6 +49,7 @@ export async function handleRequest(
       }
     }
   }
+
   return new ExternalRequest(operation, tableId, opts?.datasource).run(
     opts || {}
   )

@@ -1,6 +1,10 @@
 import { exportRows } from "../../app/rows/search/external"
 import sdk from "../.."
 import { ExternalRequest } from "../../../api/controllers/row/ExternalRequest"
+import { ExportRowsParams } from "../../app/rows/search"
+import { Format } from "../../../api/controllers/view/exporters"
+import { HTTPError } from "@budibase/backend-core"
+import { Operation } from "@budibase/types"
 
 const mockDatasourcesGet = jest.fn()
 sdk.datasources.get = mockDatasourcesGet
@@ -16,30 +20,21 @@ jest.mock("../../../api/controllers/view/exporters", () => ({
 }))
 jest.mock("../../../utilities/fileSystem")
 
-function getUserCtx() {
-  return {
-    params: {
-      tableId: "datasource__tablename",
-    },
-    query: {
-      format: "csv",
-    },
-    request: {
-      body: {},
-    },
-    throw: jest.fn(() => {
-      throw "Err"
-    }),
-    attachment: jest.fn(),
-  } as any
-}
-
-describe("external row controller", () => {
+describe("external row sdk", () => {
   describe("exportRows", () => {
+    function getExportOptions(): ExportRowsParams {
+      return {
+        tableId: "datasource__tablename",
+        format: Format.CSV,
+        query: {},
+      }
+    }
+
+    const externalRequestCall = jest.fn()
     beforeAll(() => {
       jest
         .spyOn(ExternalRequest.prototype, "run")
-        .mockImplementation(() => Promise.resolve([]))
+        .mockImplementation(externalRequestCall.mockResolvedValue([]))
     })
 
     afterEach(() => {
@@ -47,15 +42,10 @@ describe("external row controller", () => {
     })
 
     it("should throw a 400 if no datasource entities are present", async () => {
-      let userCtx = getUserCtx()
-      try {
-        await exportRows(userCtx)
-      } catch (e) {
-        expect(userCtx.throw).toHaveBeenCalledWith(
-          400,
-          "Datasource has not been configured for plus API."
-        )
-      }
+      const exportOptions = getExportOptions()
+      await expect(exportRows(exportOptions)).rejects.toThrowError(
+        new HTTPError("Datasource has not been configured for plus API.", 400)
+      )
     })
 
     it("should handle single quotes from a row ID", async () => {
@@ -66,51 +56,46 @@ describe("external row controller", () => {
           },
         },
       }))
-      let userCtx = getUserCtx()
-      userCtx.request.body = {
-        rows: ["['d001']"],
-      }
+      const exportOptions = getExportOptions()
+      exportOptions.rowIds = ["['d001']"]
 
-      await exportRows(userCtx)
+      await exportRows(exportOptions)
 
-      expect(userCtx.request.body).toEqual({
-        query: {
-          oneOf: {
-            _id: ["d001"],
+      expect(ExternalRequest).toBeCalledTimes(1)
+      expect(ExternalRequest).toBeCalledWith(
+        Operation.READ,
+        exportOptions.tableId,
+        undefined
+      )
+
+      expect(externalRequestCall).toBeCalledTimes(1)
+      expect(externalRequestCall).toBeCalledWith(
+        expect.objectContaining({
+          filters: {
+            oneOf: {
+              _id: ["d001"],
+            },
           },
-        },
-      })
+        })
+      )
     })
 
     it("should throw a 400 if any composite keys are present", async () => {
-      let userCtx = getUserCtx()
-      userCtx.request.body = {
-        rows: ["[123]", "['d001'%2C'10111']"],
-      }
-      try {
-        await exportRows(userCtx)
-      } catch (e) {
-        expect(userCtx.throw).toHaveBeenCalledWith(
-          400,
-          "Export data does not support composite keys."
-        )
-      }
+      const exportOptions = getExportOptions()
+      exportOptions.rowIds = ["[123]", "['d001'%2C'10111']"]
+      await expect(exportRows(exportOptions)).rejects.toThrowError(
+        new HTTPError("Export data does not support composite keys.", 400)
+      )
     })
 
     it("should throw a 400 if no table name was found", async () => {
-      let userCtx = getUserCtx()
-      userCtx.params.tableId = "datasource__"
-      userCtx.request.body = {
-        rows: ["[123]"],
-      }
-      try {
-        await exportRows(userCtx)
-      } catch (e) {
-        expect(userCtx.throw).toHaveBeenCalledWith(
-          400,
-          "Could not find table name."
-        )
-      }
+      const exportOptions = getExportOptions()
+      exportOptions.tableId = "datasource__"
+      exportOptions.rowIds = ["[123]"]
+
+      await expect(exportRows(exportOptions)).rejects.toThrowError(
+        new HTTPError("Could not find table name.", 400)
+      )
     })
   })
 })
