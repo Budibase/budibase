@@ -15,6 +15,7 @@
     Icon,
     Checkbox,
     DatePicker,
+    Detail,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation } from "builderStore"
@@ -55,6 +56,7 @@
   let drawer
   let fillWidth = true
   let inputData
+  let codeBindingOpen = false
 
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
@@ -496,6 +498,18 @@
           />
         {:else if value.customType === "code"}
           <CodeEditorModal>
+            {#if codeMode == EditorModes.JS}
+              <ActionButton
+                on:click={() => (codeBindingOpen = !codeBindingOpen)}
+                quiet
+                icon={codeBindingOpen ? "ChevronDown" : "ChevronRight"}
+              >
+                <Detail size="S">Bindings</Detail>
+              </ActionButton>
+              {#if codeBindingOpen}
+                <pre>{JSON.stringify(bindings, null, 2)}</pre>
+              {/if}
+            {/if}
             <CodeEditor
               value={inputData[key]}
               on:change={e => {
@@ -509,14 +523,16 @@
               height={500}
             />
             <div class="messaging">
-              <Icon name="FlashOn" />
-              <div class="messaging-wrap">
-                <div>
-                  Add available bindings by typing <strong
-                    >{codeMode == EditorModes.JS ? "$" : "{{"}</strong
-                  >
+              {#if codeMode == EditorModes.Handlebars}
+                <Icon name="FlashOn" />
+                <div class="messaging-wrap">
+                  <div>
+                    Add available bindings by typing <strong>
+                      &#125;&#125;
+                    </strong>
+                  </div>
                 </div>
-              </div>
+              {/if}
             </div>
           </CodeEditorModal>
         {:else if value.customType === "loopOption"}
