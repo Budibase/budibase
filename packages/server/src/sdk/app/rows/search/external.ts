@@ -161,8 +161,7 @@ export async function exportRows(ctx: Ctx) {
   return apiFileReturn(content)
 }
 
-export async function fetch(ctx: Ctx) {
-  const tableId = ctx.params.tableId
+export async function fetch(tableId: string) {
   return handleRequest(Operation.READ, tableId, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
@@ -172,6 +171,6 @@ export async function fetchView(ctx: Ctx) {
   // there are no views in external datasources, shouldn't ever be called
   // for now just fetch
   const split = ctx.params.viewName.split("all_")
-  ctx.params.tableId = split[1] ? split[1] : split[0]
-  return fetch(ctx)
+  const tableId = split[1] ? split[1] : split[0]
+  return fetch(tableId)
 }
