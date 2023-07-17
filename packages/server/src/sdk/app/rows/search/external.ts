@@ -20,8 +20,8 @@ export async function search(options: SearchParams) {
   const { tableId } = options
   const { paginate, query, ...params } = options
   const { limit } = params
-  let bookmark = (params.bookmark && parseInt(params.bookmark)) || undefined
-  if (paginate && bookmark) {
+  let bookmark = (params.bookmark && parseInt(params.bookmark)) || null
+  if (paginate && !bookmark) {
     bookmark = 1
   }
   let paginateObj = {}
@@ -68,7 +68,7 @@ export async function search(options: SearchParams) {
       hasNextPage = nextRows.length > 0
     }
     // need wrapper object for bookmarks etc when paginating
-    return { rows, hasNextPage, bookmark: (bookmark || 0) + 1 }
+    return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
   } catch (err: any) {
     if (err.message && err.message.includes("does not exist")) {
       throw new Error(
