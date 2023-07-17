@@ -14,6 +14,12 @@ export interface SearchParams {
   sortType?: string
 }
 
+export interface ViewParams {
+  calculation: string
+  group: string
+  field: string
+}
+
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
     return external
@@ -33,6 +39,10 @@ export async function fetch(tableId: string) {
   return pickApi(tableId).fetch(tableId)
 }
 
-export async function fetchView(tableId: string, ctx: Ctx) {
-  return pickApi(tableId).fetchView(ctx)
+export async function fetchView(
+  tableId: string,
+  viewName: string,
+  params: ViewParams
+) {
+  return pickApi(tableId).fetchView(viewName, params)
 }

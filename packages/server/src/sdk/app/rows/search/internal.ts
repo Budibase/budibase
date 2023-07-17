@@ -146,17 +146,17 @@ async function getRawTableData(db: Database, tableId: string) {
   return rows as Row[]
 }
 
-export async function fetchView(ctx: Ctx) {
-  const viewName = decodeURIComponent(ctx.params.viewName)
-
+export async function fetchView(
+  viewName: string,
+  options: { calculation: string; group: string; field: string }
+) {
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(DocumentType.TABLE)) {
-    ctx.params.tableId = viewName
     return fetch(viewName)
   }
 
   const db = context.getAppDB()
-  const { calculation, group, field } = ctx.query
+  const { calculation, group, field } = options
   const viewInfo = await getView(db, viewName)
   let response
   if (env.SELF_HOSTED) {
