@@ -5,21 +5,23 @@ import {
   PaginationJson,
   IncludeRelationship,
   Row,
-  Ctx,
+  SearchFilters,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import sdk from "../../../../sdk"
 import { handleRequest } from "../../../../api/controllers/row/external"
 import { breakExternalTableId } from "../../../../integrations/utils"
 import { cleanExportRows } from "../utils"
-import { apiFileReturn } from "../../../../utilities/fileSystem"
 import { utils } from "@budibase/shared-core"
+import { ExportRowsParams, ExportRowsResult, SearchParams } from "../search"
+import { HTTPError } from "@budibase/backend-core"
 
-export async function search(ctx: Ctx) {
-  const tableId = ctx.params.tableId
-  const { paginate, query, ...params } = ctx.request.body
-  let { bookmark, limit } = params
-  if (!bookmark && paginate) {
+export async function search(options: SearchParams) {
+  const { tableId } = options
+  const { paginate, query, ...params } = options
+  const { limit } = params
+  let bookmark = (params.bookmark && parseInt(params.bookmark)) || null
+  if (paginate && !bookmark) {
     bookmark = 1
   }
   let paginateObj = {}
@@ -59,14 +61,14 @@ export async function search(ctx: Ctx) {
         sort,
         paginate: {
           limit: 1,
-          page: bookmark * limit + 1,
+          page: bookmark! * limit + 1,
         },
         includeSqlRelationships: IncludeRelationship.INCLUDE,
       })) as Row[]
       hasNextPage = nextRows.length > 0
     }
     // need wrapper object for bookmarks etc when paginating
-    return { rows, hasNextPage, bookmark: bookmark + 1 }
+    return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
   } catch (err: any) {
     if (err.message && err.message.includes("does not exist")) {
       throw new Error(
@@ -78,43 +80,38 @@ export async function search(ctx: Ctx) {
   }
 }
 
-export async function exportRows(ctx: Ctx) {
-  const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
-  const format = ctx.query.format as string
-  const { columns } = ctx.request.body
-  const datasource = await sdk.datasources.get(datasourceId!)
-  if (!datasource || !datasource.entities) {
-    ctx.throw(400, "Datasource has not been configured for plus API.")
-  }
+export async function exportRows(
+  options: ExportRowsParams
+): Promise<ExportRowsResult> {
+  const { tableId, format, columns, rowIds } = options
+  const { datasourceId, tableName } = breakExternalTableId(tableId)
 
-  if (!exporters.isFormat(format)) {
-    ctx.throw(
-      400,
-      `Format ${format} not valid. Valid values: ${Object.values(
-        exporters.Format
-      )}`
-    )
-  }
-
-  if (ctx.request.body.rows) {
-    ctx.request.body = {
-      query: {
-        oneOf: {
-          _id: ctx.request.body.rows.map((row: string) => {
-            const ids = JSON.parse(
-              decodeURI(row).replace(/'/g, `"`).replace(/%2C/g, ",")
+  let query: SearchFilters = {}
+  if (rowIds?.length) {
+    query = {
+      oneOf: {
+        _id: rowIds.map((row: string) => {
+          const ids = JSON.parse(
+            decodeURI(row).replace(/'/g, `"`).replace(/%2C/g, ",")
+          )
+          if (ids.length > 1) {
+            throw new HTTPError(
+              "Export data does not support composite keys.",
+              400
             )
-            if (ids.length > 1) {
-              ctx.throw(400, "Export data does not support composite keys.")
-            }
-            return ids[0]
-          }),
-        },
+          }
+          return ids[0]
+        }),
       },
     }
   }
 
-  let result = await search(ctx)
+  const datasource = await sdk.datasources.get(datasourceId!)
+  if (!datasource || !datasource.entities) {
+    throw new HTTPError("Datasource has not been configured for plus API.", 400)
+  }
+
+  let result = await search({ tableId, query })
   let rows: Row[] = []
 
   // Filter data to only specified columns if required
@@ -131,14 +128,14 @@ export async function exportRows(ctx: Ctx) {
   }
 
   if (!tableName) {
-    ctx.throw(400, "Could not find table name.")
+    throw new HTTPError("Could not find table name.", 400)
   }
-  let schema = datasource.entities[tableName].schema
+  const schema = datasource.entities[tableName].schema
   let exportRows = cleanExportRows(rows, schema, format, columns)
 
   let headers = Object.keys(schema)
 
-  let content
+  let content: string
   switch (format) {
     case exporters.Format.CSV:
       content = exporters.csv(headers, exportRows)
@@ -150,28 +147,26 @@ export async function exportRows(ctx: Ctx) {
       content = exporters.jsonWithSchema(schema, exportRows)
       break
     default:
-      utils.unreachable(format)
-      break
+      throw utils.unreachable(format)
   }
 
-  const filename = `export.${format}`
-
-  // send down the file
-  ctx.attachment(filename)
-  return apiFileReturn(content)
+  const fileName = `export.${format}`
+  return {
+    fileName,
+    content,
+  }
 }
 
-export async function fetch(ctx: Ctx) {
-  const tableId = ctx.params.tableId
+export async function fetch(tableId: string) {
   return handleRequest(Operation.READ, tableId, {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
 }
 
-export async function fetchView(ctx: Ctx) {
+export async function fetchView(viewName: string) {
   // there are no views in external datasources, shouldn't ever be called
   // for now just fetch
-  const split = ctx.params.viewName.split("all_")
-  ctx.params.tableId = split[1] ? split[1] : split[0]
-  return fetch(ctx)
+  const split = viewName.split("all_")
+  const tableId = split[1] ? split[1] : split[0]
+  return fetch(tableId)
 }
