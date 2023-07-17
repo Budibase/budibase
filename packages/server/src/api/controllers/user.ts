@@ -7,21 +7,7 @@ import { Ctx, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 
 export async function fetchMetadata(ctx: Ctx) {
-  const global = await getGlobalUsers()
-  const metadata = await sdk.users.rawUserMetadata()
-  const users = []
-  for (let user of global) {
-    // find the metadata that matches up to the global ID
-    const info = metadata.find(meta => meta._id.includes(user._id))
-    // remove these props, not for the correct DB
-    users.push({
-      ...user,
-      ...info,
-      tableId: InternalTables.USER_METADATA,
-      // make sure the ID is always a local ID, not a global one
-      _id: generateUserMetadataID(user._id),
-    })
-  }
+  const users = await sdk.users.fetchMetadata()
   ctx.body = users
 }
 
