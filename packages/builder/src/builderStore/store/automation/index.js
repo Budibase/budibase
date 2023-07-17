@@ -249,9 +249,6 @@ const automationActions = store => ({
     await store.actions.save(newAutomation)
   },
   replace: async (automationId, automation) => {
-    if (!automationId) {
-      return
-    }
     if (!automation) {
       store.update(state => {
         // Remove the automation
