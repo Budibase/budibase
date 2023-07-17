@@ -27,7 +27,7 @@
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
   import UserAvatars from "./_components/UserAvatars.svelte"
-  import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
+  import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
 
   export let application
