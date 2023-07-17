@@ -76,8 +76,8 @@ affinity: {}
 globals:
   appVersion: "" # Use as an override to .Chart.AppVersion
   budibaseEnv: PRODUCTION
-  tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
-  enableAnalytics: "1"
+  tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS"
+  enableAnalytics: "0"
   sentryDSN: ""
   posthogToken: "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
   selfHosted: "1" # set to 0 for budibase cloud environment, set to 1 for self-hosted setup
@@ -95,9 +95,9 @@ globals:
   createSecrets: true # creates an internal API key, JWT secrets and redis password for you
 
   # if createSecrets is set to false, you can hard-code your secrets here
-  apiEncryptionKey: ""
-  internalApiKey: ""
-  jwtSecret: ""
+  apiEncryptionKey: "test"
+  internalApiKey: "test"
+  jwtSecret: "test"
   cdnUrl: ""
   # fallback values used during live rotation
   internalApiKeyFallback: ""
@@ -209,14 +209,14 @@ services:
 # Override values in couchDB subchart
 couchdb:
   ## clusterSize is the initial size of the CouchDB cluster.
-  clusterSize: 3
+  clusterSize: 1
   allowAdminParty: false
 
   # Secret Management
   createAdminSecret: true
 
-  # adminUsername: budibase
-  # adminPassword: budibase
+  adminUsername: budibase
+  adminPassword: budibase
   # adminHash: -pbkdf2-this_is_not_necessarily_secure_either
   # cookieAuthSecret: admin
 
@@ -239,11 +239,11 @@ couchdb:
   ## provisioning of Persistent Volumes; leaving it unset will invoke the default
   ## provisioner.
   persistentVolume:
-    enabled: false
+    enabled: true
     accessModes:
       - ReadWriteOnce
     size: 10Gi
-    storageClass: ""
+    storageClass: "local-path"
 
   ## The CouchDB image
   image:

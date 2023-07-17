@@ -96,7 +96,7 @@ jobs:
           git fetch
           mkdir sync
           echo "Packaging chart to sync dir"
-          helm package charts/budibase --version 0.0.0-master --app-version v"$RELEASE_VERSION" --destination sync
+          helm package charts/budibase --version 0.0.0-master --app-version "$RELEASE_VERSION" --destination sync
           echo "Packaging successful"
           git checkout gh-pages
           echo "Indexing helm repo"         
