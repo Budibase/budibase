@@ -202,7 +202,7 @@ export async function fetch(ctx: UserCtx) {
   // Get all builder sessions in each app
   const sessions = await builderSocket?.getRoomSessions(appIds)
   if (sessions?.length) {
-    let appSessionMap: { [key: string]: SocketSession[] } = {}
+    let appSessionMap: Record<string, SocketSession[]> = {}
     sessions.forEach(session => {
       const room = session.room
       if (!room) {
