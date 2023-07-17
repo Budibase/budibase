@@ -21,7 +21,7 @@ export const TOUR_KEYS = {
   FEATURE_ONBOARDING: "feature-onboarding",
 }
 
-const endUserOnboarding = async ({ skipped = false }) => {
+const endUserOnboarding = async ({ skipped = false } = {}) => {
   // Mark the users onboarding as complete
   // Clear all tour related state
   if (get(auth).user) {
