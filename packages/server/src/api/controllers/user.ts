@@ -3,10 +3,10 @@ import { InternalTables } from "../../db/utils"
 import { getGlobalUsers } from "../../utilities/global"
 import { getFullUser } from "../../utilities/users"
 import { context } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
+import { Ctx, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 
-export async function fetchMetadata(ctx: UserCtx) {
+export async function fetchMetadata(ctx: Ctx) {
   const global = await getGlobalUsers()
   const metadata = await sdk.users.rawUserMetadata()
   const users = []
