@@ -14,7 +14,7 @@ type: application
 # populates on packaging
 version: 0.0.0
 # populates on packaging
-appVersion: 0.0.0
+appVersion: v2.8.10
 dependencies:
   - name: couchdb
     version: 3.3.4
