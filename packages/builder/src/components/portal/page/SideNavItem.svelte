@@ -1,11 +1,8 @@
 <script>
-  import { Tooltip } from "@budibase/bbui"
-
   export let text
   export let url
   export let active = false
   export let disabled = false
-  export let tooltip = null
 </script>
 
 <div class="side-nav-item">
@@ -16,11 +13,6 @@
   {:else}
     <div class="text" on:click class:active class:disabled>
       {text || ""}
-    </div>
-  {/if}
-  {#if tooltip}
-    <div class="tooltip">
-      <Tooltip textWrapping direction="right" text={tooltip} />
     </div>
   {/if}
 </div>
@@ -44,18 +36,5 @@
   .disabled {
     pointer-events: none;
     color: var(--spectrum-global-color-gray-500) !important;
-  }
-  .tooltip {
-    position: absolute;
-    transform: translateY(-50%);
-    left: 100%;
-    top: 50%;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 130ms ease-out;
-    z-index: 100;
-  }
-  .side-nav-item:hover .tooltip {
-    opacity: 1;
   }
 </style>
