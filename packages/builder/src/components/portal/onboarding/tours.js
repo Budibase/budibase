@@ -4,6 +4,7 @@ import { auth } from "stores/portal"
 import analytics from "analytics"
 import { OnboardingData, OnboardingDesign, OnboardingPublish } from "./steps"
 import { API } from "api"
+
 const ONBOARDING_EVENT_PREFIX = "onboarding"
 
 export const TOUR_STEP_KEYS = {
@@ -20,8 +21,7 @@ export const TOUR_KEYS = {
   FEATURE_ONBOARDING: "feature-onboarding",
 }
 
-// TOUR_BUILDER_ONBOARDING - termination
-const endUserOnboarding = async () => {
+const endUserOnboarding = async ({ skipped = false }) => {
   // Mark the users onboarding as complete
   // Clear all tour related state
   if (get(auth).user) {
@@ -29,6 +29,10 @@ const endUserOnboarding = async () => {
       await API.updateSelf({
         onboardedAt: new Date().toISOString(),
       })
+
+      if (skipped) {
+        tourEvent("skipped")
+      }
 
       // Update the cached user
       await auth.getSelf()
@@ -57,7 +61,6 @@ const tourEvent = eventKey => {
 const getTours = () => {
   return {
     [TOUR_KEYS.TOUR_BUILDER_ONBOARDING]: {
-      onSkip: endUserOnboarding,
       steps: [
         {
           id: TOUR_STEP_KEYS.BUILDER_DATA_SECTION,
@@ -106,7 +109,6 @@ const getTours = () => {
           title: "Publish",
           layout: OnboardingPublish,
           route: "/builder/app/:application/design",
-          endRoute: "/builder/app/:application/data",
           query: ".toprightnav #builder-app-publish-button",
           onLoad: () => {
             tourEvent(TOUR_STEP_KEYS.BUILDER_APP_PUBLISH)
@@ -114,6 +116,10 @@ const getTours = () => {
           onComplete: endUserOnboarding,
         },
       ],
+      onSkip: async () => {
+        await endUserOnboarding({ skipped: true })
+      },
+      endRoute: "/builder/app/:application/data",
     },
     [TOUR_KEYS.FEATURE_ONBOARDING]: {
       steps: [

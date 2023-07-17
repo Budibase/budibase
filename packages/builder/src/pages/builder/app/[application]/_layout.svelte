@@ -87,17 +87,10 @@
     // Check if onboarding is enabled.
     if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
       if (!$auth.user?.onboardedAt) {
-        // Determine the correct step
-        const activeNav = $layout.children.find(c => $isActive(c.path))
-        const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
-        const targetStep = activeNav
-          ? onboardingTour.steps.find(step => step.route === activeNav?.path)
-          : null
         await store.update(state => ({
           ...state,
           onboarding: true,
           tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
-          tourStepKey: targetStep?.id,
         }))
       } else {
         // Feature tour date

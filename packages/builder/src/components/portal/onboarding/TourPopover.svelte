@@ -15,14 +15,15 @@
   $: tourNodes = { ...$store.tourNodes }
   $: tourKey = $store.tourKey
   $: tourStepKey = $store.tourStepKey
-  $: tourOnSkip = TOURS[tourKey]?.onSkip
+  $: tour = TOURS[tourKey]
+  $: tourOnSkip = tour?.onSkip
 
   const updateTourStep = (targetStepKey, tourKey) => {
     if (!tourKey) {
       return
     }
     if (!tourSteps?.length) {
-      tourSteps = [...TOURS[tourKey].steps]
+      tourSteps = [...tour.steps]
     }
     tourStepIdx = getCurrentStepIdx(tourSteps, targetStepKey)
     lastStep = tourStepIdx + 1 == tourSteps.length
@@ -73,23 +74,8 @@
         tourStep.onComplete()
       }
       popover.hide()
-      if (tourStep.endRoute) {
-        $goto(tourStep.endRoute)
-      }
-    }
-  }
-
-  const previousStep = async () => {
-    if (tourStepIdx > 0) {
-      let target = tourSteps[tourStepIdx - 1]
-      if (target) {
-        store.update(state => ({
-          ...state,
-          tourStepKey: target.id,
-        }))
-        navigateStep(target)
-      } else {
-        console.log("Could not retrieve step")
+      if (tour.endRoute) {
+        $goto(tour.endRoute)
       }
     }
   }
@@ -135,22 +121,14 @@
           <div class="tour-footer">
             <div class="tour-navigation">
               {#if typeof tourOnSkip === "function"}
-                <!-- <Button
-                  secondary
-                  quiet
-                  on:click={() => {
-                    skipping = true
-                    tourOnSkip()
-                  }}
-                  disabled={skipping}
-                >
-                  Skip
-                </Button> -->
                 <Link
                   quiet
                   on:click={() => {
                     skipping = true
                     tourOnSkip()
+                    if (tour.endRoute) {
+                      $goto(tour.endRoute)
+                    }
                   }}
                   disabled={skipping}>Skip</Link
                 >
