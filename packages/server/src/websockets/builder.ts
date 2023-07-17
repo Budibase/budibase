@@ -1,6 +1,6 @@
 import authorized from "../middleware/authorized"
 import { BaseSocket } from "./websocket"
-import { permissions, events } from "@budibase/backend-core"
+import { permissions, events, context } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import {
@@ -14,7 +14,8 @@ import {
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
-import { BuilderSocketEvent, GridSocketEvent } from "@budibase/shared-core"
+import { BuilderSocketEvent } from "@budibase/shared-core"
+import { hasTenantId } from "@budibase/backend-core/src/context"
 
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
@@ -34,7 +35,10 @@ export default class BuilderSocket extends BaseSocket {
           userIdMap[session._id] = true
         }
       })
-      await events.user.dataCollaboration(Object.keys(userIdMap).length)
+
+      if (context.hasTenantId()) {
+        await events.user.dataCollaboration(Object.keys(userIdMap).length)
+      }
 
       // Reply with all current sessions
       callback({ users: sessions })
