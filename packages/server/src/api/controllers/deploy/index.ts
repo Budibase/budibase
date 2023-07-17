@@ -9,6 +9,7 @@ import {
 import { backups } from "@budibase/pro"
 import { AppBackupTrigger } from "@budibase/types"
 import sdk from "../../../sdk"
+import { builderSocket } from "../../../websockets"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -201,4 +202,5 @@ export const publishApp = async function (ctx: any) {
 
   await events.app.published(app)
   ctx.body = deployment
+  builderSocket?.emitAppPublish(ctx)
 }

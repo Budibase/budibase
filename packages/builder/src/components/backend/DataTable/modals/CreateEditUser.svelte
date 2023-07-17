@@ -5,7 +5,7 @@
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import { API } from "api"
-  import { ModalContent, Select, Link } from "@budibase/bbui"
+  import { keepOpen, ModalContent, Select, Link } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { goto } from "@roxi/routify"
 
@@ -51,7 +51,7 @@
       errors = [...errors, { message: "Role is required" }]
     }
     if (errors.length) {
-      return false
+      return keepOpen
     }
 
     try {
@@ -79,8 +79,8 @@
       } else {
         notifications.error("Error saving user")
       }
-      // Prevent closing the modal on errors
-      return false
+
+      return keepOpen
     }
   }
 </script>
