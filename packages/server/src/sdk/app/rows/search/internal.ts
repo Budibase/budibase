@@ -1,4 +1,7 @@
-import { context } from "@budibase/backend-core"
+import {
+  context,
+  SearchParams as InternalSearchParams,
+} from "@budibase/backend-core"
 import env from "../../../../environment"
 import { fullSearch, paginatedSearch } from "./internalSearch"
 import {
@@ -8,7 +11,7 @@ import {
 } from "../../../../db/utils"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
-import { Ctx, Database, Row } from "@budibase/types"
+import { Database, Row } from "@budibase/types"
 import { cleanExportRows } from "../utils"
 import {
   Format,
@@ -16,7 +19,6 @@ import {
   json,
   jsonWithSchema,
 } from "../../../../api/controllers/view/exporters"
-import { apiFileReturn } from "../../../../utilities/fileSystem"
 import * as inMemoryViews from "../../../../db/inMemoryView"
 import {
   migrateToInMemoryView,
@@ -25,10 +27,10 @@ import {
   getFromMemoryDoc,
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
-import { ExportRowsParams, ExportRowsResult } from "../search"
+import { ExportRowsParams, ExportRowsResult, SearchParams } from "../search"
 
-export async function search(ctx: Ctx) {
-  const { tableId } = ctx.params
+export async function search(options: SearchParams) {
+  const { tableId } = options
 
   // Fetch the whole table when running in cypress, as search doesn't work
   if (!env.COUCH_DB_URL && env.isCypress()) {
@@ -36,16 +38,25 @@ export async function search(ctx: Ctx) {
   }
 
   const db = context.getAppDB()
-  const { paginate, query, ...params } = ctx.request.body
-  params.version = ctx.version
-  params.tableId = tableId
+  const { paginate, query } = options
+
+  const params: InternalSearchParams<any> = {
+    tableId: options.tableId,
+    sort: options.sort,
+    sortOrder: options.sortOrder,
+    sortType: options.sortType,
+    limit: options.limit,
+    bookmark: options.bookmark,
+    version: options.version,
+    disableEscaping: options.disableEscaping,
+  }
 
   let table
   if (params.sort && !params.sortType) {
     table = await db.get(tableId)
     const schema = table.schema
     const sortField = schema[params.sort]
-    params.sortType = sortField.type == "number" ? "number" : "string"
+    params.sortType = sortField.type === "number" ? "number" : "string"
   }
 
   let response
@@ -86,7 +97,7 @@ export async function exportRows(
 
     result = await outputProcessing(table, response)
   } else if (query) {
-    let searchResponse = await search(ctx)
+    let searchResponse = await search({ tableId, query })
     result = searchResponse.rows
   }
 

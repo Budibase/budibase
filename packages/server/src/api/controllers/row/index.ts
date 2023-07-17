@@ -134,9 +134,14 @@ export async function destroy(ctx: any) {
 
 export async function search(ctx: any) {
   const tableId = utils.getTableId(ctx)
-  ctx.status = 200
 
-  ctx.body = await quotas.addQuery(() => sdk.rows.search(tableId, ctx), {
+  const searchParams = {
+    ...ctx.request.body,
+    tableId,
+  }
+
+  ctx.status = 200
+  ctx.body = await quotas.addQuery(() => sdk.rows.search(searchParams), {
     datasourceId: tableId,
   })
 }
