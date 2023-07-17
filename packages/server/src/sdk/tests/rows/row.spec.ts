@@ -1,14 +1,14 @@
-import { exportRows } from "../row/external"
-import sdk from "../../../sdk"
-import { ExternalRequest } from "../row/ExternalRequest"
+import { exportRows } from "../../app/rows/search/external"
+import sdk from "../.."
+import { ExternalRequest } from "../../../api/controllers/row/ExternalRequest"
 
-// @ts-ignore
-sdk.datasources = {
-  get: jest.fn(),
-}
+const mockDatasourcesGet = jest.fn()
+sdk.datasources.get = mockDatasourcesGet
 
-jest.mock("../row/ExternalRequest")
-jest.mock("../view/exporters", () => ({
+jest.mock("../../../api/controllers/row/ExternalRequest")
+
+jest.mock("../../../api/controllers/view/exporters", () => ({
+  ...jest.requireActual("../../../api/controllers/view/exporters"),
   csv: jest.fn(),
   Format: {
     CSV: "csv",
@@ -31,14 +31,15 @@ function getUserCtx() {
       throw "Err"
     }),
     attachment: jest.fn(),
-  }
+  } as any
 }
 
 describe("external row controller", () => {
   describe("exportRows", () => {
     beforeAll(() => {
-      //@ts-ignore
-      jest.spyOn(ExternalRequest.prototype, "run").mockImplementation(() => [])
+      jest
+        .spyOn(ExternalRequest.prototype, "run")
+        .mockImplementation(() => Promise.resolve([]))
     })
 
     afterEach(() => {
@@ -48,7 +49,6 @@ describe("external row controller", () => {
     it("should throw a 400 if no datasource entities are present", async () => {
       let userCtx = getUserCtx()
       try {
-        //@ts-ignore
         await exportRows(userCtx)
       } catch (e) {
         expect(userCtx.throw).toHaveBeenCalledWith(
@@ -59,8 +59,7 @@ describe("external row controller", () => {
     })
 
     it("should handle single quotes from a row ID", async () => {
-      //@ts-ignore
-      sdk.datasources.get.mockImplementation(() => ({
+      mockDatasourcesGet.mockImplementation(async () => ({
         entities: {
           tablename: {
             schema: {},
@@ -72,7 +71,6 @@ describe("external row controller", () => {
         rows: ["['d001']"],
       }
 
-      //@ts-ignore
       await exportRows(userCtx)
 
       expect(userCtx.request.body).toEqual({
@@ -90,7 +88,6 @@ describe("external row controller", () => {
         rows: ["[123]", "['d001'%2C'10111']"],
       }
       try {
-        //@ts-ignore
         await exportRows(userCtx)
       } catch (e) {
         expect(userCtx.throw).toHaveBeenCalledWith(
@@ -107,7 +104,6 @@ describe("external row controller", () => {
         rows: ["[123]"],
       }
       try {
-        //@ts-ignore
         await exportRows(userCtx)
       } catch (e) {
         expect(userCtx.throw).toHaveBeenCalledWith(

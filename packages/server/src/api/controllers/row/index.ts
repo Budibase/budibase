@@ -5,6 +5,7 @@ import { isExternalTable } from "../../../integrations/utils"
 import { Ctx } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
+import sdk from "../../../sdk"
 
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
@@ -64,14 +65,14 @@ export const save = async (ctx: any) => {
 }
 export async function fetchView(ctx: any) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => pickApi(tableId).fetchView(ctx), {
+  ctx.body = await quotas.addQuery(() => sdk.rows.fetchView(tableId, ctx), {
     datasourceId: tableId,
   })
 }
 
 export async function fetch(ctx: any) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => pickApi(tableId).fetch(ctx), {
+  ctx.body = await quotas.addQuery(() => sdk.rows.fetch(tableId, ctx), {
     datasourceId: tableId,
   })
 }
@@ -120,7 +121,8 @@ export async function destroy(ctx: any) {
 export async function search(ctx: any) {
   const tableId = utils.getTableId(ctx)
   ctx.status = 200
-  ctx.body = await quotas.addQuery(() => pickApi(tableId).search(ctx), {
+
+  ctx.body = await quotas.addQuery(() => sdk.rows.search(tableId, ctx), {
     datasourceId: tableId,
   })
 }
@@ -150,7 +152,7 @@ export async function fetchEnrichedRow(ctx: any) {
 
 export const exportRows = async (ctx: any) => {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => pickApi(tableId).exportRows(ctx), {
+  ctx.body = await quotas.addQuery(() => sdk.rows.exportRows(tableId, ctx), {
     datasourceId: tableId,
   })
 }
