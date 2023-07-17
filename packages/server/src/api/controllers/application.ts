@@ -199,31 +199,10 @@ export async function fetch(ctx: UserCtx) {
     }
   }
 
-  // Get all builder sessions in each app
-  const sessions = await builderSocket?.getRoomSessions(appIds)
-  if (sessions?.length) {
-    let appSessionMap: Record<string, SocketSession[]> = {}
-    sessions.forEach(session => {
-      const room = session.room
-      if (!room) {
-        return
-      }
-      if (!appSessionMap[room]) {
-        appSessionMap[room] = []
-      }
-      appSessionMap[room].push(session)
-    })
-    apps.forEach(app => {
-      const sessions = appSessionMap[app.appId]
-      if (sessions?.length) {
-        app.sessions = sessions
-      } else {
-        delete app.sessions
-      }
-    })
-  }
+  // Enrich apps with all builder user sessions
+  const enrichedApps = await sdk.users.sessions.enrichApps(apps)
 
-  ctx.body = await checkAppMetadata(apps)
+  ctx.body = await checkAppMetadata(enrichedApps)
 }
 
 export async function fetchAppDefinition(ctx: UserCtx) {
