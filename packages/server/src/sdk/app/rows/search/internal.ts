@@ -25,6 +25,7 @@ import {
   getFromMemoryDoc,
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
+import { ExportRowsParams, ExportRowsResult } from "../search"
 
 export async function search(ctx: Ctx) {
   const { tableId } = ctx.params
@@ -67,15 +68,12 @@ export async function search(ctx: Ctx) {
   return response
 }
 
-export async function exportRows(ctx: Ctx) {
+export async function exportRows(
+  options: ExportRowsParams
+): Promise<ExportRowsResult> {
+  const { tableId, format, rowIds, columns, query } = options
   const db = context.getAppDB()
-  const table = await db.get(ctx.params.tableId)
-  const rowIds = ctx.request.body.rows
-  let format = ctx.query.format
-  if (typeof format !== "string") {
-    ctx.throw(400, "Format parameter is not valid")
-  }
-  const { columns, query } = ctx.request.body
+  const table = await db.get(tableId)
 
   let result
   if (rowIds) {
@@ -109,14 +107,20 @@ export async function exportRows(ctx: Ctx) {
 
   let exportRows = cleanExportRows(rows, schema, format, columns)
   if (format === Format.CSV) {
-    ctx.attachment("export.csv")
-    return apiFileReturn(csv(Object.keys(rows[0]), exportRows))
+    return {
+      fileName: "export.csv",
+      content: csv(Object.keys(rows[0]), exportRows),
+    }
   } else if (format === Format.JSON) {
-    ctx.attachment("export.json")
-    return apiFileReturn(json(exportRows))
+    return {
+      fileName: "export.json",
+      content: json(exportRows),
+    }
   } else if (format === Format.JSON_WITH_SCHEMA) {
-    ctx.attachment("export.json")
-    return apiFileReturn(jsonWithSchema(schema, exportRows))
+    return {
+      fileName: "export.json",
+      content: jsonWithSchema(schema, exportRows),
+    }
   } else {
     throw "Format not recognised"
   }

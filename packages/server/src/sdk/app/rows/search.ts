@@ -2,6 +2,7 @@ import { Ctx, SearchFilters } from "@budibase/types"
 import { isExternalTable } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
+import { Format } from "../../../api/controllers/view/exporters"
 
 export interface SearchParams {
   tableId: string
@@ -31,8 +32,23 @@ export async function search(tableId: string, ctx: Ctx) {
   return pickApi(tableId).search(ctx)
 }
 
-export async function exportRows(tableId: string, ctx: Ctx) {
-  return pickApi(tableId).exportRows(ctx)
+export interface ExportRowsParams {
+  tableId: string
+  format: Format
+  rowIds: string[]
+  columns: string[]
+  query: string
+}
+
+export interface ExportRowsResult {
+  fileName: string
+  content: string
+}
+
+export async function exportRows(
+  options: ExportRowsParams
+): Promise<ExportRowsResult> {
+  return pickApi(options.tableId).exportRows(options)
 }
 
 export async function fetch(tableId: string) {

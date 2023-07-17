@@ -6,6 +6,8 @@ import { Ctx } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
 import sdk from "../../../sdk"
+import * as exporters from "../view/exporters"
+import { apiFileReturn } from "../../../utilities/fileSystem"
 
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
@@ -164,7 +166,33 @@ export async function fetchEnrichedRow(ctx: any) {
 
 export const exportRows = async (ctx: any) => {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => sdk.rows.exportRows(tableId, ctx), {
-    datasourceId: tableId,
-  })
+
+  const format = ctx.query.format
+
+  const { rows, columns, query } = ctx.request.body
+  if (typeof format !== "string" || !exporters.isFormat(format)) {
+    ctx.throw(
+      400,
+      `Format ${format} not valid. Valid values: ${Object.values(
+        exporters.Format
+      )}`
+    )
+  }
+
+  ctx.body = await quotas.addQuery(
+    async () => {
+      const { fileName, content } = await sdk.rows.exportRows({
+        tableId,
+        format,
+        rowIds: rows,
+        columns,
+        query,
+      })
+      ctx.attachment(fileName)
+      return apiFileReturn(content)
+    },
+    {
+      datasourceId: tableId,
+    }
+  )
 }
