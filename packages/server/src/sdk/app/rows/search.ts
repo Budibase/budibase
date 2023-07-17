@@ -37,8 +37,8 @@ export async function search(options: SearchParams) {
 export interface ExportRowsParams {
   tableId: string
   format: Format
-  rowIds: string[]
-  columns: string[]
+  rowIds?: string[]
+  columns?: string[]
   query: SearchFilters
 }
 

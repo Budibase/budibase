@@ -86,11 +86,6 @@ export async function exportRows(
   const { tableId, format, columns, rowIds } = options
   const { datasourceId, tableName } = breakExternalTableId(tableId)
 
-  const datasource = await sdk.datasources.get(datasourceId!)
-  if (!datasource || !datasource.entities) {
-    throw new HTTPError("Datasource has not been configured for plus API.", 400)
-  }
-
   let query: SearchFilters = {}
   if (rowIds?.length) {
     query = {
@@ -109,6 +104,11 @@ export async function exportRows(
         }),
       },
     }
+  }
+
+  const datasource = await sdk.datasources.get(datasourceId!)
+  if (!datasource || !datasource.entities) {
+    throw new HTTPError("Datasource has not been configured for plus API.", 400)
   }
 
   let result = await search({ tableId, query })

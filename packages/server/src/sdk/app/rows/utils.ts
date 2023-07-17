@@ -14,7 +14,7 @@ export function cleanExportRows(
   rows: any[],
   schema: TableSchema,
   format: string,
-  columns: string[]
+  columns?: string[]
 ) {
   let cleanRows = [...rows]
 
