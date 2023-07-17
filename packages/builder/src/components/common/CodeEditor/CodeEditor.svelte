@@ -48,6 +48,7 @@
   export let mode = EditorModes.Handlebars
   export let value = ""
   export let placeholder = null
+  export let autocompleteEnabled = true
 
   // Export a function to expose caret position
   export const getCaretPosition = () => {
@@ -131,12 +132,6 @@
       syntaxHighlighting(oneDarkHighlightStyle, { fallback: true }),
       highlightActiveLineGutter(),
       highlightSpecialChars(),
-      autocompletion({
-        override: [...completions],
-        closeOnBlur: true,
-        icons: false,
-        optionClass: () => "autocomplete-option",
-      }),
       EditorView.lineWrapping,
       EditorView.updateListener.of(v => {
         const docStr = v.state.doc?.toString()
@@ -159,11 +154,16 @@
 
   const buildExtensions = base => {
     const complete = [...base]
-    if (mode.name == "javascript") {
-      complete.push(javascript())
-      complete.push(highlightWhitespace())
-      complete.push(lineNumbers())
-      complete.push(foldGutter())
+
+    if (autocompleteEnabled) {
+      complete.push(
+        autocompletion({
+          override: [...completions],
+          closeOnBlur: true,
+          icons: false,
+          optionClass: () => "autocomplete-option",
+        })
+      )
       complete.push(
         EditorView.inputHandler.of((view, from, to, insert) => {
           if (insert === "$") {
@@ -191,6 +191,13 @@
           return false
         })
       )
+    }
+
+    if (mode.name == "javascript") {
+      complete.push(javascript())
+      complete.push(highlightWhitespace())
+      complete.push(lineNumbers())
+      complete.push(foldGutter())
     }
 
     if (placeholder) {

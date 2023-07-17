@@ -32,7 +32,6 @@
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import {
     bindingsToCompletions,
-    jsAutocomplete,
     hbAutocomplete,
     EditorModes,
   } from "components/common/CodeEditor"
@@ -73,8 +72,12 @@
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
   $: codeMode =
     stepId === "EXECUTE_BASH" ? EditorModes.Handlebars : EditorModes.JS
-  $: buildCompletions =
-    stepId === "EXECUTE_BASH" ? hbAutocomplete : jsAutocomplete
+
+  $: stepCompletions =
+    codeMode === EditorModes.Handlebars
+      ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
+      : []
+
   /**
    * TODO - Remove after November 2023
    * *******************************
@@ -500,12 +503,9 @@
                 onChange({ detail: e.detail }, key)
                 inputData[key] = e.detail
               }}
-              completions={[
-                buildCompletions([
-                  ...bindingsToCompletions(bindings, codeMode),
-                ]),
-              ]}
+              completions={stepCompletions}
               mode={codeMode}
+              autocompleteEnabled={codeMode != EditorModes.JS}
               height={500}
             />
             <div class="messaging">
