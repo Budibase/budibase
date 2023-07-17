@@ -179,7 +179,7 @@ export const addSampleData = async (ctx: UserCtx) => {
 export async function fetch(ctx: UserCtx) {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
-  let apps = (await dbCore.getAllApps({ dev, all })) as App[]
+  const apps = (await dbCore.getAllApps({ dev, all })) as App[]
 
   const appIds = apps
     .filter((app: any) => app.status === "development")
