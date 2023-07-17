@@ -203,15 +203,6 @@ export function getTenantId(): string {
   return tenantId
 }
 
-export function hasTenantId(): boolean {
-  if (!isMultiTenant()) {
-    return true
-  }
-  const context = Context.get()
-  const tenantId = context?.tenantId
-  return tenantId != null
-}
-
 export function getAutomationId(): string | undefined {
   const context = Context.get()
   return context?.automationId
