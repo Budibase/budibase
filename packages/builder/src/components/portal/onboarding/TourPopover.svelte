@@ -1,5 +1,5 @@
 <script>
-  import { Popover, Layout, Heading, Body, Button } from "@budibase/bbui"
+  import { Popover, Layout, Heading, Body, Button, Link } from "@budibase/bbui"
   import { store } from "builderStore"
   import { TOURS } from "./tours.js"
   import { goto, layout, isActive } from "@roxi/routify"
@@ -10,17 +10,19 @@
   let tourStep
   let tourStepIdx
   let lastStep
+  let skipping = false
 
   $: tourNodes = { ...$store.tourNodes }
   $: tourKey = $store.tourKey
   $: tourStepKey = $store.tourStepKey
+  $: tourOnSkip = TOURS[tourKey]?.onSkip
 
   const updateTourStep = (targetStepKey, tourKey) => {
     if (!tourKey) {
       return
     }
     if (!tourSteps?.length) {
-      tourSteps = [...TOURS[tourKey]]
+      tourSteps = [...TOURS[tourKey].steps]
     }
     tourStepIdx = getCurrentStepIdx(tourSteps, targetStepKey)
     lastStep = tourStepIdx + 1 == tourSteps.length
@@ -132,16 +134,28 @@
           </Body>
           <div class="tour-footer">
             <div class="tour-navigation">
-              {#if tourStepIdx > 0}
-                <Button
+              {#if typeof tourOnSkip === "function"}
+                <!-- <Button
                   secondary
-                  on:click={previousStep}
-                  disabled={tourStepIdx == 0}
+                  quiet
+                  on:click={() => {
+                    skipping = true
+                    tourOnSkip()
+                  }}
+                  disabled={skipping}
                 >
-                  <div>Back</div>
-                </Button>
+                  Skip
+                </Button> -->
+                <Link
+                  quiet
+                  on:click={() => {
+                    skipping = true
+                    tourOnSkip()
+                  }}
+                  disabled={skipping}>Skip</Link
+                >
               {/if}
-              <Button cta on:click={nextStep}>
+              <Button cta on:click={nextStep} disabled={skipping}>
                 <div>{lastStep ? "Finish" : "Next"}</div>
               </Button>
             </div>
@@ -157,9 +171,13 @@
     padding: var(--spacing-xl);
   }
   .tour-navigation {
-    grid-gap: var(--spectrum-alias-grid-baseline);
+    grid-gap: var(--spacing-xl);
     display: flex;
     justify-content: end;
+    align-items: center;
+  }
+  .tour-navigation :global(.spectrum-Link) {
+    color: white;
   }
   .tour-body :global(.feature-list) {
     margin-bottom: 0px;

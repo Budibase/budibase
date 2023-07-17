@@ -91,7 +91,7 @@
         const activeNav = $layout.children.find(c => $isActive(c.path))
         const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
         const targetStep = activeNav
-          ? onboardingTour.find(step => step.route === activeNav?.path)
+          ? onboardingTour.steps.find(step => step.route === activeNav?.path)
           : null
         await store.update(state => ({
           ...state,
