@@ -1,27 +1,27 @@
-const tk = require( "timekeeper")
+import tk from "timekeeper"
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
 
-
-const { outputProcessing } = require("../../../utilities/rowProcessor")
-const setup = require("./utilities")
+import { outputProcessing } from "../../../utilities/rowProcessor"
+import * as setup from "./utilities"
 const { basicRow } = setup.structures
-const { context, tenancy } = require("@budibase/backend-core")
-const {
-  quotas,
-} = require("@budibase/pro")
-const {
+import { context, tenancy } from "@budibase/backend-core"
+import { quotas } from "@budibase/pro"
+import {
   QuotaUsageType,
   StaticQuotaName,
   MonthlyQuotaName,
-} = require("@budibase/types")
-const { structures } = require("@budibase/backend-core/tests");
+  Row,
+  Table,
+  FieldType,
+} from "@budibase/types"
+import { structures } from "@budibase/backend-core/tests"
 
 describe("/rows", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let table
-  let row
+  let table: Table
+  let row: Row
 
   afterAll(setup.afterAll)
 
@@ -29,12 +29,12 @@ describe("/rows", () => {
     await config.init()
   })
 
-  beforeEach(async()=>{
+  beforeEach(async () => {
     table = await config.createTable()
-    row = basicRow(table._id)
+    row = basicRow(table._id!)
   })
 
-  const loadRow = async (id, tbl_Id, status = 200) =>
+  const loadRow = async (id: string, tbl_Id: string, status = 200) =>
     await request
       .get(`/api/${tbl_Id}/rows/${id}`)
       .set(config.defaultHeaders())
@@ -42,21 +42,28 @@ describe("/rows", () => {
       .expect(status)
 
   const getRowUsage = async () => {
-    const { total } = await config.doInContext(null, () => quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS))
+    const { total } = await config.doInContext(null, () =>
+      quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
+    )
     return total
   }
 
   const getQueryUsage = async () => {
-    const { total } = await config.doInContext(null, () => quotas.getCurrentUsageValues(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
+    const { total } = await config.doInContext(null, () =>
+      quotas.getCurrentUsageValues(
+        QuotaUsageType.MONTHLY,
+        MonthlyQuotaName.QUERIES
+      )
+    )
     return total
   }
 
-  const assertRowUsage = async expected => {
+  const assertRowUsage = async (expected: number) => {
     const usage = await getRowUsage()
     expect(usage).toBe(expected)
   }
 
-  const assertQueryUsage = async expected => {
+  const assertQueryUsage = async (expected: number) => {
     const usage = await getQueryUsage()
     expect(usage).toBe(expected)
   }
@@ -70,9 +77,11 @@ describe("/rows", () => {
         .post(`/api/${row.tableId}/rows`)
         .send(row)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.res.statusMessage).toEqual(`${table.name} saved successfully`)
+      expect((res as any).res.statusMessage).toEqual(
+        `${table.name} saved successfully`
+      )
       expect(res.body.name).toEqual("Test Contact")
       expect(res.body._rev).toBeDefined()
       await assertRowUsage(rowUsage + 1)
@@ -86,12 +95,11 @@ describe("/rows", () => {
       const newTable = await config.createTable({
         name: "TestTableAuto",
         type: "table",
-        key: "name",
         schema: {
           ...table.schema,
           "Row ID": {
             name: "Row ID",
-            type: "number",
+            type: FieldType.NUMBER,
             subtype: "autoID",
             icon: "ri-magic-line",
             autocolumn: true,
@@ -104,28 +112,30 @@ describe("/rows", () => {
               },
             },
           },
-        }
+        },
       })
 
-      const ids = [1,2,3]
+      const ids = [1, 2, 3]
 
       // Performing several create row requests should increment the autoID fields accordingly
-      const createRow = async (id) => {
+      const createRow = async (id: number) => {
         const res = await request
           .post(`/api/${newTable._id}/rows`)
           .send({
-            name: "row_" + id
+            name: "row_" + id,
           })
           .set(config.defaultHeaders())
-          .expect('Content-Type', /json/)
+          .expect("Content-Type", /json/)
           .expect(200)
-        expect(res.res.statusMessage).toEqual(`${newTable.name} saved successfully`)
+        expect((res as any).res.statusMessage).toEqual(
+          `${newTable.name} saved successfully`
+        )
         expect(res.body.name).toEqual("row_" + id)
         expect(res.body._rev).toBeDefined()
         expect(res.body["Row ID"]).toEqual(id)
       }
 
-      for (let i=0; i<ids.length; i++ ){
+      for (let i = 0; i < ids.length; i++) {
         await createRow(ids[i])
       }
 
@@ -150,7 +160,7 @@ describe("/rows", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(res.res.statusMessage).toEqual(
+      expect((res as any).res.statusMessage).toEqual(
         `${table.name} updated successfully.`
       )
       expect(res.body.name).toEqual("Updated Name")
@@ -196,8 +206,8 @@ describe("/rows", () => {
         .expect(200)
 
       expect(res.body.length).toBe(2)
-      expect(res.body.find(r => r.name === newRow.name)).toBeDefined()
-      expect(res.body.find(r => r.name === row.name)).toBeDefined()
+      expect(res.body.find((r: Row) => r.name === newRow.name)).toBeDefined()
+      expect(res.body.find((r: Row) => r.name === row.name)).toBeDefined()
       await assertQueryUsage(queryUsage + 1)
     })
 
@@ -215,92 +225,91 @@ describe("/rows", () => {
 
     it("row values are coerced", async () => {
       const str = {
-        type: "string",
+        type: FieldType.STRING,
+        name: "str",
         constraints: { type: "string", presence: false },
       }
       const attachment = {
-        type: "attachment",
+        type: FieldType.ATTACHMENT,
+        name: "attachment",
         constraints: { type: "array", presence: false },
       }
       const bool = {
-        type: "boolean",
+        type: FieldType.BOOLEAN,
+        name: "boolean",
         constraints: { type: "boolean", presence: false },
       }
       const number = {
-        type: "number",
+        type: FieldType.NUMBER,
+        name: "str",
         constraints: { type: "number", presence: false },
       }
       const datetime = {
-        type: "datetime",
+        type: FieldType.DATETIME,
+        name: "datetime",
         constraints: {
           type: "string",
           presence: false,
           datetime: { earliest: "", latest: "" },
-        }
+        },
       }
       const arrayField = {
-        type: "array",
+        type: FieldType.ARRAY,
         constraints: {
           type: "array",
           presence: false,
-          inclusion: [
-            "One",
-            "Two",
-            "Three",
-          ]
+          inclusion: ["One", "Two", "Three"],
         },
         name: "Sample Tags",
-        sortable: false
+        sortable: false,
       }
       const optsField = {
-        fieldName: "Sample Opts",
-        name: "Sample Opts",
-        type: "options",
-        constraints: {
-          type: "string",
-          presence: false,
-          inclusion: [ "Alpha", "Beta", "Gamma" ]
+          fieldName: "Sample Opts",
+          name: "Sample Opts",
+          type: FieldType.OPTIONS,
+          constraints: {
+            type: "string",
+            presence: false,
+            inclusion: ["Alpha", "Beta", "Gamma"],
+          },
         },
-      },
-
-      table = await config.createTable({
-        name: "TestTable2",
-        type: "table",
-        key: "name",
-        schema: {
-          name: str,
-          stringUndefined: str,
-          stringNull: str,
-          stringString: str,
-          numberEmptyString: number,
-          numberNull: number,
-          numberUndefined: number,
-          numberString: number,
-          numberNumber: number,
-          datetimeEmptyString: datetime,
-          datetimeNull: datetime,
-          datetimeUndefined: datetime,
-          datetimeString: datetime,
-          datetimeDate: datetime,
-          boolNull: bool,
-          boolEmpty: bool,
-          boolUndefined: bool,
-          boolString: bool,
-          boolBool: bool,
-          attachmentNull: attachment,
-          attachmentUndefined: attachment,
-          attachmentEmpty: attachment,
-          attachmentEmptyArrayStr: attachment,
-          arrayFieldEmptyArrayStr: arrayField,
-          arrayFieldArrayStrKnown: arrayField,
-          arrayFieldNull: arrayField,
-          arrayFieldUndefined: arrayField,
-          optsFieldEmptyStr: optsField,
-          optsFieldUndefined: optsField,
-          optsFieldNull: optsField,
-          optsFieldStrKnown: optsField
-        },
-      })
+        table = await config.createTable({
+          name: "TestTable2",
+          type: "table",
+          schema: {
+            name: str,
+            stringUndefined: str,
+            stringNull: str,
+            stringString: str,
+            numberEmptyString: number,
+            numberNull: number,
+            numberUndefined: number,
+            numberString: number,
+            numberNumber: number,
+            datetimeEmptyString: datetime,
+            datetimeNull: datetime,
+            datetimeUndefined: datetime,
+            datetimeString: datetime,
+            datetimeDate: datetime,
+            boolNull: bool,
+            boolEmpty: bool,
+            boolUndefined: bool,
+            boolString: bool,
+            boolBool: bool,
+            attachmentNull: attachment,
+            attachmentUndefined: attachment,
+            attachmentEmpty: attachment,
+            attachmentEmptyArrayStr: attachment,
+            arrayFieldEmptyArrayStr: arrayField,
+            arrayFieldArrayStrKnown: arrayField,
+            arrayFieldNull: arrayField,
+            arrayFieldUndefined: arrayField,
+            optsFieldEmptyStr: optsField,
+            optsFieldUndefined: optsField,
+            optsFieldNull: optsField,
+            optsFieldStrKnown: optsField,
+          },
+        })
 
       row = {
         name: "Test Row",
@@ -334,13 +343,13 @@ describe("/rows", () => {
         optsFieldEmptyStr: "",
         optsFieldUndefined: undefined,
         optsFieldNull: null,
-        optsFieldStrKnown: 'Alpha'
+        optsFieldStrKnown: "Alpha",
       }
 
-      const createdRow = await config.createRow(row);
-      const id = createdRow._id
+      const createdRow = await config.createRow(row)
+      const id = createdRow._id!
 
-      const saved = (await loadRow(id, table._id)).body
+      const saved = (await loadRow(id, table._id!)).body
 
       expect(saved.stringUndefined).toBe(undefined)
       expect(saved.stringNull).toBe("")
@@ -365,15 +374,15 @@ describe("/rows", () => {
       expect(saved.attachmentNull).toEqual([])
       expect(saved.attachmentUndefined).toBe(undefined)
       expect(saved.attachmentEmpty).toEqual([])
-      expect(saved.attachmentEmptyArrayStr).toEqual([])      
+      expect(saved.attachmentEmptyArrayStr).toEqual([])
       expect(saved.arrayFieldEmptyArrayStr).toEqual([])
       expect(saved.arrayFieldNull).toEqual([])
       expect(saved.arrayFieldUndefined).toEqual(undefined)
       expect(saved.optsFieldEmptyStr).toEqual(null)
       expect(saved.optsFieldUndefined).toEqual(undefined)
       expect(saved.optsFieldNull).toEqual(null)
-      expect(saved.arrayFieldArrayStrKnown).toEqual(['One'])
-      expect(saved.optsFieldStrKnown).toEqual('Alpha')
+      expect(saved.arrayFieldArrayStrKnown).toEqual(["One"])
+      expect(saved.optsFieldStrKnown).toEqual("Alpha")
     })
   })
 
@@ -396,13 +405,13 @@ describe("/rows", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(res.res.statusMessage).toEqual(
+      expect((res as any).res.statusMessage).toEqual(
         `${table.name} updated successfully.`
       )
       expect(res.body.name).toEqual("Updated Name")
       expect(res.body.description).toEqual(existing.description)
 
-      const savedRow = await loadRow(res.body._id, table._id)
+      const savedRow = await loadRow(res.body._id, table._id!)
 
       expect(savedRow.body.description).toEqual(existing.description)
       expect(savedRow.body.name).toEqual("Updated Name")
@@ -504,7 +513,7 @@ describe("/rows", () => {
         .expect(200)
 
       expect(res.body.length).toEqual(2)
-      await loadRow(row1._id, table._id, 404)
+      await loadRow(row1._id!, table._id!, 404)
       await assertRowUsage(rowUsage - 2)
       await assertQueryUsage(queryUsage + 1)
     })
@@ -562,7 +571,7 @@ describe("/rows", () => {
   describe("fetchEnrichedRows", () => {
     it("should allow enriching some linked rows", async () => {
       const { table, firstRow, secondRow } = await tenancy.doInTenant(
-        setup.structures.TENANT_ID,
+        config.getTenantId(),
         async () => {
           const table = await config.createLinkedTable()
           const firstRow = await config.createRow({
@@ -624,7 +633,7 @@ describe("/rows", () => {
       await setup.switchToSelfHosted(async () => {
         context.doInAppContext(config.getAppId(), async () => {
           const enriched = await outputProcessing(table, [row])
-          expect(enriched[0].attachment[0].url).toBe(
+          expect((enriched as Row[])[0].attachment[0].url).toBe(
             `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
           )
         })
