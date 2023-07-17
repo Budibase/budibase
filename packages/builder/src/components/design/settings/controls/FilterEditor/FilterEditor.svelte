@@ -20,7 +20,7 @@
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: schema = getSchemaForDatasource($currentAsset, datasource)?.schema
   $: schemaFields = Object.values(schema || {})
-  $: text = getText(value)
+  $: text = getText(value?.filter(filter => filter.field))
 
   async function saveFilter() {
     dispatch("change", tempValue)
