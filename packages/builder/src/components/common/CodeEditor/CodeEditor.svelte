@@ -7,6 +7,8 @@
     closeBrackets,
     completionKeymap,
     closeBracketsKeymap,
+    acceptCompletion,
+    completionStatus,
   } from "@codemirror/autocomplete"
   import {
     EditorView,
@@ -34,7 +36,8 @@
     defaultKeymap,
     historyKeymap,
     history,
-    indentWithTab,
+    indentMore,
+    indentLess,
   } from "@codemirror/commands"
   import { Compartment } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
@@ -107,6 +110,22 @@
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
 
+  const indentWithTabCustom = {
+    key: "Tab",
+    run: view => {
+      if (completionStatus(view.state) == "active") {
+        acceptCompletion(view)
+        return true
+      }
+      indentMore(view)
+      return true
+    },
+    shift: view => {
+      indentLess(view)
+      return true
+    },
+  }
+
   const buildKeymap = () => {
     const baseMap = [
       ...closeBracketsKeymap,
@@ -114,7 +133,7 @@
       ...historyKeymap,
       ...foldKeymap,
       ...completionKeymap,
-      indentWithTab,
+      indentWithTabCustom,
     ]
     return baseMap
   }
