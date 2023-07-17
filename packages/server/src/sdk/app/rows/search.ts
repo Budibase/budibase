@@ -29,8 +29,8 @@ export async function exportRows(tableId: string, ctx: Ctx) {
   return pickApi(tableId).exportRows(ctx)
 }
 
-export async function fetch(tableId: string, ctx: Ctx) {
-  return pickApi(tableId).fetch(ctx)
+export async function fetch(tableId: string) {
+  return pickApi(tableId).fetch(tableId)
 }
 
 export async function fetchView(tableId: string, ctx: Ctx) {

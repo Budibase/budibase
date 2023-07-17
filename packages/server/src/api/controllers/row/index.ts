@@ -72,7 +72,7 @@ export async function fetchView(ctx: any) {
 
 export async function fetch(ctx: any) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => sdk.rows.fetch(tableId, ctx), {
+  ctx.body = await quotas.addQuery(() => sdk.rows.fetch(tableId), {
     datasourceId: tableId,
   })
 }

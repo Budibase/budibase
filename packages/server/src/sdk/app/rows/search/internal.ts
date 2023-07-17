@@ -27,12 +27,13 @@ import {
 import sdk from "../../../../sdk"
 
 export async function search(ctx: Ctx) {
+  const { tableId } = ctx.params
+
   // Fetch the whole table when running in cypress, as search doesn't work
   if (!env.COUCH_DB_URL && env.isCypress()) {
-    return { rows: await fetch(ctx) }
+    return { rows: await fetch(tableId) }
   }
 
-  const { tableId } = ctx.params
   const db = context.getAppDB()
   const { paginate, query, ...params } = ctx.request.body
   params.version = ctx.version
@@ -121,13 +122,13 @@ export async function exportRows(ctx: Ctx) {
   }
 }
 
-export async function fetch(ctx: Ctx) {
+export async function fetch(tableId: string) {
   const db = context.getAppDB()
 
-  const tableId = ctx.params.tableId
   let table = await db.get(tableId)
   let rows = await getRawTableData(db, tableId)
-  return outputProcessing(table, rows)
+  const result = await outputProcessing(table, rows)
+  return result
 }
 
 async function getRawTableData(db: Database, tableId: string) {
@@ -151,7 +152,7 @@ export async function fetchView(ctx: Ctx) {
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(DocumentType.TABLE)) {
     ctx.params.tableId = viewName
-    return fetch(ctx)
+    return fetch(viewName)
   }
 
   const db = context.getAppDB()
