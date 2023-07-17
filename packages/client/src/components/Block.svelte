@@ -13,6 +13,13 @@
     if (!structureLookupMap[parentId]) {
       structureLookupMap[parentId] = {}
     }
+    //If the instance already exists, delete the previous
+    for (const [key, value] of Object.entries(structureLookupMap[parentId])) {
+      if (value?._id === instance?._id) {
+        delete structureLookupMap[parentId][key]
+        break
+      }
+    }
     // Add this instance in this order, overwriting any existing instance in
     // this order in case of repeaters
     structureLookupMap[parentId][order] = instance
