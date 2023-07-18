@@ -1,4 +1,4 @@
-import { SearchFilters } from "@budibase/types"
+import { SearchFilters, SortType } from "@budibase/types"
 import { isExternalTable } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
@@ -11,8 +11,8 @@ export interface SearchParams {
   bookmark?: string
   limit?: number
   sort?: string
-  sortOrder?: string
-  sortType?: string
+  sortOrder?: "ascending" | "descending"
+  sortType?: SortType
   version?: string
   disableEscaping?: boolean
 }
