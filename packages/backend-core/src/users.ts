@@ -12,7 +12,12 @@ import {
   UNICODE_MAX,
   ViewName,
 } from "./db"
-import { BulkDocsResponse, SearchUsersRequest, User } from "@budibase/types"
+import {
+  BulkDocsResponse,
+  SearchUsersRequest,
+  User,
+  ContextUser,
+} from "@budibase/types"
 import { getGlobalDB } from "./context"
 import * as context from "./context"
 
@@ -178,7 +183,7 @@ export const getGlobalUserByAppPage = (appId: string, user: User) => {
  * Performs a starts with search on the global email view.
  */
 export const searchGlobalUsersByEmail = async (
-  email: string,
+  email: string | unknown,
   opts: any,
   getOpts?: GetOpts
 ) => {
@@ -247,4 +252,57 @@ export async function getUserCount() {
     include_docs: false,
   })
   return response.total_rows
+}
+
+// checks if a user is specifically a builder, given an app ID
+export function isBuilder(user: User | ContextUser, appId?: string) {
+  if (user.builder?.global) {
+    return true
+  } else if (appId && user.builder?.apps?.includes(appId)) {
+    return true
+  }
+  return false
+}
+
+// alias for hasAdminPermission, currently do the same thing
+// in future whether someone has admin permissions and whether they are
+// an admin for a specific resource could be separated
+export function isAdmin(user: User | ContextUser) {
+  return hasAdminPermissions(user)
+}
+
+// checks if a user is capable of building any app
+export function hasBuilderPermissions(user?: User | ContextUser) {
+  if (!user) {
+    return false
+  }
+  return user.builder?.global || user.builder?.apps?.length !== 0
+}
+
+// checks if a user is capable of being an admin
+export function hasAdminPermissions(user?: User | ContextUser) {
+  if (!user) {
+    return false
+  }
+  return user.admin?.global
+}
+
+// used to remove the builder/admin permissions, for processing the
+// user as an app user (they may have some specific role/group
+export function removePortalUserPermissions(user: User | ContextUser) {
+  delete user.admin
+  delete user.builder
+  return user
+}
+
+export function cleanseUserObject(user: User | ContextUser, base?: User) {
+  delete user.admin
+  delete user.builder
+  delete user.roles
+  if (base) {
+    user.admin = base.admin
+    user.builder = base.builder
+    user.roles = base.roles
+  }
+  return user
 }

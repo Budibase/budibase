@@ -14,8 +14,6 @@ export enum ViewName {
   USER_BY_APP = "by_app",
   USER_BY_EMAIL = "by_email2",
   BY_API_KEY = "by_api_key",
-  /** @deprecated - could be deleted */
-  USER_BY_BUILDERS = "by_builders",
   LINK = "by_link",
   ROUTING = "screen_routes",
   AUTOMATION_LOGS = "automation_logs",

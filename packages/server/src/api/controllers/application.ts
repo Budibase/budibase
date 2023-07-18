@@ -30,6 +30,7 @@ import {
   objectStore,
   roles,
   tenancy,
+  users,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import {
@@ -222,6 +223,7 @@ export async function fetchAppDefinition(ctx: UserCtx) {
 
 export async function fetchAppPackage(ctx: UserCtx) {
   const db = context.getAppDB()
+  const appId = context.getAppId()
   let application = await db.get<any>(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
@@ -233,7 +235,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
   )
 
   // Only filter screens if the user is not a builder
-  if (!(ctx.user.builder && ctx.user.builder.global)) {
+  if (!users.isBuilder(ctx.user, appId)) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
