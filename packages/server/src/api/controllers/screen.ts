@@ -7,7 +7,7 @@ import {
   roles,
 } from "@budibase/backend-core"
 import { updateAppPackage } from "./application"
-import { Plugin, ScreenProps, BBContext } from "@budibase/types"
+import { Plugin, ScreenProps, BBContext, Screen } from "@budibase/types"
 import { builderSocket } from "../../websockets"
 
 export async function fetch(ctx: BBContext) {
@@ -64,7 +64,7 @@ export async function save(ctx: BBContext) {
       })
 
     // Update the app metadata
-    const application = await db.get(DocumentType.APP_METADATA)
+    const application = await db.get<any>(DocumentType.APP_METADATA)
     let usedPlugins = application.usedPlugins || []
 
     requiredPlugins.forEach((plugin: Plugin) => {
@@ -104,7 +104,7 @@ export async function save(ctx: BBContext) {
 export async function destroy(ctx: BBContext) {
   const db = context.getAppDB()
   const id = ctx.params.screenId
-  const screen = await db.get(id)
+  const screen = await db.get<Screen>(id)
 
   await db.remove(id, ctx.params.screenRev)
 
