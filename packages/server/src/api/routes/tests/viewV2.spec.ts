@@ -1,11 +1,5 @@
 import * as setup from "./utilities"
-import {
-  FieldType,
-  SortDirection,
-  SortType,
-  Table,
-  ViewV2,
-} from "@budibase/types"
+import { FieldType, SortOrder, SortType, Table, ViewV2 } from "@budibase/types"
 import { generator, structures } from "@budibase/backend-core/tests"
 
 function priceTable(): Table {
@@ -36,9 +30,10 @@ describe("/v2/views", () => {
     query: { allOr: false, equal: { field: "value" } },
     sort: {
       field: "fieldToSort",
-      order: SortDirection.DESCENDING,
+      order: SortOrder.DESCENDING,
       type: SortType.STRING,
     },
+    columns: ["name"],
   }
 
   afterAll(setup.afterAll)

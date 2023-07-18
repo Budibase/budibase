@@ -23,6 +23,7 @@ export interface ViewV2 extends Document {
     order?: SortOrder
     type?: SortType
   }
+  columns?: string[]
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
