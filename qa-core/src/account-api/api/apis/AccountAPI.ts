@@ -2,127 +2,135 @@ import { Response } from "node-fetch"
 import { Account, CreateAccountRequest, SearchAccountsRequest, SearchAccountsResponse } from "@budibase/types"
 import AccountInternalAPIClient from "../AccountInternalAPIClient"
 import { APIRequestOpts } from "../../../types"
+import { Header } from "@budibase/backend-core"
+import BaseAPI from "./BaseAPI"
 
-export default class AccountAPI {
+export default class AccountAPI extends BaseAPI {
   client: AccountInternalAPIClient
 
   constructor(client: AccountInternalAPIClient) {
+    super()
     this.client = client
   }
 
   async validateEmail(
     email: string,
-    opts: APIRequestOpts = { doExpect: true }
-  ): Promise<Response> {
-    const [response, json] = await this.client.post(
-      `/api/accounts/validate/email`,
-      {
-        body: { email },
-      }
-    )
-    return response
+    opts: APIRequestOpts = { status: 200 }
+  ) {
+    return this.doRequest(() => {
+      return this.client.post(
+        `/api/accounts/validate/email`,
+        {
+          body: { email },
+        }
+      )
+    }, opts)
   }
 
   async validateTenantId(
     tenantId: string,
-    opts: APIRequestOpts = { doExpect: true }
-  ): Promise<Response> {
-    const [response, json] = await this.client.post(
-      `/api/accounts/validate/tenantId`,
-      {
-        body: { tenantId },
-      }
-    )
-    return response
+    opts: APIRequestOpts = { status: 200 }
+  ) {
+    return this.doRequest(() => {
+      return this.client.post(
+        `/api/accounts/validate/tenantId`,
+        {
+          body: { tenantId },
+        }
+      )
+    }, opts)
   }
 
   async create(
     body: CreateAccountRequest,
-    opts: APIRequestOpts & { autoVerify: boolean } = { doExpect: true, autoVerify: true }
+    opts: APIRequestOpts & { autoVerify: boolean } = { status: 201, autoVerify: false }
   ): Promise<[Response, Account]> {
-    const headers = {
-      "no-verify": opts.autoVerify ? "1" : "0"
-    }
-    const [response, json] = await this.client.post(`/api/accounts`, {
-      body,
-      headers,
-    })
-    if (opts.doExpect) {
-      expect(response).toHaveStatusCode(201)
-    }
-    return [response, json]
-  }
-
-  async delete(accountID: string, opts: APIRequestOpts = {status:204}) {
-    const [response, json] = await this.client.del(
-      `/api/accounts/${accountID}`,
-      {
-        internal: true,
+    return this.doRequest(() => {
+      const headers = {
+        "no-verify": opts.autoVerify ? "1" : "0"
       }
-    )
-    // can't use expect here due to use in global teardown
-    if (response.status !== opts.status) {
-      throw new Error(`status: ${response.status} not equal to expected: ${opts.status}`)
-    }
-    return response
+      return this.client.post(`/api/accounts`, {
+        body,
+        headers,
+      })
+    }, opts)
   }
 
-  async deleteCurrentAccount() {
-    const [response, json] = await this.client.del(
+  async delete(
+    accountID: string,
+    opts: APIRequestOpts = { status: 204 }) {
+    return this.doRequest(() => {
+      return this.client.del(
+        `/api/accounts/${accountID}`,
+        {
+          internal: true,
+        }
+      )
+    }, opts)
+  }
+
+  async deleteCurrentAccount(
+    opts: APIRequestOpts = { status: 204 }
+  ) {
+    return this.doRequest(() => {
+      return this.client.del(
         `/api/accounts`
-    )
-    return response
+      )
+    }, opts)
   }
 
   async verifyAccount(
-      verificationCode: string,
-      opts: APIRequestOpts = { doExpect: true }
-  ): Promise<Response> {
-    const [response, json] = await this.client.post(
+    verificationCode: string,
+    opts: APIRequestOpts = { status: 200 }
+  ){
+    return this.doRequest(() => {
+      return this.client.post(
         `/api/accounts/verify`,
         {
           body: { verificationCode },
         }
-    )
-    if (opts.doExpect) {
-      expect(response).toHaveStatusCode(200)
-    }
-    return response
+      )
+    }, opts)
   }
 
-  async verifyAccountSendEmail(
+  async sendVerificationEmail(
       email: string,
-      opts: APIRequestOpts = { doExpect: true }
-  ): Promise<Response> {
-    const [response, json] = await this.client.post(
+      opts: APIRequestOpts = { status: 200 }
+  ): Promise<[Response, string]> {
+    return this.doRequest(async () => {
+      const [response] = await this.client.post(
         `/api/accounts/verify/send`,
         {
           body: { email },
+          headers: {
+            [Header.RETURN_VERIFICATION_CODE]: "1"
+          }
         }
-    )
-    if (opts.doExpect) {
-      expect(response).toHaveStatusCode(200)
-    }
-    return response
+      )
+      const code = response.headers.get(Header.VERIFICATION_CODE)
+      return [response, code]
+    }, opts)
   }
 
   async search(
       searchType: string,
       search: 'email' | 'tenantId',
-      opts: APIRequestOpts = { doExpect: true }
+      opts: APIRequestOpts = { status: 200 }
   ): Promise<[Response, SearchAccountsResponse]> {
-    let body: SearchAccountsRequest = {}
-
-    if (search === 'email') {
-      body.email = searchType
-    } else if (search === 'tenantId') {
-      body.tenantId = searchType
-    }
-
-    const [response, json] = await this.client.post(
+    return this.doRequest(() => {
+      let body: SearchAccountsRequest = {}
+      if (search === 'email') {
+        body.email = searchType
+      } else if (search === 'tenantId') {
+        body.tenantId = searchType
+      }
+      return this.client.post(
         `/api/accounts/search`,
-        {body: body}
-    )
-    return [response, json]
+        {
+          body,
+          internal: true
+        }
+      )
+    }, opts)
   }
 }
