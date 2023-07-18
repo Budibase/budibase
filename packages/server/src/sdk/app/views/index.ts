@@ -35,8 +35,16 @@ export async function findByTable(tableId: string): Promise<ViewV2[]> {
 
 export async function get(viewId: string): Promise<ViewV2 | undefined> {
   const db = context.getAppDB()
-  const result = await db.get<ViewV2>(viewId)
-  return result
+  try {
+    const result = await db.get<ViewV2>(viewId)
+    return result
+  } catch (err: any) {
+    if (err.status === 404) {
+      return undefined
+    }
+
+    throw err
+  }
 }
 
 export async function save(view: ViewV2): Promise<ViewV2> {
