@@ -11,6 +11,7 @@
     Context,
     Modal,
     notifications,
+    OptionPicker,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
@@ -406,13 +407,12 @@
 
 <ModalContent
   title={originalName ? "Edit Column" : "Create Column"}
-  confirmText="Save Column"
+  confirmText="Save"
   onConfirm={saveColumn}
   onCancel={cancelEdit}
   disabled={invalid}
 >
   <Input
-    label="Name"
     bind:value={editableColumn.name}
     disabled={uneditable ||
       (linkEditDisabled && editableColumn.type === LINK_TYPE)}
@@ -427,6 +427,7 @@
     options={getAllowedTypes()}
     getOptionLabel={field => field.name}
     getOptionValue={field => field.type}
+    getOptionIcon={field => field.icon}
     isOptionEnabled={option => {
       if (option.type == AUTO_TYPE) {
         return availableAutoColumnKeys?.length > 0
@@ -435,28 +436,6 @@
     }}
   />
 
-  {#if canBeRequired || canBeDisplay}
-    <div>
-      {#if canBeRequired}
-        <Toggle
-          value={required}
-          on:change={onChangeRequired}
-          disabled={primaryDisplay}
-          thin
-          text="Required"
-        />
-      {/if}
-      {#if canBeDisplay}
-        <Toggle
-          bind:value={primaryDisplay}
-          on:change={onChangePrimaryDisplay}
-          thin
-          text="Use as table display column"
-        />
-      {/if}
-    </div>
-  {/if}
-
   {#if editableColumn.type === "string"}
     <Input
       type="number"
@@ -464,10 +443,7 @@
       bind:value={editableColumn.constraints.length.maximum}
     />
   {:else if editableColumn.type === "options"}
-    <ValuesList
-      label="Options (one per line)"
-      bind:values={editableColumn.constraints.inclusion}
-    />
+    <OptionPicker bind:values={editableColumn.constraints.inclusion} />
   {:else if editableColumn.type === "longform"}
     <div>
       <Label
@@ -487,14 +463,23 @@
       bind:values={editableColumn.constraints.inclusion}
     />
   {:else if editableColumn.type === "datetime" && !editableColumn.autocolumn}
-    <DatePicker
-      label="Earliest"
-      bind:value={editableColumn.constraints.datetime.earliest}
-    />
-    <DatePicker
-      label="Latest"
-      bind:value={editableColumn.constraints.datetime.latest}
-    />
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Earliest</Label>
+      </div>
+      <div class="input-length">
+        <DatePicker bind:value={editableColumn.constraints.datetime.earliest} />
+      </div>
+    </div>
+
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Latest</Label>
+      </div>
+      <div class="input-length">
+        <DatePicker bind:value={editableColumn.constraints.datetime.latest} />
+      </div>
+    </div>
     {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
       <div>
         <Label
@@ -511,16 +496,30 @@
       </div>
     {/if}
   {:else if editableColumn.type === "number" && !editableColumn.autocolumn}
-    <Input
-      type="number"
-      label="Min Value"
-      bind:value={editableColumn.constraints.numericality.greaterThanOrEqualTo}
-    />
-    <Input
-      type="number"
-      label="Max Value"
-      bind:value={editableColumn.constraints.numericality.lessThanOrEqualTo}
-    />
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Max Value</Label>
+      </div>
+      <div class="input-length">
+        <Input
+          type="number"
+          bind:value={editableColumn.constraints.numericality
+            .greaterThanOrEqualTo}
+        />
+      </div>
+    </div>
+
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Max Value</Label>
+      </div>
+      <div class="input-length">
+        <Input
+          type="number"
+          bind:value={editableColumn.constraints.numericality.lessThanOrEqualTo}
+        />
+      </div>
+    </div>
   {:else if editableColumn.type === "link"}
     <Select
       label="Table"
@@ -593,6 +592,20 @@
     />
   {/if}
 
+  {#if canBeRequired || canBeDisplay}
+    <div>
+      {#if canBeRequired}
+        <Toggle
+          value={required}
+          on:change={onChangeRequired}
+          disabled={primaryDisplay}
+          thin
+          text="Required"
+        />
+      {/if}
+    </div>
+  {/if}
+
   <div slot="footer">
     {#if !uneditable && originalName != null}
       <Button warning text on:click={confirmDelete}>Delete</Button>
@@ -624,3 +637,18 @@
   </p>
   <Input bind:value={deleteColName} placeholder={originalName} />
 </ConfirmDialog>
+
+<style>
+  .split-label {
+    display: flex;
+    align-items: center;
+  }
+
+  .label-length {
+    flex-basis: 40%;
+  }
+
+  .input-length {
+    flex-grow: 1;
+  }
+</style>
