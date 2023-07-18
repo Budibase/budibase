@@ -1,15 +1,10 @@
-process.env.DISABLE_PINO_LOGGER = "1"
-import { DEFAULT_TENANT_ID, logging } from "@budibase/backend-core"
+import { DEFAULT_TENANT_ID } from "@budibase/backend-core"
 import { AccountInternalAPI } from "../account-api"
 import * as fixtures from "../internal-api/fixtures"
 import { BudibaseInternalAPI } from "../internal-api"
 import { Account, CreateAccountRequest, Feature } from "@budibase/types"
 import env from "../environment"
 import { APIRequestOpts } from "../types"
-
-// turn off or on context logging i.e. tenantId, appId etc
-// it's not applicable for the qa run
-logging.LOG_CONTEXT = false
 
 const accountsApi = new AccountInternalAPI({})
 const internalApi = new BudibaseInternalAPI({})
@@ -24,7 +19,7 @@ async function createAccount(): Promise<[CreateAccountRequest, Account]> {
   await accountsApi.accounts.validateEmail(account.email, API_OPTS)
   await accountsApi.accounts.validateTenantId(account.tenantId, API_OPTS)
   const [res, newAccount] = await accountsApi.accounts.create(
-      account, {...API_OPTS, autoVerify: true})
+      account, {...API_OPTS, autoVerify: true })
   await updateLicense(newAccount.accountId)
   return [account, newAccount]
 }
@@ -32,7 +27,7 @@ async function createAccount(): Promise<[CreateAccountRequest, Account]> {
 const UNLIMITED = { value: -1 }
 
 async function updateLicense(accountId: string) {
-  await accountsApi.licenses.updateLicense(accountId, {
+  const [response] = await accountsApi.licenses.updateLicense(accountId, {
     overrides: {
       // add all features
       features: Object.values(Feature),
@@ -50,7 +45,12 @@ async function updateLicense(accountId: string) {
         },
       },
     },
-  })
+  }, { doExpect: false })
+  if (response.status !== 200) {
+    throw new Error(
+      `Could not update license for accountId=${accountId}: ${response.status}`
+    )
+  }
 }
 
 async function loginAsAdmin() {
