@@ -19,7 +19,6 @@ import { UserCtx, LinkDocumentValue, Row, Table } from "@budibase/types"
 import sdk from "../../../sdk"
 
 export async function patch(ctx: UserCtx) {
-  const db = context.getAppDB()
   const inputs = ctx.request.body
   const tableId = inputs.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
@@ -77,7 +76,7 @@ export async function patch(ctx: UserCtx) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row
     await userController.updateMetadata(ctx)
-    return { row: ctx.body, table }
+    return { row: ctx.body as Row, table }
   }
 
   return finaliseRow(table, row, {
