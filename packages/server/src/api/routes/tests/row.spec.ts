@@ -15,7 +15,7 @@ import {
   Table,
   FieldType,
 } from "@budibase/types"
-import { structures } from "@budibase/backend-core/tests"
+import { generator, structures } from "@budibase/backend-core/tests"
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -687,29 +687,27 @@ describe("/rows", () => {
   })
 
   describe("view search", () => {
-    function priceTable(): Table {
+    function userTable(): Table {
       return {
-        name: "table",
-        type: "table",
+        name: "user",
+        type: "user",
         schema: {
-          Price: {
-            type: FieldType.NUMBER,
-            name: "Price",
-            constraints: {},
-          },
-          Category: {
+          name: {
             type: FieldType.STRING,
-            name: "Category",
-            constraints: {
-              type: "string",
-            },
+            name: "Name",
+            constraints: { type: "string" },
+          },
+          age: {
+            type: FieldType.NUMBER,
+            name: "Age",
+            constraints: {},
           },
         },
       }
     }
 
     it("returns table rows from view", async () => {
-      const table = await config.createTable(priceTable())
+      const table = await config.createTable(userTable())
       const rows = []
       for (let i = 0; i < 10; i++) {
         rows.push(await config.createRow({ tableId: table._id }))
@@ -722,6 +720,41 @@ describe("/rows", () => {
       expect(response.body.rows).toHaveLength(10)
       expect(response.body).toEqual({
         rows: expect.arrayContaining(rows.map(expect.objectContaining)),
+      })
+    })
+
+    it("searching respects the view filters", async () => {
+      const table = await config.createTable(userTable())
+      const expectedRows = []
+      for (let i = 0; i < 10; i++)
+        await config.createRow({
+          tableId: table._id,
+          name: generator.name(),
+          age: generator.integer({ min: 10, max: 30 }),
+        })
+
+      for (let i = 0; i < 5; i++)
+        expectedRows.push(
+          await config.createRow({
+            tableId: table._id,
+            name: generator.name(),
+            age: 40,
+          })
+        )
+
+      const createViewResponse = await config.api.viewV2.create({
+        query: { equal: { age: 40 } },
+      })
+
+      const response = await request
+        .get(`/api/views/v2/${createViewResponse._id}/search`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(response.body.rows).toHaveLength(5)
+      expect(response.body).toEqual({
+        rows: expect.arrayContaining(expectedRows.map(expect.objectContaining)),
       })
     })
   })
