@@ -59,7 +59,7 @@ describe("/v2/views", () => {
   }
 
   describe("fetch", () => {
-    const views: any[] = []
+    const views: ViewV2[] = []
 
     beforeAll(async () => {
       table = await config.createTable(priceTable())
@@ -115,22 +115,23 @@ describe("/v2/views", () => {
   })
 
   describe("getView", () => {
-    let view: any
+    let view: ViewV2
     beforeAll(async () => {
       view = (await saveView(createView(table._id!))).body
     })
 
     it("can fetch the expected view", async () => {
-      const res = await getView(view._id).expect(200)
+      const res = await getView(view._id!).expect(200)
       expect(res.status).toBe(200)
-      expect(res.body._id).toBeDefined()
 
       expect(res.body).toEqual({
-        ...view,
-        _id: expect.any(String),
-        _rev: expect.any(String),
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
+        data: {
+          ...view,
+          _id: view._id,
+          _rev: view._rev,
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
+        },
       })
     })
 
@@ -141,13 +142,13 @@ describe("/v2/views", () => {
 
   describe("create", () => {
     it("persist the view when the view is successfully created", async () => {
-      const view = createView(table._id!)
-      const res = await saveView(view)
+      const newView = createView(table._id!)
+      const res = await saveView(newView)
       expect(res.status).toBe(200)
       expect(res.body._id).toBeDefined()
 
       expect(res.body).toEqual({
-        ...view,
+        ...newView,
         _id: expect.any(String),
         _rev: expect.any(String),
       })
@@ -155,7 +156,7 @@ describe("/v2/views", () => {
   })
 
   describe("delete", () => {
-    let view: any
+    let view: ViewV2
 
     beforeAll(async () => {
       table = await config.createTable(priceTable())
@@ -163,14 +164,14 @@ describe("/v2/views", () => {
     })
 
     it("can delete an existing view", async () => {
-      await getView(view._id).expect(200)
+      await getView(view._id!).expect(200)
 
       await request
         .delete(`/api/v2/views/${view._id}`)
         .set(config.defaultHeaders())
         .expect(204)
 
-      await getView(view._id).expect(404)
+      await getView(view._id!).expect(404)
     })
   })
 })

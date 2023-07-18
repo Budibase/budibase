@@ -7,7 +7,7 @@ import {
 import { ViewV2 } from "@budibase/types"
 import * as utils from "../../../db/utils"
 
-export async function fetch() {
+export async function fetch(): Promise<ViewV2[]> {
   const db = context.getAppDB()
 
   const startKey = `${DocumentType.VIEW}${SEPARATOR}`
@@ -20,7 +20,7 @@ export async function fetch() {
   return response.rows.map(r => r.doc)
 }
 
-export async function findByTable(tableId: string) {
+export async function findByTable(tableId: string): Promise<ViewV2[]> {
   const db = context.getAppDB()
 
   const startKey = utils.viewIDPrefix(tableId)
@@ -33,13 +33,13 @@ export async function findByTable(tableId: string) {
   return response.rows.map(r => r.doc)
 }
 
-export async function get(viewId: string) {
+export async function get(viewId: string): Promise<ViewV2 | undefined> {
   const db = context.getAppDB()
-  const result = await db.get(viewId)
+  const result = await db.get<ViewV2>(viewId)
   return result
 }
 
-export async function save(view: ViewV2) {
+export async function save(view: ViewV2): Promise<ViewV2> {
   const db = context.getAppDB()
 
   const response = await db.put(
@@ -50,12 +50,13 @@ export async function save(view: ViewV2) {
     {}
   )
   return {
+    ...view,
     _id: response.id,
     _rev: response.rev,
   }
 }
 
-export async function remove(viewId: string, rev: string) {
+export async function remove(viewId: string, rev: string): Promise<void> {
   const db = context.getAppDB()
   await db.remove(viewId, rev)
 }

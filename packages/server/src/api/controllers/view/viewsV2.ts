@@ -1,7 +1,7 @@
 import sdk from "../../../sdk"
-import { Ctx, ViewV2 } from "@budibase/types"
+import { Ctx, FetchViewResponse, ViewResponse, ViewV2 } from "@budibase/types"
 
-export async function fetch(ctx: Ctx) {
+export async function fetch(ctx: Ctx<{}, FetchViewResponse>) {
   const { tableId } = ctx.query
 
   if (tableId && typeof tableId !== "string") {
@@ -15,11 +15,17 @@ export async function fetch(ctx: Ctx) {
   ctx.body = { views }
 }
 
-export async function find(ctx: Ctx) {
+export async function find(ctx: Ctx<{}, ViewResponse>) {
   const { viewId } = ctx.params
 
-  const result = await sdk.views.get(viewId)
-  ctx.body = result
+  const view = await sdk.views.get(viewId)
+  if (!view) {
+    ctx.throw(404)
+  }
+
+  ctx.body = {
+    data: view,
+  }
 }
 
 export async function save(ctx: Ctx<ViewV2>) {
@@ -31,10 +37,15 @@ export async function save(ctx: Ctx<ViewV2>) {
   }
 }
 
-export async function remove(ctx: Ctx) {
+export async function remove(ctx: Ctx<{}, {}>) {
   const { viewId } = ctx.params
-  const { _rev } = await sdk.views.get(viewId)
+  const doc = await sdk.views.get(viewId)
+  if (!doc) {
+    ctx.throw(404)
+  }
 
-  await sdk.views.remove(viewId, _rev)
+  const { _rev } = doc
+
+  await sdk.views.remove(viewId, _rev!)
   ctx.status = 204
 }
