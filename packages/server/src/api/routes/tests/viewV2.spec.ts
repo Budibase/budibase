@@ -35,15 +35,6 @@ describe("/v2/views", () => {
     table = await config.createTable(priceTable())
   })
 
-  const saveView = async (view: ViewV2) => {
-    return request
-      .post(`/api/v2/views`)
-      .send(view)
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-  }
-
   const getView = (viewId: string) => {
     return request
       .get(`/api/v2/views/${viewId}`)
@@ -51,21 +42,13 @@ describe("/v2/views", () => {
       .expect("Content-Type", /json/)
   }
 
-  function createView(tableId: string): ViewV2 {
-    return {
-      name: generator.guid(),
-      tableId,
-    }
-  }
-
   describe("fetch", () => {
     const views: ViewV2[] = []
 
     beforeAll(async () => {
-      table = await config.createTable(priceTable())
+      await config.createTable(priceTable())
       for (let id = 0; id < 10; id++) {
-        const res = await saveView(createView(table._id!))
-        views.push(res.body)
+        views.push(await config.createViewV2())
       }
     })
 
@@ -86,9 +69,9 @@ describe("/v2/views", () => {
       const newTable = await config.createTable(priceTable())
       const newViews = []
       for (let id = 0; id < 5; id++) {
-        const res = await saveView(createView(newTable._id!))
-        newViews.push(res.body)
+        newViews.push(await config.createViewV2({ tableId: newTable._id }))
       }
+
       const res = await request
         .get(`/api/v2/views?tableId=${newTable._id}`)
         .set(config.defaultHeaders())
@@ -117,7 +100,7 @@ describe("/v2/views", () => {
   describe("getView", () => {
     let view: ViewV2
     beforeAll(async () => {
-      view = (await saveView(createView(table._id!))).body
+      view = await config.createViewV2()
     })
 
     it("can fetch the expected view", async () => {
@@ -142,8 +125,16 @@ describe("/v2/views", () => {
 
   describe("create", () => {
     it("persist the view when the view is successfully created", async () => {
-      const newView = createView(table._id!)
-      const res = await saveView(newView)
+      const newView: ViewV2 = {
+        name: generator.name(),
+        tableId: config.table!._id!,
+      }
+      const res = await request
+        .post(`/api/v2/views`)
+        .send(newView)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
       expect(res.status).toBe(200)
       expect(res.body._id).toBeDefined()
 
@@ -159,8 +150,8 @@ describe("/v2/views", () => {
     let view: ViewV2
 
     beforeAll(async () => {
-      table = await config.createTable(priceTable())
-      view = (await saveView(createView(table._id!))).body
+      await config.createTable(priceTable())
+      view = await config.createViewV2()
     })
 
     it("can delete an existing view", async () => {
