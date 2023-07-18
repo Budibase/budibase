@@ -37,13 +37,19 @@
           <EditTablePopover {table} />
         {/if}
       </NavItem>
-      {#each [...Object.keys(table.views || {})].sort() as viewName, idx (idx)}
+      {#each [...Object.entries(table.views || {})].sort() as [viewName, view], idx (idx)}
         <NavItem
           indentLevel={2}
           icon="Remove"
           text={viewName}
           selected={$isActive("./view") && $views.selected?.name === viewName}
-          on:click={() => $goto(`./view/${encodeURIComponent(viewName)}`)}
+          on:click={() => {
+            if (view.version === 2) {
+              $goto(`./view/v2/${encodeURIComponent(viewName)}`)
+            } else {
+              $goto(`./view/${encodeURIComponent(viewName)}`)
+            }
+          }}
           selectedBy={$userSelectedResourceMap[viewName]}
         >
           <EditViewPopover
