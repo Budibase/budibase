@@ -30,7 +30,9 @@ function pickApi(tableId: any) {
   return internal
 }
 
-export async function search(options: SearchParams) {
+export async function search(options: SearchParams): Promise<{
+  rows: any[]
+}> {
   return pickApi(options.tableId).search(options)
 }
 
