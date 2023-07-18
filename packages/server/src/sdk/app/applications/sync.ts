@@ -37,7 +37,7 @@ async function syncUsersToApp(
 
       let metadata
       try {
-        metadata = await db.get(metadataId)
+        metadata = await db.get<any>(metadataId)
       } catch (err: any) {
         if (err.status !== 404) {
           throw err
