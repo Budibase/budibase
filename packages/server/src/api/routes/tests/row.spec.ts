@@ -687,7 +687,7 @@ describe("/rows", () => {
     })
   })
 
-  describe.only("view search", () => {
+  describe("view search", () => {
     function priceTable(): Table {
       return {
         name: "table",
@@ -711,24 +711,14 @@ describe("/rows", () => {
 
     it("returns table rows from view", async () => {
       const table = await config.createTable(priceTable())
-      const rows = await Promise.all(
-        Array(10)
-          .fill({})
-          .map(() => config.createRow({ tableId: table._id }))
-      )
-      const view: ViewV2 = {
-        name: generator.guid(),
-        tableId: table._id!,
-      }
-      const createViewResponse = await request
-        .post(`/api/views/v2`)
-        .send(view)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const rows = []
+      for (let i = 0; i < 10; i++)
+        rows.push(await config.createRow({ tableId: table._id }))
+
+      const createViewResponse = await config.api.viewV2.create()
 
       const response = await request
-        .get(`/api/views/v2/${createViewResponse.body._id}/search`)
+        .get(`/api/views/v2/${createViewResponse._id}/search`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
