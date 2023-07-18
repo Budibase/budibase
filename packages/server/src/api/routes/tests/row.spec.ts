@@ -14,9 +14,8 @@ import {
   Row,
   Table,
   FieldType,
-  ViewV2,
 } from "@budibase/types"
-import { generator, structures } from "@budibase/backend-core/tests"
+import { structures } from "@budibase/backend-core/tests"
 
 describe("/rows", () => {
   let request = setup.getRequest()
