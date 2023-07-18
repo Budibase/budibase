@@ -1,7 +1,8 @@
 import { BudibaseInternalAPI } from "../internal-api"
 import { AccountInternalAPI } from "../account-api"
-import { CreateAppRequest, State } from "../types"
+import { APIRequestOpts, CreateAppRequest, State } from "../types"
 import * as fixtures from "../internal-api/fixtures"
+import { CreateAccountRequest } from "@budibase/types"
 
 export default class BudibaseTestConfiguration {
   // apis
@@ -42,12 +43,12 @@ export default class BudibaseTestConfiguration {
 
   // AUTH
 
-  async doInNewState(task: any) {
+  async doInNewState(task: () => Promise<any>) {
     return this.doWithState(task, {})
   }
 
-  async doWithState(task: any, state: State) {
-    const original = this.state
+  async doWithState(task: () => Promise<any>, state: State) {
+    const original = { ...this.state }
 
     // override the state
     this.state.apiKey = state.apiKey
@@ -66,6 +67,15 @@ export default class BudibaseTestConfiguration {
     this.state.tableId = original.tableId
     this.state.tenantId = original.tenantId
     this.state.email = original.email
+  }
+
+  async loginAsAccount(account: CreateAccountRequest, opts: APIRequestOpts = {}) {
+    const [_, cookie] = await this.accountsApi.auth.login(
+      account.email,
+      account.password,
+      opts
+    )
+    this.state.cookie = cookie
   }
 
   async login(email: string, password: string, tenantId?: string) {
