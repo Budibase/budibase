@@ -635,22 +635,25 @@ class TestConfiguration {
     return this._req(view, null, controllers.view.v1.save)
   }
 
-  async createViewV2(config?: Partial<ViewV2>) {
-    if (!this.table) {
-      throw "Test requires table to be configured."
-    }
-    const view = {
-      tableId: this.table._id,
-      name: generator.guid(),
-      ...config,
-    }
-    return this._req(view, null, controllers.view.v2.save)
-  }
-
-  getViewV2(viewId: string): supertest.Test {
-    return this.request!.get(`/api/v2/views/${viewId}`)
-      .set(this.defaultHeaders())
-      .expect("Content-Type", /json/)
+  api = {
+    viewV2: {
+      create: async (config?: Partial<ViewV2>) => {
+        if (!this.table) {
+          throw "Test requires table to be configured."
+        }
+        const view = {
+          tableId: this.table._id,
+          name: generator.guid(),
+          ...config,
+        }
+        return this._req(view, null, controllers.view.v2.save)
+      },
+      get: (viewId: string): supertest.Test => {
+        return this.request!.get(`/api/v2/views/${viewId}`)
+          .set(this.defaultHeaders())
+          .expect("Content-Type", /json/)
+      },
+    },
   }
 
   // AUTOMATION
