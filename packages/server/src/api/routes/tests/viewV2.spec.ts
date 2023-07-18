@@ -136,12 +136,14 @@ describe("/v2/views", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.status).toBe(200)
-      expect(res.body._id).toBeDefined()
+      expect(res.body.data._id).toBeDefined()
 
       expect(res.body).toEqual({
-        ...newView,
-        _id: expect.any(String),
-        _rev: expect.any(String),
+        data: {
+          ...newView,
+          _id: expect.any(String),
+          _rev: expect.any(String),
+        },
       })
     })
   })
