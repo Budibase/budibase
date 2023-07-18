@@ -1,6 +1,6 @@
-import { BBContext } from "@budibase/types"
+import { UserCtx } from "@budibase/types"
 
-export default async (ctx: BBContext, next: any) => {
+export default async (ctx: UserCtx, next: any) => {
   if (
     !ctx.internal &&
     (!ctx.user || !ctx.user.admin || !ctx.user.admin.global)

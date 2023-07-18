@@ -258,7 +258,7 @@ export async function getUserCount() {
 export function isBuilder(user: User | ContextUser, appId?: string) {
   if (user.builder?.global) {
     return true
-  } else if (appId && user.builder?.apps?.includes(appId)) {
+  } else if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
     return true
   }
   return false

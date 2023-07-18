@@ -42,7 +42,7 @@ export interface User extends Document {
   forceResetPassword?: boolean
   roles: UserRoles
   builder?: {
-    global: boolean
+    global?: boolean
     apps?: string[]
   }
   admin?: {
@@ -70,7 +70,8 @@ export interface UserRoles {
 
 export interface BuilderUser extends User {
   builder: {
-    global: boolean
+    global?: boolean
+    apps?: string[]
   }
 }
 
@@ -79,6 +80,12 @@ export interface AdminUser extends User {
     global: boolean
   }
   builder: {
+    global: boolean
+  }
+}
+
+export interface AdminOnlyUser extends User {
+  admin: {
     global: boolean
   }
 }
