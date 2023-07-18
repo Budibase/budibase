@@ -36,8 +36,8 @@ export async function updateMetadata(ctx: UserCtx) {
 export async function destroyMetadata(ctx: UserCtx) {
   const db = context.getAppDB()
   try {
-    const dbUser = await db.get(ctx.params.id)
-    await db.remove(dbUser._id, dbUser._rev)
+    const dbUser = await sdk.users.get(ctx.params.id)
+    await db.remove(dbUser._id!, dbUser._rev)
   } catch (err) {
     // error just means the global user has no config in this app
   }
@@ -60,7 +60,7 @@ export async function setFlag(ctx: UserCtx) {
   const db = context.getAppDB()
   let doc
   try {
-    doc = await db.get(flagDocId)
+    doc = await db.get<any>(flagDocId)
   } catch (err) {
     doc = { _id: flagDocId }
   }
