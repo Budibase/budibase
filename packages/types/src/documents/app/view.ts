@@ -1,3 +1,5 @@
+import { Document } from "../document"
+
 export interface View {
   name: string
   tableId: string
@@ -10,7 +12,7 @@ export interface View {
   meta?: Record<string, any>
 }
 
-export interface ViewV2 {
+export interface ViewV2 extends Document {
   name: string
   tableId: string
 }
