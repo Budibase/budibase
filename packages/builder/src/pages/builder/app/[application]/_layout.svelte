@@ -26,7 +26,7 @@
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
-  import UserAvatars from "./_components/UserAvatars.svelte"
+  import { UserAvatars } from "@budibase/frontend-core"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
 
