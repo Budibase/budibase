@@ -74,7 +74,7 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 5px;
     width: 100%;
-    background-color: #00000047;
+    background-color: var(--spectrum-global-color-gray-50);
     color: white;
     overflow: hidden;
     padding: 12px 16px;
