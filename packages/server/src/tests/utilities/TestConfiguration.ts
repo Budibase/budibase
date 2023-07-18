@@ -646,7 +646,8 @@ class TestConfiguration {
           name: generator.guid(),
           ...config,
         }
-        return this._req(view, null, controllers.view.v2.save)
+        const result = await this._req(view, null, controllers.view.v2.save)
+        return result.data
       },
       get: (viewId: string): supertest.Test => {
         return this.request!.get(`/api/v2/views/${viewId}`)
