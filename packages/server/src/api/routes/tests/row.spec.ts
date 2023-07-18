@@ -790,7 +790,37 @@ describe("/rows", () => {
         },
         ["Danny", "Charly", "Bob", "Alice"],
       ],
-    ])("allow sorting", async (sortParams, expected) => {
+      [
+        {
+          field: "age",
+          order: SortOrder.ASCENDING,
+          type: SortType.number,
+        },
+        ["Danny", "Alice", "Charly", "Bob"],
+      ],
+      [
+        {
+          field: "age",
+          order: SortOrder.ASCENDING,
+        },
+        ["Danny", "Alice", "Charly", "Bob"],
+      ],
+      [
+        {
+          field: "age",
+          order: SortOrder.DESCENDING,
+        },
+        ["Bob", "Charly", "Alice", "Danny"],
+      ],
+      [
+        {
+          field: "age",
+          order: SortOrder.DESCENDING,
+          type: SortType.number,
+        },
+        ["Bob", "Charly", "Alice", "Danny"],
+      ],
+    ])("allow sorting (%s)", async (sortParams, expected) => {
       await config.createTable(userTable())
       const users = [
         { name: "Alice", age: 25 },
