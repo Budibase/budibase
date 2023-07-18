@@ -1,4 +1,6 @@
 <script>
+  import NewColumnButton from "./NewColumnButton.svelte"
+
   import { getContext } from "svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import HeaderCell from "../cells/HeaderCell.svelte"
