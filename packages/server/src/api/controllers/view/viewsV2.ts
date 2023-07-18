@@ -4,7 +4,6 @@ import {
   Ctx,
   FetchViewResponse,
   ViewResponse,
-  ViewV2,
 } from "@budibase/types"
 
 export async function fetch(ctx: Ctx<void, FetchViewResponse>) {
@@ -34,10 +33,11 @@ export async function find(ctx: Ctx<void, ViewResponse>) {
   }
 }
 
-export async function save(ctx: Ctx<CreateViewRequest, ViewResponse>) {
+export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   const view = ctx.request.body
 
-  const result = await sdk.views.save(view)
+  const result = await sdk.views.create(view)
+  ctx.status = 201
   ctx.body = {
     data: {
       ...view,
