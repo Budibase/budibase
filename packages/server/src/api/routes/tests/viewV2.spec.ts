@@ -35,13 +35,6 @@ describe("/v2/views", () => {
     table = await config.createTable(priceTable())
   })
 
-  const getView = (viewId: string) => {
-    return request
-      .get(`/api/v2/views/${viewId}`)
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-  }
-
   describe("fetch", () => {
     const views: ViewV2[] = []
 
@@ -98,6 +91,13 @@ describe("/v2/views", () => {
   })
 
   describe("getView", () => {
+    const getView = (viewId: string) => {
+      return request
+        .get(`/api/v2/views/${viewId}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+    }
+
     let view: ViewV2
     beforeAll(async () => {
       view = await config.createViewV2()
@@ -155,14 +155,14 @@ describe("/v2/views", () => {
     })
 
     it("can delete an existing view", async () => {
-      await getView(view._id!).expect(200)
+      await config.getViewV2(view._id!).expect(200)
 
       await request
         .delete(`/api/v2/views/${view._id}`)
         .set(config.defaultHeaders())
         .expect(204)
 
-      await getView(view._id!).expect(404)
+      await config.getViewV2(view._id!).expect(404)
     })
   })
 })
