@@ -156,7 +156,14 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
 
   ctx.status = 200
   ctx.body = await quotas.addQuery(
-    () => sdk.rows.search({ tableId, query: view.query || {} }),
+    () =>
+      sdk.rows.search({
+        tableId,
+        query: view.query || {},
+        sort: view.sort?.field,
+        sortOrder: view.sort?.order,
+        sortType: view.sort?.type,
+      }),
     {
       datasourceId: tableId,
     }
