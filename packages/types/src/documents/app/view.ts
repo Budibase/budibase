@@ -1,5 +1,5 @@
-import { SortType } from "../../api"
-import { SearchFilters, SortDirection } from "../../sdk"
+import { SortOrder, SortType } from "../../api"
+import { SearchFilters } from "../../sdk"
 import { Document } from "../document"
 
 export interface View {
@@ -20,7 +20,7 @@ export interface ViewV2 extends Document {
   query?: SearchFilters
   sort?: {
     field: string
-    order?: SortDirection
+    order?: SortOrder
     type?: SortType
   }
 }
