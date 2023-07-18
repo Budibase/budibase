@@ -527,17 +527,23 @@ class TestConfiguration {
 
   // TABLE
 
-  async updateTable(config?: any): Promise<Table> {
+  async updateTable(
+    config?: any,
+    { skipReassigning } = { skipReassigning: false }
+  ): Promise<Table> {
     config = config || basicTable()
-    this.table = await this._req(config, null, controllers.table.save)
-    return this.table!
+    const response = await this._req(config, null, controllers.table.save)
+    if (!skipReassigning) {
+      this.table = response
+    }
+    return response
   }
 
-  async createTable(config?: Table) {
+  async createTable(config?: Table, options = { skipReassigning: false }) {
     if (config != null && config._id) {
       delete config._id
     }
-    return this.updateTable(config)
+    return this.updateTable(config, options)
   }
 
   async getTable(tableId?: string) {
