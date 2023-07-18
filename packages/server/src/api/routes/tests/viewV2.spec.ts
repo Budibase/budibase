@@ -53,7 +53,9 @@ describe("/v2/views", () => {
     })
 
     it("can filter by table id", async () => {
-      const newTable = await config.createTable(priceTable())
+      const newTable = await config.createTable(priceTable(), {
+        skipReassigning: true,
+      })
       const newViews = []
       for (let id = 0; id < 5; id++) {
         newViews.push(await config.api.viewV2.create({ tableId: newTable._id }))
@@ -79,12 +81,32 @@ describe("/v2/views", () => {
 
       expect(res.body.message).toBe("tableId type is not valid")
     })
+
+    it("returns views with query info", async () => {
+      const newView = await config.api.viewV2.create({
+        query: { allOr: false, equal: { field: "value" } },
+      })
+      views.push(newView)
+      const res = await request
+        .get(`/api/v2/views?tableId=${config.table!._id}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body.views.length).toBe(11)
+      expect(newView.query).toEqual({ allOr: false, equal: { field: "value" } })
+      expect(res.body.views).toEqual(
+        expect.arrayContaining([expect.objectContaining(newView)])
+      )
+    })
   })
 
   describe("getView", () => {
     let view: ViewV2
     beforeAll(async () => {
-      view = await config.api.viewV2.create()
+      view = await config.api.viewV2.create({
+        query: { allOr: false, notEqual: { field: "value" } },
+      })
     })
 
     it("can fetch the expected view", async () => {
@@ -121,6 +143,30 @@ describe("/v2/views", () => {
         ...newView,
         _id: expect.any(String),
         _rev: expect.any(String),
+      })
+    })
+
+    it("can persist views with queries", async () => {
+      const query = { allOr: false, notContains: { name: ["a", "b"] } }
+      const newView: ViewV2 = {
+        name: generator.name(),
+        tableId: config.table!._id!,
+        query,
+      }
+      const res = await request
+        .post(`/api/v2/views`)
+        .send(newView)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(201)
+
+      expect(res.body).toEqual({
+        data: {
+          ...newView,
+          query,
+          _id: expect.any(String),
+          _rev: expect.any(String),
+        },
       })
     })
   })

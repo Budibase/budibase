@@ -1,3 +1,4 @@
+import { SearchFilters } from "../../sdk"
 import { Document } from "../document"
 
 export interface View {
@@ -15,6 +16,7 @@ export interface View {
 export interface ViewV2 extends Document {
   name: string
   tableId: string
+  query?: SearchFilters
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
