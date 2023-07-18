@@ -3,15 +3,37 @@ import * as viewController from "../controllers/view"
 import * as rowController from "../controllers/row"
 import authorized from "../../middleware/authorized"
 import { paramResource } from "../../middleware/resourceId"
-import { permissions } from "@budibase/backend-core"
+import { DocumentType, SEPARATOR, permissions } from "@budibase/backend-core"
 
 const router: Router = new Router()
 
 router
   .get(
+    "/api/v2/views",
+    authorized(permissions.BUILDER),
+    viewController.v2.fetch
+  )
+  .get(
+    `/api/v2/views/:viewId`,
+    authorized(permissions.BUILDER),
+    viewController.v2.find
+  )
+  .post(
+    "/api/v2/views",
+    authorized(permissions.BUILDER),
+    viewController.v2.create
+  )
+  .delete(
+    `/api/v2/views/:viewId`,
+    authorized(permissions.BUILDER),
+    viewController.v2.remove
+  )
+
+router
+  .get(
     "/api/views/export",
     authorized(permissions.BUILDER),
-    viewController.exportView
+    viewController.v1.exportView
   )
   .get(
     "/api/views/:viewName",
@@ -22,13 +44,13 @@ router
     ),
     rowController.fetchView
   )
-  .get("/api/views", authorized(permissions.BUILDER), viewController.fetch)
+  .get("/api/views", authorized(permissions.BUILDER), viewController.v1.fetch)
   .delete(
     "/api/views/:viewName",
     paramResource("viewName"),
     authorized(permissions.BUILDER),
-    viewController.destroy
+    viewController.v1.destroy
   )
-  .post("/api/views", authorized(permissions.BUILDER), viewController.save)
+  .post("/api/views", authorized(permissions.BUILDER), viewController.v1.save)
 
 export default router

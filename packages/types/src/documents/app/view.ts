@@ -1,3 +1,5 @@
+import { Document } from "../document"
+
 export interface View {
   name: string
   tableId: string
@@ -8,6 +10,11 @@ export interface View {
   map?: string
   reduce?: any
   meta?: Record<string, any>
+}
+
+export interface ViewV2 extends Document {
+  name: string
+  tableId: string
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema

@@ -50,8 +50,11 @@ import {
   SearchFilters,
   UserRoles,
   Automation,
+  ViewV2,
 } from "@budibase/types"
 import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
+
+import API from "./api"
 
 type DefaultUserValues = {
   globalUserId: string
@@ -73,12 +76,13 @@ class TestConfiguration {
   user: any
   globalUserId: any
   userMetadataId: any
-  table: any
+  table?: Table
   linkedTable: any
   automation: any
   datasource: any
   tenantId?: string
   defaultUserValues: DefaultUserValues
+  api: API
 
   constructor(openServer = true) {
     if (openServer) {
@@ -94,6 +98,8 @@ class TestConfiguration {
     this.appId = null
     this.allApps = []
     this.defaultUserValues = this.populateDefaultUserValues()
+
+    this.api = new API(this)
   }
 
   populateDefaultUserValues(): DefaultUserValues {
@@ -525,7 +531,7 @@ class TestConfiguration {
   async updateTable(config?: any): Promise<Table> {
     config = config || basicTable()
     this.table = await this._req(config, null, controllers.table.save)
-    return this.table
+    return this.table!
   }
 
   async createTable(config?: Table) {
@@ -536,7 +542,7 @@ class TestConfiguration {
   }
 
   async getTable(tableId?: string) {
-    tableId = tableId || this.table._id
+    tableId = tableId || this.table?._id
     return this._req(null, { tableId }, controllers.table.find)
   }
 
@@ -577,7 +583,7 @@ class TestConfiguration {
       throw "Test requires table to be configured."
     }
     const tableId = (config && config.tableId) || this.table._id
-    config = config || basicRow(tableId)
+    config = config || basicRow(tableId!)
     return this._req(config, { tableId }, controllers.row.save)
   }
 
@@ -587,14 +593,14 @@ class TestConfiguration {
 
   async getRows(tableId: string) {
     if (!tableId && this.table) {
-      tableId = this.table._id
+      tableId = this.table._id!
     }
     return this._req(null, { tableId }, controllers.row.fetch)
   }
 
   async searchRows(tableId: string, searchParams: SearchFilters = {}) {
     if (!tableId && this.table) {
-      tableId = this.table._id
+      tableId = this.table._id!
     }
     const body = {
       query: searchParams,
@@ -631,7 +637,7 @@ class TestConfiguration {
       tableId: this.table._id,
       name: "ViewTest",
     }
-    return this._req(view, null, controllers.view.save)
+    return this._req(view, null, controllers.view.v1.save)
   }
 
   // AUTOMATION
