@@ -310,7 +310,7 @@ export class QueryBuilder<T> {
     }
 
     const contains = (key: string, value: any, mode = "AND") => {
-      if (Array.isArray(value) && value.length === 0) {
+      if (!value || (Array.isArray(value) && value.length === 0)) {
         return null
       }
       if (!Array.isArray(value)) {
