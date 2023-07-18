@@ -47,7 +47,6 @@ export interface User extends Document {
   }
   admin?: {
     global: boolean
-    apps?: string[]
   }
   password?: string
   status?: UserStatus

@@ -1,4 +1,10 @@
-import { roles, permissions, auth, context } from "@budibase/backend-core"
+import {
+  roles,
+  permissions,
+  auth,
+  context,
+  users,
+} from "@budibase/backend-core"
 import { Role } from "@budibase/types"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
@@ -21,8 +27,9 @@ const checkAuthorized = async (
   permType: any,
   permLevel: any
 ) => {
+  const appId = context.getAppId()
   // check if this is a builder api and the user is not a builder
-  const isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
+  const isBuilder = users.isBuilder(ctx.user, appId)
   const isBuilderApi = permType === permissions.PermissionType.BUILDER
   if (isBuilderApi && !isBuilder) {
     return ctx.throw(403, "Not Authorized")

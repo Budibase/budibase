@@ -4,12 +4,14 @@ import {
   roles,
   tenancy,
   context,
+  users,
 } from "@budibase/backend-core"
 import { generateUserMetadataID, isDevAppID } from "../db/utils"
 import { getCachedSelf } from "../utilities/global"
 import env from "../environment"
 import { isWebhookEndpoint } from "./utils"
-import { UserCtx } from "@budibase/types"
+import { UserCtx, ContextUser } from "@budibase/types"
+import { removePortalUserPermissions } from "@budibase/backend-core/src/users"
 
 export default async (ctx: UserCtx, next: any) => {
   // try to get the appID from the request
@@ -42,8 +44,7 @@ export default async (ctx: UserCtx, next: any) => {
     roleId = globalUser.roleId || roleId
 
     // Allow builders to specify their role via a header
-    const isBuilder =
-      globalUser && globalUser.builder && globalUser.builder.global
+    const isBuilder = users.isBuilder(globalUser, appId)
     const isDevApp = appId && isDevAppID(appId)
     const roleHeader =
       ctx.request &&
@@ -56,8 +57,7 @@ export default async (ctx: UserCtx, next: any) => {
           roleId = roleHeader
 
           // Delete admin and builder flags so that the specified role is honoured
-          delete ctx.user.builder
-          delete ctx.user.admin
+          ctx.user = users.removePortalUserPermissions(ctx.user) as ContextUser
         }
       } catch (error) {
         // Swallow error and do nothing
@@ -81,9 +81,7 @@ export default async (ctx: UserCtx, next: any) => {
       !tenancy.isUserInAppTenant(requestAppId, ctx.user)
     ) {
       // don't error, simply remove the users rights (they are a public user)
-      delete ctx.user.builder
-      delete ctx.user.admin
-      delete ctx.user.roles
+      ctx.user = users.cleanseUserObject(ctx.user) as ContextUser
       ctx.isAuthenticated = false
       roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
       skipCookie = true

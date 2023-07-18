@@ -1,15 +1,18 @@
 import env from "../../environment"
-import { events, accounts, tenancy } from "@budibase/backend-core"
+import { events, accounts, tenancy, users } from "@budibase/backend-core"
 import { User, UserRoles, CloudAccount } from "@budibase/types"
+
+const hasBuilderPerm = users.hasBuilderPermissions
+const hasAdminPerm = users.hasAdminPermissions
 
 export const handleDeleteEvents = async (user: any) => {
   await events.user.deleted(user)
 
-  if (isBuilder(user)) {
+  if (hasBuilderPerm(user)) {
     await events.user.permissionBuilderRemoved(user)
   }
 
-  if (isAdmin(user)) {
+  if (hasAdminPerm(user)) {
     await events.user.permissionAdminRemoved(user)
   }
 }
@@ -103,23 +106,20 @@ export const handleSaveEvents = async (
   await handleAppRoleEvents(user, existingUser)
 }
 
-const isBuilder = (user: any) => user.builder && user.builder.global
-const isAdmin = (user: any) => user.admin && user.admin.global
-
 export const isAddingBuilder = (user: any, existingUser: any) => {
-  return isAddingPermission(user, existingUser, isBuilder)
+  return isAddingPermission(user, existingUser, hasBuilderPerm)
 }
 
 export const isRemovingBuilder = (user: any, existingUser: any) => {
-  return isRemovingPermission(user, existingUser, isBuilder)
+  return isRemovingPermission(user, existingUser, hasBuilderPerm)
 }
 
 const isAddingAdmin = (user: any, existingUser: any) => {
-  return isAddingPermission(user, existingUser, isAdmin)
+  return isAddingPermission(user, existingUser, hasAdminPerm)
 }
 
 const isRemovingAdmin = (user: any, existingUser: any) => {
-  return isRemovingPermission(user, existingUser, isAdmin)
+  return isRemovingPermission(user, existingUser, hasAdminPerm)
 }
 
 const isOnboardingComplete = (user: any, existingUser: any) => {
