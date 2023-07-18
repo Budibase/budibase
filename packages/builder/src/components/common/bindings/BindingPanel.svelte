@@ -339,7 +339,7 @@
           </Tab>
         {/if}
         <div class="drawer-actions">
-          {#if drawerActions?.hide}
+          {#if typeof drawerActions.hide === "function" && drawerActions.headless}
             <Button
               secondary
               quiet
@@ -350,7 +350,7 @@
               Cancel
             </Button>
           {/if}
-          {#if bindingDrawerActions?.save}
+          {#if typeof bindingDrawerActions?.save === "function" && drawerActions.headless}
             <Button
               cta
               disabled={!valid}
