@@ -16,6 +16,7 @@ import { cloneDeep } from "lodash/fp"
 import { context, db as dbCore } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
 import { UserCtx, LinkDocumentValue, Row, Table } from "@budibase/types"
+import sdk from "../../../sdk"
 
 export async function patch(ctx: UserCtx) {
   const db = context.getAppDB()
@@ -24,7 +25,7 @@ export async function patch(ctx: UserCtx) {
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
   try {
-    let dbTable = await db.get(tableId)
+    let dbTable = await sdk.tables.getTable(tableId)
     oldRow = await outputProcessing(
       dbTable,
       await utils.findRow(ctx, tableId, inputs._id)
@@ -40,7 +41,7 @@ export async function patch(ctx: UserCtx) {
       throw "Row does not exist"
     }
   }
-  let dbTable = await db.get(tableId)
+  let dbTable = await sdk.tables.getTable(tableId)
   // need to build up full patch fields before coerce
   let combinedRow: any = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
@@ -95,7 +96,7 @@ export async function save(ctx: UserCtx) {
   }
 
   // this returns the table and row incase they have been updated
-  const dbTable = await db.get(inputs.tableId)
+  const dbTable = await sdk.tables.getTable(inputs.tableId)
 
   // need to copy the table so it can be differenced on way out
   const tableClone = cloneDeep(dbTable)
@@ -127,7 +128,7 @@ export async function save(ctx: UserCtx) {
 
 export async function find(ctx: UserCtx) {
   const db = dbCore.getDB(ctx.appId)
-  const table = await db.get(ctx.params.tableId)
+  const table = await sdk.tables.getTable(ctx.params.tableId)
   let row = await utils.findRow(ctx, ctx.params.tableId, ctx.params.rowId)
   row = await outputProcessing(table, row)
   return row
@@ -136,13 +137,13 @@ export async function find(ctx: UserCtx) {
 export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
   const { _id } = ctx.request.body
-  let row = await db.get(_id)
+  let row = await db.get<Row>(_id)
   let _rev = ctx.request.body._rev || row._rev
 
   if (row.tableId !== ctx.params.tableId) {
     throw "Supplied tableId doesn't match the row's tableId"
   }
-  const table = await db.get(row.tableId)
+  const table = await sdk.tables.getTable(row.tableId)
   // update the row to include full relationships before deleting them
   row = await outputProcessing(table, row, { squash: false })
   // now remove the relationships
@@ -172,7 +173,7 @@ export async function destroy(ctx: UserCtx) {
 export async function bulkDestroy(ctx: UserCtx) {
   const db = context.getAppDB()
   const tableId = ctx.params.tableId
-  const table = await db.get(tableId)
+  const table = await sdk.tables.getTable(tableId)
   let { rows } = ctx.request.body
 
   // before carrying out any updates, make sure the rows are ready to be returned
@@ -214,7 +215,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   const rowId = ctx.params.rowId
   // need table to work out where links go in row
   let [table, row] = await Promise.all([
-    db.get(tableId),
+    sdk.tables.getTable(tableId),
     utils.findRow(ctx, tableId, rowId),
   ])
   // get the link docs

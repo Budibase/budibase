@@ -35,7 +35,7 @@ export async function find(ctx: BBContext) {
   const appId = ctx.params.appId
   await context.doInAppContext(dbCore.getDevAppID(appId), async () => {
     const db = context.getAppDB()
-    const app = await db.get(dbCore.DocumentType.APP_METADATA)
+    const app = await db.get<App>(dbCore.DocumentType.APP_METADATA)
     ctx.body = {
       roles: await roles.getAllRoles(),
       name: app.name,
