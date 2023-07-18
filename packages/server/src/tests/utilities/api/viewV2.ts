@@ -23,7 +23,7 @@ export class ViewV2API extends TestAPI {
       .send(view)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(200)
+      .expect(201)
     return result.body.data as ViewV2
   }
   get = (viewId: string): supertest.Test => {

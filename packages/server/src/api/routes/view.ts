@@ -21,7 +21,7 @@ router
   .post(
     "/api/v2/views",
     authorized(permissions.BUILDER),
-    viewController.v2.save
+    viewController.v2.create
   )
   .delete(
     `/api/v2/views/:viewId`,
