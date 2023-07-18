@@ -20,9 +20,6 @@ export default class AccountAPI {
         body: { email },
       }
     )
-    if (opts.doExpect) {
-      expect(response).toHaveStatusCode(200)
-    }
     return response
   }
 
@@ -36,18 +33,15 @@ export default class AccountAPI {
         body: { tenantId },
       }
     )
-    if (opts.doExpect) {
-      expect(response).toHaveStatusCode(200)
-    }
     return response
   }
 
   async create(
     body: CreateAccountRequest,
-    opts: APIRequestOpts = { doExpect: true }
+    opts: APIRequestOpts & { autoVerify: boolean } = { doExpect: true, autoVerify: true }
   ): Promise<[Response, Account]> {
     const headers = {
-      "no-verify": "1",
+      "no-verify": opts.autoVerify ? "1" : "0"
     }
     const [response, json] = await this.client.post(`/api/accounts`, {
       body,
@@ -59,7 +53,7 @@ export default class AccountAPI {
     return [response, json]
   }
 
-  async delete(accountID: string) {
+  async delete(accountID: string, opts: APIRequestOpts = {status:204}) {
     const [response, json] = await this.client.del(
       `/api/accounts/${accountID}`,
       {
@@ -67,8 +61,8 @@ export default class AccountAPI {
       }
     )
     // can't use expect here due to use in global teardown
-    if (response.status !== 204) {
-      throw new Error(`Could not delete accountId=${accountID}`)
+    if (response.status !== opts.status) {
+      throw new Error(`status: ${response.status} not equal to expected: ${opts.status}`)
     }
     return response
   }
@@ -120,18 +114,15 @@ export default class AccountAPI {
     let body: SearchAccountsRequest = {}
 
     if (search === 'email') {
-      body.email = searchType;
+      body.email = searchType
     } else if (search === 'tenantId') {
-      body.tenantId = searchType;
+      body.tenantId = searchType
     }
 
     const [response, json] = await this.client.post(
         `/api/accounts/search`,
         {body: body}
     )
-    if (opts.doExpect) {
-      expect(response).toHaveStatusCode(200)
-    }
     return [response, json]
   }
 }

@@ -12,9 +12,12 @@ describe("Account API - Create Account", () => {
         await config.afterAll()
     })
 
-    it("Creates a new account", async () => {
-        await config.api.accounts.create({
-             ...fixtures.accounts.generateAccount()
+    describe("POST /api/accounts/", () => {
+        it("Returns 201", async () => {
+            const [res, account] = await config.api.accounts.create({
+                ...fixtures.accounts.generateAccount()
+            })
+            expect(res.status).toBe(201)
         })
     })
 })
