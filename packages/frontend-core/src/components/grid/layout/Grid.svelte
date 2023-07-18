@@ -29,6 +29,7 @@
 
   export let API = null
   export let tableId = null
+  export let datasourceType = null
   export let schemaOverrides = null
   export let columnWhitelist = null
   export let allowAddRows = true
@@ -77,6 +78,7 @@
   // Keep config store up to date with props
   $: config.set({
     tableId,
+    datasourceType,
     schemaOverrides,
     columnWhitelist,
     allowAddRows,

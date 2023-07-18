@@ -60,6 +60,7 @@ export const deriveStores = context => {
     loading,
     sort,
     tableId,
+    datasourceType,
     API,
     scroll,
     validation,
@@ -111,7 +112,7 @@ export const deriveStores = context => {
     const newFetch = fetchData({
       API,
       datasource: {
-        type: "table",
+        type: datasourceType,
         tableId: $tableId,
       },
       options: {
