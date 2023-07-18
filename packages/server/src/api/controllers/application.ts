@@ -49,6 +49,7 @@ import {
   MigrationType,
   PlanType,
   Screen,
+  SocketSession,
   UserCtx,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
@@ -183,6 +184,7 @@ export async function fetch(ctx: UserCtx) {
   const appIds = apps
     .filter((app: any) => app.status === "development")
     .map((app: any) => app.appId)
+
   // get the locks for all the dev apps
   if (dev || all) {
     const locks = await getLocksById(appIds)
@@ -197,7 +199,10 @@ export async function fetch(ctx: UserCtx) {
     }
   }
 
-  ctx.body = await checkAppMetadata(apps)
+  // Enrich apps with all builder user sessions
+  const enrichedApps = await sdk.users.sessions.enrichApps(apps)
+
+  ctx.body = await checkAppMetadata(enrichedApps)
 }
 
 export async function fetchAppDefinition(ctx: UserCtx) {
