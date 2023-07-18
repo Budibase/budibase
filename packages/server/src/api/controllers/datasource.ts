@@ -9,7 +9,6 @@ import {
 import { destroy as tableDestroy } from "./table/internal"
 import { BuildSchemaErrors, InvalidColumns } from "../../constants"
 import { getIntegration } from "../../integrations"
-import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { db as dbCore, context, events } from "@budibase/backend-core"
 import {
@@ -442,7 +441,7 @@ export async function find(ctx: UserCtx) {
 export async function query(ctx: UserCtx) {
   const queryJson = ctx.request.body
   try {
-    ctx.body = await getDatasourceAndQuery(queryJson)
+    ctx.body = await sdk.rows.utils.getDatasourceAndQuery(queryJson)
   } catch (err: any) {
     ctx.throw(400, err)
   }
