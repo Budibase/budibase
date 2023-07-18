@@ -209,7 +209,7 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
     oldTrigger.webhookId
   ) {
     try {
-      let db = context.getAppDB()
+      const db = context.getAppDB()
       // need to get the webhook to get the rev
       const webhook = await db.get<Webhook>(oldTrigger.webhookId)
       // might be updating - reset the inputs to remove the URLs

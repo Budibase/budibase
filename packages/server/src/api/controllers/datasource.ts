@@ -432,7 +432,6 @@ export async function destroy(ctx: UserCtx) {
 }
 
 export async function find(ctx: UserCtx) {
-  const db = context.getAppDB()
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   ctx.body = await sdk.datasources.removeSecretSingle(datasource)
 }
@@ -448,7 +447,6 @@ export async function query(ctx: UserCtx) {
 }
 
 export async function getExternalSchema(ctx: UserCtx) {
-  const db = context.getAppDB()
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   const enrichedDatasource = await getAndMergeDatasource(datasource)
   const connector = await getConnector(enrichedDatasource)
