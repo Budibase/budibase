@@ -1,5 +1,11 @@
 import * as setup from "./utilities"
-import { FieldType, Table, ViewV2 } from "@budibase/types"
+import {
+  FieldType,
+  SortDirection,
+  SortType,
+  Table,
+  ViewV2,
+} from "@budibase/types"
 import { generator, structures } from "@budibase/backend-core/tests"
 
 function priceTable(): Table {
@@ -25,6 +31,15 @@ function priceTable(): Table {
 
 describe("/v2/views", () => {
   const config = setup.getConfig()
+
+  const viewFilters: Omit<ViewV2, "name" | "tableId"> = {
+    query: { allOr: false, equal: { field: "value" } },
+    sort: {
+      field: "fieldToSort",
+      order: SortDirection.DESCENDING,
+      type: SortType.STRING,
+    },
+  }
 
   afterAll(setup.afterAll)
 
@@ -83,10 +98,7 @@ describe("/v2/views", () => {
     })
 
     it("returns views with query info", async () => {
-      const newView = await config.api.viewV2.create({
-        query: { allOr: false, equal: { field: "value" } },
-      })
-      views.push(newView)
+      const newView = await config.api.viewV2.create({ ...viewFilters })
       const res = await request
         .get(`/api/v2/views?tableId=${config.table!._id}`)
         .set(config.defaultHeaders())
@@ -96,7 +108,12 @@ describe("/v2/views", () => {
       expect(res.body.views.length).toBe(11)
       expect(newView.query).toEqual({ allOr: false, equal: { field: "value" } })
       expect(res.body.views).toEqual(
-        expect.arrayContaining([expect.objectContaining(newView)])
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...newView,
+            ...viewFilters,
+          }),
+        ])
       )
     })
   })
@@ -147,11 +164,10 @@ describe("/v2/views", () => {
     })
 
     it("can persist views with queries", async () => {
-      const query = { allOr: false, notContains: { name: ["a", "b"] } }
       const newView: ViewV2 = {
         name: generator.name(),
         tableId: config.table!._id!,
-        query,
+        ...viewFilters,
       }
       const res = await request
         .post(`/api/v2/views`)
@@ -163,7 +179,7 @@ describe("/v2/views", () => {
       expect(res.body).toEqual({
         data: {
           ...newView,
-          query,
+          ...viewFilters,
           _id: expect.any(String),
           _rev: expect.any(String),
         },
