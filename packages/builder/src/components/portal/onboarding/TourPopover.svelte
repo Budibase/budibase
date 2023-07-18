@@ -122,6 +122,7 @@
             <div class="tour-navigation">
               {#if typeof tourOnSkip === "function"}
                 <Link
+                  secondary
                   quiet
                   on:click={() => {
                     skipping = true
@@ -130,8 +131,10 @@
                       $goto(tour.endRoute)
                     }
                   }}
-                  disabled={skipping}>Skip</Link
+                  disabled={skipping}
                 >
+                  Skip
+                </Link>
               {/if}
               <Button cta on:click={nextStep} disabled={skipping}>
                 <div>{lastStep ? "Finish" : "Next"}</div>
@@ -153,9 +156,6 @@
     display: flex;
     justify-content: end;
     align-items: center;
-  }
-  .tour-navigation :global(.spectrum-Link) {
-    color: white;
   }
   .tour-body :global(.feature-list) {
     margin-bottom: 0px;
