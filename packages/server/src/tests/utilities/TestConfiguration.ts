@@ -54,6 +54,8 @@ import {
 } from "@budibase/types"
 import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
 
+import API from "./api"
+
 type DefaultUserValues = {
   globalUserId: string
   email: string
@@ -80,6 +82,7 @@ class TestConfiguration {
   datasource: any
   tenantId?: string
   defaultUserValues: DefaultUserValues
+  api: API
 
   constructor(openServer = true) {
     if (openServer) {
@@ -95,6 +98,8 @@ class TestConfiguration {
     this.appId = null
     this.allApps = []
     this.defaultUserValues = this.populateDefaultUserValues()
+
+    this.api = new API(this)
   }
 
   populateDefaultUserValues(): DefaultUserValues {
@@ -633,28 +638,6 @@ class TestConfiguration {
       name: "ViewTest",
     }
     return this._req(view, null, controllers.view.v1.save)
-  }
-
-  api = {
-    viewV2: {
-      create: async (config?: Partial<ViewV2>) => {
-        if (!this.table) {
-          throw "Test requires table to be configured."
-        }
-        const view = {
-          tableId: this.table._id,
-          name: generator.guid(),
-          ...config,
-        }
-        const result = await this._req(view, null, controllers.view.v2.save)
-        return result.data
-      },
-      get: (viewId: string): supertest.Test => {
-        return this.request!.get(`/api/v2/views/${viewId}`)
-          .set(this.defaultHeaders())
-          .expect("Content-Type", /json/)
-      },
-    },
   }
 
   // AUTOMATION
