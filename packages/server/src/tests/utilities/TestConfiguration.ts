@@ -647,6 +647,12 @@ class TestConfiguration {
     return this._req(view, null, controllers.view.v2.save)
   }
 
+  getViewV2(viewId: string): supertest.Test {
+    return this.request!.get(`/api/v2/views/${viewId}`)
+      .set(this.defaultHeaders())
+      .expect("Content-Type", /json/)
+  }
+
   // AUTOMATION
 
   async createAutomation(config?: any) {
