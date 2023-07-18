@@ -133,9 +133,7 @@ describe("/v2/views", () => {
         .send(newView)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.status).toBe(200)
-      expect(res.body.data._id).toBeDefined()
+        .expect(201)
 
       expect(res.body).toEqual({
         data: {
