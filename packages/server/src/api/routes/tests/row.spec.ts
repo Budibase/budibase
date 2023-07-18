@@ -14,6 +14,8 @@ import {
   Row,
   Table,
   FieldType,
+  SortType,
+  SortOrder,
 } from "@budibase/types"
 import { generator, structures } from "@budibase/backend-core/tests"
 
@@ -694,12 +696,12 @@ describe("/rows", () => {
         schema: {
           name: {
             type: FieldType.STRING,
-            name: "Name",
+            name: "name",
             constraints: { type: "string" },
           },
           age: {
             type: FieldType.NUMBER,
-            name: "Age",
+            name: "age",
             constraints: {},
           },
         },
@@ -755,6 +757,67 @@ describe("/rows", () => {
       expect(response.body.rows).toHaveLength(5)
       expect(response.body).toEqual({
         rows: expect.arrayContaining(expectedRows.map(expect.objectContaining)),
+      })
+    })
+
+    it.each([
+      [
+        {
+          field: "name",
+          order: SortOrder.ASCENDING,
+          type: SortType.STRING,
+        },
+        ["Alice", "Bob", "Charly", "Danny"],
+      ],
+      [
+        {
+          field: "name",
+        },
+        ["Alice", "Bob", "Charly", "Danny"],
+      ],
+      [
+        {
+          field: "name",
+          order: SortOrder.DESCENDING,
+        },
+        ["Danny", "Charly", "Bob", "Alice"],
+      ],
+      [
+        {
+          field: "name",
+          order: SortOrder.DESCENDING,
+          type: SortType.STRING,
+        },
+        ["Danny", "Charly", "Bob", "Alice"],
+      ],
+    ])("allow sorting", async (sortParams, expected) => {
+      await config.createTable(userTable())
+      const users = [
+        { name: "Alice", age: 25 },
+        { name: "Bob", age: 30 },
+        { name: "Charly", age: 27 },
+        { name: "Danny", age: 15 },
+      ]
+      for (const user of users) {
+        await config.createRow({
+          tableId: config.table!._id,
+          ...user,
+        })
+      }
+
+      const createViewResponse = await config.api.viewV2.create({
+        sort: sortParams,
+      })
+
+      const response = await request
+        .get(`/api/views/v2/${createViewResponse._id}/search`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(response.body.rows).toHaveLength(4)
+      expect(response.body).toEqual({
+        rows: expected.map(name => expect.objectContaining({ name })),
       })
     })
   })
