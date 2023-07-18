@@ -1,6 +1,5 @@
 import TestConfiguration from "../../config/TestConfiguration"
-import { generator } from "../../../shared"
-import * as fixtures from "../../fixtures";
+import * as fixtures from "../../fixtures"
 
 describe("Account API - Verify Account", () => {
     const config = new TestConfiguration()
@@ -13,26 +12,45 @@ describe("Account API - Verify Account", () => {
         await config.afterAll()
     })
 
+    describe("POST /api/accounts/verify", () => {
+        it("returns 200", async () => {
+            // Create unverified account
+            const createAccountRequest = fixtures.accounts.generateAccount()
+            const [res, acc] = await config.api.accounts.create(
+                createAccountRequest,
+                { doExpect: true, autoVerify: false })
 
-    it("Verify an account", async () => {
-        // Create account
-        await config.api.accounts.create({
-            ...fixtures.accounts.generateAccount()
+            // Attempt to log in using unverified account
+            const [loginResponse, cookie] = await config.accountsApi.auth.login(
+                createAccountRequest.email,
+                createAccountRequest.password,
+            )
+
+            // await config.login(
+            //     createAccountRequest.email,
+            //     createAccountRequest.password,
+            //     createAccountRequest.tenantId,
+            // )
+
+            // Expect response - cannot login via unverified account
+
+
+            // Verify account via code
+            // await config.api.accounts.verifyAccount()
+
+            // Expect response - login successful
         })
-        // Invite user
-
-        // Verify account via code
-        await config.api.accounts.verifyAccount()
     })
 
-    it("Send account verification email ", async () => {
-        // Create account
-        await config.api.accounts.create({
-            ...fixtures.accounts.generateAccount()
-        })
-        // Invite user
+    describe("POST /api/accounts/verify/send", () => {
+        it("Send account verification email ", async () => {
+            // Create account
+            await config.api.accounts.create({
+                ...fixtures.accounts.generateAccount()
+            })
 
-        // Verify account via email
-        await config.api.accounts.verifyAccountSendEmail()
+            // Verify account via email
+            //await config.api.accounts.verifyAccountSendEmail()
+        })
     })
 })

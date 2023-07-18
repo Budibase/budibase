@@ -14,7 +14,7 @@ logging.LOG_CONTEXT = false
 const accountsApi = new AccountInternalAPI({})
 const internalApi = new BudibaseInternalAPI({})
 
-const API_OPTS: APIRequestOpts = { doExpect: false }
+const API_OPTS: APIRequestOpts = { doExpect: false}
 
 // @ts-ignore
 global.qa = {}
@@ -23,7 +23,8 @@ async function createAccount(): Promise<[CreateAccountRequest, Account]> {
   const account = fixtures.accounts.generateAccount()
   await accountsApi.accounts.validateEmail(account.email, API_OPTS)
   await accountsApi.accounts.validateTenantId(account.tenantId, API_OPTS)
-  const [res, newAccount] = await accountsApi.accounts.create(account, API_OPTS)
+  const [res, newAccount] = await accountsApi.accounts.create(
+      account, {...API_OPTS, autoVerify: true})
   await updateLicense(newAccount.accountId)
   return [account, newAccount]
 }

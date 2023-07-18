@@ -1,6 +1,6 @@
 import TestConfiguration from "../../config/TestConfiguration"
+import * as fixtures from "../../fixtures"
 import { generator } from "../../../shared"
-import * as fixtures from "../../fixtures";
 
 describe("Account API - Validate Account", () => {
     const config = new TestConfiguration()
@@ -13,17 +13,34 @@ describe("Account API - Validate Account", () => {
         await config.afterAll()
     })
 
-    const tenant = generator.word({length: 6})
-    const email = `${tenant}@budibase.com`
+    describe("POST /api/accounts/validate/email", () => {
+        it("Returns 200", async () => {
+            const email = generator.email()
+            const res = await config.api.accounts.validateEmail(email)
+            expect(res.status).toBe(200)
+        })
 
-
-    it("Validates an email", async () => {
-
-        await config.api.accounts.validateEmail(email)
+        it("returns 400", async () => {
+            const [response, account] = await config.api.accounts.create({
+                ...fixtures.accounts.generateAccount()
+            })
+            const res = await config.api.accounts.validateEmail(account.email)
+            expect(res.status).toBe(400)
+        })
     })
 
-    it("Validates a tenant ID", async () => {
+    describe("POST /api/accounts/validate/tenantId", () => {
+        it("Returns 200", async () => {
+            const res = await config.api.accounts.validateTenantId("randomtenant")
+            expect(res.status).toBe(200)
+        })
 
-        await config.api.accounts.validateTenantId(tenant)
+        it("Returns 400", async () => {
+            const [response, account] = await config.api.accounts.create({
+                ...fixtures.accounts.generateAccount()
+            })
+            const res = await config.api.accounts.validateTenantId(account.tenantId)
+            expect(res.status).toBe(400)
+        })
     })
 })
