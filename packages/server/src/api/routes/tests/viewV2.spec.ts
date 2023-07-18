@@ -26,13 +26,12 @@ function priceTable(): Table {
 describe("/v2/views", () => {
   const request = setup.getRequest()
   const config = setup.getConfig()
-  let table: Table
 
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
     await config.init()
-    table = await config.createTable(priceTable())
+    await config.createTable(priceTable())
   })
 
   describe("fetch", () => {
