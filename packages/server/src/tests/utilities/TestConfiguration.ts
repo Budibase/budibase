@@ -50,7 +50,6 @@ import {
   SearchFilters,
   UserRoles,
   Automation,
-  ViewV2,
 } from "@budibase/types"
 import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
 
@@ -248,7 +247,7 @@ class TestConfiguration {
     const db = tenancy.getTenantDB(this.getTenantId())
     let existing
     try {
-      existing = await db.get(id)
+      existing = await db.get<any>(id)
     } catch (err) {
       existing = { email }
     }
@@ -466,7 +465,7 @@ class TestConfiguration {
   async generateApiKey(userId = this.defaultUserValues.globalUserId) {
     const db = tenancy.getTenantDB(this.getTenantId())
     const id = dbCore.generateDevInfoID(userId)
-    let devInfo
+    let devInfo: any
     try {
       devInfo = await db.get(id)
     } catch (err) {
