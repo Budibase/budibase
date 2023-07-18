@@ -47,7 +47,7 @@ export async function get(viewId: string): Promise<ViewV2 | undefined> {
   }
 }
 
-export async function save(view: ViewV2): Promise<ViewV2> {
+export async function create(view: ViewV2): Promise<ViewV2> {
   const db = context.getAppDB()
 
   const response = await db.put(
