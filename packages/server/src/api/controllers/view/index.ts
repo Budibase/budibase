@@ -27,7 +27,8 @@ export async function save(ctx: Ctx) {
   const db = context.getAppDB()
   const { originalName, ...viewToSave } = ctx.request.body
 
-  const existingTable = await db.get(ctx.request.body.tableId)
+  const existingTable = await sdk.tables.getTable(ctx.request.body.tableId)
+  existingTable.views ??= {}
   const table = cloneDeep(existingTable)
 
   const groupByField: any = Object.values(table.schema).find(
@@ -120,8 +121,8 @@ export async function destroy(ctx: Ctx) {
   const db = context.getAppDB()
   const viewName = decodeURIComponent(ctx.params.viewName)
   const view = await deleteView(viewName)
-  const table = await db.get(view.meta.tableId)
-  delete table.views[viewName]
+  const table = await sdk.tables.getTable(view.meta.tableId)
+  delete table.views![viewName]
   await db.put(table)
   await events.view.deleted(view)
 

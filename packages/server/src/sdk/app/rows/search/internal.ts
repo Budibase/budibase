@@ -11,7 +11,7 @@ import {
 } from "../../../../db/utils"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
-import { Database, Row } from "@budibase/types"
+import { Database, Row, Table } from "@budibase/types"
 import { cleanExportRows } from "../utils"
 import {
   Format,
@@ -37,7 +37,6 @@ export async function search(options: SearchParams) {
     return { rows: await fetch(tableId) }
   }
 
-  const db = context.getAppDB()
   const { paginate, query } = options
 
   const params: InternalSearchParams<any> = {
@@ -53,7 +52,7 @@ export async function search(options: SearchParams) {
 
   let table
   if (params.sort && !params.sortType) {
-    table = await db.get(tableId)
+    table = await sdk.tables.getTable(tableId)
     const schema = table.schema
     const sortField = schema[params.sort]
     params.sortType = sortField.type === "number" ? "number" : "string"
@@ -72,7 +71,7 @@ export async function search(options: SearchParams) {
     if (tableId === InternalTables.USER_METADATA) {
       response.rows = await getGlobalUsersFromMetadata(response.rows)
     }
-    table = table || (await db.get(tableId))
+    table = table || (await sdk.tables.getTable(tableId))
     response.rows = await outputProcessing(table, response.rows)
   }
 
@@ -84,7 +83,7 @@ export async function exportRows(
 ): Promise<ExportRowsResult> {
   const { tableId, format, rowIds, columns, query } = options
   const db = context.getAppDB()
-  const table = await db.get(tableId)
+  const table = await sdk.tables.getTable(tableId)
 
   let result
   if (rowIds) {
@@ -140,7 +139,7 @@ export async function exportRows(
 export async function fetch(tableId: string) {
   const db = context.getAppDB()
 
-  let table = await db.get(tableId)
+  let table = await sdk.tables.getTable(tableId)
   let rows = await getRawTableData(db, tableId)
   const result = await outputProcessing(table, rows)
   return result
@@ -193,12 +192,13 @@ export async function fetchView(
   let rows
   if (!calculation) {
     response.rows = response.rows.map(row => row.doc)
-    let table
+    let table: Table
     try {
-      table = await db.get(viewInfo.meta.tableId)
+      table = await sdk.tables.getTable(viewInfo.meta.tableId)
     } catch (err) {
       /* istanbul ignore next */
       table = {
+        name: "",
         schema: {},
       }
     }

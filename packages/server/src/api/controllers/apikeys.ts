@@ -6,7 +6,7 @@ const KEYS_DOC = dbCore.StaticDatabases.GLOBAL.docs.apiKeys
 async function getBuilderMainDoc() {
   const db = tenancy.getGlobalDB()
   try {
-    return await db.get(KEYS_DOC)
+    return await db.get<any>(KEYS_DOC)
   } catch (err) {
     // doesn't exist yet, nothing to get
     return {
