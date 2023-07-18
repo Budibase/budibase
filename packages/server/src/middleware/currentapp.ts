@@ -11,7 +11,6 @@ import { getCachedSelf } from "../utilities/global"
 import env from "../environment"
 import { isWebhookEndpoint } from "./utils"
 import { UserCtx, ContextUser } from "@budibase/types"
-import { removePortalUserPermissions } from "@budibase/backend-core/src/users"
 
 export default async (ctx: UserCtx, next: any) => {
   // try to get the appID from the request
