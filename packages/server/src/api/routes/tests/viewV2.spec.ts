@@ -41,7 +41,7 @@ describe("/v2/views", () => {
     beforeAll(async () => {
       await config.createTable(priceTable())
       for (let id = 0; id < 10; id++) {
-        views.push(await config.createViewV2())
+        views.push(await config.api.viewV2.create())
       }
     })
 
@@ -62,7 +62,7 @@ describe("/v2/views", () => {
       const newTable = await config.createTable(priceTable())
       const newViews = []
       for (let id = 0; id < 5; id++) {
-        newViews.push(await config.createViewV2({ tableId: newTable._id }))
+        newViews.push(await config.api.viewV2.create({ tableId: newTable._id }))
       }
 
       const res = await request
@@ -100,7 +100,7 @@ describe("/v2/views", () => {
 
     let view: ViewV2
     beforeAll(async () => {
-      view = await config.createViewV2()
+      view = await config.api.viewV2.create()
     })
 
     it("can fetch the expected view", async () => {
@@ -151,18 +151,18 @@ describe("/v2/views", () => {
 
     beforeAll(async () => {
       await config.createTable(priceTable())
-      view = await config.createViewV2()
+      view = await config.api.viewV2.create()
     })
 
     it("can delete an existing view", async () => {
-      await config.getViewV2(view._id!).expect(200)
+      await config.api.viewV2.get(view._id!).expect(200)
 
       await request
         .delete(`/api/v2/views/${view._id}`)
         .set(config.defaultHeaders())
         .expect(204)
 
-      await config.getViewV2(view._id!).expect(404)
+      await config.api.viewV2.get(view._id!).expect(404)
     })
   })
 })
