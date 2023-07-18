@@ -1,4 +1,5 @@
-import { SearchFilters } from "../../sdk"
+import { SortType } from "../../api"
+import { SearchFilters, SortDirection } from "../../sdk"
 import { Document } from "../document"
 
 export interface View {
@@ -17,6 +18,11 @@ export interface ViewV2 extends Document {
   name: string
   tableId: string
   query?: SearchFilters
+  sort?: {
+    field: string
+    order?: SortDirection
+    type?: SortType
+  }
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
