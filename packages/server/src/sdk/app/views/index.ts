@@ -5,7 +5,7 @@ import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 
 export async function get(viewId: string): Promise<ViewV2 | undefined> {
-  const { tableId } = utils.extractViewInfoFromId(viewId)
+  const { tableId } = utils.extractViewInfoFromID(viewId)
   const table = await sdk.tables.getTable(tableId)
   const views = Object.values(table.views!)
   const view = views.find(v => isV2(v) && v.id === viewId) as ViewV2 | undefined
