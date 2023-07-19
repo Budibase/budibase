@@ -16,7 +16,7 @@
       return
     }
     try {
-      await viewsStore.save({
+      await viewsStore.create({
         name,
         tableId: $tables.selected._id,
         field,
