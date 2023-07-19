@@ -716,8 +716,10 @@ describe("/rows", () => {
       }
 
       const createViewResponse = await config.api.viewV2.create()
-
-      const response = await config.api.viewV2.search(createViewResponse._id!)
+      const response = await config.api.viewV2.search(
+        createViewResponse.tableId,
+        createViewResponse.id
+      )
 
       expect(response.body.rows).toHaveLength(10)
       expect(response.body).toEqual({
@@ -744,11 +746,17 @@ describe("/rows", () => {
           })
         )
 
-      const createViewResponse = await config.api.viewV2.create({
-        query: { equal: { age: 40 } },
-      })
+      const createViewResponse = await config.api.viewV2.create(
+        config.table?._id!,
+        {
+          query: { equal: { age: 40 } },
+        }
+      )
 
-      const response = await config.api.viewV2.search(createViewResponse._id!)
+      const response = await config.api.viewV2.search(
+        createViewResponse.tableId,
+        createViewResponse.id
+      )
 
       expect(response.body.rows).toHaveLength(5)
       expect(response.body).toEqual({
@@ -831,11 +839,17 @@ describe("/rows", () => {
         })
       }
 
-      const createViewResponse = await config.api.viewV2.create({
-        sort: sortParams,
-      })
+      const createViewResponse = await config.api.viewV2.create(
+        config.table?._id!,
+        {
+          sort: sortParams,
+        }
+      )
 
-      const response = await config.api.viewV2.search(createViewResponse._id!)
+      const response = await config.api.viewV2.search(
+        createViewResponse.tableId,
+        createViewResponse.id
+      )
 
       expect(response.body.rows).toHaveLength(4)
       expect(response.body).toEqual({
