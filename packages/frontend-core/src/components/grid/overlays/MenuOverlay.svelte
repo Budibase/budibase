@@ -17,6 +17,7 @@
     focusedCellAPI,
     focusedRowId,
     notifications,
+    canAddRows,
   } = getContext("grid")
 
   $: style = makeStyle($menu)
@@ -93,7 +94,7 @@
       </MenuItem>
       <MenuItem
         icon="Duplicate"
-        disabled={isNewRow || !$config.allowAddRows}
+        disabled={isNewRow || !$canAddRows}
         on:click={duplicate}
       >
         Duplicate row

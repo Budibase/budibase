@@ -62,7 +62,7 @@ export async function get(
   opts?: { enriched: boolean }
 ): Promise<Datasource> {
   const appDb = context.getAppDB()
-  const datasource = await appDb.get(datasourceId)
+  const datasource = await appDb.get<Datasource>(datasourceId)
   if (opts?.enriched) {
     return (await enrichDatasourceWithValues(datasource)).datasource
   } else {
@@ -72,7 +72,7 @@ export async function get(
 
 export async function getWithEnvVars(datasourceId: string) {
   const appDb = context.getAppDB()
-  const datasource = await appDb.get(datasourceId)
+  const datasource = await appDb.get<Datasource>(datasourceId)
   return enrichDatasourceWithValues(datasource)
 }
 

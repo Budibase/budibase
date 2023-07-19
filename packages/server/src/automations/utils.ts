@@ -8,7 +8,12 @@ import { db as dbCore, context } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { Automation, AutomationJob, WebhookActionType } from "@budibase/types"
+import {
+  Automation,
+  AutomationJob,
+  Webhook,
+  WebhookActionType,
+} from "@budibase/types"
 import sdk from "../sdk"
 
 const REBOOT_CRON = "@reboot"
@@ -204,15 +209,15 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
     oldTrigger.webhookId
   ) {
     try {
-      let db = context.getAppDB()
+      const db = context.getAppDB()
       // need to get the webhook to get the rev
-      const webhook = await db.get(oldTrigger.webhookId)
+      const webhook = await db.get<Webhook>(oldTrigger.webhookId)
       // might be updating - reset the inputs to remove the URLs
       if (newTrigger) {
         delete newTrigger.webhookId
         newTrigger.inputs = {}
       }
-      await sdk.automations.webhook.destroy(webhook._id, webhook._rev)
+      await sdk.automations.webhook.destroy(webhook._id!, webhook._rev!)
     } catch (err) {
       // don't worry about not being able to delete, if it doesn't exist all good
     }

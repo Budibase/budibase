@@ -125,9 +125,18 @@ export class BaseSocket {
   }
 
   // Gets an array of all redis keys of users inside a certain room
-  async getRoomSessionIds(room: string): Promise<string[]> {
-    const keys = await this.redisClient?.get(this.getRoomKey(room))
-    return keys || []
+  async getRoomSessionIds(room: string | string[]): Promise<string[]> {
+    if (Array.isArray(room)) {
+      const roomKeys = room.map(this.getRoomKey.bind(this))
+      const roomSessionIdMap = await this.redisClient?.bulkGet(roomKeys)
+      let sessionIds: any[] = []
+      Object.values(roomSessionIdMap || {}).forEach(roomSessionIds => {
+        sessionIds = sessionIds.concat(roomSessionIds)
+      })
+      return sessionIds
+    } else {
+      return (await this.redisClient?.get(this.getRoomKey(room))) || []
+    }
   }
 
   // Sets the list of redis keys for users inside a certain room.
@@ -137,7 +146,7 @@ export class BaseSocket {
   }
 
   // Gets a list of all users inside a certain room
-  async getRoomSessions(room?: string): Promise<SocketSession[]> {
+  async getRoomSessions(room?: string | string[]): Promise<SocketSession[]> {
     if (room) {
       const sessionIds = await this.getRoomSessionIds(room)
       const keys = sessionIds.map(this.getSessionKey.bind(this))

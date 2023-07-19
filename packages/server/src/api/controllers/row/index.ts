@@ -7,6 +7,9 @@ import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
 import { addRev } from "../public/utils"
 import { fixRow } from "../public/rows"
+import sdk from "../../../sdk"
+import * as exporters from "../view/exporters"
+import { apiFileReturn } from "../../../utilities/fileSystem"
 
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
@@ -66,14 +69,26 @@ export const save = async (ctx: any) => {
 }
 export async function fetchView(ctx: any) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => pickApi(tableId).fetchView(ctx), {
-    datasourceId: tableId,
-  })
+  const viewName = decodeURIComponent(ctx.params.viewName)
+
+  const { calculation, group, field } = ctx.query
+
+  ctx.body = await quotas.addQuery(
+    () =>
+      sdk.rows.fetchView(tableId, viewName, {
+        calculation,
+        group,
+        field,
+      }),
+    {
+      datasourceId: tableId,
+    }
+  )
 }
 
 export async function fetch(ctx: any) {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => pickApi(tableId).fetch(ctx), {
+  ctx.body = await quotas.addQuery(() => sdk.rows.fetch(tableId), {
     datasourceId: tableId,
   })
 }
@@ -136,8 +151,14 @@ export async function destroy(ctx: any) {
 
 export async function search(ctx: any) {
   const tableId = utils.getTableId(ctx)
+
+  const searchParams = {
+    ...ctx.request.body,
+    tableId,
+  }
+
   ctx.status = 200
-  ctx.body = await quotas.addQuery(() => pickApi(tableId).search(ctx), {
+  ctx.body = await quotas.addQuery(() => sdk.rows.search(searchParams), {
     datasourceId: tableId,
   })
 }
@@ -167,7 +188,33 @@ export async function fetchEnrichedRow(ctx: any) {
 
 export const exportRows = async (ctx: any) => {
   const tableId = utils.getTableId(ctx)
-  ctx.body = await quotas.addQuery(() => pickApi(tableId).exportRows(ctx), {
-    datasourceId: tableId,
-  })
+
+  const format = ctx.query.format
+
+  const { rows, columns, query } = ctx.request.body
+  if (typeof format !== "string" || !exporters.isFormat(format)) {
+    ctx.throw(
+      400,
+      `Format ${format} not valid. Valid values: ${Object.values(
+        exporters.Format
+      )}`
+    )
+  }
+
+  ctx.body = await quotas.addQuery(
+    async () => {
+      const { fileName, content } = await sdk.rows.exportRows({
+        tableId,
+        format,
+        rowIds: rows,
+        columns,
+        query,
+      })
+      ctx.attachment(fileName)
+      return apiFileReturn(content)
+    },
+    {
+      datasourceId: tableId,
+    }
+  )
 }
