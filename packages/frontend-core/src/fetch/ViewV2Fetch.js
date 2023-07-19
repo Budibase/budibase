@@ -7,9 +7,8 @@ export default class ViewV2Fetch extends DataFetch {
 
   async getDefinition(datasource) {
     try {
-      const viewResponse = await this.API.viewV2.get(datasource.tableId)
       const result = await this.API.fetchTableDefinition(
-        viewResponse.data.tableId
+        datasource.tableId.tableId
       )
       return result
     } catch (error) {
@@ -24,7 +23,10 @@ export default class ViewV2Fetch extends DataFetch {
   async getData() {
     const { datasource } = this.options
     try {
-      const res = await this.API.viewV2.fetch(datasource.tableId)
+      const res = await this.API.viewV2.fetch(
+        datasource.tableId.tableId,
+        datasource.tableId.viewId
+      )
       return { rows: res?.rows || [] }
     } catch (error) {
       return { rows: [] }

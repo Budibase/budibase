@@ -11,12 +11,12 @@
   const stopSyncing = syncURLToState({
     urlParam: "id",
     stateKey: "selectedViewId",
-    validate: id => $views.list?.some(view => view._id === id),
+    validate: id => $views.list?.some(view => view.id === id),
     update: id => {
-      const view = $views.list.find(v => v._id === id)
+      const view = $views.list.find(v => v.id === id)
       views.select(view.name)
     },
-    fallbackUrl: "../",
+    fallbackUrl: "../../",
     store: views,
     routify,
     decode: decodeURIComponent,
