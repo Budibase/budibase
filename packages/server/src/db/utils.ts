@@ -277,9 +277,5 @@ export function getMultiIDParams(ids: string[]) {
  * @returns {string} The new view ID which the view doc can be stored under.
  */
 export function generateViewID(tableId: string) {
-  return `${viewIDPrefix(tableId)}${newid()}`
-}
-
-export function viewIDPrefix(tableId: string) {
-  return `${DocumentType.VIEW}${SEPARATOR}${tableId}${SEPARATOR}`
+  return `${DocumentType.VIEW}${SEPARATOR}${tableId}${SEPARATOR}${newid()}`
 }
