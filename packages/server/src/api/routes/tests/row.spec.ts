@@ -749,7 +749,7 @@ describe("/rows", () => {
       })
 
       const response = await request
-        .get(`/api/views/v2/${createViewResponse._id}/search`)
+        .get(`/api/v2/views/${createViewResponse._id}/search`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -840,7 +840,7 @@ describe("/rows", () => {
       })
 
       const response = await request
-        .get(`/api/views/v2/${createViewResponse._id}/search`)
+        .get(`/api/v2/views/${createViewResponse._id}/search`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
