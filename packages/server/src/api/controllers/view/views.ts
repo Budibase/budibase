@@ -55,7 +55,10 @@ export async function save(ctx: Ctx) {
     existingTable.views[viewName] = existingTable.views[originalName]
   }
   await db.put(table)
-  await handleViewEvents(existingTable.views[viewName], table.views[viewName])
+  await handleViewEvents(
+    existingTable.views[viewName] as View,
+    table.views[viewName]
+  )
 
   ctx.body = table.views[viewName]
   builderSocket?.emitTableUpdate(ctx, table)
