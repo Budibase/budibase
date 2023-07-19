@@ -1,24 +1,5 @@
 import sdk from "../../../sdk"
-import {
-  CreateViewRequest,
-  Ctx,
-  FetchViewResponse,
-  ViewResponse,
-} from "@budibase/types"
-
-export async function fetch(ctx: Ctx<void, FetchViewResponse>) {
-  const { tableId } = ctx.query
-
-  if (tableId && typeof tableId !== "string") {
-    ctx.throw(400, "tableId type is not valid")
-  }
-
-  const views = tableId
-    ? await sdk.views.findByTable(tableId)
-    : await sdk.views.fetch()
-
-  ctx.body = { views }
-}
+import { CreateViewRequest, Ctx, ViewResponse } from "@budibase/types"
 
 export async function find(ctx: Ctx<void, ViewResponse>) {
   const { viewId } = ctx.params
