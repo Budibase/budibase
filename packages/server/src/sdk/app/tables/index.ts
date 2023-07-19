@@ -28,7 +28,6 @@ async function getAllInternalTables(db?: Database): Promise<Table[]> {
 async function getAllExternalTables(
   datasourceId: any
 ): Promise<Record<string, Table>> {
-  const db = context.getAppDB()
   const datasource = await datasources.get(datasourceId, { enriched: true })
   if (!datasource || !datasource.entities) {
     throw "Datasource is not configured fully."
