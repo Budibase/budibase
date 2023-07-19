@@ -48,7 +48,7 @@ export default class AccountInternalAPIClient {
       if (options.internal) {
         requestOptions.headers = {
           ...requestOptions.headers,
-          ...{ [Header.API_KEY] : env.ACCOUNT_PORTAL_API_KEY },
+          ...{ [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY },
         }
       }
 

@@ -69,7 +69,10 @@ export default class BudibaseTestConfiguration {
     this.state.email = original.email
   }
 
-  async loginAsAccount(account: CreateAccountRequest, opts: APIRequestOpts = {}) {
+  async loginAsAccount(
+    account: CreateAccountRequest,
+    opts: APIRequestOpts = {}
+  ) {
     const [_, cookie] = await this.accountsApi.auth.login(
       account.email,
       account.password,

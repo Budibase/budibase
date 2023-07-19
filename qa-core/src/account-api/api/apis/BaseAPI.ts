@@ -4,10 +4,10 @@ import { APIRequestOpts } from "../../../types"
 // TODO: Add to LicenseAPI
 
 export default class BaseAPI {
-
   async doRequest(
     request: () => Promise<[Response, any]>,
-    opts: APIRequestOpts): Promise<[Response, any]> {
+    opts: APIRequestOpts
+  ): Promise<[Response, any]> {
     const [response, body] = await request()
 
     // do expect on by default
