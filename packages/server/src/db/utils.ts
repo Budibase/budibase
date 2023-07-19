@@ -280,7 +280,7 @@ export function generateViewID(tableId: string) {
   return `${tableId}${SEPARATOR}${newid()}`
 }
 
-export function extractViewInfoFromId(viewId: string) {
+export function extractViewInfoFromID(viewId: string) {
   const regex = new RegExp(`^(?<tableId>.+)${SEPARATOR}([^${SEPARATOR}]+)$`)
   const res = regex.exec(viewId)
   return {
