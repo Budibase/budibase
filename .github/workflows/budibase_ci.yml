@@ -159,7 +159,7 @@ jobs:
         run: |
           cd qa-core
           yarn setup
-          yarn test:ci
+          yarn serve:test:ci
         env:
           BB_ADMIN_USER_EMAIL: admin
           BB_ADMIN_USER_PASSWORD: admin
