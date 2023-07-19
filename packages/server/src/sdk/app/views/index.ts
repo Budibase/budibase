@@ -13,12 +13,8 @@ export async function create(
     id: coreUtils.newid(),
     version: 2,
   }
-  view._id = view.id
 
   const db = context.getAppDB()
-
-  await db.put(view, {})
-
   const table = await sdk.tables.getTable(tableId)
   table.views ??= {}
 
