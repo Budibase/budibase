@@ -60,7 +60,6 @@ export const deriveStores = context => {
     loading,
     sort,
     tableId,
-    datasourceType,
     API,
     scroll,
     validation,
@@ -72,6 +71,7 @@ export const deriveStores = context => {
     hasNextPage,
     error,
     notifications,
+    props,
   } = context
   const instanceLoaded = writable(false)
   const fetch = writable(null)
@@ -112,7 +112,7 @@ export const deriveStores = context => {
     const newFetch = fetchData({
       API,
       datasource: {
-        type: datasourceType,
+        type: props.datasourceType,
         tableId: $tableId,
       },
       options: {
