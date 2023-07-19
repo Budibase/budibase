@@ -1,4 +1,4 @@
-import { Account, AccountMetadata, ViewV2 } from "@budibase/types"
+import { ViewV2 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 import { generator } from "@budibase/backend-core/tests"
@@ -32,21 +32,4 @@ export class ViewV2API extends TestAPI {
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
   }
-  //   },
-  // }
-  // saveMetadata = async (account: Account) => {
-  //   const res = await this.request
-  //     .put(`/api/system/accounts/${account.accountId}/metadata`)
-  //     .send(account)
-  //     .set(this.config.internalAPIHeaders())
-  //     .expect("Content-Type", /json/)
-  //     .expect(200)
-  //   return res.body as AccountMetadata
-  // }
-
-  // destroyMetadata = (accountId: string) => {
-  //   return this.request
-  //     .del(`/api/system/accounts/${accountId}/metadata`)
-  //     .set(this.config.internalAPIHeaders())
-  // }
 }
