@@ -41,7 +41,7 @@ export function createViewsStore() {
   }
 
   const create = async view => {
-    const savedView = await API.viewV2.create(view.tableId, view)
+    const savedView = await API.viewV2.create(view)
 
     // Update tables
     tables.update(state => {
