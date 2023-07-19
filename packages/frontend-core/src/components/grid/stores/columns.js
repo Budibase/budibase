@@ -83,6 +83,21 @@ export const deriveStores = context => {
     await saveChanges()
   }
 
+  // Derive if we have any normal columns
+  const hasNonAutoColumn = derived(
+    [columns, stickyColumn],
+    ([$columns, $stickyColumn]) => {
+      let allCols = $columns || []
+      if ($stickyColumn) {
+        allCols = [...allCols, $stickyColumn]
+      }
+      const normalCols = allCols.filter(column => {
+        return !column.schema?.autocolumn
+      })
+      return normalCols.length > 0
+    }
+  )
+
   // Persists column changes by saving metadata against table schema
   const saveChanges = async () => {
     const $columns = get(columns)
@@ -128,6 +143,7 @@ export const deriveStores = context => {
   }
 
   return {
+    hasNonAutoColumn,
     columns: {
       ...columns,
       actions: {

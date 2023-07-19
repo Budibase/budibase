@@ -233,8 +233,11 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     try {
       // if encrypt is undefined, then default is to encrypt
       const encrypt = this.config.encrypt === undefined || this.config.encrypt
-      const clientCfg: MSSQLConfig & sqlServer.config = {
-        ...this.config,
+      const clientCfg: sqlServer.config = {
+        user: this.config.user,
+        password: this.config.password,
+        server: this.config.server,
+        database: this.config.database,
         port: +this.config.port,
         options: {
           encrypt,
@@ -244,11 +247,11 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       if (encrypt) {
         clientCfg.options!.trustServerCertificate = true
       }
-      delete clientCfg.encrypt
 
       switch (this.config.authType) {
         case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY:
-          const { clientId, tenantId, clientSecret } = this.config.adConfig
+          const { clientId, tenantId, clientSecret } =
+            this.config.adConfig || {}
           const clientApp = new ConfidentialClientApplication({
             auth: {
               clientId,
@@ -269,7 +272,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           }
           break
         case MSSQLConfigAuthType.NTLM:
-          const { domain, trustServerCertificate } = this.config.ntlmConfig
+          const { domain, trustServerCertificate } =
+            this.config.ntlmConfig || {}
           clientCfg.authentication = {
             type: "ntlm",
             options: {
@@ -277,8 +281,9 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
             },
           }
           clientCfg.options ??= {}
-          clientCfg.options.trustServerCertificate = trustServerCertificate
+          clientCfg.options.trustServerCertificate = !!trustServerCertificate
           break
+        case null:
         case undefined:
           break
         default:

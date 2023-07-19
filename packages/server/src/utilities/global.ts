@@ -90,7 +90,7 @@ export async function getCachedSelf(ctx: UserCtx, appId: string) {
 
 export async function getRawGlobalUser(userId: string) {
   const db = tenancy.getGlobalDB()
-  return db.get(getGlobalIDFromUserMetadataID(userId))
+  return db.get<User>(getGlobalIDFromUserMetadataID(userId))
 }
 
 export async function getGlobalUser(userId: string) {

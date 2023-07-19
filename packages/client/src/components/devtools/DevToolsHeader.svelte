@@ -1,6 +1,6 @@
 <script>
   import { Heading, Select, ActionButton } from "@budibase/bbui"
-  import { devToolsStore } from "../../stores"
+  import { devToolsStore, appStore } from "../../stores"
   import { getContext } from "svelte"
 
   const context = getContext("context")
@@ -45,27 +45,41 @@
       icon="Code"
       on:click={() => devToolsStore.actions.setVisible(!$devToolsStore.visible)}
     >
-      {$devToolsStore.visible ? "Close" : "Open"} DevTools
+      DevTools
     </ActionButton>
   {/if}
-  <ActionButton
-    quiet
-    icon="Close"
-    on:click={() => window.parent.closePreview?.()}
-  >
-    Close preview
-  </ActionButton>
+  {#if window.parent.isBuilder}
+    <ActionButton
+      quiet
+      icon="LinkOut"
+      on:click={() => {
+        window.parent.closePreview?.()
+        window.open(`/${$appStore.appId}`, "_blank")
+      }}
+    >
+      Fullscreen
+    </ActionButton>
+    <ActionButton
+      quiet
+      icon="Close"
+      on:click={() => window.parent.closePreview?.()}
+    >
+      Close
+    </ActionButton>
+  {/if}
 </div>
 
 <style>
   .dev-preview-header {
     flex: 0 0 60px;
-    display: grid;
-    align-items: center;
     background-color: black;
     padding: 0 var(--spacing-xl);
-    grid-template-columns: 1fr auto auto auto;
-    grid-gap: var(--spacing-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+  .dev-preview-header :global(.spectrum-Heading) {
+    flex: 1 1 auto;
   }
   .dev-preview-header.mobile {
     grid-template-columns: 1fr auto auto;

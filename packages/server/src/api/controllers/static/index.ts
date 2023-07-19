@@ -1,7 +1,7 @@
 require("svelte/register")
 
 import { join } from "../../../utilities/centralPath"
-const uuid = require("uuid")
+import uuid from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
@@ -16,6 +16,7 @@ import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
+import { App } from "@budibase/types"
 
 const send = require("koa-send")
 
@@ -110,7 +111,7 @@ export const serveApp = async function (ctx: any) {
   let db
   try {
     db = context.getAppDB({ skip_setup: true })
-    const appInfo = await db.get(DocumentType.APP_METADATA)
+    const appInfo = await db.get<any>(DocumentType.APP_METADATA)
     let appId = context.getAppId()
 
     if (!env.isJest()) {
@@ -177,7 +178,7 @@ export const serveApp = async function (ctx: any) {
 
 export const serveBuilderPreview = async function (ctx: any) {
   const db = context.getAppDB({ skip_setup: true })
-  const appInfo = await db.get(DocumentType.APP_METADATA)
+  const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 
   if (!env.isJest()) {
     let appId = context.getAppId()
