@@ -147,12 +147,12 @@ export async function search(ctx: any) {
 }
 
 export async function searchView(ctx: Ctx<void, SearchResponse>) {
-  const { viewId } = ctx.params
-  const view = await sdk.views.get(viewId)
+  const { tableId, viewId } = ctx.params
+
+  const view = await sdk.views.get(tableId, viewId)
   if (!view) {
-    ctx.throw(404)
+    ctx.throw(404, `View ${viewId} not found in table ${tableId}`)
   }
-  const tableId = view.tableId
 
   ctx.status = 200
   ctx.body = await quotas.addQuery(
