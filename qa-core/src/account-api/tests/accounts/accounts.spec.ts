@@ -2,7 +2,7 @@ import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
 import { generator } from "../../../shared"
 
-describe("accounts", () => {
+describe("Accounts", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
@@ -15,18 +15,19 @@ describe("accounts", () => {
 
   it("performs signup and deletion flow", async () => {
     await config.doInNewState(async () => {
+      // Create account
       const createAccountRequest = fixtures.accounts.generateAccount()
       const email = createAccountRequest.email
       const tenantId = createAccountRequest.tenantId
 
-      // Validation - email and tenant id allowed
+      // Validation - email and tenant ID allowed
       await config.api.accounts.validateEmail(email)
       await config.api.accounts.validateTenantId(tenantId)
 
       // Create unverified account
       await config.api.accounts.create(createAccountRequest)
 
-      // Validation - email and tenant id no longer valid
+      // Validation - email and tenant ID no longer valid
       await config.api.accounts.validateEmail(email, { status: 400 })
       await config.api.accounts.validateTenantId(tenantId, { status: 400 })
 
@@ -39,26 +40,26 @@ describe("accounts", () => {
       // Send the verification request
       await config.accountsApi.accounts.verifyAccount(code!)
 
-      // Can now login to the account
+      // Can now log in to the account
       await config.loginAsAccount(createAccountRequest)
 
       // Delete account
       await config.api.accounts.deleteCurrentAccount()
 
-      // Can't login
+      // Can't log in
       await config.loginAsAccount(createAccountRequest, { status: 403 })
     })
   })
 
-  describe("searching accounts", () => {
-    it("searches by tenant id", async () => {
+  describe("Searching accounts", () => {
+    it("search by tenant ID", async () => {
       const tenantId = generator.string()
 
-      // empty result
-      const [emptyRes, emptyBody] = await config.api.accounts.search(tenantId, "tenantId")
+      // Empty result
+      const [_, emptyBody] = await config.api.accounts.search(tenantId, "tenantId")
       expect(emptyBody.length).toBe(0)
 
-      // hit result
+      // Hit result
       const [hitRes, hitBody] = await config.api.accounts.search(config.state.tenantId!, "tenantId")
       expect(hitBody.length).toBe(1)
       expect(hitBody[0].tenantId).toBe(config.state.tenantId)
@@ -67,11 +68,11 @@ describe("accounts", () => {
     it("searches by email", async () => {
       const email = generator.email()
 
-      // empty result
-      const [emptyRes, emptyBody] = await config.api.accounts.search(email, "email")
+      // Empty result
+      const [_, emptyBody] = await config.api.accounts.search(email, "email")
       expect(emptyBody.length).toBe(0)
 
-      // hit result
+      // Hit result
       const [hitRes, hitBody] = await config.api.accounts.search(config.state.email!, "email")
       expect(hitBody.length).toBe(1)
       expect(hitBody[0].email).toBe(config.state.email)
