@@ -1,8 +1,6 @@
 import { Response } from "node-fetch"
 import { APIRequestOpts } from "../../../types"
 
-// TODO: Add to LicenseAPI
-
 export default class BaseAPI {
   async doRequest(
     request: () => Promise<[Response, any]>,
