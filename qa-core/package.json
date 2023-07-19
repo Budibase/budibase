@@ -15,8 +15,10 @@
     "test:watch": "yarn run test --watch",
     "test:debug": "DEBUG=1 yarn run test",
     "test:notify": "node scripts/testResultsWebhook",
-    "test:smoke": "yarn run test --testPathIgnorePatterns=/.+\\.integration\\.spec\\.ts",
-    "test:ci": "start-server-and-test dev:built http://localhost:4001/health test:smoke",
+    "test:cloud:prod": "yarn run test --testPathIgnorePatterns=/.+\\.integration\\.spec\\.ts",
+    "test:cloud:qa": "yarn run test",
+    "test:ci": "yarn run test --testPathIgnorePatterns=/.+\\.integration\\.spec\\.ts /account-api/",
+    "serve:test:ci": "start-server-and-test dev:built http://localhost:4001/health test:smoke",
     "serve": "start-server-and-test dev:built http://localhost:4001/health",
     "dev:built": "cd ../ && yarn dev:built"
   },
