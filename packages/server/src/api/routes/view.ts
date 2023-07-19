@@ -9,7 +9,7 @@ const router: Router = new Router()
 
 router
   .post(
-    "/api/v2/views/:tableId",
+    "/api/v2/views",
     authorized(permissions.BUILDER),
     viewController.v2.create
   )
