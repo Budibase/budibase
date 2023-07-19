@@ -2,7 +2,6 @@ import { ViewV2 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 import { generator } from "@budibase/backend-core/tests"
-import supertest from "supertest"
 
 export class ViewV2API extends TestAPI {
   constructor(config: TestConfiguration) {
@@ -30,17 +29,6 @@ export class ViewV2API extends TestAPI {
       .expect("Content-Type", /json/)
       .expect(expectStatus)
     return result.body.data as ViewV2
-  }
-
-  get = (
-    viewId: string,
-    { expectStatus } = { expectStatus: 200 }
-  ): supertest.Test => {
-    return this.request
-      .get(`/api/v2/views/${viewId}`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
   }
 
   delete = async (

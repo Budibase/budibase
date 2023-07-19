@@ -8,11 +8,6 @@ import { DocumentType, SEPARATOR, permissions } from "@budibase/backend-core"
 const router: Router = new Router()
 
 router
-  .get(
-    `/api/v2/views/:viewId`,
-    authorized(permissions.BUILDER),
-    viewController.v2.find
-  )
   .post(
     "/api/v2/views/:tableId",
     authorized(permissions.BUILDER),

@@ -1,19 +1,6 @@
 import sdk from "../../../sdk"
 import { CreateViewRequest, Ctx, ViewResponse } from "@budibase/types"
 
-export async function find(ctx: Ctx<void, ViewResponse>) {
-  const { viewId } = ctx.params
-
-  const view = await sdk.views.get(viewId)
-  if (!view) {
-    ctx.throw(404)
-  }
-
-  ctx.body = {
-    data: view,
-  }
-}
-
 export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   const { tableId } = ctx.params
   const view = ctx.request.body
