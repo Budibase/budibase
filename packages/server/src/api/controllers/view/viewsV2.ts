@@ -13,8 +13,8 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
 }
 
 export async function remove(ctx: Ctx) {
-  const { tableId, viewId } = ctx.params
+  const { viewId } = ctx.params
 
-  await sdk.views.remove(tableId, viewId)
+  await sdk.views.remove(viewId)
   ctx.status = 204
 }
