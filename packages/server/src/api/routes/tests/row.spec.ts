@@ -748,11 +748,7 @@ describe("/rows", () => {
         query: { equal: { age: 40 } },
       })
 
-      const response = await request
-        .get(`/api/v2/views/${createViewResponse._id}/search`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const response = await config.api.viewV2.search(createViewResponse._id!)
 
       expect(response.body.rows).toHaveLength(5)
       expect(response.body).toEqual({
@@ -839,11 +835,7 @@ describe("/rows", () => {
         sort: sortParams,
       })
 
-      const response = await request
-        .get(`/api/v2/views/${createViewResponse._id}/search`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const response = await config.api.viewV2.search(createViewResponse._id!)
 
       expect(response.body.rows).toHaveLength(4)
       expect(response.body).toEqual({
