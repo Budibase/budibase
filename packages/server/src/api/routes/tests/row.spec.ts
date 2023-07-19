@@ -711,8 +711,9 @@ describe("/rows", () => {
     it("returns table rows from view", async () => {
       const table = await config.createTable(priceTable())
       const rows = []
-      for (let i = 0; i < 10; i++)
+      for (let i = 0; i < 10; i++) {
         rows.push(await config.createRow({ tableId: table._id }))
+      }
 
       const createViewResponse = await config.api.viewV2.create()
 
