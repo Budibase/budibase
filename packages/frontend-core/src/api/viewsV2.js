@@ -13,4 +13,11 @@ export const buildViewV2Endpoints = API => ({
   fetch: async id => {
     return await API.get({ url: `/api/v2/views/${id}/search` })
   },
+  /**
+   * Delete a view
+   * @param id the id of the view to delete
+   */
+  delete: async id => {
+    return await API.delete({ url: `/api/v2/views/${id}` })
+  },
 })
