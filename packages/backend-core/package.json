@@ -22,6 +22,7 @@
   "dependencies": {
     "@budibase/nano": "10.1.2",
     "@budibase/pouchdb-replication-stream": "1.2.10",
+    "@budibase/shared-core": "0.0.0",
     "@budibase/types": "0.0.0",
     "@shopify/jest-koa-mocks": "5.0.1",
     "@techpass/passport-openidconnect": "0.3.2",

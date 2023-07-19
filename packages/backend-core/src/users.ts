@@ -18,6 +18,7 @@ import {
   User,
   ContextUser,
 } from "@budibase/types"
+import { sdk } from "@budibase/shared-core"
 import { getGlobalDB } from "./context"
 import * as context from "./context"
 
@@ -37,6 +38,12 @@ function removeUserPassword(users: User | User[]) {
   }
   return users
 }
+
+// extract from shared-core to make easily accessible from backend-core
+export const isBuilder = sdk.users.isBuilder
+export const isAdmin = sdk.users.isAdmin
+export const hasAdminPermissions = sdk.users.hasAdminPermissions
+export const hasBuilderPermissions = sdk.users.hasBuilderPermissions
 
 export const bulkGetGlobalUsersById = async (
   userIds: string[],
@@ -252,39 +259,6 @@ export async function getUserCount() {
     include_docs: false,
   })
   return response.total_rows
-}
-
-// checks if a user is specifically a builder, given an app ID
-export function isBuilder(user: User | ContextUser, appId?: string) {
-  if (user.builder?.global) {
-    return true
-  } else if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
-    return true
-  }
-  return false
-}
-
-// alias for hasAdminPermission, currently do the same thing
-// in future whether someone has admin permissions and whether they are
-// an admin for a specific resource could be separated
-export function isAdmin(user: User | ContextUser) {
-  return hasAdminPermissions(user)
-}
-
-// checks if a user is capable of building any app
-export function hasBuilderPermissions(user?: User | ContextUser) {
-  if (!user) {
-    return false
-  }
-  return user.builder?.global || user.builder?.apps?.length !== 0
-}
-
-// checks if a user is capable of being an admin
-export function hasAdminPermissions(user?: User | ContextUser) {
-  if (!user) {
-    return false
-  }
-  return user.admin?.global
 }
 
 // used to remove the builder/admin permissions, for processing the

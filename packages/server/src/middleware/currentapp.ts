@@ -24,7 +24,7 @@ export default async (ctx: UserCtx, next: any) => {
     if (
       isDevAppID(requestAppId) &&
       !isWebhookEndpoint(ctx) &&
-      (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
+      !users.isBuilder(ctx.user, requestAppId)
     ) {
       return ctx.redirect("/")
     }
@@ -70,7 +70,6 @@ export default async (ctx: UserCtx, next: any) => {
   }
 
   return context.doInAppContext(appId, async () => {
-    let skipCookie = false
     // if the user not in the right tenant then make sure they have no permissions
     // need to judge this only based on the request app ID,
     if (
@@ -83,7 +82,6 @@ export default async (ctx: UserCtx, next: any) => {
       ctx.user = users.cleanseUserObject(ctx.user) as ContextUser
       ctx.isAuthenticated = false
       roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
-      skipCookie = true
     }
 
     ctx.appId = appId
