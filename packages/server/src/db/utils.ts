@@ -277,5 +277,13 @@ export function getMultiIDParams(ids: string[]) {
  * @returns {string} The new view ID which the view doc can be stored under.
  */
 export function generateViewID(tableId: string) {
-  return `${DocumentType.VIEW}${SEPARATOR}${tableId}${SEPARATOR}${newid()}`
+  return `${tableId}${SEPARATOR}${newid()}`
+}
+
+export function extractViewInfoFromId(viewId: string) {
+  const regex = new RegExp(`^(?<tableId>.+)${SEPARATOR}([^${SEPARATOR}]+)$`)
+  const res = regex.exec(viewId)
+  return {
+    tableId: res!.groups!["tableId"],
+  }
 }

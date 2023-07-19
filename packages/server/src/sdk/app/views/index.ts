@@ -38,8 +38,10 @@ export function isV2(view: View | ViewV2): view is ViewV2 {
   return (view as ViewV2).version === 2
 }
 
-export async function remove(tableId: string, viewId: string): Promise<void> {
+export async function remove( viewId: string): Promise<void> {
   const db = context.getAppDB()
+
+  const {tableId}=utils.extractViewInfoFromId(viewId)
 
   const table = await sdk.tables.getTable(tableId)
   const view = await get(tableId, viewId)
