@@ -90,6 +90,7 @@ export enum BuilderSocketEvent {
   AppMetadataChange = "AppMetadataChange",
   SelectResource = "SelectResource",
   AppPublishChange = "AppPublishChange",
+  AutomationChange = "AutomationChange",
 }
 
 export const SocketSessionTTL = 60

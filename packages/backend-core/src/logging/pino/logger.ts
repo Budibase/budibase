@@ -1,8 +1,14 @@
-import env from "../../environment"
 import pino, { LoggerOptions } from "pino"
+import pinoPretty from "pino-pretty"
+
+import { IdentityType } from "@budibase/types"
+
+import env from "../../environment"
 import * as context from "../../context"
 import * as correlation from "../correlation"
-import { IdentityType } from "@budibase/types"
+import { LOG_CONTEXT } from "../index"
+
+import { localFileDestination } from "../system"
 
 // LOGGER
 
@@ -15,22 +21,27 @@ if (!env.DISABLE_PINO_LOGGER) {
         return { level: label.toUpperCase() }
       },
       bindings: () => {
-        return {}
+        return {
+          service: env.SERVICE_NAME,
+        }
       },
     },
     timestamp: () => `,"timestamp":"${new Date(Date.now()).toISOString()}"`,
   }
 
+  const destinations: pino.DestinationStream[] = []
+
   if (env.isDev()) {
-    pinoOptions.transport = {
-      target: "pino-pretty",
-      options: {
-        singleLine: true,
-      },
-    }
+    destinations.push(pinoPretty({ singleLine: true }))
   }
 
-  pinoInstance = pino(pinoOptions)
+  if (env.SELF_HOSTED) {
+    destinations.push(localFileDestination())
+  }
+
+  pinoInstance = destinations.length
+    ? pino(pinoOptions, pino.multistream(destinations))
+    : pino(pinoOptions)
 
   // CONSOLE OVERRIDES
 
