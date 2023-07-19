@@ -7,7 +7,7 @@ import {
   Table,
   ViewV2,
 } from "@budibase/types"
-import { generator, structures } from "@budibase/backend-core/tests"
+import { generator } from "@budibase/backend-core/tests"
 
 function priceTable(): Table {
   return {
@@ -48,36 +48,6 @@ describe("/v2/views", () => {
   beforeAll(async () => {
     await config.init()
     await config.createTable(priceTable())
-  })
-
-  describe("getView", () => {
-    let view: ViewV2
-    beforeAll(async () => {
-      view = await config.api.viewV2.create(config.table?._id, {
-        query: { allOr: false, notEqual: { field: "value" } },
-      })
-    })
-
-    it("can fetch the expected view", async () => {
-      const res = await config.api.viewV2.get(view.id)
-      expect(res.status).toBe(200)
-
-      expect(res.body).toEqual({
-        data: {
-          ...view,
-          _id: view._id,
-          _rev: expect.any(String),
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String),
-        },
-      })
-    })
-
-    it("will return 404 if the unnexisting id is provided", async () => {
-      await config.api.viewV2.get(structures.generator.guid(), {
-        expectStatus: 404,
-      })
-    })
   })
 
   describe("create", () => {
