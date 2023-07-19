@@ -2,11 +2,9 @@ import pino, { LoggerOptions } from "pino"
 import pinoPretty from "pino-pretty"
 
 import { IdentityType } from "@budibase/types"
-
 import env from "../../environment"
 import * as context from "../../context"
 import * as correlation from "../correlation"
-import { LOG_CONTEXT } from "../index"
 
 import { localFileDestination } from "../system"
 
