@@ -13,7 +13,7 @@ describe("Account Internal Operations", () => {
     await config.afterAll()
   })
 
-  it("performs account deletion", async () => {
+  it("performs account deletion by ID", async () => {
     // Deleting by unknown id doesn't work
     const accountId = generator.string()
     await config.api.accounts.delete(accountId, { status: 404 })
