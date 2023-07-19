@@ -1,23 +1,29 @@
 export const buildViewV2Endpoints = API => ({
   /**
-   * Fetches all rows in a view
-   * @param id the id of the view
+   * Create a new view
+   * @param tableId the id of the table where the view will be created
+   * @param view the view object
    */
-  get: async id => {
-    return await API.get({ url: `/api/v2/views/${id}` })
+  create: async (tableId, view) => {
+    return await API.post({
+      url: `/api/v2/views/${tableId}`,
+      body: view,
+    })
   },
   /**
-   * Get a view information
-   * @param id the id of the view
+   * Fetches all rows in a view
+   * @param tableId the id of the table
+   * @param viewId the id of the view
    */
-  fetch: async id => {
-    return await API.get({ url: `/api/v2/views/${id}/search` })
+  fetch: async (tableId, viewId) => {
+    return await API.get({ url: `/api/v2/views/${tableId}/${viewId}/search` })
   },
   /**
    * Delete a view
-   * @param id the id of the view to delete
+   * @param tableId the id of the table
+   * @param viewId the id of the view
    */
-  delete: async id => {
-    return await API.delete({ url: `/api/v2/views/${id}` })
+  delete: async (tableId, viewId) => {
+    return await API.delete({ url: `/api/v2/views/${tableId}/${viewId}` })
   },
 })

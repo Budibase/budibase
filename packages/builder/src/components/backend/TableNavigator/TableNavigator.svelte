@@ -45,7 +45,7 @@
           selected={$isActive("./view") && $views.selected?.name === viewName}
           on:click={() => {
             if (view.version === 2) {
-              $goto(`./view/v2/${view._id}`)
+              $goto(`./view/v2/${view.id}`)
             } else {
               $goto(`./view/${encodeURIComponent(viewName)}`)
             }

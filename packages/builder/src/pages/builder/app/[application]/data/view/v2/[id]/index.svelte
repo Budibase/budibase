@@ -9,7 +9,7 @@
 <div class="wrapper">
   <Grid
     {API}
-    tableId={selectedView?._id}
+    tableId={{ tableId: selectedView?.tableId, viewId: selectedView?.id }}
     datasourceType="viewV2"
     showAvatars={false}
     showControls={false}
