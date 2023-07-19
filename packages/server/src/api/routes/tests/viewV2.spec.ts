@@ -1,5 +1,12 @@
 import * as setup from "./utilities"
-import { FieldType, SortOrder, SortType, Table, ViewV2 } from "@budibase/types"
+import {
+  CreateViewRequest,
+  FieldType,
+  SortOrder,
+  SortType,
+  Table,
+  ViewV2,
+} from "@budibase/types"
 import { generator, structures } from "@budibase/backend-core/tests"
 
 function priceTable(): Table {
@@ -26,7 +33,7 @@ function priceTable(): Table {
 describe("/v2/views", () => {
   const config = setup.getConfig()
 
-  const viewFilters: Omit<ViewV2, "name" | "tableId"> = {
+  const viewFilters: Omit<CreateViewRequest, "name" | "tableId"> = {
     query: { allOr: false, equal: { field: "value" } },
     sort: {
       field: "fieldToSort",
@@ -46,20 +53,20 @@ describe("/v2/views", () => {
   describe("getView", () => {
     let view: ViewV2
     beforeAll(async () => {
-      view = await config.api.viewV2.create({
+      view = await config.api.viewV2.create(config.table?._id, {
         query: { allOr: false, notEqual: { field: "value" } },
       })
     })
 
     it("can fetch the expected view", async () => {
-      const res = await config.api.viewV2.get(view._id!)
+      const res = await config.api.viewV2.get(view.id)
       expect(res.status).toBe(200)
 
       expect(res.body).toEqual({
         data: {
           ...view,
           _id: view._id,
-          _rev: view._rev,
+          _rev: expect.any(String),
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
         },
@@ -75,32 +82,38 @@ describe("/v2/views", () => {
 
   describe("create", () => {
     it("persist the view when the view is successfully created", async () => {
-      const newView: ViewV2 = {
+      const newView: CreateViewRequest = {
         name: generator.name(),
         tableId: config.table!._id!,
       }
-      const res = await config.api.viewV2.create(newView)
+      const res = await config.api.viewV2.create(config.table?._id, newView)
 
       expect(res).toEqual({
         ...newView,
+        id: expect.any(String),
+        version: 2,
         _id: expect.any(String),
-        _rev: expect.any(String),
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
       })
     })
 
     it("can persist views with queries", async () => {
-      const newView: ViewV2 = {
+      const newView: CreateViewRequest = {
         name: generator.name(),
         tableId: config.table!._id!,
         ...viewFilters,
       }
-      const res = await config.api.viewV2.create(newView)
+      const res = await config.api.viewV2.create(config.table!._id!, newView)
 
       expect(res).toEqual({
         ...newView,
         ...viewFilters,
+        id: expect.any(String),
+        version: 2,
         _id: expect.any(String),
-        _rev: expect.any(String),
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
       })
     })
   })
@@ -114,11 +127,11 @@ describe("/v2/views", () => {
     })
 
     it("can delete an existing view", async () => {
-      await config.api.viewV2.get(view._id!, { expectStatus: 200 })
+      await config.api.viewV2.get(view.id, { expectStatus: 200 })
 
-      await config.api.viewV2.delete(view._id!)
+      await config.api.viewV2.delete(config.table?._id!, view.id)
 
-      await config.api.viewV2.get(view._id!, { expectStatus: 404 })
+      await config.api.viewV2.get(view.id, { expectStatus: 404 })
     })
   })
 })

@@ -15,6 +15,8 @@ export interface View {
 }
 
 export interface ViewV2 extends Document {
+  version: 2
+  id: string
   name: string
   tableId: string
   query?: SearchFilters
