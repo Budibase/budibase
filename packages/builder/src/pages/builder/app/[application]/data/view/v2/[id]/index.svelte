@@ -1,15 +1,15 @@
 <script>
-  import { views } from "stores/backend"
-  import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
+  import { Grid } from "@budibase/frontend-core"
+  import { views } from "stores/backend"
 
-  export let id
+  $: selectedView = $views.selected
 </script>
 
 <div class="wrapper">
   <Grid
     {API}
-    tableId={id}
+    tableId={selectedView?._id}
     datasourceType="viewV2"
     showAvatars={false}
     showControls={false}
