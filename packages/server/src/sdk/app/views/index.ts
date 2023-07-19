@@ -1,5 +1,5 @@
 import { HTTPError, context } from "@budibase/backend-core"
-import { ViewV2 } from "@budibase/types"
+import { View, ViewV2 } from "@budibase/types"
 
 import sdk from "../../../sdk"
 import { utils as coreUtils } from "@budibase/backend-core"
@@ -9,9 +9,9 @@ export async function get(
   viewId: string
 ): Promise<ViewV2 | undefined> {
   const table = await sdk.tables.getTable(tableId)
-  const view = Object.values(table.views!).find(v => isV2(v) && v.id === viewId)
+  const views = Object.values(table.views!)
+  const view = views.find(v => isV2(v) && v.id === viewId) as ViewV2 | undefined
 
-  // @ts-ignore TODO
   return view
 }
 
@@ -29,13 +29,12 @@ export async function create(
   const table = await sdk.tables.getTable(tableId)
   table.views ??= {}
 
-  // @ts-ignore: TODO
   table.views[view.name] = view
   await db.put(table)
   return view
 }
 
-function isV2(view: object): view is ViewV2 {
+export function isV2(view: View | ViewV2): view is ViewV2 {
   return (view as ViewV2).version === 2
 }
 
