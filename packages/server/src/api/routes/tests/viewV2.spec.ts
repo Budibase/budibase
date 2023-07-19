@@ -56,7 +56,7 @@ describe("/v2/views", () => {
         name: generator.name(),
         tableId: config.table!._id!,
       }
-      const res = await config.api.viewV2.create(config.table?._id, newView)
+      const res = await config.api.viewV2.create(newView)
 
       expect(res).toEqual({
         ...newView,
@@ -71,7 +71,7 @@ describe("/v2/views", () => {
         tableId: config.table!._id!,
         ...viewFilters,
       }
-      const res = await config.api.viewV2.create(config.table!._id!, newView)
+      const res = await config.api.viewV2.create(newView)
 
       expect(res).toEqual({
         ...newView,

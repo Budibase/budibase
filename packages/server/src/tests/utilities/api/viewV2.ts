@@ -9,10 +9,10 @@ export class ViewV2API extends TestAPI {
   }
 
   create = async (
-    tableId?: string,
     viewData?: Partial<ViewV2>,
     { expectStatus } = { expectStatus: 201 }
   ): Promise<ViewV2> => {
+    let tableId = viewData?.tableId
     if (!tableId && !this.config.table) {
       throw "Test requires table to be configured."
     }
@@ -23,7 +23,7 @@ export class ViewV2API extends TestAPI {
       ...viewData,
     }
     const result = await this.request
-      .post(`/api/v2/views/${tableId}`)
+      .post(`/api/v2/views`)
       .send(view)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)

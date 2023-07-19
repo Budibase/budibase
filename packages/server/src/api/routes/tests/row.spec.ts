@@ -743,12 +743,9 @@ describe("/rows", () => {
           })
         )
 
-      const createViewResponse = await config.api.viewV2.create(
-        config.table?._id!,
-        {
-          query: { equal: { age: 40 } },
-        }
-      )
+      const createViewResponse = await config.api.viewV2.create({
+        query: { equal: { age: 40 } },
+      })
 
       const response = await config.api.viewV2.search(createViewResponse.id)
 
@@ -833,12 +830,9 @@ describe("/rows", () => {
         })
       }
 
-      const createViewResponse = await config.api.viewV2.create(
-        config.table?._id!,
-        {
-          sort: sortParams,
-        }
-      )
+      const createViewResponse = await config.api.viewV2.create({
+        sort: sortParams,
+      })
 
       const response = await config.api.viewV2.search(createViewResponse.id)
 
