@@ -10,19 +10,21 @@ export class ViewV2API extends TestAPI {
   }
 
   create = async (
+    tableId?: string,
     viewData?: Partial<ViewV2>,
     { expectStatus } = { expectStatus: 201 }
-  ) => {
-    if (!this.config.table) {
+  ): Promise<ViewV2> => {
+    if (!tableId && !this.config.table) {
       throw "Test requires table to be configured."
     }
+    tableId = this.config.table!._id!
     const view = {
-      tableId: this.config.table._id,
+      tableId,
       name: generator.guid(),
       ...viewData,
     }
     const result = await this.request
-      .post(`/api/v2/views`)
+      .post(`/api/v2/views/${tableId}`)
       .send(view)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
@@ -41,9 +43,13 @@ export class ViewV2API extends TestAPI {
       .expect(expectStatus)
   }
 
-  delete = async (viewId: string, { expectStatus } = { expectStatus: 204 }) => {
+  delete = async (
+    tableId: string,
+    viewId: string,
+    { expectStatus } = { expectStatus: 204 }
+  ) => {
     return this.request
-      .delete(`/api/v2/views/${viewId}`)
+      .delete(`/api/v2/views/${tableId}/${viewId}`)
       .set(this.config.defaultHeaders())
       .expect(expectStatus)
   }
