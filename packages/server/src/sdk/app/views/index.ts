@@ -1,37 +1,6 @@
-import {
-  DocumentType,
-  SEPARATOR,
-  UNICODE_MAX,
-  context,
-} from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { ViewV2 } from "@budibase/types"
 import * as utils from "../../../db/utils"
-
-export async function fetch(): Promise<ViewV2[]> {
-  const db = context.getAppDB()
-
-  const startKey = `${DocumentType.VIEW}${SEPARATOR}`
-  const response = await db.allDocs({
-    startkey: startKey,
-    endkey: `${startKey}${UNICODE_MAX}`,
-    include_docs: true,
-  })
-
-  return response.rows.map(r => r.doc)
-}
-
-export async function findByTable(tableId: string): Promise<ViewV2[]> {
-  const db = context.getAppDB()
-
-  const startKey = utils.viewIDPrefix(tableId)
-  const response = await db.allDocs({
-    startkey: startKey,
-    endkey: `${startKey}${UNICODE_MAX}`,
-    include_docs: true,
-  })
-
-  return response.rows.map(r => r.doc)
-}
 
 export async function get(viewId: string): Promise<ViewV2 | undefined> {
   const db = context.getAppDB()
