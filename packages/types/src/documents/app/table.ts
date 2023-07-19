@@ -1,5 +1,5 @@
 import { Document } from "../document"
-import { View } from "./view"
+import { View, ViewV2 } from "./view"
 import { RenameColumn } from "../../sdk"
 import { FieldType } from "./row"
 
@@ -72,7 +72,7 @@ export interface TableSchema {
 
 export interface Table extends Document {
   type?: string
-  views?: { [key: string]: View }
+  views?: { [key: string]: View | ViewV2 }
   name: string
   primary?: string[]
   schema: TableSchema
