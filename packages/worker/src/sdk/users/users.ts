@@ -176,7 +176,7 @@ const validateUniqueUser = async (email: string, tenantId: string) => {
 export async function isPreventPasswordActions(user: User, account?: Account) {
   // when in maintenance mode we allow sso users with the admin role
   // to perform any password action - this prevents lockout
-  if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE && user.admin?.global) {
+  if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE && usersCore.isAdmin(user)) {
     return false
   }
 
