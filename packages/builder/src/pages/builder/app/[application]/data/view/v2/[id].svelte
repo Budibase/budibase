@@ -3,11 +3,17 @@
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
 
-  $: tableId = $views.selected?.id
+  export let id
 </script>
 
 <div class="wrapper">
-  <Grid {API} {tableId} datasourceType="view" showAvatars={false} />
+  <Grid
+    {API}
+    tableId={id}
+    datasourceType="viewV2"
+    showAvatars={false}
+    showControls={false}
+  />
 </div>
 
 <style>
