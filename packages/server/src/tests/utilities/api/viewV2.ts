@@ -62,4 +62,12 @@ export class ViewV2API extends TestAPI {
       .set(this.config.defaultHeaders())
       .expect(expectStatus)
   }
+
+  search = async (viewId: string, { expectStatus } = { expectStatus: 200 }) => {
+    return this.request
+      .get(`/api/v2/views/${viewId}/search`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expectStatus)
+  }
 }
