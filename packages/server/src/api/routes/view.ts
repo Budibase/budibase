@@ -3,7 +3,7 @@ import * as viewController from "../controllers/view"
 import * as rowController from "../controllers/row"
 import authorized from "../../middleware/authorized"
 import { paramResource } from "../../middleware/resourceId"
-import { DocumentType, SEPARATOR, permissions } from "@budibase/backend-core"
+import { permissions } from "@budibase/backend-core"
 
 const router: Router = new Router()
 

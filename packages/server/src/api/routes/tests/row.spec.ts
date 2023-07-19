@@ -716,10 +716,7 @@ describe("/rows", () => {
       }
 
       const createViewResponse = await config.api.viewV2.create()
-      const response = await config.api.viewV2.search(
-        createViewResponse.tableId,
-        createViewResponse.id
-      )
+      const response = await config.api.viewV2.search(createViewResponse.id)
 
       expect(response.body.rows).toHaveLength(10)
       expect(response.body).toEqual({
@@ -753,10 +750,7 @@ describe("/rows", () => {
         }
       )
 
-      const response = await config.api.viewV2.search(
-        createViewResponse.tableId,
-        createViewResponse.id
-      )
+      const response = await config.api.viewV2.search(createViewResponse.id)
 
       expect(response.body.rows).toHaveLength(5)
       expect(response.body).toEqual({
@@ -846,10 +840,7 @@ describe("/rows", () => {
         }
       )
 
-      const response = await config.api.viewV2.search(
-        createViewResponse.tableId,
-        createViewResponse.id
-      )
+      const response = await config.api.viewV2.search(createViewResponse.id)
 
       expect(response.body.rows).toHaveLength(4)
       expect(response.body).toEqual({
