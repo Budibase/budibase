@@ -94,11 +94,7 @@ describe("/v2/views", () => {
 
     it("returns views with query info", async () => {
       const newView = await config.api.viewV2.create({ ...viewFilters })
-      const res = await request
-        .get(`/api/v2/views?tableId=${config.table!._id}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.viewV2.fetch(config.table!._id)
 
       expect(res.body.views.length).toBe(11)
       expect(newView.query).toEqual({ allOr: false, equal: { field: "value" } })
@@ -164,20 +160,13 @@ describe("/v2/views", () => {
         tableId: config.table!._id!,
         ...viewFilters,
       }
-      const res = await request
-        .post(`/api/v2/views`)
-        .send(newView)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(201)
+      const res = await config.api.viewV2.create(newView)
 
-      expect(res.body).toEqual({
-        data: {
-          ...newView,
-          ...viewFilters,
-          _id: expect.any(String),
-          _rev: expect.any(String),
-        },
+      expect(res).toEqual({
+        ...newView,
+        ...viewFilters,
+        _id: expect.any(String),
+        _rev: expect.any(String),
       })
     })
   })
