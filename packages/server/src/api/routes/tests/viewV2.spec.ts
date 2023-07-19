@@ -127,11 +127,15 @@ describe("/v2/views", () => {
     })
 
     it("can delete an existing view", async () => {
-      await config.api.viewV2.get(view.id, { expectStatus: 200 })
+      const tableId = config.table!._id!
+      const getPersistedView = async () =>
+        (await config.api.table.get(tableId)).views![view.name]
 
-      await config.api.viewV2.delete(config.table?._id!, view.id)
+      expect(await getPersistedView()).toBeDefined()
 
-      await config.api.viewV2.get(view.id, { expectStatus: 404 })
+      await config.api.viewV2.delete(tableId, view.id)
+
+      expect(await getPersistedView()).toBeUndefined()
     })
   })
 })
