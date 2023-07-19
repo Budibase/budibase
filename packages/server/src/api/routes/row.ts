@@ -147,7 +147,7 @@ router
     rowController.search
   )
   .get(
-    "/api/v2/views/:viewId/search",
+    "/api/v2/views/:tableId/:viewId/search",
     authorized(PermissionType.VIEW, PermissionLevel.READ),
     rowController.searchView
   )
