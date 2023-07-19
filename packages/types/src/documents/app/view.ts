@@ -14,7 +14,7 @@ export interface View {
   meta?: Record<string, any>
 }
 
-export interface ViewV2 extends Document {
+export interface ViewV2 {
   version: 2
   id: string
   name: string
