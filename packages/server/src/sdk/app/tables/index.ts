@@ -26,7 +26,7 @@ async function getAllInternalTables(db?: Database): Promise<Table[]> {
 }
 
 async function getAllExternalTables(
-  datasourceId: any
+  datasourceId: string
 ): Promise<Record<string, Table>> {
   const datasource = await datasources.get(datasourceId, { enriched: true })
   if (!datasource || !datasource.entities) {
@@ -36,8 +36,8 @@ async function getAllExternalTables(
 }
 
 async function getExternalTable(
-  datasourceId: any,
-  tableName: any
+  datasourceId: string,
+  tableName: string
 ): Promise<Table> {
   const entities = await getAllExternalTables(datasourceId)
   return entities[tableName]
@@ -48,7 +48,7 @@ async function getTable(tableId: any): Promise<Table> {
   if (isExternalTable(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
     const datasource = await datasources.get(datasourceId!)
-    const table = await getExternalTable(datasourceId, tableName)
+    const table = await getExternalTable(datasourceId!, tableName!)
     return { ...table, sql: isSQL(datasource) }
   } else {
     return db.get(tableId)

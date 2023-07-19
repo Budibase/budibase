@@ -8,7 +8,7 @@ import {
 import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { getDatasourceParams } from "../../../db/utils"
 import { context, events } from "@budibase/backend-core"
-import { Table, UserCtx } from "@budibase/types"
+import { FetchTableResponse, Table, UserCtx } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
@@ -26,7 +26,7 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
 }
 
 // covers both internal and external
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: UserCtx<void, FetchTableResponse>) {
   const db = context.getAppDB()
 
   const internal = await sdk.tables.getAllInternalTables()
