@@ -2,7 +2,7 @@ import { HTTPError, context } from "@budibase/backend-core"
 import { View, ViewV2 } from "@budibase/types"
 
 import sdk from "../../../sdk"
-import { utils as coreUtils } from "@budibase/backend-core"
+import * as utils from "../../../db/utils"
 
 export async function get(
   tableId: string,
@@ -21,7 +21,7 @@ export async function create(
 ): Promise<ViewV2> {
   const view: ViewV2 = {
     ...viewRequest,
-    id: coreUtils.newid(),
+    id: utils.generateViewID(tableId),
     version: 2,
   }
 

@@ -60,7 +60,7 @@ describe("/v2/views", () => {
 
       expect(res).toEqual({
         ...newView,
-        id: expect.any(String),
+        id: expect.stringMatching(new RegExp(`^vi_${config.table?._id!}_`)),
         version: 2,
       })
     })
