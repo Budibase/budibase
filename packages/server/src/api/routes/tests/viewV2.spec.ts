@@ -62,9 +62,6 @@ describe("/v2/views", () => {
         ...newView,
         id: expect.any(String),
         version: 2,
-        _id: expect.any(String),
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
       })
     })
 
@@ -81,9 +78,6 @@ describe("/v2/views", () => {
         ...viewFilters,
         id: expect.any(String),
         version: 2,
-        _id: expect.any(String),
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
       })
     })
   })
