@@ -26,7 +26,11 @@ export function createViewsStore() {
   }
 
   const deleteView = async view => {
-    await API.deleteView(view.name)
+    if (view.version === 2) {
+      await API.viewV2.delete(view._id)
+    } else {
+      await API.deleteView(view.name)
+    }
 
     // Update tables
     tables.update(state => {
