@@ -31,13 +31,9 @@ export class ViewV2API extends TestAPI {
     return result.body.data as ViewV2
   }
 
-  delete = async (
-    tableId: string,
-    viewId: string,
-    { expectStatus } = { expectStatus: 204 }
-  ) => {
+  delete = async (viewId: string, { expectStatus } = { expectStatus: 204 }) => {
     return this.request
-      .delete(`/api/v2/views/${tableId}/${viewId}`)
+      .delete(`/api/v2/views/${viewId}`)
       .set(this.config.defaultHeaders())
       .expect(expectStatus)
   }

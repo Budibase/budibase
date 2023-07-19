@@ -14,7 +14,7 @@ router
     viewController.v2.create
   )
   .delete(
-    `/api/v2/views/:tableId/:viewId`,
+    `/api/v2/views/:viewId`,
     authorized(permissions.BUILDER),
     viewController.v2.remove
   )

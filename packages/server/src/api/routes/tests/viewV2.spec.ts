@@ -60,7 +60,7 @@ describe("/v2/views", () => {
 
       expect(res).toEqual({
         ...newView,
-        id: expect.stringMatching(new RegExp(`^vi_${config.table?._id!}_`)),
+        id: expect.stringMatching(new RegExp(`${config.table?._id!}_`)),
         version: 2,
       })
     })
@@ -97,7 +97,7 @@ describe("/v2/views", () => {
 
       expect(await getPersistedView()).toBeDefined()
 
-      await config.api.viewV2.delete(tableId, view.id)
+      await config.api.viewV2.delete(view.id)
 
       expect(await getPersistedView()).toBeUndefined()
     })
