@@ -14,12 +14,12 @@ router
     viewController.v2.find
   )
   .post(
-    "/api/v2/views",
+    "/api/v2/views/:tableId",
     authorized(permissions.BUILDER),
     viewController.v2.create
   )
   .delete(
-    `/api/v2/views/:viewId`,
+    `/api/v2/views/:tableId/:viewId`,
     authorized(permissions.BUILDER),
     viewController.v2.remove
   )
