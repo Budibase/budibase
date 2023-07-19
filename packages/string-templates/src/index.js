@@ -389,3 +389,5 @@ module.exports.convertToJS = hbs => {
   js += "`;"
   return `${varBlock}${js}`
 }
+
+module.exports.FIND_ANY_HBS_REGEX = FIND_ANY_HBS_REGEX
