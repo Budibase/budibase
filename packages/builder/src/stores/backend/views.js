@@ -41,19 +41,17 @@ export function createViewsStore() {
   }
 
   const create = async view => {
-    const savedView = await API.viewV2.create(view)
+    const savedViewResponse = await API.viewV2.create(view)
+    const savedView = savedViewResponse.data
 
     // Update tables
     tables.update(state => {
       const table = state.list.find(table => table._id === view.tableId)
-      if (table) {
-        if (view.originalName) {
-          delete table.views[view.originalName]
-        }
-        table.views[view.name] = savedView
-      }
+      table.views[view.name] = savedView
       return { ...state }
     })
+
+    return savedView
   }
 
   const save = async view => {
