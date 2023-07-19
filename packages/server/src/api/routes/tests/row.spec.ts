@@ -685,4 +685,44 @@ describe("/rows", () => {
       expect(row._id).toEqual(existing._id)
     })
   })
+
+  describe("view search", () => {
+    function priceTable(): Table {
+      return {
+        name: "table",
+        type: "table",
+        schema: {
+          Price: {
+            type: FieldType.NUMBER,
+            name: "Price",
+            constraints: {},
+          },
+          Category: {
+            type: FieldType.STRING,
+            name: "Category",
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      }
+    }
+
+    it("returns table rows from view", async () => {
+      const table = await config.createTable(priceTable())
+      const rows = []
+      for (let i = 0; i < 10; i++) {
+        rows.push(await config.createRow({ tableId: table._id }))
+      }
+
+      const createViewResponse = await config.api.viewV2.create()
+
+      const response = await config.api.viewV2.search(createViewResponse._id!)
+
+      expect(response.body.rows).toHaveLength(10)
+      expect(response.body).toEqual({
+        rows: expect.arrayContaining(rows.map(expect.objectContaining)),
+      })
+    })
+  })
 })

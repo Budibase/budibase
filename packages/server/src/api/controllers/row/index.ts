@@ -2,7 +2,7 @@ import { quotas } from "@budibase/pro"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTable } from "../../../integrations/utils"
-import { Ctx } from "@budibase/types"
+import { Ctx, SearchResponse } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
 import sdk from "../../../sdk"
@@ -114,7 +114,7 @@ export async function destroy(ctx: any) {
     response = rows
     for (let row of rows) {
       ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-      gridSocket?.emitRowDeletion(ctx, row._id)
+      gridSocket?.emitRowDeletion(ctx, row._id!)
     }
   } else {
     let resp = await quotas.addQuery(() => pickApi(tableId).destroy(ctx), {
@@ -124,7 +124,7 @@ export async function destroy(ctx: any) {
     response = resp.response
     row = resp.row
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-    gridSocket?.emitRowDeletion(ctx, row._id)
+    gridSocket?.emitRowDeletion(ctx, row._id!)
   }
   ctx.status = 200
   // for automations include the row that was deleted
@@ -144,6 +144,23 @@ export async function search(ctx: any) {
   ctx.body = await quotas.addQuery(() => sdk.rows.search(searchParams), {
     datasourceId: tableId,
   })
+}
+
+export async function searchView(ctx: Ctx<void, SearchResponse>) {
+  const { viewId } = ctx.params
+  const view = await sdk.views.get(viewId)
+  if (!view) {
+    ctx.throw(404)
+  }
+  const tableId = view.tableId
+
+  ctx.status = 200
+  ctx.body = await quotas.addQuery(
+    () => sdk.rows.search({ tableId, query: {} }),
+    {
+      datasourceId: tableId,
+    }
+  )
 }
 
 export async function validate(ctx: Ctx) {
