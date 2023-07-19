@@ -6,5 +6,5 @@ export interface ViewResponse {
 
 export type CreateViewRequest = Omit<
   ViewV2,
-  "_id" | "_rev" | "createdAt" | "updatedAt"
+  "_id" | "_rev" | "createdAt" | "updatedAt" | "version" | "id"
 >
