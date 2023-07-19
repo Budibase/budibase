@@ -1,6 +1,5 @@
 import { SortOrder, SortType } from "../../api"
 import { SearchFilters } from "../../sdk"
-import { Document } from "../document"
 
 export interface View {
   name: string
