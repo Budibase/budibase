@@ -18,13 +18,10 @@ export default class LicenseAPI extends BaseAPI {
     opts: APIRequestOpts = { status: 200 }
   ): Promise<[Response, Account]> {
     return this.doRequest(() => {
-      return this.client.put(
-        `/api/accounts/${accountId}/license`,
-        {
-          body,
-          internal: true,
-        }
-      )
+      return this.client.put(`/api/accounts/${accountId}/license`, {
+        body,
+        internal: true,
+      })
     }, opts)
   }
 }

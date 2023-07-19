@@ -11,7 +11,9 @@ async function deleteAccount() {
   // @ts-ignore
   const accountID = global.qa.accountId
 
-  const [response] = await accountsApi.accounts.delete(accountID, { doExpect: false })
+  const [response] = await accountsApi.accounts.delete(accountID, {
+    doExpect: false,
+  })
   if (response.status !== 204) {
     throw new Error(`status: ${response.status} not equal to expected: 201`)
   }

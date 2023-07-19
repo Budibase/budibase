@@ -35,7 +35,9 @@ describe("Accounts", () => {
       await config.loginAsAccount(createAccountRequest, { status: 400 })
 
       // Re-send verification email to get access to code
-      const [_, code] = await config.accountsApi.accounts.sendVerificationEmail(email)
+      const [_, code] = await config.accountsApi.accounts.sendVerificationEmail(
+        email
+      )
 
       // Send the verification request
       await config.accountsApi.accounts.verifyAccount(code!)
@@ -56,11 +58,17 @@ describe("Accounts", () => {
       const tenantId = generator.string()
 
       // Empty result
-      const [_, emptyBody] = await config.api.accounts.search(tenantId, "tenantId")
+      const [_, emptyBody] = await config.api.accounts.search(
+        tenantId,
+        "tenantId"
+      )
       expect(emptyBody.length).toBe(0)
 
       // Hit result
-      const [hitRes, hitBody] = await config.api.accounts.search(config.state.tenantId!, "tenantId")
+      const [hitRes, hitBody] = await config.api.accounts.search(
+        config.state.tenantId!,
+        "tenantId"
+      )
       expect(hitBody.length).toBe(1)
       expect(hitBody[0].tenantId).toBe(config.state.tenantId)
     })
@@ -73,7 +81,10 @@ describe("Accounts", () => {
       expect(emptyBody.length).toBe(0)
 
       // Hit result
-      const [hitRes, hitBody] = await config.api.accounts.search(config.state.email!, "email")
+      const [hitRes, hitBody] = await config.api.accounts.search(
+        config.state.email!,
+        "email"
+      )
       expect(hitBody.length).toBe(1)
       expect(hitBody[0].email).toBe(config.state.email)
     })

@@ -9,7 +9,7 @@ import { APIRequestOpts } from "../types"
 const accountsApi = new AccountInternalAPI({})
 const internalApi = new BudibaseInternalAPI({})
 
-const API_OPTS: APIRequestOpts = { doExpect: false}
+const API_OPTS: APIRequestOpts = { doExpect: false }
 
 // @ts-ignore
 global.qa = {}
@@ -18,8 +18,10 @@ async function createAccount(): Promise<[CreateAccountRequest, Account]> {
   const account = fixtures.accounts.generateAccount()
   await accountsApi.accounts.validateEmail(account.email, API_OPTS)
   await accountsApi.accounts.validateTenantId(account.tenantId, API_OPTS)
-  const [res, newAccount] = await accountsApi.accounts.create(
-      account, {...API_OPTS, autoVerify: true })
+  const [res, newAccount] = await accountsApi.accounts.create(account, {
+    ...API_OPTS,
+    autoVerify: true,
+  })
   await updateLicense(newAccount.accountId)
   return [account, newAccount]
 }
@@ -27,25 +29,29 @@ async function createAccount(): Promise<[CreateAccountRequest, Account]> {
 const UNLIMITED = { value: -1 }
 
 async function updateLicense(accountId: string) {
-  const [response] = await accountsApi.licenses.updateLicense(accountId, {
-    overrides: {
-      // add all features
-      features: Object.values(Feature),
-      quotas: {
-        usage: {
-          monthly: {
-            automations: UNLIMITED,
-          },
-          static: {
-            rows: UNLIMITED,
-            users: UNLIMITED,
-            userGroups: UNLIMITED,
-            plugins: UNLIMITED,
+  const [response] = await accountsApi.licenses.updateLicense(
+    accountId,
+    {
+      overrides: {
+        // add all features
+        features: Object.values(Feature),
+        quotas: {
+          usage: {
+            monthly: {
+              automations: UNLIMITED,
+            },
+            static: {
+              rows: UNLIMITED,
+              users: UNLIMITED,
+              userGroups: UNLIMITED,
+              plugins: UNLIMITED,
+            },
           },
         },
       },
     },
-  }, { doExpect: false })
+    { doExpect: false }
+  )
   if (response.status !== 200) {
     throw new Error(
       `Could not update license for accountId=${accountId}: ${response.status}`
