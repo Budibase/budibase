@@ -15,27 +15,19 @@ export async function find(ctx: Ctx<void, ViewResponse>) {
 }
 
 export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
+  const { tableId } = ctx.params
   const view = ctx.request.body
 
-  const result = await sdk.views.create(view)
+  const result = await sdk.views.create(tableId, view)
   ctx.status = 201
   ctx.body = {
-    data: {
-      ...view,
-      ...result,
-    },
+    data: result,
   }
 }
 
 export async function remove(ctx: Ctx) {
-  const { viewId } = ctx.params
-  const doc = await sdk.views.get(viewId)
-  if (!doc) {
-    ctx.throw(404)
-  }
+  const { tableId, viewId } = ctx.params
 
-  const { _rev } = doc
-
-  await sdk.views.remove(viewId, _rev!)
+  await sdk.views.remove(tableId, viewId)
   ctx.status = 204
 }
