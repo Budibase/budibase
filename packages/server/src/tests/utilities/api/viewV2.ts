@@ -9,7 +9,10 @@ export class ViewV2API extends TestAPI {
     super(config)
   }
 
-  create = async (viewData?: Partial<ViewV2>) => {
+  create = async (
+    viewData?: Partial<ViewV2>,
+    { expectStatus } = { expectStatus: 201 }
+  ) => {
     if (!this.config.table) {
       throw "Test requires table to be configured."
     }
@@ -23,13 +26,40 @@ export class ViewV2API extends TestAPI {
       .send(view)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(201)
+      .expect(expectStatus)
     return result.body.data as ViewV2
   }
-  get = (viewId: string): supertest.Test => {
+
+  get = (
+    viewId: string,
+    { expectStatus } = { expectStatus: 200 }
+  ): supertest.Test => {
     return this.request
       .get(`/api/v2/views/${viewId}`)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
+      .expect(expectStatus)
+  }
+
+  fetch = async (
+    tableId?: string,
+    { expectStatus } = { expectStatus: 200 }
+  ) => {
+    let url = `/api/v2/views?`
+    if (tableId) {
+      url += `tableId=${tableId}&`
+    }
+    return this.request
+      .get(url)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expectStatus)
+  }
+
+  delete = async (viewId: string, { expectStatus } = { expectStatus: 204 }) => {
+    return this.request
+      .delete(`/api/v2/views/${viewId}`)
+      .set(this.config.defaultHeaders())
+      .expect(expectStatus)
   }
 }
