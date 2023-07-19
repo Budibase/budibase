@@ -9,11 +9,6 @@ const router: Router = new Router()
 
 router
   .get(
-    "/api/v2/views",
-    authorized(permissions.BUILDER),
-    viewController.v2.fetch
-  )
-  .get(
     `/api/v2/views/:viewId`,
     authorized(permissions.BUILDER),
     viewController.v2.find
