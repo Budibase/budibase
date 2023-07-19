@@ -16,13 +16,13 @@
       return
     }
     try {
-      await viewsStore.create({
+      const newView = await viewsStore.create({
         name,
         tableId: $tables.selected._id,
         field,
       })
       notifications.success(`View ${name} created`)
-      $goto(`../../view/${encodeURIComponent(name)}`)
+      $goto(`../../view/v2/${newView.id}`)
     } catch (error) {
       notifications.error("Error creating view")
     }
