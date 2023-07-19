@@ -12,12 +12,12 @@
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import { groups, licensing, apps, users, auth, admin } from "stores/portal"
-  import { fetchData } from "@budibase/frontend-core"
+  import { fetchData, Constants, Utils } from "@budibase/frontend-core"
+  import { sdk } from "@budibase/shared-core"
   import { API } from "api"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "components/common/RoleSelect.svelte"
   import UpgradeModal from "components/common/users/UpgradeModal.svelte"
-  import { Constants, Utils } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
   import { roles } from "stores/backend"
   import { fly } from "svelte/transition"
@@ -108,7 +108,7 @@
     await usersFetch.refresh()
 
     filteredUsers = $usersFetch.rows.map(user => {
-      const isBuilderOrAdmin = user.admin?.global || user.builder?.global
+      const isBuilderOrAdmin = sdk.users.isBuilderOrAdmin(user, prodAppId)
       let role = undefined
       if (isBuilderOrAdmin) {
         role = Constants.Roles.ADMIN
@@ -258,7 +258,7 @@
     }
     // Must exclude users who have explicit privileges
     const userByEmail = filteredUsers.reduce((acc, user) => {
-      if (user.role || user.admin?.global || user.builder?.global) {
+      if (user.role || sdk.users.isBuilderOrAdmin(user, prodAppId)) {
         acc.push(user.email)
       }
       return acc
@@ -389,9 +389,9 @@
   }
 
   const userTitle = user => {
-    if (user.admin?.global) {
+    if (sdk.users.isAdmin(user)) {
       return "Admin"
-    } else if (user.builder?.global) {
+    } else if (sdk.users.isBuilder(user, prodAppId)) {
       return "Developer"
     } else {
       return "App user"

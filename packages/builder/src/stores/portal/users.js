@@ -2,6 +2,7 @@ import { writable } from "svelte/store"
 import { API } from "api"
 import { update } from "lodash"
 import { licensing } from "."
+import { sdk } from "@budibase/shared-core"
 
 export function createUsersStore() {
   const { subscribe, set } = writable({})
@@ -111,8 +112,12 @@ export function createUsersStore() {
     return await API.saveUser(user)
   }
 
-  const getUserRole = ({ admin, builder }) =>
-    admin?.global ? "admin" : builder?.global ? "developer" : "appUser"
+  const getUserRole = user =>
+    sdk.users.isAdmin(user)
+      ? "admin"
+      : sdk.users.isBuilder(user)
+      ? "developer"
+      : "appUser"
 
   const refreshUsage =
     fn =>

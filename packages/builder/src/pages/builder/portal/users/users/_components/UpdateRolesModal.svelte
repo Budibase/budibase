@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte"
   import { Body, Select, ModalContent, notifications } from "@budibase/bbui"
   import { users } from "stores/portal"
+  import { sdk } from "@budibase/shared-core"
 
   export let app
   export let user
@@ -15,7 +16,7 @@
     .filter(role => role._id !== "PUBLIC")
     .map(role => ({ value: role._id, label: role.name }))
 
-  if (!user?.builder?.global) {
+  if (!sdk.users.isBuilder(user, app?.appId)) {
     options.push({ value: NO_ACCESS, label: "No Access" })
   }
   let selectedRole = user?.roles?.[app?._id]
