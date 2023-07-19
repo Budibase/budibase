@@ -24,7 +24,6 @@ function priceTable(): Table {
 }
 
 describe("/v2/views", () => {
-  const request = setup.getRequest()
   const config = setup.getConfig()
 
   afterAll(setup.afterAll)
@@ -45,11 +44,7 @@ describe("/v2/views", () => {
     })
 
     it("returns all views", async () => {
-      const res = await request
-        .get(`/api/v2/views`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.viewV2.fetch()
 
       expect(res.body.views.length).toBe(10)
       expect(res.body.views).toEqual(
@@ -64,11 +59,7 @@ describe("/v2/views", () => {
         newViews.push(await config.api.viewV2.create({ tableId: newTable._id }))
       }
 
-      const res = await request
-        .get(`/api/v2/views?tableId=${newTable._id}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.viewV2.fetch(newTable._id)
 
       expect(res.body.views.length).toBe(5)
       expect(res.body.views).toEqual(
@@ -77,7 +68,8 @@ describe("/v2/views", () => {
     })
 
     it("can not filter by multiple table ids", async () => {
-      const res = await request
+      const res = await config
+        .getRequest()!
         .get(
           `/api/v2/views?tableId=${structures.generator.guid()}&tableId=${structures.generator.guid()}`
         )
@@ -90,20 +82,13 @@ describe("/v2/views", () => {
   })
 
   describe("getView", () => {
-    const getView = (viewId: string) => {
-      return request
-        .get(`/api/v2/views/${viewId}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-    }
-
     let view: ViewV2
     beforeAll(async () => {
       view = await config.api.viewV2.create()
     })
 
     it("can fetch the expected view", async () => {
-      const res = await getView(view._id!).expect(200)
+      const res = await config.api.viewV2.get(view._id!)
       expect(res.status).toBe(200)
 
       expect(res.body).toEqual({
@@ -118,7 +103,9 @@ describe("/v2/views", () => {
     })
 
     it("will return 404 if the unnexisting id is provided", async () => {
-      await getView(structures.generator.guid()).expect(404)
+      await config.api.viewV2.get(structures.generator.guid(), {
+        expectStatus: 404,
+      })
     })
   })
 
@@ -128,19 +115,12 @@ describe("/v2/views", () => {
         name: generator.name(),
         tableId: config.table!._id!,
       }
-      const res = await request
-        .post(`/api/v2/views`)
-        .send(newView)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(201)
+      const res = await config.api.viewV2.create(newView)
 
-      expect(res.body).toEqual({
-        data: {
-          ...newView,
-          _id: expect.any(String),
-          _rev: expect.any(String),
-        },
+      expect(res).toEqual({
+        ...newView,
+        _id: expect.any(String),
+        _rev: expect.any(String),
       })
     })
   })
@@ -154,14 +134,11 @@ describe("/v2/views", () => {
     })
 
     it("can delete an existing view", async () => {
-      await config.api.viewV2.get(view._id!).expect(200)
+      await config.api.viewV2.get(view._id!, { expectStatus: 200 })
 
-      await request
-        .delete(`/api/v2/views/${view._id}`)
-        .set(config.defaultHeaders())
-        .expect(204)
+      await config.api.viewV2.delete(view._id!)
 
-      await config.api.viewV2.get(view._id!).expect(404)
+      await config.api.viewV2.get(view._id!, { expectStatus: 404 })
     })
   })
 })
