@@ -4,10 +4,8 @@ import { View, ViewV2 } from "@budibase/types"
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 
-export async function get(
-  tableId: string,
-  viewId: string
-): Promise<ViewV2 | undefined> {
+export async function get(viewId: string): Promise<ViewV2 | undefined> {
+  const { tableId } = utils.extractViewInfoFromId(viewId)
   const table = await sdk.tables.getTable(tableId)
   const views = Object.values(table.views!)
   const view = views.find(v => isV2(v) && v.id === viewId) as ViewV2 | undefined
@@ -38,15 +36,13 @@ export function isV2(view: View | ViewV2): view is ViewV2 {
   return (view as ViewV2).version === 2
 }
 
-export async function remove( viewId: string): Promise<void> {
+export async function remove(viewId: string): Promise<void> {
   const db = context.getAppDB()
 
-  const {tableId}=utils.extractViewInfoFromId(viewId)
-
-  const table = await sdk.tables.getTable(tableId)
-  const view = await get(tableId, viewId)
+  const view = await get(viewId)
+  const table = await sdk.tables.getTable(view?.tableId)
   if (!view) {
-    throw new HTTPError(`View ${viewId} not found in table ${tableId}`, 404)
+    throw new HTTPError(`View ${viewId} not found`, 404)
   }
 
   delete table.views![view?.name]
