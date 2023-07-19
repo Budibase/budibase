@@ -8,6 +8,7 @@
   import Logo from "./_components/Logo.svelte"
   import UserDropdown from "./_components/UserDropdown.svelte"
   import HelpMenu from "components/common/HelpMenu.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   let loaded = false
   let mobileMenuVisible = false
@@ -33,7 +34,7 @@
   onMount(async () => {
     // Prevent non-builders from accessing the portal
     if ($auth.user) {
-      if (!$auth.user?.builder?.global) {
+      if (!sdk.users.hasBuilderPermissions($auth.user)) {
         $redirect("../")
       } else {
         try {

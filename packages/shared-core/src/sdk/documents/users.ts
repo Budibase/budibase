@@ -18,6 +18,10 @@ export function isAdmin(user: User | ContextUser) {
   return hasAdminPermissions(user)
 }
 
+export function isAdminOrBuilder(user: User | ContextUser, appId?: string) {
+  return isBuilder(user, appId) || isAdmin(user)
+}
+
 // checks if a user is capable of building any app
 export function hasBuilderPermissions(user?: User | ContextUser) {
   if (!user) {
