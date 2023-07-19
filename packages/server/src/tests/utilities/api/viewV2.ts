@@ -41,21 +41,6 @@ export class ViewV2API extends TestAPI {
       .expect(expectStatus)
   }
 
-  fetch = async (
-    tableId?: string,
-    { expectStatus } = { expectStatus: 200 }
-  ) => {
-    let url = `/api/v2/views?`
-    if (tableId) {
-      url += `tableId=${tableId}&`
-    }
-    return this.request
-      .get(url)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-  }
-
   delete = async (viewId: string, { expectStatus } = { expectStatus: 204 }) => {
     return this.request
       .delete(`/api/v2/views/${viewId}`)
