@@ -14,8 +14,10 @@ import {
   Row,
   Table,
   FieldType,
+  SortType,
+  SortOrder,
 } from "@budibase/types"
-import { structures } from "@budibase/backend-core/tests"
+import { generator, structures } from "@budibase/backend-core/tests"
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -687,29 +689,27 @@ describe("/rows", () => {
   })
 
   describe("view search", () => {
-    function priceTable(): Table {
+    function userTable(): Table {
       return {
-        name: "table",
-        type: "table",
+        name: "user",
+        type: "user",
         schema: {
-          Price: {
-            type: FieldType.NUMBER,
-            name: "Price",
-            constraints: {},
-          },
-          Category: {
+          name: {
             type: FieldType.STRING,
-            name: "Category",
-            constraints: {
-              type: "string",
-            },
+            name: "name",
+            constraints: { type: "string" },
+          },
+          age: {
+            type: FieldType.NUMBER,
+            name: "age",
+            constraints: {},
           },
         },
       }
     }
 
     it("returns table rows from view", async () => {
-      const table = await config.createTable(priceTable())
+      const table = await config.createTable(userTable())
       const rows = []
       for (let i = 0; i < 10; i++) {
         rows.push(await config.createRow({ tableId: table._id }))
@@ -722,6 +722,124 @@ describe("/rows", () => {
       expect(response.body.rows).toHaveLength(10)
       expect(response.body).toEqual({
         rows: expect.arrayContaining(rows.map(expect.objectContaining)),
+      })
+    })
+
+    it("searching respects the view filters", async () => {
+      const table = await config.createTable(userTable())
+      const expectedRows = []
+      for (let i = 0; i < 10; i++)
+        await config.createRow({
+          tableId: table._id,
+          name: generator.name(),
+          age: generator.integer({ min: 10, max: 30 }),
+        })
+
+      for (let i = 0; i < 5; i++)
+        expectedRows.push(
+          await config.createRow({
+            tableId: table._id,
+            name: generator.name(),
+            age: 40,
+          })
+        )
+
+      const createViewResponse = await config.api.viewV2.create({
+        query: { equal: { age: 40 } },
+      })
+
+      const response = await config.api.viewV2.search(createViewResponse._id!)
+
+      expect(response.body.rows).toHaveLength(5)
+      expect(response.body).toEqual({
+        rows: expect.arrayContaining(expectedRows.map(expect.objectContaining)),
+      })
+    })
+
+    it.each([
+      [
+        {
+          field: "name",
+          order: SortOrder.ASCENDING,
+          type: SortType.STRING,
+        },
+        ["Alice", "Bob", "Charly", "Danny"],
+      ],
+      [
+        {
+          field: "name",
+        },
+        ["Alice", "Bob", "Charly", "Danny"],
+      ],
+      [
+        {
+          field: "name",
+          order: SortOrder.DESCENDING,
+        },
+        ["Danny", "Charly", "Bob", "Alice"],
+      ],
+      [
+        {
+          field: "name",
+          order: SortOrder.DESCENDING,
+          type: SortType.STRING,
+        },
+        ["Danny", "Charly", "Bob", "Alice"],
+      ],
+      [
+        {
+          field: "age",
+          order: SortOrder.ASCENDING,
+          type: SortType.number,
+        },
+        ["Danny", "Alice", "Charly", "Bob"],
+      ],
+      [
+        {
+          field: "age",
+          order: SortOrder.ASCENDING,
+        },
+        ["Danny", "Alice", "Charly", "Bob"],
+      ],
+      [
+        {
+          field: "age",
+          order: SortOrder.DESCENDING,
+        },
+        ["Bob", "Charly", "Alice", "Danny"],
+      ],
+      [
+        {
+          field: "age",
+          order: SortOrder.DESCENDING,
+          type: SortType.number,
+        },
+        ["Bob", "Charly", "Alice", "Danny"],
+      ],
+    ])("allow sorting (%s)", async (sortParams, expected) => {
+      await config.createTable(userTable())
+      const users = [
+        { name: "Alice", age: 25 },
+        { name: "Bob", age: 30 },
+        { name: "Charly", age: 27 },
+        { name: "Danny", age: 15 },
+      ]
+      for (const user of users) {
+        await config.createRow({
+          tableId: config.table!._id,
+          ...user,
+        })
+      }
+
+      const createViewResponse = await config.api.viewV2.create({
+        sort: sortParams,
+      })
+
+      const response = await config.api.viewV2.search(createViewResponse._id!)
+
+      expect(response.body.rows).toHaveLength(4)
+      expect(response.body).toEqual({
+        rows: expected.map(name => expect.objectContaining({ name })),
       })
     })
   })

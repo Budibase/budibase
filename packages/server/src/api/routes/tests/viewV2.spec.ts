@@ -1,5 +1,5 @@
 import * as setup from "./utilities"
-import { FieldType, Table, ViewV2 } from "@budibase/types"
+import { FieldType, SortOrder, SortType, Table, ViewV2 } from "@budibase/types"
 import { generator, structures } from "@budibase/backend-core/tests"
 
 function priceTable(): Table {
@@ -25,6 +25,16 @@ function priceTable(): Table {
 
 describe("/v2/views", () => {
   const config = setup.getConfig()
+
+  const viewFilters: Omit<ViewV2, "name" | "tableId"> = {
+    query: { allOr: false, equal: { field: "value" } },
+    sort: {
+      field: "fieldToSort",
+      order: SortOrder.DESCENDING,
+      type: SortType.STRING,
+    },
+    columns: ["name"],
+  }
 
   afterAll(setup.afterAll)
 
@@ -53,7 +63,9 @@ describe("/v2/views", () => {
     })
 
     it("can filter by table id", async () => {
-      const newTable = await config.createTable(priceTable())
+      const newTable = await config.createTable(priceTable(), {
+        skipReassigning: true,
+      })
       const newViews = []
       for (let id = 0; id < 5; id++) {
         newViews.push(await config.api.viewV2.create({ tableId: newTable._id }))
@@ -79,12 +91,30 @@ describe("/v2/views", () => {
 
       expect(res.body.message).toBe("tableId type is not valid")
     })
+
+    it("returns views with query info", async () => {
+      const newView = await config.api.viewV2.create({ ...viewFilters })
+      const res = await config.api.viewV2.fetch(config.table!._id)
+
+      expect(res.body.views.length).toBe(11)
+      expect(newView.query).toEqual({ allOr: false, equal: { field: "value" } })
+      expect(res.body.views).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...newView,
+            ...viewFilters,
+          }),
+        ])
+      )
+    })
   })
 
   describe("getView", () => {
     let view: ViewV2
     beforeAll(async () => {
-      view = await config.api.viewV2.create()
+      view = await config.api.viewV2.create({
+        query: { allOr: false, notEqual: { field: "value" } },
+      })
     })
 
     it("can fetch the expected view", async () => {
@@ -119,6 +149,22 @@ describe("/v2/views", () => {
 
       expect(res).toEqual({
         ...newView,
+        _id: expect.any(String),
+        _rev: expect.any(String),
+      })
+    })
+
+    it("can persist views with queries", async () => {
+      const newView: ViewV2 = {
+        name: generator.name(),
+        tableId: config.table!._id!,
+        ...viewFilters,
+      }
+      const res = await config.api.viewV2.create(newView)
+
+      expect(res).toEqual({
+        ...newView,
+        ...viewFilters,
         _id: expect.any(String),
         _rev: expect.any(String),
       })
