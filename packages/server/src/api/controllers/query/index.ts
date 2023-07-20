@@ -157,7 +157,7 @@ export async function preview(ctx: any) {
     }
     const runFn = () => Runner.run(inputs)
 
-    const { rows, keys, info, extra } = await quotas.addQuery(runFn, {
+    const { rows, keys, info, extra } = await quotas.addQuery<any>(runFn, {
       datasourceId: datasource._id,
     })
     const schemaFields: any = {}
@@ -246,9 +246,12 @@ async function execute(
     }
     const runFn = () => Runner.run(inputs)
 
-    const { rows, pagination, extra, info } = await quotas.addQuery(runFn, {
-      datasourceId: datasource._id,
-    })
+    const { rows, pagination, extra, info } = await quotas.addQuery<any>(
+      runFn,
+      {
+        datasourceId: datasource._id,
+      }
+    )
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw
