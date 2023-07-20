@@ -3,7 +3,7 @@ import { doWithDB, DocumentType } from "../db"
 import { Database, App } from "@budibase/types"
 
 export enum AppState {
-  INVALID = "invalid"
+  INVALID = "invalid",
 }
 const EXPIRY_SECONDS = 3600
 
