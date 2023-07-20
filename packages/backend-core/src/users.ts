@@ -2,6 +2,7 @@ import {
   directCouchFind,
   DocumentType,
   generateAppUserID,
+  getGlobalIDFromUserMetadataID,
   getGlobalUserParams,
   getProdAppID,
   getUsersByAppParams,
@@ -21,6 +22,7 @@ import {
 import { sdk } from "@budibase/shared-core"
 import { getGlobalDB } from "./context"
 import * as context from "./context"
+import { user as userCache } from "./cache"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -42,8 +44,10 @@ function removeUserPassword(users: User | User[]) {
 // extract from shared-core to make easily accessible from backend-core
 export const isBuilder = sdk.users.isBuilder
 export const isAdmin = sdk.users.isAdmin
+export const isAdminOrBuilder = sdk.users.isAdminOrBuilder
 export const hasAdminPermissions = sdk.users.hasAdminPermissions
 export const hasBuilderPermissions = sdk.users.hasBuilderPermissions
+export const hasAppBuilderPermissions = sdk.users.hasAppBuilderPermissions
 
 export const bulkGetGlobalUsersById = async (
   userIds: string[],
@@ -75,6 +79,27 @@ export const getAllUserIds = async () => {
 export const bulkUpdateGlobalUsers = async (users: User[]) => {
   const db = getGlobalDB()
   return (await db.bulkDocs(users)) as BulkDocsResponse
+}
+
+export const grantAppBuilderAccess = async (userId: string, appId: string) => {
+  const prodAppId = getProdAppID(appId)
+  const db = getGlobalDB()
+  const user = (await db.get(userId)) as User
+  if (!user.builder) {
+    user.builder = {}
+  }
+  if (!user.builder.apps) {
+    user.builder.apps = []
+  }
+  if (!user.builder.apps.includes(prodAppId)) {
+    user.builder.apps.push(prodAppId)
+  }
+  try {
+    await db.put(user)
+    await userCache.invalidateUser(userId)
+  } catch (err: any) {
+    throw new Error(`Unable to grant user access: ${err.message}`)
+  }
 }
 
 export async function getById(id: string, opts?: GetOpts): Promise<User> {

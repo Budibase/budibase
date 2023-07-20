@@ -50,12 +50,13 @@ import {
   MigrationType,
   PlanType,
   Screen,
-  SocketSession,
   UserCtx,
+  ContextUser,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
+import { grantAppBuilderAccess } from "@budibase/backend-core/src/users"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -178,32 +179,10 @@ export const addSampleData = async (ctx: UserCtx) => {
 }
 
 export async function fetch(ctx: UserCtx) {
-  const dev = ctx.query && ctx.query.status === AppStatus.DEV
-  const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = (await dbCore.getAllApps({ dev, all })) as App[]
-
-  const appIds = apps
-    .filter((app: any) => app.status === "development")
-    .map((app: any) => app.appId)
-
-  // get the locks for all the dev apps
-  if (dev || all) {
-    const locks = await getLocksById(appIds)
-    for (let app of apps) {
-      const lock = locks[app.appId]
-      if (lock) {
-        app.lockedBy = lock
-      } else {
-        // make sure its definitely not present
-        delete app.lockedBy
-      }
-    }
-  }
-
-  // Enrich apps with all builder user sessions
-  const enrichedApps = await sdk.users.sessions.enrichApps(apps)
-
-  ctx.body = await checkAppMetadata(enrichedApps)
+  ctx.body = await sdk.applications.fetch(
+    ctx.query.status as AppStatus,
+    ctx.user
+  )
 }
 
 export async function fetchAppDefinition(ctx: UserCtx) {
@@ -395,6 +374,10 @@ async function appPostCreate(ctx: UserCtx, app: App) {
     tenantId,
     appId: app.appId,
   })
+  // they are an app builder, creating a new app, make sure they can access it
+  if (users.hasAppBuilderPermissions(ctx.user)) {
+    await users.grantAppBuilderAccess(ctx.user._id!, app.appId)
+  }
   await creationEvents(ctx.request, app)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {

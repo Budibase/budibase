@@ -5,7 +5,7 @@ import {
   context,
   users,
 } from "@budibase/backend-core"
-import { Role } from "@budibase/types"
+import { Role, UserCtx } from "@budibase/types"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
 
@@ -22,14 +22,19 @@ const csrf = auth.buildCsrfMiddleware()
  * - Otherwise the user must have the required role.
  */
 const checkAuthorized = async (
-  ctx: any,
+  ctx: UserCtx,
   resourceRoles: any,
   permType: any,
   permLevel: any
 ) => {
   const appId = context.getAppId()
   // check if this is a builder api and the user is not a builder
-  const isBuilder = users.isBuilder(ctx.user, appId)
+  let isBuilder
+  if (!appId) {
+    isBuilder = users.hasBuilderPermissions(ctx.user)
+  } else {
+    isBuilder = users.isBuilder(ctx.user, appId)
+  }
   const isBuilderApi = permType === permissions.PermissionType.BUILDER
   if (isBuilderApi && !isBuilder) {
     return ctx.throw(403, "Not Authorized")
