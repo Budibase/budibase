@@ -4,16 +4,6 @@
   import { API } from "api"
   import { parseFile } from "./utils"
 
-  let fileInput
-  let error = null
-  let fileName = null
-  let fileType = null
-
-  let loading = false
-  let validation = {}
-  let validateHash = ""
-  let errors = {}
-
   export let rows = []
   export let schema = {}
   export let allValid = true
@@ -50,6 +40,19 @@
       value: FIELDS.LONGFORM.type,
     },
   ]
+
+  let fileInput
+  let error = null
+  let fileName = null
+  let fileType = null
+  let loading = false
+  let validation = {}
+  let validateHash = ""
+  let errors = {}
+
+  $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
+    return validation[column]
+  })
 
   async function handleFile(e) {
     loading = true
@@ -178,7 +181,7 @@
     <Select
       label="Display Column"
       bind:value={displayColumn}
-      options={Object.keys(schema)}
+      options={displayColumnOptions}
       sort
     />
   </div>
