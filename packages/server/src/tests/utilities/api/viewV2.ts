@@ -1,4 +1,4 @@
-import { ViewV2 } from "@budibase/types"
+import { ViewSchemaResponse, ViewV2 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 import { generator } from "@budibase/backend-core/tests"
@@ -36,6 +36,17 @@ export class ViewV2API extends TestAPI {
       .delete(`/api/v2/views/${viewId}`)
       .set(this.config.defaultHeaders())
       .expect(expectStatus)
+  }
+
+  getSchema = async (
+    viewId: string,
+    { expectStatus } = { expectStatus: 200 }
+  ): Promise<ViewSchemaResponse> => {
+    const res = await this.request
+      .get(`/api/v2/views/${viewId}/schema`)
+      .set(this.config.defaultHeaders())
+      .expect(expectStatus)
+    return res.body
   }
 
   search = async (viewId: string, { expectStatus } = { expectStatus: 200 }) => {

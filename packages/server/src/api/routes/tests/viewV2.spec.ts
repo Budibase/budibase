@@ -106,4 +106,27 @@ describe("/v2/views", () => {
       expect(await getPersistedView()).toBeUndefined()
     })
   })
+
+  describe("getSchema", () => {
+    let view: ViewV2
+
+    beforeAll(async () => {
+      await config.createTable(priceTable())
+      view = await config.api.viewV2.create()
+    })
+
+    it("returns table schema if no columns are defined", async () => {
+      const result = await config.api.viewV2.getSchema(view.id)
+      expect(result).toEqual({
+        schema: {
+          Price: { type: "number", name: "Price", constraints: {} },
+          Category: {
+            type: "string",
+            name: "Category",
+            constraints: { type: "string" },
+          },
+        },
+      })
+    })
+  })
 })
