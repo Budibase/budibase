@@ -44,7 +44,6 @@
   <Grid
     {API}
     tableId={id}
-    datasourceType="table"
     allowAddRows={!isUsersTable}
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
