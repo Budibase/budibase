@@ -38,7 +38,7 @@
       <Body size="XS">CHANGES WILL APPLY TO ALL SCREENS</Body>
     </div>
     <Body size="S">
-      Your navigation is configured for all the screens within your app.
+      Your theme is configured for all the screens within your app.
     </Body>
   </div>
   <Layout noPadding gap="S">
