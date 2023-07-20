@@ -1,6 +1,7 @@
 <script>
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
+  import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 
   import {
     autocompletion,
@@ -81,7 +82,7 @@
 
   // For handlebars only.
   const bindStyle = new MatchDecorator({
-    regexp: /{{[."#\-\w\s\][]*}}/g,
+    regexp: FIND_ANY_HBS_REGEX,
     decoration: () => {
       return Decoration.mark({
         tag: "span",

@@ -1,6 +1,7 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import { isBuilderInputFocused } from "helpers"
 
   export let store
 
@@ -8,9 +9,16 @@
     if (!(e.ctrlKey || e.metaKey)) {
       return
     }
-    if (e.shiftKey && e.key === "Z") {
+
+    let keyLowerCase = e.key.toLowerCase()
+
+    // Ignore events when typing
+    if (isBuilderInputFocused(e)) {
+      return
+    }
+    if (e.shiftKey && keyLowerCase === "z") {
       store.redo()
-    } else if (e.key === "z") {
+    } else if (keyLowerCase === "z") {
       store.undo()
     }
   }
