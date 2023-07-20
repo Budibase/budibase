@@ -6,9 +6,9 @@ concurrency:
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+"
       # Exclude all pre-releases
-      - "!v*[0-9]+.[0-9]+.[0-9]+-*"
+      - "!*[0-9]+.[0-9]+.[0-9]+-*"
 
 env:
   # Posthog token used by ui at build time
