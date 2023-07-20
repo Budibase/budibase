@@ -39,12 +39,6 @@
         on:click={() => $goto("./components")}
       />
       <IconSideNavItem
-        icon="Brush"
-        tooltip="Theme"
-        active={$isActive("./theme")}
-        on:click={() => $goto("./theme")}
-      />
-      <IconSideNavItem
         icon="Link"
         tooltip="Navigation"
         active={$isActive("./navigation")}

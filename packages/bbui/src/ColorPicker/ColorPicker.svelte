@@ -1,8 +1,8 @@
 <script>
+  import Popover from "../Popover/Popover.svelte"
+  import Layout from "../Layout/Layout.svelte"
   import { createEventDispatcher } from "svelte"
   import "@spectrum-css/popover/dist/index-vars.css"
-  import clickOutside from "../Actions/click_outside"
-  import { fly } from "svelte/transition"
   import Icon from "../Icon/Icon.svelte"
   import Input from "../Form/Input.svelte"
   import { capitalise } from "../helpers"
@@ -10,9 +10,11 @@
   export let value
   export let size = "M"
   export let spectrumTheme
-  export let alignRight = false
+  export let offset
+  export let align
 
-  let open = false
+  let dropdown
+  let preview
 
   $: customValue = getCustomValue(value)
   $: checkColor = getCheckColor(value)
@@ -82,7 +84,7 @@
 
   const onChange = value => {
     dispatch("change", value)
-    open = false
+    dropdown.hide()
   }
 
   const getCustomValue = value => {
@@ -119,30 +121,25 @@
 
     return "var(--spectrum-global-color-static-gray-900)"
   }
-
-  const handleOutsideClick = event => {
-    if (open) {
-      event.stopPropagation()
-      open = false
-    }
-  }
 </script>
 
-<div class="container">
-  <div class="preview size--{size || 'M'}" on:click={() => (open = true)}>
-    <div
-      class="fill {spectrumTheme || ''}"
-      style={value ? `background: ${value};` : ""}
-      class:placeholder={!value}
-    />
-  </div>
-  {#if open}
-    <div
-      use:clickOutside={handleOutsideClick}
-      transition:fly|local={{ y: -20, duration: 200 }}
-      class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
-      class:spectrum-Popover--align-right={alignRight}
-    >
+<div
+  bind:this={preview}
+  class="preview size--{size || 'M'}"
+  on:click={() => {
+    dropdown.toggle()
+  }}
+>
+  <div
+    class="fill {spectrumTheme || ''}"
+    style={value ? `background: ${value};` : ""}
+    class:placeholder={!value}
+  />
+</div>
+
+<Popover bind:this={dropdown} anchor={preview} maxHeight={320} {offset} {align}>
+  <Layout paddingX="XL" paddingY="L">
+    <div class="container">
       {#each categories as category}
         <div class="category">
           <div class="heading">{category.label}</div>
@@ -187,8 +184,8 @@
         </div>
       </div>
     </div>
-  {/if}
-</div>
+  </Layout>
+</Popover>
 
 <style>
   .container {
@@ -248,20 +245,6 @@
     width: 48px;
     height: 48px;
   }
-  .spectrum-Popover {
-    width: 210px;
-    z-index: 999;
-    top: 100%;
-    padding: var(--spacing-l) var(--spacing-xl);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: var(--spacing-xl);
-  }
-  .spectrum-Popover--align-right {
-    right: 0;
-  }
   .colors {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
@@ -297,7 +280,11 @@
   .category--custom .heading {
     margin-bottom: var(--spacing-xs);
   }
-
+  .container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
   .spectrum-wrapper {
     background-color: transparent;
   }
