@@ -2,11 +2,9 @@ import pino, { LoggerOptions } from "pino"
 import pinoPretty from "pino-pretty"
 
 import { IdentityType } from "@budibase/types"
-
 import env from "../../environment"
 import * as context from "../../context"
 import * as correlation from "../correlation"
-import { LOG_CONTEXT } from "../index"
 
 import { localFileDestination } from "../system"
 
@@ -93,15 +91,13 @@ if (!env.DISABLE_PINO_LOGGER) {
 
     let contextObject = {}
 
-    if (LOG_CONTEXT) {
-      contextObject = {
-        tenantId: getTenantId(),
-        appId: getAppId(),
-        automationId: getAutomationId(),
-        identityId: identity?._id,
-        identityType: identity?.type,
-        correlationId: correlation.getId(),
-      }
+    contextObject = {
+      tenantId: getTenantId(),
+      appId: getAppId(),
+      automationId: getAutomationId(),
+      identityId: identity?._id,
+      identityType: identity?.type,
+      correlationId: correlation.getId(),
     }
 
     const mergingObject: any = {
