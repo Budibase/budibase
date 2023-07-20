@@ -2,8 +2,8 @@ import { getAppClient } from "../redis/init"
 import { doWithDB, DocumentType } from "../db"
 import { Database, App } from "@budibase/types"
 
-const AppState = {
-  INVALID: "invalid",
+export enum AppState {
+  INVALID = "invalid"
 }
 const EXPIRY_SECONDS = 3600
 
@@ -61,11 +61,8 @@ export async function getAppMetadata(appId: string) {
     }
     await client.store(appId, metadata, expiry)
   }
-  // we've stored in the cache an object to tell us that it is currently invalid
-  if (isInvalid(metadata)) {
-    throw { status: 404, message: "No app metadata found" }
-  }
-  return metadata as App
+
+  return metadata as App & { state: AppState }
 }
 
 /**
