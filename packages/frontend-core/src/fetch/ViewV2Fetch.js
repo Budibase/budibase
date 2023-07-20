@@ -1,5 +1,3 @@
-import { get } from "svelte/store"
-import { views as viewsStore } from "stores/backend"
 import DataFetch from "./DataFetch.js"
 
 export default class ViewV2Fetch extends DataFetch {
@@ -9,10 +7,8 @@ export default class ViewV2Fetch extends DataFetch {
 
   async getDefinition(datasource) {
     try {
-      const views = get(viewsStore).list
-      const { tableId } = views.find(v => v.id === datasource.tableId)
-      const result = await this.API.fetchTableDefinition(tableId)
-      return result
+      const { schema } = await this.API.viewV2.getSchema(datasource.tableId)
+      return { schema }
     } catch (error) {
       this.store.update(state => ({
         ...state,

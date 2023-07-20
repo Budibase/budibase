@@ -26,4 +26,11 @@ export const buildViewV2Endpoints = API => ({
   delete: async viewId => {
     return await API.delete({ url: `/api/v2/views/${viewId}` })
   },
+  /**
+   * Returns schema of a view
+   * @param viewId the id of the view
+   */
+  getSchema: async viewId => {
+    return await API.get({ url: `/api/v2/views/${viewId}/schema` })
+  },
 })
