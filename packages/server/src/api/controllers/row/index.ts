@@ -25,7 +25,7 @@ export async function patch(ctx: any): Promise<any> {
     return save(ctx)
   }
   try {
-    const { row, table } = await quotas.addQuery(
+    const { row, table } = await quotas.addQuery<any>(
       () => pickApi(tableId).patch(ctx),
       {
         datasourceId: tableId,
@@ -104,7 +104,7 @@ export async function destroy(ctx: any) {
   const tableId = utils.getTableId(ctx)
   let response, row
   if (inputs.rows) {
-    let { rows } = await quotas.addQuery(
+    let { rows } = await quotas.addQuery<any>(
       () => pickApi(tableId).bulkDestroy(ctx),
       {
         datasourceId: tableId,
@@ -117,7 +117,7 @@ export async function destroy(ctx: any) {
       gridSocket?.emitRowDeletion(ctx, row._id)
     }
   } else {
-    let resp = await quotas.addQuery(() => pickApi(tableId).destroy(ctx), {
+    let resp = await quotas.addQuery<any>(() => pickApi(tableId).destroy(ctx), {
       datasourceId: tableId,
     })
     await quotas.removeRow()
