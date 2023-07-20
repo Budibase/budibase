@@ -1,31 +1,27 @@
 import AccountInternalAPIClient from "../AccountInternalAPIClient"
 import { Account, UpdateLicenseRequest } from "@budibase/types"
 import { Response } from "node-fetch"
+import BaseAPI from "./BaseAPI"
+import { APIRequestOpts } from "../../../types"
 
-export default class LicenseAPI {
+export default class LicenseAPI extends BaseAPI {
   client: AccountInternalAPIClient
 
   constructor(client: AccountInternalAPIClient) {
+    super()
     this.client = client
   }
 
   async updateLicense(
     accountId: string,
-    body: UpdateLicenseRequest
+    body: UpdateLicenseRequest,
+    opts: APIRequestOpts = { status: 200 }
   ): Promise<[Response, Account]> {
-    const [response, json] = await this.client.put(
-      `/api/accounts/${accountId}/license`,
-      {
+    return this.doRequest(() => {
+      return this.client.put(`/api/accounts/${accountId}/license`, {
         body,
         internal: true,
-      }
-    )
-
-    if (response.status !== 200) {
-      throw new Error(
-        `Could not update license for accountId=${accountId}: ${response.status}`
-      )
-    }
-    return [response, json]
+      })
+    }, opts)
   }
 }

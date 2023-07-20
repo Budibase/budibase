@@ -5,6 +5,9 @@ const config: Config.InitialOptions = {
   setupFiles: ["./src/jest/jestSetup.ts"],
   setupFilesAfterEnv: ["./src/jest/jest.extends.ts"],
   testEnvironment: "node",
+  transform: {
+    "^.+\\.ts?$": "@swc/jest",
+  },
   globalSetup: "./src/jest/globalSetup.ts",
   globalTeardown: "./src/jest/globalTeardown.ts",
   moduleNameMapper: {
