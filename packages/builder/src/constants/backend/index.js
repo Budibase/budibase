@@ -53,6 +53,10 @@ export const FIELDS = {
       numericality: { greaterThanOrEqualTo: "", lessThanOrEqualTo: "" },
     },
   },
+  BIGINT: {
+    name: "BigInt",
+    type: "bigint",
+  },
   BOOLEAN: {
     name: "Boolean",
     type: "boolean",

@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
-    "@nx/js": "16.2.1",
+    "@nx/js": "16.4.3",
     "@rollup/plugin-json": "^4.0.2",
     "@typescript-eslint/parser": "5.45.0",
     "esbuild": "^0.17.18",
@@ -13,9 +13,11 @@
     "husky": "^8.0.3",
     "js-yaml": "^4.1.0",
     "kill-port": "^1.6.1",
-    "lerna": "7.0.2",
+    "lerna": "7.1.1",
     "madge": "^6.0.0",
     "minimist": "^1.2.8",
+    "nx": "16.4.3",
+    "nx-cloud": "16.0.5",
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
     "rimraf": "^3.0.2",
@@ -44,15 +46,15 @@
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
-    "nuke:docker": "lerna run --stream --parallel dev:stack:nuke",
+    "nuke:docker": "lerna run --stream dev:stack:nuke",
     "clean": "lerna clean",
     "kill-builder": "kill-port 3000",
     "kill-server": "kill-port 4001 4002",
     "kill-all": "yarn run kill-builder && yarn run kill-server",
-    "dev": "yarn run kill-all && lerna run --stream --parallel dev:builder --stream",
-    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && lerna run --stream --parallel dev:builder --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
-    "dev:server": "yarn run kill-server && yarn build --projects=@budibase/client && lerna run --stream --parallel dev:builder --scope @budibase/worker --scope @budibase/server",
-    "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream --parallel dev:built",
+    "dev": "yarn run kill-all && lerna run --stream dev:builder --stream",
+    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && lerna run --stream dev:builder --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
+    "dev:server": "yarn run kill-server && lerna run --stream dev:builder --scope @budibase/worker --scope @budibase/server",
+    "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
     "dev:docker": "yarn build:docker:pre && docker-compose -f hosting/docker-compose.build.yaml -f hosting/docker-compose.dev.yaml --env-file hosting/.env up --build --scale proxy-service=0",
     "test": "lerna run --stream test --stream",
     "lint:eslint": "eslint packages qa-core --max-warnings=0",
@@ -106,6 +108,5 @@
     "@budibase/string-templates": "0.0.0",
     "@budibase/types": "0.0.0"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }

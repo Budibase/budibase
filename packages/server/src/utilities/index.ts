@@ -41,7 +41,7 @@ export async function updateEntityMetadata(
   // read it to see if it exists, we'll overwrite it no matter what
   let rev, metadata: Document
   try {
-    const oldMetadata = await db.get(id)
+    const oldMetadata = await db.get<any>(id)
     rev = oldMetadata._rev
     metadata = updateFn(oldMetadata)
   } catch (err) {
@@ -75,7 +75,7 @@ export async function deleteEntityMetadata(type: string, entityId: string) {
   const id = generateMetadataID(type, entityId)
   let rev
   try {
-    const metadata = await db.get(id)
+    const metadata = await db.get<any>(id)
     if (metadata) {
       rev = metadata._rev
     }
