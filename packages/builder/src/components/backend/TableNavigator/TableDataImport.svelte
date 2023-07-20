@@ -1,5 +1,5 @@
 <script>
-  import { Select } from "@budibase/bbui"
+  import { Select, Icon } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
@@ -12,6 +12,7 @@
   let loading = false
   let validation = {}
   let validateHash = ""
+  let errors = {}
 
   export let rows = []
   export let schema = {}
@@ -69,18 +70,20 @@
 
   async function validate(rows, schema) {
     loading = true
-    error = null
-    validation = {}
-    allValid = false
 
     try {
       if (rows.length > 0) {
         const response = await API.validateNewTableImport({ rows, schema })
         validation = response.schemaValidation
         allValid = response.allValid
+        errors = response.errors
+        error = null
       }
     } catch (e) {
       error = e.message
+      validation = {}
+      allValid = false
+      errors = {}
     }
 
     loading = false
@@ -147,16 +150,22 @@
           disabled={loading}
         />
         <span
-          class={loading || validation[column.name]
+          class={validation[column.name]
             ? "fieldStatusSuccess"
             : "fieldStatusFailure"}
         >
-          {validation[column.name] ? "Success" : "Failure"}
+          {#if validation[column.name]}
+            Success
+          {:else}
+            Failure
+            <Icon name="Help" tooltip={errors[column.name]} />
+          {/if}
         </span>
-        <i
-          class={`omit-button ri-close-circle-fill ${
-            loading ? "omit-button-disabled" : ""
-          }`}
+        <Icon
+          size="S"
+          name="Close"
+          disabled={loading}
+          hoverable
           on:click={() => {
             delete schema[column.name]
             schema = schema
@@ -237,23 +246,16 @@
     justify-self: center;
     font-weight: 600;
   }
-
   .fieldStatusFailure {
     color: var(--red);
     justify-self: center;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
-
-  .omit-button {
-    font-size: 1.2em;
-    color: var(--grey-7);
-    cursor: pointer;
-    justify-self: flex-end;
-  }
-
-  .omit-button-disabled {
-    pointer-events: none;
-    opacity: 70%;
+  .fieldStatusFailure :global(.spectrum-Icon) {
+    width: 12px;
   }
 
   .display-column {
