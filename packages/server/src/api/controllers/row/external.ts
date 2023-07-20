@@ -1,29 +1,19 @@
-import {
-  FieldTypes,
-  NoEmptyFilterStrings,
-  SortDirection,
-} from "../../../constants"
+import { FieldTypes, NoEmptyFilterStrings } from "../../../constants"
 import {
   breakExternalTableId,
   breakRowIdField,
 } from "../../../integrations/utils"
 import { ExternalRequest, RunConfig } from "./ExternalRequest"
-import * as exporters from "../view/exporters"
-import { apiFileReturn } from "../../../utilities/fileSystem"
 import {
   Datasource,
   IncludeRelationship,
   Operation,
-  PaginationJson,
   Row,
-  SortJson,
   Table,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import * as utils from "./utils"
-
-const { cleanExportRows } = require("./utils")
 
 async function getRow(
   tableId: string,
@@ -59,6 +49,7 @@ export async function handleRequest(
       }
     }
   }
+
   return new ExternalRequest(operation, tableId, opts?.datasource).run(
     opts || {}
   )
@@ -114,21 +105,6 @@ export async function save(ctx: UserCtx) {
   }
 }
 
-export async function fetchView(ctx: UserCtx) {
-  // there are no views in external datasources, shouldn't ever be called
-  // for now just fetch
-  const split = ctx.params.viewName.split("all_")
-  ctx.params.tableId = split[1] ? split[1] : split[0]
-  return fetch(ctx)
-}
-
-export async function fetch(ctx: UserCtx) {
-  const tableId = ctx.params.tableId
-  return handleRequest(Operation.READ, tableId, {
-    includeSqlRelationships: IncludeRelationship.INCLUDE,
-  })
-}
-
 export async function find(ctx: UserCtx) {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
@@ -159,129 +135,6 @@ export async function bulkDestroy(ctx: UserCtx) {
   }
   const responses = (await Promise.all(promises)) as { row: Row }[]
   return { response: { ok: true }, rows: responses.map(resp => resp.row) }
-}
-
-export async function search(ctx: UserCtx) {
-  const tableId = ctx.params.tableId
-  const { paginate, query, ...params } = ctx.request.body
-  let { bookmark, limit } = params
-  if (!bookmark && paginate) {
-    bookmark = 1
-  }
-  let paginateObj = {}
-
-  if (paginate) {
-    paginateObj = {
-      // add one so we can track if there is another page
-      limit: limit,
-      page: bookmark,
-    }
-  } else if (params && limit) {
-    paginateObj = {
-      limit: limit,
-    }
-  }
-  let sort: SortJson | undefined
-  if (params.sort) {
-    const direction =
-      params.sortOrder === "descending"
-        ? SortDirection.DESCENDING
-        : SortDirection.ASCENDING
-    sort = {
-      [params.sort]: { direction },
-    }
-  }
-  try {
-    const rows = (await handleRequest(Operation.READ, tableId, {
-      filters: query,
-      sort,
-      paginate: paginateObj as PaginationJson,
-      includeSqlRelationships: IncludeRelationship.INCLUDE,
-    })) as Row[]
-    let hasNextPage = false
-    if (paginate && rows.length === limit) {
-      const nextRows = (await handleRequest(Operation.READ, tableId, {
-        filters: query,
-        sort,
-        paginate: {
-          limit: 1,
-          page: bookmark * limit + 1,
-        },
-        includeSqlRelationships: IncludeRelationship.INCLUDE,
-      })) as Row[]
-      hasNextPage = nextRows.length > 0
-    }
-    // need wrapper object for bookmarks etc when paginating
-    return { rows, hasNextPage, bookmark: bookmark + 1 }
-  } catch (err: any) {
-    if (err.message && err.message.includes("does not exist")) {
-      throw new Error(
-        `Table updated externally, please re-fetch - ${err.message}`
-      )
-    } else {
-      throw err
-    }
-  }
-}
-
-export async function exportRows(ctx: UserCtx) {
-  const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
-  const format = ctx.query.format
-  const { columns } = ctx.request.body
-  const datasource = await sdk.datasources.get(datasourceId!)
-  if (!datasource || !datasource.entities) {
-    ctx.throw(400, "Datasource has not been configured for plus API.")
-  }
-
-  if (ctx.request.body.rows) {
-    ctx.request.body = {
-      query: {
-        oneOf: {
-          _id: ctx.request.body.rows.map((row: string) => {
-            const ids = JSON.parse(
-              decodeURI(row).replace(/'/g, `"`).replace(/%2C/g, ",")
-            )
-            if (ids.length > 1) {
-              ctx.throw(400, "Export data does not support composite keys.")
-            }
-            return ids[0]
-          }),
-        },
-      },
-    }
-  }
-
-  let result = await search(ctx)
-  let rows: Row[] = []
-
-  // Filter data to only specified columns if required
-
-  if (columns && columns.length) {
-    for (let i = 0; i < result.rows.length; i++) {
-      rows[i] = {}
-      for (let column of columns) {
-        rows[i][column] = result.rows[i][column]
-      }
-    }
-  } else {
-    rows = result.rows
-  }
-
-  if (!tableName) {
-    ctx.throw(400, "Could not find table name.")
-  }
-  let schema = datasource.entities[tableName].schema
-  let exportRows = cleanExportRows(rows, schema, format, columns)
-
-  let headers = Object.keys(schema)
-
-  // @ts-ignore
-  const exporter = exporters[format]
-  const filename = `export.${format}`
-
-  // send down the file
-  ctx.attachment(filename)
-  return apiFileReturn(exporter(headers, exportRows))
 }
 
 export async function fetchEnrichedRow(ctx: UserCtx) {

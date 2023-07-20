@@ -182,7 +182,7 @@ class LinkController {
         })
 
         // if 1:N, ensure that this ID is not already attached to another record
-        const linkedTable = await this._db.get(field.tableId)
+        const linkedTable = await this._db.get<Table>(field.tableId)
         const linkedSchema = linkedTable.schema[field.fieldName!]
 
         // We need to map the global users to metadata in each app for relationships
@@ -311,7 +311,7 @@ class LinkController {
       })
     )
     // remove schema from other table
-    let linkedTable = await this._db.get(field.tableId)
+    let linkedTable = await this._db.get<Table>(field.tableId)
     if (field.fieldName) {
       delete linkedTable.schema[field.fieldName]
     }
@@ -337,7 +337,7 @@ class LinkController {
         // table for some reason
         let linkedTable
         try {
-          linkedTable = await this._db.get(field.tableId)
+          linkedTable = await this._db.get<Table>(field.tableId)
         } catch (err) {
           /* istanbul ignore next */
           continue
@@ -416,7 +416,7 @@ class LinkController {
       const field = schema[fieldName]
       try {
         if (field.type === FieldTypes.LINK && field.fieldName) {
-          const linkedTable = await this._db.get(field.tableId)
+          const linkedTable = await this._db.get<Table>(field.tableId)
           delete linkedTable.schema[field.fieldName]
           await this._db.put(linkedTable)
         }

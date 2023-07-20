@@ -23,6 +23,8 @@
   // Create a fake component instance so that we can use the core Component
   // to render this part of the block, taking advantage of binding enrichment
   $: id = `${block.id}-${context ?? rand}`
+  $: parentId = $component?.id
+  $: inBuilder = $builderStore.inBuilder
   $: instance = {
     _component: `@budibase/standard-components/${type}`,
     _id: id,
@@ -38,14 +40,14 @@
   // Register this block component if we're inside the builder so it can be
   // ejected later
   $: {
-    if ($builderStore.inBuilder) {
-      block.registerComponent(id, order ?? 0, $component?.id, instance)
+    if (inBuilder) {
+      block.registerComponent(id, parentId, order ?? 0, instance)
     }
   }
 
   onDestroy(() => {
-    if ($builderStore.inBuilder) {
-      block.unregisterComponent(order ?? 0, $component?.id)
+    if (inBuilder) {
+      block.unregisterComponent(id, parentId)
     }
   })
 </script>

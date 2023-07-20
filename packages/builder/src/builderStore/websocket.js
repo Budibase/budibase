@@ -1,5 +1,10 @@
 import { createWebsocket } from "@budibase/frontend-core"
-import { userStore, store, deploymentStore } from "builderStore"
+import {
+  userStore,
+  store,
+  deploymentStore,
+  automationStore,
+} from "builderStore"
 import { datasources, tables } from "stores/backend"
 import { get } from "svelte/store"
 import { auth } from "stores/portal"
@@ -66,6 +71,11 @@ export const createBuilderWebsocket = appId => {
       notifications.success(`${helpers.getUserLabel(user)} ${verb} this app`)
     }
   )
+
+  // Automations
+  socket.onOther(BuilderSocketEvent.AutomationChange, ({ id, automation }) => {
+    automationStore.actions.replace(id, automation)
+  })
 
   return socket
 }

@@ -67,9 +67,9 @@ export const bulkUpdateGlobalUsers = async (users: User[]) => {
 
 export async function getById(id: string, opts?: GetOpts): Promise<User> {
   const db = context.getGlobalDB()
-  let user = await db.get(id)
+  let user = await db.get<User>(id)
   if (opts?.cleanup) {
-    user = removeUserPassword(user)
+    user = removeUserPassword(user) as User
   }
   return user
 }
