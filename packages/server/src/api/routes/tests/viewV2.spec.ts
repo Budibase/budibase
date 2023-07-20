@@ -19,9 +19,14 @@ function priceTable(): Table {
         name: "Price",
         constraints: {},
       },
-      Category: {
+      Currency: {
         type: FieldType.STRING,
-        name: "Category",
+        name: "Currency",
+        constraints: {},
+      },
+      ItemId: {
+        type: FieldType.STRING,
+        name: "ItemId",
         constraints: {
           type: "string",
         },
@@ -117,25 +122,61 @@ describe("/v2/views", () => {
       const result = await config.api.viewV2.getSchema(view.id)
       expect(result).toEqual({
         schema: {
-          Price: { type: "number", name: "Price", constraints: {} },
-          Category: {
+          Price: {
+            type: "number",
+            name: "Price",
+            constraints: {},
+          },
+          Currency: {
             type: "string",
-            name: "Category",
-            constraints: { type: "string" },
+            name: "Currency",
+            constraints: {},
+          },
+          ItemId: {
+            type: "string",
+            name: "ItemId",
+            constraints: {
+              type: "string",
+            },
           },
         },
       })
     })
 
     it("respects view column definition if exists", async () => {
-      const view = await config.api.viewV2.create({ columns: ["Category"] })
+      const view = await config.api.viewV2.create({
+        columns: ["Price", "ItemId"],
+      })
       const result = await config.api.viewV2.getSchema(view.id)
       expect(result).toEqual({
         schema: {
-          Category: {
+          Price: {
+            type: "number",
+            name: "Price",
+            constraints: {},
+          },
+          ItemId: {
             type: "string",
-            name: "Category",
-            constraints: { type: "string" },
+            name: "ItemId",
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
+    })
+
+    it("respects view column definition if exists", async () => {
+      const view = await config.api.viewV2.create({
+        columns: ["Price", "innexistingColumn"],
+      })
+      const result = await config.api.viewV2.getSchema(view.id)
+      expect(result).toEqual({
+        schema: {
+          Price: {
+            type: "number",
+            name: "Price",
+            constraints: {},
           },
         },
       })
