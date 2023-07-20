@@ -161,7 +161,9 @@
             Success
           {:else}
             Failure
-            <Icon name="Help" tooltip={errors[column.name]} />
+            {#if errors[column.name]}
+              <Icon name="Help" tooltip={errors[column.name]} />
+            {/if}
           {/if}
         </span>
         <Icon
