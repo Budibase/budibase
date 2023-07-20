@@ -110,7 +110,6 @@
       name: view.name,
       icon: "Remove",
       action: () => {
-        debugger
         if (view.version === 2) {
           $goto(`./data/view/v2/${view.id}`)
         } else {
