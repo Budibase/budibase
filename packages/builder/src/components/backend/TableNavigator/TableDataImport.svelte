@@ -53,6 +53,15 @@
   $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
     return validation[column]
   })
+  $: {
+    // binding in consumer is causing double renders here
+    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
+    if (newValidateHash !== validateHash) {
+      validate(rows, schema)
+    }
+    validateHash = newValidateHash
+  }
+  $: openFileUpload(promptUpload, fileInput)
 
   async function handleFile(e) {
     loading = true
@@ -73,7 +82,6 @@
 
   async function validate(rows, schema) {
     loading = true
-
     try {
       if (rows.length > 0) {
         const response = await API.validateNewTableImport({ rows, schema })
@@ -88,19 +96,7 @@
       allValid = false
       errors = {}
     }
-
     loading = false
-  }
-
-  $: {
-    // binding in consumer is causing double renders here
-    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
-
-    if (newValidateHash !== validateHash) {
-      validate(rows, schema)
-    }
-
-    validateHash = newValidateHash
   }
 
   const handleChange = (name, e) => {
@@ -114,7 +110,13 @@
     }
   }
 
-  $: openFileUpload(promptUpload, fileInput)
+  const deleteColumn = name => {
+    if (loading) {
+      return
+    }
+    delete schema[name]
+    schema = schema
+  }
 </script>
 
 <div class="dropzone">
@@ -127,10 +129,8 @@
     on:change={handleFile}
   />
   <label for="file-upload" class:uploaded={rows.length > 0}>
-    {#if loading}
-      loading...
-    {:else if error}
-      error: {error}
+    {#if error}
+      Error: {error}
     {:else if fileName}
       {fileName}
     {:else}
@@ -150,7 +150,6 @@
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
-          disabled={loading}
         />
         <span
           class={validation[column.name]
@@ -169,12 +168,8 @@
         <Icon
           size="S"
           name="Close"
-          disabled={loading}
           hoverable
-          on:click={() => {
-            delete schema[column.name]
-            schema = schema
-          }}
+          on:click={() => deleteColumn(column.name)}
         />
       </div>
     {/each}
