@@ -39,7 +39,6 @@
 >
   <Grid
     tableId={table?.tableId}
-    datasourceType="table"
     {API}
     {allowAddRows}
     {allowEditRows}
