@@ -84,7 +84,7 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
         results.invalidColumns.push(columnName)
       } else if (!columnName.match(ValidColumnNameRegex)) {
         // Check for special characters in column names
-        results.invalidColumns.push(columnName)
+        results.schemaValidation[columnName] = false
         results.errors[columnName] =
           "Column names can't contain special characters"
       } else if (
