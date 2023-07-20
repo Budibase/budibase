@@ -17,7 +17,7 @@
   $: text = getText(filters)
 
   const getText = filters => {
-    const count = filters?.length
+    const count = filters?.filter(filter => filter.field)?.length
     return count ? `Filter (${count})` : "Filter"
   }
 </script>

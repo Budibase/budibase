@@ -4,4 +4,5 @@ export interface State {
   cookie?: string
   tableId?: string
   tenantId?: string
+  email?: string
 }

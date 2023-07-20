@@ -1,6 +1,6 @@
 import authorized from "../middleware/authorized"
 import { BaseSocket } from "./websocket"
-import { permissions, events } from "@budibase/backend-core"
+import { permissions, events, context } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import {
@@ -10,11 +10,12 @@ import {
   ContextUser,
   Screen,
   App,
+  Automation,
 } from "@budibase/types"
 import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
-import { BuilderSocketEvent, GridSocketEvent } from "@budibase/shared-core"
+import { BuilderSocketEvent } from "@budibase/shared-core"
 
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
@@ -34,7 +35,13 @@ export default class BuilderSocket extends BaseSocket {
           userIdMap[session._id] = true
         }
       })
-      await events.user.dataCollaboration(Object.keys(userIdMap).length)
+
+      const tenantId = context.getTenantIDFromAppID(appId)
+      if (tenantId) {
+        await context.doInTenant(tenantId, async () => {
+          await events.user.dataCollaboration(Object.keys(userIdMap).length)
+        })
+      }
 
       // Reply with all current sessions
       callback({ users: sessions })
@@ -154,6 +161,20 @@ export default class BuilderSocket extends BaseSocket {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AppPublishChange, {
       published: false,
       user: ctx.user,
+    })
+  }
+
+  emitAutomationUpdate(ctx: any, automation: Automation) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AutomationChange, {
+      id: automation._id,
+      automation,
+    })
+  }
+
+  emitAutomationDeletion(ctx: any, id: string) {
+    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.AutomationChange, {
+      id,
+      automation: null,
     })
   }
 }

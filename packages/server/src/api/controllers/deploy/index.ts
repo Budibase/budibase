@@ -7,7 +7,7 @@ import {
   enableCronTrigger,
 } from "../../../automations/utils"
 import { backups } from "@budibase/pro"
-import { AppBackupTrigger } from "@budibase/types"
+import { App, AppBackupTrigger } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
 
@@ -44,7 +44,7 @@ async function storeDeploymentHistory(deployment: any) {
   let deploymentDoc
   try {
     // theres only one deployment doc per app database
-    deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
+    deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
   } catch (err) {
     deploymentDoc = { _id: DocumentType.DEPLOYMENTS, history: {} }
   }
@@ -113,7 +113,7 @@ export async function fetchDeployments(ctx: any) {
 export async function deploymentProgress(ctx: any) {
   try {
     const db = context.getAppDB()
-    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
+    const deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
     ctx.body = deploymentDoc[ctx.params.deploymentId]
   } catch (err) {
     ctx.throw(
@@ -165,9 +165,9 @@ export const publishApp = async function (ctx: any) {
     // app metadata is excluded as it is likely to be in conflict
     // replicate the app metadata document manually
     const db = context.getProdAppDB()
-    const appDoc = await devDb.get(DocumentType.APP_METADATA)
+    const appDoc = await devDb.get<App>(DocumentType.APP_METADATA)
     try {
-      const prodAppDoc = await db.get(DocumentType.APP_METADATA)
+      const prodAppDoc = await db.get<App>(DocumentType.APP_METADATA)
       appDoc._rev = prodAppDoc._rev
     } catch (err) {
       delete appDoc._rev

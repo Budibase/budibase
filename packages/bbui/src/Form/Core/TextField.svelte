@@ -62,6 +62,13 @@
     }
   }
 
+  const getInputMode = type => {
+    if (type === "bigint") {
+      return "numeric"
+    }
+    return type === "number" ? "decimal" : "text"
+  }
+
   onMount(() => {
     focus = autofocus
     if (focus) field.focus()
@@ -103,7 +110,7 @@
     {type}
     class="spectrum-Textfield-input"
     style={align ? `text-align: ${align};` : ""}
-    inputmode={type === "number" ? "decimal" : "text"}
+    inputmode={getInputMode(type)}
     {autocomplete}
   />
 </div>

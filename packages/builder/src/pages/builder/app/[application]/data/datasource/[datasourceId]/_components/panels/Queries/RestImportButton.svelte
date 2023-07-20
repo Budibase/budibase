@@ -2,11 +2,12 @@
   import { Button, Modal } from "@budibase/bbui"
   import ImportQueriesModal from "./RestImportQueriesModal.svelte"
 
+  export let datasourceId
   let importQueriesModal
 </script>
 
 <Modal bind:this={importQueriesModal}>
-  <ImportQueriesModal createDatasource={false} datasourceId={"todo"} />
+  <ImportQueriesModal createDatasource={false} {datasourceId} />
 </Modal>
 
 <div class="button">
