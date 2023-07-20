@@ -126,7 +126,7 @@ export async function getAppsByIDs(appIds: string[]) {
   )
   // have to list the apps which exist, some may have been deleted
   return settled
-    .filter(promise => promise.status === "fulfilled" && promise.value.state !== AppState.INVALID)
+    .filter(promise => promise.status === "fulfilled" && promise.value?.state !== AppState.INVALID)
     .map(promise => (promise as PromiseFulfilledResult<App>).value)
 }
 
