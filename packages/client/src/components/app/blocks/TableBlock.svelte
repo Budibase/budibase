@@ -93,6 +93,9 @@
       const definition = await API.fetchTableDefinition(dataSource?.tableId)
       schema = definition.schema
       primaryDisplay = definition.primaryDisplay
+    } else if (dataSource?.type === "viewV2") {
+      const schemaResponse = await API.viewV2.getSchema(dataSource?.id)
+      schema = schemaResponse.schema
     } else if (dataSource) {
       schema = await fetchDatasourceSchema(dataSource, {
         enrichRelationships: true,

@@ -44,7 +44,7 @@
       label: key,
       name: key,
       ...value,
-      type: "view",
+      type: value.version === 2 ? "viewV2" : "view",
     }))
     return [...acc, ...viewsArr]
   }, [])
