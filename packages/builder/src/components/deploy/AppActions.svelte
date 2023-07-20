@@ -10,6 +10,7 @@
     Link,
     Modal,
     StatusLight,
+    AbsTooltip,
   } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
@@ -250,15 +251,20 @@
                     <Link quiet on:click={unpublishApp}>Unpublish</Link>
                   </span>
                   <span class="revert-link">
-                    <Link
-                      disabled={!$isOnlyUser}
-                      quiet
-                      secondary
-                      on:click={revertApp}
-                      tooltip="Unavailable - another user is editing this app"
+                    <AbsTooltip
+                      text={$isOnlyUser
+                        ? null
+                        : "Unavailable - another user is editing this app"}
                     >
-                      Revert
-                    </Link>
+                      <Link
+                        disabled={!$isOnlyUser}
+                        quiet
+                        secondary
+                        on:click={revertApp}
+                      >
+                        Revert
+                      </Link>
+                    </AbsTooltip>
                   </span>
                 {:else}
                   <span class="status-text unpublished">Not published</span>

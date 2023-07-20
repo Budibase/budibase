@@ -71,7 +71,7 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: budibase/budibase,budibase/budibase:v${{ env.RELEASE_VERSION }}
+          tags: budibase/budibase,budibase/budibase:${{ env.RELEASE_VERSION }}
           file: ./hosting/single/Dockerfile
       - name: Tag and release Budibase Azure App Service docker image
         uses: docker/build-push-action@v2
@@ -80,5 +80,5 @@ jobs:
           push: true
           platforms: linux/amd64
           build-args: TARGETBUILD=aas
-          tags: budibase/budibase-aas,budibase/budibase-aas:v${{ env.RELEASE_VERSION }}
+          tags: budibase/budibase-aas,budibase/budibase-aas:${{ env.RELEASE_VERSION }}
           file: ./hosting/single/Dockerfile

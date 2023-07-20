@@ -27,11 +27,14 @@ const DEFAULT_SCHEMA = "dbo"
 
 import { ConfidentialClientApplication } from "@azure/msal-node"
 
+import { utils } from "@budibase/shared-core"
+
 enum MSSQLConfigAuthType {
-  ACTIVE_DIRECTORY = "Active Directory",
+  AZURE_ACTIVE_DIRECTORY = "Azure Active Directory",
+  NTLM = "NTLM",
 }
 
-interface MSSQLConfig {
+interface BasicMSSQLConfig {
   user: string
   password: string
   server: string
@@ -40,12 +43,29 @@ interface MSSQLConfig {
   schema: string
   encrypt?: boolean
   authType?: MSSQLConfigAuthType
-  adConfig?: {
+}
+
+interface AzureADMSSQLConfig extends BasicMSSQLConfig {
+  authType: MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY
+  adConfig: {
     clientId: string
     clientSecret: string
     tenantId: string
   }
 }
+
+interface NTLMMSSQLConfig extends BasicMSSQLConfig {
+  authType: MSSQLConfigAuthType.NTLM
+  ntlmConfig: {
+    domain?: string
+    trustServerCertificate?: boolean
+  }
+}
+
+type MSSQLConfig =
+  | (BasicMSSQLConfig & { authType?: undefined })
+  | AzureADMSSQLConfig
+  | NTLMMSSQLConfig
 
 const SCHEMA: Integration = {
   docs: "https://github.com/tediousjs/node-mssql",
@@ -93,13 +113,18 @@ const SCHEMA: Integration = {
     authType: {
       type: DatasourceFieldType.SELECT,
       display: "Advanced auth",
-      config: { options: [MSSQLConfigAuthType.ACTIVE_DIRECTORY] },
+      config: {
+        options: [
+          MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY,
+          MSSQLConfigAuthType.NTLM,
+        ],
+      },
     },
     adConfig: {
       type: DatasourceFieldType.FIELD_GROUP,
       default: true,
       display: "Configure Active Directory",
-      hidden: "'{{authType}}' !== 'Active Directory'",
+      hidden: `'{{authType}}' !== '${MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY}'`,
       config: {
         openByDefault: true,
         nestedFields: true,
@@ -119,6 +144,28 @@ const SCHEMA: Integration = {
           type: DatasourceFieldType.STRING,
           required: true,
           display: "Tenant ID",
+        },
+      },
+    },
+    ntlmConfig: {
+      type: DatasourceFieldType.FIELD_GROUP,
+      default: true,
+      display: "Configure NTLM",
+      hidden: `'{{authType}}' !== '${MSSQLConfigAuthType.NTLM}'`,
+      config: {
+        openByDefault: true,
+        nestedFields: true,
+      },
+      fields: {
+        domain: {
+          type: DatasourceFieldType.STRING,
+          required: false,
+          display: "Domain",
+        },
+        trustServerCertificate: {
+          type: DatasourceFieldType.BOOLEAN,
+          required: false,
+          display: "Trust server certificate",
         },
       },
     },
@@ -186,8 +233,11 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     try {
       // if encrypt is undefined, then default is to encrypt
       const encrypt = this.config.encrypt === undefined || this.config.encrypt
-      const clientCfg: MSSQLConfig & sqlServer.config = {
-        ...this.config,
+      const clientCfg: sqlServer.config = {
+        user: this.config.user,
+        password: this.config.password,
+        server: this.config.server,
+        database: this.config.database,
         port: +this.config.port,
         options: {
           encrypt,
@@ -197,28 +247,47 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       if (encrypt) {
         clientCfg.options!.trustServerCertificate = true
       }
-      delete clientCfg.encrypt
 
-      if (this.config.authType === MSSQLConfigAuthType.ACTIVE_DIRECTORY) {
-        const { clientId, tenantId, clientSecret } = this.config.adConfig!
-        const clientApp = new ConfidentialClientApplication({
-          auth: {
-            clientId,
-            authority: `https://login.microsoftonline.com/${tenantId}`,
-            clientSecret,
-          },
-        })
+      switch (this.config.authType) {
+        case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY:
+          const { clientId, tenantId, clientSecret } =
+            this.config.adConfig || {}
+          const clientApp = new ConfidentialClientApplication({
+            auth: {
+              clientId,
+              authority: `https://login.microsoftonline.com/${tenantId}`,
+              clientSecret,
+            },
+          })
 
-        const response = await clientApp.acquireTokenByClientCredential({
-          scopes: ["https://database.windows.net/.default"],
-        })
+          const response = await clientApp.acquireTokenByClientCredential({
+            scopes: ["https://database.windows.net/.default"],
+          })
 
-        clientCfg.authentication = {
-          type: "azure-active-directory-access-token",
-          options: {
-            token: response!.accessToken,
-          },
-        }
+          clientCfg.authentication = {
+            type: "azure-active-directory-access-token",
+            options: {
+              token: response!.accessToken,
+            },
+          }
+          break
+        case MSSQLConfigAuthType.NTLM:
+          const { domain, trustServerCertificate } =
+            this.config.ntlmConfig || {}
+          clientCfg.authentication = {
+            type: "ntlm",
+            options: {
+              domain,
+            },
+          }
+          clientCfg.options ??= {}
+          clientCfg.options.trustServerCertificate = !!trustServerCertificate
+          break
+        case null:
+        case undefined:
+          break
+        default:
+          utils.unreachable(this.config)
       }
 
       const pool = new sqlServer.ConnectionPool(clientCfg)

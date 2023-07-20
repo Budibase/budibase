@@ -127,8 +127,12 @@ export const selectedAutomation = derived(automationStore, $automationStore => {
 export const userSelectedResourceMap = derived(userStore, $userStore => {
   let map = {}
   $userStore.forEach(user => {
-    if (user.builderMetadata?.selectedResourceId) {
-      map[user.builderMetadata?.selectedResourceId] = user
+    const resource = user.builderMetadata?.selectedResourceId
+    if (resource) {
+      if (!map[resource]) {
+        map[resource] = []
+      }
+      map[resource].push(user)
     }
   })
   return map
