@@ -53,8 +53,6 @@ async function passportCallback(
 }
 
 export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
-  const tenantId = context.getTenantId()
-  console.log(tenantId)
   const email = ctx.request.body.username
 
   const user = await userSdk.getUserByEmail(email)
