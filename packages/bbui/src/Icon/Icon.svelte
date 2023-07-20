@@ -47,7 +47,7 @@
   </svg>
   {#if tooltip && showTooltip}
     <div class="tooltip" in:fade={{ duration: 130, delay: 250 }}>
-      <Tooltip textWrapping direction="bottom" text={tooltip} />
+      <Tooltip textWrapping direction="top" text={tooltip} />
     </div>
   {/if}
 </div>
@@ -80,15 +80,9 @@
     position: absolute;
     pointer-events: none;
     left: 50%;
-    top: calc(100% + 4px);
-    width: 100vw;
-    max-width: 150px;
+    bottom: calc(100% + 4px);
     transform: translateX(-50%);
     text-align: center;
-  }
-
-  .spectrum-Icon--sizeXS {
-    width: 10px;
-    height: 10px;
+    z-index: 1;
   }
 </style>
