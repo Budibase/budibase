@@ -514,7 +514,7 @@ export const enrichButtonActions = (actions, context) => {
                     actions.slice(i + 1),
                     newContext
                   )
-                  resolve(await next())
+                  resolve(typeof next === "function" ? await next() : true)
                 } else {
                   resolve(false)
                 }

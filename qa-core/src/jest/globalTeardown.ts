@@ -10,8 +10,13 @@ const API_OPTS: APIRequestOpts = { doExpect: false }
 async function deleteAccount() {
   // @ts-ignore
   const accountID = global.qa.accountId
-  // can't run 'expect' blocks in teardown
-  await accountsApi.accounts.delete(accountID)
+
+  const [response] = await accountsApi.accounts.delete(accountID, {
+    doExpect: false,
+  })
+  if (response.status !== 204) {
+    throw new Error(`status: ${response.status} not equal to expected: 201`)
+  }
 }
 
 async function teardown() {
