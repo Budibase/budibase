@@ -16,6 +16,6 @@
 
 <style>
   .pane {
-    padding: 13px;
+    padding: var(--spacing-l);
   }
 </style>
