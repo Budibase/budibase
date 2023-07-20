@@ -124,6 +124,15 @@ export const buildAppEndpoints = API => ({
   },
 
   /**
+   * Gets budibase platform debug information.
+   */
+  fetchSystemDebugInfo: async () => {
+    return await API.get({
+      url: `/api/debug/diagnostics`,
+    })
+  },
+
+  /**
    * Syncs an app with the production database.
    * @param appId the ID of the app to sync
    */

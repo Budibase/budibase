@@ -2,12 +2,12 @@
   import { Heading, Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { goto } from "@roxi/routify"
-  import { UserAvatar } from "@budibase/frontend-core"
+  import { UserAvatars } from "@budibase/frontend-core"
 
   export let app
   export let lockedAction
 
-  $: editing = app?.lockedBy != null
+  $: editing = app.sessions?.length
 
   const handleDefaultClick = () => {
     if (window.innerWidth < 640) {
@@ -41,7 +41,7 @@
   <div class="updated">
     {#if editing}
       Currently editing
-      <UserAvatar user={app.lockedBy} />
+      <UserAvatars users={app.sessions} />
     {:else if app.updatedAt}
       {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
         time: new Date().getTime() - new Date(app.updatedAt).getTime(),

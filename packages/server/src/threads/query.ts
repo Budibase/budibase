@@ -11,6 +11,7 @@ import { cloneDeep } from "lodash/fp"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
+import { Query } from "@budibase/types"
 
 class QueryRunner {
   datasource: any
@@ -167,7 +168,7 @@ class QueryRunner {
 
   async runAnotherQuery(queryId: string, parameters: any) {
     const db = context.getAppDB()
-    const query = await db.get(queryId)
+    const query = await db.get<Query>(queryId)
     const datasource = await sdk.datasources.get(query.datasourceId, {
       enriched: true,
     })

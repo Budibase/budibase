@@ -43,7 +43,7 @@ jobs:
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
-          release_tag=v${{ env.RELEASE_VERSION }}
+          release_tag=${{ env.RELEASE_VERSION }}
 
           # Pull apps and worker images
           docker pull budibase/apps:$release_tag
@@ -108,8 +108,8 @@ jobs:
       - name: Perform Github Release
         uses: softprops/action-gh-release@v1
         with:
-          name: v${{ env.RELEASE_VERSION }}
-          tag_name: v${{ env.RELEASE_VERSION }}
+          name: ${{ env.RELEASE_VERSION }}
+          tag_name: ${{ env.RELEASE_VERSION }}
           generate_release_notes: true
           files: |
             packages/cli/build/cli-win.exe
