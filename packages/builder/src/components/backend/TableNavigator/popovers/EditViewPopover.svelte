@@ -1,5 +1,5 @@
 <script>
-  import { goto, params } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import { views } from "stores/backend"
   import { cloneDeep } from "lodash/fp"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
