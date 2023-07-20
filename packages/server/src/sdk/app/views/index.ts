@@ -1,5 +1,5 @@
 import { HTTPError, context } from "@budibase/backend-core"
-import { View, ViewV2 } from "@budibase/types"
+import { TableSchema, View, ViewV2 } from "@budibase/types"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
@@ -47,4 +47,11 @@ export async function remove(viewId: string): Promise<void> {
 
   delete table.views![view?.name]
   await db.put(table)
+}
+
+export async function getSchema(viewId: string): Promise<TableSchema> {
+  const view = await get(viewId)
+  const table = await sdk.tables.getTable(view?.tableId)
+
+  return table.schema
 }

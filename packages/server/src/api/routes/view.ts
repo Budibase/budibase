@@ -18,6 +18,11 @@ router
     authorized(permissions.BUILDER),
     viewController.v2.remove
   )
+  .get(
+    `/api/v2/views/:viewId/schema`,
+    authorized(permissions.BUILDER),
+    viewController.v2.getSchema
+  )
 
 router
   .get(
