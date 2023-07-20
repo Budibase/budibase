@@ -3,6 +3,7 @@ import { TableSchema, View, ViewV2 } from "@budibase/types"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
+import _ from "lodash"
 
 export async function get(viewId: string): Promise<ViewV2 | undefined> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
@@ -53,5 +54,10 @@ export async function getSchema(viewId: string): Promise<TableSchema> {
   const view = await get(viewId)
   const table = await sdk.tables.getTable(view?.tableId)
 
-  return table.schema
+  if (!view?.columns?.length) {
+    return table.schema
+  }
+
+  const schema = _.pick(table.schema, ...view.columns)
+  return schema
 }
