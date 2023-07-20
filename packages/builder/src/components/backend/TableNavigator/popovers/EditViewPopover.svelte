@@ -35,11 +35,11 @@
     try {
       const isSelected =
         decodeURIComponent($params.viewName) === $views.selectedViewName
-      const id = view.tableId
+      const { tableId } = view
       await views.delete(view)
       notifications.success("View deleted")
       if (isSelected) {
-        $goto(`./table/${id}`)
+        $goto(`./table/${tableId}`)
       }
     } catch (error) {
       notifications.error("Error deleting view")
