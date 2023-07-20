@@ -7,7 +7,7 @@
   } from "stores/backend"
 
   import { hasData } from "stores/selectors"
-  import { notifications, Body } from "@budibase/bbui"
+  import { notifications, Body, Icon, AbsTooltip } from "@budibase/bbui"
   import { params, goto } from "@roxi/routify"
   import CreateExternalDatasourceModal from "./_components/CreateExternalDatasourceModal/index.svelte"
   import CreateInternalTableModal from "./_components/CreateInternalTableModal.svelte"
@@ -15,7 +15,6 @@
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
   import CreationPage from "components/common/CreationPage.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons/index.js"
-  import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
 
   let internalTableModal
   let externalDatasourceModal
@@ -54,13 +53,9 @@
 >
   <div class="subHeading">
     <Body>Get started with our Budibase DB</Body>
-    <div
-      role="tooltip"
-      title="Budibase DB is built with CouchDB"
-      class="tooltip"
-    >
-      <FontAwesomeIcon name="fa-solid fa-circle-info" />
-    </div>
+    <AbsTooltip text="Budibase DB is built with CouchDB">
+      <Icon name="Info" size="S" />
+    </AbsTooltip>
   </div>
 
   <div class="options">
@@ -116,13 +111,12 @@
     display: flex;
     align-items: center;
     margin-top: 12px;
-    margin-bottom: 24px;
+    margin-bottom: 36px;
+    gap: 8px;
   }
-
-  .tooltip {
-    margin-left: 6px;
+  .subHeading :global(p) {
+    color: var(--spectrum-global-color-gray-600) !important;
   }
-
   .options {
     width: 100%;
     display: grid;
