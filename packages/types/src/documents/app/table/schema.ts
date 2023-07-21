@@ -1,7 +1,7 @@
 // all added by grid/table when defining the
 // column size, position and whether it can be viewed
 import { FieldType } from "../row"
-import { AutoReason, RelationshipTypes } from "./constants"
+import { AutoReason, RelationshipType } from "./constants"
 
 export interface UIFieldMetadata {
   order?: number
@@ -16,7 +16,7 @@ export interface RelationshipFieldMetadata {
   tableId?: string
   // below is used for SQL relationships, needed to define the foreign keys
   // or the tables used for many-to-many relationships (through)
-  relationshipType?: RelationshipTypes
+  relationshipType?: RelationshipType
   through?: string
   foreignKey?: string
   throughFrom?: string
