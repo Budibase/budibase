@@ -1,0 +1,31 @@
+import { Document } from "../../document"
+import { View } from "../view"
+import { RenameColumn } from "../../../sdk"
+import { TableSchema } from "./schema"
+
+export interface Table extends Document {
+  type?: string
+  views?: { [key: string]: View }
+  name: string
+  originalName?: string
+  primary?: string[]
+  schema: TableSchema
+  primaryDisplay?: string
+  sourceId?: string
+  relatedFormula?: string[]
+  constrained?: string[]
+  sql?: boolean
+  indexes?: { [key: string]: any }
+  rows?: { [key: string]: any }
+  created?: boolean
+  rowHeight?: number
+}
+
+export interface ExternalTable extends Table {
+  sourceId: string
+}
+
+export interface TableRequest extends Table {
+  _rename?: RenameColumn
+  created?: boolean
+}

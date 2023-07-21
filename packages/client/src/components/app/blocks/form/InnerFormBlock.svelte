@@ -17,10 +17,12 @@
   export let showDeleteButton
   export let schema
   export let repeaterId
+  export let notificationOverride
 
   const FieldTypeToComponentMap = {
     string: "stringfield",
     number: "numberfield",
+    bigint: "bigintfield",
     options: "optionsfield",
     array: "multifieldselect",
     boolean: "booleanfield",
@@ -46,6 +48,7 @@
       parameters: {
         providerId: formId,
         tableId: dataSource?.tableId,
+        notificationOverride,
       },
     },
     {

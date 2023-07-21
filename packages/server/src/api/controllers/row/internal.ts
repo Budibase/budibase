@@ -1,9 +1,7 @@
 import * as linkRows from "../../../db/linkedRows"
 import {
   generateRowID,
-  getRowParams,
   getTableIDFromRowID,
-  DocumentType,
   InternalTables,
 } from "../../../db/utils"
 import * as userController from "../user"
@@ -16,86 +14,28 @@ import { FieldTypes } from "../../../constants"
 import * as utils from "./utils"
 // import { fullSearch, paginatedSearch } from "./internalSearch"
 // import { getGlobalUsersFromMetadata } from "../../../utilities/global"
-import * as inMemoryViews from "../../../db/inMemoryView"
-import env from "../../../environment"
-import {
-  migrateToInMemoryView,
-  migrateToDesignView,
-  getFromDesignDoc,
-  getFromMemoryDoc,
-} from "../view/utils"
 import { cloneDeep } from "lodash/fp"
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
 import { csv, json, jsonWithSchema, Format } from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
-import {
-  UserCtx,
-  Database,
-  LinkDocumentValue,
-  Row,
-  Table,
-} from "@budibase/types"
+import { UserCtx, LinkDocumentValue, Row, Table } from "@budibase/types"
 import { sqlSearch } from "./internalSql"
+import sdk from "../../../sdk"
 
-import { cleanExportRows } from "./utils"
-
-const CALCULATION_TYPES = {
-  SUM: "sum",
-  COUNT: "count",
-  STATS: "stats",
-}
-
-async function getView(db: Database, viewName: string) {
-  let mainGetter = env.SELF_HOSTED ? getFromDesignDoc : getFromMemoryDoc
-  let secondaryGetter = env.SELF_HOSTED ? getFromMemoryDoc : getFromDesignDoc
-  let migration = env.SELF_HOSTED ? migrateToDesignView : migrateToInMemoryView
-  let viewInfo,
-    migrate = false
-  try {
-    viewInfo = await mainGetter(db, viewName)
-  } catch (err: any) {
-    // check if it can be retrieved from design doc (needs migrated)
-    if (err.status !== 404) {
-      viewInfo = null
-    } else {
-      viewInfo = await secondaryGetter(db, viewName)
-      migrate = !!viewInfo
-    }
-  }
-  if (migrate) {
-    await migration(db, viewName)
-  }
-  if (!viewInfo) {
-    throw "View does not exist."
-  }
-  return viewInfo
-}
-
-async function getRawTableData(ctx: UserCtx, db: Database, tableId: string) {
-  let rows
-  if (tableId === InternalTables.USER_METADATA) {
-    await userController.fetchMetadata(ctx)
-    rows = ctx.body
-  } else {
-    const response = await db.allDocs(
-      getRowParams(tableId, null, {
-        include_docs: true,
-      })
-    )
-    rows = response.rows.map(row => row.doc)
-  }
-  return rows as Row[]
-}
+// const CALCULATION_TYPES = {
+//   SUM: "sum",
+//   COUNT: "count",
+//   STATS: "stats",
+// }
 
 export async function patch(ctx: UserCtx) {
-  const db = context.getAppDB()
   const inputs = ctx.request.body
   const tableId = inputs.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
   try {
-    let dbTable = await db.get(tableId)
+    let dbTable = await sdk.tables.getTable(tableId)
     oldRow = await outputProcessing(
       dbTable,
       await utils.findRow(ctx, tableId, inputs._id)
@@ -111,7 +51,7 @@ export async function patch(ctx: UserCtx) {
       throw "Row does not exist"
     }
   }
-  let dbTable = await db.get(tableId)
+  let dbTable = await sdk.tables.getTable(tableId)
   // need to build up full patch fields before coerce
   let combinedRow: any = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
@@ -157,7 +97,6 @@ export async function patch(ctx: UserCtx) {
 }
 
 export async function save(ctx: UserCtx) {
-  const db = context.getAppDB()
   let inputs = ctx.request.body
   inputs.tableId = ctx.params.tableId
 
@@ -166,7 +105,7 @@ export async function save(ctx: UserCtx) {
   }
 
   // this returns the table and row incase they have been updated
-  const dbTable = await db.get(inputs.tableId)
+  const dbTable = await sdk.tables.getTable(inputs.tableId)
 
   // need to copy the table so it can be differenced on way out
   const tableClone = cloneDeep(dbTable)
@@ -196,85 +135,8 @@ export async function save(ctx: UserCtx) {
   })
 }
 
-export async function fetchView(ctx: UserCtx) {
-  const viewName = decodeURIComponent(ctx.params.viewName)
-
-  // if this is a table view being looked for just transfer to that
-  if (viewName.startsWith(DocumentType.TABLE)) {
-    ctx.params.tableId = viewName
-    return fetch(ctx)
-  }
-
-  const db = context.getAppDB()
-  const { calculation, group, field } = ctx.query
-  const viewInfo = await getView(db, viewName)
-  let response
-  if (env.SELF_HOSTED) {
-    response = await db.query(`database/${viewName}`, {
-      include_docs: !calculation,
-      group: !!group,
-    })
-  } else {
-    const tableId = viewInfo.meta.tableId
-    const data = await getRawTableData(ctx, db, tableId)
-    response = await inMemoryViews.runView(
-      viewInfo,
-      calculation as string,
-      !!group,
-      data
-    )
-  }
-
-  let rows
-  if (!calculation) {
-    response.rows = response.rows.map(row => row.doc)
-    let table
-    try {
-      table = await db.get(viewInfo.meta.tableId)
-    } catch (err) {
-      /* istanbul ignore next */
-      table = {
-        schema: {},
-      }
-    }
-    rows = await outputProcessing(table, response.rows)
-  }
-
-  if (calculation === CALCULATION_TYPES.STATS) {
-    response.rows = response.rows.map(row => ({
-      group: row.key,
-      field,
-      ...row.value,
-      avg: row.value.sum / row.value.count,
-    }))
-    rows = response.rows
-  }
-
-  if (
-    calculation === CALCULATION_TYPES.COUNT ||
-    calculation === CALCULATION_TYPES.SUM
-  ) {
-    rows = response.rows.map(row => ({
-      group: row.key,
-      field,
-      value: row.value,
-    }))
-  }
-  return rows
-}
-
-export async function fetch(ctx: UserCtx) {
-  const db = context.getAppDB()
-
-  const tableId = ctx.params.tableId
-  let table = await db.get(tableId)
-  let rows = await getRawTableData(ctx, db, tableId)
-  return outputProcessing(table, rows)
-}
-
 export async function find(ctx: UserCtx) {
-  const db = dbCore.getDB(ctx.appId)
-  const table = await db.get(ctx.params.tableId)
+  const table = await sdk.tables.getTable(ctx.params.tableId)
   let row = await utils.findRow(ctx, ctx.params.tableId, ctx.params.rowId)
   row = await outputProcessing(table, row)
   return row
@@ -283,13 +145,13 @@ export async function find(ctx: UserCtx) {
 export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
   const { _id } = ctx.request.body
-  let row = await db.get(_id)
+  let row = await db.get<Row>(_id)
   let _rev = ctx.request.body._rev || row._rev
 
   if (row.tableId !== ctx.params.tableId) {
     throw "Supplied tableId doesn't match the row's tableId"
   }
-  const table = await db.get(row.tableId)
+  const table = await sdk.tables.getTable(row.tableId)
   // update the row to include full relationships before deleting them
   row = await outputProcessing(table, row, { squash: false })
   // now remove the relationships
@@ -319,7 +181,7 @@ export async function destroy(ctx: UserCtx) {
 export async function bulkDestroy(ctx: UserCtx) {
   const db = context.getAppDB()
   const tableId = ctx.params.tableId
-  const table = await db.get(tableId)
+  const table = await sdk.tables.getTable(tableId)
   let { rows } = ctx.request.body
 
   // before carrying out any updates, make sure the rows are ready to be returned
@@ -398,7 +260,7 @@ export async function search(ctx: UserCtx) {
 
 export async function exportRows(ctx: UserCtx) {
   const db = context.getAppDB()
-  const table = await db.get(ctx.params.tableId)
+  const table = (await db.get(ctx.params.tableId)) as Table
   const rowIds = ctx.request.body.rows
   let format = ctx.query.format
   if (typeof format !== "string") {
@@ -436,7 +298,7 @@ export async function exportRows(ctx: UserCtx) {
     rows = result
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, columns)
+  let exportRows = sdk.rows.utils.cleanExportRows(rows, schema, format, columns)
   if (format === Format.CSV) {
     ctx.attachment("export.csv")
     return apiFileReturn(csv(Object.keys(rows[0]), exportRows))
@@ -457,7 +319,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   const rowId = ctx.params.rowId
   // need table to work out where links go in row
   let [table, row] = await Promise.all([
-    db.get(tableId),
+    sdk.tables.getTable(tableId),
     utils.findRow(ctx, tableId, rowId),
   ])
   // get the link docs

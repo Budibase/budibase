@@ -433,6 +433,9 @@ export class QueryBuilder<T> {
         if (!value) {
           return null
         }
+        if (typeof value === "boolean") {
+          return `(*:* AND !${key}:${value})`
+        }
         return `!${key}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }

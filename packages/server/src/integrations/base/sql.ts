@@ -540,7 +540,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    */
   _query(json: QueryJson, opts: QueryOptions = {}) {
     const sqlClient = this.getSqlClient()
-    const config: { client: string, useNullAsDefault?: boolean } = { client: sqlClient }
+    const config: { client: string; useNullAsDefault?: boolean } = {
+      client: sqlClient,
+    }
     if (sqlClient === SqlClient.SQL_LITE) {
       config.useNullAsDefault = true
     }

@@ -133,7 +133,7 @@
             on:change={e => onOperatorChange(filter, e.detail)}
             placeholder={null}
           />
-          {#if ["string", "longform", "number", "formula"].includes(filter.type)}
+          {#if ["string", "longform", "number", "bigint", "formula"].includes(filter.type)}
             <Input disabled={filter.noValue} bind:value={filter.value} />
           {:else if ["options", "array"].includes(filter.type)}
             <Combobox

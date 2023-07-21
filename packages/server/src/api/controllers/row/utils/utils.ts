@@ -2,15 +2,14 @@ import { InternalTables } from "../../../../db/utils"
 import * as userController from "../../user"
 import { FieldTypes } from "../../../../constants"
 import { context } from "@budibase/backend-core"
-import { makeExternalQuery } from "../../../../integrations/base/query"
 import {
+  Ctx,
   FieldType,
   RelationshipsJson,
   Row,
   Table,
   UserCtx,
 } from "@budibase/types"
-import { Format } from "../../view/exporters"
 import sdk from "../../../../sdk"
 import {
   processDates,
@@ -22,8 +21,15 @@ import {
 } from "./sqlUtils"
 import { basicProcessing, generateIdForRow, fixArrayTypes } from "./basic"
 
-const validateJs = require("validate.js")
-const { cloneDeep } = require("lodash/fp")
+import validateJs from "validate.js"
+import { cloneDeep } from "lodash/fp"
+
+function isForeignKey(key: string, table: Table) {
+  const relationships = Object.values(table.schema).filter(
+    column => column.type === FieldType.LINK
+  )
+  return relationships.some(relationship => relationship.foreignKey === key)
+}
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -34,19 +40,6 @@ validateJs.extend(validateJs.validators.datetime, {
     return new Date(value).toISOString()
   },
 })
-
-function isForeignKey(key: string, table: Table) {
-  const relationships = Object.values(table.schema).filter(
-    column => column.type === FieldType.LINK
-  )
-  return relationships.some(relationship => relationship.foreignKey === key)
-}
-
-export async function getDatasourceAndQuery(json: any) {
-  const datasourceId = json.endpoint.datasourceId
-  const datasource = await sdk.datasources.get(datasourceId)
-  return makeExternalQuery(datasource, json)
-}
 
 export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
   const db = context.getAppDB()
@@ -65,6 +58,18 @@ export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
     throw "Supplied tableId does not match the rows tableId"
   }
   return row
+}
+
+export function getTableId(ctx: Ctx) {
+  if (ctx.request.body && ctx.request.body.tableId) {
+    return ctx.request.body.tableId
+  }
+  if (ctx.params && ctx.params.tableId) {
+    return ctx.params.tableId
+  }
+  if (ctx.params && ctx.params.viewName) {
+    return ctx.params.viewName
+  }
 }
 
 export async function validate({
@@ -96,8 +101,8 @@ export async function validate({
       continue
     }
     // special case for options, need to always allow unselected (empty)
-    if (type === FieldTypes.OPTIONS && constraints.inclusion) {
-      constraints.inclusion.push(null, "")
+    if (type === FieldTypes.OPTIONS && constraints?.inclusion) {
+      constraints.inclusion.push(null as any, "")
     }
     let res
 
@@ -109,13 +114,13 @@ export async function validate({
         }
         row[fieldName].map((val: any) => {
           if (
-            !constraints.inclusion.includes(val) &&
-            constraints.inclusion.length !== 0
+            !constraints?.inclusion?.includes(val) &&
+            constraints?.inclusion?.length !== 0
           ) {
             errors[fieldName] = "Field not in list"
           }
         })
-      } else if (constraints.presence && row[fieldName].length === 0) {
+      } else if (constraints?.presence && row[fieldName].length === 0) {
         // non required MultiSelect creates an empty array, which should not throw errors
         errors[fieldName] = [`${fieldName} is required`]
       }
@@ -142,55 +147,6 @@ export async function validate({
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
-}
-
-export function cleanExportRows(
-  rows: any[],
-  schema: any,
-  format: string,
-  columns: string[]
-) {
-  let cleanRows = [...rows]
-
-  const relationships = Object.entries(schema)
-    .filter((entry: any[]) => entry[1].type === FieldTypes.LINK)
-    .map(entry => entry[0])
-
-  relationships.forEach(column => {
-    cleanRows.forEach(row => {
-      delete row[column]
-    })
-    delete schema[column]
-  })
-
-  if (format === Format.CSV) {
-    // Intended to append empty values in export
-    const schemaKeys = Object.keys(schema)
-    for (let key of schemaKeys) {
-      if (columns?.length && columns.indexOf(key) > 0) {
-        continue
-      }
-      for (let row of cleanRows) {
-        if (row[key] == null) {
-          row[key] = undefined
-        }
-      }
-    }
-  }
-
-  return cleanRows
-}
-
-export function getTableId(ctx: any) {
-  if (ctx.request.body && ctx.request.body.tableId) {
-    return ctx.request.body.tableId
-  }
-  if (ctx.params && ctx.params.tableId) {
-    return ctx.params.tableId
-  }
-  if (ctx.params && ctx.params.viewName) {
-    return ctx.params.viewName
-  }
 }
 
 export function sqlOutputProcessing(

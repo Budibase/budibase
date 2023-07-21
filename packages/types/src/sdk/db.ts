@@ -89,7 +89,7 @@ export interface Database {
 
   exists(): Promise<boolean>
   checkSetup(): Promise<Nano.DocumentScope<any>>
-  get<T>(id?: string): Promise<T | any>
+  get<T>(id?: string): Promise<T>
   remove(
     id: string | Document,
     rev?: string

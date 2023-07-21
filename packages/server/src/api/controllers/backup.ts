@@ -1,7 +1,7 @@
 import sdk from "../../sdk"
 import { events, context, db } from "@budibase/backend-core"
 import { DocumentType } from "../../db/utils"
-import { Ctx } from "@budibase/types"
+import { App, Ctx } from "@budibase/types"
 
 interface ExportAppDumpRequest {
   excludeRows: boolean
@@ -29,7 +29,7 @@ export async function exportAppDump(ctx: Ctx<ExportAppDumpRequest>) {
 
   await context.doInAppContext(appId, async () => {
     const appDb = context.getAppDB()
-    const app = await appDb.get(DocumentType.APP_METADATA)
+    const app = await appDb.get<App>(DocumentType.APP_METADATA)
     await events.app.exported(app)
   })
 }

@@ -30,6 +30,7 @@
   export let sidePanelShowDelete
   export let sidePanelSaveLabel
   export let sidePanelDeleteLabel
+  export let notificationOverride
 
   const { fetchDatasourceSchema, API } = getContext("sdk")
   const stateKey = `ID_${generate()}`
@@ -169,7 +170,7 @@
             order={1}
           >
             {#if enrichedSearchColumns?.length}
-              {#each enrichedSearchColumns as column, idx}
+              {#each enrichedSearchColumns as column, idx (column.name)}
                 <BlockComponent
                   type={column.componentType}
                   props={{
@@ -253,6 +254,7 @@
               fields: sidePanelFields || normalFields,
               title: editTitle,
               labelPosition: "left",
+              notificationOverride,
             }}
           />
         </BlockComponent>
@@ -277,6 +279,7 @@
               fields: sidePanelFields || normalFields,
               title: "Create Row",
               labelPosition: "left",
+              notificationOverride,
             }}
           />
         </BlockComponent>

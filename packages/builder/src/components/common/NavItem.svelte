@@ -2,6 +2,7 @@
   import { Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { helpers } from "@budibase/shared-core"
+  import { UserAvatars } from "@budibase/frontend-core"
 
   export let icon
   export let withArrow = false
@@ -98,21 +99,25 @@
         <Icon color={iconColor} size="S" name={icon} />
       </div>
     {/if}
-    <div class="text" title={showTooltip ? text : null}>{text}</div>
+    <div class="text" title={showTooltip ? text : null}>
+      {text}
+      {#if selectedBy}
+        <UserAvatars size="XS" users={selectedBy} />
+      {/if}
+    </div>
+
     {#if withActions}
       <div class="actions">
         <slot />
       </div>
     {/if}
+
     {#if $$slots.right}
       <div class="right">
         <slot name="right" />
       </div>
     {/if}
   </div>
-  {#if selectedBy}
-    <div class="selected-by-label">{helpers.getUserLabel(selectedBy)}</div>
-  {/if}
 </div>
 
 <style>
@@ -127,7 +132,6 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
-    position: relative;
   }
   .nav-item.scrollable {
     flex-direction: column;
@@ -136,13 +140,16 @@
   }
   .nav-item.highlighted {
     background-color: var(--spectrum-global-color-gray-200);
+    --avatars-background: var(--spectrum-global-color-gray-200);
   }
   .nav-item.selected {
     background-color: var(--spectrum-global-color-gray-300);
+    --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
   }
   .nav-item:hover {
     background-color: var(--spectrum-global-color-gray-300);
+    --avatars-background: var(--spectrum-global-color-gray-300);
   }
   .nav-item:hover .actions {
     visibility: visible;
@@ -157,37 +164,6 @@
     width: max-content;
     position: relative;
     padding-left: var(--spacing-l);
-  }
-
-  /* Selected user styles */
-  .nav-item.selectedBy:after {
-    content: "";
-    position: absolute;
-    width: calc(100% - 4px);
-    height: 28px;
-    border: 2px solid var(--selected-by-color);
-    left: 0;
-    top: 0;
-    border-radius: 2px;
-    pointer-events: none;
-  }
-  .selected-by-label {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: var(--selected-by-color);
-    padding: 2px 4px;
-    font-size: 12px;
-    color: white;
-    transform: translateY(calc(1px - 100%));
-    border-top-right-radius: 2px;
-    border-top-left-radius: 2px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 130ms ease-out;
-  }
-  .nav-item.selectedBy:hover .selected-by-label {
-    opacity: 1;
   }
 
   /* Needed to fully display the actions icon */
@@ -245,6 +221,9 @@
     color: var(--spectrum-global-color-gray-900);
     order: 2;
     width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .scrollable .text {
     flex: 0 0 auto;

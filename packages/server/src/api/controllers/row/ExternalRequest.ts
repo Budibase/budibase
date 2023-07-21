@@ -6,7 +6,7 @@ import {
   IncludeRelationship,
   Operation,
   PaginationJson,
-  RelationshipTypes,
+  RelationshipType,
   Row,
   SearchFilters,
   SortJson,
@@ -21,12 +21,12 @@ import {
   isSQL,
 } from "../../../integrations/utils"
 import {
-  getDatasourceAndQuery,
   generateIdForRow,
   buildExternalRelationships,
   buildSqlFieldList,
   sqlOutputProcessing,
 } from "./utils"
+import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
 import { FieldTypes } from "../../../constants"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
@@ -300,7 +300,7 @@ export class ExternalRequest {
       ) {
         continue
       }
-      const isMany = field.relationshipType === RelationshipTypes.MANY_TO_MANY
+      const isMany = field.relationshipType === RelationshipType.MANY_TO_MANY
       const tableId = isMany ? field.through : field.tableId
       const { tableName: relatedTableName } = breakExternalTableId(tableId)
       // @ts-ignore

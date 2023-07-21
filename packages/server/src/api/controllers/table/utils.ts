@@ -20,17 +20,11 @@ import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
-import {
-  ContextUser,
-  Database,
-  Datasource,
-  SourceName,
-  Table,
-} from "@budibase/types"
+import { ContextUser, Datasource, SourceName, Table } from "@budibase/types"
 import { addTableToSqlite } from "./sqlite"
 
 export async function clearColumns(table: any, columnNames: any) {
-  const db: Database = context.getAppDB()
+  const db = context.getAppDB()
   const rows = await db.allDocs(
     getRowParams(table._id, null, {
       include_docs: true,

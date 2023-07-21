@@ -2342,10 +2342,6 @@
             "value": "left"
           },
           {
-            "label": "Right",
-            "value": "right"
-          },
-          {
             "label": "Above",
             "value": "above"
           }
@@ -2506,6 +2502,57 @@
         "type": "validation/number",
         "label": "Validation",
         "key": "validation"
+      }
+    ]
+  },
+  "bigintfield": {
+    "name": "BigInt Field",
+    "icon": "TagBold",
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 50
+    },
+    "settings": [
+      {
+        "type": "field/bigint",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -3171,6 +3218,46 @@
         "label": "Manual entry",
         "key": "allowManualEntry",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Play sound on scan",
+        "key": "beepOnScan",
+        "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Sound pitch",
+        "key": "beepFrequency",
+        "dependsOn": "beepOnScan",
+        "defaultValue": 2637,
+        "options": [
+          {
+            "label": "Low",
+            "value": 2096
+          },
+          {
+            "label": "Regular",
+            "value": 2637
+          },
+          {
+            "label": "High",
+            "value": 3136
+          },
+          { "label": "Custom", "value": "custom" }
+        ]
+      },
+      {
+        "type": "number",
+        "label": "Sound frequency (Hz)",
+        "key": "customFrequency",
+        "defaultValue": 1046,
+        "min": 20,
+        "max": 8000,
+        "dependsOn": {
+          "setting": "beepFrequency",
+          "value": "custom"
+        }
       },
       {
         "type": "validation/string",
@@ -4490,6 +4577,16 @@
               "setting": "clickBehaviour",
               "value": "details"
             }
+          },
+          {
+            "type": "boolean",
+            "label": "Hide notifications",
+            "key": "notificationOverride",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
           }
         ]
       },
@@ -5126,6 +5223,16 @@
               "setting": "actionType",
               "value": "View",
               "invert": true
+            }
+          },
+          {
+            "type": "boolean",
+            "label": "Hide notifications",
+            "key": "notificationOverride",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "showSaveButton",
+              "value": true
             }
           }
         ]

@@ -1,4 +1,4 @@
-import { generateQueryID, getQueryParams, isProdAppID } from "../../../db/utils"
+import { generateQueryID } from "../../../db/utils"
 import { BaseQueryVerbs, FieldTypes } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
@@ -9,6 +9,7 @@ import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent } from "../../../threads/definitions"
+import { Query } from "@budibase/types"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
@@ -27,15 +28,7 @@ function enrichQueries(input: any) {
 }
 
 export async function fetch(ctx: any) {
-  const db = context.getAppDB()
-
-  const body = await db.allDocs(
-    getQueryParams(null, {
-      include_docs: true,
-    })
-  )
-
-  ctx.body = enrichQueries(body.rows.map((row: any) => row.doc))
+  ctx.body = await sdk.queries.fetch()
 }
 
 const _import = async (ctx: any) => {
@@ -102,14 +95,8 @@ export async function save(ctx: any) {
 }
 
 export async function find(ctx: any) {
-  const db = context.getAppDB()
-  const query = enrichQueries(await db.get(ctx.params.queryId))
-  // remove properties that could be dangerous in real app
-  if (isProdAppID(ctx.appId)) {
-    delete query.fields
-    delete query.parameters
-  }
-  ctx.body = query
+  const queryId = ctx.params.queryId
+  ctx.body = await sdk.queries.find(queryId)
 }
 
 //Required to discern between OIDC OAuth config entries
@@ -156,7 +143,7 @@ export async function preview(ctx: any) {
     }
     const runFn = () => Runner.run(inputs)
 
-    const { rows, keys, info, extra } = await quotas.addQuery(runFn, {
+    const { rows, keys, info, extra } = await quotas.addQuery<any>(runFn, {
       datasourceId: datasource._id,
     })
     const schemaFields: any = {}
@@ -206,7 +193,7 @@ async function execute(
 ) {
   const db = context.getAppDB()
 
-  const query = await db.get(ctx.params.queryId)
+  const query = await db.get<Query>(ctx.params.queryId)
   const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
     query.datasourceId
   )
@@ -245,9 +232,12 @@ async function execute(
     }
     const runFn = () => Runner.run(inputs)
 
-    const { rows, pagination, extra, info } = await quotas.addQuery(runFn, {
-      datasourceId: datasource._id,
-    })
+    const { rows, pagination, extra, info } = await quotas.addQuery<any>(
+      runFn,
+      {
+        datasourceId: datasource._id,
+      }
+    )
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw
@@ -275,7 +265,7 @@ export async function executeV2(
 
 const removeDynamicVariables = async (queryId: any) => {
   const db = context.getAppDB()
-  const query = await db.get(queryId)
+  const query = await db.get<Query>(queryId)
   const datasource = await sdk.datasources.get(query.datasourceId)
   const dynamicVariables = datasource.config?.dynamicVariables as any[]
 
@@ -298,7 +288,7 @@ export async function destroy(ctx: any) {
   const db = context.getAppDB()
   const queryId = ctx.params.queryId
   await removeDynamicVariables(queryId)
-  const query = await db.get(queryId)
+  const query = await db.get<Query>(queryId)
   const datasource = await sdk.datasources.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`

@@ -18,6 +18,7 @@ const TypeIconMap = {
   link: "DataCorrelated",
   formula: "Calculator",
   json: "Brackets",
+  bigint: "TagBold",
 }
 
 export const getColumnIcon = column => {
