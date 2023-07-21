@@ -271,6 +271,89 @@ describe("/tables", () => {
         ])
       )
     })
+
+    it("should fetch the default schema if not overriden", async () => {
+      const tableId = config.table!._id!
+      const views = [
+        await config.api.viewV2.create({ tableId }),
+        await config.api.viewV2.create({ tableId, columns: ["name"] }),
+      ]
+
+      const res = await config.api.table.fetch()
+
+      expect(res).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: tableId,
+            views: {
+              [views[0].name]: {
+                ...views[0],
+                schema: {
+                  name: {
+                    type: "string",
+                    name: "name",
+                    constraints: {
+                      type: "string",
+                    },
+                  },
+                  description: {
+                    type: "string",
+                    name: "description",
+                    constraints: {
+                      type: "string",
+                    },
+                  },
+                },
+              },
+              [views[1].name]: {
+                ...views[1],
+                schema: {
+                  name: {
+                    type: "string",
+                    name: "name",
+                    constraints: {
+                      type: "string",
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        ])
+      )
+    })
+
+    it("should fetch the default schema if not overriden", async () => {
+      const tableId = config.table!._id!
+      const view = await config.api.viewV2.create({
+        tableId,
+        columns: ["unnexisting", "name"],
+      })
+
+      const res = await config.api.table.fetch()
+
+      expect(res).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: tableId,
+            views: {
+              [view.name]: {
+                ...view,
+                schema: {
+                  name: {
+                    type: "string",
+                    name: "name",
+                    constraints: {
+                      type: "string",
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        ])
+      )
+    })
   })
 
   describe("indexing", () => {
