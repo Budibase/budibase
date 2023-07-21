@@ -85,4 +85,9 @@
     text-align: center;
     z-index: 1;
   }
+
+  .spectrum-Icon--sizeXS {
+    width: var(--spectrum-global-dimension-size-150);
+    height: var(--spectrum-global-dimension-size-150);
+  }
 </style>
