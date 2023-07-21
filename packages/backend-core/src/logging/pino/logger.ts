@@ -35,9 +35,9 @@ if (!env.DISABLE_PINO_LOGGER) {
 
   const destinations: pino.DestinationStream[] = []
 
-  if (env.isDev()) {
-    destinations.push(pinoPretty({ singleLine: true }))
-  }
+  destinations.push(
+    env.isDev() ? pinoPretty({ singleLine: true }) : process.stdout
+  )
 
   if (env.SELF_HOSTED) {
     destinations.push(localFileDestination())
