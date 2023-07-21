@@ -12,11 +12,12 @@ import { localFileDestination } from "../system"
 
 let pinoInstance: pino.Logger | undefined
 if (!env.DISABLE_PINO_LOGGER) {
+  const level = env.LOG_LEVEL
   const pinoOptions: LoggerOptions = {
-    level: env.LOG_LEVEL,
+    level,
     formatters: {
-      level: label => {
-        return { level: label.toUpperCase() }
+      level: level => {
+        return { level: level.toUpperCase() }
       },
       bindings: () => {
         if (env.SELF_HOSTED) {
@@ -33,14 +34,22 @@ if (!env.DISABLE_PINO_LOGGER) {
     timestamp: () => `,"timestamp":"${new Date(Date.now()).toISOString()}"`,
   }
 
-  const destinations: pino.DestinationStream[] = []
+  const destinations: pino.StreamEntry[] = []
 
   destinations.push(
-    env.isDev() ? pinoPretty({ singleLine: true }) : process.stdout
+    env.isDev()
+      ? {
+          stream: pinoPretty({ singleLine: true }),
+          level: level as pino.Level,
+        }
+      : { stream: process.stdout, level: level as pino.Level }
   )
 
   if (env.SELF_HOSTED) {
-    destinations.push(localFileDestination())
+    destinations.push({
+      stream: localFileDestination(),
+      level: level as pino.Level,
+    })
   }
 
   pinoInstance = destinations.length
