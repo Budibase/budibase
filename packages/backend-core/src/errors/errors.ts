@@ -1,11 +1,23 @@
+import { LogLevel } from "@budibase/types"
+
 // BASE
 
-export abstract class BudibaseError extends Error {
-  code: string
+interface ErrorOpts {
+  logLevel?: LogLevel
+}
 
-  constructor(message: string, code: ErrorCode) {
+export abstract class BudibaseError extends Error {
+  code: ErrorCode
+  logLevel?: LogLevel
+
+  constructor(
+    message: string,
+    code: ErrorCode,
+    opts: ErrorOpts = {}
+  ) {
     super(message)
     this.code = code
+    this.logLevel = opts.logLevel
   }
 
   protected getPublicError?(): any
@@ -18,6 +30,7 @@ export enum ErrorCode {
   FEATURE_DISABLED = "feature_disabled",
   INVALID_API_KEY = "invalid_api_key",
   HTTP = "http",
+  UNAUTHORIZED = "unauthorized",
 }
 
 /**
@@ -49,8 +62,13 @@ export const getPublicError = (err: any) => {
 export class HTTPError extends BudibaseError {
   status: number
 
-  constructor(message: string, httpStatus: number, code = ErrorCode.HTTP) {
-    super(message, code)
+  constructor(
+    message: string,
+    httpStatus: number,
+    code = ErrorCode.HTTP,
+    opts: ErrorOpts = {}
+  ) {
+    super(message, code, opts)
     this.status = httpStatus
   }
 }
@@ -94,6 +112,17 @@ export class InvalidAPIKeyError extends BudibaseError {
     super(
       "Invalid API key - may need re-generated, or user doesn't exist",
       ErrorCode.INVALID_API_KEY
+    )
+  }
+}
+
+export class UnauthorizedError extends HTTPError {
+  constructor() {
+    super(
+      "Unauthorized",
+      403,
+      ErrorCode.UNAUTHORIZED,
+      { logLevel: LogLevel.DEBUG }
     )
   }
 }

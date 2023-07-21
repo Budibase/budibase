@@ -3,7 +3,7 @@ const compress = require("koa-compress")
 import zlib from "zlib"
 import { routes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
-import { auth, middleware } from "@budibase/backend-core"
+import { auth, middleware, UnauthorizedError } from "@budibase/backend-core"
 
 const PUBLIC_ENDPOINTS = [
   // deprecated single tenant sso callback
@@ -137,7 +137,7 @@ router
       (!ctx.isAuthenticated || (ctx.user && !ctx.user.budibaseAccess)) &&
       !ctx.internal
     ) {
-      ctx.throw(403, "Unauthorized")
+      throw new UnauthorizedError()
     }
     return next()
   })
