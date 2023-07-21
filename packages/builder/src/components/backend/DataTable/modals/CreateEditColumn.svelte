@@ -33,6 +33,7 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import { getContext } from "svelte"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
+  import { ValidColumnNameRegex } from "@budibase/shared-core"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -375,7 +376,7 @@
     const newError = {}
     if (!external && fieldInfo.name?.startsWith("_")) {
       newError.name = `Column name cannot start with an underscore.`
-    } else if (fieldInfo.name && !fieldInfo.name.match(/^[_a-zA-Z0-9\s]*$/g)) {
+    } else if (fieldInfo.name && !fieldInfo.name.match(ValidColumnNameRegex)) {
       newError.name = `Illegal character; must be alpha-numeric.`
     } else if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
       newError.name = `${PROHIBITED_COLUMN_NAMES.join(
