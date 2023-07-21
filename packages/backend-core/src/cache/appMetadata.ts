@@ -5,6 +5,11 @@ import { Database, App } from "@budibase/types"
 export enum AppState {
   INVALID = "invalid",
 }
+
+export interface DeletedApp {
+  state: AppState
+}
+
 const EXPIRY_SECONDS = 3600
 
 /**
@@ -24,10 +29,6 @@ function isInvalid(metadata?: { state: string }) {
   return !metadata || metadata.state === AppState.INVALID
 }
 
-interface DeletedAppMetadata {
-  state: AppState
-}
-
 /**
  * Get the requested app metadata by id.
  * Use redis cache to first read the app metadata.
@@ -35,9 +36,7 @@ interface DeletedAppMetadata {
  * @param {string} appId the id of the app to get metadata from.
  * @returns {object} the app metadata.
  */
-export async function getAppMetadata(
-  appId: string
-): Promise<App | DeletedAppMetadata> {
+export async function getAppMetadata(appId: string): Promise<App | DeletedApp> {
   const client = await getAppClient()
   // try cache
   let metadata = await client.get(appId)
