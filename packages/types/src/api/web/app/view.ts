@@ -5,7 +5,3 @@ export interface ViewResponse {
 }
 
 export type CreateViewRequest = Omit<ViewV2, "version" | "id">
-
-export interface ViewSchemaResponse {
-  schema: TableSchema
-}
