@@ -2,7 +2,7 @@ import env from "../environment"
 import { DEFAULT_TENANT_ID, SEPARATOR, DocumentType } from "../constants"
 import { getTenantId, getGlobalDBName } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
-import { AppState, getAppMetadata } from "../cache/appMetadata"
+import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "../docIds/conversions"
 import { App, Database } from "@budibase/types"
 import { getStartEndKeyURL } from "../docIds"
@@ -131,7 +131,7 @@ export async function getAppsByIDs(appIds: string[]) {
     .filter(
       promise =>
         promise.status === "fulfilled" &&
-        promise.value?.state !== AppState.INVALID
+        (promise.value as DeletedApp).state !== AppState.INVALID
     )
     .map(promise => (promise as PromiseFulfilledResult<App>).value)
 }
