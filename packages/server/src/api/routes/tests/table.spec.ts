@@ -209,6 +209,32 @@ describe("/tables", () => {
         url: `/api/tables`,
       })
     })
+
+    it("should fetch views", async () => {
+      const tableId = config.table!._id!
+      const views = [
+        await config.api.viewV2.create({ tableId }),
+        await config.api.viewV2.create({ tableId }),
+      ]
+
+      const res = await request
+        .get(`/api/tables`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: tableId,
+            views: views.reduce((p, c) => {
+              p[c.name] = c
+              return p
+            }, {} as any),
+          }),
+        ])
+      )
+    })
   })
 
   describe("indexing", () => {
