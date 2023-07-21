@@ -8,6 +8,7 @@ import { gridSocket } from "../../../websockets"
 import sdk from "../../../sdk"
 import * as exporters from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
+import _ from "lodash"
 
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
@@ -155,7 +156,7 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
   }
 
   ctx.status = 200
-  ctx.body = await quotas.addQuery(
+  let { rows } = await quotas.addQuery(
     () =>
       sdk.rows.search({
         tableId: view.tableId,
@@ -168,6 +169,13 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
       datasourceId: view.tableId,
     }
   )
+
+  const { columns } = view
+  if (columns) {
+    rows = rows.map(r => _.pick(r, columns))
+  }
+
+  ctx.body = { rows }
 }
 
 export async function validate(ctx: Ctx) {

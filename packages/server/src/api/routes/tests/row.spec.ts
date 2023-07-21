@@ -841,5 +841,29 @@ describe("/rows", () => {
         rows: expected.map(name => expect.objectContaining({ name })),
       })
     })
+
+    it("when schema is defined, no other columns are returnd", async () => {
+      const table = await config.createTable(userTable())
+      const rows = []
+      for (let i = 0; i < 10; i++) {
+        rows.push(
+          await config.createRow({
+            tableId: table._id,
+            name: generator.name(),
+            age: generator.age(),
+          })
+        )
+      }
+
+      const createViewResponse = await config.api.viewV2.create({
+        columns: ["name"],
+      })
+      const response = await config.api.viewV2.search(createViewResponse.id)
+
+      expect(response.body.rows).toHaveLength(10)
+      expect(response.body.rows).toEqual(
+        expect.arrayContaining(rows.map(r => ({ name: r.name })))
+      )
+    })
   })
 })
