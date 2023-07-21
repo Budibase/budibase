@@ -16,7 +16,8 @@ describe("Account Internal Operations", () => {
   it("performs account deletion by ID", async () => {
     // Deleting by unknown id doesn't work
     const accountId = generator.string()
-    await config.api.accounts.delete(accountId, { status: 404 })
+    const encodedAccountId = encodeURIComponent(accountId)
+    await config.api.accounts.delete(encodedAccountId, { status: 404 })
 
     // Create new account
     const [_, account] = await config.api.accounts.create({
