@@ -243,3 +243,15 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
 
   return update
 }
+
+export async function getExternalDatasources(): Promise<Datasource[]> {
+  const db = context.getAppDB()
+
+  const externalDatasources = await db.allDocs<Datasource>(
+    getDatasourceParams("plus", {
+      include_docs: true,
+    })
+  )
+
+  return externalDatasources.rows.map(r => r.doc)
+}
