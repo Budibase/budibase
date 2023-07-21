@@ -7,6 +7,17 @@ export class TableAPI extends TestAPI {
     super(config)
   }
 
+  fetch = async (
+    { expectStatus } = { expectStatus: 200 }
+  ): Promise<Table[]> => {
+    const res = await this.request
+      .get(`/api/tables`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expectStatus)
+    return res.body
+  }
+
   get = async (
     tableId: string,
     { expectStatus } = { expectStatus: 200 }

@@ -228,9 +228,45 @@ describe("/tables", () => {
           expect.objectContaining({
             _id: tableId,
             views: views.reduce((p, c) => {
-              p[c.name] = c
+              p[c.name] = { ...c, schema: expect.anything() }
               return p
             }, {} as any),
+          }),
+        ])
+      )
+    })
+
+    it("should fetch the default schema if not overriden", async () => {
+      const tableId = config.table!._id!
+      const view = await config.api.viewV2.create({ tableId })
+
+      const res = await config.api.table.fetch()
+
+      expect(res).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: tableId,
+            views: {
+              [view.name]: {
+                ...view,
+                schema: {
+                  name: {
+                    type: "string",
+                    name: "name",
+                    constraints: {
+                      type: "string",
+                    },
+                  },
+                  description: {
+                    type: "string",
+                    name: "description",
+                    constraints: {
+                      type: "string",
+                    },
+                  },
+                },
+              },
+            },
           }),
         ])
       )
