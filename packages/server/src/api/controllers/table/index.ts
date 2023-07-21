@@ -11,6 +11,7 @@ import { FetchTablesResponse, Table, UserCtx } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
+import _ from "lodash"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
@@ -44,7 +45,22 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     }
   })
 
-  ctx.body = [...internal, ...external]
+  const tables = [...internal, ...external]
+
+  for (const t of tables.filter(t => t.views)) {
+    for (const [viewName, view] of Object.entries(t.views!)) {
+      if (sdk.views.isV2(view)) {
+        t.views![viewName] = {
+          ...view,
+          schema: !view?.columns?.length
+            ? t.schema
+            : _.pick(t.schema, ...view.columns),
+        }
+      }
+    }
+  }
+
+  ctx.body = tables as FetchTablesResponse
 }
 
 export async function find(ctx: UserCtx) {
