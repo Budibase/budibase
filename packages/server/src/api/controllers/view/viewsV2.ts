@@ -1,10 +1,5 @@
 import sdk from "../../../sdk"
-import {
-  CreateViewRequest,
-  Ctx,
-  ViewResponse,
-  ViewSchemaResponse,
-} from "@budibase/types"
+import { CreateViewRequest, Ctx, ViewResponse } from "@budibase/types"
 
 export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   const view = ctx.request.body
@@ -22,11 +17,4 @@ export async function remove(ctx: Ctx) {
 
   await sdk.views.remove(viewId)
   ctx.status = 204
-}
-
-export async function getSchema(ctx: Ctx<void, ViewSchemaResponse>) {
-  const { viewId } = ctx.params
-
-  const schema = await sdk.views.getSchema(viewId)
-  ctx.body = { schema }
 }
