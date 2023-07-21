@@ -89,3 +89,4 @@ export enum BuilderSocketEvent {
 }
 
 export const SocketSessionTTL = 60
+export const ValidColumnNameRegex = /^[_a-zA-Z0-9\s]*$/g
