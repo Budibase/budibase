@@ -18,6 +18,8 @@ export const createDataSourceStore = () => {
     // Extract table ID
     if (dataSource.type === "table" || dataSource.type === "view") {
       dataSourceId = dataSource.tableId
+    } else if (dataSource.type === "viewV2") {
+      dataSourceId = dataSource.id
     }
 
     // Only one side of the relationship is required as a trigger, as it will

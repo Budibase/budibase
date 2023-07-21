@@ -108,13 +108,25 @@ export const deriveStores = context => {
     const $filter = get(filter)
     const $sort = get(sort)
 
+    let datasource
+    if (props.datasourceType === "viewV2") {
+      const tableId = $tableId
+      datasource = {
+        type: props.datasourceType,
+        id: $tableId,
+        tableId: tableId.split("_").slice(0, -1).join("_"),
+      }
+    } else {
+      datasource = {
+        type: props.datasourceType,
+        tableId: $tableId,
+      }
+    }
+
     // Create new fetch model
     const newFetch = fetchData({
       API,
-      datasource: {
-        type: props.datasourceType,
-        tableId: $tableId,
-      },
+      datasource,
       options: {
         filter: $filter,
         sortColumn: $sort.column,
