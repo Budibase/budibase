@@ -7,7 +7,13 @@ import {
 } from "../../../utilities/schema"
 import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { events } from "@budibase/backend-core"
-import { FetchTablesResponse, Table, UserCtx } from "@budibase/types"
+import {
+  FetchTablesResponse,
+  Table,
+  TableResponse,
+  TableViewsResponse,
+  UserCtx,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
@@ -45,27 +51,47 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     }
   })
 
-  const tables = [...internal, ...external]
+  const response = [...internal, ...external].map(enrichTable)
+  ctx.body = response
+}
 
-  for (const t of tables.filter(t => t.views)) {
-    for (const [viewName, view] of Object.entries(t.views!)) {
-      if (sdk.views.isV2(view)) {
-        t.views![viewName] = {
-          ...view,
-          schema: !view?.columns?.length
-            ? t.schema
-            : _.pick(t.schema, ...view.columns),
+function enrichTable(table: Table): TableResponse {
+  const result: TableResponse = {
+    ...table,
+    views: Object.values(table.views ?? []).reduce((p, v) => {
+      if (!sdk.views.isV2(v)) {
+        p[v.name] = v
+      } else {
+        p[v.name] = {
+          ...v,
+          schema: !v?.columns?.length
+            ? table.schema
+            : _.pick(table.schema, ...v.columns),
         }
+      }
+      return p
+    }, {} as TableViewsResponse),
+  }
+
+  for (const [viewName, view] of Object.entries(table.views!)) {
+    if (sdk.views.isV2(view)) {
+      table.views![viewName] = {
+        ...view,
+        schema: !view?.columns?.length
+          ? table.schema
+          : _.pick(table.schema, ...view.columns),
       }
     }
   }
 
-  ctx.body = tables as FetchTablesResponse
+  return result
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx<void, TableResponse>) {
   const tableId = ctx.params.tableId
-  ctx.body = await sdk.tables.getTable(tableId)
+  const table = await sdk.tables.getTable(tableId)
+
+  ctx.body = enrichTable(table)
 }
 
 export async function save(ctx: UserCtx) {

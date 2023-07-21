@@ -4,9 +4,9 @@ interface ViewV2Response extends ViewV2 {
   schema: TableSchema
 }
 
-type TableViewsResponse = { [key: string]: View | ViewV2Response }
+export type TableViewsResponse = { [key: string]: View | ViewV2Response }
 
-interface TableResponse extends Table {
+export interface TableResponse extends Table {
   views?: TableViewsResponse
 }
 
