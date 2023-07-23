@@ -1,16 +1,8 @@
 <script>
-  import { Select } from "@budibase/bbui"
+  import { Select, Icon } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
-
-  let fileInput
-  let error = null
-  let fileName = null
-
-  let loading = false
-  let validation = {}
-  let validateHash = ""
 
   export let rows = []
   export let schema = {}
@@ -49,6 +41,28 @@
     },
   ]
 
+  let fileInput
+  let error = null
+  let fileName = null
+  let fileType = null
+  let loading = false
+  let validation = {}
+  let validateHash = ""
+  let errors = {}
+
+  $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
+    return validation[column]
+  })
+  $: {
+    // binding in consumer is causing double renders here
+    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
+    if (newValidateHash !== validateHash) {
+      validate(rows, schema)
+    }
+    validateHash = newValidateHash
+  }
+  $: openFileUpload(promptUpload, fileInput)
+
   async function handleFile(e) {
     loading = true
     error = null
@@ -67,32 +81,21 @@
 
   async function validate(rows, schema) {
     loading = true
-    error = null
-    validation = {}
-    allValid = false
-
     try {
       if (rows.length > 0) {
         const response = await API.validateNewTableImport({ rows, schema })
         validation = response.schemaValidation
         allValid = response.allValid
+        errors = response.errors
+        error = null
       }
     } catch (e) {
       error = e.message
+      validation = {}
+      allValid = false
+      errors = {}
     }
-
     loading = false
-  }
-
-  $: {
-    // binding in consumer is causing double renders here
-    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
-
-    if (newValidateHash !== validateHash) {
-      validate(rows, schema)
-    }
-
-    validateHash = newValidateHash
   }
 
   const handleChange = (name, e) => {
@@ -106,7 +109,13 @@
     }
   }
 
-  $: openFileUpload(promptUpload, fileInput)
+  const deleteColumn = name => {
+    if (loading) {
+      return
+    }
+    delete schema[name]
+    schema = schema
+  }
 </script>
 
 <div class="dropzone">
@@ -119,10 +128,8 @@
     on:change={handleFile}
   />
   <label for="file-upload" class:uploaded={rows.length > 0}>
-    {#if loading}
-      loading...
-    {:else if error}
-      error: {error}
+    {#if error}
+      Error: {error}
     {:else if fileName}
       {fileName}
     {:else}
@@ -142,23 +149,26 @@
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
-          disabled={loading}
         />
         <span
-          class={loading || validation[column.name]
+          class={validation[column.name]
             ? "fieldStatusSuccess"
             : "fieldStatusFailure"}
         >
-          {validation[column.name] ? "Success" : "Failure"}
+          {#if validation[column.name]}
+            Success
+          {:else}
+            Failure
+            {#if errors[column.name]}
+              <Icon name="Help" tooltip={errors[column.name]} />
+            {/if}
+          {/if}
         </span>
-        <i
-          class={`omit-button ri-close-circle-fill ${
-            loading ? "omit-button-disabled" : ""
-          }`}
-          on:click={() => {
-            delete schema[column.name]
-            schema = schema
-          }}
+        <Icon
+          size="S"
+          name="Close"
+          hoverable
+          on:click={() => deleteColumn(column.name)}
         />
       </div>
     {/each}
@@ -167,7 +177,7 @@
     <Select
       label="Display Column"
       bind:value={displayColumn}
-      options={Object.keys(schema)}
+      options={displayColumnOptions}
       sort
     />
   </div>
@@ -235,23 +245,16 @@
     justify-self: center;
     font-weight: 600;
   }
-
   .fieldStatusFailure {
     color: var(--red);
     justify-self: center;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
-
-  .omit-button {
-    font-size: 1.2em;
-    color: var(--grey-7);
-    cursor: pointer;
-    justify-self: flex-end;
-  }
-
-  .omit-button-disabled {
-    pointer-events: none;
-    opacity: 70%;
+  .fieldStatusFailure :global(.spectrum-Icon) {
+    width: 12px;
   }
 
   .display-column {
