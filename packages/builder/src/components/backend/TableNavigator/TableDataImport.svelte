@@ -44,7 +44,6 @@
   let fileInput
   let error = null
   let fileName = null
-  let fileType = null
   let loading = false
   let validation = {}
   let validateHash = ""
