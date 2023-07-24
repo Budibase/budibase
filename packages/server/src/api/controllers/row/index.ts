@@ -155,7 +155,7 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
   }
 
   ctx.status = 200
-  const { rows } = await quotas.addQuery(
+  ctx.body = await quotas.addQuery(
     () =>
       sdk.rows.search({
         tableId: view.tableId,
@@ -169,8 +169,6 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
       datasourceId: view.tableId,
     }
   )
-
-  ctx.body = { rows }
 }
 
 export async function validate(ctx: Ctx) {
