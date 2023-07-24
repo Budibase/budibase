@@ -94,3 +94,4 @@ export enum BuilderSocketEvent {
 }
 
 export const SocketSessionTTL = 60
+export const ValidQueryNameRegex = /^[^()]*$/
