@@ -186,6 +186,13 @@ export function getDatasourceParams(
   return getDocParams(DocumentType.DATASOURCE, datasourceId, otherProps)
 }
 
+export function getDatasourcePlusParams(
+  datasourceId?: Optional,
+  otherProps?: { include_docs: boolean }
+) {
+  return getDocParams(DocumentType.DATASOURCE_PLUS, datasourceId, otherProps)
+}
+
 /**
  * Generates a new query ID.
  * @returns {string} The new query ID which the query doc can be stored under.

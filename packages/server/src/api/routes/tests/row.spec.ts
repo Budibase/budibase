@@ -755,7 +755,14 @@ describe("/rows", () => {
       })
     })
 
-    it.each([
+    const sortTestOptions: [
+      {
+        field: string
+        order?: SortOrder
+        type?: SortType
+      },
+      string[]
+    ][] = [
       [
         {
           field: "name",
@@ -815,32 +822,77 @@ describe("/rows", () => {
         },
         ["Bob", "Charly", "Alice", "Danny"],
       ],
-    ])("allow sorting (%s)", async (sortParams, expected) => {
-      await config.createTable(userTable())
-      const users = [
-        { name: "Alice", age: 25 },
-        { name: "Bob", age: 30 },
-        { name: "Charly", age: 27 },
-        { name: "Danny", age: 15 },
-      ]
-      for (const user of users) {
-        await config.createRow({
-          tableId: config.table!._id,
-          ...user,
+    ]
+
+    it.each(sortTestOptions)(
+      "allow sorting (%s)",
+      async (sortParams, expected) => {
+        await config.createTable(userTable())
+        const users = [
+          { name: "Alice", age: 25 },
+          { name: "Bob", age: 30 },
+          { name: "Charly", age: 27 },
+          { name: "Danny", age: 15 },
+        ]
+        for (const user of users) {
+          await config.createRow({
+            tableId: config.table!._id,
+            ...user,
+          })
+        }
+
+        const createViewResponse = await config.api.viewV2.create({
+          sort: sortParams,
+        })
+
+        const response = await config.api.viewV2.search(createViewResponse.id)
+
+        expect(response.body.rows).toHaveLength(4)
+        expect(response.body).toEqual({
+          rows: expected.map(name => expect.objectContaining({ name })),
         })
       }
+    )
 
-      const createViewResponse = await config.api.viewV2.create({
-        sort: sortParams,
-      })
+    it.each(sortTestOptions)(
+      "allow override the default view sorting (%s)",
+      async (sortParams, expected) => {
+        await config.createTable(userTable())
+        const users = [
+          { name: "Alice", age: 25 },
+          { name: "Bob", age: 30 },
+          { name: "Charly", age: 27 },
+          { name: "Danny", age: 15 },
+        ]
+        for (const user of users) {
+          await config.createRow({
+            tableId: config.table!._id,
+            ...user,
+          })
+        }
 
-      const response = await config.api.viewV2.search(createViewResponse.id)
+        const createViewResponse = await config.api.viewV2.create({
+          sort: {
+            field: "name",
+            order: SortOrder.ASCENDING,
+            type: SortType.STRING,
+          },
+        })
 
-      expect(response.body.rows).toHaveLength(4)
-      expect(response.body).toEqual({
-        rows: expected.map(name => expect.objectContaining({ name })),
-      })
-    })
+        const response = await config.api.viewV2.search(createViewResponse.id, {
+          sort: {
+            column: sortParams.field,
+            order: sortParams.order,
+            type: sortParams.type,
+          },
+        })
+
+        expect(response.body.rows).toHaveLength(4)
+        expect(response.body).toEqual({
+          rows: expected.map(name => expect.objectContaining({ name })),
+        })
+      }
+    )
 
     it("when schema is defined, no other columns are returned", async () => {
       const table = await config.createTable(userTable())

@@ -2,7 +2,13 @@ import { quotas } from "@budibase/pro"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTable } from "../../../integrations/utils"
-import { Ctx, SearchResponse } from "@budibase/types"
+import {
+  Ctx,
+  SearchResponse,
+  SortOrder,
+  SortType,
+  ViewV2,
+} from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
 import sdk from "../../../sdk"
@@ -146,6 +152,45 @@ export async function search(ctx: any) {
   })
 }
 
+function getSortOptions(
+  ctx: Ctx,
+  view: ViewV2
+):
+  | {
+      sort: string
+      sortOrder?: SortOrder
+      sortType?: SortType
+    }
+  | undefined {
+  const { sort_column, sort_order, sort_type } = ctx.query
+  if (Array.isArray(sort_column)) {
+    ctx.throw(400, "sort_column cannot be an array")
+  }
+  if (Array.isArray(sort_order)) {
+    ctx.throw(400, "sort_order cannot be an array")
+  }
+  if (Array.isArray(sort_type)) {
+    ctx.throw(400, "sort_type cannot be an array")
+  }
+
+  if (sort_column) {
+    return {
+      sort: sort_column,
+      sortOrder: sort_order as SortOrder,
+      sortType: sort_type as SortType,
+    }
+  }
+  if (view.sort) {
+    return {
+      sort: view.sort.field,
+      sortOrder: view.sort.order,
+      sortType: view.sort.type,
+    }
+  }
+
+  return
+}
+
 export async function searchView(ctx: Ctx<void, SearchResponse>) {
   const { viewId } = ctx.params
 
@@ -172,10 +217,8 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
       sdk.rows.search({
         tableId: view.tableId,
         query: view.query || {},
-        sort: view.sort?.field,
-        sortOrder: view.sort?.order,
-        sortType: view.sort?.type,
         fields: viewFields,
+        ...getSortOptions(ctx, view),
       }),
     {
       datasourceId: view.tableId,
