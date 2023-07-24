@@ -33,10 +33,10 @@ jobs:
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
 
-      - name: Use Node.js 14.x
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: 14.x
+          node-version: 18.x
           cache: "yarn"
       - run: yarn
       - run: yarn lint
@@ -54,10 +54,10 @@ jobs:
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
 
-      - name: Use Node.js 14.x
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: 14.x
+          node-version: 18.x
           cache: "yarn"
       - run: yarn
       # Run build all the projects
@@ -78,10 +78,10 @@ jobs:
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
 
-      - name: Use Node.js 14.x
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: 14.x
+          node-version: 18.x
           cache: "yarn"
       - run: yarn
       - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
@@ -104,10 +104,10 @@ jobs:
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
 
-      - name: Use Node.js 14.x
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: 14.x
+          node-version: 18.x
           cache: "yarn"
       - run: yarn
       - run: yarn test --scope=@budibase/worker --scope=@budibase/server
@@ -127,10 +127,10 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
-      - name: Use Node.js 14.x
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: 14.x
+          node-version: 18.x
           cache: "yarn"
       - run: yarn
       - run: yarn test --scope=@budibase/pro
@@ -148,10 +148,10 @@ jobs:
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
 
-      - name: Use Node.js 14.x
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: 14.x
+          node-version: 18.x
           cache: "yarn"
       - run: yarn
       - run: yarn build
