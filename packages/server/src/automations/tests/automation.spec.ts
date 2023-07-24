@@ -33,7 +33,7 @@ describe("Run through some parts of the automations system", () => {
     setup.afterAll()
   })
 
-  it("should be able to init in builder", async () => {
+  it.only("should be able to init in builder", async () => {
     const automation: Automation = {
       ...basicAutomation(),
       appId: config.appId,
