@@ -1,4 +1,4 @@
-import { generateQueryID, getQueryParams, isProdAppID } from "../../../db/utils"
+import { generateQueryID } from "../../../db/utils"
 import { BaseQueryVerbs, FieldTypes } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
@@ -29,15 +29,7 @@ function enrichQueries(input: any) {
 }
 
 export async function fetch(ctx: any) {
-  const db = context.getAppDB()
-
-  const body = await db.allDocs(
-    getQueryParams(null, {
-      include_docs: true,
-    })
-  )
-
-  ctx.body = enrichQueries(body.rows.map((row: any) => row.doc))
+  ctx.body = await sdk.queries.fetch()
 }
 
 const _import = async (ctx: any) => {
@@ -109,14 +101,8 @@ export async function save(ctx: any) {
 }
 
 export async function find(ctx: any) {
-  const db = context.getAppDB()
-  const query = enrichQueries(await db.get(ctx.params.queryId))
-  // remove properties that could be dangerous in real app
-  if (isProdAppID(ctx.appId)) {
-    delete query.fields
-    delete query.parameters
-  }
-  ctx.body = query
+  const queryId = ctx.params.queryId
+  ctx.body = await sdk.queries.find(queryId)
 }
 
 //Required to discern between OIDC OAuth config entries

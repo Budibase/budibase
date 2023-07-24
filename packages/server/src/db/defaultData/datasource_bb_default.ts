@@ -7,7 +7,7 @@ import { employeeImport } from "./employeeImport"
 import { jobsImport } from "./jobsImport"
 import { expensesImport } from "./expensesImport"
 import { db as dbCore } from "@budibase/backend-core"
-import { Table, Row, RelationshipTypes } from "@budibase/types"
+import { Table, Row, RelationshipType } from "@budibase/types"
 
 export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
 export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
@@ -299,7 +299,7 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
       },
       fieldName: "Assigned",
       name: "Jobs",
-      relationshipType: RelationshipTypes.MANY_TO_MANY,
+      relationshipType: RelationshipType.MANY_TO_MANY,
       tableId: DEFAULT_JOBS_TABLE_ID,
     },
     "Start Date": {
@@ -458,7 +458,7 @@ export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
       type: FieldTypes.LINK,
       tableId: DEFAULT_EMPLOYEE_TABLE_ID,
       fieldName: "Jobs",
-      relationshipType: RelationshipTypes.MANY_TO_MANY,
+      relationshipType: RelationshipType.MANY_TO_MANY,
       // sortable: true,
     },
     "Works End": {
