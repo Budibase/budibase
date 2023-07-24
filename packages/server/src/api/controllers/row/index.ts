@@ -161,8 +161,10 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
   const table = await sdk.tables.getTable(view?.tableId)
 
   const viewFields =
-    view.columns?.length &&
-    Object.keys(sdk.views.enrichSchema(view, table.schema).schema)
+    (view.columns &&
+      Object.entries(view.columns).length &&
+      Object.keys(sdk.views.enrichSchema(view, table.schema).schema)) ||
+    undefined
 
   ctx.status = 200
   ctx.body = await quotas.addQuery(
