@@ -186,46 +186,7 @@ describe("/tables", () => {
     let testTable: Table
 
     beforeEach(async () => {
-      testTable = await config.createTable({
-        name: "TestTable",
-        type: "table",
-        schema: {
-          name: {
-            type: FieldType.STRING,
-            name: "name",
-            visible: true,
-            width: 80,
-            constraints: {
-              type: "string",
-            },
-          },
-          description: {
-            type: FieldType.STRING,
-            name: "description",
-            visible: true,
-            width: 200,
-            constraints: {
-              type: "string",
-            },
-          },
-          id: {
-            type: FieldType.NUMBER,
-            name: "id",
-            visible: true,
-            constraints: {
-              type: "number",
-            },
-          },
-          hiddenField: {
-            type: FieldType.STRING,
-            name: "hiddenField",
-            visible: false,
-            constraints: {
-              type: "string",
-            },
-          },
-        },
-      })
+      testTable = await config.createTable(testTable)
     })
 
     afterEach(() => {
