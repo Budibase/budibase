@@ -1,8 +1,10 @@
+import { generator } from "@budibase/backend-core/tests"
+import { events, context } from "@budibase/backend-core"
+import { FieldType, Table } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 const { basicTable } = setup.structures
-import { events, context } from "@budibase/backend-core"
-import { FieldType, Table } from "@budibase/types"
+import sdk from "../../../sdk"
 
 describe("/tables", () => {
   let request = setup.getRequest()
@@ -275,75 +277,23 @@ describe("/tables", () => {
       )
     })
 
-    it("should fetch the default schema if not overriden", async () => {
+    it("should enrich the view schemas for viewsV2", async () => {
       const tableId = config.table!._id!
-      const view = await config.api.viewV2.create({ tableId })
-
-      const res = await config.api.table.fetch()
-
-      expect(res).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            _id: tableId,
-            views: {
-              [view.name]: {
-                ...view,
-                schema: {
-                  name: {
-                    type: "string",
-                    name: "name",
-                    visible: true,
-                    width: 80,
-                    constraints: {
-                      type: "string",
-                    },
-                  },
-                  description: {
-                    type: "string",
-                    name: "description",
-                    visible: true,
-                    width: 200,
-                    constraints: {
-                      type: "string",
-                    },
-                  },
-                  id: {
-                    type: "number",
-                    name: "id",
-                    visible: true,
-                    constraints: {
-                      type: "number",
-                    },
-                  },
-                  hiddenField: {
-                    type: "string",
-                    name: "hiddenField",
-                    visible: false,
-                    constraints: {
-                      type: "string",
-                    },
-                  },
-                },
-              },
-            },
-          }),
-        ])
-      )
-    })
-
-    it("should fetch the default schema if not overriden", async () => {
-      const tableId = testTable._id!
-      const views = [
-        await config.api.viewV2.create({ tableId }),
-        await config.api.viewV2.create({
-          tableId,
-          columns: {
-            name: { visible: true },
-            id: { visible: true },
-            description: { visible: false },
+      jest.spyOn(sdk.tables, "enrichViewSchemas").mockImplementation(t => ({
+        ...t,
+        views: {
+          view1: {
+            version: 2,
+            name: "view1",
+            schema: {},
+            id: "new_view_id",
+            tableId,
           },
-        }),
-      ]
+        },
+      }))
+
+      await config.api.viewV2.create({ tableId })
+      await config.createView({ tableId, name: generator.guid() })
 
       const res = await config.api.table.fetch()
 
@@ -352,100 +302,12 @@ describe("/tables", () => {
           expect.objectContaining({
             _id: tableId,
             views: {
-              [views[0].name]: {
-                ...views[0],
-                schema: {
-                  name: {
-                    type: "string",
-                    name: "name",
-                    visible: true,
-                    width: 80,
-                    constraints: {
-                      type: "string",
-                    },
-                  },
-                  description: {
-                    type: "string",
-                    name: "description",
-                    visible: true,
-                    width: 200,
-                    constraints: {
-                      type: "string",
-                    },
-                  },
-                  id: {
-                    type: "number",
-                    name: "id",
-                    visible: true,
-                    constraints: {
-                      type: "number",
-                    },
-                  },
-                  hiddenField: {
-                    type: "string",
-                    name: "hiddenField",
-                    visible: false,
-                    constraints: {
-                      type: "string",
-                    },
-                  },
-                },
-              },
-              [views[1].name]: {
-                ...views[1],
-                schema: {
-                  name: {
-                    type: "string",
-                    name: "name",
-                    visible: true,
-                    width: 80,
-                    constraints: {
-                      type: "string",
-                    },
-                  },
-                  id: {
-                    type: "number",
-                    name: "id",
-                    visible: true,
-                    constraints: {
-                      type: "number",
-                    },
-                  },
-                },
-              },
-            },
-          }),
-        ])
-      )
-    })
-
-    it("should fetch the default schema if not overriden", async () => {
-      const tableId = config.table!._id!
-      const view = await config.api.viewV2.create({
-        tableId,
-        columns: { unnexisting: { visible: true }, name: { visible: true } },
-      })
-
-      const res = await config.api.table.fetch()
-
-      expect(res).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            _id: tableId,
-            views: {
-              [view.name]: {
-                ...view,
-                schema: {
-                  name: {
-                    type: "string",
-                    name: "name",
-                    visible: true,
-                    width: 80,
-                    constraints: {
-                      type: "string",
-                    },
-                  },
-                },
+              view1: {
+                version: 2,
+                name: "view1",
+                schema: {},
+                id: "new_view_id",
+                tableId,
               },
             },
           }),
