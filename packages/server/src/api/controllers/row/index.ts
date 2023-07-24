@@ -164,13 +164,13 @@ function getSortOptions(
   | undefined {
   const { sort_column, sort_order, sort_type } = ctx.query
   if (Array.isArray(sort_column)) {
-    ctx.throw(404, "sort_column cannot be an array")
+    ctx.throw(400, "sort_column cannot be an array")
   }
   if (Array.isArray(sort_order)) {
-    ctx.throw(404, "sort_order cannot be an array")
+    ctx.throw(400, "sort_order cannot be an array")
   }
   if (Array.isArray(sort_type)) {
-    ctx.throw(404, "sort_type cannot be an array")
+    ctx.throw(400, "sort_type cannot be an array")
   }
 
   if (sort_column) {
