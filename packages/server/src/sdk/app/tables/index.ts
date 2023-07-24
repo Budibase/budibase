@@ -69,7 +69,9 @@ function enrichSchema(
   viewOverrides: Record<string, UIFieldMetadata>
 ) {
   const result: TableSchema = {}
-  for (const [columnName, columnUIMetadata] of Object.entries(viewOverrides)) {
+  const viewOverridesEntries = Object.entries(viewOverrides)
+  const viewSetsOrder = viewOverridesEntries.some(([_, v]) => v.order)
+  for (const [columnName, columnUIMetadata] of viewOverridesEntries) {
     if (!columnUIMetadata.visible) {
       continue
     }
@@ -78,7 +80,12 @@ function enrichSchema(
       continue
     }
 
-    result[columnName] = _.merge(tableSchema[columnName], columnUIMetadata)
+    const tableFieldSchema = tableSchema[columnName]
+    if (viewSetsOrder) {
+      delete tableFieldSchema.order
+    }
+
+    result[columnName] = _.merge(tableFieldSchema, columnUIMetadata)
   }
   return result
 }
