@@ -252,6 +252,57 @@ describe("table sdk", () => {
           })
         )
       })
+
+      it("if view defines order, the table schema order should be ignored", async () => {
+        const tableId = basicTable._id!
+        const view: ViewV2 = {
+          version: 2,
+          id: generator.guid(),
+          name: generator.guid(),
+          tableId,
+          columns: {
+            name: { visible: true, order: 1 },
+            id: { visible: true },
+            description: { visible: false, order: 2 },
+          },
+        }
+
+        const res = sdk.tables.enrichViewSchemas({
+          ...basicTable,
+          views: { [view.name]: view },
+        })
+
+        expect(res).toEqual(
+          expect.objectContaining({
+            ...basicTable,
+            views: {
+              [view.name]: {
+                ...view,
+                schema: {
+                  name: {
+                    type: "string",
+                    name: "name",
+                    order: 1,
+                    visible: true,
+                    width: 80,
+                    constraints: {
+                      type: "string",
+                    },
+                  },
+                  id: {
+                    type: "number",
+                    name: "id",
+                    visible: true,
+                    constraints: {
+                      type: "number",
+                    },
+                  },
+                },
+              },
+            },
+          })
+        )
+      })
     })
   })
 })
