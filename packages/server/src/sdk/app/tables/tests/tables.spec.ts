@@ -2,6 +2,11 @@ import { FieldType, Table, ViewV2 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../.."
 
+jest.mock("../../views", () => ({
+  ...jest.requireActual("../../views"),
+  enrichSchema: jest.fn().mockImplementation(v => ({ ...v, mocked: true })),
+}))
+
 describe("table sdk", () => {
   describe("enrichViewSchemas", () => {
     const basicTable: Table = {
@@ -50,257 +55,46 @@ describe("table sdk", () => {
 
     it("should fetch the default schema if not overriden", async () => {
       const tableId = basicTable._id!
-      const view: ViewV2 = {
-        version: 2,
-        id: generator.guid(),
-        name: generator.guid(),
-        tableId,
+      function getTable() {
+        const view: ViewV2 = {
+          version: 2,
+          id: generator.guid(),
+          name: generator.guid(),
+          tableId,
+        }
+        return view
       }
+      const view1 = getTable()
+      const view2 = getTable()
+      const view3 = getTable()
       const res = sdk.tables.enrichViewSchemas({
         ...basicTable,
-        views: { [view.name]: view },
+        views: {
+          [view1.name]: view1,
+          [view2.name]: view2,
+          [view3.name]: view3,
+        },
       })
+
+      expect(sdk.views.enrichSchema).toBeCalledTimes(3)
 
       expect(res).toEqual({
         ...basicTable,
         views: {
-          [view.name]: {
-            ...view,
-            schema: {
-              name: {
-                type: "string",
-                name: "name",
-                visible: true,
-                order: 2,
-                width: 80,
-                constraints: {
-                  type: "string",
-                },
-              },
-              description: {
-                type: "string",
-                name: "description",
-                visible: true,
-                width: 200,
-                constraints: {
-                  type: "string",
-                },
-              },
-              id: {
-                type: "number",
-                name: "id",
-                visible: true,
-                order: 1,
-                constraints: {
-                  type: "number",
-                },
-              },
-              hiddenField: {
-                type: "string",
-                name: "hiddenField",
-                visible: false,
-                constraints: {
-                  type: "string",
-                },
-              },
-            },
+          [view1.name]: {
+            ...view1,
+            mocked: true,
+          },
+          [view2.name]: {
+            ...view2,
+            mocked: true,
+          },
+          [view3.name]: {
+            ...view3,
+            mocked: true,
           },
         },
       })
-    })
-
-    it("if view schema only defines visiblility, should only fetch the selected fields", async () => {
-      const tableId = basicTable._id!
-      const view: ViewV2 = {
-        version: 2,
-        id: generator.guid(),
-        name: generator.guid(),
-        tableId,
-        columns: {
-          name: { visible: true },
-          id: { visible: true },
-          description: { visible: false },
-        },
-      }
-
-      const res = sdk.tables.enrichViewSchemas({
-        ...basicTable,
-        views: { [view.name]: view },
-      })
-
-      expect(res).toEqual(
-        expect.objectContaining({
-          ...basicTable,
-          views: {
-            [view.name]: {
-              ...view,
-              schema: {
-                name: {
-                  type: "string",
-                  name: "name",
-                  visible: true,
-                  order: 2,
-                  width: 80,
-                  constraints: {
-                    type: "string",
-                  },
-                },
-                id: {
-                  type: "number",
-                  name: "id",
-                  visible: true,
-                  order: 1,
-                  constraints: {
-                    type: "number",
-                  },
-                },
-              },
-            },
-          },
-        })
-      )
-    })
-
-    it("schema does not break if the view has corrupted columns", async () => {
-      const tableId = basicTable._id!
-      const view: ViewV2 = {
-        version: 2,
-        id: generator.guid(),
-        name: generator.guid(),
-        tableId,
-        columns: { unnexisting: { visible: true }, name: { visible: true } },
-      }
-
-      const res = sdk.tables.enrichViewSchemas({
-        ...basicTable,
-        views: { [view.name]: view },
-      })
-
-      expect(res).toEqual(
-        expect.objectContaining({
-          ...basicTable,
-          views: {
-            [view.name]: {
-              ...view,
-              schema: {
-                name: {
-                  type: "string",
-                  name: "name",
-                  order: 2,
-                  visible: true,
-                  width: 80,
-                  constraints: {
-                    type: "string",
-                  },
-                },
-              },
-            },
-          },
-        })
-      )
-    })
-
-    it("if view schema only defines visiblility, should only fetch the selected fields", async () => {
-      const tableId = basicTable._id!
-      const view: ViewV2 = {
-        version: 2,
-        id: generator.guid(),
-        name: generator.guid(),
-        tableId,
-        columns: {
-          name: { visible: true },
-          id: { visible: true },
-          description: { visible: false },
-        },
-      }
-
-      const res = sdk.tables.enrichViewSchemas({
-        ...basicTable,
-        views: { [view.name]: view },
-      })
-
-      expect(res).toEqual(
-        expect.objectContaining({
-          ...basicTable,
-          views: {
-            [view.name]: {
-              ...view,
-              schema: {
-                name: {
-                  type: "string",
-                  name: "name",
-                  order: 2,
-                  visible: true,
-                  width: 80,
-                  constraints: {
-                    type: "string",
-                  },
-                },
-                id: {
-                  type: "number",
-                  name: "id",
-                  order: 1,
-                  visible: true,
-                  constraints: {
-                    type: "number",
-                  },
-                },
-              },
-            },
-          },
-        })
-      )
-    })
-
-    it("if view defines order, the table schema order should be ignored", async () => {
-      const tableId = basicTable._id!
-      const view: ViewV2 = {
-        version: 2,
-        id: generator.guid(),
-        name: generator.guid(),
-        tableId,
-        columns: {
-          name: { visible: true, order: 1 },
-          id: { visible: true },
-          description: { visible: false, order: 2 },
-        },
-      }
-
-      const res = sdk.tables.enrichViewSchemas({
-        ...basicTable,
-        views: { [view.name]: view },
-      })
-
-      expect(res).toEqual(
-        expect.objectContaining({
-          ...basicTable,
-          views: {
-            [view.name]: {
-              ...view,
-              schema: {
-                name: {
-                  type: "string",
-                  name: "name",
-                  order: 1,
-                  visible: true,
-                  width: 80,
-                  constraints: {
-                    type: "string",
-                  },
-                },
-                id: {
-                  type: "number",
-                  name: "id",
-                  visible: true,
-                  constraints: {
-                    type: "number",
-                  },
-                },
-              },
-            },
-          },
-        })
-      )
     })
   })
 })

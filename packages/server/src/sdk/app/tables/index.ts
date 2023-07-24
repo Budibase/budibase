@@ -10,8 +10,6 @@ import {
   Database,
   TableResponse,
   TableViewsResponse,
-  TableSchema,
-  UIFieldMetadata,
 } from "@budibase/types"
 import datasources from "../datasources"
 import { populateExternalTableSchemas, isEditableColumn } from "./validation"
@@ -64,49 +62,15 @@ async function getTable(tableId: any): Promise<Table> {
   }
 }
 
-function enrichSchema(
-  tableSchema: TableSchema,
-  viewOverrides: Record<string, UIFieldMetadata>
-) {
-  const result: TableSchema = {}
-  const viewOverridesEntries = Object.entries(viewOverrides)
-  const viewSetsOrder = viewOverridesEntries.some(([_, v]) => v.order)
-  for (const [columnName, columnUIMetadata] of viewOverridesEntries) {
-    if (!columnUIMetadata.visible) {
-      continue
-    }
-
-    if (!tableSchema[columnName]) {
-      continue
-    }
-
-    const tableFieldSchema = tableSchema[columnName]
-    if (viewSetsOrder) {
-      delete tableFieldSchema.order
-    }
-
-    result[columnName] = _.merge(tableFieldSchema, columnUIMetadata)
-  }
-  return result
-}
-
 function enrichViewSchemas(table: Table): TableResponse {
   const result: TableResponse = {
     ...table,
-    views: Object.values(table.views ?? []).reduce((p, v) => {
-      if (!sdk.views.isV2(v)) {
+    views: Object.values(table.views ?? [])
+      .map(v => sdk.views.enrichSchema(v, table.schema))
+      .reduce((p, v) => {
         p[v.name] = v
-      } else {
-        p[v.name] = {
-          ...v,
-          schema:
-            !v?.columns || !Object.entries(v?.columns).length
-              ? table.schema
-              : enrichSchema(table.schema, v.columns),
-        }
-      }
-      return p
-    }, {} as TableViewsResponse),
+        return p
+      }, {} as TableViewsResponse),
   }
 
   return result

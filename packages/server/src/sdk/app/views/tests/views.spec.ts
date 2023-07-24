@@ -1,6 +1,6 @@
 import { FieldType, Table, ViewV2 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
-import views from ".."
+import { enrichSchema } from ".."
 
 describe("table sdk", () => {
   describe("enrichViewSchemas", () => {
@@ -57,7 +57,7 @@ describe("table sdk", () => {
         tableId,
       }
 
-      const res = views.enrichSchema(view, basicTable.schema)
+      const res = enrichSchema(view, basicTable.schema)
 
       expect(res).toEqual({
         ...view,
@@ -116,7 +116,7 @@ describe("table sdk", () => {
         },
       }
 
-      const res = views.enrichSchema(view, basicTable.schema)
+      const res = enrichSchema(view, basicTable.schema)
 
       expect(res).toEqual({
         ...view,
@@ -154,7 +154,7 @@ describe("table sdk", () => {
         columns: { unnexisting: { visible: true }, name: { visible: true } },
       }
 
-      const res = views.enrichSchema(view, basicTable.schema)
+      const res = enrichSchema(view, basicTable.schema)
 
       expect(res).toEqual(
         expect.objectContaining({
@@ -189,7 +189,7 @@ describe("table sdk", () => {
         },
       }
 
-      const res = views.enrichSchema(view, basicTable.schema)
+      const res = enrichSchema(view, basicTable.schema)
 
       expect(res).toEqual(
         expect.objectContaining({
@@ -233,7 +233,7 @@ describe("table sdk", () => {
         },
       }
 
-      const res = views.enrichSchema(view, basicTable.schema)
+      const res = enrichSchema(view, basicTable.schema)
 
       expect(res).toEqual(
         expect.objectContaining({
