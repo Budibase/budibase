@@ -40,7 +40,13 @@ describe("/v2/views", () => {
       order: SortOrder.DESCENDING,
       type: SortType.STRING,
     },
-    columns: ["name"],
+    schema: {
+      name: {
+        name: "name",
+        type: FieldType.STRING,
+        visible: true,
+      },
+    },
   }
 
   afterAll(setup.afterAll)
