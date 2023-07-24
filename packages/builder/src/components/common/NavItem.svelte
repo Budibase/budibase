@@ -132,7 +132,6 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
-    position: relative;
   }
   .nav-item.scrollable {
     flex-direction: column;

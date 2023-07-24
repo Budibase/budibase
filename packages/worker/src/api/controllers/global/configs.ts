@@ -507,17 +507,17 @@ export async function configChecklist(ctx: Ctx) {
           smtp: {
             checked: !!smtpConfig,
             label: "Set up email",
-            link: "/builder/portal/manage/email",
+            link: "/builder/portal/settings/email",
           },
           adminUser: {
             checked: userExists,
             label: "Create your first user",
-            link: "/builder/portal/manage/users",
+            link: "/builder/portal/users/users",
           },
           sso: {
             checked: !!googleConfig || !!oidcConfig,
             label: "Set up single sign-on",
-            link: "/builder/portal/manage/auth",
+            link: "/builder/portal/settings/auth",
           },
         }
       }
