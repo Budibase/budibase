@@ -15,6 +15,7 @@ describe("table sdk", () => {
             name: "name",
             visible: true,
             width: 80,
+            order: 2,
             constraints: {
               type: "string",
             },
@@ -32,6 +33,7 @@ describe("table sdk", () => {
             type: FieldType.NUMBER,
             name: "id",
             visible: true,
+            order: 1,
             constraints: {
               type: "number",
             },
@@ -70,6 +72,7 @@ describe("table sdk", () => {
                   type: "string",
                   name: "name",
                   visible: true,
+                  order: 2,
                   width: 80,
                   constraints: {
                     type: "string",
@@ -88,6 +91,7 @@ describe("table sdk", () => {
                   type: "number",
                   name: "id",
                   visible: true,
+                  order: 1,
                   constraints: {
                     type: "number",
                   },
@@ -136,6 +140,7 @@ describe("table sdk", () => {
                     type: "string",
                     name: "name",
                     visible: true,
+                    order: 2,
                     width: 80,
                     constraints: {
                       type: "string",
@@ -145,6 +150,7 @@ describe("table sdk", () => {
                     type: "number",
                     name: "id",
                     visible: true,
+                    order: 1,
                     constraints: {
                       type: "number",
                     },
@@ -181,10 +187,63 @@ describe("table sdk", () => {
                   name: {
                     type: "string",
                     name: "name",
+                    order: 2,
                     visible: true,
                     width: 80,
                     constraints: {
                       type: "string",
+                    },
+                  },
+                },
+              },
+            },
+          })
+        )
+      })
+
+      it("if view schema only defines visiblility, should only fetch the selected fields", async () => {
+        const tableId = basicTable._id!
+        const view: ViewV2 = {
+          version: 2,
+          id: generator.guid(),
+          name: generator.guid(),
+          tableId,
+          columns: {
+            name: { visible: true },
+            id: { visible: true },
+            description: { visible: false },
+          },
+        }
+
+        const res = sdk.tables.enrichViewSchemas({
+          ...basicTable,
+          views: { [view.name]: view },
+        })
+
+        expect(res).toEqual(
+          expect.objectContaining({
+            ...basicTable,
+            views: {
+              [view.name]: {
+                ...view,
+                schema: {
+                  name: {
+                    type: "string",
+                    name: "name",
+                    order: 2,
+                    visible: true,
+                    width: 80,
+                    constraints: {
+                      type: "string",
+                    },
+                  },
+                  id: {
+                    type: "number",
+                    name: "id",
+                    order: 1,
+                    visible: true,
+                    constraints: {
+                      type: "number",
                     },
                   },
                 },
