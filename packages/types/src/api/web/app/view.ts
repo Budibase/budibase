@@ -1,4 +1,4 @@
-import { ViewV2 } from "../../../documents"
+import { TableSchema, ViewV2 } from "../../../documents"
 
 export interface ViewResponse {
   data: ViewV2

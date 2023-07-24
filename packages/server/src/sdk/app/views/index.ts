@@ -1,8 +1,9 @@
 import { HTTPError, context } from "@budibase/backend-core"
-import { View, ViewV2 } from "@budibase/types"
+import { TableSchema, UIFieldMetadata, View, ViewV2 } from "@budibase/types"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
+import _ from "lodash"
 
 export async function get(viewId: string): Promise<ViewV2 | undefined> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
@@ -47,4 +48,44 @@ export async function remove(viewId: string): Promise<void> {
 
   delete table.views![view?.name]
   await db.put(table)
+}
+
+export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
+  if (!sdk.views.isV2(view)) {
+    return view
+  }
+
+  return {
+    ...view,
+    schema:
+      !view?.columns || !Object.entries(view?.columns).length
+        ? tableSchema
+        : enrichViewV2Schema(tableSchema, view.columns),
+  }
+}
+
+function enrichViewV2Schema(
+  tableSchema: TableSchema,
+  viewOverrides: Record<string, UIFieldMetadata>
+) {
+  const result: TableSchema = {}
+  const viewOverridesEntries = Object.entries(viewOverrides)
+  const viewSetsOrder = viewOverridesEntries.some(([_, v]) => v.order)
+  for (const [columnName, columnUIMetadata] of viewOverridesEntries) {
+    if (!columnUIMetadata.visible) {
+      continue
+    }
+
+    if (!tableSchema[columnName]) {
+      continue
+    }
+
+    const tableFieldSchema = tableSchema[columnName]
+    if (viewSetsOrder) {
+      delete tableFieldSchema.order
+    }
+
+    result[columnName] = _.merge(tableFieldSchema, columnUIMetadata)
+  }
+  return result
 }
