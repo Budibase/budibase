@@ -6,9 +6,13 @@ import {
   isRows,
 } from "../../../utilities/schema"
 import { isExternalTable, isSQL } from "../../../integrations/utils"
-import { getDatasourceParams } from "../../../db/utils"
-import { context, events } from "@budibase/backend-core"
-import { Table, UserCtx } from "@budibase/types"
+import { events } from "@budibase/backend-core"
+import {
+  FetchTablesResponse,
+  Table,
+  TableResponse,
+  UserCtx,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
@@ -26,37 +30,34 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
 }
 
 // covers both internal and external
-export async function fetch(ctx: UserCtx) {
-  const db = context.getAppDB()
-
+export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
   const internal = await sdk.tables.getAllInternalTables()
 
-  const externalTables = await db.allDocs(
-    getDatasourceParams("plus", {
-      include_docs: true,
-    })
-  )
+  const externalTables = await sdk.datasources.getExternalDatasources()
 
-  const external = externalTables.rows.flatMap(tableDoc => {
-    let entities = tableDoc.doc.entities
+  const external = externalTables.flatMap(table => {
+    let entities = table.entities
     if (entities) {
-      return Object.values(entities).map((entity: any) => ({
+      return Object.values(entities).map<Table>((entity: Table) => ({
         ...entity,
         type: "external",
-        sourceId: tableDoc.doc._id,
-        sql: isSQL(tableDoc.doc),
+        sourceId: table._id,
+        sql: isSQL(table),
       }))
     } else {
       return []
     }
   })
 
-  ctx.body = [...internal, ...external]
+  const response = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
+  ctx.body = response
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx<void, TableResponse>) {
   const tableId = ctx.params.tableId
-  ctx.body = await sdk.tables.getTable(tableId)
+  const table = await sdk.tables.getTable(tableId)
+
+  ctx.body = sdk.tables.enrichViewSchemas(table)
 }
 
 export async function save(ctx: UserCtx) {

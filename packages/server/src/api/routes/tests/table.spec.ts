@@ -1,12 +1,15 @@
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
+import { generator } from "@budibase/backend-core/tests"
+import { events, context } from "@budibase/backend-core"
+import { FieldType, Table } from "@budibase/types"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
+import * as setup from "./utilities"
 const { basicTable } = setup.structures
-const { events, context } = require("@budibase/backend-core")
+import sdk from "../../../sdk"
 
 describe("/tables", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let appId
+  let appId: string
 
   afterAll(setup.afterAll)
 
@@ -16,12 +19,11 @@ describe("/tables", () => {
   })
 
   describe("create", () => {
-
     beforeEach(() => {
       jest.clearAllMocks()
     })
 
-    const createTable = (table) => {
+    const createTable = (table?: Table) => {
       if (!table) {
         table = basicTable()
       }
@@ -29,15 +31,16 @@ describe("/tables", () => {
         .post(`/api/tables`)
         .send(table)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
-
     }
 
     it("returns a success message when the table is successfully created", async () => {
       const res = await createTable()
 
-      expect(res.res.statusMessage).toEqual("Table TestTable saved successfully.")
+      expect((res as any).res.statusMessage).toEqual(
+        "Table TestTable saved successfully."
+      )
       expect(res.body.name).toEqual("TestTable")
       expect(events.table.created).toBeCalledTimes(1)
       expect(events.table.created).toBeCalledWith(res.body)
@@ -45,7 +48,7 @@ describe("/tables", () => {
 
     it("creates a table via data import", async () => {
       const table = basicTable()
-      table.rows = [{ name: 'test-name', description: 'test-desc' }]
+      table.rows = [{ name: "test-name", description: "test-desc" }]
 
       const res = await createTable(table)
 
@@ -62,7 +65,7 @@ describe("/tables", () => {
         config,
         method: "POST",
         url: `/api/tables`,
-        body: basicTable()
+        body: basicTable(),
       })
     })
   })
@@ -75,7 +78,7 @@ describe("/tables", () => {
         .post(`/api/tables`)
         .send(testTable)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       expect(events.table.updated).toBeCalledTimes(1)
@@ -94,10 +97,10 @@ describe("/tables", () => {
       const testRow = await request
         .post(`/api/${testTable._id}/rows`)
         .send({
-          name: "test"
+          name: "test",
         })
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       const updatedTable = await request
@@ -109,22 +112,24 @@ describe("/tables", () => {
           key: "name",
           _rename: {
             old: "name",
-            updated: "updatedName"
+            updated: "updatedName",
           },
           schema: {
-            updatedName: { type: "string" }
-          }
+            updatedName: { type: "string" },
+          },
         })
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
-      expect(updatedTable.res.statusMessage).toEqual("Table TestTable saved successfully.")
+      expect((updatedTable as any).res.statusMessage).toEqual(
+        "Table TestTable saved successfully."
+      )
       expect(updatedTable.body.name).toEqual("TestTable")
 
       const res = await request
         .get(`/api/${testTable._id}/rows/${testRow.body._id}`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       expect(res.body.updatedName).toEqual("test")
@@ -140,7 +145,7 @@ describe("/tables", () => {
             _id: "ta_users",
           })
           .set(config.defaultHeaders())
-          .expect('Content-Type', /json/)
+          .expect("Content-Type", /json/)
           .expect(200)
         expect(res.body.schema.email).toBeDefined()
         expect(res.body.schema.roleId).toBeDefined()
@@ -153,7 +158,7 @@ describe("/tables", () => {
       const table = await config.createTable()
       const importRequest = {
         schema: table.schema,
-        rows: [{ name: 'test-name', description: 'test-desc' }]
+        rows: [{ name: "test-name", description: "test-desc" }],
       }
 
       jest.clearAllMocks()
@@ -162,20 +167,23 @@ describe("/tables", () => {
         .post(`/api/tables/${table._id}/import`)
         .send(importRequest)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
 
       expect(events.table.created).not.toHaveBeenCalled()
       expect(events.rows.imported).toBeCalledTimes(1)
-      expect(events.rows.imported).toBeCalledWith(expect.objectContaining({
-        name: "TestTable",
-        _id: table._id
-      }), 1)
+      expect(events.rows.imported).toBeCalledWith(
+        expect.objectContaining({
+          name: "TestTable",
+          _id: table._id,
+        }),
+        1
+      )
     })
   })
 
   describe("fetch", () => {
-    let testTable
+    let testTable: Table
 
     beforeEach(async () => {
       testTable = await config.createTable(testTable)
@@ -189,7 +197,7 @@ describe("/tables", () => {
       const res = await request
         .get(`/api/tables`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       const fetchedTable = res.body[0]
       expect(fetchedTable.name).toEqual(testTable.name)
@@ -202,6 +210,70 @@ describe("/tables", () => {
         method: "GET",
         url: `/api/tables`,
       })
+    })
+
+    it("should fetch views", async () => {
+      const tableId = config.table!._id!
+      const views = [
+        await config.api.viewV2.create({ tableId }),
+        await config.api.viewV2.create({ tableId }),
+      ]
+
+      const res = await request
+        .get(`/api/tables`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: tableId,
+            views: views.reduce((p, c) => {
+              p[c.name] = { ...c, schema: expect.anything() }
+              return p
+            }, {} as any),
+          }),
+        ])
+      )
+    })
+
+    it("should enrich the view schemas for viewsV2", async () => {
+      const tableId = config.table!._id!
+      jest.spyOn(sdk.tables, "enrichViewSchemas").mockImplementation(t => ({
+        ...t,
+        views: {
+          view1: {
+            version: 2,
+            name: "view1",
+            schema: {},
+            id: "new_view_id",
+            tableId,
+          },
+        },
+      }))
+
+      await config.api.viewV2.create({ tableId })
+      await config.createView({ tableId, name: generator.guid() })
+
+      const res = await config.api.table.fetch()
+
+      expect(res).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            _id: tableId,
+            views: {
+              view1: {
+                version: 2,
+                name: "view1",
+                schema: {},
+                id: "new_view_id",
+                tableId,
+              },
+            },
+          }),
+        ])
+      )
     })
   })
 
@@ -216,7 +288,7 @@ describe("/tables", () => {
           .post(`/api/tables`)
           .send(table)
           .set(config.defaultHeaders())
-          .expect('Content-Type', /json/)
+          .expect("Content-Type", /json/)
           .expect(200)
         expect(res.body._id).toBeDefined()
         expect(res.body._rev).toBeDefined()
@@ -231,7 +303,7 @@ describe("/tables", () => {
             _rev: res.body._rev,
           })
           .set(config.defaultHeaders())
-          .expect('Content-Type', /json/)
+          .expect("Content-Type", /json/)
           .expect(200)
         // shouldn't have created a new index
         expect((await db.getIndexes()).total_rows).toEqual(indexCount + 1)
@@ -240,7 +312,7 @@ describe("/tables", () => {
   })
 
   describe("destroy", () => {
-    let testTable
+    let testTable: Table
 
     beforeEach(async () => {
       testTable = await config.createTable(testTable)
@@ -254,40 +326,44 @@ describe("/tables", () => {
       const res = await request
         .delete(`/api/tables/${testTable._id}/${testTable._rev}`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
       expect(events.table.deleted).toBeCalledTimes(1)
-      expect(events.table.deleted).toBeCalledWith({ ...testTable, tableId: testTable._id })
+      expect(events.table.deleted).toBeCalledWith({
+        ...testTable,
+        tableId: testTable._id,
+      })
     })
 
     it("deletes linked references to the table after deletion", async () => {
       const linkedTable = await config.createTable({
         name: "LinkedTable",
         type: "table",
-        key: "name",
         schema: {
           name: {
-            type: "string",
+            type: FieldType.STRING,
+            name: "name",
             constraints: {
               type: "string",
             },
           },
           TestTable: {
-            type: "link",
+            type: FieldType.LINK,
+            name: "TestTable",
             fieldName: "TestTable",
             tableId: testTable._id,
             constraints: {
-              type: "array"
-            }
-          }
+              type: "array",
+            },
+          },
         },
       })
 
       const res = await request
         .delete(`/api/tables/${testTable._id}/${testTable._rev}`)
         .set(config.defaultHeaders())
-        .expect('Content-Type', /json/)
+        .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
       const dependentTable = await config.getTable(linkedTable._id)
