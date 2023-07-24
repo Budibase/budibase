@@ -12,29 +12,44 @@ import { localFileDestination } from "../system"
 
 let pinoInstance: pino.Logger | undefined
 if (!env.DISABLE_PINO_LOGGER) {
+  const level = env.LOG_LEVEL
   const pinoOptions: LoggerOptions = {
-    level: env.LOG_LEVEL,
+    level,
     formatters: {
-      level: label => {
-        return { level: label.toUpperCase() }
+      level: level => {
+        return { level: level.toUpperCase() }
       },
       bindings: () => {
-        return {
-          service: env.SERVICE_NAME,
+        if (env.SELF_HOSTED) {
+          // "service" is being injected in datadog using the pod names,
+          // so we should leave it blank to allow the default behaviour if it's not running self-hosted
+          return {
+            service: env.SERVICE_NAME,
+          }
+        } else {
+          return {}
         }
       },
     },
     timestamp: () => `,"timestamp":"${new Date(Date.now()).toISOString()}"`,
   }
 
-  const destinations: pino.DestinationStream[] = []
+  const destinations: pino.StreamEntry[] = []
 
-  if (env.isDev()) {
-    destinations.push(pinoPretty({ singleLine: true }))
-  }
+  destinations.push(
+    env.isDev()
+      ? {
+          stream: pinoPretty({ singleLine: true }),
+          level: level as pino.Level,
+        }
+      : { stream: process.stdout, level: level as pino.Level }
+  )
 
   if (env.SELF_HOSTED) {
-    destinations.push(localFileDestination())
+    destinations.push({
+      stream: localFileDestination(),
+      level: level as pino.Level,
+    })
   }
 
   pinoInstance = destinations.length
