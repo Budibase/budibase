@@ -184,7 +184,46 @@ describe("/tables", () => {
     let testTable: Table
 
     beforeEach(async () => {
-      testTable = await config.createTable(testTable)
+      testTable = await config.createTable({
+        name: "TestTable",
+        type: "table",
+        schema: {
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+            visible: true,
+            width: 80,
+            constraints: {
+              type: "string",
+            },
+          },
+          description: {
+            type: FieldType.STRING,
+            name: "description",
+            visible: true,
+            width: 200,
+            constraints: {
+              type: "string",
+            },
+          },
+          id: {
+            type: FieldType.NUMBER,
+            name: "id",
+            visible: true,
+            constraints: {
+              type: "number",
+            },
+          },
+          hiddenField: {
+            type: FieldType.STRING,
+            name: "hiddenField",
+            visible: false,
+            constraints: {
+              type: "string",
+            },
+          },
+        },
+      })
     })
 
     afterEach(() => {
@@ -253,6 +292,8 @@ describe("/tables", () => {
                   name: {
                     type: "string",
                     name: "name",
+                    visible: true,
+                    width: 80,
                     constraints: {
                       type: "string",
                     },
@@ -260,6 +301,24 @@ describe("/tables", () => {
                   description: {
                     type: "string",
                     name: "description",
+                    visible: true,
+                    width: 200,
+                    constraints: {
+                      type: "string",
+                    },
+                  },
+                  id: {
+                    type: "number",
+                    name: "id",
+                    visible: true,
+                    constraints: {
+                      type: "number",
+                    },
+                  },
+                  hiddenField: {
+                    type: "string",
+                    name: "hiddenField",
+                    visible: false,
                     constraints: {
                       type: "string",
                     },
@@ -273,10 +332,17 @@ describe("/tables", () => {
     })
 
     it("should fetch the default schema if not overriden", async () => {
-      const tableId = config.table!._id!
+      const tableId = testTable._id!
       const views = [
         await config.api.viewV2.create({ tableId }),
-        await config.api.viewV2.create({ tableId, columns: ["name"] }),
+        await config.api.viewV2.create({
+          tableId,
+          columns: {
+            name: { visible: true },
+            id: { visible: true },
+            description: { visible: false },
+          },
+        }),
       ]
 
       const res = await config.api.table.fetch()
@@ -292,6 +358,8 @@ describe("/tables", () => {
                   name: {
                     type: "string",
                     name: "name",
+                    visible: true,
+                    width: 80,
                     constraints: {
                       type: "string",
                     },
@@ -299,6 +367,24 @@ describe("/tables", () => {
                   description: {
                     type: "string",
                     name: "description",
+                    visible: true,
+                    width: 200,
+                    constraints: {
+                      type: "string",
+                    },
+                  },
+                  id: {
+                    type: "number",
+                    name: "id",
+                    visible: true,
+                    constraints: {
+                      type: "number",
+                    },
+                  },
+                  hiddenField: {
+                    type: "string",
+                    name: "hiddenField",
+                    visible: false,
                     constraints: {
                       type: "string",
                     },
@@ -311,8 +397,18 @@ describe("/tables", () => {
                   name: {
                     type: "string",
                     name: "name",
+                    visible: true,
+                    width: 80,
                     constraints: {
                       type: "string",
+                    },
+                  },
+                  id: {
+                    type: "number",
+                    name: "id",
+                    visible: true,
+                    constraints: {
+                      type: "number",
                     },
                   },
                 },
@@ -327,7 +423,7 @@ describe("/tables", () => {
       const tableId = config.table!._id!
       const view = await config.api.viewV2.create({
         tableId,
-        columns: ["unnexisting", "name"],
+        columns: { unnexisting: { visible: true }, name: { visible: true } },
       })
 
       const res = await config.api.table.fetch()
@@ -343,6 +439,8 @@ describe("/tables", () => {
                   name: {
                     type: "string",
                     name: "name",
+                    visible: true,
+                    width: 80,
                     constraints: {
                       type: "string",
                     },
