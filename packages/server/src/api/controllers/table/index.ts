@@ -11,15 +11,11 @@ import {
   FetchTablesResponse,
   Table,
   TableResponse,
-  TableSchema,
-  TableViewsResponse,
-  UIFieldMetadata,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
-import _ from "lodash"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
@@ -53,56 +49,15 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     }
   })
 
-  const response = [...internal, ...external].map(enrichTable)
+  const response = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
   ctx.body = response
-}
-
-function enrichSchema(
-  tableSchema: TableSchema,
-  viewOverrides: Record<string, UIFieldMetadata>
-) {
-  const result: TableSchema = {}
-  for (const [columnName, columnUIMetadata] of Object.entries(viewOverrides)) {
-    if (!columnUIMetadata.visible) {
-      continue
-    }
-
-    if (!tableSchema[columnName]) {
-      continue
-    }
-
-    result[columnName] = _.merge(tableSchema[columnName], columnUIMetadata)
-  }
-  return result
-}
-
-function enrichTable(table: Table): TableResponse {
-  const result: TableResponse = {
-    ...table,
-    views: Object.values(table.views ?? []).reduce((p, v) => {
-      if (!sdk.views.isV2(v)) {
-        p[v.name] = v
-      } else {
-        p[v.name] = {
-          ...v,
-          schema:
-            !v?.columns || !Object.entries(v?.columns).length
-              ? table.schema
-              : enrichSchema(table.schema, v.columns),
-        }
-      }
-      return p
-    }, {} as TableViewsResponse),
-  }
-
-  return result
 }
 
 export async function find(ctx: UserCtx<void, TableResponse>) {
   const tableId = ctx.params.tableId
   const table = await sdk.tables.getTable(tableId)
 
-  ctx.body = enrichTable(table)
+  ctx.body = sdk.tables.enrichViewSchemas(table)
 }
 
 export async function save(ctx: UserCtx) {
