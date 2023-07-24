@@ -102,7 +102,7 @@ export async function find(ctx: any) {
 
 export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
   const appId = ctx.appId
-  const inputs: DeleteRowRequest = ctx.request.body
+  const inputs = ctx.request.body
 
   const tableId = utils.getTableId(ctx)
   let response, row
