@@ -557,6 +557,41 @@ describe("/rows", () => {
       await assertRowUsage(rowUsage - 1)
       await assertQueryUsage(queryUsage + 1)
     })
+
+    it("Should ignore malformed/invalid delete requests", async () => {
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const res = await request
+        .delete(`/api/${table._id}/rows`)
+        .send({ not: "valid" })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res.body.message).toEqual("Invalid delete rows request")
+
+      const res2 = await request
+        .delete(`/api/${table._id}/rows`)
+        .send({ rows: 123 })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res2.body.message).toEqual("Invalid delete rows request")
+
+      const res3 = await request
+        .delete(`/api/${table._id}/rows`)
+        .send("invalid")
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res3.body.message).toEqual("Invalid delete rows request")
+
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage)
+    })
   })
 
   describe("fetchView", () => {
