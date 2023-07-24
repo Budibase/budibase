@@ -19,14 +19,9 @@ function priceTable(): Table {
         name: "Price",
         constraints: {},
       },
-      Currency: {
+      Category: {
         type: FieldType.STRING,
-        name: "Currency",
-        constraints: {},
-      },
-      ItemId: {
-        type: FieldType.STRING,
-        name: "ItemId",
+        name: "Category",
         constraints: {
           type: "string",
         },
