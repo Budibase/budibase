@@ -893,5 +893,38 @@ describe("/rows", () => {
         })
       }
     )
+
+    it("when schema is defined, no other columns are returned", async () => {
+      const table = await config.createTable(userTable())
+      const rows = []
+      for (let i = 0; i < 10; i++) {
+        rows.push(
+          await config.createRow({
+            tableId: table._id,
+            name: generator.name(),
+            age: generator.age(),
+          })
+        )
+      }
+
+      const createViewResponse = await config.api.viewV2.create({
+        columns: { name: { visible: true } },
+      })
+      const response = await config.api.viewV2.search(createViewResponse.id)
+
+      expect(response.body.rows).toHaveLength(10)
+      expect(response.body.rows).toEqual(
+        expect.arrayContaining(rows.map(r => ({ name: r.name })))
+      )
+    })
+
+    it("views without data can be returned", async () => {
+      const table = await config.createTable(userTable())
+
+      const createViewResponse = await config.api.viewV2.create()
+      const response = await config.api.viewV2.search(createViewResponse.id)
+
+      expect(response.body.rows).toHaveLength(0)
+    })
   })
 })
