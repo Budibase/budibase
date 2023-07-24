@@ -2,7 +2,7 @@ import { quotas } from "@budibase/pro"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTable } from "../../../integrations/utils"
-import { Ctx } from "@budibase/types"
+import { Ctx, UserCtx, DeleteRowRequest, Row } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
 import { addRev } from "../public/utils"
@@ -100,25 +100,24 @@ export async function find(ctx: any) {
   })
 }
 
-export async function destroy(ctx: any) {
+export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
   const appId = ctx.appId
-  const inputs = ctx.request.body
+  const inputs: DeleteRowRequest = ctx.request.body
+
   const tableId = utils.getTableId(ctx)
   let response, row
 
-  if (inputs.rows) {
-    const targetRows = inputs.rows.map(
-      (row: { [key: string]: string | string }) => {
-        let processedRow = typeof row == "string" ? { _id: row } : row
-        return !processedRow._rev
-          ? addRev(fixRow(processedRow, ctx.params), tableId)
-          : fixRow(processedRow, ctx.params)
-      }
-    )
+  if ("rows" in inputs && Array.isArray(inputs?.rows)) {
+    const targetRows = inputs.rows.map(row => {
+      let processedRow: Row = typeof row == "string" ? { _id: row } : row
+      return !processedRow._rev
+        ? addRev(fixRow(processedRow, ctx.params), tableId)
+        : fixRow(processedRow, ctx.params)
+    })
 
-    const rowDeletes = await Promise.all(targetRows)
+    const rowDeletes: Row[] = await Promise.all(targetRows)
     if (rowDeletes) {
-      ctx.request.body.rows = rowDeletes
+      inputs.rows = rowDeletes
     }
 
     let { rows } = await quotas.addQuery<any>(
