@@ -43,6 +43,7 @@ export interface User extends Document {
   roles: UserRoles
   builder?: {
     global?: boolean
+    appBuilder?: boolean
     apps?: string[]
   }
   admin?: {

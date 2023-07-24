@@ -122,6 +122,15 @@ router
     buildAdminInitValidation(),
     controller.adminUser
   )
+  .post("/api/global/users/:userId/app/builder", controller.grantAppBuilder)
+  .patch(
+    "/api/global/users/:userId/app/:appId/builder",
+    controller.addAppBuilder
+  )
+  .delete(
+    "/api/global/users/:userId/app/:appId/builder",
+    controller.removeAppBuilder
+  )
   .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
   // global endpoint but needs to come at end (blocks other endpoints otherwise)
   .get("/api/global/users/:id", auth.builderOrAdmin, controller.find)
@@ -132,7 +141,5 @@ router
     users.buildUserSaveValidation(),
     selfController.updateSelf
   )
-  .post("/api/global/users/builder", controller.addAppBuilder)
-  .delete("/api/global/users/builder", controller.removeAppBuilder)
 
 export default router
