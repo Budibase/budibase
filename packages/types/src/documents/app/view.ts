@@ -1,5 +1,6 @@
 import { SortOrder, SortType } from "../../api"
 import { SearchFilters } from "../../sdk"
+import { TableSchema } from "./table"
 
 export interface View {
   name: string
@@ -24,7 +25,7 @@ export interface ViewV2 {
     order?: SortOrder
     type?: SortType
   }
-  columns?: string[]
+  schema?: TableSchema
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
