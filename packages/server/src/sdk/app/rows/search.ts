@@ -34,13 +34,15 @@ function pickApi(tableId: any) {
 
 export async function search(options: SearchParams): Promise<{
   rows: any[]
+  hasNextPage?: boolean
+  bookmark?: number | null
 }> {
-  let { rows } = await pickApi(options.tableId).search(options)
+  const result = await pickApi(options.tableId).search(options)
 
   if (options.fields) {
-    rows = rows.map((r: any) => _.pick(r, options.fields!))
+    result.rows = result.rows.map((r: any) => _.pick(r, options.fields!))
   }
-  return { rows }
+  return result
 }
 
 export interface ExportRowsParams {
