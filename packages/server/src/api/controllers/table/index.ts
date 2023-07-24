@@ -11,7 +11,9 @@ import {
   FetchTablesResponse,
   Table,
   TableResponse,
+  TableSchema,
   TableViewsResponse,
+  UIFieldMetadata,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -55,6 +57,25 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
   ctx.body = response
 }
 
+function enrichSchema(
+  tableSchema: TableSchema,
+  viewOverrides: Record<string, UIFieldMetadata>
+) {
+  const result: TableSchema = {}
+  for (const [columnName, columnUIMetadata] of Object.entries(viewOverrides)) {
+    if (!columnUIMetadata.visible) {
+      continue
+    }
+
+    if (!tableSchema[columnName]) {
+      continue
+    }
+
+    result[columnName] = _.merge(tableSchema[columnName], columnUIMetadata)
+  }
+  return result
+}
+
 function enrichTable(table: Table): TableResponse {
   const result: TableResponse = {
     ...table,
@@ -64,24 +85,14 @@ function enrichTable(table: Table): TableResponse {
       } else {
         p[v.name] = {
           ...v,
-          schema: !v?.columns?.length
-            ? table.schema
-            : _.pick(table.schema, ...v.columns),
+          schema:
+            !v?.columns || !Object.entries(v?.columns).length
+              ? table.schema
+              : enrichSchema(table.schema, v.columns),
         }
       }
       return p
     }, {} as TableViewsResponse),
-  }
-
-  for (const [viewName, view] of Object.entries(table.views!)) {
-    if (sdk.views.isV2(view)) {
-      table.views![viewName] = {
-        ...view,
-        schema: !view?.columns?.length
-          ? table.schema
-          : _.pick(table.schema, ...view.columns),
-      }
-    }
   }
 
   return result
