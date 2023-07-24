@@ -154,6 +154,16 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
     ctx.throw(404, `View ${viewId} not found`)
   }
 
+  if (view.version !== 2) {
+    ctx.throw(400, `This method only supports viewsV2`)
+  }
+
+  const table = await sdk.tables.getTable(view?.tableId)
+
+  const viewFields =
+    view.columns?.length &&
+    Object.keys(sdk.views.enrichSchema(view, table.schema).schema)
+
   ctx.status = 200
   ctx.body = await quotas.addQuery(
     () =>
@@ -163,7 +173,7 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
         sort: view.sort?.field,
         sortOrder: view.sort?.order,
         sortType: view.sort?.type,
-        fields: view.columns,
+        fields: viewFields,
       }),
     {
       datasourceId: view.tableId,
