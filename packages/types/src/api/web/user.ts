@@ -85,10 +85,3 @@ export interface AcceptUserInviteResponse {
 export interface SyncUserRequest {
   previousUser?: User
 }
-
-export interface AddAppBuilderRequest {
-  userId: string
-  appId: string
-}
-
-export interface RemoveAppBuilderRequest {}

@@ -8,8 +8,6 @@ import env from "../../../environment"
 import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
-  AddAppBuilderRequest,
-  RemoveAppBuilderRequest,
   BulkUserRequest,
   BulkUserResponse,
   CloudAccount,
@@ -32,6 +30,7 @@ import {
   tenancy,
   platform,
   ErrorCode,
+  db as dbCore,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
@@ -434,8 +433,57 @@ export const inviteAccept = async (
   }
 }
 
-export const addAppBuilder = async (ctx: Ctx<AddAppBuilderRequest, void>) => {}
+export const grantAppBuilder = async (ctx: Ctx) => {
+  const { userId } = ctx.params
+  const user = await userSdk.getUser(userId)
+  if (!user.builder) {
+    user.builder = {}
+  }
+  user.builder.appBuilder = true
+  await userSdk.save(user, { hashPassword: false })
+  ctx.body = { message: `User "${user.email}" granted app builder permissions` }
+}
 
-export const removeAppBuilder = async (
-  ctx: Ctx<RemoveAppBuilderRequest, void>
-) => {}
+export const addAppBuilder = async (ctx: Ctx) => {
+  const { userId, appId } = ctx.params
+  const user = await userSdk.getUser(userId)
+  if (!user.builder?.global || user.admin?.global) {
+    ctx.body = { message: "User already admin - no permissions updated." }
+    return
+  }
+  if (!user.builder?.appBuilder) {
+    ctx.throw(
+      400,
+      "Unable to update access, user must be granted app builder permissions."
+    )
+  }
+  const prodAppId = dbCore.getProdAppID(appId)
+  if (!user.builder.apps) {
+    user.builder.apps = []
+  }
+  user.builder.apps.push(prodAppId)
+  await userSdk.save(user, { hashPassword: false })
+  ctx.body = { message: `User "${user.email}" app builder access updated.` }
+}
+
+export const removeAppBuilder = async (ctx: Ctx) => {
+  const { userId, appId } = ctx.params
+  const user = await userSdk.getUser(userId)
+  if (!user.builder?.global || user.admin?.global) {
+    ctx.body = { message: "User already admin - no permissions removed." }
+    return
+  }
+  if (!user.builder?.appBuilder) {
+    ctx.throw(
+      400,
+      "Unable to update access, user must be granted app builder permissions."
+    )
+  }
+  const prodAppId = dbCore.getProdAppID(appId)
+  const indexOf = user.builder?.apps?.indexOf(prodAppId)
+  if (indexOf && indexOf !== -1) {
+    user.builder.apps = user.builder.apps!.splice(indexOf, 1)
+  }
+  await userSdk.save(user, { hashPassword: false })
+  ctx.body = { message: `User "${user.email}" app builder access removed.` }
+}
