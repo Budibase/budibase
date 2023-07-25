@@ -94,6 +94,27 @@ describe("/v2/views", () => {
       view = await config.api.viewV2.create({ name: "View A" })
     })
 
+    it("can update an existing view data", async () => {
+      const tableId = config.table!._id!
+      await config.api.viewV2.update({
+        ...view,
+        query: { equal: { newField: "thatValue" } },
+      })
+
+      expect(await config.api.table.get(tableId)).toEqual({
+        ...config.table,
+        views: {
+          [view.name]: {
+            ...view,
+            query: { equal: { newField: "thatValue" } },
+            schema: expect.anything(),
+          },
+        },
+        _rev: expect.any(String),
+        updatedAt: expect.any(String),
+      })
+    })
+
     it("can update an existing view name", async () => {
       const tableId = config.table!._id!
       await config.api.viewV2.update({ ...view, name: "View B" })
