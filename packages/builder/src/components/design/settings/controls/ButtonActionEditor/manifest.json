@@ -24,6 +24,7 @@
     },
     {
       "name": "Delete Row",
+      "displayName": "Delete Rows",
       "type": "data",
       "component": "DeleteRow"
     },
