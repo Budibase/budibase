@@ -187,6 +187,21 @@ describe("/v2/views", () => {
         }
       )
     })
+
+    it("cannot update the a view with unmatching ids between url and body", async () => {
+      const anotherView = await config.api.viewV2.create()
+      const result = await config
+        .request!.put(`/api/v2/views/${anotherView.id}`)
+        .send(view)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(result.body).toEqual({
+        message: "View id does not match between the body and the uri path",
+        status: 400,
+      })
+    })
   })
 
   describe("delete", () => {

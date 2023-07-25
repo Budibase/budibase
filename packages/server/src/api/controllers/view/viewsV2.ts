@@ -24,6 +24,10 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
     ctx.throw(400, "Only views V2 can be updated")
   }
 
+  if (ctx.params.viewId !== view.id) {
+    ctx.throw(400, "View id does not match between the body and the uri path")
+  }
+
   const { tableId } = view
 
   const result = await sdk.views.update(tableId, view)
