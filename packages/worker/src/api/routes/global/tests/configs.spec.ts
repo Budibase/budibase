@@ -277,6 +277,7 @@ describe("configs", () => {
   describe("GET /api/global/configs/public", () => {
     it("should return the expected public settings", async () => {
       await saveSettingsConfig()
+      mocks.pro.features.isSSOEnforced.mockResolvedValue(false)
 
       const res = await config.api.configs.getPublicSettings()
       const body = res.body as GetPublicSettingsResponse
