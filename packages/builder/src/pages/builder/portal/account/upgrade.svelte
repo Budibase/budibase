@@ -205,10 +205,8 @@
         >
       </Layout>
       <Layout noPadding>
-        <div class="fields">
-          <div class="field">
-            <CopyInput value={offlineLicenseIdentifier} />
-          </div>
+        <div class="identifier-input">
+          <CopyInput value={offlineLicenseIdentifier} />
         </div>
       </Layout>
       <Divider />
@@ -291,8 +289,11 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 100px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+  .identifier-input {
+    width: 300px;
   }
 </style>

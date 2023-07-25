@@ -841,7 +841,8 @@
                         "auto",
                         "json",
                         "internal",
-                        "barcodeqr"
+                        "barcodeqr",
+                        "bigint"
                       ],
                       "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                     },
@@ -1045,7 +1046,8 @@
                             "auto",
                             "json",
                             "internal",
-                            "barcodeqr"
+                            "barcodeqr",
+                            "bigint"
                           ],
                           "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                         },
@@ -1260,7 +1262,8 @@
                               "auto",
                               "json",
                               "internal",
-                              "barcodeqr"
+                              "barcodeqr",
+                              "bigint"
                             ],
                             "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                           },

@@ -1,4 +1,4 @@
-import { generator } from "@budibase/backend-core/tests"
+import { generator } from "../../generator"
 import { Installation } from "@budibase/types"
 import * as db from "../../db"
 
