@@ -5,3 +5,5 @@ export interface ViewResponse {
 }
 
 export type CreateViewRequest = Omit<ViewV2, "version" | "id">
+
+export type UpdateViewRequest = ViewV2

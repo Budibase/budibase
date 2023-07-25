@@ -33,6 +33,24 @@ export async function create(
   return view
 }
 
+export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
+  const db = context.getAppDB()
+  const table = await sdk.tables.getTable(tableId)
+  table.views ??= {}
+
+  const existingView = Object.values(table.views).find(
+    v => isV2(v) && v.id === view.id
+  )
+  if (!existingView) {
+    throw new HTTPError(`View ${view.id} not found in table ${tableId}`, 404)
+  }
+
+  delete table.views[existingView.name]
+  table.views[view.name] = view
+  await db.put(table)
+  return view
+}
+
 export function isV2(view: View | ViewV2): view is ViewV2 {
   return (view as ViewV2).version === 2
 }
