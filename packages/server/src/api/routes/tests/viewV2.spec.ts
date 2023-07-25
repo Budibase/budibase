@@ -86,6 +86,124 @@ describe("/v2/views", () => {
     })
   })
 
+  describe("update", () => {
+    let view: ViewV2
+
+    beforeEach(async () => {
+      await config.createTable(priceTable())
+      view = await config.api.viewV2.create({ name: "View A" })
+    })
+
+    it("can update an existing view data", async () => {
+      const tableId = config.table!._id!
+      await config.api.viewV2.update({
+        ...view,
+        query: { equal: { newField: "thatValue" } },
+      })
+
+      expect(await config.api.table.get(tableId)).toEqual({
+        ...config.table,
+        views: {
+          [view.name]: {
+            ...view,
+            query: { equal: { newField: "thatValue" } },
+            schema: expect.anything(),
+          },
+        },
+        _rev: expect.any(String),
+        updatedAt: expect.any(String),
+      })
+    })
+
+    it("can update an existing view name", async () => {
+      const tableId = config.table!._id!
+      await config.api.viewV2.update({ ...view, name: "View B" })
+
+      expect(await config.api.table.get(tableId)).toEqual(
+        expect.objectContaining({
+          views: {
+            "View B": { ...view, name: "View B", schema: expect.anything() },
+          },
+        })
+      )
+    })
+
+    it("cannot update an unexisting views nor edit ids", async () => {
+      const tableId = config.table!._id!
+      await config.api.viewV2.update(
+        { ...view, id: generator.guid() },
+        { expectStatus: 404 }
+      )
+
+      expect(await config.api.table.get(tableId)).toEqual(
+        expect.objectContaining({
+          views: {
+            [view.name]: {
+              ...view,
+              schema: expect.anything(),
+            },
+          },
+        })
+      )
+    })
+
+    it("cannot update views with the wrong tableId", async () => {
+      const tableId = config.table!._id!
+      await config.api.viewV2.update(
+        {
+          ...view,
+          tableId: generator.guid(),
+          query: { equal: { newField: "thatValue" } },
+        },
+        { expectStatus: 404 }
+      )
+
+      expect(await config.api.table.get(tableId)).toEqual(
+        expect.objectContaining({
+          views: {
+            [view.name]: {
+              ...view,
+              schema: expect.anything(),
+            },
+          },
+        })
+      )
+    })
+
+    it("cannot update views v1", async () => {
+      const viewV1 = await config.createView()
+      await config.api.viewV2.update(
+        {
+          ...viewV1,
+        },
+        {
+          expectStatus: 400,
+          handleResponse: r => {
+            expect(r.body).toEqual({
+              message: "Only views V2 can be updated",
+              status: 400,
+            })
+          },
+        }
+      )
+    })
+
+    it("cannot update the a view with unmatching ids between url and body", async () => {
+      const anotherView = await config.api.viewV2.create()
+      const result = await config
+        .request!.put(`/api/v2/views/${anotherView.id}`)
+        .send(view)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(result.body).toEqual({
+        message: "View id does not match between the body and the uri path",
+        status: 400,
+      })
+    })
+  })
+
   describe("delete", () => {
     let view: ViewV2
 
