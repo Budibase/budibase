@@ -3,7 +3,7 @@ const pro = {
   ...actual,
   features: {
     ...actual.features,
-    isSSOEnforced: jest.fn()
+    isSSOEnforced: jest.fn(),
   },
   licensing: {
     keys: {
