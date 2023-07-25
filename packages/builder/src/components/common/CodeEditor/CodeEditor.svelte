@@ -1,12 +1,15 @@
 <script>
   import { Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
+  import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
 
   import {
     autocompletion,
     closeBrackets,
     completionKeymap,
     closeBracketsKeymap,
+    acceptCompletion,
+    completionStatus,
   } from "@codemirror/autocomplete"
   import {
     EditorView,
@@ -34,7 +37,8 @@
     defaultKeymap,
     historyKeymap,
     history,
-    indentWithTab,
+    indentMore,
+    indentLess,
   } from "@codemirror/commands"
   import { Compartment } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
@@ -48,6 +52,7 @@
   export let mode = EditorModes.Handlebars
   export let value = ""
   export let placeholder = null
+  export let autocompleteEnabled = true
 
   // Export a function to expose caret position
   export const getCaretPosition = () => {
@@ -77,7 +82,7 @@
 
   // For handlebars only.
   const bindStyle = new MatchDecorator({
-    regexp: /{{[."#\-\w\s\][]*}}/g,
+    regexp: FIND_ANY_HBS_REGEX,
     decoration: () => {
       return Decoration.mark({
         tag: "span",
@@ -107,6 +112,22 @@
   let isDark = !currentTheme.includes("light")
   let themeConfig = new Compartment()
 
+  const indentWithTabCustom = {
+    key: "Tab",
+    run: view => {
+      if (completionStatus(view.state) == "active") {
+        acceptCompletion(view)
+        return true
+      }
+      indentMore(view)
+      return true
+    },
+    shift: view => {
+      indentLess(view)
+      return true
+    },
+  }
+
   const buildKeymap = () => {
     const baseMap = [
       ...closeBracketsKeymap,
@@ -114,7 +135,7 @@
       ...historyKeymap,
       ...foldKeymap,
       ...completionKeymap,
-      indentWithTab,
+      indentWithTabCustom,
     ]
     return baseMap
   }
@@ -131,12 +152,6 @@
       syntaxHighlighting(oneDarkHighlightStyle, { fallback: true }),
       highlightActiveLineGutter(),
       highlightSpecialChars(),
-      autocompletion({
-        override: [...completions],
-        closeOnBlur: true,
-        icons: false,
-        optionClass: () => "autocomplete-option",
-      }),
       EditorView.lineWrapping,
       EditorView.updateListener.of(v => {
         const docStr = v.state.doc?.toString()
@@ -159,11 +174,16 @@
 
   const buildExtensions = base => {
     const complete = [...base]
-    if (mode.name == "javascript") {
-      complete.push(javascript())
-      complete.push(highlightWhitespace())
-      complete.push(lineNumbers())
-      complete.push(foldGutter())
+
+    if (autocompleteEnabled) {
+      complete.push(
+        autocompletion({
+          override: [...completions],
+          closeOnBlur: true,
+          icons: false,
+          optionClass: () => "autocomplete-option",
+        })
+      )
       complete.push(
         EditorView.inputHandler.of((view, from, to, insert) => {
           if (insert === "$") {
@@ -191,6 +211,13 @@
           return false
         })
       )
+    }
+
+    if (mode.name == "javascript") {
+      complete.push(javascript())
+      complete.push(highlightWhitespace())
+      complete.push(lineNumbers())
+      complete.push(foldGutter())
     }
 
     if (placeholder) {

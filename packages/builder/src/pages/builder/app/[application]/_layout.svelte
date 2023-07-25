@@ -1,7 +1,12 @@
 <script>
-  import { store, automationStore, userStore } from "builderStore"
+  import {
+    store,
+    automationStore,
+    userStore,
+    deploymentStore,
+  } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { auth } from "stores/portal"
+  import { auth, apps } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
     Icon,
@@ -10,6 +15,7 @@
     Heading,
     Modal,
     notifications,
+    TooltipPosition,
   } from "@budibase/bbui"
   import AppActions from "components/deploy/AppActions.svelte"
   import { API } from "api"
@@ -20,8 +26,8 @@
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
-  import UserAvatars from "./_components/UserAvatars.svelte"
-  import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
+  import { UserAvatars } from "@budibase/frontend-core"
+  import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
 
   export let application
@@ -44,6 +50,8 @@
       await automationStore.actions.fetch()
       await roles.fetch()
       await flags.fetch()
+      await apps.load()
+      await deploymentStore.actions.load()
       loaded = true
       return pkg
     } catch (error) {
@@ -69,32 +77,20 @@
 
   // Event handler for the command palette
   const handleKeyDown = e => {
-    if (e.key === "k" && (e.ctrlKey || e.metaKey) && $store.hasLock) {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault()
       commandPaletteModal.toggle()
     }
   }
 
   const initTour = async () => {
-    // Skip tour if we don't have the lock
-    if (!$store.hasLock) {
-      return
-    }
-
     // Check if onboarding is enabled.
     if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
       if (!$auth.user?.onboardedAt) {
-        // Determine the correct step
-        const activeNav = $layout.children.find(c => $isActive(c.path))
-        const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
-        const targetStep = activeNav
-          ? onboardingTour.find(step => step.route === activeNav?.path)
-          : null
         await store.update(state => ({
           ...state,
           onboarding: true,
           tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
-          tourStepKey: targetStep?.id,
         }))
       } else {
         // Feature tour date
@@ -140,7 +136,7 @@
 {/if}
 
 <div class="root" class:blur={$store.showPreview}>
-  <div class="top-nav" class:has-lock={$store.hasLock}>
+  <div class="top-nav">
     {#if $store.initialised}
       <div class="topleftnav">
         <span class="back-to-apps">
@@ -151,38 +147,30 @@
             on:click={() => $goto("../../portal/apps")}
           />
         </span>
-        {#if $store.hasLock}
-          <Tabs {selected} size="M">
-            {#each $layout.children as { path, title }}
-              <TourWrap tourStepKey={`builder-${title}-section`}>
-                <Tab
-                  quiet
-                  selected={$isActive(path)}
-                  on:click={topItemNavigate(path)}
-                  title={capitalise(title)}
-                  id={`builder-${title}-tab`}
-                />
-              </TourWrap>
-            {/each}
-          </Tabs>
-        {:else}
-          <div class="secondary-editor">
-            <Icon name="LockClosed" />
-            <div
-              class="secondary-editor-body"
-              title="Another user is currently editing your screens and automations"
-            >
-              Another user is currently editing your screens and automations
-            </div>
-          </div>
-        {/if}
+        <Tabs {selected} size="M">
+          {#each $layout.children as { path, title }}
+            <TourWrap tourStepKey={`builder-${title}-section`}>
+              <Tab
+                quiet
+                selected={$isActive(path)}
+                on:click={topItemNavigate(path)}
+                title={capitalise(title)}
+                id={`builder-${title}-tab`}
+              />
+            </TourWrap>
+          {/each}
+        </Tabs>
       </div>
       <div class="topcenternav">
         <Heading size="XS">{$store.name}</Heading>
       </div>
       <div class="toprightnav">
-        <span class:nav-lock={!$store.hasLock}>
-          <UserAvatars users={$userStore} />
+        <span>
+          <UserAvatars
+            users={$userStore}
+            order="rtl"
+            tooltipPosition={TooltipPosition.Bottom}
+          />
         </span>
         <AppActions {application} {loaded} />
       </div>
@@ -238,7 +226,7 @@
   .top-nav {
     flex: 0 0 60px;
     background: var(--background);
-    padding: 0 var(--spacing-xl);
+    padding-left: var(--spacing-xl);
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     flex-direction: row;
@@ -246,10 +234,6 @@
     align-items: stretch;
     border-bottom: var(--border-light);
     z-index: 2;
-  }
-
-  .top-nav.has-lock {
-    padding-right: 0px;
   }
 
   .topcenternav {
@@ -288,23 +272,6 @@
 
   .toprightnav :global(.avatars) {
     margin-right: var(--spacing-l);
-  }
-
-  .secondary-editor {
-    align-self: center;
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    min-width: 0;
-    overflow: hidden;
-    margin-left: var(--spacing-xl);
-  }
-
-  .secondary-editor-body {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0px;
   }
 
   .body {

@@ -3,7 +3,7 @@ import { Operation, QueryJson, RenameColumn, Table } from "@budibase/types"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
-import { FieldTypes, RelationshipTypes } from "../../constants"
+import { FieldTypes, RelationshipType } from "../../constants"
 
 function generateSchema(
   schema: CreateTableBuilder,
@@ -53,6 +53,9 @@ function generateSchema(
           schema.float(key)
         }
         break
+      case FieldTypes.BIGINT:
+        schema.bigint(key)
+        break
       case FieldTypes.BOOLEAN:
         schema.boolean(key)
         break
@@ -67,8 +70,8 @@ function generateSchema(
       case FieldTypes.LINK:
         // this side of the relationship doesn't need any SQL work
         if (
-          column.relationshipType !== RelationshipTypes.MANY_TO_ONE &&
-          column.relationshipType !== RelationshipTypes.MANY_TO_MANY
+          column.relationshipType !== RelationshipType.MANY_TO_ONE &&
+          column.relationshipType !== RelationshipType.MANY_TO_MANY
         ) {
           if (!column.foreignKey || !column.tableId) {
             throw "Invalid relationship schema"

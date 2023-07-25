@@ -13,14 +13,15 @@
   export let value = []
   export let componentInstance
   export let bindings = []
+  export let schema = null
 
   let drawer
 
   $: tempValue = value
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource($currentAsset, datasource)?.schema
-  $: schemaFields = Object.values(schema || {})
-  $: text = getText(value)
+  $: dsSchema = getSchemaForDatasource($currentAsset, datasource)?.schema
+  $: schemaFields = Object.values(schema || dsSchema || {})
+  $: text = getText(value?.filter(filter => filter.field))
 
   async function saveFilter() {
     dispatch("change", tempValue)

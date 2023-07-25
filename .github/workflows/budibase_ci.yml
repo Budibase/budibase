@@ -12,9 +12,6 @@ on:
       - master
       - develop
   pull_request:
-    branches:
-      - master
-      - develop
   workflow_dispatch:
 
 env:
@@ -162,7 +159,7 @@ jobs:
         run: |
           cd qa-core
           yarn setup
-          yarn test:ci
+          yarn serve:test:self:ci
         env:
           BB_ADMIN_USER_EMAIL: admin
           BB_ADMIN_USER_PASSWORD: admin
@@ -175,6 +172,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: true
+          fetch-depth: 0
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Check pro commit
@@ -183,10 +181,10 @@ jobs:
           cd packages/pro
           pro_commit=$(git rev-parse HEAD)
 
-          branch=${{ github.base_ref || github.ref_name  }}
-          echo "Running on branch `$branch` (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
+          branch="${{ github.base_ref || github.ref_name  }}"
+          echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
 
-          if [[ "$branch" == "master" ]]; then
+          if [[ $branch == "master" ]]; then
             base_commit=$(git rev-parse origin/master)
           else
             base_commit=$(git rev-parse origin/develop)

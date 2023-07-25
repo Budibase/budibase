@@ -20,6 +20,7 @@
   let drawer
   let boundValue
 
+  $: text = getText(value)
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: schema = getSchema($currentAsset, datasource)
   $: options = allowCellEditing
@@ -30,6 +31,17 @@
   $: enrichedSchemaFields = getFields(Object.values(schema || {}), {
     allowLinks: true,
   })
+
+  const getText = value => {
+    if (!value?.length) {
+      return "All columns"
+    }
+    let text = `${value.length} column`
+    if (value.length !== 1) {
+      text += "s"
+    }
+    return text
+  }
 
   const getSchema = (asset, datasource) => {
     const schema = getSchemaForDatasource(asset, datasource).schema
@@ -76,7 +88,7 @@
 </script>
 
 <div class="column-editor">
-  <ActionButton on:click={open}>Configure columns</ActionButton>
+  <ActionButton on:click={open}>{text}</ActionButton>
 </div>
 <Drawer bind:this={drawer} title="Columns">
   <Button cta slot="buttons" on:click={save}>Save</Button>

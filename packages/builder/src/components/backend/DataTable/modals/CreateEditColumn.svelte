@@ -19,7 +19,7 @@
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
-    RelationshipTypes,
+    RelationshipType,
     ALLOWABLE_STRING_OPTIONS,
     ALLOWABLE_NUMBER_OPTIONS,
     ALLOWABLE_STRING_TYPES,
@@ -34,6 +34,7 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import { getContext } from "svelte"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
+  import { ValidColumnNameRegex } from "@budibase/shared-core"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -58,7 +59,6 @@
 
   let table = $tables.selected
   let confirmDeleteDialog
-  let deletion
   let savingColumn
   let deleteColName
   let jsonSchemaModal
@@ -185,7 +185,7 @@
       dispatch("updatecolumns")
       if (
         saveColumn.type === LINK_TYPE &&
-        saveColumn.relationshipType === RelationshipTypes.MANY_TO_MANY
+        saveColumn.relationshipType === RelationshipType.MANY_TO_MANY
       ) {
         // Fetching the new tables
         tables.fetch()
@@ -216,7 +216,6 @@
         notifications.success(`Column ${editableColumn.name} deleted`)
         confirmDeleteDialog.hide()
         hide()
-        deletion = false
         dispatch("updatecolumns")
       }
     } catch (error) {
@@ -240,7 +239,7 @@
 
     // Default relationships many to many
     if (editableColumn.type === LINK_TYPE) {
-      editableColumn.relationshipType = RelationshipTypes.MANY_TO_MANY
+      editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     }
     if (editableColumn.type === FORMULA_TYPE) {
       editableColumn.formulaType = "dynamic"
@@ -267,13 +266,11 @@
 
   function confirmDelete() {
     confirmDeleteDialog.show()
-    deletion = true
   }
 
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
     deleteColName = ""
-    deletion = false
   }
 
   function getRelationshipOptions(field) {
@@ -290,17 +287,17 @@
       {
         name: `Many ${thisName} rows → many ${linkName} rows`,
         alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipTypes.MANY_TO_MANY,
+        value: RelationshipType.MANY_TO_MANY,
       },
       {
         name: `One ${linkName} row → many ${thisName} rows`,
         alt: `One ${linkTable.name} rows → many ${table.name} rows`,
-        value: RelationshipTypes.ONE_TO_MANY,
+        value: RelationshipType.ONE_TO_MANY,
       },
       {
         name: `One ${thisName} row → many ${linkName} rows`,
         alt: `One ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipTypes.MANY_TO_ONE,
+        value: RelationshipType.MANY_TO_ONE,
       },
     ]
   }
@@ -331,6 +328,7 @@
         FIELDS.NUMBER,
         FIELDS.BOOLEAN,
         FIELDS.FORMULA,
+        FIELDS.BIGINT,
       ]
       // no-sql or a spreadsheet
       if (!external || table.sql) {
@@ -379,7 +377,7 @@
     const newError = {}
     if (!external && fieldInfo.name?.startsWith("_")) {
       newError.name = `Column name cannot start with an underscore.`
-    } else if (fieldInfo.name && !fieldInfo.name.match(/^[_a-zA-Z0-9\s]*$/g)) {
+    } else if (fieldInfo.name && !fieldInfo.name.match(ValidColumnNameRegex)) {
       newError.name = `Illegal character; must be alpha-numeric.`
     } else if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
       newError.name = `${PROHIBITED_COLUMN_NAMES.join(

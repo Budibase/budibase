@@ -1,4 +1,4 @@
-import { context } from "@budibase/backend-core"
+import { context, db as dbCore } from "@budibase/backend-core"
 import { findHBSBlocks, processObjectSync } from "@budibase/string-templates"
 import {
   Datasource,
@@ -8,14 +8,87 @@ import {
   RestAuthConfig,
   RestAuthType,
   RestBasicAuthConfig,
+  Row,
+  RestConfig,
   SourceName,
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
 import { getDefinitions, getDefinition } from "../../../integrations"
 import _ from "lodash"
+import {
+  BudibaseInternalDB,
+  getDatasourceParams,
+  getTableParams,
+} from "../../../db/utils"
+import sdk from "../../index"
 
 const ENV_VAR_PREFIX = "env."
+
+export async function fetch() {
+  // Get internal tables
+  const db = context.getAppDB()
+  const internalTables = await db.allDocs(
+    getTableParams(null, {
+      include_docs: true,
+    })
+  )
+
+  const internal = internalTables.rows.reduce((acc: any, row: Row) => {
+    const sourceId = row.doc.sourceId || "bb_internal"
+    acc[sourceId] = acc[sourceId] || []
+    acc[sourceId].push(row.doc)
+    return acc
+  }, {})
+
+  const bbInternalDb = {
+    ...BudibaseInternalDB,
+  }
+
+  // Get external datasources
+  const datasources = (
+    await db.allDocs(
+      getDatasourceParams(null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(row => row.doc)
+
+  const allDatasources: Datasource[] = await sdk.datasources.removeSecrets([
+    bbInternalDb,
+    ...datasources,
+  ])
+
+  for (let datasource of allDatasources) {
+    if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
+      datasource.entities = internal[datasource._id!]
+    }
+  }
+
+  return [bbInternalDb, ...datasources]
+}
+
+export function areRESTVariablesValid(datasource: Datasource) {
+  const restConfig = datasource.config as RestConfig
+  const varNames: string[] = []
+  if (restConfig.dynamicVariables) {
+    for (let variable of restConfig.dynamicVariables) {
+      if (varNames.includes(variable.name)) {
+        return false
+      }
+      varNames.push(variable.name)
+    }
+  }
+  if (restConfig.staticVariables) {
+    for (let name of Object.keys(restConfig.staticVariables)) {
+      if (varNames.includes(name)) {
+        return false
+      }
+      varNames.push(name)
+    }
+  }
+  return true
+}
 
 export function checkDatasourceTypes(schema: Integration, config: any) {
   for (let key of Object.keys(config)) {
@@ -62,7 +135,7 @@ export async function get(
   opts?: { enriched: boolean }
 ): Promise<Datasource> {
   const appDb = context.getAppDB()
-  const datasource = await appDb.get(datasourceId)
+  const datasource = await appDb.get<Datasource>(datasourceId)
   if (opts?.enriched) {
     return (await enrichDatasourceWithValues(datasource)).datasource
   } else {
@@ -72,7 +145,7 @@ export async function get(
 
 export async function getWithEnvVars(datasourceId: string) {
   const appDb = context.getAppDB()
-  const datasource = await appDb.get(datasourceId)
+  const datasource = await appDb.get<Datasource>(datasourceId)
   return enrichDatasourceWithValues(datasource)
 }
 

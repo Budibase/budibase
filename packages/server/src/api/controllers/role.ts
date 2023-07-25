@@ -1,6 +1,7 @@
 import { roles, context, events, db as dbCore } from "@budibase/backend-core"
 import { getUserMetadataParams, InternalTables } from "../../db/utils"
-import { UserCtx, Database } from "@budibase/types"
+import { UserCtx, Database, UserRoles, Role } from "@budibase/types"
+import sdk from "../../sdk"
 
 const UpdateRolesOptions = {
   CREATED: "created",
@@ -13,23 +14,23 @@ async function updateRolesOnUserTable(
   updateOption: string,
   roleVersion: string | undefined
 ) {
-  const table = await db.get(InternalTables.USER_METADATA)
+  const table = await sdk.tables.getTable(InternalTables.USER_METADATA)
   const schema = table.schema
   const remove = updateOption === UpdateRolesOptions.REMOVED
   let updated = false
   for (let prop of Object.keys(schema)) {
     if (prop === "roleId") {
       updated = true
-      const constraints = schema[prop].constraints
+      const constraints = schema[prop].constraints!
       const updatedRoleId =
         roleVersion === roles.RoleIDVersion.NAME
           ? roles.getExternalRoleID(roleId, roleVersion)
           : roleId
-      const indexOfRoleId = constraints.inclusion.indexOf(updatedRoleId)
+      const indexOfRoleId = constraints.inclusion!.indexOf(updatedRoleId)
       if (remove && indexOfRoleId !== -1) {
-        constraints.inclusion.splice(indexOfRoleId, 1)
+        constraints.inclusion!.splice(indexOfRoleId, 1)
       } else if (!remove && indexOfRoleId === -1) {
-        constraints.inclusion.push(updatedRoleId)
+        constraints.inclusion!.push(updatedRoleId)
       }
       break
     }
@@ -69,7 +70,7 @@ export async function save(ctx: UserCtx) {
 
   let dbRole
   if (!isCreate) {
-    dbRole = await db.get(_id)
+    dbRole = await db.get<UserRoles>(_id)
   }
   if (dbRole && dbRole.name !== name && isNewVersion) {
     ctx.throw(400, "Cannot change custom role name")
@@ -105,7 +106,7 @@ export async function destroy(ctx: UserCtx) {
     // make sure has the prefix (if it has it then it won't be added)
     roleId = dbCore.generateRoleID(roleId)
   }
-  const role = await db.get(roleId)
+  const role = await db.get<Role>(roleId)
   // first check no users actively attached to role
   const users = (
     await db.allDocs(

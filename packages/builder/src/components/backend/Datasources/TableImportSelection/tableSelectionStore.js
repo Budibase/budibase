@@ -1,6 +1,6 @@
 import { derived, writable, get } from "svelte/store"
-import { notifications } from "@budibase/bbui"
-import { datasources, ImportTableError } from "stores/backend"
+import { keepOpen, notifications } from "@budibase/bbui"
+import { datasources, ImportTableError, tables } from "stores/backend"
 
 export const createTableSelectionStore = (integration, datasource) => {
   const tableNamesStore = writable([])
@@ -10,7 +10,10 @@ export const createTableSelectionStore = (integration, datasource) => {
 
   datasources.getTableNames(datasource).then(tableNames => {
     tableNamesStore.set(tableNames)
-    selectedTableNamesStore.set(tableNames.filter(t => datasource.entities[t]))
+    selectedTableNamesStore.set(
+      tableNames.filter(tableName => datasource.entities?.[tableName])
+    )
+
     loadingStore.set(false)
   })
 
@@ -23,7 +26,7 @@ export const createTableSelectionStore = (integration, datasource) => {
 
     try {
       await datasources.updateSchema(datasource, get(selectedTableNamesStore))
-
+      await tables.fetch()
       notifications.success(`Tables fetched successfully.`)
       await onComplete()
     } catch (err) {
@@ -33,8 +36,7 @@ export const createTableSelectionStore = (integration, datasource) => {
         notifications.error("Error fetching tables.")
       }
 
-      // Prevent modal closing
-      return false
+      return keepOpen
     }
   }
 
