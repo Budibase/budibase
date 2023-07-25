@@ -186,18 +186,21 @@ export function inputProcessing(
  * @param {object} opts used to set some options for the output, such as disabling relationship squashing.
  * @returns {object[]|object} the enriched rows will be returned.
  */
-export async function outputProcessing(
+export async function outputProcessing<T extends Row[] | Row>(
   table: Table,
-  rows: Row[] | Row,
+  rows: T,
   opts = { squash: true }
-) {
+): Promise<T> {
+  let safeRows: Row[]
   let wasArray = true
   if (!(rows instanceof Array)) {
-    rows = [rows]
+    safeRows = [rows]
     wasArray = false
+  } else {
+    safeRows = rows
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(table, rows as Row[])
+  let enriched = await linkRows.attachFullLinkedDocs(table, safeRows)
 
   // process formulas
   enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
@@ -221,7 +224,7 @@ export async function outputProcessing(
       enriched
     )) as Row[]
   }
-  return wasArray ? enriched : enriched[0]
+  return (wasArray ? enriched : enriched[0]) as T
 }
 
 /**
