@@ -28,15 +28,15 @@
   $: isInternal = $tables.selected?.type !== "external"
 
   $: datasource = $datasources.list.find(datasource => {
-    return datasource._id === $tables.selected.sourceId
+    return datasource._id === $tables.selected?.sourceId
   })
+
+  $: relationshipsEnabled = relationshipSupport(datasource)
 
   const relationshipSupport = datasource => {
     const integration = $integrations[datasource?.source]
     return !isInternal && integration?.relationships !== false
   }
-
-  $: relationshipsEnabled = relationshipSupport(datasource)
 
   const handleGridTableUpdate = async e => {
     tables.replaceTable(id, e.detail)
