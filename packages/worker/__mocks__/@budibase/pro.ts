@@ -1,6 +1,10 @@
 const actual = jest.requireActual("@budibase/pro")
 const pro = {
   ...actual,
+  features: {
+    ...actual.features,
+    isSSOEnforced: jest.fn(),
+  },
   licensing: {
     keys: {
       activateLicenseKey: jest.fn(),
