@@ -119,7 +119,7 @@ function isDeleteRow(input: any): input is DeleteRow {
   return input._id !== undefined
 }
 
-async function processDeleteRowRequest(ctx: UserCtx<DeleteRowRequest>) {
+async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
   let request = ctx.request.body as DeleteRows
   const tableId = utils.getTableId(ctx)
 
@@ -139,7 +139,7 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 
   let deleteRequest = ctx.request.body as DeleteRows
 
-  const rowDeletes: Row[] = await processDeleteRowRequest(ctx)
+  const rowDeletes: Row[] = await processDeleteRowsRequest(ctx)
   deleteRequest.rows = rowDeletes
 
   let { rows } = await quotas.addQuery<any>(
