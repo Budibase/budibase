@@ -14,7 +14,7 @@ router
     viewController.v2.create
   )
   .put(
-    `/api/v2/views`,
+    `/api/v2/views/:viewId`,
     authorized(permissions.BUILDER),
     viewController.v2.update
   )
