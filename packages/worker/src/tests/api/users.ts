@@ -149,15 +149,23 @@ export class UserAPI extends TestAPI {
       .expect(200)
   }
 
-  grantBuilderToApp = (userId: string, appId: string) => {
+  grantBuilderToApp = (
+    userId: string,
+    appId: string,
+    statusCode: number = 200
+  ) => {
     return this.request
       .patch(`/api/global/users/${userId}/app/${appId}/builder`)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(200)
+      .expect(statusCode)
   }
 
-  revokeBuilderToApp = (userId: string, appId: string) => {
+  revokeBuilderToApp = (
+    userId: string,
+    appId: string,
+    statusCode: number = 200
+  ) => {
     return this.request
       .delete(`/api/global/users/${userId}/app/${appId}/builder`)
       .set(this.config.defaultHeaders())
