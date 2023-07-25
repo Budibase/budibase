@@ -1,54 +1,60 @@
 import env from "../../environment"
 import {
+  createAllSearchIndex,
   createLinkView,
   createRoutingView,
-  createAllSearchIndex,
 } from "../../db/views/staticViews"
-import { createApp, deleteApp } from "../../utilities/fileSystem"
 import {
+  backupClientLibrary,
+  createApp,
+  deleteApp,
+  revertClientLibrary,
+  updateClientLibrary,
+} from "../../utilities/fileSystem"
+import {
+  AppStatus,
+  DocumentType,
   generateAppID,
+  generateDevAppID,
   getLayoutParams,
   getScreenParams,
-  generateDevAppID,
-  DocumentType,
-  AppStatus,
 } from "../../db/utils"
 import {
-  db as dbCore,
-  roles,
   cache,
-  tenancy,
   context,
+  db as dbCore,
+  env as envCore,
+  ErrorCode,
   events,
   migrations,
   objectStore,
-  ErrorCode,
-  env as envCore,
+  roles,
+  tenancy,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
-import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
-import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { stringToReadStream, isQsTrue } from "../../utilities"
-import { getLocksById } from "../../utilities/redis"
 import {
-  updateClientLibrary,
-  backupClientLibrary,
-  revertClientLibrary,
-} from "../../utilities/fileSystem"
+  buildDefaultDocs,
+  DEFAULT_BB_DATASOURCE_ID,
+} from "../../db/defaultData/datasource_bb_default"
+import { removeAppFromUserRoles } from "../../utilities/workerRequests"
+import { stringToReadStream } from "../../utilities"
+import { doesUserHaveLock, getLocksById } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
 import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
-import { quotas, groups } from "@budibase/pro"
+import { groups, licensing, quotas } from "@budibase/pro"
 import {
   App,
   Layout,
-  Screen,
   MigrationType,
-  Database,
+  PlanType,
+  Screen,
+  SocketSession,
   UserCtx,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
+import { builderSocket } from "../../websockets"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -111,11 +117,18 @@ function checkAppName(
   }
 }
 
-async function createInstance(
-  appId: string,
-  template: any,
-  includeSampleData: boolean
-) {
+interface AppTemplate {
+  templateString: string
+  useTemplate: string
+  file?: {
+    type: string
+    path: string
+    password?: string
+  }
+  key?: string
+}
+
+async function createInstance(appId: string, template: AppTemplate) {
   const db = context.getAppDB()
   await db.put({
     _id: "_design/database",
@@ -142,21 +155,25 @@ async function createInstance(
   } else {
     // create the users table
     await db.put(USERS_TABLE_SCHEMA)
-
-    if (includeSampleData) {
-      // create ootb stock db
-      await addDefaultTables(db)
-    }
   }
 
   return { _id: appId }
 }
 
-async function addDefaultTables(db: Database) {
-  const defaultDbDocs = buildDefaultDocs()
+export const addSampleData = async (ctx: UserCtx) => {
+  const db = context.getAppDB()
 
-  // add in the default db data docs - tables, datasource, rows and links
-  await db.bulkDocs([...defaultDbDocs])
+  try {
+    // Check if default datasource exists before creating it
+    await sdk.datasources.get(DEFAULT_BB_DATASOURCE_ID)
+  } catch (err: any) {
+    const defaultDbDocs = buildDefaultDocs()
+
+    // add in the default db data docs - tables, datasource, rows and links
+    await db.bulkDocs([...defaultDbDocs])
+  }
+
+  ctx.status = 200
 }
 
 export async function fetch(ctx: UserCtx) {
@@ -167,6 +184,7 @@ export async function fetch(ctx: UserCtx) {
   const appIds = apps
     .filter((app: any) => app.status === "development")
     .map((app: any) => app.appId)
+
   // get the locks for all the dev apps
   if (dev || all) {
     const locks = await getLocksById(appIds)
@@ -181,7 +199,10 @@ export async function fetch(ctx: UserCtx) {
     }
   }
 
-  ctx.body = await checkAppMetadata(apps)
+  // Enrich apps with all builder user sessions
+  const enrichedApps = await sdk.users.sessions.enrichApps(apps)
+
+  ctx.body = await checkAppMetadata(enrichedApps)
 }
 
 export async function fetchAppDefinition(ctx: UserCtx) {
@@ -201,9 +222,10 @@ export async function fetchAppDefinition(ctx: UserCtx) {
 
 export async function fetchAppPackage(ctx: UserCtx) {
   const db = context.getAppDB()
-  let application = await db.get(DocumentType.APP_METADATA)
+  let application = await db.get<any>(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
+  const license = await licensing.cache.getCachedLicense()
 
   // Enrich plugin URLs
   application.usedPlugins = objectStore.enrichPluginURLs(
@@ -224,39 +246,41 @@ export async function fetchAppPackage(ctx: UserCtx) {
 
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
+    licenseType: license?.plan.type || PlanType.FREE,
     screens,
     layouts,
     clientLibPath,
+    hasLock: await doesUserHaveLock(application.appId, ctx.user),
   }
 }
 
 async function performAppCreate(ctx: UserCtx) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   const name = ctx.request.body.name,
-    possibleUrl = ctx.request.body.url
+    possibleUrl = ctx.request.body.url,
+    encryptionPassword = ctx.request.body.encryptionPassword
+
   checkAppName(ctx, apps, name)
   const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
   checkAppUrl(ctx, apps, url)
 
   const { useTemplate, templateKey, templateString } = ctx.request.body
-  const instanceConfig: any = {
+  const instanceConfig: AppTemplate = {
     useTemplate,
     key: templateKey,
     templateString,
   }
   if (ctx.request.files && ctx.request.files.templateFile) {
-    instanceConfig.file = ctx.request.files.templateFile
+    instanceConfig.file = {
+      ...(ctx.request.files.templateFile as any),
+      password: encryptionPassword,
+    }
   }
-  const includeSampleData = isQsTrue(ctx.request.body.sampleData)
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))
 
   return await context.doInAppContext(appId, async () => {
-    const instance = await createInstance(
-      appId,
-      instanceConfig,
-      includeSampleData
-    )
+    const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
 
     let newApplication: App = {
@@ -289,6 +313,9 @@ async function performAppCreate(ctx: UserCtx) {
       theme: "spectrum--light",
       customTheme: {
         buttonBorderRadius: "16px",
+      },
+      features: {
+        componentValidation: true,
       },
     }
 
@@ -418,12 +445,20 @@ export async function update(ctx: UserCtx) {
   await events.app.updated(app)
   ctx.status = 200
   ctx.body = app
+  builderSocket?.emitAppMetadataUpdate(ctx, {
+    theme: app.theme,
+    customTheme: app.customTheme,
+    navigation: app.navigation,
+    name: app.name,
+    url: app.url,
+    icon: app.icon,
+  })
 }
 
 export async function updateClient(ctx: UserCtx) {
   // Get current app version
   const db = context.getAppDB()
-  const application = await db.get(DocumentType.APP_METADATA)
+  const application = await db.get<App>(DocumentType.APP_METADATA)
   const currentVersion = application.version
 
   // Update client library and manifest
@@ -447,7 +482,7 @@ export async function updateClient(ctx: UserCtx) {
 export async function revertClient(ctx: UserCtx) {
   // Check app can be reverted
   const db = context.getAppDB()
-  const application = await db.get(DocumentType.APP_METADATA)
+  const application = await db.get<App>(DocumentType.APP_METADATA)
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
   }
@@ -500,7 +535,7 @@ async function destroyApp(ctx: UserCtx) {
 
   const db = dbCore.getDB(devAppId)
   // standard app deletion flow
-  const app = await db.get(DocumentType.APP_METADATA)
+  const app = await db.get<App>(DocumentType.APP_METADATA)
   const result = await db.destroy()
   await quotas.removeApp()
   await events.app.deleted(app)
@@ -548,6 +583,7 @@ export async function unpublish(ctx: UserCtx) {
   await unpublishApp(ctx)
   await postDestroyApp(ctx)
   ctx.status = 204
+  builderSocket?.emitAppUnpublish(ctx)
 }
 
 export async function sync(ctx: UserCtx) {
@@ -562,7 +598,7 @@ export async function sync(ctx: UserCtx) {
 export async function updateAppPackage(appPackage: any, appId: any) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
-    const application = await db.get(DocumentType.APP_METADATA)
+    const application = await db.get<App>(DocumentType.APP_METADATA)
 
     const newAppPackage = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {

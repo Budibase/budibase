@@ -1,9 +1,13 @@
 import { FieldTypes } from "../constants"
+import { ValidColumnNameRegex } from "@budibase/shared-core"
 
 interface SchemaColumn {
   readonly name: string
   readonly type: FieldTypes
   readonly autocolumn?: boolean
+  readonly constraints?: {
+    presence: boolean
+  }
 }
 
 interface Schema {
@@ -24,6 +28,7 @@ interface ValidationResults {
   schemaValidation: SchemaValidation
   allValid: boolean
   invalidColumns: Array<string>
+  errors: Record<string, string>
 }
 
 const PARSERS: any = {
@@ -66,6 +71,7 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
     schemaValidation: {},
     allValid: false,
     invalidColumns: [],
+    errors: {},
   }
 
   rows.forEach(row => {
@@ -76,6 +82,16 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
       // If the columnType is not a string, then it's not present in the schema, and should be added to the invalid columns array
       if (typeof columnType !== "string") {
         results.invalidColumns.push(columnName)
+      } else if (!columnName.match(ValidColumnNameRegex)) {
+        // Check for special characters in column names
+        results.schemaValidation[columnName] = false
+        results.errors[columnName] =
+          "Column names can't contain special characters"
+      } else if (
+        columnData == null &&
+        !schema[columnName].constraints?.presence
+      ) {
+        results.schemaValidation[columnName] = true
       } else if (
         // If there's no data for this field don't bother with further checks
         // If the field is already marked as invalid there's no need for further checks

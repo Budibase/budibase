@@ -2,13 +2,22 @@
   import { getContext } from "svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import HeaderCell from "../cells/HeaderCell.svelte"
-  import { Icon } from "@budibase/bbui"
+  import { Icon, TempTooltip, TooltipType } from "@budibase/bbui"
 
-  const { renderedColumns, dispatch, scroll, hiddenColumnsWidth, width } =
-    getContext("grid")
+  const {
+    renderedColumns,
+    dispatch,
+    scroll,
+    hiddenColumnsWidth,
+    width,
+    config,
+    hasNonAutoColumn,
+    tableId,
+    loading,
+  } = getContext("grid")
 
   $: columnsWidth = $renderedColumns.reduce(
-    (total, col) => (total += col.width),
+    (total, col) => total + col.width,
     0
   )
   $: end = $hiddenColumnsWidth + columnsWidth - 1 - $scroll.left
@@ -23,22 +32,31 @@
       {/each}
     </div>
   </GridScrollWrapper>
-  <div
-    class="add"
-    style="left:{left}px"
-    on:click={() => dispatch("add-column")}
-  >
-    <Icon name="Add" />
-  </div>
+  {#if $config.allowSchemaChanges}
+    {#key $tableId}
+      <TempTooltip
+        text="Click here to create your first column"
+        type={TooltipType.Info}
+        condition={!$hasNonAutoColumn && !$loading}
+      >
+        <div
+          class="add"
+          style="left:{left}px;"
+          on:click={() => dispatch("add-column")}
+        >
+          <Icon name="Add" />
+        </div>
+      </TempTooltip>
+    {/key}
+  {/if}
 </div>
 
 <style>
   .header {
-    background: var(--background);
+    background: var(--grid-background-alt);
     border-bottom: var(--cell-border);
     position: relative;
     height: var(--default-row-height);
-    z-index: 1;
   }
   .row {
     display: flex;
@@ -53,7 +71,8 @@
     border-left: var(--cell-border);
     border-right: var(--cell-border);
     border-bottom: var(--cell-border);
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--grid-background-alt);
+    z-index: 1;
   }
   .add:hover {
     background: var(--spectrum-global-color-gray-200);

@@ -1,5 +1,5 @@
 <script>
-  import { tables } from "stores/backend"
+  import { datasources, tables } from "stores/backend"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
@@ -16,16 +16,28 @@
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
 
   const userSchemaOverrides = {
-    firstName: { name: "First name", disabled: true },
-    lastName: { name: "Last name", disabled: true },
-    email: { name: "Email", disabled: true },
-    roleId: { name: "Role", disabled: true },
-    status: { name: "Status", disabled: true },
+    firstName: { displayName: "First name", disabled: true },
+    lastName: { displayName: "Last name", disabled: true },
+    email: { displayName: "Email", disabled: true },
+    roleId: { displayName: "Role", disabled: true },
+    status: { displayName: "Status", disabled: true },
   }
 
   $: id = $tables.selected?._id
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.type !== "external"
+
+  const handleGridTableUpdate = async e => {
+    tables.replaceTable(id, e.detail)
+
+    // We need to refresh datasources when an external table changes.
+    // Type "external" may exist - sometimes type is "table" and sometimes it
+    // is "external" - it has different meanings in different endpoints.
+    // If we check both these then we hopefully catch all external tables.
+    if (e.detail?.type === "external" || e.detail?.sql) {
+      await datasources.fetch()
+    }
+  }
 </script>
 
 <div class="wrapper">
@@ -35,8 +47,12 @@
     allowAddRows={!isUsersTable}
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
-    on:updatetable={e => tables.updateTable(e.detail)}
+    showAvatars={false}
+    on:updatetable={handleGridTableUpdate}
   >
+    <svelte:fragment slot="filter">
+      <GridFilterButton />
+    </svelte:fragment>
     <svelte:fragment slot="controls">
       {#if isInternal}
         <GridCreateViewButton />
@@ -51,7 +67,6 @@
         <GridImportButton />
       {/if}
       <GridExportButton />
-      <GridFilterButton />
       <GridAddColumnModal />
       <GridEditColumnModal />
       {#if isUsersTable}

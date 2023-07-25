@@ -1,6 +1,7 @@
 import { Config } from "@jest/types"
 
 import * as fs from "fs"
+import { join } from "path"
 const preset = require("ts-jest/jest-preset")
 
 const baseConfig: Config.InitialProjectOptions = {
@@ -20,9 +21,8 @@ const baseConfig: Config.InitialProjectOptions = {
 }
 
 // add pro sources if they exist
-if (fs.existsSync("../../../budibase-pro")) {
-  baseConfig.moduleNameMapper["@budibase/pro"] =
-    "<rootDir>/../../../budibase-pro/packages/pro/src"
+if (fs.existsSync("../pro/src")) {
+  baseConfig.moduleNameMapper!["@budibase/pro"] = "<rootDir>/../pro/src"
 }
 
 const config: Config.InitialOptions = {
@@ -48,5 +48,7 @@ const config: Config.InitialOptions = {
   ],
   coverageReporters: ["lcov", "json", "clover"],
 }
+
+process.env.TOP_LEVEL_PATH = join(__dirname, "..", "..")
 
 export default config

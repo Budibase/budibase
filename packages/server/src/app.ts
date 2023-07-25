@@ -15,7 +15,6 @@ import * as api from "./api"
 import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
-import { initialise as initialiseWebsockets } from "./websockets"
 import { events, logging, middleware, timers } from "@budibase/backend-core"
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
@@ -61,7 +60,6 @@ if (env.isProd()) {
 
 const server = http.createServer(app.callback())
 destroyable(server)
-initialiseWebsockets(app, server)
 
 let shuttingDown = false,
   errCode = 0

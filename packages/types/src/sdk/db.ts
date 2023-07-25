@@ -65,6 +65,7 @@ export type DatabaseQueryOpts = {
   key?: string
   keys?: string[]
   group?: boolean
+  startkey_docid?: string
 }
 
 export const isDocument = (doc: any): doc is Document => {
@@ -88,7 +89,7 @@ export interface Database {
 
   exists(): Promise<boolean>
   checkSetup(): Promise<Nano.DocumentScope<any>>
-  get<T>(id?: string): Promise<T | any>
+  get<T>(id?: string): Promise<T>
   remove(
     id: string | Document,
     rev?: string

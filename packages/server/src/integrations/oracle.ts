@@ -5,8 +5,10 @@ import {
   QueryJson,
   QueryType,
   SqlQuery,
-  Table,
+  ExternalTable,
   DatasourcePlus,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -24,12 +26,7 @@ import {
   ExecuteOptions,
   Result,
 } from "oracledb"
-import {
-  OracleTable,
-  OracleColumn,
-  OracleColumnsResponse,
-  OracleConstraint,
-} from "./base/types"
+import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
 let oracledb: any
 try {
   oracledb = require("oracledb")
@@ -53,6 +50,10 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "Oracle Database is an object-relational database management system developed by Oracle Corporation",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+  },
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -107,7 +108,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
   private readonly config: OracleConfig
   private index: number = 1
 
-  public tables: Record<string, Table> = {}
+  public tables: Record<string, ExternalTable> = {}
   public schemaErrors: Record<string, string> = {}
 
   private readonly COLUMNS_SQL = `
@@ -261,13 +262,16 @@ class OracleIntegration extends Sql implements DatasourcePlus {
    * @param {*} datasourceId - datasourceId to fetch
    * @param entities - the tables that are to be built
    */
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, ExternalTable>
+  ) {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: this.COLUMNS_SQL,
     })
     const oracleTables = this.mapColumns(columnsResponse)
 
-    const tables: { [key: string]: Table } = {}
+    const tables: { [key: string]: ExternalTable } = {}
 
     // iterate each table
     Object.values(oracleTables).forEach(oracleTable => {
@@ -278,6 +282,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           primary: [],
           name: oracleTable.name,
           schema: {},
+          sourceId: datasourceId,
         }
         tables[oracleTable.name] = table
       }
@@ -323,6 +328,37 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     const final = finaliseExternalTables(tables, entities)
     this.tables = final.tables
     this.schemaErrors = final.errors
+  }
+
+  async getTableNames() {
+    const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
+      sql: this.COLUMNS_SQL,
+    })
+    return (columnsResponse.rows || []).map(row => row.TABLE_NAME)
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    let connection
+    try {
+      connection = await this.getConnection()
+      response.connected = true
+    } catch (err: any) {
+      response.connected = false
+      response.error = err.message
+    } finally {
+      if (connection) {
+        try {
+          await connection.close()
+        } catch (err: any) {
+          response.connected = false
+          response.error = err.message
+        }
+      }
+    }
+    return response
   }
 
   private async internalQuery<T>(query: SqlQuery): Promise<Result<T>> {

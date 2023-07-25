@@ -38,7 +38,7 @@
       return []
     }
     if (Array.isArray(values)) {
-      return values
+      return values.slice()
     }
     return values.split(",").map(value => value.trim())
   }

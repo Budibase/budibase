@@ -1,7 +1,7 @@
 <script>
   import Icon from "../Icon/Icon.svelte"
   import { getContext, onMount } from "svelte"
-  import { slide } from "svelte/transition"
+  import ErrorMessage from "./ErrorMessage.svelte"
 
   export let disabled = false
   export let error = null
@@ -11,6 +11,7 @@
   export let value
   export let ref
   export let autoHeight
+  export let compact = false
 
   const formContext = getContext("fancy-form")
   const id = Math.random()
@@ -42,6 +43,7 @@
   class:disabled
   class:focused
   class:clickable
+  class:compact
   class:auto-height={autoHeight}
 >
   <div class="content" on:click>
@@ -55,15 +57,12 @@
     {/if}
   </div>
   {#if error}
-    <div transition:slide|local={{ duration: 130 }} class="error-message">
-      {error}
-    </div>
+    <ErrorMessage {error} />
   {/if}
 </div>
 
 <style>
   .fancy-field {
-    max-width: 400px;
     background: var(--spectrum-global-color-gray-75);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
@@ -71,6 +70,12 @@
     transition: border-color 130ms ease-out, background 130ms ease-out,
       background 130ms ease-out;
     color: var(--spectrum-global-color-gray-800);
+    --padding: 16px;
+    --height: 64px;
+  }
+  .fancy-field.compact {
+    --padding: 8px;
+    --height: 36px;
   }
   .fancy-field:hover {
     border-color: var(--spectrum-global-color-gray-400);
@@ -93,8 +98,8 @@
   }
   .content {
     position: relative;
-    height: 64px;
-    padding: 0 16px;
+    height: var(--height);
+    padding: 0 var(--padding);
   }
   .fancy-field.auto-height .content {
     height: auto;
@@ -105,17 +110,10 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    gap: 16px;
+    gap: var(--padding);
   }
   .field {
     flex: 1 1 auto;
-  }
-  .error-message {
-    background: var(--spectrum-global-color-red-400);
-    color: white;
-    font-size: 14px;
-    padding: 6px 16px;
-    font-weight: 500;
   }
   .error-icon {
     flex: 0 0 auto;

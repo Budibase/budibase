@@ -17,14 +17,16 @@ import URLSelect from "./controls/URLSelect.svelte"
 import OptionsEditor from "./controls/OptionsEditor/OptionsEditor.svelte"
 import FormFieldSelect from "./controls/FormFieldSelect.svelte"
 import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelte"
-import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
 import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
+import GridColumnEditor from "./controls/ColumnEditor/GridColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
+import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte"
 
 const componentMap = {
-  text: DrawerBindableCombobox,
+  text: DrawerBindableInput,
   select: Select,
   radio: RadioGroup,
   dataSource: DataSourceSelect,
@@ -43,13 +45,16 @@ const componentMap = {
   schema: SchemaSelect,
   section: SectionSelect,
   filter: FilterEditor,
+  "filter/relationship": RelationshipFilterEditor,
   url: URLSelect,
   fieldConfiguration: FieldConfiguration,
   columns: ColumnEditor,
   "columns/basic": BasicColumnEditor,
+  "columns/grid": GridColumnEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
+  "field/bigint": FormFieldSelect,
   "field/options": FormFieldSelect,
   "field/boolean": FormFieldSelect,
   "field/longform": FormFieldSelect,

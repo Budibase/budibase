@@ -1,25 +1,35 @@
 <script>
   import { Button, Layout } from "@budibase/bbui"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
-  import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
   import Panel from "components/design/Panel.svelte"
+  import { isActive, goto, redirect } from "@roxi/routify"
+  import BetaButton from "./_components/BetaButton.svelte"
+  import { datasources } from "stores/backend"
 
-  let modal
+  $: {
+    // If we ever don't have any data other than the users table, prompt the
+    // user to add some
+    if (!$datasources.hasData) {
+      $redirect("./new")
+    }
+  }
 </script>
 
 <!-- routify:options index=1 -->
 <div class="data">
-  <Panel title="Sources" borderRight>
-    <Layout paddingX="L" paddingY="XL" gap="S">
-      <Button cta on:click={modal.show}>Add source</Button>
-      <CreateDatasourceModal bind:modal />
-      <DatasourceNavigator />
-    </Layout>
-  </Panel>
+  {#if !$isActive("./new")}
+    <Panel title="Sources" borderRight>
+      <Layout paddingX="L" paddingY="XL" gap="S">
+        <Button cta on:click={() => $goto("./new")}>Add source</Button>
+        <DatasourceNavigator />
+      </Layout>
+    </Panel>
+  {/if}
 
   <div class="content">
     <slot />
   </div>
+  <BetaButton />
 </div>
 
 <style>
@@ -40,5 +50,6 @@
     justify-content: flex-start;
     align-items: stretch;
     flex: 1 1 auto;
+    z-index: 1;
   }
 </style>

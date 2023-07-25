@@ -20,16 +20,10 @@ import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
-import {
-  ContextUser,
-  Database,
-  Datasource,
-  SourceName,
-  Table,
-} from "@budibase/types"
+import { ContextUser, Datasource, SourceName, Table } from "@budibase/types"
 
 export async function clearColumns(table: any, columnNames: any) {
-  const db: Database = context.getAppDB()
+  const db = context.getAppDB()
   const rows = await db.allDocs(
     getRowParams(table._id, null, {
       include_docs: true,
@@ -129,17 +123,17 @@ export function importToRows(
     // the real schema of the table passed in, not the clone used for
     // incrementing auto IDs
     for (const [fieldName, schema] of Object.entries(originalTable.schema)) {
+      const rowVal = Array.isArray(row[fieldName])
+        ? row[fieldName]
+        : [row[fieldName]]
       if (
         (schema.type === FieldTypes.OPTIONS ||
           schema.type === FieldTypes.ARRAY) &&
-        row[fieldName] &&
-        (!schema.constraints!.inclusion ||
-          schema.constraints!.inclusion.indexOf(row[fieldName]) === -1)
+        row[fieldName]
       ) {
-        schema.constraints!.inclusion = [
-          ...schema.constraints!.inclusion!,
-          row[fieldName],
-        ]
+        let merged = [...schema.constraints!.inclusion!, ...rowVal]
+        let superSet = new Set(merged)
+        schema.constraints!.inclusion = Array.from(superSet)
         schema.constraints!.inclusion.sort()
       }
     }
@@ -149,7 +143,12 @@ export function importToRows(
   return finalData
 }
 
-export async function handleDataImport(user: any, table: any, rows: any) {
+export async function handleDataImport(
+  user: any,
+  table: any,
+  rows: any,
+  identifierFields: Array<string> = []
+) {
   const schema: unknown = table.schema
 
   if (!rows || !isRows(rows) || !isSchema(schema)) {
@@ -160,6 +159,32 @@ export async function handleDataImport(user: any, table: any, rows: any) {
   const data = parse(rows, schema)
 
   let finalData: any = importToRows(data, table, user)
+
+  //Set IDs of finalData to match existing row if an update is expected
+  if (identifierFields.length > 0) {
+    const allDocs = await db.allDocs(
+      getRowParams(table._id, null, {
+        include_docs: true,
+      })
+    )
+    allDocs.rows
+      .map(existingRow => existingRow.doc)
+      .forEach((doc: any) => {
+        finalData.forEach((finalItem: any) => {
+          let match = true
+          for (const field of identifierFields) {
+            if (finalItem[field] !== doc[field]) {
+              match = false
+              break
+            }
+          }
+          if (match) {
+            finalItem._id = doc._id
+            finalItem._rev = doc._rev
+          }
+        })
+      })
+  }
 
   await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
     tableId: table._id,

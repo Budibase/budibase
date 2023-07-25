@@ -11,8 +11,16 @@ import * as Users from "./users"
 import * as Validation from "./validation"
 import * as Viewport from "./viewport"
 import * as Clipboard from "./clipboard"
+import * as Config from "./config"
+import * as Sort from "./sort"
+import * as Filter from "./filter"
+import * as Notifications from "./notifications"
 
 const DependencyOrderedStores = [
+  Config,
+  Notifications,
+  Sort,
+  Filter,
   Bounds,
   Scroll,
   Rows,

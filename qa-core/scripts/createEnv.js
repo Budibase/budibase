@@ -12,6 +12,8 @@ function init() {
       BB_ADMIN_USER_EMAIL: "admin",
       BB_ADMIN_USER_PASSWORD: "admin",
       LOG_LEVEL: "info",
+      JEST_TIMEOUT: "60000",
+      DISABLE_PINO_LOGGER: "1",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {

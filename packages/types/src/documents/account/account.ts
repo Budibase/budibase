@@ -39,6 +39,7 @@ export interface Account extends CreateAccount {
   // licensing
   tier: string // deprecated
   planType?: PlanType
+  /** @deprecated */
   planTier?: number
   license?: License
   installId?: string
@@ -47,8 +48,10 @@ export interface Account extends CreateAccount {
   stripeCustomerId?: string
   licenseKey?: string
   licenseKeyActivatedAt?: number
+  licenseRequestedAt?: number
   licenseOverrides?: LicenseOverrides
   quotaUsage?: QuotaUsage
+  offlineLicenseToken?: string
 }
 
 export interface PasswordAccount extends Account {

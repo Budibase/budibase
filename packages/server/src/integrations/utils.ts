@@ -1,6 +1,7 @@
 import { SourceName, SqlQuery, Datasource, Table } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
 import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
+import { helpers } from "@budibase/shared-core"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -47,7 +48,6 @@ const SQL_STRING_TYPE_MAP = {
   blob: FieldTypes.STRING,
   long: FieldTypes.STRING,
   text: FieldTypes.STRING,
-  bigint: FieldTypes.STRING,
 }
 
 const SQL_BOOLEAN_TYPE_MAP = {
@@ -58,6 +58,7 @@ const SQL_BOOLEAN_TYPE_MAP = {
 
 const SQL_MISC_TYPE_MAP = {
   json: FieldTypes.JSON,
+  bigint: FieldTypes.BIGINT,
 }
 
 const SQL_TYPE_MAP = {
@@ -178,18 +179,7 @@ export function getSqlQuery(query: SqlQuery | string): SqlQuery {
   }
 }
 
-export function isSQL(datasource: Datasource): boolean {
-  if (!datasource || !datasource.source) {
-    return false
-  }
-  const SQL = [
-    SourceName.POSTGRES,
-    SourceName.SQL_SERVER,
-    SourceName.MYSQL,
-    SourceName.ORACLE,
-  ]
-  return SQL.indexOf(datasource.source) !== -1
-}
+export const isSQL = helpers.isSQL
 
 export function isIsoDateString(str: string) {
   if (!/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(str)) {
@@ -327,4 +317,28 @@ export function finaliseExternalTables(
     .sort(([a], [b]) => a.localeCompare(b))
     .reduce((r, [k, v]) => ({ ...r, [k]: v }), {})
   return { tables: finalTables, errors }
+}
+
+/**
+ * Checks if the provided input is an object, but specifically not a date type object.
+ * Used during coercion of types and relationship handling, dates are considered valid
+ * and can be used as a display field, but objects and arrays cannot.
+ * @param testValue an unknown type which this function will attempt to extract
+ * a valid primary display string from.
+ */
+export function getPrimaryDisplay(testValue: unknown): string | undefined {
+  if (testValue instanceof Date) {
+    return testValue.toISOString()
+  }
+  if (
+    Array.isArray(testValue) &&
+    testValue[0] &&
+    typeof testValue[0] !== "object"
+  ) {
+    return testValue.join(", ")
+  }
+  if (typeof testValue === "object") {
+    return undefined
+  }
+  return testValue as string
 }

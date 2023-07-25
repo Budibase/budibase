@@ -122,13 +122,23 @@ const deleteRowHandler = async action => {
 }
 
 const triggerAutomationHandler = async action => {
-  const { fields, notificationOverride } = action.parameters
+  const { fields, notificationOverride, timeout } = action.parameters
   if (fields) {
     try {
-      await API.triggerAutomation({
+      const result = await API.triggerAutomation({
         automationId: action.parameters.automationId,
         fields,
+        timeout,
       })
+
+      // Value will exist if automation is synchronous, so return it.
+      if (result.value) {
+        if (!notificationOverride) {
+          notificationStore.actions.success("Automation ran successfully")
+        }
+        return { result }
+      }
+
       if (!notificationOverride) {
         notificationStore.actions.success("Automation triggered")
       }
@@ -138,10 +148,20 @@ const triggerAutomationHandler = async action => {
     }
   }
 }
-
 const navigationHandler = action => {
   const { url, peek, externalNewTab } = action.parameters
   routeStore.actions.navigate(url, peek, externalNewTab)
+}
+
+const scrollHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ScrollTo,
+    {
+      field: action.parameters.field,
+    }
+  )
 }
 
 const queryExecutionHandler = async action => {
@@ -360,6 +380,7 @@ const handlerMap = {
   ["Duplicate Row"]: duplicateRowHandler,
   ["Delete Row"]: deleteRowHandler,
   ["Navigate To"]: navigationHandler,
+  ["Scroll To Field"]: scrollHandler,
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
@@ -384,7 +405,7 @@ const confirmTextMap = {
   ["Save Row"]: "Are you sure you want to save this row?",
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
-  ["Prompt User"]: "Are you sure you want to contiune?",
+  ["Prompt User"]: "Are you sure you want to continue?",
 }
 
 /**
@@ -457,7 +478,7 @@ export const enrichButtonActions = (actions, context) => {
                     actions.slice(i + 1),
                     newContext
                   )
-                  resolve(await next())
+                  resolve(typeof next === "function" ? await next() : true)
                 } else {
                   resolve(false)
                 }

@@ -15,6 +15,16 @@ router
     authorized(permissions.BUILDER),
     datasourceController.fetch
   )
+  .post(
+    "/api/datasources/verify",
+    authorized(permissions.BUILDER),
+    datasourceController.verify
+  )
+  .post(
+    "/api/datasources/info",
+    authorized(permissions.BUILDER),
+    datasourceController.information
+  )
   .get(
     "/api/datasources/:datasourceId",
     authorized(
@@ -55,6 +65,11 @@ router
     "/api/datasources/:datasourceId/:revId",
     authorized(permissions.BUILDER),
     datasourceController.destroy
+  )
+  .get(
+    "/api/datasources/:datasourceId/schema/external",
+    authorized(permissions.BUILDER),
+    datasourceController.getExternalSchema
   )
 
 export default router

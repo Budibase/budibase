@@ -7,7 +7,7 @@ import {
   Operation,
   PaginationJson,
   RelationshipsJson,
-  RelationshipTypes,
+  RelationshipType,
   Row,
   SearchFilters,
   SortJson,
@@ -19,10 +19,11 @@ import {
   breakRowIdField,
   convertRowId,
   generateRowIdField,
+  getPrimaryDisplay,
   isRowId,
   isSQL,
 } from "../../../integrations/utils"
-import { getDatasourceAndQuery } from "./utils"
+import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
 import { FieldTypes } from "../../../constants"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
@@ -297,8 +298,7 @@ export class ExternalRequest {
       if (
         row[key] == null ||
         newRow[key] ||
-        field.autocolumn ||
-        field.type === FieldTypes.FORMULA
+        !sdk.tables.isEditableColumn(field)
       ) {
         continue
       }
@@ -391,7 +391,10 @@ export class ExternalRequest {
           }
         }
         relatedRow = processFormulas(linkedTable, relatedRow)
-        const relatedDisplay = display ? relatedRow[display] : undefined
+        let relatedDisplay
+        if (display) {
+          relatedDisplay = getPrimaryDisplay(relatedRow[display])
+        }
         row[relationship.column][key] = {
           primaryDisplay: relatedDisplay || "Invalid display column",
           _id: relatedRow._id,
@@ -574,7 +577,7 @@ export class ExternalRequest {
       ) {
         continue
       }
-      const isMany = field.relationshipType === RelationshipTypes.MANY_TO_MANY
+      const isMany = field.relationshipType === RelationshipType.MANY_TO_MANY
       const tableId = isMany ? field.through : field.tableId
       const { tableName: relatedTableName } = breakExternalTableId(tableId)
       // @ts-ignore

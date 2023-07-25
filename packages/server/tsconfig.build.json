@@ -10,7 +10,15 @@
     "incremental": true,
     "types": ["node", "jest"],
     "outDir": "dist/src",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@budibase/types": ["../types/src"],
+      "@budibase/backend-core": ["../backend-core/src"],
+      "@budibase/backend-core/*": ["../backend-core/*"],
+      "@budibase/shared-core": ["../shared-core/src"],
+      "@budibase/pro": ["../pro/src"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": [

@@ -1,10 +1,13 @@
 <script>
-  import { Heading, Body, Button, Icon, notifications } from "@budibase/bbui"
-  import AppLockModal from "../common/AppLockModal.svelte"
+  import { Heading, Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
   import { goto } from "@roxi/routify"
+  import { UserAvatars } from "@budibase/frontend-core"
 
   export let app
+  export let lockedAction
+
+  $: editing = app.sessions?.length
 
   const handleDefaultClick = () => {
     if (window.innerWidth < 640) {
@@ -15,21 +18,15 @@
   }
 
   const goToBuilder = () => {
-    if (app.lockedOther) {
-      notifications.error(
-        `App locked by ${app.lockedBy.email}. Please allow lock to expire or have them unlock this app.`
-      )
-      return
-    }
     $goto(`../../app/${app.devId}`)
   }
 
   const goToOverview = () => {
-    $goto(`../overview/${app.devId}`)
+    $goto(`../../app/${app.devId}/settings`)
   }
 </script>
 
-<div class="app-row" on:click={handleDefaultClick}>
+<div class="app-row" on:click={lockedAction || handleDefaultClick}>
   <div class="title">
     <div class="app-icon">
       <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
@@ -42,7 +39,10 @@
   </div>
 
   <div class="updated">
-    {#if app.updatedAt}
+    {#if editing}
+      Currently editing
+      <UserAvatars users={app.sessions} />
+    {:else if app.updatedAt}
       {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
         time: new Date().getTime() - new Date(app.updatedAt).getTime(),
       })}
@@ -57,9 +57,12 @@
   </div>
 
   <div class="app-row-actions">
-    <AppLockModal {app} buttonSize="M" />
-    <Button size="S" secondary on:click={goToOverview}>Manage</Button>
-    <Button size="S" primary on:click={goToBuilder}>Edit</Button>
+    <Button size="S" secondary on:click={lockedAction || goToOverview}>
+      Manage
+    </Button>
+    <Button size="S" primary on:click={lockedAction || goToBuilder}>
+      Edit
+    </Button>
   </div>
 </div>
 
@@ -82,6 +85,9 @@
 
   .updated {
     color: var(--spectrum-global-color-gray-700);
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .title,

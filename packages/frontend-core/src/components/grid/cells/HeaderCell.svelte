@@ -37,8 +37,12 @@
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
   $: canMoveRight = orderable && idx < $renderedColumns.length - 1
-  $: ascendingLabel = column.schema?.type === "number" ? "low-high" : "A-Z"
-  $: descendingLabel = column.schema?.type === "number" ? "high-low" : "Z-A"
+  $: ascendingLabel = ["number", "bigint"].includes(column.schema?.type)
+    ? "low-high"
+    : "A-Z"
+  $: descendingLabel = ["number", "bigint"].includes(column.schema?.type)
+    ? "high-low"
+    : "Z-A"
 
   const editColumn = () => {
     dispatch("edit-column", column.schema)
@@ -163,7 +167,7 @@
     <MenuItem
       icon="Edit"
       on:click={editColumn}
-      disabled={!$config.allowEditColumns || column.schema.disabled}
+      disabled={!$config.allowSchemaChanges || column.schema.disabled}
     >
       Edit column
     </MenuItem>
@@ -171,7 +175,7 @@
       icon="Label"
       on:click={makeDisplayColumn}
       disabled={idx === "sticky" ||
-        !$config.allowEditColumns ||
+        !$config.allowSchemaChanges ||
         bannedDisplayColumnTypes.includes(column.schema.type)}
     >
       Use as display column
@@ -196,7 +200,13 @@
     <MenuItem disabled={!canMoveRight} icon="ChevronRight" on:click={moveRight}>
       Move right
     </MenuItem>
-    <MenuItem icon="VisibilityOff" on:click={hideColumn}>Hide column</MenuItem>
+    <MenuItem
+      disabled={idx === "sticky" || !$config.showControls}
+      icon="VisibilityOff"
+      on:click={hideColumn}
+    >
+      Hide column
+    </MenuItem>
   </Menu>
 </Popover>
 
@@ -214,7 +224,7 @@
   .header-cell :global(.cell) {
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--grid-background-alt);
   }
 
   .name {

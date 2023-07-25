@@ -343,6 +343,9 @@ export class QueryBuilder<T> {
     }
 
     const oneOf = (key: string, value: any) => {
+      if (!value) {
+        return `*:*`
+      }
       if (!Array.isArray(value)) {
         if (typeof value === "string") {
           value = value.split(",")
@@ -430,11 +433,14 @@ export class QueryBuilder<T> {
         if (!value) {
           return null
         }
+        if (typeof value === "boolean") {
+          return `(*:* AND !${key}:${value})`
+        }
         return `!${key}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }
     if (this.#query.empty) {
-      build(this.#query.empty, (key: string) => `!${key}:["" TO *]`)
+      build(this.#query.empty, (key: string) => `(*:* -${key}:["" TO *])`)
     }
     if (this.#query.notEmpty) {
       build(this.#query.notEmpty, (key: string) => `${key}:["" TO *]`)

@@ -115,7 +115,7 @@
     </Body>
     {#if filters?.length}
       <div class="fields">
-        {#each filters as filter, idx}
+        {#each filters as filter}
           <Select
             bind:value={filter.field}
             options={fieldOptions}
@@ -133,7 +133,7 @@
             on:change={e => onOperatorChange(filter, e.detail)}
             placeholder={null}
           />
-          {#if ["string", "longform", "number", "formula"].includes(filter.type)}
+          {#if ["string", "longform", "number", "bigint", "formula"].includes(filter.type)}
             <Input disabled={filter.noValue} bind:value={filter.value} />
           {:else if ["options", "array"].includes(filter.type)}
             <Combobox

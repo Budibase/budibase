@@ -2209,12 +2209,13 @@
     "name": "Form",
     "icon": "Form",
     "hasChildren": true,
-    "illegalChildren": ["section", "form"],
+    "illegalChildren": ["section", "form", "formblock"],
     "actions": [
       "ValidateForm",
       "ClearForm",
       "ChangeFormStep",
-      "UpdateFieldValue"
+      "UpdateFieldValue",
+      "ScrollTo"
     ],
     "styles": ["size"],
     "size": {
@@ -2296,7 +2297,7 @@
     "name": "Form Step",
     "icon": "AssetsAdded",
     "hasChildren": true,
-    "illegalChildren": ["section", "form", "form step"],
+    "illegalChildren": ["section", "form", "formstep", "formblock"],
     "styles": ["size"],
     "size": {
       "width": 400,
@@ -2334,14 +2335,20 @@
             "value": "left"
           },
           {
-            "label": "Right",
-            "value": "right"
-          },
-          {
             "label": "Above",
             "value": "above"
           }
         ]
+      },
+      {
+        "type": "section",
+        "label": "Type",
+        "key": "type",
+        "defaultValue": "oneColumn",
+        "dependsOn": {
+          "setting": "labelPosition",
+          "value": "above"
+        }
       }
     ]
   },
@@ -2488,6 +2495,57 @@
         "type": "validation/number",
         "label": "Validation",
         "key": "validation"
+      }
+    ]
+  },
+  "bigintfield": {
+    "name": "BigInt Field",
+    "icon": "TagBold",
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 50
+    },
+    "settings": [
+      {
+        "type": "field/bigint",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -3155,6 +3213,46 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Play sound on scan",
+        "key": "beepOnScan",
+        "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Sound pitch",
+        "key": "beepFrequency",
+        "dependsOn": "beepOnScan",
+        "defaultValue": 2637,
+        "options": [
+          {
+            "label": "Low",
+            "value": 2096
+          },
+          {
+            "label": "Regular",
+            "value": 2637
+          },
+          {
+            "label": "High",
+            "value": 3136
+          },
+          { "label": "Custom", "value": "custom" }
+        ]
+      },
+      {
+        "type": "number",
+        "label": "Sound frequency (Hz)",
+        "key": "customFrequency",
+        "defaultValue": 1046,
+        "min": 20,
+        "max": 8000,
+        "dependsOn": {
+          "setting": "beepFrequency",
+          "value": "custom"
+        }
+      },
+      {
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
@@ -3380,6 +3478,16 @@
         ]
       },
       {
+        "type": "validation/link",
+        "label": "Validation",
+        "key": "validation"
+      },
+      {
+        "type": "filter/relationship",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
@@ -3390,11 +3498,6 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
-      },
-      {
-        "type": "validation/link",
-        "label": "Validation",
-        "key": "validation"
       }
     ]
   },
@@ -3535,7 +3638,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -4311,7 +4415,8 @@
           {
             "type": "field/sortable",
             "label": "Sort by",
-            "key": "sortColumn"
+            "key": "sortColumn",
+            "placeholder": "None"
           },
           {
             "type": "select",
@@ -4466,6 +4571,16 @@
               "setting": "clickBehaviour",
               "value": "details"
             }
+          },
+          {
+            "type": "boolean",
+            "label": "Hide notifications",
+            "key": "notificationOverride",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
           }
         ]
       },
@@ -4555,7 +4670,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -4723,7 +4839,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -5101,6 +5218,16 @@
               "value": "View",
               "invert": true
             }
+          },
+          {
+            "type": "boolean",
+            "label": "Hide notifications",
+            "key": "notificationOverride",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "showSaveButton",
+              "value": true
+            }
           }
         ]
       }
@@ -5229,6 +5356,92 @@
         "type": "number",
         "key": "rows",
         "label": "Rows"
+      }
+    ]
+  },
+  "gridblock": {
+    "name": "Grid block",
+    "icon": "Table",
+    "styles": ["size"],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "info": "Grid Blocks are only compatible with internal or SQL tables",
+    "settings": [
+      {
+        "type": "table",
+        "label": "Table",
+        "key": "table",
+        "required": true
+      },
+      {
+        "type": "columns/grid",
+        "label": "Columns",
+        "key": "columns",
+        "dependsOn": "table"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "initialFilter"
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort column",
+        "key": "initialSortColumn",
+        "placeholder": "Default"
+      },
+      {
+        "type": "select",
+        "label": "Sort order",
+        "key": "initialSortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Ascending"
+      },
+      {
+        "type": "select",
+        "label": "Row height",
+        "key": "fixedRowHeight",
+        "placeholder": "Default",
+        "options": [
+          {
+            "label": "Small",
+            "value": 36
+          },
+          {
+            "label": "Medium",
+            "value": 64
+          },
+          {
+            "label": "Large",
+            "value": 92
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Add rows",
+        "key": "allowAddRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Edit rows",
+        "key": "allowEditRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Delete rows",
+        "key": "allowDeleteRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "High contrast",
+        "key": "stripeRows",
+        "defaultValue": false
       }
     ]
   }

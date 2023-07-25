@@ -144,8 +144,6 @@ The following commands can be executed to manually get Budibase up and running (
 
 `yarn` to install project dependencies
 
-`yarn bootstrap` will install all budibase modules and symlink them together using lerna.
-
 `yarn build` will build all budibase packages.
 
 #### 4. Running
@@ -233,17 +231,32 @@ An overview of the CI pipelines can be found [here](../.github/workflows/README.
 
 ### Pro
 
-@budibase/pro is the closed source package that supports licensed features in budibase. By default the package will be pulled from NPM and will not normally need to be touched in local development. If you require to update code inside the pro package it can be cloned to the same root level as budibase, e.g.
+@budibase/pro is the closed source package that supports licensed features in budibase. By default the package will be pulled from NPM and will not normally need to be touched in local development. If you need to make an update to pro and have access to the repo, then you can update your submodule within the mono-repo by running `git submodule update --init` - from here you can use normal submodule flow to develop a change within pro.
+
+Once you have updated to use the pro submodule, it will be linked into all of your local dependencies by NX as with all other monorepo packages. If you have been using the NPM version of `@budibase/pro` then you may need to run a `git reset --hard` to fix all of the pro versions back to `0.0.0` to be monorepo aware.
+
+From here - to develop a change in pro, you can follow the below flow:
 
 ```
-.
-|_ budibase
-|_ budibase-pro
+# enter the pro submodule
+cd packages/pro
+# get the base branch you are working from (same as monorepo)
+git fetch
+git checkout <develop | master>
+# create a branch, named the same as the branch in your monorepo
+git checkout -b <some branch>
+... make changes
+# commit the changes you've made, with a message for pro
+git commit <something>
+# within the monorepo, add the pro reference to your branch, commit it with a message like "Update pro ref"
+cd ../..
+git add packages/pro
+git commit <add the new reference to main repo>
 ```
+
+From here, you will have created a branch in the pro repository and commited the reference to your branch on the monorepo. When you eventually PR this work back into the mainline branch, you will need to first merge your pro PR to the pro mainline, then go into your PR in the monorepo and update the reference again to the new mainline.
 
 Note that only budibase maintainers will be able to access the pro repo.
-
-The `yarn bootstrap` command can be used to replace the NPM supplied dependency with the local source aware version. This is achieved using the `yarn link` command. To see specifically how dependencies are linked see [scripts/link-dependencies.sh](../scripts/link-dependencies.sh). The same link script is used to link dependencies to account-portal in local dev.
 
 ### Troubleshooting
 

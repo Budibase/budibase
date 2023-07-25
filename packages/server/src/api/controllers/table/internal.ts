@@ -15,7 +15,7 @@ import { isEqual } from "lodash"
 import { cloneDeep } from "lodash/fp"
 import sdk from "../../../sdk"
 
-function checkAutoColumns(table: Table, oldTable: Table) {
+function checkAutoColumns(table: Table, oldTable?: Table) {
   if (!table.schema) {
     return table
   }
@@ -46,7 +46,7 @@ export async function save(ctx: any) {
   // if the table obj had an _id then it will have been retrieved
   let oldTable
   if (ctx.request.body && ctx.request.body._id) {
-    oldTable = await db.get(ctx.request.body._id)
+    oldTable = await sdk.tables.getTable(ctx.request.body._id)
   }
 
   // check all types are correct
@@ -70,8 +70,8 @@ export async function save(ctx: any) {
   if (oldTable && oldTable.schema) {
     for (let propKey of Object.keys(tableToSave.schema)) {
       let oldColumn = oldTable.schema[propKey]
-      if (oldColumn && oldColumn.type === "internal") {
-        oldColumn.type = "auto"
+      if (oldColumn && oldColumn.type === FieldTypes.INTERNAL) {
+        oldColumn.type = FieldTypes.AUTO
       }
     }
   }
@@ -138,7 +138,7 @@ export async function save(ctx: any) {
 
 export async function destroy(ctx: any) {
   const db = context.getAppDB()
-  const tableToDelete = await db.get(ctx.params.tableId)
+  const tableToDelete = await sdk.tables.getTable(ctx.params.tableId)
 
   // Delete all rows for that table
   const rowsData = await db.allDocs(
@@ -160,7 +160,7 @@ export async function destroy(ctx: any) {
   })
 
   // don't remove the table itself until very end
-  await db.remove(tableToDelete._id, tableToDelete._rev)
+  await db.remove(tableToDelete._id!, tableToDelete._rev)
 
   // remove table search index
   if (!env.isTest() || env.COUCH_DB_URL) {
@@ -185,7 +185,7 @@ export async function destroy(ctx: any) {
 
 export async function bulkImport(ctx: any) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
-  const { rows } = ctx.request.body
-  await handleDataImport(ctx.user, table, rows)
+  const { rows, identifierFields } = ctx.request.body
+  await handleDataImport(ctx.user, table, rows, identifierFields)
   return table
 }

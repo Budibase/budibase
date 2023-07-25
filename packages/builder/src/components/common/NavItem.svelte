@@ -1,6 +1,8 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
+  import { helpers } from "@budibase/shared-core"
+  import { UserAvatars } from "@budibase/frontend-core"
 
   export let icon
   export let withArrow = false
@@ -17,12 +19,16 @@
   export let highlighted = false
   export let rightAlignIcon = false
   export let id
+  export let showTooltip = false
+  export let selectedBy = null
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
 
   let contentRef
+
   $: selected && contentRef && scrollToView()
+  $: style = getStyle(indentLevel, selectedBy)
 
   const onClick = () => {
     scrollToView()
@@ -41,6 +47,14 @@
     const bounds = contentRef.getBoundingClientRect()
     scrollApi.scrollTo(bounds)
   }
+
+  const getStyle = (indentLevel, selectedBy) => {
+    let style = `padding-left:calc(${indentLevel * 14}px);`
+    if (selectedBy) {
+      style += `--selected-by-color:${helpers.getUserColor(selectedBy)};`
+    }
+    return style
+  }
 </script>
 
 <div
@@ -50,8 +64,7 @@
   class:withActions
   class:scrollable
   class:highlighted
-  style={`padding-left: calc(${indentLevel * 14}px)`}
-  {draggable}
+  class:selectedBy
   on:dragend
   on:dragstart
   on:dragover
@@ -60,6 +73,8 @@
   ondragover="return false"
   ondragenter="return false"
   {id}
+  {style}
+  {draggable}
 >
   <div class="nav-item-content" bind:this={contentRef}>
     {#if withArrow}
@@ -84,12 +99,19 @@
         <Icon color={iconColor} size="S" name={icon} />
       </div>
     {/if}
-    <div class="text">{text}</div>
+    <div class="text" title={showTooltip ? text : null}>
+      {text}
+      {#if selectedBy}
+        <UserAvatars size="XS" users={selectedBy} />
+      {/if}
+    </div>
+
     {#if withActions}
       <div class="actions">
         <slot />
       </div>
     {/if}
+
     {#if $$slots.right}
       <div class="right">
         <slot name="right" />
@@ -118,13 +140,16 @@
   }
   .nav-item.highlighted {
     background-color: var(--spectrum-global-color-gray-200);
+    --avatars-background: var(--spectrum-global-color-gray-200);
   }
   .nav-item.selected {
     background-color: var(--spectrum-global-color-gray-300);
+    --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
   }
   .nav-item:hover {
     background-color: var(--spectrum-global-color-gray-300);
+    --avatars-background: var(--spectrum-global-color-gray-300);
   }
   .nav-item:hover .actions {
     visibility: visible;
@@ -196,6 +221,9 @@
     color: var(--spectrum-global-color-gray-900);
     order: 2;
     width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .scrollable .text {
     flex: 0 0 auto;

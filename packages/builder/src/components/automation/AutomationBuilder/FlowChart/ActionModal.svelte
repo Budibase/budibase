@@ -6,23 +6,47 @@
     Body,
     Icon,
     notifications,
+    Tags,
+    Tag,
   } from "@budibase/bbui"
-  import { automationStore } from "builderStore"
-  import { admin } from "stores/portal"
+  import { automationStore, selectedAutomation } from "builderStore"
+  import { admin, licensing } from "stores/portal"
   import { externalActions } from "./ExternalActions"
+  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
+  import { checkForCollectStep } from "builderStore/utils"
 
   export let blockIdx
+  export let lastStep
 
-  const disabled = {
-    SEND_EMAIL_SMTP: {
-      disabled: !$admin.checklist.smtp.checked,
-      message: "Please configure SMTP",
-    },
-  }
-
+  let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
+  let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let selectedAction
   let actionVal
   let actions = Object.entries($automationStore.blockDefinitions.ACTION)
+
+  $: collectBlockExists = checkForCollectStep($selectedAutomation)
+
+  const disabled = () => {
+    return {
+      SEND_EMAIL_SMTP: {
+        disabled: !$admin.checklist.smtp.checked,
+        message: "Please configure SMTP",
+      },
+      COLLECT: {
+        disabled: !lastStep || !syncAutomationsEnabled || collectBlockExists,
+        message: collectDisabledMessage(),
+      },
+    }
+  }
+
+  const collectDisabledMessage = () => {
+    if (collectBlockExists) {
+      return "Only one Collect step allowed"
+    }
+    if (!lastStep) {
+      return "Only available as the last step"
+    }
+  }
 
   const external = actions.reduce((acc, elm) => {
     const [k, v] = elm
@@ -38,6 +62,15 @@
       acc[k] = v
     }
     delete acc.LOOP
+
+    // Filter out Collect block if not App Action or Webhook
+    if (
+      !collectBlockAllowedSteps.includes(
+        $selectedAutomation.definition.trigger.stepId
+      )
+    ) {
+      delete acc.COLLECT
+    }
     return acc
   }, {})
 
@@ -48,7 +81,6 @@
     }
     return acc
   }, {})
-  console.log(plugins)
 
   const selectAction = action => {
     actionVal = action
@@ -72,7 +104,7 @@
 <ModalContent
   title="Add automation step"
   confirmText="Save"
-  size="M"
+  size="L"
   disabled={!selectedAction}
   onConfirm={addBlockToAutomation}
 >
@@ -94,7 +126,7 @@
             />
             <span class="icon-spacing">
               <Body size="XS">
-                {idx.charAt(0).toUpperCase() + idx.slice(1)}
+                {action.stepTitle || idx.charAt(0).toUpperCase() + idx.slice(1)}
               </Body>
             </span>
           </div>
@@ -107,7 +139,7 @@
     <Detail size="S">Actions</Detail>
     <div class="item-list">
       {#each Object.entries(internal) as [idx, action]}
-        {@const isDisabled = disabled[idx] && disabled[idx].disabled}
+        {@const isDisabled = disabled()[idx] && disabled()[idx].disabled}
         <div
           class="item"
           class:disabled={isDisabled}
@@ -117,8 +149,14 @@
           <div class="item-body">
             <Icon name={action.icon} />
             <Body size="XS">{action.name}</Body>
-            {#if isDisabled}
-              <Icon name="Help" tooltip={disabled[idx].message} />
+            {#if isDisabled && !syncAutomationsEnabled && action.stepId === ActionStepID.COLLECT}
+              <div class="tag-color">
+                <Tags>
+                  <Tag icon="LockClosed">Business</Tag>
+                </Tags>
+              </div>
+            {:else if isDisabled}
+              <Icon name="Help" tooltip={disabled()[idx].message} />
             {/if}
           </div>
         </div>
@@ -130,7 +168,7 @@
     <Layout noPadding gap="XS">
       <Detail size="S">Plugins</Detail>
       <div class="item-list">
-        {#each Object.entries(plugins) as [idx, action]}
+        {#each Object.entries(plugins) as [_, action]}
           <div
             class="item"
             class:selected={selectedAction === action.name}
@@ -152,6 +190,7 @@
     display: flex;
     margin-left: var(--spacing-m);
     gap: var(--spacing-m);
+    align-items: center;
   }
   .item-list {
     display: grid;
@@ -180,5 +219,9 @@
   }
   .disabled :global(.spectrum-Body) {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .tag-color :global(.spectrum-Tags-item) {
+    background: var(--spectrum-global-color-gray-200);
   }
 </style>

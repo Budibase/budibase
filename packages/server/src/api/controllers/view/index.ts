@@ -15,7 +15,7 @@ import {
   TableSchema,
   View,
 } from "@budibase/types"
-import { cleanExportRows } from "../row/utils"
+import { builderSocket } from "../../../websockets"
 
 const { cloneDeep, isEqual } = require("lodash")
 
@@ -27,7 +27,8 @@ export async function save(ctx: Ctx) {
   const db = context.getAppDB()
   const { originalName, ...viewToSave } = ctx.request.body
 
-  const existingTable = await db.get(ctx.request.body.tableId)
+  const existingTable = await sdk.tables.getTable(ctx.request.body.tableId)
+  existingTable.views ??= {}
   const table = cloneDeep(existingTable)
 
   const groupByField: any = Object.values(table.schema).find(
@@ -48,7 +49,7 @@ export async function save(ctx: Ctx) {
   if (!view.meta.schema) {
     view.meta.schema = table.schema
   }
-  table.views[viewName] = view.meta
+  table.views[viewName] = { ...view.meta, name: viewName }
   if (originalName) {
     delete table.views[originalName]
     existingTable.views[viewName] = existingTable.views[originalName]
@@ -56,10 +57,8 @@ export async function save(ctx: Ctx) {
   await db.put(table)
   await handleViewEvents(existingTable.views[viewName], table.views[viewName])
 
-  ctx.body = {
-    ...table.views[viewToSave.name],
-    name: viewToSave.name,
-  }
+  ctx.body = table.views[viewName]
+  builderSocket?.emitTableUpdate(ctx, table)
 }
 
 export async function calculationEvents(existingView: View, newView: View) {
@@ -122,12 +121,13 @@ export async function destroy(ctx: Ctx) {
   const db = context.getAppDB()
   const viewName = decodeURIComponent(ctx.params.viewName)
   const view = await deleteView(viewName)
-  const table = await db.get(view.meta.tableId)
-  delete table.views[viewName]
+  const table = await sdk.tables.getTable(view.meta.tableId)
+  delete table.views![viewName]
   await db.put(table)
   await events.view.deleted(view)
 
   ctx.body = view
+  builderSocket?.emitTableUpdate(ctx, table)
 }
 
 export async function exportView(ctx: Ctx) {
@@ -163,13 +163,16 @@ export async function exportView(ctx: Ctx) {
   let rows = ctx.body as Row[]
 
   let schema: TableSchema = view && view.meta && view.meta.schema
-  const tableId = ctx.params.tableId || view.meta.tableId
+  const tableId =
+    ctx.params.tableId ||
+    view?.meta?.tableId ||
+    (viewName.startsWith(DocumentType.TABLE) && viewName)
   const table: Table = await sdk.tables.getTable(tableId)
   if (!schema) {
     schema = table.schema
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, [])
+  let exportRows = sdk.rows.utils.cleanExportRows(rows, schema, format, [])
 
   if (format === Format.CSV) {
     ctx.attachment(`${viewName}.csv`)

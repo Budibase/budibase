@@ -5,7 +5,7 @@
     "jest": true,
     "node": true
   },
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
   "parserOptions": {
     "ecmaVersion": 2019,
     "sourceType": "module",
@@ -18,20 +18,24 @@
     "*.spec.js",
     "bundle.js"
   ],
-  "plugins": ["svelte3"],
   "extends": ["eslint:recommended"],
   "overrides": [
     {
-      "files": ["*.svelte"],
-      "processor": "svelte3/svelte3"
+      "files": ["**/*.svelte"],
+      "extends": "plugin:svelte/recommended",
+      "parser": "svelte-eslint-parser",
+      "parserOptions": {
+        "parser": "@babel/eslint-parser",
+        "ecmaVersion": 2019,
+        "sourceType": "module",
+        "allowImportExportEverywhere": true
+      }
+
     },
     {
       "files": ["**/*.ts"],
       "parser": "@typescript-eslint/parser",
-      "plugins": [],
-      "extends": [
-        "eslint:recommended"
-      ],
+      "extends": ["eslint:recommended"],
       "rules": {
         "no-unused-vars": "off",
         "no-inner-declarations": "off",
@@ -43,7 +47,8 @@
     }
   ],
   "rules": {
-    "no-self-assign": "off"
+    "no-self-assign": "off",
+    "no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_" }]
   },
   "globals": {
     "GeolocationPositionError": true

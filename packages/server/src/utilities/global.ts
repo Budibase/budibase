@@ -9,7 +9,7 @@ import {
 import env from "../environment"
 import { groups } from "@budibase/pro"
 import { UserCtx, ContextUser, User, UserGroup } from "@budibase/types"
-import { global } from "yargs"
+import { cloneDeep } from "lodash"
 
 export function updateAppRole(
   user: ContextUser,
@@ -65,16 +65,20 @@ export async function processUser(
   user: ContextUser,
   opts: { appId?: string; groups?: UserGroup[] } = {}
 ) {
-  if (user) {
-    delete user.password
+  let clonedUser = cloneDeep(user)
+  if (clonedUser) {
+    delete clonedUser.password
   }
   const appId = opts.appId || context.getAppId()
-  user = updateAppRole(user, { appId })
-  if (!user.roleId && user?.userGroups?.length) {
-    user = await checkGroupRoles(user, { appId, groups: opts?.groups })
+  clonedUser = updateAppRole(clonedUser, { appId })
+  if (!clonedUser.roleId && clonedUser?.userGroups?.length) {
+    clonedUser = await checkGroupRoles(clonedUser, {
+      appId,
+      groups: opts?.groups,
+    })
   }
 
-  return user
+  return clonedUser
 }
 
 export async function getCachedSelf(ctx: UserCtx, appId: string) {
@@ -86,7 +90,7 @@ export async function getCachedSelf(ctx: UserCtx, appId: string) {
 
 export async function getRawGlobalUser(userId: string) {
   const db = tenancy.getGlobalDB()
-  return db.get(getGlobalIDFromUserMetadataID(userId))
+  return db.get<User>(getGlobalIDFromUserMetadataID(userId))
 }
 
 export async function getGlobalUser(userId: string) {
@@ -122,11 +126,8 @@ export async function getGlobalUsers(
       delete user.forceResetPassword
       return user
     })
-  if (!appId) {
-    return globalUsers
-  }
 
-  if (opts?.noProcessing) {
+  if (opts?.noProcessing || !appId) {
     return globalUsers
   } else {
     // pass in the groups, meaning we don't actually need to retrieve them for

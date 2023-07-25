@@ -10,7 +10,7 @@ import * as setup from "../api/routes/tests/utilities"
 import {
   Datasource,
   FieldType,
-  RelationshipTypes,
+  RelationshipType,
   Row,
   SourceName,
   Table,
@@ -19,15 +19,15 @@ import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 import { GenericContainer } from "testcontainers"
-import { generateRowIdField } from "../integrations/utils"
 
 const config = setup.getConfig()!
 
 jest.setTimeout(30000)
 
 jest.unmock("pg")
+jest.mock("../websockets")
 
-describe("row api - postgres", () => {
+describe("postgres integrations", () => {
   let makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
     primaryPostgresTable: Table,
@@ -53,8 +53,8 @@ describe("row api - postgres", () => {
     makeRequest = generateMakeRequest(apiKey, true)
   })
 
-  beforeEach(async () => {
-    postgresDatasource = await config.createDatasource({
+  function pgDatasourceConfig() {
+    return {
       datasource: {
         type: "datasource",
         source: SourceName.POSTGRES,
@@ -71,7 +71,11 @@ describe("row api - postgres", () => {
           ca: false,
         },
       },
-    })
+    }
+  }
+
+  beforeEach(async () => {
+    postgresDatasource = await config.createDatasource(pgDatasourceConfig())
 
     async function createAuxTable(prefix: string) {
       return await config.createTable({
@@ -97,17 +101,17 @@ describe("row api - postgres", () => {
     oneToManyRelationshipInfo = {
       table: await createAuxTable("o2m"),
       fieldName: "oneToManyRelation",
-      relationshipType: RelationshipTypes.ONE_TO_MANY,
+      relationshipType: RelationshipType.ONE_TO_MANY,
     }
     manyToOneRelationshipInfo = {
       table: await createAuxTable("m2o"),
       fieldName: "manyToOneRelation",
-      relationshipType: RelationshipTypes.MANY_TO_ONE,
+      relationshipType: RelationshipType.MANY_TO_ONE,
     }
     manyToManyRelationshipInfo = {
       table: await createAuxTable("m2m"),
       fieldName: "manyToManyRelation",
-      relationshipType: RelationshipTypes.MANY_TO_MANY,
+      relationshipType: RelationshipType.MANY_TO_MANY,
     }
 
     primaryPostgresTable = await config.createTable({
@@ -139,7 +143,7 @@ describe("row api - postgres", () => {
           },
           fieldName: oneToManyRelationshipInfo.fieldName,
           name: "oneToManyRelation",
-          relationshipType: RelationshipTypes.ONE_TO_MANY,
+          relationshipType: RelationshipType.ONE_TO_MANY,
           tableId: oneToManyRelationshipInfo.table._id,
           main: true,
         },
@@ -150,7 +154,7 @@ describe("row api - postgres", () => {
           },
           fieldName: manyToOneRelationshipInfo.fieldName,
           name: "manyToOneRelation",
-          relationshipType: RelationshipTypes.MANY_TO_ONE,
+          relationshipType: RelationshipType.MANY_TO_ONE,
           tableId: manyToOneRelationshipInfo.table._id,
           main: true,
         },
@@ -161,7 +165,7 @@ describe("row api - postgres", () => {
           },
           fieldName: manyToManyRelationshipInfo.fieldName,
           name: "manyToManyRelation",
-          relationshipType: RelationshipTypes.MANY_TO_MANY,
+          relationshipType: RelationshipType.MANY_TO_MANY,
           tableId: manyToManyRelationshipInfo.table._id,
           main: true,
         },
@@ -189,12 +193,12 @@ describe("row api - postgres", () => {
   type ForeignTableInfo = {
     table: Table
     fieldName: string
-    relationshipType: RelationshipTypes
+    relationshipType: RelationshipType
   }
 
   type ForeignRowsInfo = {
     row: Row
-    relationshipType: RelationshipTypes
+    relationshipType: RelationshipType
   }
 
   async function createPrimaryRow(opts: {
@@ -259,7 +263,7 @@ describe("row api - postgres", () => {
       rowData[manyToOneRelationshipInfo.fieldName].push(foreignRow._id)
       foreignRows.push({
         row: foreignRow,
-        relationshipType: RelationshipTypes.MANY_TO_ONE,
+        relationshipType: RelationshipType.MANY_TO_ONE,
       })
     }
 
@@ -277,7 +281,7 @@ describe("row api - postgres", () => {
       rowData[manyToManyRelationshipInfo.fieldName].push(foreignRow._id)
       foreignRows.push({
         row: foreignRow,
-        relationshipType: RelationshipTypes.MANY_TO_MANY,
+        relationshipType: RelationshipType.MANY_TO_MANY,
       })
     }
 
@@ -555,7 +559,7 @@ describe("row api - postgres", () => {
           expect(res.status).toBe(200)
 
           const one2ManyForeignRows = foreignRows.filter(
-            x => x.relationshipType === RelationshipTypes.ONE_TO_MANY
+            x => x.relationshipType === RelationshipType.ONE_TO_MANY
           )
           expect(one2ManyForeignRows).toHaveLength(1)
 
@@ -917,7 +921,7 @@ describe("row api - postgres", () => {
             (row: Row) => row.id === 2
           )
           expect(m2mRow1).toEqual({
-            ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][0].row,
+            ...foreignRowsByType[RelationshipType.MANY_TO_MANY][0].row,
             [m2mFieldName]: [
               {
                 _id: row._id,
@@ -926,7 +930,7 @@ describe("row api - postgres", () => {
             ],
           })
           expect(m2mRow2).toEqual({
-            ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][1].row,
+            ...foreignRowsByType[RelationshipType.MANY_TO_MANY][1].row,
             [m2mFieldName]: [
               {
                 _id: row._id,
@@ -936,24 +940,24 @@ describe("row api - postgres", () => {
           })
           expect(res.body[m2oFieldName]).toEqual([
             {
-              ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][0].row,
+              ...foreignRowsByType[RelationshipType.MANY_TO_ONE][0].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
             {
-              ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][1].row,
+              ...foreignRowsByType[RelationshipType.MANY_TO_ONE][1].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
             {
-              ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][2].row,
+              ...foreignRowsByType[RelationshipType.MANY_TO_ONE][2].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
           ])
           expect(res.body[o2mFieldName]).toEqual([
             {
-              ...foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row,
+              ...foreignRowsByType[RelationshipType.ONE_TO_MANY][0].row,
               _id: expect.any(String),
               _rev: expect.any(String),
             },
@@ -1023,6 +1027,44 @@ describe("row api - postgres", () => {
 
         expect(res.body).toHaveLength(rowsCount)
       })
+    })
+  })
+
+  describe("POST /api/datasources/verify", () => {
+    it("should be able to verify the connection", async () => {
+      const config = pgDatasourceConfig()
+      const response = await makeRequest(
+        "post",
+        "/api/datasources/verify",
+        config
+      )
+      expect(response.status).toBe(200)
+      expect(response.body.connected).toBe(true)
+    })
+
+    it("should state an invalid datasource cannot connect", async () => {
+      const config = pgDatasourceConfig()
+      config.datasource.config.password = "wrongpassword"
+      const response = await makeRequest(
+        "post",
+        "/api/datasources/verify",
+        config
+      )
+      expect(response.status).toBe(200)
+      expect(response.body.connected).toBe(false)
+      expect(response.body.error).toBeDefined()
+    })
+  })
+
+  describe("POST /api/datasources/info", () => {
+    it("should fetch information about postgres datasource", async () => {
+      const primaryName = primaryPostgresTable.name
+      const response = await makeRequest("post", "/api/datasources/info", {
+        datasource: postgresDatasource,
+      })
+      expect(response.status).toBe(200)
+      expect(response.body.tableNames).toBeDefined()
+      expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-1)
     })
   })
 })

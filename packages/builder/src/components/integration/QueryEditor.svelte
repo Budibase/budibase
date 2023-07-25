@@ -18,6 +18,7 @@
   export let tab = true
   export let mode
   export let editorHeight = 500
+  export let editorWidth = 640
   // export let parameters = []
 
   let width
@@ -169,7 +170,9 @@
 {#if label}
   <Label small>{label}</Label>
 {/if}
-<div style={`--code-mirror-height: ${editorHeight}px`}>
+<div
+  style={`--code-mirror-height: ${editorHeight}px; --code-mirror-width: ${editorWidth}px;`}
+>
   <textarea tabindex="0" bind:this={refs.editor} readonly {value} />
 </div>
 

@@ -1,5 +1,6 @@
 <script>
   import {
+    keepOpen,
     ColorPicker,
     Body,
     ModalContent,
@@ -9,15 +10,23 @@
 
   export let group
   export let saveGroup
+
+  let nameError
 </script>
 
 <ModalContent
-  onConfirm={() => saveGroup(group)}
+  onConfirm={() => {
+    if (!group.name?.trim()) {
+      nameError = "Group name cannot be empty"
+      return keepOpen
+    }
+    saveGroup(group)
+  }}
   size="M"
   title={group?._rev ? "Edit group" : "Create group"}
   confirmText="Save"
 >
-  <Input bind:value={group.name} label="Name" />
+  <Input bind:value={group.name} label="Name" error={nameError} />
   <div class="modal-format">
     <div class="modal-inner">
       <Body size="XS">Icon</Body>

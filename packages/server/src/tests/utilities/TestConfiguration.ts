@@ -21,6 +21,7 @@ import {
   basicScreen,
   basicLayout,
   basicWebhook,
+  basicAutomationResults,
 } from "./structures"
 import {
   constants,
@@ -48,6 +49,7 @@ import {
   Table,
   SearchFilters,
   UserRoles,
+  Automation,
 } from "@budibase/types"
 import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
 
@@ -133,7 +135,10 @@ class TestConfiguration {
     }
   }
 
-  async doInContext(appId: string | null, task: any) {
+  async doInContext<T>(
+    appId: string | null,
+    task: () => Promise<T>
+  ): Promise<T> {
     if (!appId) {
       appId = this.appId
     }
@@ -373,7 +378,7 @@ class TestConfiguration {
 
   // HEADERS
 
-  defaultHeaders(extras = {}) {
+  defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
     const authObj: AuthToken = {
       userId: this.defaultUserValues.globalUserId,
@@ -390,7 +395,9 @@ class TestConfiguration {
       ...extras,
     }
 
-    if (this.appId) {
+    if (prodApp) {
+      headers[constants.Header.APP_ID] = this.prodAppId
+    } else if (this.appId) {
       headers[constants.Header.APP_ID] = this.appId
     }
     return headers
@@ -716,6 +723,26 @@ class TestConfiguration {
       },
     })
     return { datasource, query: basedOnQuery }
+  }
+
+  // AUTOMATION LOG
+
+  async createAutomationLog(automation: Automation) {
+    return await context.doInAppContext(this.getProdAppId(), async () => {
+      return await pro.sdk.automations.logs.storeLog(
+        automation,
+        basicAutomationResults(automation._id!)
+      )
+    })
+  }
+
+  async getAutomationLogs() {
+    return context.doInAppContext(this.appId, async () => {
+      const now = new Date()
+      return await pro.sdk.automations.logs.logSearch({
+        startDate: new Date(now.getTime() - 100000).toISOString(),
+      })
+    })
   }
 
   // QUERY

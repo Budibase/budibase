@@ -13,15 +13,19 @@
   const dispatch = createEventDispatcher()
 
   export let tableId
+  export let tableType
+
   let rows = []
   let allValid = false
   let displayColumn = null
+  let identifierFields = []
 
   async function importData() {
     try {
       await API.importTableData({
         tableId,
         rows,
+        identifierFields,
       })
       notifications.success("Rows successfully imported")
     } catch (error) {
@@ -45,6 +49,13 @@
   </Body>
   <Layout gap="XS" noPadding>
     <Label grey extraSmall>CSV or JSON file to import</Label>
-    <TableDataImport {tableId} bind:rows bind:allValid bind:displayColumn />
+    <TableDataImport
+      {tableId}
+      {tableType}
+      bind:rows
+      bind:allValid
+      bind:displayColumn
+      bind:identifierFields
+    />
   </Layout>
 </ModalContent>

@@ -13,20 +13,20 @@
     rows,
     selectedRows,
     stickyColumn,
-    renderedColumns,
     renderedRows,
     focusedCellId,
     hoveredRowId,
-    config,
+    canAddRows,
     selectedCellMap,
     focusedRow,
     scrollLeft,
     dispatch,
     contentLines,
+    isDragging,
   } = getContext("grid")
 
   $: rowCount = $rows.length
-  $: selectedRowCount = Object.values($selectedRows).filter(x => !!x).length
+  $: selectedRowCount = Object.values($selectedRows).length
   $: width = GutterWidth + ($stickyColumn?.width || 0)
 
   const selectAll = () => {
@@ -50,7 +50,6 @@
 >
   <div class="header row">
     <GutterCell
-      disableExpand
       disableNumber
       on:select={selectAll}
       defaultHeight
@@ -71,8 +70,8 @@
         {@const cellId = `${row._id}-${$stickyColumn?.name}`}
         <div
           class="row"
-          on:mouseenter={() => ($hoveredRowId = row._id)}
-          on:mouseleave={() => ($hoveredRowId = null)}
+          on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
+          on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
         >
           <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
           {#if $stickyColumn}
@@ -82,7 +81,8 @@
               {rowFocused}
               selected={rowSelected}
               highlighted={rowHovered || rowFocused}
-              rowIdx={idx}
+              rowIdx={row.__idx}
+              topRow={idx === 0}
               focused={$focusedCellId === cellId}
               selectedUser={$selectedCellMap[cellId]}
               width={$stickyColumn.width}
@@ -92,14 +92,16 @@
           {/if}
         </div>
       {/each}
-      {#if $config.allowAddRows && ($renderedColumns.length || $stickyColumn)}
+      {#if $canAddRows}
         <div
           class="row new"
-          on:mouseenter={() => ($hoveredRowId = BlankRowID)}
-          on:mouseleave={() => ($hoveredRowId = null)}
+          on:mouseenter={$isDragging
+            ? null
+            : () => ($hoveredRowId = BlankRowID)}
+          on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
           on:click={() => dispatch("add-row-inline")}
         >
-          <GutterCell disableExpand rowHovered={$hoveredRowId === BlankRowID}>
+          <GutterCell rowHovered={$hoveredRowId === BlankRowID}>
             <Icon name="Add" color="var(--spectrum-global-color-gray-500)" />
           </GutterCell>
           {#if $stickyColumn}
@@ -158,7 +160,7 @@
     z-index: 1;
   }
   .header :global(.cell) {
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--grid-background-alt);
   }
   .row {
     display: flex;

@@ -1,98 +1,212 @@
 name: Budibase CI
 
-on: 
- # Trigger the workflow on push or pull request,
- # but only for the master branch
- push:
-    branches:
-      - master
-      - develop 
- pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the master branch
+  push:
     branches:
       - master
       - develop
- workflow_dispatch:
+  pull_request:
+  workflow_dispatch:
 
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js 14.x
-      uses: actions/setup-node@v1
-      with:
-        node-version: 14.x
-    - run: yarn
-    - run: yarn lint
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.x
+          cache: "yarn"
+      - run: yarn
+      - run: yarn lint
 
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
+          cache: "yarn"
       - run: yarn
-      - run: yarn bootstrap
+      # Run build all the projects
       - run: yarn build
+      # Check the types of the projects built via esbuild
+      - run: yarn check:types
 
-  test:
+  test-libraries:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
+          cache: "yarn"
       - run: yarn
-      - run: yarn bootstrap
-      - run: yarn build
-      - run: yarn test
+      - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           name: codecov-umbrella
           verbose: true
 
-  test-pro:
+  test-services:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
+          cache: "yarn"
       - run: yarn
-      - run: yarn bootstrap
-      - run: yarn test:pro
+      - run: yarn test --scope=@budibase/worker --scope=@budibase/server
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
+          name: codecov-umbrella
+          verbose: true
+
+  test-pro:
+    runs-on: ubuntu-latest
+    if: github.repository == github.event.pull_request.head.repo.full_name
+    steps:
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.x
+          cache: "yarn"
+      - run: yarn
+      - run: yarn test --scope=@budibase/pro
 
   integration-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
-      - name: Install Pro
-        run: yarn install:pro $BRANCH $BASE_BRANCH
-      - run: yarn && yarn bootstrap && yarn build
-      - run: |
+          cache: "yarn"
+      - run: yarn
+      - run: yarn build
+      - name: Run tests
+        run: |
           cd qa-core
           yarn setup
-          yarn test:ci
+          yarn serve:test:self:ci
         env:
           BB_ADMIN_USER_EMAIL: admin
           BB_ADMIN_USER_PASSWORD: admin
+
+  check-pro-submodule:
+    runs-on: ubuntu-latest
+    if: github.repository == github.event.pull_request.head.repo.full_name
+    steps:
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          fetch-depth: 0
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+
+      - name: Check pro commit
+        id: get_pro_commits
+        run: |
+          cd packages/pro
+          pro_commit=$(git rev-parse HEAD)
+
+          branch="${{ github.base_ref || github.ref_name  }}"
+          echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
+
+          if [[ $branch == "master" ]]; then
+            base_commit=$(git rev-parse origin/master)
+          else
+            base_commit=$(git rev-parse origin/develop)
+          fi
+
+          echo "pro_commit=$pro_commit"
+          echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
+          echo "base_commit=$base_commit"
+          echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
+
+      - name: Check submodule merged to develop
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const submoduleCommit = '${{ steps.get_pro_commits.outputs.pro_commit }}';
+            const baseCommit = '${{ steps.get_pro_commits.outputs.base_commit }}';
+
+            if (submoduleCommit !== baseCommit) {
+              console.error('Submodule commit does not match the latest commit on the develop branch.');
+              console.error('Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md')
+              process.exit(1);
+            } else {
+              console.log('All good, the submodule had been merged and setup correctly!')
+            }

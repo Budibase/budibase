@@ -5,21 +5,19 @@
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { goto, isActive } from "@roxi/routify"
+  import { userSelectedResourceMap } from "builderStore"
 
-  const alphabetical = (a, b) => a.name?.toLowerCase() > b.name?.toLowerCase()
+  const alphabetical = (a, b) =>
+    a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
 
   export let sourceId
+  export let selectTable
 
   $: sortedTables = $tables.list
-    .filter(table => table.sourceId === sourceId)
+    .filter(
+      table => table.sourceId === sourceId && table._id !== TableNames.USERS
+    )
     .sort(alphabetical)
-
-  const selectTable = tableId => {
-    tables.select(tableId)
-    if (!$isActive("./table/:tableId")) {
-      $goto(`./table/${tableId}`)
-    }
-  }
 </script>
 
 {#if $database?._id}
@@ -33,6 +31,7 @@
         selected={$isActive("./table/:tableId") &&
           $tables.selected?._id === table._id}
         on:click={() => selectTable(table._id)}
+        selectedBy={$userSelectedResourceMap[table._id]}
       >
         {#if table._id !== TableNames.USERS}
           <EditTablePopover {table} />
@@ -45,6 +44,7 @@
           text={viewName}
           selected={$isActive("./view") && $views.selected?.name === viewName}
           on:click={() => $goto(`./view/${encodeURIComponent(viewName)}`)}
+          selectedBy={$userSelectedResourceMap[viewName]}
         >
           <EditViewPopover
             view={{ name: viewName, ...table.views[viewName] }}

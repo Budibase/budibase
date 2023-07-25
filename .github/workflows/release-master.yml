@@ -1,58 +1,46 @@
 name: Budibase Release
-concurrency: release
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 on:
- push:
-    branches:
-      - master
-    paths:
-      - '.aws/**'
-      - '.github/**'
-      - 'charts/**'
-      - 'packages/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'yarn.lock'
-      - 'package.json'
-      - 'yarn.lock'
- workflow_dispatch:
-  inputs:
-    versioning:
-      type: choice
-      description: "Versioning type: patch, minor, major"
-      default: patch
-      options:
-        - patch
-        - minor
-        - major
-      required: true
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+      # Exclude all pre-releases
+      - "!*[0-9]+.[0-9]+.[0-9]+-*"
 
 env:
-  # Posthog token used by ui at build time 
+  # Posthog token used by ui at build time
   POSTHOG_TOKEN: phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
   release-images:
     runs-on: ubuntu-latest
     steps:
-      - name: Fail if branch is not master
-        if: github.ref != 'refs/heads/master' 
-        run: | 
-          echo "Ref is not master, you must run this job from master."
-          exit 1
       - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          fetch-depth: 0
+
+      - name: Fail if tag is not in master
+        run: |
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
+            exit 1
+          fi
+
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
 
-      - name: Install Pro
-        run: yarn install:pro master
-
-      - run: yarn
-      - run: yarn bootstrap
+      - run: yarn install --frozen-lockfile
+      - name: Update versions
+        run: ./scripts/updateVersions.sh
       - run: yarn lint
       - run: yarn build
       - run: yarn build:sdk
@@ -60,26 +48,30 @@ jobs:
       - name: Publish budibase packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          RELEASE_VERSION_TYPE: ${{ github.event.inputs.versioning }}
         run: |
           # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
           git config --global user.name "Budibase Release Bot"
           git config --global user.email "<>"
+          git submodule foreach git commit -a -m 'Release process'
+          git commit -a -m 'Release process'
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
           yarn release
 
-      - name: 'Get Previous tag'
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      - name: "Get Current tag"
+        id: currenttag
+        run: |
+          version=v$(./scripts/getCurrentVersion.sh)
+          echo 'Using tag $version'
+          echo "::set-output name=tag::$resversionult"
 
       - name: Build/release Docker images
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build:docker
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+          BUDIBASE_RELEASE_VERSION: ${{ steps.currenttag.outputs.tag }}
 
   release-helm-chart:
     needs: [release-images]
@@ -103,10 +95,10 @@ jobs:
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
           git reset --hard
-          git pull
+          git fetch
           mkdir sync
           echo "Packaging chart to sync dir"
-          helm package charts/budibase --version 0.0.0-master --app-version v"$RELEASE_VERSION" --destination sync
+          helm package charts/budibase --version 0.0.0-master --app-version "$RELEASE_VERSION" --destination sync
           echo "Packaging successful"
           git checkout gh-pages
           echo "Indexing helm repo"         
@@ -133,7 +125,6 @@ jobs:
       - name: Get the latest budibase release version
         id: version
         run: |
-          git pull
           release_version=$(cat lerna.json | jq -r '.version')
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 

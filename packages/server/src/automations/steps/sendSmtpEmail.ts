@@ -6,6 +6,7 @@ import {
   AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -15,6 +16,9 @@ export const definition: AutomationStepSchema = {
   name: "Send Email (SMTP)",
   type: AutomationStepType.ACTION,
   internal: true,
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   stepId: AutomationActionStepId.SEND_EMAIL_SMTP,
   inputs: {},
   schema: {
@@ -44,6 +48,35 @@ export const definition: AutomationStepSchema = {
           type: AutomationIOType.STRING,
           title: "HTML Contents",
         },
+        addInvite: {
+          type: AutomationIOType.BOOLEAN,
+          title: "Add calendar invite",
+        },
+        startTime: {
+          type: AutomationIOType.DATE,
+          title: "Start Time",
+          dependsOn: "addInvite",
+        },
+        endTime: {
+          type: AutomationIOType.DATE,
+          title: "End Time",
+          dependsOn: "addInvite",
+        },
+        summary: {
+          type: AutomationIOType.STRING,
+          title: "Meeting Summary",
+          dependsOn: "addInvite",
+        },
+        location: {
+          type: AutomationIOType.STRING,
+          title: "Location",
+          dependsOn: "addInvite",
+        },
+        url: {
+          type: AutomationIOType.STRING,
+          title: "URL",
+          dependsOn: "addInvite",
+        },
       },
       required: ["to", "from", "subject", "contents"],
     },
@@ -64,21 +97,43 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  let { to, from, subject, contents, cc, bcc } = inputs
+  let {
+    to,
+    from,
+    subject,
+    contents,
+    cc,
+    bcc,
+    addInvite,
+    startTime,
+    endTime,
+    summary,
+    location,
+    url,
+  } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"
   }
   to = to || undefined
   try {
-    let response = await sendSmtpEmail(
+    let response = await sendSmtpEmail({
       to,
       from,
       subject,
       contents,
       cc,
       bcc,
-      true
-    )
+      automation: true,
+      invite: addInvite
+        ? {
+            startTime,
+            endTime,
+            summary,
+            location,
+            url,
+          }
+        : undefined,
+    })
     return {
       success: true,
       response,

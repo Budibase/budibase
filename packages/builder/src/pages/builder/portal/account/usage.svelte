@@ -43,11 +43,17 @@
   }
 
   $: quotaUsage = $licensing.quotaUsage
+
   $: license = $auth.user?.license
+  $: plan = license?.plan
+  $: usesInvoicing = plan?.usesInvoicing
+
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: quotaReset = quotaUsage?.quotaReset
   $: canManagePlan =
     ($admin.cloud && accountPortalAccess) || (!$admin.cloud && $auth.isAdmin)
+
+  $: showButton = !usesInvoicing && accountPortalAccess
 
   const setMonthlyUsage = () => {
     monthlyUsage = []
@@ -121,7 +127,7 @@
   const setTextRows = () => {
     textRows = []
 
-    if (cancelAt) {
+    if (cancelAt && !usesInvoicing) {
       textRows.push({ message: "Subscription has been cancelled" })
       textRows.push({
         message: `${getDaysRemaining(cancelAt)} days remaining`,
@@ -213,7 +219,7 @@
       description="YOUR CURRENT PLAN"
       title={planTitle()}
       {primaryActionText}
-      primaryAction={accountPortalAccess ? goToAccountPortal : undefined}
+      primaryAction={showButton ? goToAccountPortal : undefined}
       {textRows}
     >
       <div class="content">
@@ -224,33 +230,23 @@
                 <Usage {usage} warnWhenFull={WARN_USAGE.includes(usage.name)} />
               </div>
             {/each}
+            <Layout gap="XS" noPadding>
+              <Heading size="S">Monthly limits</Heading>
+              <div class="detail">
+                <TooltipWrapper tooltip={new Date(quotaReset)}>
+                  <Detail size="M">
+                    Resets in {daysRemainingInMonth} days
+                  </Detail>
+                </TooltipWrapper>
+              </div>
+            </Layout>
+            <Layout noPadding gap="M">
+              {#each monthlyUsage as usage}
+                <Usage {usage} warnWhenFull={WARN_USAGE.includes(usage.name)} />
+              {/each}
+            </Layout>
           </Layout>
         </div>
-
-        {#if monthlyUsage.length}
-          <div class="column">
-            <Layout noPadding gap="M">
-              <Layout gap="XS" noPadding>
-                <Heading size="S">Monthly limits</Heading>
-                <div class="detail">
-                  <TooltipWrapper tooltip={new Date(quotaReset)}>
-                    <Detail size="M">
-                      Resets in {daysRemainingInMonth} days
-                    </Detail>
-                  </TooltipWrapper>
-                </div>
-              </Layout>
-              <Layout noPadding gap="M">
-                {#each monthlyUsage as usage}
-                  <Usage
-                    {usage}
-                    warnWhenFull={WARN_USAGE.includes(usage.name)}
-                  />
-                {/each}
-              </Layout>
-            </Layout>
-          </div>
-        {/if}
       </div>
     </DashCard>
   </Layout>

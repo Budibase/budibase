@@ -1,6 +1,7 @@
 <script>
-  import { clickOutside, Menu, MenuItem, notifications } from "@budibase/bbui"
+  import { clickOutside, Menu, MenuItem, Helpers } from "@budibase/bbui"
   import { getContext } from "svelte"
+  import { NewRowID } from "../lib/constants"
 
   const {
     focusedRow,
@@ -14,9 +15,13 @@
     clipboard,
     dispatch,
     focusedCellAPI,
+    focusedRowId,
+    notifications,
+    canAddRows,
   } = getContext("grid")
 
   $: style = makeStyle($menu)
+  $: isNewRow = $focusedRowId === NewRowID
 
   const makeStyle = menu => {
     return `left:${menu.left}px; top:${menu.top}px;`
@@ -25,7 +30,7 @@
   const deleteRow = () => {
     rows.actions.deleteRows([$focusedRow])
     menu.actions.close()
-    notifications.success("Deleted 1 row")
+    $notifications.success("Deleted 1 row")
   }
 
   const duplicate = async () => {
@@ -35,6 +40,11 @@
       const column = $stickyColumn?.name || $columns[0].name
       $focusedCellId = `${newRow._id}-${column}`
     }
+  }
+
+  const copyToClipboard = async value => {
+    await Helpers.copyToClipboard(value)
+    $notifications.success("Copied to clipboard")
   }
 </script>
 
@@ -58,22 +68,40 @@
       </MenuItem>
       <MenuItem
         icon="Maximize"
-        disabled={!$config.allowEditRows}
+        disabled={isNewRow ||
+          !$config.allowEditRows ||
+          !$config.allowExpandRows}
         on:click={() => dispatch("edit-row", $focusedRow)}
         on:click={menu.actions.close}
       >
         Edit row in modal
       </MenuItem>
       <MenuItem
+        icon="Copy"
+        disabled={isNewRow || !$focusedRow?._id}
+        on:click={() => copyToClipboard($focusedRow?._id)}
+        on:click={menu.actions.close}
+      >
+        Copy row _id
+      </MenuItem>
+      <MenuItem
+        icon="Copy"
+        disabled={isNewRow || !$focusedRow?._rev}
+        on:click={() => copyToClipboard($focusedRow?._rev)}
+        on:click={menu.actions.close}
+      >
+        Copy row _rev
+      </MenuItem>
+      <MenuItem
         icon="Duplicate"
-        disabled={!$config.allowAddRows}
+        disabled={isNewRow || !$canAddRows}
         on:click={duplicate}
       >
         Duplicate row
       </MenuItem>
       <MenuItem
         icon="Delete"
-        disabled={!$config.allowDeleteRows}
+        disabled={isNewRow || !$config.allowDeleteRows}
         on:click={deleteRow}
       >
         Delete row

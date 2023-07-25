@@ -1,6 +1,6 @@
 {
   "name": "@budibase/string-templates",
-  "version": "2.5.6-alpha.37",
+  "version": "0.0.0",
   "description": "Handlebars wrapper for Budibase templating.",
   "main": "src/index.cjs",
   "module": "dist/bundle.mjs",
@@ -25,7 +25,7 @@
     "manifest": "node ./scripts/gen-collection-info.js"
   },
   "dependencies": {
-    "@budibase/handlebars-helpers": "^0.11.8",
+    "@budibase/handlebars-helpers": "^0.11.9",
     "dayjs": "^1.10.4",
     "handlebars": "^4.7.6",
     "handlebars-utils": "^1.0.6",

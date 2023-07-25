@@ -147,6 +147,9 @@ const automationActions = store => ({
       testData,
     })
     if (!result?.trigger && !result?.steps?.length) {
+      if (result?.err?.code === "usage_limit_exceeded") {
+        throw "You have exceeded your automation quota"
+      }
       throw "Something went wrong testing your automation"
     }
     store.update(state => {
@@ -244,5 +247,37 @@ const automationActions = store => ({
       )
     }
     await store.actions.save(newAutomation)
+  },
+  replace: async (automationId, automation) => {
+    if (!automation) {
+      store.update(state => {
+        // Remove the automation
+        state.automations = state.automations.filter(
+          x => x._id !== automationId
+        )
+        // Select a new automation if required
+        if (automationId === state.selectedAutomationId) {
+          store.actions.select(state.automations[0]?._id)
+        }
+        return state
+      })
+    } else {
+      const index = get(store).automations.findIndex(
+        x => x._id === automation._id
+      )
+      if (index === -1) {
+        // Automation addition
+        store.update(state => ({
+          ...state,
+          automations: [...state.automations, automation],
+        }))
+      } else {
+        // Automation update
+        store.update(state => {
+          state.automations[index] = automation
+          return state
+        })
+      }
+    }
   },
 })

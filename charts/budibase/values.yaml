@@ -209,7 +209,7 @@ services:
 # Override values in couchDB subchart
 couchdb:
   ## clusterSize is the initial size of the CouchDB cluster.
-  clusterSize: 3
+  clusterSize: 1
   allowAdminParty: false
 
   # Secret Management

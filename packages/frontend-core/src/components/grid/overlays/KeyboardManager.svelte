@@ -13,6 +13,10 @@
     clipboard,
     dispatch,
     selectedRows,
+    config,
+    menu,
+    gridFocused,
+    canAddRows,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -22,6 +26,11 @@
 
   // Global key listener which intercepts all key events
   const handleKeyDown = e => {
+    // Ignore completely if the grid is not focused
+    if (!$gridFocused) {
+      return
+    }
+
     // Avoid processing events sourced from certain origins
     if (e.target?.closest) {
       for (let selector of ignoredOriginSelectors) {
@@ -37,10 +46,12 @@
         e.preventDefault()
         focusFirstCell()
       } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault()
-        dispatch("add-row-inline")
+        if ($canAddRows) {
+          e.preventDefault()
+          dispatch("add-row-inline")
+        }
       } else if (e.key === "Delete" || e.key === "Backspace") {
-        if (Object.keys($selectedRows).length) {
+        if (Object.keys($selectedRows).length && $config.allowDeleteRows) {
           dispatch("request-bulk-delete")
         }
       }
@@ -58,6 +69,7 @@
       } else {
         $focusedCellId = null
       }
+      menu.actions.close()
       return
     } else if (e.key === "Tab") {
       e.preventDefault()
@@ -88,7 +100,9 @@
           }
           break
         case "Enter":
-          dispatch("add-row-inline")
+          if ($canAddRows) {
+            dispatch("add-row-inline")
+          }
       }
     } else {
       switch (e.key) {
@@ -106,7 +120,7 @@
           break
         case "Delete":
         case "Backspace":
-          if (Object.keys($selectedRows).length) {
+          if (Object.keys($selectedRows).length && $config.allowDeleteRows) {
             dispatch("request-bulk-delete")
           } else {
             deleteSelectedCell()
@@ -117,7 +131,9 @@
           break
         case " ":
         case "Space":
-          toggleSelectRow()
+          if ($config.allowDeleteRows) {
+            toggleSelectRow()
+          }
           break
         default:
           startEnteringValue(e.key, e.which)
@@ -217,10 +233,7 @@
     if (!id || id === NewRowID) {
       return
     }
-    selectedRows.update(state => {
-      state[id] = !state[id]
-      return state
-    })
+    selectedRows.actions.toggleRow(id)
   }
 
   onMount(() => {

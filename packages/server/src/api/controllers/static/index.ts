@@ -1,7 +1,7 @@
 require("svelte/register")
 
-import { resolve, join } from "../../../utilities/centralPath"
-const uuid = require("uuid")
+import { join } from "../../../utilities/centralPath"
+import uuid from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
@@ -16,6 +16,7 @@ import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
+import { App } from "@budibase/types"
 
 const send = require("koa-send")
 
@@ -49,7 +50,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
     return
   }
 
-  let builderPath = resolve(TOP_LEVEL_PATH, "new_design_ui")
+  let builderPath = join(TOP_LEVEL_PATH, "new_design_ui")
 
   // // download it from S3
   if (!fs.existsSync(builderPath)) {
@@ -67,7 +68,7 @@ export const toggleBetaUiFeature = async function (ctx: any) {
 }
 
 export const serveBuilder = async function (ctx: any) {
-  const builderPath = resolve(TOP_LEVEL_PATH, "builder")
+  const builderPath = join(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
 }
 
@@ -100,6 +101,9 @@ export const deleteObjects = async function (ctx: any) {
 }
 
 export const serveApp = async function (ctx: any) {
+  const bbHeaderEmbed =
+    ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
+
   //Public Settings
   const { config } = await configs.getSettingsConfigDoc()
   const branding = await pro.branding.getBrandingConfig(config)
@@ -107,7 +111,7 @@ export const serveApp = async function (ctx: any) {
   let db
   try {
     db = context.getAppDB({ skip_setup: true })
-    const appInfo = await db.get(DocumentType.APP_METADATA)
+    const appInfo = await db.get<any>(DocumentType.APP_METADATA)
     let appId = context.getAppId()
 
     if (!env.isJest()) {
@@ -134,12 +138,13 @@ export const serveApp = async function (ctx: any) {
             ? objectStore.getGlobalFileUrl("settings", "logoUrl")
             : "",
       })
-      const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+      const appHbs = loadHandlebarsFile(`${__dirname}/app.hbs`)
       ctx.body = await processString(appHbs, {
         head,
         body: html,
         style: css.code,
         appId,
+        embedded: bbHeaderEmbed,
       })
     } else {
       // just return the app info for jest to assert on
@@ -161,7 +166,7 @@ export const serveApp = async function (ctx: any) {
             : "",
       })
 
-      const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+      const appHbs = loadHandlebarsFile(`${__dirname}/app.hbs`)
       ctx.body = await processString(appHbs, {
         head,
         body: html,
@@ -173,11 +178,11 @@ export const serveApp = async function (ctx: any) {
 
 export const serveBuilderPreview = async function (ctx: any) {
   const db = context.getAppDB({ skip_setup: true })
-  const appInfo = await db.get(DocumentType.APP_METADATA)
+  const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 
   if (!env.isJest()) {
     let appId = context.getAppId()
-    const previewHbs = loadHandlebarsFile(`${__dirname}/templates/preview.hbs`)
+    const previewHbs = loadHandlebarsFile(`${__dirname}/preview.hbs`)
     ctx.body = await processString(previewHbs, {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
     })

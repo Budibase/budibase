@@ -86,6 +86,7 @@ const getCurrentIdentity = async (): Promise<Identity> => {
       installationId,
       tenantId,
       environment,
+      realTenantId: context.getTenantId(),
       hostInfo: userContext.hostInfo,
     }
   } else {
@@ -263,7 +264,7 @@ const getEventTenantId = async (tenantId: string): Promise<string> => {
   }
 }
 
-const getUniqueTenantId = async (tenantId: string): Promise<string> => {
+export const getUniqueTenantId = async (tenantId: string): Promise<string> => {
   // make sure this tenantId always matches the tenantId in context
   return context.doInTenant(tenantId, () => {
     return withCache(CacheKey.UNIQUE_TENANT_ID, TTL.ONE_DAY, async () => {

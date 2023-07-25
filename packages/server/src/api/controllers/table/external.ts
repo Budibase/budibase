@@ -1,31 +1,34 @@
 import {
-  buildExternalTableId,
   breakExternalTableId,
+  buildExternalTableId,
 } from "../../../integrations/utils"
 import {
+  foreignKeyStructure,
   generateForeignKey,
   generateJunctionTableName,
-  foreignKeyStructure,
   hasTypeChanged,
   setStaticSchemas,
 } from "./utils"
 import { FieldTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { handleRequest } from "../row/external"
-import { events, context } from "@budibase/backend-core"
-import { parse, isRows, isSchema } from "../../../utilities/schema"
+import { context, events } from "@budibase/backend-core"
+import { isRows, isSchema, parse } from "../../../utilities/schema"
 import {
+  AutoReason,
   Datasource,
-  Table,
-  QueryJson,
-  Operation,
-  RenameColumn,
   FieldSchema,
-  UserCtx,
+  Operation,
+  QueryJson,
+  RelationshipType,
+  RenameColumn,
+  Table,
   TableRequest,
-  RelationshipTypes,
+  UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { builderSocket } from "../../../websockets"
+
 const { cloneDeep } = require("lodash/fp")
 
 async function makeTableRequest(
@@ -100,12 +103,12 @@ function getDatasourceId(table: Table) {
 }
 
 function otherRelationshipType(type?: string) {
-  if (type === RelationshipTypes.MANY_TO_MANY) {
-    return RelationshipTypes.MANY_TO_MANY
+  if (type === RelationshipType.MANY_TO_MANY) {
+    return RelationshipType.MANY_TO_MANY
   }
-  return type === RelationshipTypes.ONE_TO_MANY
-    ? RelationshipTypes.MANY_TO_ONE
-    : RelationshipTypes.ONE_TO_MANY
+  return type === RelationshipType.ONE_TO_MANY
+    ? RelationshipType.MANY_TO_ONE
+    : RelationshipType.ONE_TO_MANY
 }
 
 function generateManyLinkSchema(
@@ -148,12 +151,12 @@ function generateLinkSchema(
   column: FieldSchema,
   table: Table,
   relatedTable: Table,
-  type: RelationshipTypes
+  type: RelationshipType
 ) {
   if (!table.primary || !relatedTable.primary) {
     throw new Error("Unable to generate link schema, no primary keys")
   }
-  const isOneSide = type === RelationshipTypes.ONE_TO_MANY
+  const isOneSide = type === RelationshipType.ONE_TO_MANY
   const primary = isOneSide ? relatedTable.primary[0] : table.primary[0]
   // generate a foreign key
   const foreignKey = generateForeignKey(column, relatedTable)
@@ -208,6 +211,7 @@ export async function save(ctx: UserCtx) {
   let tableToSave: TableRequest = {
     type: "table",
     _id: buildExternalTableId(datasourceId, inputs.name),
+    sourceId: datasourceId,
     ...inputs,
   }
 
@@ -247,7 +251,7 @@ export async function save(ctx: UserCtx) {
     }
     const relatedColumnName = schema.fieldName!
     const relationType = schema.relationshipType!
-    if (relationType === RelationshipTypes.MANY_TO_MANY) {
+    if (relationType === RelationshipType.MANY_TO_MANY) {
       const junctionTable = generateManyLinkSchema(
         datasource,
         schema,
@@ -261,7 +265,7 @@ export async function save(ctx: UserCtx) {
       extraTablesToUpdate.push(junctionTable)
     } else {
       const fkTable =
-        relationType === RelationshipTypes.ONE_TO_MANY
+        relationType === RelationshipType.ONE_TO_MANY
           ? tableToSave
           : relatedTable
       const foreignKey = generateLinkSchema(
@@ -315,7 +319,12 @@ export async function save(ctx: UserCtx) {
   delete tableToSave._rename
   // store it into couch now for budibase reference
   datasource.entities[tableToSave.name] = tableToSave
-  await db.put(datasource)
+  await db.put(sdk.tables.populateExternalTableSchemas(datasource))
+
+  // Since tables are stored inside datasources, we need to notify clients
+  // that the datasource definition changed
+  const updatedDatasource = await sdk.datasources.get(datasource._id!)
+  builderSocket?.emitDatasourceUpdate(ctx, updatedDatasource)
 
   return tableToSave
 }
@@ -341,7 +350,12 @@ export async function destroy(ctx: UserCtx) {
     datasource.entities = tables
   }
 
-  await db.put(datasource)
+  await db.put(sdk.tables.populateExternalTableSchemas(datasource))
+
+  // Since tables are stored inside datasources, we need to notify clients
+  // that the datasource definition changed
+  const updatedDatasource = await sdk.datasources.get(datasource._id!)
+  builderSocket?.emitDatasourceUpdate(ctx, updatedDatasource)
 
   return tableToDelete
 }

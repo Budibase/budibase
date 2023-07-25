@@ -57,12 +57,23 @@
     {
       "name": "Trigger Automation",
       "type": "application",
-      "component": "TriggerAutomation"
+      "component": "TriggerAutomation",
+      "context": [
+        {
+          "label": "Automation Result",
+          "value": "result"
+        }
+      ]
     },
     {
       "name": "Update Field Value",
       "type": "form",
       "component": "UpdateFieldValue"
+    },
+    {
+      "name": "Scroll To Field",
+      "type": "form",
+      "component": "ScrollTo"
     },
     {
       "name": "Validate Form",

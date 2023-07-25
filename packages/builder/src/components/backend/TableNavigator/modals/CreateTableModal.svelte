@@ -2,21 +2,13 @@
   import { goto, url } from "@roxi/routify"
   import { tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
-  import {
-    Input,
-    Label,
-    ModalContent,
-    Toggle,
-    Divider,
-    Layout,
-  } from "@budibase/bbui"
+  import { Input, Label, ModalContent, Layout } from "@budibase/bbui"
   import { datasources } from "stores/backend"
   import TableDataImport from "../TableDataImport.svelte"
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
   } from "constants/backend"
-  import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
 
   $: tableNames = $tables.list.map(table => table.name)
   $: selectedSource = $datasources.list.find(
@@ -28,6 +20,7 @@
     ? selectedSource._id
     : BUDIBASE_INTERNAL_DB_ID
 
+  export let promptUpload = false
   export let name
   export let beforeSave = async () => {}
   export let afterSave = async table => {
@@ -42,27 +35,11 @@
   }
 
   let error = ""
-  let autoColumns = getAutoColumnInformation()
+
   let schema = {}
   let rows = []
   let allValid = true
   let displayColumn = null
-
-  function getAutoColumns() {
-    const selectedAutoColumns = {}
-
-    Object.entries(autoColumns).forEach(([subtype, column]) => {
-      if (column.enabled) {
-        selectedAutoColumns[column.name] = buildAutoColumn(
-          name,
-          column.name,
-          subtype
-        )
-      }
-    })
-
-    return selectedAutoColumns
-  }
 
   function checkValid(evt) {
     const tableName = evt.target.value
@@ -76,7 +53,7 @@
   async function saveTable() {
     let newTable = {
       name,
-      schema: { ...schema, ...getAutoColumns() },
+      schema: { ...schema },
       rows,
       type: "internal",
       sourceId: targetDatasourceId,
@@ -92,6 +69,7 @@
     try {
       await beforeSave()
       table = await tables.save(newTable)
+      await datasources.fetch()
       await afterSave(table)
     } catch (e) {
       notifications.error(e)
@@ -116,48 +94,18 @@
     bind:value={name}
     {error}
   />
-  <div class="autocolumns">
-    <Label extraSmall grey>Auto Columns</Label>
-    <div class="toggles">
-      <div class="toggle-1">
-        <Toggle text="Created by" bind:value={autoColumns.createdBy.enabled} />
-        <Toggle text="Created at" bind:value={autoColumns.createdAt.enabled} />
-        <Toggle text="Auto ID" bind:value={autoColumns.autoID.enabled} />
-      </div>
-      <div class="toggle-2">
-        <Toggle text="Updated by" bind:value={autoColumns.updatedBy.enabled} />
-        <Toggle text="Updated at" bind:value={autoColumns.updatedAt.enabled} />
-      </div>
-    </div>
-    <Divider />
-  </div>
   <div>
     <Layout gap="XS" noPadding>
       <Label grey extraSmall
         >Create a Table from a CSV or JSON file (Optional)</Label
       >
-      <TableDataImport bind:rows bind:schema bind:allValid bind:displayColumn />
+      <TableDataImport
+        {promptUpload}
+        bind:rows
+        bind:schema
+        bind:allValid
+        bind:displayColumn
+      />
     </Layout>
   </div>
 </ModalContent>
-
-<style>
-  .autocolumns {
-    margin-bottom: -10px;
-  }
-
-  .toggles {
-    display: flex;
-    width: 100%;
-    margin-top: 6px;
-  }
-
-  .toggle-1 :global(> *) {
-    margin-bottom: 10px;
-  }
-
-  .toggle-2 :global(> *) {
-    margin-bottom: 10px;
-    margin-left: 20px;
-  }
-</style>

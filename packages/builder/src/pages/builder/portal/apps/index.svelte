@@ -14,6 +14,7 @@
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
+  import AccountLockedModal from "components/portal/licensing/AccountLockedModal.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
@@ -28,7 +29,7 @@
   let template
   let creationModal
   let appLimitModal
-  let creatingApp = false
+  let accountLockedModal
   let searchTerm = ""
   let creatingFromTemplate = false
   let automationErrors
@@ -48,6 +49,11 @@
         : true)
   )
   $: automationErrors = getAutomationErrors(enrichedApps)
+  $: isOwner = $auth.accountPortalAccess && $admin.cloud
+
+  const usersLimitLockAction = $licensing?.errUserLimit
+    ? () => accountLockedModal.show()
+    : null
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -93,7 +99,9 @@
     const params = new URLSearchParams({
       open: "error",
     })
-    $goto(`../overview/${appId}/automation-history?${params.toString()}`)
+    $goto(
+      `/builder/app/${appId}/settings/automation-history?${params.toString()}`
+    )
   }
 
   const errorCount = errors => {
@@ -114,14 +122,12 @@
     } else {
       template = null
       creationModal.show()
-      creatingApp = true
     }
   }
 
   const initiateAppImport = () => {
     template = { fromFile: true }
     creationModal.show()
-    creatingApp = true
   }
 
   const autoCreateApp = async () => {
@@ -164,7 +170,6 @@
 
   const stopAppCreation = () => {
     template = null
-    creatingApp = false
   }
 
   function createAppFromTemplateUrl(templateKey) {
@@ -188,6 +193,9 @@
       if (initInfo?.init_template) {
         creatingFromTemplate = true
         createAppFromTemplateUrl(initInfo.init_template)
+      }
+      if (usersLimitLockAction) {
+        usersLimitLockAction()
       }
     } catch (error) {
       notifications.error("Error getting init info")
@@ -230,20 +238,30 @@
         <Layout noPadding gap="L">
           <div class="title">
             <div class="buttons">
-              <Button size="M" cta on:click={initiateAppCreation}>
+              <Button
+                size="M"
+                cta
+                on:click={usersLimitLockAction || initiateAppCreation}
+              >
                 Create new app
               </Button>
-              {#if $apps?.length > 0}
+              {#if $apps?.length > 0 && !$admin.offlineMode}
                 <Button
                   size="M"
                   secondary
-                  on:click={$goto("/builder/portal/apps/templates")}
+                  on:click={usersLimitLockAction ||
+                    $goto("/builder/portal/apps/templates")}
                 >
                   View templates
                 </Button>
               {/if}
               {#if !$apps?.length}
-                <Button size="L" quiet secondary on:click={initiateAppImport}>
+                <Button
+                  size="L"
+                  quiet
+                  secondary
+                  on:click={usersLimitLockAction || initiateAppImport}
+                >
                   Import app
                 </Button>
               {/if}
@@ -267,7 +285,7 @@
 
           <div class="app-table">
             {#each filteredApps as app (app.appId)}
-              <AppRow {app} />
+              <AppRow {app} lockedAction={usersLimitLockAction} />
             {/each}
           </div>
         </Layout>
@@ -294,6 +312,11 @@
 </Modal>
 
 <AppLimitModal bind:this={appLimitModal} />
+<AccountLockedModal
+  bind:this={accountLockedModal}
+  onConfirm={() =>
+    isOwner ? $licensing.goToUpgradePage() : $licensing.goToPricingPage()}
+/>
 
 <style>
   .title {
@@ -330,7 +353,6 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-xl);
-    overflow: hidden;
   }
 
   .empty-wrapper {

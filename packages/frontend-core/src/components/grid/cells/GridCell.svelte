@@ -6,6 +6,7 @@
   export let selectedUser = null
   export let error = null
   export let rowIdx
+  export let topRow = false
   export let defaultHeight = false
   export let center = false
   export let readonly = false
@@ -15,7 +16,7 @@
   const getStyle = (width, selectedUser) => {
     let style = `flex: 0 0 ${width}px;`
     if (selectedUser) {
-      style += `--cell-color:${selectedUser.color};`
+      style += `--user-color:${selectedUser.color};`
     }
     return style
   }
@@ -31,13 +32,14 @@
   class:readonly
   class:default-height={defaultHeight}
   class:selected-other={selectedUser != null}
+  class:alt={rowIdx % 2 === 1}
+  class:top={topRow}
   on:focus
   on:mousedown
   on:mouseup
   on:click
   on:contextmenu
   {style}
-  data-row={rowIdx}
 >
   {#if error}
     <div class="label">
@@ -70,6 +72,9 @@
     width: 0;
     --cell-color: transparent;
   }
+  .cell.alt {
+    --cell-background: var(--cell-background-alt);
+  }
   .cell.default-height {
     height: var(--default-row-height);
   }
@@ -94,13 +99,14 @@
   }
 
   /* Cell border for cells with labels */
-  .cell.error:after,
-  .cell.selected-other:not(.focused):after {
+  .cell.error:after {
     border-radius: 0 2px 2px 2px;
   }
-  .cell[data-row="0"].error:after,
-  .cell[data-row="0"].selected-other:not(.focused):after {
+  .cell.top.error:after {
     border-radius: 2px 2px 2px 0;
+  }
+  .cell.selected-other:not(.focused):after {
+    border-radius: 2px;
   }
 
   /* Cell z-index */
@@ -111,14 +117,8 @@
   .cell.focused {
     z-index: 2;
   }
-  .cell.focused {
-    --cell-color: var(--spectrum-global-color-blue-400);
-  }
-  .cell.error {
-    --cell-color: var(--spectrum-global-color-red-500);
-  }
-  .cell.readonly {
-    --cell-color: var(--spectrum-global-color-gray-600);
+  .cell.selected-other:hover {
+    z-index: 2;
   }
   .cell:not(.focused) {
     user-select: none;
@@ -126,6 +126,21 @@
   .cell:hover {
     cursor: default;
   }
+
+  /* Cell color overrides */
+  .cell.selected-other {
+    --cell-color: var(--user-color);
+  }
+  .cell.focused {
+    --cell-color: var(--accent-color);
+  }
+  .cell.error {
+    --cell-color: var(--spectrum-global-color-red-500);
+  }
+  .cell.focused.readonly {
+    --cell-color: var(--spectrum-global-color-gray-600);
+  }
+
   .cell.highlighted:not(.focused),
   .cell.focused.readonly {
     --cell-background: var(--cell-background-hover);
@@ -141,7 +156,7 @@
     left: 0;
     padding: 1px 4px 3px 4px;
     margin: 0 0 -2px 0;
-    background: var(--user-color);
+    background: var(--cell-color);
     border-radius: 2px;
     display: block;
     color: white;
@@ -152,14 +167,19 @@
     overflow: hidden;
     user-select: none;
   }
-  .cell[data-row="0"] .label {
+  .cell.top .label {
     bottom: auto;
     top: 100%;
-    border-radius: 0 2px 2px 2px;
     padding: 2px 4px 2px 4px;
     margin: -2px 0 0 0;
   }
   .error .label {
     background: var(--spectrum-global-color-red-500);
+  }
+  .selected-other:not(.error) .label {
+    display: none;
+  }
+  .selected-other:not(.error):hover .label {
+    display: block;
   }
 </style>

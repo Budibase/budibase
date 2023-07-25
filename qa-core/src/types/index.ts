@@ -8,7 +8,7 @@ export * from "./responseMessage"
 export * from "./routing"
 export * from "./state"
 export * from "./unpublishAppResponse"
-export * from "./addedDatasource"
-
+export * from "./screens"
+export * from "./datasources"
 // re-export public api types
 export * from "@budibase/server/api/controllers/public/mapping/types"

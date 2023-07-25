@@ -3,7 +3,6 @@ import {
   Event,
   LicenseActivatedEvent,
   LicensePlanChangedEvent,
-  LicenseTierChangedEvent,
   PlanType,
   Account,
   LicensePortalOpenedEvent,
@@ -11,22 +10,23 @@ import {
   LicenseCheckoutOpenedEvent,
   LicensePaymentFailedEvent,
   LicensePaymentRecoveredEvent,
+  PriceDuration,
 } from "@budibase/types"
 
-async function tierChanged(account: Account, from: number, to: number) {
-  const properties: LicenseTierChangedEvent = {
-    accountId: account.accountId,
-    to,
-    from,
+async function planChanged(
+  account: Account,
+  opts: {
+    from: PlanType
+    to: PlanType
+    fromQuantity: number | undefined
+    toQuantity: number | undefined
+    fromDuration: PriceDuration | undefined
+    toDuration: PriceDuration | undefined
   }
-  await publishEvent(Event.LICENSE_TIER_CHANGED, properties)
-}
-
-async function planChanged(account: Account, from: PlanType, to: PlanType) {
+) {
   const properties: LicensePlanChangedEvent = {
     accountId: account.accountId,
-    to,
-    from,
+    ...opts,
   }
   await publishEvent(Event.LICENSE_PLAN_CHANGED, properties)
 }
@@ -74,7 +74,6 @@ async function paymentRecovered(account: Account) {
 }
 
 export default {
-  tierChanged,
   planChanged,
   activated,
   checkoutOpened,

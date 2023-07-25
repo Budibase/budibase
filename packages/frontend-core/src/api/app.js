@@ -124,6 +124,15 @@ export const buildAppEndpoints = API => ({
   },
 
   /**
+   * Gets budibase platform debug information.
+   */
+  fetchSystemDebugInfo: async () => {
+    return await API.get({
+      url: `/api/debug/diagnostics`,
+    })
+  },
+
+  /**
    * Syncs an app with the production database.
    * @param appId the ID of the app to sync
    */
@@ -150,6 +159,12 @@ export const buildAppEndpoints = API => ({
   fetchComponentLibDefinitions: async appId => {
     return await API.get({
       url: `/api/${appId}/components/definitions`,
+    })
+  },
+
+  addSampleData: async appId => {
+    return await API.post({
+      url: `/api/applications/${appId}/sample`,
     })
   },
 })

@@ -5,6 +5,7 @@
   import { goto, isActive } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { isBuilderInputFocused } from "helpers"
 
   let confirmDeleteDialog
   let confirmEjectDialog
@@ -100,8 +101,7 @@
       return
     }
     // Ignore events when typing
-    const activeTag = document.activeElement?.tagName.toLowerCase()
-    if (["input", "textarea"].indexOf(activeTag) !== -1 && e.key !== "Escape") {
+    if (isBuilderInputFocused(e)) {
       return
     }
     // Key events are always for the selected component

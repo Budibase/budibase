@@ -9,7 +9,7 @@
   export let rowFocused = false
   export let rowHovered = false
   export let rowSelected = false
-  export let disableExpand = false
+  export let expandable = false
   export let disableNumber = false
   export let defaultHeight = false
   export let disabled = false
@@ -21,23 +21,7 @@
     svelteDispatch("select")
     const id = row?._id
     if (id) {
-      selectedRows.update(state => {
-        let newState = {
-          ...state,
-          [id]: !state[id],
-        }
-        if (!newState[id]) {
-          delete newState[id]
-        }
-        return newState
-      })
-    }
-  }
-
-  const expand = () => {
-    svelteDispatch("expand")
-    if (row) {
-      dispatch("edit-row", row)
+      selectedRows.actions.toggleRow(id)
     }
   }
 </script>
@@ -47,6 +31,7 @@
   highlighted={rowFocused || rowHovered}
   selected={rowSelected}
   {defaultHeight}
+  rowIdx={row?.__idx}
 >
   <div class="gutter">
     {#if $$slots.default}
@@ -70,12 +55,22 @@
         </div>
       {/if}
     {/if}
-    {#if $config.allowExpandRows}
-      <div
-        class="expand"
-        class:visible={!disableExpand && (rowFocused || rowHovered)}
-      >
-        <Icon name="Maximize" hoverable size="S" on:click={expand} />
+    {#if rowSelected && $config.allowDeleteRows}
+      <div class="delete" on:click={() => dispatch("request-bulk-delete")}>
+        <Icon
+          name="Delete"
+          size="S"
+          color="var(--spectrum-global-color-red-400)"
+        />
+      </div>
+    {:else}
+      <div class="expand" class:visible={$config.allowExpandRows && expandable}>
+        <Icon
+          size="S"
+          name="Maximize"
+          hoverable
+          on:click={() => svelteDispatch("expand")}
+        />
       </div>
     {/if}
   </div>
@@ -111,9 +106,12 @@
   .number.visible {
     display: flex;
   }
+  .delete,
+  .expand {
+    margin-right: 4px;
+  }
   .expand {
     opacity: 0;
-    margin-right: 4px;
   }
   .expand :global(.spectrum-Icon) {
     pointer-events: none;
@@ -123,5 +121,12 @@
   }
   .expand.visible :global(.spectrum-Icon) {
     pointer-events: all;
+  }
+
+  .delete:hover {
+    cursor: pointer;
+  }
+  .delete:hover :global(.spectrum-Icon) {
+    color: var(--spectrum-global-color-red-600) !important;
   }
 </style>

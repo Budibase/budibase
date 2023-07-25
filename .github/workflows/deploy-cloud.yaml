@@ -1,67 +1,48 @@
 name: Budibase Deploy Production
 
 on:
- workflow_dispatch:
-  inputs:
-    version:
-      description: Budibase release version. For example - 1.0.0
-      required: false
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Budibase release version. For example - 1.0.0
+        required: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Fail if branch is not master
-        if: github.ref != 'refs/heads/master' 
-        run: | 
-          echo "Ref is not master, you must run this job from master."
-          exit 1
-
+      - name: Fail if not a tag
+        run: |
+          if [[ $GITHUB_REF != refs/tags/* ]]; then
+            echo "Workflow Dispatch can only be run on tags"
+            exit 1
+          fi
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-      - name: Pull values.yaml from budibase-infra
-        run: | 
-          curl -H "Authorization: token ${{ secrets.GH_ACCESS_TOKEN }}" \
-          -H 'Accept: application/vnd.github.v3.raw' \
-          -o values.production.yaml \
-          -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.yaml
-          wc -l values.production.yaml
-      
+      - name: Fail if tag is not in master
+        run: |
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
+            exit 1
+          fi
+
       - name: Get the latest budibase release version
         id: version
-        run: | 
+        run: |
           if [ -z "${{ github.event.inputs.version }}" ]; then
             release_version=$(cat lerna.json | jq -r '.version')
           else
             release_version=${{ github.event.inputs.version }}
           fi
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-      
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
 
-      - name: Deploy to EKS
-        uses: craftech-io/eks-helm-deploy-action@v1
+      - uses: passeidireto/trigger-external-workflow-action@main
+        env:
+          PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS__KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
-          cluster-name: budibase-eks-production
-          config-files: values.production.yaml
-          chart-path: charts/budibase
-          namespace: budibase
-          values: globals.appVersion=v${{ env.RELEASE_VERSION }},services.couchdb.url=${{ secrets.PRODUCTION_COUCHDB_URL }},services.couchdb.password=${{ secrets.PRODUCTION_COUCHDB_PASSWORD }}
-          name: budibase-prod
-
-      - name: Discord Webhook Action
-        uses: tsickert/discord-webhook@v4.0.0
-        with:
-          webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
-          content: "Production Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Cloud."
-          embed-title: ${{ env.RELEASE_VERSION }}
-
+          repository: budibase/budibase-deploys
+          event: budicloud-prod-deploy
+          github_pat: ${{ secrets.GH_ACCESS_TOKEN }}

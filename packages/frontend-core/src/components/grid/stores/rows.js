@@ -1,23 +1,19 @@
 import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch/fetchData"
-import { notifications } from "@budibase/bbui"
 import { NewRowID, RowPageSize } from "../lib/constants"
+import { tick } from "svelte"
 
-const initialSortState = {
-  column: null,
-  order: "ascending",
-}
+const SuppressErrors = true
 
 export const createStores = () => {
   const rows = writable([])
   const table = writable(null)
-  const filter = writable([])
   const loading = writable(false)
   const loaded = writable(false)
-  const sort = writable(initialSortState)
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
+  const error = writable(null)
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(
@@ -46,13 +42,12 @@ export const createStores = () => {
     rows,
     rowLookupMap,
     table,
-    filter,
     loaded,
     loading,
-    sort,
     rowChangeCache,
     inProgressChanges,
     hasNextPage,
+    error,
   }
 }
 
@@ -74,6 +69,8 @@ export const deriveStores = context => {
     inProgressChanges,
     previousFocusedRowId,
     hasNextPage,
+    error,
+    notifications,
   } = context
   const instanceLoaded = writable(false)
   const fetch = writable(null)
@@ -97,15 +94,18 @@ export const deriveStores = context => {
   // Reset everything when table ID changes
   let unsubscribe = null
   let lastResetKey = null
-  tableId.subscribe($tableId => {
+  tableId.subscribe(async $tableId => {
     // Unsub from previous fetch if one exists
     unsubscribe?.()
     fetch.set(null)
     instanceLoaded.set(false)
     loading.set(true)
 
-    // Reset state
-    filter.set([])
+    // Tick to allow other reactive logic to update stores when table ID changes
+    // before proceeding. This allows us to wipe filters etc if needed.
+    await tick()
+    const $filter = get(filter)
+    const $sort = get(sort)
 
     // Create new fetch model
     const newFetch = fetchData({
@@ -115,21 +115,40 @@ export const deriveStores = context => {
         tableId: $tableId,
       },
       options: {
-        filter: [],
-        sortColumn: initialSortState.column,
-        sortOrder: initialSortState.order,
+        filter: $filter,
+        sortColumn: $sort.column,
+        sortOrder: $sort.order,
         limit: RowPageSize,
         paginate: true,
       },
     })
 
     // Subscribe to changes of this fetch model
-    unsubscribe = newFetch.subscribe($fetch => {
-      if ($fetch.loaded && !$fetch.loading) {
+    unsubscribe = newFetch.subscribe(async $fetch => {
+      if ($fetch.error) {
+        // Present a helpful error to the user
+        let message = "An unknown error occurred"
+        if ($fetch.error.status === 403) {
+          message = "You don't have access to this data"
+        } else if ($fetch.error.message) {
+          message = $fetch.error.message
+        }
+        error.set(message)
+      } else if ($fetch.loaded && !$fetch.loading) {
+        error.set(null)
         hasNextPage.set($fetch.hasNextPage)
         const $instanceLoaded = get(instanceLoaded)
         const resetRows = $fetch.resetKey !== lastResetKey
+        const previousResetKey = lastResetKey
         lastResetKey = $fetch.resetKey
+
+        // If resetting rows due to a table change, wipe data and wait for
+        // derived stores to compute. This prevents stale data being passed
+        // to cells when we save the new schema.
+        if (!$instanceLoaded && previousResetKey) {
+          rows.set([])
+          await tick()
+        }
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
@@ -184,10 +203,23 @@ export const deriveStores = context => {
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
     if (error?.json?.validationErrors) {
-      // Normal validation error
+      // Normal validation errors
       const keys = Object.keys(error.json.validationErrors)
       const $columns = get(columns)
+
+      // Filter out missing columns from columns that we have
+      let erroredColumns = []
+      let missingColumns = []
       for (let column of keys) {
+        if (columns.actions.hasColumn(column)) {
+          erroredColumns.push(column)
+        } else {
+          missingColumns.push(column)
+        }
+      }
+
+      // Process errors for columns that we have
+      for (let column of erroredColumns) {
         validation.actions.setError(
           `${rowId}-${column}`,
           `${column} ${error.json.validationErrors[column]}`
@@ -202,11 +234,18 @@ export const deriveStores = context => {
           })
         }
       }
+
+      // Notify about missing columns
+      for (let column of missingColumns) {
+        get(notifications).error(`${column} is required but is missing`)
+      }
+
       // Focus the first cell with an error
-      focusedCellId.set(`${rowId}-${keys[0]}`)
+      if (erroredColumns.length) {
+        focusedCellId.set(`${rowId}-${erroredColumns[0]}`)
+      }
     } else {
-      // Some other error - just update the current cell
-      validation.actions.setError(get(focusedCellId), error?.message || "Error")
+      get(notifications).error(error?.message || "An unknown error occurred")
     }
   }
 
@@ -214,8 +253,10 @@ export const deriveStores = context => {
   const addRow = async (row, idx, bubble = false) => {
     try {
       // Create row
-      let newRow = await API.saveRow({ ...row, tableId: get(tableId) })
-      newRow = await fetchRow(newRow._id)
+      const newRow = await API.saveRow(
+        { ...row, tableId: get(tableId) },
+        SuppressErrors
+      )
 
       // Update state
       if (idx != null) {
@@ -229,7 +270,7 @@ export const deriveStores = context => {
       }
 
       // Refresh row to ensure data is in the correct format
-      notifications.success("Row created successfully")
+      get(notifications).success("Row created successfully")
       return newRow
     } catch (error) {
       if (bubble) {
@@ -268,32 +309,36 @@ export const deriveStores = context => {
     return res?.rows?.[0]
   }
 
-  // Refreshes a specific row, handling updates, addition or deletion
-  const refreshRow = async id => {
-    // Fetch row from the server again
-    const newRow = await fetchRow(id)
-
+  // Replaces a row in state with the newly defined row, handling updates,
+  // addition and deletion
+  const replaceRow = (id, row) => {
     // Get index of row to check if it exists
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[id]
 
     // Process as either an update, addition or deletion
-    if (newRow) {
+    if (row) {
       if (index != null) {
         // An existing row was updated
         rows.update(state => {
-          state[index] = { ...newRow }
+          state[index] = { ...row }
           return state
         })
       } else {
         // A new row was created
-        handleNewRows([newRow])
+        handleNewRows([row])
       }
     } else if (index != null) {
       // A row was removed
       handleRemoveRows([$rows[index]])
     }
+  }
+
+  // Refreshes a specific row
+  const refreshRow = async id => {
+    const row = await fetchRow(id)
+    replaceRow(id, row)
   }
 
   // Refreshes all data
@@ -338,17 +383,21 @@ export const deriveStores = context => {
         ...state,
         [rowId]: true,
       }))
-      const newRow = { ...row, ...get(rowChangeCache)[rowId] }
-      const saved = await API.saveRow(newRow)
+      const saved = await API.saveRow(
+        { ...row, ...get(rowChangeCache)[rowId] },
+        SuppressErrors
+      )
 
       // Update state after a successful change
-      rows.update(state => {
-        state[index] = {
-          ...newRow,
-          _rev: saved._rev,
-        }
-        return state.slice()
-      })
+      if (saved?._id) {
+        rows.update(state => {
+          state[index] = saved
+          return state.slice()
+        })
+      } else if (saved?.id) {
+        // Handle users table edge case
+        await refreshRow(saved.id)
+      }
       rowChangeCache.update(state => {
         delete state[rowId]
         return state
@@ -432,6 +481,9 @@ export const deriveStores = context => {
 
   // Checks if we have a row with a certain ID
   const hasRow = id => {
+    if (id === NewRowID) {
+      return true
+    }
     return get(rowLookupMap)[id] != null
   }
 
@@ -459,6 +511,7 @@ export const deriveStores = context => {
         hasRow,
         loadNextPage,
         refreshRow,
+        replaceRow,
         refreshData,
         refreshTableDefinition,
       },

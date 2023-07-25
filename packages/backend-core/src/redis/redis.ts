@@ -1,6 +1,15 @@
 import env from "../environment"
-// ioredis mock is all in memory
-const Redis = env.MOCK_REDIS ? require("ioredis-mock") : require("ioredis")
+import Redis from "ioredis"
+// mock-redis doesn't have any typing
+let MockRedis: any | undefined
+if (env.MOCK_REDIS) {
+  try {
+    // ioredis mock is all in memory
+    MockRedis = require("ioredis-mock")
+  } catch (err) {
+    console.log("Mock redis unavailable")
+  }
+}
 import {
   addDbPrefix,
   removeDbPrefix,
@@ -12,13 +21,13 @@ import * as timers from "../timers"
 
 const RETRY_PERIOD_MS = 2000
 const STARTUP_TIMEOUT_MS = 5000
-const CLUSTERED = false
+const CLUSTERED = env.REDIS_CLUSTERED
 const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 
 // for testing just generate the client once
 let CLOSED = false
 let CLIENTS: { [key: number]: any } = {}
-
+0
 let CONNECTED = false
 
 // mock redis always connected
@@ -55,6 +64,7 @@ function connectionError(
  * will return the ioredis client which will be ready to use.
  */
 function init(selectDb = DEFAULT_SELECT_DB) {
+  const RedisCore = env.MOCK_REDIS && MockRedis ? MockRedis : Redis
   let timeout: NodeJS.Timeout
   CLOSED = false
   let client = pickClient(selectDb)
@@ -64,7 +74,7 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   }
   // testing uses a single in memory client
   if (env.MOCK_REDIS) {
-    CLIENTS[selectDb] = new Redis(getRedisOptions())
+    CLIENTS[selectDb] = new RedisCore(getRedisOptions())
   }
   // start the timer - only allowed 5 seconds to connect
   timeout = setTimeout(() => {
@@ -81,14 +91,14 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   if (client) {
     client.disconnect()
   }
-  const { redisProtocolUrl, opts, host, port } = getRedisOptions(CLUSTERED)
+  const { redisProtocolUrl, opts, host, port } = getRedisOptions()
 
   if (CLUSTERED) {
-    client = new Redis.Cluster([{ host, port }], opts)
+    client = new RedisCore.Cluster([{ host, port }], opts)
   } else if (redisProtocolUrl) {
-    client = new Redis(redisProtocolUrl)
+    client = new RedisCore(redisProtocolUrl)
   } else {
-    client = new Redis(opts)
+    client = new RedisCore(opts)
   }
   // attach handlers
   client.on("end", (err: Error) => {
@@ -183,6 +193,9 @@ class RedisWrapper {
     CLOSED = false
     init(this._select)
     await waitForConnection(this._select)
+    if (this._select && !env.isTest()) {
+      this.getClient().select(this._select)
+    }
     return this
   }
 
@@ -207,6 +220,11 @@ class RedisWrapper {
   async keys(pattern: string) {
     const db = this._db
     return this.getClient().keys(addDbPrefix(db, pattern))
+  }
+
+  async exists(key: string) {
+    const db = this._db
+    return await this.getClient().exists(addDbPrefix(db, key))
   }
 
   async get(key: string) {

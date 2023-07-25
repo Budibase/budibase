@@ -7,6 +7,7 @@ import {
 } from "../../../integrations/utils"
 import { Table, Database } from "@budibase/types"
 import datasources from "../datasources"
+import { populateExternalTableSchemas, isEditableColumn } from "./validation"
 
 async function getAllInternalTables(db?: Database): Promise<Table[]> {
   if (!db) {
@@ -27,7 +28,6 @@ async function getAllInternalTables(db?: Database): Promise<Table[]> {
 async function getAllExternalTables(
   datasourceId: any
 ): Promise<Record<string, Table>> {
-  const db = context.getAppDB()
   const datasource = await datasources.get(datasourceId, { enriched: true })
   if (!datasource || !datasource.entities) {
     throw "Datasource is not configured fully."
@@ -60,4 +60,6 @@ export default {
   getAllExternalTables,
   getExternalTable,
   getTable,
+  populateExternalTableSchemas,
+  isEditableColumn,
 }

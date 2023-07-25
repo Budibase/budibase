@@ -5,24 +5,28 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 
 # add pin script
 WORKDIR /
-ADD scripts/pinVersions.js scripts/cleanup.sh ./
+ADD scripts/cleanup.sh ./
 RUN chmod +x /cleanup.sh
 
 # build server
 WORKDIR /app
 ADD packages/server .
-RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+COPY yarn.lock .
+RUN yarn install --production=true
+RUN /cleanup.sh
 
 # build worker
 WORKDIR /worker
 ADD packages/worker .
-RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+COPY yarn.lock .
+RUN yarn install --production=true
+RUN /cleanup.sh
 
 FROM budibase/couchdb
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
-# e.g. docker build --build-arg TARGETBUILD=aas ....
+# e.g. docker build --build-arg TARGETBUILD=aas ....
 ARG TARGETBUILD=single
 ENV TARGETBUILD $TARGETBUILD
 
@@ -31,9 +35,15 @@ COPY --from=build /worker /worker
 
 # install base dependencies
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server && \
-  apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' && \
-  apt-get update
+  apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server
+
+# Install postgres client for pg_dump utils
+RUN apt install software-properties-common apt-transport-https gpg -y \
+    && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
+    && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
+    && apt update -y \
+    && apt install postgresql-client-15 -y \
+    && apt remove software-properties-common apt-transport-https gpg -y
 
 # install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx
 WORKDIR /nodejs

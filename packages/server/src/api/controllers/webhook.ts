@@ -6,8 +6,11 @@ import {
   WebhookActionType,
   BBContext,
   Automation,
+  AutomationActionStepId,
 } from "@budibase/types"
 import sdk from "../../sdk"
+import * as pro from "@budibase/pro"
+
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
 
@@ -74,19 +77,40 @@ export async function trigger(ctx: BBContext) {
       if (webhook.bodySchema) {
         validate(ctx.request.body, webhook.bodySchema)
       }
-      const target = await db.get(webhook.action.target)
+      const target = await db.get<Automation>(webhook.action.target)
       if (webhook.action.type === WebhookActionType.AUTOMATION) {
         // trigger with both the pure request and then expand it
         // incase the user has produced a schema to bind to
-        await triggers.externalTrigger(target, {
-          body: ctx.request.body,
-          ...ctx.request.body,
-          appId: prodAppId,
-        })
-      }
-      ctx.status = 200
-      ctx.body = {
-        message: "Webhook trigger fired successfully",
+        let hasCollectStep = sdk.automations.utils.checkForCollectStep(target)
+
+        if (hasCollectStep && (await pro.features.isSyncAutomationsEnabled())) {
+          const response = await triggers.externalTrigger(
+            target,
+            {
+              body: ctx.request.body,
+              ...ctx.request.body,
+              appId: prodAppId,
+            },
+            { getResponses: true }
+          )
+
+          let collectedValue = response.steps.find(
+            (step: any) => step.stepId === AutomationActionStepId.COLLECT
+          )
+
+          ctx.status = 200
+          ctx.body = collectedValue.outputs
+        } else {
+          await triggers.externalTrigger(target, {
+            body: ctx.request.body,
+            ...ctx.request.body,
+            appId: prodAppId,
+          })
+          ctx.status = 200
+          ctx.body = {
+            message: "Webhook trigger fired successfully",
+          }
+        }
       }
     } catch (err: any) {
       if (err.status === 404) {

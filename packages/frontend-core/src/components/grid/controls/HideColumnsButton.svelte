@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
-  import { ActionButton, Popover, Toggle } from "@budibase/bbui"
+  import { ActionButton, Popover, Toggle, Icon } from "@budibase/bbui"
+  import { getColumnIcon } from "../lib/utils"
 
   const { columns, stickyColumn } = getContext("grid")
 
@@ -8,6 +9,7 @@
   let anchor
 
   $: anyHidden = $columns.some(col => !col.visible)
+  $: text = getText($columns)
 
   const toggleVisibility = (column, visible) => {
     columns.update(state => {
@@ -37,6 +39,11 @@
     })
     columns.actions.saveChanges()
   }
+
+  const getText = columns => {
+    const hidden = columns.filter(col => !col.visible).length
+    return hidden ? `Hide columns (${hidden})` : "Hide columns"
+  }
 </script>
 
 <div bind:this={anchor}>
@@ -48,7 +55,7 @@
     selected={open || anyHidden}
     disabled={!$columns.length}
   >
-    Columns
+    {text}
   </ActionButton>
 </div>
 
@@ -56,16 +63,22 @@
   <div class="content">
     <div class="columns">
       {#if $stickyColumn}
+        <div class="column">
+          <Icon size="S" name={getColumnIcon($stickyColumn)} />
+          {$stickyColumn.label}
+        </div>
         <Toggle disabled size="S" value={true} />
-        <span>{$stickyColumn.label}</span>
       {/if}
       {#each $columns as column}
+        <div class="column">
+          <Icon size="S" name={getColumnIcon(column)} />
+          {column.label}
+        </div>
         <Toggle
           size="S"
           value={column.visible}
           on:change={e => toggleVisibility(column, e.detail)}
         />
-        <span>{column.label}</span>
       {/each}
     </div>
     <div class="buttons">
@@ -90,6 +103,13 @@
   .columns {
     display: grid;
     align-items: center;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr auto;
+  }
+  .columns :global(.spectrum-Switch) {
+    margin-right: 0;
+  }
+  .column {
+    display: flex;
+    gap: 8px;
   }
 </style>

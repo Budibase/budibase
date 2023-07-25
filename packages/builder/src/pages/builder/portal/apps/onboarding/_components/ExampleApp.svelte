@@ -1,6 +1,5 @@
 <script>
   export let name = ""
-  export let showData = false
 
   const rows = [
     {
@@ -45,11 +44,11 @@
 <div tabindex="-1" class="exampleApp">
   <div class="page">
     <div class="header">
-      <img alt="Budibase Logo" src={"https://i.imgur.com/Xhdt1YP.png"} />
+      <img alt="Budibase Logo" src={"/builder/bblogo.png"} />
       <h1>{name}</h1>
     </div>
     <div class="nav">Home</div>
-    <table class={`table ${showData ? "tableVisible" : ""}`}>
+    <table>
       <thead>
         <tr>
           <th>FIRST NAME</th>
@@ -71,7 +70,7 @@
         {/each}
       </tbody>
     </table>
-    <div class={`sidePanel ${showData ? "sidePanelVisible" : ""}`}>
+    <div class="sidePanel">
       <h2>{rows[0].firstName}</h2>
       <div class="field">
         <label for="exampleLastName">lastName</label>
@@ -199,14 +198,6 @@
     text-align: left;
   }
 
-  .table {
-    opacity: 0;
-  }
-
-  .tableVisible {
-    opacity: 1;
-  }
-
   .sidePanel {
     position: absolute;
     width: 300px;
@@ -216,9 +207,6 @@
     top: 0;
     right: -364px;
     padding: 42px 32px;
-  }
-
-  .sidePanelVisible {
     right: 0;
   }
 

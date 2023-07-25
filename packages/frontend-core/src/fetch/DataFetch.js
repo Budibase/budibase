@@ -57,6 +57,7 @@ export default class DataFetch {
       cursor: null,
       cursors: [],
       resetKey: Math.random(),
+      error: null,
     })
 
     // Merge options with their default values
@@ -136,8 +137,10 @@ export default class DataFetch {
       this.options.sortOrder = "ascending"
     }
 
-    // If no sort column, use the primary display and fallback to first column
-    if (!this.options.sortColumn) {
+    // If no sort column, or an invalid sort column is provided, use the primary
+    // display and fallback to first column
+    const sortValid = this.options.sortColumn && schema[this.options.sortColumn]
+    if (!sortValid) {
       let newSortColumn
       if (definition?.primaryDisplay && schema[definition.primaryDisplay]) {
         newSortColumn = definition.primaryDisplay
@@ -152,7 +155,7 @@ export default class DataFetch {
     let sortType = "string"
     if (sortColumn) {
       const type = schema?.[sortColumn]?.type
-      sortType = type === "number" ? "number" : "string"
+      sortType = type === "number" || type === "bigint" ? "number" : "string"
     }
     this.options.sortType = sortType
 
@@ -250,6 +253,10 @@ export default class DataFetch {
     try {
       return await this.API.fetchTableDefinition(datasource.tableId)
     } catch (error) {
+      this.store.update(state => ({
+        ...state,
+        error,
+      }))
       return null
     }
   }
@@ -362,13 +369,35 @@ export default class DataFetch {
       return
     }
     this.store.update($store => ({ ...$store, loading: true }))
-    const { rows, info, error } = await this.getPage()
+    const { rows, info, error, cursor } = await this.getPage()
+
+    let { cursors } = get(this.store)
+    const { pageNumber } = get(this.store)
+
+    if (!rows.length && pageNumber > 0) {
+      // If the full page is gone but we have previous pages, navigate to the previous page
+      this.store.update($store => ({
+        ...$store,
+        loading: false,
+        cursors: cursors.slice(0, pageNumber),
+      }))
+      return await this.prevPage()
+    }
+
+    const currentNextCursor = cursors[pageNumber + 1]
+    if (currentNextCursor != cursor) {
+      // If the current cursor changed, all the next pages need to be updated, so we mark them as stale
+      cursors = cursors.slice(0, pageNumber + 1)
+      cursors[pageNumber + 1] = cursor
+    }
+
     this.store.update($store => ({
       ...$store,
       rows,
       info,
       loading: false,
       error,
+      cursors,
     }))
   }
 

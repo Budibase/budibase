@@ -2,18 +2,22 @@ import { writable, get, derived } from "svelte/store"
 import { tick } from "svelte"
 import {
   DefaultRowHeight,
+  GutterWidth,
   LargeRowHeight,
   MediumRowHeight,
   NewRowID,
 } from "../lib/constants"
 
-export const createStores = () => {
+export const createStores = context => {
+  const { props } = context
   const focusedCellId = writable(null)
   const focusedCellAPI = writable(null)
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
-  const rowHeight = writable(DefaultRowHeight)
+  const rowHeight = writable(props.fixedRowHeight || DefaultRowHeight)
   const previousFocusedRowId = writable(null)
+  const gridFocused = writable(false)
+  const isDragging = writable(false)
 
   // Derive the current focused row ID
   const focusedRowId = derived(
@@ -24,14 +28,35 @@ export const createStores = () => {
     null
   )
 
+  // Toggles whether a certain row ID is selected or not
+  const toggleSelectedRow = id => {
+    selectedRows.update(state => {
+      let newState = {
+        ...state,
+        [id]: !state[id],
+      }
+      if (!newState[id]) {
+        delete newState[id]
+      }
+      return newState
+    })
+  }
+
   return {
     focusedCellId,
     focusedCellAPI,
     focusedRowId,
     previousFocusedRowId,
-    selectedRows,
     hoveredRowId,
     rowHeight,
+    gridFocused,
+    isDragging,
+    selectedRows: {
+      ...selectedRows,
+      actions: {
+        toggleRow: toggleSelectedRow,
+      },
+    },
   }
 }
 
@@ -43,6 +68,10 @@ export const deriveStores = context => {
     enrichedRows,
     rowLookupMap,
     rowHeight,
+    stickyColumn,
+    width,
+    hasNonAutoColumn,
+    config,
   } = context
 
   // Derive the row that contains the selected cell
@@ -70,18 +99,34 @@ export const deriveStores = context => {
     hoveredRowId.set(null)
   }
 
+  // Derive the amount of content lines to show in cells depending on row height
   const contentLines = derived(rowHeight, $rowHeight => {
-    if ($rowHeight === LargeRowHeight) {
+    if ($rowHeight >= LargeRowHeight) {
       return 3
-    } else if ($rowHeight === MediumRowHeight) {
+    } else if ($rowHeight >= MediumRowHeight) {
       return 2
     }
     return 1
   })
 
+  // Derive whether we should use the compact UI, depending on width
+  const compact = derived([stickyColumn, width], ([$stickyColumn, $width]) => {
+    return ($stickyColumn?.width || 0) + $width + GutterWidth < 1100
+  })
+
+  // Derive if we're able to add rows
+  const canAddRows = derived(
+    [config, hasNonAutoColumn],
+    ([$config, $hasNonAutoColumn]) => {
+      return $config.allowAddRows && $hasNonAutoColumn
+    }
+  )
+
   return {
+    canAddRows,
     focusedRow,
     contentLines,
+    compact,
     ui: {
       actions: {
         blur,
@@ -100,6 +145,7 @@ export const initialise = context => {
     hoveredRowId,
     table,
     rowHeight,
+    fixedRowHeight,
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
@@ -152,8 +198,19 @@ export const initialise = context => {
     }
   })
 
-  // Pull row height from table
+  // Pull row height from table as long as we don't have a fixed height
   table.subscribe($table => {
-    rowHeight.set($table?.rowHeight || DefaultRowHeight)
+    if (!get(fixedRowHeight)) {
+      rowHeight.set($table?.rowHeight || DefaultRowHeight)
+    }
+  })
+
+  // Reset row height when initial row height prop changes
+  fixedRowHeight.subscribe(height => {
+    if (height) {
+      rowHeight.set(height)
+    } else {
+      rowHeight.set(get(table)?.rowHeight || DefaultRowHeight)
+    }
   })
 }

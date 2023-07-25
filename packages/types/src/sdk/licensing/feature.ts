@@ -8,6 +8,8 @@ export enum Feature {
   ENFORCEABLE_SSO = "enforceableSSO",
   BRANDING = "branding",
   SCIM = "scim",
+  SYNC_AUTOMATIONS = "syncAutomations",
+  OFFLINE = "offline",
 }
 
 export type PlanFeatures = { [key in PlanType]: Feature[] | undefined }

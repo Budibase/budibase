@@ -1,12 +1,5 @@
 import env from "../../../environment"
-import {
-  db as dbCore,
-  context,
-  docUpdates,
-  constants,
-  logging,
-  roles,
-} from "@budibase/backend-core"
+import { db as dbCore, context, logging, roles } from "@budibase/backend-core"
 import { User, ContextUser, UserGroup } from "@budibase/types"
 import { sdk as proSdk } from "@budibase/pro"
 import sdk from "../../"
@@ -44,7 +37,7 @@ async function syncUsersToApp(
 
       let metadata
       try {
-        metadata = await db.get(metadataId)
+        metadata = await db.get<any>(metadataId)
       } catch (err: any) {
         if (err.status !== 404) {
           throw err
@@ -107,9 +100,11 @@ export async function syncUsersToAllApps(userIds: string[]) {
   }
   const resp = await Promise.allSettled(promises)
   const failed = resp.filter(promise => promise.status === "rejected")
-  if (failed.length > 0) {
-    const reasons = failed.map(fail => (fail as PromiseRejectedResult).reason)
-    logging.logAlert("Failed to sync users to apps", reasons)
+  const reasons = failed
+    .map(fail => (fail as PromiseRejectedResult).reason)
+    .filter(reason => !dbCore.isDocumentConflictError(reason))
+  if (reasons.length > 0) {
+    logging.logWarn("Failed to sync users to apps", reasons)
   }
 }
 

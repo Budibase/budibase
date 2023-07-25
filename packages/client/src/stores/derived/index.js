@@ -3,3 +3,4 @@
 // separately we can keep our actual stores lean and performant.
 export { currentRole } from "./currentRole.js"
 export { dndComponentPath } from "./dndComponentPath.js"
+export { devToolsEnabled } from "./devToolsEnabled.js"

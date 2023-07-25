@@ -38,7 +38,7 @@ export const getValidOperatorsForType = (
   }[] = []
   if (type === "string") {
     ops = stringOps
-  } else if (type === "number") {
+  } else if (type === "number" || type === "bigint") {
     ops = numOps
   } else if (type === "options") {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
@@ -328,8 +328,8 @@ export const runLuceneQuery = (docs: any[], query?: Query) => {
       return (
         docValue == null ||
         docValue === "" ||
-        docValue < testValue.low ||
-        docValue > testValue.high
+        +docValue < testValue.low ||
+        +docValue > testValue.high
       )
     }
   )
@@ -454,4 +454,20 @@ export const luceneLimit = (docs: any[], limit: string) => {
     return docs
   }
   return docs.slice(0, numLimit)
+}
+
+export const hasFilters = (query?: Query) => {
+  if (!query) {
+    return false
+  }
+  const skipped = ["allOr"]
+  for (let [key, value] of Object.entries(query)) {
+    if (skipped.includes(key) || typeof value !== "object") {
+      continue
+    }
+    if (Object.keys(value).length !== 0) {
+      return true
+    }
+  }
+  return false
 }

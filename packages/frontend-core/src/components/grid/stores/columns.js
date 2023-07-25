@@ -35,10 +35,20 @@ export const createStores = () => {
     []
   )
 
+  // Checks if we have a certain column by name
+  const hasColumn = column => {
+    const $columns = get(columns)
+    const $sticky = get(stickyColumn)
+    return $columns.some(col => col.name === column) || $sticky?.name === column
+  }
+
   return {
     columns: {
       ...columns,
       subscribe: enrichedColumns.subscribe,
+      actions: {
+        hasColumn,
+      },
     },
     stickyColumn,
     visibleColumns,
@@ -46,7 +56,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { table, columns, stickyColumn, API, dispatch } = context
+  const { table, columns, stickyColumn, API, dispatch, config } = context
 
   // Updates the tables primary display column
   const changePrimaryDisplay = async column => {
@@ -55,6 +65,38 @@ export const deriveStores = context => {
       primaryDisplay: column,
     })
   }
+
+  // Updates the width of all columns
+  const changeAllColumnWidths = async width => {
+    columns.update(state => {
+      return state.map(col => ({
+        ...col,
+        width,
+      }))
+    })
+    if (get(stickyColumn)) {
+      stickyColumn.update(state => ({
+        ...state,
+        width,
+      }))
+    }
+    await saveChanges()
+  }
+
+  // Derive if we have any normal columns
+  const hasNonAutoColumn = derived(
+    [columns, stickyColumn],
+    ([$columns, $stickyColumn]) => {
+      let allCols = $columns || []
+      if ($stickyColumn) {
+        allCols = [...allCols, $stickyColumn]
+      }
+      const normalCols = allCols.filter(column => {
+        return !column.schema?.autocolumn
+      })
+      return normalCols.length > 0
+    }
+  )
 
   // Persists column changes by saving metadata against table schema
   const saveChanges = async () => {
@@ -90,36 +132,56 @@ export const deriveStores = context => {
     // Update local state
     table.set(newTable)
 
-    // Broadcast event so that we can keep sync with external state
-    // (e.g. data section which maintains a list of table definitions)
-    dispatch("updatetable", newTable)
-
     // Update server
-    await API.saveTable(newTable)
+    if (get(config).allowSchemaChanges) {
+      await API.saveTable(newTable)
+    }
+
+    // Broadcast change to external state can be updated, as this change
+    // will not be received by the builder websocket because we caused it ourselves
+    dispatch("updatetable", newTable)
   }
 
   return {
+    hasNonAutoColumn,
     columns: {
       ...columns,
       actions: {
+        ...columns.actions,
         saveChanges,
         saveTable,
         changePrimaryDisplay,
+        changeAllColumnWidths,
       },
     },
   }
 }
 
 export const initialise = context => {
-  const { table, columns, stickyColumn, schemaOverrides } = context
+  const { table, columns, stickyColumn, schemaOverrides, columnWhitelist } =
+    context
 
   const schema = derived(
-    [table, schemaOverrides],
-    ([$table, $schemaOverrides]) => {
-      let newSchema = $table?.schema
-      if (!newSchema) {
+    [table, schemaOverrides, columnWhitelist],
+    ([$table, $schemaOverrides, $columnWhitelist]) => {
+      if (!$table?.schema) {
         return null
       }
+      let newSchema = { ...$table?.schema }
+
+      // Edge case to temporarily allow deletion of duplicated user
+      // fields that were saved with the "disabled" flag set.
+      // By overriding the saved schema we ensure only overrides can
+      // set the disabled flag.
+      // TODO: remove in future
+      Object.keys(newSchema).forEach(field => {
+        newSchema[field] = {
+          ...newSchema[field],
+          disabled: false,
+        }
+      })
+
+      // Apply schema overrides
       Object.keys($schemaOverrides || {}).forEach(field => {
         if (newSchema[field]) {
           newSchema[field] = {
@@ -128,6 +190,16 @@ export const initialise = context => {
           }
         }
       })
+
+      // Apply whitelist if specified
+      if ($columnWhitelist?.length) {
+        Object.keys(newSchema).forEach(key => {
+          if (!$columnWhitelist.includes(key)) {
+            delete newSchema[key]
+          }
+        })
+      }
+
       return newSchema
     }
   )
@@ -160,7 +232,7 @@ export const initialise = context => {
       fields
         .map(field => ({
           name: field,
-          label: $schema[field].name || field,
+          label: $schema[field].displayName || field,
           schema: $schema[field],
           width: $schema[field].width || DefaultColumnWidth,
           visible: $schema[field].visible ?? true,
@@ -195,7 +267,7 @@ export const initialise = context => {
     }
     stickyColumn.set({
       name: primaryDisplay,
-      label: $schema[primaryDisplay].name || primaryDisplay,
+      label: $schema[primaryDisplay].displayName || primaryDisplay,
       schema: $schema[primaryDisplay],
       width: $schema[primaryDisplay].width || DefaultColumnWidth,
       visible: true,

@@ -14,19 +14,22 @@
   import { groups, licensing, apps, users, auth, admin } from "stores/portal"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "api"
-  import { onMount } from "svelte"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "components/common/RoleSelect.svelte"
   import UpgradeModal from "components/common/users/UpgradeModal.svelte"
   import { Constants, Utils } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
   import { roles } from "stores/backend"
+  import { fly } from "svelte/transition"
 
   let query = null
   let loaded = false
-  let rendered = false
   let inviting = false
   let searchFocus = false
+
+  // Initially filter entities without app access
+  // Show all when false
+  let filterByAppAccess = true
 
   let appInvites = []
   let filteredInvites = []
@@ -34,8 +37,9 @@
   let filteredGroups = []
   let selectedGroup
   let userOnboardResponse = null
-
   let userLimitReachedModal
+
+  let inviteFailureResponse = ""
 
   $: queryIsEmail = emailValidator(query) === true
   $: prodAppId = apps.getProdAppID($store.appId)
@@ -52,15 +56,32 @@
   }
 
   const filterInvites = async query => {
-    appInvites = await getInvites()
-    if (!query || query == "") {
-      filteredInvites = appInvites
+    if (!prodAppId) {
       return
     }
-    filteredInvites = appInvites.filter(invite => invite.email.includes(query))
+
+    appInvites = await getInvites()
+
+    //On Focus behaviour
+    if (!filterByAppAccess && !query) {
+      filteredInvites =
+        appInvites.length > 100 ? appInvites.slice(0, 100) : [...appInvites]
+      return
+    }
+
+    filteredInvites = appInvites.filter(invite => {
+      const inviteInfo = invite.info?.apps
+      if (!query && inviteInfo && prodAppId) {
+        return Object.keys(inviteInfo).includes(prodAppId)
+      }
+      return invite.email.includes(query)
+    })
   }
 
-  $: filterInvites(query)
+  $: filterByAppAccess, prodAppId, filterInvites(query)
+  $: if (searchFocus === true) {
+    filterByAppAccess = false
+  }
 
   const usersFetch = fetchData({
     API,
@@ -79,9 +100,9 @@
     }
     await usersFetch.update({
       query: {
-        appId: query ? null : prodAppId,
+        appId: query || !filterByAppAccess ? null : prodAppId,
         email: query,
-        paginated: query ? null : false,
+        paginated: query || !filterByAppAccess ? null : false,
       },
     })
     await usersFetch.refresh()
@@ -107,7 +128,12 @@
   }
 
   const debouncedUpdateFetch = Utils.debounce(searchUsers, 250)
-  $: debouncedUpdateFetch(query, $store.builderSidePanel, loaded)
+  $: debouncedUpdateFetch(
+    query,
+    $store.builderSidePanel,
+    loaded,
+    filterByAppAccess
+  )
 
   const updateAppUser = async (user, role) => {
     if (!prodAppId) {
@@ -182,9 +208,10 @@
   }
 
   const searchGroups = (userGroups, query) => {
-    let filterGroups = query?.length
-      ? userGroups
-      : getAppGroups(userGroups, prodAppId)
+    let filterGroups =
+      query?.length || !filterByAppAccess
+        ? userGroups
+        : getAppGroups(userGroups, prodAppId)
     return filterGroups
       .filter(group => {
         if (!query?.length) {
@@ -214,7 +241,7 @@
   }
 
   // Adds the 'role' attribute and sets it to the current app.
-  $: enrichedGroups = getEnrichedGroups($groups)
+  $: enrichedGroups = getEnrichedGroups($groups, filterByAppAccess)
   $: filteredGroups = searchGroups(enrichedGroups, query)
   $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
   $: allUsers = [...filteredUsers, ...groupUsers]
@@ -226,7 +253,7 @@
     specific roles for the app.
   */
   const buildGroupUsers = (userGroups, filteredUsers) => {
-    if (query) {
+    if (query || !filterByAppAccess) {
       return []
     }
     // Must exclude users who have explicit privileges
@@ -282,19 +309,6 @@
     let userInviteResponse
     try {
       userInviteResponse = await users.onboard(payload)
-
-      const newUser = userInviteResponse?.successful.find(
-        user => user.email === newUserEmail
-      )
-      if (newUser) {
-        notifications.success(
-          userInviteResponse.created
-            ? "User created successfully"
-            : "User invite successful"
-        )
-      } else {
-        throw new Error("User invite failed")
-      }
     } catch (error) {
       console.error(error.message)
       notifications.error("Error inviting user")
@@ -305,12 +319,31 @@
 
   const onInviteUser = async () => {
     userOnboardResponse = await inviteUser()
+    const originalQuery = query + ""
+    query = null
 
-    const userInviteSuccess = userOnboardResponse?.successful
-    if (userInviteSuccess && userInviteSuccess[0].email === query) {
-      query = null
-      query = userInviteSuccess[0].email
+    const newUser = userOnboardResponse?.successful.find(
+      user => user.email === originalQuery
+    )
+    if (newUser) {
+      query = originalQuery
+      notifications.success(
+        userOnboardResponse.created
+          ? "User created successfully"
+          : "User invite successful"
+      )
+    } else {
+      const failedUser = userOnboardResponse?.unsuccessful.find(
+        user => user.email === originalQuery
+      )
+      inviteFailureResponse =
+        failedUser?.reason === "Unavailable"
+          ? "Email already in use. Please use a different email."
+          : failedUser?.reason
+
+      notifications.error(inviteFailureResponse)
     }
+    userOnboardResponse = null
   }
 
   const onUpdateUserInvite = async (invite, role) => {
@@ -321,12 +354,12 @@
         [prodAppId]: role,
       },
     })
-    await filterInvites()
+    await filterInvites(query)
   }
 
   const onUninviteAppUser = async invite => {
     await uninviteAppUser(invite)
-    await filterInvites()
+    await filterInvites(query)
   }
 
   // Purge only the app from the invite or recind the invite if only 1 app remains?
@@ -348,11 +381,6 @@
   }
 
   $: initSidePanel($store.builderSidePanel)
-
-  onMount(() => {
-    rendered = true
-    searchFocus = true
-  })
 
   function handleKeyDown(evt) {
     if (evt.key === "Enter" && queryIsEmail && !inviting) {
@@ -385,16 +413,14 @@
 <svelte:window on:keydown={handleKeyDown} />
 
 <div
+  transition:fly={{ x: 400, duration: 260 }}
   id="builder-side-panel-container"
-  class:open={$store.builderSidePanel}
-  use:clickOutside={$store.builderSidePanel
-    ? () => {
-        store.update(state => {
-          state.builderSidePanel = false
-          return state
-        })
-      }
-    : () => {}}
+  use:clickOutside={() => {
+    store.update(state => {
+      state.builderSidePanel = false
+      return state
+    })
+  }}
 >
   <div class="builder-side-panel-header">
     <Heading size="S">Users</Heading>
@@ -417,7 +443,6 @@
         autocomplete="off"
         disabled={inviting}
         value={query}
-        autofocus
         on:input={e => {
           query = e.target.value.trim()
         }}
@@ -428,16 +453,20 @@
 
     <span
       class="search-input-icon"
-      class:searching={query}
+      class:searching={query || !filterByAppAccess}
       on:click={() => {
+        if (!filterByAppAccess) {
+          filterByAppAccess = true
+        }
         if (!query) {
           return
         }
         query = null
         userOnboardResponse = null
+        filterByAppAccess = true
       }}
     >
-      <Icon name={query ? "Close" : "Search"} />
+      <Icon name={!filterByAppAccess || query ? "Close" : "Search"} />
     </span>
   </div>
 
@@ -555,7 +584,7 @@
 
         {#if filteredUsers?.length}
           <div class="auth-entity-section">
-            <div class="auth-entity-header ">
+            <div class="auth-entity-header">
               <div class="auth-entity-title">Users</div>
               <div class="auth-entity-access-title">Access</div>
             </div>
@@ -696,17 +725,16 @@
     max-width: calc(100vw - 40px);
     background: var(--background);
     border-left: var(--border-light);
-    z-index: 3;
+    z-index: 999;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
-    transition: transform 130ms ease-out;
     position: absolute;
     width: 400px;
     right: 0;
-    transform: translateX(100%);
     height: 100%;
+    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
   }
 
   .builder-side-panel-header,
@@ -754,11 +782,6 @@
 
   #builder-side-panel-container .search :global(input::placeholder) {
     font-style: normal;
-  }
-
-  #builder-side-panel-container.open {
-    transform: translateX(0);
-    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
   }
 
   .builder-side-panel-header {
