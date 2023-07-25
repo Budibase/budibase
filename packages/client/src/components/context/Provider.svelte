@@ -8,10 +8,8 @@
   export let actions
   export let key
 
-  // Clone and create new data context for this component tree
   const context = getContext("context")
   const component = getContext("component")
-
   const providerKey = key || $component.id
 
   // Generate a permanent unique ID for this component and use it to register

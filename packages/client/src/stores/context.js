@@ -9,12 +9,10 @@ export const createContextStore = () => {
     if (!providerId || data === undefined) {
       return
     }
-    // console.log(`[${providerId}]`, data)
     context.update(state => {
       state[providerId] = data
       return state
     })
-
     broadcastChange(providerId)
   }
 
@@ -31,7 +29,6 @@ export const createContextStore = () => {
 
   const observeChanges = callback => {
     observers.push(callback)
-
     return () => {
       observers = observers.filter(cb => cb !== callback)
     }

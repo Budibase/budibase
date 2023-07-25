@@ -499,15 +499,9 @@
     // Check if we already know if this key is used
     let used = knownContextKeyMap[key]
 
-    // If we don't know, check
+    // If we don't know, check and cache
     if (used == null) {
-      // Check HBS
-      if (bindingString.indexOf(`[${key}]`) !== -1) {
-        used = true
-      } else {
-        used = false
-      }
-      // Cache result
+      used = bindingString.indexOf(`[${key}]`) !== -1
       knownContextKeyMap[key] = used
     }
 
