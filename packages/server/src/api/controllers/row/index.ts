@@ -12,6 +12,7 @@ import {
   SearchResponse,
   SortOrder,
   SortType,
+  UserCtx,
   ViewV2,
 } from "@budibase/types"
 import * as utils from "./utils"
@@ -29,7 +30,7 @@ function pickApi(tableId: any) {
   return internal
 }
 
-export async function patch(ctx: any): Promise<any> {
+export async function patch(ctx: UserCtx): Promise<any> {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
@@ -53,7 +54,7 @@ export async function patch(ctx: any): Promise<any> {
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 }
@@ -78,6 +79,7 @@ export const save = async (ctx: any) => {
   ctx.body = row || squashed
   gridSocket?.emitRowUpdate(ctx, row || squashed)
 }
+
 export async function fetchView(ctx: any) {
   const tableId = utils.getTableId(ctx)
   const viewName = decodeURIComponent(ctx.params.viewName)
