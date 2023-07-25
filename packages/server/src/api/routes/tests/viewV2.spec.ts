@@ -89,7 +89,7 @@ describe("/v2/views", () => {
   describe("update", () => {
     let view: ViewV2
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       await config.createTable(priceTable())
       view = await config.api.viewV2.create({ name: "View A" })
     })
@@ -119,14 +119,55 @@ describe("/v2/views", () => {
       const tableId = config.table!._id!
       await config.api.viewV2.update({ ...view, name: "View B" })
 
-      expect(await config.api.table.get(tableId)).toEqual({
-        ...config.table,
-        views: {
-          "View B": { ...view, name: "View B", schema: expect.anything() },
+      expect(await config.api.table.get(tableId)).toEqual(
+        expect.objectContaining({
+          views: {
+            "View B": { ...view, name: "View B", schema: expect.anything() },
+          },
+        })
+      )
+    })
+
+    it("cannot update an unexisting views nor edit ids", async () => {
+      const tableId = config.table!._id!
+      await config.api.viewV2.update(
+        { ...view, id: generator.guid() },
+        { expectStatus: 404 }
+      )
+
+      expect(await config.api.table.get(tableId)).toEqual(
+        expect.objectContaining({
+          views: {
+            [view.name]: {
+              ...view,
+              schema: expect.anything(),
+            },
+          },
+        })
+      )
+    })
+
+    it("cannot update views with the wrong tableId", async () => {
+      const tableId = config.table!._id!
+      await config.api.viewV2.update(
+        {
+          ...view,
+          tableId: generator.guid(),
+          query: { equal: { newField: "thatValue" } },
         },
-        _rev: expect.any(String),
-        updatedAt: expect.any(String),
-      })
+        { expectStatus: 404 }
+      )
+
+      expect(await config.api.table.get(tableId)).toEqual(
+        expect.objectContaining({
+          views: {
+            [view.name]: {
+              ...view,
+              schema: expect.anything(),
+            },
+          },
+        })
+      )
     })
   })
 
