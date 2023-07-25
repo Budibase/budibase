@@ -1,0 +1,133 @@
+openapi: 3.0.0
+info:
+  title: Worker API Specification
+  version: 1.0.0
+servers:
+  - url: "http://localhost:10000"
+    description: localhost
+  - url: "https://budibaseqa.app"
+    description: QA
+  - url: "https://preprod.qa.budibase.net"
+    description: Preprod
+  - url: "https://budibase.app"
+    description: Production
+
+tags:
+  - name: license
+    description: License operations
+
+paths:
+  /api/global/license/key:
+    post:
+      tags:
+        - license
+      summary: Activate license key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateLicenseKeyRequest'
+      responses:
+        '200':
+          description: Success
+    get:
+      tags:
+        - license
+      summary: Get license key
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetLicenseKeyResponse'
+    delete:
+      tags:
+        - license
+      summary: Delete license key
+      responses:
+        '204':
+          description: No content
+  /api/global/license/offline:
+    post:
+      tags:
+        - license
+      summary: Activate offline license
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateOfflineLicenseTokenRequest'
+      responses:
+        '200':
+          description: Success
+    get:
+      tags:
+        - license
+      summary: Get offline license
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOfflineLicenseTokenResponse'
+    delete:
+      tags:
+        - license
+      summary: Delete offline license
+      responses:
+        '204':
+          description: No content
+  /api/global/license/offline/identifier:
+    get:
+      tags:
+        - license
+      summary: Get offline identifier
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOfflineIdentifierResponse'
+
+components:
+  schemas:
+    ActivateOfflineLicenseTokenRequest:
+      type: object
+      properties:
+        offlineLicenseToken:
+          type: string
+      required:
+        - offlineLicenseToken
+    GetOfflineLicenseTokenResponse:
+      type: object
+      properties:
+        offlineLicenseToken:
+          type: string
+      required:
+        - offlineLicenseToken
+    ActivateLicenseKeyRequest:
+      type: object
+      properties:
+        licenseKey:
+          type: string
+      required:
+        - licenseKey
+    GetLicenseKeyResponse:
+      type: object
+      properties:
+        licenseKey:
+          type: string
+      required:
+        - licenseKey
+    GetOfflineIdentifierResponse:
+      type: object
+      properties:
+        identifierBase64:
+          type: string
+      required:
+        - identifierBase64
