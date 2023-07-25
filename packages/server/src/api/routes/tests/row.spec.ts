@@ -17,7 +17,11 @@ import {
   SortType,
   SortOrder,
 } from "@budibase/types"
-import { generator, structures } from "@budibase/backend-core/tests"
+import {
+  expectAnyInternalColsAttributes,
+  generator,
+  structures,
+} from "@budibase/backend-core/tests"
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -987,22 +991,11 @@ describe("/rows", () => {
       })
       const response = await config.api.viewV2.search(createViewResponse.id)
 
-      const anyRowAttributes: {
-        [K in (typeof db.CONSTANT_INTERNAL_ROW_COLS)[number]]: any
-      } = {
-        tableId: expect.anything(),
-        type: expect.anything(),
-        _id: expect.anything(),
-        _rev: expect.anything(),
-        createdAt: expect.anything(),
-        updatedAt: expect.anything(),
-      }
-
       expect(response.body.rows).toHaveLength(10)
       expect(response.body.rows).toEqual(
         expect.arrayContaining(
           rows.map(r => ({
-            ...anyRowAttributes,
+            ...expectAnyInternalColsAttributes,
             name: r.name,
           }))
         )

@@ -2,7 +2,10 @@ import { FieldType, Row, Table } from "@budibase/types"
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { SearchParams } from "../../search"
 import { search } from "../internal"
-import { generator } from "@budibase/backend-core/tests"
+import {
+  expectAnyInternalColsAttributes,
+  generator,
+} from "@budibase/backend-core/tests"
 
 describe("internal", () => {
   const config = new TestConfiguration()
@@ -75,6 +78,30 @@ describe("internal", () => {
         expect(result.rows).toHaveLength(10)
         expect(result.rows).toEqual(
           expect.arrayContaining(rows.map(r => expect.objectContaining(r)))
+        )
+      })
+    })
+
+    it("querying by fields will always return data attribute columns", async () => {
+      await config.doInContext(config.appId, async () => {
+        const tableId = config.table!._id!
+
+        const searchParams: SearchParams = {
+          tableId,
+          query: {},
+          fields: ["name", "age"],
+        }
+        const result = await search(searchParams)
+
+        expect(result.rows).toHaveLength(10)
+        expect(result.rows).toEqual(
+          expect.arrayContaining(
+            rows.map(r => ({
+              ...expectAnyInternalColsAttributes,
+              name: r.name,
+              age: r.age,
+            }))
+          )
         )
       })
     })
