@@ -5,7 +5,7 @@ tk.freeze(timestamp)
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
 const { basicRow } = setup.structures
-import { context, tenancy } from "@budibase/backend-core"
+import { context, db, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   QuotaUsageType,
@@ -969,7 +969,7 @@ describe("/rows", () => {
       }
     )
 
-    it("when schema is defined, no other columns are returned", async () => {
+    it("when schema is defined, defined columns and row attributes are returned", async () => {
       const table = await config.createTable(userTable())
       const rows = []
       for (let i = 0; i < 10; i++) {
@@ -987,9 +987,25 @@ describe("/rows", () => {
       })
       const response = await config.api.viewV2.search(createViewResponse.id)
 
+      const anyRowAttributes: {
+        [K in (typeof db.CONSTANT_INTERNAL_ROW_COLS)[number]]: any
+      } = {
+        tableId: expect.anything(),
+        type: expect.anything(),
+        _id: expect.anything(),
+        _rev: expect.anything(),
+        createdAt: expect.anything(),
+        updatedAt: expect.anything(),
+      }
+
       expect(response.body.rows).toHaveLength(10)
       expect(response.body.rows).toEqual(
-        expect.arrayContaining(rows.map(r => ({ name: r.name })))
+        expect.arrayContaining(
+          rows.map(r => ({
+            ...anyRowAttributes,
+            name: r.name,
+          }))
+        )
       )
     })
 
