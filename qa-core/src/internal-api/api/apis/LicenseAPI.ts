@@ -12,8 +12,13 @@ export default class LicenseAPI extends BaseAPI {
     super(client)
   }
 
-  async getOfflineLicenseToken(opts: { status?: number } = {}): Promise<[Response, GetOfflineLicenseTokenResponse]> {
-    const [response, body] = await this.get(`/global/license/offline`, opts.status)
+  async getOfflineLicenseToken(
+    opts: { status?: number } = {}
+  ): Promise<[Response, GetOfflineLicenseTokenResponse]> {
+    const [response, body] = await this.get(
+      `/global/license/offline`,
+      opts.status
+    )
     return [response, body]
   }
 
@@ -22,13 +27,19 @@ export default class LicenseAPI extends BaseAPI {
     return [response]
   }
 
-  async activateOfflineLicenseToken(body: ActivateOfflineLicenseTokenRequest): Promise<[Response]> {
+  async activateOfflineLicenseToken(
+    body: ActivateOfflineLicenseTokenRequest
+  ): Promise<[Response]> {
     const [response] = await this.post(`/global/license/offline`, body)
     return [response]
   }
 
-  async getOfflineIdentifier(): Promise<[Response, GetOfflineIdentifierResponse]> {
-    const [response, body] = await this.get(`/global/license/offline/identifier`)
+  async getOfflineIdentifier(): Promise<
+    [Response, GetOfflineIdentifierResponse]
+  > {
+    const [response, body] = await this.get(
+      `/global/license/offline/identifier`
+    )
     return [response, body]
   }
 }
