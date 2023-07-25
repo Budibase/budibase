@@ -14,9 +14,8 @@ describe("offline", () => {
   })
 
   // TODO: Currently requires a self host install + account portal
-  // How do we flag this as a self host specific test?
-
-  it("creates, activates and deletes offline license", async () => {
+  // Ignored until we set this up
+  xit("creates, activates and deletes offline license", async () => {
     // installation: Delete any token
     await config.internalApi.license.deleteOfflineLicenseToken()
 
