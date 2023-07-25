@@ -13,6 +13,11 @@ router
     authorized(permissions.BUILDER),
     viewController.v2.create
   )
+  .put(
+    `/api/v2/views`,
+    authorized(permissions.BUILDER),
+    viewController.v2.update
+  )
   .delete(
     `/api/v2/views/:viewId`,
     authorized(permissions.BUILDER),

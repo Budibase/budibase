@@ -1,5 +1,10 @@
 import sdk from "../../../sdk"
-import { CreateViewRequest, Ctx, ViewResponse } from "@budibase/types"
+import {
+  CreateViewRequest,
+  Ctx,
+  UpdateViewRequest,
+  ViewResponse,
+} from "@budibase/types"
 
 export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   const view = ctx.request.body
@@ -7,6 +12,21 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
 
   const result = await sdk.views.create(tableId, view)
   ctx.status = 201
+  ctx.body = {
+    data: result,
+  }
+}
+
+export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
+  const view = ctx.request.body
+
+  if (view.version !== 2) {
+    ctx.throw(400, "Only views V2 can be updated")
+  }
+
+  const { tableId } = view
+
+  const result = await sdk.views.update(tableId, view)
   ctx.body = {
     data: result,
   }
