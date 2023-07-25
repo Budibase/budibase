@@ -163,8 +163,7 @@ export class UserAPI extends TestAPI {
 
   revokeBuilderToApp = (
     userId: string,
-    appId: string,
-    statusCode: number = 200
+    appId: string
   ) => {
     return this.request
       .delete(`/api/global/users/${userId}/app/${appId}/builder`)
