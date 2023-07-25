@@ -1,4 +1,4 @@
-import { structures } from ".."
+import { generator } from "./generator"
 import { newid } from "../../../../src/docIds/newid"
 
 export function id() {
@@ -6,7 +6,7 @@ export function id() {
 }
 
 export function rev() {
-  return `${structures.generator.character({
+  return `${generator.character({
     numeric: true,
-  })}-${structures.uuid().replace(/-/, "")}`
+  })}-${generator.guid().replace(/-/, "")}`
 }

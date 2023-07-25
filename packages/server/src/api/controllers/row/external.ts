@@ -73,9 +73,11 @@ export async function patch(ctx: UserCtx) {
     row: inputs,
   })
   const row = await getRow(tableId, id, { relationships: true })
+  const table = await sdk.tables.getTable(tableId)
   return {
     ...response,
     row,
+    table,
   }
 }
 
