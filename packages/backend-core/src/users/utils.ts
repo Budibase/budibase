@@ -1,11 +1,4 @@
-import {
-  Account,
-  CloudAccount,
-  isSSOAccount,
-  isSSOUser,
-  User,
-} from "@budibase/types"
-import * as pro from "@budibase/pro"
+import { CloudAccount } from "@budibase/types"
 import * as accountSdk from "../accounts"
 import env from "../environment"
 import { getPlatformUser } from "./lookup"
@@ -38,30 +31,6 @@ export async function validateUniqueUser(email: string, tenantId: string) {
       throw new EmailUnavailableError(email)
     }
   }
-}
-
-export async function isPreventPasswordActions(user: User, account?: Account) {
-  // when in maintenance mode we allow sso users with the admin role
-  // to perform any password action - this prevents lockout
-  if (env.ENABLE_SSO_MAINTENANCE_MODE && isAdmin(user)) {
-    return false
-  }
-
-  // SSO is enforced for all users
-  if (await pro.features.isSSOEnforced()) {
-    return true
-  }
-
-  // Check local sso
-  if (isSSOUser(user)) {
-    return true
-  }
-
-  // Check account sso
-  if (!account) {
-    account = await accountSdk.getAccountByTenantId(getTenantId())
-  }
-  return !!(account && account.email === user.email && isSSOAccount(account))
 }
 
 /**
