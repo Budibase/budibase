@@ -263,7 +263,7 @@ class TestConfiguration {
     }
     const response = await this._req(user, null, controllers.users.save)
     const body = response as SaveUserResponse
-    return this.getUser(body.email) as Promise<User>
+    return (await this.getUser(body.email)) as User
   }
 
   // CONFIGS

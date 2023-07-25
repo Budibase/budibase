@@ -2,7 +2,6 @@ import {
   directCouchFind,
   DocumentType,
   generateAppUserID,
-  getGlobalIDFromUserMetadataID,
   getGlobalUserParams,
   getProdAppID,
   getUsersByAppParams,
@@ -12,17 +11,16 @@ import {
   SEPARATOR,
   UNICODE_MAX,
   ViewName,
-} from "./db"
+} from "../db"
 import {
   BulkDocsResponse,
   SearchUsersRequest,
   User,
   ContextUser,
 } from "@budibase/types"
-import { sdk } from "@budibase/shared-core"
-import { getGlobalDB } from "./context"
-import * as context from "./context"
-import { user as userCache } from "./cache"
+import { getGlobalDB } from "../context"
+import * as context from "../context"
+import { user as userCache } from "../cache"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -40,14 +38,6 @@ function removeUserPassword(users: User | User[]) {
   }
   return users
 }
-
-// extract from shared-core to make easily accessible from backend-core
-export const isBuilder = sdk.users.isBuilder
-export const isAdmin = sdk.users.isAdmin
-export const isAdminOrBuilder = sdk.users.isAdminOrBuilder
-export const hasAdminPermissions = sdk.users.hasAdminPermissions
-export const hasBuilderPermissions = sdk.users.hasBuilderPermissions
-export const hasAppBuilderPermissions = sdk.users.hasAppBuilderPermissions
 
 export const bulkGetGlobalUsersById = async (
   userIds: string[],
