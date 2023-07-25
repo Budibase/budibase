@@ -169,6 +169,24 @@ describe("/v2/views", () => {
         })
       )
     })
+
+    it("cannot update views v1", async () => {
+      const viewV1 = await config.createView()
+      await config.api.viewV2.update(
+        {
+          ...viewV1,
+        },
+        {
+          expectStatus: 400,
+          handleResponse: r => {
+            expect(r.body).toEqual({
+              message: "Only views V2 can be updated",
+              status: 400,
+            })
+          },
+        }
+      )
+    })
   })
 
   describe("delete", () => {
