@@ -66,7 +66,7 @@ describe("/api/global/users", () => {
       expect(res.body._id).toBeDefined()
       const user = await config.getUser(email)
       expect(user).toBeDefined()
-      expect(user._id).toEqual(res.body._id)
+      expect(user!._id).toEqual(res.body._id)
       expect(events.user.inviteAccepted).toBeCalledTimes(1)
       expect(events.user.inviteAccepted).toBeCalledWith(user)
     })

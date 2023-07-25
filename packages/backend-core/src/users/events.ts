@@ -1,18 +1,18 @@
-import env from "../../environment"
-import { events, accounts, tenancy, users } from "@budibase/backend-core"
+import env from "../environment"
+import * as events from "../events"
+import * as accounts from "../accounts"
+import { getTenantId } from "../context"
 import { User, UserRoles, CloudAccount } from "@budibase/types"
-
-const hasBuilderPerm = users.hasBuilderPermissions
-const hasAdminPerm = users.hasAdminPermissions
+import { hasBuilderPermissions, hasAdminPermissions } from "./utils"
 
 export const handleDeleteEvents = async (user: any) => {
   await events.user.deleted(user)
 
-  if (hasBuilderPerm(user)) {
+  if (hasBuilderPermissions(user)) {
     await events.user.permissionBuilderRemoved(user)
   }
 
-  if (hasAdminPerm(user)) {
+  if (hasAdminPermissions(user)) {
     await events.user.permissionAdminRemoved(user)
   }
 }
@@ -58,7 +58,7 @@ export const handleSaveEvents = async (
   user: User,
   existingUser: User | undefined
 ) => {
-  const tenantId = tenancy.getTenantId()
+  const tenantId = getTenantId()
   let tenantAccount: CloudAccount | undefined
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     tenantAccount = await accounts.getAccountByTenantId(tenantId)
@@ -107,19 +107,19 @@ export const handleSaveEvents = async (
 }
 
 export const isAddingBuilder = (user: any, existingUser: any) => {
-  return isAddingPermission(user, existingUser, hasBuilderPerm)
+  return isAddingPermission(user, existingUser, hasBuilderPermissions)
 }
 
 export const isRemovingBuilder = (user: any, existingUser: any) => {
-  return isRemovingPermission(user, existingUser, hasBuilderPerm)
+  return isRemovingPermission(user, existingUser, hasBuilderPermissions)
 }
 
 const isAddingAdmin = (user: any, existingUser: any) => {
-  return isAddingPermission(user, existingUser, hasAdminPerm)
+  return isAddingPermission(user, existingUser, hasAdminPermissions)
 }
 
 const isRemovingAdmin = (user: any, existingUser: any) => {
-  return isRemovingPermission(user, existingUser, hasAdminPerm)
+  return isRemovingPermission(user, existingUser, hasAdminPermissions)
 }
 
 const isOnboardingComplete = (user: any, existingUser: any) => {
