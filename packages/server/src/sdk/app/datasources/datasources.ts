@@ -19,6 +19,7 @@ import _ from "lodash"
 import {
   BudibaseInternalDB,
   getDatasourceParams,
+  getDatasourcePlusParams,
   getTableParams,
 } from "../../../db/utils"
 import sdk from "../../index"
@@ -242,4 +243,16 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
   }
 
   return update
+}
+
+export async function getExternalDatasources(): Promise<Datasource[]> {
+  const db = context.getAppDB()
+
+  const externalDatasources = await db.allDocs<Datasource>(
+    getDatasourcePlusParams(undefined, {
+      include_docs: true,
+    })
+  )
+
+  return externalDatasources.rows.map(r => r.doc)
 }
