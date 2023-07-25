@@ -1,30 +1,58 @@
 export const buildLicensingEndpoints = API => ({
-  /**
-   * Activates a self hosted license key
-   */
+  // LICENSE KEY
+
   activateLicenseKey: async data => {
     return API.post({
-      url: `/api/global/license/activate`,
+      url: `/api/global/license/key`,
       body: data,
     })
   },
-
-  /**
-   * Delete a self hosted license key
-   */
   deleteLicenseKey: async () => {
     return API.delete({
-      url: `/api/global/license/info`,
+      url: `/api/global/license/key`,
     })
   },
+  getLicenseKey: async () => {
+    try {
+      return await API.get({
+        url: "/api/global/license/key",
+      })
+    } catch (e) {
+      if (e.status !== 404) {
+        throw e
+      }
+    }
+  },
 
-  /**
-   * Get the license info - metadata about the license including the
-   * obfuscated license key.
-   */
-  getLicenseInfo: async () => {
-    return API.get({
-      url: "/api/global/license/info",
+  // OFFLINE LICENSE
+
+  activateOfflineLicense: async ({ offlineLicenseToken }) => {
+    return API.post({
+      url: "/api/global/license/offline",
+      body: {
+        offlineLicenseToken,
+      },
+    })
+  },
+  deleteOfflineLicense: async () => {
+    return API.delete({
+      url: "/api/global/license/offline",
+    })
+  },
+  getOfflineLicense: async () => {
+    try {
+      return await API.get({
+        url: "/api/global/license/offline",
+      })
+    } catch (e) {
+      if (e.status !== 404) {
+        throw e
+      }
+    }
+  },
+  getOfflineLicenseIdentifier: async () => {
+    return await API.get({
+      url: "/api/global/license/offline/identifier",
     })
   },
 
@@ -36,7 +64,6 @@ export const buildLicensingEndpoints = API => ({
       url: "/api/global/license/refresh",
     })
   },
-
   /**
    * Retrieve the usage information for the tenant
    */

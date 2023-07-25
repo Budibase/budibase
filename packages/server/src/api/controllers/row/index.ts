@@ -9,6 +9,10 @@ import {
   DeleteRow,
   DeleteRows,
   Row,
+  SearchResponse,
+  SortOrder,
+  SortType,
+  ViewV2,
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
@@ -148,7 +152,7 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 
   for (let row of rows) {
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-    gridSocket?.emitRowDeletion(ctx, row._id)
+    gridSocket?.emitRowDeletion(ctx, row._id!)
   }
 
   return rows
@@ -201,6 +205,80 @@ export async function search(ctx: any) {
   ctx.body = await quotas.addQuery(() => sdk.rows.search(searchParams), {
     datasourceId: tableId,
   })
+}
+
+function getSortOptions(
+  ctx: Ctx,
+  view: ViewV2
+):
+  | {
+      sort: string
+      sortOrder?: SortOrder
+      sortType?: SortType
+    }
+  | undefined {
+  const { sort_column, sort_order, sort_type } = ctx.query
+  if (Array.isArray(sort_column)) {
+    ctx.throw(400, "sort_column cannot be an array")
+  }
+  if (Array.isArray(sort_order)) {
+    ctx.throw(400, "sort_order cannot be an array")
+  }
+  if (Array.isArray(sort_type)) {
+    ctx.throw(400, "sort_type cannot be an array")
+  }
+
+  if (sort_column) {
+    return {
+      sort: sort_column,
+      sortOrder: sort_order as SortOrder,
+      sortType: sort_type as SortType,
+    }
+  }
+  if (view.sort) {
+    return {
+      sort: view.sort.field,
+      sortOrder: view.sort.order,
+      sortType: view.sort.type,
+    }
+  }
+
+  return
+}
+
+export async function searchView(ctx: Ctx<void, SearchResponse>) {
+  const { viewId } = ctx.params
+
+  const view = await sdk.views.get(viewId)
+  if (!view) {
+    ctx.throw(404, `View ${viewId} not found`)
+  }
+
+  if (view.version !== 2) {
+    ctx.throw(400, `This method only supports viewsV2`)
+  }
+
+  const table = await sdk.tables.getTable(view?.tableId)
+
+  const viewFields =
+    (view.columns &&
+      Object.entries(view.columns).length &&
+      Object.keys(sdk.views.enrichSchema(view, table.schema).schema)) ||
+    undefined
+
+  ctx.status = 200
+  ctx.body = await quotas.addQuery(
+    () =>
+      sdk.rows.search({
+        tableId: view.tableId,
+        query: view.query || {},
+        fields: viewFields,
+        ...getSortOptions(ctx, view),
+      }),
+    {
+      datasourceId: view.tableId,
+    }
+  )
 }
 
 export async function validate(ctx: Ctx) {
