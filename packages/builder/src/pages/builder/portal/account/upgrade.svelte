@@ -206,7 +206,7 @@
       </Layout>
       <Layout noPadding>
         <div class="identifier-input">
-            <CopyInput value={offlineLicenseIdentifier} />
+          <CopyInput value={offlineLicenseIdentifier} />
         </div>
       </Layout>
       <Divider />
