@@ -986,16 +986,17 @@ describe("/rows", () => {
         )
       }
 
-      const createViewResponse = await config.api.viewV2.create({
+      const view = await config.api.viewV2.create({
         columns: { name: { visible: true } },
       })
-      const response = await config.api.viewV2.search(createViewResponse.id)
+      const response = await config.api.viewV2.search(view.id)
 
       expect(response.body.rows).toHaveLength(10)
       expect(response.body.rows).toEqual(
         expect.arrayContaining(
           rows.map(r => ({
             ...expectAnyInternalColsAttributes,
+            _viewId: view.id,
             name: r.name,
           }))
         )
