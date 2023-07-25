@@ -20,3 +20,11 @@ export const expectAnyInternalColsAttributes: {
   createdAt: expect.anything(),
   updatedAt: expect.anything(),
 }
+
+export const expectAnyExternalColsAttributes: {
+  [K in (typeof db.CONSTANT_EXTERNAL_ROW_COLS)[number]]: any
+} = {
+  tableId: expect.anything(),
+  _id: expect.anything(),
+  _rev: expect.anything(),
+}
