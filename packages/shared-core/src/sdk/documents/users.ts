@@ -14,6 +14,10 @@ export function isBuilder(user: User | ContextUser, appId?: string) {
   return false
 }
 
+export function isGlobalBuilder(user: User | ContextUser) {
+  return (isBuilder(user) && !hasAppBuilderPermissions(user)) || isAdmin(user)
+}
+
 // alias for hasAdminPermission, currently do the same thing
 // in future whether someone has admin permissions and whether they are
 // an admin for a specific resource could be separated
