@@ -1,5 +1,5 @@
 import { generator } from "@budibase/backend-core/tests"
-import { FieldType, Operation, Row, Table } from "@budibase/types"
+import { FieldType, Operation, Table } from "@budibase/types"
 import { patch } from "../external"
 
 jest.mock("../../../../sdk", () => ({
@@ -48,24 +48,19 @@ describe("external", () => {
   })
 
   describe("patch", () => {
-    beforeAll(() => {
+    beforeEach(() => {
       mockGetTable.mockResolvedValue(table)
     })
 
     it("patching a row from a table will submit the requested fields", async () => {
       const tableId = generator.guid()
-      const patchData: Row = {
+      const patchData = {
         _id: generator.guid(),
         name: generator.name(),
         age: generator.age(),
         address: generator.address(),
       }
 
-      const trimmedRow: Row = {
-        name: patchData.name,
-        age: patchData.age,
-      }
-      mockTrimViewFields.mockResolvedValue(trimmedRow)
       mockRowsValidate.mockResolvedValue({ valid: true, errors: [] })
 
       await patch(tableId, patchData)
@@ -87,6 +82,56 @@ describe("external", () => {
         Operation.READ,
         tableId,
         expect.anything()
+      )
+
+      expect(mockTrimViewFields).not.toBeCalled()
+    })
+
+    it("patching a row from a view will submit the requested fields", async () => {
+      const tableId = generator.guid()
+      const patchData = {
+        _id: generator.guid(),
+        _viewId: generator.guid(),
+        name: generator.name(),
+        age: generator.age(),
+        address: generator.address(),
+      }
+
+      const trimmedRow = {
+        name: patchData.name,
+        age: patchData.age,
+      }
+      mockTrimViewFields.mockResolvedValue(trimmedRow)
+      mockRowsValidate.mockResolvedValue({ valid: true, errors: [] })
+
+      await patch(tableId, patchData)
+
+      expect(mockTrimViewFields).toBeCalledTimes(1)
+      expect(mockTrimViewFields).toBeCalledWith(patchData._viewId, table, {
+        name: patchData.name,
+        age: patchData.age,
+        address: patchData.address,
+      })
+
+      // Ensure we don't persist _viewId
+      expect(mockHandleRequest).not.toHaveBeenCalledWith(
+        Operation.UPDATE,
+        expect.anything(),
+        expect.objectContaining({
+          row: expect.objectContaining({ _viewId: expect.anything() }),
+        })
+      )
+
+      expect(mockHandleRequest).toHaveBeenCalledWith(
+        Operation.UPDATE,
+        tableId,
+        {
+          id: [patchData._id],
+          row: {
+            name: patchData.name,
+            age: patchData.age,
+          },
+        }
       )
     })
   })
