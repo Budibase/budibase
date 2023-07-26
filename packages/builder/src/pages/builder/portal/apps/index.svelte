@@ -15,6 +15,7 @@
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
   import AccountLockedModal from "components/portal/licensing/AccountLockedModal.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
@@ -237,35 +238,37 @@
       {#if enrichedApps.length}
         <Layout noPadding gap="L">
           <div class="title">
-            <div class="buttons">
-              <Button
-                size="M"
-                cta
-                on:click={usersLimitLockAction || initiateAppCreation}
-              >
-                Create new app
-              </Button>
-              {#if $apps?.length > 0 && !$admin.offlineMode}
+            {#if sdk.isGlobalBuilder($auth.user)}
+              <div class="buttons">
                 <Button
                   size="M"
-                  secondary
-                  on:click={usersLimitLockAction ||
-                    $goto("/builder/portal/apps/templates")}
+                  cta
+                  on:click={usersLimitLockAction || initiateAppCreation}
                 >
-                  View templates
+                  Create new app
                 </Button>
-              {/if}
-              {#if !$apps?.length}
-                <Button
-                  size="L"
-                  quiet
-                  secondary
-                  on:click={usersLimitLockAction || initiateAppImport}
-                >
-                  Import app
-                </Button>
-              {/if}
-            </div>
+                {#if $apps?.length > 0 && !$admin.offlineMode}
+                  <Button
+                    size="M"
+                    secondary
+                    on:click={usersLimitLockAction ||
+                      $goto("/builder/portal/apps/templates")}
+                  >
+                    View templates
+                  </Button>
+                {/if}
+                {#if !$apps?.length}
+                  <Button
+                    size="L"
+                    quiet
+                    secondary
+                    on:click={usersLimitLockAction || initiateAppImport}
+                  >
+                    Import app
+                  </Button>
+                {/if}
+              </div>
+            {/if}
             {#if enrichedApps.length > 1}
               <div class="app-actions">
                 <Select

@@ -5,8 +5,8 @@ export const initPro = async () => {
   await proSdk.init({
     scimUserServiceConfig: {
       functions: {
-        saveUser: userSdk.save,
-        removeUser: (id: string) => userSdk.destroy(id),
+        saveUser: userSdk.db.save,
+        removeUser: (id: string) => userSdk.db.destroy(id),
       },
     },
   })

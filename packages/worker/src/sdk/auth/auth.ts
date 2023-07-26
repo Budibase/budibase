@@ -76,9 +76,9 @@ export const reset = async (email: string) => {
 export const resetUpdate = async (resetCode: string, password: string) => {
   const { userId } = await redis.checkResetPasswordCode(resetCode)
 
-  let user = await userSdk.getUser(userId)
+  let user = await userSdk.db.getUser(userId)
   user.password = password
-  user = await userSdk.save(user)
+  user = await userSdk.db.save(user)
 
   // remove password from the user before sending events
   delete user.password
