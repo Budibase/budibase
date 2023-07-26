@@ -16,6 +16,7 @@ import {
   FieldType,
   SortType,
   SortOrder,
+  PatchRowRequest,
 } from "@budibase/types"
 import {
   expectAnyInternalColsAttributes,
@@ -400,9 +401,9 @@ describe("/rows", () => {
       const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.patch(table._id!, {
-        _id: existing._id,
-        _rev: existing._rev,
-        tableId: table._id,
+        _id: existing._id!,
+        _rev: existing._rev!,
+        tableId: table._id!,
         name: "Updated Name",
       })
 
@@ -428,9 +429,9 @@ describe("/rows", () => {
       await config.api.row.patch(
         table._id!,
         {
-          _id: existing._id,
-          _rev: existing._rev,
-          tableId: table._id,
+          _id: existing._id!,
+          _rev: existing._rev!,
+          tableId: table._id!,
           name: 1,
         },
         { expectStatus: 400 }
@@ -451,7 +452,7 @@ describe("/rows", () => {
         const [row] = searchResponse.body.rows as Row[]
 
         const res = await config.api.row.patch(table._id!, {
-          ...row,
+          ...(row as PatchRowRequest),
           name: "Updated Name",
           description: "Updated Description",
         })
@@ -478,7 +479,7 @@ describe("/rows", () => {
         const [row] = searchResponse.body.rows as Row[]
 
         const res = await config.api.row.patch(table._id!, {
-          ...row,
+          ...(row as PatchRowRequest),
           name: "Updated Name",
           description: "Updated Description",
         })
