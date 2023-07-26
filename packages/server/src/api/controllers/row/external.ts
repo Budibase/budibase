@@ -8,6 +8,8 @@ import {
   Datasource,
   IncludeRelationship,
   Operation,
+  PatchRowRequest,
+  PatchRowResponse,
   Row,
   Table,
   UserCtx,
@@ -55,14 +57,12 @@ export async function handleRequest(
   )
 }
 
-export async function patch(ctx: UserCtx) {
-  const inputs = ctx.request.body
+export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = ctx.params.tableId
-  const id = inputs._id
-  // don't save the ID to db
-  delete inputs._id
+  const { id, ...rowData } = ctx.request.body
+
   const validateResult = await utils.validate({
-    row: inputs,
+    row: rowData,
     tableId,
   })
   if (!validateResult.valid) {
@@ -70,7 +70,7 @@ export async function patch(ctx: UserCtx) {
   }
   const response = await handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(id),
-    row: inputs,
+    row: rowData,
   })
   const row = await getRow(tableId, id, { relationships: true })
   const table = await sdk.tables.getTable(tableId)

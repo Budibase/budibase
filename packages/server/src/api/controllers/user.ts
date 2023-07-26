@@ -1,6 +1,5 @@
-import { generateUserMetadataID, generateUserFlagID } from "../../db/utils"
+import { generateUserFlagID } from "../../db/utils"
 import { InternalTables } from "../../db/utils"
-import { getGlobalUsers } from "../../utilities/global"
 import { getFullUser } from "../../utilities/users"
 import { context } from "@budibase/backend-core"
 import { Ctx, UserCtx } from "@budibase/types"
