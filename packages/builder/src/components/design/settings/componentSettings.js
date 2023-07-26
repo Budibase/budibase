@@ -20,6 +20,7 @@ import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelt
 import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
 import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
+import GridColumnEditor from "./controls/ColumnEditor/GridColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
 
@@ -47,9 +48,11 @@ const componentMap = {
   fieldConfiguration: FieldConfiguration,
   columns: ColumnEditor,
   "columns/basic": BasicColumnEditor,
+  "columns/grid": GridColumnEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
+  "field/bigint": FormFieldSelect,
   "field/options": FormFieldSelect,
   "field/boolean": FormFieldSelect,
   "field/longform": FormFieldSelect,

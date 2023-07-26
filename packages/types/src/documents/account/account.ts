@@ -51,6 +51,7 @@ export interface Account extends CreateAccount {
   licenseRequestedAt?: number
   licenseOverrides?: LicenseOverrides
   quotaUsage?: QuotaUsage
+  offlineLicenseToken?: string
 }
 
 export interface PasswordAccount extends Account {

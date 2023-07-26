@@ -81,7 +81,9 @@ export const streamFile = (path: string) => {
  * @param {string} fileContents contents which will be written to a temp file.
  * @return {string} the path to the temp file.
  */
-export const storeTempFile = (fileContents: any) => {
+export const storeTempFile = (
+  fileContents: string | NodeJS.ArrayBufferView
+) => {
   const path = join(budibaseTempDir(), uuid())
   fs.writeFileSync(path, fileContents)
   return path

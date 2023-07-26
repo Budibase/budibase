@@ -9,8 +9,8 @@ const marked = require("marked")
  * full list of supported helpers can be found here:
  * https://github.com/budibase/handlebars-helpers
  */
-
-const DIRECTORY = fs.existsSync("node_modules") ? "." : ".."
+const { join } = require("path")
+const DIRECTORY = join(__dirname, "..", "..", "..")
 const COLLECTIONS = [
   "math",
   "array",
@@ -20,7 +20,7 @@ const COLLECTIONS = [
   "comparison",
   "object",
 ]
-const FILENAME = `${DIRECTORY}/manifest.json`
+const FILENAME = join(__dirname, "..", "manifest.json")
 const outputJSON = {}
 const ADDED_HELPERS = {
   date: {

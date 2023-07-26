@@ -14,6 +14,12 @@
 
   $: tempValue = filters || []
   $: schemaFields = Object.values(schema || {})
+  $: text = getText(filters)
+
+  const getText = filters => {
+    const count = filters?.filter(filter => filter.field)?.length
+    return count ? `Filter (${count})` : "Filter"
+  }
 </script>
 
 <ActionButton
@@ -23,7 +29,7 @@
   on:click={modal.show}
   selected={tempValue?.length > 0}
 >
-  Filter
+  {text}
 </ActionButton>
 <Modal bind:this={modal}>
   <ModalContent

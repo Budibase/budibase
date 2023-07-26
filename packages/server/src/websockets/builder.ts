@@ -1,6 +1,6 @@
 import authorized from "../middleware/authorized"
 import { BaseSocket } from "./websocket"
-import { permissions, events } from "@budibase/backend-core"
+import { permissions, events, context } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import { Datasource, Table, SocketSession, ContextUser } from "@budibase/types"
@@ -18,13 +18,25 @@ export default class BuilderSocket extends BaseSocket {
     // Initial identification of selected app
     socket?.on(BuilderSocketEvent.SelectApp, async ({ appId }, callback) => {
       await this.joinRoom(socket, appId)
-
-      // Reply with all users in current room
       const sessions = await this.getRoomSessions(appId)
-      callback({ users: sessions })
 
-      // Track usage
-      await events.user.dataCollaboration(sessions.length)
+      // Track collaboration usage by unique users
+      let userIdMap: any = {}
+      sessions?.forEach(session => {
+        if (session._id) {
+          userIdMap[session._id] = true
+        }
+      })
+
+      const tenantId = context.getTenantIDFromAppID(appId)
+      if (tenantId) {
+        await context.doInTenant(tenantId, async () => {
+          await events.user.dataCollaboration(Object.keys(userIdMap).length)
+        })
+      }
+
+      // Reply with all current sessions
+      callback({ users: sessions })
     })
   }
 

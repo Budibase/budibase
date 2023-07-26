@@ -100,7 +100,9 @@
     const params = new URLSearchParams({
       open: "error",
     })
-    $goto(`../overview/${appId}/automation-history?${params.toString()}`)
+    $goto(
+      `/builder/app/${appId}/settings/automation-history?${params.toString()}`
+    )
   }
 
   const errorCount = errors => {
@@ -247,7 +249,7 @@
               >
                 Create new app
               </Button>
-              {#if $apps?.length > 0}
+              {#if $apps?.length > 0 && !$admin.offlineMode}
                 <Button
                   size="M"
                   secondary

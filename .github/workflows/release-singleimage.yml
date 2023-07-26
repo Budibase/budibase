@@ -208,5 +208,5 @@ jobs:
           push: true
           platforms: linux/amd64
           build-args: TARGETBUILD=aas
-          tags: budibase/budibase-aas,budibase/budibase-aas:v${{ env.RELEASE_VERSION }}
+          tags: budibase/budibase-aas,budibase/budibase-aas:${{ env.RELEASE_VERSION }}
           file: ./hosting/single/Dockerfile

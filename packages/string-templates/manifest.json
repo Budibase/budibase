@@ -75,7 +75,7 @@
       ],
       "numArgs": 2,
       "example": "{{ multiply 10 5 }} -> 50",
-      "description": "<p>Return the product of <code>a</code> times <code>b</code>.</p>\n"
+      "description": "<p>Multiply number <code>a</code> by number <code>b</code>.</p>\n"
     },
     "plus": {
       "args": [
@@ -128,15 +128,6 @@
       "numArgs": 1,
       "example": "{{ sum [1, 2, 3] }} -> 6",
       "description": "<p>Returns the sum of all numbers in the given array.</p>\n"
-    },
-    "times": {
-      "args": [
-        "a",
-        "b"
-      ],
-      "numArgs": 2,
-      "example": "{{ times 10 5 }} -> 50",
-      "description": "<p>Multiply number <code>a</code> by number <code>b</code>.</p>\n"
     }
   },
   "array": {
@@ -497,18 +488,8 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ escape 'https://myurl?Hello%20There' }} -> https://myurl?Hello+There",
+      "example": "{{ decodeURI 'https://myurl?Hello%20There' }} -> https://myurl?=Hello There",
       "description": "<p>Decode a Uniform Resource Identifier (URI) component.</p>\n"
-    },
-    "url_encode": {
-      "args": [],
-      "numArgs": 0,
-      "description": "<p>Alias for <a href=\"#encodeuri\">encodeURI</a>.</p>\n"
-    },
-    "url_decode": {
-      "args": [],
-      "numArgs": 0,
-      "description": "<p>Alias for <a href=\"#decodeuri\">decodeURI</a>.</p>\n"
     },
     "urlResolve": {
       "args": [
@@ -625,7 +606,7 @@
         "length"
       ],
       "numArgs": 2,
-      "example": "{{ellipsis 'foo bar baz' 7}} -> foo bar…",
+      "example": "{{ellipsis 'foo bar baz', 7}} -> foo bar…",
       "description": "<p>Truncates a string to the specified <code>length</code>, and appends it with an elipsis, <code>…</code>.</p>\n"
     },
     "hyphenate": {
