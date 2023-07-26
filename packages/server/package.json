@@ -183,6 +183,16 @@
   },
   "nx": {
     "targets": {
+      "dev:builder": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/backend-core"
+            ],
+            "target": "build"
+          }
+        ]
+      },
       "test": {
         "dependsOn": [
           {
