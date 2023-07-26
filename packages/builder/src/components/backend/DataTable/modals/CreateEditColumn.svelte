@@ -13,7 +13,7 @@
     notifications,
     OptionPicker,
   } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/backend"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
@@ -32,7 +32,6 @@
   import { truncate } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
-  import { getContext } from "svelte"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
 
@@ -46,11 +45,11 @@
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
-  const { hide } = getContext(Context.Modal)
-  let fieldDefinitions = cloneDeep(FIELDS)
+  const { dispatch: gridDispatch } = getContext("grid")
 
   export let field
 
+  let fieldDefinitions = cloneDeep(FIELDS)
   let originalName
   let linkEditDisabled
   let primaryDisplay
@@ -66,7 +65,6 @@
   let editableColumn = {
     type: "string",
     constraints: fieldDefinitions.STRING.constraints,
-
     // Initial value for column name in other table for linked records
     fieldName: $tables.selected.name,
   }
@@ -183,6 +181,8 @@
         indexes,
       })
       dispatch("updatecolumns")
+      gridDispatch("close-edit-column")
+
       if (
         saveColumn.type === LINK_TYPE &&
         saveColumn.relationshipType === RelationshipType.MANY_TO_MANY
@@ -204,6 +204,7 @@
 
   function cancelEdit() {
     editableColumn.name = originalName
+    gridDispatch("close-edit-column")
   }
 
   async function deleteColumn() {
@@ -215,8 +216,9 @@
         await tables.deleteField(editableColumn)
         notifications.success(`Column ${editableColumn.name} deleted`)
         confirmDeleteDialog.hide()
-        hide()
+        deletion = false
         dispatch("updatecolumns")
+        gridDispatch("close-edit-column")
       }
     } catch (error) {
       notifications.error(`Error deleting column: ${error.message}`)
@@ -403,213 +405,207 @@
   }
 </script>
 
-<ModalContent
-  title={originalName ? "Edit Column" : "Create Column"}
-  confirmText="Save"
-  onConfirm={saveColumn}
-  onCancel={cancelEdit}
-  disabled={invalid}
->
+<Input
+  bind:value={editableColumn.name}
+  disabled={uneditable ||
+    (linkEditDisabled && editableColumn.type === LINK_TYPE)}
+  error={errors?.name}
+/>
+
+<Select
+  disabled={!typeEnabled}
+  label="Type"
+  bind:value={editableColumn.type}
+  on:change={handleTypeChange}
+  options={getAllowedTypes()}
+  getOptionLabel={field => field.name}
+  getOptionValue={field => field.type}
+  getOptionIcon={field => field.icon}
+  isOptionEnabled={option => {
+    if (option.type == AUTO_TYPE) {
+      return availableAutoColumnKeys?.length > 0
+    }
+    return true
+  }}
+/>
+
+{#if editableColumn.type === "string"}
   <Input
-    bind:value={editableColumn.name}
-    disabled={uneditable ||
-      (linkEditDisabled && editableColumn.type === LINK_TYPE)}
-    error={errors?.name}
+    type="number"
+    label="Max Length"
+    bind:value={editableColumn.constraints.length.maximum}
   />
-
-  <Select
-    disabled={!typeEnabled}
-    label="Type"
-    bind:value={editableColumn.type}
-    on:change={handleTypeChange}
-    options={getAllowedTypes()}
-    getOptionLabel={field => field.name}
-    getOptionValue={field => field.type}
-    getOptionIcon={field => field.icon}
-    isOptionEnabled={option => {
-      if (option.type == AUTO_TYPE) {
-        return availableAutoColumnKeys?.length > 0
-      }
-      return true
-    }}
-  />
-
-  {#if editableColumn.type === "string"}
-    <Input
-      type="number"
-      label="Max Length"
-      bind:value={editableColumn.constraints.length.maximum}
+{:else if editableColumn.type === "options"}
+  <OptionPicker bind:values={editableColumn.constraints.inclusion} />
+{:else if editableColumn.type === "longform"}
+  <div>
+    <Label
+      size="M"
+      tooltip="Rich text includes support for images, links, tables, lists and more"
+    >
+      Formatting
+    </Label>
+    <Toggle
+      bind:value={editableColumn.useRichText}
+      text="Enable rich text support (markdown)"
     />
-  {:else if editableColumn.type === "options"}
-    <OptionPicker bind:values={editableColumn.constraints.inclusion} />
-  {:else if editableColumn.type === "longform"}
+  </div>
+{:else if editableColumn.type === "array"}
+  <ValuesList
+    label="Options (one per line)"
+    bind:values={editableColumn.constraints.inclusion}
+  />
+{:else if editableColumn.type === "datetime" && !editableColumn.autocolumn}
+  <div class="split-label">
+    <div class="label-length">
+      <Label size="M">Earliest</Label>
+    </div>
+    <div class="input-length">
+      <DatePicker bind:value={editableColumn.constraints.datetime.earliest} />
+    </div>
+  </div>
+
+  <div class="split-label">
+    <div class="label-length">
+      <Label size="M">Latest</Label>
+    </div>
+    <div class="input-length">
+      <DatePicker bind:value={editableColumn.constraints.datetime.latest} />
+    </div>
+  </div>
+  {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
     <div>
       <Label
-        size="M"
-        tooltip="Rich text includes support for images, links, tables, lists and more"
+        tooltip={isCreating
+          ? null
+          : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
       >
-        Formatting
+        Time zones
       </Label>
       <Toggle
-        bind:value={editableColumn.useRichText}
-        text="Enable rich text support (markdown)"
+        bind:value={editableColumn.ignoreTimezones}
+        text="Ignore time zones"
       />
     </div>
-  {:else if editableColumn.type === "array"}
-    <ValuesList
-      label="Options (one per line)"
-      bind:values={editableColumn.constraints.inclusion}
+  {/if}
+{:else if editableColumn.type === "number" && !editableColumn.autocolumn}
+  <div class="split-label">
+    <div class="label-length">
+      <Label size="M">Max Value</Label>
+    </div>
+    <div class="input-length">
+      <Input
+        type="number"
+        bind:value={editableColumn.constraints.numericality
+          .greaterThanOrEqualTo}
+      />
+    </div>
+  </div>
+
+  <div class="split-label">
+    <div class="label-length">
+      <Label size="M">Max Value</Label>
+    </div>
+    <div class="input-length">
+      <Input
+        type="number"
+        bind:value={editableColumn.constraints.numericality.lessThanOrEqualTo}
+      />
+    </div>
+  </div>
+{:else if editableColumn.type === "link"}
+  <Select
+    label="Table"
+    disabled={linkEditDisabled}
+    bind:value={editableColumn.tableId}
+    options={tableOptions}
+    getOptionLabel={table => table.name}
+    getOptionValue={table => table._id}
+  />
+  {#if relationshipOptions && relationshipOptions.length > 0}
+    <RadioGroup
+      disabled={linkEditDisabled}
+      label="Define the relationship"
+      bind:value={editableColumn.relationshipType}
+      options={relationshipOptions}
+      getOptionLabel={option => option.name}
+      getOptionValue={option => option.value}
+      getOptionTitle={option => option.alt}
     />
-  {:else if editableColumn.type === "datetime" && !editableColumn.autocolumn}
-    <div class="split-label">
-      <div class="label-length">
-        <Label size="M">Earliest</Label>
-      </div>
-      <div class="input-length">
-        <DatePicker bind:value={editableColumn.constraints.datetime.earliest} />
-      </div>
-    </div>
-
-    <div class="split-label">
-      <div class="label-length">
-        <Label size="M">Latest</Label>
-      </div>
-      <div class="input-length">
-        <DatePicker bind:value={editableColumn.constraints.datetime.latest} />
-      </div>
-    </div>
-    {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
-      <div>
-        <Label
-          tooltip={isCreating
-            ? null
-            : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
-        >
-          Time zones
-        </Label>
-        <Toggle
-          bind:value={editableColumn.ignoreTimezones}
-          text="Ignore time zones"
-        />
-      </div>
-    {/if}
-  {:else if editableColumn.type === "number" && !editableColumn.autocolumn}
-    <div class="split-label">
-      <div class="label-length">
-        <Label size="M">Max Value</Label>
-      </div>
-      <div class="input-length">
-        <Input
-          type="number"
-          bind:value={editableColumn.constraints.numericality
-            .greaterThanOrEqualTo}
-        />
-      </div>
-    </div>
-
-    <div class="split-label">
-      <div class="label-length">
-        <Label size="M">Max Value</Label>
-      </div>
-      <div class="input-length">
-        <Input
-          type="number"
-          bind:value={editableColumn.constraints.numericality.lessThanOrEqualTo}
-        />
-      </div>
-    </div>
-  {:else if editableColumn.type === "link"}
+  {/if}
+  <Input
+    disabled={linkEditDisabled}
+    label={`Column name in other table`}
+    bind:value={editableColumn.fieldName}
+    error={errors.relatedName}
+  />
+{:else if editableColumn.type === FORMULA_TYPE}
+  {#if !table.sql}
     <Select
-      label="Table"
-      disabled={linkEditDisabled}
-      bind:value={editableColumn.tableId}
-      options={tableOptions}
-      getOptionLabel={table => table.name}
-      getOptionValue={table => table._id}
-    />
-    {#if relationshipOptions && relationshipOptions.length > 0}
-      <RadioGroup
-        disabled={linkEditDisabled}
-        label="Define the relationship"
-        bind:value={editableColumn.relationshipType}
-        options={relationshipOptions}
-        getOptionLabel={option => option.name}
-        getOptionValue={option => option.value}
-        getOptionTitle={option => option.alt}
-      />
-    {/if}
-    <Input
-      disabled={linkEditDisabled}
-      label={`Column name in other table`}
-      bind:value={editableColumn.fieldName}
-      error={errors.relatedName}
-    />
-  {:else if editableColumn.type === FORMULA_TYPE}
-    {#if !table.sql}
-      <Select
-        label="Formula type"
-        bind:value={editableColumn.formulaType}
-        options={[
-          { label: "Dynamic", value: "dynamic" },
-          { label: "Static", value: "static" },
-        ]}
-        getOptionLabel={option => option.label}
-        getOptionValue={option => option.value}
-        tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
+      label="Formula type"
+      bind:value={editableColumn.formulaType}
+      options={[
+        { label: "Dynamic", value: "dynamic" },
+        { label: "Static", value: "static" },
+      ]}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.value}
+      tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
          while static formula are calculated when the row is saved."
+    />
+  {/if}
+  <ModalBindableInput
+    title="Formula"
+    label="Formula"
+    value={editableColumn.formula}
+    on:change={e => {
+      editableColumn = {
+        ...editableColumn,
+        formula: e.detail,
+      }
+    }}
+    bindings={getBindings({ table })}
+    allowJS
+  />
+{:else if editableColumn.type === JSON_TYPE}
+  <Button primary text on:click={openJsonSchemaEditor}
+    >Open schema editor</Button
+  >
+{/if}
+{#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
+  <Select
+    label="Auto column type"
+    value={editableColumn.subtype}
+    on:change={e => (editableColumn.subtype = e.detail)}
+    options={Object.entries(autoColumnOptions)}
+    getOptionLabel={option => option[1].name}
+    getOptionValue={option => option[0]}
+    disabled={!availableAutoColumnKeys?.length || editableColumn.autocolumn}
+    error={errors?.subtype}
+  />
+{/if}
+
+{#if canBeRequired || canBeDisplay}
+  <div>
+    {#if canBeRequired}
+      <Toggle
+        value={required}
+        on:change={onChangeRequired}
+        disabled={primaryDisplay}
+        thin
+        text="Required"
       />
-    {/if}
-    <ModalBindableInput
-      title="Formula"
-      label="Formula"
-      value={editableColumn.formula}
-      on:change={e => {
-        editableColumn = {
-          ...editableColumn,
-          formula: e.detail,
-        }
-      }}
-      bindings={getBindings({ table })}
-      allowJS
-    />
-  {:else if editableColumn.type === JSON_TYPE}
-    <Button primary text on:click={openJsonSchemaEditor}
-      >Open schema editor</Button
-    >
-  {/if}
-  {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
-    <Select
-      label="Auto column type"
-      value={editableColumn.subtype}
-      on:change={e => (editableColumn.subtype = e.detail)}
-      options={Object.entries(autoColumnOptions)}
-      getOptionLabel={option => option[1].name}
-      getOptionValue={option => option[0]}
-      disabled={!availableAutoColumnKeys?.length || editableColumn.autocolumn}
-      error={errors?.subtype}
-    />
-  {/if}
-
-  {#if canBeRequired || canBeDisplay}
-    <div>
-      {#if canBeRequired}
-        <Toggle
-          value={required}
-          on:change={onChangeRequired}
-          disabled={primaryDisplay}
-          thin
-          text="Required"
-        />
-      {/if}
-    </div>
-  {/if}
-
-  <div slot="footer">
-    {#if !uneditable && originalName != null}
-      <Button warning text on:click={confirmDelete}>Delete</Button>
     {/if}
   </div>
-</ModalContent>
+{/if}
+
+<div class="action-buttons">
+  {#if !uneditable && originalName != null}
+    <Button warning text on:click={confirmDelete}>Delete</Button>
+  {/if}
+  <Button secondary newStyles on:click={cancelEdit}>Cancel</Button>
+  <Button newStyles cta on:click={saveColumn}>Save Column</Button>
+</div>
 <Modal bind:this={jsonSchemaModal}>
   <JSONSchemaModal
     schema={editableColumn.schema}
@@ -620,6 +616,7 @@
     }}
   />
 </Modal>
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Column"
@@ -637,6 +634,12 @@
 </ConfirmDialog>
 
 <style>
+  .action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    gap: var(--spacing-l);
+  }
   .split-label {
     display: flex;
     align-items: center;

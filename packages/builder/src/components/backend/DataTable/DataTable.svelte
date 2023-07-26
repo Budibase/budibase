@@ -14,6 +14,7 @@
   import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
   import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
+  import CreateEditColumn from "./modals/CreateEditColumn.svelte"
 
   const userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
@@ -53,6 +54,13 @@
     <svelte:fragment slot="filter">
       <GridFilterButton />
     </svelte:fragment>
+    <svelte:fragment slot="edit-column">
+      <GridEditColumnModal />
+    </svelte:fragment>
+    <svelte:fragment slot="add-column">
+      <GridAddColumnModal />
+    </svelte:fragment>
+
     <svelte:fragment slot="controls">
       {#if isInternal}
         <GridCreateViewButton />
@@ -66,9 +74,8 @@
       {:else}
         <GridImportButton />
       {/if}
+
       <GridExportButton />
-      <GridAddColumnModal />
-      <GridEditColumnModal />
       {#if isUsersTable}
         <GridEditUserModal />
       {:else}

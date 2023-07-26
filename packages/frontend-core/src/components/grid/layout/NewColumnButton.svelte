@@ -1,11 +1,8 @@
 <script>
-  import { getContext } from "svelte"
-  import GridScrollWrapper from "./GridScrollWrapper.svelte"
-  import HeaderCell from "../cells/HeaderCell.svelte"
-  import { Icon, Popover } from "@budibase/bbui"
-  import ColumnConfiguration from "./ColumnConfiguration.svelte"
+  import { getContext, onMount } from "svelte"
+  import { Icon, Popover, clickOutside } from "@budibase/bbui"
 
-  const { renderedColumns, scroll, hiddenColumnsWidth, width } =
+  const { renderedColumns, scroll, hiddenColumnsWidth, width, subscribe } =
     getContext("grid")
 
   let anchor
@@ -16,6 +13,15 @@
   )
   $: end = $hiddenColumnsWidth + columnsWidth - 1 - $scroll.left
   $: left = Math.min($width - 40, end)
+
+  const submit = () => {
+    open = false
+  }
+
+  const close = () => {
+    open = false
+  }
+  onMount(() => subscribe("close-edit-column", close))
 </script>
 
 <div>
@@ -28,17 +34,24 @@
   >
     <Icon name="Add" />
   </div>
+  <Popover
+    bind:open
+    {anchor}
+    align="right"
+    offset={0}
+    popoverTarget={document.getElementById(`add-column-button`)}
+    animate={false}
+  >
+    <div
+      use:clickOutside={() => {
+        open = false
+      }}
+      class="content"
+    >
+      <slot />
+    </div>
+  </Popover>
 </div>
-<Popover
-  bind:open
-  {anchor}
-  align="right"
-  offset={0}
-  popoverTarget={document.getElementById(`add-column-button`)}
-  animate={false}
->
-  <ColumnConfiguration />
-</Popover>
 
 <style>
   .add {
@@ -57,5 +70,14 @@
   .add:hover {
     background: var(--spectrum-global-color-gray-200);
     cursor: pointer;
+  }
+
+  .content {
+    width: 300px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 2;
   }
 </style>

@@ -24,13 +24,16 @@
   )
   $: end = $hiddenColumnsWidth + columnsWidth - 1 - $scroll.left
   $: left = Math.min($width - 40, end)
+  $: console.log($renderedColumns)
 </script>
 
 <div class="header">
   <GridScrollWrapper scrollHorizontally>
     <div class="row">
       {#each $renderedColumns as column, idx}
-        <HeaderCell {column} {idx} />
+        <HeaderCell {column} {idx}>
+          <slot name="edit-column" />
+        </HeaderCell>
       {/each}
     </div>
   </GridScrollWrapper>
@@ -41,13 +44,9 @@
         type={TooltipType.Info}
         condition={!$hasNonAutoColumn && !$loading}
       >
-        <div
-          class="add"
-          style="left:{left}px;"
-          on:click={() => dispatch("add-column")}
-        >
-          <Icon name="Add" />
-        </div>
+        <NewColumnButton>
+          <slot name="add-column" />
+        </NewColumnButton>
       </TempTooltip>
     {/key}
   {/if}

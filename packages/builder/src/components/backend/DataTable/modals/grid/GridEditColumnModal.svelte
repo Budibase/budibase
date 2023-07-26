@@ -10,15 +10,12 @@
 
   const editColumn = column => {
     editableColumn = column
-    editColumnModal.show()
   }
 
   onMount(() => subscribe("edit-column", editColumn))
 </script>
 
-<Modal bind:this={editColumnModal}>
-  <CreateEditColumn
-    field={editableColumn}
-    on:updatecolumns={rows.actions.refreshData}
-  />
-</Modal>
+<CreateEditColumn
+  field={editableColumn}
+  on:updatecolumns={rows.actions.refreshData}
+/>

@@ -91,7 +91,7 @@
 
 <style>
   .action-container {
-    background-color: var(--background);
+    background-color: var(--spectrum-global-color-gray-100);
     border-radius: 0px;
     border: 1px solid var(--spectrum-global-color-gray-300);
     transition: background-color 130ms ease-in-out, color 130ms ease-in-out,

@@ -139,9 +139,20 @@
   {#if $loaded}
     <div class="grid-data-outer" use:clickOutside={ui.actions.blur}>
       <div class="grid-data-inner">
-        <StickyColumn />
+        <StickyColumn>
+          <svelte:fragment slot="edit-column">
+            <slot name="edit-column" />
+          </svelte:fragment>
+        </StickyColumn>
         <div class="grid-data-content">
-          <HeaderRow />
+          <HeaderRow>
+            <svelte:fragment slot="add-column">
+              <slot name="add-column" />
+            </svelte:fragment>
+            <svelte:fragment slot="edit-column">
+              <slot name="edit-column" />
+            </svelte:fragment>
+          </HeaderRow>
           <GridBody />
         </div>
         {#if $canAddRows}
