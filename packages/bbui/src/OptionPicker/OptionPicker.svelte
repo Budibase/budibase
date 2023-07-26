@@ -3,34 +3,54 @@
   import { dndzone } from "svelte-dnd-action"
   import Icon from "../Icon/Icon.svelte"
   import ColorPicker from "../ColorPicker/ColorPicker.svelte"
-
+  import Popover from "../Popover/Popover.svelte"
+  import clickOutside from "../Actions/click_outside"
+  import { onMount } from "svelte"
   const flipDurationMs = 150
 
-  export let values
-
+  export let constraints
   let options = []
+
+  let colorPopovers = []
+  let anchors = []
+
+  let open = false
+  let optionNameColorMap = constraints.optionColors || {}
   $: {
-    if (options.length) {
-      options = values.map((value, idx) => ({
+    if (constraints.inclusion.length) {
+      options = constraints.inclusion.map((value, idx) => ({
         name: value,
-        id: Math.floor(Math.random() * 100),
+        id: Math.random(),
       }))
-    } else {
-      options = [{ name: `Option 1`, id: Math.random() }]
     }
   }
 
+  const getColor = (idx, opacity = 0.3) => {
+    if (idx == null || idx === -1) {
+      return null
+    }
+    return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, ${opacity})`
+  }
+
   const removeInput = idx => {
-    values = values.filter((e, i) => i !== idx)
+    constraints.inclusion = constraints.inclusion.filter((e, i) => i !== idx)
     options = options.filter((e, i) => i !== idx)
+    colorPopovers.pop(undefined)
+    anchors.pop(undefined)
   }
 
   const addNewInput = () => {
     options = [
       ...options,
-      { name: `Option ${values.length + 1}`, id: Math.random() },
+      { name: `Option ${constraints.inclusion.length + 1}`, id: Math.random() },
     ]
-    values = [...values, `Option ${values.length + 1}`]
+    constraints.inclusion = [
+      ...constraints.inclusion,
+      `Option ${constraints.inclusion.length + 1}`,
+    ]
+
+    colorPopovers.push(undefined)
+    anchors.push(undefined)
   }
 
   const handleDndConsider = e => {
@@ -38,9 +58,20 @@
   }
   const handleDndFinalize = e => {
     options = e.detail.items
-    values = options.map(option => option.name)
+    constraints.inclusion = options.map(option => option.name)
   }
-  $: console.log(options)
+
+  const handleColorChange = (optionName, color, idx) => {
+    optionNameColorMap[optionName] = color
+    colorPopovers[idx].hide()
+    constraints.optionColors = optionNameColorMap
+  }
+
+  onMount(() => {
+    // Initialize arrays on mount, assuming 'options' is already populated
+    colorPopovers = constraints.inclusion.map(() => undefined)
+    anchors = constraints.inclusion.map(() => undefined)
+  })
 </script>
 
 <div>
@@ -63,14 +94,48 @@
           <Icon name="DragHandle" size="L" />
         </div>
         <div class="child color-picker">
-          <ColorPicker size="S" value={"red"} on:change />
+          <div
+            id="color-picker"
+            bind:this={anchors[idx]}
+            style="--color:{optionNameColorMap[option.name] || getColor(idx)};"
+            class="dot"
+            use:clickOutside={() => colorPopovers[idx].hide()}
+            on:click={e => {
+              open = true
+              anchors[idx] = e.target
+              colorPopovers[idx].show()
+            }}
+          >
+            <Popover
+              bind:this={colorPopovers[idx]}
+              anchor={anchors[idx]}
+              align="left"
+              offset={0}
+              style=""
+              popoverTarget={document.getElementById(`color-picker`)}
+              animate={false}
+            >
+              <div class="colors">
+                {option.name}
+                {#each Array(6) as _, i}
+                  {@const colorVar = getColor(i + 1)}
+                  <div
+                    on:click={() =>
+                      handleColorChange(option.name, colorVar, idx)}
+                    style="--color:{colorVar};"
+                    class="dot"
+                  />
+                {/each}
+              </div>
+            </Popover>
+          </div>
         </div>
         <div class="child">
           <input
             class="input-field"
             type="text"
             on:change={e => {
-              values[idx] = e.target.value
+              constraints.inclusion[idx] = e.target.value
               options[idx].name = e.target.value
             }}
             value={option.name}
@@ -91,7 +156,7 @@
 
 <style>
   .action-container {
-    background-color: var(--spectrum-global-color-gray-100);
+    background-color: var(--spectrum-alias-background-color-primary);
     border-radius: 0px;
     border: 1px solid var(--spectrum-global-color-gray-300);
     transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
@@ -164,6 +229,19 @@
     display: flex;
   }
 
-  .drag-handle-spacing {
+  .dot {
+    height: 20px;
+    width: 20px;
+    background-color: var(--color);
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .colors {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--spacing-m);
+    justify-items: center;
+    margin: var(--spacing-m);
   }
 </style>
