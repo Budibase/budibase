@@ -24,8 +24,6 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v2
         with:
-          repository: Budibase/budibase
-          ref: 'master'
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
@@ -100,8 +98,6 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v2
         with:
-          repository: Budibase/budibase
-          ref: 'master'
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
@@ -166,8 +162,6 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v2
         with:
-          repository: Budibase/budibase
-          ref: 'master'
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
