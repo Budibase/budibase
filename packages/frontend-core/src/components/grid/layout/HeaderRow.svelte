@@ -12,7 +12,7 @@
     width,
     config,
     hasNonAutoColumn,
-    tableId,
+    datasource,
     loading,
   } = getContext("grid")
 
@@ -33,7 +33,7 @@
     </div>
   </GridScrollWrapper>
   {#if $config.allowSchemaChanges}
-    {#key $tableId}
+    {#key $datasource}
       <TempTooltip
         text="Click here to create your first column"
         type={TooltipType.Info}

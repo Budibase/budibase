@@ -59,7 +59,7 @@ export const deriveStores = context => {
     filter,
     loading,
     sort,
-    tableId,
+    datasource,
     API,
     scroll,
     validation,
@@ -71,7 +71,7 @@ export const deriveStores = context => {
     hasNextPage,
     error,
     notifications,
-    props,
+    config,
   } = context
   const instanceLoaded = writable(false)
   const fetch = writable(null)
@@ -95,7 +95,7 @@ export const deriveStores = context => {
   // Reset everything when table ID changes
   let unsubscribe = null
   let lastResetKey = null
-  tableId.subscribe(async $tableId => {
+  datasource.subscribe(async $datasource => {
     // Unsub from previous fetch if one exists
     unsubscribe?.()
     fetch.set(null)
@@ -107,21 +107,6 @@ export const deriveStores = context => {
     await tick()
     const $filter = get(filter)
     const $sort = get(sort)
-
-    let datasource
-    if (props.datasourceType === "viewV2") {
-      const tableId = $tableId
-      datasource = {
-        type: props.datasourceType,
-        id: $tableId,
-        tableId: tableId.split("_").slice(0, -1).join("_"),
-      }
-    } else {
-      datasource = {
-        type: props.datasourceType,
-        tableId: $tableId,
-      }
-    }
 
     // Create new fetch model
     const newFetch = fetchData({
