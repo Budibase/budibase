@@ -491,6 +491,33 @@ describe("/rows", () => {
         })
         expect(savedRow.body.description).not.toEqual("Updated Description")
       })
+
+      it("should allow remove fields that belong to the view", async () => {
+        const existing = await config.createRow()
+        const view = await config.api.viewV2.create({
+          columns: { name: { visible: true } },
+        })
+        const searchResponse = await config.api.viewV2.search(view.id)
+
+        const [row] = searchResponse.body.rows as Row[]
+
+        const res = await config.api.row.patch(table._id!, {
+          ...row,
+          name: undefined,
+          description: undefined,
+        } as PatchRowRequest)
+
+        const savedRow = await loadRow(res.body._id, table._id!)
+
+        expect(savedRow.body).toEqual({
+          ...existing,
+          name: undefined,
+          _rev: expect.anything(),
+          createdAt: expect.anything(),
+          updatedAt: expect.anything(),
+        })
+        expect(savedRow.body.description).not.toEqual("Updated Description")
+      })
     })
   })
 
