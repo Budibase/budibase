@@ -146,6 +146,11 @@ router
     authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.search
   )
+  .get(
+    "/api/v2/views/:viewId/search",
+    authorized(PermissionType.VIEW, PermissionLevel.READ),
+    rowController.searchView
+  )
   /**
    * @api {post} /api/:tableId/rows Creates a new row
    * @apiName Creates a new row

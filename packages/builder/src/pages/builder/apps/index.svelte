@@ -144,7 +144,7 @@
             <Heading>Apps</Heading>
             <div class="group">
               <Layout gap="S" noPadding>
-                {#each userApps as app, idx (app.appId)}
+                {#each userApps as app (app.appId)}
                   <a class="app" target="_blank" href={getUrl(app)}>
                     <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">

@@ -6,10 +6,13 @@
     Heading,
     Body,
     Modal,
+    AbsTooltip,
+    TooltipPosition,
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CreateRestoreModal from "./CreateRestoreModal.svelte"
   import { createEventDispatcher } from "svelte"
+  import { isOnlyUser } from "builderStore"
 
   export let row
 
@@ -45,7 +48,18 @@
     </div>
 
     {#if row.type !== "restore"}
-      <MenuItem on:click={restoreDialog.show} icon="Revert">Restore</MenuItem>
+      <AbsTooltip
+        position={TooltipPosition.Left}
+        text="Unavailable - another user is editing this app"
+      >
+        <MenuItem
+          on:click={restoreDialog.show}
+          icon="Revert"
+          disabled={!$isOnlyUser}
+        >
+          Restore
+        </MenuItem>
+      </AbsTooltip>
       <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
       <MenuItem on:click={downloadExport} icon="Download">Download</MenuItem>
     {/if}

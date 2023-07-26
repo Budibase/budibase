@@ -3,6 +3,7 @@ import { getAutomationStore } from "./store/automation"
 import { getTemporalStore } from "./store/temporal"
 import { getThemeStore } from "./store/theme"
 import { getUserStore } from "./store/users"
+import { getDeploymentStore } from "./store/deployments"
 import { derived } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
@@ -14,6 +15,7 @@ export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
 export const temporalStore = getTemporalStore()
 export const userStore = getUserStore()
+export const deploymentStore = getDeploymentStore()
 
 // Setup history for screens
 export const screenHistoryStore = createHistoryStore({
@@ -117,4 +119,25 @@ export const selectedAutomation = derived(automationStore, $automationStore => {
   return $automationStore.automations?.find(
     x => x._id === $automationStore.selectedAutomationId
   )
+})
+
+// Derive map of resource IDs to other users.
+// We only ever care about a single user in each resource, so if multiple users
+// share the same datasource we can just overwrite them.
+export const userSelectedResourceMap = derived(userStore, $userStore => {
+  let map = {}
+  $userStore.forEach(user => {
+    const resource = user.builderMetadata?.selectedResourceId
+    if (resource) {
+      if (!map[resource]) {
+        map[resource] = []
+      }
+      map[resource].push(user)
+    }
+  })
+  return map
+})
+
+export const isOnlyUser = derived(userStore, $userStore => {
+  return $userStore.length < 2
 })
