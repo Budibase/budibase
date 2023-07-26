@@ -1,6 +1,7 @@
 export { database } from "./database"
 export { tables } from "./tables"
 export { views } from "./views"
+export { viewsV2 } from "./viewsV2"
 export { permissions } from "./permissions"
 export { roles } from "./roles"
 export { datasources, ImportTableError } from "./datasources"

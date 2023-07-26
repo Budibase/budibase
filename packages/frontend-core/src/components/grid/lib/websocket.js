@@ -3,18 +3,18 @@ import { createWebsocket } from "../../../utils"
 import { SocketEvent, GridSocketEvent } from "@budibase/shared-core"
 
 export const createGridWebsocket = context => {
-  const { rows, tableId, users, focusedCellId, table, API } = context
+  const { rows, datasource, users, focusedCellId, table, API } = context
   const socket = createWebsocket("/socket/grid")
 
-  const connectToTable = tableId => {
+  const connectToDatasource = datasource => {
     if (!socket.connected) {
       return
     }
     // Identify which table we are editing
     const appId = API.getAppID()
     socket.emit(
-      GridSocketEvent.SelectTable,
-      { tableId, appId },
+      GridSocketEvent.SelectDatasource,
+      { datasource, appId },
       ({ users: gridUsers }) => {
         users.set(gridUsers)
       }
@@ -23,7 +23,7 @@ export const createGridWebsocket = context => {
 
   // Built-in events
   socket.on("connect", () => {
-    connectToTable(get(tableId))
+    connectToDatasource(get(datasource))
   })
   socket.on("connect_error", err => {
     console.log("Failed to connect to grid websocket:", err.message)
@@ -57,7 +57,7 @@ export const createGridWebsocket = context => {
   })
 
   // Change websocket connection when table changes
-  tableId.subscribe(connectToTable)
+  datasource.subscribe(connectToDatasource)
 
   // Notify selected cell changes
   focusedCellId.subscribe($focusedCellId => {

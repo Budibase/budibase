@@ -1,5 +1,5 @@
 <script>
-  import { tables, views, database } from "stores/backend"
+  import { tables, views, viewsV2, database } from "stores/backend"
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
@@ -38,11 +38,15 @@
         {/if}
       </NavItem>
       {#each [...Object.entries(table.views || {})].sort() as [viewName, view], idx (idx)}
+        {@const viewSelected =
+          $isActive("./view") && $views.selected?.name === viewName}
+        {@const viewV2Selected =
+          $isActive("./view/v2") && $viewsV2.selected?.name === viewName}
         <NavItem
           indentLevel={2}
           icon="Remove"
           text={viewName}
-          selected={$isActive("./view") && $views.selected?.name === viewName}
+          selected={viewSelected || viewV2Selected}
           on:click={() => {
             if (view.version === 2) {
               $goto(`./view/v2/${view.id}`)

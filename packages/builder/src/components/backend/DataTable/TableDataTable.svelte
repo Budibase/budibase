@@ -26,6 +26,10 @@
   $: id = $tables.selected?._id
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.type !== "external"
+  $: datasource = {
+    type: "table",
+    tableId: id,
+  }
 
   const handleGridTableUpdate = async e => {
     tables.replaceTable(id, e.detail)
@@ -43,7 +47,7 @@
 <div class="wrapper">
   <Grid
     {API}
-    tableId={id}
+    {datasource}
     allowAddRows={!isUsersTable}
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}

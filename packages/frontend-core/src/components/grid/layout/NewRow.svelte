@@ -17,7 +17,7 @@
     dispatch,
     rows,
     focusedCellAPI,
-    tableId,
+    datasource,
     subscribe,
     renderedRows,
     renderedColumns,
@@ -38,7 +38,7 @@
 
   $: firstColumn = $stickyColumn || $renderedColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
-  $: $tableId, (visible = false)
+  $: $datasource, (visible = false)
   $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
   $: selectedRowCount = Object.values($selectedRows).length
   $: hasNoRows = !$rows.length

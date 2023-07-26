@@ -6,7 +6,7 @@ export const createStores = context => {
   const getProp = prop => derivedMemo(config, $config => $config[prop])
 
   // Derive and memoize some props so that we can react to them in isolation
-  const tableId = getProp("tableId")
+  const datasource = getProp("datasource")
   const initialSortColumn = getProp("initialSortColumn")
   const initialSortOrder = getProp("initialSortOrder")
   const initialFilter = getProp("initialFilter")
@@ -18,7 +18,7 @@ export const createStores = context => {
 
   return {
     config,
-    tableId,
+    datasource,
     initialSortColumn,
     initialSortOrder,
     initialFilter,

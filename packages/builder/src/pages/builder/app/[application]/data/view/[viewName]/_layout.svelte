@@ -5,8 +5,8 @@
   import { onDestroy } from "svelte"
   import { store } from "builderStore"
 
-  $: viewName = $views.selectedViewName
-  $: store.actions.websocket.selectResource(viewName)
+  $: name = $views.selectedViewName
+  $: store.actions.websocket.selectResource(name)
 
   const stopSyncing = syncURLToState({
     urlParam: "viewName",
