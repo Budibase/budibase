@@ -399,17 +399,12 @@ describe("/rows", () => {
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .patch(`/api/${table._id}/rows`)
-        .send({
-          _id: existing._id,
-          _rev: existing._rev,
-          tableId: table._id,
-          name: "Updated Name",
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.patch(table._id!, {
+        _id: existing._id,
+        _rev: existing._rev,
+        tableId: table._id,
+        name: "Updated Name",
+      })
 
       expect((res as any).res.statusMessage).toEqual(
         `${table.name} updated successfully.`
@@ -430,16 +425,16 @@ describe("/rows", () => {
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      await request
-        .patch(`/api/${table._id}/rows`)
-        .send({
+      await config.api.row.patch(
+        table._id!,
+        {
           _id: existing._id,
           _rev: existing._rev,
           tableId: table._id,
           name: 1,
-        })
-        .set(config.defaultHeaders())
-        .expect(400)
+        },
+        { expectStatus: 400 }
+      )
 
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
