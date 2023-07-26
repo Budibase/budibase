@@ -441,6 +441,33 @@ describe("/rows", () => {
     })
 
     describe("view row", () => {
+      it("should update only the fields that are supplied", async () => {
+        const existing = await config.createRow()
+        const view = await config.api.viewV2.create({
+          columns: { name: { visible: true } },
+        })
+        const searchResponse = await config.api.viewV2.search(view.id)
+
+        const [row] = searchResponse.body.rows as Row[]
+
+        const res = await config.api.row.patch(table._id!, {
+          ...row,
+          name: "Updated Name",
+          description: "Updated Description",
+        })
+
+        const savedRow = await loadRow(res.body._id, table._id!)
+
+        expect(savedRow.body).toEqual({
+          ...existing,
+          name: "Updated Name",
+          description: "Updated Description",
+          _rev: expect.anything(),
+          createdAt: expect.anything(),
+          updatedAt: expect.anything(),
+        })
+      })
+
       it("should not edit fields that don't belong to the view", async () => {
         const existing = await config.createRow()
         const view = await config.api.viewV2.create({
