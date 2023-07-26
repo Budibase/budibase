@@ -3,7 +3,6 @@ import { isExternalTable } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
 import { Format } from "../../../api/controllers/view/exporters"
-import _ from "lodash"
 
 export interface SearchParams {
   tableId: string
@@ -37,12 +36,7 @@ export async function search(options: SearchParams): Promise<{
   hasNextPage?: boolean
   bookmark?: number | null
 }> {
-  const result = await pickApi(options.tableId).search(options)
-
-  if (options.fields) {
-    result.rows = result.rows.map((r: any) => _.pick(r, options.fields!))
-  }
-  return result
+  return pickApi(options.tableId).search(options)
 }
 
 export interface ExportRowsParams {

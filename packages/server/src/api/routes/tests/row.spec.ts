@@ -5,7 +5,7 @@ tk.freeze(timestamp)
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
 const { basicRow } = setup.structures
-import { context, tenancy } from "@budibase/backend-core"
+import { context, db, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   QuotaUsageType,
@@ -17,7 +17,11 @@ import {
   SortType,
   SortOrder,
 } from "@budibase/types"
-import { generator, structures } from "@budibase/backend-core/tests"
+import {
+  expectAnyInternalColsAttributes,
+  generator,
+  structures,
+} from "@budibase/backend-core/tests"
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -519,6 +523,81 @@ describe("/rows", () => {
       await assertRowUsage(rowUsage - 2)
       await assertQueryUsage(queryUsage + 1)
     })
+
+    it("should be able to delete a variety of row set types", async () => {
+      const row1 = await config.createRow()
+      const row2 = await config.createRow()
+      const row3 = await config.createRow()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const res = await request
+        .delete(`/api/${table._id}/rows`)
+        .send({
+          rows: [row1, row2._id, { _id: row3._id }],
+        })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body.length).toEqual(3)
+      await loadRow(row1._id!, table._id!, 404)
+      await assertRowUsage(rowUsage - 3)
+      await assertQueryUsage(queryUsage + 1)
+    })
+
+    it("should accept a valid row object and delete the row", async () => {
+      const row1 = await config.createRow()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const res = await request
+        .delete(`/api/${table._id}/rows`)
+        .send(row1)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body.id).toEqual(row1._id)
+      await loadRow(row1._id!, table._id!, 404)
+      await assertRowUsage(rowUsage - 1)
+      await assertQueryUsage(queryUsage + 1)
+    })
+
+    it("Should ignore malformed/invalid delete requests", async () => {
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const res = await request
+        .delete(`/api/${table._id}/rows`)
+        .send({ not: "valid" })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res.body.message).toEqual("Invalid delete rows request")
+
+      const res2 = await request
+        .delete(`/api/${table._id}/rows`)
+        .send({ rows: 123 })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res2.body.message).toEqual("Invalid delete rows request")
+
+      const res3 = await request
+        .delete(`/api/${table._id}/rows`)
+        .send("invalid")
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res3.body.message).toEqual("Invalid delete rows request")
+
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage)
+    })
   })
 
   describe("fetchView", () => {
@@ -894,7 +973,7 @@ describe("/rows", () => {
       }
     )
 
-    it("when schema is defined, no other columns are returned", async () => {
+    it("when schema is defined, defined columns and row attributes are returned", async () => {
       const table = await config.createTable(userTable())
       const rows = []
       for (let i = 0; i < 10; i++) {
@@ -914,7 +993,12 @@ describe("/rows", () => {
 
       expect(response.body.rows).toHaveLength(10)
       expect(response.body.rows).toEqual(
-        expect.arrayContaining(rows.map(r => ({ name: r.name })))
+        expect.arrayContaining(
+          rows.map(r => ({
+            ...expectAnyInternalColsAttributes,
+            name: r.name,
+          }))
+        )
       )
     })
 

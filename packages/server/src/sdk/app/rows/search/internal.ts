@@ -1,5 +1,6 @@
 import {
   context,
+  db,
   SearchParams as InternalSearchParams,
 } from "@budibase/backend-core"
 import env from "../../../../environment"
@@ -28,6 +29,7 @@ import {
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
 import { ExportRowsParams, ExportRowsResult, SearchParams } from "../search"
+import pick from "lodash/pick"
 
 export async function search(options: SearchParams) {
   const { tableId } = options
@@ -72,6 +74,12 @@ export async function search(options: SearchParams) {
       response.rows = await getGlobalUsersFromMetadata(response.rows)
     }
     table = table || (await sdk.tables.getTable(tableId))
+
+    if (options.fields) {
+      const fields = [...options.fields, ...db.CONSTANT_INTERNAL_ROW_COLS]
+      response.rows = response.rows.map((r: any) => pick(r, fields))
+    }
+
     response.rows = await outputProcessing(table, response.rows)
   }
 

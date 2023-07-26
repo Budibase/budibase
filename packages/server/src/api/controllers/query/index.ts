@@ -10,6 +10,7 @@ import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent } from "../../../threads/definitions"
 import { Query } from "@budibase/types"
+import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
@@ -75,6 +76,11 @@ export { _import as import }
 export async function save(ctx: any) {
   const db = context.getAppDB()
   const query = ctx.request.body
+
+  // Validate query name
+  if (!query?.name.match(ValidQueryNameRegex)) {
+    ctx.throw(400, "Invalid query name")
+  }
 
   const datasource = await sdk.datasources.get(query.datasourceId)
 
