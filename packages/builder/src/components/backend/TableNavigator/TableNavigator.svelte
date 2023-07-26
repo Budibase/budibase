@@ -7,9 +7,6 @@
   import { goto, isActive } from "@roxi/routify"
   import { userSelectedResourceMap } from "builderStore"
 
-  const alphabetical = (a, b) =>
-    a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
-
   export let sourceId
   export let selectTable
 
@@ -18,6 +15,17 @@
       table => table.sourceId === sourceId && table._id !== TableNames.USERS
     )
     .sort(alphabetical)
+
+  const alphabetical = (a, b) => {
+    return a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
+  }
+
+  const isViewActive = (view, isActive, views, viewsV2) => {
+    return (
+      (isActive("./view/v1") && views.selected?.name === view.name) ||
+      (isActive("./view/v2") && viewsV2.selected?.id === view.id)
+    )
+  }
 </script>
 
 {#if $database?._id}
@@ -37,28 +45,22 @@
           <EditTablePopover {table} />
         {/if}
       </NavItem>
-      {#each [...Object.entries(table.views || {})].sort() as [viewName, view], idx (idx)}
-        {@const viewSelected =
-          $isActive("./view") && $views.selected?.name === viewName}
-        {@const viewV2Selected =
-          $isActive("./view/v2") && $viewsV2.selected?.name === viewName}
+      {#each [...Object.entries(table.views || {})].sort() as [name, view], idx (idx)}
         <NavItem
           indentLevel={2}
           icon="Remove"
-          text={viewName}
-          selected={viewSelected || viewV2Selected}
+          text={name}
+          selected={isViewActive(view, $isActive, $views, $viewsV2)}
           on:click={() => {
             if (view.version === 2) {
               $goto(`./view/v2/${view.id}`)
             } else {
-              $goto(`./view/${encodeURIComponent(viewName)}`)
+              $goto(`./view/v1/${encodeURIComponent(name)}`)
             }
           }}
-          selectedBy={$userSelectedResourceMap[viewName]}
+          selectedBy={$userSelectedResourceMap[name]}
         >
-          <EditViewPopover
-            view={{ name: viewName, ...table.views[viewName] }}
-          />
+          <EditViewPopover view={{ name, ...table.views[name] }} />
         </NavItem>
       {/each}
     {/each}
