@@ -1,7 +1,10 @@
 import { generator } from "@budibase/backend-core/tests"
-import { FieldType, Table, ViewV2 } from "@budibase/types"
+import { FieldType, Table } from "@budibase/types"
 jest.mock("../../../../sdk", () => ({
-  views: { get: jest.fn() },
+  views: {
+    ...jest.requireActual("../../../../sdk/app/views"),
+    get: jest.fn(),
+  },
 }))
 
 import sdk from "../../../../sdk"
@@ -28,23 +31,20 @@ describe("utils", () => {
       },
     },
   }
-  const view: ViewV2 = {
-    version: 2,
-    id: generator.guid(),
-    name: generator.guid(),
-    tableId: generator.guid(),
-  }
 
   beforeEach(() => {
     jest.resetAllMocks()
   })
 
   describe("trimViewFields", () => {
-    beforeEach(() => {
-      mockGetView.mockResolvedValue(view)
-    })
-
     it("when no columns are defined, same data is returned", async () => {
+      mockGetView.mockResolvedValue({
+        version: 2,
+        id: generator.guid(),
+        name: generator.guid(),
+        tableId: generator.guid(),
+      })
+
       const viewId = generator.guid()
       const data = {
         _id: generator.guid(),
@@ -56,6 +56,35 @@ describe("utils", () => {
       const result = await trimViewFields(viewId, table, data)
 
       expect(result).toBe(data)
+    })
+
+    it("when columns are defined, trim data is returned", async () => {
+      mockGetView.mockResolvedValue({
+        version: 2,
+        id: generator.guid(),
+        name: generator.guid(),
+        tableId: generator.guid(),
+        columns: {
+          name: { visible: true },
+          address: { visible: true },
+          age: { visible: false },
+        },
+      })
+
+      const viewId = generator.guid()
+      const data = {
+        _id: generator.guid(),
+        name: generator.name(),
+        age: generator.age(),
+        address: generator.address(),
+      }
+
+      const result = await trimViewFields(viewId, table, data)
+
+      expect(result).toEqual({
+        name: data.name,
+        address: data.address,
+      })
     })
   })
 })
