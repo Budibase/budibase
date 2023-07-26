@@ -33,7 +33,10 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const dbTable = await sdk.tables.getTable(tableId)
 
   if (_viewId) {
-    data = await sdk.rows.utils.trimViewFields(_viewId, dbTable, data)
+    data = {
+      ...(await sdk.rows.utils.trimViewFields(_viewId, dbTable, data)),
+      _id: data._id,
+    }
   }
 
   try {
