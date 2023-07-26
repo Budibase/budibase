@@ -82,6 +82,8 @@
       primaryDisplay =
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
+    } else if (!savingColumn) {
+      editableColumn.name = "Column 01"
     }
   }
 
@@ -436,7 +438,7 @@
     bind:value={editableColumn.constraints.length.maximum}
   />
 {:else if editableColumn.type === "options"}
-  <OptionPicker bind:values={editableColumn.constraints.inclusion} />
+  <OptionPicker bind:constraints={editableColumn.constraints} />
 {:else if editableColumn.type === "longform"}
   <div>
     <Label
@@ -541,32 +543,44 @@
   />
 {:else if editableColumn.type === FORMULA_TYPE}
   {#if !table.sql}
-    <Select
-      label="Formula type"
-      bind:value={editableColumn.formulaType}
-      options={[
-        { label: "Dynamic", value: "dynamic" },
-        { label: "Static", value: "static" },
-      ]}
-      getOptionLabel={option => option.label}
-      getOptionValue={option => option.value}
-      tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
+    <div class="split-label">
+      <div class="label-length">
+        <Label size="M">Formula Type</Label>
+      </div>
+      <div class="input-length">
+        <Select
+          bind:value={editableColumn.formulaType}
+          options={[
+            { label: "Dynamic", value: "dynamic" },
+            { label: "Static", value: "static" },
+          ]}
+          getOptionLabel={option => option.label}
+          getOptionValue={option => option.value}
+          tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
          while static formula are calculated when the row is saved."
-    />
+        />
+      </div>
+    </div>
   {/if}
-  <ModalBindableInput
-    title="Formula"
-    label="Formula"
-    value={editableColumn.formula}
-    on:change={e => {
-      editableColumn = {
-        ...editableColumn,
-        formula: e.detail,
-      }
-    }}
-    bindings={getBindings({ table })}
-    allowJS
-  />
+  <div class="split-label">
+    <div class="label-length">
+      <Label size="M">Formula</Label>
+    </div>
+    <div class="input-length">
+      <ModalBindableInput
+        title="Formula"
+        value={editableColumn.formula}
+        on:change={e => {
+          editableColumn = {
+            ...editableColumn,
+            formula: e.detail,
+          }
+        }}
+        bindings={getBindings({ table })}
+        allowJS
+      />
+    </div>
+  </div>
 {:else if editableColumn.type === JSON_TYPE}
   <Button primary text on:click={openJsonSchemaEditor}
     >Open schema editor</Button

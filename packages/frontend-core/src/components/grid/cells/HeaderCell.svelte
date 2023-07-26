@@ -174,6 +174,7 @@
     offset={0}
     popoverTarget={document.getElementById(`grid-${rand}`)}
     animate={false}
+    customZindex={100}
   >
     {#if editIsOpen}
       <div
@@ -295,9 +296,5 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-  }
-
-  .content :global(.spectrum-Popover) {
-    z-index: 100;
   }
 </style>

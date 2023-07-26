@@ -41,6 +41,7 @@
     offset={0}
     popoverTarget={document.getElementById(`add-column-button`)}
     animate={false}
+    customZindex={100}
   >
     <div
       use:clickOutside={() => {

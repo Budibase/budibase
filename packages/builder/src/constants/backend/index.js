@@ -62,6 +62,7 @@ export const FIELDS = {
   BIGINT: {
     name: "BigInt",
     type: "bigint",
+    icon: "TagBold",
   },
   BOOLEAN: {
     name: "Boolean",
