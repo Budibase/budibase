@@ -7,6 +7,8 @@ LABEL com.centurylinklabs.watchtower.lifecycle.post-check="scripts/watchtower-ho
 
 WORKDIR /app
 
+RUN echo "this is a test"
+
 # handle node-gyp
 RUN apk add --no-cache --virtual .gyp python3 make g++
 RUN yarn global add pm2
