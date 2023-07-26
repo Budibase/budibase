@@ -433,26 +433,9 @@ export const inviteAccept = async (
   }
 }
 
-export const grantAppBuilder = async (ctx: Ctx) => {
-  const { userId } = ctx.params
-  const user = await userSdk.db.getUser(userId)
-  if (!user.builder) {
-    user.builder = {}
-  }
-  user.builder.appBuilder = true
-  await userSdk.db.save(user, { hashPassword: false })
-  ctx.body = { message: `User "${user.email}" granted app builder permissions` }
-}
-
 export const addAppBuilder = async (ctx: Ctx) => {
   const { userId, appId } = ctx.params
   const user = await userSdk.db.getUser(userId)
-  if (!user.builder?.appBuilder && !userSdk.core.isGlobalBuilder(user)) {
-    ctx.throw(
-      400,
-      "Unable to update access, user must be granted app builder permissions."
-    )
-  }
   if (userSdk.core.isGlobalBuilder(user)) {
     ctx.body = { message: "User already admin - no permissions updated." }
     return
@@ -472,12 +455,6 @@ export const addAppBuilder = async (ctx: Ctx) => {
 export const removeAppBuilder = async (ctx: Ctx) => {
   const { userId, appId } = ctx.params
   const user = await userSdk.db.getUser(userId)
-  if (!user.builder?.appBuilder && !userSdk.core.isGlobalBuilder(user)) {
-    ctx.throw(
-      400,
-      "Unable to update access, user must be granted app builder permissions."
-    )
-  }
   if (userSdk.core.isGlobalBuilder(user)) {
     ctx.body = { message: "User already admin - no permissions removed." }
     return

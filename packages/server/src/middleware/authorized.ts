@@ -5,7 +5,7 @@ import {
   context,
   users,
 } from "@budibase/backend-core"
-import { Role, UserCtx } from "@budibase/types"
+import { Role, UserCtx, PermissionType, PermissionLevel } from "@budibase/types"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
 
@@ -24,8 +24,8 @@ const csrf = auth.buildCsrfMiddleware()
 const checkAuthorized = async (
   ctx: UserCtx,
   resourceRoles: any,
-  permType: any,
-  permLevel: any
+  permType: PermissionType,
+  permLevel: PermissionLevel
 ) => {
   const appId = context.getAppId()
   // check if this is a builder api and the user is not a builder
@@ -47,10 +47,10 @@ const checkAuthorized = async (
 }
 
 const checkAuthorizedResource = async (
-  ctx: any,
+  ctx: UserCtx,
   resourceRoles: any,
-  permType: any,
-  permLevel: any
+  permType: PermissionType,
+  permLevel: PermissionLevel
 ) => {
   // get the user's roles
   const roleId = ctx.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
@@ -122,7 +122,10 @@ export default (
 
     // check general builder stuff, this middleware is a good way
     // to find API endpoints which are builder focused
-    if (permType === permissions.PermissionType.BUILDER) {
+    if (
+      permType === permissions.PermissionType.BUILDER ||
+      permType === permissions.PermissionType.GLOBAL_BUILDER
+    ) {
       await builderMiddleware(ctx)
     }
 
