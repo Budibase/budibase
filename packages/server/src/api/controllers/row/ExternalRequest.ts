@@ -164,7 +164,7 @@ function generateIdForRow(
       fieldName: field,
       isLinked,
     })
-    if (fieldValue) {
+    if (fieldValue != null) {
       idParts.push(fieldValue)
     }
   }
