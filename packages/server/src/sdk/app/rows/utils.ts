@@ -1,5 +1,4 @@
 import cloneDeep from "lodash/cloneDeep"
-import pick from "lodash/pick"
 import validateJs from "validate.js"
 import { FieldType, Row, Table, TableSchema } from "@budibase/types"
 import { FieldTypes } from "../../../constants"
@@ -137,7 +136,7 @@ export async function validate({
   return { valid: Object.keys(errors).length === 0, errors }
 }
 
-export async function trimViewFields<T>(
+export async function trimViewFields<T extends Row>(
   viewId: string,
   table: Table,
   data: T
@@ -148,5 +147,10 @@ export async function trimViewFields<T>(
   }
 
   const { schema } = sdk.views.enrichSchema(view!, table.schema)
-  return pick(data, Object.keys(schema)) as T
+  const result: Record<string, any> = {}
+  for (const key of Object.keys(schema)) {
+    result[key] = data[key] !== null ? data[key] : undefined
+  }
+
+  return result as T
 }

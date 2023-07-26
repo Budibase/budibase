@@ -2,7 +2,7 @@ import * as linkRows from "../../db/linkedRows"
 import { FieldTypes, AutoFieldSubTypes } from "../../constants"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
 import { ObjectStoreBuckets } from "../../constants"
-import { context, db as dbCore, objectStore } from "@budibase/backend-core"
+import { context, db, db as dbCore, objectStore } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import { Row, RowAttachment, Table, ContextUser } from "@budibase/types"
@@ -138,7 +138,10 @@ export function inputProcessing(
 ) {
   let clonedRow = cloneDeep(row)
 
-  const dontCleanseKeys = ["type", "_id", "_rev", "tableId"]
+  const dontCleanseKeys: string[] = [
+    ...db.CONSTANT_EXTERNAL_ROW_COLS,
+    ...db.CONSTANT_INTERNAL_ROW_COLS,
+  ]
   for (let [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
     // cleanse fields that aren't in the schema

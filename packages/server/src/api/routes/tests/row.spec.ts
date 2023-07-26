@@ -503,8 +503,8 @@ describe("/rows", () => {
 
         const res = await config.api.row.patch(table._id!, {
           ...row,
-          name: undefined,
-          description: undefined,
+          name: null,
+          description: null,
         } as PatchRowRequest)
 
         const savedRow = await loadRow(res.body._id, table._id!)
