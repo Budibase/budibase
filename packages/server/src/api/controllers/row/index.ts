@@ -9,10 +9,11 @@ import {
   DeleteRow,
   DeleteRows,
   Row,
+  PatchRowRequest,
+  PatchRowResponse,
   SearchResponse,
   SortOrder,
   SortType,
-  UserCtx,
   ViewV2,
 } from "@budibase/types"
 import * as utils from "./utils"
@@ -30,7 +31,9 @@ function pickApi(tableId: any) {
   return internal
 }
 
-export async function patch(ctx: UserCtx): Promise<any> {
+export async function patch(
+  ctx: UserCtx<PatchRowRequest, PatchRowResponse>
+): Promise<any> {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
@@ -39,7 +42,7 @@ export async function patch(ctx: UserCtx): Promise<any> {
     return save(ctx)
   }
   try {
-    const { row, table } = await quotas.addQuery<any>(
+    const { row, table } = await quotas.addQuery(
       () => pickApi(tableId).patch(ctx),
       {
         datasourceId: tableId,
