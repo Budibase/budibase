@@ -1,20 +1,20 @@
 <script>
-  import { viewsV2 } from "stores/backend"
+  import { views } from "stores/backend"
   import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import { store } from "builderStore"
 
-  $: id = $viewsV2.selectedViewId
-  $: store.actions.websocket.selectResource(id)
+  $: name = $views.selectedViewName
+  $: store.actions.websocket.selectResource(name)
 
   const stopSyncing = syncURLToState({
-    urlParam: "id",
-    stateKey: "selectedViewId",
-    validate: id => $viewsV2.list?.some(view => view.id === id),
-    update: viewsV2.select,
+    urlParam: "viewName",
+    stateKey: "selectedViewName",
+    validate: name => $views.list?.some(view => view.name === name),
+    update: views.select,
     fallbackUrl: "../../",
-    store: viewsV2,
+    store: views,
     routify,
     decode: decodeURIComponent,
   })

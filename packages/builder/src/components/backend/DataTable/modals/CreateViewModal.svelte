@@ -1,22 +1,19 @@
 <script>
   import { Input, notifications, ModalContent } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { views as viewsStore } from "stores/backend"
+  import { viewsV2 } from "stores/backend"
   import { tables } from "stores/backend"
 
   let name
   let field
 
-  $: views = $tables.list.flatMap(table => Object.keys(table.views || {}))
+  $: views = Object.keys($tables.selected?.views || {})
+  $: nameExists = views.includes(name?.trim())
 
   const saveView = async () => {
     name = name?.trim()
-    if (views.includes(name)) {
-      notifications.error(`View exists with name ${name}`)
-      return
-    }
     try {
-      const newView = await viewsStore.create({
+      const newView = await viewsV2.create({
         name,
         tableId: $tables.selected._id,
         field,
@@ -33,6 +30,12 @@
   title="Create View"
   confirmText="Create View"
   onConfirm={saveView}
+  disabled={nameExists}
 >
-  <Input label="View Name" thin bind:value={name} />
+  <Input
+    label="View Name"
+    thin
+    bind:value={name}
+    error={nameExists ? "A view already exists with that name" : null}
+  />
 </ModalContent>

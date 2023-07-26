@@ -111,7 +111,7 @@ export const deriveStores = context => {
     // Create new fetch model
     const newFetch = fetchData({
       API,
-      datasource,
+      datasource: $datasource,
       options: {
         filter: $filter,
         sortColumn: $sort.column,
