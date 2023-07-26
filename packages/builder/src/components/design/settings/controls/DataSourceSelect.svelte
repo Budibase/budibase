@@ -143,13 +143,12 @@
   }
 
   const openQueryParamsDrawer = () => {
-    tmpQueryParams = value.queryParams
+    tmpQueryParams = { ...value.queryParams }
     drawer.show()
   }
 
   const getQueryValue = queries => {
-    value = queries.find(q => q._id === value._id) || value
-    return value
+    return queries.find(q => q._id === value._id) || value
   }
 
   const saveQueryParams = () => {
@@ -176,7 +175,10 @@
         <Layout noPadding gap="XS">
           {#if getQueryParams(value).length > 0}
             <BindingBuilder
-              bind:customParams={tmpQueryParams}
+              customParams={tmpQueryParams}
+              on:change={v => {
+                tmpQueryParams = { ...v.detail }
+              }}
               queryBindings={getQueryParams(value)}
               bind:bindings
             />

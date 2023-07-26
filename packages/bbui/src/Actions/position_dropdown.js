@@ -64,7 +64,7 @@ export default function positionDropdown(element, opts) {
 
     // Apply styles
     Object.entries(styles).forEach(([style, value]) => {
-      if (value) {
+      if (value != null) {
         element.style[style] = `${value.toFixed(0)}px`
       } else {
         element.style[style] = null

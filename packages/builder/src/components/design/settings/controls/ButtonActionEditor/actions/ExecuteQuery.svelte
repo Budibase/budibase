@@ -73,9 +73,12 @@
       {#if query?.parameters?.length > 0}
         <div class="params">
           <BindingBuilder
-            bind:customParams={parameters.queryParams}
+            customParams={parameters.queryParams}
             queryBindings={query.parameters}
             bind:bindings
+            on:change={v => {
+              parameters.queryParams = { ...v.detail }
+            }}
           />
           <IntegrationQueryEditor
             height={200}

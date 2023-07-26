@@ -18,6 +18,20 @@ var argv = require("minimist")(process.argv.slice(2))
 function runBuild(entry, outfile) {
   const isDev = process.env.NODE_ENV !== "production"
   const tsconfig = argv["p"] || `tsconfig.build.json`
+  const tsconfigPathPluginContent = JSON.parse(
+    fs.readFileSync(tsconfig, "utf-8")
+  )
+
+  if (!fs.existsSync("../pro/src")) {
+    // If we don't have pro, we cannot bundle backend-core.
+    // Otherwise, the main context will not be shared between libraries
+    delete tsconfigPathPluginContent.compilerOptions.paths[
+      "@budibase/backend-core"
+    ]
+    delete tsconfigPathPluginContent.compilerOptions.paths[
+      "@budibase/backend-core/*"
+    ]
+  }
 
   const sharedConfig = {
     entryPoints: [entry],
@@ -25,7 +39,10 @@ function runBuild(entry, outfile) {
     minify: !isDev,
     sourcemap: isDev,
     tsconfig,
-    plugins: [TsconfigPathsPlugin({ tsconfig }), nodeExternalsPlugin()],
+    plugins: [
+      TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
+      nodeExternalsPlugin(),
+    ],
     target: "node14",
     preserveSymlinks: true,
     loader: {
