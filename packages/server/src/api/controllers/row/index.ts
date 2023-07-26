@@ -295,7 +295,7 @@ export async function validate(ctx: Ctx) {
   if (isExternalTable(tableId)) {
     ctx.body = { valid: true }
   } else {
-    ctx.body = await utils.validate({
+    ctx.body = await sdk.rows.utils.validate({
       row: ctx.request.body,
       tableId,
     })
