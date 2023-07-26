@@ -1,5 +1,5 @@
 <script>
-  import { datasources, viewsV2 } from "stores/backend"
+  import { viewsV2 } from "stores/backend"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
@@ -12,7 +12,6 @@
     id,
     tableId: id?.split("_").slice(0, -1).join("_"),
   }
-  $: console.log(datasource)
 
   const handleGridViewUpdate = async e => {
     viewsV2.replace(id, e.detail)

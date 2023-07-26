@@ -2,13 +2,15 @@ import DataFetch from "./DataFetch.js"
 
 export default class ViewV2Fetch extends DataFetch {
   async getSchema(datasource, definition) {
-    return definition.schema
+    return definition?.schema
   }
 
   async getDefinition(datasource) {
     try {
       const table = await this.API.fetchTableDefinition(datasource.tableId)
-      const view = Object.values(table.views).find(v => v.id === datasource.id)
+      const view = Object.values(table.views || {}).find(
+        view => view.id === datasource.id
+      )
       const { schema } = view
       return { schema }
     } catch (error) {

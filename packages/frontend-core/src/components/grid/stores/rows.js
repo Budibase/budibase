@@ -102,6 +102,11 @@ export const deriveStores = context => {
     instanceLoaded.set(false)
     loading.set(true)
 
+    // Abandon if we don't have a valid datasource
+    if (!$datasource?.tableId) {
+      return
+    }
+
     // Tick to allow other reactive logic to update stores when table ID changes
     // before proceeding. This allows us to wipe filters etc if needed.
     await tick()

@@ -60,7 +60,7 @@
           }}
           selectedBy={$userSelectedResourceMap[name]}
         >
-          <EditViewPopover view={{ name, ...table.views[name] }} />
+          <EditViewPopover {view} />
         </NavItem>
       {/each}
     {/each}
