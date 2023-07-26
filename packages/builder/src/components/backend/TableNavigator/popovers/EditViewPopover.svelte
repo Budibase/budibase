@@ -1,6 +1,5 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { views } from "stores/backend"
+  import { views, viewsV2 } from "stores/backend"
   import { cloneDeep } from "lodash/fp"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
@@ -24,25 +23,29 @@
     const updatedView = cloneDeep(view)
     updatedView.name = updatedName
 
-    await views.save({
-      originalName,
-      ...updatedView,
-    })
+    if (view.version === 2) {
+      await viewsV2.save({
+        originalName,
+        ...updatedView,
+      })
+    } else {
+      await views.save({
+        originalName,
+        ...updatedView,
+      })
+    }
+
     notifications.success("View renamed successfully")
   }
 
   async function deleteView() {
     try {
-      const isSelected =
-        view.tableId === $views.selected.tableId &&
-        view.name === $views.selected.name
-
-      const { tableId } = view
-      await views.delete(view)
-      notifications.success("View deleted")
-      if (isSelected) {
-        $goto(`./table/${tableId}`)
+      if (view.version === 2) {
+        await viewsV2.delete(view)
+      } else {
+        await views.delete(view)
       }
+      notifications.success("View deleted")
     } catch (error) {
       notifications.error("Error deleting view")
     }
