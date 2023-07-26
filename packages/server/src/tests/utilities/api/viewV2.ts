@@ -1,7 +1,8 @@
-import { SortOrder, SortType, ViewV2 } from "@budibase/types"
+import { CreateViewRequest, SortOrder, SortType, ViewV2 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 import { generator } from "@budibase/backend-core/tests"
+import { Response } from "superagent"
 
 export class ViewV2API extends TestAPI {
   constructor(config: TestConfiguration) {
@@ -9,7 +10,7 @@ export class ViewV2API extends TestAPI {
   }
 
   create = async (
-    viewData?: Partial<ViewV2>,
+    viewData?: Partial<CreateViewRequest>,
     { expectStatus } = { expectStatus: 201 }
   ): Promise<ViewV2> => {
     let tableId = viewData?.tableId
@@ -28,6 +29,29 @@ export class ViewV2API extends TestAPI {
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(expectStatus)
+    return result.body.data as ViewV2
+  }
+
+  update = async (
+    view: ViewV2,
+    {
+      expectStatus,
+      handleResponse,
+    }: {
+      expectStatus: number
+      handleResponse?: (response: Response) => void
+    } = { expectStatus: 200 }
+  ): Promise<ViewV2> => {
+    const result = await this.request
+      .put(`/api/v2/views/${view.id}`)
+      .send(view)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expectStatus)
+
+    if (handleResponse) {
+      handleResponse(result)
+    }
     return result.body.data as ViewV2
   }
 

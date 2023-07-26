@@ -4,6 +4,11 @@ import * as external from "./external"
 import { isExternalTable } from "../../../integrations/utils"
 import {
   Ctx,
+  UserCtx,
+  DeleteRowRequest,
+  DeleteRow,
+  DeleteRows,
+  Row,
   SearchResponse,
   SortOrder,
   SortType,
@@ -11,6 +16,8 @@ import {
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
+import { addRev } from "../public/utils"
+import { fixRow } from "../public/rows"
 import sdk from "../../../sdk"
 import * as exporters from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
@@ -104,35 +111,83 @@ export async function find(ctx: any) {
   })
 }
 
-export async function destroy(ctx: any) {
-  const appId = ctx.appId
-  const inputs = ctx.request.body
+function isDeleteRows(input: any): input is DeleteRows {
+  return input.rows !== undefined && Array.isArray(input.rows)
+}
+
+function isDeleteRow(input: any): input is DeleteRow {
+  return input._id !== undefined
+}
+
+async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
+  let request = ctx.request.body as DeleteRows
   const tableId = utils.getTableId(ctx)
-  let response, row
-  if (inputs.rows) {
-    let { rows } = await quotas.addQuery<any>(
-      () => pickApi(tableId).bulkDestroy(ctx),
-      {
-        datasourceId: tableId,
-      }
-    )
-    await quotas.removeRows(rows.length)
-    response = rows
-    for (let row of rows) {
-      ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-      gridSocket?.emitRowDeletion(ctx, row._id!)
-    }
-  } else {
-    let resp = await quotas.addQuery<any>(() => pickApi(tableId).destroy(ctx), {
+
+  const processedRows = request.rows.map(row => {
+    let processedRow: Row = typeof row == "string" ? { _id: row } : row
+    return !processedRow._rev
+      ? addRev(fixRow(processedRow, ctx.params), tableId)
+      : fixRow(processedRow, ctx.params)
+  })
+
+  return await Promise.all(processedRows)
+}
+
+async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
+  const tableId = utils.getTableId(ctx)
+  const appId = ctx.appId
+
+  let deleteRequest = ctx.request.body as DeleteRows
+
+  const rowDeletes: Row[] = await processDeleteRowsRequest(ctx)
+  deleteRequest.rows = rowDeletes
+
+  let { rows } = await quotas.addQuery<any>(
+    () => pickApi(tableId).bulkDestroy(ctx),
+    {
       datasourceId: tableId,
-    })
-    await quotas.removeRow()
-    response = resp.response
-    row = resp.row
+    }
+  )
+  await quotas.removeRows(rows.length)
+
+  for (let row of rows) {
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
     gridSocket?.emitRowDeletion(ctx, row._id!)
   }
+
+  return rows
+}
+
+async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
+  const appId = ctx.appId
+  const tableId = utils.getTableId(ctx)
+
+  let resp = await quotas.addQuery<any>(() => pickApi(tableId).destroy(ctx), {
+    datasourceId: tableId,
+  })
+  await quotas.removeRow()
+
+  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
+  gridSocket?.emitRowDeletion(ctx, resp.row._id)
+
+  return resp
+}
+
+export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
+  let response, row
   ctx.status = 200
+
+  if (isDeleteRows(ctx.request.body)) {
+    response = await deleteRows(ctx)
+  } else if (isDeleteRow(ctx.request.body)) {
+    const deleteResp = await deleteRow(ctx)
+    response = deleteResp.response
+    row = deleteResp.row
+  } else {
+    ctx.status = 400
+    response = { message: "Invalid delete rows request" }
+  }
+
   // for automations include the row that was deleted
   ctx.row = row || {}
   ctx.body = response
