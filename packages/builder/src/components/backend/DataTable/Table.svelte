@@ -3,8 +3,6 @@
   import { goto, params } from "@roxi/routify"
   import { Table, Heading, Layout } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
-  import CreateEditRow from "./modals/CreateEditRow.svelte"
-  import CreateEditUser from "./modals/CreateEditUser.svelte"
   import {
     TableNames,
     UNEDITABLE_USER_FIELDS,
@@ -33,7 +31,6 @@
   $: selectedRows, dispatch("selectionUpdated", selectedRows)
   $: isUsersTable = tableId === TableNames.USERS
   $: data && resetSelectedRows()
-  $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
   $: {
     UNSORTABLE_TYPES.forEach(type => {
       Object.values(schema || {}).forEach(col => {
@@ -112,6 +109,7 @@
         {disableSorting}
         {customPlaceholder}
         allowEditRows={allowEditing}
+        allowEditColumns={allowEditing}
         showAutoColumns={!hideAutocolumns}
         {allowClickRows}
         on:clickrelationship={e => selectRelationship(e.detail)}

@@ -44,7 +44,6 @@
   let fileInput
   let error = null
   let fileName = null
-  let fileType = null
   let loading = false
   let validation = {}
   let validateHash = ""
@@ -73,7 +72,6 @@
       rows = response.rows
       schema = response.schema
       fileName = response.fileName
-      fileType = response.fileType
     } catch (e) {
       loading = false
       error = e
