@@ -10,6 +10,10 @@ export const backfill = async (appDb: Database, timestamp: string | number) => {
 
     if (table.views) {
       for (const view of Object.values(table.views)) {
+        if (sdk.views.isV2(view)) {
+          continue
+        }
+
         await events.view.created(view, timestamp)
 
         if (view.calculation) {

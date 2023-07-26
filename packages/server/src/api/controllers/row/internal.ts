@@ -87,7 +87,7 @@ export async function patch(ctx: UserCtx) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row
     await userController.updateMetadata(ctx)
-    return { row: ctx.body, table }
+    return { row: ctx.body as Row, table }
   }
 
   return finaliseRow(table, row, {

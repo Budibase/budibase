@@ -2,7 +2,7 @@ import env from "../environment"
 import { DEFAULT_TENANT_ID, SEPARATOR, DocumentType } from "../constants"
 import { getTenantId, getGlobalDBName } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
-import { getAppMetadata } from "../cache/appMetadata"
+import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "../docIds/conversions"
 import { App, Database } from "@budibase/types"
 import { getStartEndKeyURL } from "../docIds"
@@ -101,7 +101,9 @@ export async function getAllApps({
     const response = await Promise.allSettled(appPromises)
     const apps = response
       .filter(
-        (result: any) => result.status === "fulfilled" && result.value != null
+        (result: any) =>
+          result.status === "fulfilled" &&
+          result.value?.state !== AppState.INVALID
       )
       .map(({ value }: any) => value)
     if (!all) {
@@ -126,7 +128,11 @@ export async function getAppsByIDs(appIds: string[]) {
   )
   // have to list the apps which exist, some may have been deleted
   return settled
-    .filter(promise => promise.status === "fulfilled")
+    .filter(
+      promise =>
+        promise.status === "fulfilled" &&
+        (promise.value as DeletedApp).state !== AppState.INVALID
+    )
     .map(promise => (promise as PromiseFulfilledResult<App>).value)
 }
 
