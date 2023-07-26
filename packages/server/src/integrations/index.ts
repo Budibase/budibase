@@ -54,7 +54,6 @@ const INTEGRATIONS: Record<SourceName, any> = {
   [SourceName.FIRESTORE]: firebase.integration,
   [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
   [SourceName.REDIS]: redis.integration,
-  [SourceName.FIRESTORE]: firebase.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
   [SourceName.ORACLE]: undefined,
 }
