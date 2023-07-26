@@ -26,22 +26,27 @@ import {
 import sdk from "../../../sdk"
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const inputs = ctx.request.body
-  const tableId = inputs.tableId
+  let { _viewId, ...data } = ctx.request.body
+  const tableId = data.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
   const dbTable = await sdk.tables.getTable(tableId)
+
+  if (_viewId) {
+    data = await sdk.rows.utils.trimViewFields(_viewId, dbTable, data)
+  }
+
   try {
     oldRow = await outputProcessing(
       dbTable,
-      await utils.findRow(ctx, tableId, inputs._id!)
+      await utils.findRow(ctx, tableId, data._id)
     )
   } catch (err) {
     if (isUserTable) {
       // don't include the rev, it'll be the global rev
       // this time
       oldRow = {
-        _id: inputs._id,
+        _id: data._id,
       }
     } else {
       throw "Row does not exist"
@@ -50,9 +55,9 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 
   // need to build up full patch fields before coerce
   let combinedRow: any = cloneDeep(oldRow)
-  for (let key of Object.keys(inputs)) {
+  for (let key of Object.keys(data)) {
     if (!dbTable.schema[key]) continue
-    combinedRow[key] = inputs[key]
+    combinedRow[key] = data[key]
   }
 
   // need to copy the table so it can be differenced on way out

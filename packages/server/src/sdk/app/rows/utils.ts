@@ -1,10 +1,13 @@
 import cloneDeep from "lodash/cloneDeep"
+import pick from "lodash/pick"
 import validateJs from "validate.js"
 import { FieldType, Row, Table, TableSchema } from "@budibase/types"
+import { db } from "@budibase/backend-core"
 import { FieldTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
+import { isExternalTable } from "../../../integrations/utils"
 
 export async function getDatasourceAndQuery(json: any) {
   const datasourceId = json.endpoint.datasourceId
@@ -134,4 +137,22 @@ export async function validate({
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
+}
+
+export async function trimViewFields<T>(
+  viewId: string,
+  table: Table,
+  data: T
+): Promise<T> {
+  const view = await sdk.views.get(viewId)
+  if (!view?.columns || !Object.keys(view.columns).length) {
+    return data
+  }
+
+  const rowDataFields = isExternalTable(table._id!)
+    ? db.CONSTANT_EXTERNAL_ROW_COLS
+    : db.CONSTANT_INTERNAL_ROW_COLS
+
+  const { schema } = sdk.views.enrichSchema(view!, table.schema)
+  return pick(data, [...Object.keys(schema), ...rowDataFields]) as T
 }

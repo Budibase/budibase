@@ -44,7 +44,12 @@ export async function handleRequest(
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = ctx.params.tableId
-  const { id, ...rowData } = ctx.request.body
+  let { _id: id, _viewId, ...rowData } = ctx.request.body
+
+  const table = await sdk.tables.getTable(tableId)
+  if (_viewId) {
+    rowData = await sdk.rows.utils.trimViewFields(_viewId, table, rowData)
+  }
 
   const validateResult = await sdk.rows.utils.validate({
     row: rowData,
@@ -57,10 +62,10 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     id: breakRowIdField(id),
     row: rowData,
   })
+
   const row = await sdk.rows.external.getRow(tableId, id, {
     relationships: true,
   })
-  const table = await sdk.tables.getTable(tableId)
   return {
     ...response,
     row,
