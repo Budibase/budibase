@@ -122,8 +122,7 @@ router
     buildAdminInitValidation(),
     controller.adminUser
   )
-  .post("/api/global/users/:userId/app/builder", controller.grantAppBuilder)
-  .patch(
+  .post(
     "/api/global/users/:userId/app/:appId/builder",
     controller.addAppBuilder
   )
