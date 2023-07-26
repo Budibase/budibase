@@ -480,7 +480,7 @@ describe("/api/global/users", () => {
       function createSSOUser() {
         return config.doInTenant(() => {
           const user = structures.users.ssoUser()
-          return userSdk.save(user, { requirePassword: false })
+          return userSdk.db.save(user, { requirePassword: false })
         })
       }
 
