@@ -43,34 +43,7 @@ export async function handleRequest(
 }
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const tableId = ctx.params.tableId
-  let { _id: id, _viewId, ...rowData } = ctx.request.body
-
-  const table = await sdk.tables.getTable(tableId)
-  if (_viewId) {
-    rowData = await sdk.rows.utils.trimViewFields(_viewId, table, rowData)
-  }
-
-  const validateResult = await sdk.rows.utils.validate({
-    row: rowData,
-    tableId,
-  })
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
-  const response = await handleRequest(Operation.UPDATE, tableId, {
-    id: breakRowIdField(id),
-    row: rowData,
-  })
-
-  const row = await sdk.rows.external.getRow(tableId, id, {
-    relationships: true,
-  })
-  return {
-    ...response,
-    row,
-    table,
-  }
+  return sdk.rows.external.patch(ctx.params.tableId, ctx.request.body)
 }
 
 export async function save(ctx: UserCtx) {

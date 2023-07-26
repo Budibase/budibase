@@ -25,7 +25,9 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
+export async function patch(
+  ctx: UserCtx<PatchRowRequest, PatchRowResponse>
+): Promise<Row> {
   let { _viewId, ...data } = ctx.request.body
   const tableId = data.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
