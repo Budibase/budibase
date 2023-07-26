@@ -30,5 +30,6 @@ export interface RowAttachment {
 export interface Row extends Document {
   type?: string
   tableId?: string
+  viewId?: string
   [key: string]: any
 }
