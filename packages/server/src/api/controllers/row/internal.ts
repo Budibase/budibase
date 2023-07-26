@@ -30,8 +30,8 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = inputs.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
+  const dbTable = await sdk.tables.getTable(tableId)
   try {
-    let dbTable = await sdk.tables.getTable(tableId)
     oldRow = await outputProcessing(
       dbTable,
       await utils.findRow(ctx, tableId, inputs._id!)
@@ -47,7 +47,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
       throw "Row does not exist"
     }
   }
-  let dbTable = await sdk.tables.getTable(tableId)
+
   // need to build up full patch fields before coerce
   let combinedRow: any = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
@@ -60,7 +60,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 
   // this returns the table and row incase they have been updated
   let { table, row } = inputProcessing(ctx.user, tableClone, combinedRow)
-  const validateResult = await utils.validate({
+  const validateResult = await sdk.rows.utils.validate({
     row,
     table,
   })
@@ -109,7 +109,7 @@ export async function save(ctx: UserCtx) {
 
   let { table, row } = inputProcessing(ctx.user, tableClone, inputs)
 
-  const validateResult = await utils.validate({
+  const validateResult = await sdk.rows.utils.validate({
     row,
     table,
   })

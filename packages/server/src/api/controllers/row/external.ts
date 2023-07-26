@@ -15,7 +15,6 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import * as utils from "./utils"
 
 async function getRow(
   tableId: string,
@@ -61,7 +60,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = ctx.params.tableId
   const { id, ...rowData } = ctx.request.body
 
-  const validateResult = await utils.validate({
+  const validateResult = await sdk.rows.utils.validate({
     row: rowData,
     tableId,
   })
@@ -84,7 +83,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 export async function save(ctx: UserCtx) {
   const inputs = ctx.request.body
   const tableId = ctx.params.tableId
-  const validateResult = await utils.validate({
+  const validateResult = await sdk.rows.utils.validate({
     row: inputs,
     tableId,
   })
