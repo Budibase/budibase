@@ -5,7 +5,7 @@ tk.freeze(timestamp)
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
 const { basicRow } = setup.structures
-import { context, db, tenancy } from "@budibase/backend-core"
+import { context, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   QuotaUsageType,
@@ -438,6 +438,35 @@ describe("/rows", () => {
 
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
+    })
+
+    describe("view row", () => {
+      it("should not edit fields that don't belong to the view", async () => {
+        const existing = await config.createRow()
+        const view = await config.api.viewV2.create({
+          columns: { name: { visible: true } },
+        })
+        const searchResponse = await config.api.viewV2.search(view.id)
+
+        const [row] = searchResponse.body.rows as Row[]
+
+        const res = await config.api.row.patch(table._id!, {
+          ...row,
+          name: "Updated Name",
+          description: "Updated Description",
+        })
+
+        const savedRow = await loadRow(res.body._id, table._id!)
+
+        expect(savedRow.body).toEqual({
+          ...existing,
+          name: "Updated Name",
+          _rev: expect.anything(),
+          createdAt: expect.anything(),
+          updatedAt: expect.anything(),
+        })
+        expect(savedRow.body.description).not.toEqual("Updated Description")
+      })
     })
   })
 
