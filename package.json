@@ -108,5 +108,8 @@
     "@budibase/string-templates": "0.0.0",
     "@budibase/types": "0.0.0"
   },
+  "engines": {
+    "node": ">=14.0.0 <15.0.0"
+  },
   "dependencies": {}
 }
