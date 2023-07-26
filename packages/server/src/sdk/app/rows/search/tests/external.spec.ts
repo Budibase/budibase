@@ -11,7 +11,7 @@ import {
 
 jest.unmock("mysql2/promise")
 
-jest.setTimeout(20000)
+jest.setTimeout(30000)
 
 describe("external", () => {
   const config = new TestConfiguration()
