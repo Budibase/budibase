@@ -56,7 +56,7 @@ export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
   const email = ctx.request.body.username
 
   const user = await userSdk.db.getUserByEmail(email)
-  if (user && (await userSdk.isPreventPasswordActions(user))) {
+  if (user && (await userSdk.db.isPreventPasswordActions(user))) {
     ctx.throw(403, "Invalid credentials")
   }
 
