@@ -331,6 +331,11 @@ async function performAppCreate(ctx: UserCtx) {
         }
       })
 
+      // Keep existing validation setting
+      if (!existing.features?.componentValidation) {
+        newApplication.features!.componentValidation = false
+      }
+
       // Migrate navigation settings and screens if required
       if (existing) {
         const navigation = await migrateAppNavigation()
