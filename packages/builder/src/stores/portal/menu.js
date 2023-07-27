@@ -29,20 +29,17 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
       href: "/builder/portal/apps",
     },
   ]
-  if (
-    sdk.users.hasBuilderPermissions(user) &&
-    !sdk.users.hasAppBuilderPermissions(user)
-  ) {
+  if (sdk.users.isGlobalBuilder(user)) {
     menu.push({
       title: "Users",
       href: "/builder/portal/users",
       subPages: userSubPages,
     })
+    menu.push({
+      title: "Plugins",
+      href: "/builder/portal/plugins",
+    })
   }
-  menu.push({
-    title: "Plugins",
-    href: "/builder/portal/plugins",
-  })
 
   // Add settings page for admins
   if (isAdmin) {

@@ -55,7 +55,7 @@ router
   )
   .delete(
     "/api/applications/:appId",
-    authorized(permissions.BUILDER),
+    authorized(permissions.GLOBAL_BUILDER),
     controller.destroy
   )
 
