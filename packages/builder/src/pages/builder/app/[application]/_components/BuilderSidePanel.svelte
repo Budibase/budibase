@@ -108,9 +108,9 @@
     await usersFetch.refresh()
 
     filteredUsers = $usersFetch.rows.map(user => {
-      const isBuilderOrAdmin = sdk.users.isBuilderOrAdmin(user, prodAppId)
+      const isAdminOrBuilder = sdk.users.isAdminOrBuilder(user, prodAppId)
       let role = undefined
-      if (isBuilderOrAdmin) {
+      if (isAdminOrBuilder) {
         role = Constants.Roles.ADMIN
       } else {
         const appRole = Object.keys(user.roles).find(x => x === prodAppId)
@@ -122,7 +122,7 @@
       return {
         ...user,
         role,
-        isBuilderOrAdmin,
+        isAdminOrBuilder,
       }
     })
   }
@@ -258,7 +258,7 @@
     }
     // Must exclude users who have explicit privileges
     const userByEmail = filteredUsers.reduce((acc, user) => {
-      if (user.role || sdk.users.isBuilderOrAdmin(user, prodAppId)) {
+      if (user.role || sdk.users.isAdminOrBuilder(user, prodAppId)) {
         acc.push(user.email)
       }
       return acc
@@ -403,7 +403,7 @@
       const role = $roles.find(role => role._id === user.role)
       return `This user has been given ${role?.name} access from the ${user.group} group`
     }
-    if (user.isBuilderOrAdmin) {
+    if (user.isAdminOrBuilder) {
       return "This user's role grants admin access to all apps"
     }
     return null
@@ -614,7 +614,7 @@
                     }}
                     autoWidth
                     align="right"
-                    allowedRoles={user.isBuilderOrAdmin
+                    allowedRoles={user.isAdminOrBuilder
                       ? [Constants.Roles.ADMIN]
                       : null}
                   />

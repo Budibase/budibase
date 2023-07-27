@@ -15,7 +15,7 @@
   let activeTab = "Apps"
 
   $: $url(), updateActiveTab($menu)
-  $: fullscreen = !$apps.length
+  $: fullscreen = $apps.length == null
 
   const updateActiveTab = menu => {
     for (let entry of menu) {
