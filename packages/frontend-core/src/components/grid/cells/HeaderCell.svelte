@@ -3,7 +3,6 @@
   import GridCell from "./GridCell.svelte"
   import { Icon, Popover, Menu, MenuItem, clickOutside } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
-  import ColumnConfiguration from "../layout/ColumnConfiguration.svelte"
 
   export let column
   export let idx

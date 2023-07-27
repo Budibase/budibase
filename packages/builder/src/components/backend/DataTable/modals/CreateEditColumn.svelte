@@ -7,13 +7,11 @@
     Toggle,
     RadioGroup,
     DatePicker,
-    ModalContent,
-    Context,
     Modal,
     notifications,
     OptionSelectDnD,
   } from "@budibase/bbui"
-  import { createEventDispatcher, getContext, onMount } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/backend"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
@@ -27,7 +25,6 @@
     SWITCHABLE_TYPES,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
-  import ValuesList from "components/common/ValuesList.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { truncate } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
@@ -218,7 +215,6 @@
         await tables.deleteField(editableColumn)
         notifications.success(`Column ${editableColumn.name} deleted`)
         confirmDeleteDialog.hide()
-        deletion = false
         dispatch("updatecolumns")
         gridDispatch("close-edit-column")
       }
@@ -254,14 +250,6 @@
     const req = e.detail
     editableColumn.constraints.presence = req ? { allowEmpty: false } : false
     required = req
-  }
-
-  function onChangePrimaryDisplay(e) {
-    const isPrimary = e.detail
-    // primary display is always required
-    if (isPrimary) {
-      editableColumn.constraints.presence = { allowEmpty: false }
-    }
   }
 
   function openJsonSchemaEditor() {
@@ -615,7 +603,9 @@
     <Button warning text on:click={confirmDelete}>Delete</Button>
   {/if}
   <Button secondary newStyles on:click={cancelEdit}>Cancel</Button>
-  <Button newStyles cta on:click={saveColumn}>Save Column</Button>
+  <Button disabled={invalid} newStyles cta on:click={saveColumn}
+    >Save Column</Button
+  >
 </div>
 <Modal bind:this={jsonSchemaModal}>
   <JSONSchemaModal

@@ -14,7 +14,6 @@
   import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
   import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
-  import CreateEditColumn from "./modals/CreateEditColumn.svelte"
 
   const userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },

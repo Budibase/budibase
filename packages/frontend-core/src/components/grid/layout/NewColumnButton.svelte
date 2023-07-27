@@ -14,10 +14,6 @@
   $: end = $hiddenColumnsWidth + columnsWidth - 1 - $scroll.left
   $: left = Math.min($width - 40, end)
 
-  const submit = () => {
-    open = false
-  }
-
   const close = () => {
     open = false
   }

@@ -2,7 +2,6 @@
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import Icon from "../Icon/Icon.svelte"
-  import ColorPicker from "../ColorPicker/ColorPicker.svelte"
   import Popover from "../Popover/Popover.svelte"
   import clickOutside from "../Actions/click_outside"
   import { onMount } from "svelte"
@@ -14,11 +13,10 @@
   let colorPopovers = []
   let anchors = []
 
-  let open = false
   let optionNameColorMap = constraints.optionColors || {}
   $: {
     if (constraints.inclusion.length) {
-      options = constraints.inclusion.map((value, idx) => ({
+      options = constraints.inclusion.map(value => ({
         name: value,
         id: Math.random(),
       }))
@@ -78,13 +76,12 @@
   }
 
   const openColorPickerPopover = (optionIdx, target) => {
-    open = true
-    anchors[optionIdx] = target
     colorPopovers[optionIdx].show()
+    anchors[optionIdx] = target
   }
 
   onMount(() => {
-    // Initialize arrays on mount, assuming 'options' is already populated
+    // Initialize anchor arrays on mount, assuming 'options' is already populated
     colorPopovers = constraints.inclusion.map(() => undefined)
     anchors = constraints.inclusion.map(() => undefined)
   })
@@ -126,10 +123,7 @@
               popoverTarget={document.getElementById(`color-picker`)}
               animate={false}
             >
-              <div
-                use:clickOutside={() => colorPopovers[idx]?.hide()}
-                class="colors"
-              >
+              <div class="colors">
                 {#each Array(6) as _, i}
                   {@const colorVar = getColor(i + 1)}
                   <div

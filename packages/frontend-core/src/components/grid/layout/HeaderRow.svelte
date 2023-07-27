@@ -4,7 +4,7 @@
   import { getContext } from "svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import HeaderCell from "../cells/HeaderCell.svelte"
-  import { Icon, TempTooltip, TooltipType } from "@budibase/bbui"
+  import { TempTooltip, TooltipType } from "@budibase/bbui"
 
   const { renderedColumns, config, hasNonAutoColumn, tableId, loading } =
     getContext("grid")
