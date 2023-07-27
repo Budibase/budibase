@@ -1,4 +1,4 @@
-name: Check for Unreleased Changes
+name: check_unreleased_changes
 
 on:
   pull_request:
