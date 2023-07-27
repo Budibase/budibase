@@ -453,10 +453,7 @@
     />
   </div>
 {:else if editableColumn.type === "array"}
-  <ValuesList
-    label="Options (one per line)"
-    bind:values={editableColumn.constraints.inclusion}
-  />
+  <OptionPicker bind:constraints={editableColumn.constraints} />
 {:else if editableColumn.type === "datetime" && !editableColumn.autocolumn}
   <div class="split-label">
     <div class="label-length">

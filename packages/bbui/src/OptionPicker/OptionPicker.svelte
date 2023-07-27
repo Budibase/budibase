@@ -33,6 +33,8 @@
   }
 
   const removeInput = idx => {
+    delete optionNameColorMap[options[idx].name]
+    delete constraints.optionColors[options[idx].name]
     constraints.inclusion = constraints.inclusion.filter((e, i) => i !== idx)
     options = options.filter((e, i) => i !== idx)
     colorPopovers.pop(undefined)
@@ -63,7 +65,15 @@
 
   const handleColorChange = (optionName, color, idx) => {
     optionNameColorMap[optionName] = color
+    constraints.optionColors = optionNameColorMap
     colorPopovers[idx].hide()
+  }
+
+  const handleNameChange = (optionName, idx, value) => {
+    constraints.inclusion[idx] = value
+    options[idx].name = value
+    optionNameColorMap[value] = optionNameColorMap[optionName]
+    delete optionNameColorMap[optionName]
     constraints.optionColors = optionNameColorMap
   }
 
@@ -98,8 +108,7 @@
             id="color-picker"
             bind:this={anchors[idx]}
             style="--color:{optionNameColorMap[option.name] || getColor(idx)};"
-            class="dot"
-            use:clickOutside={() => colorPopovers[idx].hide()}
+            class="circle"
             on:click={e => {
               open = true
               anchors[idx] = e.target
@@ -115,15 +124,17 @@
               popoverTarget={document.getElementById(`color-picker`)}
               animate={false}
             >
-              <div class="colors">
-                {option.name}
+              <div
+                use:clickOutside={() => colorPopovers[idx].hide()}
+                class="colors"
+              >
                 {#each Array(6) as _, i}
                   {@const colorVar = getColor(i + 1)}
                   <div
                     on:click={() =>
                       handleColorChange(option.name, colorVar, idx)}
                     style="--color:{colorVar};"
-                    class="dot"
+                    class="circle"
                   />
                 {/each}
               </div>
@@ -134,10 +145,7 @@
           <input
             class="input-field"
             type="text"
-            on:change={e => {
-              constraints.inclusion[idx] = e.target.value
-              options[idx].name = e.target.value
-            }}
+            on:change={e => handleNameChange(option.name, idx, e.target.value)}
             value={option.name}
             placeholder="Option name"
           />
@@ -229,18 +237,23 @@
     display: flex;
   }
 
-  .dot {
+  .circle {
     height: 20px;
     width: 20px;
     background-color: var(--color);
     border-radius: 50%;
     display: inline-block;
+    box-sizing: border-box;
+  }
+
+  .circle:not(#color-picker .circle):hover {
+    border: 1px solid var(--spectrum-global-color-blue-400);
   }
 
   .colors {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: var(--spacing-m);
+    gap: var(--spacing-xl);
     justify-items: center;
     margin: var(--spacing-m);
   }
