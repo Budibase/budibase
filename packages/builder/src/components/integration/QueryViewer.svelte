@@ -14,8 +14,9 @@
     Tab,
     Modal,
     ModalContent,
+    notifications,
+    Divider,
   } from "@budibase/bbui"
-  import { notifications, Divider } from "@budibase/bbui"
   import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
@@ -28,6 +29,7 @@
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
   import { fieldsToSchema, schemaToFields } from "helpers/data/utils"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
+  import { ValidQueryNameRegex } from "@budibase/shared-core"
 
   export let query
 
@@ -47,6 +49,7 @@
   let saveModal
   let override = false
   let navigateTo = null
+  let nameError = null
 
   // seed the transformer
   if (query && !query.transformer) {
@@ -77,7 +80,7 @@
   $: queryConfig = integrationInfo?.query
   $: shouldShowQueryConfig = queryConfig && query.queryVerb
   $: readQuery = query.queryVerb === "read" || query.readable
-  $: queryInvalid = !query.name || (readQuery && data.length === 0)
+  $: queryInvalid = !query.name || nameError || (readQuery && data.length === 0)
 
   //Cast field in query preview response to number if specified by schema
   $: {
@@ -139,9 +142,10 @@
         queryStr = JSON.stringify(query)
       }
 
+      notifications.success("Query saved successfully")
       return response
     } catch (error) {
-      notifications.error("Error saving query")
+      notifications.error(error.message || "Error saving query")
     }
   }
 </script>
@@ -183,8 +187,14 @@
           value={query.name}
           on:input={e => {
             let newValue = e.target.value || ""
-            query.name = newValue.trim()
+            if (newValue.match(ValidQueryNameRegex)) {
+              query.name = newValue.trim()
+              nameError = null
+            } else {
+              nameError = "Invalid query name"
+            }
           }}
+          error={nameError}
         />
       </div>
       {#if queryConfig}
@@ -250,9 +260,9 @@
             size="L"
           />
         </div>
-        <Body size="S"
-          >Add a JavaScript function to transform the query result.</Body
-        >
+        <Body size="S">
+          Add a JavaScript function to transform the query result.
+        </Body>
         <CodeMirrorEditor
           height={200}
           label="Transformer"
@@ -264,13 +274,12 @@
       </div>
       <div class="viewer-controls">
         <Heading size="S">Results</Heading>
-        <ButtonGroup gap="XS">
+        <ButtonGroup gap="S">
           <Button
             cta
             disabled={queryInvalid}
             on:click={async () => {
               await saveQuery()
-              notifications.success(`Query saved successfully`)
               // Go to the correct URL if we just created a new query
               if (!query._rev) {
                 $goto(`../../${query._id}`)

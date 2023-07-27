@@ -183,7 +183,7 @@
     const currentUserEmails = (await users.fetch())?.map(x => x.email) || []
     const newUsers = []
 
-    for (const user of userData?.users) {
+    for (const user of userData?.users ?? []) {
       const { email } = user
 
       if (

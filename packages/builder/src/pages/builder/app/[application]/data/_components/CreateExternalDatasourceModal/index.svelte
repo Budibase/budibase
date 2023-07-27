@@ -1,5 +1,5 @@
 <script>
-  import { Modal } from "@budibase/bbui"
+  import { Modal, keepOpen } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { IntegrationTypes } from "constants/backend"
   import GoogleAuthPrompt from "./GoogleAuthPrompt.svelte"
@@ -75,8 +75,7 @@
       notifications.error(`Error creating datasource: ${e.message}`)
     }
 
-    // Prevent modal closing
-    return false
+    return keepOpen
   }
 </script>
 

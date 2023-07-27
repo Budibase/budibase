@@ -2342,10 +2342,6 @@
             "value": "left"
           },
           {
-            "label": "Right",
-            "value": "right"
-          },
-          {
             "label": "Above",
             "value": "above"
           }
@@ -3490,6 +3486,16 @@
         ]
       },
       {
+        "type": "validation/link",
+        "label": "Validation",
+        "key": "validation"
+      },
+      {
+        "type": "filter/relationship",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
@@ -3500,11 +3506,6 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
-      },
-      {
-        "type": "validation/link",
-        "label": "Validation",
-        "key": "validation"
       }
     ]
   },
@@ -4581,6 +4582,16 @@
               "setting": "clickBehaviour",
               "value": "details"
             }
+          },
+          {
+            "type": "boolean",
+            "label": "Hide notifications",
+            "key": "notificationOverride",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
           }
         ]
       },
@@ -5217,6 +5228,16 @@
               "setting": "actionType",
               "value": "View",
               "invert": true
+            }
+          },
+          {
+            "type": "boolean",
+            "label": "Hide notifications",
+            "key": "notificationOverride",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "showSaveButton",
+              "value": true
             }
           }
         ]

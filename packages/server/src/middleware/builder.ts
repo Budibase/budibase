@@ -10,7 +10,7 @@ import {
   setDebounce,
 } from "../utilities/redis"
 import { db as dbCore, cache } from "@budibase/backend-core"
-import { UserCtx, Database } from "@budibase/types"
+import { UserCtx, Database, App } from "@budibase/types"
 
 const DEBOUNCE_TIME_SEC = 30
 
@@ -51,7 +51,7 @@ async function updateAppUpdatedAt(ctx: UserCtx) {
   }
   await dbCore.doWithDB(appId, async (db: Database) => {
     try {
-      const metadata = await db.get(DocumentType.APP_METADATA)
+      const metadata = await db.get<any>(DocumentType.APP_METADATA)
       metadata.updatedAt = new Date().toISOString()
 
       metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user?.userId!)

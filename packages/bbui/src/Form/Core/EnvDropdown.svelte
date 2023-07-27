@@ -150,7 +150,7 @@
           </div>
         {:else if variables.length}
           <div style="max-height: 100px">
-            {#each variables as variable, idx}
+            {#each variables as variable}
               <li
                 class="spectrum-Menu-item"
                 role="option"

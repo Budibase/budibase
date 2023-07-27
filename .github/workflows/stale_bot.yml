@@ -1,0 +1,29 @@
+name: Close stale issues and PRs # https://github.com/actions/stale
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 1 * * *' # 1:30 every morning
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v8
+        with:
+          # stale rules
+          days-before-stale: 60
+          days-before-pr-stale: 7
+          stale-issue-label: stale
+          stale-issue-message: "This issue has been automatically marked as stale because it has not had any activity for 60 days."
+
+          # close rules
+          # days after being marked as stale to close
+          days-before-close: 30
+          close-issue-label: closed-stale
+          close-issue-message: This issue has been automatically closed it has not had any activity in 90 days."
+          days-before-pr-close: 7
+
+          # exemptions
+          exempt-pr-labels: pinned,security,roadmap
+
+
