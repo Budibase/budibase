@@ -43,6 +43,12 @@ CREATE TABLE test.table1 (
   id SERIAL PRIMARY KEY,
   Name varchar(255)
 );
+CREATE TABLE CompositeTable (
+  KeyPartOne varchar(128),
+  KeyPartTwo varchar(128),
+  Name varchar(255),
+  PRIMARY KEY (KeyPartOne, KeyPartTwo)
+);
 INSERT INTO Persons (FirstName, LastName, Address, City, Type) VALUES ('Mike', 'Hughes', '123 Fake Street', 'Belfast', 'qa');
 INSERT INTO Persons (FirstName, LastName, Address, City, Type) VALUES ('John', 'Smith', '64 Updown Road', 'Dublin', 'programmer');
 INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (1, 2, 'assembling', TRUE);
@@ -55,3 +61,6 @@ INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (2, 1);
 INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (3, 1);
 INSERT INTO Products_Tasks (ProductID, TaskID) VALUES (1, 2);
 INSERT INTO test.table1 (Name) VALUES ('Test');
+INSERT INTO CompositeTable (KeyPartOne, KeyPartTwo, Name) VALUES ('aaa', 'bbb', 'Michael');
+INSERT INTO CompositeTable (KeyPartOne, KeyPartTwo, Name) VALUES ('bbb', 'ccc', 'Andrew');
+INSERT INTO CompositeTable (KeyPartOne, KeyPartTwo, Name) VALUES ('ddd', '', 'OneKey');
