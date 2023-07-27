@@ -16,6 +16,9 @@ import licenseRoutes from "./global/license"
 import migrationRoutes from "./system/migrations"
 import accountRoutes from "./system/accounts"
 import restoreRoutes from "./system/restore"
+import systemLogRoutes from "./system/logs"
+
+import env from "../../environment"
 
 export const routes: Router[] = [
   configRoutes,
@@ -38,3 +41,7 @@ export const routes: Router[] = [
   eventRoutes,
   pro.scim,
 ]
+
+if (env.SELF_HOSTED) {
+  routes.push(systemLogRoutes)
+}

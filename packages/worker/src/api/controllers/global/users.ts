@@ -412,7 +412,7 @@ export const inviteAccept = async (
 
       const saved = await userSdk.save(request)
       const db = tenancy.getGlobalDB()
-      const user = await db.get(saved._id)
+      const user = await db.get<User>(saved._id)
       await events.user.inviteAccepted(user)
       return saved
     })

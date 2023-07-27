@@ -71,6 +71,7 @@
     contentLines,
     gridFocused,
     error,
+    canAddRows,
   } = context
 
   // Keep config store up to date with props
@@ -143,7 +144,7 @@
           <HeaderRow />
           <GridBody />
         </div>
-        {#if allowAddRows}
+        {#if $canAddRows}
           <NewRow />
         {/if}
         <div class="overlays">

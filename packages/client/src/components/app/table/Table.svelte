@@ -47,6 +47,14 @@
     )
   }
 
+  // If the data changes, double check that the selected elements are still present.
+  $: if (data) {
+    let rowIds = data.map(row => row._id)
+    if (rowIds.length) {
+      selectedRows = selectedRows.filter(row => rowIds.includes(row._id))
+    }
+  }
+
   const getFields = (schema, customColumns, showAutoColumns) => {
     // Check for an invalid column selection
     let invalid = false

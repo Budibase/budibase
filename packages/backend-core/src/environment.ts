@@ -47,7 +47,10 @@ function httpLogging() {
   return process.env.HTTP_LOGGING
 }
 
-function findVersion() {
+function getPackageJsonFields(): {
+  VERSION: string
+  SERVICE_NAME: string
+} {
   function findFileInAncestors(
     fileName: string,
     currentDir: string
@@ -69,10 +72,14 @@ function findVersion() {
   try {
     const packageJsonFile = findFileInAncestors("package.json", process.cwd())
     const content = readFileSync(packageJsonFile!, "utf-8")
-    return JSON.parse(content).version
+    const parsedContent = JSON.parse(content)
+    return {
+      VERSION: parsedContent.version,
+      SERVICE_NAME: parsedContent.name,
+    }
   } catch {
     // throwing an error here is confusing/causes backend-core to be hard to import
-    return undefined
+    return { VERSION: "", SERVICE_NAME: "" }
   }
 }
 
@@ -154,7 +161,7 @@ const environment = {
   ENABLE_SSO_MAINTENANCE_MODE: selfHosted
     ? process.env.ENABLE_SSO_MAINTENANCE_MODE
     : false,
-  VERSION: findVersion(),
+  ...getPackageJsonFields(),
   DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
   OFFLINE_MODE: process.env.OFFLINE_MODE,
   _set(key: any, value: any) {
@@ -162,6 +169,7 @@ const environment = {
     // @ts-ignore
     environment[key] = value
   },
+  ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
 }
 
 // clean up any environment variable edge cases

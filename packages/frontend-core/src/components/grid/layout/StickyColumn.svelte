@@ -13,11 +13,10 @@
     rows,
     selectedRows,
     stickyColumn,
-    renderedColumns,
     renderedRows,
     focusedCellId,
     hoveredRowId,
-    config,
+    canAddRows,
     selectedCellMap,
     focusedRow,
     scrollLeft,
@@ -93,7 +92,7 @@
           {/if}
         </div>
       {/each}
-      {#if $config.allowAddRows && ($renderedColumns.length || $stickyColumn)}
+      {#if $canAddRows}
         <div
           class="row new"
           on:mouseenter={$isDragging

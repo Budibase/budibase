@@ -10,6 +10,7 @@
 
 {#if embed}
   <div class="embed" use:styleable={$component.styles}>
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     {@html embed}
   </div>
 {:else if $builderStore.inBuilder}

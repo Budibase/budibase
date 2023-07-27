@@ -18,7 +18,7 @@
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
-    RelationshipTypes,
+    RelationshipType,
     ALLOWABLE_STRING_OPTIONS,
     ALLOWABLE_NUMBER_OPTIONS,
     ALLOWABLE_STRING_TYPES,
@@ -58,7 +58,6 @@
 
   let table = $tables.selected
   let confirmDeleteDialog
-  let deletion
   let savingColumn
   let deleteColName
   let jsonSchemaModal
@@ -185,7 +184,7 @@
       dispatch("updatecolumns")
       if (
         saveColumn.type === LINK_TYPE &&
-        saveColumn.relationshipType === RelationshipTypes.MANY_TO_MANY
+        saveColumn.relationshipType === RelationshipType.MANY_TO_MANY
       ) {
         // Fetching the new tables
         tables.fetch()
@@ -216,7 +215,6 @@
         notifications.success(`Column ${editableColumn.name} deleted`)
         confirmDeleteDialog.hide()
         hide()
-        deletion = false
         dispatch("updatecolumns")
       }
     } catch (error) {
@@ -240,7 +238,7 @@
 
     // Default relationships many to many
     if (editableColumn.type === LINK_TYPE) {
-      editableColumn.relationshipType = RelationshipTypes.MANY_TO_MANY
+      editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     }
     if (editableColumn.type === FORMULA_TYPE) {
       editableColumn.formulaType = "dynamic"
@@ -267,13 +265,11 @@
 
   function confirmDelete() {
     confirmDeleteDialog.show()
-    deletion = true
   }
 
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
     deleteColName = ""
-    deletion = false
   }
 
   function getRelationshipOptions(field) {
@@ -290,17 +286,17 @@
       {
         name: `Many ${thisName} rows → many ${linkName} rows`,
         alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipTypes.MANY_TO_MANY,
+        value: RelationshipType.MANY_TO_MANY,
       },
       {
         name: `One ${linkName} row → many ${thisName} rows`,
         alt: `One ${linkTable.name} rows → many ${table.name} rows`,
-        value: RelationshipTypes.ONE_TO_MANY,
+        value: RelationshipType.ONE_TO_MANY,
       },
       {
         name: `One ${thisName} row → many ${linkName} rows`,
         alt: `One ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipTypes.MANY_TO_ONE,
+        value: RelationshipType.MANY_TO_ONE,
       },
     ]
   }
