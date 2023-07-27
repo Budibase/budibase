@@ -26,16 +26,14 @@
   $: id = $tables.selected?._id
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.type !== "external"
-  $: datasource = {
+  $: gridDatasource = {
     type: "table",
     tableId: id,
   }
-
-  $: datasource = $datasources.list.find(datasource => {
+  $: tableDatasource = $datasources.list.find(datasource => {
     return datasource._id === $tables.selected?.sourceId
   })
-
-  $: relationshipsEnabled = relationshipSupport(datasource)
+  $: relationshipsEnabled = relationshipSupport(tableDatasource)
 
   const relationshipSupport = datasource => {
     const integration = $integrations[datasource?.source]
@@ -58,7 +56,7 @@
 <div class="wrapper">
   <Grid
     {API}
-    {datasource}
+    datasource={gridDatasource}
     allowAddRows={!isUsersTable}
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}

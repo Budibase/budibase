@@ -17,7 +17,6 @@ import * as Filter from "./filter"
 import * as Notifications from "./notifications"
 
 const DependencyOrderedStores = [
-  Config,
   Notifications,
   Sort,
   Filter,
@@ -34,6 +33,7 @@ const DependencyOrderedStores = [
   Menu,
   Pagination,
   Clipboard,
+  Config,
 ]
 
 export const attachStores = context => {
@@ -45,6 +45,11 @@ export const attachStores = context => {
   // Derived store creation
   for (let store of DependencyOrderedStores) {
     context = { ...context, ...store.deriveStores?.(context) }
+  }
+
+  // Action creation
+  for (let store of DependencyOrderedStores) {
+    context = { ...context, ...store.createActions?.(context) }
   }
 
   // Initialise any store logic

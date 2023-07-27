@@ -32,7 +32,7 @@
       {/each}
     </div>
   </GridScrollWrapper>
-  {#if $config.allowSchemaChanges}
+  {#if $config.canEditColumns}
     {#key $datasource}
       <TempTooltip
         text="Click here to create your first column"

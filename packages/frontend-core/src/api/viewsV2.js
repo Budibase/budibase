@@ -1,7 +1,6 @@
 export const buildViewV2Endpoints = API => ({
   /**
    * Create a new view
-   * @param tableId the id of the table where the view will be created
    * @param view the view object
    */
   create: async view => {
@@ -11,8 +10,17 @@ export const buildViewV2Endpoints = API => ({
     })
   },
   /**
+   * Updates a view
+   * @param view the view object
+   */
+  update: async view => {
+    return await API.put({
+      url: `/api/v2/views/${view.id}`,
+      body: view,
+    })
+  },
+  /**
    * Fetches all rows in a view
-   * @param tableId the id of the table
    * @param viewId the id of the view
    */
   fetch: async viewId => {
@@ -20,7 +28,6 @@ export const buildViewV2Endpoints = API => ({
   },
   /**
    * Delete a view
-   * @param tableId the id of the table
    * @param viewId the id of the view
    */
   delete: async viewId => {
