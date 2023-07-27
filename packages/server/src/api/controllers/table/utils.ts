@@ -1,6 +1,6 @@
 import { parse, isSchema, isRows } from "../../../utilities/schema"
 import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
-import { isEqual } from "lodash"
+import isEqual from "lodash/isEqual"
 import {
   AutoFieldSubTypes,
   FieldTypes,

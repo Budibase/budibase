@@ -17,7 +17,7 @@ import oracle from "./oracle"
 import { SourceName, Integration, PluginType } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
-import { cloneDeep } from "lodash"
+import cloneDeep from "lodash/cloneDeep"
 import sdk from "../sdk"
 
 const DEFINITIONS: Record<SourceName, Integration | undefined> = {

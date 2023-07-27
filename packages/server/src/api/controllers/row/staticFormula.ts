@@ -9,7 +9,7 @@ import { context } from "@budibase/backend-core"
 import { Table, Row } from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
 import sdk from "../../../sdk"
-import { isEqual } from "lodash"
+import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
 
 /**
