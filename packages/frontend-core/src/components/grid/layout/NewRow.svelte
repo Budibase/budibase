@@ -28,7 +28,7 @@
     columnHorizontalInversionIndex,
     selectedRows,
     loading,
-    canAddRows,
+    config,
   } = getContext("grid")
 
   let visible = false
@@ -154,7 +154,7 @@
   condition={hasNoRows && !$loading}
   type={TooltipType.Info}
 >
-  {#if !visible && !selectedRowCount && $canAddRows}
+  {#if !visible && !selectedRowCount && $config.canAddRows}
     <div
       class="new-row-fab"
       on:click={() => dispatch("add-row-inline")}

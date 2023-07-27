@@ -38,8 +38,24 @@ export const createStores = () => {
     }
   })
 
+  // Enrich rows with an index property and any pending changes
+  const enrichedRows = derived(
+    [rows, rowChangeCache],
+    ([$rows, $rowChangeCache]) => {
+      return $rows.map((row, idx) => ({
+        ...row,
+        ...$rowChangeCache[row._id],
+        __idx: idx,
+      }))
+    },
+    []
+  )
+
   return {
-    rows,
+    rows: {
+      ...rows,
+      subscribe: enrichedRows.subscribe,
+    },
     rowLookupMap,
     table,
     loaded,
@@ -51,7 +67,7 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const createActions = context => {
   const {
     rows,
     rowLookupMap,
@@ -71,26 +87,13 @@ export const deriveStores = context => {
     hasNextPage,
     error,
     notifications,
-    config,
   } = context
   const instanceLoaded = writable(false)
   const fetch = writable(null)
+  const tableId = writable(null)
 
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}
-
-  // Enrich rows with an index property and any pending changes
-  const enrichedRows = derived(
-    [rows, rowChangeCache],
-    ([$rows, $rowChangeCache]) => {
-      return $rows.map((row, idx) => ({
-        ...row,
-        ...$rowChangeCache[row._id],
-        __idx: idx,
-      }))
-    },
-    []
-  )
 
   // Reset everything when table ID changes
   let unsubscribe = null
@@ -101,6 +104,8 @@ export const deriveStores = context => {
     fetch.set(null)
     instanceLoaded.set(false)
     loading.set(true)
+
+    console.log($datasource)
 
     // Abandon if we don't have a valid datasource
     if (!$datasource?.tableId) {
@@ -501,7 +506,6 @@ export const deriveStores = context => {
   })
 
   return {
-    enrichedRows,
     rows: {
       ...rows,
       actions: {

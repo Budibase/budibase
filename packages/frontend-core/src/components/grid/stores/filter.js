@@ -1,10 +1,10 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 
 export const createStores = context => {
   const { props } = context
 
   // Initialise to default props
-  const filter = writable(props.initialFilter)
+  const filter = writable(get(props).initialFilter)
 
   return {
     filter,

@@ -23,7 +23,7 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const createActions = context => {
   const {
     reorder,
     columns,

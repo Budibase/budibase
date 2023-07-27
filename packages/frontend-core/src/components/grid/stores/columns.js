@@ -35,20 +35,10 @@ export const createStores = () => {
     []
   )
 
-  // Checks if we have a certain column by name
-  const hasColumn = column => {
-    const $columns = get(columns)
-    const $sticky = get(stickyColumn)
-    return $columns.some(col => col.name === column) || $sticky?.name === column
-  }
-
   return {
     columns: {
       ...columns,
       subscribe: enrichedColumns.subscribe,
-      actions: {
-        hasColumn,
-      },
     },
     stickyColumn,
     visibleColumns,
@@ -56,10 +46,43 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
+  const { columns, stickyColumn } = context
+
+  // Derive if we have any normal columns
+  const hasNonAutoColumn = derived(
+    [columns, stickyColumn],
+    ([$columns, $stickyColumn]) => {
+      let allCols = $columns || []
+      if ($stickyColumn) {
+        allCols = [...allCols, $stickyColumn]
+      }
+      const normalCols = allCols.filter(column => {
+        return !column.schema?.autocolumn
+      })
+      return normalCols.length > 0
+    }
+  )
+
+  return {
+    hasNonAutoColumn,
+  }
+}
+
+export const createActions = context => {
   const { table, columns, stickyColumn, API, dispatch, config } = context
+
+  // Checks if we have a certain column by name
+  const hasColumn = column => {
+    const $columns = get(columns)
+    const $sticky = get(stickyColumn)
+    return $columns.some(col => col.name === column) || $sticky?.name === column
+  }
 
   // Updates the tables primary display column
   const changePrimaryDisplay = async column => {
+    if (!get(config).canEditPrimaryDisplay) {
+      return
+    }
     return await saveTable({
       ...get(table),
       primaryDisplay: column,
@@ -82,21 +105,6 @@ export const deriveStores = context => {
     }
     await saveChanges()
   }
-
-  // Derive if we have any normal columns
-  const hasNonAutoColumn = derived(
-    [columns, stickyColumn],
-    ([$columns, $stickyColumn]) => {
-      let allCols = $columns || []
-      if ($stickyColumn) {
-        allCols = [...allCols, $stickyColumn]
-      }
-      const normalCols = allCols.filter(column => {
-        return !column.schema?.autocolumn
-      })
-      return normalCols.length > 0
-    }
-  )
 
   // Persists column changes by saving metadata against table schema
   const saveChanges = async () => {
@@ -133,7 +141,7 @@ export const deriveStores = context => {
     table.set(newTable)
 
     // Update server
-    if (get(config).allowSchemaChanges) {
+    if (get(config).canSaveSchema) {
       await API.saveTable(newTable)
     }
 
@@ -143,11 +151,10 @@ export const deriveStores = context => {
   }
 
   return {
-    hasNonAutoColumn,
     columns: {
       ...columns,
       actions: {
-        ...columns.actions,
+        hasColumn,
         saveChanges,
         saveTable,
         changePrimaryDisplay,
