@@ -206,7 +206,7 @@ describe("/api/global/auth", () => {
         const newPassword = "newpassword"
         const res = await config.api.auth.updatePassword(code!, newPassword)
 
-        user = await config.getUser(user.email) as User
+        user = (await config.getUser(user.email)) as User
         delete user.password
 
         expect(res.body).toEqual({ message: "password reset successfully." })

@@ -204,106 +204,109 @@
   })
 </script>
 
-{#if $apps.length}
-  <Page>
-    <Layout noPadding gap="L">
-      {#each Object.keys(automationErrors || {}) as appId}
-        <Notification
-          wide
-          dismissable
-          action={() => goToAutomationError(appId)}
-          type="error"
-          icon="Alert"
-          actionMessage={errorCount(automationErrors[appId]) > 1
-            ? "View errors"
-            : "View error"}
-          on:dismiss={async () => {
-            await automationStore.actions.clearLogErrors({ appId })
-            await apps.load()
-          }}
-          message={automationErrorMessage(appId)}
-        />
-      {/each}
-      <div class="title">
-        <div class="welcome">
-          <Layout noPadding gap="XS">
-            <Heading size="L">{welcomeHeader}</Heading>
-            <Body size="M">
-              Manage your apps and get a head start with templates
-            </Body>
-          </Layout>
-        </div>
+<Page>
+  <Layout noPadding gap="L">
+    {#each Object.keys(automationErrors || {}) as appId}
+      <Notification
+        wide
+        dismissable
+        action={() => goToAutomationError(appId)}
+        type="error"
+        icon="Alert"
+        actionMessage={errorCount(automationErrors[appId]) > 1
+          ? "View errors"
+          : "View error"}
+        on:dismiss={async () => {
+          await automationStore.actions.clearLogErrors({ appId })
+          await apps.load()
+        }}
+        message={automationErrorMessage(appId)}
+      />
+    {/each}
+    <div class="title">
+      <div class="welcome">
+        <Layout noPadding gap="XS">
+          <Heading size="L">{welcomeHeader}</Heading>
+          <Body size="M">
+            Below you'll find the list of apps that you have access to
+          </Body>
+        </Layout>
       </div>
+    </div>
 
-      {#if enrichedApps.length}
-        <Layout noPadding gap="L">
-          <div class="title">
-            {#if $auth.user && sdk.users.isGlobalBuilder($auth.user)}
-              <div class="buttons">
+    {#if enrichedApps.length}
+      <Layout noPadding gap="L">
+        <div class="title">
+          {#if $auth.user && sdk.users.isGlobalBuilder($auth.user)}
+            <div class="buttons">
+              <Button
+                size="M"
+                cta
+                on:click={usersLimitLockAction || initiateAppCreation}
+              >
+                Create new app
+              </Button>
+              {#if $apps?.length > 0 && !$admin.offlineMode}
                 <Button
                   size="M"
-                  cta
-                  on:click={usersLimitLockAction || initiateAppCreation}
+                  secondary
+                  on:click={usersLimitLockAction ||
+                    $goto("/builder/portal/apps/templates")}
                 >
-                  Create new app
+                  View templates
                 </Button>
-                {#if $apps?.length > 0 && !$admin.offlineMode}
-                  <Button
-                    size="M"
-                    secondary
-                    on:click={usersLimitLockAction ||
-                      $goto("/builder/portal/apps/templates")}
-                  >
-                    View templates
-                  </Button>
-                {/if}
-                {#if !$apps?.length}
-                  <Button
-                    size="L"
-                    quiet
-                    secondary
-                    on:click={usersLimitLockAction || initiateAppImport}
-                  >
-                    Import app
-                  </Button>
-                {/if}
-              </div>
-            {/if}
-            {#if enrichedApps.length > 1}
-              <div class="app-actions">
-                <Select
-                  autoWidth
-                  bind:value={sortBy}
-                  placeholder={null}
-                  options={[
-                    { label: "Sort by name", value: "name" },
-                    { label: "Sort by recently updated", value: "updated" },
-                    { label: "Sort by status", value: "status" },
-                  ]}
-                />
-                <Search placeholder="Search" bind:value={searchTerm} />
-              </div>
-            {/if}
-          </div>
-
-          <div class="app-table">
-            {#each filteredApps as app (app.appId)}
-              <AppRow {app} lockedAction={usersLimitLockAction} />
-            {/each}
-          </div>
-        </Layout>
-      {/if}
-
-      {#if creatingFromTemplate}
-        <div class="empty-wrapper">
-          <img class="img-logo img-size" alt="logo" src={Logo} />
-          <p>Creating your Budibase app from your selected template...</p>
-          <Spinner size="10" />
+              {/if}
+              {#if !$apps?.length}
+                <Button
+                  size="L"
+                  quiet
+                  secondary
+                  on:click={usersLimitLockAction || initiateAppImport}
+                >
+                  Import app
+                </Button>
+              {/if}
+            </div>
+          {/if}
+          {#if enrichedApps.length > 1}
+            <div class="app-actions">
+              <Select
+                autoWidth
+                bind:value={sortBy}
+                placeholder={null}
+                options={[
+                  { label: "Sort by name", value: "name" },
+                  { label: "Sort by recently updated", value: "updated" },
+                  { label: "Sort by status", value: "status" },
+                ]}
+              />
+              <Search placeholder="Search" bind:value={searchTerm} />
+            </div>
+          {/if}
         </div>
-      {/if}
-    </Layout>
-  </Page>
-{/if}
+
+        <div class="app-table">
+          {#each filteredApps as app (app.appId)}
+            <AppRow {app} lockedAction={usersLimitLockAction} />
+          {/each}
+        </div>
+      </Layout>
+    {:else}
+      <div class="no-apps">
+        <img class="spaceman" alt="spaceman" src={Logo} width="100px" />
+        <Body weight="700">You haven't been given access to any apps yet</Body>
+      </div>
+    {/if}
+
+    {#if creatingFromTemplate}
+      <div class="empty-wrapper">
+        <img class="img-logo img-size" alt="logo" src={Logo} />
+        <p>Creating your Budibase app from your selected template...</p>
+        <Spinner size="10" />
+      </div>
+    {/if}
+  </Layout>
+</Page>
 
 <Modal
   bind:this={creationModal}
@@ -369,6 +372,16 @@
   .img-size {
     width: 160px;
     height: 160px;
+  }
+
+  .no-apps {
+    background-color: var(--spectrum-global-color-gray-100);
+    padding: calc(var(--spacing-xl) * 2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: var(--spacing-xl);
   }
 
   @media (max-width: 1000px) {

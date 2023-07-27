@@ -7,10 +7,12 @@ import { db as dbCore, users } from "@budibase/backend-core"
 
 export function filterAppList(user: ContextUser, apps: App[]) {
   let appList: string[] = []
+  const roleApps = Object.keys(user.roles || {})
   if (users.hasAppBuilderPermissions(user)) {
-    appList = user.builder?.apps!
+    appList = user.builder?.apps || []
+    appList = appList.concat(roleApps)
   } else if (!users.isAdminOrBuilder(user)) {
-    appList = Object.keys(user.roles || {})
+    appList = roleApps
   } else {
     return apps
   }
