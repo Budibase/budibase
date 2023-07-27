@@ -77,6 +77,12 @@
     constraints.optionColors = optionNameColorMap
   }
 
+  const openColorPickerPopover = (optionIdx, target) => {
+    open = true
+    anchors[optionIdx] = target
+    colorPopovers[optionIdx].show()
+  }
+
   onMount(() => {
     // Initialize arrays on mount, assuming 'options' is already populated
     colorPopovers = constraints.inclusion.map(() => undefined)
@@ -109,11 +115,7 @@
             bind:this={anchors[idx]}
             style="--color:{optionNameColorMap[option.name] || getColor(idx)};"
             class="circle"
-            on:click={e => {
-              open = true
-              anchors[idx] = e.target
-              colorPopovers[idx].show()
-            }}
+            on:click={e => openColorPickerPopover(idx, e.target)}
           >
             <Popover
               bind:this={colorPopovers[idx]}
@@ -125,7 +127,7 @@
               animate={false}
             >
               <div
-                use:clickOutside={() => colorPopovers[idx].hide()}
+                use:clickOutside={() => colorPopovers[idx]?.hide()}
                 class="colors"
               >
                 {#each Array(6) as _, i}
@@ -134,7 +136,7 @@
                     on:click={() =>
                       handleColorChange(option.name, colorVar, idx)}
                     style="--color:{colorVar};"
-                    class="circle"
+                    class="circle circle-hover"
                   />
                 {/each}
               </div>
@@ -246,8 +248,9 @@
     box-sizing: border-box;
   }
 
-  .circle:not(#color-picker .circle):hover {
+  .circle-hover:hover {
     border: 1px solid var(--spectrum-global-color-blue-400);
+    cursor: pointer;
   }
 
   .colors {

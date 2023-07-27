@@ -11,7 +11,7 @@
     Context,
     Modal,
     notifications,
-    OptionPicker,
+    OptionSelectDnD,
   } from "@budibase/bbui"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
@@ -438,7 +438,7 @@
     bind:value={editableColumn.constraints.length.maximum}
   />
 {:else if editableColumn.type === "options"}
-  <OptionPicker bind:constraints={editableColumn.constraints} />
+  <OptionSelectDnD bind:constraints={editableColumn.constraints} />
 {:else if editableColumn.type === "longform"}
   <div>
     <Label
@@ -453,7 +453,7 @@
     />
   </div>
 {:else if editableColumn.type === "array"}
-  <OptionPicker bind:constraints={editableColumn.constraints} />
+  <OptionSelectDnD bind:constraints={editableColumn.constraints} />
 {:else if editableColumn.type === "datetime" && !editableColumn.autocolumn}
   <div class="split-label">
     <div class="label-length">
