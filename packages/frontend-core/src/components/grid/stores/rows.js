@@ -482,9 +482,14 @@ export const createActions = context => {
   }
 
   // Refreshes the schema of the data fetch subscription
-  const refreshTableDefinition = async () => {
-    const definition = await API.fetchTableDefinition(get(tableId))
-    table.set(definition)
+  const refreshDatasourceDefinition = async () => {
+    const $datasource = get(datasource)
+    if ($datasource.type === "table") {
+      table.set(await API.fetchTableDefinition($datasource.tableId))
+    } else if ($datasource.type === "viewV2") {
+      // const definition = await API.viewsV2.(get(tableId))
+      // table.set(definition)
+    }
   }
 
   // Checks if we have a row with a certain ID
@@ -520,7 +525,7 @@ export const createActions = context => {
         refreshRow,
         replaceRow,
         refreshData,
-        refreshTableDefinition,
+        refreshDatasourceDefinition,
       },
     },
   }
