@@ -21,16 +21,10 @@ export const deriveStores = context => {
     [props, hasNonAutoColumn],
     ([$props, $hasNonAutoColumn]) => {
       let config = {
-        // Row features
-        canAddRows: $props.allowAddRows,
-        canExpandRows: $props.allowExpandRows,
-        canEditRows: $props.allowEditRows,
-        canDeleteRows: $props.allowDeleteRows,
+        ...$props,
 
-        // Column features
-        canEditColumns: $props.allowEditColumns,
-        canEditPrimaryDisplay: $props.allowEditColumns,
-        canSaveSchema: $props.allowSchemaChanges,
+        // Additional granular features which we don't expose as props
+        canEditPrimaryDisplay: $props.canEditColumns,
       }
 
       // Disable some features if we're editing a view
@@ -42,14 +36,10 @@ export const deriveStores = context => {
         config.canAddRows = false
       }
 
-      console.log($hasNonAutoColumn)
-
       // Disable adding rows if we don't have any valid columns
       if (!$hasNonAutoColumn) {
         config.canAddRows = false
       }
-
-      console.log(config)
 
       return config
     }

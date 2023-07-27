@@ -32,12 +32,12 @@
   export let datasource = null
   export let schemaOverrides = null
   export let columnWhitelist = null
-  export let allowAddRows = true
-  export let allowExpandRows = true
-  export let allowEditRows = true
-  export let allowDeleteRows = true
-  export let allowEditColumns = true
-  export let allowSchemaChanges = true
+  export let canAddRows = true
+  export let canExpandRows = true
+  export let canEditRows = true
+  export let canDeleteRows = true
+  export let canEditColumns = true
+  export let canSaveSchema = true
   export let stripeRows = false
   export let collaboration = true
   export let showAvatars = true
@@ -83,12 +83,12 @@
     datasource,
     schemaOverrides,
     columnWhitelist,
-    allowAddRows,
-    allowExpandRows,
-    allowEditRows,
-    allowDeleteRows,
-    allowEditColumns,
-    allowSchemaChanges,
+    canAddRows,
+    canExpandRows,
+    canEditRows,
+    canDeleteRows,
+    canEditColumns,
+    canSaveSchema,
     stripeRows,
     collaboration,
     showAvatars,
