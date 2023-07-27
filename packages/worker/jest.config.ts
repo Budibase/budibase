@@ -16,6 +16,7 @@ const config: Config.InitialOptions = {
     "@budibase/types": "<rootDir>/../types/src",
     "@budibase/shared-core": ["<rootDir>/../shared-core/src"],
   },
+  workerIdleMemoryLimit: "40%",
 }
 
 // add pro sources if they exist
