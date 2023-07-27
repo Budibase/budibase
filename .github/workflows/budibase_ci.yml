@@ -110,7 +110,12 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn
-      - run: yarn test --concurrency=1 --scope=@budibase/worker --scope=@budibase/server
+      - name: Test worker
+        run: yarn test --scope=@budibase/worker
+      - name: Test server
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
+        run: yarn test --scope=@budibase/server
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
