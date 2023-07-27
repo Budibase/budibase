@@ -5,7 +5,6 @@ import Joi from "joi"
 import cloudRestricted from "../../../middleware/cloudRestricted"
 import { users } from "../validation"
 import * as selfController from "../../controllers/global/self"
-import { addAppBuilder } from "../../controllers/global/users"
 
 const router: Router = new Router()
 
