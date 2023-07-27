@@ -6,8 +6,8 @@
     "@nx/js": "16.4.3",
     "@rollup/plugin-json": "^4.0.2",
     "@typescript-eslint/parser": "5.45.0",
-    "esbuild": "^0.17.18",
-    "esbuild-node-externals": "^1.7.0",
+    "esbuild": "^0.18.17",
+    "esbuild-node-externals": "^1.8.0",
     "eslint": "^8.44.0",
     "eslint-plugin-cypress": "^2.11.3",
     "husky": "^8.0.3",
@@ -51,9 +51,9 @@
     "kill-builder": "kill-port 3000",
     "kill-server": "kill-port 4001 4002",
     "kill-all": "yarn run kill-builder && yarn run kill-server",
-    "dev": "yarn run kill-all && lerna run --stream dev:builder --stream",
-    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && lerna run --stream dev:builder --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
-    "dev:server": "yarn run kill-server && lerna run --stream dev:builder --scope @budibase/worker --scope @budibase/server",
+    "dev": "yarn run kill-all && yarn nx run-many --target=dev:builder",
+    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && yarn nx run-many --target=dev:builder --exclude=@budibase/backend-core,@budibase/server,@budibase/worker",
+    "dev:server": "yarn run kill-server &&  yarn nx run-many --target=dev:builder --projects=@budibase/worker,@budibase/server",
     "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
     "dev:docker": "yarn build:docker:pre && docker-compose -f hosting/docker-compose.build.yaml -f hosting/docker-compose.dev.yaml --env-file hosting/.env up --build --scale proxy-service=0",
     "test": "lerna run --stream test --stream",
@@ -107,6 +107,9 @@
     "@budibase/shared-core": "0.0.0",
     "@budibase/string-templates": "0.0.0",
     "@budibase/types": "0.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0 <15.0.0"
   },
   "dependencies": {}
 }

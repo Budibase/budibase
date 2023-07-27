@@ -1,13 +1,8 @@
-import { structures } from "../../../tests"
-import { mocks } from "@budibase/backend-core/tests"
+import { structures, mocks } from "../../../tests"
 import { env, context } from "@budibase/backend-core"
 import * as users from "../users"
 import { CloudAccount } from "@budibase/types"
 import { isPreventPasswordActions } from "../users"
-
-jest.mock("@budibase/pro")
-import * as _pro from "@budibase/pro"
-const pro = jest.mocked(_pro, true)
 
 describe("users", () => {
   beforeEach(() => {
@@ -56,7 +51,7 @@ describe("users", () => {
       it("returns true for all users when sso is enforced", async () => {
         await context.doInTenant(structures.tenant.id(), async () => {
           const user = structures.users.user()
-          pro.features.isSSOEnforced.mockResolvedValueOnce(true)
+          mocks.pro.features.isSSOEnforced.mockResolvedValueOnce(true)
           const result = await users.isPreventPasswordActions(user)
           expect(result).toBe(true)
         })

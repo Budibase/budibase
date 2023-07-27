@@ -14,7 +14,8 @@ import { breakExternalTableId } from "../../../../integrations/utils"
 import { cleanExportRows } from "../utils"
 import { utils } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult, SearchParams } from "../search"
-import { HTTPError } from "@budibase/backend-core"
+import { HTTPError, db } from "@budibase/backend-core"
+import pick from "lodash/pick"
 
 export async function search(options: SearchParams) {
   const { tableId } = options
@@ -48,7 +49,7 @@ export async function search(options: SearchParams) {
     }
   }
   try {
-    const rows = (await handleRequest(Operation.READ, tableId, {
+    let rows = (await handleRequest(Operation.READ, tableId, {
       filters: query,
       sort,
       paginate: paginateObj as PaginationJson,
@@ -67,6 +68,12 @@ export async function search(options: SearchParams) {
       })) as Row[]
       hasNextPage = nextRows.length > 0
     }
+
+    if (options.fields) {
+      const fields = [...options.fields, ...db.CONSTANT_EXTERNAL_ROW_COLS]
+      rows = rows.map((r: any) => pick(r, fields))
+    }
+
     // need wrapper object for bookmarks etc when paginating
     return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
   } catch (err: any) {

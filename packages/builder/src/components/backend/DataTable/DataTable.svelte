@@ -1,5 +1,5 @@
 <script>
-  import { datasources, tables } from "stores/backend"
+  import { datasources, tables, integrations } from "stores/backend"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
@@ -27,6 +27,17 @@
   $: id = $tables.selected?._id
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.type !== "external"
+
+  $: datasource = $datasources.list.find(datasource => {
+    return datasource._id === $tables.selected?.sourceId
+  })
+
+  $: relationshipsEnabled = relationshipSupport(datasource)
+
+  const relationshipSupport = datasource => {
+    const integration = $integrations[datasource?.source]
+    return !isInternal && integration?.relationships !== false
+  }
 
   const handleGridTableUpdate = async e => {
     tables.replaceTable(id, e.detail)
@@ -66,7 +77,7 @@
         <GridCreateViewButton />
       {/if}
       <GridManageAccessButton />
-      {#if !isInternal}
+      {#if relationshipsEnabled}
         <GridRelationshipButton />
       {/if}
       {#if isUsersTable}
