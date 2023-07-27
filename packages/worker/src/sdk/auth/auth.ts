@@ -58,7 +58,7 @@ export const reset = async (email: string) => {
   }
 
   // exit if user has sso
-  if (await userSdk.isPreventPasswordActions(user)) {
+  if (await userSdk.db.isPreventPasswordActions(user)) {
     return
   }
 

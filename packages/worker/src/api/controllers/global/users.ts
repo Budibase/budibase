@@ -432,38 +432,3 @@ export const inviteAccept = async (
     ctx.throw(400, "Unable to create new user, invitation invalid.")
   }
 }
-
-export const addAppBuilder = async (ctx: Ctx) => {
-  const { userId, appId } = ctx.params
-  const user = await userSdk.db.getUser(userId)
-  if (userSdk.core.isGlobalBuilder(user)) {
-    ctx.body = { message: "User already admin - no permissions updated." }
-    return
-  }
-  const prodAppId = dbCore.getProdAppID(appId)
-  if (!user.builder) {
-    user.builder = {}
-  }
-  if (!user.builder.apps) {
-    user.builder.apps = []
-  }
-  user.builder.apps.push(prodAppId)
-  await userSdk.db.save(user, { hashPassword: false })
-  ctx.body = { message: `User "${user.email}" app builder access updated.` }
-}
-
-export const removeAppBuilder = async (ctx: Ctx) => {
-  const { userId, appId } = ctx.params
-  const user = await userSdk.db.getUser(userId)
-  if (userSdk.core.isGlobalBuilder(user)) {
-    ctx.body = { message: "User already admin - no permissions removed." }
-    return
-  }
-  const prodAppId = dbCore.getProdAppID(appId)
-  const indexOf = user.builder?.apps?.indexOf(prodAppId)
-  if (user.builder && indexOf != undefined && indexOf !== -1) {
-    user.builder.apps = user.builder.apps!.splice(indexOf, 1)
-  }
-  await userSdk.db.save(user, { hashPassword: false })
-  ctx.body = { message: `User "${user.email}" app builder access removed.` }
-}

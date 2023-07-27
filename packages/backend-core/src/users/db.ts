@@ -16,22 +16,25 @@ import {
   SaveUserOpts,
   User,
   Account,
+  isSSOUser,
+  isSSOAccount,
+  UserStatus,
 } from "@budibase/types"
 import * as accountSdk from "../accounts"
-import { validateUniqueUser, getAccountHolderFromUserIds } from "./utils"
+import {
+  validateUniqueUser,
+  getAccountHolderFromUserIds,
+  isAdmin,
+} from "./utils"
 import { searchExistingEmails } from "./lookup"
+import { hash } from "../utils"
 
 type QuotaUpdateFn = (change: number, cb?: () => Promise<any>) => Promise<any>
 type GroupUpdateFn = (groupId: string, userIds: string[]) => Promise<any>
+type FeatureFn = () => Promise<Boolean>
 type QuotaFns = { addUsers: QuotaUpdateFn; removeUsers: QuotaUpdateFn }
 type GroupFns = { addUsers: GroupUpdateFn }
-type BuildUserFn = (
-  user: User,
-  opts: SaveUserOpts,
-  tenantId: string,
-  dbUser?: User,
-  account?: Account
-) => Promise<any>
+type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
   const userId = dbUser._id as string
@@ -44,19 +47,92 @@ const bulkDeleteProcessing = async (dbUser: User) => {
 export class UserDB {
   quotas: QuotaFns
   groups: GroupFns
-  ssoEnforcedFn: () => Promise<boolean>
-  buildUserFn: BuildUserFn
+  features: FeatureFns
 
-  constructor(
-    quotaFns: QuotaFns,
-    groupFns: GroupFns,
-    ssoEnforcedFn: () => Promise<boolean>,
-    buildUserFn: BuildUserFn
-  ) {
+  constructor(quotaFns: QuotaFns, groupFns: GroupFns, featureFns: FeatureFns) {
     this.quotas = quotaFns
     this.groups = groupFns
-    this.ssoEnforcedFn = ssoEnforcedFn
-    this.buildUserFn = buildUserFn
+    this.features = featureFns
+  }
+
+  async isPreventPasswordActions(user: User, account?: Account) {
+    // when in maintenance mode we allow sso users with the admin role
+    // to perform any password action - this prevents lockout
+    if (env.ENABLE_SSO_MAINTENANCE_MODE && isAdmin(user)) {
+      return false
+    }
+
+    // SSO is enforced for all users
+    if (await this.features.isSSOEnforced()) {
+      return true
+    }
+
+    // Check local sso
+    if (isSSOUser(user)) {
+      return true
+    }
+
+    // Check account sso
+    if (!account) {
+      account = await accountSdk.getAccountByTenantId(getTenantId())
+    }
+    return !!(account && account.email === user.email && isSSOAccount(account))
+  }
+
+  async buildUser(
+    user: User,
+    opts: SaveUserOpts = {
+      hashPassword: true,
+      requirePassword: true,
+    },
+    tenantId: string,
+    dbUser?: any,
+    account?: Account
+  ): Promise<User> {
+    let { password, _id } = user
+
+    // don't require a password if the db user doesn't already have one
+    if (dbUser && !dbUser.password) {
+      opts.requirePassword = false
+    }
+
+    let hashedPassword
+    if (password) {
+      if (await this.isPreventPasswordActions(user, account)) {
+        throw new HTTPError("Password change is disabled for this user", 400)
+      }
+      hashedPassword = opts.hashPassword ? await hash(password) : password
+    } else if (dbUser) {
+      hashedPassword = dbUser.password
+    }
+
+    // passwords are never required if sso is enforced
+    const requirePasswords =
+      opts.requirePassword && !(await this.features.isSSOEnforced())
+    if (!hashedPassword && requirePasswords) {
+      throw "Password must be specified."
+    }
+
+    _id = _id || dbUtils.generateGlobalUserID()
+
+    const fullUser = {
+      createdAt: Date.now(),
+      ...dbUser,
+      ...user,
+      _id,
+      password: hashedPassword,
+      tenantId,
+    }
+    // make sure the roles object is always present
+    if (!fullUser.roles) {
+      fullUser.roles = {}
+    }
+    // add the active status to a user if its not provided
+    if (fullUser.status == null) {
+      fullUser.status = UserStatus.ACTIVE
+    }
+
+    return fullUser
   }
 
   async allUsers() {
@@ -150,7 +226,7 @@ export class UserDB {
     return this.quotas.addUsers(change, async () => {
       await validateUniqueUser(email, tenantId)
 
-      let builtUser = await this.buildUserFn(user, opts, tenantId, dbUser)
+      let builtUser = await this.buildUser(user, opts, tenantId, dbUser)
       // don't allow a user to update its own roles/perms
       if (opts.currentUserId && opts.currentUserId === dbUser?._id) {
         builtUser = usersCore.cleanseUserObject(builtUser, dbUser) as User
@@ -231,7 +307,7 @@ export class UserDB {
       // create the promises array that will be called by bulkDocs
       newUsers.forEach((user: any) => {
         usersToSave.push(
-          this.buildUserFn(
+          this.buildUser(
             user,
             {
               hashPassword: true,
