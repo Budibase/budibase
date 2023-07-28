@@ -2,10 +2,8 @@ import { Config } from "@jest/types"
 
 import * as fs from "fs"
 import { join } from "path"
-const preset = require("ts-jest/jest-preset")
 
 const baseConfig: Config.InitialProjectOptions = {
-  ...preset,
   preset: "@trendyol/jest-testcontainers",
   setupFiles: ["./src/tests/jestEnv.ts"],
   setupFilesAfterEnv: ["./src/tests/jestSetup.ts"],

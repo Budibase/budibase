@@ -11,7 +11,7 @@ import {
 import { runStaticFormulaChecks } from "./bulkFormula"
 import { Table } from "@budibase/types"
 import { quotas } from "@budibase/pro"
-import { isEqual } from "lodash"
+import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
 import sdk from "../../../sdk"
 

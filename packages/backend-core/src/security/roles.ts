@@ -3,7 +3,7 @@ import { prefixRoleID, getRoleParams, DocumentType, SEPARATOR } from "../db"
 import { getAppDB } from "../context"
 import { doWithDB } from "../db"
 import { Screen, Role as RoleDoc } from "@budibase/types"
-const { cloneDeep } = require("lodash/fp")
+import cloneDeep from "lodash/fp/cloneDeep"
 
 export const BUILTIN_ROLE_IDS = {
   ADMIN: "ADMIN",

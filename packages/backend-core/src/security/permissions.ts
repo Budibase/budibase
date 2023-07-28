@@ -1,5 +1,5 @@
-const { flatten } = require("lodash")
-const { cloneDeep } = require("lodash/fp")
+import flatten from "lodash/flatten"
+import cloneDeep from "lodash/fp/cloneDeep"
 
 export type RoleHierarchy = {
   permissionId: string
