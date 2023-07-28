@@ -94,6 +94,10 @@ export const useSyncAutomations = () => {
   return useFeature(Feature.SYNC_AUTOMATIONS)
 }
 
+export const useAppBuilders = () => {
+  return useFeature(Feature.APP_BUILDERS)
+}
+
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {

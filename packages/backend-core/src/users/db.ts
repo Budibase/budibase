@@ -196,7 +196,10 @@ export class UserDB {
       throw new Error("_id or email is required")
     }
 
-    if (user.builder?.apps?.length && !await this.features.isAppBuildersEnabled()) {
+    if (
+      user.builder?.apps?.length &&
+      !(await this.features.isAppBuildersEnabled())
+    ) {
       throw new Error("Unable to update app builders, please check license")
     }
 
