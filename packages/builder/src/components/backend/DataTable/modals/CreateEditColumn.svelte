@@ -80,11 +80,6 @@
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
     } else if (!savingColumn) {
-      function extractColumnNumber(columnName) {
-        const match = columnName.match(/Column (\d+)/)
-        return match ? parseInt(match[1]) : 0
-      }
-
       let highestNumber = 0
       Object.keys(table.schema).forEach(columnName => {
         const columnNumber = extractColumnNumber(columnName)
@@ -281,6 +276,11 @@
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
     deleteColName = ""
+  }
+
+  function extractColumnNumber(columnName) {
+    const match = columnName.match(/Column (\d+)/)
+    return match ? parseInt(match[1]) : 0
   }
 
   function getRelationshipOptions(field) {
