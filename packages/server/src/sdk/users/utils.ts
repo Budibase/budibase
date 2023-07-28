@@ -6,7 +6,7 @@ import {
   getUserMetadataParams,
   InternalTables,
 } from "../../db/utils"
-import { isEqual } from "lodash"
+import isEqual from "lodash/isEqual"
 import { ContextUser, UserMetadata, User, Database } from "@budibase/types"
 
 export function combineMetadataAndUser(
