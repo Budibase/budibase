@@ -23,7 +23,7 @@ export const buildRowEndpoints = API => ({
       return
     }
     return await API.post({
-      url: `/api/${row.tableId}/rows`,
+      url: `/api/${row.viewId || row.tableId}/rows`,
       body: row,
       suppressErrors,
     })
