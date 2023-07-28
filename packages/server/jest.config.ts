@@ -16,7 +16,6 @@ const baseConfig: Config.InitialProjectOptions = {
     "@budibase/shared-core": "<rootDir>/../shared-core/src",
     "@budibase/types": "<rootDir>/../types/src",
   },
-  workerIdleMemoryLimit: "2GB",
 }
 
 // add pro sources if they exist
