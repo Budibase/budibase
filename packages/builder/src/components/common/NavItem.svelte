@@ -2,7 +2,7 @@
   import { Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { helpers } from "@budibase/shared-core"
-  import UserAvatars from "../../pages/builder/app/[application]/_components/UserAvatars.svelte"
+  import { UserAvatars } from "@budibase/frontend-core"
 
   export let icon
   export let withArrow = false
@@ -132,7 +132,6 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
-    position: relative;
   }
   .nav-item.scrollable {
     flex-direction: column;

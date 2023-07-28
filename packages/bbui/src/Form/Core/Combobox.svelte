@@ -82,7 +82,7 @@
   {#if open}
     <div class="overlay" on:mousedown|self={() => (open = false)} />
     <div
-      transition:fly={{ y: -20, duration: 200 }}
+      transition:fly|local={{ y: -20, duration: 200 }}
       class="spectrum-Popover spectrum-Popover--bottom is-open"
     >
       <ul class="spectrum-Menu" role="listbox">

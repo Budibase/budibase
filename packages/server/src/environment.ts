@@ -81,7 +81,6 @@ const environment = {
   SELF_HOSTED: process.env.SELF_HOSTED,
   HTTP_MB_LIMIT: process.env.HTTP_MB_LIMIT,
   FORKED_PROCESS_NAME: process.env.FORKED_PROCESS_NAME || "main",
-  OFFLINE_MODE: process.env.OFFLINE_MODE,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

@@ -2342,10 +2342,6 @@
             "value": "left"
           },
           {
-            "label": "Right",
-            "value": "right"
-          },
-          {
             "label": "Above",
             "value": "above"
           }
@@ -3490,6 +3486,16 @@
         ]
       },
       {
+        "type": "validation/link",
+        "label": "Validation",
+        "key": "validation"
+      },
+      {
+        "type": "filter/relationship",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
@@ -3500,11 +3506,6 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
-      },
-      {
-        "type": "validation/link",
-        "label": "Validation",
-        "key": "validation"
       }
     ]
   },

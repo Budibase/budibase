@@ -10,7 +10,7 @@ import * as setup from "../api/routes/tests/utilities"
 import {
   Datasource,
   FieldType,
-  RelationshipTypes,
+  RelationshipType,
   Row,
   SourceName,
   Table,
@@ -101,17 +101,17 @@ describe("postgres integrations", () => {
     oneToManyRelationshipInfo = {
       table: await createAuxTable("o2m"),
       fieldName: "oneToManyRelation",
-      relationshipType: RelationshipTypes.ONE_TO_MANY,
+      relationshipType: RelationshipType.ONE_TO_MANY,
     }
     manyToOneRelationshipInfo = {
       table: await createAuxTable("m2o"),
       fieldName: "manyToOneRelation",
-      relationshipType: RelationshipTypes.MANY_TO_ONE,
+      relationshipType: RelationshipType.MANY_TO_ONE,
     }
     manyToManyRelationshipInfo = {
       table: await createAuxTable("m2m"),
       fieldName: "manyToManyRelation",
-      relationshipType: RelationshipTypes.MANY_TO_MANY,
+      relationshipType: RelationshipType.MANY_TO_MANY,
     }
 
     primaryPostgresTable = await config.createTable({
@@ -143,7 +143,7 @@ describe("postgres integrations", () => {
           },
           fieldName: oneToManyRelationshipInfo.fieldName,
           name: "oneToManyRelation",
-          relationshipType: RelationshipTypes.ONE_TO_MANY,
+          relationshipType: RelationshipType.ONE_TO_MANY,
           tableId: oneToManyRelationshipInfo.table._id,
           main: true,
         },
@@ -154,7 +154,7 @@ describe("postgres integrations", () => {
           },
           fieldName: manyToOneRelationshipInfo.fieldName,
           name: "manyToOneRelation",
-          relationshipType: RelationshipTypes.MANY_TO_ONE,
+          relationshipType: RelationshipType.MANY_TO_ONE,
           tableId: manyToOneRelationshipInfo.table._id,
           main: true,
         },
@@ -165,7 +165,7 @@ describe("postgres integrations", () => {
           },
           fieldName: manyToManyRelationshipInfo.fieldName,
           name: "manyToManyRelation",
-          relationshipType: RelationshipTypes.MANY_TO_MANY,
+          relationshipType: RelationshipType.MANY_TO_MANY,
           tableId: manyToManyRelationshipInfo.table._id,
           main: true,
         },
@@ -193,12 +193,12 @@ describe("postgres integrations", () => {
   type ForeignTableInfo = {
     table: Table
     fieldName: string
-    relationshipType: RelationshipTypes
+    relationshipType: RelationshipType
   }
 
   type ForeignRowsInfo = {
     row: Row
-    relationshipType: RelationshipTypes
+    relationshipType: RelationshipType
   }
 
   async function createPrimaryRow(opts: {
@@ -263,7 +263,7 @@ describe("postgres integrations", () => {
       rowData[manyToOneRelationshipInfo.fieldName].push(foreignRow._id)
       foreignRows.push({
         row: foreignRow,
-        relationshipType: RelationshipTypes.MANY_TO_ONE,
+        relationshipType: RelationshipType.MANY_TO_ONE,
       })
     }
 
@@ -281,7 +281,7 @@ describe("postgres integrations", () => {
       rowData[manyToManyRelationshipInfo.fieldName].push(foreignRow._id)
       foreignRows.push({
         row: foreignRow,
-        relationshipType: RelationshipTypes.MANY_TO_MANY,
+        relationshipType: RelationshipType.MANY_TO_MANY,
       })
     }
 
@@ -559,7 +559,7 @@ describe("postgres integrations", () => {
           expect(res.status).toBe(200)
 
           const one2ManyForeignRows = foreignRows.filter(
-            x => x.relationshipType === RelationshipTypes.ONE_TO_MANY
+            x => x.relationshipType === RelationshipType.ONE_TO_MANY
           )
           expect(one2ManyForeignRows).toHaveLength(1)
 
@@ -921,7 +921,7 @@ describe("postgres integrations", () => {
             (row: Row) => row.id === 2
           )
           expect(m2mRow1).toEqual({
-            ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][0].row,
+            ...foreignRowsByType[RelationshipType.MANY_TO_MANY][0].row,
             [m2mFieldName]: [
               {
                 _id: row._id,
@@ -930,7 +930,7 @@ describe("postgres integrations", () => {
             ],
           })
           expect(m2mRow2).toEqual({
-            ...foreignRowsByType[RelationshipTypes.MANY_TO_MANY][1].row,
+            ...foreignRowsByType[RelationshipType.MANY_TO_MANY][1].row,
             [m2mFieldName]: [
               {
                 _id: row._id,
@@ -940,24 +940,24 @@ describe("postgres integrations", () => {
           })
           expect(res.body[m2oFieldName]).toEqual([
             {
-              ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][0].row,
+              ...foreignRowsByType[RelationshipType.MANY_TO_ONE][0].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
             {
-              ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][1].row,
+              ...foreignRowsByType[RelationshipType.MANY_TO_ONE][1].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
             {
-              ...foreignRowsByType[RelationshipTypes.MANY_TO_ONE][2].row,
+              ...foreignRowsByType[RelationshipType.MANY_TO_ONE][2].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
           ])
           expect(res.body[o2mFieldName]).toEqual([
             {
-              ...foreignRowsByType[RelationshipTypes.ONE_TO_MANY][0].row,
+              ...foreignRowsByType[RelationshipType.ONE_TO_MANY][0].row,
               _id: expect.any(String),
               _rev: expect.any(String),
             },

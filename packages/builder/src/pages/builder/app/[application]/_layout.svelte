@@ -26,8 +26,8 @@
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
-  import UserAvatars from "./_components/UserAvatars.svelte"
-  import { TOUR_KEYS, TOURS } from "components/portal/onboarding/tours.js"
+  import { UserAvatars } from "@budibase/frontend-core"
+  import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import PreviewOverlay from "./_components/PreviewOverlay.svelte"
 
   export let application
@@ -87,17 +87,10 @@
     // Check if onboarding is enabled.
     if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
       if (!$auth.user?.onboardedAt) {
-        // Determine the correct step
-        const activeNav = $layout.children.find(c => $isActive(c.path))
-        const onboardingTour = TOURS[TOUR_KEYS.TOUR_BUILDER_ONBOARDING]
-        const targetStep = activeNav
-          ? onboardingTour.find(step => step.route === activeNav?.path)
-          : null
         await store.update(state => ({
           ...state,
           onboarding: true,
           tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
-          tourStepKey: targetStep?.id,
         }))
       } else {
         // Feature tour date

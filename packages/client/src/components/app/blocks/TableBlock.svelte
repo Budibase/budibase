@@ -170,7 +170,7 @@
             order={1}
           >
             {#if enrichedSearchColumns?.length}
-              {#each enrichedSearchColumns as column, idx}
+              {#each enrichedSearchColumns as column, idx (column.name)}
                 <BlockComponent
                   type={column.componentType}
                   props={{

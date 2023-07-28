@@ -1,8 +1,7 @@
 import mocks from "./mocks"
 
 // init the licensing mock
-import * as pro from "@budibase/pro"
-mocks.licenses.init(pro)
+mocks.licenses.init(mocks.pro)
 
 // use unlimited license by default
 mocks.licenses.useUnlimited()
@@ -238,21 +237,21 @@ class TestConfiguration {
 
       const db = context.getGlobalDB()
 
-      const id = dbCore.generateDevInfoID(this.user._id)
+      const id = dbCore.generateDevInfoID(this.user!._id)
       // TODO: dry
       this.apiKey = encryption.encrypt(
         `${this.tenantId}${dbCore.SEPARATOR}${utils.newid()}`
       )
       const devInfo = {
         _id: id,
-        userId: this.user._id,
+        userId: this.user!._id,
         apiKey: this.apiKey,
       }
       await db.put(devInfo)
     })
   }
 
-  async getUser(email: string): Promise<User> {
+  async getUser(email: string): Promise<User | undefined> {
     return context.doInTenant(this.getTenantId(), () => {
       return users.getGlobalUserByEmail(email)
     })
@@ -264,7 +263,7 @@ class TestConfiguration {
     }
     const response = await this._req(user, null, controllers.users.save)
     const body = response as SaveUserResponse
-    return this.getUser(body.email)
+    return this.getUser(body.email) as Promise<User>
   }
 
   // CONFIGS

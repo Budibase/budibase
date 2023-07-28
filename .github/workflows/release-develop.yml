@@ -6,7 +6,7 @@ concurrency:
 on:
   push:
     tags:
-      - v*-alpha.*
+      - "*-alpha.*"
   workflow_dispatch:
 
 env:

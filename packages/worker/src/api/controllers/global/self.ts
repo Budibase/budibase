@@ -44,7 +44,7 @@ export async function generateAPIKey(ctx: any) {
   const id = dbCore.generateDevInfoID(userId)
   let devInfo
   try {
-    devInfo = await db.get(id)
+    devInfo = await db.get<any>(id)
   } catch (err) {
     devInfo = { _id: id, userId }
   }

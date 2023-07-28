@@ -5,6 +5,9 @@
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { createEventDispatcher } from "svelte"
+
+  const dispatch = createEventDispatcher()
 
   export let bindable = true
   export let queryBindings = []
@@ -20,7 +23,10 @@
   // The readable binding in the UI gets converted to a UUID value that the client understands
   // for parsing, then converted back so we can display it the readable form in the UI
   function onBindingChange(param, valueToParse) {
-    customParams[param] = readableToRuntimeBinding(bindings, valueToParse)
+    dispatch("change", {
+      ...customParams,
+      [param]: readableToRuntimeBinding(bindings, valueToParse),
+    })
   }
 </script>
 

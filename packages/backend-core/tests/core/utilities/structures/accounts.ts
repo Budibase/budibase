@@ -13,7 +13,7 @@ import {
 } from "@budibase/types"
 import _ from "lodash"
 
-export const account = (): Account => {
+export const account = (partial: Partial<Account> = {}): Account => {
   return {
     accountId: uuid(),
     tenantId: generator.word(),
@@ -29,6 +29,7 @@ export const account = (): Account => {
     size: "10+",
     profession: "Software Engineer",
     quotaUsage: quotas.usage(),
+    ...partial,
   }
 }
 

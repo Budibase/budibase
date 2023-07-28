@@ -12,9 +12,6 @@ on:
       - master
       - develop
   pull_request:
-    branches:
-      - master
-      - develop
   workflow_dispatch:
 
 env:
@@ -162,7 +159,7 @@ jobs:
         run: |
           cd qa-core
           yarn setup
-          yarn test:ci
+          yarn serve:test:self:ci
         env:
           BB_ADMIN_USER_EMAIL: admin
           BB_ADMIN_USER_PASSWORD: admin

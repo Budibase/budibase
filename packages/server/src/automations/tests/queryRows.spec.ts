@@ -1,6 +1,6 @@
 // lucene searching not supported in test due to use of PouchDB
-let rows = []
-jest.mock("../../api/controllers/row/internalSearch", () => ({
+let rows: Row[] = []
+jest.mock("../../sdk/app/rows/search/internalSearch", () => ({
   fullSearch: jest.fn(() => {
     return {
       rows,
@@ -8,12 +8,13 @@ jest.mock("../../api/controllers/row/internalSearch", () => ({
   }),
   paginatedSearch: jest.fn(),
 }))
-const setup = require("./utilities")
+import { Row, Table } from "@budibase/types"
+import * as setup from "./utilities"
 
 const NAME = "Test"
 
 describe("Test a query step automation", () => {
-  let table
+  let table: Table
   let config = setup.getConfig()
 
   beforeAll(async () => {
@@ -87,8 +88,8 @@ describe("Test a query step automation", () => {
       filters: {},
       "filters-def": [
         {
-          value: null
-        }
+          value: null,
+        },
       ],
       sortColumn: "name",
       sortOrder: "ascending",

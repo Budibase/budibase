@@ -4,6 +4,7 @@ import { getFullUser } from "../../utilities/users"
 import { roles, context } from "@budibase/backend-core"
 import { groups } from "@budibase/pro"
 import { ContextUser, User, Row, UserCtx } from "@budibase/types"
+import sdk from "../../sdk"
 
 const PUBLIC_ROLE = roles.BUILTIN_ROLE_IDS.PUBLIC
 
@@ -41,7 +42,7 @@ export async function fetchSelf(ctx: UserCtx) {
     // remove the full roles structure
     delete user.roles
     try {
-      const userTable = await db.get(InternalTables.USER_METADATA)
+      const userTable = await sdk.tables.getTable(InternalTables.USER_METADATA)
       // specifically needs to make sure is enriched
       ctx.body = await outputProcessing(userTable, user as Row)
     } catch (err: any) {

@@ -8,8 +8,9 @@ import { FieldTypes, FormulaTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
 import { Table, Row } from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
-const { isEqual } = require("lodash")
-const { cloneDeep } = require("lodash/fp")
+import sdk from "../../../sdk"
+import { isEqual } from "lodash"
+import { cloneDeep } from "lodash/fp"
 
 /**
  * This function runs through a list of enriched rows, looks at the rows which
@@ -148,7 +149,7 @@ export async function finaliseRow(
       await db.put(table)
     } catch (err: any) {
       if (err.status === 409) {
-        const updatedTable = await db.get(table._id)
+        const updatedTable = await sdk.tables.getTable(table._id)
         let response = processAutoColumn(null, updatedTable, row, {
           reprocessing: true,
         })

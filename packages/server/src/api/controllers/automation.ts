@@ -16,6 +16,7 @@ import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
 import {
+  App,
   Automation,
   AutomationActionStepId,
   AutomationResults,
@@ -152,7 +153,7 @@ export async function update(ctx: BBContext) {
     return
   }
 
-  const oldAutomation = await db.get(automation._id)
+  const oldAutomation = await db.get<Automation>(automation._id)
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({
     oldAuto: oldAutomation,
@@ -210,7 +211,7 @@ export async function find(ctx: BBContext) {
 export async function destroy(ctx: BBContext) {
   const db = context.getAppDB()
   const automationId = ctx.params.id
-  const oldAutomation = await db.get(automationId)
+  const oldAutomation = await db.get<Automation>(automationId)
   await checkForWebhooks({
     oldAuto: oldAutomation,
   })
@@ -229,7 +230,7 @@ export async function clearLogError(ctx: BBContext) {
   const { automationId, appId } = ctx.request.body
   await context.doInAppContext(appId, async () => {
     const db = context.getProdAppDB()
-    const metadata = await db.get(DocumentType.APP_METADATA)
+    const metadata = await db.get<App>(DocumentType.APP_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
     } else if (
@@ -267,7 +268,7 @@ export async function getDefinitionList(ctx: BBContext) {
 
 export async function trigger(ctx: BBContext) {
   const db = context.getAppDB()
-  let automation = await db.get(ctx.params.id)
+  let automation = await db.get<Automation>(ctx.params.id)
 
   let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
   if (hasCollectStep && (await features.isSyncAutomationsEnabled())) {
@@ -312,8 +313,8 @@ function prepareTestInput(input: any) {
 
 export async function test(ctx: BBContext) {
   const db = context.getAppDB()
-  let automation = await db.get(ctx.params.id)
-  await setTestFlag(automation._id)
+  let automation = await db.get<Automation>(ctx.params.id)
+  await setTestFlag(automation._id!)
   const testInput = prepareTestInput(ctx.request.body)
   const response = await triggers.externalTrigger(
     automation,
@@ -328,7 +329,7 @@ export async function test(ctx: BBContext) {
     ...ctx.request.body,
     occurredAt: new Date().getTime(),
   })
-  await clearTestFlag(automation._id)
+  await clearTestFlag(automation._id!)
   ctx.body = response
   await events.automation.tested(automation)
 }

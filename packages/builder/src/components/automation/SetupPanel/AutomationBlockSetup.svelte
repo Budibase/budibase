@@ -15,6 +15,7 @@
     Icon,
     Checkbox,
     DatePicker,
+    Detail,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation } from "builderStore"
@@ -32,7 +33,7 @@
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import {
     bindingsToCompletions,
-    jsAutocomplete,
+    hbAutocomplete,
     EditorModes,
   } from "components/common/CodeEditor"
   import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
@@ -55,6 +56,7 @@
   let drawer
   let fillWidth = true
   let inputData
+  let codeBindingOpen = false
 
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
@@ -70,6 +72,13 @@
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
+  $: codeMode =
+    stepId === "EXECUTE_BASH" ? EditorModes.Handlebars : EditorModes.JS
+
+  $: stepCompletions =
+    codeMode === EditorModes.Handlebars
+      ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
+      : []
 
   /**
    * TODO - Remove after November 2023
@@ -489,6 +498,18 @@
           />
         {:else if value.customType === "code"}
           <CodeEditorModal>
+            {#if codeMode == EditorModes.JS}
+              <ActionButton
+                on:click={() => (codeBindingOpen = !codeBindingOpen)}
+                quiet
+                icon={codeBindingOpen ? "ChevronDown" : "ChevronRight"}
+              >
+                <Detail size="S">Bindings</Detail>
+              </ActionButton>
+              {#if codeBindingOpen}
+                <pre>{JSON.stringify(bindings, null, 2)}</pre>
+              {/if}
+            {/if}
             <CodeEditor
               value={inputData[key]}
               on:change={e => {
@@ -496,19 +517,22 @@
                 onChange({ detail: e.detail }, key)
                 inputData[key] = e.detail
               }}
-              completions={[
-                jsAutocomplete([
-                  ...bindingsToCompletions(bindings, EditorModes.JS),
-                ]),
-              ]}
-              mode={EditorModes.JS}
+              completions={stepCompletions}
+              mode={codeMode}
+              autocompleteEnabled={codeMode != EditorModes.JS}
               height={500}
             />
             <div class="messaging">
-              <Icon name="FlashOn" />
-              <div class="messaging-wrap">
-                <div>Add available bindings by typing <strong>$</strong></div>
-              </div>
+              {#if codeMode == EditorModes.Handlebars}
+                <Icon name="FlashOn" />
+                <div class="messaging-wrap">
+                  <div>
+                    Add available bindings by typing <strong>
+                      &#125;&#125;
+                    </strong>
+                  </div>
+                </div>
+              {/if}
             </div>
           </CodeEditorModal>
         {:else if value.customType === "loopOption"}

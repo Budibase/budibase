@@ -18,6 +18,7 @@ module.exports.doesContainString = templates.doesContainString
 module.exports.disableEscaping = templates.disableEscaping
 module.exports.findHBSBlocks = templates.findHBSBlocks
 module.exports.convertToJS = templates.convertToJS
+module.exports.FIND_ANY_HBS_REGEX = templates.FIND_ANY_HBS_REGEX
 
 if (!process.env.NO_JS) {
   const { VM } = require("vm2")
@@ -28,7 +29,7 @@ if (!process.env.NO_JS) {
   setJSRunner((js, context) => {
     const vm = new VM({
       sandbox: context,
-      timeout: 1000
+      timeout: 1000,
     })
     return vm.run(js)
   })

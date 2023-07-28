@@ -1,5 +1,6 @@
 import { LicenseOverrides, QuotaUsage } from "../../documents"
-import { PlanType } from "../../sdk"
+import { OfflineLicense, PlanType } from "../../sdk"
+import { ISO8601 } from "../../shared"
 
 export interface GetLicenseRequest {
   // All fields should be optional to cater for
@@ -25,4 +26,14 @@ export interface LicenseActivateRequest {
 export interface UpdateLicenseRequest {
   planType?: PlanType
   overrides?: LicenseOverrides
+}
+
+export interface CreateOfflineLicenseRequest {
+  installationIdentifierBase64: string
+  expireAt: ISO8601
+}
+
+export interface GetOfflineLicenseResponse {
+  offlineLicenseToken: string
+  license: OfflineLicense
 }

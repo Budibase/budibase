@@ -6,9 +6,9 @@ concurrency:
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+"
       # Exclude all pre-releases
-      - "!v*[0-9]+.[0-9]+.[0-9]+-*"
+      - "!*[0-9]+.[0-9]+.[0-9]+-*"
 
 env:
   # Posthog token used by ui at build time
@@ -98,7 +98,7 @@ jobs:
           git fetch
           mkdir sync
           echo "Packaging chart to sync dir"
-          helm package charts/budibase --version 0.0.0-master --app-version v"$RELEASE_VERSION" --destination sync
+          helm package charts/budibase --version 0.0.0-master --app-version "$RELEASE_VERSION" --destination sync
           echo "Packaging successful"
           git checkout gh-pages
           echo "Indexing helm repo"         

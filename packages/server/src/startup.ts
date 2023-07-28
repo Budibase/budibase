@@ -5,7 +5,7 @@ import {
   generateApiKey,
   getChecklist,
 } from "./utilities/workerRequests"
-import { installation, tenancy, logging, events } from "@budibase/backend-core"
+import { events, installation, logging, tenancy } from "@budibase/backend-core"
 import fs from "fs"
 import { watch } from "./watch"
 import * as automations from "./automations"

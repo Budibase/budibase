@@ -1,5 +1,5 @@
 <script>
-  import { RelationshipTypes } from "constants/backend"
+  import { RelationshipType } from "constants/backend"
   import {
     keepOpen,
     Button,
@@ -25,11 +25,11 @@
   const relationshipTypes = [
     {
       label: "One to Many",
-      value: RelationshipTypes.MANY_TO_ONE,
+      value: RelationshipType.MANY_TO_ONE,
     },
     {
       label: "Many to Many",
-      value: RelationshipTypes.MANY_TO_MANY,
+      value: RelationshipType.MANY_TO_MANY,
     },
   ]
 
@@ -58,8 +58,8 @@
     value: table._id,
   }))
   $: valid = getErrorCount(errors) === 0 && allRequiredAttributesSet()
-  $: isManyToMany = relationshipType === RelationshipTypes.MANY_TO_MANY
-  $: isManyToOne = relationshipType === RelationshipTypes.MANY_TO_ONE
+  $: isManyToMany = relationshipType === RelationshipType.MANY_TO_MANY
+  $: isManyToOne = relationshipType === RelationshipType.MANY_TO_ONE
 
   function getTable(id) {
     return plusTables.find(table => table._id === id)
@@ -116,7 +116,7 @@
 
   function allRequiredAttributesSet() {
     const base = getTable(fromId) && getTable(toId) && fromColumn && toColumn
-    if (relationshipType === RelationshipTypes.MANY_TO_ONE) {
+    if (relationshipType === RelationshipType.MANY_TO_ONE) {
       return base && fromPrimary && fromForeign
     } else {
       return base && getTable(throughId) && throughFromKey && throughToKey
@@ -181,12 +181,12 @@
   }
 
   function otherRelationshipType(type) {
-    if (type === RelationshipTypes.MANY_TO_ONE) {
-      return RelationshipTypes.ONE_TO_MANY
-    } else if (type === RelationshipTypes.ONE_TO_MANY) {
-      return RelationshipTypes.MANY_TO_ONE
-    } else if (type === RelationshipTypes.MANY_TO_MANY) {
-      return RelationshipTypes.MANY_TO_MANY
+    if (type === RelationshipType.MANY_TO_ONE) {
+      return RelationshipType.ONE_TO_MANY
+    } else if (type === RelationshipType.ONE_TO_MANY) {
+      return RelationshipType.MANY_TO_ONE
+    } else if (type === RelationshipType.MANY_TO_MANY) {
+      return RelationshipType.MANY_TO_MANY
     }
   }
 
@@ -218,7 +218,7 @@
 
     // if any to many only need to check from
     const manyToMany =
-      relateFrom.relationshipType === RelationshipTypes.MANY_TO_MANY
+      relateFrom.relationshipType === RelationshipType.MANY_TO_MANY
 
     if (!manyToMany) {
       delete relateFrom.through
@@ -253,7 +253,7 @@
       }
       relateTo = {
         ...relateTo,
-        relationshipType: RelationshipTypes.ONE_TO_MANY,
+        relationshipType: RelationshipType.ONE_TO_MANY,
         foreignKey: relateFrom.fieldName,
         fieldName: fromPrimary,
       }
@@ -321,7 +321,7 @@
       fromColumn = toRelationship.name
     }
     relationshipType =
-      fromRelationship.relationshipType || RelationshipTypes.MANY_TO_ONE
+      fromRelationship.relationshipType || RelationshipType.MANY_TO_ONE
     if (selectedFromTable) {
       fromId = selectedFromTable._id
       fromColumn = selectedFromTable.name

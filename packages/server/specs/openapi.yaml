@@ -768,6 +768,7 @@ components:
                       - json
                       - internal
                       - barcodeqr
+                      - bigint
                     description: Defines the type of the column, most explain themselves, a link
                       column is a relationship.
                   constraints:
@@ -931,6 +932,7 @@ components:
                           - json
                           - internal
                           - barcodeqr
+                          - bigint
                         description: Defines the type of the column, most explain themselves, a link
                           column is a relationship.
                       constraints:
@@ -1101,6 +1103,7 @@ components:
                             - json
                             - internal
                             - barcodeqr
+                            - bigint
                           description: Defines the type of the column, most explain themselves, a link
                             column is a relationship.
                         constraints:
