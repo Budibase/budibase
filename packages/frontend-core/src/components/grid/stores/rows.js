@@ -312,7 +312,7 @@ export const createActions = context => {
   // Fetches a row by ID using the search endpoint
   const fetchRow = async id => {
     const res = await API.searchTable({
-      tableId: get(tableId),
+      tableId: get(datasource).tableId,
       limit: 1,
       query: {
         equal: {
@@ -442,7 +442,7 @@ export const createActions = context => {
       delete row.__idx
     })
     await API.deleteRows({
-      tableId: get(tableId),
+      tableId: get(datasource).tableId,
       rows: rowsToDelete,
     })
 
