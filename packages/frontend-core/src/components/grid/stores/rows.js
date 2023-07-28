@@ -90,7 +90,6 @@ export const createActions = context => {
   } = context
   const instanceLoaded = writable(false)
   const fetch = writable(null)
-  const tableId = writable(null)
 
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}
@@ -261,10 +260,18 @@ export const createActions = context => {
   const addRow = async (row, idx, bubble = false) => {
     try {
       // Create row
-      const newRow = await API.saveRow(
-        { ...row, tableId: get(tableId) },
-        SuppressErrors
-      )
+      const $datasource = get(datasource)
+      let newRow = { ...row }
+      if ($datasource.type === "table") {
+        newRow.tableId = $datasource.tableId
+      } else if ($datasource.type === "viewV2") {
+        newRow.tableId = $datasource.tableId
+        newRow._viewId = $datasource.id
+      } else {
+        return
+      }
+      console.log(newRow)
+      newRow = await API.saveRow(newRow, SuppressErrors)
 
       // Update state
       if (idx != null) {
