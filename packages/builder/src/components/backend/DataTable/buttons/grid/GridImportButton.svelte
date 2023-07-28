@@ -4,12 +4,12 @@
 
   export let disabled = false
 
-  const { rows, tableId, table } = getContext("grid")
+  const { rows, datasource, table } = getContext("grid")
 </script>
 
 <ImportButton
   {disabled}
-  tableId={$tableId}
+  tableId={$datasource.tableId}
   tableType={$table?.type}
   on:importrows={rows.actions.refreshData}
 />
