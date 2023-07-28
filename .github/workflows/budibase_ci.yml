@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: 14.x
           cache: "yarn"
-     - name: Yarn
+      - name: Yarn
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn install --frozen-lockfile --prefer-offline --non-interactive --ignore-scripts
 
