@@ -32,7 +32,8 @@ jobs:
       - name: Checkout repo only
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
-      - uses: actions/setup-node@v3
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
           cache: "yarn"
@@ -53,7 +54,8 @@ jobs:
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
 
-      - uses: actions/setup-node@v3
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
           cache: "yarn"
@@ -75,7 +77,8 @@ jobs:
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
 
-      - uses: actions/setup-node@v3
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
           cache: "yarn"
@@ -100,7 +103,8 @@ jobs:
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
 
-      - uses: actions/setup-node@v3
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
           cache: "yarn"
@@ -127,7 +131,8 @@ jobs:
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
 
-      - uses: actions/setup-node@v3
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
           cache: "yarn"
@@ -152,7 +157,8 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
-      - uses: actions/setup-node@v3
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
           cache: "yarn"
@@ -174,7 +180,8 @@ jobs:
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
 
-      - uses: actions/setup-node@v3
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
           cache: "yarn"
