@@ -449,6 +449,8 @@ describe("/rows", () => {
 
         const [row] = searchResponse.body.rows as Row[]
 
+        expect(row._viewId).toBeDefined()
+
         const res = await config.api.row.patch(table._id!, {
           ...row,
           description: "Updated Description",
@@ -462,6 +464,7 @@ describe("/rows", () => {
           _rev: expect.anything(),
           createdAt: expect.anything(),
           updatedAt: expect.anything(),
+          _viewId: undefined,
         })
       })
 
@@ -474,6 +477,7 @@ describe("/rows", () => {
 
         const [row] = searchResponse.body.rows as Row[]
 
+        expect(row._viewId).toBeDefined()
         const res = await config.api.row.patch(table._id!, {
           ...row,
           name: "Updated Name",
@@ -515,6 +519,7 @@ describe("/rows", () => {
           _rev: expect.anything(),
           createdAt: expect.anything(),
           updatedAt: expect.anything(),
+          _viewId: undefined,
         })
         expect(savedRow.body.description).not.toEqual("Updated Description")
       })
