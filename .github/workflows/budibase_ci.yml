@@ -37,6 +37,15 @@ jobs:
         with:
           node-version: 14.x
           cache: "yarn"
+
+      - uses: actions/cache@v3
+        name: Check yarn cache
+        id: check-yarn-cache
+        with:
+          key: node-cache-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          lookup-only: true
+      - name: Yarn
+        if: steps.check-yarn-cache.outputs.cache-hit != 'true'
       - name: Yarn
         run: yarn install --frozen-lockfile --prefer-offline
 
