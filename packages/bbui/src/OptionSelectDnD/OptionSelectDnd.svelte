@@ -3,7 +3,6 @@
   import { dndzone } from "svelte-dnd-action"
   import Icon from "../Icon/Icon.svelte"
   import Popover from "../Popover/Popover.svelte"
-  import clickOutside from "../Actions/click_outside"
   import { onMount } from "svelte"
   const flipDurationMs = 150
 
