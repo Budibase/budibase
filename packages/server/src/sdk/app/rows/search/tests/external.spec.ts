@@ -1,6 +1,13 @@
 import { GenericContainer } from "testcontainers"
 
-import { Datasource, FieldType, Row, SourceName, Table } from "@budibase/types"
+import {
+  Datasource,
+  EmptyFilterOption,
+  FieldType,
+  Row,
+  SourceName,
+  Table,
+} from "@budibase/types"
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { SearchParams } from "../../search"
 import { search } from "../external"
@@ -113,6 +120,22 @@ describe("external", () => {
         expect(result.rows).toEqual(
           expect.arrayContaining(rows.map(r => expect.objectContaining(r)))
         )
+      })
+    })
+
+    it("empty filters search returns no data", async () => {
+      await config.doInContext(config.appId, async () => {
+        const tableId = config.table!._id!
+
+        const searchParams: SearchParams = {
+          tableId,
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        }
+        const result = await search(searchParams)
+
+        expect(result.rows).toHaveLength(0)
       })
     })
 
