@@ -147,8 +147,8 @@ export async function exportRows(
 export async function fetch(tableId: string) {
   const db = context.getAppDB()
 
-  let table = await sdk.tables.getTable(tableId)
-  let rows = await getRawTableData(db, tableId)
+  const table = await sdk.tables.getTable(tableId)
+  const rows = await getRawTableData(db, tableId)
   const result = await outputProcessing(table, rows)
   return result
 }
@@ -171,7 +171,7 @@ async function getRawTableData(db: Database, tableId: string) {
 export async function fetchView(
   viewName: string,
   options: { calculation: string; group: string; field: string }
-) {
+): Promise<Row[]> {
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(DocumentType.TABLE)) {
     return fetch(viewName)
@@ -197,7 +197,7 @@ export async function fetchView(
     )
   }
 
-  let rows
+  let rows: Row[] = []
   if (!calculation) {
     response.rows = response.rows.map(row => row.doc)
     let table: Table
