@@ -63,8 +63,6 @@
     "airtable": "0.10.1",
     "arangojs": "7.2.0",
     "aws-sdk": "2.1030.0",
-    "bcrypt": "5.1.0",
-    "bcryptjs": "2.4.3",
     "bull": "4.10.1",
     "chmodr": "1.2.0",
     "chokidar": "3.5.3",
