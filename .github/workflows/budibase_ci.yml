@@ -20,7 +20,38 @@ env:
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
+  yarn:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.repository == github.event.pull_request.head.repo.full_name
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.repository != github.event.pull_request.head.repo.full_name
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.x
+      - uses: actions/cache@v3
+        name: yarn-cache
+        id: yarn-cache
+        with:
+          path: |
+            node_modules
+            **/node_modules
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn
+      - name: Yarn
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --prefer-offline --non-interactive --ignore-scripts
+
   lint:
+    needs: [yarn]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo and submodules
@@ -37,11 +68,21 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 14.x
-          cache: "yarn"
-      - run: yarn
+      - uses: actions/cache@v3
+        name: yarn-cache
+        id: yarn-cache
+        with:
+          path: |
+            node_modules
+            **/node_modules
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn
       - run: yarn lint
 
   build:
+    needs: [yarn]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo and submodules
@@ -58,14 +99,24 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 14.x
-          cache: "yarn"
-      - run: yarn
+      - uses: actions/cache@v3
+        name: yarn-cache
+        id: yarn-cache
+        with:
+          path: |
+            node_modules
+            **/node_modules
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn
       # Run build all the projects
       - run: yarn build
       # Check the types of the projects built via esbuild
       - run: yarn check:types
 
   test-libraries:
+    needs: [yarn]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo and submodules
@@ -82,8 +133,17 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 14.x
-          cache: "yarn"
-      - run: yarn
+      - uses: actions/cache@v3
+        name: yarn-cache
+        id: yarn-cache
+        with:
+          path: |
+            node_modules
+            **/node_modules
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn
       - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
       - uses: codecov/codecov-action@v3
         with:
@@ -92,6 +152,7 @@ jobs:
           verbose: true
 
   test-services:
+    needs: [yarn]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo and submodules
@@ -108,9 +169,19 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 14.x
-          cache: "yarn"
-      - run: yarn
-      - run: yarn test --scope=@budibase/worker --scope=@budibase/server
+      - uses: actions/cache@v3
+        name: yarn-cache
+        id: yarn-cache
+        with:
+          path: |
+            node_modules
+            **/node_modules
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn
+      - name: Test worker and server
+        run: yarn test --scope=@budibase/worker --scope=@budibase/server
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
@@ -118,6 +189,7 @@ jobs:
           verbose: true
 
   test-pro:
+    needs: [yarn]
     runs-on: ubuntu-latest
     if: github.repository == github.event.pull_request.head.repo.full_name
     steps:
@@ -131,11 +203,21 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 14.x
-          cache: "yarn"
-      - run: yarn
+      - uses: actions/cache@v3
+        name: yarn-cache
+        id: yarn-cache
+        with:
+          path: |
+            node_modules
+            **/node_modules
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn
       - run: yarn test --scope=@budibase/pro
 
   integration-test:
+    needs: [yarn]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo and submodules
@@ -152,8 +234,17 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 14.x
-          cache: "yarn"
-      - run: yarn
+      - uses: actions/cache@v3
+        name: yarn-cache
+        id: yarn-cache
+        with:
+          path: |
+            node_modules
+            **/node_modules
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn
       - run: yarn build
       - name: Run tests
         run: |
@@ -165,6 +256,7 @@ jobs:
           BB_ADMIN_USER_PASSWORD: admin
 
   check-pro-submodule:
+    needs: [yarn]
     runs-on: ubuntu-latest
     if: github.repository == github.event.pull_request.head.repo.full_name
     steps:
