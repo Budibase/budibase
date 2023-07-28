@@ -473,7 +473,7 @@ export const hasFilters = (query?: Query) => {
   if (!query) {
     return false
   }
-  const skipped = ["allOr"]
+  const skipped = ["allOr", "onEmptyFilter"]
   for (let [key, value] of Object.entries(query)) {
     if (skipped.includes(key) || typeof value !== "object") {
       continue

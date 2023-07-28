@@ -193,15 +193,17 @@
             on:change={e => (matchAny = e.detail === "or")}
             placeholder={null}
           />
-          <Select
-            label="When filter empty"
-            value={onEmptyFilter}
-            options={onEmptyOptions}
-            getOptionLabel={opt => opt.label}
-            getOptionValue={opt => opt.value}
-            on:change={e => (onEmptyFilter = e.detail)}
-            placeholder={null}
-          />
+          {#if datasource?.type === "table"}
+            <Select
+              label="When filter empty"
+              value={onEmptyFilter}
+              options={onEmptyOptions}
+              getOptionLabel={opt => opt.label}
+              getOptionValue={opt => opt.value}
+              on:change={e => (onEmptyFilter = e.detail)}
+              placeholder={null}
+            />
+          {/if}
         </div>
         <div>
           <div class="filter-label">

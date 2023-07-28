@@ -16,6 +16,7 @@ import {
   EmptyFilterOption,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { hasFilters } from "@budibase/shared-core/src/filters"
 
 export async function handleRequest(
   operation: Operation,
@@ -38,15 +39,8 @@ export async function handleRequest(
     }
   }
 
-  let hasFilters = false
-  for (const [key, value] of Object.entries(opts?.filters || {})) {
-    if (typeof value === "object" && Object.keys(value).length !== 0) {
-      hasFilters = true
-      break
-    }
-  }
   if (
-    !hasFilters &&
+    !hasFilters(opts?.filters) &&
     opts?.filters?.onEmptyFilter === EmptyFilterOption.RETURN_NONE
   ) {
     return []
