@@ -1,9 +1,18 @@
 import { UserCtx } from "@budibase/types"
-import { isBuilder } from "../users"
+import { isBuilder, hasBuilderPermissions } from "../users"
 import { getAppId } from "../context"
+import env from "../environment"
 
 export default async (ctx: UserCtx, next: any) => {
   const appId = getAppId()
+  const builderFn = env.isWorker()
+    ? hasBuilderPermissions
+    : env.isApps()
+    ? isBuilder
+    : undefined
+  if (!builderFn) {
+    throw new Error("Service name unknown - middleware inactive.")
+  }
   if (!ctx.internal && !isBuilder(ctx.user, appId)) {
     ctx.throw(403, "Builder user only endpoint.")
   }
