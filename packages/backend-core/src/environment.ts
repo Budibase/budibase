@@ -85,11 +85,11 @@ function getPackageJsonFields(): {
 }
 
 function isWorker() {
-  return environment.SERVICE_NAME === ServiceType.WORKER
+  return environment.SERVICE_TYPE === ServiceType.WORKER
 }
 
 function isApps() {
-  return environment.SERVICE_NAME === ServiceType.APPS
+  return environment.SERVICE_TYPE === ServiceType.APPS
 }
 
 const environment = {
