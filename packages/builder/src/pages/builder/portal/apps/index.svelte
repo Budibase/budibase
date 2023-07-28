@@ -234,7 +234,7 @@
       </div>
     </div>
 
-    {#if enrichedApps.length}
+    {#if !enrichedApps.length}
       <Layout noPadding gap="L">
         <div class="title">
           {#if $auth.user && sdk.users.isGlobalBuilder($auth.user)}

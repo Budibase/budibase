@@ -3,9 +3,9 @@ import {
   roles,
   context,
   cache,
-  users as usersCore,
   tenancy,
 } from "@budibase/backend-core"
+import sdk from "../../../sdk"
 import { Ctx, App } from "@budibase/types"
 
 export async function fetch(ctx: Ctx) {
@@ -48,7 +48,7 @@ export async function find(ctx: Ctx) {
 export async function removeAppRole(ctx: Ctx) {
   const { appId } = ctx.params
   const db = tenancy.getGlobalDB()
-  const users = await usersCore.db.allUsers()
+  const users = await sdk.users.db.allUsers()
   const bulk = []
   const cacheInvalidations = []
   for (let user of users) {
