@@ -6,8 +6,8 @@ then
   # --runInBand performs better in ci where resources are limited
   export NODE_OPTIONS="--max-old-space-size=4096"
   node ../../node_modules/jest/bin/jest.js --version
-  echo "node --expose-gc --no-compilation-cache ../../node_modules/jest/bin/jest.js --runInBand --logHeapUsage"
-  node --expose-gc --no-compilation-cache ../../node_modules/jest/bin/jest.js --runInBand --logHeapUsage
+  echo "node --expose-gc --no-compilation-cache ../../node_modules/jest/bin/jest.js --runInBand --logHeapUsage --forceExit"
+  node --expose-gc --no-compilation-cache ../../node_modules/jest/bin/jest.js --runInBand --logHeapUsage --forceExit
 else
   # --maxWorkers performs better in development
   echo "jest --coverage --maxWorkers=2 --forceExit"
