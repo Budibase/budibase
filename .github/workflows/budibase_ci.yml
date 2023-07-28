@@ -46,7 +46,6 @@ jobs:
           lookup-only: true
       - name: Yarn
         if: steps.check-yarn-cache.outputs.cache-hit != 'true'
-      - name: Yarn
         run: yarn install --frozen-lockfile --prefer-offline
 
   lint:
