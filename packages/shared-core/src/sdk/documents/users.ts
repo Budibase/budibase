@@ -37,7 +37,8 @@ export function hasAppBuilderPermissions(user?: User | ContextUser) {
   if (!user) {
     return false
   }
-  return !user.builder?.global && user.builder?.apps?.length !== 0
+  const appLength = user.builder?.apps?.length
+  return !user.builder?.global && appLength && appLength > 0
 }
 
 // checks if a user is capable of building any app

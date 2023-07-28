@@ -149,8 +149,8 @@ describe("check service difference", () => {
     const ctx = buildUserCtx({
       ...basicUser,
       builder: {
-        apps: [appId]
-      }
+        apps: [appId],
+      },
     })
     const next = jest.fn()
     doInAppContext(appId, () => {
@@ -168,8 +168,8 @@ describe("check service difference", () => {
     const ctx = buildUserCtx({
       ...basicUser,
       builder: {
-        apps: ["app_a"]
-      }
+        apps: ["app_a"],
+      },
     })
     const next = jest.fn()
     doInAppContext("app_b", () => {
