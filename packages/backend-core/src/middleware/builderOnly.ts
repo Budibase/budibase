@@ -13,7 +13,7 @@ export default async (ctx: UserCtx, next: any) => {
   if (!builderFn) {
     throw new Error("Service name unknown - middleware inactive.")
   }
-  if (!ctx.internal && !isBuilder(ctx.user, appId)) {
+  if (!ctx.internal && !builderFn(ctx.user, appId)) {
     ctx.throw(403, "Builder user only endpoint.")
   }
   return next()

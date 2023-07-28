@@ -2,8 +2,10 @@ import adminOnly from "../adminOnly"
 import builderOnly from "../builderOnly"
 import builderOrAdmin from "../builderOrAdmin"
 import { structures } from "../../../tests"
-import { ContextUser } from "@budibase/types"
+import { ContextUser, ServiceType } from "@budibase/types"
 import { doInAppContext } from "../../context"
+import env from "../../environment"
+env._set("SERVICE_TYPE", ServiceType.APPS)
 
 const appId = "app_aaa"
 const basicUser = structures.users.user()
@@ -137,5 +139,42 @@ describe("builderOrAdmin middleware", () => {
       next = jest.fn()
     builderOrAdmin(ctx, next)
     threw(ctx.throw)
+  })
+})
+
+describe("check service difference", () => {
+  it("should not allow without app ID in apps", () => {
+    env._set("SERVICE_TYPE", ServiceType.APPS)
+    const appId = "app_a"
+    const ctx = buildUserCtx({
+      ...basicUser,
+      builder: {
+        apps: [appId]
+      }
+    })
+    const next = jest.fn()
+    doInAppContext(appId, () => {
+      builderOnly(ctx, next)
+    })
+    passed(ctx.throw, next)
+    doInAppContext("app_b", () => {
+      builderOnly(ctx, next)
+    })
+    threw(ctx.throw)
+  })
+
+  it("should allow without app ID in worker", () => {
+    env._set("SERVICE_TYPE", ServiceType.WORKER)
+    const ctx = buildUserCtx({
+      ...basicUser,
+      builder: {
+        apps: ["app_a"]
+      }
+    })
+    const next = jest.fn()
+    doInAppContext("app_b", () => {
+      builderOnly(ctx, next)
+    })
+    passed(ctx.throw, next)
   })
 })
