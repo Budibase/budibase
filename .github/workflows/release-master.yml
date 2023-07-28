@@ -36,7 +36,7 @@ jobs:
 
       - uses: actions/setup-node@v1
         with:
-          node-version: 18.x
+          node-version: 14.x
 
       - run: yarn install --frozen-lockfile
       - name: Update versions
