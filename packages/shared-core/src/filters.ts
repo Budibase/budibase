@@ -118,7 +118,7 @@ const removeKeyNumbering = (key: string) => {
 
 type Filter = {
   operator: keyof Omit<Query, "onEmptyFilter">
-  onEmptyFilter: EmptyFilterOption
+  onEmptyFilter?: EmptyFilterOption
   field: string
   type: any
   value: any
