@@ -374,10 +374,6 @@ async function appPostCreate(ctx: UserCtx, app: App) {
     tenantId,
     appId: app.appId,
   })
-  // they are an app builder, creating a new app, make sure they can access it
-  if (users.hasAppBuilderPermissions(ctx.user)) {
-    await users.grantAppBuilderAccess(ctx.user._id!, app.appId)
-  }
   await creationEvents(ctx.request, app)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
