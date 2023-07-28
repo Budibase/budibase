@@ -1,7 +1,7 @@
-import { flatten } from "lodash"
-import { cloneDeep } from "lodash/fp"
 import { PermissionType, PermissionLevel } from "@budibase/types"
 export { PermissionType, PermissionLevel } from "@budibase/types"
+import flatten from "lodash/flatten"
+import cloneDeep from "lodash/fp/cloneDeep"
 
 export type RoleHierarchy = {
   permissionId: string
