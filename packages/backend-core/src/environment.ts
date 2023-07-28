@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "fs"
-import { ServiceName } from "@budibase/types"
+import { ServiceType } from "@budibase/types"
 
 function isTest() {
   return isCypress() || isJest()
@@ -85,11 +85,11 @@ function getPackageJsonFields(): {
 }
 
 function isWorker() {
-  return environment.SERVICE_NAME === ServiceName.WORKER
+  return environment.SERVICE_NAME === ServiceType.WORKER
 }
 
 function isApps() {
-  return environment.SERVICE_NAME === ServiceName.APPS
+  return environment.SERVICE_NAME === ServiceType.APPS
 }
 
 const environment = {
