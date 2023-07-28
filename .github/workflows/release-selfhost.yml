@@ -28,10 +28,10 @@ jobs:
             exit 1
           fi
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js 14.x
         uses: actions/setup-node@v1
         with:
-          node-version: 18.x
+          node-version: 14.x
 
       - name: Get the latest budibase release version
         id: version
