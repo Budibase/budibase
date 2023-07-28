@@ -32,21 +32,11 @@ jobs:
       - name: Checkout repo only
         uses: actions/checkout@v3
         if: github.repository != github.event.pull_request.head.repo.full_name
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 14.x
-      - uses: actions/cache@v3
-        name: yarn-cache
-        id: yarn-cache
-        with:
-          path: |
-            node_modules
-            **/node_modules
-            ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn
-      - name: Yarn
+          cache: "yarn"
+     - name: Yarn
         if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: yarn install --frozen-lockfile --prefer-offline --non-interactive --ignore-scripts
 
@@ -73,10 +63,9 @@ jobs:
         id: yarn-cache
         with:
           path: |
-            node_modules
             **/node_modules
             ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: node-cache-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn
       - run: yarn lint
@@ -104,10 +93,9 @@ jobs:
         id: yarn-cache
         with:
           path: |
-            node_modules
             **/node_modules
             ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: node-cache-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn
       # Run build all the projects
@@ -138,10 +126,9 @@ jobs:
         id: yarn-cache
         with:
           path: |
-            node_modules
             **/node_modules
             ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: node-cache-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn
       - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
@@ -174,10 +161,9 @@ jobs:
         id: yarn-cache
         with:
           path: |
-            node_modules
             **/node_modules
             ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: node-cache-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn
       - name: Test worker and server
@@ -208,10 +194,9 @@ jobs:
         id: yarn-cache
         with:
           path: |
-            node_modules
             **/node_modules
             ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: node-cache-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn
       - run: yarn test --scope=@budibase/pro
@@ -239,10 +224,9 @@ jobs:
         id: yarn-cache
         with:
           path: |
-            node_modules
             **/node_modules
             ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: node-cache-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn
       - run: yarn build
