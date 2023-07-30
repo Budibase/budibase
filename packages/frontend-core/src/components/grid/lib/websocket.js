@@ -14,7 +14,10 @@ export const createGridWebsocket = context => {
     const appId = API.getAppID()
     socket.emit(
       GridSocketEvent.SelectDatasource,
-      { datasource, appId },
+      {
+        datasource,
+        appId,
+      },
       ({ users: gridUsers }) => {
         users.set(gridUsers)
       }

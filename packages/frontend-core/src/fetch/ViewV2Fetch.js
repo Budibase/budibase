@@ -8,11 +8,9 @@ export default class ViewV2Fetch extends DataFetch {
   async getDefinition(datasource) {
     try {
       const table = await this.API.fetchTableDefinition(datasource.tableId)
-      const view = Object.values(table.views || {}).find(
+      return Object.values(table.views || {}).find(
         view => view.id === datasource.id
       )
-      const { schema } = view
-      return { schema }
     } catch (error) {
       this.store.update(state => ({
         ...state,
