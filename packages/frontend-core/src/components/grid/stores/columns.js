@@ -69,7 +69,8 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { table, columns, stickyColumn, API, dispatch, config } = context
+  const { table, columns, stickyColumn, API, dispatch, config, datasource } =
+    context
 
   // Checks if we have a certain column by name
   const hasColumn = column => {
@@ -137,12 +138,19 @@ export const createActions = context => {
   }
 
   const saveTable = async newTable => {
+    const $config = get(config)
+    const $datasource = get(datasource)
+
     // Update local state
     table.set(newTable)
 
     // Update server
-    if (get(config).canSaveSchema) {
-      await API.saveTable(newTable)
+    if ($config.canSaveSchema) {
+      if ($datasource.type === "table") {
+        await API.saveTable(newTable)
+      } else if ($datasource.type === "viewV2") {
+        await API.viewV2.update({ ...newTable })
+      }
     }
 
     // Broadcast change to external state can be updated, as this change

@@ -45,6 +45,7 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
     throw new HTTPError(`View ${view.id} not found in table ${tableId}`, 404)
   }
 
+  console.log("set to", view)
   delete table.views[existingView.name]
   table.views[view.name] = view
   await db.put(table)
