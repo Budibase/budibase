@@ -56,6 +56,7 @@ export class UserDB {
   }
 
   async isPreventPasswordActions(user: User, account?: Account) {
+    const userDb = this
     // when in maintenance mode we allow sso users with the admin role
     // to perform any password action - this prevents lockout
     if (env.ENABLE_SSO_MAINTENANCE_MODE && isAdmin(user)) {
@@ -63,7 +64,7 @@ export class UserDB {
     }
 
     // SSO is enforced for all users
-    if (await this.features.isSSOEnforced()) {
+    if (await userDb.features.isSSOEnforced()) {
       return true
     }
 
@@ -180,6 +181,7 @@ export class UserDB {
   }
 
   async save(user: User, opts: SaveUserOpts = {}): Promise<User> {
+    const userDb = this
     // default booleans to true
     if (opts.hashPassword == null) {
       opts.hashPassword = true
@@ -198,7 +200,7 @@ export class UserDB {
 
     if (
       user.builder?.apps?.length &&
-      !(await this.features.isAppBuildersEnabled())
+      !(await userDb.features.isAppBuildersEnabled())
     ) {
       throw new Error("Unable to update app builders, please check license")
     }
@@ -230,10 +232,10 @@ export class UserDB {
     }
 
     const change = dbUser ? 0 : 1 // no change if there is existing user
-    return this.quotas.addUsers(change, async () => {
+    return userDb.quotas.addUsers(change, async () => {
       await validateUniqueUser(email, tenantId)
 
-      let builtUser = await this.buildUser(user, opts, tenantId, dbUser)
+      let builtUser = await userDb.buildUser(user, opts, tenantId, dbUser)
       // don't allow a user to update its own roles/perms
       if (opts.currentUserId && opts.currentUserId === dbUser?._id) {
         builtUser = usersCore.cleanseUserObject(builtUser, dbUser) as User
@@ -251,7 +253,7 @@ export class UserDB {
 
         if (userGroups.length > 0) {
           for (let groupId of userGroups) {
-            groupPromises.push(this.groups.addUsers(groupId, [_id!]))
+            groupPromises.push(userDb.groups.addUsers(groupId, [_id!]))
           }
         }
       }
@@ -283,6 +285,7 @@ export class UserDB {
     newUsersRequested: User[],
     groups: string[]
   ): Promise<BulkUserCreated> {
+    const userDb = this
     const tenantId = getTenantId()
 
     let usersToSave: any[] = []
@@ -310,11 +313,11 @@ export class UserDB {
     }
 
     const account = await accountSdk.getAccountByTenantId(tenantId)
-    return this.quotas.addUsers(newUsers.length, async () => {
+    return userDb.quotas.addUsers(newUsers.length, async () => {
       // create the promises array that will be called by bulkDocs
       newUsers.forEach((user: any) => {
         usersToSave.push(
-          this.buildUser(
+          userDb.buildUser(
             user,
             {
               hashPassword: true,
@@ -350,7 +353,7 @@ export class UserDB {
         const groupPromises = []
         const createdUserIds = saved.map(user => user._id)
         for (let groupId of groups) {
-          groupPromises.push(this.groups.addUsers(groupId, createdUserIds))
+          groupPromises.push(userDb.groups.addUsers(groupId, createdUserIds))
         }
         await Promise.all(groupPromises)
       }
@@ -363,6 +366,7 @@ export class UserDB {
   }
 
   async bulkDelete(userIds: string[]): Promise<BulkUserDeleted> {
+    const userDb = this
     const db = getGlobalDB()
 
     const response: BulkUserDeleted = {
@@ -400,7 +404,7 @@ export class UserDB {
     }))
     const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
 
-    await this.quotas.removeUsers(toDelete.length)
+    await userDb.quotas.removeUsers(toDelete.length)
     for (let user of usersToDelete) {
       await bulkDeleteProcessing(user)
     }
@@ -431,6 +435,7 @@ export class UserDB {
   }
 
   async destroy(id: string) {
+    const userDb = this
     const db = getGlobalDB()
     const dbUser = (await db.get(id)) as User
     const userId = dbUser._id as string
@@ -452,7 +457,7 @@ export class UserDB {
 
     await db.remove(userId, dbUser._rev)
 
-    await this.quotas.removeUsers(1)
+    await userDb.quotas.removeUsers(1)
     await eventHelpers.handleDeleteEvents(dbUser)
     await cache.user.invalidateUser(userId)
     await sessions.invalidateSessions(userId, { reason: "deletion" })

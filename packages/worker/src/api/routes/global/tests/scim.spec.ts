@@ -9,6 +9,7 @@ import {
 } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
 import { events } from "@budibase/backend-core"
+import * as pro from "@budibase/pro"
 
 mocks.licenses.useScimIntegration()
 
