@@ -40,7 +40,8 @@ describe("/v2/views", () => {
       order: SortOrder.DESCENDING,
       type: SortType.STRING,
     },
-    columns: {
+    columns: ["name"],
+    schemaUI: {
       name: {
         visible: true,
       },

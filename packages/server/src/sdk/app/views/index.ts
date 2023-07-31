@@ -1,11 +1,5 @@
 import { HTTPError, context } from "@budibase/backend-core"
-import {
-  FieldSchema,
-  TableSchema,
-  UIFieldMetadata,
-  View,
-  ViewV2,
-} from "@budibase/types"
+import { FieldSchema, TableSchema, View, ViewV2 } from "@budibase/types"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
