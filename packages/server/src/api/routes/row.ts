@@ -146,11 +146,6 @@ router
     authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.search
   )
-  .get(
-    "/api/v2/views/:viewId/search",
-    authorized(PermissionType.VIEW, PermissionLevel.READ),
-    rowController.searchView
-  )
   /**
    * @api {post} /api/:tableId/rows Creates a new row
    * @apiName Creates a new row
@@ -268,4 +263,35 @@ router
     rowController.exportRows
   )
 
+router
+  .get(
+    "/api/v2/views/:viewId/search",
+    authorized(PermissionType.VIEW, PermissionLevel.READ),
+    rowController.views.searchView
+  )
+  /**
+   * @api {post} /api/:tableId/rows Creates a new row
+   * @apiName Creates a new row
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription This API will create a new row based on the supplied body. If the
+   * body includes an "_id" field then it will update an existing row if the field
+   * links to one. Please note that "_id", "_rev" and "tableId" are fields that are
+   * already used by Budibase tables and cannot be used for columns.
+   *
+   * @apiParam {string} tableId The ID of the table to save a row to.
+   *
+   * @apiParam (Body) {string} [_id] If the row exists already then an ID for the row must be provided.
+   * @apiParam (Body) {string} [_rev] If working with an existing row for an internal table its revision
+   * must also be provided.
+   * @apiParam (Body) {string} _viewId The ID of the view should be specified in the row body itself.
+   * @apiParam (Body) {string} tableId The ID of the table should also be specified in the row body itself.
+   * @apiParam (Body) {any} [any] Any field supplied in the body will be assessed to see if it matches
+   * a column in the specified table. All other fields will be dropped and not stored.
+   *
+   * @apiSuccess {string} _id The ID of the row that was just saved, if it was just created this
+   * is the rows new ID.
+   * @apiSuccess {string} [_rev] If saving to an internal table a revision will also be returned.
+   * @apiSuccess {object} body The contents of the row that was saved will be returned as well.
+   */
 export default router
