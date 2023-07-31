@@ -301,7 +301,7 @@ router
     "/api/v2/views/:viewId/rows",
     paramResource("viewId"),
     authorized(PermissionType.VIEW, PermissionLevel.WRITE),
-    rowController.views.save
+    rowController.save
   )
 
 export default router
