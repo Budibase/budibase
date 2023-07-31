@@ -1039,4 +1039,80 @@ describe("/rows", () => {
       expect(response.body.rows).toHaveLength(0)
     })
   })
+
+  describe("view 2.0", () => {
+    function userTable(): Table {
+      return {
+        name: "user",
+        type: "user",
+        schema: {
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+          },
+          surname: {
+            type: FieldType.STRING,
+            name: "name",
+          },
+          age: {
+            type: FieldType.NUMBER,
+            name: "age",
+          },
+          address: {
+            type: FieldType.STRING,
+            name: "address",
+          },
+          jobTitle: {
+            type: FieldType.STRING,
+            name: "jobTitle",
+          },
+        },
+      }
+    }
+
+    const randomRowData = () => ({
+      name: generator.first(),
+      surname: generator.last(),
+      age: generator.age(),
+      address: generator.address(),
+      jobTitle: generator.word(),
+    })
+
+    describe("create", () => {
+      it("should persist a new row with only the provided view fields", async () => {
+        const table = await config.createTable(userTable())
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          columns: {
+            name: { visible: true },
+            surname: { visible: true },
+            address: { visible: true },
+          },
+        })
+
+        const data = randomRowData()
+        const newRow = await config.api.viewV2.row.create(view.id, {
+          tableId: config.table!._id,
+          _viewId: view.id,
+          ...data,
+        })
+
+        const row = await config.api.row.get(table._id!, newRow._id!)
+        expect(row.body).toEqual({
+          name: data.name,
+          surname: data.surname,
+          address: data.address,
+          tableId: config.table!._id,
+          type: "row",
+          _id: expect.any(String),
+          _rev: expect.any(String),
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
+        })
+        expect(row.body._viewId).toBeUndefined()
+        expect(row.body.age).toBeUndefined()
+        expect(row.body.jobTitle).toBeUndefined()
+      })
+    })
+  })
 })
