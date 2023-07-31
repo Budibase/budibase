@@ -8,7 +8,11 @@ export default async (ctx: Ctx<Row>, next: Next) => {
   const { body } = ctx.request
   const { _viewId: viewId } = body
   if (!viewId) {
-    ctx.throw(400, "_viewId is required")
+    return ctx.throw(400, "_viewId is required")
+  }
+
+  if (!ctx.params.viewId) {
+    return ctx.throw(400, "viewId path is required")
   }
 
   const { tableId } = utils.extractViewInfoFromID(ctx.params.viewId)
