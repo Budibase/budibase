@@ -28,7 +28,10 @@ export function isAdmin(user: User | ContextUser): boolean {
   return hasAdminPermissions(user)
 }
 
-export function isAdminOrBuilder(user: User | ContextUser, appId?: string): boolean {
+export function isAdminOrBuilder(
+  user: User | ContextUser,
+  appId?: string
+): boolean {
   return isBuilder(user, appId) || isAdmin(user)
 }
 
