@@ -23,16 +23,16 @@ const mockGetTable = sdk.tables.getTable as jest.MockedFunction<
 
 class TestConfiguration {
   next: Next
-  throw: (status: number, message: string) => never
+  throw: jest.Mock<(status: number, message: string) => never>
   middleware: typeof trimViewRowInfoMiddleware
   params: Record<string, any>
   request?: Pick<BBRequest<Row>, "body">
 
   constructor() {
     this.next = jest.fn()
-    this.throw = (_status: any, message: any) => {
+    this.throw = jest.fn().mockImplementation((_status: any, message: any) => {
       throw new Error(message)
-    }
+    })
     this.params = {}
 
     this.middleware = trimViewRowInfoMiddleware
@@ -89,10 +89,12 @@ describe("trimViewRowInfo middleware", () => {
       },
     },
   }
+  let viewId: string = undefined!
 
   beforeEach(() => {
     jest.resetAllMocks()
     mockGetTable.mockResolvedValue(table)
+    viewId = utils.generateViewID(table._id!)
   })
 
   const getRandomData = () => ({
@@ -103,7 +105,6 @@ describe("trimViewRowInfo middleware", () => {
   })
 
   it("when no columns are defined, same data is returned", async () => {
-    const viewId = utils.generateViewID(table._id!)
     mockGetView.mockResolvedValue({
       version: 2,
       id: viewId,
@@ -119,10 +120,12 @@ describe("trimViewRowInfo middleware", () => {
 
     expect(config.request?.body).toEqual(data)
     expect(config.params.tableId).toEqual(table._id)
+
+    expect(config.next).toBeCalledTimes(1)
+    expect(config.throw).not.toBeCalled()
   })
 
   it("when columns are defined, trimmed data is returned", async () => {
-    const viewId = utils.generateViewID(table._id!)
     mockGetView.mockResolvedValue({
       version: 2,
       id: viewId,
@@ -143,5 +146,18 @@ describe("trimViewRowInfo middleware", () => {
       address: data.address,
     })
     expect(config.params.tableId).toEqual(table._id)
+
+    expect(config.next).toBeCalledTimes(1)
+    expect(config.throw).not.toBeCalled()
+  })
+
+  it("it should throw an error if no viewid is provided on the body", async () => {
+    const data = getRandomData()
+    await config.executeMiddleware(viewId, {
+      ...data,
+    })
+
+    expect(config.throw).toBeCalledTimes(1)
+    expect(config.throw).toBeCalledWith(400, "_viewId is required")
   })
 })
