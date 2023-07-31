@@ -391,6 +391,18 @@ describe("/rows", () => {
       expect(saved.arrayFieldArrayStrKnown).toEqual(["One"])
       expect(saved.optsFieldStrKnown).toEqual("Alpha")
     })
+
+    it("should not allow creating a table row with view id data", async () => {
+      const res = await request
+        .post(`/api/${row.tableId}/rows`)
+        .send({ ...row, _viewId: generator.guid() })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+      expect(res.body.message).toEqual(
+        "Table row endpoints cannot contain view info"
+      )
+    })
   })
 
   describe("patch", () => {

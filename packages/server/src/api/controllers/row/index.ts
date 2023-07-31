@@ -62,10 +62,15 @@ export async function patch(
   }
 }
 
-export const save = async (ctx: any) => {
+export const save = async (ctx: UserCtx<Row>) => {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
+
+  if (body._viewId) {
+    ctx.throw(400, "Table row endpoints cannot contain view info")
+  }
+
   // if it has an ID already then its a patch
   if (body && body._id) {
     return patch(ctx)
