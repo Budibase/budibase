@@ -65,10 +65,4 @@ export default class AuthAPI extends BaseAPI {
       })
     }, opts)
   }
-
-  async self(opts: APIRequestOpts = { status: 200 }) {
-    return this.doRequest(() => {
-      return this.client.get(`/api/auth/self`)
-    }, opts)
-  }
 }
