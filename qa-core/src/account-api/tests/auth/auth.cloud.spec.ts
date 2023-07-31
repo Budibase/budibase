@@ -3,7 +3,7 @@ import * as fixtures from "../../fixtures"
 import { generator } from "../../../shared"
 import { Hosting } from "@budibase/types"
 
-describe("Accounts", () => {
+describe("Password Management", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
