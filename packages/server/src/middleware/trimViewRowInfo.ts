@@ -2,22 +2,23 @@ import { Ctx, Row } from "@budibase/types"
 import * as utils from "../db/utils"
 import sdk from "../sdk"
 import { db } from "@budibase/backend-core"
+import { Next } from "koa"
 
-export default () => async (ctx: Ctx<Row>, next: any) => {
+export default async (ctx: Ctx<Row>, next: Next) => {
   const { body } = ctx.request
   const { _viewId: viewId } = body
   if (!viewId) {
     ctx.throw(400, "_viewId is required")
   }
 
-  const { tableId } = utils.extractViewInfoFromID(viewId)
+  const { tableId } = utils.extractViewInfoFromID(ctx.params.viewId)
   const { _viewId, ...trimmedView } = await trimViewFields(
     viewId,
     tableId,
     body
   )
   ctx.request.body = trimmedView
-  ctx.params.tableId = body.tableId
+  ctx.params.tableId = tableId
 
   return next()
 }
