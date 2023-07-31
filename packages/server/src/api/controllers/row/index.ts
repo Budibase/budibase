@@ -146,7 +146,7 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   const rowDeletes: Row[] = await processDeleteRowsRequest(ctx)
   deleteRequest.rows = rowDeletes
 
-  let { rows } = await quotas.addQuery<any>(
+  const { rows } = await quotas.addQuery(
     () => pickApi(tableId).bulkDestroy(ctx),
     {
       datasourceId: tableId,
