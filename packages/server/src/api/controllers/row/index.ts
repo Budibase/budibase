@@ -37,6 +37,11 @@ export async function patch(
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
+
+  if (body._viewId) {
+    ctx.throw(400, "Table row endpoints cannot contain view info")
+  }
+
   // if it doesn't have an _id then its save
   if (body && !body._id) {
     return save(ctx)
@@ -62,7 +67,7 @@ export async function patch(
   }
 }
 
-export const save = async (ctx: UserCtx<Row>) => {
+export const save = async (ctx: UserCtx<Row, Row>) => {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
@@ -73,7 +78,7 @@ export const save = async (ctx: UserCtx<Row>) => {
 
   // if it has an ID already then its a patch
   if (body && body._id) {
-    return patch(ctx)
+    return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   const { row, table, squashed } = await quotas.addRow(() =>
     quotas.addQuery(() => pickApi(tableId).save(ctx), {
