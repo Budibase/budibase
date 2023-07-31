@@ -45,18 +45,17 @@ const bulkDeleteProcessing = async (dbUser: User) => {
 }
 
 export class UserDB {
-  quotas: QuotaFns
-  groups: GroupFns
-  features: FeatureFns
+  static quotas: QuotaFns
+  static groups: GroupFns
+  static features: FeatureFns
 
-  constructor(quotaFns: QuotaFns, groupFns: GroupFns, featureFns: FeatureFns) {
-    this.quotas = quotaFns
-    this.groups = groupFns
-    this.features = featureFns
+  static init(quotaFns: QuotaFns, groupFns: GroupFns, featureFns: FeatureFns) {
+    UserDB.quotas = quotaFns
+    UserDB.groups = groupFns
+    UserDB.features = featureFns
   }
 
-  async isPreventPasswordActions(user: User, account?: Account) {
-    const userDb = this
+  static async isPreventPasswordActions(user: User, account?: Account) {
     // when in maintenance mode we allow sso users with the admin role
     // to perform any password action - this prevents lockout
     if (env.ENABLE_SSO_MAINTENANCE_MODE && isAdmin(user)) {
@@ -64,7 +63,7 @@ export class UserDB {
     }
 
     // SSO is enforced for all users
-    if (await userDb.features.isSSOEnforced()) {
+    if (await UserDB.features.isSSOEnforced()) {
       return true
     }
 
@@ -80,7 +79,7 @@ export class UserDB {
     return !!(account && account.email === user.email && isSSOAccount(account))
   }
 
-  async buildUser(
+  static async buildUser(
     user: User,
     opts: SaveUserOpts = {
       hashPassword: true,
@@ -99,7 +98,7 @@ export class UserDB {
 
     let hashedPassword
     if (password) {
-      if (await this.isPreventPasswordActions(user, account)) {
+      if (await UserDB.isPreventPasswordActions(user, account)) {
         throw new HTTPError("Password change is disabled for this user", 400)
       }
       hashedPassword = opts.hashPassword ? await hash(password) : password
@@ -109,7 +108,7 @@ export class UserDB {
 
     // passwords are never required if sso is enforced
     const requirePasswords =
-      opts.requirePassword && !(await this.features.isSSOEnforced())
+      opts.requirePassword && !(await UserDB.features.isSSOEnforced())
     if (!hashedPassword && requirePasswords) {
       throw "Password must be specified."
     }
@@ -136,7 +135,7 @@ export class UserDB {
     return fullUser
   }
 
-  async allUsers() {
+  static async allUsers() {
     const db = getGlobalDB()
     const response = await db.allDocs(
       dbUtils.getGlobalUserParams(null, {
@@ -146,14 +145,14 @@ export class UserDB {
     return response.rows.map((row: any) => row.doc)
   }
 
-  async countUsersByApp(appId: string) {
+  static async countUsersByApp(appId: string) {
     let response: any = await usersCore.searchGlobalUsersByApp(appId, {})
     return {
       userCount: response.length,
     }
   }
 
-  async getUsersByAppAccess(appId?: string) {
+  static async getUsersByAppAccess(appId?: string) {
     const opts: any = {
       include_docs: true,
       limit: 50,
@@ -165,14 +164,14 @@ export class UserDB {
     return response
   }
 
-  async getUserByEmail(email: string) {
+  static async getUserByEmail(email: string) {
     return usersCore.getGlobalUserByEmail(email)
   }
 
   /**
    * Gets a user by ID from the global database, based on the current tenancy.
    */
-  async getUser(userId: string) {
+  static async getUser(userId: string) {
     const user = await usersCore.getById(userId)
     if (user) {
       delete user.password
@@ -180,8 +179,7 @@ export class UserDB {
     return user
   }
 
-  async save(user: User, opts: SaveUserOpts = {}): Promise<User> {
-    const userDb = this
+  static async save(user: User, opts: SaveUserOpts = {}): Promise<User> {
     // default booleans to true
     if (opts.hashPassword == null) {
       opts.hashPassword = true
@@ -200,7 +198,7 @@ export class UserDB {
 
     if (
       user.builder?.apps?.length &&
-      !(await userDb.features.isAppBuildersEnabled())
+      !(await UserDB.features.isAppBuildersEnabled())
     ) {
       throw new Error("Unable to update app builders, please check license")
     }
@@ -232,10 +230,10 @@ export class UserDB {
     }
 
     const change = dbUser ? 0 : 1 // no change if there is existing user
-    return userDb.quotas.addUsers(change, async () => {
+    return UserDB.quotas.addUsers(change, async () => {
       await validateUniqueUser(email, tenantId)
 
-      let builtUser = await userDb.buildUser(user, opts, tenantId, dbUser)
+      let builtUser = await UserDB.buildUser(user, opts, tenantId, dbUser)
       // don't allow a user to update its own roles/perms
       if (opts.currentUserId && opts.currentUserId === dbUser?._id) {
         builtUser = usersCore.cleanseUserObject(builtUser, dbUser) as User
@@ -253,7 +251,7 @@ export class UserDB {
 
         if (userGroups.length > 0) {
           for (let groupId of userGroups) {
-            groupPromises.push(userDb.groups.addUsers(groupId, [_id!]))
+            groupPromises.push(UserDB.groups.addUsers(groupId, [_id!]))
           }
         }
       }
@@ -281,11 +279,10 @@ export class UserDB {
     })
   }
 
-  async bulkCreate(
+  static async bulkCreate(
     newUsersRequested: User[],
     groups: string[]
   ): Promise<BulkUserCreated> {
-    const userDb = this
     const tenantId = getTenantId()
 
     let usersToSave: any[] = []
@@ -313,11 +310,11 @@ export class UserDB {
     }
 
     const account = await accountSdk.getAccountByTenantId(tenantId)
-    return userDb.quotas.addUsers(newUsers.length, async () => {
+    return UserDB.quotas.addUsers(newUsers.length, async () => {
       // create the promises array that will be called by bulkDocs
       newUsers.forEach((user: any) => {
         usersToSave.push(
-          userDb.buildUser(
+          UserDB.buildUser(
             user,
             {
               hashPassword: true,
@@ -353,7 +350,7 @@ export class UserDB {
         const groupPromises = []
         const createdUserIds = saved.map(user => user._id)
         for (let groupId of groups) {
-          groupPromises.push(userDb.groups.addUsers(groupId, createdUserIds))
+          groupPromises.push(UserDB.groups.addUsers(groupId, createdUserIds))
         }
         await Promise.all(groupPromises)
       }
@@ -365,8 +362,7 @@ export class UserDB {
     })
   }
 
-  async bulkDelete(userIds: string[]): Promise<BulkUserDeleted> {
-    const userDb = this
+  static async bulkDelete(userIds: string[]): Promise<BulkUserDeleted> {
     const db = getGlobalDB()
 
     const response: BulkUserDeleted = {
@@ -404,7 +400,7 @@ export class UserDB {
     }))
     const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
 
-    await userDb.quotas.removeUsers(toDelete.length)
+    await UserDB.quotas.removeUsers(toDelete.length)
     for (let user of usersToDelete) {
       await bulkDeleteProcessing(user)
     }
@@ -434,8 +430,7 @@ export class UserDB {
     return response
   }
 
-  async destroy(id: string) {
-    const userDb = this
+  static async destroy(id: string) {
     const db = getGlobalDB()
     const dbUser = (await db.get(id)) as User
     const userId = dbUser._id as string
@@ -457,7 +452,7 @@ export class UserDB {
 
     await db.remove(userId, dbUser._rev)
 
-    await userDb.quotas.removeUsers(1)
+    await UserDB.quotas.removeUsers(1)
     await eventHelpers.handleDeleteEvents(dbUser)
     await cache.user.invalidateUser(userId)
     await sessions.invalidateSessions(userId, { reason: "deletion" })
