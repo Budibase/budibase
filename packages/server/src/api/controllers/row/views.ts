@@ -1,6 +1,6 @@
 import { quotas } from "@budibase/pro"
 import {
-  Ctx,
+  UserCtx,
   SearchResponse,
   SortOrder,
   SortType,
@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function searchView(ctx: Ctx<void, SearchResponse>) {
+export async function searchView(ctx: UserCtx<void, SearchResponse>) {
   const { viewId } = ctx.params
 
   const view = await sdk.views.get(viewId)
@@ -47,7 +47,7 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
 }
 
 function getSortOptions(
-  ctx: Ctx,
+  ctx: UserCtx,
   view: ViewV2
 ):
   | {
