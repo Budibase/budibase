@@ -8,26 +8,13 @@ import {
   Datasource,
   IncludeRelationship,
   Operation,
+  PatchRowRequest,
+  PatchRowResponse,
   Row,
   Table,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import * as utils from "./utils"
-
-async function getRow(
-  tableId: string,
-  rowId: string,
-  opts?: { relationships?: boolean }
-) {
-  const response = (await handleRequest(Operation.READ, tableId, {
-    id: breakRowIdField(rowId),
-    includeSqlRelationships: opts?.relationships
-      ? IncludeRelationship.INCLUDE
-      : IncludeRelationship.EXCLUDE,
-  })) as Row[]
-  return response ? response[0] : response
-}
 
 export async function handleRequest(
   operation: Operation,
@@ -55,14 +42,12 @@ export async function handleRequest(
   )
 }
 
-export async function patch(ctx: UserCtx) {
-  const inputs = ctx.request.body
+export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = ctx.params.tableId
-  const id = inputs._id
-  // don't save the ID to db
-  delete inputs._id
-  const validateResult = await utils.validate({
-    row: inputs,
+  const { id, ...rowData } = ctx.request.body
+
+  const validateResult = await sdk.rows.utils.validate({
+    row: rowData,
     tableId,
   })
   if (!validateResult.valid) {
@@ -70,9 +55,11 @@ export async function patch(ctx: UserCtx) {
   }
   const response = await handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(id),
-    row: inputs,
+    row: rowData,
   })
-  const row = await getRow(tableId, id, { relationships: true })
+  const row = await sdk.rows.external.getRow(tableId, id, {
+    relationships: true,
+  })
   const table = await sdk.tables.getTable(tableId)
   return {
     ...response,
@@ -84,7 +71,7 @@ export async function patch(ctx: UserCtx) {
 export async function save(ctx: UserCtx) {
   const inputs = ctx.request.body
   const tableId = ctx.params.tableId
-  const validateResult = await utils.validate({
+  const validateResult = await sdk.rows.utils.validate({
     row: inputs,
     tableId,
   })
@@ -97,7 +84,9 @@ export async function save(ctx: UserCtx) {
   const responseRow = response as { row: Row }
   const rowId = responseRow.row._id
   if (rowId) {
-    const row = await getRow(tableId, rowId, { relationships: true })
+    const row = await sdk.rows.external.getRow(tableId, rowId, {
+      relationships: true,
+    })
     return {
       ...response,
       row,
@@ -110,7 +99,7 @@ export async function save(ctx: UserCtx) {
 export async function find(ctx: UserCtx) {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
-  return getRow(tableId, id)
+  return sdk.rows.external.getRow(tableId, id)
 }
 
 export async function destroy(ctx: UserCtx) {

@@ -314,7 +314,7 @@ describe("scim", () => {
 
           const user = await config.getUser(email)
           expect(user).toBeDefined()
-          expect(user.email).toEqual(email)
+          expect(user!.email).toEqual(email)
         })
 
         it("if multiple emails are provided, the first primary one is used as email", async () => {
@@ -345,7 +345,7 @@ describe("scim", () => {
 
           const user = await config.getUser(email)
           expect(user).toBeDefined()
-          expect(user.email).toEqual(email)
+          expect(user!.email).toEqual(email)
         })
 
         it("if no email is provided and the user name is not an email, an exception is thrown", async () => {
