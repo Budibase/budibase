@@ -4,7 +4,7 @@ import authorized from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
-import guardViewRowInfo from "../../middleware/guardViewRowInfo"
+import noViewData from "../../middleware/noViewData"
 const { PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
@@ -175,7 +175,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
-    guardViewRowInfo(),
+    noViewData(),
     rowController.save
   )
   /**
@@ -190,7 +190,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
-    guardViewRowInfo(),
+    noViewData(),
     rowController.patch
   )
   /**
