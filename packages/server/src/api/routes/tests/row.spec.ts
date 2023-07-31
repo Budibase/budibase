@@ -983,7 +983,7 @@ describe("/rows", () => {
       }
 
       const view = await config.api.viewV2.create({
-        columns: { name: { visible: true } },
+        columns: ["name"],
       })
       const response = await config.api.viewV2.search(view.id)
 
