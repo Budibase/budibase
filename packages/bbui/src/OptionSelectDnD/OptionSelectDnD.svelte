@@ -3,16 +3,24 @@
   import { dndzone } from "svelte-dnd-action"
   import Icon from "../Icon/Icon.svelte"
   import Popover from "../Popover/Popover.svelte"
-  import { onMount } from "svelte"
+  import { onMount, createEventDispatcher } from "svelte"
   const flipDurationMs = 150
 
   export let constraints
+  export let optionColors = {}
   let options = []
 
   let colorPopovers = []
   let anchors = []
 
-  let optionNameColorMap = constraints.optionColors || {}
+  let colorsArray = [
+    "hsla(0, 90%, 75%, 0.3)",
+    "hsla(50, 80%, 75%, 0.3)",
+    "hsla(120, 90%, 75%, 0.3)",
+    "hsla(200, 90%, 75%, 0.3)",
+    "hsla(240, 90%, 75%, 0.3)",
+    "hsla(320, 90%, 75%, 0.3)",
+  ]
   $: {
     if (constraints.inclusion.length) {
       options = constraints.inclusion.map(value => ({
@@ -20,13 +28,6 @@
         id: Math.random(),
       }))
     }
-  }
-
-  const getColor = (idx, opacity = 0.3) => {
-    if (idx == null || idx === -1) {
-      return null
-    }
-    return `hsla(${((idx + 1) * 222) % 360}, 90%, 75%, ${opacity})`
   }
 
   const removeInput = idx => {
@@ -61,17 +62,15 @@
   }
 
   const handleColorChange = (optionName, color, idx) => {
-    optionNameColorMap[optionName] = color
-    constraints.optionColors = optionNameColorMap
+    optionColors[optionName] = color
     colorPopovers[idx].hide()
   }
 
   const handleNameChange = (optionName, idx, value) => {
     constraints.inclusion[idx] = value
     options[idx].name = value
-    optionNameColorMap[value] = optionNameColorMap[optionName]
-    delete optionNameColorMap[optionName]
-    constraints.optionColors = optionNameColorMap
+    optionColors[value] = optionColors[optionName]
+    delete optionColors[optionName]
   }
 
   const openColorPickerPopover = (optionIdx, target) => {
@@ -109,7 +108,8 @@
           <div
             id="color-picker"
             bind:this={anchors[idx]}
-            style="--color:{optionNameColorMap[option.name] || getColor(idx)};"
+            style="--color:{optionColors?.[option.name] ||
+              'hsla(0, 1%, 50%, 0.3)'}"
             class="circle"
             on:click={e => openColorPickerPopover(idx, e.target)}
           >
@@ -123,12 +123,10 @@
               animate={false}
             >
               <div class="colors">
-                {#each Array(6) as _, i}
-                  {@const colorVar = getColor(i + 1)}
+                {#each colorsArray as color}
                   <div
-                    on:click={() =>
-                      handleColorChange(option.name, colorVar, idx)}
-                    style="--color:{colorVar};"
+                    on:click={() => handleColorChange(option.name, color, idx)}
+                    style="--color:{color};"
                     class="circle circle-hover"
                   />
                 {/each}
