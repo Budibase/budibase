@@ -75,6 +75,14 @@
   {
     "name": "Chart",
     "icon": "GraphBarVertical",
-    "children": ["bar", "line", "area", "candlestick", "pie", "donut"]
+    "children": [
+      "bar",
+      "line",
+      "area",
+      "candlestick",
+      "pie",
+      "donut",
+      "histogram"
+    ]
   }
 ]
