@@ -1,5 +1,5 @@
 <script>
-  import { Layout, Body, Button } from "@budibase/bbui"
+  import { Layout, Heading, Body, Button } from "@budibase/bbui"
   import { downloadStream } from "@budibase/frontend-core"
   import Spinner from "components/common/Spinner.svelte"
 
@@ -18,6 +18,7 @@
 </script>
 
 <Layout noPadding>
+  <Heading>System logs</Heading>
   <Body>Download your latest logs to share with the Budibase team</Body>
   <div class="download-button">
     <Button cta on:click={download} disabled={loading}>
@@ -25,7 +26,7 @@
         {#if loading}
           <Spinner size="10" />
         {/if}
-        Download system logs
+        Download
       </div>
     </Button>
   </div>

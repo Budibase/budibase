@@ -15,19 +15,26 @@ import * as utils from "./utils"
 import { cloneDeep } from "lodash/fp"
 import { context, db as dbCore } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
-import { UserCtx, LinkDocumentValue, Row, Table } from "@budibase/types"
+import {
+  UserCtx,
+  LinkDocumentValue,
+  Row,
+  Table,
+  PatchRowRequest,
+  PatchRowResponse,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function patch(ctx: UserCtx) {
+export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const inputs = ctx.request.body
   const tableId = inputs.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
+  const dbTable = await sdk.tables.getTable(tableId)
   try {
-    let dbTable = await sdk.tables.getTable(tableId)
     oldRow = await outputProcessing(
       dbTable,
-      await utils.findRow(ctx, tableId, inputs._id)
+      await utils.findRow(ctx, tableId, inputs._id!)
     )
   } catch (err) {
     if (isUserTable) {
@@ -40,7 +47,7 @@ export async function patch(ctx: UserCtx) {
       throw "Row does not exist"
     }
   }
-  let dbTable = await sdk.tables.getTable(tableId)
+
   // need to build up full patch fields before coerce
   let combinedRow: any = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
@@ -53,7 +60,7 @@ export async function patch(ctx: UserCtx) {
 
   // this returns the table and row incase they have been updated
   let { table, row } = inputProcessing(ctx.user, tableClone, combinedRow)
-  const validateResult = await utils.validate({
+  const validateResult = await sdk.rows.utils.validate({
     row,
     table,
   })
@@ -74,7 +81,7 @@ export async function patch(ctx: UserCtx) {
 
   if (isUserTable) {
     // the row has been updated, need to put it into the ctx
-    ctx.request.body = row
+    ctx.request.body = row as any
     await userController.updateMetadata(ctx)
     return { row: ctx.body as Row, table }
   }
@@ -102,7 +109,7 @@ export async function save(ctx: UserCtx) {
 
   let { table, row } = inputProcessing(ctx.user, tableClone, inputs)
 
-  const validateResult = await utils.validate({
+  const validateResult = await sdk.rows.utils.validate({
     row,
     table,
   })

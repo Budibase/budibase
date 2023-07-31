@@ -46,6 +46,9 @@
   export let lowColumn
   export let dateColumn
 
+  // Histogram
+  export let bucketCount
+
   let dataProviderId
 
   $: colors = c1 && c2 && c3 && c4 && c5 ? [c1, c2, c3, c4, c5] : null
@@ -92,6 +95,7 @@
           highColumn,
           lowColumn,
           dateColumn,
+          bucketCount,
         }}
       />
     {/if}

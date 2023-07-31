@@ -9,6 +9,8 @@ import {
   DeleteRow,
   DeleteRows,
   Row,
+  PatchRowRequest,
+  PatchRowResponse,
   SearchResponse,
   SortOrder,
   SortType,
@@ -29,7 +31,9 @@ function pickApi(tableId: any) {
   return internal
 }
 
-export async function patch(ctx: any): Promise<any> {
+export async function patch(
+  ctx: UserCtx<PatchRowRequest, PatchRowResponse>
+): Promise<any> {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
@@ -38,7 +42,7 @@ export async function patch(ctx: any): Promise<any> {
     return save(ctx)
   }
   try {
-    const { row, table } = await quotas.addQuery<any>(
+    const { row, table } = await quotas.addQuery(
       () => pickApi(tableId).patch(ctx),
       {
         datasourceId: tableId,
@@ -53,7 +57,7 @@ export async function patch(ctx: any): Promise<any> {
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 }
@@ -78,6 +82,7 @@ export const save = async (ctx: any) => {
   ctx.body = row || squashed
   gridSocket?.emitRowUpdate(ctx, row || squashed)
 }
+
 export async function fetchView(ctx: any) {
   const tableId = utils.getTableId(ctx)
   const viewName = decodeURIComponent(ctx.params.viewName)
@@ -267,7 +272,7 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
     undefined
 
   ctx.status = 200
-  ctx.body = await quotas.addQuery(
+  const result = await quotas.addQuery(
     () =>
       sdk.rows.search({
         tableId: view.tableId,
@@ -279,6 +284,9 @@ export async function searchView(ctx: Ctx<void, SearchResponse>) {
       datasourceId: view.tableId,
     }
   )
+
+  result.rows.forEach(r => (r._viewId = view.id))
+  ctx.body = result
 }
 
 export async function validate(ctx: Ctx) {
@@ -287,7 +295,7 @@ export async function validate(ctx: Ctx) {
   if (isExternalTable(tableId)) {
     ctx.body = { valid: true }
   } else {
-    ctx.body = await utils.validate({
+    ctx.body = await sdk.rows.utils.validate({
       row: ctx.request.body,
       tableId,
     })
