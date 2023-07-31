@@ -1,5 +1,5 @@
 import { Feature, License, Quotas } from "@budibase/types"
-import _ from "lodash"
+import cloneDeep from "lodash/cloneDeep"
 
 let CLOUD_FREE_LICENSE: License
 let UNLIMITED_LICENSE: License
@@ -58,7 +58,7 @@ export const useCloudFree = () => {
 // FEATURES
 
 const useFeature = (feature: Feature) => {
-  const license = _.cloneDeep(UNLIMITED_LICENSE)
+  const license = cloneDeep(UNLIMITED_LICENSE)
   const opts: UseLicenseOpts = {
     features: [feature],
   }
@@ -97,7 +97,7 @@ export const useSyncAutomations = () => {
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {
-  const license = _.cloneDeep(UNLIMITED_LICENSE)
+  const license = cloneDeep(UNLIMITED_LICENSE)
   license.quotas.constant.automationLogRetentionDays.value = value
   return useLicense(license)
 }
