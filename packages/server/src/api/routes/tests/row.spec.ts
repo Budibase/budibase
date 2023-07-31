@@ -392,7 +392,7 @@ describe("/rows", () => {
       expect(saved.optsFieldStrKnown).toEqual("Alpha")
     })
 
-    it("should not allow creating a table row with view id data", async () => {
+    it("should throw an error when creating a table row with view id data", async () => {
       const res = await request
         .post(`/api/${row.tableId}/rows`)
         .send({ ...row, _viewId: generator.guid() })
@@ -451,6 +451,25 @@ describe("/rows", () => {
 
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
+    })
+
+    it("should throw an error when creating a table row with view id data", async () => {
+      const existing = await config.createRow()
+
+      const res = await config.api.row.patch(
+        table._id!,
+        {
+          ...existing,
+          _id: existing._id!,
+          _rev: existing._rev!,
+          tableId: table._id!,
+          _viewId: generator.guid(),
+        },
+        { expectStatus: 400 }
+      )
+      expect(res.body.message).toEqual(
+        "Table row endpoints cannot contain view info"
+      )
     })
   })
 
