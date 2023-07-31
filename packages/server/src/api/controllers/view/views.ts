@@ -17,7 +17,8 @@ import {
 } from "@budibase/types"
 import { builderSocket } from "../../../websockets"
 
-const { cloneDeep, isEqual } = require("lodash")
+const cloneDeep = require("lodash/cloneDeep")
+import isEqual from "lodash/isEqual"
 
 export async function fetch(ctx: Ctx) {
   ctx.body = await getViews()
