@@ -176,7 +176,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
-    noViewData(),
+    noViewData,
     rowController.save
   )
   /**
@@ -191,7 +191,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
-    noViewData(),
+    noViewData,
     rowController.patch
   )
   /**
@@ -302,7 +302,7 @@ router
     "/api/v2/views/:viewId/rows",
     paramResource("viewId"),
     authorized(PermissionType.VIEW, PermissionLevel.WRITE),
-    trimViewRowInfo(),
+    trimViewRowInfo,
     rowController.save
   )
 

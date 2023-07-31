@@ -16,7 +16,6 @@ import {
   FieldType,
   SortType,
   SortOrder,
-  PatchRowRequest,
 } from "@budibase/types"
 import {
   expectAnyInternalColsAttributes,
