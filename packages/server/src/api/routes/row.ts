@@ -350,7 +350,7 @@ router
       ctx.params.tableId = utils.extractViewInfoFromID(
         ctx.params.viewId
       ).tableId
-      next()
+      return next()
     },
     rowController.destroy
   )

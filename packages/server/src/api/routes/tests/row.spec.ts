@@ -1225,6 +1225,41 @@ describe("/rows", () => {
           expectStatus: 404,
         })
       })
+
+      it("should be able to delete multiple rows", async () => {
+        const table = await config.createTable(userTable())
+        const tableId = table._id!
+        const view = await config.api.viewV2.create({
+          tableId,
+          columns: {
+            name: { visible: true },
+            address: { visible: true },
+          },
+        })
+
+        const rows = [
+          await config.createRow(),
+          await config.createRow(),
+          await config.createRow(),
+        ]
+        const rowUsage = await getRowUsage()
+        const queryUsage = await getQueryUsage()
+
+        await config.api.viewV2.row.delete(view.id, {
+          rows: [rows[0], rows[2]],
+        })
+
+        await assertRowUsage(rowUsage - 2)
+        await assertQueryUsage(queryUsage + 1)
+
+        await config.api.row.get(tableId, rows[0]._id!, {
+          expectStatus: 404,
+        })
+        await config.api.row.get(tableId, rows[2]._id!, {
+          expectStatus: 404,
+        })
+        await config.api.row.get(tableId, rows[1]._id!, { expectStatus: 200 })
+      })
     })
   })
 })
