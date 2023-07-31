@@ -166,13 +166,13 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
 
-  let resp = await quotas.addQuery<any>(() => pickApi(tableId).destroy(ctx), {
+  const resp = await quotas.addQuery(() => pickApi(tableId).destroy(ctx), {
     datasourceId: tableId,
   })
   await quotas.removeRow()
 
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
-  gridSocket?.emitRowDeletion(ctx, resp.row._id)
+  gridSocket?.emitRowDeletion(ctx, resp.row._id!)
 
   return resp
 }

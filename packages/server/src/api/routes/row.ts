@@ -6,6 +6,7 @@ import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
 import noViewData from "../../middleware/noViewData"
 import trimViewRowInfo from "../../middleware/trimViewRowInfo"
+import * as utils from "../../db/utils"
 const { PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
@@ -305,12 +306,53 @@ router
     trimViewRowInfo,
     rowController.save
   )
+  /**
+   * @api {patch} /api/v2/views/:viewId/rows/:rowId Updates a row
+   * @apiName Update a row
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription This endpoint is identical to the row creation endpoint but instead it will
+   * error if an _id isn't provided, it will only function for existing rows.
+   */
   .patch(
     "/api/v2/views/:viewId/rows/:rowId",
     paramResource("viewId"),
     authorized(PermissionType.VIEW, PermissionLevel.WRITE),
     trimViewRowInfo,
     rowController.patch
+  )
+  /**
+   * @api {delete} /api/v2/views/:viewId/rows Delete rows for a view
+   * @apiName Delete rows for a view
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription This endpoint can delete a single row, or delete them in a bulk
+   * fashion.
+   *
+   * @apiParam {string} tableId The ID of the table the row is to be deleted from.
+   *
+   * @apiParam (Body) {object[]} [rows] If bulk deletion is desired then provide the rows in this
+   * key of the request body that are to be deleted.
+   * @apiParam (Body) {string} [_id] If deleting a single row then provide its ID in this field.
+   * @apiParam (Body) {string} [_rev] If deleting a single row from an internal table then provide its
+   * revision here.
+   *
+   * @apiSuccess {object[]|object} body If deleting bulk then the response body will be an array
+   * of the deleted rows, if deleting a single row then the body will contain a "row" property which
+   * is the deleted row.
+   */
+  .delete(
+    "/api/v2/views/:viewId/rows",
+    paramResource("viewId"),
+    authorized(PermissionType.VIEW, PermissionLevel.WRITE),
+    // This is required as the implementation relies on the table id
+    (ctx, next) => {
+      ctx.params.tableId = utils.extractViewInfoFromID(
+        ctx.params.viewId
+      ).tableId
+      next()
+    },
+    rowController.destroy
   )
 
 export default router

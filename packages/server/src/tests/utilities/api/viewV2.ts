@@ -1,5 +1,6 @@
 import {
   CreateViewRequest,
+  DeleteRowRequest,
   PatchRowRequest,
   PatchRowResponse,
   Row,
@@ -129,6 +130,18 @@ export class ViewV2API extends TestAPI {
         .expect("Content-Type", /json/)
         .expect(expectStatus)
       return result.body as PatchRowResponse
+    },
+    delete: async (
+      viewId: string,
+      body: DeleteRowRequest,
+      { expectStatus } = { expectStatus: 200 }
+    ): Promise<any> => {
+      const result = await this.request
+        .delete(`/api/v2/views/${viewId}/rows`)
+        .send(body)
+        .set(this.config.defaultHeaders())
+        .expect(expectStatus)
+      return result.body
     },
   }
 }

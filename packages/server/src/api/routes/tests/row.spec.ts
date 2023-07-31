@@ -16,6 +16,7 @@ import {
   FieldType,
   SortType,
   SortOrder,
+  DeleteRow,
 } from "@budibase/types"
 import {
   expectAnyInternalColsAttributes,
@@ -1146,7 +1147,7 @@ describe("/rows", () => {
     describe("patch", () => {
       it("should update only the view fields for a row", async () => {
         const table = await config.createTable(userTable())
-        const tableId = config.table!._id!
+        const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
           columns: {
@@ -1193,6 +1194,36 @@ describe("/rows", () => {
         )
         expect(route).toBeDefined()
         expect(route?.stack).toContainEqual(trimViewRowInfoMiddleware)
+      })
+    })
+
+    describe("destroy", () => {
+      it("should be able to delete a row", async () => {
+        const table = await config.createTable(userTable())
+        const tableId = table._id!
+        const view = await config.api.viewV2.create({
+          tableId,
+          columns: {
+            name: { visible: true },
+            address: { visible: true },
+          },
+        })
+
+        const createdRow = await config.createRow()
+        const rowUsage = await getRowUsage()
+        const queryUsage = await getQueryUsage()
+
+        const body: DeleteRow = {
+          _id: createdRow._id!,
+        }
+        await config.api.viewV2.row.delete(view.id, body)
+
+        await assertRowUsage(rowUsage - 1)
+        await assertQueryUsage(queryUsage + 1)
+
+        await config.api.row.get(tableId, createdRow._id!, {
+          expectStatus: 404,
+        })
       })
     })
   })
