@@ -1,5 +1,7 @@
 import {
   CreateViewRequest,
+  PatchRowRequest,
+  PatchRowResponse,
   Row,
   SortOrder,
   SortType,
@@ -113,6 +115,20 @@ export class ViewV2API extends TestAPI {
         .expect("Content-Type", /json/)
         .expect(expectStatus)
       return result.body as Row
+    },
+    update: async (
+      viewId: string,
+      rowId: string,
+      row: PatchRowRequest,
+      { expectStatus } = { expectStatus: 200 }
+    ): Promise<PatchRowResponse> => {
+      const result = await this.request
+        .patch(`/api/v2/views/${viewId}/rows/${rowId}`)
+        .send(row)
+        .set(this.config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(expectStatus)
+      return result.body as PatchRowResponse
     },
   }
 }

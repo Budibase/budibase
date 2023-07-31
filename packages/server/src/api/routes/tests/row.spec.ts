@@ -1142,5 +1142,58 @@ describe("/rows", () => {
         expect(route?.stack).toContainEqual(trimViewRowInfoMiddleware)
       })
     })
+
+    describe("patch", () => {
+      it("should update only the view fields for a row", async () => {
+        const table = await config.createTable(userTable())
+        const tableId = config.table!._id!
+        const view = await config.api.viewV2.create({
+          tableId,
+          columns: {
+            name: { visible: true },
+            address: { visible: true },
+          },
+        })
+
+        const newRow = await config.api.viewV2.row.create(view.id, {
+          tableId,
+          _viewId: view.id,
+          ...randomRowData(),
+        })
+        const newData = randomRowData()
+        await config.api.viewV2.row.update(view.id, newRow._id!, {
+          tableId,
+          _viewId: view.id,
+          _id: newRow._id!,
+          _rev: newRow._rev!,
+          ...newData,
+        })
+
+        const row = await config.api.row.get(tableId, newRow._id!)
+        expect(row.body).toEqual({
+          ...newRow,
+          type: "row",
+          name: newData.name,
+          address: newData.address,
+          _id: expect.any(String),
+          _rev: expect.any(String),
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
+        })
+        expect(row.body._viewId).toBeUndefined()
+        expect(row.body.age).toBeUndefined()
+        expect(row.body.jobTitle).toBeUndefined()
+      })
+
+      it("should setup the trimViewRowInfo middleware", async () => {
+        const route = router.stack.find(
+          r =>
+            r.methods.includes("PATCH") &&
+            r.path === "/api/v2/views/:viewId/rows/:rowId"
+        )
+        expect(route).toBeDefined()
+        expect(route?.stack).toContainEqual(trimViewRowInfoMiddleware)
+      })
+    })
   })
 })
