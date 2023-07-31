@@ -35,10 +35,6 @@ export async function patch(
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
 
-  if (body._viewId) {
-    ctx.throw(400, "Table row endpoints cannot contain view info")
-  }
-
   // if it doesn't have an _id then its save
   if (body && !body._id) {
     return save(ctx)
@@ -68,10 +64,6 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
-
-  if (body._viewId) {
-    ctx.throw(400, "Table row endpoints cannot contain view info")
-  }
 
   // if it has an ID already then its a patch
   if (body && body._id) {
