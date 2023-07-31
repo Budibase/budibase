@@ -92,31 +92,56 @@ describe("trimViewRowInfo middleware", () => {
 
   beforeEach(() => {
     jest.resetAllMocks()
+    mockGetTable.mockResolvedValue(table)
+  })
+
+  const getRandomData = () => ({
+    _id: generator.guid(),
+    name: generator.name(),
+    age: generator.age(),
+    address: generator.address(),
   })
 
   it("when no columns are defined, same data is returned", async () => {
+    const viewId = utils.generateViewID(table._id!)
     mockGetView.mockResolvedValue({
       version: 2,
-      id: generator.guid(),
+      id: viewId,
       name: generator.guid(),
-      tableId: generator.guid(),
+      tableId: table._id!,
     })
-    mockGetTable.mockResolvedValue(table)
 
-    const viewId = utils.generateViewID(table._id!)
-    const data = {
-      _id: generator.guid(),
-      name: generator.name(),
-      age: generator.age(),
-      address: generator.address(),
-    }
-
+    const data = getRandomData()
     await config.executeMiddleware(viewId, {
       _viewId: viewId,
       ...data,
     })
 
     expect(config.request?.body).toEqual(data)
+    expect(config.params.tableId).toEqual(table._id)
+  })
+
+  it("when columns are defined, trimmed data is returned", async () => {
+    const viewId = utils.generateViewID(table._id!)
+    mockGetView.mockResolvedValue({
+      version: 2,
+      id: viewId,
+      name: generator.guid(),
+      tableId: table._id!,
+      columns: { name: { visible: true }, address: { visible: true } },
+    })
+
+    const data = getRandomData()
+    await config.executeMiddleware(viewId, {
+      _viewId: viewId,
+      ...data,
+    })
+
+    expect(config.request?.body).toEqual({
+      _id: data._id,
+      name: data.name,
+      address: data.address,
+    })
     expect(config.params.tableId).toEqual(table._id)
   })
 })
