@@ -104,8 +104,6 @@ export const createActions = context => {
     instanceLoaded.set(false)
     loading.set(true)
 
-    console.log($datasource)
-
     // Abandon if we don't have a valid datasource
     if (!$datasource?.tableId) {
       return
@@ -270,7 +268,6 @@ export const createActions = context => {
       } else {
         return
       }
-      console.log(newRow)
       newRow = await API.saveRow(newRow, SuppressErrors)
 
       // Update state

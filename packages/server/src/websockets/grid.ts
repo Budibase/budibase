@@ -21,8 +21,13 @@ export default class GridSocket extends BaseSocket {
   async onConnect(socket: Socket) {
     // Initial identification of connected spreadsheet
     socket.on(
-      GridSocketEvent.SelectTable,
-      async ({ tableId, appId }, callback) => {
+      GridSocketEvent.SelectDatasource,
+      async ({ datasource, appId }, callback) => {
+        if (datasource?.type !== "table") {
+          return
+        }
+        const tableId = datasource.tableId
+
         // Ignore if no table or app specified
         if (!tableId || !appId) {
           socket.disconnect(true)
