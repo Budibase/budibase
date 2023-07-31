@@ -1,11 +1,11 @@
 import {
   auth as authCore,
-  tenancy,
-  utils as coreUtils,
-  sessions,
+  env as coreEnv,
   events,
   HTTPError,
-  env as coreEnv,
+  sessions,
+  tenancy,
+  utils as coreUtils,
 } from "@budibase/backend-core"
 import { PlatformLogoutOpts, User } from "@budibase/types"
 import jwt from "jsonwebtoken"
@@ -20,7 +20,7 @@ export async function loginUser(user: User) {
   const sessionId = coreUtils.newid()
   const tenantId = tenancy.getTenantId()
   await sessions.createASession(user._id!, { sessionId, tenantId })
-  const token = jwt.sign(
+  return jwt.sign(
     {
       userId: user._id,
       sessionId,
@@ -28,7 +28,6 @@ export async function loginUser(user: User) {
     },
     coreEnv.JWT_SECRET!
   )
-  return token
 }
 
 export async function logout(opts: PlatformLogoutOpts) {
