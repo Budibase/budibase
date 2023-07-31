@@ -1,6 +1,7 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
 import { generator } from "../../../shared"
+import { Hosting } from "@budibase/types"
 
 describe("Accounts", () => {
   const config = new TestConfiguration()
@@ -16,7 +17,9 @@ describe("Accounts", () => {
   it("performs signup and deletion flow", async () => {
     await config.doInNewState(async () => {
       // Create account
-      const createAccountRequest = fixtures.accounts.generateAccount()
+      const createAccountRequest = fixtures.accounts.generateAccount({
+        hosting: Hosting.CLOUD,
+      })
       const email = createAccountRequest.email
       const tenantId = createAccountRequest.tenantId
 
