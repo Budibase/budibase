@@ -15494,10 +15494,10 @@ jest-snapshot@^29.6.2:
     pretty-format "^29.6.2"
     semver "^7.5.3"
 
-jest-util@^29.0.0:
-  version "29.6.1"
-  resolved "https://registry.yarnpkg.com/jest-util/-/jest-util-29.6.1.tgz#c9e29a87a6edbf1e39e6dee2b4689b8a146679cb"
-  integrity sha512-NRFCcjc+/uO3ijUVyNOQJluf8PtGCe/W6cix36+M3cTFgiYqFOOW5MgN4JOOcvbUhcKTYVd1CvHz/LWi8d16Mg==
+jest-util@^29.0.0, jest-util@^29.6.2:
+  version "29.6.2"
+  resolved "https://registry.yarnpkg.com/jest-util/-/jest-util-29.6.2.tgz#8a052df8fff2eebe446769fd88814521a517664d"
+  integrity sha512-3eX1qb6L88lJNCFlEADKOkjpXJQyZRiavX1INZ4tRnrBVr2COd3RgcTLyUiEXMNBlDU/cgYq6taUS0fExrWW4w==
   dependencies:
     "@jest/types" "^29.6.1"
     "@types/node" "*"
@@ -15512,18 +15512,6 @@ jest-util@^29.4.3:
   integrity sha512-ToSGORAz4SSSoqxDSylWX8JzkOQR7zoBtNRsA7e+1WUX5F8jrOwaNpuh1YfJHJKDHXLHmObv5eOjejUd+/Ws+Q==
   dependencies:
     "@jest/types" "^29.4.3"
-    "@types/node" "*"
-    chalk "^4.0.0"
-    ci-info "^3.2.0"
-    graceful-fs "^4.2.9"
-    picomatch "^2.2.3"
-
-jest-util@^29.6.2:
-  version "29.6.2"
-  resolved "https://registry.yarnpkg.com/jest-util/-/jest-util-29.6.2.tgz#8a052df8fff2eebe446769fd88814521a517664d"
-  integrity sha512-3eX1qb6L88lJNCFlEADKOkjpXJQyZRiavX1INZ4tRnrBVr2COd3RgcTLyUiEXMNBlDU/cgYq6taUS0fExrWW4w==
-  dependencies:
-    "@jest/types" "^29.6.1"
     "@types/node" "*"
     chalk "^4.0.0"
     ci-info "^3.2.0"
