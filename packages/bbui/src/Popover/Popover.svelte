@@ -80,7 +80,7 @@
       class="spectrum-Popover is-open"
       class:customZindex
       role="presentation"
-      style="height: {customHeight};"
+      style="height: {customHeight}; --customZindex: {customZindex};"
       transition:fly|local={{ y: -20, duration: animate ? 200 : 0 }}
     >
       <slot />
@@ -96,6 +96,6 @@
   }
 
   .customZindex {
-    z-index: 100 !important;
+    z-index: var(--customZindex) !important;
   }
 </style>
