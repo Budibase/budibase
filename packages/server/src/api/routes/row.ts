@@ -5,6 +5,7 @@ import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
 import noViewData from "../../middleware/noViewData"
+import trimViewRowInfo from "../../middleware/trimViewRowInfo"
 const { PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
@@ -301,6 +302,7 @@ router
     "/api/v2/views/:viewId/rows",
     paramResource("viewId"),
     authorized(PermissionType.VIEW, PermissionLevel.WRITE),
+    trimViewRowInfo(),
     rowController.save
   )
 

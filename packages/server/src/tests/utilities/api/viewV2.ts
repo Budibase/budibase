@@ -1,4 +1,10 @@
-import { CreateViewRequest, SortOrder, SortType, ViewV2 } from "@budibase/types"
+import {
+  CreateViewRequest,
+  Row,
+  SortOrder,
+  SortType,
+  ViewV2,
+} from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 import { generator } from "@budibase/backend-core/tests"
@@ -92,5 +98,21 @@ export class ViewV2API extends TestAPI {
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(expectStatus)
+  }
+
+  row = {
+    create: async (
+      viewId: string,
+      row: Row,
+      { expectStatus } = { expectStatus: 200 }
+    ): Promise<Row> => {
+      const result = await this.request
+        .post(`/api/v2/views/${viewId}/rows`)
+        .send(row)
+        .set(this.config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(expectStatus)
+      return result.body as Row
+    },
   }
 }
