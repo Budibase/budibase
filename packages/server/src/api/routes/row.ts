@@ -305,5 +305,12 @@ router
     trimViewRowInfo,
     rowController.save
   )
+  .patch(
+    "/api/v2/views/:viewId/rows/:rowId",
+    paramResource("viewId"),
+    authorized(PermissionType.VIEW, PermissionLevel.WRITE),
+    trimViewRowInfo,
+    rowController.patch
+  )
 
 export default router
