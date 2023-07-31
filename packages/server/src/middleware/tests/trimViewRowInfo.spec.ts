@@ -14,7 +14,7 @@ jest.mock("../../sdk", () => ({
 }))
 
 import sdk from "../../sdk"
-import { BaseContext, Next } from "koa"
+import { Next } from "koa"
 
 const mockGetView = sdk.views.get as jest.MockedFunction<typeof sdk.views.get>
 const mockGetTable = sdk.tables.getTable as jest.MockedFunction<
@@ -30,9 +30,7 @@ class TestConfiguration {
 
   constructor() {
     this.next = jest.fn()
-    this.throw = jest.fn().mockImplementation((_status: any, message: any) => {
-      throw new Error(message)
-    })
+    this.throw = jest.fn()
     this.params = {}
 
     this.middleware = trimViewRowInfoMiddleware
@@ -159,6 +157,7 @@ describe("trimViewRowInfo middleware", () => {
 
     expect(config.throw).toBeCalledTimes(1)
     expect(config.throw).toBeCalledWith(400, "_viewId is required")
+    expect(config.next).not.toBeCalled()
   })
 
   it("it should throw an error if no viewid is provided on the parameters", async () => {
@@ -170,5 +169,6 @@ describe("trimViewRowInfo middleware", () => {
 
     expect(config.throw).toBeCalledTimes(1)
     expect(config.throw).toBeCalledWith(400, "viewId path is required")
+    expect(config.next).not.toBeCalled()
   })
 })
