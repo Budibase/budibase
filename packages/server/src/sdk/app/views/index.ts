@@ -3,7 +3,7 @@ import { TableSchema, UIFieldMetadata, View, ViewV2 } from "@budibase/types"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
-import _ from "lodash"
+import merge from "lodash/merge"
 
 export async function get(viewId: string): Promise<ViewV2 | undefined> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
@@ -103,7 +103,7 @@ function enrichViewV2Schema(
       delete tableFieldSchema.order
     }
 
-    result[columnName] = _.merge(tableFieldSchema, columnUIMetadata)
+    result[columnName] = merge(tableFieldSchema, columnUIMetadata)
   }
   return result
 }

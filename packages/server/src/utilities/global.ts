@@ -9,7 +9,7 @@ import {
 import env from "../environment"
 import { groups } from "@budibase/pro"
 import { UserCtx, ContextUser, User, UserGroup } from "@budibase/types"
-import { cloneDeep } from "lodash"
+import cloneDeep from "lodash/cloneDeep"
 
 export function updateAppRole(
   user: ContextUser,

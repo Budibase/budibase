@@ -14,7 +14,6 @@ import {
 import datasources from "../datasources"
 import { populateExternalTableSchemas, isEditableColumn } from "./validation"
 import sdk from "../../../sdk"
-import _ from "lodash"
 
 async function getAllInternalTables(db?: Database): Promise<Table[]> {
   if (!db) {
