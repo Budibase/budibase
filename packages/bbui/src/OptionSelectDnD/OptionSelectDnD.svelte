@@ -3,7 +3,7 @@
   import { dndzone } from "svelte-dnd-action"
   import Icon from "../Icon/Icon.svelte"
   import Popover from "../Popover/Popover.svelte"
-  import { onMount, createEventDispatcher } from "svelte"
+  import { onMount } from "svelte"
   const flipDurationMs = 150
 
   export let constraints
@@ -31,7 +31,6 @@
   }
 
   const removeInput = idx => {
-    delete optionNameColorMap[options[idx].name]
     delete constraints.optionColors[options[idx].name]
     constraints.inclusion = constraints.inclusion.filter((e, i) => i !== idx)
     options = options.filter((e, i) => i !== idx)
