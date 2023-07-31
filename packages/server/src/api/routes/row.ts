@@ -4,6 +4,7 @@ import authorized from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
+import guardViewRowInfo from "../../middleware/guardViewRowInfo"
 const { PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
@@ -174,6 +175,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
+    guardViewRowInfo(),
     rowController.save
   )
   /**
@@ -188,6 +190,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
+    guardViewRowInfo(),
     rowController.patch
   )
   /**
@@ -294,4 +297,11 @@ router
    * @apiSuccess {string} [_rev] If saving to an internal table a revision will also be returned.
    * @apiSuccess {object} body The contents of the row that was saved will be returned as well.
    */
+  .post(
+    "/api/v2/views/:viewId/rows",
+    paramResource("viewId"),
+    authorized(PermissionType.VIEW, PermissionLevel.WRITE),
+    rowController.views.save
+  )
+
 export default router
