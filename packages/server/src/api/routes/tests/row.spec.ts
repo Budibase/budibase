@@ -22,6 +22,9 @@ import {
   generator,
   structures,
 } from "@budibase/backend-core/tests"
+import trimViewRowInfoMiddleware from "../../../middleware/trimViewRowInfo"
+import noViewDataMiddleware from "../../../middleware/noViewData"
+import router from "../row"
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -402,6 +405,14 @@ describe("/rows", () => {
         "Table row endpoints cannot contain view info"
       )
     })
+
+    it("should setup the noViewData middleware", async () => {
+      const route = router.stack.find(
+        r => r.methods.includes("POST") && r.path === "/api/:tableId/rows"
+      )
+      expect(route).toBeDefined()
+      expect(route?.stack).toContainEqual(noViewDataMiddleware)
+    })
   })
 
   describe("patch", () => {
@@ -469,6 +480,14 @@ describe("/rows", () => {
       expect(res.body.message).toEqual(
         "Table row endpoints cannot contain view info"
       )
+    })
+
+    it("should setup the noViewData middleware", async () => {
+      const route = router.stack.find(
+        r => r.methods.includes("PATCH") && r.path === "/api/:tableId/rows"
+      )
+      expect(route).toBeDefined()
+      expect(route?.stack).toContainEqual(noViewDataMiddleware)
     })
   })
 
@@ -1111,6 +1130,16 @@ describe("/rows", () => {
         expect(row.body._viewId).toBeUndefined()
         expect(row.body.age).toBeUndefined()
         expect(row.body.jobTitle).toBeUndefined()
+      })
+
+      it("should setup the trimViewRowInfo middleware", async () => {
+        const route = router.stack.find(
+          r =>
+            r.methods.includes("POST") &&
+            r.path === "/api/v2/views/:viewId/rows"
+        )
+        expect(route).toBeDefined()
+        expect(route?.stack).toContainEqual(trimViewRowInfoMiddleware)
       })
     })
   })
