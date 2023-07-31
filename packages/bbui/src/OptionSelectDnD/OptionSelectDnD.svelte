@@ -29,9 +29,8 @@
       }))
     }
   }
-
   const removeInput = idx => {
-    delete constraints.optionColors[options[idx].name]
+    delete optionColors[options[idx].name]
     constraints.inclusion = constraints.inclusion.filter((e, i) => i !== idx)
     options = options.filter((e, i) => i !== idx)
     colorPopovers.pop(undefined)
