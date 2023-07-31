@@ -164,84 +164,77 @@
   </GridCell>
 </div>
 
-<div>
-  <Popover
-    bind:open
-    bind:this={popover}
-    {anchor}
-    align="right"
-    offset={0}
-    popoverTarget={document.getElementById(`grid-${rand}`)}
-    animate={false}
-    customZindex={100}
-  >
-    {#if editIsOpen}
-      <div
-        use:clickOutside={() => {
-          editIsOpen = false
-        }}
-        class="content"
+<Popover
+  bind:open
+  bind:this={popover}
+  {anchor}
+  align="right"
+  offset={0}
+  popoverTarget={document.getElementById(`grid-${rand}`)}
+  animate={false}
+  customZindex={100}
+>
+  {#if editIsOpen}
+    <div
+      use:clickOutside={() => {
+        editIsOpen = false
+      }}
+      class="content"
+    >
+      <slot />
+    </div>
+  {:else}
+    <Menu>
+      <MenuItem
+        icon="Edit"
+        on:click={editColumn}
+        disabled={!$config.allowSchemaChanges || column.schema.disabled}
       >
-        <slot />
-      </div>
-    {:else}
-      <Menu>
-        <MenuItem
-          icon="Edit"
-          on:click={editColumn}
-          disabled={!$config.allowSchemaChanges || column.schema.disabled}
-        >
-          Edit column
-        </MenuItem>
-        <MenuItem
-          icon="Label"
-          on:click={makeDisplayColumn}
-          disabled={idx === "sticky" ||
-            !$config.allowSchemaChanges ||
-            bannedDisplayColumnTypes.includes(column.schema.type)}
-        >
-          Use as display column
-        </MenuItem>
-        <MenuItem
-          icon="SortOrderUp"
-          on:click={sortAscending}
-          disabled={column.name === $sort.column && $sort.order === "ascending"}
-        >
-          Sort {ascendingLabel}
-        </MenuItem>
-        <MenuItem
-          icon="SortOrderDown"
-          on:click={sortDescending}
-          disabled={column.name === $sort.column &&
-            $sort.order === "descending"}
-        >
-          Sort {descendingLabel}
-        </MenuItem>
-        <MenuItem
-          disabled={!canMoveLeft}
-          icon="ChevronLeft"
-          on:click={moveLeft}
-        >
-          Move left
-        </MenuItem>
-        <MenuItem
-          disabled={!canMoveRight}
-          icon="ChevronRight"
-          on:click={moveRight}
-        >
-          Move right
-        </MenuItem>
-        <MenuItem
-          disabled={idx === "sticky" || !$config.showControls}
-          icon="VisibilityOff"
-          on:click={hideColumn}
-        >
-          Hide column
-        </MenuItem>
-      </Menu>
-    {/if}
-  </Popover>
-</div>
+        Edit column
+      </MenuItem>
+      <MenuItem
+        icon="Label"
+        on:click={makeDisplayColumn}
+        disabled={idx === "sticky" ||
+          !$config.allowSchemaChanges ||
+          bannedDisplayColumnTypes.includes(column.schema.type)}
+      >
+        Use as display column
+      </MenuItem>
+      <MenuItem
+        icon="SortOrderUp"
+        on:click={sortAscending}
+        disabled={column.name === $sort.column && $sort.order === "ascending"}
+      >
+        Sort {ascendingLabel}
+      </MenuItem>
+      <MenuItem
+        icon="SortOrderDown"
+        on:click={sortDescending}
+        disabled={column.name === $sort.column && $sort.order === "descending"}
+      >
+        Sort {descendingLabel}
+      </MenuItem>
+      <MenuItem disabled={!canMoveLeft} icon="ChevronLeft" on:click={moveLeft}>
+        Move left
+      </MenuItem>
+      <MenuItem
+        disabled={!canMoveRight}
+        icon="ChevronRight"
+        on:click={moveRight}
+      >
+        Move right
+      </MenuItem>
+      <MenuItem
+        disabled={idx === "sticky" || !$config.showControls}
+        icon="VisibilityOff"
+        on:click={hideColumn}
+      >
+        Hide column
+      </MenuItem>
+    </Menu>
+  {/if}
+</Popover>
 
 <style>
   .header-cell {

@@ -20,35 +20,33 @@
   onMount(() => subscribe("close-edit-column", close))
 </script>
 
-<div>
-  <div
-    id="add-column-button"
-    bind:this={anchor}
-    class="add"
-    style="left:{left}px"
-    on:click={() => (open = true)}
-  >
-    <Icon name="Add" />
-  </div>
-  <Popover
-    bind:open
-    {anchor}
-    align="right"
-    offset={0}
-    popoverTarget={document.getElementById(`add-column-button`)}
-    animate={false}
-    customZindex={100}
-  >
-    <div
-      use:clickOutside={() => {
-        open = false
-      }}
-      class="content"
-    >
-      <slot />
-    </div>
-  </Popover>
+<div
+  id="add-column-button"
+  bind:this={anchor}
+  class="add"
+  style="left:{left}px"
+  on:click={() => (open = true)}
+>
+  <Icon name="Add" />
 </div>
+<Popover
+  bind:open
+  {anchor}
+  align="right"
+  offset={0}
+  popoverTarget={document.getElementById(`add-column-button`)}
+  animate={false}
+  customZindex={100}
+>
+  <div
+    use:clickOutside={() => {
+      open = false
+    }}
+    class="content"
+  >
+    <slot />
+  </div>
+</Popover>
 
 <style>
   .add {
@@ -76,5 +74,6 @@
     flex-direction: column;
     gap: 20px;
     z-index: 2;
+    background: var(--grid-background);
   }
 </style>
