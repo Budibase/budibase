@@ -135,3 +135,22 @@ export async function validate({
   }
   return { valid: Object.keys(errors).length === 0, errors }
 }
+
+export async function trimViewFields<T extends Row>(
+  viewId: string,
+  table: Table,
+  data: T
+): Promise<T> {
+  const view = await sdk.views.get(viewId)
+  if (!view?.columns || !Object.keys(view.columns).length) {
+    return data
+  }
+
+  const { schema } = sdk.views.enrichSchema(view!, table.schema)
+  const result: Record<string, any> = {}
+  for (const key of Object.keys(schema)) {
+    result[key] = data[key] !== null ? data[key] : undefined
+  }
+
+  return result as T
+}
