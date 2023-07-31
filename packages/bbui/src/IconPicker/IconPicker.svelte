@@ -1,5 +1,4 @@
 <script>
-  //import { createEventDispatcher } from "svelte"
   import "@spectrum-css/popover/dist/index-vars.css"
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"

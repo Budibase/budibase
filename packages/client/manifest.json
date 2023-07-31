@@ -5420,11 +5420,7 @@
             "type": "boolean",
             "label": "Hide notifications",
             "key": "notificationOverride",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "showSaveButton",
-              "value": true
-            }
+            "defaultValue": false
           }
         ]
       }
