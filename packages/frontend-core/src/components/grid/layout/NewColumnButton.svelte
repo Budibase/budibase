@@ -74,6 +74,6 @@
     flex-direction: column;
     gap: 20px;
     z-index: 2;
-    background: var(--grid-background);
+    background: var(--spectrum-alias-background-color-secondary);
   }
 </style>

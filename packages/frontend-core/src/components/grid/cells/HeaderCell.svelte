@@ -288,6 +288,6 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--spectrum-alias-background-color-secondary);
   }
 </style>
