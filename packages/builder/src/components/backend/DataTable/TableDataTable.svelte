@@ -66,6 +66,13 @@
     <svelte:fragment slot="filter">
       <GridFilterButton />
     </svelte:fragment>
+    <svelte:fragment slot="edit-column">
+      <GridEditColumnModal />
+    </svelte:fragment>
+    <svelte:fragment slot="add-column">
+      <GridAddColumnModal />
+    </svelte:fragment>
+
     <svelte:fragment slot="controls">
       {#if isInternal}
         <GridCreateViewButton />
@@ -79,9 +86,8 @@
       {:else}
         <GridImportButton />
       {/if}
+
       <GridExportButton />
-      <GridAddColumnModal />
-      <GridEditColumnModal />
       {#if isUsersTable}
         <GridEditUserModal />
       {:else}
