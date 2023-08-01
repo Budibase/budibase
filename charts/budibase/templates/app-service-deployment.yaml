@@ -201,25 +201,24 @@ spec:
 
         image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
+        {{- if .Values.services.apps.startupProbe }}
+        {{- with .Values.services.apps.startupProbe }}
+        startupProbe:
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services.apps.livenessProbe }}
+        {{- with .Values.services.apps.livenessProbe }}
         livenessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.services.apps.port }}
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          successThreshold: 1
-          failureThreshold: 3
-          timeoutSeconds: 3
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services.apps.readinessProbe }}
+        {{- with .Values.services.apps.readinessProbe }}
         readinessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.services.apps.port }}
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          successThreshold: 1
-          failureThreshold: 3
-          timeoutSeconds: 3
-
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
         name: bbapps
         ports:
         - containerPort: {{ .Values.services.apps.port }}
