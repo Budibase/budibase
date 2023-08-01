@@ -4,7 +4,6 @@
   import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
-
   const dispatch = createEventDispatcher()
 
   export let value
@@ -50,6 +49,7 @@
         type="string"
         {bindings}
         fillWidth={true}
+        updateOnChange={false}
       />
     {/each}
   </div>
