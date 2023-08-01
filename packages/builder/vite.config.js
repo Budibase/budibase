@@ -1,4 +1,5 @@
 import { svelte } from "@sveltejs/vite-plugin-svelte"
+import commonjs from "@rollup/plugin-commonjs"
 import replace from "@rollup/plugin-replace"
 import { defineConfig, loadEnv } from "vite"
 import { viteStaticCopy } from "vite-plugin-static-copy"
@@ -61,6 +62,7 @@ export default defineConfig(({ mode }) => {
       sourcemap: !isProduction,
     },
     plugins: [
+      commonjs(),
       svelte({
         hot: !isProduction,
         emitCss: true,
