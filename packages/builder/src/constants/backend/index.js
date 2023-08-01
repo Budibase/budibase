@@ -2,6 +2,7 @@ export const FIELDS = {
   STRING: {
     name: "Text",
     type: "string",
+    icon: "Text",
     constraints: {
       type: "string",
       length: {},
@@ -11,6 +12,7 @@ export const FIELDS = {
   BARCODEQR: {
     name: "Barcode/QR",
     type: "barcodeqr",
+    icon: "Camera",
     constraints: {
       type: "string",
       length: {},
@@ -20,6 +22,7 @@ export const FIELDS = {
   LONGFORM: {
     name: "Long Form Text",
     type: "longform",
+    icon: "TextAlignLeft",
     constraints: {
       type: "string",
       length: {},
@@ -29,6 +32,7 @@ export const FIELDS = {
   OPTIONS: {
     name: "Options",
     type: "options",
+    icon: "Dropdown",
     constraints: {
       type: "string",
       presence: false,
@@ -38,6 +42,7 @@ export const FIELDS = {
   ARRAY: {
     name: "Multi-select",
     type: "array",
+    icon: "Duplicate",
     constraints: {
       type: "array",
       presence: false,
@@ -47,6 +52,7 @@ export const FIELDS = {
   NUMBER: {
     name: "Number",
     type: "number",
+    icon: "123",
     constraints: {
       type: "number",
       presence: false,
@@ -56,10 +62,12 @@ export const FIELDS = {
   BIGINT: {
     name: "BigInt",
     type: "bigint",
+    icon: "TagBold",
   },
   BOOLEAN: {
     name: "Boolean",
     type: "boolean",
+    icon: "Boolean",
     constraints: {
       type: "boolean",
       presence: false,
@@ -68,6 +76,7 @@ export const FIELDS = {
   DATETIME: {
     name: "Date/Time",
     type: "datetime",
+    icon: "Calendar",
     constraints: {
       type: "string",
       length: {},
@@ -81,6 +90,7 @@ export const FIELDS = {
   ATTACHMENT: {
     name: "Attachment",
     type: "attachment",
+    icon: "Folder",
     constraints: {
       type: "array",
       presence: false,
@@ -89,6 +99,7 @@ export const FIELDS = {
   LINK: {
     name: "Relationship",
     type: "link",
+    icon: "Link",
     constraints: {
       type: "array",
       presence: false,
@@ -97,11 +108,13 @@ export const FIELDS = {
   FORMULA: {
     name: "Formula",
     type: "formula",
+    icon: "Calculator",
     constraints: {},
   },
   JSON: {
     name: "JSON",
     type: "json",
+    icon: "Brackets",
     constraints: {
       type: "object",
       presence: false,
