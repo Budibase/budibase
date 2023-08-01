@@ -1033,7 +1033,7 @@ describe("/rows", () => {
       }
 
       const view = await config.api.viewV2.create({
-        columns: ["name"],
+        schema: { name: {} },
       })
       const response = await config.api.viewV2.search(view.id)
 
@@ -1102,7 +1102,7 @@ describe("/rows", () => {
         const table = await config.createTable(userTable())
         const view = await config.api.viewV2.create({
           tableId: table._id!,
-          columns: {
+          schema: {
             name: { visible: true },
             surname: { visible: true },
             address: { visible: true },
@@ -1150,7 +1150,7 @@ describe("/rows", () => {
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
-          columns: {
+          schema: {
             name: { visible: true },
             address: { visible: true },
           },
@@ -1203,7 +1203,7 @@ describe("/rows", () => {
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
-          columns: {
+          schema: {
             name: { visible: true },
             address: { visible: true },
           },
@@ -1231,7 +1231,7 @@ describe("/rows", () => {
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
-          columns: {
+          schema: {
             name: { visible: true },
             address: { visible: true },
           },

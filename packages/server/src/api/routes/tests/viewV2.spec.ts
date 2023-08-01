@@ -1,6 +1,7 @@
 import * as setup from "./utilities"
 import {
   CreateViewRequest,
+  FieldSchema,
   FieldType,
   SortOrder,
   SortType,
@@ -42,8 +43,6 @@ describe("/v2/views", () => {
     },
     schema: {
       name: {
-        name: "name",
-        type: FieldType.STRING,
         visible: true,
       },
     },
@@ -108,7 +107,7 @@ describe("/v2/views", () => {
             visible: false,
             icon: "ic",
           },
-        },
+        } as Record<string, FieldSchema>,
       }
 
       const createdView = await config.api.viewV2.create(newView)
@@ -151,7 +150,7 @@ describe("/v2/views", () => {
               presence: true,
             },
           },
-        },
+        } as Record<string, FieldSchema>,
       }
 
       await config.api.viewV2.create(newView, {
@@ -173,7 +172,7 @@ describe("/v2/views", () => {
             name: "Category",
             type: FieldType.STRING,
           },
-        },
+        } as Record<string, FieldSchema>,
       }
 
       await config.api.viewV2.create(newView, {
@@ -316,7 +315,7 @@ describe("/v2/views", () => {
             visible: false,
             icon: "ic",
           },
-        },
+        } as Record<string, FieldSchema>,
       })
 
       expect(await config.api.viewV2.get(view.id)).toEqual({
@@ -357,7 +356,7 @@ describe("/v2/views", () => {
                 presence: true,
               },
             },
-          },
+          } as Record<string, FieldSchema>,
         },
         {
           expectStatus: 400,
@@ -379,7 +378,7 @@ describe("/v2/views", () => {
               name: "Category",
               type: FieldType.STRING,
             },
-          },
+          } as Record<string, FieldSchema>,
         },
         {
           expectStatus: 200,
