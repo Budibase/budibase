@@ -16,6 +16,7 @@
     "prepack": "cp package.json dist",
     "build": "tsc -p tsconfig.build.json",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
   },

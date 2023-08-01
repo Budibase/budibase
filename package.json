@@ -36,7 +36,7 @@
     "bootstrap": "./scripts/link-dependencies.sh && echo '***BOOTSTRAP ONLY REQUIRED FOR USE WITH ACCOUNT PORTAL***'",
     "build": "yarn nx run-many -t=build",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
-    "check:types": "lerna run check:types --skip-nx-cache",
+    "check:types": "lerna run check:types",
     "backend:bootstrap": "./scripts/scopeBackend.sh && yarn run bootstrap",
     "backend:build": "./scripts/scopeBackend.sh 'lerna run --stream build'",
     "build:sdk": "lerna run --stream build:sdk",
