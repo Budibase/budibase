@@ -92,7 +92,19 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
 
   const { tableId } = view
 
-  const result = await sdk.views.update(tableId, view)
+  const schemaUI = await parseSchemaUI(ctx, view)
+  const parsedView: ViewV2 = {
+    id: view.id,
+    name: view.name,
+    version: view.version,
+    tableId: view.tableId,
+    query: view.query,
+    sort: view.sort,
+    columns: view.schema && Object.keys(view.schema),
+    schemaUI,
+  }
+
+  const result = await sdk.views.update(tableId, parsedView)
   ctx.body = {
     data: result,
   }
