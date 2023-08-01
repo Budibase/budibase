@@ -1,6 +1,14 @@
 import DataFetch from "./DataFetch.js"
 
 export default class ViewV2Fetch extends DataFetch {
+  determineFeatureFlags() {
+    return {
+      supportsSearch: true,
+      supportsSort: true,
+      supportsPagination: true,
+    }
+  }
+
   async getSchema(datasource, definition) {
     return definition?.schema
   }
