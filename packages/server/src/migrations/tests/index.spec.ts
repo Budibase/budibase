@@ -17,7 +17,7 @@ tk.freeze(timestamp)
 const clearMigrations = async () => {
   const dbs = [context.getDevAppDB(), context.getProdAppDB()]
   for (const db of dbs) {
-    const doc = await db.get(DocumentType.MIGRATIONS)
+    const doc = await db.get<any>(DocumentType.MIGRATIONS)
     const newDoc = { _id: doc._id, _rev: doc._rev }
     await db.put(newDoc)
   }
@@ -52,7 +52,7 @@ describe("migrations", () => {
         await config.createTable()
         await config.createView()
         await config.createTable()
-        await config.createView(structures.view(config.table._id))
+        await config.createView(structures.view(config.table!._id!))
         await config.createScreen()
         await config.createScreen()
 

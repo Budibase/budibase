@@ -68,7 +68,7 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when an error is thrown from the createChatCompletion call", async () => {
-    openai.OpenAIApi.mockImplementation(() => ({
+    ;(openai.OpenAIApi as any).mockImplementation(() => ({
       createChatCompletion: jest.fn(() => {
         throw new Error("An error occurred while calling createChatCompletion")
       }),
