@@ -4,7 +4,7 @@
   import { NewRowID } from "../lib/constants"
 
   const {
-    enrichedRows,
+    rows,
     focusedCellId,
     visibleColumns,
     focusedRow,
@@ -142,7 +142,7 @@
 
   // Focuses the first cell in the grid
   const focusFirstCell = () => {
-    const firstRow = $enrichedRows[0]
+    const firstRow = $rows[0]
     if (!firstRow) {
       return
     }
@@ -183,7 +183,7 @@
     if (!$focusedRow) {
       return
     }
-    const newRow = $enrichedRows[$focusedRow.__idx + delta]
+    const newRow = $rows[$focusedRow.__idx + delta]
     if (newRow) {
       const split = $focusedCellId.split("-")
       $focusedCellId = `${newRow._id}-${split[1]}`

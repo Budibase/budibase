@@ -16,17 +16,13 @@ export const createStores = () => {
   const error = writable(null)
 
   // Generate a lookup map to quick find a row by ID
-  const rowLookupMap = derived(
-    rows,
-    $rows => {
-      let map = {}
-      for (let i = 0; i < $rows.length; i++) {
-        map[$rows[i]._id] = i
-      }
-      return map
-    },
-    {}
-  )
+  const rowLookupMap = derived(rows, $rows => {
+    let map = {}
+    for (let i = 0; i < $rows.length; i++) {
+      map[$rows[i]._id] = i
+    }
+    return map
+  })
 
   // Mark loaded as true if we've ever stopped loading
   let hasStartedLoading = false
@@ -47,8 +43,7 @@ export const createStores = () => {
         ...$rowChangeCache[row._id],
         __idx: idx,
       }))
-    },
-    []
+    }
   )
 
   return {
@@ -262,13 +257,14 @@ export const createActions = context => {
       let newRow = { ...row }
       if ($datasource.type === "table") {
         newRow.tableId = $datasource.tableId
+        newRow = await API.saveRow(newRow, SuppressErrors)
       } else if ($datasource.type === "viewV2") {
         newRow.tableId = $datasource.tableId
         newRow._viewId = $datasource.id
+        newRow = await API.viewV2.createRow(newRow)
       } else {
         return
       }
-      newRow = await API.saveRow(newRow, SuppressErrors)
 
       // Update state
       if (idx != null) {
@@ -362,6 +358,7 @@ export const createActions = context => {
   const updateRow = async (rowId, changes) => {
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
+    const $datasource = get(datasource)
     const index = $rowLookupMap[rowId]
     const row = $rows[index]
     if (index == null || !Object.keys(changes || {}).length) {
@@ -395,10 +392,20 @@ export const createActions = context => {
         ...state,
         [rowId]: true,
       }))
-      const saved = await API.saveRow(
-        { ...row, ...get(rowChangeCache)[rowId] },
-        SuppressErrors
-      )
+
+      let saved
+      if ($datasource.type === "table") {
+        saved = await API.saveRow(
+          { ...row, ...get(rowChangeCache)[rowId] },
+          SuppressErrors
+        )
+      } else if ($datasource.type === "viewV2") {
+        saved = await API.viewV2.updateRow(
+          { ...row, ...get(rowChangeCache)[rowId] },
+          SuppressErrors
+        )
+        saved._viewId = $datasource.id
+      }
 
       // Update state after a successful change
       if (saved?._id) {
