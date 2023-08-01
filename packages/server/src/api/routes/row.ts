@@ -4,6 +4,9 @@ import authorized from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
+import noViewData from "../../middleware/noViewData"
+import trimViewRowInfo from "../../middleware/trimViewRowInfo"
+import * as utils from "../../db/utils"
 const { PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
@@ -146,11 +149,6 @@ router
     authorized(PermissionType.TABLE, PermissionLevel.READ),
     rowController.search
   )
-  .get(
-    "/api/v2/views/:viewId/search",
-    authorized(PermissionType.VIEW, PermissionLevel.READ),
-    rowController.searchView
-  )
   /**
    * @api {post} /api/:tableId/rows Creates a new row
    * @apiName Creates a new row
@@ -179,6 +177,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
+    noViewData,
     rowController.save
   )
   /**
@@ -193,6 +192,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
+    noViewData,
     rowController.patch
   )
   /**
@@ -266,6 +266,93 @@ router
     paramResource("tableId"),
     authorized(PermissionType.TABLE, PermissionLevel.WRITE),
     rowController.exportRows
+  )
+
+router
+  .get(
+    "/api/v2/views/:viewId/search",
+    authorized(PermissionType.VIEW, PermissionLevel.READ),
+    rowController.views.searchView
+  )
+  /**
+   * @api {post} /api/:tableId/rows Creates a new row
+   * @apiName Creates a new row
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription This API will create a new row based on the supplied body. If the
+   * body includes an "_id" field then it will update an existing row if the field
+   * links to one. Please note that "_id", "_rev" and "tableId" are fields that are
+   * already used by Budibase tables and cannot be used for columns.
+   *
+   * @apiParam {string} tableId The ID of the table to save a row to.
+   *
+   * @apiParam (Body) {string} [_id] If the row exists already then an ID for the row must be provided.
+   * @apiParam (Body) {string} [_rev] If working with an existing row for an internal table its revision
+   * must also be provided.
+   * @apiParam (Body) {string} _viewId The ID of the view should be specified in the row body itself.
+   * @apiParam (Body) {string} tableId The ID of the table should also be specified in the row body itself.
+   * @apiParam (Body) {any} [any] Any field supplied in the body will be assessed to see if it matches
+   * a column in the specified table. All other fields will be dropped and not stored.
+   *
+   * @apiSuccess {string} _id The ID of the row that was just saved, if it was just created this
+   * is the rows new ID.
+   * @apiSuccess {string} [_rev] If saving to an internal table a revision will also be returned.
+   * @apiSuccess {object} body The contents of the row that was saved will be returned as well.
+   */
+  .post(
+    "/api/v2/views/:viewId/rows",
+    paramResource("viewId"),
+    authorized(PermissionType.VIEW, PermissionLevel.WRITE),
+    trimViewRowInfo,
+    rowController.save
+  )
+  /**
+   * @api {patch} /api/v2/views/:viewId/rows/:rowId Updates a row
+   * @apiName Update a row
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription This endpoint is identical to the row creation endpoint but instead it will
+   * error if an _id isn't provided, it will only function for existing rows.
+   */
+  .patch(
+    "/api/v2/views/:viewId/rows/:rowId",
+    paramResource("viewId"),
+    authorized(PermissionType.VIEW, PermissionLevel.WRITE),
+    trimViewRowInfo,
+    rowController.patch
+  )
+  /**
+   * @api {delete} /api/v2/views/:viewId/rows Delete rows for a view
+   * @apiName Delete rows for a view
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription This endpoint can delete a single row, or delete them in a bulk
+   * fashion.
+   *
+   * @apiParam {string} tableId The ID of the table the row is to be deleted from.
+   *
+   * @apiParam (Body) {object[]} [rows] If bulk deletion is desired then provide the rows in this
+   * key of the request body that are to be deleted.
+   * @apiParam (Body) {string} [_id] If deleting a single row then provide its ID in this field.
+   * @apiParam (Body) {string} [_rev] If deleting a single row from an internal table then provide its
+   * revision here.
+   *
+   * @apiSuccess {object[]|object} body If deleting bulk then the response body will be an array
+   * of the deleted rows, if deleting a single row then the body will contain a "row" property which
+   * is the deleted row.
+   */
+  .delete(
+    "/api/v2/views/:viewId/rows",
+    paramResource("viewId"),
+    authorized(PermissionType.VIEW, PermissionLevel.WRITE),
+    // This is required as the implementation relies on the table id
+    (ctx, next) => {
+      ctx.params.tableId = utils.extractViewInfoFromID(
+        ctx.params.viewId
+      ).tableId
+      return next()
+    },
+    rowController.destroy
   )
 
 export default router

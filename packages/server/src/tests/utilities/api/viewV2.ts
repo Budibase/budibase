@@ -1,4 +1,13 @@
-import { CreateViewRequest, SortOrder, SortType, ViewV2 } from "@budibase/types"
+import {
+  CreateViewRequest,
+  DeleteRowRequest,
+  PatchRowRequest,
+  PatchRowResponse,
+  Row,
+  SortOrder,
+  SortType,
+  ViewV2,
+} from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 import { generator } from "@budibase/backend-core/tests"
@@ -92,5 +101,47 @@ export class ViewV2API extends TestAPI {
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(expectStatus)
+  }
+
+  row = {
+    create: async (
+      viewId: string,
+      row: Row,
+      { expectStatus } = { expectStatus: 200 }
+    ): Promise<Row> => {
+      const result = await this.request
+        .post(`/api/v2/views/${viewId}/rows`)
+        .send(row)
+        .set(this.config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(expectStatus)
+      return result.body as Row
+    },
+    update: async (
+      viewId: string,
+      rowId: string,
+      row: PatchRowRequest,
+      { expectStatus } = { expectStatus: 200 }
+    ): Promise<PatchRowResponse> => {
+      const result = await this.request
+        .patch(`/api/v2/views/${viewId}/rows/${rowId}`)
+        .send(row)
+        .set(this.config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(expectStatus)
+      return result.body as PatchRowResponse
+    },
+    delete: async (
+      viewId: string,
+      body: DeleteRowRequest,
+      { expectStatus } = { expectStatus: 200 }
+    ): Promise<any> => {
+      const result = await this.request
+        .delete(`/api/v2/views/${viewId}/rows`)
+        .send(body)
+        .set(this.config.defaultHeaders())
+        .expect(expectStatus)
+      return result.body
+    },
   }
 }
