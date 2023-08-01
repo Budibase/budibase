@@ -45,8 +45,14 @@ describe("Accounts", () => {
       // Send the verification request
       await config.accountsApi.accounts.verifyAccount(code!)
 
+      // Verify self response is unauthorized
+      await config.api.accounts.self({ status: 403 })
+
       // Can now log in to the account
       await config.loginAsAccount(createAccountRequest)
+
+      // Verify self response matches account
+      await config.api.accounts.self()
 
       // Delete account
       await config.api.accounts.deleteCurrentAccount()
