@@ -40,9 +40,10 @@ describe("/v2/views", () => {
       order: SortOrder.DESCENDING,
       type: SortType.STRING,
     },
-    columns: ["name"],
-    schemaUI: {
+    schema: {
       name: {
+        name: "name",
+        type: FieldType.STRING,
         visible: true,
       },
     },
@@ -74,14 +75,58 @@ describe("/v2/views", () => {
       const newView: CreateViewRequest = {
         name: generator.name(),
         tableId: config.table!._id!,
-        ...viewFilters,
+        query: viewFilters.query,
+        sort: viewFilters.sort,
       }
+      delete newView.schema
       const res = await config.api.viewV2.create(newView)
 
       expect(res).toEqual({
         ...newView,
-        ...viewFilters,
+        query: viewFilters.query,
+        sort: viewFilters.sort,
         id: expect.any(String),
+        version: 2,
+      })
+    })
+
+    it("persist schema overrides", async () => {
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: config.table!._id!,
+        schema: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            visible: true,
+          },
+          lastname: {
+            name: "lastname",
+            type: FieldType.STRING,
+            visible: false,
+          },
+        },
+      }
+
+      const createdView = await config.api.viewV2.create(newView)
+
+      expect(await config.api.viewV2.get(createdView.id)).toEqual({
+        ...newView,
+        schema: undefined,
+        columns: ["name", "lastname"],
+        schemaUI: {
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            visible: true,
+          },
+          lastname: {
+            name: "lastname",
+            type: FieldType.STRING,
+            visible: false,
+          },
+        },
+        id: createdView.id,
         version: 2,
       })
     })

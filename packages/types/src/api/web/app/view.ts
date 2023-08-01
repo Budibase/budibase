@@ -1,9 +1,12 @@
-import { TableSchema, ViewV2 } from "../../../documents"
+import { ViewV2, FieldSchema } from "../../../documents"
 
 export interface ViewResponse {
   data: ViewV2
 }
 
-export type CreateViewRequest = Omit<ViewV2, "version" | "id">
+export interface CreateViewRequest
+  extends Omit<ViewV2, "version" | "id" | "columns" | "schemaUI"> {
+  schema?: Record<string, FieldSchema>
+}
 
 export type UpdateViewRequest = ViewV2
