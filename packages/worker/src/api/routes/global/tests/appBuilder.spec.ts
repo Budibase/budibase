@@ -54,7 +54,7 @@ describe("/api/global/users/:userId/app/builder", () => {
       await config.api.users.grantBuilderToApp(user._id!, MOCK_APP_ID)
       let updated = await getUser(user._id!)
       expect(updated.builder?.apps![0]).toBe(MOCK_APP_ID)
-      await config.api.users.revokeBuilderToApp(user._id!, MOCK_APP_ID)
+      await config.api.users.revokeBuilderFromApp(user._id!, MOCK_APP_ID)
       updated = await getUser(user._id!)
       expect(updated.builder?.apps!.length).toBe(0)
     })

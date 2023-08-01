@@ -10,7 +10,6 @@ import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
 import { sdk as proSdk } from "@budibase/pro"
-import { ServiceType } from "@budibase/types"
 import {
   auth,
   logging,
@@ -20,7 +19,6 @@ import {
   env as coreEnv,
   timers,
 } from "@budibase/backend-core"
-coreEnv._set("SERVICE_TYPE", ServiceType.WORKER)
 db.init()
 import Koa from "koa"
 import koaBody from "koa-body"

@@ -3,7 +3,7 @@ import { db as dbCore } from "@budibase/backend-core"
 
 type Optional = string | null
 
-export enum AppStatus {
+export const enum AppStatus {
   DEV = "development",
   ALL = "all",
   DEPLOYED = "published",

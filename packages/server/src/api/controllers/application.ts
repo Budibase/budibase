@@ -56,7 +56,6 @@ import {
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
-import { grantAppBuilderAccess } from "@budibase/backend-core/src/users"
 
 // utility function, need to do away with this
 async function getLayouts() {

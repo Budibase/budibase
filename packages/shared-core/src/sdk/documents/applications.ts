@@ -4,7 +4,10 @@ const APP_PREFIX = prefixed(DocumentType.APP)
 const APP_DEV_PREFIX = prefixed(DocumentType.APP_DEV)
 
 export function getDevAppID(appId: string) {
-  if (!appId || appId.startsWith(APP_DEV_PREFIX)) {
+  if (!appId) {
+    throw new Error("No app ID provided")
+  }
+  if (appId.startsWith(APP_DEV_PREFIX)) {
     return appId
   }
   // split to take off the app_ element, then join it together incase any other app_ exist
@@ -18,7 +21,10 @@ export function getDevAppID(appId: string) {
  * Convert a development app ID to a deployed app ID.
  */
 export function getProdAppID(appId: string) {
-  if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
+  if (!appId) {
+    throw new Error("No app ID provided")
+  }
+  if (!appId.startsWith(APP_DEV_PREFIX)) {
     return appId
   }
   // split to take off the app_dev element, then join it together incase any other app_ exist

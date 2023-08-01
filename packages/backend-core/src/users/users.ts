@@ -71,27 +71,6 @@ export const bulkUpdateGlobalUsers = async (users: User[]) => {
   return (await db.bulkDocs(users)) as BulkDocsResponse
 }
 
-export const grantAppBuilderAccess = async (userId: string, appId: string) => {
-  const prodAppId = getProdAppID(appId)
-  const db = getGlobalDB()
-  const user = (await db.get(userId)) as User
-  if (!user.builder) {
-    user.builder = {}
-  }
-  if (!user.builder.apps) {
-    user.builder.apps = []
-  }
-  if (!user.builder.apps.includes(prodAppId)) {
-    user.builder.apps.push(prodAppId)
-  }
-  try {
-    await db.put(user)
-    await userCache.invalidateUser(userId)
-  } catch (err: any) {
-    throw new Error(`Unable to grant user access: ${err.message}`)
-  }
-}
-
 export async function getById(id: string, opts?: GetOpts): Promise<User> {
   const db = context.getGlobalDB()
   let user = await db.get<User>(id)

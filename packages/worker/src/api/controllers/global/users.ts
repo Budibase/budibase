@@ -30,7 +30,6 @@ import {
   tenancy,
   platform,
   ErrorCode,
-  db as dbCore,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
