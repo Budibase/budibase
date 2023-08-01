@@ -1,4 +1,10 @@
-import { CreateViewRequest, SortOrder, SortType, ViewV2 } from "@budibase/types"
+import {
+  CreateViewRequest,
+  SortOrder,
+  SortType,
+  UpdateViewRequest,
+  ViewV2,
+} from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 import { generator } from "@budibase/backend-core/tests"
@@ -34,7 +40,7 @@ export class ViewV2API extends TestAPI {
   }
 
   update = async (
-    view: ViewV2,
+    view: UpdateViewRequest,
     {
       expectStatus,
       handleResponse,

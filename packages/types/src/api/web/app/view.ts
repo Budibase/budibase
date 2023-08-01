@@ -9,4 +9,7 @@ export interface CreateViewRequest
   schema?: Record<string, FieldSchema>
 }
 
-export type UpdateViewRequest = ViewV2
+export interface UpdateViewRequest
+  extends Omit<ViewV2, "columns" | "schemaUI"> {
+  schema?: Record<string, FieldSchema>
+}
