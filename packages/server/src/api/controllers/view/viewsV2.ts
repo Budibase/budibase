@@ -2,14 +2,28 @@ import sdk from "../../../sdk"
 import {
   CreateViewRequest,
   Ctx,
+  UIFieldMetadata,
   UpdateViewRequest,
   ViewResponse,
   ViewV2,
+  RequiredKeys,
 } from "@budibase/types"
 
 export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   const view = ctx.request.body
   const { tableId } = view
+
+  const schemaUI =
+    view.schema &&
+    Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
+      p[fieldName] = {
+        order: schemaValue.order,
+        width: schemaValue.width,
+        visible: schemaValue.visible,
+        icon: schemaValue.icon,
+      }
+      return p
+    }, {} as Record<string, RequiredKeys<UIFieldMetadata>>)
 
   const parsedView: Omit<ViewV2, "id" | "version"> = {
     name: view.name,
@@ -17,7 +31,7 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
     query: view.query,
     sort: view.sort,
     columns: view.schema && Object.keys(view.schema),
-    schemaUI: view.schema,
+    schemaUI,
   }
   const result = await sdk.views.create(tableId, parsedView)
   ctx.status = 201

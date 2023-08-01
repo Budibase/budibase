@@ -90,7 +90,7 @@ describe("/v2/views", () => {
       })
     })
 
-    it("persist schema overrides", async () => {
+    it("persist only UI schema overrides", async () => {
       const newView: CreateViewRequest = {
         name: generator.name(),
         tableId: config.table!._id!,
@@ -99,11 +99,14 @@ describe("/v2/views", () => {
             name: "name",
             type: FieldType.STRING,
             visible: true,
+            order: 1,
+            width: 100,
           },
           lastname: {
             name: "lastname",
             type: FieldType.STRING,
             visible: false,
+            icon: "ic",
           },
         },
       }
@@ -116,14 +119,13 @@ describe("/v2/views", () => {
         columns: ["name", "lastname"],
         schemaUI: {
           name: {
-            name: "name",
-            type: FieldType.STRING,
             visible: true,
+            order: 1,
+            width: 100,
           },
           lastname: {
-            name: "lastname",
-            type: FieldType.STRING,
             visible: false,
+            icon: "ic",
           },
         },
         id: createdView.id,

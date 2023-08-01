@@ -3,3 +3,7 @@ export type DeepPartial<T> = {
 }
 
 export type ISO8601 = string
+
+export type RequiredKeys<T> = {
+  [K in keyof Required<T>]: T[K]
+}
