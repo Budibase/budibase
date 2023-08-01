@@ -153,7 +153,7 @@ export class UserAPI extends TestAPI {
       .expect(statusCode)
   }
 
-  revokeBuilderToApp = (userId: string, appId: string) => {
+  revokeBuilderFromApp = (userId: string, appId: string) => {
     return this.request
       .delete(`/api/global/users/${userId}/app/${appId}/builder`)
       .set(this.config.defaultHeaders())
