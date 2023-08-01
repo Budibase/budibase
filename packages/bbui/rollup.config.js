@@ -13,8 +13,8 @@ export default {
     file: "dist/bbui.es.js",
   },
   plugins: [
-    commonjs(),
     resolve(),
+    commonjs(),
     svelte({
       emitCss: true,
     }),
