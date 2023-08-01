@@ -69,6 +69,10 @@ export const buildViewV2Endpoints = API => ({
    * @param rows the array of rows to delete
    */
   deleteRows: async ({ viewId, rows }) => {
+    // Ensure we delete _viewId from rows as otherwise this throws a 500
+    rows?.forEach(row => {
+      delete row?._viewId
+    })
     return await API.delete({
       url: `/api/v2/views/${viewId}/rows`,
       body: {

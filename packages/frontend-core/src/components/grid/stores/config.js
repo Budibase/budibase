@@ -31,7 +31,6 @@ export const deriveStores = context => {
       if ($props.datasource?.type === "viewV2") {
         config.canEditPrimaryDisplay = false
         config.canEditColumns = false
-        config.canDeleteRows = false
       }
 
       // Disable adding rows if we don't have any valid columns

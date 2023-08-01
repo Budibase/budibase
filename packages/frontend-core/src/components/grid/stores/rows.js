@@ -440,15 +440,23 @@ export const createActions = context => {
     if (!rowsToDelete?.length) {
       return
     }
+    const $datasource = get(datasource)
 
     // Actually delete rows
     rowsToDelete.forEach(row => {
       delete row.__idx
     })
-    await API.deleteRows({
-      tableId: get(datasource).tableId,
-      rows: rowsToDelete,
-    })
+    if ($datasource.type === "table") {
+      await API.deleteRows({
+        tableId: $datasource.tableId,
+        rows: rowsToDelete,
+      })
+    } else if ($datasource.type === "viewV2") {
+      await API.viewV2.deleteRows({
+        viewId: $datasource.id,
+        rows: rowsToDelete,
+      })
+    }
 
     // Update state
     handleRemoveRows(rowsToDelete)
