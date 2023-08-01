@@ -169,6 +169,8 @@ export const createActions = context => {
           scroll.update(state => ({ ...state, top: 0 }))
         }
 
+        // For views we always update the filter to match the definition
+
         // Process new rows
         handleNewRows($fetch.rows, resetRows)
 
@@ -182,15 +184,19 @@ export const createActions = context => {
 
   // Update fetch when filter or sort config changes
   filter.subscribe($filter => {
-    get(fetch)?.update({
-      filter: $filter,
-    })
+    if (get(datasource)?.type === "table") {
+      get(fetch)?.update({
+        filter: $filter,
+      })
+    }
   })
   sort.subscribe($sort => {
-    get(fetch)?.update({
-      sortOrder: $sort.order,
-      sortColumn: $sort.column,
-    })
+    if (get(datasource)?.type === "table") {
+      get(fetch)?.update({
+        sortOrder: $sort.order,
+        sortColumn: $sort.column,
+      })
+    }
   })
 
   // Gets a row by ID
@@ -548,4 +554,17 @@ export const createActions = context => {
       },
     },
   }
+}
+
+export const initialise = context => {
+  const { table, filter, datasource } = context
+
+  // For views, always keep the UI for filter and sorting up to date with the
+  // latest view definition
+  table.subscribe($definition => {
+    if (!$definition || get(datasource)?.type !== "viewV2") {
+      return
+    }
+    filter.set($definition.query)
+  })
 }
