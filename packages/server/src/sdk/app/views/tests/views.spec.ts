@@ -102,18 +102,14 @@ describe("table sdk", () => {
       })
     })
 
-    it("if view schema only defines visiblility, should only fetch the selected fields", async () => {
+    it("if view schema only defines columns, should only fetch the selected fields", async () => {
       const tableId = basicTable._id!
       const view: ViewV2 = {
         version: 2,
         id: generator.guid(),
         name: generator.guid(),
         tableId,
-        columns: {
-          name: { visible: true },
-          id: { visible: true },
-          description: { visible: false },
-        },
+        columns: ["name", "id"],
       }
 
       const res = enrichSchema(view, basicTable.schema)
@@ -151,7 +147,7 @@ describe("table sdk", () => {
         id: generator.guid(),
         name: generator.guid(),
         tableId,
-        columns: { unnexisting: { visible: true }, name: { visible: true } },
+        columns: ["unnexisting", "name"],
       }
 
       const res = enrichSchema(view, basicTable.schema)
@@ -175,16 +171,17 @@ describe("table sdk", () => {
       )
     })
 
-    it("if view schema only defines visiblility, should only fetch the selected fields", async () => {
+    it("if the view schema overrides the schema UI, the table schema should be overridden", async () => {
       const tableId = basicTable._id!
       const view: ViewV2 = {
         version: 2,
         id: generator.guid(),
         name: generator.guid(),
         tableId,
-        columns: {
-          name: { visible: true },
-          id: { visible: true },
+        columns: ["name", "id", "description"],
+        schemaUI: {
+          name: { visible: true, width: 100 },
+          id: { visible: true, width: 20 },
           description: { visible: false },
         },
       }
@@ -200,7 +197,7 @@ describe("table sdk", () => {
               name: "name",
               order: 2,
               visible: true,
-              width: 80,
+              width: 100,
               constraints: {
                 type: "string",
               },
@@ -210,8 +207,18 @@ describe("table sdk", () => {
               name: "id",
               order: 1,
               visible: true,
+              width: 20,
               constraints: {
                 type: "number",
+              },
+            },
+            description: {
+              type: "string",
+              name: "description",
+              visible: false,
+              width: 200,
+              constraints: {
+                type: "string",
               },
             },
           },
@@ -219,14 +226,15 @@ describe("table sdk", () => {
       )
     })
 
-    it("if view defines order, the table schema order should be ignored", async () => {
+    it("if the view defines order, the table schema order should be ignored", async () => {
       const tableId = basicTable._id!
       const view: ViewV2 = {
         version: 2,
         id: generator.guid(),
         name: generator.guid(),
         tableId,
-        columns: {
+        columns: ["name", "id", "description"],
+        schemaUI: {
           name: { visible: true, order: 1 },
           id: { visible: true },
           description: { visible: false, order: 2 },
@@ -255,6 +263,16 @@ describe("table sdk", () => {
               visible: true,
               constraints: {
                 type: "number",
+              },
+            },
+            description: {
+              type: "string",
+              name: "description",
+              order: 2,
+              visible: false,
+              width: 200,
+              constraints: {
+                type: "string",
               },
             },
           },

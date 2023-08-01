@@ -129,7 +129,7 @@ describe("trimViewRowInfo middleware", () => {
       id: viewId,
       name: generator.guid(),
       tableId: table._id!,
-      columns: { name: { visible: true }, address: { visible: true } },
+      columns: ["name", "address"],
     })
 
     const data = getRandomData()
