@@ -18,16 +18,18 @@ async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
     newObj: Record<string, any>,
     existingObj: Record<string, any>
   ) {
-    for (const [key, value] of Object.entries(newObj)) {
-      if (typeof value === "object") {
-        if (hasOverrides(value, existingObj[key] || {})) {
-          return true
-        }
-      } else if (value !== existingObj[key]) {
+    const result = Object.entries(newObj).some(([key, value]) => {
+      const isObject = typeof value === "object"
+      const existing = existingObj[key]
+      if (isObject && hasOverrides(value, existing || {})) {
         return true
       }
-    }
-    return false
+      if (!isObject && value !== existing) {
+        return true
+      }
+    })
+
+    return result
   }
 
   const table = await sdk.tables.getTable(view.tableId)
