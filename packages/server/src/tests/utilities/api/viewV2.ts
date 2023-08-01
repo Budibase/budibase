@@ -3,6 +3,7 @@ import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 import { generator } from "@budibase/backend-core/tests"
 import { Response } from "superagent"
+import sdk from "../../../sdk"
 
 export class ViewV2API extends TestAPI {
   constructor(config: TestConfiguration) {
@@ -60,6 +61,12 @@ export class ViewV2API extends TestAPI {
       .delete(`/api/v2/views/${viewId}`)
       .set(this.config.defaultHeaders())
       .expect(expectStatus)
+  }
+
+  get = async (viewId: string) => {
+    return await this.config.doInContext(this.config.appId, () =>
+      sdk.views.get(viewId)
+    )
   }
 
   search = async (

@@ -4,13 +4,22 @@ import {
   Ctx,
   UpdateViewRequest,
   ViewResponse,
+  ViewV2,
 } from "@budibase/types"
 
 export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   const view = ctx.request.body
   const { tableId } = view
 
-  const result = await sdk.views.create(tableId, view)
+  const parsedView: Omit<ViewV2, "id" | "version"> = {
+    name: view.name,
+    tableId: view.tableId,
+    query: view.query,
+    sort: view.sort,
+    columns: view.schema && Object.keys(view.schema),
+    schemaUI: view.schema,
+  }
+  const result = await sdk.views.create(tableId, parsedView)
   ctx.status = 201
   ctx.body = {
     data: result,
