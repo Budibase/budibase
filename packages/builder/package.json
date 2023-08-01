@@ -115,7 +115,7 @@
     "mochawesome-report-generator": "^6.2.0",
     "ncp": "^2.0.0",
     "rimraf": "^3.0.2",
-    "rollup": "^2.44.0",
+    "rollup": "^2.45.2",
     "rollup-plugin-copy": "^3.4.0",
     "start-server-and-test": "^1.12.1",
     "svelte": "^3.48.0",
