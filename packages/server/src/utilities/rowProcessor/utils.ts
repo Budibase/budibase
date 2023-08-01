@@ -5,7 +5,7 @@ import {
   FormulaTypes,
 } from "../../constants"
 import { processStringSync } from "@budibase/string-templates"
-import { FieldSchema, FieldType, Row, Table } from "@budibase/types"
+import { FieldSchema, Row, Table } from "@budibase/types"
 
 /**
  * If the subtype has been lost for any reason this works out what

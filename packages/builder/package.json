@@ -140,6 +140,18 @@
           }
         ]
       },
+      "dev:builder": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates",
+              "@budibase/shared-core",
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      },
       "test": {
         "dependsOn": [
           {
