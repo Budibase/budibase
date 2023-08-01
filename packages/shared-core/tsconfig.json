@@ -4,6 +4,7 @@
     "baseUrl": ".",
     "rootDir": "./src",
     "composite": true,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "paths": {
       "@budibase/types": ["../../types/src"]
     }
