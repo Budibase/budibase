@@ -98,6 +98,7 @@
     "@babel/plugin-transform-runtime": "^7.13.10",
     "@babel/preset-env": "^7.13.12",
     "@babel/runtime": "^7.13.10",
+    "@rollup/plugin-commonjs": "25.0.3",
     "@rollup/plugin-replace": "^2.4.2",
     "@roxi/routify": "2.18.5",
     "@sveltejs/vite-plugin-svelte": "1.0.1",
