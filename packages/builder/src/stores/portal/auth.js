@@ -14,13 +14,6 @@ export function createAuthStore() {
     postLogout: false,
   })
   const store = derived(auth, $store => {
-    let isAdmin = false
-    let isBuilder = false
-    if ($store.user) {
-      const user = $store.user
-      isAdmin = sdk.users.isAdmin(user)
-      isBuilder = sdk.users.isBuilder(user)
-    }
     return {
       user: $store.user,
       accountPortalAccess: $store.accountPortalAccess,
@@ -28,8 +21,6 @@ export function createAuthStore() {
       tenantSet: $store.tenantSet,
       loaded: $store.loaded,
       postLogout: $store.postLogout,
-      isAdmin,
-      isBuilder,
       isSSO: !!$store.user?.provider,
     }
   })

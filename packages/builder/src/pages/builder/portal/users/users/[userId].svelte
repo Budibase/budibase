@@ -88,7 +88,7 @@
 
   $: scimEnabled = $features.isScimEnabled
   $: isSSO = !!user?.provider
-  $: readonly = !$auth.isAdmin || scimEnabled
+  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
   $: privileged = sdk.users.isAdminOrBuilder(user)
   $: nameLabel = getNameLabel(user)
   $: filteredGroups = getFilteredGroups($groups, searchTerm)
@@ -286,7 +286,7 @@
           <div class="field">
             <Label size="L">Role</Label>
             <Select
-              disabled={!$auth.isAdmin}
+              disabled={!sdk.users.isAdmin($auth.user)}
               value={globalRole}
               options={Constants.BudibaseRoleOptions}
               on:change={updateUserRole}

@@ -15,7 +15,7 @@
   let activeTab = "Apps"
 
   $: $url(), updateActiveTab($menu)
-  $: fullscreen = $apps.length == null
+  $: isOnboarding = !$apps.length && sdk.users.isGlobalBuilder($auth.user)
 
   const updateActiveTab = menu => {
     for (let entry of menu) {
@@ -50,7 +50,7 @@
 </script>
 
 {#if $auth.user && loaded}
-  {#if fullscreen}
+  {#if isOnboarding}
     <slot />
   {:else}
     <HelpMenu />

@@ -107,7 +107,7 @@
               >
                 Update password
               </MenuItem>
-              {#if $auth.isBuilder}
+              {#if sdk.users.hasBuilderPermissions($auth.user)}
                 <MenuItem
                   icon="UserDeveloper"
                   on:click={() => $goto("../portal")}
