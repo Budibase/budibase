@@ -2,14 +2,12 @@
   "name": "@budibase/shared-core",
   "version": "0.0.0",
   "description": "Shared data utils",
-  "main": "dist/cjs/src/index.js",
-  "types": "dist/mjs/src/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "exports": {
     ".": {
-      "import": "./dist/mjs/src/index.js",
-      "require": "./dist/cjs/src/index.js"
-    },
-    "./package.json": "./dist/mjs/package.json"
+      "import": "./dist/mjs/src/index.js"
+    }
   },
   "author": "Budibase",
   "license": "GPL-3.0",
@@ -17,7 +15,7 @@
     "prebuild": "rimraf dist/",
     "build": "tsc -p tsconfig.build.json && tsc -p tsconfig-cjs.build.json",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "dev:builder": "yarn prebuild && concurrently \"tsc -p tsconfig.build.json --watch --preserveWatchOutput\" \"tsc -p tsconfig-cjs.build.json --watch --preserveWatchOutput\"",
+    "dev:builder": "yarn prebuild && tsc -p tsconfig.json --watch --preserveWatchOutput",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null"
   },
   "dependencies": {
