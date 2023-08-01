@@ -11,7 +11,7 @@
     "sourceMap": true,
     "declaration": true,
     "types": ["node"],
-    "outDir": "dist/src",
+    "outDir": "dist",
     "skipLibCheck": true
   },
   "include": ["**/*.js", "**/*.ts"],
