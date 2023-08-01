@@ -16,13 +16,7 @@ export function filterAppList(user: ContextUser, apps: App[]) {
   } else {
     return apps
   }
-  const finalApps: App[] = []
-  for (let app of apps) {
-    if (appList.includes(dbCore.getProdAppID(app.appId))) {
-      finalApps.push(app)
-    }
-  }
-  return finalApps
+  return apps.filter(app => appList.includes(dbCore.getProdAppID(app.appId)))
 }
 
 export async function fetch(status: AppStatus, user: ContextUser) {
