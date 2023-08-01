@@ -95,15 +95,15 @@ describe("/v2/views", () => {
         name: generator.name(),
         tableId: config.table!._id!,
         schema: {
-          name: {
-            name: "name",
-            type: FieldType.STRING,
+          Price: {
+            name: "Price",
+            type: FieldType.NUMBER,
             visible: true,
             order: 1,
             width: 100,
           },
-          lastname: {
-            name: "lastname",
+          Category: {
+            name: "Category",
             type: FieldType.STRING,
             visible: false,
             icon: "ic",
@@ -116,20 +116,68 @@ describe("/v2/views", () => {
       expect(await config.api.viewV2.get(createdView.id)).toEqual({
         ...newView,
         schema: undefined,
-        columns: ["name", "lastname"],
+        columns: ["Price", "Category"],
         schemaUI: {
-          name: {
+          Price: {
             visible: true,
             order: 1,
             width: 100,
           },
-          lastname: {
+          Category: {
             visible: false,
             icon: "ic",
           },
         },
         id: createdView.id,
         version: 2,
+      })
+    })
+
+    it("throw an exception if the schema overrides a non UI field", async () => {
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: config.table!._id!,
+        schema: {
+          Price: {
+            name: "Price",
+            type: FieldType.NUMBER,
+            visible: true,
+          },
+          Category: {
+            name: "Category",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+              presence: true,
+            },
+          },
+        },
+      }
+
+      await config.api.viewV2.create(newView, {
+        expectStatus: 400,
+      })
+    })
+
+    it("will not throw an exception if the schema is 'deleting' non UI fields", async () => {
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: config.table!._id!,
+        schema: {
+          Price: {
+            name: "Price",
+            type: FieldType.NUMBER,
+            visible: true,
+          },
+          Category: {
+            name: "Category",
+            type: FieldType.STRING,
+          },
+        },
+      }
+
+      await config.api.viewV2.create(newView, {
+        expectStatus: 201,
       })
     })
   })

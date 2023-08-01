@@ -9,9 +9,40 @@ import {
   RequiredKeys,
 } from "@budibase/types"
 
-export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
-  const view = ctx.request.body
-  const { tableId } = view
+async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
+  if (!view.schema) {
+    return
+  }
+
+  function hasOverrides(
+    newObj: Record<string, any>,
+    existingObj: Record<string, any>
+  ) {
+    for (const [key, value] of Object.entries(newObj)) {
+      if (typeof value === "object") {
+        if (hasOverrides(value, existingObj[key] || {})) {
+          return true
+        }
+      } else if (value !== existingObj[key]) {
+        return true
+      }
+    }
+    return false
+  }
+
+  const table = await sdk.tables.getTable(view.tableId)
+  for (const [
+    fieldName,
+    { order, width, visible, icon, ...schemaNonUI },
+  ] of Object.entries(view.schema)) {
+    const overrides = hasOverrides(schemaNonUI, table.schema[fieldName])
+    if (overrides) {
+      ctx.throw(
+        400,
+        "This endpoint does not support overriding non UI fields in the schema"
+      )
+    }
+  }
 
   const schemaUI =
     view.schema &&
@@ -24,6 +55,14 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
       }
       return p
     }, {} as Record<string, RequiredKeys<UIFieldMetadata>>)
+  return schemaUI
+}
+
+export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
+  const view = ctx.request.body
+  const { tableId } = view
+
+  const schemaUI = await parseSchemaUI(ctx, view)
 
   const parsedView: Omit<ViewV2, "id" | "version"> = {
     name: view.name,
