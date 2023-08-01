@@ -14,6 +14,7 @@
     "tsc": "tsc -p tsconfig.build.json",
     "pkg": "pkg . --out-path build --no-bytecode --public --public-packages \"*\" -C GZip",
     "build": "yarn prebuild && yarn rename && yarn tsc && yarn pkg && yarn postbuild",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "postbuild": "rm -rf prebuilds 2> /dev/null"
   },
   "pkg": {
