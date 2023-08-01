@@ -23,6 +23,7 @@
   "dependencies": {
     "@budibase/nano": "10.1.2",
     "@budibase/pouchdb-replication-stream": "1.2.10",
+    "@budibase/shared-core": "0.0.0",
     "@budibase/types": "0.0.0",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-cloudfront-sign": "2.2.0",

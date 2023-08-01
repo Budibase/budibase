@@ -10,7 +10,7 @@ import {
   setDebounce,
 } from "../utilities/redis"
 import { db as dbCore, cache } from "@budibase/backend-core"
-import { UserCtx, Database, App } from "@budibase/types"
+import { UserCtx, Database } from "@budibase/types"
 
 const DEBOUNCE_TIME_SEC = 30
 

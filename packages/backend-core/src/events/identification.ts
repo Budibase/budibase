@@ -21,6 +21,7 @@ import { processors } from "./processors"
 import { newid } from "../utils"
 import * as installation from "../installation"
 import * as configs from "../configs"
+import * as users from "../users"
 import { withCache, TTL, CacheKey } from "../cache/generic"
 
 /**
@@ -164,8 +165,8 @@ const identifyUser = async (
   const id = user._id as string
   const tenantId = await getEventTenantId(user.tenantId)
   const type = IdentityType.USER
-  let builder = user.builder?.global || false
-  let admin = user.admin?.global || false
+  let builder = users.hasBuilderPermissions(user)
+  let admin = users.hasAdminPermissions(user)
   let providerType
   if (isSSOUser(user)) {
     providerType = user.providerType
