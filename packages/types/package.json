@@ -16,7 +16,7 @@
     "prebuild": "rimraf dist/",
     "build": "tsc -p tsconfig.build.json && tsc -p tsconfig-cjs.build.json",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "dev:builder": "yarn prebuild && concurrently \"tsc -p tsconfig.build.json --watch\" \"tsc -p tsconfig-cjs.build.json --watch\"",
+    "dev:builder": "yarn prebuild && concurrently \"tsc -p tsconfig.build.json --watch --preserveWatchOutput\" \"tsc -p tsconfig-cjs.build.json --watch --preserveWatchOutput\"",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null"
   },
   "jest": {},
