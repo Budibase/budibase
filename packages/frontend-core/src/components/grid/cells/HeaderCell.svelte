@@ -173,7 +173,6 @@
   align="right"
   offset={0}
   popoverTarget={document.getElementById(`grid-${rand}`)}
-  animate={false}
   customZindex={100}
 >
   {#if editIsOpen}
