@@ -7,7 +7,7 @@ export const createGridWebsocket = context => {
   const socket = createWebsocket("/socket/grid")
 
   const connectToDatasource = datasource => {
-    if (!socket.connected) {
+    if (!socket.connected || datasource?.type !== "table") {
       return
     }
     // Identify which table we are editing
