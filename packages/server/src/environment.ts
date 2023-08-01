@@ -1,3 +1,6 @@
+import { env as coreEnv } from "@budibase/backend-core"
+import { ServiceType } from "@budibase/types"
+coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import { join } from "path"
 
 function isTest() {

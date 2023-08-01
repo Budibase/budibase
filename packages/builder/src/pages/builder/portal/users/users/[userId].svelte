@@ -31,6 +31,7 @@
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
   import ScimBanner from "../_components/SCIMBanner.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   export let userId
 
@@ -87,8 +88,8 @@
 
   $: scimEnabled = $features.isScimEnabled
   $: isSSO = !!user?.provider
-  $: readonly = !$auth.isAdmin || scimEnabled
-  $: privileged = user?.admin?.global || user?.builder?.global
+  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
+  $: privileged = sdk.users.isAdminOrBuilder(user)
   $: nameLabel = getNameLabel(user)
   $: filteredGroups = getFilteredGroups($groups, searchTerm)
   $: availableApps = getAvailableApps($apps, privileged, user?.roles)
@@ -97,9 +98,9 @@
       return y._id === userId
     })
   })
-  $: globalRole = user?.admin?.global
+  $: globalRole = sdk.users.isAdmin(user)
     ? "admin"
-    : user?.builder?.global
+    : sdk.users.isBuilder(user)
     ? "developer"
     : "appUser"
 
@@ -285,7 +286,7 @@
           <div class="field">
             <Label size="L">Role</Label>
             <Select
-              disabled={!$auth.isAdmin}
+              disabled={!sdk.users.isAdmin($auth.user)}
               value={globalRole}
               options={Constants.BudibaseRoleOptions}
               on:change={updateUserRole}
