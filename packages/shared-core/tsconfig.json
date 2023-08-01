@@ -2,7 +2,10 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "composite": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@budibase/types": ["../types/src"]
+    }
   },
   "include": ["**/*.js", "**/*.ts"],
   "exclude": ["node_modules", "dist"]
