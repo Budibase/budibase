@@ -77,13 +77,13 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
   let schema = { ...tableSchema }
   if (view.schemaUI) {
     const viewOverridesEntries = Object.entries(view.schemaUI)
-    const viewSetsOrder = viewOverridesEntries.some(([_, v]) => v.order)
+    const viewSetsOrder = viewOverridesEntries.some(([_, v]) => v.order != null)
     for (const [fieldName, schemaUI] of viewOverridesEntries) {
       schema[fieldName] = {
         ...schema[fieldName],
         ...schemaUI,
         order: viewSetsOrder
-          ? schemaUI.order || undefined
+          ? schemaUI.order ?? undefined
           : schema[fieldName].order,
       }
     }
