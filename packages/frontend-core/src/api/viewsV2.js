@@ -33,4 +33,47 @@ export const buildViewV2Endpoints = API => ({
   delete: async viewId => {
     return await API.delete({ url: `/api/v2/views/${viewId}` })
   },
+  /**
+   * Creates a row from a view
+   * @param row the row to create
+   * @param suppressErrors whether or not to suppress error notifications
+   */
+  createRow: async (row, suppressErrors = false) => {
+    if (!row?._viewId || !row?.tableId) {
+      return
+    }
+    return await API.post({
+      url: `/api/v2/views/${row._viewId}/rows`,
+      body: row,
+      suppressErrors,
+    })
+  },
+  /**
+   * Updates an existing row through a view
+   * @param row the row to update
+   * @param suppressErrors whether or not to suppress error notifications
+   */
+  updateRow: async (row, suppressErrors = false) => {
+    if (!row?._viewId || !row?.tableId || !row?._id) {
+      return
+    }
+    return await API.patch({
+      url: `/api/v2/views/${row._viewId}/rows/${row._id}`,
+      body: row,
+      suppressErrors,
+    })
+  },
+  /**
+   * Deletes multiple rows from a table through a view
+   * @param viewId the table ID to delete the rows from
+   * @param rows the array of rows to delete
+   */
+  deleteRows: async ({ viewId, rows }) => {
+    return await API.delete({
+      url: `/api/v2/views/${viewId}/rows`,
+      body: {
+        rows,
+      },
+    })
+  },
 })
