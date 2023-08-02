@@ -86,6 +86,7 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
           : schema[fieldName].order,
       }
     }
+    delete view.schemaUI
   }
 
   if (view?.columns?.length) {
@@ -97,6 +98,7 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
       pickedSchema[fieldName] = { ...schema[fieldName] }
     }
     schema = pickedSchema
+    delete view.columns
   }
 
   return {

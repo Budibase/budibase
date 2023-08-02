@@ -49,12 +49,18 @@ async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
   const schemaUI =
     view.schema &&
     Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
-      p[fieldName] = {
+      const fieldSchema: RequiredKeys<UIFieldMetadata> = {
         order: schemaValue.order,
         width: schemaValue.width,
         visible: schemaValue.visible,
         icon: schemaValue.icon,
       }
+      Object.entries(fieldSchema)
+        .filter(([_, val]) => val === undefined)
+        .forEach(([key]) => {
+          delete fieldSchema[key as keyof UIFieldMetadata]
+        })
+      p[fieldName] = fieldSchema
       return p
     }, {} as Record<string, RequiredKeys<UIFieldMetadata>>)
   return schemaUI
