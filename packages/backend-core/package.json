@@ -16,12 +16,14 @@
     "prepack": "cp package.json dist",
     "build": "tsc -p tsconfig.build.json",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
     "@budibase/nano": "10.1.2",
     "@budibase/pouchdb-replication-stream": "1.2.10",
+    "@budibase/shared-core": "0.0.0",
     "@budibase/types": "0.0.0",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-cloudfront-sign": "2.2.0",

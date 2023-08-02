@@ -1,4 +1,8 @@
-const { join } = require("path")
+import { env as coreEnv } from "@budibase/backend-core"
+import { ServiceType } from "@budibase/types"
+import { join } from "path"
+
+coreEnv._set("SERVICE_TYPE", ServiceType.WORKER)
 
 function isDev() {
   return process.env.NODE_ENV !== "production"

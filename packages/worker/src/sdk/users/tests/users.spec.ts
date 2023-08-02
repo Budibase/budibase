@@ -1,8 +1,8 @@
 import { structures, mocks } from "../../../tests"
 import { env, context } from "@budibase/backend-core"
 import * as users from "../users"
+import { db as userDb } from "../"
 import { CloudAccount } from "@budibase/types"
-import { isPreventPasswordActions } from "../users"
 
 describe("users", () => {
   beforeEach(() => {
@@ -13,7 +13,7 @@ describe("users", () => {
     it("returns false for non sso user", async () => {
       await context.doInTenant(structures.tenant.id(), async () => {
         const user = structures.users.user()
-        const result = await users.isPreventPasswordActions(user)
+        const result = await userDb.isPreventPasswordActions(user)
         expect(result).toBe(false)
       })
     })
@@ -24,7 +24,7 @@ describe("users", () => {
         const account = structures.accounts.ssoAccount() as CloudAccount
         account.email = user.email
         mocks.accounts.getAccountByTenantId.mockResolvedValueOnce(account)
-        const result = await users.isPreventPasswordActions(user)
+        const result = await userDb.isPreventPasswordActions(user)
         expect(result).toBe(true)
       })
     })
@@ -34,7 +34,7 @@ describe("users", () => {
         const user = structures.users.user()
         const account = structures.accounts.ssoAccount() as CloudAccount
         mocks.accounts.getAccountByTenantId.mockResolvedValueOnce(account)
-        const result = await users.isPreventPasswordActions(user)
+        const result = await userDb.isPreventPasswordActions(user)
         expect(result).toBe(false)
       })
     })
@@ -42,7 +42,7 @@ describe("users", () => {
     it("returns true for sso user", async () => {
       await context.doInTenant(structures.tenant.id(), async () => {
         const user = structures.users.ssoUser()
-        const result = await users.isPreventPasswordActions(user)
+        const result = await userDb.isPreventPasswordActions(user)
         expect(result).toBe(true)
       })
     })
@@ -52,7 +52,7 @@ describe("users", () => {
         await context.doInTenant(structures.tenant.id(), async () => {
           const user = structures.users.user()
           mocks.pro.features.isSSOEnforced.mockResolvedValueOnce(true)
-          const result = await users.isPreventPasswordActions(user)
+          const result = await userDb.isPreventPasswordActions(user)
           expect(result).toBe(true)
         })
       })
@@ -70,7 +70,7 @@ describe("users", () => {
       describe("non-admin user", () => {
         it("returns true", async () => {
           const user = structures.users.ssoUser()
-          const result = await users.isPreventPasswordActions(user)
+          const result = await userDb.isPreventPasswordActions(user)
           expect(result).toBe(true)
         })
       })
@@ -80,7 +80,7 @@ describe("users", () => {
           const user = structures.users.ssoUser({
             user: structures.users.adminUser(),
           })
-          const result = await users.isPreventPasswordActions(user)
+          const result = await userDb.isPreventPasswordActions(user)
           expect(result).toBe(false)
         })
       })
