@@ -6,6 +6,7 @@ import {
   SortOrder,
   SortType,
   Table,
+  UpdateViewRequest,
   ViewV2,
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
@@ -34,20 +35,6 @@ function priceTable(): Table {
 describe("/v2/views", () => {
   const config = setup.getConfig()
 
-  const viewFilters: Omit<CreateViewRequest, "name" | "tableId"> = {
-    query: { allOr: false, equal: { field: "value" } },
-    sort: {
-      field: "fieldToSort",
-      order: SortOrder.DESCENDING,
-      type: SortType.STRING,
-    },
-    schema: {
-      name: {
-        visible: true,
-      },
-    },
-  }
-
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
@@ -70,20 +57,30 @@ describe("/v2/views", () => {
       })
     })
 
-    it("can persist views with queries", async () => {
-      const newView: CreateViewRequest = {
+    it("can persist views with all fields", async () => {
+      const newView: Required<CreateViewRequest> = {
         name: generator.name(),
         tableId: config.table!._id!,
-        query: viewFilters.query,
-        sort: viewFilters.sort,
+        primaryDisplay: generator.word(),
+        query: { allOr: false, equal: { field: "value" } },
+        sort: {
+          field: "fieldToSort",
+          order: SortOrder.DESCENDING,
+          type: SortType.STRING,
+        },
+        schema: {
+          name: {
+            visible: true,
+          },
+        },
       }
-      delete newView.schema
       const res = await config.api.viewV2.create(newView)
 
       expect(res).toEqual({
         ...newView,
-        query: viewFilters.query,
-        sort: viewFilters.sort,
+        schema: undefined,
+        columns: ["name"],
+        schemaUI: newView.schema,
         id: expect.any(String),
         version: 2,
       })
@@ -203,6 +200,46 @@ describe("/v2/views", () => {
             ...view,
             query: { equal: { newField: "thatValue" } },
             schema: expect.anything(),
+          },
+        },
+        _rev: expect.any(String),
+        updatedAt: expect.any(String),
+      })
+    })
+
+    it("can update all fields", async () => {
+      const tableId = config.table!._id!
+
+      const updatedData: Required<UpdateViewRequest> = {
+        version: view.version,
+        id: view.id,
+        tableId,
+        name: view.name,
+        primaryDisplay: generator.word(),
+        query: { equal: { [generator.word()]: generator.word() } },
+        sort: {
+          field: generator.word(),
+          order: SortOrder.DESCENDING,
+          type: SortType.STRING,
+        },
+        schema: {
+          Category: {
+            visible: false,
+          },
+        },
+      }
+      await config.api.viewV2.update(updatedData)
+
+      expect(await config.api.table.get(tableId)).toEqual({
+        ...config.table,
+        views: {
+          [view.name]: {
+            ...updatedData,
+            schema: {
+              Category: expect.objectContaining({
+                visible: false,
+              }),
+            },
           },
         },
         _rev: expect.any(String),
