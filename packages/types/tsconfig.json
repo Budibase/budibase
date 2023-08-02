@@ -1,10 +1,10 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "composite": true
+    "baseUrl": ".",
+    "rootDir": "./src",
+    "composite": true,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["node_modules", "dist"]
 }

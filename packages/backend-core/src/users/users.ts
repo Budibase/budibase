@@ -11,10 +11,16 @@ import {
   SEPARATOR,
   UNICODE_MAX,
   ViewName,
-} from "./db"
-import { BulkDocsResponse, SearchUsersRequest, User } from "@budibase/types"
-import { getGlobalDB } from "./context"
-import * as context from "./context"
+} from "../db"
+import {
+  BulkDocsResponse,
+  SearchUsersRequest,
+  User,
+  ContextUser,
+} from "@budibase/types"
+import { getGlobalDB } from "../context"
+import * as context from "../context"
+import { user as userCache } from "../cache"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -178,7 +184,7 @@ export const getGlobalUserByAppPage = (appId: string, user: User) => {
  * Performs a starts with search on the global email view.
  */
 export const searchGlobalUsersByEmail = async (
-  email: string,
+  email: string | unknown,
   opts: any,
   getOpts?: GetOpts
 ) => {
@@ -247,4 +253,24 @@ export async function getUserCount() {
     include_docs: false,
   })
   return response.total_rows
+}
+
+// used to remove the builder/admin permissions, for processing the
+// user as an app user (they may have some specific role/group
+export function removePortalUserPermissions(user: User | ContextUser) {
+  delete user.admin
+  delete user.builder
+  return user
+}
+
+export function cleanseUserObject(user: User | ContextUser, base?: User) {
+  delete user.admin
+  delete user.builder
+  delete user.roles
+  if (base) {
+    user.admin = base.admin
+    user.builder = base.builder
+    user.roles = base.roles
+  }
+  return user
 }

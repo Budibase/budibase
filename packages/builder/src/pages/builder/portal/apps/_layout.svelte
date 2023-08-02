@@ -1,11 +1,19 @@
 <script>
   import { notifications } from "@budibase/bbui"
-  import { admin, apps, templates, licensing, groups } from "stores/portal"
+  import {
+    admin,
+    apps,
+    templates,
+    licensing,
+    groups,
+    auth,
+  } from "stores/portal"
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
+  import { sdk } from "@budibase/shared-core"
 
   // Don't block loading if we've already hydrated state
-  let loaded = $apps.length > 0
+  let loaded = $apps.length != null
 
   onMount(async () => {
     try {
@@ -25,7 +33,7 @@
       }
 
       // Go to new app page if no apps exists
-      if (!$apps.length) {
+      if (!$apps.length && sdk.users.isGlobalBuilder($auth.user)) {
         $redirect("./onboarding")
       }
     } catch (error) {
