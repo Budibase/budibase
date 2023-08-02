@@ -134,7 +134,8 @@
           {
             "projects": [
               "@budibase/string-templates",
-              "@budibase/shared-core"
+              "@budibase/shared-core",
+              "@budibase/types"
             ],
             "target": "build"
           }
