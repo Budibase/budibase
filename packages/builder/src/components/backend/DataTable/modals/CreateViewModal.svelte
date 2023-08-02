@@ -3,17 +3,16 @@
   import { Input, notifications, ModalContent } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { viewsV2 } from "stores/backend"
-  import { tables } from "stores/backend"
   import { LuceneUtils } from "@budibase/frontend-core"
 
   const { filter, sort, table } = getContext("grid")
 
   $: query = LuceneUtils.buildLuceneQuery($filter)
-  $: console.log($table.schema)
 
   let name
 
-  $: views = Object.keys($tables.selected?.views || {})
+  $: console.log($table)
+  $: views = Object.keys($table?.views || {})
   $: nameExists = views.includes(name?.trim())
 
   const saveView = async () => {
@@ -21,17 +20,19 @@
     try {
       const newView = await viewsV2.create({
         name,
-        tableId: $tables.selected._id,
+        tableId: $table._id,
         query,
         sort: {
           field: $sort.column,
           order: $sort.order,
         },
-        columns: $table.schema,
+        schema: $table.schema,
+        primaryDisplay: $table.primaryDisplay,
       })
       notifications.success(`View ${name} created`)
       $goto(`../../view/v2/${newView.id}`)
     } catch (error) {
+      console.log(error)
       notifications.error("Error creating view")
     }
   }
