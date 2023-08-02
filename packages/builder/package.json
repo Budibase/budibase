@@ -140,6 +140,16 @@
           }
         ]
       },
+      "dev:builder": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/shared-core"
+            ],
+            "target": "dev:builder"
+          }
+        ]
+      },
       "test": {
         "dependsOn": [
           {
