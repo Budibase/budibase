@@ -6,7 +6,8 @@
   "types": "src/index.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./src/index.ts"
     }
   },
   "author": "Budibase",
