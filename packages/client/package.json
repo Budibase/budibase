@@ -70,8 +70,9 @@
         "dependsOn": [
           {
             "projects": [
+              "@budibase/shared-core",
               "@budibase/string-templates",
-              "@budibase/shared-core"
+              "@budibase/types"
             ],
             "target": "build"
           }
@@ -81,8 +82,9 @@
         "dependsOn": [
           {
             "projects": [
+              "@budibase/shared-core",
               "@budibase/string-templates",
-              "@budibase/shared-core"
+              "@budibase/types"
             ],
             "target": "build"
           }
