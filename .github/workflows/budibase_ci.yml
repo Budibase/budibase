@@ -154,7 +154,7 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn build
+      - run: yarn build --projects=@budibase/server,@budibase/worker,@budibase/client
       - name: Run tests
         run: |
           cd qa-core
