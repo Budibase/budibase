@@ -20,6 +20,7 @@
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   export let groupId
 
@@ -46,7 +47,7 @@
   let editModal, deleteModal
 
   $: scimEnabled = $features.isScimEnabled
-  $: readonly = !$auth.isAdmin || scimEnabled
+  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
   $: group = $groups.find(x => x._id === groupId)
   $: groupApps = $apps
     .filter(app =>

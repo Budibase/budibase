@@ -6,5 +6,7 @@
     "paths": {
       "@budibase/types": ["../types/src"]
     }
-  }
+  },
+  "include": ["**/*.js", "**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

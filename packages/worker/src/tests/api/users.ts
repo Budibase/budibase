@@ -140,4 +140,24 @@ export class UserAPI extends TestAPI {
       .expect("Content-Type", /json/)
       .expect(opts?.status ? opts.status : 200)
   }
+
+  grantBuilderToApp = (
+    userId: string,
+    appId: string,
+    statusCode: number = 200
+  ) => {
+    return this.request
+      .post(`/api/global/users/${userId}/app/${appId}/builder`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(statusCode)
+  }
+
+  revokeBuilderFromApp = (userId: string, appId: string) => {
+    return this.request
+      .delete(`/api/global/users/${userId}/app/${appId}/builder`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
 }

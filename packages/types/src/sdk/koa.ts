@@ -38,6 +38,7 @@ export interface Ctx<RequestBody = any, ResponseBody = any> extends Context {
 export interface UserCtx<RequestBody = any, ResponseBody = any>
   extends Ctx<RequestBody, ResponseBody> {
   user: ContextUser
+  roleId?: string
 }
 
 /**
