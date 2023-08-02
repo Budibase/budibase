@@ -144,6 +144,7 @@
         "dependsOn": [
           {
             "projects": [
+              "@budibase/string-templates",
               "@budibase/shared-core"
             ],
             "target": "build"
