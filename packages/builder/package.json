@@ -146,7 +146,7 @@
             "projects": [
               "@budibase/shared-core"
             ],
-            "target": "dev:builder"
+            "target": "build"
           }
         ]
       },
