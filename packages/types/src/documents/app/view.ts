@@ -18,6 +18,7 @@ export interface ViewV2 {
   version: 2
   id: string
   name: string
+  primaryDisplay?: string
   tableId: string
   query?: SearchFilters
   sort?: {
