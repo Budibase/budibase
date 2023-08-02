@@ -180,20 +180,5 @@
   "optionalDependencies": {
     "oracledb": "5.3.0"
   },
-  "nx": {
-    "targets": {
-      "test": {
-        "dependsOn": [
-          {
-            "projects": [
-              "@budibase/string-templates",
-              "@budibase/shared-core"
-            ],
-            "target": "build"
-          }
-        ]
-      }
-    }
-  },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }
