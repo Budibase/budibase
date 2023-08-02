@@ -66,13 +66,14 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
 
   const schemaUI = await parseSchemaUI(ctx, view)
 
-  const parsedView: Omit<ViewV2, "id" | "version"> = {
+  const parsedView: Omit<RequiredKeys<ViewV2>, "id" | "version"> = {
     name: view.name,
     tableId: view.tableId,
     query: view.query,
     sort: view.sort,
     columns: view.schema && Object.keys(view.schema),
     schemaUI,
+    primaryDisplay: view.primaryDisplay,
   }
   const result = await sdk.views.create(tableId, parsedView)
   ctx.status = 201
@@ -95,7 +96,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
   const { tableId } = view
 
   const schemaUI = await parseSchemaUI(ctx, view)
-  const parsedView: ViewV2 = {
+  const parsedView: RequiredKeys<ViewV2> = {
     id: view.id,
     name: view.name,
     version: view.version,
@@ -104,6 +105,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
     sort: view.sort,
     columns: view.schema && Object.keys(view.schema),
     schemaUI,
+    primaryDisplay: view.primaryDisplay,
   }
 
   const result = await sdk.views.update(tableId, parsedView)
