@@ -14,6 +14,7 @@
   import { API } from "api"
   import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
+  import { sdk } from "@budibase/shared-core"
 
   let version
   let loaded = false
@@ -25,7 +26,7 @@
 
   // Only admins allowed here
   $: {
-    if (!$auth.isAdmin || $admin.cloud) {
+    if (!sdk.users.isAdmin($auth.user) || $admin.cloud) {
       $redirect("../../portal")
     }
   }
@@ -89,7 +90,7 @@
   })
 </script>
 
-{#if $auth.isAdmin}
+{#if sdk.users.isAdmin($auth.user)}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <Heading size="M">Version</Heading>

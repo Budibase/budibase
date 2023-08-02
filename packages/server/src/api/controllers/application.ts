@@ -30,6 +30,7 @@ import {
   objectStore,
   roles,
   tenancy,
+  users,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import {
@@ -49,8 +50,8 @@ import {
   MigrationType,
   PlanType,
   Screen,
-  SocketSession,
   UserCtx,
+  ContextUser,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -177,32 +178,10 @@ export const addSampleData = async (ctx: UserCtx) => {
 }
 
 export async function fetch(ctx: UserCtx) {
-  const dev = ctx.query && ctx.query.status === AppStatus.DEV
-  const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = (await dbCore.getAllApps({ dev, all })) as App[]
-
-  const appIds = apps
-    .filter((app: any) => app.status === "development")
-    .map((app: any) => app.appId)
-
-  // get the locks for all the dev apps
-  if (dev || all) {
-    const locks = await getLocksById(appIds)
-    for (let app of apps) {
-      const lock = locks[app.appId]
-      if (lock) {
-        app.lockedBy = lock
-      } else {
-        // make sure its definitely not present
-        delete app.lockedBy
-      }
-    }
-  }
-
-  // Enrich apps with all builder user sessions
-  const enrichedApps = await sdk.users.sessions.enrichApps(apps)
-
-  ctx.body = await checkAppMetadata(enrichedApps)
+  ctx.body = await sdk.applications.fetch(
+    ctx.query.status as AppStatus,
+    ctx.user
+  )
 }
 
 export async function fetchAppDefinition(ctx: UserCtx) {
@@ -222,6 +201,7 @@ export async function fetchAppDefinition(ctx: UserCtx) {
 
 export async function fetchAppPackage(ctx: UserCtx) {
   const db = context.getAppDB()
+  const appId = context.getAppId()
   let application = await db.get<any>(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
@@ -233,7 +213,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
   )
 
   // Only filter screens if the user is not a builder
-  if (!(ctx.user.builder && ctx.user.builder.global)) {
+  if (!users.isBuilder(ctx.user, appId)) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)

@@ -3,10 +3,10 @@ import { db as dbCore } from "@budibase/backend-core"
 
 type Optional = string | null
 
-export const AppStatus = {
-  DEV: "development",
-  ALL: "all",
-  DEPLOYED: "published",
+export const enum AppStatus {
+  DEV = "development",
+  ALL = "all",
+  DEPLOYED = "published",
 }
 
 export const BudibaseInternalDB = {

@@ -41,7 +41,7 @@ export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
     const currentUserId = ctx.user?._id
     const requestUser = ctx.request.body
 
-    const user = await userSdk.save(requestUser, { currentUserId })
+    const user = await userSdk.db.save(requestUser, { currentUserId })
 
     ctx.body = {
       _id: user._id!,
@@ -57,7 +57,7 @@ const bulkDelete = async (userIds: string[], currentUserId: string) => {
   if (userIds?.indexOf(currentUserId) !== -1) {
     throw new Error("Unable to delete self.")
   }
-  return await userSdk.bulkDelete(userIds)
+  return await userSdk.db.bulkDelete(userIds)
 }
 
 const bulkCreate = async (users: User[], groupIds: string[]) => {
@@ -66,7 +66,7 @@ const bulkCreate = async (users: User[], groupIds: string[]) => {
       "Max limit for upload is 1000 users. Please reduce file size and try again."
     )
   }
-  return await userSdk.bulkCreate(users, groupIds)
+  return await userSdk.db.bulkCreate(users, groupIds)
 }
 
 export const bulkUpdate = async (
@@ -141,7 +141,7 @@ export const adminUser = async (
       // always bust checklist beforehand, if an error occurs but can proceed, don't get
       // stuck in a cycle
       await cache.bustCache(cache.CacheKey.CHECKLIST)
-      const finalUser = await userSdk.save(user, {
+      const finalUser = await userSdk.db.save(user, {
         hashPassword,
         requirePassword,
       })
@@ -167,7 +167,7 @@ export const adminUser = async (
 export const countByApp = async (ctx: any) => {
   const appId = ctx.params.appId
   try {
-    ctx.body = await userSdk.countUsersByApp(appId)
+    ctx.body = await userSdk.db.countUsersByApp(appId)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -179,7 +179,7 @@ export const destroy = async (ctx: any) => {
     ctx.throw(400, "Unable to delete self.")
   }
 
-  await userSdk.destroy(id)
+  await userSdk.db.destroy(id)
 
   ctx.body = {
     message: `User ${id} deleted.`,
@@ -188,7 +188,7 @@ export const destroy = async (ctx: any) => {
 
 export const getAppUsers = async (ctx: Ctx<SearchUsersRequest>) => {
   const body = ctx.request.body
-  const users = await userSdk.getUsersByAppAccess(body?.appId)
+  const users = await userSdk.db.getUsersByAppAccess(body?.appId)
 
   ctx.body = { data: users }
 }
@@ -212,7 +212,7 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
 
 // called internally by app server user fetch
 export const fetch = async (ctx: any) => {
-  const all = await userSdk.allUsers()
+  const all = await userSdk.db.allUsers()
   // user hashed password shouldn't ever be returned
   for (let user of all) {
     if (user) {
@@ -224,12 +224,12 @@ export const fetch = async (ctx: any) => {
 
 // called internally by app server user find
 export const find = async (ctx: any) => {
-  ctx.body = await userSdk.getUser(ctx.params.id)
+  ctx.body = await userSdk.db.getUser(ctx.params.id)
 }
 
 export const tenantUserLookup = async (ctx: any) => {
   const id = ctx.params.id
-  const user = await userSdk.getPlatformUser(id)
+  const user = await userSdk.core.getPlatformUser(id)
   if (user) {
     ctx.body = user
   } else {
@@ -252,7 +252,7 @@ export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
     // @ts-ignore
     const { users, groups, roles } = request.create
     const assignUsers = users.map((user: User) => (user.roles = roles))
-    onboardingResponse = await userSdk.bulkCreate(assignUsers, groups)
+    onboardingResponse = await userSdk.db.bulkCreate(assignUsers, groups)
     ctx.body = onboardingResponse
   } else if (emailConfigured) {
     onboardingResponse = await inviteMultiple(ctx)
@@ -277,7 +277,7 @@ export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
         tenantId: tenancy.getTenantId(),
       }
     })
-    let bulkCreateReponse = await userSdk.bulkCreate(users, [])
+    let bulkCreateReponse = await userSdk.db.bulkCreate(users, [])
 
     // Apply temporary credentials
     let createWithCredentials = {
@@ -410,7 +410,7 @@ export const inviteAccept = async (
         ...info,
       }
 
-      const saved = await userSdk.save(request)
+      const saved = await userSdk.db.save(request)
       const db = tenancy.getGlobalDB()
       const user = await db.get<User>(saved._id)
       await events.user.inviteAccepted(user)
