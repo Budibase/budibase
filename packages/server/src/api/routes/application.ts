@@ -15,7 +15,7 @@ router
   )
   .post(
     "/api/applications",
-    authorized(permissions.BUILDER),
+    authorized(permissions.GLOBAL_BUILDER),
     applicationValidator(),
     controller.create
   )
@@ -55,7 +55,7 @@ router
   )
   .delete(
     "/api/applications/:appId",
-    authorized(permissions.BUILDER),
+    authorized(permissions.GLOBAL_BUILDER),
     controller.destroy
   )
 

@@ -3,19 +3,10 @@
     "default": {
       "runner": "nx-cloud",
       "options": {
-        "cacheableOperations": ["build", "test"],
+        "cacheableOperations": ["build", "test", "check:types"],
         "accessToken": "MmM4OGYxNzItMDBlYy00ZmE3LTk4MTYtNmJhYWMyZjBjZTUyfHJlYWQ="
       }
     }
   },
-  "targetDefaults": {
-    "dev:builder": {
-      "dependsOn": [
-        {
-          "projects": ["@budibase/string-templates"],
-          "target": "build"
-        }
-      ]
-    }
-  }
+  "targetDefaults": {}
 }
