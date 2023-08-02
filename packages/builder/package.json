@@ -146,7 +146,8 @@
           {
             "projects": [
               "@budibase/string-templates",
-              "@budibase/shared-core"
+              "@budibase/shared-core",
+              "@budibase/types"
             ],
             "target": "build"
           }
@@ -157,7 +158,8 @@
           {
             "projects": [
               "@budibase/shared-core",
-              "@budibase/string-templates"
+              "@budibase/string-templates",
+              "@budibase/types"
             ],
             "target": "build"
           }
