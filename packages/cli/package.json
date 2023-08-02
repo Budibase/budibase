@@ -71,7 +71,8 @@
         "dependsOn": [
           {
             "projects": [
-              "@budibase/backend-core"
+              "@budibase/backend-core",
+              "@budibase/string-templates"
             ],
             "target": "build"
           }

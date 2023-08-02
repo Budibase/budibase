@@ -9,6 +9,7 @@ const baseConfig: Config.InitialProjectOptions = {
   },
   moduleNameMapper: {
     "@budibase/types": "<rootDir>/../types/src",
+    "@budibase/shared-core": ["<rootDir>/../shared-core/src"],
   },
 }
 
