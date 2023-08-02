@@ -22,7 +22,7 @@
   import Spaceman from "assets/bb-space-man.svg"
   import Logo from "assets/bb-emblem.svg"
   import { UserAvatar } from "@budibase/frontend-core"
-  import { helpers } from "@budibase/shared-core"
+  import { helpers, sdk } from "@budibase/shared-core"
 
   let loaded = false
   let userInfoModal
@@ -43,32 +43,30 @@
   $: userGroups = $groups.filter(group =>
     group.users.find(user => user._id === $auth.user?._id)
   )
-  let userApps = []
   $: publishedApps = $apps.filter(publishedAppsOnly)
+  $: userApps = getUserApps($auth.user)
 
-  $: {
-    if (!Object.keys($auth.user?.roles).length && $auth.user?.userGroups) {
-      userApps =
-        $auth.user?.builder?.global || $auth.user?.admin?.global
-          ? publishedApps
-          : publishedApps.filter(app => {
-              return userGroups.find(group => {
-                return groups.actions
-                  .getGroupAppIds(group)
-                  .map(role => apps.extractAppId(role))
-                  .includes(app.appId)
-              })
-            })
-    } else {
-      userApps =
-        $auth.user?.builder?.global || $auth.user?.admin?.global
-          ? publishedApps
-          : publishedApps.filter(app =>
-              Object.keys($auth.user?.roles)
-                .map(x => apps.extractAppId(x))
-                .includes(app.appId)
-            )
+  function getUserApps(user) {
+    if (sdk.users.isAdmin(user)) {
+      return publishedApps
     }
+    return publishedApps.filter(app => {
+      if (sdk.users.isBuilder(user, app.appId)) {
+        return true
+      }
+      if (!Object.keys(user?.roles).length && user?.userGroups) {
+        return userGroups.find(group => {
+          return groups.actions
+            .getGroupAppIds(group)
+            .map(role => apps.extractAppId(role))
+            .includes(app.appId)
+        })
+      } else {
+        return Object.keys($auth.user?.roles)
+          .map(x => apps.extractAppId(x))
+          .includes(app.appId)
+      }
+    })
   }
 
   function getUrl(app) {
@@ -109,7 +107,7 @@
               >
                 Update password
               </MenuItem>
-              {#if $auth.isBuilder}
+              {#if sdk.users.hasBuilderPermissions($auth.user)}
                 <MenuItem
                   icon="UserDeveloper"
                   on:click={() => $goto("../portal")}
