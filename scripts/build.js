@@ -59,7 +59,7 @@ function runBuild(
       ".svelte": "copy",
     },
     metafile,
-    external: bundle ? ["deasync", "mock-aws-s3", "nock"] : undefined,
+    external: bundle ? ["deasync", "mock-aws-s3", "nock", "bull"] : undefined,
   }
 
   build({
