@@ -19,18 +19,6 @@ export const deriveStores = context => {
       }
       let newSchema = { ...$definition?.schema }
 
-      // Edge case to temporarily allow deletion of duplicated user
-      // fields that were saved with the "disabled" flag set.
-      // By overriding the saved schema we ensure only overrides can
-      // set the disabled flag.
-      // TODO: remove in future
-      Object.keys(newSchema).forEach(field => {
-        newSchema[field] = {
-          ...newSchema[field],
-          disabled: false,
-        }
-      })
-
       // Apply schema overrides
       Object.keys($schemaOverrides || {}).forEach(field => {
         if (newSchema[field]) {
@@ -60,39 +48,54 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { datasource, definition, API, config, dispatch } = context
+  const { datasource, definition, config, dispatch, table, viewV2 } = context
+
+  // Gets the appropriate API for the configured datasource type
+  const getAPI = () => {
+    const $datasource = get(datasource)
+    switch ($datasource?.type) {
+      case "table":
+        return table
+      case "viewV2":
+        return viewV2
+      default:
+        return null
+    }
+  }
 
   // Refreshes the datasource definition
   const refreshDefinition = async () => {
-    const $datasource = get(datasource)
-    if ($datasource.type === "table") {
-      definition.set(await API.fetchTableDefinition($datasource.tableId))
-    } else if ($datasource.type === "viewV2") {
-      // const definition = await API.viewsV2.(get(tableId))
-      // table.set(definition)
-    }
+    return await getAPI()?.actions.refreshDefinition()
   }
 
   // Saves the datasource definition
   const saveDefinition = async newDefinition => {
-    const $config = get(config)
-    const $datasource = get(datasource)
-
     // Update local state
     definition.set(newDefinition)
 
     // Update server
-    if ($config.canSaveSchema) {
-      if ($datasource.type === "table") {
-        await API.saveTable(newDefinition)
-      } else if ($datasource.type === "viewV2") {
-        await API.viewV2.update(newDefinition)
-      }
+    if (get(config).canSaveSchema) {
+      await getAPI()?.actions.saveDefinition(newDefinition)
     }
 
     // Broadcast change to external state can be updated, as this change
     // will not be received by the builder websocket because we caused it ourselves
     dispatch("updatedefinition", newDefinition)
+  }
+
+  // Adds a row to the datasource
+  const addRow = async row => {
+    return await getAPI()?.actions.addRow(row)
+  }
+
+  // Updates an existing row in the datasource
+  const updateRow = async row => {
+    return await getAPI()?.actions.updateRow(row)
+  }
+
+  // Deletes rows from the datasource
+  const deleteRows = async rows => {
+    return await getAPI()?.actions.deleteRows(rows)
   }
 
   return {
@@ -101,6 +104,9 @@ export const createActions = context => {
       actions: {
         refreshDefinition,
         saveDefinition,
+        addRow,
+        updateRow,
+        deleteRows,
       },
     },
   }
