@@ -148,7 +148,9 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     this.config = {
       ...config,
       multipleStatements: true,
-      typeCast: function (field: any, next: any) {
+    }
+    if (!this.config.typeCast) {
+      this.config.typeCast = function (field: any, next: any) {
         if (
           field.type == "DATETIME" ||
           field.type === "DATE" ||
@@ -161,7 +163,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
           return field.buffer()?.[0]
         }
         return next()
-      },
+      }
     }
   }
 
@@ -204,7 +206,10 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
 
   async internalQuery(
     query: SqlQuery,
-    opts: { connect?: boolean; disableCoercion?: boolean } = {
+    opts: {
+      connect?: boolean
+      disableCoercion?: boolean
+    } = {
       connect: true,
       disableCoercion: false,
     }
