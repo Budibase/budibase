@@ -8,6 +8,7 @@ import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
+import { SourceName } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
@@ -27,6 +28,7 @@ class QueryRunner {
   hasRerun: boolean
   hasRefreshedOAuth: boolean
   hasDynamicVariables: boolean
+  schema: any
 
   constructor(input: QueryEvent, flags = { noRecursiveQuery: false }) {
     this.datasource = input.datasource
@@ -36,6 +38,7 @@ class QueryRunner {
     this.pagination = input.pagination
     this.transformer = input.transformer
     this.queryId = input.queryId
+    this.schema = input.schema
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
     // Additional context items for enrichment
@@ -50,7 +53,7 @@ class QueryRunner {
   }
 
   async execute(): Promise<any> {
-    let { datasource, fields, queryVerb, transformer } = this
+    let { datasource, fields, queryVerb, transformer, schema } = this
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)
 
@@ -65,6 +68,32 @@ class QueryRunner {
         updatedConfigs.push(await sdk.queries.enrichContext(config, this.ctx))
       }
       datasourceClone.config.authConfigs = updatedConfigs
+    }
+
+    if (datasource.source === SourceName.MYSQL && schema) {
+      datasourceClone.config.typeCast = function (field: any, next: any) {
+        if (schema[field.name]?.name === field.name) {
+          if (["LONGLONG", "NEWDECIMAL", "DECIMAL"].includes(field.type)) {
+            if (schema[field.name]?.type === "number") {
+              const value = field.string()
+              return value ? Number(value) : null
+            } else {
+              return field.string()
+            }
+          }
+        }
+        if (
+          field.type == "DATETIME" ||
+          field.type === "DATE" ||
+          field.type === "TIMESTAMP"
+        ) {
+          return field.string()
+        }
+        if (field.type === "BIT" && field.length === 1) {
+          return field.buffer()?.[0]
+        }
+        return next()
+      }
     }
 
     const integration = new Integration(datasourceClone.config)
