@@ -61,7 +61,7 @@
     allowDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
-    on:updatetable={handleGridTableUpdate}
+    on:updatedatasource={handleGridTableUpdate}
   >
     <svelte:fragment slot="filter">
       <GridFilterButton />

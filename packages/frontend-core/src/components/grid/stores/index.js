@@ -15,13 +15,18 @@ import * as Config from "./config"
 import * as Sort from "./sort"
 import * as Filter from "./filter"
 import * as Notifications from "./notifications"
+import * as Table from "./table"
+import * as ViewV2 from "./viewV2"
+import * as Datasource from "./datsource"
 
 const DependencyOrderedStores = [
+  // Common stores
   Notifications,
   Sort,
   Filter,
   Bounds,
   Scroll,
+  Datasource,
   Columns,
   Rows,
   UI,
@@ -34,6 +39,10 @@ const DependencyOrderedStores = [
   Pagination,
   Clipboard,
   Config,
+
+  // Datasource specific stores
+  Table,
+  ViewV2,
 ]
 
 export const attachStores = context => {

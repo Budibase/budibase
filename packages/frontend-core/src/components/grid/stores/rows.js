@@ -7,13 +7,13 @@ const SuppressErrors = true
 
 export const createStores = () => {
   const rows = writable([])
-  const table = writable(null)
   const loading = writable(false)
   const loaded = writable(false)
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
   const error = writable(null)
+  const fetch = writable(null)
 
   // Generate a lookup map to quick find a row by ID
   const rowLookupMap = derived(rows, $rows => {
@@ -51,8 +51,8 @@ export const createStores = () => {
       ...rows,
       subscribe: enrichedRows.subscribe,
     },
+    fetch,
     rowLookupMap,
-    table,
     loaded,
     loading,
     rowChangeCache,
@@ -66,7 +66,7 @@ export const createActions = context => {
   const {
     rows,
     rowLookupMap,
-    table,
+    definition,
     filter,
     loading,
     sort,
@@ -82,14 +82,14 @@ export const createActions = context => {
     hasNextPage,
     error,
     notifications,
+    fetch,
   } = context
   const instanceLoaded = writable(false)
-  const fetch = writable(null)
 
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}
 
-  // Reset everything when table ID changes
+  // Reset everything when datasource changes
   let unsubscribe = null
   let lastResetKey = null
   datasource.subscribe(async $datasource => {
@@ -100,11 +100,11 @@ export const createActions = context => {
     loading.set(true)
 
     // Abandon if we don't have a valid datasource
-    if (!$datasource?.tableId) {
+    if (!$datasource) {
       return
     }
 
-    // Tick to allow other reactive logic to update stores when table ID changes
+    // Tick to allow other reactive logic to update stores when datasource changes
     // before proceeding. This allows us to wipe filters etc if needed.
     await tick()
     const $filter = get(filter)
@@ -142,7 +142,7 @@ export const createActions = context => {
         const previousResetKey = lastResetKey
         lastResetKey = $fetch.resetKey
 
-        // If resetting rows due to a table change, wipe data and wait for
+        // If resetting rows due to a datasource change, wipe data and wait for
         // derived stores to compute. This prevents stale data being passed
         // to cells when we save the new schema.
         if (!$instanceLoaded && previousResetKey) {
@@ -152,24 +152,23 @@ export const createActions = context => {
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
-          table.set($fetch.definition)
-          sort.set({
-            column: $fetch.sortColumn,
-            order: $fetch.sortOrder,
-          })
+          definition.set($fetch.definition)
+
+          // sort.set({
+          //   column: $fetch.sortColumn,
+          //   order: $fetch.sortOrder,
+          // })
         }
 
         // Reset scroll state when data changes
         if (!$instanceLoaded) {
-          // Reset both top and left for a new table ID
+          // Reset both top and left for a new datasource ID
           instanceLoaded.set(true)
           scroll.set({ top: 0, left: 0 })
         } else if (resetRows) {
           // Only reset top scroll position when resetting rows
           scroll.update(state => ({ ...state, top: 0 }))
         }
-
-        // For views we always update the filter to match the definition
 
         // Process new rows
         handleNewRows($fetch.rows, resetRows)
@@ -180,23 +179,6 @@ export const createActions = context => {
     })
 
     fetch.set(newFetch)
-  })
-
-  // Update fetch when filter or sort config changes
-  filter.subscribe($filter => {
-    if (get(datasource)?.type === "table") {
-      get(fetch)?.update({
-        filter: $filter,
-      })
-    }
-  })
-  sort.subscribe($sort => {
-    if (get(datasource)?.type === "table") {
-      get(fetch)?.update({
-        sortOrder: $sort.order,
-        sortColumn: $sort.column,
-      })
-    }
   })
 
   // Gets a row by ID
@@ -506,17 +488,6 @@ export const createActions = context => {
     get(fetch)?.nextPage()
   }
 
-  // Refreshes the schema of the data fetch subscription
-  const refreshDatasourceDefinition = async () => {
-    const $datasource = get(datasource)
-    if ($datasource.type === "table") {
-      table.set(await API.fetchTableDefinition($datasource.tableId))
-    } else if ($datasource.type === "viewV2") {
-      // const definition = await API.viewsV2.(get(tableId))
-      // table.set(definition)
-    }
-  }
-
   // Checks if we have a row with a certain ID
   const hasRow = id => {
     if (id === NewRowID) {
@@ -550,21 +521,7 @@ export const createActions = context => {
         refreshRow,
         replaceRow,
         refreshData,
-        refreshDatasourceDefinition,
       },
     },
   }
-}
-
-export const initialise = context => {
-  const { table, filter, datasource } = context
-
-  // For views, always keep the UI for filter and sorting up to date with the
-  // latest view definition
-  table.subscribe($definition => {
-    if (!$definition || get(datasource)?.type !== "viewV2") {
-      return
-    }
-    filter.set($definition.query)
-  })
 }

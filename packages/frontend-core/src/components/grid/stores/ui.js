@@ -131,7 +131,7 @@ export const initialise = context => {
     focusedCellId,
     selectedRows,
     hoveredRowId,
-    table,
+    definition,
     rowHeight,
     fixedRowHeight,
   } = context
@@ -187,9 +187,9 @@ export const initialise = context => {
   })
 
   // Pull row height from table as long as we don't have a fixed height
-  table.subscribe($table => {
+  definition.subscribe($definition => {
     if (!get(fixedRowHeight)) {
-      rowHeight.set($table?.rowHeight || DefaultRowHeight)
+      rowHeight.set($definition?.rowHeight || DefaultRowHeight)
     }
   })
 
@@ -198,7 +198,7 @@ export const initialise = context => {
     if (height) {
       rowHeight.set(height)
     } else {
-      rowHeight.set(get(table)?.rowHeight || DefaultRowHeight)
+      rowHeight.set(get(definition)?.rowHeight || DefaultRowHeight)
     }
   })
 }

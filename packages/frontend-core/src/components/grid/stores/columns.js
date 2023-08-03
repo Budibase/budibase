@@ -69,8 +69,7 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { table, columns, stickyColumn, API, dispatch, config, datasource } =
-    context
+  const { columns, stickyColumn, config, datasource, definition } = context
 
   // Checks if we have a certain column by name
   const hasColumn = column => {
@@ -79,13 +78,13 @@ export const createActions = context => {
     return $columns.some(col => col.name === column) || $sticky?.name === column
   }
 
-  // Updates the tables primary display column
+  // Updates the datasources primary display column
   const changePrimaryDisplay = async column => {
     if (!get(config).canEditPrimaryDisplay) {
       return
     }
-    return await saveTable({
-      ...get(table),
+    return await datasource.actions.saveDefinition({
+      ...get(definition),
       primaryDisplay: column,
     })
   }
@@ -107,14 +106,14 @@ export const createActions = context => {
     await saveChanges()
   }
 
-  // Persists column changes by saving metadata against table schema
+  // Persists column changes by saving metadata against datasource schema
   const saveChanges = async () => {
     const $columns = get(columns)
-    const $table = get(table)
+    const $definition = get(definition)
     const $stickyColumn = get(stickyColumn)
-    const newSchema = cloneDeep($table.schema)
+    const newSchema = cloneDeep($definition.schema)
 
-    // Build new updated table schema
+    // Build new updated datasource schema
     Object.keys(newSchema).forEach(column => {
       // Respect order specified by columns
       const index = $columns.findIndex(x => x.name === column)
@@ -134,28 +133,10 @@ export const createActions = context => {
       }
     })
 
-    await saveTable({ ...$table, schema: newSchema })
-  }
-
-  const saveTable = async newTable => {
-    const $config = get(config)
-    const $datasource = get(datasource)
-
-    // Update local state
-    table.set(newTable)
-
-    // Update server
-    if ($config.canSaveSchema) {
-      if ($datasource.type === "table") {
-        await API.saveTable(newTable)
-      } else if ($datasource.type === "viewV2") {
-        await API.viewV2.update({ ...newTable })
-      }
-    }
-
-    // Broadcast change to external state can be updated, as this change
-    // will not be received by the builder websocket because we caused it ourselves
-    dispatch("updatetable", newTable)
+    await datasource.actions.saveDefinition({
+      ...$definition,
+      schema: newSchema,
+    })
   }
 
   return {
@@ -164,7 +145,6 @@ export const createActions = context => {
       actions: {
         hasColumn,
         saveChanges,
-        saveTable,
         changePrimaryDisplay,
         changeAllColumnWidths,
       },
@@ -173,51 +153,7 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { table, columns, stickyColumn, schemaOverrides, columnWhitelist } =
-    context
-
-  const schema = derived(
-    [table, schemaOverrides, columnWhitelist],
-    ([$table, $schemaOverrides, $columnWhitelist]) => {
-      if (!$table?.schema) {
-        return null
-      }
-      let newSchema = { ...$table?.schema }
-
-      // Edge case to temporarily allow deletion of duplicated user
-      // fields that were saved with the "disabled" flag set.
-      // By overriding the saved schema we ensure only overrides can
-      // set the disabled flag.
-      // TODO: remove in future
-      Object.keys(newSchema).forEach(field => {
-        newSchema[field] = {
-          ...newSchema[field],
-          disabled: false,
-        }
-      })
-
-      // Apply schema overrides
-      Object.keys($schemaOverrides || {}).forEach(field => {
-        if (newSchema[field]) {
-          newSchema[field] = {
-            ...newSchema[field],
-            ...$schemaOverrides[field],
-          }
-        }
-      })
-
-      // Apply whitelist if specified
-      if ($columnWhitelist?.length) {
-        Object.keys(newSchema).forEach(key => {
-          if (!$columnWhitelist.includes(key)) {
-            delete newSchema[key]
-          }
-        })
-      }
-
-      return newSchema
-    }
-  )
+  const { definition, columns, stickyColumn, schema } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
   schema.subscribe($schema => {
@@ -226,12 +162,12 @@ export const initialise = context => {
       stickyColumn.set(null)
       return
     }
-    const $table = get(table)
+    const $definition = get(definition)
 
     // Find primary display
     let primaryDisplay
-    if ($table.primaryDisplay && $schema[$table.primaryDisplay]) {
-      primaryDisplay = $table.primaryDisplay
+    if ($definition.primaryDisplay && $schema[$definition.primaryDisplay]) {
+      primaryDisplay = $definition.primaryDisplay
     }
 
     // Get field list
