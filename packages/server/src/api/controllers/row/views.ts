@@ -1,14 +1,14 @@
 import { quotas } from "@budibase/pro"
 import {
   UserCtx,
-  SearchResponse,
+  SearchRowResponse,
   SortOrder,
   SortType,
   ViewV2,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function searchView(ctx: UserCtx<void, SearchResponse>) {
+export async function searchView(ctx: UserCtx<void, SearchRowResponse>) {
   const { viewId } = ctx.params
 
   const view = await sdk.views.get(viewId)
