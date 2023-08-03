@@ -17,7 +17,7 @@
   import { generate } from "shortid"
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { getFields } from "helpers/searchFields"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
 
   export let schemaFields
   export let filters = []
@@ -63,6 +63,15 @@
         return newFilter
       })
   }
+
+  onMount(() => {
+    parseFilters(filters)
+    rawFilters.forEach(filter => {
+      filter.type =
+        schemaFields.find(field => field.name === filter.field)?.type ||
+        filter.type
+    })
+  })
 
   // Add field key prefixes and a special metadata filter object to indicate
   // whether to use the "match all" or "match any" behaviour
