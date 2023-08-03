@@ -86,7 +86,7 @@ export const createActions = context => {
       if ($datasource.type === "table") {
         await API.saveTable(newDefinition)
       } else if ($datasource.type === "viewV2") {
-        await API.viewV2.update({ ...newDefinition })
+        await API.viewV2.update(newDefinition)
       }
     }
 

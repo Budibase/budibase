@@ -17,7 +17,7 @@ import * as Filter from "./filter"
 import * as Notifications from "./notifications"
 import * as Table from "./table"
 import * as ViewV2 from "./viewV2"
-import * as Datasource from "./datsource"
+import * as Datasource from "./datasource"
 
 const DependencyOrderedStores = [
   // Common stores
