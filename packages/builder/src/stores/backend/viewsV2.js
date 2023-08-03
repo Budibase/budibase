@@ -54,23 +54,20 @@ export function createViewsV2Store() {
   }
 
   const save = async view => {
-    // No dedicated save endpoint at this time
-    // const savedView = await API.saveView(view)
-    //
-    // // Update tables
-    // tables.update(state => {
-    //   const table = state.list.find(table => table._id === view.tableId)
-    //   if (table) {
-    //     if (view.originalName) {
-    //       delete table.views[view.originalName]
-    //     }
-    //     table.views[view.name] = savedView
-    //   }
-    //   return { ...state }
-    // })
-  }
+    const savedView = await API.viewV2.update(view)
 
-  const replace = (id, view) => {}
+    // Update tables
+    tables.update(state => {
+      const table = state.list.find(table => table._id === view.tableId)
+      if (table) {
+        if (view.originalName) {
+          delete table.views[view.originalName]
+        }
+        table.views[view.name] = savedView
+      }
+      return { ...state }
+    })
+  }
 
   return {
     subscribe: derivedStore.subscribe,
@@ -78,7 +75,6 @@ export function createViewsV2Store() {
     delete: deleteView,
     create,
     save,
-    replace,
   }
 }
 
