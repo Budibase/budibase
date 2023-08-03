@@ -1,6 +1,5 @@
 import { derivedMemo } from "../../../utils"
 import { derived } from "svelte/store"
-import { DatasourceType } from "../lib/constants"
 
 export const deriveStores = context => {
   const { props, hasNonAutoColumn } = context
@@ -29,7 +28,7 @@ export const deriveStores = context => {
       }
 
       // Disable some features if we're editing a view
-      if ($props.datasource?.type === DatasourceType.ViewV2) {
+      if ($props.datasource?.type === "viewV2") {
         config.canEditColumns = false
       }
 

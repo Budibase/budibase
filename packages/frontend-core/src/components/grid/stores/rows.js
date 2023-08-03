@@ -240,19 +240,9 @@ export const createActions = context => {
   // Adds a new row
   const addRow = async (row, idx, bubble = false) => {
     try {
-      // Create row
-      const $datasource = get(datasource)
+      // Create row. Spread row so we can mutate and enrich safely.
       let newRow = { ...row }
-      if ($datasource.type === "table") {
-        newRow.tableId = $datasource.tableId
-        newRow = await API.saveRow(newRow, SuppressErrors)
-      } else if ($datasource.type === "viewV2") {
-        newRow.tableId = $datasource.tableId
-        newRow._viewId = $datasource.id
-        newRow = await API.viewV2.createRow(newRow)
-      } else {
-        return
-      }
+      newRow = await datasource.actions.addRow(newRow)
 
       // Update state
       if (idx != null) {
@@ -381,19 +371,11 @@ export const createActions = context => {
         [rowId]: true,
       }))
 
-      let saved
-      if ($datasource.type === "table") {
-        saved = await API.saveRow(
-          { ...row, ...get(rowChangeCache)[rowId] },
-          SuppressErrors
-        )
-      } else if ($datasource.type === "viewV2") {
-        saved = await API.viewV2.updateRow(
-          { ...row, ...get(rowChangeCache)[rowId] },
-          SuppressErrors
-        )
-        saved._viewId = $datasource.id
-      }
+      // Update row
+      const saved = await datasource.actions.updateRow({
+        ...row,
+        ...get(rowChangeCache)[rowId],
+      })
 
       // Update state after a successful change
       if (saved?._id) {
@@ -428,23 +410,12 @@ export const createActions = context => {
     if (!rowsToDelete?.length) {
       return
     }
-    const $datasource = get(datasource)
 
     // Actually delete rows
     rowsToDelete.forEach(row => {
       delete row.__idx
     })
-    if ($datasource.type === "table") {
-      await API.deleteRows({
-        tableId: $datasource.tableId,
-        rows: rowsToDelete,
-      })
-    } else if ($datasource.type === "viewV2") {
-      await API.viewV2.deleteRows({
-        viewId: $datasource.id,
-        rows: rowsToDelete,
-      })
-    }
+    await datasource.actions.deleteRows(rowsToDelete)
 
     // Update state
     handleRemoveRows(rowsToDelete)
