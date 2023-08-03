@@ -93,6 +93,40 @@ const INITIAL_FRONTEND_STATE = {
   tourNodes: null,
 }
 
+export const updateComponentSetting = (name, value) => {
+  return component => {
+    if (!name || !component) {
+      return false
+    }
+    // Skip update if the value is the same
+    if (component[name] === value) {
+      return false
+    }
+
+    const settings = getComponentSettings(component._component)
+    const updatedSetting = settings.find(setting => setting.key === name)
+
+    if (
+      updatedSetting?.type === "dataSource" ||
+      updatedSetting?.type === "table"
+    ) {
+      const { schema } = getSchemaForDatasource(null, value)
+      const columnNames = Object.keys(schema || {})
+      const multifieldKeysToSelectAll = settings
+        .filter(setting => {
+          return setting.type === "multifield" && setting.selectAllFields
+        })
+        .map(setting => setting.key)
+
+      multifieldKeysToSelectAll.forEach(key => {
+        component[key] = columnNames
+      })
+    }
+
+    component[name] = value
+  }
+}
+
 export const getFrontendStore = () => {
   const store = writable({ ...INITIAL_FRONTEND_STATE })
   let websocket
@@ -111,13 +145,18 @@ export const getFrontendStore = () => {
     }
     let clone = cloneDeep(screen)
     const result = patchFn(clone)
+    console.log("sequentialScreenPatch ", result)
     if (result === false) {
       return
     }
-    return await store.actions.screens.save(clone)
+    return
+    //return await store.actions.screens.save(clone)
   })
 
   store.actions = {
+    tester: (name, value) => {
+      return updateComponentSetting(name, value)
+    },
     reset: () => {
       store.set({ ...INITIAL_FRONTEND_STATE })
       websocket?.disconnect()
@@ -825,6 +864,7 @@ export const getFrontendStore = () => {
       },
       patch: async (patchFn, componentId, screenId) => {
         // Use selected component by default
+        console.log("front end patch")
         if (!componentId || !screenId) {
           const state = get(store)
           componentId = componentId || state.selectedComponentId
@@ -834,6 +874,7 @@ export const getFrontendStore = () => {
           return
         }
         const patchScreen = screen => {
+          // findComponent looks in the tree not comp.settings[0]
           let component = findComponent(screen.props, componentId)
           if (!component) {
             return false
@@ -841,6 +882,18 @@ export const getFrontendStore = () => {
           return patchFn(component, screen)
         }
         await store.actions.screens.patch(patchScreen, screenId)
+      },
+      // Temporary
+      customPatch: async (patchFn, componentId, screenId) => {
+        console.log("patchUpdate :")
+        if (!componentId || !screenId) {
+          const state = get(store)
+          componentId = componentId || state.selectedComponentId
+          screenId = screenId || state.selectedScreenId
+        }
+        if (!componentId || !screenId || !patchFn) {
+          return
+        }
       },
       delete: async component => {
         if (!component) {
@@ -1207,37 +1260,9 @@ export const getFrontendStore = () => {
         })
       },
       updateSetting: async (name, value) => {
-        await store.actions.components.patch(component => {
-          if (!name || !component) {
-            return false
-          }
-          // Skip update if the value is the same
-          if (component[name] === value) {
-            return false
-          }
-
-          const settings = getComponentSettings(component._component)
-          const updatedSetting = settings.find(setting => setting.key === name)
-
-          if (
-            updatedSetting?.type === "dataSource" ||
-            updatedSetting?.type === "table"
-          ) {
-            const { schema } = getSchemaForDatasource(null, value)
-            const columnNames = Object.keys(schema || {})
-            const multifieldKeysToSelectAll = settings
-              .filter(setting => {
-                return setting.type === "multifield" && setting.selectAllFields
-              })
-              .map(setting => setting.key)
-
-            multifieldKeysToSelectAll.forEach(key => {
-              component[key] = columnNames
-            })
-          }
-
-          component[name] = value
-        })
+        await store.actions.components.patch(
+          updateComponentSetting(name, value)
+        )
       },
       requestEjectBlock: componentId => {
         store.actions.preview.sendEvent("eject-block", componentId)

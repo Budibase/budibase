@@ -197,22 +197,24 @@
           {/if}
         </BlockComponent>
       {/if}
-      <BlockComponent type="fieldgroup" props={{ labelPosition }} order={1}>
-        {#each fields as field, idx}
-          {#if getComponentForField(field.name)}
-            <BlockComponent
-              type={getComponentForField(field.name)}
-              props={{
-                validation: field.validation,
-                field: field.name,
-                label: field.displayName,
-                placeholder: field.displayName,
-              }}
-              order={idx}
-            />
-          {/if}
-        {/each}
-      </BlockComponent>
+      {#key fields}
+        <BlockComponent type="fieldgroup" props={{ labelPosition }} order={1}>
+          {#each fields as field, idx}
+            {#if getComponentForField(field.name)}
+              <BlockComponent
+                type={getComponentForField(field.name)}
+                props={{
+                  validation: field.validation,
+                  field: field.name,
+                  label: field.displayName,
+                  placeholder: field.displayName,
+                }}
+                order={idx}
+              />
+            {/if}
+          {/each}
+        </BlockComponent>
+      {/key}
     </BlockComponent>
   </BlockComponent>
 {:else}
