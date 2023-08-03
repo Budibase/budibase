@@ -45,6 +45,21 @@ export const createActions = context => {
     })
   }
 
+  // TODO: update in future. We can't depend on having table read access.
+  const getRow = async id => {
+    const res = await API.searchTable({
+      tableId: get(datasource).tableId,
+      limit: 1,
+      query: {
+        equal: {
+          _id: id,
+        },
+      },
+      paginate: false,
+    })
+    return res?.rows?.[0]
+  }
+
   return {
     viewV2: {
       actions: {
@@ -53,6 +68,7 @@ export const createActions = context => {
         addRow,
         updateRow,
         deleteRows,
+        getRow,
       },
     },
   }
