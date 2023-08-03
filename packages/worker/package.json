@@ -49,6 +49,7 @@
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.1.0",
     "bcryptjs": "2.4.3",
+    "bull": "4.10.1",
     "dd-trace": "3.13.2",
     "dotenv": "8.6.0",
     "elastic-apm-node": "3.38.0",
