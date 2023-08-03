@@ -40,6 +40,10 @@ spec:
       - image: budibase/proxy:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         name: proxy-service
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh","-c","nginx -s quit; while killall -0 nginx; do sleep 1; done"]
         {{- if .Values.services.proxy.startupProbe }}
         {{- with .Values.services.proxy.startupProbe }}
         startupProbe:
