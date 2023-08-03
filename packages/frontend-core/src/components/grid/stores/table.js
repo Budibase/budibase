@@ -15,6 +15,8 @@ export const initialise = context => {
   // Update fetch when sorting changes
   sort.subscribe($sort => {
     if (get(datasource)?.type === "table") {
+      console.log("update", $sort)
+      console.log(get(fetch))
       get(fetch)?.update({
         sortOrder: $sort.order,
         sortColumn: $sort.column,
