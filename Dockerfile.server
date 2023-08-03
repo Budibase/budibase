@@ -31,10 +31,11 @@ COPY packages/ packages/
 COPY scripts/build.js scripts/build.js
 COPY nx.json .
 
-RUN yarn build --projects=@budibase/server
+RUN yarn build --projects=@budibase/builder,@budibase/server
 
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
 RUN ./scripts/removeWorkspaceDependencies.sh packages/server/package.json
+
 
 
 FROM node:14-slim as runner
@@ -86,6 +87,8 @@ RUN echo '' > scripts/syncProPackage.js
 RUN yarn install --production=true --frozen-lockfile && yarn cache clean
 
 COPY --from=builder /builder/packages/server/dist packages/server/dist
+COPY --from=builder /builder/packages/server/client client
+COPY --from=builder /builder/packages/server/builder builder
 
 COPY lerna.json .
 
