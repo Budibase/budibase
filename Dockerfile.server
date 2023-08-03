@@ -33,8 +33,8 @@ COPY nx.json .
 
 RUN yarn build --projects=@budibase/server
 
-COPY scripts/clean-dependencies.sh scripts/clean-dependencies.sh
-RUN ./scripts/clean-dependencies.sh packages/server/package.json
+COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
+RUN ./scripts/removeWorkspaceDependencies.sh packages/server/package.json
 
 
 FROM node:14-slim as runner
