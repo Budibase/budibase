@@ -6,7 +6,7 @@ import {
   PatchRowResponse,
   Row,
   ViewV2,
-  SearchRequest,
+  SearchViewRowRequest,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
@@ -80,7 +80,7 @@ export class ViewV2API extends TestAPI {
 
   search = async (
     viewId: string,
-    params?: SearchRequest,
+    params?: SearchViewRowRequest,
     { expectStatus } = { expectStatus: 200 }
   ) => {
     return this.request
