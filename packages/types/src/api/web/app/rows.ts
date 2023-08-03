@@ -1,3 +1,4 @@
+import { SearchParams } from "../../../sdk"
 import { Row } from "../../../documents"
 
 export interface PatchRowRequest extends Row {
@@ -8,6 +9,8 @@ export interface PatchRowRequest extends Row {
 
 export interface PatchRowResponse extends Row {}
 
-export interface SearchResponse {
+export interface SearchRowRequest extends SearchParams {}
+
+export interface SearchRowResponse {
   rows: any[]
 }
