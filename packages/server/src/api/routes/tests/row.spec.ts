@@ -1212,11 +1212,9 @@ describe("/rows", () => {
           const response = await config.api.viewV2.search(
             createViewResponse.id,
             {
-              sort: {
-                column: sortParams.field,
-                order: sortParams.order,
-                type: sortParams.type,
-              },
+              sort: sortParams.field,
+              sortOrder: sortParams.order,
+              sortType: sortParams.type,
             }
           )
 
