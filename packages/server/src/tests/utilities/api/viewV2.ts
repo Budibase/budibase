@@ -1,13 +1,12 @@
 import {
   CreateViewRequest,
-  SortOrder,
-  SortType,
   UpdateViewRequest,
   DeleteRowRequest,
   PatchRowRequest,
   PatchRowResponse,
   Row,
   ViewV2,
+  SearchRequest,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
@@ -81,31 +80,12 @@ export class ViewV2API extends TestAPI {
 
   search = async (
     viewId: string,
-    options?: {
-      sort: {
-        column: string
-        order?: SortOrder
-        type?: SortType
-      }
-    },
+    params?: SearchRequest,
     { expectStatus } = { expectStatus: 200 }
   ) => {
-    const qs: [string, any][] = []
-    if (options?.sort.column) {
-      qs.push(["sort_column", options.sort.column])
-    }
-    if (options?.sort.order) {
-      qs.push(["sort_order", options.sort.order])
-    }
-    if (options?.sort.type) {
-      qs.push(["sort_type", options.sort.type])
-    }
-    let url = `/api/v2/views/${viewId}/search`
-    if (qs.length) {
-      url += "?" + qs.map(q => q.join("=")).join("&")
-    }
     return this.request
-      .get(url)
+      .post(`/api/v2/views/${viewId}/search`)
+      .send(params)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(expectStatus)

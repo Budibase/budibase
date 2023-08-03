@@ -1,4 +1,5 @@
 import { Row } from "../../../documents"
+import { SortOrder, SortType } from "../pagination"
 
 export interface PatchRowRequest extends Row {
   _id: string
@@ -7,6 +8,14 @@ export interface PatchRowRequest extends Row {
 }
 
 export interface PatchRowResponse extends Row {}
+
+export interface SearchRequest {
+  sort?: {
+    column: string
+    order?: SortOrder
+    type?: SortType
+  }
+}
 
 export interface SearchResponse {
   rows: any[]
