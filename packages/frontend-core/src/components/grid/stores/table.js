@@ -25,6 +25,20 @@ export const createActions = context => {
     })
   }
 
+  const getRow = async id => {
+    const res = await API.searchTable({
+      tableId: get(datasource).tableId,
+      limit: 1,
+      query: {
+        equal: {
+          _id: id,
+        },
+      },
+      paginate: false,
+    })
+    return res?.rows?.[0]
+  }
+
   return {
     table: {
       actions: {
@@ -33,6 +47,7 @@ export const createActions = context => {
         addRow: saveRow,
         updateRow: saveRow,
         deleteRows,
+        getRow,
       },
     },
   }

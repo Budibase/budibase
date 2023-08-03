@@ -3,8 +3,6 @@ import { fetchData } from "../../../fetch/fetchData"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import { tick } from "svelte"
 
-const SuppressErrors = true
-
 export const createStores = () => {
   const rows = writable([])
   const loading = writable(false)
@@ -280,21 +278,6 @@ export const createActions = context => {
     }
   }
 
-  // Fetches a row by ID using the search endpoint
-  const fetchRow = async id => {
-    const res = await API.searchTable({
-      tableId: get(datasource).tableId,
-      limit: 1,
-      query: {
-        equal: {
-          _id: id,
-        },
-      },
-      paginate: false,
-    })
-    return res?.rows?.[0]
-  }
-
   // Replaces a row in state with the newly defined row, handling updates,
   // addition and deletion
   const replaceRow = (id, row) => {
@@ -323,7 +306,7 @@ export const createActions = context => {
 
   // Refreshes a specific row
   const refreshRow = async id => {
-    const row = await fetchRow(id)
+    const row = await datasource.actions.getRow(id)
     replaceRow(id, row)
   }
 
@@ -336,7 +319,6 @@ export const createActions = context => {
   const updateRow = async (rowId, changes) => {
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
-    const $datasource = get(datasource)
     const index = $rowLookupMap[rowId]
     const row = $rows[index]
     if (index == null || !Object.keys(changes || {}).length) {

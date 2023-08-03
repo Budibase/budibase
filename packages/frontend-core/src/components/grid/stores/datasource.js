@@ -98,6 +98,10 @@ export const createActions = context => {
     return await getAPI()?.actions.deleteRows(rows)
   }
 
+  const getRow = async id => {
+    return await getAPI()?.actions.getRow(id)
+  }
+
   return {
     datasource: {
       ...datasource,
@@ -107,6 +111,7 @@ export const createActions = context => {
         addRow,
         updateRow,
         deleteRows,
+        getRow,
       },
     },
   }
