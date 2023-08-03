@@ -1,14 +1,15 @@
 import { quotas } from "@budibase/pro"
 import {
   UserCtx,
-  SearchRowResponse,
-  SortOrder,
-  SortType,
   ViewV2,
+  SearchRowRequest,
+  SearchRowResponse,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function searchView(ctx: UserCtx<void, SearchRowResponse>) {
+export async function searchView(
+  ctx: UserCtx<SearchRowRequest, SearchRowResponse>
+) {
   const { viewId } = ctx.params
 
   const view = await sdk.views.get(viewId)
@@ -35,7 +36,7 @@ export async function searchView(ctx: UserCtx<void, SearchRowResponse>) {
         tableId: view.tableId,
         query: view.query || {},
         fields: viewFields,
-        ...getSortOptions(ctx, view),
+        ...getSortOptions(ctx.request.body, view),
       }),
     {
       datasourceId: view.tableId,
@@ -46,32 +47,12 @@ export async function searchView(ctx: UserCtx<void, SearchRowResponse>) {
   ctx.body = result
 }
 
-function getSortOptions(
-  ctx: UserCtx,
-  view: ViewV2
-):
-  | {
-      sort: string
-      sortOrder?: SortOrder
-      sortType?: SortType
-    }
-  | undefined {
-  const { sort_column, sort_order, sort_type } = ctx.query
-  if (Array.isArray(sort_column)) {
-    ctx.throw(400, "sort_column cannot be an array")
-  }
-  if (Array.isArray(sort_order)) {
-    ctx.throw(400, "sort_order cannot be an array")
-  }
-  if (Array.isArray(sort_type)) {
-    ctx.throw(400, "sort_type cannot be an array")
-  }
-
-  if (sort_column) {
+function getSortOptions(request: SearchRowRequest, view: ViewV2) {
+  if (request.sort) {
     return {
-      sort: sort_column,
-      sortOrder: sort_order as SortOrder,
-      sortType: sort_type as SortType,
+      sort: request.sort,
+      sortOrder: request.sortOrder,
+      sortType: request.sortType,
     }
   }
   if (view.sort) {
@@ -82,5 +63,5 @@ function getSortOptions(
     }
   }
 
-  return
+  return undefined
 }
