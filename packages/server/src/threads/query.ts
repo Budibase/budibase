@@ -70,33 +70,10 @@ class QueryRunner {
       datasourceClone.config.authConfigs = updatedConfigs
     }
 
-    if (datasource.source === SourceName.MYSQL && schema) {
-      datasourceClone.config.typeCast = function (field: any, next: any) {
-        if (schema[field.name]?.name === field.name) {
-          if (["LONGLONG", "NEWDECIMAL", "DECIMAL"].includes(field.type)) {
-            if (schema[field.name]?.type === "number") {
-              const value = field.string()
-              return value ? Number(value) : null
-            } else {
-              return field.string()
-            }
-          }
-        }
-        if (
-          field.type == "DATETIME" ||
-          field.type === "DATE" ||
-          field.type === "TIMESTAMP"
-        ) {
-          return field.string()
-        }
-        if (field.type === "BIT" && field.length === 1) {
-          return field.buffer()?.[0]
-        }
-        return next()
-      }
-    }
-
     const integration = new Integration(datasourceClone.config)
+
+    // define the type casting from the schema
+    integration.defineTypeCastingFromSchema?.(schema)
 
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
