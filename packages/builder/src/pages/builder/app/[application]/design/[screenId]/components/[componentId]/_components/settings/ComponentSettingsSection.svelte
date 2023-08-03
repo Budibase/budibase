@@ -13,11 +13,16 @@
   export let bindings
   export let componentBindings
   export let isScreen = false
+  export let onUpdateSetting
 
   $: sections = getSections(componentInstance, componentDefinition, isScreen)
 
   const getSections = (instance, definition, isScreen) => {
     const settings = definition?.settings ?? []
+    console.log(
+      "ComponentSettingsSection::definition?.settings",
+      definition?.settings
+    )
     const generalSettings = settings.filter(setting => !setting.section)
     const customSections = settings.filter(setting => setting.section)
     let sections = [
@@ -46,19 +51,23 @@
   }
 
   const updateSetting = async (setting, value) => {
-    try {
-      await store.actions.components.updateSetting(setting.key, value)
+    if (typeof onUpdateSetting === "function") {
+      onUpdateSetting(setting, value)
+    } else {
+      try {
+        await store.actions.components.updateSetting(setting.key, value)
 
-      // Send event if required
-      if (setting.sendEvents) {
-        analytics.captureEvent(Events.COMPONENT_UPDATED, {
-          name: componentInstance._component,
-          setting: setting.key,
-          value,
-        })
+        // Send event if required
+        if (setting.sendEvents) {
+          analytics.captureEvent(Events.COMPONENT_UPDATED, {
+            name: componentInstance._component,
+            setting: setting.key,
+            value,
+          })
+        }
+      } catch (error) {
+        notifications.error("Error updating component prop")
       }
-    } catch (error) {
-      notifications.error("Error updating component prop")
     }
   }
 
@@ -129,10 +138,13 @@
         {/if}
         {#each section.settings as setting (setting.key)}
           {#if setting.visible}
+            <!-- DEAN - Remove fieldConfiguration label config -->
             <PropertyControl
               type={setting.type}
               control={getComponentForSetting(setting)}
-              label={setting.label}
+              label={setting.type != "fieldConfiguration"
+                ? setting.label
+                : undefined}
               labelHidden={setting.labelHidden}
               key={setting.key}
               value={componentInstance[setting.key]}

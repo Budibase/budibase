@@ -5107,22 +5107,6 @@
         "nested": true
       },
       {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ],
-        "defaultValue": "spectrum--medium"
-      },
-      {
         "type": "text",
         "label": "Empty text",
         "key": "noRowsMessage",
@@ -5132,45 +5116,6 @@
           "value": "Create",
           "invert": true
         }
-      },
-      {
-        "section": true,
-        "name": "Fields",
-        "settings": [
-          {
-            "type": "fieldConfiguration",
-            "label": "Fields",
-            "key": "fields",
-            "selectAllFields": true
-          },
-          {
-            "type": "select",
-            "label": "Field labels",
-            "key": "labelPosition",
-            "defaultValue": "left",
-            "options": [
-              {
-                "label": "Left",
-                "value": "left"
-              },
-              {
-                "label": "Above",
-                "value": "above"
-              }
-            ]
-          },
-          {
-            "type": "boolean",
-            "label": "Disabled",
-            "key": "disabled",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
-          }
-        ]
       },
       {
         "section": true,
@@ -5238,6 +5183,61 @@
             "dependsOn": {
               "setting": "showSaveButton",
               "value": true
+            }
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Fields",
+        "settings": [
+          {
+            "type": "select",
+            "label": "Align labels",
+            "key": "labelPosition",
+            "defaultValue": "left",
+            "options": [
+              {
+                "label": "Left",
+                "value": "left"
+              },
+              {
+                "label": "Above",
+                "value": "above"
+              }
+            ]
+          },
+          {
+            "type": "select",
+            "label": "Size",
+            "key": "size",
+            "options": [
+              {
+                "label": "Medium",
+                "value": "spectrum--medium"
+              },
+              {
+                "label": "Large",
+                "value": "spectrum--large"
+              }
+            ],
+            "defaultValue": "spectrum--medium"
+          },
+          {
+            "type": "fieldConfiguration",
+            "label": "Fields",
+            "key": "fields",
+            "selectAllFields": true
+          },
+          {
+            "type": "boolean",
+            "label": "Disabled",
+            "key": "disabled",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
             }
           }
         ]

@@ -24,14 +24,20 @@
   const { fetchDatasourceSchema } = getContext("sdk")
 
   const convertOldFieldFormat = fields => {
-    if (typeof fields?.[0] === "string") {
-      return fields.map(field => ({ name: field, displayName: field }))
-    }
-
-    return fields
+    return typeof fields?.[0] === "string"
+      ? fields.map(field => ({
+          name: field,
+          displayName: field,
+          active: true,
+        }))
+      : fields
   }
 
+  //All settings need to derive from the block config now
+
+  // Parse the fields here too. Not present means false.
   const getDefaultFields = (fields, schema) => {
+    let formFields
     if (schema && (!fields || fields.length === 0)) {
       const defaultFields = []
 
@@ -41,13 +47,20 @@
         defaultFields.push({
           name: field.name,
           displayName: field.name,
+          active: true,
         })
       })
-
-      return defaultFields
+      formFields = [...defaultFields]
+    } else {
+      formFields = (fields || []).map(field => {
+        return {
+          ...field,
+          active: typeof field?.active != "boolean" ? true : field?.active,
+        }
+      })
     }
 
-    return fields
+    return formFields.filter(field => field.active)
   }
 
   let schema
@@ -56,7 +69,6 @@
 
   $: formattedFields = convertOldFieldFormat(fields)
   $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
-
   $: fetchSchema(dataSource)
   $: dataProvider = `{{ literal ${safe(providerId)} }}`
   $: filter = [
