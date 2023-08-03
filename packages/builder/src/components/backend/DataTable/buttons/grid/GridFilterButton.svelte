@@ -2,22 +2,22 @@
   import TableFilterButton from "../TableFilterButton.svelte"
   import { getContext } from "svelte"
 
-  const { columns, tableId, filter, table } = getContext("grid")
+  const { columns, datasource, filter, definition } = getContext("grid")
 
   // Wipe filter whenever table ID changes to avoid using stale filters
-  $: $tableId, filter.set([])
+  $: $datasource, filter.set([])
 
   const onFilter = e => {
     filter.set(e.detail || [])
   }
 </script>
 
-{#key $tableId}
+{#key $datasource}
   <TableFilterButton
-    schema={$table?.schema}
+    schema={$definition?.schema}
     filters={$filter}
     on:change={onFilter}
     disabled={!$columns.length}
-    tableId={$tableId}
+    tableId={$datasource.tableId}
   />
 {/key}

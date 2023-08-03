@@ -16,7 +16,8 @@ export const createStores = context => {
 }
 
 export const initialise = context => {
-  const { sort, initialSortColumn, initialSortOrder } = context
+  const { sort, initialSortColumn, initialSortOrder, table, datasource } =
+    context
 
   // Reset sort when initial sort props change
   initialSortColumn.subscribe(newSortColumn => {

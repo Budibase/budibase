@@ -116,8 +116,16 @@ export default class DataFetch {
   async getInitialData() {
     const { datasource, filter, paginate } = this.options
 
-    // Fetch datasource definition and determine feature flags
+    // Fetch datasource definition and extract filter and sort if configured
     const definition = await this.getDefinition(datasource)
+    if (definition?.sort?.field) {
+      this.options.sortColumn = definition.sort.field
+    }
+    if (definition?.sort?.order) {
+      this.options.sortOrder = definition.sort.order
+    }
+
+    // Determine feature flags
     const features = this.determineFeatureFlags(definition)
     this.features = {
       supportsSearch: !!features?.supportsSearch,

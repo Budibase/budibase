@@ -2,12 +2,12 @@
   import ExistingRelationshipButton from "../ExistingRelationshipButton.svelte"
   import { getContext } from "svelte"
 
-  const { table, rows } = getContext("grid")
+  const { definition, rows } = getContext("grid")
 </script>
 
-{#if $table}
+{#if $definition}
   <ExistingRelationshipButton
-    table={$table}
+    table={$definition}
     on:updatecolumns={() => rows.actions.refreshData()}
   />
 {/if}

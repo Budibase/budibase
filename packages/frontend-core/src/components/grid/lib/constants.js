@@ -1,3 +1,7 @@
+export const DatasourceType = {
+  Table: "table",
+  ViewV2: "viewV2",
+}
 export const Padding = 246
 export const MaxCellRenderHeight = 222
 export const ScrollBarSize = 8
