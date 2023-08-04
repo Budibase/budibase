@@ -5,14 +5,13 @@
   import { viewsV2 } from "stores/backend"
   import { LuceneUtils } from "@budibase/frontend-core"
 
-  const { filter, sort, table } = getContext("grid")
+  const { filter, sort, definition } = getContext("grid")
 
   $: query = LuceneUtils.buildLuceneQuery($filter)
 
   let name
 
-  $: console.log($table)
-  $: views = Object.keys($table?.views || {})
+  $: views = Object.keys($definition?.views || {})
   $: nameExists = views.includes(name?.trim())
 
   const saveView = async () => {
@@ -20,14 +19,14 @@
     try {
       const newView = await viewsV2.create({
         name,
-        tableId: $table._id,
+        tableId: $definition._id,
         query,
         sort: {
           field: $sort.column,
           order: $sort.order,
         },
-        schema: $table.schema,
-        primaryDisplay: $table.primaryDisplay,
+        schema: $definition.schema,
+        primaryDisplay: $definition.primaryDisplay,
       })
       notifications.success(`View ${name} created`)
       $goto(`../../view/v2/${newView.id}`)
