@@ -48,7 +48,6 @@ export function createViewsV2Store() {
 
   // Handles external updates of tables
   const replaceView = (viewId, view) => {
-    console.log("replace", viewId, view)
     if (!viewId) {
       return
     }
