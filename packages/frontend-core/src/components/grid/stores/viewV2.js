@@ -60,6 +60,12 @@ export const createActions = context => {
     return res?.rows?.[0]
   }
 
+  const isDatasourceValid = datasource => {
+    return (
+      datasource?.type === "viewV2" && datasource?.id && datasource?.tableId
+    )
+  }
+
   return {
     viewV2: {
       actions: {
@@ -69,6 +75,7 @@ export const createActions = context => {
         updateRow,
         deleteRows,
         getRow,
+        isDatasourceValid,
       },
     },
   }
