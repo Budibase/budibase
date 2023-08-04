@@ -7,16 +7,32 @@ import {
 import { publicApiUserFix } from "../../../utilities/users"
 import { db as dbCore } from "@budibase/backend-core"
 import { search as stringSearch } from "./utils"
-import { BBContext, User } from "@budibase/types"
+import { UserCtx, User } from "@budibase/types"
+import { Next } from "koa"
 
-function isLoggedInUser(ctx: BBContext, user: User) {
+function removeRoles(ctx: UserCtx, oldUser?: User) {
+  const user = ctx.request.body
+  if (user.builder) {
+    user.builder = oldUser?.builder || undefined
+  }
+  if (user.admin) {
+    user.admin = oldUser?.admin || undefined
+  }
+  if (user.roles) {
+    user.roles = oldUser?.roles || {}
+  }
+  ctx.request.body = user
+  return ctx
+}
+
+function isLoggedInUser(ctx: UserCtx, user: User) {
   const loggedInId = ctx.user?._id
   const globalUserId = dbCore.getGlobalIDFromUserMetadataID(loggedInId!)
   // check both just incase
   return globalUserId === user._id || loggedInId === user._id
 }
 
-function getUser(ctx: BBContext, userId?: string) {
+function getUser(ctx: UserCtx, userId?: string) {
   if (userId) {
     ctx.params = { userId }
   } else if (!ctx.params?.userId) {
@@ -25,42 +41,38 @@ function getUser(ctx: BBContext, userId?: string) {
   return readGlobalUser(ctx)
 }
 
-export async function search(ctx: BBContext, next: any) {
+export async function search(ctx: UserCtx, next: Next) {
   const { name } = ctx.request.body
   const users = await allGlobalUsers(ctx)
   ctx.body = stringSearch(users, name, "email")
   await next()
 }
 
-export async function create(ctx: BBContext, next: any) {
-  const response = await saveGlobalUser(publicApiUserFix(ctx))
+export async function create(ctx: UserCtx, next: Next) {
+  ctx = publicApiUserFix(removeRoles(ctx))
+  const response = await saveGlobalUser(ctx)
   ctx.body = await getUser(ctx, response._id)
   await next()
 }
 
-export async function read(ctx: BBContext, next: any) {
+export async function read(ctx: UserCtx, next: Next) {
   ctx.body = await readGlobalUser(ctx)
   await next()
 }
 
-export async function update(ctx: BBContext, next: any) {
+export async function update(ctx: UserCtx, next: Next) {
   const user = await readGlobalUser(ctx)
   ctx.request.body = {
     ...ctx.request.body,
     _rev: user._rev,
   }
-  // disallow updating your own role - always overwrite with DB roles
-  if (isLoggedInUser(ctx, user)) {
-    ctx.request.body.builder = user.builder
-    ctx.request.body.admin = user.admin
-    ctx.request.body.roles = user.roles
-  }
-  const response = await saveGlobalUser(publicApiUserFix(ctx))
+  ctx = publicApiUserFix(removeRoles(ctx, user))
+  const response = await saveGlobalUser(ctx)
   ctx.body = await getUser(ctx, response._id)
   await next()
 }
 
-export async function destroy(ctx: BBContext, next: any) {
+export async function destroy(ctx: UserCtx, next: Next) {
   const user = await getUser(ctx)
   // disallow deleting yourself
   if (isLoggedInUser(ctx, user)) {
