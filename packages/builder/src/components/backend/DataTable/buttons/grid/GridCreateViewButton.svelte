@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { Modal, ActionButton } from "@budibase/bbui"
-  import CreateViewModal from "../../modals/CreateViewModal.svelte"
+  import GridCreateViewModal from "../../modals/grid/GridCreateViewModal.svelte"
 
   const { rows, columns } = getContext("grid")
 
@@ -14,5 +14,5 @@
   Add view
 </ActionButton>
 <Modal bind:this={modal}>
-  <CreateViewModal />
+  <GridCreateViewModal />
 </Modal>
