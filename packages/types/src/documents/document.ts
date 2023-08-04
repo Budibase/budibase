@@ -37,6 +37,7 @@ export enum DocumentType {
   USER_FLAG = "flag",
   AUTOMATION_METADATA = "meta_au",
   AUDIT_LOG = "al",
+  VIEW = "view",
 }
 
 export interface Document {
