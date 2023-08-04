@@ -27,11 +27,6 @@ const SortOrderPretty = {
   [SortOrder.DESCENDING]: "Descending",
 }
 
-const EmptyFilterOptionPretty = {
-  [EmptyFilterOption.RETURN_ALL]: "Return all table rows",
-  [EmptyFilterOption.RETURN_NONE]: "Return no rows",
-}
-
 export const definition: AutomationStepSchema = {
   description: "Query rows from the database",
   icon: "Search",
