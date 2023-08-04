@@ -25,6 +25,10 @@ export const createActions = context => {
     })
   }
 
+  const isDatasourceValid = datasource => {
+    return datasource?.type === "table" && datasource?.tableId
+  }
+
   const getRow = async id => {
     const res = await API.searchTable({
       tableId: get(datasource).tableId,
@@ -48,6 +52,7 @@ export const createActions = context => {
         updateRow: saveRow,
         deleteRows,
         getRow,
+        isDatasourceValid,
       },
     },
   }
