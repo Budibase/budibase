@@ -1,11 +1,12 @@
-import { writable, get } from "svelte/store"
+import { get } from "svelte/store"
+import { memo } from "../../../utils"
 
 export const createStores = context => {
   const { props } = context
   const $props = get(props)
 
   // Initialise to default props
-  const sort = writable({
+  const sort = memo({
     column: $props.initialSortColumn,
     order: $props.initialSortOrder || "ascending",
   })

@@ -82,16 +82,10 @@ export const initialise = context => {
     if (!$definition || get(datasource)?.type !== "viewV2") {
       return
     }
-    const $sort = get(sort)
-    if (
-      $definition.sort?.field !== $sort?.column ||
-      $definition.sort?.order !== $sort?.order
-    ) {
-      sort.set({
-        column: $definition.sort?.field,
-        order: $definition.sort?.order,
-      })
-    }
+    sort.set({
+      column: $definition.sort?.field,
+      order: $definition.sort?.order,
+    })
   })
 
   // When sorting changes, ensure view definition is kept up to date
