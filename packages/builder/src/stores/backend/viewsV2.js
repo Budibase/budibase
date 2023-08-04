@@ -1,4 +1,4 @@
-import { writable, derived } from "svelte/store"
+import { writable, derived, get } from "svelte/store"
 import { tables } from "./"
 import { API } from "api"
 
@@ -30,44 +30,64 @@ export function createViewsV2Store() {
 
   const deleteView = async view => {
     await API.viewV2.delete(view.id)
-
-    // Update tables
-    tables.update(state => {
-      const table = state.list.find(table => table._id === view.tableId)
-      delete table.views[view.name]
-      return { ...state }
-    })
+    replaceView(view.id, null)
   }
 
   const create = async view => {
     const savedViewResponse = await API.viewV2.create(view)
     const savedView = savedViewResponse.data
-
-    // Update tables
-    tables.update(state => {
-      const table = state.list.find(table => table._id === view.tableId)
-      table.views[view.name] = savedView
-      return { ...state }
-    })
-
+    replaceView(savedView.id, savedView)
     return savedView
   }
 
   const save = async view => {
     const res = await API.viewV2.update(view)
     const savedView = res?.data
+    replaceView(view.id, savedView)
+  }
 
-    // Update tables
-    tables.update(state => {
-      const table = state.list.find(table => table._id === view.tableId)
-      if (table) {
-        if (view.originalName) {
-          delete table.views[view.originalName]
-        }
-        table.views[view.name] = savedView
-      }
-      return { ...state }
+  // Handles external updates of tables
+  const replaceView = (viewId, view) => {
+    console.log("replace", viewId, view)
+    if (!viewId) {
+      return
+    }
+    const existingView = get(derivedStore).list.find(view => view.id === viewId)
+    const tableIndex = get(tables).list.findIndex(table => {
+      return table._id === view?.tableId || table._id === existingView?.tableId
     })
+    if (tableIndex === -1) {
+      return
+    }
+
+    // Handle deletion
+    if (!view) {
+      tables.update(state => {
+        delete state.list[tableIndex].views[existingView.name]
+        return state
+      })
+      return
+    }
+
+    // Add new view
+    if (!existingView) {
+      tables.update(state => {
+        state.list[tableIndex].views[view.name] = view
+        return state
+      })
+    }
+
+    // Update existing view
+    else {
+      tables.update(state => {
+        // Remove old view
+        delete state.list[tableIndex].views[existingView.name]
+
+        // Add new view
+        state.list[tableIndex].views[view.name] = view
+        return state
+      })
+    }
   }
 
   return {
@@ -76,6 +96,7 @@ export function createViewsV2Store() {
     delete: deleteView,
     create,
     save,
+    replaceView,
   }
 }
 
