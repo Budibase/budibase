@@ -80,7 +80,7 @@ export const createActions = context => {
 
     // Broadcast change to external state can be updated, as this change
     // will not be received by the builder websocket because we caused it ourselves
-    dispatch("updatedefinition", newDefinition)
+    dispatch("updatedatasource", newDefinition)
   }
 
   // Adds a row to the datasource
