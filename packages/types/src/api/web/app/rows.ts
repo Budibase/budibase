@@ -12,7 +12,7 @@ export interface PatchRowResponse extends Row {}
 export interface SearchRowRequest extends Omit<SearchParams, "tableId"> {}
 
 export interface SearchViewRowRequest
-  extends Pick<SearchRowRequest, "sort" | "sortOrder" | "sortType"> {}
+  extends Pick<SearchRowRequest, "sort" | "sortOrder" | "sortType" | "limit"> {}
 
 export interface SearchRowResponse {
   rows: any[]

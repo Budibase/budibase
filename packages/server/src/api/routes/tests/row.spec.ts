@@ -1263,6 +1263,22 @@ describe("/rows", () => {
 
         expect(response.body.rows).toHaveLength(0)
       })
+
+      it("returns table rows from view", async () => {
+        const table = await config.createTable(userTable())
+        const rows = []
+        for (let i = 0; i < 10; i++) {
+          rows.push(await config.createRow({ tableId: table._id }))
+        }
+        const limit = generator.integer({ min: 1, max: 8 })
+
+        const createViewResponse = await config.api.viewV2.create()
+        const response = await config.api.viewV2.search(createViewResponse.id, {
+          limit,
+        })
+
+        expect(response.body.rows).toHaveLength(limit)
+      })
     })
   })
 })

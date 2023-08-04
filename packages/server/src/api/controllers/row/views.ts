@@ -39,6 +39,7 @@ export async function searchView(
     query: view.query || {},
     fields: viewFields,
     ...getSortOptions(ctx.request.body, view),
+    limit: ctx.request.body.limit,
   }
 
   const result = await quotas.addQuery(() => sdk.rows.search(searchOptions), {
