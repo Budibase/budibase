@@ -24,7 +24,6 @@ import {
   structures,
 } from "@budibase/backend-core/tests"
 import trimViewRowInfoMiddleware from "../../../middleware/trimViewRowInfo"
-import noViewDataMiddleware from "../../../middleware/noViewData"
 import router from "../row"
 
 describe("/rows", () => {
@@ -406,14 +405,6 @@ describe("/rows", () => {
         "Table row endpoints cannot contain view info"
       )
     })
-
-    it("should setup the noViewData middleware", async () => {
-      const route = router.stack.find(
-        r => r.methods.includes("POST") && r.path === "/api/:tableId/rows"
-      )
-      expect(route).toBeDefined()
-      expect(route?.stack).toContainEqual(noViewDataMiddleware)
-    })
   })
 
   describe("patch", () => {
@@ -481,14 +472,6 @@ describe("/rows", () => {
       expect(res.body.message).toEqual(
         "Table row endpoints cannot contain view info"
       )
-    })
-
-    it("should setup the noViewData middleware", async () => {
-      const route = router.stack.find(
-        r => r.methods.includes("PATCH") && r.path === "/api/:tableId/rows"
-      )
-      expect(route).toBeDefined()
-      expect(route?.stack).toContainEqual(noViewDataMiddleware)
     })
   })
 

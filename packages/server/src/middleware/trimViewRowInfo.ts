@@ -7,15 +7,15 @@ import { Next } from "koa"
 export default async (ctx: Ctx<Row>, next: Next) => {
   const { body } = ctx.request
   const { _viewId: viewId } = body
-  if (!viewId) {
-    return ctx.throw(400, "_viewId is required")
+
+  const possibleViewId = ctx.params.tableId
+
+  // nothing to do, it is not a view (just a table ID)
+  if (!viewId || !utils.isViewID(possibleViewId)) {
+    return next()
   }
 
-  if (!ctx.params.viewId) {
-    return ctx.throw(400, "viewId path is required")
-  }
-
-  const { tableId } = utils.extractViewInfoFromID(ctx.params.viewId)
+  const { tableId } = utils.extractViewInfoFromID(possibleViewId)
   const { _viewId, ...trimmedView } = await trimViewFields(
     viewId,
     tableId,
