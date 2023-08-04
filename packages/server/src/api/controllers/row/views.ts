@@ -2,13 +2,15 @@ import { quotas } from "@budibase/pro"
 import {
   UserCtx,
   ViewV2,
-  SearchRowRequest,
   SearchRowResponse,
+  SearchViewRowRequest,
+  RequiredKeys,
+  SearchParams,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
 export async function searchView(
-  ctx: UserCtx<SearchRowRequest, SearchRowResponse>
+  ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
 ) {
   const { viewId } = ctx.params
 
@@ -30,24 +32,24 @@ export async function searchView(
     undefined
 
   ctx.status = 200
-  const result = await quotas.addQuery(
-    () =>
-      sdk.rows.search({
-        tableId: view.tableId,
-        query: view.query || {},
-        fields: viewFields,
-        ...getSortOptions(ctx.request.body, view),
-      }),
-    {
-      datasourceId: view.tableId,
-    }
-  )
+
+  const searchOptions: RequiredKeys<SearchViewRowRequest> &
+    RequiredKeys<Pick<SearchParams, "tableId" | "query" | "fields">> = {
+    tableId: view.tableId,
+    query: view.query || {},
+    fields: viewFields,
+    ...getSortOptions(ctx.request.body, view),
+  }
+
+  const result = await quotas.addQuery(() => sdk.rows.search(searchOptions), {
+    datasourceId: view.tableId,
+  })
 
   result.rows.forEach(r => (r._viewId = view.id))
   ctx.body = result
 }
 
-function getSortOptions(request: SearchRowRequest, view: ViewV2) {
+function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
   if (request.sort) {
     return {
       sort: request.sort,
@@ -63,5 +65,9 @@ function getSortOptions(request: SearchRowRequest, view: ViewV2) {
     }
   }
 
-  return undefined
+  return {
+    sort: undefined,
+    sortOrder: undefined,
+    sortType: undefined,
+  }
 }
