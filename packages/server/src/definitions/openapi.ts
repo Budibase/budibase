@@ -34,6 +34,12 @@ export interface paths {
     /** Based on query properties (currently only name) search for queries. */
     post: operations["querySearch"];
   };
+  "/roles/assign": {
+    post: operations["roleAssign"];
+  };
+  "/roles/unassign": {
+    post: operations["roleUnAssign"];
+  };
   "/tables/{tableId}/rows": {
     /** Creates a row within the specified table. */
     post: operations["rowCreate"];
@@ -256,7 +262,8 @@ export interface components {
                 | "auto"
                 | "json"
                 | "internal"
-                | "barcodeqr";
+                | "barcodeqr"
+                | "bigint";
               /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
               constraints?: {
                 /** @enum {string} */
@@ -362,7 +369,8 @@ export interface components {
                   | "auto"
                   | "json"
                   | "internal"
-                  | "barcodeqr";
+                  | "barcodeqr"
+                  | "bigint";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
                   /** @enum {string} */
@@ -470,7 +478,8 @@ export interface components {
                   | "auto"
                   | "json"
                   | "internal"
-                  | "barcodeqr";
+                  | "barcodeqr"
+                  | "bigint";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
                   /** @enum {string} */
@@ -577,18 +586,8 @@ export interface components {
       lastName?: string;
       /** @description If set to true forces the user to reset their password on first login. */
       forceResetPassword?: boolean;
-      /** @description Describes if the user is a builder user or not. */
-      builder?: {
-        /** @description If set to true the user will be able to build any app in the system. */
-        global?: boolean;
-      };
-      /** @description Describes if the user is an admin user or not. */
-      admin?: {
-        /** @description If set to true the user will be able to administrate the system. */
-        global?: boolean;
-      };
-      /** @description Contains the roles of the user per app (assuming they are not a builder user). */
-      roles: { [key: string]: string };
+    } & {
+      roles: unknown;
     };
     userOutput: {
       data: {
@@ -607,24 +606,14 @@ export interface components {
         lastName?: string;
         /** @description If set to true forces the user to reset their password on first login. */
         forceResetPassword?: boolean;
-        /** @description Describes if the user is a builder user or not. */
-        builder?: {
-          /** @description If set to true the user will be able to build any app in the system. */
-          global?: boolean;
-        };
-        /** @description Describes if the user is an admin user or not. */
-        admin?: {
-          /** @description If set to true the user will be able to administrate the system. */
-          global?: boolean;
-        };
-        /** @description Contains the roles of the user per app (assuming they are not a builder user). */
-        roles: { [key: string]: string };
         /** @description The ID of the user. */
         _id: string;
+      } & {
+        roles: unknown;
       };
     };
     userSearch: {
-      data: {
+      data: ({
         /** @description The email address of the user, this must be unique. */
         email: string;
         /** @description The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure. */
@@ -640,21 +629,11 @@ export interface components {
         lastName?: string;
         /** @description If set to true forces the user to reset their password on first login. */
         forceResetPassword?: boolean;
-        /** @description Describes if the user is a builder user or not. */
-        builder?: {
-          /** @description If set to true the user will be able to build any app in the system. */
-          global?: boolean;
-        };
-        /** @description Describes if the user is an admin user or not. */
-        admin?: {
-          /** @description If set to true the user will be able to administrate the system. */
-          global?: boolean;
-        };
-        /** @description Contains the roles of the user per app (assuming they are not a builder user). */
-        roles: { [key: string]: string };
         /** @description The ID of the user. */
         _id: string;
-      }[];
+      } & {
+        roles: unknown;
+      })[];
     };
     rowSearch: {
       query: {
@@ -711,6 +690,48 @@ export interface components {
     nameSearch: {
       /** @description The name to be used when searching - this will be used in a case insensitive starts with match. */
       name: string;
+    };
+    rolesAssign: {
+      /** @description Add/remove global builder permissions from the list of users. */
+      builder?: {
+        global: boolean;
+      };
+      /** @description Add/remove global admin permissions from the list of users. */
+      admin?: {
+        global: boolean;
+      };
+      /** @description Add/remove a per-app role, such as BASIC, ADMIN etc. */
+      role?: {
+        /** @description The role ID, such as BASIC, ADMIN or a custom role ID. */
+        roleId: string;
+        /** @description The app that the role relates to. */
+        appId: string;
+      };
+      /** @description The user IDs to be updated to add/remove the specified roles. */
+      userIds: string[];
+    };
+    rolesUnAssign: {
+      /** @description Add/remove global builder permissions from the list of users. */
+      builder?: {
+        global: boolean;
+      };
+      /** @description Add/remove global admin permissions from the list of users. */
+      admin?: {
+        global: boolean;
+      };
+      /** @description Add/remove a per-app role, such as BASIC, ADMIN etc. */
+      role?: {
+        /** @description The role ID, such as BASIC, ADMIN or a custom role ID. */
+        roleId: string;
+        /** @description The app that the role relates to. */
+        appId: string;
+      };
+      /** @description The user IDs to be updated to add/remove the specified roles. */
+      userIds: string[];
+    };
+    rolesOutput: {
+      /** @description The updated users' IDs */
+      userIds: string[];
     };
   };
   parameters: {
@@ -904,6 +925,36 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["nameSearch"];
+      };
+    };
+  };
+  roleAssign: {
+    responses: {
+      /** Returns a list of updated user IDs */
+      200: {
+        content: {
+          "application/json": components["schemas"]["rolesOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["rolesAssign"];
+      };
+    };
+  };
+  roleUnAssign: {
+    responses: {
+      /** Returns a list of updated user IDs */
+      200: {
+        content: {
+          "application/json": components["schemas"]["rolesOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["rolesUnAssign"];
       };
     };
   };
