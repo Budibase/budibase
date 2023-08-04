@@ -1,5 +1,11 @@
-import { roles, permissions, auth, context } from "@budibase/backend-core"
-import { Role } from "@budibase/types"
+import {
+  auth,
+  context,
+  permissions,
+  roles,
+  users,
+} from "@budibase/backend-core"
+import { PermissionLevel, PermissionType, Role, UserCtx } from "@budibase/types"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
 
@@ -16,15 +22,20 @@ const csrf = auth.buildCsrfMiddleware()
  * - Otherwise the user must have the required role.
  */
 const checkAuthorized = async (
-  ctx: any,
+  ctx: UserCtx,
   resourceRoles: any,
-  permType: any,
-  permLevel: any
+  permType: PermissionType,
+  permLevel: PermissionLevel
 ) => {
+  const appId = context.getAppId()
+  const isGlobalBuilderApi = permType === PermissionType.GLOBAL_BUILDER
+  const isBuilderApi = permType === PermissionType.BUILDER
+  const globalBuilder = users.isGlobalBuilder(ctx.user)
+  let isBuilder = appId
+    ? users.isBuilder(ctx.user, appId)
+    : users.hasBuilderPermissions(ctx.user)
   // check if this is a builder api and the user is not a builder
-  const isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
-  const isBuilderApi = permType === permissions.PermissionType.BUILDER
-  if (isBuilderApi && !isBuilder) {
+  if ((isGlobalBuilderApi && !globalBuilder) || (isBuilderApi && !isBuilder)) {
     return ctx.throw(403, "Not Authorized")
   }
 
@@ -35,10 +46,10 @@ const checkAuthorized = async (
 }
 
 const checkAuthorizedResource = async (
-  ctx: any,
+  ctx: UserCtx,
   resourceRoles: any,
-  permType: any,
-  permLevel: any
+  permType: PermissionType,
+  permLevel: PermissionLevel
 ) => {
   // get the user's roles
   const roleId = ctx.roleId || roles.BUILTIN_ROLE_IDS.PUBLIC
@@ -64,8 +75,8 @@ const checkAuthorizedResource = async (
 }
 
 export default (
-    permType: any,
-    permLevel: any = null,
+    permType: PermissionType,
+    permLevel?: PermissionLevel,
     opts = { schema: false }
   ) =>
   async (ctx: any, next: any) => {
@@ -83,12 +94,12 @@ export default (
     let resourceRoles: any = []
     let otherLevelRoles: any = []
     const otherLevel =
-      permLevel === permissions.PermissionLevel.READ
-        ? permissions.PermissionLevel.WRITE
-        : permissions.PermissionLevel.READ
+      permLevel === PermissionLevel.READ
+        ? PermissionLevel.WRITE
+        : PermissionLevel.READ
     const appId = context.getAppId()
     if (appId && hasResource(ctx)) {
-      resourceRoles = await roles.getRequiredResourceRole(permLevel, ctx)
+      resourceRoles = await roles.getRequiredResourceRole(permLevel!, ctx)
       if (opts && opts.schema) {
         otherLevelRoles = await roles.getRequiredResourceRole(otherLevel, ctx)
       }
@@ -110,13 +121,16 @@ export default (
 
     // check general builder stuff, this middleware is a good way
     // to find API endpoints which are builder focused
-    if (permType === permissions.PermissionType.BUILDER) {
+    if (
+      permType === PermissionType.BUILDER ||
+      permType === PermissionType.GLOBAL_BUILDER
+    ) {
       await builderMiddleware(ctx)
     }
 
     try {
       // check authorized
-      await checkAuthorized(ctx, resourceRoles, permType, permLevel)
+      await checkAuthorized(ctx, resourceRoles, permType, permLevel!)
     } catch (err) {
       // this is a schema, check if
       if (opts && opts.schema && permLevel) {
