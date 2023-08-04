@@ -180,5 +180,19 @@
   },
   "optionalDependencies": {
     "oracledb": "5.3.0"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/client"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }
