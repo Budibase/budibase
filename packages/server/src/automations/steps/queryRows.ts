@@ -73,12 +73,6 @@ export const definition: AutomationStepSchema = {
           title: "Limit",
           customType: AutomationCustomIOType.QUERY_LIMIT,
         },
-        onEmptyFilter: {
-          pretty: Object.values(EmptyFilterOptionPretty),
-          enum: Object.values(EmptyFilterOption),
-          type: AutomationIOType.STRING,
-          title: "When Filter Empty",
-        },
       },
       required: ["tableId"],
     },
