@@ -83,6 +83,7 @@
         tableId: dataSource?.tableId,
         rowId: `{{ ${safe(repeaterId)}.${safe("_id")} }}`,
         revId: `{{ ${safe(repeaterId)}.${safe("_rev")} }}`,
+        notificationOverride,
       },
     },
     {

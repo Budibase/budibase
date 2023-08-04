@@ -1,16 +1,21 @@
 <script>
   import { Heading, Body, Button, Icon } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
+  import { auth } from "stores/portal"
   import { goto } from "@roxi/routify"
   import { UserAvatars } from "@budibase/frontend-core"
+  import { sdk } from "@budibase/shared-core"
 
   export let app
   export let lockedAction
 
   $: editing = app.sessions?.length
+  $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
 
   const handleDefaultClick = () => {
-    if (window.innerWidth < 640) {
+    if (!isBuilder) {
+      goToApp()
+    } else if (window.innerWidth < 640) {
       goToOverview()
     } else {
       goToBuilder()
@@ -23,6 +28,10 @@
 
   const goToOverview = () => {
     $goto(`../../app/${app.devId}/settings`)
+  }
+
+  const goToApp = () => {
+    window.open(`/app/${app.name}`, "_blank")
   }
 </script>
 
@@ -39,7 +48,7 @@
   </div>
 
   <div class="updated">
-    {#if editing}
+    {#if editing && isBuilder}
       Currently editing
       <UserAvatars users={app.sessions} />
     {:else if app.updatedAt}
@@ -56,14 +65,21 @@
     <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
-  <div class="app-row-actions">
-    <Button size="S" secondary on:click={lockedAction || goToOverview}>
-      Manage
-    </Button>
-    <Button size="S" primary on:click={lockedAction || goToBuilder}>
-      Edit
-    </Button>
-  </div>
+  {#if isBuilder}
+    <div class="app-row-actions">
+      <Button size="S" secondary on:click={lockedAction || goToOverview}>
+        Manage
+      </Button>
+      <Button size="S" primary on:click={lockedAction || goToBuilder}>
+        Edit
+      </Button>
+    </div>
+  {:else}
+    <!-- this can happen if an app builder has app user access to an app -->
+    <div class="app-row-actions">
+      <Button size="S" secondary>View</Button>
+    </div>
+  {/if}
 </div>
 
 <style>

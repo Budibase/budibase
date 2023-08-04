@@ -16,7 +16,6 @@
     "require": ["tsconfig-paths/register"],
     "swc": true
   },
-  "references": [{ "path": "../types" }, { "path": "../backend-core" }],
   "include": ["src/**/*", "package.json"],
   "exclude": ["node_modules", "dist"]
 }
