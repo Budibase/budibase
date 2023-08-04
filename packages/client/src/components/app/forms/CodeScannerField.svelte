@@ -14,6 +14,7 @@
   export let beepOnScan
   export let beepFrequency
   export let customFrequency
+  export let preferedCamera
 
   let fieldState
   let fieldApi
@@ -48,6 +49,7 @@
       {beepOnScan}
       {beepFrequency}
       {customFrequency}
+      {preferedCamera}
     />
   {/if}
 </Field>
