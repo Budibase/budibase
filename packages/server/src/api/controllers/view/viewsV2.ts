@@ -8,6 +8,7 @@ import {
   ViewV2,
   RequiredKeys,
 } from "@budibase/types"
+import { builderSocket } from "../../../websockets"
 
 async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
   if (!view.schema) {
@@ -86,6 +87,9 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   ctx.body = {
     data: result,
   }
+
+  const table = await sdk.tables.getTable(tableId)
+  builderSocket?.emitTableUpdate(ctx, table)
 }
 
 export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
@@ -118,11 +122,17 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
   ctx.body = {
     data: result,
   }
+
+  const table = await sdk.tables.getTable(tableId)
+  builderSocket?.emitTableUpdate(ctx, table)
 }
 
 export async function remove(ctx: Ctx) {
   const { viewId } = ctx.params
 
-  await sdk.views.remove(viewId)
+  const view = await sdk.views.remove(viewId)
   ctx.status = 204
+
+  const table = await sdk.tables.getTable(view.tableId)
+  builderSocket?.emitTableUpdate(ctx, table)
 }
