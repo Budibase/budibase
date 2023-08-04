@@ -151,11 +151,6 @@ export const createActions = context => {
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
           definition.set($fetch.definition)
-
-          // sort.set({
-          //   column: $fetch.sortColumn,
-          //   order: $fetch.sortOrder,
-          // })
         }
 
         // Reset scroll state when data changes

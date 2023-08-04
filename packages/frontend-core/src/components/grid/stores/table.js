@@ -54,7 +54,7 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { datasource, fetch, filter, sort } = context
+  const { datasource, fetch, filter, sort, definition } = context
 
   // Update fetch when filter changes
   filter.subscribe($filter => {
@@ -71,6 +71,22 @@ export const initialise = context => {
       get(fetch)?.update({
         sortOrder: $sort.order,
         sortColumn: $sort.column,
+      })
+    }
+  })
+
+  // Ensure sorting UI reflects the fetch state whenever we reset the fetch,
+  // which triggers a new definition
+  definition.subscribe(() => {
+    if (get(datasource)?.type === "table") {
+      const $fetch = get(fetch)
+      if (!$fetch) {
+        return
+      }
+      const { sortColumn, sortOrder } = get($fetch)
+      sort.set({
+        column: sortColumn,
+        order: sortOrder,
       })
     }
   })
