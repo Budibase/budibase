@@ -13,7 +13,6 @@
   }
 
   const handleGridViewUpdate = async e => {
-    console.log("update")
     viewsV2.replaceView(id, e.detail)
   }
 </script>
