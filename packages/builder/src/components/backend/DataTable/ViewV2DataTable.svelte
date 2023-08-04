@@ -26,9 +26,7 @@
     showAvatars={false}
     on:updatedatasource={handleGridViewUpdate}
   >
-    <svelte:fragment slot="filter">
-      <GridFilterButton />
-    </svelte:fragment>
+    <svelte:fragment slot="filter" />
     <svelte:fragment slot="controls">
       <GridCreateEditRowModal />
     </svelte:fragment>
