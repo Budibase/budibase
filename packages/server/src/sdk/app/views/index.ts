@@ -56,7 +56,7 @@ export function isV2(view: View | ViewV2): view is ViewV2 {
   return (view as ViewV2).version === 2
 }
 
-export async function remove(viewId: string): Promise<void> {
+export async function remove(viewId: string): Promise<ViewV2> {
   const db = context.getAppDB()
 
   const view = await get(viewId)
@@ -67,6 +67,7 @@ export async function remove(viewId: string): Promise<void> {
 
   delete table.views![view?.name]
   await db.put(table)
+  return view
 }
 
 export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
