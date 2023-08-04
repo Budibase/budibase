@@ -39,6 +39,7 @@
   import { API } from "api"
   import { OnboardingType } from "../../../../../constants"
   import ScimBanner from "../_components/SCIMBanner.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   const fetch = fetchData({
     API,
@@ -66,7 +67,7 @@
   let userData = []
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
-  $: readonly = !$auth.isAdmin || $features.isScimEnabled
+  $: readonly = !sdk.users.isAdmin($auth.user) || $features.isScimEnabled
 
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {

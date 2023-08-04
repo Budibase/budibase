@@ -14,7 +14,7 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "build": "node ../../scripts/build.js",
-    "check:types": "tsc -p tsconfig.build.json --noEmit",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "run:docker": "node dist/index.js",
     "debug": "yarn build && node --expose-gc --inspect=9223 dist/index.js",
@@ -102,20 +102,5 @@
     "tsconfig-paths": "4.0.0",
     "typescript": "4.7.3",
     "update-dotenv": "1.1.1"
-  },
-  "nx": {
-    "targets": {
-      "dev:builder": {
-        "dependsOn": [
-          {
-            "projects": [
-              "@budibase/backend-core"
-            ],
-            "target": "build"
-          }
-        ]
-      }
-    }
-  },
-  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
+  }
 }

@@ -1,11 +1,12 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import { apps } from "stores/portal"
+  import { sdk } from "@budibase/shared-core"
 
   export let value
   export let row
 
-  $: priviliged = row?.admin?.global || row?.builder?.global
+  $: priviliged = sdk.users.isAdminOrBuilder(row)
   $: count = priviliged ? $apps.length : value?.length || 0
 </script>
 

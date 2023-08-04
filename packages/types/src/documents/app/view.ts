@@ -18,6 +18,7 @@ export interface ViewV2 {
   version: 2
   id: string
   name: string
+  primaryDisplay?: string
   tableId: string
   query?: SearchFilters
   sort?: {
@@ -25,7 +26,8 @@ export interface ViewV2 {
     order?: SortOrder
     type?: SortType
   }
-  columns?: Record<string, UIFieldMetadata>
+  columns?: string[]
+  schemaUI?: Record<string, UIFieldMetadata>
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema
