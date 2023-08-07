@@ -24,7 +24,7 @@ export const buildViewV2Endpoints = API => ({
    * @param viewId the id of the view
    */
   fetch: async viewId => {
-    return await API.get({ url: `/api/v2/views/${viewId}/search` })
+    return await API.post({ url: `/api/v2/views/${viewId}/search` })
   },
   /**
    * Delete a view
