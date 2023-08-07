@@ -14,8 +14,18 @@ import {
   Row,
   Table,
   FieldType,
+  SortType,
+  SortOrder,
+  DeleteRow,
 } from "@budibase/types"
-import { structures } from "@budibase/backend-core/tests"
+import {
+  expectAnyInternalColsAttributes,
+  generator,
+  structures,
+} from "@budibase/backend-core/tests"
+import trimViewRowInfoMiddleware from "../../../middleware/trimViewRowInfo"
+import noViewDataMiddleware from "../../../middleware/noViewData"
+import router from "../row"
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -384,6 +394,26 @@ describe("/rows", () => {
       expect(saved.arrayFieldArrayStrKnown).toEqual(["One"])
       expect(saved.optsFieldStrKnown).toEqual("Alpha")
     })
+
+    it("should throw an error when creating a table row with view id data", async () => {
+      const res = await request
+        .post(`/api/${row.tableId}/rows`)
+        .send({ ...row, _viewId: generator.guid() })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+      expect(res.body.message).toEqual(
+        "Table row endpoints cannot contain view info"
+      )
+    })
+
+    it("should setup the noViewData middleware", async () => {
+      const route = router.stack.find(
+        r => r.methods.includes("POST") && r.path === "/api/:tableId/rows"
+      )
+      expect(route).toBeDefined()
+      expect(route?.stack).toContainEqual(noViewDataMiddleware)
+    })
   })
 
   describe("patch", () => {
@@ -393,17 +423,12 @@ describe("/rows", () => {
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .patch(`/api/${table._id}/rows`)
-        .send({
-          _id: existing._id,
-          _rev: existing._rev,
-          tableId: table._id,
-          name: "Updated Name",
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.patch(table._id!, {
+        _id: existing._id!,
+        _rev: existing._rev!,
+        tableId: table._id!,
+        name: "Updated Name",
+      })
 
       expect((res as any).res.statusMessage).toEqual(
         `${table.name} updated successfully.`
@@ -424,19 +449,46 @@ describe("/rows", () => {
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      await request
-        .patch(`/api/${table._id}/rows`)
-        .send({
-          _id: existing._id,
-          _rev: existing._rev,
-          tableId: table._id,
+      await config.api.row.patch(
+        table._id!,
+        {
+          _id: existing._id!,
+          _rev: existing._rev!,
+          tableId: table._id!,
           name: 1,
-        })
-        .set(config.defaultHeaders())
-        .expect(400)
+        },
+        { expectStatus: 400 }
+      )
 
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
+    })
+
+    it("should throw an error when creating a table row with view id data", async () => {
+      const existing = await config.createRow()
+
+      const res = await config.api.row.patch(
+        table._id!,
+        {
+          ...existing,
+          _id: existing._id!,
+          _rev: existing._rev!,
+          tableId: table._id!,
+          _viewId: generator.guid(),
+        },
+        { expectStatus: 400 }
+      )
+      expect(res.body.message).toEqual(
+        "Table row endpoints cannot contain view info"
+      )
+    })
+
+    it("should setup the noViewData middleware", async () => {
+      const route = router.stack.find(
+        r => r.methods.includes("PATCH") && r.path === "/api/:tableId/rows"
+      )
+      expect(route).toBeDefined()
+      expect(route?.stack).toContainEqual(noViewDataMiddleware)
     })
   })
 
@@ -516,6 +568,81 @@ describe("/rows", () => {
       await loadRow(row1._id!, table._id!, 404)
       await assertRowUsage(rowUsage - 2)
       await assertQueryUsage(queryUsage + 1)
+    })
+
+    it("should be able to delete a variety of row set types", async () => {
+      const row1 = await config.createRow()
+      const row2 = await config.createRow()
+      const row3 = await config.createRow()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const res = await request
+        .delete(`/api/${table._id}/rows`)
+        .send({
+          rows: [row1, row2._id, { _id: row3._id }],
+        })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body.length).toEqual(3)
+      await loadRow(row1._id!, table._id!, 404)
+      await assertRowUsage(rowUsage - 3)
+      await assertQueryUsage(queryUsage + 1)
+    })
+
+    it("should accept a valid row object and delete the row", async () => {
+      const row1 = await config.createRow()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const res = await request
+        .delete(`/api/${table._id}/rows`)
+        .send(row1)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body.id).toEqual(row1._id)
+      await loadRow(row1._id!, table._id!, 404)
+      await assertRowUsage(rowUsage - 1)
+      await assertQueryUsage(queryUsage + 1)
+    })
+
+    it("Should ignore malformed/invalid delete requests", async () => {
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
+      const res = await request
+        .delete(`/api/${table._id}/rows`)
+        .send({ not: "valid" })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res.body.message).toEqual("Invalid delete rows request")
+
+      const res2 = await request
+        .delete(`/api/${table._id}/rows`)
+        .send({ rows: 123 })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res2.body.message).toEqual("Invalid delete rows request")
+
+      const res3 = await request
+        .delete(`/api/${table._id}/rows`)
+        .send("invalid")
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(400)
+
+      expect(res3.body.message).toEqual("Invalid delete rows request")
+
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage)
     })
   })
 
@@ -683,6 +810,459 @@ describe("/rows", () => {
       // Ensure only the _id column was exported
       expect(Object.keys(row).length).toEqual(1)
       expect(row._id).toEqual(existing._id)
+    })
+  })
+
+  describe("view 2.0", () => {
+    function userTable(): Table {
+      return {
+        name: "user",
+        type: "user",
+        schema: {
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+          },
+          surname: {
+            type: FieldType.STRING,
+            name: "name",
+          },
+          age: {
+            type: FieldType.NUMBER,
+            name: "age",
+          },
+          address: {
+            type: FieldType.STRING,
+            name: "address",
+          },
+          jobTitle: {
+            type: FieldType.STRING,
+            name: "jobTitle",
+          },
+        },
+      }
+    }
+
+    const randomRowData = () => ({
+      name: generator.first(),
+      surname: generator.last(),
+      age: generator.age(),
+      address: generator.address(),
+      jobTitle: generator.word(),
+    })
+
+    describe("create", () => {
+      it("should persist a new row with only the provided view fields", async () => {
+        const table = await config.createTable(userTable())
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          schema: {
+            name: { visible: true },
+            surname: { visible: true },
+            address: { visible: true },
+          },
+        })
+
+        const data = randomRowData()
+        const newRow = await config.api.viewV2.row.create(view.id, {
+          tableId: config.table!._id,
+          _viewId: view.id,
+          ...data,
+        })
+
+        const row = await config.api.row.get(table._id!, newRow._id!)
+        expect(row.body).toEqual({
+          name: data.name,
+          surname: data.surname,
+          address: data.address,
+          tableId: config.table!._id,
+          type: "row",
+          _id: expect.any(String),
+          _rev: expect.any(String),
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
+        })
+        expect(row.body._viewId).toBeUndefined()
+        expect(row.body.age).toBeUndefined()
+        expect(row.body.jobTitle).toBeUndefined()
+      })
+
+      it("should setup the trimViewRowInfo middleware", async () => {
+        const route = router.stack.find(
+          r =>
+            r.methods.includes("POST") &&
+            r.path === "/api/v2/views/:viewId/rows"
+        )
+        expect(route).toBeDefined()
+        expect(route?.stack).toContainEqual(trimViewRowInfoMiddleware)
+      })
+    })
+
+    describe("patch", () => {
+      it("should update only the view fields for a row", async () => {
+        const table = await config.createTable(userTable())
+        const tableId = table._id!
+        const view = await config.api.viewV2.create({
+          tableId,
+          schema: {
+            name: { visible: true },
+            address: { visible: true },
+          },
+        })
+
+        const newRow = await config.api.viewV2.row.create(view.id, {
+          tableId,
+          _viewId: view.id,
+          ...randomRowData(),
+        })
+        const newData = randomRowData()
+        await config.api.viewV2.row.update(view.id, newRow._id!, {
+          tableId,
+          _viewId: view.id,
+          _id: newRow._id!,
+          _rev: newRow._rev!,
+          ...newData,
+        })
+
+        const row = await config.api.row.get(tableId, newRow._id!)
+        expect(row.body).toEqual({
+          ...newRow,
+          type: "row",
+          name: newData.name,
+          address: newData.address,
+          _id: expect.any(String),
+          _rev: expect.any(String),
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
+        })
+        expect(row.body._viewId).toBeUndefined()
+        expect(row.body.age).toBeUndefined()
+        expect(row.body.jobTitle).toBeUndefined()
+      })
+
+      it("should setup the trimViewRowInfo middleware", async () => {
+        const route = router.stack.find(
+          r =>
+            r.methods.includes("PATCH") &&
+            r.path === "/api/v2/views/:viewId/rows/:rowId"
+        )
+        expect(route).toBeDefined()
+        expect(route?.stack).toContainEqual(trimViewRowInfoMiddleware)
+      })
+    })
+
+    describe("destroy", () => {
+      it("should be able to delete a row", async () => {
+        const table = await config.createTable(userTable())
+        const tableId = table._id!
+        const view = await config.api.viewV2.create({
+          tableId,
+          schema: {
+            name: { visible: true },
+            address: { visible: true },
+          },
+        })
+
+        const createdRow = await config.createRow()
+        const rowUsage = await getRowUsage()
+        const queryUsage = await getQueryUsage()
+
+        const body: DeleteRow = {
+          _id: createdRow._id!,
+        }
+        await config.api.viewV2.row.delete(view.id, body)
+
+        await assertRowUsage(rowUsage - 1)
+        await assertQueryUsage(queryUsage + 1)
+
+        await config.api.row.get(tableId, createdRow._id!, {
+          expectStatus: 404,
+        })
+      })
+
+      it("should be able to delete multiple rows", async () => {
+        const table = await config.createTable(userTable())
+        const tableId = table._id!
+        const view = await config.api.viewV2.create({
+          tableId,
+          schema: {
+            name: { visible: true },
+            address: { visible: true },
+          },
+        })
+
+        const rows = [
+          await config.createRow(),
+          await config.createRow(),
+          await config.createRow(),
+        ]
+        const rowUsage = await getRowUsage()
+        const queryUsage = await getQueryUsage()
+
+        await config.api.viewV2.row.delete(view.id, {
+          rows: [rows[0], rows[2]],
+        })
+
+        await assertRowUsage(rowUsage - 2)
+        await assertQueryUsage(queryUsage + 1)
+
+        await config.api.row.get(tableId, rows[0]._id!, {
+          expectStatus: 404,
+        })
+        await config.api.row.get(tableId, rows[2]._id!, {
+          expectStatus: 404,
+        })
+        await config.api.row.get(tableId, rows[1]._id!, { expectStatus: 200 })
+      })
+    })
+
+    describe("view search", () => {
+      function userTable(): Table {
+        return {
+          name: "user",
+          type: "user",
+          schema: {
+            name: {
+              type: FieldType.STRING,
+              name: "name",
+              constraints: { type: "string" },
+            },
+            age: {
+              type: FieldType.NUMBER,
+              name: "age",
+              constraints: {},
+            },
+          },
+        }
+      }
+
+      it("returns table rows from view", async () => {
+        const table = await config.createTable(userTable())
+        const rows = []
+        for (let i = 0; i < 10; i++) {
+          rows.push(await config.createRow({ tableId: table._id }))
+        }
+
+        const createViewResponse = await config.api.viewV2.create()
+        const response = await config.api.viewV2.search(createViewResponse.id)
+
+        expect(response.body.rows).toHaveLength(10)
+        expect(response.body).toEqual({
+          rows: expect.arrayContaining(rows.map(expect.objectContaining)),
+        })
+      })
+
+      it("searching respects the view filters", async () => {
+        const table = await config.createTable(userTable())
+        const expectedRows = []
+        for (let i = 0; i < 10; i++)
+          await config.createRow({
+            tableId: table._id,
+            name: generator.name(),
+            age: generator.integer({ min: 10, max: 30 }),
+          })
+
+        for (let i = 0; i < 5; i++)
+          expectedRows.push(
+            await config.createRow({
+              tableId: table._id,
+              name: generator.name(),
+              age: 40,
+            })
+          )
+
+        const createViewResponse = await config.api.viewV2.create({
+          query: { equal: { age: 40 } },
+        })
+
+        const response = await config.api.viewV2.search(createViewResponse.id)
+
+        expect(response.body.rows).toHaveLength(5)
+        expect(response.body).toEqual({
+          rows: expect.arrayContaining(
+            expectedRows.map(expect.objectContaining)
+          ),
+        })
+      })
+
+      const sortTestOptions: [
+        {
+          field: string
+          order?: SortOrder
+          type?: SortType
+        },
+        string[]
+      ][] = [
+        [
+          {
+            field: "name",
+            order: SortOrder.ASCENDING,
+            type: SortType.STRING,
+          },
+          ["Alice", "Bob", "Charly", "Danny"],
+        ],
+        [
+          {
+            field: "name",
+          },
+          ["Alice", "Bob", "Charly", "Danny"],
+        ],
+        [
+          {
+            field: "name",
+            order: SortOrder.DESCENDING,
+          },
+          ["Danny", "Charly", "Bob", "Alice"],
+        ],
+        [
+          {
+            field: "name",
+            order: SortOrder.DESCENDING,
+            type: SortType.STRING,
+          },
+          ["Danny", "Charly", "Bob", "Alice"],
+        ],
+        [
+          {
+            field: "age",
+            order: SortOrder.ASCENDING,
+            type: SortType.number,
+          },
+          ["Danny", "Alice", "Charly", "Bob"],
+        ],
+        [
+          {
+            field: "age",
+            order: SortOrder.ASCENDING,
+          },
+          ["Danny", "Alice", "Charly", "Bob"],
+        ],
+        [
+          {
+            field: "age",
+            order: SortOrder.DESCENDING,
+          },
+          ["Bob", "Charly", "Alice", "Danny"],
+        ],
+        [
+          {
+            field: "age",
+            order: SortOrder.DESCENDING,
+            type: SortType.number,
+          },
+          ["Bob", "Charly", "Alice", "Danny"],
+        ],
+      ]
+
+      it.each(sortTestOptions)(
+        "allow sorting (%s)",
+        async (sortParams, expected) => {
+          await config.createTable(userTable())
+          const users = [
+            { name: "Alice", age: 25 },
+            { name: "Bob", age: 30 },
+            { name: "Charly", age: 27 },
+            { name: "Danny", age: 15 },
+          ]
+          for (const user of users) {
+            await config.createRow({
+              tableId: config.table!._id,
+              ...user,
+            })
+          }
+
+          const createViewResponse = await config.api.viewV2.create({
+            sort: sortParams,
+          })
+
+          const response = await config.api.viewV2.search(createViewResponse.id)
+
+          expect(response.body.rows).toHaveLength(4)
+          expect(response.body).toEqual({
+            rows: expected.map(name => expect.objectContaining({ name })),
+          })
+        }
+      )
+
+      it.each(sortTestOptions)(
+        "allow override the default view sorting (%s)",
+        async (sortParams, expected) => {
+          await config.createTable(userTable())
+          const users = [
+            { name: "Alice", age: 25 },
+            { name: "Bob", age: 30 },
+            { name: "Charly", age: 27 },
+            { name: "Danny", age: 15 },
+          ]
+          for (const user of users) {
+            await config.createRow({
+              tableId: config.table!._id,
+              ...user,
+            })
+          }
+
+          const createViewResponse = await config.api.viewV2.create({
+            sort: {
+              field: "name",
+              order: SortOrder.ASCENDING,
+              type: SortType.STRING,
+            },
+          })
+
+          const response = await config.api.viewV2.search(
+            createViewResponse.id,
+            {
+              sort: sortParams.field,
+              sortOrder: sortParams.order,
+              sortType: sortParams.type,
+            }
+          )
+
+          expect(response.body.rows).toHaveLength(4)
+          expect(response.body).toEqual({
+            rows: expected.map(name => expect.objectContaining({ name })),
+          })
+        }
+      )
+
+      it("when schema is defined, defined columns and row attributes are returned", async () => {
+        const table = await config.createTable(userTable())
+        const rows = []
+        for (let i = 0; i < 10; i++) {
+          rows.push(
+            await config.createRow({
+              tableId: table._id,
+              name: generator.name(),
+              age: generator.age(),
+            })
+          )
+        }
+
+        const view = await config.api.viewV2.create({
+          schema: { name: {} },
+        })
+        const response = await config.api.viewV2.search(view.id)
+
+        expect(response.body.rows).toHaveLength(10)
+        expect(response.body.rows).toEqual(
+          expect.arrayContaining(
+            rows.map(r => ({
+              ...expectAnyInternalColsAttributes,
+              _viewId: view.id,
+              name: r.name,
+            }))
+          )
+        )
+      })
+
+      it("views without data can be returned", async () => {
+        const table = await config.createTable(userTable())
+
+        const createViewResponse = await config.api.viewV2.create()
+        const response = await config.api.viewV2.search(createViewResponse.id)
+
+        expect(response.body.rows).toHaveLength(0)
+      })
     })
   })
 })

@@ -1,5 +1,6 @@
 import {
   context,
+  db,
   SearchParams as InternalSearchParams,
 } from "@budibase/backend-core"
 import env from "../../../../environment"
@@ -11,7 +12,7 @@ import {
 } from "../../../../db/utils"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
-import { Database, Row, Table } from "@budibase/types"
+import { Database, Row, Table, SearchParams } from "@budibase/types"
 import { cleanExportRows } from "../utils"
 import {
   Format,
@@ -27,7 +28,8 @@ import {
   getFromMemoryDoc,
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
-import { ExportRowsParams, ExportRowsResult, SearchParams } from "../search"
+import { ExportRowsParams, ExportRowsResult } from "../search"
+import pick from "lodash/pick"
 
 export async function search(options: SearchParams) {
   const { tableId } = options
@@ -72,6 +74,12 @@ export async function search(options: SearchParams) {
       response.rows = await getGlobalUsersFromMetadata(response.rows)
     }
     table = table || (await sdk.tables.getTable(tableId))
+
+    if (options.fields) {
+      const fields = [...options.fields, ...db.CONSTANT_INTERNAL_ROW_COLS]
+      response.rows = response.rows.map((r: any) => pick(r, fields))
+    }
+
     response.rows = await outputProcessing(table, response.rows)
   }
 
@@ -139,8 +147,8 @@ export async function exportRows(
 export async function fetch(tableId: string) {
   const db = context.getAppDB()
 
-  let table = await sdk.tables.getTable(tableId)
-  let rows = await getRawTableData(db, tableId)
+  const table = await sdk.tables.getTable(tableId)
+  const rows = await getRawTableData(db, tableId)
   const result = await outputProcessing(table, rows)
   return result
 }
@@ -163,7 +171,7 @@ async function getRawTableData(db: Database, tableId: string) {
 export async function fetchView(
   viewName: string,
   options: { calculation: string; group: string; field: string }
-) {
+): Promise<Row[]> {
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(DocumentType.TABLE)) {
     return fetch(viewName)
@@ -189,7 +197,7 @@ export async function fetchView(
     )
   }
 
-  let rows
+  let rows: Row[] = []
   if (!calculation) {
     response.rows = response.rows.map(row => row.doc)
     let table: Table

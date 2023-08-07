@@ -49,6 +49,7 @@ export default class AccountInternalAPIClient {
         requestOptions.headers = {
           ...requestOptions.headers,
           ...{ [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY },
+          cookie: "",
         }
       }
 

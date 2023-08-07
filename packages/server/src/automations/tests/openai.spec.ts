@@ -22,6 +22,10 @@ jest.mock(
   }))
 )
 
+const mockedOpenAIApi = openai.OpenAIApi as jest.MockedClass<
+  typeof openai.OpenAIApi
+>
+
 const OPENAI_PROMPT = "What is the meaning of life?"
 
 describe("test the openai action", () => {
@@ -68,11 +72,16 @@ describe("test the openai action", () => {
   })
 
   it("should present the correct error message when an error is thrown from the createChatCompletion call", async () => {
-    openai.OpenAIApi.mockImplementation(() => ({
-      createChatCompletion: jest.fn(() => {
-        throw new Error("An error occurred while calling createChatCompletion")
-      }),
-    }))
+    mockedOpenAIApi.mockImplementation(
+      () =>
+        ({
+          createChatCompletion: jest.fn(() => {
+            throw new Error(
+              "An error occurred while calling createChatCompletion"
+            )
+          }),
+        } as any)
+    )
 
     const res = await setup.runStep("OPENAI", {
       prompt: OPENAI_PROMPT,

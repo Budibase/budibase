@@ -2,12 +2,27 @@ import { quotas } from "@budibase/pro"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTable } from "../../../integrations/utils"
-import { Ctx } from "@budibase/types"
+import {
+  Ctx,
+  UserCtx,
+  DeleteRowRequest,
+  DeleteRow,
+  DeleteRows,
+  Row,
+  PatchRowRequest,
+  PatchRowResponse,
+  SearchRowResponse,
+  SearchRowRequest,
+  SearchParams,
+} from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
+import { addRev } from "../public/utils"
+import { fixRow } from "../public/rows"
 import sdk from "../../../sdk"
 import * as exporters from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
+export * as views from "./views"
 
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
@@ -16,16 +31,19 @@ function pickApi(tableId: any) {
   return internal
 }
 
-export async function patch(ctx: any): Promise<any> {
+export async function patch(
+  ctx: UserCtx<PatchRowRequest, PatchRowResponse>
+): Promise<any> {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
+
   // if it doesn't have an _id then its save
   if (body && !body._id) {
     return save(ctx)
   }
   try {
-    const { row, table } = await quotas.addQuery<any>(
+    const { row, table } = await quotas.addQuery(
       () => pickApi(tableId).patch(ctx),
       {
         datasourceId: tableId,
@@ -40,18 +58,19 @@ export async function patch(ctx: any): Promise<any> {
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 }
 
-export const save = async (ctx: any) => {
+export const save = async (ctx: UserCtx<Row, Row>) => {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
+
   // if it has an ID already then its a patch
   if (body && body._id) {
-    return patch(ctx)
+    return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   const { row, table, squashed } = await quotas.addRow(() =>
     quotas.addQuery(() => pickApi(tableId).save(ctx), {
@@ -65,6 +84,7 @@ export const save = async (ctx: any) => {
   ctx.body = row || squashed
   gridSocket?.emitRowUpdate(ctx, row || squashed)
 }
+
 export async function fetchView(ctx: any) {
   const tableId = utils.getTableId(ctx)
   const viewName = decodeURIComponent(ctx.params.viewName)
@@ -98,44 +118,92 @@ export async function find(ctx: any) {
   })
 }
 
-export async function destroy(ctx: any) {
-  const appId = ctx.appId
-  const inputs = ctx.request.body
+function isDeleteRows(input: any): input is DeleteRows {
+  return input.rows !== undefined && Array.isArray(input.rows)
+}
+
+function isDeleteRow(input: any): input is DeleteRow {
+  return input._id !== undefined
+}
+
+async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
+  let request = ctx.request.body as DeleteRows
   const tableId = utils.getTableId(ctx)
-  let response, row
-  if (inputs.rows) {
-    let { rows } = await quotas.addQuery<any>(
-      () => pickApi(tableId).bulkDestroy(ctx),
-      {
-        datasourceId: tableId,
-      }
-    )
-    await quotas.removeRows(rows.length)
-    response = rows
-    for (let row of rows) {
-      ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-      gridSocket?.emitRowDeletion(ctx, row._id)
-    }
-  } else {
-    let resp = await quotas.addQuery<any>(() => pickApi(tableId).destroy(ctx), {
+
+  const processedRows = request.rows.map(row => {
+    let processedRow: Row = typeof row == "string" ? { _id: row } : row
+    return !processedRow._rev
+      ? addRev(fixRow(processedRow, ctx.params), tableId)
+      : fixRow(processedRow, ctx.params)
+  })
+
+  return await Promise.all(processedRows)
+}
+
+async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
+  const tableId = utils.getTableId(ctx)
+  const appId = ctx.appId
+
+  let deleteRequest = ctx.request.body as DeleteRows
+
+  const rowDeletes: Row[] = await processDeleteRowsRequest(ctx)
+  deleteRequest.rows = rowDeletes
+
+  const { rows } = await quotas.addQuery(
+    () => pickApi(tableId).bulkDestroy(ctx),
+    {
       datasourceId: tableId,
-    })
-    await quotas.removeRow()
-    response = resp.response
-    row = resp.row
+    }
+  )
+  await quotas.removeRows(rows.length)
+
+  for (let row of rows) {
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-    gridSocket?.emitRowDeletion(ctx, row._id)
+    gridSocket?.emitRowDeletion(ctx, row._id!)
   }
+
+  return rows
+}
+
+async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
+  const appId = ctx.appId
+  const tableId = utils.getTableId(ctx)
+
+  const resp = await quotas.addQuery(() => pickApi(tableId).destroy(ctx), {
+    datasourceId: tableId,
+  })
+  await quotas.removeRow()
+
+  ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
+  gridSocket?.emitRowDeletion(ctx, resp.row._id!)
+
+  return resp
+}
+
+export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
+  let response, row
   ctx.status = 200
+
+  if (isDeleteRows(ctx.request.body)) {
+    response = await deleteRows(ctx)
+  } else if (isDeleteRow(ctx.request.body)) {
+    const deleteResp = await deleteRow(ctx)
+    response = deleteResp.response
+    row = deleteResp.row
+  } else {
+    ctx.status = 400
+    response = { message: "Invalid delete rows request" }
+  }
+
   // for automations include the row that was deleted
   ctx.row = row || {}
   ctx.body = response
 }
 
-export async function search(ctx: any) {
+export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const tableId = utils.getTableId(ctx)
 
-  const searchParams = {
+  const searchParams: SearchParams = {
     ...ctx.request.body,
     tableId,
   }
@@ -152,7 +220,7 @@ export async function validate(ctx: Ctx) {
   if (isExternalTable(tableId)) {
     ctx.body = { valid: true }
   } else {
-    ctx.body = await utils.validate({
+    ctx.body = await sdk.rows.utils.validate({
       row: ctx.request.body,
       tableId,
     })

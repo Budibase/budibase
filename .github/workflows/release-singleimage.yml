@@ -1,4 +1,4 @@
-name: Deploy Budibase Single Container Image to DockerHub
+name: release-singleimage
 
 on:
   workflow_dispatch:
@@ -8,8 +8,8 @@ env:
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   REGISTRY_URL: registry.hub.docker.com
 jobs:
-  build:
-    name: "build"
+  build-amd64:
+    name: "build-amd64"
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -27,14 +27,12 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
-
       - name: Fail if tag is not in master
         run: |
           if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
             echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
             exit 1
           fi
-
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
@@ -70,9 +68,139 @@ jobs:
         with:
           context: .
           push: true
-          platforms: linux/amd64,linux/arm64
-          tags: budibase/budibase,budibase/budibase:${{ env.RELEASE_VERSION }}
+          platforms: linux/amd64
+          tags: budibase/budibase,budibase/budibase:v${{ env.RELEASE_VERSION }}
           file: ./hosting/single/Dockerfile
+
+      - name: Tag and release Budibase Azure App Service docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          build-args: TARGETBUILD=aas
+          tags: budibase/budibase-aas,budibase/budibase-aas:v${{ env.RELEASE_VERSION }}
+          file: ./hosting/single/Dockerfile
+
+  build-arm64:
+    name: "build-arm64"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
+    steps:
+      - name: Fail if not a tag
+        run: |
+          if [[ $GITHUB_REF != refs/tags/* ]]; then 
+            echo "Workflow Dispatch can only be run on tags" 
+            exit 1 
+          fi
+      - name: "Checkout"
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          fetch-depth: 0
+      - name: Fail if tag is not in master
+        run: |
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
+            exit 1
+          fi
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Run Yarn
+        run: yarn
+      - name: Update versions
+        run: ./scripts/updateVersions.sh
+      - name: Runt Yarn Lint
+        run: yarn lint
+      - name: Update versions
+        run: ./scripts/updateVersions.sh
+      - name: Run Yarn Build
+        run: yarn build:docker:pre
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_API_KEY }}
+      - name: Get the latest release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo $release_version
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+      - name: Tag and release Budibase service docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          platforms: linux/arm64
+          tags: budibase/budibase,budibase/budibase:v${{ env.RELEASE_VERSION }}
+          file: ./hosting/single/Dockerfile
+
+  build-aas:
+    name: "build-aas"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
+    steps:
+      - name: Fail if not a tag
+        run: |
+          if [[ $GITHUB_REF != refs/tags/* ]]; then 
+            echo "Workflow Dispatch can only be run on tags" 
+            exit 1 
+          fi
+      - name: "Checkout"
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          fetch-depth: 0
+      - name: Fail if tag is not in master
+        run: |
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
+            exit 1
+          fi
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Run Yarn
+        run: yarn
+      - name: Update versions
+        run: ./scripts/updateVersions.sh
+      - name: Runt Yarn Lint
+        run: yarn lint
+      - name: Update versions
+        run: ./scripts/updateVersions.sh
+      - name: Run Yarn Build
+        run: yarn build:docker:pre
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_API_KEY }}
+      - name: Get the latest release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo $release_version
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
       - name: Tag and release Budibase Azure App Service docker image
         uses: docker/build-push-action@v2
         with:

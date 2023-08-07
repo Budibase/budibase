@@ -25,13 +25,13 @@ jobs:
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
-        if: github.repository == github.event.pull_request.head.repo.full_name
+        if: github.repository == 'Budibase/budibase'
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Checkout repo only
         uses: actions/checkout@v3
-        if: github.repository != github.event.pull_request.head.repo.full_name
+        if: github.repository != 'Budibase/budibase'
 
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
@@ -46,13 +46,13 @@ jobs:
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
-        if: github.repository == github.event.pull_request.head.repo.full_name
+        if: github.repository == 'Budibase/budibase'
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Checkout repo only
         uses: actions/checkout@v3
-        if: github.repository != github.event.pull_request.head.repo.full_name
+        if: github.repository != 'Budibase/budibase'
 
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
@@ -70,13 +70,13 @@ jobs:
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
-        if: github.repository == github.event.pull_request.head.repo.full_name
+        if: github.repository == 'Budibase/budibase'
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Checkout repo only
         uses: actions/checkout@v3
-        if: github.repository != github.event.pull_request.head.repo.full_name
+        if: github.repository != 'Budibase/budibase'
 
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
@@ -96,13 +96,13 @@ jobs:
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
-        if: github.repository == github.event.pull_request.head.repo.full_name
+        if: github.repository == 'Budibase/budibase'
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Checkout repo only
         uses: actions/checkout@v3
-        if: github.repository != github.event.pull_request.head.repo.full_name
+        if: github.repository != 'Budibase/budibase'
 
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
@@ -119,7 +119,7 @@ jobs:
 
   test-pro:
     runs-on: ubuntu-latest
-    if: github.repository == github.event.pull_request.head.repo.full_name
+    if: github.repository == 'Budibase/budibase'
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
@@ -140,13 +140,13 @@ jobs:
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
-        if: github.repository == github.event.pull_request.head.repo.full_name
+        if: github.repository == 'Budibase/budibase'
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
       - name: Checkout repo only
         uses: actions/checkout@v3
-        if: github.repository != github.event.pull_request.head.repo.full_name
+        if: github.repository != 'Budibase/budibase'
 
       - name: Use Node.js 14.x
         uses: actions/setup-node@v3
@@ -154,7 +154,7 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn build
+      - run: yarn build --projects=@budibase/server,@budibase/worker,@budibase/client
       - name: Run tests
         run: |
           cd qa-core
@@ -166,7 +166,7 @@ jobs:
 
   check-pro-submodule:
     runs-on: ubuntu-latest
-    if: github.repository == github.event.pull_request.head.repo.full_name
+    if: github.repository == 'Budibase/budibase'
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
@@ -190,6 +190,8 @@ jobs:
             base_commit=$(git rev-parse origin/develop)
           fi
 
+          echo "target_branch=$branch"
+          echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
           echo "pro_commit=$pro_commit"
           echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
           echo "base_commit=$base_commit"
@@ -204,7 +206,7 @@ jobs:
             const baseCommit = '${{ steps.get_pro_commits.outputs.base_commit }}';
 
             if (submoduleCommit !== baseCommit) {
-              console.error('Submodule commit does not match the latest commit on the develop branch.');
+              console.error('Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}"" branch.');
               console.error('Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md')
               process.exit(1);
             } else {

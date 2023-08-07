@@ -5,9 +5,15 @@ import {
   isExternalTable,
   isSQL,
 } from "../../../integrations/utils"
-import { Table, Database } from "@budibase/types"
+import {
+  Table,
+  Database,
+  TableResponse,
+  TableViewsResponse,
+} from "@budibase/types"
 import datasources from "../datasources"
 import { populateExternalTableSchemas, isEditableColumn } from "./validation"
+import sdk from "../../../sdk"
 
 async function getAllInternalTables(db?: Database): Promise<Table[]> {
   if (!db) {
@@ -55,6 +61,20 @@ async function getTable(tableId: any): Promise<Table> {
   }
 }
 
+function enrichViewSchemas(table: Table): TableResponse {
+  const result: TableResponse = {
+    ...table,
+    views: Object.values(table.views ?? [])
+      .map(v => sdk.views.enrichSchema(v, table.schema))
+      .reduce((p, v) => {
+        p[v.name] = v
+        return p
+      }, {} as TableViewsResponse),
+  }
+
+  return result
+}
+
 export default {
   getAllInternalTables,
   getAllExternalTables,
@@ -62,4 +82,5 @@ export default {
   getTable,
   populateExternalTableSchemas,
   isEditableColumn,
+  enrichViewSchemas,
 }

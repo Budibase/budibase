@@ -1,5 +1,5 @@
 <script>
-  import { datasources, tables } from "stores/backend"
+  import { datasources, tables, integrations } from "stores/backend"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
@@ -27,6 +27,17 @@
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.type !== "external"
 
+  $: datasource = $datasources.list.find(datasource => {
+    return datasource._id === $tables.selected?.sourceId
+  })
+
+  $: relationshipsEnabled = relationshipSupport(datasource)
+
+  const relationshipSupport = datasource => {
+    const integration = $integrations[datasource?.source]
+    return !isInternal && integration?.relationships !== false
+  }
+
   const handleGridTableUpdate = async e => {
     tables.replaceTable(id, e.detail)
 
@@ -53,12 +64,19 @@
     <svelte:fragment slot="filter">
       <GridFilterButton />
     </svelte:fragment>
+    <svelte:fragment slot="edit-column">
+      <GridEditColumnModal />
+    </svelte:fragment>
+    <svelte:fragment slot="add-column">
+      <GridAddColumnModal />
+    </svelte:fragment>
+
     <svelte:fragment slot="controls">
       {#if isInternal}
         <GridCreateViewButton />
       {/if}
       <GridManageAccessButton />
-      {#if !isInternal}
+      {#if relationshipsEnabled}
         <GridRelationshipButton />
       {/if}
       {#if isUsersTable}
@@ -66,9 +84,8 @@
       {:else}
         <GridImportButton />
       {/if}
+
       <GridExportButton />
-      <GridAddColumnModal />
-      <GridEditColumnModal />
       {#if isUsersTable}
         <GridEditUserModal />
       {:else}

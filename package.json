@@ -6,8 +6,8 @@
     "@nx/js": "16.4.3",
     "@rollup/plugin-json": "^4.0.2",
     "@typescript-eslint/parser": "5.45.0",
-    "esbuild": "^0.17.18",
-    "esbuild-node-externals": "^1.7.0",
+    "esbuild": "^0.18.17",
+    "esbuild-node-externals": "^1.8.0",
     "eslint": "^8.44.0",
     "eslint-plugin-cypress": "^2.11.3",
     "husky": "^8.0.3",
@@ -36,7 +36,7 @@
     "bootstrap": "./scripts/link-dependencies.sh && echo '***BOOTSTRAP ONLY REQUIRED FOR USE WITH ACCOUNT PORTAL***'",
     "build": "yarn nx run-many -t=build",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
-    "check:types": "lerna run check:types --skip-nx-cache",
+    "check:types": "lerna run check:types",
     "backend:bootstrap": "./scripts/scopeBackend.sh && yarn run bootstrap",
     "backend:build": "./scripts/scopeBackend.sh 'lerna run --stream build'",
     "build:sdk": "lerna run --stream build:sdk",
@@ -51,7 +51,7 @@
     "kill-builder": "kill-port 3000",
     "kill-server": "kill-port 4001 4002",
     "kill-all": "yarn run kill-builder && yarn run kill-server",
-    "dev": "yarn run kill-all && lerna run --stream dev:builder --stream",
+    "dev": "yarn run kill-all && lerna run --stream dev:builder",
     "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && lerna run --stream dev:builder --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
     "dev:server": "yarn run kill-server && lerna run --stream dev:builder --scope @budibase/worker --scope @budibase/server",
     "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
@@ -107,6 +107,9 @@
     "@budibase/shared-core": "0.0.0",
     "@budibase/string-templates": "0.0.0",
     "@budibase/types": "0.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0 <15.0.0"
   },
   "dependencies": {}
 }

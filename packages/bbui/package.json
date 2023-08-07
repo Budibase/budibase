@@ -85,7 +85,8 @@
     "dayjs": "^1.10.4",
     "easymde": "^2.16.1",
     "svelte-flatpickr": "3.2.3",
-    "svelte-portal": "^1.0.0"
+    "svelte-portal": "^1.0.0",
+    "svelte-dnd-action": "^0.9.8"
   },
   "resolutions": {
     "loader-utils": "1.4.1"
@@ -96,13 +97,14 @@
         "dependsOn": [
           {
             "projects": [
-              "@budibase/string-templates"
+              "@budibase/string-templates",
+              "@budibase/shared-core",
+              "@budibase/types"
             ],
             "target": "build"
           }
         ]
       }
     }
-  },
-  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
+  }
 }
