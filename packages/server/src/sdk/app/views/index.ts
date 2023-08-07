@@ -1,5 +1,5 @@
 import { HTTPError, context } from "@budibase/backend-core"
-import { TableSchema, UIFieldMetadata, View, ViewV2 } from "@budibase/types"
+import { FieldSchema, TableSchema, View, ViewV2 } from "@budibase/types"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
@@ -73,37 +73,36 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
     return view
   }
 
+  let schema = { ...tableSchema }
+  if (view.schemaUI) {
+    const viewOverridesEntries = Object.entries(view.schemaUI)
+    const viewSetsOrder = viewOverridesEntries.some(([_, v]) => v.order)
+    for (const [fieldName, schemaUI] of viewOverridesEntries) {
+      schema[fieldName] = {
+        ...schema[fieldName],
+        ...schemaUI,
+        order: viewSetsOrder
+          ? schemaUI.order || undefined
+          : schema[fieldName].order,
+      }
+    }
+    delete view.schemaUI
+  }
+
+  if (view?.columns?.length) {
+    const pickedSchema: Record<string, FieldSchema> = {}
+    for (const fieldName of view.columns) {
+      if (!schema[fieldName]) {
+        continue
+      }
+      pickedSchema[fieldName] = { ...schema[fieldName] }
+    }
+    schema = pickedSchema
+    delete view.columns
+  }
+
   return {
     ...view,
-    schema:
-      !view?.columns || !Object.entries(view?.columns).length
-        ? tableSchema
-        : enrichViewV2Schema(tableSchema, view.columns),
+    schema: schema,
   }
-}
-
-function enrichViewV2Schema(
-  tableSchema: TableSchema,
-  viewOverrides: Record<string, UIFieldMetadata>
-) {
-  const result: TableSchema = {}
-  const viewOverridesEntries = Object.entries(viewOverrides)
-  const viewSetsOrder = viewOverridesEntries.some(([_, v]) => v.order)
-  for (const [columnName, columnUIMetadata] of viewOverridesEntries) {
-    if (!columnUIMetadata.visible) {
-      continue
-    }
-
-    if (!tableSchema[columnName]) {
-      continue
-    }
-
-    const tableFieldSchema = tableSchema[columnName]
-    if (viewSetsOrder) {
-      delete tableFieldSchema.order
-    }
-
-    result[columnName] = merge(tableFieldSchema, columnUIMetadata)
-  }
-  return result
 }

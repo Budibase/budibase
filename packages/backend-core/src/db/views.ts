@@ -105,16 +105,6 @@ export const createApiKeyView = async () => {
   await createView(db, viewJs, ViewName.BY_API_KEY)
 }
 
-export const createUserBuildersView = async () => {
-  const db = getGlobalDB()
-  const viewJs = `function(doc) {
-    if (doc.builder && doc.builder.global === true) {
-      emit(doc._id, doc._id)
-    }
-  }`
-  await createView(db, viewJs, ViewName.USER_BY_BUILDERS)
-}
-
 export interface QueryViewOptions {
   arrayResponse?: boolean
 }
@@ -223,7 +213,6 @@ export const queryPlatformView = async <T>(
 const CreateFuncByName: any = {
   [ViewName.USER_BY_EMAIL]: createNewUserEmailView,
   [ViewName.BY_API_KEY]: createApiKeyView,
-  [ViewName.USER_BY_BUILDERS]: createUserBuildersView,
   [ViewName.USER_BY_APP]: createUserAppView,
 }
 
