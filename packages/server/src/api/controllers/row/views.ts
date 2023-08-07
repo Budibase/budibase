@@ -6,6 +6,7 @@ import {
   SortType,
   ViewV2,
 } from "@budibase/types"
+import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 
 export async function searchView(ctx: UserCtx<void, SearchResponse>) {
@@ -29,11 +30,12 @@ export async function searchView(ctx: UserCtx<void, SearchResponse>) {
     undefined
 
   ctx.status = 200
+  const query = dataFilters.buildLuceneQuery(view.query || [])
   const result = await quotas.addQuery(
     () =>
       sdk.rows.search({
         tableId: view.tableId,
-        query: view.query || {},
+        query,
         fields: viewFields,
         ...getSortOptions(ctx, view),
       }),
