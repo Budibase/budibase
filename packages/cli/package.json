@@ -19,12 +19,11 @@
   },
   "pkg": {
     "targets": [
-      "node16-linux",
-      "node16-win",
-      "node16-macos"
+      "node18-linux",
+      "node18-win",
+      "node18-macos"
     ],
     "assets": [
-      "node_modules/@budibase/backend-core/dist/**/*",
       "prebuilds/**/*"
     ],
     "outputPath": "build"
