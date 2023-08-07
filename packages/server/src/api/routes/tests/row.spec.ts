@@ -1264,7 +1264,7 @@ describe("/rows", () => {
         expect(response.body.rows).toHaveLength(0)
       })
 
-      it("returns table rows from view", async () => {
+      it("respects the limit parameter", async () => {
         const table = await config.createTable(userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
