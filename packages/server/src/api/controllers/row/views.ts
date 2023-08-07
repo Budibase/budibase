@@ -1,14 +1,17 @@
 import { quotas } from "@budibase/pro"
 import {
   UserCtx,
-  SearchResponse,
-  SortOrder,
-  SortType,
   ViewV2,
+  SearchRowResponse,
+  SearchViewRowRequest,
+  RequiredKeys,
+  SearchParams,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function searchView(ctx: UserCtx<void, SearchResponse>) {
+export async function searchView(
+  ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
+) {
   const { viewId } = ctx.params
 
   const view = await sdk.views.get(viewId)
@@ -29,49 +32,29 @@ export async function searchView(ctx: UserCtx<void, SearchResponse>) {
     undefined
 
   ctx.status = 200
-  const result = await quotas.addQuery(
-    () =>
-      sdk.rows.search({
-        tableId: view.tableId,
-        query: view.query || {},
-        fields: viewFields,
-        ...getSortOptions(ctx, view),
-      }),
-    {
-      datasourceId: view.tableId,
-    }
-  )
+
+  const searchOptions: RequiredKeys<SearchViewRowRequest> &
+    RequiredKeys<Pick<SearchParams, "tableId" | "query" | "fields">> = {
+    tableId: view.tableId,
+    query: view.query || {},
+    fields: viewFields,
+    ...getSortOptions(ctx.request.body, view),
+  }
+
+  const result = await quotas.addQuery(() => sdk.rows.search(searchOptions), {
+    datasourceId: view.tableId,
+  })
 
   result.rows.forEach(r => (r._viewId = view.id))
   ctx.body = result
 }
 
-function getSortOptions(
-  ctx: UserCtx,
-  view: ViewV2
-):
-  | {
-      sort: string
-      sortOrder?: SortOrder
-      sortType?: SortType
-    }
-  | undefined {
-  const { sort_column, sort_order, sort_type } = ctx.query
-  if (Array.isArray(sort_column)) {
-    ctx.throw(400, "sort_column cannot be an array")
-  }
-  if (Array.isArray(sort_order)) {
-    ctx.throw(400, "sort_order cannot be an array")
-  }
-  if (Array.isArray(sort_type)) {
-    ctx.throw(400, "sort_type cannot be an array")
-  }
-
-  if (sort_column) {
+function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
+  if (request.sort) {
     return {
-      sort: sort_column,
-      sortOrder: sort_order as SortOrder,
-      sortType: sort_type as SortType,
+      sort: request.sort,
+      sortOrder: request.sortOrder,
+      sortType: request.sortType,
     }
   }
   if (view.sort) {
@@ -82,5 +65,9 @@ function getSortOptions(
     }
   }
 
-  return
+  return {
+    sort: undefined,
+    sortOrder: undefined,
+    sortType: undefined,
+  }
 }
