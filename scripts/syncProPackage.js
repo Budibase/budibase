@@ -16,15 +16,19 @@ if (!localPro) {
 }
 
 // Get the list of workspaces with mismatched dependencies
-const output = execSync("yarn --silent workspaces info --json", {
+const output = execSync("yarn workspaces list --verbose --json", {
   encoding: "utf-8",
 })
-const data = JSON.parse(output)
+
+const workspaces = output
+  .split("\n")
+  .filter(x => !!x)
+  .map(l => JSON.parse(l))
 
 // Loop through each workspace and update the dependencies
-Object.keys(data).forEach(workspace => {
+workspaces.forEach(workspace => {
   // Loop through each dependency and update its version in package.json
-  const packageJsonPath = path.join(data[workspace].location, "package.json")
+  const packageJsonPath = path.join(workspace.location, "package.json")
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
   if (packageJson.version !== "0.0.0") {
     // Don't change if we are not using local versions

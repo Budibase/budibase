@@ -10,21 +10,24 @@ if (!version) {
 }
 
 // Get the list of workspaces with mismatched dependencies
-const output = execSync("yarn --silent workspaces info --json", {
+const output = execSync("yarn workspaces list --verbose --json", {
   encoding: "utf-8",
 })
-const data = JSON.parse(output)
 
-const workspaces = Object.keys(data).filter(key => {
-  return data[key].mismatchedWorkspaceDependencies?.length
-})
+const workspaces = output
+  .split("\n")
+  .filter(x => !!x)
+  .map(l => JSON.parse(l))
+  .filter(w => {
+    return w.mismatchedWorkspaceDependencies?.length
+  })
 
 // Loop through each workspace and update the dependencies
 workspaces.forEach(workspace => {
-  const dependencies = data[workspace].mismatchedWorkspaceDependencies
+  const dependencies = workspace.mismatchedWorkspaceDependencies
 
   // Loop through each dependency and update its version in package.json
-  const packageJsonPath = path.join(data[workspace].location, "package.json")
+  const packageJsonPath = path.join(workspace.location, "package.json")
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"))
   let hasChanges = false
 
