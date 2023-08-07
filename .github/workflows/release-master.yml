@@ -60,7 +60,7 @@ jobs:
       - name: "Get Current tag"
         id: currenttag
         run: |
-          version=v$(./scripts/getCurrentVersion.sh)
+          version=$(./scripts/getCurrentVersion.sh)
           echo "Using tag $version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
