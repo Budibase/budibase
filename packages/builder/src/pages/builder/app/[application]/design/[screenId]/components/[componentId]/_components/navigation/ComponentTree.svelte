@@ -1,5 +1,5 @@
 <script>
-  import { store } from "builderStore"
+  import { store, userSelectedResourceMap } from "builderStore"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { capitalise } from "helpers"
@@ -17,8 +17,6 @@
   export let level = 0
 
   let closedNodes = {}
-
-  $: currentScreen = get(selectedScreen)
 
   $: filteredComponents = components?.filter(component => {
     return (
@@ -123,6 +121,7 @@
         selected={$store.selectedComponentId === component._id}
         {opened}
         highlighted={isChildOfSelectedComponent(component)}
+        selectedBy={$userSelectedResourceMap[component._id]}
       >
         <ComponentDropdownMenu {component} />
       </NavItem>

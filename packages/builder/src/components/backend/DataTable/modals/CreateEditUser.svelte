@@ -5,7 +5,7 @@
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import { API } from "api"
-  import { ModalContent, Select, Link } from "@budibase/bbui"
+  import { keepOpen, ModalContent, Select, Link } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { goto } from "@roxi/routify"
 
@@ -51,7 +51,7 @@
       errors = [...errors, { message: "Role is required" }]
     }
     if (errors.length) {
-      return false
+      return keepOpen
     }
 
     try {
@@ -79,8 +79,8 @@
       } else {
         notifications.error("Error saving user")
       }
-      // Prevent closing the modal on errors
-      return false
+
+      return keepOpen
     }
   }
 </script>
@@ -95,9 +95,9 @@
   {#if !creating}
     <div>
       A user's email, role, first and last names cannot be changed from within
-      the app builder. Please go to the <Link
-        on:click={$goto("/builder/portal/manage/users")}>user portal</Link
-      > to do this.
+      the app builder. Please go to the
+      <Link on:click={$goto("/builder/portal/users/users")}>user portal</Link>
+      to do this.
     </div>
   {/if}
   <RowFieldControl

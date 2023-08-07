@@ -3,7 +3,7 @@
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore } from "./dndStore.js"
   import { goto } from "@roxi/routify"
-  import { store, selectedScreen } from "builderStore"
+  import { store, selectedScreen, userSelectedResourceMap } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
@@ -41,6 +41,7 @@
             $store.selectedComponentId = $selectedScreen?.props._id
           }}
           id={`component-${$selectedScreen?.props._id}`}
+          selectedBy={$userSelectedResourceMap[$selectedScreen?.props._id]}
         >
           <ScreenslotDropdownMenu component={$selectedScreen?.props} />
         </NavItem>

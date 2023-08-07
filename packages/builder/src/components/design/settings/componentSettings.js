@@ -23,6 +23,7 @@ import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
 import GridColumnEditor from "./controls/ColumnEditor/GridColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
+import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -44,6 +45,7 @@ const componentMap = {
   schema: SchemaSelect,
   section: SectionSelect,
   filter: FilterEditor,
+  "filter/relationship": RelationshipFilterEditor,
   url: URLSelect,
   fieldConfiguration: FieldConfiguration,
   columns: ColumnEditor,

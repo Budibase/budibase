@@ -1,5 +1,5 @@
 <script>
-  import { Modal, notifications } from "@budibase/bbui"
+  import { keepOpen, Modal, notifications } from "@budibase/bbui"
   import { integrationForDatasource } from "stores/selectors"
   import { datasources, integrations } from "stores/backend"
   import DatasourceConfigEditor from "components/backend/Datasources/ConfigEditor/index.svelte"
@@ -23,8 +23,8 @@
       )
     } catch (err) {
       notifications.error(err?.message ?? "Error saving datasource")
-      // prevent the modal from closing
-      return false
+
+      return keepOpen
     }
   }
 </script>
