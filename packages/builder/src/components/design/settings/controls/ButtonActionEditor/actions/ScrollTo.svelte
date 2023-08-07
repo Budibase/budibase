@@ -43,7 +43,6 @@
       { label: "Start", value: "start" },
       { label: "Center", value: "center" },
       { label: "End", value: "end" },
-      { label: "Nearest", value: "nearest" },
     ]}
   />
 </div>
