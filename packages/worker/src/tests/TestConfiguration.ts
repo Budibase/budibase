@@ -251,9 +251,9 @@ class TestConfiguration {
     })
   }
 
-  async getUser(email: string): Promise<User | undefined> {
-    return context.doInTenant(this.getTenantId(), () => {
-      return users.getGlobalUserByEmail(email)
+  async getUser(email: string): Promise<User> {
+    return context.doInTenant(this.getTenantId(), async () => {
+      return (await users.getGlobalUserByEmail(email)) as User
     })
   }
 
@@ -263,7 +263,7 @@ class TestConfiguration {
     }
     const response = await this._req(user, null, controllers.users.save)
     const body = response as SaveUserResponse
-    return this.getUser(body.email) as Promise<User>
+    return (await this.getUser(body.email)) as User
   }
 
   // CONFIGS
