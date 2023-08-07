@@ -14,6 +14,7 @@ export function getPermissionType(resourceId: string) {
   switch (docType) {
     case DocumentType.TABLE:
     case DocumentType.ROW:
+    case DocumentType.VIEW:
       return permissions.PermissionType.TABLE
     case DocumentType.AUTOMATION:
       return permissions.PermissionType.AUTOMATION
@@ -22,9 +23,6 @@ export function getPermissionType(resourceId: string) {
     case DocumentType.QUERY:
     case DocumentType.DATASOURCE:
       return permissions.PermissionType.QUERY
-    default:
-      // views don't have an ID, will end up here
-      return permissions.PermissionType.VIEW
   }
 }
 
