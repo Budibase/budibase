@@ -3,3 +3,11 @@ node_modules/
 watchtower-hook.json
 dist/
 testResults.json
+
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
