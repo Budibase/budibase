@@ -7,9 +7,11 @@
   import { onMount } from "svelte"
   import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import { TableNames } from "constants"
+  import { store } from "builderStore"
 
   let modal
 
+  $: store.actions.websocket.selectResource(BUDIBASE_INTERNAL_DB_ID)
   $: internalTablesBySourceId = $tables.list.filter(
     table =>
       table.type !== "external" &&

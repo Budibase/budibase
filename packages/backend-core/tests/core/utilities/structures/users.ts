@@ -1,5 +1,6 @@
 import {
   AdminUser,
+  AdminOnlyUser,
   BuilderUser,
   SSOAuthDetails,
   SSOUser,
@@ -21,11 +22,29 @@ export const adminUser = (userProps?: any): AdminUser => {
   }
 }
 
+export const adminOnlyUser = (userProps?: any): AdminOnlyUser => {
+  return {
+    ...user(userProps),
+    admin: {
+      global: true,
+    },
+  }
+}
+
 export const builderUser = (userProps?: any): BuilderUser => {
   return {
     ...user(userProps),
     builder: {
       global: true,
+    },
+  }
+}
+
+export const appBuilderUser = (appId: string, userProps?: any): BuilderUser => {
+  return {
+    ...user(userProps),
+    builder: {
+      apps: [appId],
     },
   }
 }

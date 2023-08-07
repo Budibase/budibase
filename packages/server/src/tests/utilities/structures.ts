@@ -16,23 +16,26 @@ import {
   AutomationTrigger,
   AutomationTriggerStepId,
   Datasource,
+  FieldType,
   SourceName,
+  Table,
 } from "@budibase/types"
 
-export function basicTable() {
+export function basicTable(): Table {
   return {
     name: "TestTable",
     type: "table",
-    key: "name",
     schema: {
       name: {
-        type: "string",
+        type: FieldType.STRING,
+        name: "name",
         constraints: {
           type: "string",
         },
       },
       description: {
-        type: "string",
+        type: FieldType.STRING,
+        name: "description",
         constraints: {
           type: "string",
         },
