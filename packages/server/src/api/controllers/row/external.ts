@@ -44,7 +44,7 @@ export async function handleRequest(
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = ctx.params.tableId
-  const { id, ...rowData } = ctx.request.body
+  const { _id, ...rowData } = ctx.request.body
 
   const validateResult = await sdk.rows.utils.validate({
     row: rowData,
@@ -54,10 +54,10 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     throw { validation: validateResult.errors }
   }
   const response = await handleRequest(Operation.UPDATE, tableId, {
-    id: breakRowIdField(id),
+    id: breakRowIdField(_id),
     row: rowData,
   })
-  const row = await sdk.rows.external.getRow(tableId, id, {
+  const row = await sdk.rows.external.getRow(tableId, _id, {
     relationships: true,
   })
   const table = await sdk.tables.getTable(tableId)
@@ -104,9 +104,9 @@ export async function find(ctx: UserCtx) {
 
 export async function destroy(ctx: UserCtx) {
   const tableId = ctx.params.tableId
-  const id = ctx.request.body._id
+  const _id = ctx.request.body._id
   const { row } = (await handleRequest(Operation.DELETE, tableId, {
-    id: breakRowIdField(id),
+    id: breakRowIdField(_id),
     includeSqlRelationships: IncludeRelationship.EXCLUDE,
   })) as { row: Row }
   return { response: { ok: true }, row }
