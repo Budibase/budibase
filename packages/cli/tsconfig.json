@@ -5,12 +5,7 @@
     "declaration": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "resolveJsonModule": true,
-    "paths": {
-      "@budibase/types": ["../types/src"],
-      "@budibase/backend-core": ["../backend-core/src"],
-      "@budibase/backend-core/*": ["../backend-core/*"]
-    }
+    "resolveJsonModule": true
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"],
