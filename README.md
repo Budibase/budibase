@@ -4,7 +4,7 @@
   </a>
 </p>
 <h1 align="center">
-  Budibase AND
+  Budibase ANR
 </h1>
 
 <h3 align="center">
