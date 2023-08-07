@@ -14,6 +14,7 @@
   import { Constants } from "@budibase/frontend-core"
   import { DashCard, Usage } from "components/usage"
   import { PlanModel } from "constants"
+  import { sdk } from "@budibase/shared-core"
 
   let staticUsage = []
   let monthlyUsage = []
@@ -51,7 +52,8 @@
   $: accountPortalAccess = $auth?.user?.accountPortalAccess
   $: quotaReset = quotaUsage?.quotaReset
   $: canManagePlan =
-    ($admin.cloud && accountPortalAccess) || (!$admin.cloud && $auth.isAdmin)
+    ($admin.cloud && accountPortalAccess) ||
+    (!$admin.cloud && sdk.users.isAdmin($auth.user))
 
   $: showButton = !usesInvoicing && accountPortalAccess
 

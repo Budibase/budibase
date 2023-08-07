@@ -8,7 +8,7 @@ import {
   Database,
   FieldSchema,
   LinkDocumentValue,
-  RelationshipTypes,
+  RelationshipType,
   Row,
   Table,
 } from "@budibase/types"
@@ -136,16 +136,16 @@ class LinkController {
   handleRelationshipType(linkerField: FieldSchema, linkedField: FieldSchema) {
     if (
       !linkerField.relationshipType ||
-      linkerField.relationshipType === RelationshipTypes.MANY_TO_MANY
+      linkerField.relationshipType === RelationshipType.MANY_TO_MANY
     ) {
-      linkedField.relationshipType = RelationshipTypes.MANY_TO_MANY
+      linkedField.relationshipType = RelationshipType.MANY_TO_MANY
       // make sure by default all are many to many (if not specified)
-      linkerField.relationshipType = RelationshipTypes.MANY_TO_MANY
-    } else if (linkerField.relationshipType === RelationshipTypes.MANY_TO_ONE) {
+      linkerField.relationshipType = RelationshipType.MANY_TO_MANY
+    } else if (linkerField.relationshipType === RelationshipType.MANY_TO_ONE) {
       // Ensure that the other side of the relationship is locked to one record
-      linkedField.relationshipType = RelationshipTypes.ONE_TO_MANY
-    } else if (linkerField.relationshipType === RelationshipTypes.ONE_TO_MANY) {
-      linkedField.relationshipType = RelationshipTypes.MANY_TO_ONE
+      linkedField.relationshipType = RelationshipType.ONE_TO_MANY
+    } else if (linkerField.relationshipType === RelationshipType.ONE_TO_MANY) {
+      linkedField.relationshipType = RelationshipType.MANY_TO_ONE
     }
     return { linkerField, linkedField }
   }
@@ -182,7 +182,7 @@ class LinkController {
         })
 
         // if 1:N, ensure that this ID is not already attached to another record
-        const linkedTable = await this._db.get(field.tableId)
+        const linkedTable = await this._db.get<Table>(field.tableId)
         const linkedSchema = linkedTable.schema[field.fieldName!]
 
         // We need to map the global users to metadata in each app for relationships
@@ -200,9 +200,7 @@ class LinkController {
 
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
-          if (
-            linkedSchema?.relationshipType === RelationshipTypes.ONE_TO_MANY
-          ) {
+          if (linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY) {
             let links = (
               (await getLinkDocuments({
                 tableId: field.tableId,
@@ -311,7 +309,7 @@ class LinkController {
       })
     )
     // remove schema from other table
-    let linkedTable = await this._db.get(field.tableId)
+    let linkedTable = await this._db.get<Table>(field.tableId)
     if (field.fieldName) {
       delete linkedTable.schema[field.fieldName]
     }
@@ -337,7 +335,7 @@ class LinkController {
         // table for some reason
         let linkedTable
         try {
-          linkedTable = await this._db.get(field.tableId)
+          linkedTable = await this._db.get<Table>(field.tableId)
         } catch (err) {
           /* istanbul ignore next */
           continue
@@ -416,7 +414,7 @@ class LinkController {
       const field = schema[fieldName]
       try {
         if (field.type === FieldTypes.LINK && field.fieldName) {
-          const linkedTable = await this._db.get(field.tableId)
+          const linkedTable = await this._db.get<Table>(field.tableId)
           delete linkedTable.schema[field.fieldName]
           await this._db.put(linkedTable)
         }

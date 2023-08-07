@@ -6,8 +6,11 @@
   import { goto } from "@roxi/routify"
   import { DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
   import { onMount } from "svelte"
+  import { store } from "builderStore"
 
   let modal
+
+  $: store.actions.websocket.selectResource(DEFAULT_BB_DATASOURCE_ID)
   $: internalTablesBySourceId = $tables.list.filter(
     table =>
       table.type !== "external" && table.sourceId === DEFAULT_BB_DATASOURCE_ID

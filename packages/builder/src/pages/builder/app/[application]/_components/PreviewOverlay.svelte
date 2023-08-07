@@ -15,6 +15,7 @@
   }
 
   onMount(() => {
+    window.isBuilder = true
     window.closePreview = () => {
       store.update(state => ({
         ...state,
