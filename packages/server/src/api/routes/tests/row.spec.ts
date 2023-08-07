@@ -1263,6 +1263,79 @@ describe("/rows", () => {
 
         expect(response.body.rows).toHaveLength(0)
       })
+
+      it("respects the limit parameter", async () => {
+        const table = await config.createTable(userTable())
+        const rows = []
+        for (let i = 0; i < 10; i++) {
+          rows.push(await config.createRow({ tableId: table._id }))
+        }
+        const limit = generator.integer({ min: 1, max: 8 })
+
+        const createViewResponse = await config.api.viewV2.create()
+        const response = await config.api.viewV2.search(createViewResponse.id, {
+          limit,
+        })
+
+        expect(response.body.rows).toHaveLength(limit)
+      })
+
+      it("can handle pagination", async () => {
+        const table = await config.createTable(userTable())
+        const rows = []
+        for (let i = 0; i < 10; i++) {
+          rows.push(await config.createRow({ tableId: table._id }))
+        }
+        // rows.sort((a, b) => (a._id! > b._id! ? 1 : -1))
+
+        const createViewResponse = await config.api.viewV2.create()
+        const allRows = (await config.api.viewV2.search(createViewResponse.id))
+          .body.rows
+
+        const firstPageResponse = await config.api.viewV2.search(
+          createViewResponse.id,
+          {
+            paginate: true,
+            limit: 4,
+          }
+        )
+        expect(firstPageResponse.body).toEqual({
+          rows: expect.arrayContaining(allRows.slice(0, 4)),
+          totalRows: 10,
+          hasNextPage: true,
+          bookmark: expect.any(String),
+        })
+
+        const secondPageResponse = await config.api.viewV2.search(
+          createViewResponse.id,
+          {
+            paginate: true,
+            limit: 4,
+            bookmark: firstPageResponse.body.bookmark,
+          }
+        )
+        expect(secondPageResponse.body).toEqual({
+          rows: expect.arrayContaining(allRows.slice(4, 8)),
+          totalRows: 10,
+          hasNextPage: true,
+          bookmark: expect.any(String),
+        })
+
+        const lastPageResponse = await config.api.viewV2.search(
+          createViewResponse.id,
+          {
+            paginate: true,
+            limit: 4,
+            bookmark: secondPageResponse.body.bookmark,
+          }
+        )
+        expect(lastPageResponse.body).toEqual({
+          rows: expect.arrayContaining(allRows.slice(8)),
+          totalRows: 10,
+          hasNextPage: false,
+          bookmark: expect.any(String),
+        })
+      })
     })
   })
 })
