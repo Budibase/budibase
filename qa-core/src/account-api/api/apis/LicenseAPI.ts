@@ -69,4 +69,36 @@ export default class LicenseAPI extends BaseAPI {
     expect(response.status).toBe(opts.status ? opts.status : 200)
     return [response, json]
   }
+
+  async getLicenseKey(opts: APIRequestOpts = { status: 200 }) {
+    return this.doRequest(() => {
+      return this.client.get(`/api/license/key`)
+    }, opts)
+  }
+
+  async activateLicense(
+      apiKey: string,
+      tenantId: string,
+      licenseKey: string,
+      opts: APIRequestOpts = { status: 200 }
+  ) {
+    return this.doRequest(() => {
+      return this.client.post(`/api/license/activate`, {
+        body: {
+          apiKey: apiKey,
+          tenantId: tenantId,
+          licenseKey: licenseKey,
+        },
+      })
+    }, opts)
+  }
+
+  async regenerateLicenseKey(
+      opts: APIRequestOpts = { status: 200 }
+  ) {
+    return this.doRequest(() => {
+      return this.client.post(`/api/license/key/regenerate`, {
+      })
+    }, opts)
+  }
 }
