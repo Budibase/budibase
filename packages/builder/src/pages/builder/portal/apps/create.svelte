@@ -11,7 +11,6 @@
   let template
   let creationModal = false
   let appLimitModal
-  let creatingApp = false
 
   const initiateAppCreation = () => {
     if ($licensing?.usageMetrics?.apps >= 100) {
@@ -19,13 +18,11 @@
     } else {
       template = null
       creationModal.show()
-      creatingApp = true
     }
   }
 
   const stopAppCreation = () => {
     template = null
-    creatingApp = false
   }
 
   const initiateAppImport = () => {
@@ -34,7 +31,6 @@
     } else {
       template = { fromFile: true }
       creationModal.show()
-      creatingApp = true
     }
   }
 </script>

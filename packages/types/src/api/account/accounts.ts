@@ -1,3 +1,4 @@
+import { Account } from "../../documents"
 import { Hosting } from "../../sdk"
 
 export interface CreateAccountRequest {
@@ -11,3 +12,11 @@ export interface CreateAccountRequest {
   name?: string
   password: string
 }
+
+export interface SearchAccountsRequest {
+  // one or the other - not both
+  email?: string
+  tenantId?: string
+}
+
+export type SearchAccountsResponse = Account[]

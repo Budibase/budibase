@@ -1,6 +1,6 @@
 <script>
   import { Layout, Heading, Body, Divider, Button } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { store, isOnlyUser } from "builderStore"
   import VersionModal from "components/deploy/VersionModal.svelte"
 
   let versionModal
@@ -22,7 +22,16 @@
       Updates can contain new features, performance improvements and bug fixes.
     </Body>
     <div>
-      <Button cta on:click={versionModal.show}>Update app</Button>
+      <Button
+        cta
+        on:click={versionModal.show}
+        disabled={!$isOnlyUser}
+        tooltip={$isOnlyUser
+          ? null
+          : "Unavailable - another user is editing this app"}
+      >
+        Update app
+      </Button>
     </div>
   {:else}
     <Body>
@@ -31,7 +40,15 @@
       You're running the latest!
     </Body>
     <div>
-      <Button secondary on:click={versionModal.show}>Revert app</Button>
+      <Button
+        secondary
+        on:click={versionModal.show}
+        tooltip={$isOnlyUser
+          ? null
+          : "Unavailable - another user is editing this app"}
+      >
+        Revert app
+      </Button>
     </div>
   {/if}
 </Layout>

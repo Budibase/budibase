@@ -13,7 +13,7 @@ import { Database } from "@budibase/types"
 export async function getView(viewName: string) {
   const db = context.getAppDB()
   if (env.SELF_HOSTED) {
-    const designDoc = await db.get("_design/database")
+    const designDoc = await db.get<any>("_design/database")
     return designDoc.views[viewName]
   } else {
     // This is a table view, don't read the view from the DB
@@ -22,7 +22,7 @@ export async function getView(viewName: string) {
     }
 
     try {
-      const viewDoc = await db.get(generateMemoryViewID(viewName))
+      const viewDoc = await db.get<any>(generateMemoryViewID(viewName))
       return viewDoc.view
     } catch (err: any) {
       // Return null when PouchDB doesn't found the view
@@ -39,7 +39,7 @@ export async function getViews() {
   const db = context.getAppDB()
   const response = []
   if (env.SELF_HOSTED) {
-    const designDoc = await db.get("_design/database")
+    const designDoc = await db.get<any>("_design/database")
     for (let name of Object.keys(designDoc.views)) {
       // Only return custom views, not built ins
       const viewNames = Object.values(ViewName) as string[]
@@ -76,7 +76,7 @@ export async function saveView(
 ) {
   const db = context.getAppDB()
   if (env.SELF_HOSTED) {
-    const designDoc = await db.get("_design/database")
+    const designDoc = await db.get<any>("_design/database")
     designDoc.views = {
       ...designDoc.views,
       [viewName]: viewTemplate,
@@ -96,9 +96,9 @@ export async function saveView(
       tableId: viewTemplate.meta.tableId,
     }
     try {
-      const old = await db.get(id)
+      const old = await db.get<any>(id)
       if (originalId) {
-        const originalDoc = await db.get(originalId)
+        const originalDoc = await db.get<any>(originalId)
         await db.remove(originalDoc._id, originalDoc._rev)
       }
       if (old && old._rev) {
@@ -114,14 +114,14 @@ export async function saveView(
 export async function deleteView(viewName: string) {
   const db = context.getAppDB()
   if (env.SELF_HOSTED) {
-    const designDoc = await db.get("_design/database")
+    const designDoc = await db.get<any>("_design/database")
     const view = designDoc.views[viewName]
     delete designDoc.views[viewName]
     await db.put(designDoc)
     return view
   } else {
     const id = generateMemoryViewID(viewName)
-    const viewDoc = await db.get(id)
+    const viewDoc = await db.get<any>(id)
     await db.remove(viewDoc._id, viewDoc._rev)
     return viewDoc.view
   }
@@ -129,7 +129,7 @@ export async function deleteView(viewName: string) {
 
 export async function migrateToInMemoryView(db: Database, viewName: string) {
   // delete the view initially
-  const designDoc = await db.get("_design/database")
+  const designDoc = await db.get<any>("_design/database")
   // run the view back through the view builder to update it
   const view = viewBuilder(designDoc.views[viewName].meta)
   delete designDoc.views[viewName]
@@ -138,15 +138,15 @@ export async function migrateToInMemoryView(db: Database, viewName: string) {
 }
 
 export async function migrateToDesignView(db: Database, viewName: string) {
-  let view = await db.get(generateMemoryViewID(viewName))
-  const designDoc = await db.get("_design/database")
+  let view = await db.get<any>(generateMemoryViewID(viewName))
+  const designDoc = await db.get<any>("_design/database")
   designDoc.views[viewName] = viewBuilder(view.view.meta)
   await db.put(designDoc)
   await db.remove(view._id, view._rev)
 }
 
 export async function getFromDesignDoc(db: Database, viewName: string) {
-  const designDoc = await db.get("_design/database")
+  const designDoc = await db.get<any>("_design/database")
   let view = designDoc.views[viewName]
   if (view == null) {
     throw { status: 404, message: "Unable to get view" }
@@ -155,7 +155,7 @@ export async function getFromDesignDoc(db: Database, viewName: string) {
 }
 
 export async function getFromMemoryDoc(db: Database, viewName: string) {
-  let view = await db.get(generateMemoryViewID(viewName))
+  let view = await db.get<any>(generateMemoryViewID(viewName))
   if (view) {
     view = view.view
   } else {

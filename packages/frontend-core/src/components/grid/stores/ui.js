@@ -70,6 +70,8 @@ export const deriveStores = context => {
     rowHeight,
     stickyColumn,
     width,
+    hasNonAutoColumn,
+    config,
   } = context
 
   // Derive the row that contains the selected cell
@@ -112,7 +114,16 @@ export const deriveStores = context => {
     return ($stickyColumn?.width || 0) + $width + GutterWidth < 1100
   })
 
+  // Derive if we're able to add rows
+  const canAddRows = derived(
+    [config, hasNonAutoColumn],
+    ([$config, $hasNonAutoColumn]) => {
+      return $config.allowAddRows && $hasNonAutoColumn
+    }
+  )
+
   return {
+    canAddRows,
     focusedRow,
     contentLines,
     compact,

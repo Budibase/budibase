@@ -272,6 +272,7 @@
   {:else if error}
     <div class="center error">
       <Layout justifyItems="center" gap="S">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         {@html ErrorSVG}
         <Heading size="L">App preview failed to load</Heading>
         <Body size="S">{error}</Body>

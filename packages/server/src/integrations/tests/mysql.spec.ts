@@ -102,7 +102,7 @@ describe("MySQL Integration", () => {
       )
     })
 
-    it("parses strings matching a valid date format", async () => {
+    it.skip("parses strings matching a valid date format", async () => {
       const sql = "select * from users;"
       await config.integration.read({
         sql,

@@ -1,6 +1,10 @@
 <script>
   import { onMount } from "svelte"
-  import { automationStore, selectedAutomation } from "builderStore"
+  import {
+    automationStore,
+    selectedAutomation,
+    userSelectedResourceMap,
+  } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import EditAutomationPopover from "./EditAutomationPopover.svelte"
   import { notifications } from "@budibase/bbui"
@@ -21,13 +25,13 @@
 </script>
 
 <div class="automations-list">
-  {#each $automationStore.automations.sort(aut => aut.name) as automation, idx}
+  {#each $automationStore.automations.sort(aut => aut.name) as automation}
     <NavItem
-      border={idx > 0}
       icon="ShareAndroid"
       text={automation.name}
       selected={automation._id === selectedAutomationId}
       on:click={() => selectAutomation(automation._id)}
+      selectedBy={$userSelectedResourceMap[automation._id]}
     >
       <EditAutomationPopover {automation} />
     </NavItem>
@@ -40,6 +44,5 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    margin: 0 calc(-1 * var(--spacing-xl));
   }
 </style>
