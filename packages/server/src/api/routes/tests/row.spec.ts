@@ -1072,7 +1072,7 @@ describe("/rows", () => {
           )
 
         const createViewResponse = await config.api.viewV2.create({
-          query: { equal: { age: 40 } },
+          query: [{ operator: "equal", field: "age", value: 40 }],
         })
 
         const response = await config.api.viewV2.search(createViewResponse.id)
