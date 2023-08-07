@@ -77,7 +77,7 @@ export async function trigger(ctx: BBContext) {
       if (webhook.bodySchema) {
         validate(ctx.request.body, webhook.bodySchema)
       }
-      const target = await db.get(webhook.action.target)
+      const target = await db.get<Automation>(webhook.action.target)
       if (webhook.action.type === WebhookActionType.AUTOMATION) {
         // trigger with both the pure request and then expand it
         // incase the user has produced a schema to bind to

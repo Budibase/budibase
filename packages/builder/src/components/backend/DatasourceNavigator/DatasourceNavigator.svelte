@@ -13,6 +13,7 @@
   } from "helpers/data/utils"
   import IntegrationIcon from "./IntegrationIcon.svelte"
   import { TableNames } from "constants"
+  import { userSelectedResourceMap } from "builderStore"
 
   let openDataSources = []
 
@@ -166,8 +167,9 @@
       selected={$isActive("./table/:tableId") &&
         $tables.selected?._id === TableNames.USERS}
       on:click={() => selectTable(TableNames.USERS)}
+      selectedBy={$userSelectedResourceMap[TableNames.USERS]}
     />
-    {#each enrichedDataSources as datasource, idx}
+    {#each enrichedDataSources as datasource}
       <NavItem
         border
         text={datasource.name}
@@ -176,6 +178,7 @@
         withArrow={true}
         on:click={() => selectDatasource(datasource)}
         on:iconClick={() => toggleNode(datasource)}
+        selectedBy={$userSelectedResourceMap[datasource._id]}
       >
         <div class="datasource-icon" slot="icon">
           <IntegrationIcon
@@ -201,6 +204,7 @@
             selected={$isActive("./query/:queryId") &&
               $queries.selectedQueryId === query._id}
             on:click={() => $goto(`./query/${query._id}`)}
+            selectedBy={$userSelectedResourceMap[query._id]}
           >
             <EditQueryPopover {query} />
           </NavItem>
@@ -212,7 +216,7 @@
 
 <style>
   .hierarchy-items-container {
-    margin: 0 calc(-1 * var(--spacing-xl));
+    margin: 0 calc(-1 * var(--spacing-l));
   }
   .datasource-icon {
     display: grid;

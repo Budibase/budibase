@@ -1,5 +1,5 @@
 <script>
-  import { ModalContent, Select, Input, Button } from "@budibase/bbui"
+  import { keepOpen, ModalContent, Select, Input, Button } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "api"
   import { notifications } from "@budibase/bbui"
@@ -76,7 +76,7 @@
       errors.push({ message: "Please choose permissions" })
     }
     if (errors.length) {
-      return false
+      return keepOpen
     }
 
     // Save/create the role
@@ -85,7 +85,7 @@
       notifications.success("Role saved successfully")
     } catch (error) {
       notifications.error(`Error saving role - ${error.message}`)
-      return false
+      return keepOpen
     }
   }
 
