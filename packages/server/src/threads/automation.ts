@@ -486,8 +486,7 @@ class Orchestrator {
     const end = performance.now()
     const executionTime = end - start
 
-    console.debug(`[Automation ID]: ${automation._id} completed`)
-    console.info(`Execution time: ${executionTime} milliseconds`, {
+    console.info(`Automation ID: ${automation._id} Execution time: ${executionTime} milliseconds`, {
       _logKey: "automation",
       executionTime,
     })
