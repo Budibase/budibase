@@ -269,7 +269,7 @@ router
   )
 
 router
-  .get(
+  .post(
     "/api/v2/views/:viewId/search",
     authorized(PermissionType.VIEW, PermissionLevel.READ),
     rowController.views.searchView
