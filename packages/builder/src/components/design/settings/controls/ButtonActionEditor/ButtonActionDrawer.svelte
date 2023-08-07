@@ -104,7 +104,7 @@
 
     // Delete the action
     actions.splice(index, 1)
-    actions = actions
+    actions = updateContinueIfActions()
 
     // Select a new action if we deleted the selected one
     if (isSelected) {
@@ -117,6 +117,30 @@
     showAvailableActions = !showAvailableActions
   }
 
+  const updateContinueIfActions = () => {
+    if (!actions?.length) {
+      return
+    }
+    // Ensure only the last 'Continue if' step can support final actions
+    let continueIfActions = actions.filter(
+      action => action[EVENT_TYPE_KEY] === "Continue if / Stop if"
+    )
+    for (let i = 0; i < continueIfActions.length; i++) {
+      const last = i === continueIfActions.length - 1
+      continueIfActions[i].parameters = {
+        ...continueIfActions[i].parameters,
+        disableFinalActions: !last,
+        allowFinalActions: !last
+          ? false
+          : continueIfActions[i].parameters?.allowFinalActions,
+        finalActions: !last
+          ? null
+          : continueIfActions[i].parameters?.finalActions,
+      }
+    }
+    return actions
+  }
+
   const addAction = actionType => {
     const newAction = {
       parameters: {},
@@ -127,6 +151,7 @@
       actions = []
     }
     actions = [...actions, newAction]
+    actions = updateContinueIfActions()
     selectedAction = newAction
   }
 
