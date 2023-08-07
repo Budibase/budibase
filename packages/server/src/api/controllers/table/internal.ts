@@ -97,7 +97,7 @@ export async function save(ctx: any) {
   // update schema of non-statistics views when new columns are added
   for (let view in tableToSave.views) {
     const tableView = tableToSave.views[view]
-    if (!tableView) continue
+    if (!tableView || sdk.views.isV2(tableView)) continue
 
     if (
       (tableView.schema as ViewStatisticsSchema).group ||
