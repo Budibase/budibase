@@ -168,7 +168,7 @@
     <Layout noPadding gap="XS">
       <Detail size="S">Plugins</Detail>
       <div class="item-list">
-        {#each Object.entries(plugins) as [idx, action]}
+        {#each Object.entries(plugins) as [_, action]}
           <div
             class="item"
             class:selected={selectedAction === action.name}

@@ -11,6 +11,7 @@ import DatasourcesAPI from "./apis/DatasourcesAPI"
 import IntegrationsAPI from "./apis/IntegrationsAPI"
 import QueriesAPI from "./apis/QueriesAPI"
 import PermissionsAPI from "./apis/PermissionsAPI"
+import LicenseAPI from "./apis/LicenseAPI"
 import BudibaseInternalAPIClient from "./BudibaseInternalAPIClient"
 import { State } from "../../types"
 
@@ -30,6 +31,7 @@ export default class BudibaseInternalAPI {
   integrations: IntegrationsAPI
   queries: QueriesAPI
   permissions: PermissionsAPI
+  license: LicenseAPI
 
   constructor(state: State) {
     this.client = new BudibaseInternalAPIClient(state)
@@ -47,5 +49,6 @@ export default class BudibaseInternalAPI {
     this.integrations = new IntegrationsAPI(this.client)
     this.queries = new QueriesAPI(this.client)
     this.permissions = new PermissionsAPI(this.client)
+    this.license = new LicenseAPI(this.client)
   }
 }

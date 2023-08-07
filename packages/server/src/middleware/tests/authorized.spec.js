@@ -9,7 +9,7 @@ jest.mock("../../environment", () => ({
 )
 const authorizedMiddleware = require("../authorized").default
 const env = require("../../environment")
-const { permissions } = require("@budibase/backend-core")
+const { PermissionType, PermissionLevel } = require("@budibase/types")
 
 const APP_ID = ""
 
@@ -112,7 +112,7 @@ describe("Authorization middleware", () => {
     
     it("throws if the user does not have builder permissions", async () => {
       config.setEnvironment(false)
-      config.setMiddlewareRequiredPermission(permissions.PermissionType.BUILDER)
+      config.setMiddlewareRequiredPermission(PermissionType.BUILDER)
       config.setUser({
         role: {
           _id: ""
@@ -124,13 +124,13 @@ describe("Authorization middleware", () => {
     })
 
     it("passes on to next() middleware if the user has resource permission", async () => {
-      config.setResourceId(permissions.PermissionType.QUERY)
+      config.setResourceId(PermissionType.QUERY)
       config.setUser({
         role: {
           _id: ""
         }
       })
-      config.setMiddlewareRequiredPermission(permissions.PermissionType.QUERY)
+      config.setMiddlewareRequiredPermission(PermissionType.QUERY)
 
       await config.executeMiddleware()
       expect(config.next).toHaveBeenCalled()
@@ -154,7 +154,7 @@ describe("Authorization middleware", () => {
           _id: ""
         },
       })
-      config.setMiddlewareRequiredPermission(permissions.PermissionType.ADMIN, permissions.PermissionLevel.BASIC)
+      config.setMiddlewareRequiredPermission(PermissionType.ADMIN, PermissionLevel.BASIC)
       
       await config.executeMiddleware()
       expect(config.throw).toHaveBeenCalledWith(403, "User does not have permission")

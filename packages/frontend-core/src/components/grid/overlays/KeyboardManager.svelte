@@ -16,6 +16,7 @@
     config,
     menu,
     gridFocused,
+    canAddRows,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -45,7 +46,7 @@
         e.preventDefault()
         focusFirstCell()
       } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        if ($config.allowAddRows) {
+        if ($canAddRows) {
           e.preventDefault()
           dispatch("add-row-inline")
         }
@@ -99,7 +100,7 @@
           }
           break
         case "Enter":
-          if ($config.allowAddRows) {
+          if ($canAddRows) {
             dispatch("add-row-inline")
           }
       }

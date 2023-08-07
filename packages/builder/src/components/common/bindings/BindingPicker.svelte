@@ -88,6 +88,7 @@
         {/if}
         {#if hoverTarget.description}
           <div class="helper__description">
+            <!-- eslint-disable-next-line svelte/no-at-html-tags-->
             {@html hoverTarget.description}
           </div>
         {/if}
@@ -124,7 +125,6 @@
         />
       </span>
 
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
       <span
         class="search-input-icon"
         on:click={() => {
@@ -162,7 +162,6 @@
           </div>
           <ul>
             {#each category.bindings as binding}
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
               <li
                 class="binding"
                 on:mouseenter={e => {

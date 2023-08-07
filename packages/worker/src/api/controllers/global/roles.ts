@@ -5,10 +5,10 @@ import {
   cache,
   tenancy,
 } from "@budibase/backend-core"
-import { BBContext, App } from "@budibase/types"
-import { allUsers } from "../../../sdk/users"
+import sdk from "../../../sdk"
+import { Ctx, App } from "@budibase/types"
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: Ctx) {
   const tenantId = ctx.user!.tenantId
   // always use the dev apps as they'll be most up to date (true)
   const apps = (await dbCore.getAllApps({ tenantId, all: true })) as App[]
@@ -31,11 +31,11 @@ export async function fetch(ctx: BBContext) {
   ctx.body = response
 }
 
-export async function find(ctx: BBContext) {
+export async function find(ctx: Ctx) {
   const appId = ctx.params.appId
   await context.doInAppContext(dbCore.getDevAppID(appId), async () => {
     const db = context.getAppDB()
-    const app = await db.get(dbCore.DocumentType.APP_METADATA)
+    const app = await db.get<App>(dbCore.DocumentType.APP_METADATA)
     ctx.body = {
       roles: await roles.getAllRoles(),
       name: app.name,
@@ -45,10 +45,10 @@ export async function find(ctx: BBContext) {
   })
 }
 
-export async function removeAppRole(ctx: BBContext) {
+export async function removeAppRole(ctx: Ctx) {
   const { appId } = ctx.params
   const db = tenancy.getGlobalDB()
-  const users = await allUsers()
+  const users = await sdk.users.db.allUsers()
   const bulk = []
   const cacheInvalidations = []
   for (let user of users) {

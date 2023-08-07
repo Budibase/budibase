@@ -15,7 +15,15 @@ import * as api from "./api"
 import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
-import { events, logging, middleware, timers } from "@budibase/backend-core"
+import { ServiceType } from "@budibase/types"
+import {
+  events,
+  logging,
+  middleware,
+  timers,
+  env as coreEnv,
+} from "@budibase/backend-core"
+coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import { startup } from "./startup"
 const Sentry = require("@sentry/node")
 const destroyable = require("server-destroy")

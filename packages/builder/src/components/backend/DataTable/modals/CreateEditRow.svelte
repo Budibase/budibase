@@ -1,10 +1,9 @@
 <script>
   import { createEventDispatcher } from "svelte"
   import { tables } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
+  import { ModalContent, keepOpen, notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import { API } from "api"
-  import { ModalContent } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
 
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -41,8 +40,8 @@
       } else {
         notifications.error(`Failed to save row - ${error.message}`)
       }
-      // Prevent modal closing if there were errors
-      return false
+
+      return keepOpen
     }
   }
 </script>

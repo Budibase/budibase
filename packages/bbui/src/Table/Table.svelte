@@ -379,7 +379,7 @@
           </div>
         {/if}
         {#if sortedRows?.length}
-          {#each sortedRows as row, idx}
+          {#each sortedRows as row}
             <div class="spectrum-Table-row" class:clickable={allowClickRows}>
               {#if showEditColumn}
                 <div
