@@ -26,6 +26,12 @@ function generateReadJson({
     filters: filters || {},
     sort: sort || {},
     paginate: paginate || {},
+    meta: {
+      table: {
+        name: table || TABLE_NAME,
+        primary: ["id"],
+      },
+    },
   }
 }
 
@@ -634,6 +640,21 @@ describe("SQL query builder", () => {
     expect(query).toEqual({
       bindings: [`%jo%`, limit],
       sql: `select * from (select * from (select * from \"test\" where LOWER(\"test\".\"name\") LIKE :1) where rownum <= :2) \"test\"`,
+    })
+  })
+
+  it("should sort SQL Server tables by the primary key if no sort data is provided", () => {
+    let query = new Sql(SqlClient.MS_SQL, limit)._query(
+      generateReadJson({
+        sort: {},
+        paginate: {
+          limit: 10,
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select top (@p0) * from [test] order by [test].[id] asc) as [test]`,
     })
   })
 })
