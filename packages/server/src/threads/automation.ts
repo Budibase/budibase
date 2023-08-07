@@ -486,10 +486,13 @@ class Orchestrator {
     const end = performance.now()
     const executionTime = end - start
 
-    console.info(`Automation ID: ${automation._id} Execution time: ${executionTime} milliseconds`, {
-      _logKey: "automation",
-      executionTime,
-    })
+    console.info(
+      `Automation ID: ${automation._id} Execution time: ${executionTime} milliseconds`,
+      {
+        _logKey: "automation",
+        executionTime,
+      }
+    )
 
     // store the logs for the automation run
     try {
