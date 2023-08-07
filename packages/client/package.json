@@ -70,14 +70,26 @@
         "dependsOn": [
           {
             "projects": [
+              "@budibase/shared-core",
               "@budibase/string-templates",
-              "@budibase/shared-core"
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      },
+      "dev:builder": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/shared-core",
+              "@budibase/string-templates",
+              "@budibase/types"
             ],
             "target": "build"
           }
         ]
       }
     }
-  },
-  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
+  }
 }

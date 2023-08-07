@@ -1,18 +1,19 @@
 import { fixAutoColumnSubType } from "../utils"
 import { AutoFieldDefaultNames, AutoFieldSubTypes } from "../../../constants"
+import { FieldSchema, FieldType, RelationshipType } from "@budibase/types"
 
 describe("rowProcessor utility", () => {
   describe("fixAutoColumnSubType", () => {
-    let schema = {
+    let schema: FieldSchema = {
       name: "",
-      type: "link",
+      type: FieldType.LINK,
       subtype: "", // missing subtype
       icon: "ri-magic-line",
       autocolumn: true,
       constraints: { type: "array", presence: false },
       tableId: "ta_users",
       fieldName: "test-Updated By",
-      relationshipType: "many-to-many",
+      relationshipType: RelationshipType.MANY_TO_MANY,
       sortable: false,
     }
 
