@@ -23,6 +23,7 @@ import env from "../../environment"
 export const routes: Router[] = [
   configRoutes,
   userRoutes,
+  pro.users,
   workspaceRoutes,
   authRoutes,
   templateRoutes,

@@ -91,7 +91,7 @@ export async function getSelf(ctx: any) {
   }
 
   // get the main body of the user
-  const user = await userSdk.getUser(userId)
+  const user = await userSdk.db.getUser(userId)
   ctx.body = await groups.enrichUserRolesFromGroups(user)
 
   // add the feature flags for this tenant
@@ -106,12 +106,12 @@ export async function updateSelf(
 ) {
   const update = ctx.request.body
 
-  let user = await userSdk.getUser(ctx.user._id!)
+  let user = await userSdk.db.getUser(ctx.user._id!)
   user = {
     ...user,
     ...update,
   }
-  user = await userSdk.save(user, { requirePassword: false })
+  user = await userSdk.db.save(user, { requirePassword: false })
 
   if (update.password) {
     // Log all other sessions out apart from the current one

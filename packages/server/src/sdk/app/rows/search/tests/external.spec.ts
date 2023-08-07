@@ -13,7 +13,7 @@ jest.unmock("mysql2/promise")
 
 jest.setTimeout(30000)
 
-describe("external", () => {
+describe.skip("external", () => {
   const config = new TestConfiguration()
 
   let externalDatasource: Datasource

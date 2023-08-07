@@ -93,7 +93,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 }
 
 export async function save(ctx: UserCtx) {
-  const db = context.getAppDB()
   let inputs = ctx.request.body
   inputs.tableId = ctx.params.tableId
 
@@ -177,7 +176,6 @@ export async function destroy(ctx: UserCtx) {
 }
 
 export async function bulkDestroy(ctx: UserCtx) {
-  const db = context.getAppDB()
   const tableId = ctx.params.tableId
   const table = await sdk.tables.getTable(tableId)
   let { rows } = ctx.request.body
@@ -206,6 +204,7 @@ export async function bulkDestroy(ctx: UserCtx) {
       })
     )
   } else {
+    const db = context.getAppDB()
     await db.bulkDocs(processedRows.map(row => ({ ...row, _deleted: true })))
   }
   // remove any attachments that were on the rows from object storage

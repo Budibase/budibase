@@ -1,10 +1,12 @@
 import * as setup from "./utilities"
 import {
   CreateViewRequest,
+  FieldSchema,
   FieldType,
   SortOrder,
   SortType,
   Table,
+  UpdateViewRequest,
   ViewV2,
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
@@ -33,20 +35,6 @@ function priceTable(): Table {
 describe("/v2/views", () => {
   const config = setup.getConfig()
 
-  const viewFilters: Omit<CreateViewRequest, "name" | "tableId"> = {
-    query: { allOr: false, equal: { field: "value" } },
-    sort: {
-      field: "fieldToSort",
-      order: SortOrder.DESCENDING,
-      type: SortType.STRING,
-    },
-    columns: {
-      name: {
-        visible: true,
-      },
-    },
-  }
-
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
@@ -69,19 +57,123 @@ describe("/v2/views", () => {
       })
     })
 
-    it("can persist views with queries", async () => {
-      const newView: CreateViewRequest = {
+    it("can persist views with all fields", async () => {
+      const newView: Required<CreateViewRequest> = {
         name: generator.name(),
         tableId: config.table!._id!,
-        ...viewFilters,
+        primaryDisplay: generator.word(),
+        query: { allOr: false, equal: { field: "value" } },
+        sort: {
+          field: "fieldToSort",
+          order: SortOrder.DESCENDING,
+          type: SortType.STRING,
+        },
+        schema: {
+          name: {
+            visible: true,
+          },
+        },
       }
       const res = await config.api.viewV2.create(newView)
 
       expect(res).toEqual({
         ...newView,
-        ...viewFilters,
+        schema: undefined,
+        columns: ["name"],
+        schemaUI: newView.schema,
         id: expect.any(String),
         version: 2,
+      })
+    })
+
+    it("persist only UI schema overrides", async () => {
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: config.table!._id!,
+        schema: {
+          Price: {
+            name: "Price",
+            type: FieldType.NUMBER,
+            visible: true,
+            order: 1,
+            width: 100,
+          },
+          Category: {
+            name: "Category",
+            type: FieldType.STRING,
+            visible: false,
+            icon: "ic",
+          },
+        } as Record<string, FieldSchema>,
+      }
+
+      const createdView = await config.api.viewV2.create(newView)
+
+      expect(await config.api.viewV2.get(createdView.id)).toEqual({
+        ...newView,
+        schema: undefined,
+        columns: ["Price", "Category"],
+        schemaUI: {
+          Price: {
+            visible: true,
+            order: 1,
+            width: 100,
+          },
+          Category: {
+            visible: false,
+            icon: "ic",
+          },
+        },
+        id: createdView.id,
+        version: 2,
+      })
+    })
+
+    it("throw an exception if the schema overrides a non UI field", async () => {
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: config.table!._id!,
+        schema: {
+          Price: {
+            name: "Price",
+            type: FieldType.NUMBER,
+            visible: true,
+          },
+          Category: {
+            name: "Category",
+            type: FieldType.STRING,
+            constraints: {
+              type: "string",
+              presence: true,
+            },
+          },
+        } as Record<string, FieldSchema>,
+      }
+
+      await config.api.viewV2.create(newView, {
+        expectStatus: 400,
+      })
+    })
+
+    it("will not throw an exception if the schema is 'deleting' non UI fields", async () => {
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: config.table!._id!,
+        schema: {
+          Price: {
+            name: "Price",
+            type: FieldType.NUMBER,
+            visible: true,
+          },
+          Category: {
+            name: "Category",
+            type: FieldType.STRING,
+          },
+        } as Record<string, FieldSchema>,
+      }
+
+      await config.api.viewV2.create(newView, {
+        expectStatus: 201,
       })
     })
   })
@@ -108,6 +200,46 @@ describe("/v2/views", () => {
             ...view,
             query: { equal: { newField: "thatValue" } },
             schema: expect.anything(),
+          },
+        },
+        _rev: expect.any(String),
+        updatedAt: expect.any(String),
+      })
+    })
+
+    it("can update all fields", async () => {
+      const tableId = config.table!._id!
+
+      const updatedData: Required<UpdateViewRequest> = {
+        version: view.version,
+        id: view.id,
+        tableId,
+        name: view.name,
+        primaryDisplay: generator.word(),
+        query: { equal: { [generator.word()]: generator.word() } },
+        sort: {
+          field: generator.word(),
+          order: SortOrder.DESCENDING,
+          type: SortType.STRING,
+        },
+        schema: {
+          Category: {
+            visible: false,
+          },
+        },
+      }
+      await config.api.viewV2.update(updatedData)
+
+      expect(await config.api.table.get(tableId)).toEqual({
+        ...config.table,
+        views: {
+          [view.name]: {
+            ...updatedData,
+            schema: {
+              Category: expect.objectContaining({
+                visible: false,
+              }),
+            },
           },
         },
         _rev: expect.any(String),
@@ -201,6 +333,94 @@ describe("/v2/views", () => {
         message: "View id does not match between the body and the uri path",
         status: 400,
       })
+    })
+
+    it("updates only UI schema overrides", async () => {
+      await config.api.viewV2.update({
+        ...view,
+        schema: {
+          Price: {
+            name: "Price",
+            type: FieldType.NUMBER,
+            visible: true,
+            order: 1,
+            width: 100,
+          },
+          Category: {
+            name: "Category",
+            type: FieldType.STRING,
+            visible: false,
+            icon: "ic",
+          },
+        } as Record<string, FieldSchema>,
+      })
+
+      expect(await config.api.viewV2.get(view.id)).toEqual({
+        ...view,
+        schema: undefined,
+        columns: ["Price", "Category"],
+        schemaUI: {
+          Price: {
+            visible: true,
+            order: 1,
+            width: 100,
+          },
+          Category: {
+            visible: false,
+            icon: "ic",
+          },
+        },
+        id: view.id,
+        version: 2,
+      })
+    })
+
+    it("throw an exception if the schema overrides a non UI field", async () => {
+      await config.api.viewV2.update(
+        {
+          ...view,
+          schema: {
+            Price: {
+              name: "Price",
+              type: FieldType.NUMBER,
+              visible: true,
+            },
+            Category: {
+              name: "Category",
+              type: FieldType.STRING,
+              constraints: {
+                type: "string",
+                presence: true,
+              },
+            },
+          } as Record<string, FieldSchema>,
+        },
+        {
+          expectStatus: 400,
+        }
+      )
+    })
+
+    it("will not throw an exception if the schema is 'deleting' non UI fields", async () => {
+      await config.api.viewV2.update(
+        {
+          ...view,
+          schema: {
+            Price: {
+              name: "Price",
+              type: FieldType.NUMBER,
+              visible: true,
+            },
+            Category: {
+              name: "Category",
+              type: FieldType.STRING,
+            },
+          } as Record<string, FieldSchema>,
+        },
+        {
+          expectStatus: 200,
+        }
+      )
     })
   })
 
