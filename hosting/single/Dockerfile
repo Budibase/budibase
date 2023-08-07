@@ -1,4 +1,4 @@
-FROM node:14-slim as build
+FROM node:18-slim as build
 
 # install node-gyp dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-utils cron g++ make python
