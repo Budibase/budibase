@@ -17,7 +17,7 @@ import oracle from "./oracle"
 import { SourceName, Integration, PluginType } from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
-import { cloneDeep } from "lodash"
+import cloneDeep from "lodash/cloneDeep"
 import sdk from "../sdk"
 
 const DEFINITIONS: Record<SourceName, Integration | undefined> = {
@@ -54,7 +54,6 @@ const INTEGRATIONS: Record<SourceName, any> = {
   [SourceName.FIRESTORE]: firebase.integration,
   [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
   [SourceName.REDIS]: redis.integration,
-  [SourceName.FIRESTORE]: firebase.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
   [SourceName.ORACLE]: undefined,
 }

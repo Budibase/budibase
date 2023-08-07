@@ -1,5 +1,6 @@
 <script>
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
+  import { fetchData } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
   import { FieldTypes } from "../../../constants"
@@ -14,42 +15,33 @@
   export let autocomplete = false
   export let defaultValue
   export let onChange
+  export let filter
 
   let fieldState
   let fieldApi
   let fieldSchema
-
-  let options = []
   let tableDefinition
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
-  $: fetchRows(linkedTableId)
-  $: fetchTable(linkedTableId)
+  $: fetch = fetchData({
+    API,
+    datasource: {
+      type: "table",
+      tableId: linkedTableId,
+    },
+    options: {
+      filter,
+      limit: 100,
+    },
+  })
+  $: fetch.update({ filter })
+  $: options = $fetch.rows
+  $: tableDefinition = $fetch.definition
   $: singleValue = flatten(fieldState?.value)?.[0]
   $: multiValue = flatten(fieldState?.value) ?? []
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: expandedDefaultValue = expand(defaultValue)
-
-  const fetchTable = async id => {
-    if (id) {
-      try {
-        tableDefinition = await API.fetchTableDefinition(id)
-      } catch (error) {
-        tableDefinition = null
-      }
-    }
-  }
-
-  const fetchRows = async id => {
-    if (id) {
-      try {
-        options = await API.fetchTableData(id)
-      } catch (error) {
-        options = []
-      }
-    }
-  }
 
   const flatten = values => {
     if (!values) {

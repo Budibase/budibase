@@ -15,10 +15,11 @@ import {
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
 import { getDefinitions, getDefinition } from "../../../integrations"
-import _ from "lodash"
+import merge from "lodash/merge"
 import {
   BudibaseInternalDB,
   getDatasourceParams,
+  getDatasourcePlusParams,
   getTableParams,
 } from "../../../db/utils"
 import sdk from "../../index"
@@ -135,7 +136,7 @@ export async function get(
   opts?: { enriched: boolean }
 ): Promise<Datasource> {
   const appDb = context.getAppDB()
-  const datasource = await appDb.get(datasourceId)
+  const datasource = await appDb.get<Datasource>(datasourceId)
   if (opts?.enriched) {
     return (await enrichDatasourceWithValues(datasource)).datasource
   } else {
@@ -145,7 +146,7 @@ export async function get(
 
 export async function getWithEnvVars(datasourceId: string) {
   const appDb = context.getAppDB()
-  const datasource = await appDb.get(datasourceId)
+  const datasource = await appDb.get<Datasource>(datasourceId)
   return enrichDatasourceWithValues(datasource)
 }
 
@@ -226,7 +227,7 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
   }
 
   if (old.config?.auth) {
-    update.config = _.merge(old.config, update.config)
+    update.config = merge(old.config, update.config)
   }
 
   // update back to actual passwords for everything else
@@ -242,4 +243,16 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
   }
 
   return update
+}
+
+export async function getExternalDatasources(): Promise<Datasource[]> {
+  const db = context.getAppDB()
+
+  const externalDatasources = await db.allDocs<Datasource>(
+    getDatasourcePlusParams(undefined, {
+      include_docs: true,
+    })
+  )
+
+  return externalDatasources.rows.map(r => r.doc)
 }

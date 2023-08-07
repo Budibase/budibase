@@ -18,6 +18,7 @@
   import { API } from "api"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
+  import { sdk } from "@budibase/shared-core"
 
   const imageExtensions = [
     ".png",
@@ -206,7 +207,7 @@
   })
 </script>
 
-{#if $auth.isAdmin && mounted}
+{#if sdk.users.isAdmin($auth.user) && mounted}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <div class="title">
@@ -400,7 +401,7 @@
           on:click={() => {
             if (isCloud && $auth?.user?.accountPortalAccess) {
               window.open($admin.accountPortalUrl + "/portal/upgrade", "_blank")
-            } else if ($auth.isAdmin) {
+            } else if (sdk.users.isAdmin($auth.user)) {
               $goto("/builder/portal/account/upgrade")
             }
           }}

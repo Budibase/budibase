@@ -17,6 +17,7 @@
   export let showDeleteButton
   export let schema
   export let repeaterId
+  export let notificationOverride
 
   const FieldTypeToComponentMap = {
     string: "stringfield",
@@ -47,6 +48,7 @@
       parameters: {
         providerId: formId,
         tableId: dataSource?.tableId,
+        notificationOverride,
       },
     },
     {
@@ -81,6 +83,7 @@
         tableId: dataSource?.tableId,
         rowId: `{{ ${safe(repeaterId)}.${safe("_id")} }}`,
         revId: `{{ ${safe(repeaterId)}.${safe("_rev")} }}`,
+        notificationOverride,
       },
     },
     {
