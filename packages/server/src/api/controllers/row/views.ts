@@ -33,13 +33,17 @@ export async function searchView(
 
   ctx.status = 200
 
+  const { body } = ctx.request
+
   const searchOptions: RequiredKeys<SearchViewRowRequest> &
     RequiredKeys<Pick<SearchParams, "tableId" | "query" | "fields">> = {
     tableId: view.tableId,
     query: view.query || {},
     fields: viewFields,
-    ...getSortOptions(ctx.request.body, view),
-    limit: ctx.request.body.limit,
+    ...getSortOptions(body, view),
+    limit: body.limit,
+    bookmark: body.bookmark,
+    paginate: body.paginate,
   }
 
   const result = await quotas.addQuery(() => sdk.rows.search(searchOptions), {
