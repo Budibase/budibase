@@ -196,6 +196,7 @@ const scrollHandler = async (action, context) => {
     ActionTypes.ScrollTo,
     {
       field: action.parameters.field,
+      block: action.parameters.block,
     }
   )
 }

@@ -11,8 +11,8 @@
   export let parameters
 
   onMount(() => {
-    if (!parameters.type) {
-      parameters.type = "top"
+    if (!parameters.block) {
+      parameters.block = "start"
     }
   })
 
@@ -36,6 +36,16 @@
   />
   <Label small>Field</Label>
   <Combobox bind:value={parameters.field} options={fieldOptions} />
+  <Label small>Vertical alignment</Label>
+  <Select
+    bind:value={parameters.block}
+    options={[
+      { label: "Start", value: "start" },
+      { label: "Center", value: "center" },
+      { label: "End", value: "end" },
+      { label: "Nearest", value: "nearest" },
+    ]}
+  />
 </div>
 
 <style>

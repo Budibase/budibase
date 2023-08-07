@@ -52,9 +52,6 @@
       parameters.finalActions = null
     }
   })
-
-  $: parameters.finalActions =
-    parameters.finalActions?.length === 0 ? null : parameters.finalActions
 </script>
 
 <div class="root">

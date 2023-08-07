@@ -408,11 +408,19 @@
     }
   }
 
-  const handleScrollToField = ({ field }) => {
+  const handleScrollToField = ({ field, block }) => {
     const fieldId = get(getField(field)).fieldState.fieldId
-    const label = document.querySelector(`label[for="${fieldId}"]`)
-    document.getElementById(fieldId).focus({ preventScroll: true })
-    label.scrollIntoView({ behavior: "smooth" })
+    const fieldElement = document.getElementById(fieldId)
+    fieldElement.focus({ preventScroll: true })
+    if (block === "start") {
+      const label = document.querySelector(`label[for="${fieldId}"]`)
+      label.scrollIntoView({ behavior: "smooth" })
+    } else {
+      fieldElement.scrollIntoView({
+        behavior: "smooth",
+        block,
+      })
+    }
   }
 
   // Action context to pass to children
