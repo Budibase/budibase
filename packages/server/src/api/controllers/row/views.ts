@@ -7,6 +7,7 @@ import {
   RequiredKeys,
   SearchParams,
 } from "@budibase/types"
+import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
 
 export async function searchView(
@@ -34,11 +35,12 @@ export async function searchView(
   ctx.status = 200
 
   const { body } = ctx.request
+  const query = dataFilters.buildLuceneQuery(view.query || [])
 
   const searchOptions: RequiredKeys<SearchViewRowRequest> &
     RequiredKeys<Pick<SearchParams, "tableId" | "query" | "fields">> = {
     tableId: view.tableId,
-    query: view.query || {},
+    query,
     fields: viewFields,
     ...getSortOptions(body, view),
     limit: body.limit,
