@@ -207,7 +207,7 @@ jobs:
 
             if (submoduleCommit !== baseCommit) {
               console.error('Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}"" branch.');
-              console.error('Refer to the pro repo to merge your changes: https://github.com/'Budibase/budibase'-pro/blob/develop/docs/getting_started.md')
+              console.error('Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md')
               process.exit(1);
             } else {
               console.log('All good, the submodule had been merged and setup correctly!')
