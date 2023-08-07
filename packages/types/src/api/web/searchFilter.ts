@@ -1,9 +1,11 @@
+import { FieldType } from "../../documents"
+
 export type SearchFilter = {
   operator: keyof SearchQuery
   field: string
-  type: any
+  type?: FieldType
   value: any
-  externalType: "integer" | "int" | "smallint" | "mediumint"
+  externalType?: string
 }
 
 export type SearchQuery = {
