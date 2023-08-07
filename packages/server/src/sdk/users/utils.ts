@@ -6,7 +6,7 @@ import {
   getUserMetadataParams,
   InternalTables,
 } from "../../db/utils"
-import { isEqual } from "lodash"
+import isEqual from "lodash/isEqual"
 import { ContextUser, UserMetadata, User, Database } from "@budibase/types"
 
 export function combineMetadataAndUser(
@@ -62,6 +62,25 @@ export async function rawUserMetadata(db?: Database) {
       })
     )
   ).rows.map(row => row.doc)
+}
+
+export async function fetchMetadata() {
+  const global = await getGlobalUsers()
+  const metadata = await rawUserMetadata()
+  const users = []
+  for (let user of global) {
+    // find the metadata that matches up to the global ID
+    const info = metadata.find(meta => meta._id.includes(user._id))
+    // remove these props, not for the correct DB
+    users.push({
+      ...user,
+      ...info,
+      tableId: InternalTables.USER_METADATA,
+      // make sure the ID is always a local ID, not a global one
+      _id: generateUserMetadataID(user._id),
+    })
+  }
+  return users
 }
 
 export async function syncGlobalUsers() {

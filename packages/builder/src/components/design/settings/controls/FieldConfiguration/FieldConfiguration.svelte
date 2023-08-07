@@ -8,32 +8,39 @@
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
   import { currentAsset } from "builderStore"
-  import { getFields } from "helpers/searchFields"
 
   export let componentInstance
   export let value = []
-
-  const convertOldColumnFormat = oldColumns => {
-    if (typeof oldColumns?.[0] === "string") {
-      value = oldColumns.map(field => ({ name: field, displayName: field }))
-    }
-  }
-
-  $: convertOldColumnFormat(value)
 
   const dispatch = createEventDispatcher()
 
   let drawer
   let boundValue
 
+  $: text = getText(value)
+  $: convertOldColumnFormat(value)
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: schema = getSchema($currentAsset, datasource)
   $: options = Object.keys(schema || {})
   $: sanitisedValue = getValidColumns(value, options)
   $: updateBoundValue(sanitisedValue)
-  $: enrichedSchemaFields = getFields(Object.values(schema || {}), {
-    allowLinks: true,
-  })
+
+  const getText = value => {
+    if (!value?.length) {
+      return "All fields"
+    }
+    let text = `${value.length} field`
+    if (value.length !== 1) {
+      text += "s"
+    }
+    return text
+  }
+
+  const convertOldColumnFormat = oldColumns => {
+    if (typeof oldColumns?.[0] === "string") {
+      value = oldColumns.map(field => ({ name: field, displayName: field }))
+    }
+  }
 
   const getSchema = (asset, datasource) => {
     const schema = getSchemaForDatasource(asset, datasource).schema
@@ -79,7 +86,10 @@
   }
 </script>
 
-<ActionButton on:click={open}>Configure fields</ActionButton>
+<div class="field-configuration">
+  <ActionButton on:click={open}>{text}</ActionButton>
+</div>
+
 <Drawer bind:this={drawer} title="Form Fields">
   <svelte:fragment slot="description">
     Configure the fields in your form.
@@ -87,3 +97,9 @@
   <Button cta slot="buttons" on:click={save}>Save</Button>
   <ColumnDrawer slot="body" bind:columns={boundValue} {options} {schema} />
 </Drawer>
+
+<style>
+  .field-configuration :global(.spectrum-ActionButton) {
+    width: 100%;
+  }
+</style>

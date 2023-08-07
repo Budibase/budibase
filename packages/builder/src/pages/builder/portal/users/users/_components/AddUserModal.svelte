@@ -1,5 +1,6 @@
 <script>
   import {
+    keepOpen,
     Label,
     ActionButton,
     ModalContent,
@@ -73,7 +74,7 @@
       valid = validateInput(input, index) && valid
     })
     if (!valid) {
-      return false
+      return keepOpen
     }
     showOnboardingTypeModal({ users: userData, groups: userGroups })
   }

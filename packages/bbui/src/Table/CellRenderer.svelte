@@ -29,7 +29,6 @@
   $: type = getType(schema)
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
-  $: width = schema?.width || "150px"
   $: cellValue = getCellValue(value, schema.template)
 
   const getType = schema => {

@@ -19,6 +19,7 @@
   import DeleteLicenseKeyModal from "../../../../components/portal/licensing/DeleteLicenseKeyModal.svelte"
   import { API } from "api"
   import { onMount } from "svelte"
+  import { sdk } from "@budibase/shared-core"
 
   $: license = $auth.user.license
   $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
@@ -176,7 +177,7 @@
   })
 </script>
 
-{#if $auth.isAdmin}
+{#if sdk.users.isAdmin($auth.user)}
   <DeleteLicenseKeyModal
     bind:this={deleteLicenseKeyModal}
     onConfirm={deleteLicenseKey}

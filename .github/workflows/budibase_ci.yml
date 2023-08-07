@@ -12,9 +12,6 @@ on:
       - master
       - develop
   pull_request:
-    branches:
-      - master
-      - develop
   workflow_dispatch:
 
 env:
@@ -157,12 +154,12 @@ jobs:
           node-version: 14.x
           cache: "yarn"
       - run: yarn
-      - run: yarn build
+      - run: yarn build --projects=@budibase/server,@budibase/worker,@budibase/client
       - name: Run tests
         run: |
           cd qa-core
           yarn setup
-          yarn test:ci
+          yarn serve:test:self:ci
         env:
           BB_ADMIN_USER_EMAIL: admin
           BB_ADMIN_USER_PASSWORD: admin
@@ -185,7 +182,7 @@ jobs:
           pro_commit=$(git rev-parse HEAD)
 
           branch="${{ github.base_ref || github.ref_name  }}"
-          echo "Running on branch `$branch` (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
+          echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
 
           if [[ $branch == "master" ]]; then
             base_commit=$(git rev-parse origin/master)

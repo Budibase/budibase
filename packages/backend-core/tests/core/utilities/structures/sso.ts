@@ -15,7 +15,7 @@ import { generator } from "./generator"
 import { email, uuid } from "./common"
 import * as shared from "./shared"
 import { user } from "./shared"
-import _ from "lodash"
+import sample from "lodash/sample"
 
 export function OAuth(): OAuth2 {
   return {
@@ -47,7 +47,7 @@ export function authDetails(userDoc?: User): SSOAuthDetails {
 }
 
 export function providerType(): SSOProviderType {
-  return _.sample(Object.values(SSOProviderType)) as SSOProviderType
+  return sample(Object.values(SSOProviderType)) as SSOProviderType
 }
 
 export function ssoProfile(user?: User): SSOProfile {

@@ -8,10 +8,10 @@ import {
   getLinkedTableIDs,
   getLinkedTable,
 } from "./linkUtils"
-import { flatten } from "lodash"
+import flatten from "lodash/flatten"
 import { FieldTypes } from "../../constants"
 import { getMultiIDParams, USER_METDATA_PREFIX } from "../utils"
-import { partition } from "lodash"
+import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
