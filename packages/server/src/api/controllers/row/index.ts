@@ -11,6 +11,9 @@ import {
   Row,
   PatchRowRequest,
   PatchRowResponse,
+  SearchRowResponse,
+  SearchRowRequest,
+  SearchParams,
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
@@ -197,10 +200,10 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
   ctx.body = response
 }
 
-export async function search(ctx: any) {
+export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const tableId = utils.getTableId(ctx)
 
-  const searchParams = {
+  const searchParams: SearchParams = {
     ...ctx.request.body,
     tableId,
   }
