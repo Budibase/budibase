@@ -18,6 +18,7 @@
   let focusedOptionIdx = null
 
   $: options = schema?.constraints?.inclusion || []
+  $: optionColors = schema?.optionColors || {}
   $: editable = focused && !readonly
   $: values = Array.isArray(value) ? value : [value].filter(x => x != null)
   $: {
@@ -93,7 +94,7 @@
     on:click={editable ? open : null}
   >
     {#each values as val}
-      {@const color = getOptionColor(val)}
+      {@const color = optionColors[val] || getOptionColor(val)}
       {#if color}
         <div class="badge text" style="--color: {color}">
           <span>
@@ -121,7 +122,7 @@
       use:clickOutside={close}
     >
       {#each options as option, idx}
-        {@const color = getOptionColor(option)}
+        {@const color = optionColors[option] || getOptionColor(option)}
         <div
           class="option"
           on:click={() => toggleOption(option)}

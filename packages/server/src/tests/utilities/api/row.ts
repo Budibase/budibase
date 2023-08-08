@@ -7,6 +7,21 @@ export class RowAPI extends TestAPI {
     super(config)
   }
 
+  get = async (
+    tableId: string,
+    rowId: string,
+    { expectStatus } = { expectStatus: 200 }
+  ) => {
+    const request = this.request
+      .get(`/api/${tableId}/rows/${rowId}`)
+      .set(this.config.defaultHeaders())
+      .expect(expectStatus)
+    if (expectStatus !== 404) {
+      request.expect("Content-Type", /json/)
+    }
+    return request
+  }
+
   patch = async (
     tableId: string,
     row: PatchRowRequest,

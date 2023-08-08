@@ -2,6 +2,7 @@ import { derived, writable, get } from "svelte/store"
 import { API } from "api"
 import { admin } from "stores/portal"
 import analytics from "analytics"
+import { sdk } from "@budibase/shared-core"
 
 export function createAuthStore() {
   const auth = writable({
@@ -13,13 +14,6 @@ export function createAuthStore() {
     postLogout: false,
   })
   const store = derived(auth, $store => {
-    let isAdmin = false
-    let isBuilder = false
-    if ($store.user) {
-      const user = $store.user
-      isAdmin = !!user.admin?.global
-      isBuilder = !!user.builder?.global
-    }
     return {
       user: $store.user,
       accountPortalAccess: $store.accountPortalAccess,
@@ -27,8 +21,6 @@ export function createAuthStore() {
       tenantSet: $store.tenantSet,
       loaded: $store.loaded,
       postLogout: $store.postLogout,
-      isAdmin,
-      isBuilder,
       isSSO: !!$store.user?.provider,
     }
   })
@@ -57,8 +49,8 @@ export function createAuthStore() {
               name: user.account?.name,
               user_id: user._id,
               tenant: user.tenantId,
-              admin: user?.admin?.global,
-              builder: user?.builder?.global,
+              admin: sdk.users.isAdmin(user),
+              builder: sdk.users.isBuilder(user),
               "Company size": user.account?.size,
               "Job role": user.account?.profession,
             },

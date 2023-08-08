@@ -11,10 +11,9 @@ import {
   Row,
   PatchRowRequest,
   PatchRowResponse,
-  SearchResponse,
-  SortOrder,
-  SortType,
-  ViewV2,
+  SearchRowResponse,
+  SearchRowRequest,
+  SearchParams,
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
@@ -23,6 +22,7 @@ import { fixRow } from "../public/rows"
 import sdk from "../../../sdk"
 import * as exporters from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
+export * as views from "./views"
 
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
@@ -37,6 +37,7 @@ export async function patch(
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
+
   // if it doesn't have an _id then its save
   if (body && !body._id) {
     return save(ctx)
@@ -62,13 +63,14 @@ export async function patch(
   }
 }
 
-export const save = async (ctx: any) => {
+export const save = async (ctx: UserCtx<Row, Row>) => {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
+
   // if it has an ID already then its a patch
   if (body && body._id) {
-    return patch(ctx)
+    return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   const { row, table, squashed } = await quotas.addRow(() =>
     quotas.addQuery(() => pickApi(tableId).save(ctx), {
@@ -147,7 +149,7 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   const rowDeletes: Row[] = await processDeleteRowsRequest(ctx)
   deleteRequest.rows = rowDeletes
 
-  let { rows } = await quotas.addQuery<any>(
+  const { rows } = await quotas.addQuery(
     () => pickApi(tableId).bulkDestroy(ctx),
     {
       datasourceId: tableId,
@@ -167,13 +169,13 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
 
-  let resp = await quotas.addQuery<any>(() => pickApi(tableId).destroy(ctx), {
+  const resp = await quotas.addQuery(() => pickApi(tableId).destroy(ctx), {
     datasourceId: tableId,
   })
   await quotas.removeRow()
 
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
-  gridSocket?.emitRowDeletion(ctx, resp.row._id)
+  gridSocket?.emitRowDeletion(ctx, resp.row._id!)
 
   return resp
 }
@@ -198,10 +200,10 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
   ctx.body = response
 }
 
-export async function search(ctx: any) {
+export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const tableId = utils.getTableId(ctx)
 
-  const searchParams = {
+  const searchParams: SearchParams = {
     ...ctx.request.body,
     tableId,
   }
@@ -210,83 +212,6 @@ export async function search(ctx: any) {
   ctx.body = await quotas.addQuery(() => sdk.rows.search(searchParams), {
     datasourceId: tableId,
   })
-}
-
-function getSortOptions(
-  ctx: Ctx,
-  view: ViewV2
-):
-  | {
-      sort: string
-      sortOrder?: SortOrder
-      sortType?: SortType
-    }
-  | undefined {
-  const { sort_column, sort_order, sort_type } = ctx.query
-  if (Array.isArray(sort_column)) {
-    ctx.throw(400, "sort_column cannot be an array")
-  }
-  if (Array.isArray(sort_order)) {
-    ctx.throw(400, "sort_order cannot be an array")
-  }
-  if (Array.isArray(sort_type)) {
-    ctx.throw(400, "sort_type cannot be an array")
-  }
-
-  if (sort_column) {
-    return {
-      sort: sort_column,
-      sortOrder: sort_order as SortOrder,
-      sortType: sort_type as SortType,
-    }
-  }
-  if (view.sort) {
-    return {
-      sort: view.sort.field,
-      sortOrder: view.sort.order,
-      sortType: view.sort.type,
-    }
-  }
-
-  return
-}
-
-export async function searchView(ctx: Ctx<void, SearchResponse>) {
-  const { viewId } = ctx.params
-
-  const view = await sdk.views.get(viewId)
-  if (!view) {
-    ctx.throw(404, `View ${viewId} not found`)
-  }
-
-  if (view.version !== 2) {
-    ctx.throw(400, `This method only supports viewsV2`)
-  }
-
-  const table = await sdk.tables.getTable(view?.tableId)
-
-  const viewFields =
-    (view.columns &&
-      Object.entries(view.columns).length &&
-      Object.keys(sdk.views.enrichSchema(view, table.schema).schema)) ||
-    undefined
-
-  ctx.status = 200
-  const result = await quotas.addQuery(
-    () =>
-      sdk.rows.search({
-        tableId: view.tableId,
-        query: view.query || {},
-        fields: viewFields,
-        ...getSortOptions(ctx, view),
-      }),
-    {
-      datasourceId: view.tableId,
-    }
-  )
-
-  result.rows.forEach(r => (r._viewId = view.id))
-  ctx.body = result
 }
 
 export async function validate(ctx: Ctx) {
