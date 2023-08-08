@@ -51,9 +51,12 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
       - name: Checkout repo only
         uses: actions/checkout@v3
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
@@ -61,8 +64,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - name: Fetch remote references
-        run: git fetch origin ${{ env.NX_BASE_BRANCH }}
+
       # Run build all the projects
       - run: yarn build --since=${{ env.NX_BASE_BRANCH }}
       # Check the types of the projects built via esbuild
@@ -77,9 +79,12 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
       - name: Checkout repo only
         uses: actions/checkout@v3
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
@@ -87,8 +92,6 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - name: Fetch remote references
-        run: git fetch origin ${{ env.NX_BASE_BRANCH }}
       - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro --since=${{ env.NX_BASE_BRANCH }}
       - uses: codecov/codecov-action@v3
         with:
@@ -105,9 +108,12 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
       - name: Checkout repo only
         uses: actions/checkout@v3
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
@@ -115,8 +121,6 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - name: Fetch remote references
-        run: git fetch origin ${{ env.NX_BASE_BRANCH }}
       - name: Test worker and server
         run: yarn test --scope=@budibase/worker --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
       - uses: codecov/codecov-action@v3
