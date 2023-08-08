@@ -26,9 +26,9 @@
   $: parentId = $component?.id
   $: inBuilder = $builderStore.inBuilder
   $: instance = {
-    _component: `@budibase/standard-components/${type}`,
+    _component: getComponent(type),
     _id: id,
-    _instanceName: name || type[0].toUpperCase() + type.slice(1),
+    _instanceName: getInstanceName(name, type),
     _styles: {
       ...styles,
       normal: styles?.normal || {},
@@ -43,6 +43,30 @@
     if (inBuilder) {
       block.registerComponent(id, parentId, order ?? 0, instance)
     }
+  }
+
+  const getComponent = type => {
+    if (!type) {
+      return null
+    }
+    if (type.startsWith("plugin/")) {
+      return type
+    } else {
+      return `@budibase/standard-components/${type}`
+    }
+  }
+
+  const getInstanceName = (name, type) => {
+    if (name) {
+      return name
+    }
+    if (!type) {
+      return "New component"
+    }
+    if (type.startsWith("plugin/")) {
+      type = type.split("plugin/")[1]
+    }
+    return type[0].toUpperCase() + type.slice(1)
   }
 
   onDestroy(() => {

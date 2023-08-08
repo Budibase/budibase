@@ -4,9 +4,9 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@budibase/types": ["../types/src"]
+      "@budibase/types": ["../types/src"],
+      "@budibase/shared-core": ["../shared-core/src"]
     }
   },
-
   "exclude": ["node_modules", "dist"]
 }

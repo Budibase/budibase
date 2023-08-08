@@ -210,7 +210,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     if (!this.config.schema) {
       this.config.schema = "public"
     }
-    await this.client.query(`SET search_path TO ${this.config.schema}`)
+    await this.client.query(`SET search_path TO "${this.config.schema}"`)
     this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     this.open = true
   }

@@ -11,7 +11,7 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "build": "node ./scripts/build.js",
-    "check:types": "tsc -p tsconfig.build.json --noEmit",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "postbuild": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
@@ -179,31 +179,5 @@
   },
   "optionalDependencies": {
     "oracledb": "5.3.0"
-  },
-  "nx": {
-    "targets": {
-      "dev:builder": {
-        "dependsOn": [
-          {
-            "projects": [
-              "@budibase/backend-core"
-            ],
-            "target": "build"
-          }
-        ]
-      },
-      "test": {
-        "dependsOn": [
-          {
-            "projects": [
-              "@budibase/string-templates",
-              "@budibase/shared-core"
-            ],
-            "target": "build"
-          }
-        ]
-      }
-    }
-  },
-  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
+  }
 }

@@ -21,6 +21,7 @@
   export let offset = 5
   export let customHeight
   export let animate = true
+  export let customZindex
 
   $: target = portalTarget || getContext(Context.PopoverRoot) || ".spectrum"
 
@@ -77,8 +78,9 @@
       }}
       on:keydown={handleEscape}
       class="spectrum-Popover is-open"
+      class:customZindex
       role="presentation"
-      style="height: {customHeight}"
+      style="height: {customHeight}; --customZindex: {customZindex};"
       transition:fly|local={{ y: -20, duration: animate ? 200 : 0 }}
     >
       <slot />
@@ -91,5 +93,9 @@
     min-width: var(--spectrum-global-dimension-size-2000);
     border-color: var(--spectrum-global-color-gray-300);
     overflow: auto;
+  }
+
+  .customZindex {
+    z-index: var(--customZindex) !important;
   }
 </style>

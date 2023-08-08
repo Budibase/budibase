@@ -116,6 +116,8 @@ spec:
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
+        - name: OFFLINE_MODE
+          value: {{ .Values.globals.offlineMode | quote }}
         - name: LOG_LEVEL
           value: {{ .Values.services.worker.logLevel | quote }}
         - name: REDIS_PASSWORD
@@ -190,24 +192,24 @@ spec:
         {{ end }}
         image: budibase/worker:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
+        {{- if .Values.services.worker.startupProbe }}
+        {{- with .Values.services.worker.startupProbe }}
+        startupProbe:
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services.worker.livenessProbe }}
+        {{- with .Values.services.worker.livenessProbe }}
         livenessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.services.worker.port }}
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          successThreshold: 1
-          failureThreshold: 3
-          timeoutSeconds: 3
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services.worker.readinessProbe }}
+        {{- with .Values.services.worker.readinessProbe }}
         readinessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.services.worker.port }}
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          successThreshold: 1
-          failureThreshold: 3
-          timeoutSeconds: 3
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
         name: bbworker
         ports:
         - containerPort: {{ .Values.services.worker.port }}
