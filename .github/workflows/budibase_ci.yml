@@ -61,6 +61,8 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
+      - name: Fetch remote references
+        run: git fetch origin "+refs/heads/*:refs/remotes/origin/*"
       # Run build all the projects
       - run: yarn build --since=${{ env.NX_BASE_BRANCH }}
       # Check the types of the projects built via esbuild
@@ -85,6 +87,8 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
+      - name: Fetch remote references
+        run: git fetch origin "+refs/heads/*:refs/remotes/origin/*"
       - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro --since=${{ env.NX_BASE_BRANCH }}
       - uses: codecov/codecov-action@v3
         with:
@@ -111,6 +115,8 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
+      - name: Fetch remote references
+        run: git fetch origin "+refs/heads/*:refs/remotes/origin/*"
       - name: Test worker and server
         run: yarn test --scope=@budibase/worker --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
       - uses: codecov/codecov-action@v3
