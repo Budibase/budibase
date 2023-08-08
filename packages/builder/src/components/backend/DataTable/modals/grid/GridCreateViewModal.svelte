@@ -3,11 +3,8 @@
   import { Input, notifications, ModalContent } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { viewsV2 } from "stores/backend"
-  import { LuceneUtils } from "@budibase/frontend-core"
 
   const { filter, sort, definition } = getContext("grid")
-
-  $: query = LuceneUtils.buildLuceneQuery($filter)
 
   let name
 
@@ -20,7 +17,7 @@
       const newView = await viewsV2.create({
         name,
         tableId: $definition._id,
-        query,
+        query: $filter,
         sort: {
           field: $sort.column,
           order: $sort.order,
