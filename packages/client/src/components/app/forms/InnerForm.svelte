@@ -409,6 +409,9 @@
   }
 
   const handleScrollToField = ({ field, block }) => {
+    if (!field.fieldState) {
+      field = get(getField(field))
+    }
     const fieldId = field.fieldState.fieldId
     const fieldElement = document.getElementById(fieldId)
     fieldElement.focus({ preventScroll: true })
