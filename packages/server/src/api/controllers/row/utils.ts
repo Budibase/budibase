@@ -45,13 +45,16 @@ export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
 }
 
 export function getTableId(ctx: Ctx) {
-  if (ctx.request.body && ctx.request.body.tableId) {
+  if (ctx.request.body?.tableId) {
     return ctx.request.body.tableId
   }
-  if (ctx.params && ctx.params.tableId) {
+  if (ctx.params?.sourceId) {
+    return ctx.params.sourceId
+  }
+  if (ctx.params?.tableId) {
     return ctx.params.tableId
   }
-  if (ctx.params && ctx.params.viewName) {
+  if (ctx.params?.viewName) {
     return ctx.params.viewName
   }
 }
