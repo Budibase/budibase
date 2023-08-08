@@ -1,6 +1,8 @@
 import { SearchParams } from "../../../sdk"
 import { Row } from "../../../documents"
 
+export interface SaveRowRequest extends Row {}
+
 export interface PatchRowRequest extends Row {
   _id: string
   _rev: string
