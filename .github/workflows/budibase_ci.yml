@@ -138,6 +138,7 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
@@ -166,7 +167,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - run: yarn build --projects=@budibase/server,@budibase/worker,@budibase/client
+      - run: yarn build --scope @budibase/server --scope @budibase/worker --scope @budibase/client
       - name: Run tests
         run: |
           cd qa-core
