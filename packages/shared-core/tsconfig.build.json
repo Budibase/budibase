@@ -12,7 +12,10 @@
     "declaration": true,
     "types": ["node"],
     "outDir": "dist",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@budibase/types": ["../../types/src"]
+    }
   },
   "include": ["**/*.js", "**/*.ts"],
   "exclude": [
