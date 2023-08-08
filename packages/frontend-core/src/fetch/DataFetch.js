@@ -116,7 +116,7 @@ export default class DataFetch {
   async getInitialData() {
     const { datasource, filter, paginate } = this.options
 
-    // Fetch datasource definition and extract filter and sort if configured
+    // Fetch datasource definition and extract sort properties if configured
     const definition = await this.getDefinition(datasource)
     if (definition?.sort?.field) {
       this.options.sortColumn = definition.sort.field
