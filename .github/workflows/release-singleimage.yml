@@ -10,7 +10,7 @@ env:
 jobs:
   build-amd64-arm64:
     name: "build-amd64-arm64"
-      runs-on: [self-hosted, dev]
+    runs-on: [self-hosted, dev]
     strategy:
       matrix:
         node-version: [14.x]
