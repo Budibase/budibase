@@ -9,8 +9,8 @@ env:
   REGISTRY_URL: registry.hub.docker.com
 jobs:
   build-amd64-arm64:
-    name: "build-amd64"
-    runs-on: ubuntu-latest
+    name: "build-amd64-arm64"
+      runs-on: [self-hosted, dev]
     strategy:
       matrix:
         node-version: [14.x]
@@ -74,7 +74,7 @@ jobs:
 
   build-aas:
     name: "build-aas"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, dev]
     strategy:
       matrix:
         node-version: [14.x]
