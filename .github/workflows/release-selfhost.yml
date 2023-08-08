@@ -5,7 +5,7 @@ on:
 
 jobs:
   release:
-    runs-on: [self-hosted, dev]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Fail if not a tag
