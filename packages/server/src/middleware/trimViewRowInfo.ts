@@ -22,7 +22,7 @@ export default async (ctx: Ctx<Row>, next: Next) => {
   const { tableId } = utils.extractViewInfoFromID(viewId)
 
   // don't need to trim delete requests
-  if (ctx.method.toLowerCase() !== "delete") {
+  if (ctx?.method?.toLowerCase() !== "delete") {
     const { _viewId, ...trimmedView } = await trimViewFields(
       viewId,
       tableId,
