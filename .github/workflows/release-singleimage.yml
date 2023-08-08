@@ -6,7 +6,6 @@ on:
 env:
   CI: true
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-  REGISTRY_IMAGE: budibase/budibase
 jobs:
   build-multiarch:
     name: "build-multiarch"
@@ -72,9 +71,9 @@ jobs:
         with:
           context: .
           platforms: ${{ matrix.platform }}
-          tags: budibase/budibase,budibase/budibase:v${{ env.RELEASE_VERSION }}
+          tags: budibase/budibase,budibase/budibase:${{ env.RELEASE_VERSION }}
           file: ./hosting/single/Dockerfile
-          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=budibase/budibase,push-by-digest=true,name-canonical=true,push=true
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
@@ -104,7 +103,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY_IMAGE }}
+          images: budibase/budibase
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -114,10 +113,10 @@ jobs:
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+            $(printf 'budibase/budibase@sha256:%s ' *)
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect budibase/budibase:${{ steps.meta.outputs.version }}
 
   build-aas:
     name: "build-aas"
