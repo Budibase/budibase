@@ -18,6 +18,7 @@ env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  NX_BASE_BRANCH: ${{ github.base_ref || "origin/master"}}
 
 jobs:
   lint:
@@ -61,9 +62,9 @@ jobs:
           cache: "yarn"
       - run: yarn --frozen-lockfile
       # Run build all the projects
-      - run: yarn build
+      - run: yarn build --since=${{ NX_BASE_BRANCH }}
       # Check the types of the projects built via esbuild
-      - run: yarn check:types
+      - run: yarn check:types --since=${{ NX_BASE_BRANCH }}
 
   test-libraries:
     runs-on: ubuntu-latest
@@ -84,7 +85,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
+      - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro --since=${{ NX_BASE_BRANCH }}
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
@@ -111,7 +112,7 @@ jobs:
           cache: "yarn"
       - run: yarn --frozen-lockfile
       - name: Test worker and server
-        run: yarn test --scope=@budibase/worker --scope=@budibase/server
+        run: yarn test --scope=@budibase/worker --scope=@budibase/server --since=${{ NX_BASE_BRANCH }}
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
@@ -134,7 +135,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - run: yarn test --scope=@budibase/pro
+      - run: yarn test --scope=@budibase/pro --since=${{ NX_BASE_BRANCH }}
 
   integration-test:
     runs-on: ubuntu-latest
