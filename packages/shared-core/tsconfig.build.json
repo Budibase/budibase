@@ -14,7 +14,7 @@
     "outDir": "dist",
     "skipLibCheck": true,
     "paths": {
-      "@budibase/types": ["../../types/src"]
+      "@budibase/types": ["../types/src"]
     }
   },
   "include": ["**/*.js", "**/*.ts"],
