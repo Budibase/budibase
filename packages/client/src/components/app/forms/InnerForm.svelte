@@ -409,7 +409,7 @@
   }
 
   const handleScrollToField = ({ field, block }) => {
-    const fieldId = get(getField(field)).fieldState.fieldId
+    const fieldId = field.fieldState.fieldId
     const fieldElement = document.getElementById(fieldId)
     fieldElement.focus({ preventScroll: true })
     if (block === "start") {
@@ -425,7 +425,18 @@
 
   // Action context to pass to children
   const actions = [
-    { type: ActionTypes.ValidateForm, callback: formApi.validate },
+    {
+      type: ActionTypes.ValidateForm,
+      callback: () => ({
+        fields: fields
+          .filter(field => get(field).step === get(currentStep))
+          .map(field => ({
+            field: get(field),
+            valid: get(field).fieldApi.validate(),
+          })),
+        valid: formApi.validate(),
+      }),
+    },
     { type: ActionTypes.ClearForm, callback: formApi.reset },
     { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
     { type: ActionTypes.UpdateFieldValue, callback: handleUpdateFieldValue },

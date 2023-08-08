@@ -24,9 +24,10 @@
 
   const saveEventData = async () => {
     // any automations that need created from event triggers
-    const automationsToCreate = tmpValue.filter(
-      action => action["##eventHandlerType"] === "Trigger Automation"
-    )
+    const automationsToCreate =
+      tmpValue?.filter(
+        action => action["##eventHandlerType"] === "Trigger Automation"
+      ) || []
     for (let action of automationsToCreate) {
       await createAutomation(action.parameters)
     }
