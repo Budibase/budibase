@@ -9,7 +9,7 @@ import {
   fixAutoColumnSubType,
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
-import { Table } from "@budibase/types"
+import { Table, ViewV2 } from "@budibase/types"
 import { quotas } from "@budibase/pro"
 import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
@@ -96,6 +96,14 @@ export async function save(ctx: any) {
   for (let view in tableToSave.views) {
     const tableView = tableToSave.views[view]
     if (!tableView) continue
+
+    if (sdk.views.isV2(tableView)) {
+      tableToSave.views[view] = sdk.views.syncSchema(
+        oldTable!.views![view] as ViewV2,
+        tableToSave.schema
+      )
+      continue
+    }
 
     if (tableView.schema.group || tableView.schema.field) continue
     tableView.schema = tableToSave.schema
