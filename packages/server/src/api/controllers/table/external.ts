@@ -217,7 +217,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     ...inputs,
   }
 
-  let oldTable
+  let oldTable: Table | undefined
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await sdk.tables.getTable(ctx.request.body._id)
   }
