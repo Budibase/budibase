@@ -1,12 +1,14 @@
 import { auth } from "@budibase/backend-core"
 import Joi from "joi"
 
+const OPTIONAL_STRING = Joi.string().allow(null, "")
+
 let schema: any = {
-  email: Joi.string().allow(null, ""),
-  password: Joi.string().allow(null, ""),
+  email: OPTIONAL_STRING,
+  password: OPTIONAL_STRING,
   forceResetPassword: Joi.boolean().optional(),
-  firstName: Joi.string().allow(null, ""),
-  lastName: Joi.string().allow(null, ""),
+  firstName: OPTIONAL_STRING,
+  lastName: OPTIONAL_STRING,
   builder: Joi.object({
     global: Joi.boolean().optional(),
     apps: Joi.array().optional(),
@@ -21,8 +23,8 @@ export const buildSelfSaveValidation = () => {
   schema = {
     password: Joi.string().optional(),
     forceResetPassword: Joi.boolean().optional(),
-    firstName: Joi.string().allow("").optional(),
-    lastName: Joi.string().allow("").optional(),
+    firstName: OPTIONAL_STRING,
+    lastName: OPTIONAL_STRING,
     onboardedAt: Joi.string().optional(),
   }
   return auth.joiValidator.body(Joi.object(schema).required().unknown(false))
