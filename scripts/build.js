@@ -59,8 +59,6 @@ function runBuild(entry, outfile) {
     ],
   }
 
-  const { compilerOptions } = tsconfigPathPluginContent
-
   build({
     ...sharedConfig,
     platform: "node",
