@@ -13,7 +13,7 @@ export default class ViewV2Fetch extends DataFetch {
     }
   }
 
-  async getSchema(datasource, definition) {
+  getSchema(datasource, definition) {
     return definition?.schema
   }
 
