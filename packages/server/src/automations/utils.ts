@@ -128,19 +128,6 @@ export async function clearMetadata() {
   await db.bulkDocs(automationMetadata)
 }
 
-export function isCronTrigger(auto: Automation) {
-  return (
-    auto &&
-    auto.definition.trigger &&
-    auto.definition.trigger.stepId === CRON_STEP_ID
-  )
-}
-
-export function isRebootTrigger(auto: Automation) {
-  const trigger = auto ? auto.definition.trigger : null
-  return isCronTrigger(auto) && trigger?.inputs.cron === REBOOT_CRON
-}
-
 /**
  * This function handles checking of any cron jobs that need to be enabled/updated.
  * @param {string} appId The ID of the app in which we are checking for webhooks
@@ -148,13 +135,15 @@ export function isRebootTrigger(auto: Automation) {
  */
 export async function enableCronTrigger(appId: any, automation: Automation) {
   const trigger = automation ? automation.definition.trigger : null
+  const validCron =
+    sdk.automations.isCron(automation) &&
+    trigger?.inputs.cron
+  const needsCreated =
+    !sdk.automations.isReboot(automation) &&
+    !sdk.automations.disabled(automation)
 
   // need to create cron job
-  if (
-    isCronTrigger(automation) &&
-    !isRebootTrigger(automation) &&
-    trigger?.inputs.cron
-  ) {
+  if (validCron && needsCreated) {
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${newid()}`
     const job: any = await automationQueue.add(
