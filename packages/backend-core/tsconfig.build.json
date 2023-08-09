@@ -12,7 +12,11 @@
     "declaration": true,
     "types": ["node", "jest"],
     "outDir": "dist",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@budibase/types": ["../types/src"],
+      "@budibase/shared-core": ["../shared-core/src"]
+    }
   },
   "include": ["**/*.js", "**/*.ts"],
   "exclude": [
