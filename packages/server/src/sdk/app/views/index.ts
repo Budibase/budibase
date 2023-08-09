@@ -1,9 +1,14 @@
 import { HTTPError, context } from "@budibase/backend-core"
-import { FieldSchema, TableSchema, View, ViewV2 } from "@budibase/types"
+import {
+  FieldSchema,
+  RenameColumn,
+  TableSchema,
+  View,
+  ViewV2,
+} from "@budibase/types"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
-import merge from "lodash/merge"
 
 export async function get(viewId: string): Promise<ViewV2 | undefined> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
@@ -107,7 +112,22 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
   }
 }
 
-export function syncSchema(view: ViewV2, schema: TableSchema): ViewV2 {
+export function syncSchema(
+  view: ViewV2,
+  schema: TableSchema,
+  renameColumn: RenameColumn | undefined
+): ViewV2 {
+  if (renameColumn) {
+    if (view.columns) {
+      view.columns[view.columns.indexOf(renameColumn.old)] =
+        renameColumn.updated
+    }
+    if (view.schemaUI) {
+      view.schemaUI[renameColumn.updated] = view.schemaUI[renameColumn.old]
+      delete view.schemaUI[renameColumn.old]
+    }
+  }
+
   if (view.schemaUI) {
     for (const fieldName of Object.keys(view.schemaUI)) {
       if (!schema[fieldName]) {
@@ -122,5 +142,6 @@ export function syncSchema(view: ViewV2, schema: TableSchema): ViewV2 {
   }
 
   view.columns = view.columns?.filter(x => schema[x])
+
   return view
 }

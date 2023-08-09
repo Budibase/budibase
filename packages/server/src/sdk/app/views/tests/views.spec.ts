@@ -1,5 +1,5 @@
 import _ from "lodash"
-import { FieldType, Table, ViewV2 } from "@budibase/types"
+import { FieldType, Table, TableSchema, ViewV2 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import { enrichSchema, syncSchema } from ".."
 
@@ -296,7 +296,11 @@ describe("table sdk", () => {
           ...basicView,
           columns: ["name", "id", "description"],
         }
-        const result = syncSchema(_.cloneDeep(view), basicTable.schema)
+        const result = syncSchema(
+          _.cloneDeep(view),
+          basicTable.schema,
+          undefined
+        )
         expect(result).toEqual(view)
       })
 
@@ -320,7 +324,7 @@ describe("table sdk", () => {
           },
         }
 
-        const result = syncSchema(_.cloneDeep(view), newTableSchema)
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
         expect(result).toEqual({
           ...view,
           schemaUI: undefined,
@@ -334,10 +338,34 @@ describe("table sdk", () => {
         }
         const { name, description, ...newTableSchema } = basicTable.schema
 
-        const result = syncSchema(_.cloneDeep(view), newTableSchema)
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
         expect(result).toEqual({
           ...view,
           columns: ["id"],
+          schemaUI: undefined,
+        })
+      })
+
+      it("renaming mapped columns will update the view column mapping", () => {
+        const view = {
+          ...basicView,
+          columns: ["name", "id", "description"],
+        }
+        const { description, ...newTableSchema } = {
+          ...basicTable.schema,
+          updatedDescription: {
+            ...basicTable.schema.description,
+            name: "updatedDescription",
+          },
+        } as TableSchema
+
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, {
+          old: "description",
+          updated: "updatedDescription",
+        })
+        expect(result).toEqual({
+          ...view,
+          columns: ["name", "id", "updatedDescription"],
           schemaUI: undefined,
         })
       })
@@ -355,7 +383,11 @@ describe("table sdk", () => {
             hiddenField: { visible: false },
           },
         }
-        const result = syncSchema(_.cloneDeep(view), basicTable.schema)
+        const result = syncSchema(
+          _.cloneDeep(view),
+          basicTable.schema,
+          undefined
+        )
         expect(result).toEqual(view)
       })
 
@@ -385,7 +417,7 @@ describe("table sdk", () => {
           },
         }
 
-        const result = syncSchema(_.cloneDeep(view), newTableSchema)
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
         expect(result).toEqual({
           ...view,
           schemaUI: {
@@ -409,7 +441,7 @@ describe("table sdk", () => {
         }
         const { name, description, ...newTableSchema } = basicTable.schema
 
-        const result = syncSchema(_.cloneDeep(view), newTableSchema)
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
         expect(result).toEqual({
           ...view,
           columns: ["id"],
@@ -439,9 +471,9 @@ describe("table sdk", () => {
             name: "newField1",
             visible: true,
           },
-        } as any
+        } as TableSchema
 
-        const result = syncSchema(_.cloneDeep(view), newTableSchema)
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
         expect(result).toEqual({
           ...view,
           columns: ["id"],
@@ -450,6 +482,40 @@ describe("table sdk", () => {
             name: undefined,
             description: undefined,
             newField1: { visible: false },
+          },
+        })
+      })
+
+      it("renaming mapped columns will update the view column mapping and it's schema", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          columns: ["name", "id", "description"],
+          schemaUI: {
+            name: { visible: true },
+            id: { visible: true },
+            description: { visible: true, width: 150, icon: "ic-any" },
+            hiddenField: { visible: false },
+          },
+        }
+        const { description, ...newTableSchema } = {
+          ...basicTable.schema,
+          updatedDescription: {
+            ...basicTable.schema.description,
+            name: "updatedDescription",
+          },
+        } as TableSchema
+
+        const result = syncSchema(_.cloneDeep(view), newTableSchema, {
+          old: "description",
+          updated: "updatedDescription",
+        })
+        expect(result).toEqual({
+          ...view,
+          columns: ["name", "id", "updatedDescription"],
+          schemaUI: {
+            ...view.schemaUI,
+            description: undefined,
+            updatedDescription: { visible: true, width: 150, icon: "ic-any" },
           },
         })
       })
