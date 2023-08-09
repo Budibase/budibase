@@ -282,7 +282,7 @@ describe("table sdk", () => {
     })
   })
 
-  describe.only("syncSchema", () => {
+  describe("syncSchema", () => {
     const basicView: ViewV2 = {
       version: 2,
       id: generator.guid(),
