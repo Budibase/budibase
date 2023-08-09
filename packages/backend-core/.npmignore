@@ -1,7 +1,4 @@
-node_modules/
-tsconfig.build.json
-tsconfig.json
-jest.config.ts
-jest-testcontainers-config.js
-__mocks__
-scripts
+*
+!dist/*
+dist/tsconfig.build.tsbuildinfo
+!package.json
