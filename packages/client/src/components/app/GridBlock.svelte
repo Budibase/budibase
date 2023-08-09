@@ -38,10 +38,7 @@
   class:in-builder={$builderStore.inBuilder}
 >
   <Grid
-    datasource={{
-      type: "table",
-      tableId: table?.tableId,
-    }}
+    datasource={table}
     {API}
     {stripeRows}
     {initialFilter}
