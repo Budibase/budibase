@@ -1,6 +1,5 @@
-import { FieldType, Row, Table } from "@budibase/types"
+import { FieldType, Row, Table, SearchParams } from "@budibase/types"
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
-import { SearchParams } from "../../search"
 import { search } from "../internal"
 import {
   expectAnyInternalColsAttributes,
