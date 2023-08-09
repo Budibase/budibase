@@ -16,13 +16,14 @@ import {
 } from "@budibase/types"
 import sdk from "../sdk"
 
-const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
-const CRON_STEP_ID = definitions.CRON.stepId
 const Runner = new Thread(ThreadType.AUTOMATION)
 
-function loggingArgs(job: AutomationJob) {
-  return [
+function loggingArgs(
+  job: AutomationJob,
+  timing?: { start: number; complete?: boolean }
+) {
+  const logs: any[] = [
     {
       _logKey: "automation",
       trigger: job.data.automation.definition.trigger.event,
@@ -32,24 +33,53 @@ function loggingArgs(job: AutomationJob) {
       jobId: job.id,
     },
   ]
+  if (timing?.start) {
+    logs.push({
+      _logKey: "startTime",
+      start: timing.start,
+    })
+  }
+  if (timing?.start && timing?.complete) {
+    const end = new Date().getTime()
+    const duration = end - timing.start
+    logs.push({
+      _logKey: "endTime",
+      end,
+    })
+    logs.push({
+      _logKey: "duration",
+      duration,
+    })
+  }
+  return logs
 }
 
 export async function processEvent(job: AutomationJob) {
   const appId = job.data.event.appId!
   const automationId = job.data.automation._id!
+  const start = new Date().getTime()
   const task = async () => {
     try {
       // need to actually await these so that an error can be captured properly
-      console.log("automation running", ...loggingArgs(job))
+      console.log("automation running", ...loggingArgs(job, { start }))
 
       const runFn = () => Runner.run(job)
       const result = await quotas.addAutomation(runFn, {
         automationId,
       })
-      console.log("automation completed", ...loggingArgs(job))
+      const end = new Date().getTime()
+      const duration = end - start
+      console.log(
+        "automation completed",
+        ...loggingArgs(job, { start, complete: true })
+      )
       return result
     } catch (err) {
-      console.error(`automation was unable to run`, err, ...loggingArgs(job))
+      console.error(
+        `automation was unable to run`,
+        err,
+        ...loggingArgs(job, { start, complete: true })
+      )
       return { err }
     }
   }
@@ -135,9 +165,7 @@ export async function clearMetadata() {
  */
 export async function enableCronTrigger(appId: any, automation: Automation) {
   const trigger = automation ? automation.definition.trigger : null
-  const validCron =
-    sdk.automations.isCron(automation) &&
-    trigger?.inputs.cron
+  const validCron = sdk.automations.isCron(automation) && trigger?.inputs.cron
   const needsCreated =
     !sdk.automations.isReboot(automation) &&
     !sdk.automations.disabled(automation)
