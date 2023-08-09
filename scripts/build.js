@@ -60,15 +60,10 @@ function runBuild(entry, outfile) {
   }
 
   const { compilerOptions } = tsconfigPathPluginContent
-  const format =
-    compilerOptions.target === "es6" && compilerOptions.module !== "commonjs"
-      ? "esm"
-      : undefined
 
   build({
     ...sharedConfig,
     platform: "node",
-    format,
     outfile,
   }).then(result => {
     glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
