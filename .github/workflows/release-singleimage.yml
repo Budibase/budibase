@@ -1,4 +1,4 @@
-name: release-singleimage
+name: Deploy Budibase Single Container Image to DockerHub
 
 on:
   workflow_dispatch:
@@ -6,19 +6,20 @@ on:
 env:
   CI: true
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-  REGISTRY_IMAGE: budibase/budibase
+  REGISTRY_URL: registry.hub.docker.com
 jobs:
-  build-multiarch:
-    name: "build-multiarch"
+  build:
+    name: "build"
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version:
-          - 14.x
-        platform:
-          - linux/amd64
-          - linux/arm64
+        node-version: [14.x]
     steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 512
+          swap-size-mb: 1024
       - name: Fail if not a tag
         run: |
           if [[ $GITHUB_REF != refs/tags/* ]]; then 
@@ -31,12 +32,14 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
+
       - name: Fail if tag is not in master
         run: |
           if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
             echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
             exit 1
           fi
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
@@ -71,108 +74,10 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          platforms: ${{ matrix.platform }}
-          tags: budibase/budibase,budibase/budibase:v${{ env.RELEASE_VERSION }}
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: budibase/budibase,budibase/budibase:${{ env.RELEASE_VERSION }}
           file: ./hosting/single/Dockerfile
-          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
-      - name: Export digest
-        run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
-      - name: Upload digest
-        uses: actions/upload-artifact@v3
-        with:
-          name: digests
-          path: /tmp/digests/*
-          if-no-files-found: error
-          retention-days: 1
-
-  merge:
-    runs-on: ubuntu-latest
-    needs:
-      - build-multiarch
-    steps:
-      - name: Download digests
-        uses: actions/download-artifact@v3
-        with:
-          name: digests
-          path: /tmp/digests
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY_IMAGE }}
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_API_KEY }}
-      - name: Create manifest list and push
-        working-directory: /tmp/digests
-        run: |
-          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
-      - name: Inspect image
-        run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
-
-  build-aas:
-    name: "build-aas"
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version:
-          - 14.x
-    steps:
-      - name: Fail if not a tag
-        run: |
-          if [[ $GITHUB_REF != refs/tags/* ]]; then 
-            echo "Workflow Dispatch can only be run on tags" 
-            exit 1 
-          fi
-      - name: "Checkout"
-        uses: actions/checkout@v2
-        with:
-          submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          fetch-depth: 0
-      - name: Fail if tag is not in master
-        run: |
-          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
-            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
-            exit 1
-          fi
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Setup Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v1
-      - name: Run Yarn
-        run: yarn
-      - name: Update versions
-        run: ./scripts/updateVersions.sh
-      - name: Runt Yarn Lint
-        run: yarn lint
-      - name: Update versions
-        run: ./scripts/updateVersions.sh
-      - name: Run Yarn Build
-        run: yarn build:docker:pre
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_API_KEY }}
-      - name: Get the latest release version
-        id: version
-        run: |
-          release_version=$(cat lerna.json | jq -r '.version')
-          echo $release_version
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
       - name: Tag and release Budibase Azure App Service docker image
         uses: docker/build-push-action@v2
         with:
