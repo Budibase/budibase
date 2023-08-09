@@ -44,7 +44,7 @@ export async function save(ctx: any) {
   }
 
   // if the table obj had an _id then it will have been retrieved
-  let oldTable
+  let oldTable: Table | undefined
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await sdk.tables.getTable(ctx.request.body._id)
   }
