@@ -1,3 +1,4 @@
-node_modules/
-tsconfig.build.json
-tsconfig.json
+*
+!dist/**/*
+dist/tsconfig.build.tsbuildinfo
+!package.json
