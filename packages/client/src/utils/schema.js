@@ -51,6 +51,15 @@ export const fetchDatasourceSchema = async (
     return null
   }
 
+  // Strip hidden fields from views
+  if (datasource.type === "viewV2") {
+    Object.keys(schema).forEach(field => {
+      if (!schema[field].visible) {
+        delete schema[field]
+      }
+    })
+  }
+
   // Enrich schema with relationships if required
   if (definition?.sql && options?.enrichRelationships) {
     const relationshipAdditions = await getRelationshipSchemaAdditions(schema)
