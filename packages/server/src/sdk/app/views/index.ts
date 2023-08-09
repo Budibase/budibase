@@ -106,3 +106,21 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
     schema: schema,
   }
 }
+
+export function syncSchema(view: ViewV2, schema: TableSchema): ViewV2 {
+  if (view.schemaUI) {
+    for (const fieldName of Object.keys(view.schemaUI)) {
+      if (!schema[fieldName]) {
+        delete view.schemaUI[fieldName]
+      }
+    }
+    for (const fieldName of Object.keys(schema)) {
+      if (!view.schemaUI[fieldName]) {
+        view.schemaUI[fieldName] = { visible: false }
+      }
+    }
+  }
+
+  view.columns = view.columns?.filter(x => schema[x])
+  return view
+}
