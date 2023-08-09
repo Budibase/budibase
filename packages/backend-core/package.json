@@ -14,7 +14,7 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "prepack": "cp package.json dist",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node ./scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "test": "bash scripts/test.sh",
@@ -88,5 +88,20 @@
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
     "typescript": "4.7.3"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/shared-core",
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }
