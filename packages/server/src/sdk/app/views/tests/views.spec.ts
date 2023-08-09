@@ -292,7 +292,7 @@ describe("table sdk", () => {
 
     describe("view without schema", () => {
       it("no table schema changes will not amend the view", () => {
-        const view = {
+        const view: ViewV2 = {
           ...basicView,
           columns: ["name", "id", "description"],
         }
@@ -305,7 +305,7 @@ describe("table sdk", () => {
       })
 
       it("adding new columns will not change the view schema", () => {
-        const view = {
+        const view: ViewV2 = {
           ...basicView,
           columns: ["name", "id", "description"],
         }
@@ -332,7 +332,7 @@ describe("table sdk", () => {
       })
 
       it("deleting columns will not change the view schema", () => {
-        const view = {
+        const view: ViewV2 = {
           ...basicView,
           columns: ["name", "id", "description"],
         }
@@ -347,7 +347,7 @@ describe("table sdk", () => {
       })
 
       it("renaming mapped columns will update the view column mapping", () => {
-        const view = {
+        const view: ViewV2 = {
           ...basicView,
           columns: ["name", "id", "description"],
         }
@@ -373,7 +373,7 @@ describe("table sdk", () => {
 
     describe("view with schema", () => {
       it("no table schema changes will not amend the view", () => {
-        const view = {
+        const view: ViewV2 = {
           ...basicView,
           columns: ["name", "id", "description"],
           schemaUI: {
@@ -392,7 +392,7 @@ describe("table sdk", () => {
       })
 
       it("adding new columns will add them as not visible to the view", () => {
-        const view = {
+        const view: ViewV2 = {
           ...basicView,
           columns: ["name", "id", "description"],
           schemaUI: {
@@ -429,7 +429,7 @@ describe("table sdk", () => {
       })
 
       it("deleting columns will remove them from the UI", () => {
-        const view = {
+        const view: ViewV2 = {
           ...basicView,
           columns: ["name", "id", "description"],
           schemaUI: {
@@ -454,7 +454,7 @@ describe("table sdk", () => {
       })
 
       it("can handle additions and deletions at the same them UI", () => {
-        const view = {
+        const view: ViewV2 = {
           ...basicView,
           columns: ["name", "id", "description"],
           schemaUI: {
@@ -518,6 +518,56 @@ describe("table sdk", () => {
             updatedDescription: { visible: true, width: 150, icon: "ic-any" },
           },
         })
+      })
+
+      it("changing no UI schema will not affect the view", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          columns: ["name", "id", "description"],
+          schemaUI: {
+            name: { visible: true, width: 100 },
+            id: { visible: true, width: 20 },
+            description: { visible: false },
+            hiddenField: { visible: false },
+          },
+        }
+        const result = syncSchema(
+          _.cloneDeep(view),
+          {
+            ...basicTable.schema,
+            id: {
+              ...basicTable.schema.id,
+              type: FieldType.NUMBER,
+            },
+          },
+          undefined
+        )
+        expect(result).toEqual(view)
+      })
+
+      it("changing table column UI fields will not affect the view schema", () => {
+        const view: ViewV2 = {
+          ...basicView,
+          columns: ["name", "id", "description"],
+          schemaUI: {
+            name: { visible: true, width: 100 },
+            id: { visible: true, width: 20 },
+            description: { visible: false },
+            hiddenField: { visible: false },
+          },
+        }
+        const result = syncSchema(
+          _.cloneDeep(view),
+          {
+            ...basicTable.schema,
+            id: {
+              ...basicTable.schema.id,
+              visible: !basicTable.schema.id.visible,
+            },
+          },
+          undefined
+        )
+        expect(result).toEqual(view)
       })
     })
   })
