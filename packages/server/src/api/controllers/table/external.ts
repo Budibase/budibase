@@ -22,6 +22,8 @@ import {
   QueryJson,
   RelationshipType,
   RenameColumn,
+  SaveTableRequest,
+  SaveTableResponse,
   Table,
   TableRequest,
   UserCtx,
@@ -198,8 +200,8 @@ function isRelationshipSetup(column: FieldSchema) {
   return column.foreignKey || column.through
 }
 
-export async function save(ctx: UserCtx) {
-  const inputs: TableRequest = ctx.request.body
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+  const inputs = ctx.request.body
   const renamed = inputs?._rename
   // can't do this right now
   delete inputs.rows
