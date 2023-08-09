@@ -1,5 +1,6 @@
 import { default as threadUtils } from "./utils"
 import { Job } from "bull"
+threadUtils.threadSetup()
 import {
   disableCronById,
   isErrorInOutput,
@@ -34,8 +35,6 @@ import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 import sdk from "../sdk"
-
-threadUtils.threadSetup()
 
 const FILTER_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.LOOP.stepId
