@@ -27,6 +27,7 @@ import {
   Table,
   TableRequest,
   UserCtx,
+  ViewV2,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -224,6 +225,16 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 
   if (hasTypeChanged(tableToSave, oldTable)) {
     ctx.throw(400, "A column type has changed.")
+  }
+
+  for (let view in tableToSave.views) {
+    const tableView = tableToSave.views[view]
+    if (!tableView || !sdk.views.isV2(tableView)) continue
+
+    tableToSave.views[view] = sdk.views.syncSchema(
+      oldTable!.views![view] as ViewV2,
+      tableToSave.schema
+    )
   }
 
   const db = context.getAppDB()
