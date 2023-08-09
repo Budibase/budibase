@@ -233,7 +233,8 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
 
     tableToSave.views[view] = sdk.views.syncSchema(
       oldTable!.views![view] as ViewV2,
-      tableToSave.schema
+      tableToSave.schema,
+      renamed
     )
   }
 
