@@ -1,37 +1,60 @@
-import env from "../../environment"
 import pino, { LoggerOptions } from "pino"
+import pinoPretty from "pino-pretty"
+
+import { IdentityType } from "@budibase/types"
+import env from "../../environment"
 import * as context from "../../context"
 import * as correlation from "../correlation"
-import { IdentityType } from "@budibase/types"
-import { LOG_CONTEXT } from "../index"
+
+import { localFileDestination } from "../system"
 
 // LOGGER
 
 let pinoInstance: pino.Logger | undefined
 if (!env.DISABLE_PINO_LOGGER) {
+  const level = env.LOG_LEVEL
   const pinoOptions: LoggerOptions = {
-    level: env.LOG_LEVEL,
+    level,
     formatters: {
-      level: label => {
-        return { level: label.toUpperCase() }
+      level: level => {
+        return { level: level.toUpperCase() }
       },
       bindings: () => {
-        return {}
+        if (env.SELF_HOSTED) {
+          // "service" is being injected in datadog using the pod names,
+          // so we should leave it blank to allow the default behaviour if it's not running self-hosted
+          return {
+            service: env.SERVICE_NAME,
+          }
+        } else {
+          return {}
+        }
       },
     },
     timestamp: () => `,"timestamp":"${new Date(Date.now()).toISOString()}"`,
   }
 
-  if (env.isDev()) {
-    pinoOptions.transport = {
-      target: "pino-pretty",
-      options: {
-        singleLine: true,
-      },
-    }
+  const destinations: pino.StreamEntry[] = []
+
+  destinations.push(
+    env.isDev()
+      ? {
+          stream: pinoPretty({ singleLine: true }),
+          level: level as pino.Level,
+        }
+      : { stream: process.stdout, level: level as pino.Level }
+  )
+
+  if (env.SELF_HOSTED) {
+    destinations.push({
+      stream: localFileDestination(),
+      level: level as pino.Level,
+    })
   }
 
-  pinoInstance = pino(pinoOptions)
+  pinoInstance = destinations.length
+    ? pino(pinoOptions, pino.multistream(destinations))
+    : pino(pinoOptions)
 
   // CONSOLE OVERRIDES
 
@@ -83,15 +106,13 @@ if (!env.DISABLE_PINO_LOGGER) {
 
     let contextObject = {}
 
-    if (LOG_CONTEXT) {
-      contextObject = {
-        tenantId: getTenantId(),
-        appId: getAppId(),
-        automationId: getAutomationId(),
-        identityId: identity?._id,
-        identityType: identity?.type,
-        correlationId: correlation.getId(),
-      }
+    contextObject = {
+      tenantId: getTenantId(),
+      appId: getAppId(),
+      automationId: getAutomationId(),
+      identityId: identity?._id,
+      identityType: identity?.type,
+      correlationId: correlation.getId(),
     }
 
     const mergingObject: any = {

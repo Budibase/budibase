@@ -7,14 +7,14 @@
   } from "stores/backend"
 
   import { hasData } from "stores/selectors"
-  import { Icon, notifications, Heading, Body } from "@budibase/bbui"
+  import { notifications, Body, Icon, AbsTooltip } from "@budibase/bbui"
   import { params, goto } from "@roxi/routify"
   import CreateExternalDatasourceModal from "./_components/CreateExternalDatasourceModal/index.svelte"
   import CreateInternalTableModal from "./_components/CreateInternalTableModal.svelte"
   import DatasourceOption from "./_components/DatasourceOption.svelte"
   import IntegrationIcon from "components/backend/DatasourceNavigator/IntegrationIcon.svelte"
+  import CreationPage from "components/common/CreationPage.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons/index.js"
-  import FontAwesomeIcon from "components/common/FontAwesomeIcon.svelte"
 
   let internalTableModal
   let externalDatasourceModal
@@ -46,25 +46,16 @@
   bind:this={externalDatasourceModal}
 />
 
-<div class="page">
-  <div class="closeButton">
-    {#if hasData($datasources, $tables)}
-      <Icon hoverable name="Close" on:click={$goto("./table")} />
-    {/if}
-  </div>
-  <div class="heading">
-    <Heading weight="light">Add new data source</Heading>
-  </div>
-
+<CreationPage
+  showClose={hasData($datasources, $tables)}
+  onClose={() => $goto("./table")}
+  heading="Add new data source"
+>
   <div class="subHeading">
     <Body>Get started with our Budibase DB</Body>
-    <div
-      role="tooltip"
-      title="Budibase DB is built with CouchDB"
-      class="tooltip"
-    >
-      <FontAwesomeIcon name="fa-solid fa-circle-info" />
-    </div>
+    <AbsTooltip text="Budibase DB is built with CouchDB">
+      <Icon name="Info" size="S" />
+    </AbsTooltip>
   </div>
 
   <div class="options">
@@ -113,37 +104,19 @@
       </DatasourceOption>
     {/each}
   </div>
-</div>
+</CreationPage>
 
 <style>
-  .page {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .closeButton {
-    height: 38px;
-    display: flex;
-    justify-content: right;
-    width: 100%;
-  }
-
-  .heading {
-    margin-bottom: 12px;
-  }
-
   .subHeading {
     display: flex;
     align-items: center;
-    margin-bottom: 24px;
+    margin-top: 12px;
+    margin-bottom: 36px;
+    gap: 8px;
   }
-
-  .tooltip {
-    margin-left: 6px;
+  .subHeading :global(p) {
+    color: var(--spectrum-global-color-gray-600) !important;
   }
-
   .options {
     width: 100%;
     display: grid;

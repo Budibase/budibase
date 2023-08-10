@@ -40,6 +40,11 @@ export type DatabasePutOpts = {
   force?: boolean
 }
 
+export type DocExistsResponse = {
+  _rev?: string
+  exists: boolean
+}
+
 export type DatabaseCreateIndexOpts = {
   index: {
     fields: string[]
@@ -89,7 +94,8 @@ export interface Database {
 
   exists(): Promise<boolean>
   checkSetup(): Promise<Nano.DocumentScope<any>>
-  get<T>(id?: string): Promise<T | any>
+  get<T>(id?: string): Promise<T>
+  docExists(id: string): Promise<DocExistsResponse>
   remove(
     id: string | Document,
     rev?: string

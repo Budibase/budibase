@@ -11,8 +11,8 @@
 <Panel title="Automations" borderRight>
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Button cta on:click={modal.show}>Add automation</Button>
-    <AutomationList />
   </Layout>
+  <AutomationList />
 </Panel>
 
 <Modal bind:this={modal}>

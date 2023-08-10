@@ -201,7 +201,7 @@
             <Label>Filters</Label>
           </div>
           <div class="fields">
-            {#each rawFilters as filter, idx}
+            {#each rawFilters as filter}
               <Select
                 bind:value={filter.field}
                 options={fieldOptions}

@@ -5,7 +5,7 @@ import { convertBookmark } from "../../../utilities"
 
 // makes sure that the user doesn't need to pass in the type, tableId or _id params for
 // the call to be correct
-function fixRow(row: Row, params: any) {
+export function fixRow(row: Row, params: any) {
   if (!params || !row) {
     return row
   }

@@ -12,7 +12,7 @@ const EXPIRY_SECONDS = 3600
  */
 async function populateFromDB(userId: string, tenantId: string) {
   const db = tenancy.getTenantDB(tenantId)
-  const user = await db.get(userId)
+  const user = await db.get<any>(userId)
   user.budibaseAccess = true
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const account = await accounts.getAccount(user.email)

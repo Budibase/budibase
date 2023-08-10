@@ -9,6 +9,7 @@
   import { setContext } from "svelte"
   import ScimBanner from "../../_components/SCIMBanner.svelte"
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   export let groupId
 
@@ -49,7 +50,7 @@
   ]
 
   $: scimEnabled = $features.isScimEnabled
-  $: readonly = !$auth.isAdmin || scimEnabled
+  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
 
   const removeUser = async id => {
     await groups.actions.removeUser(groupId, id)

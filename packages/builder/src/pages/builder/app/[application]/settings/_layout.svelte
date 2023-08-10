@@ -1,8 +1,11 @@
 <script>
   import { Content, SideNav, SideNavItem } from "components/portal/page"
-  import { Page, Layout } from "@budibase/bbui"
+  import { Page, Layout, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "components/deploy/DeleteModal.svelte"
+  import { isOnlyUser } from "builderStore"
+  import { auth } from "stores/portal"
+  import { sdk } from "@budibase/shared-core"
 
   let deleteModal
 </script>
@@ -43,14 +46,24 @@
             url={$url("./version")}
             active={$isActive("./version")}
           />
-          <div class="delete-action">
-            <SideNavItem
-              text="Delete app"
-              on:click={() => {
-                deleteModal.show()
-              }}
-            />
-          </div>
+          {#if sdk.users.isGlobalBuilder($auth.user)}
+            <div class="delete-action">
+              <AbsTooltip
+                position={TooltipPosition.Bottom}
+                text={$isOnlyUser
+                  ? null
+                  : "Unavailable - another user is editing this app"}
+              >
+                <SideNavItem
+                  text="Delete app"
+                  disabled={!$isOnlyUser}
+                  on:click={() => {
+                    deleteModal.show()
+                  }}
+                />
+              </AbsTooltip>
+            </div>
+          {/if}
         </SideNav>
         <slot />
       </Content>
@@ -61,7 +74,7 @@
 <DeleteModal bind:this={deleteModal} />
 
 <style>
-  .delete-action :global(span) {
+  .delete-action :global(.text) {
     color: var(--spectrum-global-color-red-400);
   }
   .delete-action {
