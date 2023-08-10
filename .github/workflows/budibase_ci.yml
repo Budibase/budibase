@@ -69,7 +69,7 @@ jobs:
       # Run build all the projects
       - name: Build
         run: |
-          if [[ ${{ env.USE_NX_AFFECTED }} ]]; then
+          if ${{ env.USE_NX_AFFECTED }}; then
             yarn build --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn build
@@ -77,7 +77,7 @@ jobs:
       # Check the types of the projects built via esbuild
       - name: Check types
         run: |
-          if [[ ${{ env.USE_NX_AFFECTED }} ]]; then
+          if ${{ env.USE_NX_AFFECTED }}; then
             yarn check:types --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn check:types
@@ -107,7 +107,7 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
-          if [[ ${{ env.USE_NX_AFFECTED }} ]]; then
+          if ${{ env.USE_NX_AFFECTED }}; then
             yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
@@ -142,7 +142,7 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Test worker and server
         run: |
-          if [[ ${{ env.USE_NX_AFFECTED }} ]]; then
+          if ${{ env.USE_NX_AFFECTED }}; then
             yarn test --scope=@budibase/worker --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn test --scope=@budibase/worker --scope=@budibase/server
@@ -173,7 +173,7 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
-          if [[ ${{ env.USE_NX_AFFECTED }} ]]; then
+          if ${{ env.USE_NX_AFFECTED }}; then
             yarn test --scope=@budibase/pro --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn test --scope=@budibase/pro
