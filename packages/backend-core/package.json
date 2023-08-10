@@ -2,11 +2,11 @@
   "name": "@budibase/backend-core",
   "version": "0.0.0",
   "description": "Budibase backend core libraries used in server and worker",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
   "exports": {
-    ".": "./dist/src/index.js",
-    "./tests": "./dist/tests/index.js",
+    ".": "./dist/index.js",
+    "./tests": "./dist/tests.js",
     "./*": "./dist/*.js"
   },
   "author": "Budibase",
