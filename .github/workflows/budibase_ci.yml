@@ -73,7 +73,11 @@ jobs:
       # Check the types of the projects built via esbuild
       - name: Check types
         run: |
-          yarn check:types
+          if ${{ env.USE_NX_AFFECTED }}; then
+            yarn check:types --since=${{ env.NX_BASE_BRANCH }}
+          else
+            yarn check:types
+          fi
 
   test-libraries:
     runs-on: ubuntu-latest
