@@ -127,6 +127,14 @@ export default defineConfig(({ mode }) => {
           find: "helpers",
           replacement: path.resolve("./src/helpers"),
         },
+        {
+          find: "@budibase/types",
+          replacement: path.resolve("../types/src"),
+        },
+        {
+          find: "@budibase/shared-core",
+          replacement: path.resolve("../shared-core/src"),
+        },
       ],
     },
   }
