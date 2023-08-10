@@ -1,17 +1,14 @@
-import { HTTPError, context } from "@budibase/backend-core"
+import { context, HTTPError } from "@budibase/backend-core"
 import { FieldSchema, TableSchema, View, ViewV2 } from "@budibase/types"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
-import merge from "lodash/merge"
 
 export async function get(viewId: string): Promise<ViewV2 | undefined> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
   const table = await sdk.tables.getTable(tableId)
   const views = Object.values(table.views!)
-  const view = views.find(v => isV2(v) && v.id === viewId) as ViewV2 | undefined
-
-  return view
+  return views.find(v => isV2(v) && v.id === viewId) as ViewV2 | undefined
 }
 
 export async function create(
