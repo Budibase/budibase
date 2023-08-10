@@ -18,6 +18,8 @@ env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  NX_BASE_BRANCH: origin/${{ github.base_ref }}
+  USE_NX_AFFECTED: ${{ github.event_name == 'pull_request' && github.base_ref != 'master'}}
 
 jobs:
   lint:
@@ -50,9 +52,12 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
       - name: Checkout repo only
         uses: actions/checkout@v3
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
@@ -60,10 +65,19 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
+
       # Run build all the projects
-      - run: yarn build
+      - name: Build
+        run: |
+          yarn build
       # Check the types of the projects built via esbuild
-      - run: yarn check:types
+      - name: Check types
+        run: |
+          if ${{ env.USE_NX_AFFECTED }}; then
+            yarn check:types --since=${{ env.NX_BASE_BRANCH }}
+          else
+            yarn check:types
+          fi
 
   test-libraries:
     runs-on: ubuntu-latest
@@ -74,9 +88,12 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
       - name: Checkout repo only
         uses: actions/checkout@v3
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
@@ -84,7 +101,13 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - run: yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
+      - name: Test
+        run: |
+          if ${{ env.USE_NX_AFFECTED }}; then
+            yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro --since=${{ env.NX_BASE_BRANCH }}
+          else
+            yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
+          fi
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
@@ -100,9 +123,12 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
       - name: Checkout repo only
         uses: actions/checkout@v3
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
@@ -111,7 +137,13 @@ jobs:
           cache: "yarn"
       - run: yarn --frozen-lockfile
       - name: Test worker and server
-        run: yarn test --scope=@budibase/worker --scope=@budibase/server
+        run: |
+          if ${{ env.USE_NX_AFFECTED }}; then
+            yarn test --scope=@budibase/worker --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
+          else
+            yarn test --scope=@budibase/worker --scope=@budibase/server
+          fi
+
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
@@ -127,6 +159,7 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
@@ -134,7 +167,13 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - run: yarn test --scope=@budibase/pro
+      - name: Test
+        run: |
+          if ${{ env.USE_NX_AFFECTED }}; then
+            yarn test --scope=@budibase/pro --since=${{ env.NX_BASE_BRANCH }}
+          else
+            yarn test --scope=@budibase/pro
+          fi
 
   integration-test:
     runs-on: ubuntu-latest
@@ -155,7 +194,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - run: yarn build --projects=@budibase/server,@budibase/worker,@budibase/client
+      - run: yarn build --scope @budibase/server --scope @budibase/worker --scope @budibase/client
       - name: Run tests
         run: |
           cd qa-core
@@ -173,7 +212,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: true
-          fetch-depth: 0
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Check pro commit

@@ -16,16 +16,12 @@ import {
   FieldType,
   SortType,
   SortOrder,
-  DeleteRow,
 } from "@budibase/types"
 import {
   expectAnyInternalColsAttributes,
   generator,
   structures,
 } from "@budibase/backend-core/tests"
-import trimViewRowInfoMiddleware from "../../../middleware/trimViewRowInfo"
-import noViewDataMiddleware from "../../../middleware/noViewData"
-import router from "../row"
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -394,26 +390,6 @@ describe("/rows", () => {
       expect(saved.arrayFieldArrayStrKnown).toEqual(["One"])
       expect(saved.optsFieldStrKnown).toEqual("Alpha")
     })
-
-    it("should throw an error when creating a table row with view id data", async () => {
-      const res = await request
-        .post(`/api/${row.tableId}/rows`)
-        .send({ ...row, _viewId: generator.guid() })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(400)
-      expect(res.body.message).toEqual(
-        "Table row endpoints cannot contain view info"
-      )
-    })
-
-    it("should setup the noViewData middleware", async () => {
-      const route = router.stack.find(
-        r => r.methods.includes("POST") && r.path === "/api/:tableId/rows"
-      )
-      expect(route).toBeDefined()
-      expect(route?.stack).toContainEqual(noViewDataMiddleware)
-    })
   })
 
   describe("patch", () => {
@@ -462,33 +438,6 @@ describe("/rows", () => {
 
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
-    })
-
-    it("should throw an error when creating a table row with view id data", async () => {
-      const existing = await config.createRow()
-
-      const res = await config.api.row.patch(
-        table._id!,
-        {
-          ...existing,
-          _id: existing._id!,
-          _rev: existing._rev!,
-          tableId: table._id!,
-          _viewId: generator.guid(),
-        },
-        { expectStatus: 400 }
-      )
-      expect(res.body.message).toEqual(
-        "Table row endpoints cannot contain view info"
-      )
-    })
-
-    it("should setup the noViewData middleware", async () => {
-      const route = router.stack.find(
-        r => r.methods.includes("PATCH") && r.path === "/api/:tableId/rows"
-      )
-      expect(route).toBeDefined()
-      expect(route?.stack).toContainEqual(noViewDataMiddleware)
     })
   })
 
@@ -758,7 +707,7 @@ describe("/rows", () => {
       })
       // the environment needs configured for this
       await setup.switchToSelfHosted(async () => {
-        context.doInAppContext(config.getAppId(), async () => {
+        return context.doInAppContext(config.getAppId(), async () => {
           const enriched = await outputProcessing(table, [row])
           expect((enriched as Row[])[0].attachment[0].url).toBe(
             `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
@@ -864,7 +813,7 @@ describe("/rows", () => {
         })
 
         const data = randomRowData()
-        const newRow = await config.api.viewV2.row.create(view.id, {
+        const newRow = await config.api.row.save(view.id, {
           tableId: config.table!._id,
           _viewId: view.id,
           ...data,
@@ -886,16 +835,6 @@ describe("/rows", () => {
         expect(row.body.age).toBeUndefined()
         expect(row.body.jobTitle).toBeUndefined()
       })
-
-      it("should setup the trimViewRowInfo middleware", async () => {
-        const route = router.stack.find(
-          r =>
-            r.methods.includes("POST") &&
-            r.path === "/api/v2/views/:viewId/rows"
-        )
-        expect(route).toBeDefined()
-        expect(route?.stack).toContainEqual(trimViewRowInfoMiddleware)
-      })
     })
 
     describe("patch", () => {
@@ -910,13 +849,13 @@ describe("/rows", () => {
           },
         })
 
-        const newRow = await config.api.viewV2.row.create(view.id, {
+        const newRow = await config.api.row.save(view.id, {
           tableId,
           _viewId: view.id,
           ...randomRowData(),
         })
         const newData = randomRowData()
-        await config.api.viewV2.row.update(view.id, newRow._id!, {
+        await config.api.row.patch(view.id, {
           tableId,
           _viewId: view.id,
           _id: newRow._id!,
@@ -939,16 +878,6 @@ describe("/rows", () => {
         expect(row.body.age).toBeUndefined()
         expect(row.body.jobTitle).toBeUndefined()
       })
-
-      it("should setup the trimViewRowInfo middleware", async () => {
-        const route = router.stack.find(
-          r =>
-            r.methods.includes("PATCH") &&
-            r.path === "/api/v2/views/:viewId/rows/:rowId"
-        )
-        expect(route).toBeDefined()
-        expect(route?.stack).toContainEqual(trimViewRowInfoMiddleware)
-      })
     })
 
     describe("destroy", () => {
@@ -967,10 +896,7 @@ describe("/rows", () => {
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
-        const body: DeleteRow = {
-          _id: createdRow._id!,
-        }
-        await config.api.viewV2.row.delete(view.id, body)
+        await config.api.row.delete(view.id, [createdRow])
 
         await assertRowUsage(rowUsage - 1)
         await assertQueryUsage(queryUsage + 1)
@@ -999,9 +925,7 @@ describe("/rows", () => {
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
-        await config.api.viewV2.row.delete(view.id, {
-          rows: [rows[0], rows[2]],
-        })
+        await config.api.row.delete(view.id, [rows[0], rows[2]])
 
         await assertRowUsage(rowUsage - 2)
         await assertQueryUsage(queryUsage + 1)
