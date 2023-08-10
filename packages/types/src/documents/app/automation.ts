@@ -100,6 +100,10 @@ export const AutomationStepIdArray = [
   ...Object.values(AutomationTriggerStepId),
 ]
 
+export enum AutomationState {
+  DISABLED = "disabled",
+}
+
 export interface Automation extends Document {
   definition: {
     steps: AutomationStep[]
@@ -112,6 +116,7 @@ export interface Automation extends Document {
   name: string
   internal?: boolean
   type?: string
+  state?: AutomationState
 }
 
 interface BaseIOStructure {
