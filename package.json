@@ -34,7 +34,7 @@
     "preinstall": "node scripts/syncProPackage.js",
     "setup": "git config submodule.recurse true && git submodule update && node ./hosting/scripts/setup.js && yarn && yarn build && yarn dev",
     "bootstrap": "./scripts/link-dependencies.sh && echo '***BOOTSTRAP ONLY REQUIRED FOR USE WITH ACCOUNT PORTAL***'",
-    "build": "yarn nx run-many -t=build",
+    "build": "lerna run build --stream",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
     "check:types": "lerna run check:types",
     "backend:bootstrap": "./scripts/scopeBackend.sh && yarn run bootstrap",
@@ -109,7 +109,7 @@
     "@budibase/types": "0.0.0"
   },
   "engines": {
-    "node": ">=14.0.0 <15.0.0"
+    "node": ">=18.0.0 <19.0.0"
   },
   "dependencies": {}
 }
