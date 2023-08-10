@@ -7,7 +7,6 @@ import {
 import { destroy as tableDestroy } from "./table/internal"
 import { BuildSchemaErrors, InvalidColumns } from "../../constants"
 import { getIntegration } from "../../integrations"
-import { getDatasourceAndQuery } from "./row/utils"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import {
@@ -401,8 +400,7 @@ export async function destroy(ctx: UserCtx) {
 }
 
 export async function find(ctx: UserCtx) {
-  const db = context.getAppDB()
-  const datasource = await db.get(ctx.params.datasourceId)
+  const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   ctx.body = await sdk.datasources.removeSecretSingle(datasource)
 }
 
@@ -410,15 +408,14 @@ export async function find(ctx: UserCtx) {
 export async function query(ctx: UserCtx) {
   const queryJson = ctx.request.body
   try {
-    ctx.body = await getDatasourceAndQuery(queryJson)
+    ctx.body = await sdk.rows.utils.getDatasourceAndQuery(queryJson)
   } catch (err: any) {
     ctx.throw(400, err)
   }
 }
 
 export async function getExternalSchema(ctx: UserCtx) {
-  const db = context.getAppDB()
-  const datasource = await db.get(ctx.params.datasourceId)
+  const datasource = await sdk.datasources.get(ctx.params.datasourceId)
   const enrichedDatasource = await getAndMergeDatasource(datasource)
   const connector = await getConnector(enrichedDatasource)
 

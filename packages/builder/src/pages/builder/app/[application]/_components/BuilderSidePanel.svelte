@@ -12,19 +12,18 @@
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import { groups, licensing, apps, users, auth, admin } from "stores/portal"
-  import { fetchData } from "@budibase/frontend-core"
+  import { fetchData, Constants, Utils } from "@budibase/frontend-core"
+  import { sdk } from "@budibase/shared-core"
   import { API } from "api"
-  import { onMount } from "svelte"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
   import RoleSelect from "components/common/RoleSelect.svelte"
   import UpgradeModal from "components/common/users/UpgradeModal.svelte"
-  import { Constants, Utils } from "@budibase/frontend-core"
   import { emailValidator } from "helpers/validation"
   import { roles } from "stores/backend"
+  import { fly } from "svelte/transition"
 
   let query = null
   let loaded = false
-  let rendered = false
   let inviting = false
   let searchFocus = false
 
@@ -109,9 +108,9 @@
     await usersFetch.refresh()
 
     filteredUsers = $usersFetch.rows.map(user => {
-      const isBuilderOrAdmin = user.admin?.global || user.builder?.global
+      const isAdminOrBuilder = sdk.users.isAdminOrBuilder(user, prodAppId)
       let role = undefined
-      if (isBuilderOrAdmin) {
+      if (isAdminOrBuilder) {
         role = Constants.Roles.ADMIN
       } else {
         const appRole = Object.keys(user.roles).find(x => x === prodAppId)
@@ -123,7 +122,7 @@
       return {
         ...user,
         role,
-        isBuilderOrAdmin,
+        isAdminOrBuilder,
       }
     })
   }
@@ -259,7 +258,7 @@
     }
     // Must exclude users who have explicit privileges
     const userByEmail = filteredUsers.reduce((acc, user) => {
-      if (user.role || user.admin?.global || user.builder?.global) {
+      if (user.role || sdk.users.isAdminOrBuilder(user, prodAppId)) {
         acc.push(user.email)
       }
       return acc
@@ -383,10 +382,6 @@
 
   $: initSidePanel($store.builderSidePanel)
 
-  onMount(() => {
-    rendered = true
-  })
-
   function handleKeyDown(evt) {
     if (evt.key === "Enter" && queryIsEmail && !inviting) {
       onInviteUser()
@@ -394,9 +389,9 @@
   }
 
   const userTitle = user => {
-    if (user.admin?.global) {
+    if (sdk.users.isAdmin(user)) {
       return "Admin"
-    } else if (user.builder?.global) {
+    } else if (sdk.users.isBuilder(user, prodAppId)) {
       return "Developer"
     } else {
       return "App user"
@@ -408,7 +403,7 @@
       const role = $roles.find(role => role._id === user.role)
       return `This user has been given ${role?.name} access from the ${user.group} group`
     }
-    if (user.isBuilderOrAdmin) {
+    if (user.isAdminOrBuilder) {
       return "This user's role grants admin access to all apps"
     }
     return null
@@ -418,16 +413,14 @@
 <svelte:window on:keydown={handleKeyDown} />
 
 <div
+  transition:fly={{ x: 400, duration: 260 }}
   id="builder-side-panel-container"
-  class:open={$store.builderSidePanel}
-  use:clickOutside={$store.builderSidePanel
-    ? () => {
-        store.update(state => {
-          state.builderSidePanel = false
-          return state
-        })
-      }
-    : () => {}}
+  use:clickOutside={() => {
+    store.update(state => {
+      state.builderSidePanel = false
+      return state
+    })
+  }}
 >
   <div class="builder-side-panel-header">
     <Heading size="S">Users</Heading>
@@ -621,7 +614,7 @@
                     }}
                     autoWidth
                     align="right"
-                    allowedRoles={user.isBuilderOrAdmin
+                    allowedRoles={user.isAdminOrBuilder
                       ? [Constants.Roles.ADMIN]
                       : null}
                   />
@@ -737,12 +730,11 @@
     flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
-    transition: transform 130ms ease-out;
     position: absolute;
     width: 400px;
     right: 0;
-    transform: translateX(100%);
     height: 100%;
+    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
   }
 
   .builder-side-panel-header,
@@ -790,11 +782,6 @@
 
   #builder-side-panel-container .search :global(input::placeholder) {
     font-style: normal;
-  }
-
-  #builder-side-panel-container.open {
-    transform: translateX(0);
-    box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
   }
 
   .builder-side-panel-header {

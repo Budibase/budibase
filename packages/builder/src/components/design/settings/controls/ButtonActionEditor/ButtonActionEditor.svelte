@@ -70,8 +70,9 @@
   } set`
 </script>
 
-<div class="action-count">{actionText}</div>
-<ActionButton on:click={openDrawer}>Define actions</ActionButton>
+<div class="action-editor">
+  <ActionButton on:click={openDrawer}>{actionText}</ActionButton>
+</div>
 
 <Drawer bind:this={drawer} title={"Actions"}>
   <svelte:fragment slot="description">
@@ -89,9 +90,7 @@
 </Drawer>
 
 <style>
-  .action-count {
-    padding-top: 6px;
-    padding-bottom: var(--spacing-s);
-    font-weight: 600;
+  .action-editor :global(.spectrum-ActionButton) {
+    width: 100%;
   }
 </style>

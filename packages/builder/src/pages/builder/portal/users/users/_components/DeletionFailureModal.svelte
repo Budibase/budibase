@@ -5,7 +5,6 @@
   export let deleteUsersResponse
 
   let successCount
-  let failureCount
   let title
   let unsuccessfulUsers
   let message
@@ -37,7 +36,6 @@
 
   onMount(() => {
     successCount = deleteUsersResponse.successful.length
-    failureCount = deleteUsersResponse.unsuccessful.length
     setTitle()
     setMessage()
     setUsers()

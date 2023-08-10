@@ -1,5 +1,5 @@
 <script>
-  import { Body, ModalContent, Select } from "@budibase/bbui"
+  import { keepOpen, Body, ModalContent, Select } from "@budibase/bbui"
   import { apps, groups } from "stores/portal"
   import { roles } from "stores/backend"
   import RoleSelect from "components/common/RoleSelect.svelte"
@@ -20,8 +20,8 @@
     if (!selectingRole) {
       selectingRole = true
       await roles.fetchByAppId(prodAppId)
-      // return false to stop closing modal
-      return false
+
+      return keepOpen
     } else {
       await groups.actions.addApp(group._id, prodAppId, selectedRoleId)
     }

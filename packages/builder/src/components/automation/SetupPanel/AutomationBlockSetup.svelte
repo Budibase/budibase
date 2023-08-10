@@ -108,7 +108,10 @@
   /****************************************************/
 
   const getInputData = (testData, blockInputs) => {
-    let newInputData = testData || blockInputs
+    // Test data is not cloned for reactivity
+    let newInputData = testData || cloneDeep(blockInputs)
+
+    // Ensures the app action fields are populated
     if (block.event === "app:trigger" && !newInputData?.fields) {
       newInputData = cloneDeep(blockInputs)
     }

@@ -2,15 +2,12 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "composite": true,
-    "declaration": true,
-    "sourceMap": true,
-    "baseUrl": ".",
-    "outDir": "dist"
+    "baseUrl": "."
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"],
     "swc": true
   },
-  "include": ["src/**/*", "specs"],
+  "include": ["src/**/*", "specs", "__mocks__"],
   "exclude": ["node_modules", "dist"]
 }

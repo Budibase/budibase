@@ -12,8 +12,8 @@
   $: role = $roles.find(role => role._id === roleId)
   $: tooltip =
     roleId === Roles.PUBLIC
-      ? "This screen is open to the public"
-      : `Requires at least ${role?.name} access`
+      ? "Open to the public"
+      : `Requires ${role?.name} access`
 </script>
 
 <div
@@ -44,14 +44,14 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    width: 130px;
+    width: 200px;
     pointer-events: none;
   }
   .tooltip :global(.spectrum-Tooltip) {
     background: var(--color);
     color: white;
     font-weight: 600;
-    max-width: 130px;
+    max-width: 200px;
   }
   .tooltip :global(.spectrum-Tooltip-tip) {
     border-top-color: var(--color);
