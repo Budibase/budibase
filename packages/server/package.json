@@ -179,5 +179,20 @@
   },
   "optionalDependencies": {
     "oracledb": "5.3.0"
+  },
+  "nx": {
+    "targets": {
+      "dev:builder": {
+        "dependsOn": [
+          {
+            "comment": "Required for pro usage when submodule not loaded",
+            "projects": [
+              "@budibase/backend-core"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }
