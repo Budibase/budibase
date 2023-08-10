@@ -49,13 +49,13 @@ export function getTableId(ctx: Ctx) {
   if (ctx.params?.sourceId) {
     return ctx.params.sourceId
   }
-  // check body for a table ID
-  if (ctx.request.body?.tableId) {
-    return ctx.request.body.tableId
-  }
   // now check for old way of specifying table ID
   if (ctx.params?.tableId) {
     return ctx.params.tableId
+  }
+  // check body for a table ID
+  if (ctx.request.body?.tableId) {
+    return ctx.request.body.tableId
   }
   // now check if a specific view name
   if (ctx.params?.viewName) {
