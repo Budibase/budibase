@@ -9,7 +9,15 @@ import {
   fixAutoColumnSubType,
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
-import { Table, ViewStatisticsSchema } from "@budibase/types"
+import {
+  SaveTableRequest,
+  SaveTableResponse,
+  Table,
+  TableRequest,
+  UserCtx,
+  ViewStatisticsSchema,
+  ViewV2,
+} from "@budibase/types"
 import { quotas } from "@budibase/pro"
 import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
@@ -33,7 +41,7 @@ function checkAutoColumns(table: Table, oldTable?: Table) {
   return table
 }
 
-export async function save(ctx: any) {
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const db = context.getAppDB()
   const { rows, ...rest } = ctx.request.body
   let tableToSave: Table & {
@@ -82,7 +90,7 @@ export async function save(ctx: any) {
   let { _rename } = tableToSave
   /* istanbul ignore next */
   if (_rename && _rename.old === _rename.updated) {
-    _rename = null
+    _rename = undefined
     delete tableToSave._rename
   }
 
@@ -100,8 +108,11 @@ export async function save(ctx: any) {
     if (!tableView) continue
 
     if (sdk.views.isV2(tableView)) {
-      // We don't want to modify views from the tables controller
-      tableToSave.views[view] = oldTable!.views![view]
+      tableToSave.views[view] = sdk.views.syncSchema(
+        oldTable!.views![view] as ViewV2,
+        tableToSave.schema,
+        _rename
+      )
       continue
     }
 
@@ -124,7 +135,7 @@ export async function save(ctx: any) {
       tableToSave._rev = linkResp._rev
     }
   } catch (err) {
-    ctx.throw(400, err)
+    ctx.throw(400, err as string)
   }
 
   // don't perform any updates until relationships have been

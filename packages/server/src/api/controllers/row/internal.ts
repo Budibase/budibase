@@ -1,28 +1,13 @@
 import * as linkRows from "../../../db/linkedRows"
-import {
-  generateRowID,
-  getTableIDFromRowID,
-  InternalTables,
-} from "../../../db/utils"
+import {generateRowID, getTableIDFromRowID, InternalTables,} from "../../../db/utils"
 import * as userController from "../user"
-import {
-  inputProcessing,
-  outputProcessing,
-  cleanupAttachments,
-} from "../../../utilities/rowProcessor"
-import { FieldTypes } from "../../../constants"
+import {cleanupAttachments, inputProcessing, outputProcessing,} from "../../../utilities/rowProcessor"
+import {FieldTypes} from "../../../constants"
 import * as utils from "./utils"
-import { cloneDeep } from "lodash/fp"
-import { context } from "@budibase/backend-core"
-import { finaliseRow, updateRelatedFormula } from "./staticFormula"
-import {
-  UserCtx,
-  LinkDocumentValue,
-  Row,
-  Table,
-  PatchRowRequest,
-  PatchRowResponse,
-} from "@budibase/types"
+import {cloneDeep} from "lodash/fp"
+import {context} from "@budibase/backend-core"
+import {finaliseRow, updateRelatedFormula} from "./staticFormula"
+import {LinkDocumentValue, PatchRowRequest, PatchRowResponse, Row, Table, UserCtx,} from "@budibase/types"
 import sdk from "../../../sdk"
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
@@ -94,8 +79,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 
 export async function save(ctx: UserCtx) {
   let inputs = ctx.request.body
-  const tableId = utils.getTableId(ctx)
-  inputs.tableId = tableId
+  inputs.tableId = utils.getTableId(ctx)
 
   if (!inputs._rev && !inputs._id) {
     inputs._id = generateRowID(inputs.tableId)
