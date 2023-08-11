@@ -49,7 +49,7 @@ describe("table sdk", () => {
   }
 
   describe("enrichViewSchemas", () => {
-    it("should fetch the default schema if not overriden", async () => {
+    it("should fetch the default schema if not overridden", async () => {
       const tableId = basicTable._id!
       const view: ViewV2 = {
         version: 2,
@@ -66,7 +66,7 @@ describe("table sdk", () => {
           name: {
             type: "string",
             name: "name",
-            visible: true,
+            visible: false,
             order: 2,
             width: 80,
             constraints: {
@@ -76,7 +76,7 @@ describe("table sdk", () => {
           description: {
             type: "string",
             name: "description",
-            visible: true,
+            visible: false,
             width: 200,
             constraints: {
               type: "string",
@@ -85,7 +85,7 @@ describe("table sdk", () => {
           id: {
             type: "number",
             name: "id",
-            visible: true,
+            visible: false,
             order: 1,
             constraints: {
               type: "number",

@@ -80,18 +80,16 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
   const anyViewOrder = Object.values(view.schema || {}).some(
     ui => ui.order != null
   )
-  if (Object.keys(view.schema || {}).length > 0) {
-    for (const key of Object.keys(schema)) {
-      // if nothing specified in view, then it is not visible
-      const ui = view.schema?.[key] || { visible: false }
-      if (ui.visible === false) {
-        schema[key].visible = false
-      } else {
-        schema[key] = {
-          ...schema[key],
-          ...ui,
-          order: anyViewOrder ? ui?.order ?? undefined : schema[key].order,
-        }
+  for (const key of Object.keys(schema)) {
+    // if nothing specified in view, then it is not visible
+    const ui = view.schema?.[key] || { visible: false }
+    if (ui.visible === false) {
+      schema[key].visible = false
+    } else {
+      schema[key] = {
+        ...schema[key],
+        ...ui,
+        order: anyViewOrder ? ui?.order ?? undefined : schema[key].order,
       }
     }
   }
