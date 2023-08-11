@@ -96,7 +96,6 @@
       } else {
         editableColumn.name = "Column 01"
       }
-      focus = true
     }
     allowedTypes = getAllowedTypes()
   }
@@ -419,20 +418,18 @@
   onMount(() => {
     mounted = true
   })
-
-  $: console.log(editableColumn.name)
 </script>
 
 <Layout noPadding gap="S">
   {#if mounted}
     <Input
-    autofocus
-    bind:value={editableColumn.name}
-    disabled={uneditable ||
-      (linkEditDisabled && editableColumn.type === LINK_TYPE)}
-    error={errors?.name}
-  />
-      {/if}
+      autofocus
+      bind:value={editableColumn.name}
+      disabled={uneditable ||
+        (linkEditDisabled && editableColumn.type === LINK_TYPE)}
+      error={errors?.name}
+    />
+  {/if}
   <Select
     disabled={!typeEnabled}
     bind:value={editableColumn.type}
