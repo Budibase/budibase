@@ -79,20 +79,19 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
   }
 
   let schema = { ...tableSchema }
-  if (view.schemaUI) {
-    const viewOverridesEntries = Object.entries(view.schemaUI)
-    const viewSetsOrder = viewOverridesEntries.some(([_, v]) => v.order != null)
-    for (const [fieldName, schemaUI] of viewOverridesEntries) {
-      schema[fieldName] = {
-        ...schema[fieldName],
-        ...schemaUI,
-        order: viewSetsOrder
-          ? schemaUI.order ?? undefined
-          : schema[fieldName].order,
-      }
+  const anyViewOrder = Object.values(view.schemaUI || {}).some(ui => ui.order != null)
+  for (const key of Object.keys(schema)) {
+    // if nothing specified in view, then it is not visible
+    const ui = view.schemaUI?.[key] || { visible: false }
+    schema[key] = {
+      ...schema[key],
+      ...ui,
+      order: anyViewOrder
+        ? ui?.order ?? undefined
+        : schema[key].order,
     }
-    delete view.schemaUI
   }
+  delete view.schemaUI
 
   if (view?.columns?.length) {
     const pickedSchema: Record<string, FieldSchema> = {}
