@@ -5277,26 +5277,28 @@
       },
       {
         "type": "text",
-        "label": "Row ID",
-        "key": "rowId",
-        "nested": true,
-        "dependsOn": {
-          "setting": "actionType",
-          "value": "Create",
-          "invert": true
-        }
-      },
-      {
-        "type": "text",
         "label": "Title",
         "key": "title",
         "nested": true
       },
       {
-        "type": "text",
-        "label": "Empty text",
-        "key": "noRowsMessage",
-        "defaultValue": "We couldn't find a row to display",
+        "section": true,
+        "name": "Row details",
+        "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Row ID",
+            "key": "rowId",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "label": "Empty text",
+            "key": "noRowsMessage",
+            "defaultValue": "We couldn't find a row to display"
+          }
+        ],
         "dependsOn": {
           "setting": "actionType",
           "value": "Create",
@@ -5308,10 +5310,11 @@
         "name": "Buttons",
         "settings": [
           {
-            "type": "boolean",
-            "label": "Show save button",
-            "key": "showSaveButton",
-            "defaultValue": true,
+            "type": "text",
+            "key": "saveButtonLabel",
+            "label": "Save button",
+            "nested": true,
+            "defaultValue": "Save",
             "dependsOn": {
               "setting": "actionType",
               "value": "View",
@@ -5320,34 +5323,13 @@
           },
           {
             "type": "text",
-            "key": "saveButtonLabel",
-            "label": "Save button label",
-            "nested": true,
-            "defaultValue": "Save",
-            "dependsOn": {
-              "setting": "showSaveButton",
-              "value": true
-            }
-          },
-          {
-            "type": "boolean",
-            "label": "Allow delete",
-            "key": "showDeleteButton",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "Update"
-            }
-          },
-          {
-            "type": "text",
             "key": "deleteButtonLabel",
-            "label": "Delete button label",
+            "label": "Delete button",
             "nested": true,
             "defaultValue": "Delete",
             "dependsOn": {
-              "setting": "showDeleteButton",
-              "value": true
+              "setting": "actionType",
+              "value": "Update"
             }
           },
           {
@@ -5365,7 +5347,11 @@
             "type": "boolean",
             "label": "Hide notifications",
             "key": "notificationOverride",
-            "defaultValue": false
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "Update"
+            }
           }
         ]
       },
@@ -5407,7 +5393,6 @@
           },
           {
             "type": "fieldConfiguration",
-            "label": "Fields",
             "key": "fields",
             "selectAllFields": true
           },
