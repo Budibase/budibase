@@ -1,9 +1,18 @@
-import {context} from "@budibase/backend-core"
-import {BudibaseInternalDB, getTableParams} from "../../../db/utils"
-import {breakExternalTableId, isExternalTable, isSQL,} from "../../../integrations/utils"
-import {Database, Table, TableResponse, TableViewsResponse,} from "@budibase/types"
+import { context } from "@budibase/backend-core"
+import { BudibaseInternalDB, getTableParams } from "../../../db/utils"
+import {
+  breakExternalTableId,
+  isExternalTable,
+  isSQL,
+} from "../../../integrations/utils"
+import {
+  Database,
+  Table,
+  TableResponse,
+  TableViewsResponse,
+} from "@budibase/types"
 import datasources from "../datasources"
-import {isEditableColumn, populateExternalTableSchemas} from "./validation"
+import { isEditableColumn, populateExternalTableSchemas } from "./validation"
 import sdk from "../../../sdk"
 
 async function getAllInternalTables(db?: Database): Promise<Table[]> {
