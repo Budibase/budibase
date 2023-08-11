@@ -9,7 +9,7 @@
   $: datasource = {
     type: "viewV2",
     id,
-    tableId: id?.split("_").slice(0, -1).join("_"),
+    tableId: $viewsV2.selected?.tableId
   }
 
   const handleGridViewUpdate = async e => {
