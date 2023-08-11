@@ -10,10 +10,10 @@ import {
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
 import {
+  RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
   Table,
-  TableRequest,
   UserCtx,
   ViewStatisticsSchema,
   ViewV2,
@@ -85,7 +85,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   }
 
   // Don't rename if the name is the same
-  let { _rename } = tableToSave
+  let _rename: RenameColumn | undefined = tableToSave._rename
   /* istanbul ignore next */
   if (_rename && _rename.old === _rename.updated) {
     _rename = undefined
