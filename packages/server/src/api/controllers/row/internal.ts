@@ -6,9 +6,9 @@ import {
 } from "../../../db/utils"
 import * as userController from "../user"
 import {
+  cleanupAttachments,
   inputProcessing,
   outputProcessing,
-  cleanupAttachments,
 } from "../../../utilities/rowProcessor"
 import { FieldTypes } from "../../../constants"
 import * as utils from "./utils"
@@ -16,12 +16,12 @@ import { cloneDeep } from "lodash/fp"
 import { context } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
 import {
-  UserCtx,
   LinkDocumentValue,
-  Row,
-  Table,
   PatchRowRequest,
   PatchRowResponse,
+  Row,
+  Table,
+  UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 

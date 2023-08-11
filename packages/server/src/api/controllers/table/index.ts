@@ -1,12 +1,23 @@
 import * as internal from "./internal"
 import * as external from "./external"
-import {isRows, isSchema, validate as validateSchema,} from "../../../utilities/schema"
-import {isExternalTable, isSQL} from "../../../integrations/utils"
-import {events} from "@budibase/backend-core"
-import {FetchTablesResponse, SaveTableRequest, SaveTableResponse, Table, TableResponse, UserCtx,} from "@budibase/types"
+import {
+  isRows,
+  isSchema,
+  validate as validateSchema,
+} from "../../../utilities/schema"
+import { isExternalTable, isSQL } from "../../../integrations/utils"
+import { events } from "@budibase/backend-core"
+import {
+  FetchTablesResponse,
+  SaveTableRequest,
+  SaveTableResponse,
+  Table,
+  TableResponse,
+  UserCtx,
+} from "@budibase/types"
 import sdk from "../../../sdk"
-import {jsonFromCsvString} from "../../../utilities/csv"
-import {builderSocket} from "../../../websockets"
+import { jsonFromCsvString } from "../../../utilities/csv"
+import { builderSocket } from "../../../websockets"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
