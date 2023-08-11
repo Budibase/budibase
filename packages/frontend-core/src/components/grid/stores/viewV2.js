@@ -26,14 +26,16 @@ export const createActions = context => {
     const $datasource = get(datasource)
     row.tableId = $datasource?.tableId
     row._viewId = $datasource?.id
-    return await API.viewV2.createRow(row, SuppressErrors)
+    return {
+      ...await API.saveRow(row, SuppressErrors),
+      _viewId: row._viewId
+    }
   }
 
   const updateRow = async row => {
     const $datasource = get(datasource)
-    const savedRow = await API.viewV2.updateRow(row, SuppressErrors)
     return {
-      ...savedRow,
+      ...await API.patchRow(row, SuppressErrors),
       _viewId: $datasource.id,
     }
   }

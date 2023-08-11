@@ -23,7 +23,23 @@ export const buildRowEndpoints = API => ({
       return
     }
     return await API.post({
-      url: `/api/${row.viewId || row.tableId}/rows`,
+      url: `/api/${row._viewId || row.tableId}/rows`,
+      body: row,
+      suppressErrors,
+    })
+  },
+
+  /**
+   * Patches a row in a table.
+   * @param row the row to patch
+   * @param suppressErrors whether or not to suppress error notifications
+   */
+  patchRow: async (row, suppressErrors = false) => {
+    if (!row?.tableId) {
+      return
+    }
+    return await API.patch({
+      url: `/api/${row._viewId || row.tableId}/rows`,
       body: row,
       suppressErrors,
     })
