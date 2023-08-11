@@ -444,4 +444,25 @@ describe("/v2/views", () => {
       expect(await getPersistedView()).toBeUndefined()
     })
   })
+
+  describe("fetch view (through table)", () => {
+    it("should be able to fetch a view V2", async () => {
+      const table = await config.createTable(priceTable())
+
+      const newView: CreateViewRequest = {
+        name: generator.name(),
+        tableId: table._id!,
+        schema: {
+          Price: { visible: false },
+          Category: { visible: true },
+        },
+      }
+      const res = await config.api.viewV2.create(newView)
+      const view = await config.api.viewV2.get(res.id)
+      expect(view!.schemaUI?.Price).toBeUndefined()
+      const updatedTable = await config.getTable(table._id!)
+      const viewSchema = updatedTable.views[view!.name!].schema
+      expect(viewSchema.Price.visible).toEqual(false)
+    })
+  })
 })
