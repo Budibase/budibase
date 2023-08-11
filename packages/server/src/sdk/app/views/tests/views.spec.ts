@@ -110,7 +110,10 @@ describe("table sdk", () => {
         id: generator.guid(),
         name: generator.guid(),
         tableId,
-        columns: ["name", "id"],
+        schema: {
+          name: { visible: true },
+          id: { visible: true },
+        },
       }
 
       const res = enrichSchema(view, basicTable.schema)
@@ -118,6 +121,7 @@ describe("table sdk", () => {
       expect(res).toEqual({
         ...view,
         schema: {
+          ...basicTable.schema,
           name: {
             type: "string",
             name: "name",
@@ -148,7 +152,10 @@ describe("table sdk", () => {
         id: generator.guid(),
         name: generator.guid(),
         tableId,
-        columns: ["unnexisting", "name"],
+        schema: {
+          unnexisting: { visible: true },
+          name: { visible: true },
+        },
       }
 
       const res = enrichSchema(view, basicTable.schema)
@@ -157,6 +164,7 @@ describe("table sdk", () => {
         expect.objectContaining({
           ...view,
           schema: {
+            ...basicTable.schema,
             name: {
               type: "string",
               name: "name",
@@ -179,8 +187,7 @@ describe("table sdk", () => {
         id: generator.guid(),
         name: generator.guid(),
         tableId,
-        columns: ["name", "id", "description"],
-        schemaUI: {
+        schema: {
           name: { visible: true, width: 100 },
           id: { visible: true, width: 20 },
           description: { visible: false },
@@ -193,6 +200,7 @@ describe("table sdk", () => {
         expect.objectContaining({
           ...view,
           schema: {
+            ...basicTable.schema,
             name: {
               type: "string",
               name: "name",
@@ -234,11 +242,10 @@ describe("table sdk", () => {
         id: generator.guid(),
         name: generator.guid(),
         tableId,
-        columns: ["name", "id", "description"],
-        schemaUI: {
+        schema: {
           name: { visible: true, order: 1 },
           id: { visible: true },
-          description: { visible: false, order: 2 },
+          description: { visible: true, order: 2 },
         },
       }
 
@@ -248,6 +255,7 @@ describe("table sdk", () => {
         expect.objectContaining({
           ...view,
           schema: {
+            ...basicTable.schema,
             name: {
               type: "string",
               name: "name",
@@ -261,6 +269,7 @@ describe("table sdk", () => {
             id: {
               type: "number",
               name: "id",
+              order: undefined,
               visible: true,
               constraints: {
                 type: "number",
@@ -270,7 +279,7 @@ describe("table sdk", () => {
               type: "string",
               name: "description",
               order: 2,
-              visible: false,
+              visible: true,
               width: 200,
               constraints: {
                 type: "string",
@@ -294,7 +303,6 @@ describe("table sdk", () => {
       it("no table schema changes will not amend the view", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
         }
         const result = syncSchema(
           _.cloneDeep(view),
@@ -307,7 +315,6 @@ describe("table sdk", () => {
       it("adding new columns will not change the view schema", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
         }
 
         const newTableSchema = {
@@ -327,29 +334,26 @@ describe("table sdk", () => {
         const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
         expect(result).toEqual({
           ...view,
-          schemaUI: undefined,
+          schema: undefined,
         })
       })
 
       it("deleting columns will not change the view schema", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
         }
         const { name, description, ...newTableSchema } = basicTable.schema
 
         const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
         expect(result).toEqual({
           ...view,
-          columns: ["id"],
-          schemaUI: undefined,
+          schema: undefined,
         })
       })
 
       it("renaming mapped columns will update the view column mapping", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
         }
         const { description, ...newTableSchema } = {
           ...basicTable.schema,
@@ -365,8 +369,7 @@ describe("table sdk", () => {
         })
         expect(result).toEqual({
           ...view,
-          columns: ["name", "id", "updatedDescription"],
-          schemaUI: undefined,
+          schema: undefined,
         })
       })
     })
@@ -375,8 +378,7 @@ describe("table sdk", () => {
       it("no table schema changes will not amend the view", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
-          schemaUI: {
+          schema: {
             name: { visible: true, width: 100 },
             id: { visible: true, width: 20 },
             description: { visible: false },
@@ -394,8 +396,7 @@ describe("table sdk", () => {
       it("adding new columns will add them as not visible to the view", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
-          schemaUI: {
+          schema: {
             name: { visible: true, width: 100 },
             id: { visible: true, width: 20 },
             description: { visible: false },
@@ -420,8 +421,8 @@ describe("table sdk", () => {
         const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
         expect(result).toEqual({
           ...view,
-          schemaUI: {
-            ...view.schemaUI,
+          schema: {
+            ...view.schema,
             newField1: { visible: false },
             newField2: { visible: false },
           },
@@ -431,8 +432,7 @@ describe("table sdk", () => {
       it("deleting columns will remove them from the UI", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
-          schemaUI: {
+          schema: {
             name: { visible: true, width: 100 },
             id: { visible: true, width: 20 },
             description: { visible: false },
@@ -444,9 +444,8 @@ describe("table sdk", () => {
         const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
         expect(result).toEqual({
           ...view,
-          columns: ["id"],
-          schemaUI: {
-            ...view.schemaUI,
+          schema: {
+            ...view.schema,
             name: undefined,
             description: undefined,
           },
@@ -456,8 +455,7 @@ describe("table sdk", () => {
       it("can handle additions and deletions at the same them UI", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
-          schemaUI: {
+          schema: {
             name: { visible: true, width: 100 },
             id: { visible: true, width: 20 },
             description: { visible: false },
@@ -476,9 +474,8 @@ describe("table sdk", () => {
         const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
         expect(result).toEqual({
           ...view,
-          columns: ["id"],
-          schemaUI: {
-            ...view.schemaUI,
+          schema: {
+            ...view.schema,
             name: undefined,
             description: undefined,
             newField1: { visible: false },
@@ -489,8 +486,7 @@ describe("table sdk", () => {
       it("renaming mapped columns will update the view column mapping and it's schema", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
-          schemaUI: {
+          schema: {
             name: { visible: true },
             id: { visible: true },
             description: { visible: true, width: 150, icon: "ic-any" },
@@ -511,9 +507,8 @@ describe("table sdk", () => {
         })
         expect(result).toEqual({
           ...view,
-          columns: ["name", "id", "updatedDescription"],
-          schemaUI: {
-            ...view.schemaUI,
+          schema: {
+            ...view.schema,
             description: undefined,
             updatedDescription: { visible: true, width: 150, icon: "ic-any" },
           },
@@ -523,8 +518,7 @@ describe("table sdk", () => {
       it("changing no UI schema will not affect the view", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
-          schemaUI: {
+          schema: {
             name: { visible: true, width: 100 },
             id: { visible: true, width: 20 },
             description: { visible: false },
@@ -548,8 +542,7 @@ describe("table sdk", () => {
       it("changing table column UI fields will not affect the view schema", () => {
         const view: ViewV2 = {
           ...basicView,
-          columns: ["name", "id", "description"],
-          schemaUI: {
+          schema: {
             name: { visible: true, width: 100 },
             id: { visible: true, width: 20 },
             description: { visible: false },
