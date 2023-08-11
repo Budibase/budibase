@@ -58,7 +58,8 @@
               $goto(`./view/v1/${encodeURIComponent(name)}`)
             }
           }}
-          selectedBy={$userSelectedResourceMap[name]}
+          selectedBy={$userSelectedResourceMap[name] ||
+            $userSelectedResourceMap[view.id]}
         >
           <EditViewPopover {view} />
         </NavItem>

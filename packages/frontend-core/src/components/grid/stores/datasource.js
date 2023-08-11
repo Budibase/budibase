@@ -80,7 +80,7 @@ export const createActions = context => {
 
     // Broadcast change to external state can be updated, as this change
     // will not be received by the builder websocket because we caused it ourselves
-    dispatch("updatedefinition", newDefinition)
+    dispatch("updatedatasource", newDefinition)
   }
 
   // Adds a row to the datasource
@@ -98,8 +98,14 @@ export const createActions = context => {
     return await getAPI()?.actions.deleteRows(rows)
   }
 
+  // Gets a single row from a datasource
   const getRow = async id => {
     return await getAPI()?.actions.getRow(id)
+  }
+
+  // Checks if a certain datasource config is valid
+  const isDatasourceValid = datasource => {
+    return getAPI()?.actions.isDatasourceValid(datasource)
   }
 
   return {
@@ -112,6 +118,7 @@ export const createActions = context => {
         updateRow,
         deleteRows,
         getRow,
+        isDatasourceValid,
       },
     },
   }

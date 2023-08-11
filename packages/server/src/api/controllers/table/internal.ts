@@ -9,7 +9,7 @@ import {
   fixAutoColumnSubType,
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
-import { Table } from "@budibase/types"
+import { Table, ViewStatisticsSchema } from "@budibase/types"
 import { quotas } from "@budibase/pro"
 import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
@@ -36,7 +36,9 @@ function checkAutoColumns(table: Table, oldTable?: Table) {
 export async function save(ctx: any) {
   const db = context.getAppDB()
   const { rows, ...rest } = ctx.request.body
-  let tableToSave = {
+  let tableToSave: Table & {
+    _rename?: { old: string; updated: string } | null
+  } = {
     type: "table",
     _id: generateTableID(),
     views: {},
@@ -44,7 +46,7 @@ export async function save(ctx: any) {
   }
 
   // if the table obj had an _id then it will have been retrieved
-  let oldTable
+  let oldTable: Table | undefined
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await sdk.tables.getTable(ctx.request.body._id)
   }
@@ -97,7 +99,17 @@ export async function save(ctx: any) {
     const tableView = tableToSave.views[view]
     if (!tableView) continue
 
-    if (tableView.schema.group || tableView.schema.field) continue
+    if (sdk.views.isV2(tableView)) {
+      // We don't want to modify views from the tables controller
+      tableToSave.views[view] = oldTable!.views![view]
+      continue
+    }
+
+    if (
+      (tableView.schema as ViewStatisticsSchema).group ||
+      tableView.schema.field
+    )
+      continue
     tableView.schema = tableToSave.schema
   }
 

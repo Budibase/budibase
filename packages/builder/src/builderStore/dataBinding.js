@@ -734,9 +734,19 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     // Determine the schema from the backing entity if not already determined
     if (table && !schema) {
       if (type === "view") {
-        // For views, the schema is pulled from the `views` property of the
-        // table
+        // Old views
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
+      } else if (type === "viewV2") {
+        // New views which are DS+
+        const view = table.views?.[datasource.name]
+        schema = cloneDeep(view?.schema)
+
+        // Strip hidden fields
+        Object.keys(schema || {}).forEach(field => {
+          if (!schema[field].visible) {
+            delete schema[field]
+          }
+        })
       } else if (
         type === "query" &&
         (options.formSchema || options.searchableSchema)

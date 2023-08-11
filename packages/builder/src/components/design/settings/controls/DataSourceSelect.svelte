@@ -39,15 +39,33 @@
     tableId: m._id,
     type: "table",
   }))
-  $: views = $tablesStore.list.reduce((acc, cur) => {
-    let viewsArr = Object.entries(cur.views || {}).map(([key, value]) => ({
-      label: key,
-      name: key,
-      ...value,
-      type: "view",
-    }))
-    return [...acc, ...viewsArr]
-  }, [])
+  $: viewsV1 = $tablesStore.list.reduce(
+    (acc, table) => [
+      ...acc,
+      ...Object.values(table.views || {})
+        .filter(view => view.version !== 2)
+        .map(view => ({
+          ...view,
+          label: view.name,
+          type: "view",
+        })),
+    ],
+    []
+  )
+  $: viewsV2 = $tablesStore.list.reduce(
+    (acc, table) => [
+      ...acc,
+      ...Object.values(table.views || {})
+        .filter(view => view.version === 2)
+        .map(view => ({
+          ...view,
+          label: view.name,
+          type: "viewV2",
+        })),
+    ],
+    []
+  )
+  $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
   $: queries = $queriesStore.list
     .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
     .map(query => ({

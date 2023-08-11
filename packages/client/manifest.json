@@ -5274,7 +5274,7 @@
       },
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "dataSource"
       },
       {
@@ -5549,7 +5549,7 @@
     "settings": [
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "table",
         "required": true
       },
