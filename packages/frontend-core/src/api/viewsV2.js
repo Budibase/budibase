@@ -22,9 +22,33 @@ export const buildViewV2Endpoints = API => ({
   /**
    * Fetches all rows in a view
    * @param viewId the id of the view
+   * @param paginate whether to paginate or not
+   * @param limit page size
+   * @param bookmark pagination cursor
+   * @param sort sort column
+   * @param sortOrder sort order
+   * @param sortType sort type (text or numeric)
    */
-  fetch: async viewId => {
-    return await API.get({ url: `/api/v2/views/${viewId}/search` })
+  fetch: async ({
+    viewId,
+    paginate,
+    limit,
+    bookmark,
+    sort,
+    sortOrder,
+    sortType,
+  }) => {
+    return await API.post({
+      url: `/api/v2/views/${viewId}/search`,
+      body: {
+        paginate,
+        limit,
+        bookmark,
+        sort,
+        sortOrder,
+        sortType,
+      },
+    })
   },
   /**
    * Delete a view

@@ -60,6 +60,12 @@ export const createActions = context => {
     return res?.rows?.[0]
   }
 
+  const isDatasourceValid = datasource => {
+    return (
+      datasource?.type === "viewV2" && datasource?.id && datasource?.tableId
+    )
+  }
+
   return {
     viewV2: {
       actions: {
@@ -69,15 +75,16 @@ export const createActions = context => {
         updateRow,
         deleteRows,
         getRow,
+        isDatasourceValid,
       },
     },
   }
 }
 
 export const initialise = context => {
-  const { definition, datasource, sort, rows } = context
+  const { definition, datasource, sort, rows, filter } = context
 
-  // For views, keep sort state in line with the view definition
+  // Keep sort and filter state in line with the view definition
   definition.subscribe($definition => {
     if (!$definition || get(datasource)?.type !== "viewV2") {
       return
@@ -86,6 +93,7 @@ export const initialise = context => {
       column: $definition.sort?.field,
       order: $definition.sort?.order,
     })
+    filter.set($definition.query || [])
   })
 
   // When sorting changes, ensure view definition is kept up to date
@@ -104,6 +112,21 @@ export const initialise = context => {
           field: $sort.column,
           order: $sort.order,
         },
+      })
+      await rows.actions.refreshData()
+    }
+  })
+
+  // When filters change, ensure view definition is kept up to date
+  filter.subscribe(async $filter => {
+    const $view = get(definition)
+    if (!$view || get(datasource)?.type !== "viewV2") {
+      return
+    }
+    if (JSON.stringify($filter) !== JSON.stringify($view.query)) {
+      await datasource.actions.saveDefinition({
+        ...$view,
+        query: $filter,
       })
       await rows.actions.refreshData()
     }

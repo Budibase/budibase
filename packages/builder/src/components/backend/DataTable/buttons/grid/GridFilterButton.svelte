@@ -4,9 +4,6 @@
 
   const { columns, datasource, filter, definition } = getContext("grid")
 
-  // Wipe filter whenever table ID changes to avoid using stale filters
-  $: $datasource, filter.set([])
-
   const onFilter = e => {
     filter.set(e.detail || [])
   }

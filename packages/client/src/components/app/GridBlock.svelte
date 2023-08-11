@@ -38,11 +38,8 @@
   class:in-builder={$builderStore.inBuilder}
 >
   <Grid
-    tableId={table?.tableId}
+    datasource={table}
     {API}
-    {allowAddRows}
-    {allowEditRows}
-    {allowDeleteRows}
     {stripeRows}
     {initialFilter}
     {initialSortColumn}
@@ -50,9 +47,12 @@
     {fixedRowHeight}
     {columnWhitelist}
     {schemaOverrides}
+    canAddRows={allowAddRows}
+    canEditRows={allowEditRows}
+    canDeleteRows={allowDeleteRows}
+    canExpandRows={false}
+    canSaveSchema={false}
     showControls={false}
-    allowExpandRows={false}
-    allowSchemaChanges={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
   />

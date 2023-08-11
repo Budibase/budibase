@@ -98,7 +98,7 @@ export const createActions = context => {
     loading.set(true)
 
     // Abandon if we don't have a valid datasource
-    if (!$datasource) {
+    if (!datasource.actions.isDatasourceValid($datasource)) {
       return
     }
 
