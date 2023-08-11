@@ -12,7 +12,7 @@
     OptionSelectDnD,
     Layout,
   } from "@budibase/bbui"
-  import { createEventDispatcher, getContext } from "svelte"
+  import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/backend"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
@@ -47,6 +47,7 @@
 
   export let field
 
+  let mounted = false
   let fieldDefinitions = cloneDeep(FIELDS)
   let originalName
   let linkEditDisabled
@@ -95,6 +96,7 @@
       } else {
         editableColumn.name = "Column 01"
       }
+      focus = true
     }
     allowedTypes = getAllowedTypes()
   }
@@ -413,16 +415,24 @@
     }
     return newError
   }
+
+  onMount(() => {
+    mounted = true
+  })
+
+  $: console.log(editableColumn.name)
 </script>
 
 <Layout noPadding gap="S">
-  <Input
+  {#if mounted}
+    <Input
+    autofocus
     bind:value={editableColumn.name}
     disabled={uneditable ||
       (linkEditDisabled && editableColumn.type === LINK_TYPE)}
     error={errors?.name}
   />
-
+      {/if}
   <Select
     disabled={!typeEnabled}
     bind:value={editableColumn.type}
