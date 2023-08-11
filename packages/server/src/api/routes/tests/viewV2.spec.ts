@@ -119,10 +119,6 @@ describe("/v2/views", () => {
             order: 1,
             width: 100,
           },
-          Category: {
-            visible: false,
-            icon: "ic",
-          },
         },
         id: createdView.id,
         version: 2,
@@ -372,10 +368,6 @@ describe("/v2/views", () => {
             visible: true,
             order: 1,
             width: 100,
-          },
-          Category: {
-            visible: false,
-            icon: "ic",
           },
         },
         id: view.id,

@@ -1,23 +1,12 @@
 import * as internal from "./internal"
 import * as external from "./external"
-import {
-  validate as validateSchema,
-  isSchema,
-  isRows,
-} from "../../../utilities/schema"
-import { isExternalTable, isSQL } from "../../../integrations/utils"
-import { events } from "@budibase/backend-core"
-import {
-  FetchTablesResponse,
-  SaveTableResponse,
-  SaveTableRequest,
-  Table,
-  TableResponse,
-  UserCtx,
-} from "@budibase/types"
+import {isRows, isSchema, validate as validateSchema,} from "../../../utilities/schema"
+import {isExternalTable, isSQL} from "../../../integrations/utils"
+import {events} from "@budibase/backend-core"
+import {FetchTablesResponse, SaveTableRequest, SaveTableResponse, Table, TableResponse, UserCtx,} from "@budibase/types"
 import sdk from "../../../sdk"
-import { jsonFromCsvString } from "../../../utilities/csv"
-import { builderSocket } from "../../../websockets"
+import {jsonFromCsvString} from "../../../utilities/csv"
+import {builderSocket} from "../../../websockets"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
@@ -51,8 +40,7 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     }
   })
 
-  const response = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
-  ctx.body = response
+  ctx.body = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
 }
 
 export async function find(ctx: UserCtx<void, TableResponse>) {

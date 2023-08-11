@@ -44,7 +44,7 @@ async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
     }
   }
 
-  return (
+  const finalViewSchema =
     view.schema &&
     Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
       const fieldSchema: RequiredKeys<UIFieldMetadata> = {
@@ -61,7 +61,12 @@ async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
       p[fieldName] = fieldSchema
       return p
     }, {} as Record<string, RequiredKeys<UIFieldMetadata>>)
-  )
+  for (let [key, column] of Object.entries(finalViewSchema)) {
+    if (!column.visible) {
+      delete finalViewSchema[key]
+    }
+  }
+  return finalViewSchema
 }
 
 export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
