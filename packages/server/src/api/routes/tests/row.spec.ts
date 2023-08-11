@@ -1,27 +1,28 @@
 import tk from "timekeeper"
-const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
-tk.freeze(timestamp)
-
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
-const { basicRow } = setup.structures
 import { context, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
-  QuotaUsageType,
-  StaticQuotaName,
-  MonthlyQuotaName,
-  Row,
-  Table,
   FieldType,
-  SortType,
+  MonthlyQuotaName,
+  QuotaUsageType,
+  Row,
   SortOrder,
+  SortType,
+  StaticQuotaName,
+  Table,
 } from "@budibase/types"
 import {
   expectAnyInternalColsAttributes,
   generator,
   structures,
 } from "@budibase/backend-core/tests"
+
+const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
+tk.freeze(timestamp)
+
+const { basicRow } = setup.structures
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -389,6 +390,49 @@ describe("/rows", () => {
       expect(saved.optsFieldNull).toEqual(null)
       expect(saved.arrayFieldArrayStrKnown).toEqual(["One"])
       expect(saved.optsFieldStrKnown).toEqual("Alpha")
+    })
+  })
+
+  describe("view save", () => {
+    function orderTable(): Table {
+      return {
+        name: "orders",
+        schema: {
+          Country: {
+            type: FieldType.STRING,
+            name: "Country",
+          },
+          OrderID: {
+            type: FieldType.STRING,
+            name: "OrderID",
+          },
+          Story: {
+            type: FieldType.STRING,
+            name: "Story",
+          },
+        },
+      }
+    }
+
+    it("views have extra data trimmed", async () => {
+      const table = await config.createTable(orderTable())
+
+      const createViewResponse = await config.api.viewV2.create({
+        tableId: table._id,
+        schema: {
+          Country: {},
+          OrderID: {},
+        },
+      })
+
+      const response = await config.api.row.save(createViewResponse.id, {
+        Country: "Aussy",
+        OrderID: "1111",
+        Story: "aaaaa",
+      })
+
+      const row = await config.api.row.get(table._id!, response._id!)
+      expect(row.body.Story).toBeUndefined()
     })
   })
 
