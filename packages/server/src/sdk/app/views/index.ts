@@ -1,5 +1,11 @@
+import {
+  FieldSchema,
+  RenameColumn,
+  TableSchema,
+  View,
+  ViewV2,
+} from "@budibase/types"
 import { context, HTTPError } from "@budibase/backend-core"
-import { FieldSchema, TableSchema, View, ViewV2 } from "@budibase/types"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
@@ -102,4 +108,38 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
     ...view,
     schema: schema,
   }
+}
+
+export function syncSchema(
+  view: ViewV2,
+  schema: TableSchema,
+  renameColumn: RenameColumn | undefined
+): ViewV2 {
+  if (renameColumn) {
+    if (view.columns) {
+      view.columns[view.columns.indexOf(renameColumn.old)] =
+        renameColumn.updated
+    }
+    if (view.schemaUI) {
+      view.schemaUI[renameColumn.updated] = view.schemaUI[renameColumn.old]
+      delete view.schemaUI[renameColumn.old]
+    }
+  }
+
+  if (view.schemaUI) {
+    for (const fieldName of Object.keys(view.schemaUI)) {
+      if (!schema[fieldName]) {
+        delete view.schemaUI[fieldName]
+      }
+    }
+    for (const fieldName of Object.keys(schema)) {
+      if (!view.schemaUI[fieldName]) {
+        view.schemaUI[fieldName] = { visible: false }
+      }
+    }
+  }
+
+  view.columns = view.columns?.filter(x => schema[x])
+
+  return view
 }
