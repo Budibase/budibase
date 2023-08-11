@@ -27,7 +27,6 @@
     "array",
     "attachment",
     "boolean",
-    "formula",
     "json",
   ]
 
