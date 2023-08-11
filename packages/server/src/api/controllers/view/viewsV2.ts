@@ -2,11 +2,11 @@ import sdk from "../../../sdk"
 import {
   CreateViewRequest,
   Ctx,
+  RequiredKeys,
   UIFieldMetadata,
   UpdateViewRequest,
   ViewResponse,
   ViewV2,
-  RequiredKeys,
 } from "@budibase/types"
 
 async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
@@ -18,7 +18,7 @@ async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
     newObj: Record<string, any>,
     existingObj: Record<string, any>
   ) {
-    const result = Object.entries(newObj).some(([key, value]) => {
+    return Object.entries(newObj || {}).some(([key, value]) => {
       const isObject = typeof value === "object"
       const existing = existingObj[key]
       if (isObject && hasOverrides(value, existing || {})) {
@@ -28,8 +28,6 @@ async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
         return true
       }
     })
-
-    return result
   }
 
   const table = await sdk.tables.getTable(view.tableId)
@@ -46,7 +44,7 @@ async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
     }
   }
 
-  const schemaUI =
+  return (
     view.schema &&
     Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
       const fieldSchema: RequiredKeys<UIFieldMetadata> = {
@@ -63,7 +61,7 @@ async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
       p[fieldName] = fieldSchema
       return p
     }, {} as Record<string, RequiredKeys<UIFieldMetadata>>)
-  return schemaUI
+  )
 }
 
 export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
