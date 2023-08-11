@@ -27,15 +27,15 @@ export const createActions = context => {
     row.tableId = $datasource?.tableId
     row._viewId = $datasource?.id
     return {
-      ...await API.saveRow(row, SuppressErrors),
-      _viewId: row._viewId
+      ...(await API.saveRow(row, SuppressErrors)),
+      _viewId: row._viewId,
     }
   }
 
   const updateRow = async row => {
     const $datasource = get(datasource)
     return {
-      ...await API.patchRow(row, SuppressErrors),
+      ...(await API.patchRow(row, SuppressErrors)),
       _viewId: $datasource.id,
     }
   }

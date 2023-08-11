@@ -45,7 +45,8 @@ async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
     }
   }
 
-  const finalViewSchema = view.schema &&
+  const finalViewSchema =
+    view.schema &&
     Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
       const fieldSchema: RequiredKeys<UIFieldMetadata> = {
         order: schemaValue.order,
