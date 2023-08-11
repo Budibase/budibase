@@ -57,6 +57,16 @@ export const buildViewV2Endpoints = API => ({
   delete: async viewId => {
     return await API.delete({ url: `/api/v2/views/${viewId}` })
   },
+
+
+
+
+
+
+
+
+
+
   /**
    * Creates a row from a view
    * @param row the row to create
