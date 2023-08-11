@@ -27,8 +27,8 @@ export async function searchView(
   const table = await sdk.tables.getTable(view?.tableId)
 
   const viewFields =
-    (view.columns &&
-      Object.entries(view.columns).length &&
+    (view.schema &&
+      Object.entries(view.schema).length &&
       Object.keys(sdk.views.enrichSchema(view, table.schema).schema)) ||
     undefined
 
