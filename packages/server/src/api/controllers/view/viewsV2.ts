@@ -10,7 +10,7 @@ import {
 } from "@budibase/types"
 import { builderSocket } from "../../../websockets"
 
-async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
+async function parseSchema(ctx: Ctx, view: CreateViewRequest) {
   if (!view.schema) {
     return
   }
@@ -74,15 +74,14 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   const view = ctx.request.body
   const { tableId } = view
 
-  const schemaUI = await parseSchemaUI(ctx, view)
+  const schema = await parseSchema(ctx, view)
 
   const parsedView: Omit<RequiredKeys<ViewV2>, "id" | "version"> = {
     name: view.name,
     tableId: view.tableId,
     query: view.query,
     sort: view.sort,
-    columns: view.schema && Object.keys(view.schema),
-    schemaUI,
+    schema,
     primaryDisplay: view.primaryDisplay,
   }
   const result = await sdk.views.create(tableId, parsedView)
@@ -108,7 +107,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
 
   const { tableId } = view
 
-  const schemaUI = await parseSchemaUI(ctx, view)
+  const schema = await parseSchema(ctx, view)
   const parsedView: RequiredKeys<ViewV2> = {
     id: view.id,
     name: view.name,
@@ -116,8 +115,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
     tableId: view.tableId,
     query: view.query,
     sort: view.sort,
-    columns: view.schema && Object.keys(view.schema),
-    schemaUI,
+    schema,
     primaryDisplay: view.primaryDisplay,
   }
 

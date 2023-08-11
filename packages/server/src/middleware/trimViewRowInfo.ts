@@ -42,7 +42,7 @@ export async function trimViewFields<T extends Row>(
   data: T
 ): Promise<T> {
   const view = await sdk.views.get(viewId)
-  if (!view?.columns || !Object.keys(view.columns).length) {
+  if (!view?.schema || !Object.keys(view.schema).length) {
     return data
   }
 

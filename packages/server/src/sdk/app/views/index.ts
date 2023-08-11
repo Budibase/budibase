@@ -79,30 +79,23 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
   }
 
   let schema = { ...tableSchema }
-  const anyViewOrder = Object.values(view.schemaUI || {}).some(
+  const anyViewOrder = Object.values(view.schema || {}).some(
     ui => ui.order != null
   )
-  for (const key of Object.keys(schema)) {
-    // if nothing specified in view, then it is not visible
-    const ui = view.schemaUI?.[key] || { visible: false }
-    schema[key] = {
-      ...schema[key],
-      ...ui,
-      order: anyViewOrder ? ui?.order ?? undefined : schema[key].order,
-    }
-  }
-  delete view.schemaUI
-
-  if (view?.columns?.length) {
-    const pickedSchema: Record<string, FieldSchema> = {}
-    for (const fieldName of view.columns) {
-      if (!schema[fieldName]) {
-        continue
+  if (Object.keys(view.schema || {}).length > 0) {
+    for (const key of Object.keys(schema)) {
+      // if nothing specified in view, then it is not visible
+      const ui = view.schema?.[key] || { visible: false }
+      if (ui.visible === false) {
+        schema[key].visible = false
+      } else {
+        schema[key] = {
+          ...schema[key],
+          ...ui,
+          order: anyViewOrder ? ui?.order ?? undefined : schema[key].order,
+        }
       }
-      pickedSchema[fieldName] = { ...schema[fieldName] }
     }
-    schema = pickedSchema
-    delete view.columns
   }
 
   return {
@@ -116,31 +109,23 @@ export function syncSchema(
   schema: TableSchema,
   renameColumn: RenameColumn | undefined
 ): ViewV2 {
-  if (renameColumn) {
-    if (view.columns) {
-      view.columns[view.columns.indexOf(renameColumn.old)] =
-        renameColumn.updated
-    }
-    if (view.schemaUI) {
-      view.schemaUI[renameColumn.updated] = view.schemaUI[renameColumn.old]
-      delete view.schemaUI[renameColumn.old]
-    }
+  if (renameColumn && view.schema) {
+    view.schema[renameColumn.updated] = view.schema[renameColumn.old]
+    delete view.schema[renameColumn.old]
   }
 
-  if (view.schemaUI) {
-    for (const fieldName of Object.keys(view.schemaUI)) {
+  if (view.schema) {
+    for (const fieldName of Object.keys(view.schema)) {
       if (!schema[fieldName]) {
-        delete view.schemaUI[fieldName]
+        delete view.schema[fieldName]
       }
     }
     for (const fieldName of Object.keys(schema)) {
-      if (!view.schemaUI[fieldName]) {
-        view.schemaUI[fieldName] = { visible: false }
+      if (!view.schema[fieldName]) {
+        view.schema[fieldName] = { visible: false }
       }
     }
   }
-
-  view.columns = view.columns?.filter(x => schema[x])
 
   return view
 }

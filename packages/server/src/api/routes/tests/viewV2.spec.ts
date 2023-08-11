@@ -78,9 +78,7 @@ describe("/v2/views", () => {
 
       expect(res).toEqual({
         ...newView,
-        schema: undefined,
-        columns: ["name"],
-        schemaUI: newView.schema,
+        schema: newView.schema,
         id: expect.any(String),
         version: 2,
       })
@@ -111,9 +109,7 @@ describe("/v2/views", () => {
 
       expect(await config.api.viewV2.get(createdView.id)).toEqual({
         ...newView,
-        schema: undefined,
-        columns: ["Price", "Category"],
-        schemaUI: {
+        schema: {
           Price: {
             visible: true,
             order: 1,
@@ -240,7 +236,11 @@ describe("/v2/views", () => {
           [view.name]: {
             ...updatedData,
             schema: {
+              ...config.table!.schema,
               Category: expect.objectContaining({
+                visible: false,
+              }),
+              Price: expect.objectContaining({
                 visible: false,
               }),
             },
@@ -361,9 +361,7 @@ describe("/v2/views", () => {
 
       expect(await config.api.viewV2.get(view.id)).toEqual({
         ...view,
-        schema: undefined,
-        columns: ["Price", "Category"],
-        schemaUI: {
+        schema: {
           Price: {
             visible: true,
             order: 1,
@@ -459,7 +457,7 @@ describe("/v2/views", () => {
       }
       const res = await config.api.viewV2.create(newView)
       const view = await config.api.viewV2.get(res.id)
-      expect(view!.schemaUI?.Price).toBeUndefined()
+      expect(view!.schema?.Price).toBeUndefined()
       const updatedTable = await config.getTable(table._id!)
       const viewSchema = updatedTable.views[view!.name!].schema
       expect(viewSchema.Price.visible).toEqual(false)
