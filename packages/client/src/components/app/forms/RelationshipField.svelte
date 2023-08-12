@@ -22,6 +22,7 @@
   let fieldApi
   let fieldSchema
   let tableDefinition
+  let expandedDefaultValue
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = field[1].tableId
@@ -42,7 +43,18 @@
   $: singleValue = flatten(fieldState?.value)?.[0]
   $: multiValue = flatten(fieldState?.value) ?? []
   $: component = multiselect ? CoreMultiselect : CoreSelect
-  $: expandedDefaultValue = expand(defaultValue)
+  $: {
+    expandedDefaultValue = expand(defaultValue)
+    if (
+      options?.length > 0 &&
+      defaultValueLabel !== "_id" &&
+      expandedDefaultValue.length > 0
+    ) {
+      expandedDefaultValue = options
+        .filter(option => expandedDefaultValue.includes(getDisplayName(option)))
+        .map(option => option._id)
+    }
+  }
 
   const flatten = values => {
     if (!values) {
@@ -84,31 +96,52 @@
   }
 </script>
 
-<Field
-  {label}
-  field={field[0]}
-  {disabled}
-  {validation}
-  defaultValue={expandedDefaultValue}
-  type={FieldTypes.LINK}
-  bind:fieldState
-  bind:fieldApi
-  bind:fieldSchema
->
-  {#if fieldState}
-    <svelte:component
-      this={component}
-      {options}
-      {autocomplete}
-      value={multiselect ? multiValue : singleValue}
-      on:change={multiselect ? multiHandler : singleHandler}
-      id={fieldState.fieldId}
-      disabled={fieldState.disabled}
-      error={fieldState.error}
-      getOptionLabel={getDisplayName}
-      getOptionValue={option => option._id}
-      {placeholder}
-      sort={true}
-    />
-  {/if}
-</Field>
+{#if $fetch.loading}
+  <Field {label} {disabled} field={field[0]} type={FieldTypes.LINK}>
+    {#if fieldState}
+      <svelte:component
+        this={component}
+        {options}
+        {autocomplete}
+        value={multiselect ? multiValue : singleValue}
+        on:change={multiselect ? multiHandler : singleHandler}
+        id={fieldState.fieldId}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
+        getOptionLabel={getDisplayName}
+        getOptionValue={option => option._id}
+        {placeholder}
+        sort={true}
+      />
+    {/if}
+  </Field>
+{:else}
+  <Field
+    {label}
+    field={field[0]}
+    {disabled}
+    {validation}
+    defaultValue={expandedDefaultValue}
+    type={FieldTypes.LINK}
+    bind:fieldState
+    bind:fieldApi
+    bind:fieldSchema
+  >
+    {#if fieldState}
+      <svelte:component
+        this={component}
+        {options}
+        {autocomplete}
+        value={multiselect ? multiValue : singleValue}
+        on:change={multiselect ? multiHandler : singleHandler}
+        id={fieldState.fieldId}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
+        getOptionLabel={getDisplayName}
+        getOptionValue={option => option._id}
+        {placeholder}
+        sort={true}
+      />
+    {/if}
+  </Field>
+{/if}
