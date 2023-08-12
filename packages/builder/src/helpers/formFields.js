@@ -26,7 +26,11 @@ export const getComponentFieldOptions = (asset, id, type, loose = true) => {
   types = types.map(type => type.slice(type.indexOf("/") + 1))
 
   // Find fields of valid types
-  return Object.entries(schema || {})
-    .filter(entry => types.includes(entry[1].type))
-    .map(entry => entry[0])
+  const validFields = Object.entries(schema || {}).filter(entry =>
+    types.includes(entry[1].type)
+  )
+  if (type === "field/link") {
+    return validFields
+  }
+  return validFields.map(entry => entry[0])
 }

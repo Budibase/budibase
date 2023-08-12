@@ -6,6 +6,7 @@
   import { createEventDispatcher } from "svelte"
 
   export let value = null
+  export let valueDisplay
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
@@ -57,7 +58,7 @@
         dispatch("blur")
       }}
       on:change={onType}
-      value={value || ""}
+      value={valueDisplay || value || ""}
       placeholder={placeholder || ""}
       {disabled}
       {readonly}

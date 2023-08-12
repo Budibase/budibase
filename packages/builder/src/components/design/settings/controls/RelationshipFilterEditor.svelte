@@ -11,7 +11,7 @@
   export let componentInstance
 
   // Extract which relationship column we're using
-  $: column = componentInstance.field
+  $: column = componentInstance.field[0]
 
   // Find the closest parent form
   $: form = findClosestMatchingComponent(

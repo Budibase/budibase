@@ -858,7 +858,10 @@ export const buildFormSchema = component => {
   if (fieldSetting && component.field) {
     const type = fieldSetting.type.split("field/")[1]
     if (type) {
-      schema[component.field] = { type }
+      const fieldName = Array.isArray(component.field)
+        ? component.field[0]
+        : component.field
+      schema[fieldName] = { type }
     }
   }
   component._children?.forEach(child => {

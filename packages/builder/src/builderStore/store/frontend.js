@@ -663,7 +663,9 @@ export const getFrontendStore = () => {
               // Set field name and also assume we have a label setting
               if (fieldOptions[0]) {
                 component[setting.key] = fieldOptions[0]
-                component.label = fieldOptions[0]
+                component.label = Array.isArray(fieldOptions[0])
+                  ? fieldOptions[0][0]
+                  : fieldOptions[0]
               }
             } else if (useDefaultValues && setting.defaultValue !== undefined) {
               // Use default value where required

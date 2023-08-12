@@ -24,6 +24,7 @@ import GridColumnEditor from "./controls/ColumnEditor/GridColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
 import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte"
+import RelationshipFieldSelect from "./controls/RelationshipFieldSelect.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -60,7 +61,7 @@ const componentMap = {
   "field/longform": FormFieldSelect,
   "field/datetime": FormFieldSelect,
   "field/attachment": FormFieldSelect,
-  "field/link": FormFieldSelect,
+  "field/link": RelationshipFieldSelect,
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,
   "field/barcodeqr": FormFieldSelect,

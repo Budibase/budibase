@@ -16,6 +16,7 @@
   export let defaultValue
   export let onChange
   export let filter
+  export let defaultValueLabel = "_id"
 
   let fieldState
   let fieldApi
@@ -23,7 +24,7 @@
   let tableDefinition
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
-  $: linkedTableId = fieldSchema?.tableId
+  $: linkedTableId = field[1].tableId
   $: fetch = fetchData({
     API,
     datasource: {
@@ -85,7 +86,7 @@
 
 <Field
   {label}
-  {field}
+  field={field[0]}
   {disabled}
   {validation}
   defaultValue={expandedDefaultValue}
