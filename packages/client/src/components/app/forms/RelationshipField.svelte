@@ -27,7 +27,7 @@
   $: fieldName = typeof field === "string" ? field : field[0]
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId =
-    typeof field === "string" ? fieldSchema?.tableId : fieldfield[1].tableId
+    typeof field === "string" ? fieldSchema?.tableId : field[1].tableId
   $: fetch = fetchData({
     API,
     datasource: {
