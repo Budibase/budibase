@@ -17,7 +17,7 @@
 <Combobox
   on:change
   {value}
-  valueDisplay={value?.[0] || ""}
+  valueDisplay={Array.isArray(value) ? value[0] : null}
   {options}
   getOptionLabel={option => option[0]}
   getOptionValue={option => option}
