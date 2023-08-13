@@ -45,15 +45,19 @@
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: {
     expandedDefaultValue = expand(defaultValue)
-    if (
-      defaultValueColumn === "Row _id" &&
-      !options.some(option => expandedDefaultValue.includes(option._id))
-    ) {
-      expandedDefaultValue = []
-    } else if (options?.length > 0 && expandedDefaultValue.length > 0) {
-      expandedDefaultValue = options
-        .filter(option => expandedDefaultValue.includes(getDisplayName(option)))
-        .map(option => option._id)
+    if (options?.length > 0 && expandedDefaultValue.length > 0) {
+      if (
+        defaultValueColumn === "Row _id" &&
+        !options.some(option => expandedDefaultValue.includes(option._id))
+      ) {
+        expandedDefaultValue = []
+      } else if (defaultValueColumn === "Display") {
+        expandedDefaultValue = options
+          .filter(option =>
+            expandedDefaultValue.includes(getDisplayName(option))
+          )
+          .map(option => option._id)
+      }
     }
   }
 
