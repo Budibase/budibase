@@ -353,6 +353,7 @@
       fieldInfo.update(state => {
         state.fieldState.validator = null
         state.fieldState.error = null
+        state.fieldState.value = null
         return state
       })
     }

@@ -3614,10 +3614,10 @@
       },
       {
         "type": "select",
-        "label": "Default value label",
-        "key": "defaultValueLabel",
-        "options": ["_id", "Display"],
-        "defaultValue": "_id"
+        "label": "Default value column",
+        "key": "defaultValueColumn",
+        "options": ["Row _id", "Display"],
+        "defaultValue": "Row _id"
       },
       {
         "type": "text",

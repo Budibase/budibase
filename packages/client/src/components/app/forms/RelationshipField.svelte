@@ -16,7 +16,7 @@
   export let defaultValue
   export let onChange
   export let filter
-  export let defaultValueLabel = "_id"
+  export let defaultValueColumn = "Row _id"
 
   let fieldState
   let fieldApi
@@ -46,10 +46,11 @@
   $: {
     expandedDefaultValue = expand(defaultValue)
     if (
-      options?.length > 0 &&
-      defaultValueLabel !== "_id" &&
-      expandedDefaultValue.length > 0
+      defaultValueColumn === "Row _id" &&
+      !options.some(option => expandedDefaultValue.includes(option._id))
     ) {
+      expandedDefaultValue = []
+    } else if (options?.length > 0 && expandedDefaultValue.length > 0) {
       expandedDefaultValue = options
         .filter(option => expandedDefaultValue.includes(getDisplayName(option)))
         .map(option => option._id)
@@ -97,21 +98,15 @@
 </script>
 
 {#if $fetch.loading}
-  <Field {label} {disabled} field={field[0]} type={FieldTypes.LINK}>
+  <Field {label} field={field[0]} {disabled} type={FieldTypes.LINK}>
     {#if fieldState}
       <svelte:component
         this={component}
         {options}
         {autocomplete}
-        value={multiselect ? multiValue : singleValue}
-        on:change={multiselect ? multiHandler : singleHandler}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
         error={fieldState.error}
-        getOptionLabel={getDisplayName}
-        getOptionValue={option => option._id}
-        {placeholder}
-        sort={true}
       />
     {/if}
   </Field>
