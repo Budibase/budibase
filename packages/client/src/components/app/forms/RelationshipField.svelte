@@ -24,10 +24,8 @@
   let tableDefinition
   let expandedDefaultValue
 
-  $: fieldName = typeof field === "string" ? field : field[0]
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
-  $: linkedTableId =
-    typeof field === "string" ? fieldSchema?.tableId : field[1].tableId
+  $: linkedTableId = fieldSchema?.tableId
   $: fetch = fetchData({
     API,
     datasource: {
@@ -104,7 +102,7 @@
 </script>
 
 {#if $fetch.loading}
-  <Field {label} field={fieldName} {disabled} type={FieldTypes.LINK}>
+  <Field {label} {field} {disabled} type={FieldTypes.LINK} bind:fieldSchema>
     {#if fieldState}
       <svelte:component
         this={component}
@@ -119,7 +117,7 @@
 {:else}
   <Field
     {label}
-    field={fieldName}
+    {field}
     {disabled}
     {validation}
     defaultValue={expandedDefaultValue}

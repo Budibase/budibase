@@ -4,7 +4,6 @@
   import { createEventDispatcher } from "svelte"
 
   export let value = null
-  export let valueDisplay
   export let label = undefined
   export let disabled = false
   export let readonly = false
@@ -33,7 +32,6 @@
     {error}
     {disabled}
     {value}
-    {valueDisplay}
     {options}
     {placeholder}
     {readonly}
