@@ -102,12 +102,13 @@ describe("trimViewRowInfo middleware", () => {
     address: generator.address(),
   })
 
-  it("when no columns are defined, same data is returned", async () => {
+  it("when no columns are defined, don't allow anything", async () => {
     mockGetView.mockResolvedValue({
       version: 2,
       id: viewId,
       name: generator.guid(),
       tableId: table._id!,
+      schema: {},
     })
 
     const data = getRandomData()
@@ -116,7 +117,9 @@ describe("trimViewRowInfo middleware", () => {
       ...data,
     })
 
-    expect(config.request?.body).toEqual(data)
+    expect(config.request?.body).toEqual({
+      _id: data._id,
+    })
     expect(config.params.sourceId).toEqual(table._id)
 
     expect(config.next).toBeCalledTimes(1)
@@ -129,7 +132,10 @@ describe("trimViewRowInfo middleware", () => {
       id: viewId,
       name: generator.guid(),
       tableId: table._id!,
-      columns: ["name", "address"],
+      schema: {
+        name: {},
+        address: {},
+      },
     })
 
     const data = getRandomData()
