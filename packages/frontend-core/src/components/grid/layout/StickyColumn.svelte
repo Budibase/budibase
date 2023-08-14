@@ -13,11 +13,10 @@
     rows,
     selectedRows,
     stickyColumn,
-    renderedColumns,
     renderedRows,
     focusedCellId,
     hoveredRowId,
-    config,
+    canAddRows,
     selectedCellMap,
     focusedRow,
     scrollLeft,
@@ -58,7 +57,9 @@
       disabled={!$renderedRows.length}
     />
     {#if $stickyColumn}
-      <HeaderCell column={$stickyColumn} orderable={false} idx="sticky" />
+      <HeaderCell column={$stickyColumn} orderable={false} idx="sticky">
+        <slot name="edit-column" />
+      </HeaderCell>
     {/if}
   </div>
 
@@ -93,7 +94,7 @@
           {/if}
         </div>
       {/each}
-      {#if $config.allowAddRows && ($renderedColumns.length || $stickyColumn)}
+      {#if $canAddRows}
         <div
           class="row new"
           on:mouseenter={$isDragging

@@ -11,7 +11,7 @@ import {
   RestBasicAuthConfig,
   RestBearerAuthConfig,
 } from "@budibase/types"
-import { get } from "lodash"
+import get from "lodash/get"
 import * as https from "https"
 import qs from "querystring"
 import fetch from "node-fetch"

@@ -1,4 +1,5 @@
 import { User, Document } from "../"
+import { SocketSession } from "../../sdk"
 
 export type AppMetadataErrors = { [key: string]: string[] }
 
@@ -17,6 +18,7 @@ export interface App extends Document {
   customTheme?: AppCustomTheme
   revertableVersion?: string
   lockedBy?: User
+  sessions?: SocketSession[]
   navigation?: AppNavigation
   automationErrors?: AppMetadataErrors
   icon?: AppIcon

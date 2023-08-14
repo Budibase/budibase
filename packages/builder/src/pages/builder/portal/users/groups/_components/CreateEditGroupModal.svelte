@@ -1,5 +1,6 @@
 <script>
   import {
+    keepOpen,
     ColorPicker,
     Body,
     ModalContent,
@@ -17,7 +18,7 @@
   onConfirm={() => {
     if (!group.name?.trim()) {
       nameError = "Group name cannot be empty"
-      return false
+      return keepOpen
     }
     saveGroup(group)
   }}

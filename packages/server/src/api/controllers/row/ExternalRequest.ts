@@ -7,7 +7,7 @@ import {
   Operation,
   PaginationJson,
   RelationshipsJson,
-  RelationshipTypes,
+  RelationshipType,
   Row,
   SearchFilters,
   SortJson,
@@ -23,14 +23,13 @@ import {
   isRowId,
   isSQL,
 } from "../../../integrations/utils"
-import { getDatasourceAndQuery } from "./utils"
+import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
 import { FieldTypes } from "../../../constants"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { processDates, processFormulas } from "../../../utilities/rowProcessor"
 import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import { isEditableColumn } from "../../../sdk/app/tables/validation"
 
 export interface ManyRelationship {
   tableId?: string
@@ -578,7 +577,7 @@ export class ExternalRequest {
       ) {
         continue
       }
-      const isMany = field.relationshipType === RelationshipTypes.MANY_TO_MANY
+      const isMany = field.relationshipType === RelationshipType.MANY_TO_MANY
       const tableId = isMany ? field.through : field.tableId
       const { tableName: relatedTableName } = breakExternalTableId(tableId)
       // @ts-ignore

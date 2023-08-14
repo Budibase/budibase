@@ -3,10 +3,10 @@ import { db as dbCore } from "@budibase/backend-core"
 
 type Optional = string | null
 
-export const AppStatus = {
-  DEV: "development",
-  ALL: "all",
-  DEPLOYED: "published",
+export const enum AppStatus {
+  DEV = "development",
+  ALL = "all",
+  DEPLOYED = "published",
 }
 
 export const BudibaseInternalDB = {
@@ -186,6 +186,13 @@ export function getDatasourceParams(
   return getDocParams(DocumentType.DATASOURCE, datasourceId, otherProps)
 }
 
+export function getDatasourcePlusParams(
+  datasourceId?: Optional,
+  otherProps?: { include_docs: boolean }
+) {
+  return getDocParams(DocumentType.DATASOURCE_PLUS, datasourceId, otherProps)
+}
+
 /**
  * Generates a new query ID.
  * @returns {string} The new query ID which the query doc can be stored under.
@@ -269,5 +276,21 @@ export function getMultiIDParams(ids: string[]) {
   return {
     keys: ids,
     include_docs: true,
+  }
+}
+
+/**
+ * Generates a new view ID.
+ * @returns {string} The new view ID which the view doc can be stored under.
+ */
+export function generateViewID(tableId: string) {
+  return `${tableId}${SEPARATOR}${newid()}`
+}
+
+export function extractViewInfoFromID(viewId: string) {
+  const regex = new RegExp(`^(?<tableId>.+)${SEPARATOR}([^${SEPARATOR}]+)$`)
+  const res = regex.exec(viewId)
+  return {
+    tableId: res!.groups!["tableId"],
   }
 }

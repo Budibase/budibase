@@ -3,6 +3,7 @@
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "helpers/pagination"
   import { auth, groups, users } from "stores/portal"
+  import { sdk } from "@budibase/shared-core"
 
   export let groupId
   export let onUsersUpdated
@@ -13,7 +14,7 @@
   let prevSearch = undefined
   let pageInfo = createPaginationStore()
 
-  $: readonly = !$auth.isAdmin
+  $: readonly = !sdk.users.isAdmin($auth.user)
   $: page = $pageInfo.page
   $: searchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
