@@ -18,7 +18,7 @@ ENV TOP_LEVEL_PATH=/
 
 # handle node-gyp
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends g++ make python
+    && apt-get install -y --no-install-recommends g++ make python3
 RUN yarn global add pm2
 
 # Install client for oracle datasource
