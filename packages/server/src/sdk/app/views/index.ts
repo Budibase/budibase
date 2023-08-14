@@ -1,15 +1,19 @@
 import { RenameColumn, TableSchema, View, ViewV2 } from "@budibase/types"
-import { context, HTTPError } from "@budibase/backend-core"
+import { context, db as dbCore, HTTPError } from "@budibase/backend-core"
 import { cloneDeep } from "lodash"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 
-export async function get(viewId: string): Promise<ViewV2 | undefined> {
+export async function get(viewId: string): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
   const table = await sdk.tables.getTable(tableId)
   const views = Object.values(table.views!)
-  return views.find(v => isV2(v) && v.id === viewId) as ViewV2 | undefined
+  const found = views.find(v => isV2(v) && v.id === viewId)
+  if (!found) {
+    throw new Error("No view found")
+  }
+  return found as ViewV2
 }
 
 export async function create(
@@ -66,6 +70,14 @@ export async function remove(viewId: string): Promise<ViewV2> {
   delete table.views![view?.name]
   await db.put(table)
   return view
+}
+
+export function allowedFields(view: View | ViewV2) {
+  return [
+    ...Object.keys(view?.schema || {}),
+    ...dbCore.CONSTANT_EXTERNAL_ROW_COLS,
+    ...dbCore.CONSTANT_INTERNAL_ROW_COLS,
+  ]
 }
 
 export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {

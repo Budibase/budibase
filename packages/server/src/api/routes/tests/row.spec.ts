@@ -985,6 +985,7 @@ describe("/rows", () => {
     })
 
     describe("view search", () => {
+      const viewSchema = { age: { visible: true }, name: { visible: true } }
       function userTable(): Table {
         return {
           name: "user",
@@ -1041,6 +1042,7 @@ describe("/rows", () => {
 
         const createViewResponse = await config.api.viewV2.create({
           query: [{ operator: "equal", field: "age", value: 40 }],
+          schema: viewSchema,
         })
 
         const response = await config.api.viewV2.search(createViewResponse.id)
@@ -1141,6 +1143,7 @@ describe("/rows", () => {
 
           const createViewResponse = await config.api.viewV2.create({
             sort: sortParams,
+            schema: viewSchema,
           })
 
           const response = await config.api.viewV2.search(createViewResponse.id)
@@ -1175,6 +1178,7 @@ describe("/rows", () => {
               order: SortOrder.ASCENDING,
               type: SortType.STRING,
             },
+            schema: viewSchema,
           })
 
           const response = await config.api.viewV2.search(
@@ -1207,7 +1211,7 @@ describe("/rows", () => {
         }
 
         const view = await config.api.viewV2.create({
-          schema: { name: {} },
+          schema: { name: { visible: true } },
         })
         const response = await config.api.viewV2.search(view.id)
 
@@ -1224,7 +1228,7 @@ describe("/rows", () => {
       })
 
       it("views without data can be returned", async () => {
-        const table = await config.createTable(userTable())
+        await config.createTable(userTable())
 
         const createViewResponse = await config.api.viewV2.create()
         const response = await config.api.viewV2.search(createViewResponse.id)
