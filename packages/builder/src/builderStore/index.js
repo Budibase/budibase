@@ -61,6 +61,12 @@ export const selectedLayout = derived(store, $store => {
 export const selectedComponent = derived(
   [store, selectedScreen],
   ([$store, $selectedScreen]) => {
+    if (
+      $selectedScreen &&
+      ["navigation", "screen"].includes($store.selectedComponentId)
+    ) {
+      return findComponent($selectedScreen?.props, $selectedScreen?.props._id)
+    }
     if (!$selectedScreen || !$store.selectedComponentId) {
       return null
     }

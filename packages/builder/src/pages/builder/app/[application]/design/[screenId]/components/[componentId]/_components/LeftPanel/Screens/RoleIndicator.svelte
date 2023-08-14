@@ -26,7 +26,7 @@
   <StatusLight square {color} />
   {#if showTooltip}
     <div class="tooltip">
-      <Tooltip textWrapping text={tooltip} direction="left" />
+      <Tooltip textWrapping text={tooltip} direction="right" />
     </div>
   {/if}
 </div>
@@ -38,13 +38,11 @@
   .tooltip {
     z-index: 1;
     position: absolute;
-    top: 50%;
-    left: calc(50% - 8px);
-    transform: translateX(-100%) translateY(-50%);
+    bottom: -5px;
+    left: 13px;
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    width: 200px;
     pointer-events: none;
   }
   .tooltip :global(.spectrum-Tooltip) {

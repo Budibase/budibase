@@ -1,14 +1,19 @@
 <script>
+  import LeftPanel from "./_components/LeftPanel/index.svelte"
+  import AppPanel from "./_components/AppPanel.svelte"
   import { syncURLToState } from "helpers/urlStateSync"
   import { store, selectedScreen } from "builderStore"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import { findComponent } from "builderStore/componentUtils"
-  import ComponentListPanel from "./_components/navigation/ComponentListPanel.svelte"
-  import ComponentSettingsPanel from "./_components/settings/ComponentSettingsPanel.svelte"
+  import ComponentSettingsPanel from "./_components/Component/ComponentSettingsPanel.svelte"
+  import NavigationPanel from "./_components/Navigation/index.svelte"
+  import ScreenSettingsPanel from "./_components/Screen/SettingsPanel.svelte"
 
   $: componentId = $store.selectedComponentId
   $: store.actions.websocket.selectResource(componentId)
+  $: params = routify.params
+  $: routeComponentId = $params.componentId
 
   const cleanUrl = url => {
     // Strip trailing slashes
@@ -22,11 +27,18 @@
     return { url }
   }
 
+  const validate = id => {
+    if (id === "screen") return true
+    if (id === "navigation") return true
+
+    return !!findComponent($selectedScreen.props, id)
+  }
+
   // Keep URL and state in sync for selected component ID
   const stopSyncing = syncURLToState({
     urlParam: "componentId",
     stateKey: "selectedComponentId",
-    validate: id => !!findComponent($selectedScreen.props, id),
+    validate,
     fallbackUrl: "../",
     store,
     routify,
@@ -36,6 +48,38 @@
   onDestroy(stopSyncing)
 </script>
 
-<ComponentListPanel />
-<ComponentSettingsPanel />
-<slot />
+<div class="design">
+  <div class="content">
+    {#if $selectedScreen}
+      <LeftPanel />
+      <AppPanel />
+      {#if routeComponentId === "screen"}
+        <ScreenSettingsPanel />
+      {:else if routeComponentId === "navigation"}
+        <NavigationPanel />
+      {:else}
+        <ComponentSettingsPanel />
+      {/if}
+      <slot />
+    {/if}
+  </div>
+</div>
+
+<style>
+  .design {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    height: 0;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex: 1 1 auto;
+  }
+</style>

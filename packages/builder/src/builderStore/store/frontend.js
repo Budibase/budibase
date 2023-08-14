@@ -769,9 +769,13 @@ export const getFrontendStore = () => {
         else {
           await store.actions.screens.patch(screen => {
             // Find the selected component
+            let selectedComponentId = state.selectedComponentId
+            if (["navigation", "screen"].includes(selectedComponentId)) {
+              selectedComponentId = screen?.props._id
+            }
             const currentComponent = findComponent(
               screen.props,
-              state.selectedComponentId
+              selectedComponentId
             )
             if (!currentComponent) {
               return false

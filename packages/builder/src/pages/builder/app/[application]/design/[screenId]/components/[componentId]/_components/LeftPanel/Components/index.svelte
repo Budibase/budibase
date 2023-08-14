@@ -1,0 +1,156 @@
+<script>
+  import { notifications, Icon, Body } from "@budibase/bbui"
+  import { isActive, goto } from "@roxi/routify"
+  import { store, selectedScreen, userSelectedResourceMap } from "builderStore"
+  import NavItem from "components/common/NavItem.svelte"
+  import ComponentTree from "./ComponentTree.svelte"
+  import { dndStore } from "./dndStore.js"
+  import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
+  import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
+  import { DropPosition } from "./dndStore"
+  import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
+  import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
+
+  let scrolling = false
+
+  const toNewComponentRoute = () => {
+    if ($isActive("./new")) {
+      return
+    } else {
+      $goto(`./new`)
+    }
+  }
+
+  const onDrop = async () => {
+    try {
+      await dndStore.actions.drop()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error saving component")
+    }
+  }
+
+  const handleScroll = e => {
+    if (e.target.scrollTop === 0) {
+      scrolling = false
+    } else {
+      scrolling = true
+    }
+  }
+</script>
+
+<div class="components">
+  <div class="header" class:headerScrolling={scrolling}>
+    <Body size="S">Components</Body>
+    <div on:click={toNewComponentRoute} class="addButton">
+      <Icon name="Add" />
+    </div>
+  </div>
+  <div class="list-panel">
+    <ComponentScrollWrapper on:scroll={handleScroll}>
+      <ul>
+        <li>
+          <NavItem
+            text="Screen"
+            indentLevel={0}
+            selected={$store.selectedComponentId === "screen"}
+            opened
+            scrollable
+            icon="WebPage"
+            on:drop={onDrop}
+            on:click={() => {
+              $store.selectedComponentId = "screen"
+            }}
+            id={`component-screen`}
+            selectedBy={$userSelectedResourceMap["screen"]}
+          >
+            <ScreenslotDropdownMenu component={$selectedScreen?.props} />
+          </NavItem>
+          <NavItem
+            text="Navigation"
+            indentLevel={0}
+            selected={$store.selectedComponentId === "navigation"}
+            opened
+            scrollable
+            icon={$selectedScreen.showNavigation
+              ? "Visibility"
+              : "VisibilityOff"}
+            on:drop={onDrop}
+            on:click={() => {
+              $store.selectedComponentId = "navigation"
+            }}
+            id={`component-nav`}
+            selectedBy={$userSelectedResourceMap["navigation"]}
+          />
+          <ComponentTree
+            level={0}
+            components={$selectedScreen?.props._children}
+          />
+
+          <!-- Show drop indicators for the target and the parent -->
+          {#if $dndStore.dragging && $dndStore.valid}
+            <DNDPositionIndicator
+              component={$dndStore.target}
+              position={$dndStore.dropPosition}
+            />
+            {#if $dndStore.dropPosition !== DropPosition.INSIDE}
+              <DNDPositionIndicator
+                component={$dndStore.targetParent}
+                position={DropPosition.INSIDE}
+              />
+            {/if}
+          {/if}
+        </li>
+      </ul>
+    </ComponentScrollWrapper>
+  </div>
+  <ComponentKeyHandler />
+</div>
+
+<style>
+  .components {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .header {
+    padding: 15px 12px;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid transparent;
+    transition: border-bottom 300ms;
+  }
+
+  .headerScrolling {
+    border-bottom: 2px solid var(--grey-2);
+  }
+
+  .components :global(.nav-item) {
+    padding-right: 8px !important;
+  }
+
+  .addButton {
+    margin-left: auto;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .list-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    position: relative;
+  }
+  ul,
+  li {
+    min-width: max-content;
+  }
+</style>
