@@ -84,7 +84,7 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { definition, datasource, sort, rows, filter } = context
+  const { definition, datasource, sort, rows, filter, subscribe } = context
 
   // Keep sort and filter state in line with the view definition
   definition.subscribe($definition => {
@@ -132,5 +132,14 @@ export const initialise = context => {
       })
       await rows.actions.refreshData()
     }
+  })
+
+  // When hidden we show columns, we need to refresh data in order to fetch
+  // values for those columns
+  subscribe("show-column", async () => {
+    if (get(datasource)?.type !== "viewV2") {
+      return
+    }
+    await rows.actions.refreshData()
   })
 }
