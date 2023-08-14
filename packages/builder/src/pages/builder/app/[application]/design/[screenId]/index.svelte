@@ -1,5 +1,8 @@
 <script>
+  import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
 
-  $redirect("./screens")
+  onMount(() => {
+    $redirect("./components/screen")
+  })
 </script>

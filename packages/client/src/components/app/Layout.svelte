@@ -146,21 +146,24 @@
 </script>
 
 <div
-  class="layout layout--{typeClass}"
+  class="component screen layout layout--{typeClass}"
   use:styleable={$component.styles}
   class:desktop={!mobile}
   class:mobile={!!mobile}
+  data-id="screen"
+  data-name="Screen"
+  data-icon="WebPage"
 >
-  <div class="layout-body">
+  <div class="screen-dom screen-wrapper layout-body">
     {#if typeClass !== "none"}
       <div
         class="interactive component navigation"
         data-id="navigation"
         data-name="Navigation"
-        data-icon="Link"
+        data-icon="Visibility"
       >
         <div
-          class="nav-wrapper"
+          class="nav-wrapper navigation-dom"
           class:sticky
           class:hidden={$routeStore.queryParams?.peek}
           class:clickable={$builderStore.inBuilder}

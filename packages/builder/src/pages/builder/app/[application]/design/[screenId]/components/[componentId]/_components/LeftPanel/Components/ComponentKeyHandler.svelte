@@ -5,7 +5,6 @@
   import { goto, isActive } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { isBuilderInputFocused } from "helpers"
 
   let confirmDeleteDialog
   let confirmEjectDialog
@@ -55,6 +54,9 @@
     },
     ["Escape"]: () => {
       if ($isActive("./new")) {
+        event.preventDefault()
+        event.stopPropagation()
+
         $goto("./")
       }
     },
@@ -85,10 +87,13 @@
       const handler = keyHandlers[key]
       if (!handler) {
         return false
-      } else if (event) {
+      }
+
+      if (event && key !== "Escape") {
         event.preventDefault()
         event.stopPropagation()
       }
+
       return await handler(component)
     } catch (error) {
       notifications.error(error || "Error handling key press")
@@ -101,7 +106,13 @@
       return
     }
     // Ignore events when typing
-    if (isBuilderInputFocused(e)) {
+    const activeTag = document.activeElement?.tagName.toLowerCase()
+    const inCodeEditor =
+      document.activeElement?.classList?.contains("cm-content")
+    if (
+      (inCodeEditor || ["input", "textarea"].indexOf(activeTag) !== -1) &&
+      e.key !== "Escape"
+    ) {
       return
     }
     // Key events are always for the selected component
