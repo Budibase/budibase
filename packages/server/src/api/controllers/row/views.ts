@@ -24,15 +24,7 @@ export async function searchView(
     ctx.throw(400, `This method only supports viewsV2`)
   }
 
-  const table = await sdk.tables.getTable(view?.tableId)
-
-  const viewFields =
-    (view.schema &&
-      Object.entries(view.schema).length &&
-      Object.keys(sdk.views.enrichSchema(view, table.schema).schema)) ||
-    undefined
-
-  ctx.status = 200
+  const viewFields = Object.keys(view.schema || {})
 
   const { body } = ctx.request
   const query = dataFilters.buildLuceneQuery(view.query || [])
