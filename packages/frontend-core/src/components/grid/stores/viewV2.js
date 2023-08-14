@@ -22,21 +22,13 @@ export const createActions = context => {
     await API.viewV2.update(newDefinition)
   }
 
-  const addRow = async row => {
+  const saveRow = async row => {
     const $datasource = get(datasource)
     row.tableId = $datasource?.tableId
     row._viewId = $datasource?.id
     return {
       ...(await API.saveRow(row, SuppressErrors)),
       _viewId: row._viewId,
-    }
-  }
-
-  const updateRow = async row => {
-    const $datasource = get(datasource)
-    return {
-      ...(await API.patchRow(row, SuppressErrors)),
-      _viewId: $datasource.id,
     }
   }
 
@@ -73,8 +65,8 @@ export const createActions = context => {
       actions: {
         refreshDefinition,
         saveDefinition,
-        addRow,
-        updateRow,
+        addRow: saveRow,
+        updateRow: saveRow,
         deleteRows,
         getRow,
         isDatasourceValid,
