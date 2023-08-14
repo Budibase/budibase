@@ -1,11 +1,11 @@
 import {
-  FieldSchema,
   RenameColumn,
   TableSchema,
   View,
   ViewV2,
 } from "@budibase/types"
 import { context, HTTPError } from "@budibase/backend-core"
+import { cloneDeep } from "lodash"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
@@ -76,7 +76,7 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
     return view
   }
 
-  let schema = { ...tableSchema }
+  let schema = cloneDeep(tableSchema)
   const anyViewOrder = Object.values(view.schema || {}).some(
     ui => ui.order != null
   )
