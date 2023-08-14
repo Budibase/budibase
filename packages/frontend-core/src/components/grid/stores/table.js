@@ -62,8 +62,8 @@ export const initialise = context => {
   const { datasource, fetch, filter, sort, definition } = context
 
   // Wipe filter whenever table ID changes to avoid using stale filters
-  definition.subscribe(() => {
-    if (get(datasource)?.type !== "table") {
+  datasource.subscribe($datasource => {
+    if ($datasource?.type !== "table") {
       return
     }
     filter.set([])
