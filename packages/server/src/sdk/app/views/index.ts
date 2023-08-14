@@ -1,9 +1,4 @@
-import {
-  RenameColumn,
-  TableSchema,
-  View,
-  ViewV2,
-} from "@budibase/types"
+import { RenameColumn, TableSchema, View, ViewV2 } from "@budibase/types"
 import { context, HTTPError } from "@budibase/backend-core"
 import { cloneDeep } from "lodash"
 
