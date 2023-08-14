@@ -37,11 +37,7 @@ export async function trimViewFields<T extends Row>(
   viewId: string
 ): Promise<void> {
   const view = await sdk.views.get(viewId)
-  const allowedKeys = [
-    ...Object.keys(view?.schema || {}),
-    ...db.CONSTANT_EXTERNAL_ROW_COLS,
-    ...db.CONSTANT_INTERNAL_ROW_COLS,
-  ]
+  const allowedKeys = sdk.views.allowedFields(view)
   // have to mutate the context, can't update reference
   const toBeRemoved = Object.keys(body).filter(
     key => !allowedKeys.includes(key)
