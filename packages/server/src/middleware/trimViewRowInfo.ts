@@ -23,7 +23,7 @@ export default async (ctx: Ctx<Row>, next: Next) => {
 
   // don't need to trim delete requests
   if (ctx?.method?.toLowerCase() !== "delete") {
-    await trimViewFields(ctx.request.body, viewId, tableId)
+    await trimViewFields(ctx.request.body, viewId)
   }
 
   ctx.params.sourceId = tableId
@@ -34,18 +34,11 @@ export default async (ctx: Ctx<Row>, next: Next) => {
 // have to mutate the koa context, can't return
 export async function trimViewFields<T extends Row>(
   body: Row,
-  viewId: string,
-  tableId: string
+  viewId: string
 ): Promise<void> {
   const view = await sdk.views.get(viewId)
-  if (!view?.schema || !Object.keys(view.schema).length) {
-    return
-  }
-
-  const table = await sdk.tables.getTable(tableId)
-  const { schema } = sdk.views.enrichSchema(view!, table.schema)
   const allowedKeys = [
-    ...Object.keys(schema),
+    ...Object.keys(view?.schema || {}),
     ...db.CONSTANT_EXTERNAL_ROW_COLS,
     ...db.CONSTANT_INTERNAL_ROW_COLS,
   ]
