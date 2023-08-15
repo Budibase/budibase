@@ -4,6 +4,7 @@
   import { API } from "api"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridFilterButton from "components/backend/DataTable/buttons/grid/GridFilterButton.svelte"
+  import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte";
 
   $: id = $viewsV2.selected?.id
   $: datasource = {
@@ -31,6 +32,7 @@
     </svelte:fragment>
     <svelte:fragment slot="controls">
       <GridCreateEditRowModal />
+      <GridManageAccessButton />
     </svelte:fragment>
   </Grid>
 </div>
