@@ -35,7 +35,7 @@ export async function search(ctx: UserCtx, next: Next) {
 }
 
 export async function create(ctx: UserCtx, next: Next) {
-  ctx = publicApiUserFix(await sdk.publicApi.userSaveUpdate(ctx))
+  ctx = publicApiUserFix(await sdk.publicApi.users.roleCheck(ctx))
   const response = await saveGlobalUser(ctx)
   ctx.body = await getUser(ctx, response._id)
   await next()
@@ -52,7 +52,7 @@ export async function update(ctx: UserCtx, next: Next) {
     ...ctx.request.body,
     _rev: user._rev,
   }
-  ctx = publicApiUserFix(await sdk.publicApi.userSaveUpdate(ctx, user))
+  ctx = publicApiUserFix(await sdk.publicApi.users.roleCheck(ctx, user))
   const response = await saveGlobalUser(ctx)
   ctx.body = await getUser(ctx, response._id)
   await next()

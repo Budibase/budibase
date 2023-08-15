@@ -3,6 +3,13 @@ import Resource from "./utils/Resource"
 
 const roleSchema = object(
   {
+    appBuilder: object({
+      appId: {
+        description:
+          "The app that the users should have app builder privileges granted for.",
+        type: "string",
+      },
+    }),
     builder: object(
       {
         global: {
