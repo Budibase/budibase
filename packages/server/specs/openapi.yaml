@@ -1296,6 +1296,32 @@ components:
           description: If set to true forces the user to reset their password on first
             login.
           type: boolean
+        builder:
+          description: Describes if the user is a builder user or not. This field can only
+            be set on a business or enterprise license.
+          type: object
+          properties:
+            global:
+              description: If set to true the user will be able to build any app in the
+                system.
+              type: boolean
+        admin:
+          description: Describes if the user is an admin user or not. This field can only
+            be set on a business or enterprise license.
+          type: object
+          properties:
+            global:
+              description: If set to true the user will be able to administrate the system.
+              type: boolean
+        roles:
+          description: Contains the roles of the user per app (assuming they are not a
+            builder user). This field can only be set on a business or
+            enterprise license.
+          type: object
+          additionalProperties:
+            type: string
+            description: A map of app ID (production app ID, minus the _dev component) to a
+              role ID, e.g. ADMIN.
       required:
         - email
         - roles
@@ -1328,6 +1354,32 @@ components:
               description: If set to true forces the user to reset their password on first
                 login.
               type: boolean
+            builder:
+              description: Describes if the user is a builder user or not. This field can only
+                be set on a business or enterprise license.
+              type: object
+              properties:
+                global:
+                  description: If set to true the user will be able to build any app in the
+                    system.
+                  type: boolean
+            admin:
+              description: Describes if the user is an admin user or not. This field can only
+                be set on a business or enterprise license.
+              type: object
+              properties:
+                global:
+                  description: If set to true the user will be able to administrate the system.
+                  type: boolean
+            roles:
+              description: Contains the roles of the user per app (assuming they are not a
+                builder user). This field can only be set on a business or
+                enterprise license.
+              type: object
+              additionalProperties:
+                type: string
+                description: A map of app ID (production app ID, minus the _dev component) to a
+                  role ID, e.g. ADMIN.
             _id:
               description: The ID of the user.
               type: string
@@ -1368,6 +1420,32 @@ components:
                 description: If set to true forces the user to reset their password on first
                   login.
                 type: boolean
+              builder:
+                description: Describes if the user is a builder user or not. This field can only
+                  be set on a business or enterprise license.
+                type: object
+                properties:
+                  global:
+                    description: If set to true the user will be able to build any app in the
+                      system.
+                    type: boolean
+              admin:
+                description: Describes if the user is an admin user or not. This field can only
+                  be set on a business or enterprise license.
+                type: object
+                properties:
+                  global:
+                    description: If set to true the user will be able to administrate the system.
+                    type: boolean
+              roles:
+                description: Contains the roles of the user per app (assuming they are not a
+                  builder user). This field can only be set on a business or
+                  enterprise license.
+                type: object
+                additionalProperties:
+                  type: string
+                  description: A map of app ID (production app ID, minus the _dev component) to a
+                    role ID, e.g. ADMIN.
               _id:
                 description: The ID of the user.
                 type: string
@@ -1481,22 +1559,22 @@ components:
     rolesAssign:
       type: object
       properties:
+        appBuilder:
+          type: object
+          properties:
+            appId:
+              description: The app that the users should have app builder privileges granted
+                for.
+              type: string
+          description: Allow setting users to builders per app.
+          required:
+            - appId
         builder:
-          type: object
-          properties:
-            global:
-              type: boolean
+          type: boolean
           description: Add/remove global builder permissions from the list of users.
-          required:
-            - global
         admin:
-          type: object
-          properties:
-            global:
-              type: boolean
+          type: boolean
           description: Add/remove global admin permissions from the list of users.
-          required:
-            - global
         role:
           type: object
           properties:
@@ -1520,22 +1598,22 @@ components:
     rolesUnAssign:
       type: object
       properties:
+        appBuilder:
+          type: object
+          properties:
+            appId:
+              description: The app that the users should have app builder privileges granted
+                for.
+              type: string
+          description: Allow setting users to builders per app.
+          required:
+            - appId
         builder:
-          type: object
-          properties:
-            global:
-              type: boolean
+          type: boolean
           description: Add/remove global builder permissions from the list of users.
-          required:
-            - global
         admin:
-          type: object
-          properties:
-            global:
-              type: boolean
+          type: boolean
           description: Add/remove global admin permissions from the list of users.
-          required:
-            - global
         role:
           type: object
           properties:
@@ -1559,13 +1637,18 @@ components:
     rolesOutput:
       type: object
       properties:
-        userIds:
-          description: The updated users' IDs
-          type: array
-          items:
-            type: string
+        data:
+          type: object
+          properties:
+            userIds:
+              description: The updated users' IDs
+              type: array
+              items:
+                type: string
+          required:
+            - userIds
       required:
-        - userIds
+        - data
 security:
   - ApiKeyAuth: []
 paths:
@@ -1780,6 +1863,7 @@ paths:
     post:
       operationId: roleAssign
       summary: Assign a role to a list of users
+      description: This is a business/enterprise only endpoint
       tags:
         - roles
       requestBody:
@@ -1799,6 +1883,7 @@ paths:
     post:
       operationId: roleUnAssign
       summary: Un-assign a role from a list of users
+      description: This is a business/enterprise only endpoint
       tags:
         - roles
       requestBody:
