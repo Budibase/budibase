@@ -9,6 +9,7 @@ const write = []
  *   post:
  *     operationId: roleAssign
  *     summary: Assign a role to a list of users
+ *     description: This is a business/enterprise only endpoint
  *     tags:
  *       - roles
  *     requestBody:
@@ -33,6 +34,7 @@ write.push(new Endpoint("post", "/roles/assign", controller.assign))
  *   post:
  *     operationId: roleUnAssign
  *     summary: Un-assign a role from a list of users
+ *     description: This is a business/enterprise only endpoint
  *     tags:
  *       - roles
  *     requestBody:
