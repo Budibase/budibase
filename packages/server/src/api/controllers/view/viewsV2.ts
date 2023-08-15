@@ -39,6 +39,12 @@ async function parseSchema(view: CreateViewRequest) {
   return finalViewSchema
 }
 
+export async function get(ctx: Ctx<void, ViewResponse>) {
+  ctx.body = {
+    data: await sdk.views.get(ctx.params.viewId, { enriched: true })
+  }
+}
+
 export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   const view = ctx.request.body
   const { tableId } = view
