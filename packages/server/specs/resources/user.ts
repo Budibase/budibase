@@ -57,6 +57,40 @@ const userSchema = object(
         "If set to true forces the user to reset their password on first login.",
       type: "boolean",
     },
+    builder: {
+      description:
+        "Describes if the user is a builder user or not. This field can only be set on a business or enterprise license.",
+      type: "object",
+      properties: {
+        global: {
+          description:
+            "If set to true the user will be able to build any app in the system.",
+          type: "boolean",
+        },
+      },
+    },
+    admin: {
+      description:
+        "Describes if the user is an admin user or not. This field can only be set on a business or enterprise license.",
+      type: "object",
+      properties: {
+        global: {
+          description:
+            "If set to true the user will be able to administrate the system.",
+          type: "boolean",
+        },
+      },
+    },
+    roles: {
+      description:
+        "Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license.",
+      type: "object",
+      additionalProperties: {
+        type: "string",
+        description:
+          "A map of app ID (production app ID, minus the _dev component) to a role ID, e.g. ADMIN.",
+      },
+    },
   },
   { required: ["email", "roles"] }
 )
