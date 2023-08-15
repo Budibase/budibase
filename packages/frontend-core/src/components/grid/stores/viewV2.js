@@ -43,19 +43,8 @@ export const createActions = context => {
     })
   }
 
-  // TODO: update in future. We can't depend on having table read access.
-  const getRow = async id => {
-    const res = await API.searchTable({
-      tableId: get(datasource).tableId,
-      limit: 1,
-      query: {
-        equal: {
-          _id: id,
-        },
-      },
-      paginate: false,
-    })
-    return res?.rows?.[0]
+  const getRow = () => {
+    throw "Views don't support fetching individual rows"
   }
 
   const isDatasourceValid = datasource => {
