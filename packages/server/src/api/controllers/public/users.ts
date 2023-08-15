@@ -9,21 +9,7 @@ import { db as dbCore } from "@budibase/backend-core"
 import { search as stringSearch } from "./utils"
 import { UserCtx, User } from "@budibase/types"
 import { Next } from "koa"
-
-function removeRoles(ctx: UserCtx, oldUser?: User) {
-  const user = ctx.request.body
-  if (user.builder) {
-    user.builder = oldUser?.builder || undefined
-  }
-  if (user.admin) {
-    user.admin = oldUser?.admin || undefined
-  }
-  if (user.roles) {
-    user.roles = oldUser?.roles || {}
-  }
-  ctx.request.body = user
-  return ctx
-}
+import { sdk } from "@budibase/pro"
 
 function isLoggedInUser(ctx: UserCtx, user: User) {
   const loggedInId = ctx.user?._id
@@ -49,7 +35,7 @@ export async function search(ctx: UserCtx, next: Next) {
 }
 
 export async function create(ctx: UserCtx, next: Next) {
-  ctx = publicApiUserFix(removeRoles(ctx))
+  ctx = publicApiUserFix(await sdk.publicApi.userSaveUpdate(ctx))
   const response = await saveGlobalUser(ctx)
   ctx.body = await getUser(ctx, response._id)
   await next()
@@ -66,7 +52,7 @@ export async function update(ctx: UserCtx, next: Next) {
     ...ctx.request.body,
     _rev: user._rev,
   }
-  ctx = publicApiUserFix(removeRoles(ctx, user))
+  ctx = publicApiUserFix(await sdk.publicApi.userSaveUpdate(ctx, user))
   const response = await saveGlobalUser(ctx)
   ctx.body = await getUser(ctx, response._id)
   await next()
