@@ -20,53 +20,49 @@ export default class GridSocket extends BaseSocket {
 
   async onConnect(socket: Socket) {
     // Initial identification of connected spreadsheet
-    socket.on(
-      GridSocketEvent.SelectDatasource,
-      async ({ datasource, appId }, callback) => {
-        if (datasource?.type !== "table") {
-          return
-        }
-        const tableId = datasource.tableId
+    socket.on(GridSocketEvent.SelectDatasource, async (payload, callback) => {
+      const ds = payload.datasource
+      const appId = payload.appId
+      const resourceId = ds?.type === "table" ? ds?.tableId : ds?.id
 
-        // Ignore if no table or app specified
-        if (!tableId || !appId) {
-          socket.disconnect(true)
-          return
-        }
-
-        // Create context
-        const ctx = createContext(this.app, socket, {
-          resourceId: tableId,
-          appId,
-        })
-
-        // Construct full middleware chain to assess permissions
-        const middlewares = [
-          userAgent,
-          auth.buildAuthMiddleware([], {
-            publicAllowed: true,
-          }),
-          currentApp,
-          authorized(PermissionType.TABLE, PermissionLevel.READ),
-        ]
-
-        // Run all koa middlewares
-        try {
-          await runMiddlewares(ctx, middlewares, async () => {
-            // Middlewares are finished and we have permission
-            // Join room for this resource
-            const room = `${appId}-${tableId}`
-            await this.joinRoom(socket, room)
-
-            // Reply with all users in current room
-            const sessions = await this.getRoomSessions(room)
-            callback({ users: sessions })
-          })
-        } catch (error) {
-          socket.disconnect(true)
-        }
+      // Ignore if no table or app specified
+      if (!resourceId || !appId) {
+        socket.disconnect(true)
+        return
       }
-    )
+
+      // Create context
+      const ctx = createContext(this.app, socket, {
+        resourceId,
+        appId,
+      })
+
+      // Construct full middleware chain to assess permissions
+      const middlewares = [
+        userAgent,
+        auth.buildAuthMiddleware([], {
+          publicAllowed: true,
+        }),
+        currentApp,
+        authorized(PermissionType.TABLE, PermissionLevel.READ),
+      ]
+
+      // Run all koa middlewares
+      try {
+        await runMiddlewares(ctx, middlewares, async () => {
+          // Middlewares are finished and we have permission
+          // Join room for this resource
+          const room = `${appId}-${resourceId}`
+          await this.joinRoom(socket, room)
+
+          // Reply with all users in current room
+          const sessions = await this.getRoomSessions(room)
+          callback({ users: sessions })
+        })
+      } catch (error) {
+        socket.disconnect(true)
+      }
+    })
 
     // Handle users selecting a new cell
     socket.on(GridSocketEvent.SelectCell, ({ cellId }) => {
