@@ -1,6 +1,15 @@
 export const buildViewV2Endpoints = API => ({
   /**
    * Create a new view
+   * @param viewId the ID of the view to fetch
+   */
+  fetchDefinition: async viewId => {
+    return await API.get({
+      url: `/api/v2/views/${viewId}`,
+    })
+  },
+  /**
+   * Create a new view
    * @param view the view object
    */
   create: async view => {

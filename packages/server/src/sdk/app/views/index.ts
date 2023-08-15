@@ -5,7 +5,10 @@ import { cloneDeep } from "lodash"
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 
-export async function get(viewId: string): Promise<ViewV2> {
+export async function get(
+  viewId: string,
+  opts?: { enriched: boolean }
+): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
   const table = await sdk.tables.getTable(tableId)
   const views = Object.values(table.views!)
@@ -13,7 +16,11 @@ export async function get(viewId: string): Promise<ViewV2> {
   if (!found) {
     throw new Error("No view found")
   }
-  return found as ViewV2
+  if (opts?.enriched) {
+    return enrichSchema(found, table.schema) as ViewV2
+  } else {
+    return found as ViewV2
+  }
 }
 
 export async function create(
