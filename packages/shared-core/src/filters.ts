@@ -208,7 +208,7 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
         ) {
           query.range[field].high = value
         }
-      } else if (query[operator]) {
+      } else if (query[operator] && operator !== "onEmptyFilter") {
         if (type === "boolean") {
           // Transform boolean filters to cope with null.
           // "equals false" needs to be "not equals true"
