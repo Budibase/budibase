@@ -1,5 +1,5 @@
 import { FieldType } from "../../documents"
-import { EmptyFilterOption } from "src/sdk"
+import { EmptyFilterOption } from "../../sdk"
 
 export type SearchFilter = {
   operator: keyof SearchQuery
