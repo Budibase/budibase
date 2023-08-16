@@ -25,10 +25,10 @@ function runBuild(entry, outfile) {
   if (!fs.existsSync("../pro/src")) {
     // If we don't have pro, we cannot bundle backend-core.
     // Otherwise, the main context will not be shared between libraries
-    delete tsconfigPathPluginContent.compilerOptions.paths[
+    delete tsconfigPathPluginContent?.compilerOptions?.paths?.[
       "@budibase/backend-core"
     ]
-    delete tsconfigPathPluginContent.compilerOptions.paths[
+    delete tsconfigPathPluginContent?.compilerOptions?.paths?.[
       "@budibase/backend-core/*"
     ]
   }
@@ -43,7 +43,6 @@ function runBuild(entry, outfile) {
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
       nodeExternalsPlugin(),
     ],
-    target: "node14",
     preserveSymlinks: true,
     loader: {
       ".svelte": "copy",
