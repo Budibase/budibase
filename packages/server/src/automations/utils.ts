@@ -130,7 +130,8 @@ export async function disableAllCrons(appId: any) {
       }
     }
   }
-  return Promise.all(promises)
+  const results = await Promise.all(promises)
+  return { count: results.length / 2 }
 }
 
 export async function disableCronById(jobId: number | string) {
@@ -169,6 +170,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
   const needsCreated =
     !sdk.automations.isReboot(automation) &&
     !sdk.automations.disabled(automation)
+  let enabled = false
 
   // need to create cron job
   if (validCron && needsCreated) {
@@ -191,8 +193,9 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
       automation._id = response.id
       automation._rev = response.rev
     })
+    enabled = true
   }
-  return automation
+  return { enabled, automation }
 }
 
 /**
