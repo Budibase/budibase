@@ -4730,7 +4730,7 @@
             ]
           },
           {
-            "label": "Fields",
+            "label": "",
             "type": "fieldConfiguration",
             "key": "sidePanelFields",
             "nested": true,
@@ -4740,17 +4740,7 @@
             }
           },
           {
-            "label": "Show delete",
-            "type": "boolean",
-            "key": "sidePanelShowDelete",
-            "nested": true,
-            "dependsOn": {
-              "setting": "clickBehaviour",
-              "value": "details"
-            }
-          },
-          {
-            "label": "Save label",
+            "label": "Save button",
             "type": "text",
             "key": "sidePanelSaveLabel",
             "defaultValue": "Save",
@@ -4761,7 +4751,7 @@
             }
           },
           {
-            "label": "Delete label",
+            "label": "Delete button",
             "type": "text",
             "key": "sidePanelDeleteLabel",
             "defaultValue": "Delete",
@@ -5292,20 +5282,25 @@
             "type": "text",
             "label": "Row ID",
             "key": "rowId",
-            "nested": true
+            "nested": true,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "Create",
+              "invert": true
+            }
           },
           {
             "type": "text",
             "label": "Empty text",
             "key": "noRowsMessage",
-            "defaultValue": "We couldn't find a row to display"
+            "defaultValue": "We couldn't find a row to display",
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "Create",
+              "invert": true
+            }
           }
-        ],
-        "dependsOn": {
-          "setting": "actionType",
-          "value": "Create",
-          "invert": true
-        }
+        ]
       },
       {
         "section": true,
@@ -5352,7 +5347,8 @@
             "defaultValue": false,
             "dependsOn": {
               "setting": "actionType",
-              "value": "Update"
+              "value": "View",
+              "invert": true
             }
           }
         ]
