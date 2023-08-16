@@ -51,4 +51,4 @@ export type SearchQuery = {
   }
 }
 
-export type SearchQueryFields = Omit<SearchQuery, "allOr">
+export type SearchQueryFields = Omit<SearchQuery, "allOr" | "onEmptyFilter">
