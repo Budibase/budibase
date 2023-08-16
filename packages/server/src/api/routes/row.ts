@@ -269,6 +269,7 @@ router
 
 router.post(
   "/api/v2/views/:viewId/search",
+  paramResource("viewId"),
   authorized(PermissionType.TABLE, PermissionLevel.READ),
   rowController.views.searchView
 )
