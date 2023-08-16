@@ -15,6 +15,7 @@ import {
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import * as utils from "./utils"
 
 export async function handleRequest(
   operation: Operation,
@@ -43,7 +44,7 @@ export async function handleRequest(
 }
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   const { _id, ...rowData } = ctx.request.body
 
   const validateResult = await sdk.rows.utils.validate({
@@ -70,7 +71,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 
 export async function save(ctx: UserCtx) {
   const inputs = ctx.request.body
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   const validateResult = await sdk.rows.utils.validate({
     row: inputs,
     tableId,
@@ -98,12 +99,12 @@ export async function save(ctx: UserCtx) {
 
 export async function find(ctx: UserCtx) {
   const id = ctx.params.rowId
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   return sdk.rows.external.getRow(tableId, id)
 }
 
 export async function destroy(ctx: UserCtx) {
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   const _id = ctx.request.body._id
   const { row } = (await handleRequest(Operation.DELETE, tableId, {
     id: breakRowIdField(_id),
@@ -114,7 +115,7 @@ export async function destroy(ctx: UserCtx) {
 
 export async function bulkDestroy(ctx: UserCtx) {
   const { rows } = ctx.request.body
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   let promises: Promise<Row[] | { row: Row; table: Table }>[] = []
   for (let row of rows) {
     promises.push(
@@ -130,7 +131,7 @@ export async function bulkDestroy(ctx: UserCtx) {
 
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const id = ctx.params.rowId
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   const datasource: Datasource = await sdk.datasources.get(datasourceId!)
   if (!tableName) {
