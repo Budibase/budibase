@@ -1,5 +1,6 @@
 <script>
   import { get } from "svelte/store"
+  import Panel from "components/design/Panel.svelte"
   import {
     Detail,
     Toggle,
@@ -25,6 +26,7 @@
       e.detail
     )
   }
+
   const update = async (key, value) => {
     try {
       let navigation = $store.navigation
@@ -36,16 +38,12 @@
   }
 </script>
 
-<div class="panel">
-  <div class="header">
-    <div class="icon">
-      <Icon
-        name={$selectedScreen.showNavigation ? "Visibility" : "VisibilityOff"}
-      />
-    </div>
-    <Body>Navigation</Body>
-  </div>
-  <div class="divider" />
+<Panel
+  title="Navigation"
+  icon={$selectedScreen.showNavigation ? "Visibility" : "VisibilityOff"}
+  borderLeft
+  wide
+>
   <div class="generalSection">
     <div class="subheading">
       <Detail>General</Detail>
@@ -161,16 +159,9 @@
       />
     </div>
   </div>
-</div>
+</Panel>
 
 <style>
-  .panel {
-    overflow: hidden;
-    width: 310px;
-    background: var(--background);
-    border-left: 2px solid var(--grey-2);
-  }
-
   .generalSection {
     padding: 13px 13px 25px;
   }
@@ -178,32 +169,12 @@
   .customizeSection {
     padding: 13px 13px 25px;
   }
-
-  .header {
-    display: flex;
-    padding: 16px 14px;
-    align-items: center;
-  }
-
-  .header :global(p) {
-    font-size: 12px;
-  }
-
   .subheading {
     margin-bottom: 10px;
   }
 
   .subheading :global(p) {
     color: var(--grey-6);
-  }
-
-  .icon {
-    color: var(--grey-6);
-    margin-right: 8px;
-  }
-
-  .icon :global(svg) {
-    height: 16px;
   }
 
   .toggle {
