@@ -35,22 +35,28 @@
     { value: "and", label: "Match all filters" },
     { value: "or", label: "Match any filter" },
   ]
+  const onEmptyOptions = [
+    { value: "all", label: "Return all table rows" },
+    { value: "none", label: "Return no rows" },
+  ]
 
   let rawFilters
   let matchAny = false
+  let onEmptyFilter = "all"
 
   $: parseFilters(filters)
-  $: dispatch("change", enrichFilters(rawFilters, matchAny))
+  $: dispatch("change", enrichFilters(rawFilters, matchAny, onEmptyFilter))
   $: enrichedSchemaFields = getFields(schemaFields || [], { allowLinks: true })
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
-  // Remove field key prefixes and determine whether to use the "match all"
-  // or "match any" behaviour
+  // Remove field key prefixes and determine which behaviours to use
   const parseFilters = filters => {
     matchAny = filters?.find(filter => filter.operator === "allOr") != null
+    onEmptyFilter =
+      filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
     rawFilters = (filters || [])
-      .filter(filter => filter.operator !== "allOr")
+      .filter(filter => filter.operator !== "allOr" && !filter.onEmptyFilter)
       .map(filter => {
         const { field } = filter
         let newFilter = { ...filter }
@@ -65,8 +71,8 @@
   }
 
   // Add field key prefixes and a special metadata filter object to indicate
-  // whether to use the "match all" or "match any" behaviour
-  const enrichFilters = (rawFilters, matchAny) => {
+  // how to handle filter behaviour
+  const enrichFilters = (rawFilters, matchAny, onEmptyFilter) => {
     let count = 1
     return rawFilters
       .filter(filter => filter.field)
@@ -75,6 +81,7 @@
         field: `${count++}:${filter.field}`,
       }))
       .concat(matchAny ? [{ operator: "allOr" }] : [])
+      .concat([{ onEmptyFilter }])
   }
 
   const addFilter = () => {
@@ -186,6 +193,17 @@
             on:change={e => (matchAny = e.detail === "or")}
             placeholder={null}
           />
+          {#if datasource?.type === "table"}
+            <Select
+              label="When filter empty"
+              value={onEmptyFilter}
+              options={onEmptyOptions}
+              getOptionLabel={opt => opt.label}
+              getOptionValue={opt => opt.value}
+              on:change={e => (onEmptyFilter = e.detail)}
+              placeholder={null}
+            />
+          {/if}
         </div>
         <div>
           <div class="filter-label">

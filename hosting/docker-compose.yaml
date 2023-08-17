@@ -27,6 +27,7 @@ services:
       BB_ADMIN_USER_EMAIL: ${BB_ADMIN_USER_EMAIL}
       BB_ADMIN_USER_PASSWORD: ${BB_ADMIN_USER_PASSWORD}
       PLUGINS_DIR: ${PLUGINS_DIR}
+      OFFLINE_MODE: ${OFFLINE_MODE}
     depends_on:
       - worker-service
       - redis-service
@@ -54,6 +55,7 @@ services:
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       REDIS_URL: redis-service:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+      OFFLINE_MODE: ${OFFLINE_MODE}
     depends_on:
       - redis-service
       - minio-service
