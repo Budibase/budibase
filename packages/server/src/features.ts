@@ -1,3 +1,4 @@
+import { features } from "@budibase/backend-core"
 import env from "./environment"
 
 enum AppFeature {
@@ -5,23 +6,10 @@ enum AppFeature {
   AUTOMATIONS = "automations",
 }
 
-const featureList = processFeatureList()
-
-function processFeatureList() {
-  const fullList = Object.values(AppFeature) as string[]
-  let list
-  if (!env.APP_FEATURES) {
-    list = fullList
-  } else {
-    list = env.APP_FEATURES.split(",")
-  }
-  for (let feature of list) {
-    if (!fullList.includes(feature)) {
-      throw new Error(`Feature: ${feature} is not an allowed option`)
-    }
-  }
-  return list
-}
+const featureList = features.processFeatureEnvVar<AppFeature>(
+  Object.keys(AppFeature),
+  env.APP_FEATURES
+)
 
 export function isFeatureEnabled(feature: AppFeature) {
   return featureList.includes(feature)
