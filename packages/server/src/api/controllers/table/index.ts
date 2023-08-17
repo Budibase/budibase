@@ -93,7 +93,7 @@ export async function destroy(ctx: UserCtx) {
   ctx.status = 200
   ctx.table = deletedTable
   ctx.body = { message: `Table ${tableId} deleted.` }
-  builderSocket?.emitTableDeletion(ctx, tableId)
+  builderSocket?.emitTableDeletion(ctx, deletedTable)
 }
 
 export async function bulkImport(ctx: UserCtx) {

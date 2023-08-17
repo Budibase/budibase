@@ -8,7 +8,7 @@ import {
   ViewResponse,
   ViewV2,
 } from "@budibase/types"
-import { builderSocket } from "../../../websockets"
+import { builderSocket, gridSocket } from "../../../websockets"
 
 async function parseSchema(view: CreateViewRequest) {
   if (!view.schema) {
@@ -41,7 +41,7 @@ async function parseSchema(view: CreateViewRequest) {
 
 export async function get(ctx: Ctx<void, ViewResponse>) {
   ctx.body = {
-    data: await sdk.views.get(ctx.params.viewId, { enriched: true })
+    data: await sdk.views.get(ctx.params.viewId, { enriched: true }),
   }
 }
 
@@ -67,6 +67,7 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
 
   const table = await sdk.tables.getTable(tableId)
   builderSocket?.emitTableUpdate(ctx, table)
+  gridSocket?.emitViewUpdate(ctx, result)
 }
 
 export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
@@ -101,6 +102,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
 
   const table = await sdk.tables.getTable(tableId)
   builderSocket?.emitTableUpdate(ctx, table)
+  gridSocket?.emitViewUpdate(ctx, result)
 }
 
 export async function remove(ctx: Ctx) {
@@ -111,4 +113,5 @@ export async function remove(ctx: Ctx) {
 
   const table = await sdk.tables.getTable(view.tableId)
   builderSocket?.emitTableUpdate(ctx, table)
+  gridSocket?.emitViewDeletion(ctx, view)
 }
