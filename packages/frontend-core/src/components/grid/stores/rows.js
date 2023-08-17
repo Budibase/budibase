@@ -311,7 +311,7 @@ export const createActions = context => {
   }
 
   // Patches a row with some changes
-  const updateRow = async (rowId, changes) => {
+  const updateRow = async (rowId, changes, options = { save: true }) => {
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[rowId]
@@ -340,6 +340,11 @@ export const createActions = context => {
         ...changes,
       },
     }))
+
+    // Stop here if we don't want to persist the change
+    if (!options?.save) {
+      return
+    }
 
     // Save change
     try {
@@ -378,8 +383,8 @@ export const createActions = context => {
   }
 
   // Updates a value of a row
-  const updateValue = async (rowId, column, value) => {
-    return await updateRow(rowId, { [column]: value })
+  const updateValue = async ({ rowId, column, value, save = true }) => {
+    return await updateRow(rowId, { [column]: value }, { save })
   }
 
   // Deletes an array of rows

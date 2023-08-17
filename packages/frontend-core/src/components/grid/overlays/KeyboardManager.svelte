@@ -215,13 +215,15 @@
     if ($focusedCellAPI && !$focusedCellAPI.isReadonly()) {
       const type = $focusedCellAPI.getType()
       if (type === "number" && keyCodeIsNumber(keyCode)) {
-        $focusedCellAPI.setValue(parseInt(key))
+        // Update the value locally but don't save it yet
+        $focusedCellAPI.setValue(parseInt(key), { save: false })
         $focusedCellAPI.focus()
       } else if (
         ["string", "barcodeqr", "longform"].includes(type) &&
         (keyCodeIsLetter(keyCode) || keyCodeIsNumber(keyCode))
       ) {
-        $focusedCellAPI.setValue(key)
+        // Update the value locally but don't save it yet
+        $focusedCellAPI.setValue(key, { save: false })
         $focusedCellAPI.focus()
       }
     }
