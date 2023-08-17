@@ -76,7 +76,7 @@ export enum SocketEvent {
 
 export enum GridSocketEvent {
   RowChange = "RowChange",
-  TableChange = "TableChange",
+  DatasourceChange = "DatasourceChange",
   SelectDatasource = "SelectDatasource",
   SelectCell = "SelectCell",
 }

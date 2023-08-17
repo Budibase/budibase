@@ -3,7 +3,7 @@ import { createWebsocket } from "../../../utils"
 import { SocketEvent, GridSocketEvent } from "@budibase/shared-core"
 
 export const createGridWebsocket = context => {
-  const { rows, datasource, users, focusedCellId, table, API } = context
+  const { rows, datasource, users, focusedCellId, definition, API } = context
   const socket = createWebsocket("/socket/grid")
 
   const connectToDatasource = datasource => {
@@ -51,13 +51,16 @@ export const createGridWebsocket = context => {
   })
 
   // Table events
-  socket.onOther(GridSocketEvent.TableChange, ({ table: newTable }) => {
-    // Only update table if one exists. If the table was deleted then we don't
-    // want to know - let the builder navigate away
-    if (newTable) {
-      table.set(newTable)
+  socket.onOther(
+    GridSocketEvent.DatasourceChange,
+    ({ datasource: newDatasource }) => {
+      // Only update definition if one exists. If the datasource was deleted
+      // then we don't want to know - let the builder navigate away
+      if (newDatasource) {
+        definition.set(newDatasource)
+      }
     }
-  })
+  )
 
   // Change websocket connection when table changes
   datasource.subscribe(connectToDatasource)

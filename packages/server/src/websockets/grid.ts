@@ -5,7 +5,7 @@ import { auth, permissions } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
 import { getTableId } from "../api/controllers/row/utils"
-import { Row, Table } from "@budibase/types"
+import { Row, Table, View, ViewV2 } from "@budibase/types"
 import { Socket } from "socket.io"
 import { GridSocketEvent } from "@budibase/shared-core"
 import { userAgent } from "koa-useragent"
@@ -88,22 +88,52 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
-  emitRowDeletion(ctx: any, id: string) {
+  emitRowDeletion(ctx: any, row: Row) {
     const resourceId = ctx.params?.viewId || getTableId(ctx)
     const room = `${ctx.appId}-${resourceId}`
-    this.emitToRoom(ctx, room, GridSocketEvent.RowChange, { id, row: null })
+    this.emitToRoom(ctx, room, GridSocketEvent.RowChange, {
+      id: row._id,
+      row: null,
+    })
   }
 
   emitTableUpdate(ctx: any, table: Table) {
     const room = `${ctx.appId}-${table._id}`
-    this.emitToRoom(ctx, room, GridSocketEvent.TableChange, {
+    this.emitToRoom(ctx, room, GridSocketEvent.DatasourceChange, {
       id: table._id,
-      table,
+      datasource: table,
     })
   }
 
-  emitTableDeletion(ctx: any, id: string) {
-    const room = `${ctx.appId}-${id}`
-    this.emitToRoom(ctx, room, GridSocketEvent.TableChange, { id, table: null })
+  emitTableDeletion(ctx: any, table: Table) {
+    const room = `${ctx.appId}-${table._id}`
+    this.emitToRoom(ctx, room, GridSocketEvent.DatasourceChange, {
+      id: table._id,
+      datasource: null,
+    })
+
+    // When the table is deleted we need to notify all views that they have
+    // also been deleted
+    Object.values(table.views || {})
+      .filter((view: View | ViewV2) => (view as ViewV2).version === 2)
+      .forEach((view: View | ViewV2) => {
+        this.emitViewDeletion(ctx, view as ViewV2)
+      })
+  }
+
+  emitViewUpdate(ctx: any, view: ViewV2) {
+    const room = `${ctx.appId}-${view.id}`
+    this.emitToRoom(ctx, room, GridSocketEvent.DatasourceChange, {
+      id: view.id,
+      datasource: view,
+    })
+  }
+
+  emitViewDeletion(ctx: any, view: ViewV2) {
+    const room = `${ctx.appId}-${view.id}`
+    this.emitToRoom(ctx, room, GridSocketEvent.DatasourceChange, {
+      id: view.id,
+      datasource: null,
+    })
   }
 }
