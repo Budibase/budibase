@@ -6,11 +6,13 @@
     Select,
     Toggle,
     RadioGroup,
+    Icon,
     DatePicker,
     Modal,
     notifications,
     OptionSelectDnD,
     Layout,
+    AbsTooltip,
   } from "@budibase/bbui"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
@@ -459,12 +461,17 @@
     />
   {:else if editableColumn.type === "longform"}
     <div>
-      <Label
-        size="M"
-        tooltip="Rich text includes support for images, links, tables, lists and more"
-      >
-        Formatting
-      </Label>
+      <div class="tooltip-alignment">
+        <Label size="M">Formatting</Label>
+        <AbsTooltip
+          position="top"
+          type="info"
+          text={"Rich text includes support for images, link"}
+        >
+          <Icon size="XS" name="InfoOutline" />
+        </AbsTooltip>
+      </div>
+
       <Toggle
         bind:value={editableColumn.useRichText}
         text="Enable rich text support (markdown)"
@@ -495,13 +502,18 @@
     </div>
     {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
       <div>
-        <Label
-          tooltip={isCreating
-            ? null
-            : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
-        >
-          Time zones
-        </Label>
+        <div>
+          <Label>Time zones</Label>
+          <AbsTooltip
+            position="top"
+            type="info"
+            text={isCreating
+              ? null
+              : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
+          >
+            <Icon size="XS" name="InfoOutline" />
+          </AbsTooltip>
+        </div>
         <Toggle
           bind:value={editableColumn.ignoreTimezones}
           text="Ignore time zones"
@@ -676,6 +688,12 @@
   .split-label {
     display: flex;
     align-items: center;
+  }
+
+  .tooltip-alignment {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
   }
 
   .label-length {
