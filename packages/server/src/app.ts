@@ -37,5 +37,5 @@ start().catch(err => {
 })
 
 export function getServer() {
-  return app
+  return server
 }
