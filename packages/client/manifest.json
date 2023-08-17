@@ -2408,6 +2408,13 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+
+      {
+        "type": "text",
+        "label": "Initial form step",
+        "key": "initialFormStep",
+        "defaultValue": 1
       }
     ],
     "context": [
