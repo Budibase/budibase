@@ -250,7 +250,7 @@
       } else if (type === "first") {
         currentStep.set(1)
       } else if (type === "specific" && number && !isNaN(number)) {
-        currentStep.set(parseInt(number))
+        currentStep.set(number)
       }
     },
     setStep: step => {

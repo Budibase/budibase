@@ -80,7 +80,7 @@ function getRedisConfig() {
 
 export function setupEnv(...envs: any[]) {
   const couch = getCouchConfig(),
-    minio = getMinioConfig(),
+    minio = getCouchConfig(),
     redis = getRedisConfig()
   const configs = [
     { key: "COUCH_DB_PORT", value: couch.port },

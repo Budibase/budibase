@@ -34,7 +34,7 @@ router
     "/api/views/:viewName",
     paramResource("viewName"),
     authorized(
-      permissions.PermissionType.TABLE,
+      permissions.PermissionType.VIEW,
       permissions.PermissionLevel.READ
     ),
     rowController.fetchView

@@ -9,7 +9,6 @@
   export let size
   export let disabled = false
   export let actionType = "Create"
-  export let initialFormStep = 1
 
   // Not exposed as a builder setting. Used internally to disable validation
   // for fields rendered in things like search blocks.
@@ -22,18 +21,10 @@
   const context = getContext("context")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
-  const getInitialFormStep = () => {
-    const parsedFormStep = parseInt(initialFormStep)
-    if (isNaN(parsedFormStep)) {
-      return 1
-    }
-    return parsedFormStep
-  }
-
   let loaded = false
   let schema
   let table
-  let currentStep = writable(getInitialFormStep())
+  let currentStep = writable(1)
 
   $: fetchSchema(dataSource)
   $: schemaKey = generateSchemaKey(schema)
