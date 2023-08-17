@@ -13,8 +13,10 @@ import {
   Row,
   Table,
   UserCtx,
+  EmptyFilterOption,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { hasFilters } from "@budibase/shared-core/src/filters"
 import * as utils from "./utils"
 
 export async function handleRequest(
@@ -36,6 +38,13 @@ export async function handleRequest(
         }
       }
     }
+  }
+
+  if (
+    !hasFilters(opts?.filters) &&
+    opts?.filters?.onEmptyFilter === EmptyFilterOption.RETURN_NONE
+  ) {
+    return []
   }
 
   return new ExternalRequest(operation, tableId, opts?.datasource).run(

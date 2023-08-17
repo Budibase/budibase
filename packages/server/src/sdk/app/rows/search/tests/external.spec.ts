@@ -2,6 +2,7 @@ import { GenericContainer } from "testcontainers"
 
 import {
   Datasource,
+  EmptyFilterOption,
   FieldType,
   Row,
   SourceName,
@@ -120,6 +121,22 @@ describe.skip("external", () => {
         expect(result.rows).toEqual(
           expect.arrayContaining(rows.map(r => expect.objectContaining(r)))
         )
+      })
+    })
+
+    it("empty filters search returns no data", async () => {
+      await config.doInContext(config.appId, async () => {
+        const tableId = config.table!._id!
+
+        const searchParams: SearchParams = {
+          tableId,
+          query: {
+            onEmptyFilter: EmptyFilterOption.RETURN_NONE,
+          },
+        }
+        const result = await search(searchParams)
+
+        expect(result.rows).toHaveLength(0)
       })
     })
 
