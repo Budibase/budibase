@@ -9,8 +9,6 @@ import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { events } from "@budibase/backend-core"
 import {
   FetchTablesResponse,
-  SaveTableResponse,
-  SaveTableRequest,
   Table,
   TableResponse,
   UserCtx,
@@ -62,7 +60,7 @@ export async function find(ctx: UserCtx<void, TableResponse>) {
   ctx.body = sdk.tables.enrichViewSchemas(table)
 }
 
-export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+export async function save(ctx: UserCtx) {
   const appId = ctx.appId
   const table = ctx.request.body
   const isImport = table.rows

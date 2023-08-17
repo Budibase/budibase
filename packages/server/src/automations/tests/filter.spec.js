@@ -1,18 +1,11 @@
-import * as setup from "./utilities"
-import { FilterConditions } from "../steps/filter"
+const setup = require("./utilities")
+const { FilterConditions } = require("../steps/filter")
 
 describe("test the filter logic", () => {
-  async function checkFilter(
-    field: any,
-    condition: string,
-    value: any,
-    pass = true
-  ) {
-    let res = await setup.runStep(setup.actions.FILTER.stepId, {
-      field,
-      condition,
-      value,
-    })
+  async function checkFilter(field, condition, value, pass = true) {
+    let res = await setup.runStep(setup.actions.FILTER.stepId,
+      { field, condition, value }
+    )
     expect(res.result).toEqual(pass)
     expect(res.success).toEqual(true)
   }
@@ -43,9 +36,9 @@ describe("test the filter logic", () => {
 
   it("check date coercion", async () => {
     await checkFilter(
-      new Date().toISOString(),
+      (new Date()).toISOString(),
       FilterConditions.GREATER_THAN,
-      new Date(-10000).toISOString(),
+      (new Date(-10000)).toISOString(),
       true
     )
   })

@@ -1,5 +1,4 @@
 import { GenericContainer } from "testcontainers"
-
 import {
   Datasource,
   EmptyFilterOption,
@@ -7,10 +6,9 @@ import {
   Row,
   SourceName,
   Table,
-  SearchParams,
 } from "@budibase/types"
-
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
+import { SearchParams } from "../../search"
 import { search } from "../external"
 import {
   expectAnyExternalColsAttributes,
