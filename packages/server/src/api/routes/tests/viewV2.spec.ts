@@ -62,7 +62,7 @@ describe("/v2/views", () => {
         name: generator.name(),
         tableId: config.table!._id!,
         primaryDisplay: generator.word(),
-        query: [{ operator: "equal", field: "field", value: "value" }],
+        query: { allOr: false, equal: { field: "value" } },
         sort: {
           field: "fieldToSort",
           order: SortOrder.DESCENDING,
@@ -190,7 +190,7 @@ describe("/v2/views", () => {
       const tableId = config.table!._id!
       await config.api.viewV2.update({
         ...view,
-        query: [{ operator: "equal", field: "newField", value: "thatValue" }],
+        query: { equal: { newField: "thatValue" } },
       })
 
       expect(await config.api.table.get(tableId)).toEqual({
@@ -198,9 +198,7 @@ describe("/v2/views", () => {
         views: {
           [view.name]: {
             ...view,
-            query: [
-              { operator: "equal", field: "newField", value: "thatValue" },
-            ],
+            query: { equal: { newField: "thatValue" } },
             schema: expect.anything(),
           },
         },
@@ -218,13 +216,7 @@ describe("/v2/views", () => {
         tableId,
         name: view.name,
         primaryDisplay: generator.word(),
-        query: [
-          {
-            operator: "equal",
-            field: generator.word(),
-            value: generator.word(),
-          },
-        ],
+        query: { equal: { [generator.word()]: generator.word() } },
         sort: {
           field: generator.word(),
           order: SortOrder.DESCENDING,
@@ -293,7 +285,7 @@ describe("/v2/views", () => {
         {
           ...view,
           tableId: generator.guid(),
-          query: [{ operator: "equal", field: "newField", value: "thatValue" }],
+          query: { equal: { newField: "thatValue" } },
         },
         { expectStatus: 404 }
       )

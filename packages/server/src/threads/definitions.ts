@@ -11,12 +11,6 @@ export interface QueryEvent {
   queryId: string
   environmentVariables?: Record<string, string>
   ctx?: any
-  schema?: {
-    [key: string]: {
-      name: string
-      type: string
-    }
-  }
 }
 
 export interface QueryVariable {

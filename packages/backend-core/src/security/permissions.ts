@@ -78,6 +78,7 @@ export const BUILTIN_PERMISSIONS = {
     permissions: [
       new Permission(PermissionType.QUERY, PermissionLevel.READ),
       new Permission(PermissionType.TABLE, PermissionLevel.READ),
+      new Permission(PermissionType.VIEW, PermissionLevel.READ),
     ],
   },
   WRITE: {
@@ -86,6 +87,7 @@ export const BUILTIN_PERMISSIONS = {
     permissions: [
       new Permission(PermissionType.QUERY, PermissionLevel.WRITE),
       new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
+      new Permission(PermissionType.VIEW, PermissionLevel.READ),
       new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
     ],
   },
@@ -96,6 +98,7 @@ export const BUILTIN_PERMISSIONS = {
       new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
       new Permission(PermissionType.USER, PermissionLevel.READ),
       new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
+      new Permission(PermissionType.VIEW, PermissionLevel.READ),
       new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
     ],
   },
@@ -106,6 +109,7 @@ export const BUILTIN_PERMISSIONS = {
       new Permission(PermissionType.TABLE, PermissionLevel.ADMIN),
       new Permission(PermissionType.USER, PermissionLevel.ADMIN),
       new Permission(PermissionType.AUTOMATION, PermissionLevel.ADMIN),
+      new Permission(PermissionType.VIEW, PermissionLevel.ADMIN),
       new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
       new Permission(PermissionType.QUERY, PermissionLevel.ADMIN),
     ],
