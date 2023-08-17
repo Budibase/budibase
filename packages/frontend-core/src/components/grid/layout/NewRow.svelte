@@ -120,8 +120,8 @@
     document.addEventListener("keydown", handleKeyPress)
   }
 
-  const updateValue = (rowId, columnName, val) => {
-    newRow[columnName] = val
+  const updateValue = ({ column, value }) => {
+    newRow[column] = value
   }
 
   const addViaModal = () => {
