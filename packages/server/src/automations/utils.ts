@@ -15,9 +15,13 @@ import {
   WebhookActionType,
 } from "@budibase/types"
 import sdk from "../sdk"
+import { automationsEnabled } from "../features"
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
-const Runner = new Thread(ThreadType.AUTOMATION)
+let Runner: Thread
+if (automationsEnabled()) {
+  Runner = new Thread(ThreadType.AUTOMATION)
+}
 
 function loggingArgs(
   job: AutomationJob,
