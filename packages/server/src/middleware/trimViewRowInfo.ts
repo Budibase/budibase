@@ -27,6 +27,7 @@ export default async (ctx: Ctx<Row>, next: Next) => {
   }
 
   ctx.params.sourceId = tableId
+  ctx.params.viewId = viewId
 
   return next()
 }

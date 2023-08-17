@@ -80,8 +80,8 @@ export default class GridSocket extends BaseSocket {
   }
 
   emitRowUpdate(ctx: any, row: Row) {
-    const tableId = getTableId(ctx)
-    const room = `${ctx.appId}-${tableId}`
+    const resourceId = ctx.params?.viewId || getTableId(ctx)
+    const room = `${ctx.appId}-${resourceId}`
     this.emitToRoom(ctx, room, GridSocketEvent.RowChange, {
       id: row._id,
       row,
@@ -89,8 +89,8 @@ export default class GridSocket extends BaseSocket {
   }
 
   emitRowDeletion(ctx: any, id: string) {
-    const tableId = getTableId(ctx)
-    const room = `${ctx.appId}-${tableId}`
+    const resourceId = ctx.params?.viewId || getTableId(ctx)
+    const room = `${ctx.appId}-${resourceId}`
     this.emitToRoom(ctx, room, GridSocketEvent.RowChange, { id, row: null })
   }
 
