@@ -1,5 +1,6 @@
-import { SearchFilter, SortOrder, SortType } from "../../api"
-import { UIFieldMetadata } from "./table"
+import { SortOrder, SortType } from "../../api"
+import { SearchFilters } from "../../sdk"
+import { TableSchema, UIFieldMetadata } from "./table"
 
 export interface View {
   name: string
@@ -19,7 +20,7 @@ export interface ViewV2 {
   name: string
   primaryDisplay?: string
   tableId: string
-  query?: SearchFilter[]
+  query?: SearchFilters
   sort?: {
     field: string
     order?: SortOrder

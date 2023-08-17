@@ -2408,13 +2408,6 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
-      },
-
-      {
-        "type": "text",
-        "label": "Initial form step",
-        "key": "initialFormStep",
-        "defaultValue": 1
       }
     ],
     "context": [
@@ -2452,7 +2445,6 @@
     "name": "Form Step",
     "icon": "AssetsAdded",
     "hasChildren": true,
-    "requiredAncestors": ["form"],
     "illegalChildren": ["section", "form", "formstep", "formblock"],
     "styles": ["size"],
     "size": {
@@ -2472,7 +2464,6 @@
   "fieldgroup": {
     "name": "Field Group",
     "icon": "Group",
-    "requiredAncestors": ["form"],
     "illegalChildren": ["section"],
     "styles": ["size"],
     "hasChildren": true,
