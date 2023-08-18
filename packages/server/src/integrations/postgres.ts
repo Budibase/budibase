@@ -137,6 +137,21 @@ const SCHEMA: Integration = {
     delete: {
       type: QueryType.SQL,
     },
+    bulkCreate: {
+      type: QueryType.FIELDS,
+      displayName: "Bulk Create",
+      fields: {
+        table: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+        },
+        rows: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+          display: "Rows binding",
+        },
+      },
+    },
   },
 }
 
@@ -399,6 +414,23 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const response = await this.internalQuery(input)
       return response.rows.length ? response.rows : [{ [operation]: true }]
     }
+  }
+
+  async bulkCreate(query: { table: string; rows: any }) {
+    let rowsToInsert = []
+    try {
+      if (typeof query.rows === "string") {
+        rowsToInsert = JSON.parse(query.rows)
+      } else {
+        rowsToInsert = query.rows
+      }
+    } catch {}
+    const columns = `"${Object.keys(rowsToInsert[0] || {}).join(`","`)}"`
+    const values = await this.getBulkValues(rowsToInsert)
+    await this.create(
+      `INSERT INTO "${query.table}" (${columns}) VALUES ${values}`
+    )
+    return [{ created: true, count: rowsToInsert.length }]
   }
 
   async getExternalSchema() {
