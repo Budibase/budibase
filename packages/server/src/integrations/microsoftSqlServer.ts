@@ -183,6 +183,21 @@ const SCHEMA: Integration = {
     delete: {
       type: QueryType.SQL,
     },
+    bulkCreate: {
+      type: QueryType.FIELDS,
+      displayName: "Bulk Create",
+      fields: {
+        table: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+        },
+        rows: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+          display: "Rows binding",
+        },
+      },
+    },
   },
 }
 
@@ -499,6 +514,27 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     const processFn = (result: any) =>
       result.recordset ? result.recordset : [{ [operation]: true }]
     return this.queryWithReturning(json, queryFn, processFn)
+  }
+
+  async bulkCreate(query: { table: string; rows: any }) {
+    let rowsToInsert = []
+    try {
+      if (typeof query.rows === "string") {
+        rowsToInsert = JSON.parse(query.rows)
+      } else {
+        rowsToInsert = query.rows
+      }
+    } catch {}
+    const columns = `"${Object.keys(rowsToInsert[0] || {}).join(`","`)}"`
+    const values = await this.getBulkValues(rowsToInsert, SqlClient.MS_SQL)
+    console.log(
+      "STATEMENT ",
+      `INSERT INTO "${query.table}" (${columns}) VALUES ${values}`
+    )
+    await this.create(
+      `INSERT INTO "${query.table}" (${columns}) VALUES ${values}`
+    )
+    return [{ created: true, count: rowsToInsert.length }]
   }
 
   async getExternalSchema() {

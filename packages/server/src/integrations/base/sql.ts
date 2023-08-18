@@ -652,12 +652,15 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     const escapeCharacter = source === SqlClient.POSTGRES ? "E" : ""
     for (let row of rowsToInsert) {
       let values = ""
-      for (const value of Object.values(row)) {
+      for (let value of Object.values(row)) {
         if (typeof value === "string") {
           values += `${escapeCharacter}'${value.replace(
             /[\/#+\-&|!(){}\]^"~'*?:\\]/g,
             "\\$&"
           )}',`
+          if (source === SqlClient.MS_SQL) {
+            values = values.replace("\\'", "''")
+          }
         } else {
           values += `${value},`
         }
