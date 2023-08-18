@@ -434,4 +434,3 @@ export const hasFilters = (query?: SearchQuery) => {
   }
   return false
 }
-
