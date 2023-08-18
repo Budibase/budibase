@@ -127,7 +127,7 @@ export async function preview(ctx: any) {
   const query = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
-  const { fields, parameters, queryVerb, transformer, queryId, schema } = query
+  const { fields, parameters, queryVerb, transformer, queryId } = query
 
   const authConfigCtx: any = getAuthConfig(ctx)
 
@@ -140,7 +140,6 @@ export async function preview(ctx: any) {
       parameters,
       transformer,
       queryId,
-      schema,
       // have to pass down to the thread runner - can't put into context now
       environmentVariables: envVars,
       ctx: {
@@ -236,7 +235,6 @@ async function execute(
         user: ctx.user,
         auth: { ...authConfigCtx },
       },
-      schema: query.schema,
     }
     const runFn = () => Runner.run(inputs)
 
