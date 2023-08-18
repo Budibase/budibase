@@ -137,7 +137,6 @@ services:
         path: /health
         port: 10000
         scheme: HTTP
-      enabled: true
       periodSeconds: 3
       failureThreshold: 1
     livenessProbe:
@@ -170,7 +169,6 @@ services:
         path: /health
         port: 4002
         scheme: HTTP
-      enabled: true
       periodSeconds: 3
       failureThreshold: 1
     livenessProbe:
@@ -204,7 +202,6 @@ services:
         path: /health
         port: 4003
         scheme: HTTP
-      enabled: true
       periodSeconds: 3
       failureThreshold: 1
     livenessProbe:
@@ -411,14 +408,12 @@ couchdb:
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
   # FOR COUCHDB
   livenessProbe:
-    enabled: true
     failureThreshold: 3
     initialDelaySeconds: 0
     periodSeconds: 10
     successThreshold: 1
     timeoutSeconds: 1
   readinessProbe:
-    enabled: true
     failureThreshold: 3
     initialDelaySeconds: 0
     periodSeconds: 10
