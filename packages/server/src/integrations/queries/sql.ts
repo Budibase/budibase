@@ -9,6 +9,12 @@ export async function interpolateSQL(
   parameters: { [key: string]: any },
   integration: DatasourcePlus
 ) {
+  // Find rows binding for bulkCreate
+  if (fields.rows) {
+    let match = findHBSBlocks(fields.rows)
+    fields.rows = (await sdk.queries.enrichContext([match[0]], parameters))[0]
+    return fields
+  }
   let sql = fields.sql
   if (!sql || typeof sql !== "string") {
     return fields

@@ -646,6 +646,23 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     }
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
+
+  async getBulkValues(rowsToInsert: Array<any>) {
+    let finalValues = ""
+    for (let row of rowsToInsert) {
+      let values = ""
+      for (const value of Object.values(row)) {
+        if (typeof value === "string") {
+          values += `'${value.replace(/[\/#+\-&|!(){}\]^"~'*?:\\]/g, "\\$&")}',`
+        } else {
+          values += `${value},`
+        }
+      }
+      values = values.substring(0, values.length - 1)
+      finalValues += `(${values}),`
+    }
+    return finalValues.substring(0, finalValues.length - 1)
+  }
 }
 
 export default SqlQueryBuilder

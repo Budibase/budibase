@@ -90,6 +90,21 @@ const SCHEMA: Integration = {
     delete: {
       type: QueryType.SQL,
     },
+    bulkCreate: {
+      type: QueryType.FIELDS,
+      displayName: "Bulk Create",
+      fields: {
+        table: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+        },
+        rows: {
+          type: DatasourceFieldType.STRING,
+          required: true,
+          display: "Rows binding",
+        },
+      },
+    },
   },
 }
 
@@ -330,6 +345,23 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   async delete(query: SqlQuery | string) {
     const results = await this.internalQuery(getSqlQuery(query))
     return results.length ? results : [{ deleted: true }]
+  }
+
+  async bulkCreate(query: { table: string; rows: any }) {
+    let rowsToInsert = []
+    try {
+      if (typeof query.rows === "string") {
+        rowsToInsert = JSON.parse(query.rows)
+      } else {
+        rowsToInsert = query.rows
+      }
+    } catch {}
+    const columns = `\`${Object.keys(rowsToInsert[0] || {}).join(`\`,\``)}\``
+    const values = await this.getBulkValues(rowsToInsert)
+    await this.create(
+      `INSERT INTO ${query.table} (${columns}) VALUES ${values}`
+    )
+    return [{ created: true, count: rowsToInsert.length }]
   }
 
   async query(json: QueryJson) {
