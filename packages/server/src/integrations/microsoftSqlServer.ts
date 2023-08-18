@@ -341,10 +341,10 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
   }
 
-  getDefinitionSQL(tableName: string) {
+  getDefinitionSQL(tableName: string, schemaName: string) {
     return `select *
             from INFORMATION_SCHEMA.COLUMNS
-            where TABLE_NAME='${tableName}'`
+            where TABLE_NAME='${tableName}' AND TABLE_SCHEMA='${schemaName}'`
   }
 
   getConstraintsSQL(tableName: string) {
@@ -388,16 +388,18 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       throw "Unable to get list of tables in database"
     }
 
-    const schema = this.config.schema || DEFAULT_SCHEMA
+    const schemaName = this.config.schema || DEFAULT_SCHEMA
     const tableNames = tableInfo
-      .filter((record: any) => record.TABLE_SCHEMA === schema)
+      .filter((record: any) => record.TABLE_SCHEMA === schemaName)
       .map((record: any) => record.TABLE_NAME)
       .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
 
     const tables: Record<string, ExternalTable> = {}
     for (let tableName of tableNames) {
       // get the column definition (type)
-      const definition = await this.runSQL(this.getDefinitionSQL(tableName))
+      const definition = await this.runSQL(
+        this.getDefinitionSQL(tableName, schemaName)
+      )
       // find primary key constraints
       const constraints = await this.runSQL(this.getConstraintsSQL(tableName))
       // find the computed and identity columns (auto columns)

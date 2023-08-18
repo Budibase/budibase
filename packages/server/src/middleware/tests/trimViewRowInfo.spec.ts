@@ -117,7 +117,7 @@ describe("trimViewRowInfo middleware", () => {
     })
 
     expect(config.request?.body).toEqual(data)
-    expect(config.params.sourceId).toEqual(table._id)
+    expect(config.params.tableId).toEqual(table._id)
 
     expect(config.next).toBeCalledTimes(1)
     expect(config.throw).not.toBeCalled()
@@ -143,9 +143,32 @@ describe("trimViewRowInfo middleware", () => {
       name: data.name,
       address: data.address,
     })
-    expect(config.params.sourceId).toEqual(table._id)
+    expect(config.params.tableId).toEqual(table._id)
 
     expect(config.next).toBeCalledTimes(1)
     expect(config.throw).not.toBeCalled()
+  })
+
+  it("it should throw an error if no viewid is provided on the body", async () => {
+    const data = getRandomData()
+    await config.executeMiddleware(viewId, {
+      ...data,
+    })
+
+    expect(config.throw).toBeCalledTimes(1)
+    expect(config.throw).toBeCalledWith(400, "_viewId is required")
+    expect(config.next).not.toBeCalled()
+  })
+
+  it("it should throw an error if no viewid is provided on the parameters", async () => {
+    const data = getRandomData()
+    await config.executeMiddleware(undefined as any, {
+      _viewId: viewId,
+      ...data,
+    })
+
+    expect(config.throw).toBeCalledTimes(1)
+    expect(config.throw).toBeCalledWith(400, "viewId path is required")
+    expect(config.next).not.toBeCalled()
   })
 })
