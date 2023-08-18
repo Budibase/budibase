@@ -7,7 +7,7 @@ enum AppFeature {
 }
 
 const featureList = features.processFeatureEnvVar<AppFeature>(
-  Object.keys(AppFeature),
+  Object.values(AppFeature),
   env.APP_FEATURES
 )
 
