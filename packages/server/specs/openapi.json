@@ -1521,7 +1521,7 @@
             "type": "boolean"
           },
           "builder": {
-            "description": "Describes if the user is a builder user or not.",
+            "description": "Describes if the user is a builder user or not. This field can only be set on a business or enterprise license.",
             "type": "object",
             "properties": {
               "global": {
@@ -1531,7 +1531,7 @@
             }
           },
           "admin": {
-            "description": "Describes if the user is an admin user or not.",
+            "description": "Describes if the user is an admin user or not. This field can only be set on a business or enterprise license.",
             "type": "object",
             "properties": {
               "global": {
@@ -1541,7 +1541,7 @@
             }
           },
           "roles": {
-            "description": "Contains the roles of the user per app (assuming they are not a builder user).",
+            "description": "Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license.",
             "type": "object",
             "additionalProperties": {
               "type": "string",
@@ -1588,7 +1588,7 @@
                 "type": "boolean"
               },
               "builder": {
-                "description": "Describes if the user is a builder user or not.",
+                "description": "Describes if the user is a builder user or not. This field can only be set on a business or enterprise license.",
                 "type": "object",
                 "properties": {
                   "global": {
@@ -1598,7 +1598,7 @@
                 }
               },
               "admin": {
-                "description": "Describes if the user is an admin user or not.",
+                "description": "Describes if the user is an admin user or not. This field can only be set on a business or enterprise license.",
                 "type": "object",
                 "properties": {
                   "global": {
@@ -1608,7 +1608,7 @@
                 }
               },
               "roles": {
-                "description": "Contains the roles of the user per app (assuming they are not a builder user).",
+                "description": "Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license.",
                 "type": "object",
                 "additionalProperties": {
                   "type": "string",
@@ -1667,7 +1667,7 @@
                   "type": "boolean"
                 },
                 "builder": {
-                  "description": "Describes if the user is a builder user or not.",
+                  "description": "Describes if the user is a builder user or not. This field can only be set on a business or enterprise license.",
                   "type": "object",
                   "properties": {
                     "global": {
@@ -1677,7 +1677,7 @@
                   }
                 },
                 "admin": {
-                  "description": "Describes if the user is an admin user or not.",
+                  "description": "Describes if the user is an admin user or not. This field can only be set on a business or enterprise license.",
                   "type": "object",
                   "properties": {
                     "global": {
@@ -1687,7 +1687,7 @@
                   }
                 },
                 "roles": {
-                  "description": "Contains the roles of the user per app (assuming they are not a builder user).",
+                  "description": "Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license.",
                   "type": "object",
                   "additionalProperties": {
                     "type": "string",
@@ -1832,6 +1832,137 @@
         },
         "required": [
           "name"
+        ]
+      },
+      "rolesAssign": {
+        "type": "object",
+        "properties": {
+          "appBuilder": {
+            "type": "object",
+            "properties": {
+              "appId": {
+                "description": "The app that the users should have app builder privileges granted for.",
+                "type": "string"
+              }
+            },
+            "description": "Allow setting users to builders per app.",
+            "required": [
+              "appId"
+            ]
+          },
+          "builder": {
+            "type": "boolean",
+            "description": "Add/remove global builder permissions from the list of users."
+          },
+          "admin": {
+            "type": "boolean",
+            "description": "Add/remove global admin permissions from the list of users."
+          },
+          "role": {
+            "type": "object",
+            "properties": {
+              "roleId": {
+                "description": "The role ID, such as BASIC, ADMIN or a custom role ID.",
+                "type": "string"
+              },
+              "appId": {
+                "description": "The app that the role relates to.",
+                "type": "string"
+              }
+            },
+            "description": "Add/remove a per-app role, such as BASIC, ADMIN etc.",
+            "required": [
+              "roleId",
+              "appId"
+            ]
+          },
+          "userIds": {
+            "description": "The user IDs to be updated to add/remove the specified roles.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "userIds"
+        ]
+      },
+      "rolesUnAssign": {
+        "type": "object",
+        "properties": {
+          "appBuilder": {
+            "type": "object",
+            "properties": {
+              "appId": {
+                "description": "The app that the users should have app builder privileges granted for.",
+                "type": "string"
+              }
+            },
+            "description": "Allow setting users to builders per app.",
+            "required": [
+              "appId"
+            ]
+          },
+          "builder": {
+            "type": "boolean",
+            "description": "Add/remove global builder permissions from the list of users."
+          },
+          "admin": {
+            "type": "boolean",
+            "description": "Add/remove global admin permissions from the list of users."
+          },
+          "role": {
+            "type": "object",
+            "properties": {
+              "roleId": {
+                "description": "The role ID, such as BASIC, ADMIN or a custom role ID.",
+                "type": "string"
+              },
+              "appId": {
+                "description": "The app that the role relates to.",
+                "type": "string"
+              }
+            },
+            "description": "Add/remove a per-app role, such as BASIC, ADMIN etc.",
+            "required": [
+              "roleId",
+              "appId"
+            ]
+          },
+          "userIds": {
+            "description": "The user IDs to be updated to add/remove the specified roles.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "userIds"
+        ]
+      },
+      "rolesOutput": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "userIds": {
+                "description": "The updated users' IDs",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "userIds"
+            ]
+          }
+        },
+        "required": [
+          "data"
         ]
       }
     }
@@ -2179,6 +2310,70 @@
                   "queries": {
                     "$ref": "#/components/examples/queries"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles/assign": {
+      "post": {
+        "operationId": "roleAssign",
+        "summary": "Assign a role to a list of users",
+        "description": "This is a business/enterprise only endpoint",
+        "tags": [
+          "roles"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rolesAssign"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns a list of updated user IDs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rolesOutput"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles/unassign": {
+      "post": {
+        "operationId": "roleUnAssign",
+        "summary": "Un-assign a role from a list of users",
+        "description": "This is a business/enterprise only endpoint",
+        "tags": [
+          "roles"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rolesUnAssign"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns a list of updated user IDs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rolesOutput"
                 }
               }
             }
