@@ -22,9 +22,12 @@ import {
   QueryJson,
   RelationshipType,
   RenameColumn,
+  SaveTableRequest,
+  SaveTableResponse,
   Table,
   TableRequest,
   UserCtx,
+  ViewV2,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -198,8 +201,8 @@ function isRelationshipSetup(column: FieldSchema) {
   return column.foreignKey || column.through
 }
 
-export async function save(ctx: UserCtx) {
-  const inputs: TableRequest = ctx.request.body
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+  const inputs = ctx.request.body
   const renamed = inputs?._rename
   // can't do this right now
   delete inputs.rows
@@ -215,13 +218,24 @@ export async function save(ctx: UserCtx) {
     ...inputs,
   }
 
-  let oldTable
+  let oldTable: Table | undefined
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await sdk.tables.getTable(ctx.request.body._id)
   }
 
   if (hasTypeChanged(tableToSave, oldTable)) {
     ctx.throw(400, "A column type has changed.")
+  }
+
+  for (let view in tableToSave.views) {
+    const tableView = tableToSave.views[view]
+    if (!tableView || !sdk.views.isV2(tableView)) continue
+
+    tableToSave.views[view] = sdk.views.syncSchema(
+      oldTable!.views![view] as ViewV2,
+      tableToSave.schema,
+      renamed
+    )
   }
 
   const db = context.getAppDB()
