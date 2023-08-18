@@ -3,26 +3,35 @@ import * as utils from "../db/utils"
 import sdk from "../sdk"
 import { db } from "@budibase/backend-core"
 import { Next } from "koa"
+import { getTableId } from "../api/controllers/row/utils"
 
 export default async (ctx: Ctx<Row>, next: Next) => {
   const { body } = ctx.request
-  const { _viewId: viewId } = body
+  let { _viewId: viewId } = body
+
+  const possibleViewId = getTableId(ctx)
+  if (utils.isViewID(possibleViewId)) {
+    viewId = possibleViewId
+  }
+
+  // nothing to do, it is not a view (just a table ID)
   if (!viewId) {
-    return ctx.throw(400, "_viewId is required")
+    return next()
   }
 
-  if (!ctx.params.viewId) {
-    return ctx.throw(400, "viewId path is required")
+  const { tableId } = utils.extractViewInfoFromID(viewId)
+
+  // don't need to trim delete requests
+  if (ctx?.method?.toLowerCase() !== "delete") {
+    const { _viewId, ...trimmedView } = await trimViewFields(
+      viewId,
+      tableId,
+      body
+    )
+    ctx.request.body = trimmedView
   }
 
-  const { tableId } = utils.extractViewInfoFromID(ctx.params.viewId)
-  const { _viewId, ...trimmedView } = await trimViewFields(
-    viewId,
-    tableId,
-    body
-  )
-  ctx.request.body = trimmedView
-  ctx.params.tableId = tableId
+  ctx.params.sourceId = tableId
 
   return next()
 }

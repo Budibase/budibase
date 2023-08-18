@@ -43,7 +43,6 @@ function runBuild(entry, outfile) {
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
       nodeExternalsPlugin(),
     ],
-    target: "node14",
     preserveSymlinks: true,
     loader: {
       ".svelte": "copy",
