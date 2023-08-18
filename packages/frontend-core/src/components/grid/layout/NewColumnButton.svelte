@@ -11,7 +11,6 @@
     (total, col) => (total += col.width),
     0
   )
-  $: console.log($renderedColumns)
   $: end = $hiddenColumnsWidth + columnsWidth - 1 - $scroll.left
   $: left = Math.min($width - 40, end)
 
