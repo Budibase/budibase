@@ -998,11 +998,16 @@ export const getFrontendStore = () => {
         const componentId = state.selectedComponentId
         const screen = get(selectedScreen)
         const parent = findComponentParent(screen.props, componentId)
-
-        // Check we aren't right at the top of the tree
         const index = parent?._children.findIndex(x => x._id === componentId)
-        if (!parent || componentId === screen.props._id) {
+
+        if (componentId === 'screen') {
           return null
+        }
+        if (componentId === 'navigation') {
+          return "screen"
+        }
+        if (parent._id === screen.props._id && index === 0) {
+          return "navigation"
         }
 
         // If we have siblings above us, choose the sibling or a descendant
@@ -1025,11 +1030,16 @@ export const getFrontendStore = () => {
         return parent._id
       },
       getNext: () => {
+        const state = get(store)
         const component = get(selectedComponent)
         const componentId = component?._id
         const screen = get(selectedScreen)
         const parent = findComponentParent(screen.props, componentId)
         const index = parent?._children.findIndex(x => x._id === componentId)
+
+        if (state.selectedComponentId === 'screen') {
+          return 'navigation'
+        }
 
         // If we have children, select first child
         if (component._children?.length) {
