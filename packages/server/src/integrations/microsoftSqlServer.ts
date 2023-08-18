@@ -527,10 +527,9 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       "STATEMENT ",
       `INSERT INTO "${query.table}" (${columns}) VALUES ${values}`
     )
-    await this.create(
+    return await this.create(
       `INSERT INTO "${query.table}" (${columns}) VALUES ${values}`
     )
-    return [{ created: true, count: rowsToInsert.length }]
   }
 
   async getExternalSchema() {

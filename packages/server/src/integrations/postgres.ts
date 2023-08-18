@@ -423,10 +423,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
     const columns = `"${Object.keys(rowsToInsert[0] || {}).join(`","`)}"`
     const values = await this.getBulkValues(rowsToInsert, SqlClient.POSTGRES)
-    await this.create(
+    return await this.create(
       `INSERT INTO "${query.table}" (${columns}) VALUES ${values}`
     )
-    return [{ created: true, count: rowsToInsert.length }]
   }
 
   async getExternalSchema() {
