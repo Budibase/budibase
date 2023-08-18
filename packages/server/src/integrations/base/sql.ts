@@ -647,13 +647,17 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
 
-  async getBulkValues(rowsToInsert: Array<any>) {
+  async getBulkValues(rowsToInsert: Array<any>, source?: SqlClient) {
     let finalValues = ""
+    const escapeCharacter = source === SqlClient.POSTGRES ? "E" : ""
     for (let row of rowsToInsert) {
       let values = ""
       for (const value of Object.values(row)) {
         if (typeof value === "string") {
-          values += `'${value.replace(/[\/#+\-&|!(){}\]^"~'*?:\\]/g, "\\$&")}',`
+          values += `${escapeCharacter}'${value.replace(
+            /[\/#+\-&|!(){}\]^"~'*?:\\]/g,
+            "\\$&"
+          )}',`
         } else {
           values += `${value},`
         }

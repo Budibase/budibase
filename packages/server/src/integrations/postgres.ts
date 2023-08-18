@@ -426,7 +426,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       }
     } catch {}
     const columns = `"${Object.keys(rowsToInsert[0] || {}).join(`","`)}"`
-    const values = await this.getBulkValues(rowsToInsert)
+    const values = await this.getBulkValues(rowsToInsert, SqlClient.POSTGRES)
     await this.create(
       `INSERT INTO "${query.table}" (${columns}) VALUES ${values}`
     )
