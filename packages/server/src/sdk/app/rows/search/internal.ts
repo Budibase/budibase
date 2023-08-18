@@ -12,7 +12,7 @@ import {
 } from "../../../../db/utils"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
-import { Database, Row, Table, SearchParams } from "@budibase/types"
+import { Database, Row, Table } from "@budibase/types"
 import { cleanExportRows } from "../utils"
 import {
   Format,
@@ -28,7 +28,7 @@ import {
   getFromMemoryDoc,
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
-import { ExportRowsParams, ExportRowsResult } from "../search"
+import { ExportRowsParams, ExportRowsResult, SearchParams } from "../search"
 import pick from "lodash/pick"
 
 export async function search(options: SearchParams) {

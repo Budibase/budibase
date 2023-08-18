@@ -2445,7 +2445,6 @@
     "name": "Form Step",
     "icon": "AssetsAdded",
     "hasChildren": true,
-    "requiredAncestors": ["form"],
     "illegalChildren": ["section", "form", "formstep", "formblock"],
     "styles": ["size"],
     "size": {
@@ -2465,7 +2464,6 @@
   "fieldgroup": {
     "name": "Field Group",
     "icon": "Group",
-    "requiredAncestors": ["form"],
     "illegalChildren": ["section"],
     "styles": ["size"],
     "hasChildren": true,
