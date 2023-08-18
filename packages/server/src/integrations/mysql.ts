@@ -348,14 +348,10 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   }
 
   async bulkCreate(query: { table: string; rows: any }) {
-    let rowsToInsert = []
-    try {
-      if (typeof query.rows === "string") {
-        rowsToInsert = JSON.parse(query.rows)
-      } else {
-        rowsToInsert = query.rows
-      }
-    } catch {}
+    let rowsToInsert = query.rows || []
+    if (typeof query.rows === "string") {
+      rowsToInsert = JSON.parse(query.rows)
+    }
     const columns = `\`${Object.keys(rowsToInsert[0] || {}).join(`\`,\``)}\``
     const values = await this.getBulkValues(rowsToInsert)
     await this.create(
