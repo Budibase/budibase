@@ -13,12 +13,12 @@
   .panel {
     width: 310px;
     height: 100%;
-    border-right: 1px solid var(--grey-2);
+    border-right: 2px solid var(--grey-2);
     display: flex;
     flex-direction: column;
   }
 
   .divider {
-    border-bottom: 1px solid var(--grey-2);
+    border-bottom: 2px solid var(--grey-2);
   }
 </style>
