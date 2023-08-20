@@ -130,7 +130,7 @@
     height: calc(100vh - 58px);
   }
   .screens {
-    height: 196px;
+    height: 212px;
     display: flex;
     flex-direction: column;
     transition: height 300ms;
@@ -185,7 +185,7 @@
   }
 
   .content {
-    overflow-y: scroll;
+    overflow: auto;
     flex-grow: 1;
   }
 
