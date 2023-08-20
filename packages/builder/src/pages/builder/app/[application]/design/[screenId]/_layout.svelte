@@ -1,4 +1,5 @@
 <script>
+  import AppPanel from "./_components/AppPanel.svelte"
   import * as routify from "@roxi/routify"
   import { syncURLToState } from "helpers/urlStateSync"
   import { store } from "builderStore"
@@ -20,4 +21,28 @@
   onDestroy(stopSyncing)
 </script>
 
-<slot />
+<div class="design">
+  <div class="content">
+    <AppPanel />
+    <slot />
+  </div>
+</div>
+
+<style>
+  .design {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    height: 0;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex: 1 1 auto;
+  }
+</style>

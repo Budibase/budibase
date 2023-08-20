@@ -1,6 +1,5 @@
 <script>
   import LeftPanel from "./_components/LeftPanel/index.svelte"
-  import AppPanel from "./_components/AppPanel.svelte"
   import { syncURLToState } from "helpers/urlStateSync"
   import { store, selectedScreen } from "builderStore"
   import * as routify from "@roxi/routify"
@@ -48,38 +47,20 @@
   onDestroy(stopSyncing)
 </script>
 
-<div class="design">
-  <div class="content">
-    {#if $selectedScreen}
-      <LeftPanel />
-      <AppPanel />
-      {#if routeComponentId === "screen"}
-        <ScreenSettingsPanel />
-      {:else if routeComponentId === "navigation"}
-        <NavigationPanel />
-      {:else}
-        <ComponentSettingsPanel />
-      {/if}
-      <slot />
-    {/if}
-  </div>
+<div class="left">
+  <LeftPanel />
 </div>
+{#if routeComponentId === "screen"}
+  <ScreenSettingsPanel />
+{:else if routeComponentId === "navigation"}
+  <NavigationPanel />
+{:else}
+  <ComponentSettingsPanel />
+{/if}
+<slot />
 
 <style>
-  .design {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: stretch;
-    height: 0;
-  }
-
-  .content {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: stretch;
-    flex: 1 1 auto;
+  .left {
+    order: -1;
   }
 </style>

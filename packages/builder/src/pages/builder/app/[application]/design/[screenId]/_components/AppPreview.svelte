@@ -1,7 +1,7 @@
 <script>
   import { get } from "svelte/store"
   import { onMount, onDestroy } from "svelte"
-  import { store, selectedScreen, currentAsset } from "builderStore"
+  import { store, selectedComponent, selectedScreen, currentAsset } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ProgressCircle,
@@ -65,7 +65,9 @@
   $: refreshContent(json)
 
   // Determine if the add component menu is active
-  $: isAddingComponent = $isActive(`./new`)
+  $: isAddingComponent = $isActive(
+    `./components/${$selectedComponent?._id}/new`
+  )
 
   // Register handler to send custom to the preview
   $: sendPreviewEvent = (name, payload) => {
@@ -208,9 +210,9 @@
 
   const toggleAddComponent = () => {
     if (isAddingComponent) {
-      $goto(`../`)
+      $goto(`./components/${$selectedComponent?._id}`)
     } else {
-      $goto(`./new`)
+      $goto(`./components/${$selectedComponent?._id}/new`)
     }
   }
 
