@@ -1,7 +1,9 @@
 import { FieldType } from "../../documents"
+import { EmptyFilterOption } from "../../sdk"
 
 export type SearchFilter = {
   operator: keyof SearchQuery
+  onEmptyFilter?: EmptyFilterOption
   field: string
   type?: FieldType
   value: any
@@ -10,6 +12,7 @@ export type SearchFilter = {
 
 export type SearchQuery = {
   allOr?: boolean
+  onEmptyFilter?: EmptyFilterOption
   string?: {
     [key: string]: string
   }
@@ -48,4 +51,4 @@ export type SearchQuery = {
   }
 }
 
-export type SearchQueryFields = Omit<SearchQuery, "allOr">
+export type SearchQueryFields = Omit<SearchQuery, "allOr" | "onEmptyFilter">
