@@ -194,7 +194,8 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - run: yarn build --scope @budibase/server --scope @budibase/worker --scope @budibase/client
+      - name: Build packages
+        run: yarn build --scope @budibase/server --scope @budibase/worker --scope @budibase/client --scope @budibase/backend-core
       - name: Run tests
         run: |
           cd qa-core
