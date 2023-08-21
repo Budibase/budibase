@@ -87,7 +87,7 @@ class TestConfiguration {
     if (openServer) {
       // use a random port because it doesn't matter
       env.PORT = "0"
-      this.server = require("../../app").default
+      this.server = require("../../app").getServer()
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
       this.started = true
@@ -178,7 +178,7 @@ class TestConfiguration {
     if (this.server) {
       this.server.close()
     } else {
-      require("../../app").default.close()
+      require("../../app").getServer().close()
     }
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
