@@ -39,12 +39,16 @@ export async function searchView(
         ?.filter(filter => filter.field)
         .map(filter => db.removeKeyNumbering(filter.field)) || []
 
-    // Prevent using an "OR" search
+    // Delete extraneous search params that cannot be overridden
     delete body.query.allOr
+    delete body.query.onEmptyFilter
 
     // Carry over filters for unused fields
     Object.keys(body.query).forEach(key => {
-      const operator = key as keyof Omit<SearchFilters, "allOr">
+      const operator = key as keyof Omit<
+        SearchFilters,
+        "allOr" | "onEmptyFilter"
+      >
       Object.keys(body.query[operator] || {}).forEach(field => {
         if (!existingFields.includes(db.removeKeyNumbering(field))) {
           query[operator]![field] = body.query[operator]![field]
