@@ -21,6 +21,7 @@
   export let id
   export let showTooltip = false
   export let selectedBy = null
+  export let compact = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -80,8 +81,9 @@
     {#if withArrow}
       <div
         class:opened
-        class:relative={indentLevel === 0}
-        class:absolute={indentLevel > 0}
+        class:relative={indentLevel === 0 && !compact}
+        class:absolute={indentLevel > 0 && !compact}
+        class:compact
         class="icon arrow"
         on:click={onIconClick}
       >
@@ -191,6 +193,13 @@
   .icon.arrow.absolute {
     position: absolute;
     left: 0;
+    padding: 8px;
+    margin-left: -8px;
+  }
+
+  .compact {
+    position: absolute;
+    left: 4px;
     padding: 8px;
     margin-left: -8px;
   }

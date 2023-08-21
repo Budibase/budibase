@@ -107,6 +107,7 @@
       id={`component-${component._id}`}
     >
       <NavItem
+          compact
         scrollable
         draggable
         on:dragend={dndStore.actions.reset}
@@ -117,7 +118,7 @@
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
         withArrow={componentHasChildren(component)}
-        indentLevel={level + 1}
+        indentLevel={level}
         selected={$store.selectedComponentId === component._id}
         {opened}
         highlighted={isChildOfSelectedComponent(component)}
