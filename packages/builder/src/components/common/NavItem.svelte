@@ -199,13 +199,17 @@
 
   .compact {
     position: absolute;
-    left: 4px;
+    left: 6px;
     padding: 8px;
     margin-left: -8px;
   }
   .icon.arrow :global(svg) {
     width: 12px;
     height: 12px;
+  }
+  .icon.arrow.compact :global(svg) {
+    width: 9px;
+    height: 9px;
   }
   .icon.arrow.relative {
     position: relative;
