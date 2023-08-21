@@ -118,18 +118,17 @@
 
 <style>
   .newScreen {
+    display: none;
     width: 100vw;
-    height: 0;
     bottom: 0;
-    overflow: hidden;
     position: absolute;
-    background-color: var(--background);
+    height: calc(100vh - 58px);
     z-index: 2;
-    transition: height 350ms ease-in-out;
+    background-color: var(--background);
   }
 
   .newScreenVisible {
-    height: calc(100vh - 58px);
+    display: initial;
   }
 
   .screens {
