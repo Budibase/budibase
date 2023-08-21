@@ -4615,14 +4615,15 @@
             "type": "field/sortable",
             "label": "Sort by",
             "key": "sortColumn",
-            "placeholder": "None"
+            "placeholder": "Default"
           },
           {
             "type": "select",
             "label": "Sort order",
             "key": "sortOrder",
             "options": ["Ascending", "Descending"],
-            "defaultValue": "Ascending"
+            "defaultValue": "Ascending",
+            "dependsOn": "sortColumn"
           },
           {
             "type": "select",

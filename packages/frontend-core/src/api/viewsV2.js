@@ -31,6 +31,7 @@ export const buildViewV2Endpoints = API => ({
   /**
    * Fetches all rows in a view
    * @param viewId the id of the view
+   * @param query the search query
    * @param paginate whether to paginate or not
    * @param limit page size
    * @param bookmark pagination cursor
@@ -40,6 +41,7 @@ export const buildViewV2Endpoints = API => ({
    */
   fetch: async ({
     viewId,
+    query,
     paginate,
     limit,
     bookmark,
@@ -50,6 +52,7 @@ export const buildViewV2Endpoints = API => ({
     return await API.post({
       url: `/api/v2/views/${viewId}/search`,
       body: {
+        query,
         paginate,
         limit,
         bookmark,
