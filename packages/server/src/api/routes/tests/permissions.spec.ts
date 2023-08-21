@@ -1,3 +1,12 @@
+import * as permissionSdk from "../../../sdk/app/permissions"
+jest.mock(
+  "../../../sdk/app/permissions",
+  (): jest.Mocked<typeof permissionSdk> => ({
+    resourceActionAllowed: jest.fn(),
+  })
+)
+const mockedSdk = permissionSdk as jest.Mocked<typeof permissionSdk>
+
 import { roles } from "@budibase/backend-core"
 import { Document, Row, Table } from "@budibase/types"
 import * as setup from "./utilities"
@@ -22,6 +31,8 @@ describe("/permission", () => {
   })
 
   beforeEach(async () => {
+    mockedSdk.resourceActionAllowed.mockResolvedValue({ allowed: true })
+
     table = (await config.createTable()) as typeof table
     row = await config.createRow()
     perms = await config.addPermission(STD_ROLE_ID, table._id)
