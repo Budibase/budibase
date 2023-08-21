@@ -69,8 +69,20 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { definition, datasource, sort, rows, filter, subscribe, viewV2 } =
-    context
+  const {
+    definition,
+    datasource,
+    sort,
+    rows,
+    filter,
+    subscribe,
+    viewV2,
+    initialFilter,
+    initialSortColumn,
+    initialSortOrder,
+    config,
+    fetch,
+  } = context
 
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
@@ -86,10 +98,10 @@ export const initialise = context => {
     }
 
     // Reset state for new view
-    filter.set([])
+    filter.set(get(initialFilter))
     sort.set({
-      column: null,
-      order: "ascending",
+      column: get(initialSortColumn),
+      order: get(initialSortOrder) || "ascending",
     })
 
     // Keep sort and filter state in line with the view definition
@@ -98,34 +110,55 @@ export const initialise = context => {
         if ($definition?.id !== $datasource.id) {
           return
         }
-        sort.set({
-          column: $definition.sort?.field,
-          order: $definition.sort?.order || "ascending",
-        })
-        filter.set($definition.query || [])
+        // Only override sorting if we don't have an initial sort column
+        if (!get(initialSortColumn)) {
+          sort.set({
+            column: $definition.sort?.field,
+            order: $definition.sort?.order || "ascending",
+          })
+        }
+        // Only override filter state if we don't have an initial filter
+        if (!get(initialFilter)) {
+          filter.set($definition.query)
+        }
       })
     )
 
     // When sorting changes, ensure view definition is kept up to date
     unsubscribers.push(
       sort.subscribe(async $sort => {
-        // Ensure we're updating the correct view
-        const $view = get(definition)
-        if ($view?.id !== $datasource.id) {
-          return
+        // If we can mutate schema then update the view definition
+        if (get(config).canSaveSchema) {
+          // Ensure we're updating the correct view
+          const $view = get(definition)
+          if ($view?.id !== $datasource.id) {
+            return
+          }
+          if (
+            $sort?.column !== $view.sort?.field ||
+            $sort?.order !== $view.sort?.order
+          ) {
+            await datasource.actions.saveDefinition({
+              ...$view,
+              sort: {
+                field: $sort.column,
+                order: $sort.order || "ascending",
+              },
+            })
+            await rows.actions.refreshData()
+          }
         }
-        if (
-          $sort?.column !== $view.sort?.field ||
-          $sort?.order !== $view.sort?.order
-        ) {
-          await datasource.actions.saveDefinition({
-            ...$view,
-            sort: {
-              field: $sort.column,
-              order: $sort.order || "ascending",
-            },
+        // Otherwise just update the fetch
+        else {
+          // Ensure we're updating the correct fetch
+          const $fetch = get(fetch)
+          if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+            return
+          }
+          $fetch.update({
+            sortOrder: $sort.order || "ascending",
+            sortColumn: $sort.column,
           })
-          await rows.actions.refreshData()
         }
       })
     )
@@ -133,17 +166,31 @@ export const initialise = context => {
     // When filters change, ensure view definition is kept up to date
     unsubscribers?.push(
       filter.subscribe(async $filter => {
-        // Ensure we're updating the correct view
-        const $view = get(definition)
-        if ($view?.id !== $datasource.id) {
-          return
+        // If we can mutate schema then update the view definition
+        if (get(config).canSaveSchema) {
+          // Ensure we're updating the correct view
+          const $view = get(definition)
+          if ($view?.id !== $datasource.id) {
+            return
+          }
+          if (JSON.stringify($filter) !== JSON.stringify($view.query)) {
+            await datasource.actions.saveDefinition({
+              ...$view,
+              query: $filter,
+            })
+            await rows.actions.refreshData()
+          }
         }
-        if (JSON.stringify($filter) !== JSON.stringify($view.query)) {
-          await datasource.actions.saveDefinition({
-            ...$view,
-            query: $filter,
+        // Otherwise just update the fetch
+        else {
+          // Ensure we're updating the correct fetch
+          const $fetch = get(fetch)
+          if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+            return
+          }
+          $fetch.update({
+            filter: $filter,
           })
-          await rows.actions.refreshData()
         }
       })
     )

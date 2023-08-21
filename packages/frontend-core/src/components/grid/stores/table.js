@@ -59,7 +59,16 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { datasource, fetch, filter, sort, table } = context
+  const {
+    datasource,
+    fetch,
+    filter,
+    sort,
+    table,
+    initialFilter,
+    initialSortColumn,
+    initialSortOrder,
+  } = context
 
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
@@ -75,10 +84,10 @@ export const initialise = context => {
     }
 
     // Wipe state
-    filter.set([])
+    filter.set(get(initialFilter))
     sort.set({
-      column: null,
-      order: "ascending",
+      column: get(initialSortColumn),
+      order: get(initialSortOrder) || "ascending",
     })
 
     // Update fetch when filter changes
