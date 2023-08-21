@@ -1,4 +1,5 @@
 <script>
+  import LinksEditor from './LinksEditor.svelte'
   import { get } from "svelte/store"
   import Panel from "components/design/Panel.svelte"
   import {
@@ -68,7 +69,7 @@
       </div>
     </div>
     <div class="configureLinks">
-      <Button cta>Configure Links</Button>
+      <LinksEditor />
     </div>
     <div class="controls">
       <div class="label">
