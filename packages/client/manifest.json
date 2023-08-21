@@ -5583,7 +5583,8 @@
         "label": "Sort order",
         "key": "initialSortOrder",
         "options": ["Ascending", "Descending"],
-        "defaultValue": "Ascending"
+        "defaultValue": "Ascending",
+        "dependsOn": "initialSortColumn"
       },
       {
         "type": "select",
