@@ -131,6 +131,7 @@
   .newScreenVisible {
     height: calc(100vh - 58px);
   }
+
   .screens {
     height: 212px;
     display: flex;
@@ -159,6 +160,7 @@
   }
 
   .input {
+    font-family: var(--font-sans);
     position: absolute;
     padding-left: 12px;
     color: var(--ink);
