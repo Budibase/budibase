@@ -31,10 +31,10 @@ export const initialise = context => {
   const sortColumnExists = derived(
     [sort, definition],
     ([$sort, $definition]) => {
-      if (!$sort?.column) {
+      if (!$sort?.column || !$definition) {
         return true
       }
-      return $definition?.schema?.[$sort.column] != null
+      return $definition.schema?.[$sort.column] != null
     }
   )
 
