@@ -1,11 +1,11 @@
 import {
   Datasource,
   FieldType,
+  SortDirection,
+  SortType,
   SearchFilter,
   SearchQuery,
   SearchQueryFields,
-  SortDirection,
-  SortType,
 } from "@budibase/types"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
@@ -138,12 +138,17 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
-      let { operator, field, type, value, externalType } = expression
+      let { operator, field, type, value, externalType, onEmptyFilter } =
+        expression
       const isHbs =
         typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
       // Parse all values into correct types
       if (operator === "allOr") {
         query.allOr = true
+        return
+      }
+      if (onEmptyFilter) {
+        query.onEmptyFilter = onEmptyFilter
         return
       }
       if (
@@ -203,7 +208,7 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
         ) {
           query.range[field].high = value
         }
-      } else if (query[operator]) {
+      } else if (query[operator] && operator !== "onEmptyFilter") {
         if (type === "boolean") {
           // Transform boolean filters to cope with null.
           // "equals false" needs to be "not equals true"
@@ -418,7 +423,7 @@ export const hasFilters = (query?: SearchQuery) => {
   if (!query) {
     return false
   }
-  const skipped = ["allOr"]
+  const skipped = ["allOr", "onEmptyFilter"]
   for (let [key, value] of Object.entries(query)) {
     if (skipped.includes(key) || typeof value !== "object") {
       continue
