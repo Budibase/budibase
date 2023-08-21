@@ -1,5 +1,6 @@
 import env from "../environment"
 import * as context from "../context"
+export * from "./installation"
 
 /**
  * Read the TENANT_FEATURE_FLAGS env var and return an array of features flags for each tenant.
