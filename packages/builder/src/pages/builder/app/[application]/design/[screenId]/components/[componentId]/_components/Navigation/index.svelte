@@ -57,6 +57,10 @@
       <Body size="S">Show nav on this screen</Body>
     </div>
   </div>
+
+
+
+  {#if $selectedScreen.showNavigation}
   <div class="divider" />
   <div class="customizeSection">
     <div class="subheading">
@@ -160,6 +164,7 @@
       />
     </div>
   </div>
+  {/if}
 </Panel>
 
 <style>
