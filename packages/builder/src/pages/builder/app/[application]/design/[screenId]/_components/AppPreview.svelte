@@ -1,7 +1,12 @@
 <script>
   import { get } from "svelte/store"
   import { onMount, onDestroy } from "svelte"
-  import { store, selectedComponent, selectedScreen, currentAsset } from "builderStore"
+  import {
+    store,
+    selectedComponent,
+    selectedScreen,
+    currentAsset,
+  } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ProgressCircle,
