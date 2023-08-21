@@ -74,7 +74,7 @@
       <Body size="S">Screens</Body>
     </div>
     <div on:click={openSearch} class="searchButton" class:hide={search}>
-      <Icon name="Search" />
+      <Icon size="S" name="Search" />
     </div>
     <div
       on:click={handleAddButton}
@@ -218,6 +218,10 @@
     transition: opacity 300ms;
   }
 
+  .searchButton:hover {
+    color: var(--ink);
+  }
+
   .hide {
     opacity: 0;
     pointer-events: none;
@@ -231,6 +235,10 @@
 
   .closeButton {
     transform: rotate(45deg);
+  }
+
+  .addButton:hover {
+    color: var(--ink);
   }
 
   .icon {

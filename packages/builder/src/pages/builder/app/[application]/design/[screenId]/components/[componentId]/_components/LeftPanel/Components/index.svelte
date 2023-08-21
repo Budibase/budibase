@@ -137,6 +137,10 @@
     cursor: pointer;
   }
 
+  .addButton:hover {
+    color: var(--ink);
+  }
+
   .list-panel {
     display: flex;
     flex-direction: column;
