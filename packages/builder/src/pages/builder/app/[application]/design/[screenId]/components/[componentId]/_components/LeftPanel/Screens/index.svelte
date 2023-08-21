@@ -97,7 +97,9 @@
         selectedBy={$userSelectedResourceMap[screen._id]}
       >
         <DropdownMenu screenId={screen._id} />
-        <RoleIndicator slot="icon" roleId={screen.routing.roleId} />
+        <div slot="icon" class="icon">
+          <RoleIndicator roleId={screen.routing.roleId} />
+        </div>
       </NavItem>
     {/each}
   </div>
@@ -229,5 +231,10 @@
 
   .closeButton {
     transform: rotate(45deg);
+  }
+
+  .icon {
+    margin-left: 4px;
+    margin-right: 4px;
   }
 </style>
