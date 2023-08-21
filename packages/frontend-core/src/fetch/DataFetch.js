@@ -354,14 +354,6 @@ export default class DataFetch {
     const entries = Object.entries(newOptions || {})
     for (let [key, value] of entries) {
       if (JSON.stringify(value) !== JSON.stringify(this.options[key])) {
-        console.log(
-          key,
-          "is different",
-          "new",
-          value,
-          "vs old",
-          this.options[key]
-        )
         refresh = true
         break
       }
