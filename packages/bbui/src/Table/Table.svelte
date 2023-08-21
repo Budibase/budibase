@@ -215,7 +215,7 @@
         const nameA = getDisplayName(a)
         const nameB = getDisplayName(b)
         if (orderA !== orderB) {
-          return orderA < orderB ? orderA : orderB
+          return orderA < orderB ? a : b
         }
         return nameA < nameB ? a : b
       })
