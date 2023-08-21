@@ -20,11 +20,13 @@ import { startup } from "./startup"
 let app: Koa, server: Server
 
 async function start() {
+  // if API disabled, could run automations instead
   if (apiEnabled()) {
     const koa = createKoaApp()
     app = koa.app
     server = koa.server
   }
+  // startup includes automation runner - if enabled
   await startup(app, server)
   if (env.isProd()) {
     env._set("NODE_ENV", "production")
