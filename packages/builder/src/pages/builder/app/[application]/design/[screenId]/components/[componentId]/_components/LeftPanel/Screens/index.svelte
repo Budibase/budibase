@@ -85,31 +85,32 @@
     </div>
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
-    {#each filteredScreens as screen (screen._id)}
-      <NavItem
-        icon={screen.routing.homeScreen ? "Home" : null}
-        indentLevel={0}
-        selected={$store.selectedScreenId === screen._id}
-        text={screen.routing.route}
-        on:click={() => store.actions.screens.select(screen._id)}
-        rightAlignIcon
-        showTooltip
-        selectedBy={$userSelectedResourceMap[screen._id]}
-      >
-        <DropdownMenu screenId={screen._id} />
-        <div slot="icon" class="icon">
-          <RoleIndicator roleId={screen.routing.roleId} />
-        </div>
-      </NavItem>
-    {/each}
+    {#if filteredScreens?.length}
+      {#each filteredScreens as screen (screen._id)}
+        <NavItem
+          icon={screen.routing.homeScreen ? "Home" : null}
+          indentLevel={0}
+          selected={$store.selectedScreenId === screen._id}
+          text={screen.routing.route}
+          on:click={() => store.actions.screens.select(screen._id)}
+          rightAlignIcon
+          showTooltip
+          selectedBy={$userSelectedResourceMap[screen._id]}
+        >
+          <DropdownMenu screenId={screen._id} />
+          <div slot="icon" class="icon">
+            <RoleIndicator roleId={screen.routing.roleId} />
+          </div>
+        </NavItem>
+      {/each}
+    {:else}
+      <Layout paddingY="L" paddingX="L">
+        <Body size="S">
+          There aren't any screens matching the current filters
+        </Body>
+      </Layout>
+    {/if}
   </div>
-  {#if !filteredScreens?.length}
-    <Layout paddingY="" paddingX="L">
-      <Body size="S">
-        There aren't any screens matching the current filters
-      </Body>
-    </Layout>
-  {/if}
 </div>
 
 <div class="newScreen" class:newScreenVisible={newScreen}>
