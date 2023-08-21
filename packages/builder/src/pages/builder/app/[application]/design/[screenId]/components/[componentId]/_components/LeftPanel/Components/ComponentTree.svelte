@@ -107,7 +107,7 @@
       id={`component-${component._id}`}
     >
       <NavItem
-          compact
+        compact
         scrollable
         draggable
         on:dragend={dndStore.actions.reset}

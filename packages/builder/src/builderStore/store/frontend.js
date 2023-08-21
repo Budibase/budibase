@@ -1000,10 +1000,10 @@ export const getFrontendStore = () => {
         const parent = findComponentParent(screen.props, componentId)
         const index = parent?._children.findIndex(x => x._id === componentId)
 
-        if (componentId === 'screen') {
+        if (componentId === "screen") {
           return null
         }
-        if (componentId === 'navigation') {
+        if (componentId === "navigation") {
           return "screen"
         }
         if (parent._id === screen.props._id && index === 0) {
@@ -1037,8 +1037,8 @@ export const getFrontendStore = () => {
         const parent = findComponentParent(screen.props, componentId)
         const index = parent?._children.findIndex(x => x._id === componentId)
 
-        if (state.selectedComponentId === 'screen') {
-          return 'navigation'
+        if (state.selectedComponentId === "screen") {
+          return "navigation"
         }
 
         // If we have children, select first child

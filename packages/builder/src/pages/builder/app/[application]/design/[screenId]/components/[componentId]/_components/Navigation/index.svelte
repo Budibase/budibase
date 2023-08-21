@@ -1,5 +1,5 @@
 <script>
-  import LinksEditor from './LinksEditor.svelte'
+  import LinksEditor from "./LinksEditor.svelte"
   import { get } from "svelte/store"
   import Panel from "components/design/Panel.svelte"
   import {
@@ -7,7 +7,6 @@
     Toggle,
     Body,
     Icon,
-    Button,
     ColorPicker,
     Input,
     Label,
@@ -58,112 +57,111 @@
     </div>
   </div>
 
-
-
   {#if $selectedScreen.showNavigation}
-  <div class="divider" />
-  <div class="customizeSection">
-    <div class="subheading">
-      <Detail>Customize</Detail>
-    </div>
-    <div class="info">
-      <div class="infoHeader">
-        <Icon name="InfoOutline" />
-        <Body size="S">These settings apply to all screens</Body>
+    <div class="divider" />
+    <div class="customizeSection">
+      <div class="subheading">
+        <Detail>Customize</Detail>
       </div>
-    </div>
-    <div class="configureLinks">
-      <LinksEditor />
-    </div>
-    <div class="controls">
-      <div class="label">
-        <Label size="M">Position</Label>
+      <div class="info">
+        <div class="infoHeader">
+          <Icon name="InfoOutline" />
+          <Body size="S">These settings apply to all screens</Body>
+        </div>
       </div>
-      <ActionGroup quiet>
-        <ActionButton
-          selected={$store.navigation.navigation === "Top"}
-          quiet={$store.navigation.navigation !== "Top"}
-          icon="PaddingTop"
-          on:click={() => update("navigation", "Top")}
-        />
-        <ActionButton
-          selected={$store.navigation.navigation === "Left"}
-          quiet={$store.navigation.navigation !== "Left"}
-          icon="PaddingLeft"
-          on:click={() => update("navigation", "Left")}
-        />
-      </ActionGroup>
-
-      {#if $store.navigation.navigation === "Top"}
+      <div class="configureLinks">
+        <LinksEditor />
+      </div>
+      <div class="controls">
         <div class="label">
-          <Label size="M">Sticky header</Label>
+          <Label size="M">Position</Label>
+        </div>
+        <ActionGroup quiet>
+          <ActionButton
+            selected={$store.navigation.navigation === "Top"}
+            quiet={$store.navigation.navigation !== "Top"}
+            icon="PaddingTop"
+            on:click={() => update("navigation", "Top")}
+          />
+          <ActionButton
+            selected={$store.navigation.navigation === "Left"}
+            quiet={$store.navigation.navigation !== "Left"}
+            icon="PaddingLeft"
+            on:click={() => update("navigation", "Left")}
+          />
+        </ActionGroup>
+
+        {#if $store.navigation.navigation === "Top"}
+          <div class="label">
+            <Label size="M">Sticky header</Label>
+          </div>
+          <Checkbox
+            value={$store.navigation.sticky}
+            on:change={e => update("sticky", e.detail)}
+          />
+          <div class="label">
+            <Label size="M">Width</Label>
+          </div>
+          <Select
+            options={["Max", "Large", "Medium", "Small"]}
+            plaveholder={null}
+            value={$store.navigation.navWidth}
+            on:change={e => update("navWidth", e.detail)}
+          />
+        {/if}
+        <div class="label">
+          <Label size="M">Show logo</Label>
         </div>
         <Checkbox
-          value={$store.navigation.sticky}
-          on:change={e => update("sticky", e.detail)}
+          value={!$store.navigation.hideLogo}
+          on:change={e => update("hideLogo", !e.detail)}
+        />
+        {#if !$store.navigation.hideLogo}
+          <div class="label">
+            <Label size="M">Logo URL</Label>
+          </div>
+          <Input
+            value={$store.navigation.logoUrl}
+            on:change={e => update("logoUrl", e.detail)}
+            updateOnChange={false}
+          />
+        {/if}
+        <div class="label">
+          <Label size="M">Show title</Label>
+        </div>
+        <Checkbox
+          value={!$store.navigation.hideTitle}
+          on:change={e => update("hideTitle", !e.detail)}
+        />
+        {#if !$store.navigation.hideTitle}
+          <div class="label">
+            <Label size="M">Title</Label>
+          </div>
+          <Input
+            value={$store.navigation.title}
+            on:change={e => update("title", e.detail)}
+            updateOnChange={false}
+          />
+        {/if}
+        <div class="label">
+          <Label>Background</Label>
+        </div>
+        <ColorPicker
+          spectrumTheme={$store.theme}
+          value={$store.navigation.navBackground ||
+            DefaultAppTheme.navBackground}
+          on:change={e => update("navBackground", e.detail)}
         />
         <div class="label">
-          <Label size="M">Width</Label>
+          <Label>Text</Label>
         </div>
-        <Select
-          options={["Max", "Large", "Medium", "Small"]}
-          plaveholder={null}
-          value={$store.navigation.navWidth}
-          on:change={e => update("navWidth", e.detail)}
+        <ColorPicker
+          spectrumTheme={$store.theme}
+          value={$store.navigation.navTextColor || DefaultAppTheme.navTextColor}
+          on:change={e => update("navTextColor", e.detail)}
         />
-      {/if}
-      <div class="label">
-        <Label size="M">Show logo</Label>
       </div>
-      <Checkbox
-        value={!$store.navigation.hideLogo}
-        on:change={e => update("hideLogo", !e.detail)}
-      />
-      {#if !$store.navigation.hideLogo}
-        <div class="label">
-          <Label size="M">Logo URL</Label>
-        </div>
-        <Input
-          value={$store.navigation.logoUrl}
-          on:change={e => update("logoUrl", e.detail)}
-          updateOnChange={false}
-        />
-      {/if}
-      <div class="label">
-        <Label size="M">Show title</Label>
-      </div>
-      <Checkbox
-        value={!$store.navigation.hideTitle}
-        on:change={e => update("hideTitle", !e.detail)}
-      />
-      {#if !$store.navigation.hideTitle}
-        <div class="label">
-          <Label size="M">Title</Label>
-        </div>
-        <Input
-          value={$store.navigation.title}
-          on:change={e => update("title", e.detail)}
-          updateOnChange={false}
-        />
-      {/if}
-      <div class="label">
-        <Label>Background</Label>
-      </div>
-      <ColorPicker
-        spectrumTheme={$store.theme}
-        value={$store.navigation.navBackground || DefaultAppTheme.navBackground}
-        on:change={e => update("navBackground", e.detail)}
-      />
-      <div class="label">
-        <Label>Text</Label>
-      </div>
-      <ColorPicker
-        spectrumTheme={$store.theme}
-        value={$store.navigation.navTextColor || DefaultAppTheme.navTextColor}
-        on:change={e => update("navTextColor", e.detail)}
-      />
     </div>
-  </div>
   {/if}
 </Panel>
 
