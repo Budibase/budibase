@@ -32,6 +32,16 @@
             "target": "build"
           }
         ]
+      },
+      "dev:builder": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
       }
     }
   }
