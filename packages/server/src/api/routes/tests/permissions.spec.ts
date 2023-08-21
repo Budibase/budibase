@@ -1,5 +1,7 @@
-const { roles } = require("@budibase/backend-core")
-const setup = require("./utilities")
+import { roles } from "@budibase/backend-core"
+import { Document, Row, Table } from "@budibase/types"
+import * as setup from "./utilities"
+
 const { basicRow } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -9,18 +11,18 @@ const STD_ROLE_ID = BUILTIN_ROLE_IDS.PUBLIC
 describe("/permission", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let table
-  let perms
-  let row
+  let table: Table & { _id: string }
+  let perms: Document[]
+  let row: Row
 
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
     await config.init()
   })
-  
+
   beforeEach(async () => {
-    table = await config.createTable()
+    table = (await config.createTable()) as typeof table
     row = await config.createRow()
     perms = await config.addPermission(STD_ROLE_ID, table._id)
   })
@@ -124,7 +126,9 @@ describe("/permission", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(Array.isArray(res.body)).toEqual(true)
-      const publicPerm = res.body.find(perm => perm._id === "public")
+      const publicPerm = res.body.find(
+        (perm: Document) => perm._id === "public"
+      )
       expect(publicPerm).toBeDefined()
       expect(publicPerm.permissions).toBeDefined()
       expect(publicPerm.name).toBeDefined()
