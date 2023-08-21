@@ -1,11 +1,12 @@
-import { permissions, roles, context } from "@budibase/backend-core"
+import { permissions, roles, context, HTTPError } from "@budibase/backend-core"
+import { UserCtx, Database, Role, PermissionLevel } from "@budibase/types"
 import { getRoleParams } from "../../db/utils"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
 } from "../../utilities/security"
 import { removeFromArray } from "../../utilities"
-import { UserCtx, Database, Role } from "@budibase/types"
+import sdk from "../../sdk"
 
 const PermissionUpdateType = {
   REMOVE: "remove",
@@ -29,9 +30,21 @@ async function updatePermissionOnRole(
     roleId,
     resourceId,
     level,
-  }: { roleId: string; resourceId: string; level: string },
+  }: { roleId: string; resourceId: string; level: PermissionLevel },
   updateType: string
 ) {
+  const allowedAction = await sdk.permissions.resourceActionAllowed({
+    resourceId,
+    level,
+  })
+
+  if (!allowedAction.allowed) {
+    throw new HTTPError(
+      `You are not allowed to '${allowedAction.level}' the resource type '${allowedAction.resourceType}'`,
+      403
+    )
+  }
+
   const db = context.getAppDB()
   const remove = updateType === PermissionUpdateType.REMOVE
   const isABuiltin = roles.isBuiltin(roleId)
