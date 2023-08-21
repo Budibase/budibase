@@ -1,10 +1,12 @@
 <script>
-  import { Select, Label, Stepper } from "@budibase/bbui"
+  import { Select, Label } from "@budibase/bbui"
   import { currentAsset, store } from "builderStore"
   import { getActionProviderComponents } from "builderStore/dataBinding"
   import { onMount } from "svelte"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
+  export let bindings = []
 
   $: actionProviders = getActionProviderComponents(
     $currentAsset,
@@ -51,7 +53,11 @@
   <Select bind:value={parameters.type} options={typeOptions} />
   {#if parameters.type === "specific"}
     <Label small>Number</Label>
-    <Stepper bind:value={parameters.number} />
+    <DrawerBindableInput
+      {bindings}
+      value={parameters.number}
+      on:change={e => (parameters.number = e.detail)}
+    />
   {/if}
 </div>
 
