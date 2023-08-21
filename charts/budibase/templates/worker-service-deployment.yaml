@@ -116,6 +116,8 @@ spec:
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
+        - name: OFFLINE_MODE
+          value: {{ .Values.globals.offlineMode | quote }}
         - name: LOG_LEVEL
           value: {{ .Values.services.worker.logLevel | quote }}
         - name: REDIS_PASSWORD
