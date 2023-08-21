@@ -69,62 +69,91 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { definition, datasource, sort, rows, filter, subscribe } = context
+  const { definition, datasource, sort, rows, filter, subscribe, viewV2 } =
+    context
 
-  // Keep sort and filter state in line with the view definition
-  definition.subscribe($definition => {
-    if (!$definition || get(datasource)?.type !== "viewV2") {
+  // Keep a list of subscriptions so that we can clear them when the datasource
+  // config changes
+  let unsubscribers = []
+
+  // Observe datasource changes and apply logic for view V2 datasources
+  datasource.subscribe($datasource => {
+    // Clear previous subscriptions
+    unsubscribers?.forEach(unsubscribe => unsubscribe())
+    unsubscribers = []
+    if (!viewV2.actions.isDatasourceValid($datasource)) {
       return
     }
+
+    // Reset state for new view
+    filter.set([])
     sort.set({
-      column: $definition.sort?.field,
-      order: $definition.sort?.order,
+      column: null,
+      order: "ascending",
     })
-    filter.set($definition.query || [])
-  })
 
-  // When sorting changes, ensure view definition is kept up to date
-  sort.subscribe(async $sort => {
-    const $view = get(definition)
-    if (!$view || get(datasource)?.type !== "viewV2") {
-      return
-    }
-    if (
-      $sort?.column !== $view.sort?.field ||
-      $sort?.order !== $view.sort?.order
-    ) {
-      await datasource.actions.saveDefinition({
-        ...$view,
-        sort: {
-          field: $sort.column,
-          order: $sort.order,
-        },
+    // Keep sort and filter state in line with the view definition
+    unsubscribers.push(
+      definition.subscribe($definition => {
+        if ($definition?.id !== $datasource.id) {
+          return
+        }
+        sort.set({
+          column: $definition.sort?.field,
+          order: $definition.sort?.order || "ascending",
+        })
+        filter.set($definition.query || [])
       })
-      await rows.actions.refreshData()
-    }
-  })
+    )
 
-  // When filters change, ensure view definition is kept up to date
-  filter.subscribe(async $filter => {
-    const $view = get(definition)
-    if (!$view || get(datasource)?.type !== "viewV2") {
-      return
-    }
-    if (JSON.stringify($filter) !== JSON.stringify($view.query)) {
-      await datasource.actions.saveDefinition({
-        ...$view,
-        query: $filter,
+    // When sorting changes, ensure view definition is kept up to date
+    unsubscribers.push(
+      sort.subscribe(async $sort => {
+        // Ensure we're updating the correct view
+        const $view = get(definition)
+        if ($view?.id !== $datasource.id) {
+          return
+        }
+        if (
+          $sort?.column !== $view.sort?.field ||
+          $sort?.order !== $view.sort?.order
+        ) {
+          await datasource.actions.saveDefinition({
+            ...$view,
+            sort: {
+              field: $sort.column,
+              order: $sort.order || "ascending",
+            },
+          })
+          await rows.actions.refreshData()
+        }
       })
-      await rows.actions.refreshData()
-    }
-  })
+    )
 
-  // When hidden we show columns, we need to refresh data in order to fetch
-  // values for those columns
-  subscribe("show-column", async () => {
-    if (get(datasource)?.type !== "viewV2") {
-      return
-    }
-    await rows.actions.refreshData()
+    // When filters change, ensure view definition is kept up to date
+    unsubscribers?.push(
+      filter.subscribe(async $filter => {
+        // Ensure we're updating the correct view
+        const $view = get(definition)
+        if ($view?.id !== $datasource.id) {
+          return
+        }
+        if (JSON.stringify($filter) !== JSON.stringify($view.query)) {
+          await datasource.actions.saveDefinition({
+            ...$view,
+            query: $filter,
+          })
+          await rows.actions.refreshData()
+        }
+      })
+    )
+
+    // When hidden we show columns, we need to refresh data in order to fetch
+    // values for those columns
+    unsubscribers.push(
+      subscribe("show-column", async () => {
+        await rows.actions.refreshData()
+      })
+    )
   })
 }

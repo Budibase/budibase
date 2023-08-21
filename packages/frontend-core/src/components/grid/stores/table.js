@@ -59,51 +59,55 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { datasource, fetch, filter, sort, definition } = context
+  const { datasource, fetch, filter, sort, table } = context
 
-  // Wipe filter whenever table ID changes to avoid using stale filters
+  // Keep a list of subscriptions so that we can clear them when the datasource
+  // config changes
+  let unsubscribers = []
+
+  // Observe datasource changes and apply logic for table datasources
   datasource.subscribe($datasource => {
-    if ($datasource?.type !== "table") {
+    // Clear previous subscriptions
+    unsubscribers?.forEach(unsubscribe => unsubscribe())
+    unsubscribers = []
+    if (!table.actions.isDatasourceValid($datasource)) {
       return
     }
+
+    // Wipe state
     filter.set([])
-  })
-
-  // Update fetch when filter changes
-  filter.subscribe($filter => {
-    if (get(datasource)?.type !== "table") {
-      return
-    }
-    get(fetch)?.update({
-      filter: $filter,
-    })
-  })
-
-  // Update fetch when sorting changes
-  sort.subscribe($sort => {
-    if (get(datasource)?.type !== "table") {
-      return
-    }
-    get(fetch)?.update({
-      sortOrder: $sort.order,
-      sortColumn: $sort.column,
-    })
-  })
-
-  // Ensure sorting UI reflects the fetch state whenever we reset the fetch,
-  // which triggers a new definition
-  definition.subscribe(() => {
-    if (get(datasource)?.type !== "table") {
-      return
-    }
-    const $fetch = get(fetch)
-    if (!$fetch) {
-      return
-    }
-    const { sortColumn, sortOrder } = get($fetch)
     sort.set({
-      column: sortColumn,
-      order: sortOrder,
+      column: null,
+      order: "ascending",
     })
+
+    // Update fetch when filter changes
+    unsubscribers.push(
+      filter.subscribe($filter => {
+        // Ensure we're updating the correct fetch
+        const $fetch = get(fetch)
+        if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+          return
+        }
+        $fetch.update({
+          filter: $filter,
+        })
+      })
+    )
+
+    // Update fetch when sorting changes
+    unsubscribers.push(
+      sort.subscribe($sort => {
+        // Ensure we're updating the correct fetch
+        const $fetch = get(fetch)
+        if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+          return
+        }
+        $fetch.update({
+          sortOrder: $sort.order || "ascending",
+          sortColumn: $sort.column,
+        })
+      })
+    )
   })
 }

@@ -4,9 +4,6 @@ import { get } from "svelte/store"
 export default class ViewV2Fetch extends DataFetch {
   determineFeatureFlags() {
     return {
-      // The API does not actually support dynamic filtering, but since views
-      // have filters built in we don't want to perform client side filtering
-      // which would happen if we marked this as false
       supportsSearch: true,
       supportsSort: true,
       supportsPagination: true,
@@ -33,18 +30,23 @@ export default class ViewV2Fetch extends DataFetch {
     }
   }
 
+  getDefaultSortColumn() {
+    return null
+  }
+
   async getData() {
     const { datasource, limit, sortColumn, sortOrder, sortType, paginate } =
       this.options
-    const { cursor } = get(this.store)
+    const { cursor, query } = get(this.store)
     try {
       const res = await this.API.viewV2.fetch({
         viewId: datasource.id,
+        query,
         paginate,
         limit,
         bookmark: cursor,
         sort: sortColumn,
-        sortOrder,
+        sortOrder: sortOrder?.toLowerCase(),
         sortType,
       })
       return {
