@@ -211,7 +211,7 @@
   }
 
   .searchButton {
-    color: var(--ink);
+    color: var(--grey-7);
     cursor: pointer;
     margin-right: 10px;
     opacity: 1;
@@ -224,7 +224,7 @@
   }
 
   .addButton {
-    color: var(--ink);
+    color: var(--grey-7);
     cursor: pointer;
     transition: transform 300ms;
   }

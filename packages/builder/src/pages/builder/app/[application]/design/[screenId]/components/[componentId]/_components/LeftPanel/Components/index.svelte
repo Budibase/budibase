@@ -133,7 +133,7 @@
 
   .addButton {
     margin-left: auto;
-    color: var(--ink);
+    color: var(--grey-7);
     cursor: pointer;
   }
 
