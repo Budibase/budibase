@@ -25,7 +25,6 @@ async function getAllDBRoles(db: Database) {
 }
 
 async function updatePermissionOnRole(
-  appId: string,
   {
     roleId,
     resourceId,
@@ -163,16 +162,11 @@ export async function getResourcePerms(ctx: UserCtx) {
 }
 
 export async function addPermission(ctx: UserCtx) {
-  ctx.body = await updatePermissionOnRole(
-    ctx.appId,
-    ctx.params,
-    PermissionUpdateType.ADD
-  )
+  ctx.body = await updatePermissionOnRole(ctx.params, PermissionUpdateType.ADD)
 }
 
 export async function removePermission(ctx: UserCtx) {
   ctx.body = await updatePermissionOnRole(
-    ctx.appId,
     ctx.params,
     PermissionUpdateType.REMOVE
   )
