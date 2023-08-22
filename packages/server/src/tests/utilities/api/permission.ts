@@ -7,6 +7,17 @@ export class PermissionAPI extends TestAPI {
     super(config)
   }
 
+  get = async (
+    resourceId: string,
+    { expectStatus } = { expectStatus: 200 }
+  ) => {
+    return this.request
+      .get(`/api/permission/${resourceId}`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expectStatus)
+  }
+
   create = async (
     {
       roleId,
