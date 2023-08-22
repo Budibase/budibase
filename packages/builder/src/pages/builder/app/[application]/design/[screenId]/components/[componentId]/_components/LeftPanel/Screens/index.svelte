@@ -106,10 +106,10 @@
         </NavItem>
       {/each}
     {:else}
-      <Layout paddingY="L" paddingX="L">
-        <Body size="S">
-          There aren't any screens matching the current filters
-        </Body>
+      <Layout paddingY="none" paddingX="L">
+        <div class="no-results">
+          There aren't any screens matching that route
+        </div>
       </Layout>
     {/if}
   </div>
@@ -239,5 +239,9 @@
   .icon {
     margin-left: 4px;
     margin-right: 4px;
+  }
+
+  .no-results {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
