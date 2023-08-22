@@ -69,7 +69,7 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { columns, stickyColumn, config, datasource, definition } = context
+  const { columns, stickyColumn, datasource, definition } = context
 
   // Checks if we have a certain column by name
   const hasColumn = column => {

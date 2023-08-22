@@ -7,10 +7,10 @@
   $: resourceId = getResourceID($datasource)
 
   const getResourceID = datasource => {
-      if (!datasource) {
-          return null
-      }
-      return datasource.type === "table" ? datasource.tableId : datasource.id
+    if (!datasource) {
+      return null
+    }
+    return datasource.type === "table" ? datasource.tableId : datasource.id
   }
 </script>
 
