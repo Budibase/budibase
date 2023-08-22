@@ -42,14 +42,6 @@ describe("/permission", () => {
     perms = await config.addPermission(STD_ROLE_ID, table._id)
   })
 
-  async function getTablePermissions() {
-    return request
-      .get(`/api/permission/${table._id}`)
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-  }
-
   describe("levels", () => {
     it("should be able to get levels", async () => {
       const res = await request
@@ -87,7 +79,7 @@ describe("/permission", () => {
         table._id,
         PermissionLevel.WRITE
       )
-      const res = await getTablePermissions()
+      const res = await config.api.permission.get(table._id)
       expect(res.body["read"]).toEqual(STD_ROLE_ID)
       expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
       const allRes = await request
@@ -128,7 +120,7 @@ describe("/permission", () => {
         level: PermissionLevel.READ,
       })
       expect(res.body[0]._id).toEqual(STD_ROLE_ID)
-      const permsRes = await getTablePermissions()
+      const permsRes = await config.api.permission.get(table._id)
       expect(permsRes.body[STD_ROLE_ID]).toBeUndefined()
     })
 
