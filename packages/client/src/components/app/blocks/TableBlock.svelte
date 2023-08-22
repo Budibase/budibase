@@ -53,7 +53,8 @@
   $: editTitle = getEditTitle(detailsFormBlockId, primaryDisplay)
   $: normalFields = getNormalFields(schema)
   $: rowClickActions =
-    clickBehaviour === "actions" || dataSource?.type !== "table"
+    clickBehaviour === "actions" ||
+    (dataSource?.type !== "table" && dataSource?.type !== "viewV2")
       ? onClick
       : [
           {
