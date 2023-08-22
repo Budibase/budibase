@@ -1,5 +1,4 @@
 <script>
-  import LeftPanel from "./_components/LeftPanel/index.svelte"
   import { syncURLToState } from "helpers/urlStateSync"
   import { store, selectedScreen } from "builderStore"
   import * as routify from "@roxi/routify"
@@ -47,9 +46,6 @@
   onDestroy(stopSyncing)
 </script>
 
-<div class="left">
-  <LeftPanel />
-</div>
 {#if routeComponentId === "screen"}
   <ScreenSettingsPanel />
 {:else if routeComponentId === "navigation"}
@@ -58,9 +54,3 @@
   <ComponentSettingsPanel />
 {/if}
 <slot />
-
-<style>
-  .left {
-    order: -1;
-  }
-</style>
