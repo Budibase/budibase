@@ -176,6 +176,9 @@
   .input:focus {
     outline: none;
   }
+  .input::placeholder {
+    color: var(--spectrum-global-color-gray-600);
+  }
 
   .screenSearch input {
     display: block;
