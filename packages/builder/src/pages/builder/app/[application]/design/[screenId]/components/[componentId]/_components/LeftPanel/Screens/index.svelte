@@ -135,7 +135,7 @@
   }
 
   .screens {
-    height: 212px;
+    height: 210px;
     display: flex;
     flex-direction: column;
     transition: height 300ms ease-out;
