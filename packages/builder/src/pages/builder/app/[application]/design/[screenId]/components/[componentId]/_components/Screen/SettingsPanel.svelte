@@ -5,8 +5,6 @@
   import {
     Input,
     Layout,
-    Button,
-    Toggle,
     Checkbox,
     Banner,
     Select,
@@ -16,7 +14,6 @@
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { selectedScreen, store } from "builderStore"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import { goto } from "@roxi/routify"
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "builderStore/dataBinding"
 
@@ -120,15 +117,6 @@
       control: ButtonActionEditor,
     },
     {
-      key: "showNavigation",
-      label: "Navigation",
-      control: Toggle,
-      props: {
-        text: "Show nav",
-        disabled: !!$selectedScreen.layoutId,
-      },
-    },
-    {
       key: "width",
       label: "Width",
       control: Select,
@@ -173,8 +161,5 @@
         {bindings}
       />
     {/each}
-    <Button secondary on:click={() => $goto("../components")}>
-      View components
-    </Button>
   </Layout>
 </Panel>
