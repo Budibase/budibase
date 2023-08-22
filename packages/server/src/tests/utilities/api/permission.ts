@@ -14,7 +14,7 @@ export class PermissionAPI extends TestAPI {
       level,
     }: { roleId: string; resourceId: string; level: PermissionLevel },
     { expectStatus } = { expectStatus: 200 }
-  ): Promise<AnyDocument[]> => {
+  ): Promise<any> => {
     const res = await this.request
       .post(`/api/permission/${roleId}/${resourceId}/${level}`)
       .set(this.config.defaultHeaders())
