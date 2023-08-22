@@ -40,7 +40,7 @@
 </script>
 
 <div class="components">
-  <div class="header" class:headerScrolling={scrolling}>
+  <div class="header" class:scrolling>
     <Body size="S">Components</Body>
     <div on:click={toNewComponentRoute} class="addButton">
       <Icon name="Add" />
@@ -116,15 +116,16 @@
   }
 
   .header {
-    padding: 15px 12px;
+    height: 50px;
+    box-sizing: border-box;
+    padding: var(--spacing-l);
     display: flex;
     align-items: center;
     border-bottom: 2px solid transparent;
-    transition: border-bottom 300ms;
+    transition: border-bottom 130ms ease-out;
   }
-
-  .headerScrolling {
-    border-bottom: 2px solid var(--grey-2);
+  .header.scrolling {
+    border-bottom: var(--border-light);
   }
 
   .components :global(.nav-item) {
