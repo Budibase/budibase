@@ -1,14 +1,18 @@
-import * as permissionSdk from "../../../sdk/app/permissions"
-jest.mock(
-  "../../../sdk/app/permissions",
-  (): jest.Mocked<typeof permissionSdk> => ({
-    resourceActionAllowed: jest.fn(),
-  })
-)
-const mockedSdk = permissionSdk as jest.Mocked<typeof permissionSdk>
+const mockedSdk = sdk.permissions as jest.Mocked<typeof sdk.permissions>
+jest.mock("../../../sdk/app/permissions", () => ({
+  resourceActionAllowed: jest.fn(),
+}))
+
+import sdk from "../../../sdk"
 
 import { roles } from "@budibase/backend-core"
-import { Document, Row, Table } from "@budibase/types"
+import {
+  Document,
+  DocumentType,
+  PermissionLevel,
+  Row,
+  Table,
+} from "@budibase/types"
 import * as setup from "./utilities"
 
 const { basicRow } = setup.structures
@@ -78,7 +82,11 @@ describe("/permission", () => {
     })
 
     it("should get resource permissions with multiple roles", async () => {
-      perms = await config.addPermission(HIGHER_ROLE_ID, table._id, "write")
+      perms = await config.addPermission(
+        HIGHER_ROLE_ID,
+        table._id,
+        PermissionLevel.WRITE
+      )
       const res = await getTablePermissions()
       expect(res.body["read"]).toEqual(STD_ROLE_ID)
       expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
@@ -89,6 +97,26 @@ describe("/permission", () => {
         .expect(200)
       expect(allRes.body[table._id]["write"]).toEqual(HIGHER_ROLE_ID)
       expect(allRes.body[table._id]["read"]).toEqual(STD_ROLE_ID)
+    })
+
+    it("throw forbidden if the action is not allowed for the resource", async () => {
+      mockedSdk.resourceActionAllowed.mockResolvedValue({
+        allowed: false,
+        resourceType: DocumentType.DATASOURCE,
+        level: PermissionLevel.READ,
+      })
+
+      const response = await config.api.permission.create(
+        {
+          roleId: STD_ROLE_ID,
+          resourceId: table._id,
+          level: PermissionLevel.EXECUTE,
+        },
+        { expectStatus: 403 }
+      )
+      expect(response.message).toEqual(
+        "You are not allowed to 'read' the resource type 'datasource'"
+      )
     })
   })
 
