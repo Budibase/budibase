@@ -148,9 +148,9 @@
   .header {
     flex-shrink: 0;
     position: relative;
-    height: 51px;
+    height: 50px;
     box-sizing: border-box;
-    padding: 0 12px 0 0;
+    padding: 0 var(--spacing-l);
     display: flex;
     align-items: center;
     border-bottom: 2px solid transparent;
@@ -164,7 +164,6 @@
   .input {
     font-family: var(--font-sans);
     position: absolute;
-    padding-left: 12px;
     color: var(--ink);
     background-color: transparent;
     border: none;
@@ -189,10 +188,8 @@
     align-items: center;
     height: 100%;
     box-sizing: border-box;
-    padding-left: 12px;
     flex: 1;
     opacity: 1;
-    transition: opacity 300ms ease-out;
     z-index: 1;
   }
 
@@ -210,7 +207,6 @@
     cursor: pointer;
     margin-right: 10px;
     opacity: 1;
-    transition: opacity 300ms ease-out;
   }
 
   .searchButton:hover {
