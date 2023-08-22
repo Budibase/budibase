@@ -18,7 +18,7 @@ export class PermissionAPI extends TestAPI {
       .expect(expectStatus)
   }
 
-  create = async (
+  set = async (
     {
       roleId,
       resourceId,
@@ -34,7 +34,7 @@ export class PermissionAPI extends TestAPI {
     return res.body
   }
 
-  remove = async (
+  revoke = async (
     {
       roleId,
       resourceId,
