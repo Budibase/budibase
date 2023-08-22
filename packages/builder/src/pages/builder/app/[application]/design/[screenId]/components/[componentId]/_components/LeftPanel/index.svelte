@@ -1,25 +1,28 @@
 <script>
   import Screens from "./Screens/index.svelte"
   import Components from "./Components/index.svelte"
+  import { selectedScreen } from "builderStore"
 </script>
 
 <div class="panel">
   <Screens />
   <div class="divider" />
-  <Components />
+  {#if $selectedScreen}
+    <Components />
+  {/if}
 </div>
 
 <style>
   .panel {
     width: 310px;
     height: 100%;
-    border-right: 2px solid var(--grey-2);
+    border-right: var(--border-light);
     display: flex;
     flex-direction: column;
     background: var(--background);
   }
 
   .divider {
-    border-bottom: 2px solid var(--grey-2);
+    border-bottom: var(--border-light);
   }
 </style>
