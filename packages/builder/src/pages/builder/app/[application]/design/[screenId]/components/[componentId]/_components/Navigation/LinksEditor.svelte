@@ -21,11 +21,7 @@
 </script>
 
 <Button cta on:click={openDrawer}>Configure Links</Button>
-<Drawer
-  bind:this={drawer}
-  title={"Navigation Links"}
-  width="calc(100% - 334px)"
->
+<Drawer bind:this={drawer} title={"Navigation Links"}>
   <svelte:fragment slot="description">
     Configure the links in your navigation bar.
   </svelte:fragment>
