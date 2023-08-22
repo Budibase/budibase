@@ -38,7 +38,8 @@ export async function processUser(
       : await groups.getBulk(user.userGroups)
   }
   // check if a group provides builder access
-  const builderAppIds = await groups.getGroupBuilderAppIds(user, appId, {
+  const builderAppIds = await groups.getGroupBuilderAppIds(user, {
+    appId,
     groups: groupList,
   })
   if (builderAppIds.length && !users.isBuilder(user, appId)) {
