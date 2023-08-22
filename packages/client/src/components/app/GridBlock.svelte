@@ -50,6 +50,7 @@
     canAddRows={allowAddRows}
     canEditRows={allowEditRows}
     canDeleteRows={allowDeleteRows}
+    canEditColumns={false}
     canExpandRows={false}
     canSaveSchema={false}
     showControls={false}
