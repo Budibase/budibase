@@ -80,9 +80,6 @@ export const createActions = context => {
 
   // Updates the datasources primary display column
   const changePrimaryDisplay = async column => {
-    if (!get(config).canEditPrimaryDisplay) {
-      return
-    }
     return await datasource.actions.saveDefinition({
       ...get(definition),
       primaryDisplay: column,

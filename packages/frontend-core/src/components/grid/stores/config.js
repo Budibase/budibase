@@ -1,8 +1,8 @@
 import { derivedMemo } from "../../../utils"
 import { derived } from "svelte/store"
 
-export const deriveStores = context => {
-  const { props, hasNonAutoColumn } = context
+export const createStores = context => {
+  const { props } = context
   const getProp = prop => derivedMemo(props, $props => $props[prop])
 
   // Derive and memoize some props so that we can react to them in isolation
@@ -16,16 +16,27 @@ export const deriveStores = context => {
   const notifySuccess = getProp("notifySuccess")
   const notifyError = getProp("notifyError")
 
+  return {
+    datasource,
+    initialSortColumn,
+    initialSortOrder,
+    initialFilter,
+    fixedRowHeight,
+    schemaOverrides,
+    columnWhitelist,
+    notifySuccess,
+    notifyError,
+  }
+}
+
+export const deriveStores = context => {
+  const { props, hasNonAutoColumn } = context
+
   // Derive features
   const config = derived(
     [props, hasNonAutoColumn],
     ([$props, $hasNonAutoColumn]) => {
-      let config = {
-        ...$props,
-
-        // Additional granular features which we don't expose as props
-        canEditPrimaryDisplay: $props.canEditColumns,
-      }
+      let config = { ...$props }
 
       // Disable some features if we're editing a view
       if ($props.datasource?.type === "viewV2") {
@@ -43,14 +54,5 @@ export const deriveStores = context => {
 
   return {
     config,
-    datasource,
-    initialSortColumn,
-    initialSortOrder,
-    initialFilter,
-    fixedRowHeight,
-    schemaOverrides,
-    columnWhitelist,
-    notifySuccess,
-    notifyError,
   }
 }
