@@ -122,14 +122,34 @@ describe("/permission", () => {
 
   describe("remove", () => {
     it("should be able to remove the permission", async () => {
-      const res = await request
-        .delete(`/api/permission/${STD_ROLE_ID}/${table._id}/read`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.permission.remove({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
       expect(res.body[0]._id).toEqual(STD_ROLE_ID)
       const permsRes = await getTablePermissions()
       expect(permsRes.body[STD_ROLE_ID]).toBeUndefined()
+    })
+
+    it("throw forbidden if the action is not allowed for the resource", async () => {
+      mockedSdk.resourceActionAllowed.mockResolvedValue({
+        allowed: false,
+        resourceType: DocumentType.DATASOURCE,
+        level: PermissionLevel.READ,
+      })
+
+      const response = await config.api.permission.remove(
+        {
+          roleId: STD_ROLE_ID,
+          resourceId: table._id,
+          level: PermissionLevel.EXECUTE,
+        },
+        { expectStatus: 403 }
+      )
+      expect(response.body.message).toEqual(
+        "You are not allowed to 'read' the resource type 'datasource'"
+      )
     })
   })
 

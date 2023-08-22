@@ -22,4 +22,20 @@ export class PermissionAPI extends TestAPI {
       .expect(expectStatus)
     return res.body
   }
+
+  remove = async (
+    {
+      roleId,
+      resourceId,
+      level,
+    }: { roleId: string; resourceId: string; level: PermissionLevel },
+    { expectStatus } = { expectStatus: 200 }
+  ) => {
+    const res = await this.request
+      .delete(`/api/permission/${roleId}/${resourceId}/${level}`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expectStatus)
+    return res
+  }
 }
