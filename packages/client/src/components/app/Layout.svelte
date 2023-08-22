@@ -73,18 +73,20 @@
   )
   $: autoCloseSidePanel = !$builderStore.inBuilder && $sidePanelStore.open
 
-  // Scroll navigation into view if selected
+  // Scroll navigation into view if selected.
+  // Memoize into a primitive to avoid spamming this whenever builder store
+  // changes.
+  $: selected =
+    $builderStore.inBuilder &&
+    $builderStore.selectedComponentId === "navigation"
   $: {
-    if (
-      $builderStore.inBuilder &&
-      $builderStore.selectedComponentId === "navigation"
-    ) {
+    if (selected) {
       const node = document.getElementsByClassName("nav-wrapper")?.[0]
       if (node) {
         node.style.scrollMargin = "100px"
         node.scrollIntoView({
           behavior: "smooth",
-          block: "start",
+          block: "nearest",
           inline: "start",
         })
       }
