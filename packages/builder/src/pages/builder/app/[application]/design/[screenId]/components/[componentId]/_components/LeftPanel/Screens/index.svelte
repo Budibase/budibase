@@ -5,6 +5,7 @@
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"
   import NewScreen from "components/design/NewScreen/index.svelte"
+  import { tick } from "svelte"
 
   let newScreen = false
   let search = false
@@ -15,8 +16,9 @@
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
 
-  const openSearch = () => {
+  const openSearch = async () => {
     search = true
+    await tick()
     searchInput.focus()
     screensContainer.scroll({ top: 0, behavior: "smooth" })
   }
@@ -136,7 +138,7 @@
     height: 212px;
     display: flex;
     flex-direction: column;
-    transition: height 300ms;
+    transition: height 300ms ease-out;
   }
 
   .screenSearch {
@@ -152,7 +154,7 @@
     display: flex;
     align-items: center;
     border-bottom: 2px solid transparent;
-    transition: border-bottom 300ms;
+    transition: border-bottom 300ms ease-out;
   }
 
   .headerScrolling {
@@ -164,15 +166,19 @@
     position: absolute;
     padding-left: 12px;
     color: var(--ink);
-    background-color: var(--background-alt);
+    background-color: transparent;
     border: none;
     font-size: var(--spectrum-alias-font-size-default);
     width: 260px;
     box-sizing: border-box;
+    display: none;
   }
-
   .input:focus {
     outline: none;
+  }
+
+  .screenSearch input {
+    display: block;
   }
 
   .title {
@@ -183,29 +189,13 @@
     padding-left: 12px;
     flex: 1;
     opacity: 1;
-    transition: opacity 300ms;
-    background-color: var(--background-alt);
+    transition: opacity 300ms ease-out;
     z-index: 1;
   }
 
   .content {
     overflow: auto;
     flex-grow: 1;
-  }
-
-  .content::-webkit-scrollbar-track {
-    background: var(--background-alt);
-  }
-
-  .content::-webkit-scrollbar {
-    width: 18px;
-  }
-
-  .content::-webkit-scrollbar-thumb {
-    background-color: var(--grey-3);
-    border-radius: 20px;
-    border: 1px solid var(--background-alt);
-    border-width: 5px 5px;
   }
 
   .screens :global(.nav-item) {
@@ -217,7 +207,7 @@
     cursor: pointer;
     margin-right: 10px;
     opacity: 1;
-    transition: opacity 300ms;
+    transition: opacity 300ms ease-out;
   }
 
   .searchButton:hover {
@@ -232,7 +222,7 @@
   .addButton {
     color: var(--grey-7);
     cursor: pointer;
-    transition: transform 300ms;
+    transition: transform 300ms ease-out;
   }
 
   .closeButton {
