@@ -16,7 +16,7 @@
     let newOffsets = {}
 
     // Calculate left offset
-    const offsetX = bounds.left + bounds.width + scrollLeft - 36
+    const offsetX = bounds.left + bounds.width + scrollLeft + 16
     if (offsetX > sidebarWidth) {
       newOffsets.left = offsetX - sidebarWidth
     } else {
@@ -78,20 +78,5 @@
     flex: 1 1 auto;
     overflow: auto;
     height: 0;
-  }
-
-  div::-webkit-scrollbar-track {
-    background: var(--background-alt);
-  }
-
-  div::-webkit-scrollbar {
-    width: 18px;
-  }
-
-  div::-webkit-scrollbar-thumb {
-    background-color: var(--grey-3);
-    border-radius: 20px;
-    border: 1px solid var(--background-alt);
-    border-width: 5px 5px;
   }
 </style>
