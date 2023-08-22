@@ -57,8 +57,8 @@
   <Grid
     {API}
     datasource={gridDatasource}
-    allowAddRows={!isUsersTable}
-    allowDeleteRows={!isUsersTable}
+    canAddRows={!isUsersTable}
+    canDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}

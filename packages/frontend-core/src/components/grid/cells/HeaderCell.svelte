@@ -196,7 +196,6 @@
         icon="Label"
         on:click={makeDisplayColumn}
         disabled={idx === "sticky" ||
-          !$config.canEditPrimaryDisplay ||
           bannedDisplayColumnTypes.includes(column.schema.type)}
       >
         Use as display column
