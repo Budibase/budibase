@@ -98,7 +98,7 @@ describe("/permission", () => {
         level: PermissionLevel.READ,
       })
 
-      const response = await config.api.permission.create(
+      const response = await config.api.permission.set(
         {
           roleId: STD_ROLE_ID,
           resourceId: table._id,
@@ -114,7 +114,7 @@ describe("/permission", () => {
 
   describe("remove", () => {
     it("should be able to remove the permission", async () => {
-      const res = await config.api.permission.remove({
+      const res = await config.api.permission.revoke({
         roleId: STD_ROLE_ID,
         resourceId: table._id,
         level: PermissionLevel.READ,
@@ -131,7 +131,7 @@ describe("/permission", () => {
         level: PermissionLevel.READ,
       })
 
-      const response = await config.api.permission.remove(
+      const response = await config.api.permission.revoke(
         {
           roleId: STD_ROLE_ID,
           resourceId: table._id,
