@@ -16,6 +16,7 @@
     border-right: 2px solid var(--grey-2);
     display: flex;
     flex-direction: column;
+    background: var(--background);
   }
 
   .divider {
