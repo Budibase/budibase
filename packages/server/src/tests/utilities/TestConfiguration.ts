@@ -50,6 +50,7 @@ import {
   SearchFilters,
   UserRoles,
   Automation,
+  PermissionLevel,
 } from "@budibase/types"
 import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
 
@@ -620,7 +621,11 @@ class TestConfiguration {
     return this._req(config, null, controllers.role.save)
   }
 
-  async addPermission(roleId: string, resourceId: string, level = "read") {
+  async addPermission(
+    roleId: string,
+    resourceId: string,
+    level = PermissionLevel.READ
+  ) {
     return this._req(
       null,
       {
