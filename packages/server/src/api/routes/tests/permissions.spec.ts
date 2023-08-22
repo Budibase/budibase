@@ -39,7 +39,11 @@ describe("/permission", () => {
 
     table = (await config.createTable()) as typeof table
     row = await config.createRow()
-    perms = await config.addPermission(STD_ROLE_ID, table._id)
+    perms = await config.api.permission.set({
+      roleId: STD_ROLE_ID,
+      resourceId: table._id,
+      level: PermissionLevel.READ,
+    })
   })
 
   describe("levels", () => {
@@ -74,11 +78,11 @@ describe("/permission", () => {
     })
 
     it("should get resource permissions with multiple roles", async () => {
-      perms = await config.addPermission(
-        HIGHER_ROLE_ID,
-        table._id,
-        PermissionLevel.WRITE
-      )
+      perms = await config.api.permission.set({
+        roleId: HIGHER_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.WRITE,
+      })
       const res = await config.api.permission.get(table._id)
       expect(res.body["read"]).toEqual(STD_ROLE_ID)
       expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
