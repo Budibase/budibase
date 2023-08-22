@@ -4,6 +4,7 @@ import {
   VirtualDocumentType,
 } from "@budibase/types"
 import { isViewID } from "../../../db/utils"
+import { features } from "@budibase/pro"
 
 type ResourceActionAllowedResult =
   | { allowed: true }
@@ -21,6 +22,10 @@ export async function resourceActionAllowed({
   level: PermissionLevel
 }): Promise<ResourceActionAllowedResult> {
   if (!isViewID(resourceId)) {
+    return { allowed: true }
+  }
+
+  if (await features.isViewPermissionEnabled()) {
     return { allowed: true }
   }
 
