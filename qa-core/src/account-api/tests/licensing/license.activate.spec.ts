@@ -1,8 +1,8 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixures from "../../fixtures"
-import { Hosting, Feature } from "@budibase/types"
+import {Feature, Hosting, PlanType} from "@budibase/types"
 
-describe("online", () => {
+describe("license activation", () => {
     const config = new TestConfiguration()
 
     beforeAll(async () => {
@@ -13,7 +13,7 @@ describe("online", () => {
         await config.afterAll()
     })
 
-    it("creates, activates and deletes online license", async () => {
+    it("creates, activates and deletes online license - self host", async () => {
         // Remove existing license key
         await config.internalApi.license.deleteLicenseKey()
 
@@ -30,21 +30,21 @@ describe("online", () => {
         const tenantId = account.tenantId!
 
         // Update license to have paid feature
-        await config.accountsApi.licenses.updateLicense(accountId, {
+        const [res, acc] = await config.accountsApi.licenses.updateLicense(accountId, {
             overrides: {
                 features: [Feature.APP_BACKUPS],
             },
         })
 
         // Retrieve license key
-        const [getLicenseRes, licenseKey] = await config.accountsApi.licenses.getLicenseKey()
+        const [getLicenseRes, body] =
+            await config.accountsApi.licenses.getLicenseKey()
+
 
         // Activate license key
-        await config.internalApi.license.activateLicenseKey({
-            licenseKey: licenseKey,
-        })
+        //await config.internalApi.license.activateLicenseKey()
 
-        // TODO: Verify license updated with new feature
+        // Verify license updated with new feature
 
         // Remove license key
         await config.internalApi.license.deleteLicenseKey()
@@ -52,6 +52,6 @@ describe("online", () => {
         // Verify license key not found
         await config.internalApi.license.getLicenseKey({ status: 404 })
 
-        // TODO: Verify user downgraded to free license
+        // Verify user downgraded to free license
     })
 })

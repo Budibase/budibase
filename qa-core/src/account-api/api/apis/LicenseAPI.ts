@@ -2,6 +2,7 @@ import AccountInternalAPIClient from "../AccountInternalAPIClient"
 import {
   Account,
   CreateOfflineLicenseRequest,
+  GetLicenseKeyResponse,
   GetOfflineLicenseResponse,
   UpdateLicenseRequest,
 } from "@budibase/types"
@@ -70,10 +71,14 @@ export default class LicenseAPI extends BaseAPI {
     return [response, json]
   }
 
-  async getLicenseKey(opts: APIRequestOpts = { status: 200 }) {
-    return this.doRequest(() => {
-      return this.client.get(`/api/license/key`)
-    }, opts)
+  async getLicenseKey(
+      opts: { status?: number } = {}
+  ): Promise<[Response, GetLicenseKeyResponse]>  {
+    const [response, json] = await this.client.get(
+        `/api/license/key`,
+    )
+    expect(response.status).toBe(opts.status ? opts.status : 200)
+    return [response, json]
   }
 
   async activateLicense(
@@ -100,5 +105,47 @@ export default class LicenseAPI extends BaseAPI {
       return this.client.post(`/api/license/key/regenerate`, {
       })
     }, opts)
+  }
+
+  async getPlans(opts: APIRequestOpts = { status: 200 }) {
+    return this.doRequest(() => {
+      return this.client.get(`/api/plans`)
+    }, opts)
+  }
+
+  async updatePlan(opts: APIRequestOpts = { status: 200 }) {
+    return this.doRequest(() => {
+      return this.client.put(`/api/license/plan`)
+    }, opts)
+  }
+
+  async updateAccountLicense(
+      accountId: string,
+      opts: { status?: number } = {}
+  ): Promise<Response> {
+    const [response, json] = await this.client.post(
+        `/api/accounts/${accountId}/license/refresh`,
+        {
+          internal: true,
+        }
+    )
+    expect(response.status).toBe(opts.status ? opts.status : 201)
+    return response
+  }
+
+  async getLicenseUsage(opts: APIRequestOpts = { status: 200 }) {
+    return this.doRequest(() => {
+      return this.client.get(`/api/license/usage`)
+    }, opts)
+  }
+
+  async updateLicenseUsage(
+      opts: { status?: number } = {}
+  ): Promise<Response> {
+    const [response, json] = await this.client.post(
+        `/api/license/usage/triggered`
+    )
+    expect(response.status).toBe(opts.status ? opts.status : 201)
+    return response
   }
 }

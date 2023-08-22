@@ -1,5 +1,5 @@
 import AccountInternalAPIClient from "./AccountInternalAPIClient"
-import { AccountAPI, LicenseAPI, AuthAPI } from "./apis"
+import {AccountAPI, LicenseAPI, AuthAPI, StripeAPI, EnvironmentAPI} from "./apis"
 import { State } from "../../types"
 
 export default class AccountInternalAPI {
@@ -8,11 +8,15 @@ export default class AccountInternalAPI {
   auth: AuthAPI
   accounts: AccountAPI
   licenses: LicenseAPI
+  stripe: StripeAPI
+  environment: EnvironmentAPI
 
   constructor(state: State) {
     this.client = new AccountInternalAPIClient(state)
     this.auth = new AuthAPI(this.client)
     this.accounts = new AccountAPI(this.client)
     this.licenses = new LicenseAPI(this.client)
+    this.stripe = new StripeAPI(this.client)
+    this.environment = new EnvironmentAPI(this.client)
   }
 }

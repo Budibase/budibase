@@ -27,4 +27,26 @@ export default class AuthAPI extends BaseAPI {
       return [res, cookie]
     }, opts)
   }
+
+  async getSsoProvider(
+      provider: string,
+      opts: { status?: number } = {}
+  ): Promise<[Response]> {
+    const [response, json] = await this.client.get(
+        `/api/auth/sso/${provider}`
+    )
+    expect(response.status).toBe(opts.status ? opts.status : 200)
+    return [response]
+  }
+
+  async getSsoProviderCallback(
+      provider: string,
+      opts: { status?: number } = {}
+  ): Promise<[Response]> {
+    const [response, json] = await this.client.get(
+        `/api/auth/sso/${provider}/callback`
+    )
+    expect(response.status).toBe(opts.status ? opts.status : 200)
+    return [response]
+  }
 }
