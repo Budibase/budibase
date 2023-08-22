@@ -475,7 +475,7 @@
     node.style.scrollMargin = "100px"
     node.scrollIntoView({
       behavior: "smooth",
-      block: "start",
+      block: "nearest",
       inline: "start",
     })
   }
