@@ -121,7 +121,7 @@
       type: "Screen",
       name: screen.routing.route,
       icon: "WebPage",
-      action: () => $goto(`./design/${screen._id}/components`),
+      action: () => $goto(`./design/${screen._id}`),
     })),
     ...($automationStore?.automations?.map(automation => ({
       type: "Automation",

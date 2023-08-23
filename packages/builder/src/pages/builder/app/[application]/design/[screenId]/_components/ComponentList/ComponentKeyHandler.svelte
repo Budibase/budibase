@@ -36,7 +36,7 @@
       confirmEjectDialog.show()
     },
     ["Ctrl+Enter"]: () => {
-      $goto(`./${$store.selectedComponentId}/new`)
+      $goto(`./:componentId/new`)
     },
     ["Delete"]: component => {
       // Don't show confirmation for the screen itself

@@ -207,10 +207,10 @@
   }
 
   const toggleAddComponent = () => {
-    if ($isActive(`./${selectedComponentId}/new`)) {
-      $goto(`./${selectedComponentId}`)
+    if ($isActive(`./:componentId/new`)) {
+      $goto(`./:componentId`)
     } else {
-      $goto(`./${selectedComponentId}/new`)
+      $goto(`./:componentId/new`)
     }
   }
 
