@@ -9,9 +9,7 @@
 <div class="app-panel">
   <div class="header">
     <div class="header-left">
-      {#if $isActive("./screens") || $isActive("./components")}
-        <UndoRedoControl store={screenHistoryStore} />
-      {/if}
+      <UndoRedoControl store={screenHistoryStore} />
     </div>
     <div class="header-right">
       {#if $store.clientFeatures.devicePreview}
