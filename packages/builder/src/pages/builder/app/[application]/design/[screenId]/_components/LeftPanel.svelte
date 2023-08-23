@@ -1,14 +1,11 @@
 <script>
   import ScreenList from "./ScreenList/index.svelte"
   import ComponentList from "./ComponentList/index.svelte"
-  import { selectedScreen } from "builderStore"
 </script>
 
 <div class="panel">
   <ScreenList />
-  {#if $selectedScreen}
-    <ComponentList />
-  {/if}
+  <ComponentList />
 </div>
 
 <style>

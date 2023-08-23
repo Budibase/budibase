@@ -2,7 +2,7 @@
   import AppPanel from "./_components/AppPanel.svelte"
   import * as routify from "@roxi/routify"
   import { syncURLToState } from "helpers/urlStateSync"
-  import { store } from "builderStore"
+  import { store, selectedScreen } from "builderStore"
   import { onDestroy } from "svelte"
   import LeftPanel from "./_components/LeftPanel.svelte"
 
@@ -22,13 +22,15 @@
   onDestroy(stopSyncing)
 </script>
 
-<div class="design">
-  <div class="content">
-    <LeftPanel />
-    <AppPanel />
-    <slot />
+{#if $selectedScreen}
+  <div class="design">
+    <div class="content">
+      <LeftPanel />
+      <AppPanel />
+      <slot />
+    </div>
   </div>
-</div>
+{/if}
 
 <style>
   .design {
