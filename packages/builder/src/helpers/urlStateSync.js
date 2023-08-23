@@ -56,6 +56,11 @@ export const syncURLToState = options => {
 
   // Navigate to a certain URL
   const gotoUrl = (url, params) => {
+    // Clean URL
+    if (url?.endsWith("/index")) {
+      url = url.replace("/index", "")
+    }
+    // Allow custom URL handling
     if (beforeNavigate) {
       const res = beforeNavigate(url, params)
       if (res?.url) {
@@ -64,10 +69,6 @@ export const syncURLToState = options => {
       if (res?.params) {
         params = res.params
       }
-    }
-    // Clean URL
-    if (url?.endsWith("/index")) {
-      url = url.replace("/index", "")
     }
     log("Navigating to", url, "with params", params)
     cachedGoto(url, params)

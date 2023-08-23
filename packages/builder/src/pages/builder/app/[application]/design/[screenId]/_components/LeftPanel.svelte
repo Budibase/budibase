@@ -1,12 +1,12 @@
 <script>
   import ScreenList from "./ScreenList/index.svelte"
   import ComponentList from "./ComponentList/index.svelte"
-  import { isActive } from "@roxi/routify"
+  import { selectedScreen } from "builderStore"
 </script>
 
 <div class="panel">
   <ScreenList />
-  {#if $isActive("./:componentId")}
+  {#if $selectedScreen}
     <ComponentList />
   {/if}
 </div>
