@@ -6,7 +6,7 @@
   import { findComponent } from "builderStore/componentUtils"
   import ComponentSettingsPanel from "./_components/Component/ComponentSettingsPanel.svelte"
   import NavigationPanel from "./_components/Navigation/index.svelte"
-  import ScreenSettingsPanel from "./_components/Screen/SettingsPanel.svelte"
+  import ScreenSettingsPanel from "./_components/Screen/index.svelte"
 
   $: componentId = $store.selectedComponentId
   $: store.actions.websocket.selectResource(componentId)
