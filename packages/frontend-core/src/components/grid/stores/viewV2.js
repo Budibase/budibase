@@ -3,7 +3,7 @@ import { get } from "svelte/store"
 const SuppressErrors = true
 
 export const createActions = context => {
-  const { definition, API, datasource } = context
+  const { definition, API, datasource, columns, stickyColumn } = context
 
   const refreshDefinition = async () => {
     const $datasource = get(datasource)
@@ -53,6 +53,15 @@ export const createActions = context => {
     )
   }
 
+  const canUseColumn = name => {
+    const $columns = get(columns)
+    const $sticky = get(stickyColumn)
+    return (
+      $columns.some(col => col.name === name && col.visible) ||
+      $sticky?.name === name
+    )
+  }
+
   return {
     viewV2: {
       actions: {
@@ -63,6 +72,7 @@ export const createActions = context => {
         deleteRows,
         getRow,
         isDatasourceValid,
+        canUseColumn,
       },
     },
   }
