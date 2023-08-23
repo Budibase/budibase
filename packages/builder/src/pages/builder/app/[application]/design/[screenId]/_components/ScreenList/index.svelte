@@ -9,11 +9,9 @@
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"
-  import NewScreen from "components/design/NewScreen/index.svelte"
   import { onMount, tick } from "svelte"
-  import { beforeUrlChange } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
 
-  let newScreen = false
   let search = false
   let resizing = false
   let searchValue = ""
@@ -25,14 +23,6 @@
   let dragOffset
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
-
-  // Close new screen when URL changes
-  $beforeUrlChange(() => {
-    if (newScreen) {
-      newScreen = false
-    }
-    return true
-  })
 
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -66,17 +56,13 @@
     if (search) {
       closeSearch()
     } else {
-      newScreen = true
+      $goto("../new")
     }
   }
 
   const onKeyDown = e => {
     if (e.key === "Escape") {
-      if (newScreen) {
-        newScreen = false
-      } else {
-        closeSearch()
-      }
+      closeSearch()
     }
   }
 
@@ -184,29 +170,7 @@
   />
 </div>
 
-<div class="newScreen" class:newScreenVisible={newScreen}>
-  <NewScreen
-    onClose={() => {
-      console.log("close")
-      newScreen = false
-    }}
-  />
-</div>
-
 <style>
-  .newScreen {
-    display: none;
-    width: 100vw;
-    bottom: 0;
-    position: absolute;
-    height: calc(100vh - 58px);
-    z-index: 2;
-    background-color: var(--background);
-  }
-  .newScreenVisible {
-    display: initial;
-  }
-
   .screens {
     display: flex;
     flex-direction: column;
