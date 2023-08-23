@@ -19,7 +19,6 @@ import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
-import { env } from "@budibase/backend-core"
 
 const config = setup.getConfig()!
 
@@ -51,16 +50,6 @@ describe("postgres integrations", () => {
       )
       .start()
 
-    const containerCouch = await new GenericContainer("budibase/couchdb")
-      .withExposedPorts(5984)
-      .withEnv("COUCHDB_PASSWORD", "budibase")
-      .withEnv("COUCHDB_USER", "budibase")
-      .start()
-    env._set(
-      "COUCH_DB_URL",
-      `http://localhost:${containerCouch.getMappedPort(5984)}`
-    )
-
     host = containerPostgres.getContainerIpAddress()
     port = containerPostgres.getMappedPort(5432)
 
@@ -68,7 +57,6 @@ describe("postgres integrations", () => {
     const apiKey = await config.generateApiKey()
 
     containers.push(containerPostgres)
-    containers.push(containerCouch)
 
     makeRequest = generateMakeRequest(apiKey, true)
   })
