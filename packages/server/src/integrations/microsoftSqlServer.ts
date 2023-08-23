@@ -218,6 +218,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   TABLES_SQL =
     "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
 
+  CHARACTERS_TO_ESCAPE_REGEX = /[\/#+\-&|!(){}\]^"~'*?:\\]/g
+
   constructor(config: MSSQLConfig) {
     super(SqlClient.MS_SQL)
     this.config = config
@@ -523,13 +525,30 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
     const columns = `"${Object.keys(rowsToInsert[0] || {}).join(`","`)}"`
     const values = await this.getBulkValues(rowsToInsert, SqlClient.MS_SQL)
-    console.log(
-      "STATEMENT ",
-      `INSERT INTO "${query.table}" (${columns}) VALUES ${values}`
-    )
     return await this.create(
       `INSERT INTO "${query.table}" (${columns}) VALUES ${values}`
     )
+  }
+
+  async getBulkValues(rowsToInsert: Array<any>, source?: SqlClient) {
+    let finalValues = ""
+    for (let row of rowsToInsert) {
+      let values = ""
+      for (let value of Object.values(row)) {
+        if (typeof value === "string") {
+          values += `'${value.replace(
+            this.CHARACTERS_TO_ESCAPE_REGEX,
+            "\\$&"
+          )}',`
+          values = values.replace("\\'", "''")
+        } else {
+          values += `${value},`
+        }
+      }
+      values = values.substring(0, values.length - 1)
+      finalValues += `(${values}),`
+    }
+    return finalValues.substring(0, finalValues.length - 1)
   }
 
   async getExternalSchema() {

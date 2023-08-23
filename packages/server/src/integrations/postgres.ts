@@ -37,6 +37,7 @@ if (types) {
 }
 
 const JSON_REGEX = /'{.*}'::json/s
+const CHARACTERS_TO_ESCAPE_REGEX = /[\/#+\-&|!(){}\]^"~'*?:\\]/g
 
 interface PostgresConfig {
   host: string
@@ -426,6 +427,23 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     return await this.create(
       `INSERT INTO "${query.table}" (${columns}) VALUES ${values}`
     )
+  }
+
+  async getBulkValues(rowsToInsert: Array<any>, source?: SqlClient) {
+    let finalValues = ""
+    for (let row of rowsToInsert) {
+      let values = ""
+      for (let value of Object.values(row)) {
+        if (typeof value === "string") {
+          values += `E'${value.replace(CHARACTERS_TO_ESCAPE_REGEX, "\\$&")}',`
+        } else {
+          values += `${value},`
+        }
+      }
+      values = values.substring(0, values.length - 1)
+      finalValues += `(${values}),`
+    }
+    return finalValues.substring(0, finalValues.length - 1)
   }
 
   async getExternalSchema() {
