@@ -18,7 +18,8 @@ import {
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
-import { GenericContainer, Wait } from "testcontainers"
+import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
+import { env } from "@budibase/backend-core"
 
 const config = setup.getConfig()!
 
@@ -37,21 +38,45 @@ describe("postgres integrations", () => {
 
   let host: string
   let port: number
+  const containers: StartedTestContainer[] = []
 
   beforeAll(async () => {
-    const container = await new GenericContainer("postgres")
+    const containerPostgres = await new GenericContainer("postgres")
       .withExposedPorts(5432)
       .withEnv("POSTGRES_PASSWORD", "password")
-      .withWaitStrategy(Wait.forLogMessage("PostgreSQL init process complete; ready for start up."))
+      .withWaitStrategy(
+        Wait.forLogMessage(
+          "PostgreSQL init process complete; ready for start up."
+        )
+      )
       .start()
 
-    host = container.getContainerIpAddress()
-    port = container.getMappedPort(5432)
+    const containerCouch = await new GenericContainer("budibase/couchdb")
+      .withExposedPorts(5984)
+      .withEnv("COUCHDB_PASSWORD", "budibase")
+      .withEnv("COUCHDB_USER", "budibase")
+      .start()
+    env._set(
+      "COUCH_DB_URL",
+      `http://localhost:${containerCouch.getMappedPort(5984)}`
+    )
+
+    host = containerPostgres.getContainerIpAddress()
+    port = containerPostgres.getMappedPort(5432)
 
     await config.init()
     const apiKey = await config.generateApiKey()
 
+    containers.push(containerPostgres)
+    containers.push(containerCouch)
+
     makeRequest = generateMakeRequest(apiKey, true)
+  })
+
+  afterAll(async () => {
+    for (let container of containers) {
+      await container.stop()
+    }
   })
 
   function pgDatasourceConfig() {
