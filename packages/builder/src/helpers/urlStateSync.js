@@ -65,6 +65,10 @@ export const syncURLToState = options => {
         params = res.params
       }
     }
+    // Clean URL
+    if (url?.endsWith("/index")) {
+      url = url.replace("/index", "")
+    }
     log("Navigating to", url, "with params", params)
     cachedGoto(url, params)
   }

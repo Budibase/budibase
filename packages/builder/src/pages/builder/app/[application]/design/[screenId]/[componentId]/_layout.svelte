@@ -13,12 +13,8 @@
   $: params = routify.params
   $: routeComponentId = $params.componentId
 
-  const cleanUrl = url => {
-    // Strip trailing slashes
-    if (url?.endsWith("/index")) {
-      url = url.replace("/index", "")
-    }
-    // Hide new component panel whenever component ID changes
+  // Hide new component panel whenever component ID changes
+  const closeNewComponentPanel = url => {
     if (url?.endsWith("/new")) {
       url = url.replace("/new", "")
     }
@@ -40,7 +36,7 @@
     fallbackUrl: "../",
     store,
     routify,
-    beforeNavigate: cleanUrl,
+    beforeNavigate: closeNewComponentPanel,
   })
 
   onDestroy(stopSyncing)
