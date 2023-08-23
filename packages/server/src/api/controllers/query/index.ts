@@ -1,4 +1,4 @@
-import { generateQueryID, getQueryParams, isProdAppID } from "../../../db/utils"
+import { generateQueryID } from "../../../db/utils"
 import { BaseQueryVerbs, FieldTypes } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
@@ -10,6 +10,7 @@ import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent } from "../../../threads/definitions"
 import { Query } from "@budibase/types"
+import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
@@ -28,15 +29,7 @@ function enrichQueries(input: any) {
 }
 
 export async function fetch(ctx: any) {
-  const db = context.getAppDB()
-
-  const body = await db.allDocs(
-    getQueryParams(null, {
-      include_docs: true,
-    })
-  )
-
-  ctx.body = enrichQueries(body.rows.map((row: any) => row.doc))
+  ctx.body = await sdk.queries.fetch()
 }
 
 const _import = async (ctx: any) => {
@@ -84,6 +77,11 @@ export async function save(ctx: any) {
   const db = context.getAppDB()
   const query = ctx.request.body
 
+  // Validate query name
+  if (!query?.name.match(ValidQueryNameRegex)) {
+    ctx.throw(400, "Invalid query name")
+  }
+
   const datasource = await sdk.datasources.get(query.datasourceId)
 
   let eventFn
@@ -103,14 +101,8 @@ export async function save(ctx: any) {
 }
 
 export async function find(ctx: any) {
-  const db = context.getAppDB()
-  const query = enrichQueries(await db.get(ctx.params.queryId))
-  // remove properties that could be dangerous in real app
-  if (isProdAppID(ctx.appId)) {
-    delete query.fields
-    delete query.parameters
-  }
-  ctx.body = query
+  const queryId = ctx.params.queryId
+  ctx.body = await sdk.queries.find(queryId)
 }
 
 //Required to discern between OIDC OAuth config entries
@@ -135,7 +127,7 @@ export async function preview(ctx: any) {
   const query = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
-  const { fields, parameters, queryVerb, transformer, queryId } = query
+  const { fields, parameters, queryVerb, transformer, queryId, schema } = query
 
   const authConfigCtx: any = getAuthConfig(ctx)
 
@@ -148,6 +140,7 @@ export async function preview(ctx: any) {
       parameters,
       transformer,
       queryId,
+      schema,
       // have to pass down to the thread runner - can't put into context now
       environmentVariables: envVars,
       ctx: {
@@ -157,7 +150,7 @@ export async function preview(ctx: any) {
     }
     const runFn = () => Runner.run(inputs)
 
-    const { rows, keys, info, extra } = await quotas.addQuery(runFn, {
+    const { rows, keys, info, extra } = await quotas.addQuery<any>(runFn, {
       datasourceId: datasource._id,
     })
     const schemaFields: any = {}
@@ -243,12 +236,16 @@ async function execute(
         user: ctx.user,
         auth: { ...authConfigCtx },
       },
+      schema: query.schema,
     }
     const runFn = () => Runner.run(inputs)
 
-    const { rows, pagination, extra, info } = await quotas.addQuery(runFn, {
-      datasourceId: datasource._id,
-    })
+    const { rows, pagination, extra, info } = await quotas.addQuery<any>(
+      runFn,
+      {
+        datasourceId: datasource._id,
+      }
+    )
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw

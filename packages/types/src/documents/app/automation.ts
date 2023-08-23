@@ -100,6 +100,10 @@ export const AutomationStepIdArray = [
   ...Object.values(AutomationTriggerStepId),
 ]
 
+export enum AutomationState {
+  DISABLED = "disabled",
+}
+
 export interface Automation extends Document {
   definition: {
     steps: AutomationStep[]
@@ -112,6 +116,7 @@ export interface Automation extends Document {
   name: string
   internal?: boolean
   type?: string
+  state?: AutomationState
 }
 
 interface BaseIOStructure {
@@ -174,12 +179,15 @@ export interface AutomationTrigger extends AutomationTriggerSchema {
   id: string
 }
 
+export enum AutomationStepStatus {
+  NO_ITERATIONS = "no_iterations",
+}
+
 export enum AutomationStatus {
   SUCCESS = "success",
   ERROR = "error",
   STOPPED = "stopped",
   STOPPED_ERROR = "stopped_error",
-  NO_ITERATIONS = "no_iterations",
 }
 
 export interface AutomationResults {

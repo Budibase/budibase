@@ -2,21 +2,16 @@
   "name": "@budibase/types",
   "version": "0.0.0",
   "description": "Budibase types",
-  "main": "dist/cjs/index.js",
-  "types": "dist/mjs/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/mjs/index.js",
-      "require": "./dist/cjs/index.js"
-    }
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
     "prebuild": "rimraf dist/",
-    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig-cjs.build.json",
+    "build": "node ../../scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "dev:builder": "yarn prebuild && concurrently \"tsc -p tsconfig.build.json --watch\" \"tsc -p tsconfig-cjs.build.json --watch\""
+    "dev:builder": "yarn prebuild && tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null"
   },
   "jest": {},
   "devDependencies": {

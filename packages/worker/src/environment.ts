@@ -1,4 +1,8 @@
-const { join } = require("path")
+import { env as coreEnv } from "@budibase/backend-core"
+import { ServiceType } from "@budibase/types"
+import { join } from "path"
+
+coreEnv._set("SERVICE_TYPE", ServiceType.WORKER)
 
 function isDev() {
   return process.env.NODE_ENV !== "production"
@@ -27,6 +31,8 @@ function parseIntSafe(number: any) {
 }
 
 const environment = {
+  // features
+  WORKER_FEATURES: process.env.WORKER_FEATURES,
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
@@ -61,7 +67,6 @@ const environment = {
   CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 3600,
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   ENCRYPTED_TEST_PUBLIC_API_KEY: process.env.ENCRYPTED_TEST_PUBLIC_API_KEY,
-  OFFLINE_MODE: process.env.OFFLINE_MODE,
   /**
    * Mock the email service in use - links to ethereal hosted emails are logged instead.
    */

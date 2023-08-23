@@ -95,9 +95,9 @@
   {#if !creating}
     <div>
       A user's email, role, first and last names cannot be changed from within
-      the app builder. Please go to the <Link
-        on:click={$goto("/builder/portal/manage/users")}>user portal</Link
-      > to do this.
+      the app builder. Please go to the
+      <Link on:click={$goto("/builder/portal/users/users")}>user portal</Link>
+      to do this.
     </div>
   {/if}
   <RowFieldControl

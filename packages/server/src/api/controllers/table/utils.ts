@@ -1,6 +1,6 @@
 import { parse, isSchema, isRows } from "../../../utilities/schema"
 import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
-import { isEqual } from "lodash"
+import isEqual from "lodash/isEqual"
 import {
   AutoFieldSubTypes,
   FieldTypes,
@@ -418,7 +418,7 @@ export function areSwitchableTypes(type1: any, type2: any) {
   return false
 }
 
-export function hasTypeChanged(table: any, oldTable: any) {
+export function hasTypeChanged(table: Table, oldTable: Table | undefined) {
   if (!oldTable) {
     return false
   }

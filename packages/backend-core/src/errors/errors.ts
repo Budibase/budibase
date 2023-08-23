@@ -55,6 +55,18 @@ export class HTTPError extends BudibaseError {
   }
 }
 
+export class NotFoundError extends HTTPError {
+  constructor(message: string) {
+    super(message, 404)
+  }
+}
+
+export class BadRequestError extends HTTPError {
+  constructor(message: string) {
+    super(message, 400)
+  }
+}
+
 // LICENSING
 
 export class UsageLimitError extends HTTPError {

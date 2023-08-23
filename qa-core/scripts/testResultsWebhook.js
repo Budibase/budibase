@@ -42,7 +42,7 @@ async function discordResultsNotification(report) {
       Accept: "application/json",
     },
     body: JSON.stringify({
-      content: `**Nightly Tests Status**: ${OUTCOME}`,
+      content: `**Tests Status**: ${OUTCOME}`,
       embeds: [
         {
           title: `Budi QA Bot - ${env}`,

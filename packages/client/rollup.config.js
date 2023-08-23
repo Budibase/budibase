@@ -25,11 +25,11 @@ const devPaths = production
   : [
       {
         find: "@budibase/shared-core",
-        replacement: path.resolve("../shared-core/dist/mjs/src/index"),
+        replacement: path.resolve("../shared-core/dist/index"),
       },
       {
         find: "@budibase/types",
-        replacement: path.resolve("../types/dist/mjs/index"),
+        replacement: path.resolve("../types/dist/index"),
       },
     ]
 

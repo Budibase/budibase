@@ -1,21 +1,8 @@
-import { SearchFilters } from "@budibase/types"
+import { SearchFilters, SearchParams } from "@budibase/types"
 import { isExternalTable } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
 import { Format } from "../../../api/controllers/view/exporters"
-
-export interface SearchParams {
-  tableId: string
-  paginate?: boolean
-  query: SearchFilters
-  bookmark?: string
-  limit?: number
-  sort?: string
-  sortOrder?: string
-  sortType?: string
-  version?: string
-  disableEscaping?: boolean
-}
 
 export interface ViewParams {
   calculation: string
@@ -30,7 +17,11 @@ function pickApi(tableId: any) {
   return internal
 }
 
-export async function search(options: SearchParams) {
+export async function search(options: SearchParams): Promise<{
+  rows: any[]
+  hasNextPage?: boolean
+  bookmark?: number | null
+}> {
   return pickApi(options.tableId).search(options)
 }
 

@@ -5,11 +5,12 @@ import {
   cache,
   tenancy,
   context,
+  users,
 } from "@budibase/backend-core"
 import env from "../environment"
 import { groups } from "@budibase/pro"
 import { UserCtx, ContextUser, User, UserGroup } from "@budibase/types"
-import { cloneDeep } from "lodash"
+import cloneDeep from "lodash/cloneDeep"
 
 export function updateAppRole(
   user: ContextUser,
@@ -22,8 +23,7 @@ export function updateAppRole(
   }
   // if in an multi-tenancy environment make sure roles are never updated
   if (env.MULTI_TENANCY && appId && !tenancy.isUserInAppTenant(appId, user)) {
-    delete user.builder
-    delete user.admin
+    user = users.removePortalUserPermissions(user)
     user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
     return user
   }
@@ -32,7 +32,7 @@ export function updateAppRole(
     user.roleId = user.roles[dbCore.getProdAppID(appId)]
   }
   // if a role wasn't found then either set as admin (builder) or public (everyone else)
-  if (!user.roleId && user.builder && user.builder.global) {
+  if (!user.roleId && users.isBuilder(user, appId)) {
     user.roleId = roles.BUILTIN_ROLE_IDS.ADMIN
   } else if (!user.roleId && !user?.userGroups?.length) {
     user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC

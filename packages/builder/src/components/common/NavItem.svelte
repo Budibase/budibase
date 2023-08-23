@@ -21,6 +21,7 @@
   export let id
   export let showTooltip = false
   export let selectedBy = null
+  export let compact = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -80,8 +81,9 @@
     {#if withArrow}
       <div
         class:opened
-        class:relative={indentLevel === 0}
-        class:absolute={indentLevel > 0}
+        class:relative={indentLevel === 0 && !compact}
+        class:absolute={indentLevel > 0 && !compact}
+        class:compact
         class="icon arrow"
         on:click={onIconClick}
       >
@@ -132,7 +134,6 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
-    position: relative;
   }
   .nav-item.scrollable {
     flex-direction: column;
@@ -195,9 +196,20 @@
     padding: 8px;
     margin-left: -8px;
   }
+
+  .compact {
+    position: absolute;
+    left: 6px;
+    padding: 8px;
+    margin-left: -8px;
+  }
   .icon.arrow :global(svg) {
     width: 12px;
     height: 12px;
+  }
+  .icon.arrow.compact :global(svg) {
+    width: 9px;
+    height: 9px;
   }
   .icon.arrow.relative {
     position: relative;
