@@ -156,8 +156,6 @@
         store.actions.components.copy(source, true, false)
         await store.actions.components.paste(destination, data.mode)
       }
-    } else if (type === "click-nav") {
-      $store.selectedComponentId = "navigation"
     } else if (type === "request-add-component") {
       toggleAddComponent()
     } else if (type === "highlight-setting") {

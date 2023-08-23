@@ -176,7 +176,7 @@
           class:hidden={$routeStore.queryParams?.peek}
           class:clickable={$builderStore.inBuilder}
           on:click={$builderStore.inBuilder
-            ? builderStore.actions.clickNav
+            ? builderStore.actions.selectComponent(navigationId)
             : null}
           style={navStyle}
         >
