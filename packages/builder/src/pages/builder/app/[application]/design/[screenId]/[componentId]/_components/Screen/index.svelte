@@ -1,15 +1,51 @@
 <script>
-  import RightPanel from "components/design/RightPanel.svelte"
-  import GeneralPane from "./GeneralPane.svelte"
-  import ThemePane from "./ThemePane.svelte"
-
+  import GeneralPanel from "./GeneralPanel.svelte"
+  import ThemePanel from "./ThemePanel.svelte"
   import { selectedScreen } from "builderStore"
+  import Panel from "components/design/Panel.svelte"
+  import { capitalise } from "helpers"
+  import { ActionButton, Layout } from "@budibase/bbui"
+
+  let activeTab = "settings"
+  const tabs = ["settings", "theme"]
 </script>
 
-<RightPanel
+<Panel
   title={$selectedScreen.routing.route}
   icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
+  borderLeft
+  wide
 >
-  <GeneralPane />
-  <ThemePane />
-</RightPanel>
+  <div slot="panel-header-content">
+    <div class="settings-tabs">
+      {#each tabs as tab}
+        <ActionButton
+          size="M"
+          quiet
+          selected={activeTab === tab}
+          on:click={() => {
+            activeTab = tab
+          }}
+        >
+          {capitalise(tab)}
+        </ActionButton>
+      {/each}
+    </div>
+  </div>
+  <Layout gap="S" paddingX="L" paddingY="XL">
+    {#if activeTab === "theme"}
+      <ThemePanel />
+    {:else}
+      <GeneralPanel />
+    {/if}
+  </Layout>
+</Panel>
+
+<style>
+  .settings-tabs {
+    display: flex;
+    gap: var(--spacing-s);
+    padding: 0 var(--spacing-l);
+    padding-bottom: var(--spacing-l);
+  }
+</style>
