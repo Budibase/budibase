@@ -49,23 +49,27 @@
           <NavItem
             text="Screen"
             indentLevel={0}
-            selected={$store.selectedComponentId === "screen"}
+            selected={$store.selectedComponentId ===
+              `${$store.selectedScreenId}-screen`}
             opened
             scrollable
             icon="WebPage"
             on:drop={onDrop}
             on:click={() => {
-              $store.selectedComponentId = "screen"
+              $store.selectedComponentId = `${$store.selectedScreenId}-screen`
             }}
             id={`component-screen`}
-            selectedBy={$userSelectedResourceMap["screen"]}
+            selectedBy={$userSelectedResourceMap[
+              `${$store.selectedScreenId}-screen`
+            ]}
           >
             <ScreenslotDropdownMenu component={$selectedScreen?.props} />
           </NavItem>
           <NavItem
             text="Navigation"
             indentLevel={0}
-            selected={$store.selectedComponentId === "navigation"}
+            selected={$store.selectedComponentId ===
+              `${$store.selectedScreenId}-navigation`}
             opened
             scrollable
             icon={$selectedScreen.showNavigation
@@ -73,10 +77,12 @@
               : "VisibilityOff"}
             on:drop={onDrop}
             on:click={() => {
-              $store.selectedComponentId = "navigation"
+              $store.selectedComponentId = `${$store.selectedScreenId}-navigation`
             }}
             id={`component-nav`}
-            selectedBy={$userSelectedResourceMap["navigation"]}
+            selectedBy={$userSelectedResourceMap[
+              `${$store.selectedScreenId}-navigation`
+            ]}
           />
           <ComponentTree
             level={0}

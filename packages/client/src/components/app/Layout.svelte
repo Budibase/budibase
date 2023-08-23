@@ -78,7 +78,7 @@
   // changes.
   $: selected =
     $builderStore.inBuilder &&
-    $builderStore.selectedComponentId === "navigation"
+    $builderStore.selectedComponentId?.endsWith("-navigation")
   $: {
     if (selected) {
       const node = document.getElementsByClassName("nav-wrapper")?.[0]
@@ -152,7 +152,7 @@
   use:styleable={$component.styles}
   class:desktop={!mobile}
   class:mobile={!!mobile}
-  data-id="screen"
+  data-id={`${$builderStore.screen?._id}-screen`}
   data-name="Screen"
   data-icon="WebPage"
 >

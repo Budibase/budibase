@@ -4,7 +4,7 @@
 
   $: {
     if ($frontendStore.screens.length > 0) {
-      $redirect(`./${$frontendStore.screens[0]._id}/screen`)
+      $redirect(`./${$frontendStore.screens[0]._id}`)
     } else {
       $redirect("./new")
     }

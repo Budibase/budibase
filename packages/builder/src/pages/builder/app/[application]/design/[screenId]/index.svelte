@@ -1,5 +1,6 @@
 <script>
   import { redirect } from "@roxi/routify"
+  import { store } from "builderStore"
 
-  $redirect("./screen")
+  $redirect(`./${$store.selectedScreenId}-screen`)
 </script>
