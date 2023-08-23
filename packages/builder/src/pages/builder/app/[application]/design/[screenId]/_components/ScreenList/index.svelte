@@ -1,20 +1,25 @@
 <script>
   import { Icon, Layout, Body } from "@budibase/bbui"
-  import { store, sortedScreens, userSelectedResourceMap } from "builderStore"
+  import {
+    store,
+    sortedScreens,
+    userSelectedResourceMap,
+    screensHeight,
+  } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"
   import NewScreen from "components/design/NewScreen/index.svelte"
-  import { tick } from "svelte"
+  import { onMount, tick } from "svelte"
 
   let newScreen = false
   let search = false
   let resizing = false
   let searchValue = ""
   let searchInput
+  let container
   let screensContainer
   let scrolling = false
-  let height = "210px"
   let previousHeight = null
   let dragOffset
 
@@ -27,14 +32,14 @@
     await tick()
     searchInput.focus()
     screensContainer.scroll({ top: 0, behavior: "smooth" })
-    previousHeight = height
-    height = "calc(100% + 1px)"
+    previousHeight = $screensHeight
+    $screensHeight = "calc(100% + 1px)"
   }
 
   const closeSearch = async () => {
     if (previousHeight) {
       // Restore previous height and wait for animation
-      height = previousHeight
+      $screensHeight = previousHeight
       previousHeight = null
       await sleep(300)
     }
@@ -71,28 +76,48 @@
   }
 
   const startResizing = e => {
+    // Reset the height store to match the true height
+    $screensHeight = `${container.getBoundingClientRect().height}px`
+
+    // Store an offset to easily compute new height when moving the mouse
+    dragOffset = parseInt($screensHeight) - e.clientY
+
+    // Add event listeners
     resizing = true
-    dragOffset = parseInt(height) - e.clientY
     document.addEventListener("mousemove", resize)
     document.addEventListener("mouseup", stopResizing)
   }
 
   const resize = e => {
+    // Prevent negative heights as this screws with layout
     const newHeight = Math.max(0, e.clientY + dragOffset)
     if (newHeight == null || isNaN(newHeight)) {
       return
     }
-    height = `${newHeight}px`
+    $screensHeight = `${newHeight}px`
   }
 
   const stopResizing = () => {
     resizing = false
     document.removeEventListener("mousemove", resize)
   }
+
+  onMount(() => {
+    // Ensure we aren't stuck at 100% height from leaving while searching
+    if ($screensHeight == null || isNaN(parseInt($screensHeight))) {
+      $screensHeight = "210px"
+    }
+  })
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-<div class="screens" class:search class:resizing style={`height:${height};`}>
+<div
+  class="screens"
+  class:search
+  class:resizing
+  style={`height:${$screensHeight};`}
+  bind:this={container}
+>
   <div class="header" class:scrolling>
     <input
       readonly={!search}
@@ -143,7 +168,11 @@
     {/if}
   </div>
 
-  <div class="divider" on:mousedown={startResizing} />
+  <div
+    class="divider"
+    on:mousedown={startResizing}
+    on:dblclick={() => screensHeight.set("210px")}
+  />
 </div>
 
 <div class="newScreen" class:newScreenVisible={newScreen}>

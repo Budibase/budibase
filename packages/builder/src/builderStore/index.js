@@ -4,7 +4,7 @@ import { getTemporalStore } from "./store/temporal"
 import { getThemeStore } from "./store/theme"
 import { getUserStore } from "./store/users"
 import { getDeploymentStore } from "./store/deployments"
-import { derived } from "svelte/store"
+import { derived, writable } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
 import { createHistoryStore } from "builderStore/store/history"
@@ -147,3 +147,5 @@ export const userSelectedResourceMap = derived(userStore, $userStore => {
 export const isOnlyUser = derived(userStore, $userStore => {
   return $userStore.length < 2
 })
+
+export const screensHeight = writable("210px")
