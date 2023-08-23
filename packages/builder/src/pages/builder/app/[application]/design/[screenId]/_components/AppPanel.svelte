@@ -3,7 +3,6 @@
   import AppPreview from "./AppPreview.svelte"
   import { store, screenHistoryStore } from "builderStore"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
-  import { isActive } from "@roxi/routify"
 </script>
 
 <div class="app-panel">
