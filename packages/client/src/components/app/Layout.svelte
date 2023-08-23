@@ -151,8 +151,6 @@
     }
     return style
   }
-
-  $: console.log($builderStore.selectedComponentId)
 </script>
 
 <div
