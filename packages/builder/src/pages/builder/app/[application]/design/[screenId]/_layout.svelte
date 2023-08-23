@@ -6,9 +6,6 @@
   import { onDestroy } from "svelte"
   import LeftPanel from "./_components/LeftPanel.svelte"
 
-  $: screenId = $store.selectedScreenId
-  $: store.actions.websocket.selectResource(screenId)
-
   // Keep URL and state in sync for selected screen ID
   const stopSyncing = syncURLToState({
     urlParam: "screenId",
