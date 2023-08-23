@@ -15,7 +15,7 @@
 
   const toNewComponentRoute = () => {
     if ($isActive(`./${$store.selectedComponentId}/new`)) {
-      return
+      $goto(`./${$store.selectedComponentId}`)
     } else {
       $goto(`./${$store.selectedComponentId}/new`)
     }
