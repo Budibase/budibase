@@ -56,7 +56,7 @@
   const deleteScreen = async () => {
     try {
       await store.actions.screens.delete(screen)
-      notifications.success("Deleted screen successfully.")
+      notifications.success("Deleted screen successfully")
     } catch (err) {
       notifications.error("Error deleting screen")
     }

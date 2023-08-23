@@ -67,7 +67,8 @@
         }
       }
 
-      // Select and go to new screen
+      // Go to new screen
+      $goto(`./${screenId}`)
       store.actions.screens.select(screenId)
     } catch (error) {
       console.log(error)

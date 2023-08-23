@@ -42,11 +42,13 @@
   onDestroy(stopSyncing)
 </script>
 
-{#if routeComponentId === "screen"}
-  <ScreenSettingsPanel />
-{:else if routeComponentId === "navigation"}
-  <NavigationPanel />
-{:else}
-  <ComponentSettingsPanel />
+{#if $selectedScreen}
+  {#if routeComponentId === "screen"}
+    <ScreenSettingsPanel />
+  {:else if routeComponentId === "navigation"}
+    <NavigationPanel />
+  {:else}
+    <ComponentSettingsPanel />
+  {/if}
 {/if}
 <slot />
