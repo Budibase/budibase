@@ -53,11 +53,8 @@
       store.actions.components.selectNext()
     },
     ["Escape"]: () => {
-      if ($isActive("./new")) {
-        event.preventDefault()
-        event.stopPropagation()
-
-        $goto("./")
+      if ($isActive(`./:componentId/new`)) {
+        $goto(`./${$store.selectedComponentId}`)
       }
     },
   }
