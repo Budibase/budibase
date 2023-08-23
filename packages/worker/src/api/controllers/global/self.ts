@@ -48,7 +48,7 @@ export async function generateAPIKey(ctx: any) {
   } catch (err) {
     devInfo = { _id: id, userId }
   }
-  devInfo.apiKey = await apiKey
+  devInfo.apiKey = apiKey
   await db.put(devInfo)
   ctx.body = cleanupDevInfo(devInfo)
 }
@@ -63,7 +63,7 @@ export async function fetchAPIKey(ctx: any) {
     devInfo = {
       _id: id,
       userId: ctx.user._id,
-      apiKey: await newApiKey(),
+      apiKey: newApiKey(),
     }
     await db.put(devInfo)
   }
