@@ -11,6 +11,7 @@
   import DropdownMenu from "./DropdownMenu.svelte"
   import NewScreen from "components/design/NewScreen/index.svelte"
   import { onMount, tick } from "svelte"
+  import { beforeUrlChange } from "@roxi/routify"
 
   let newScreen = false
   let search = false
@@ -24,6 +25,14 @@
   let dragOffset
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
+
+  // Close new screen when URL changes
+  $beforeUrlChange(() => {
+    if (newScreen) {
+      newScreen = false
+    }
+    return true
+  })
 
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -176,7 +185,12 @@
 </div>
 
 <div class="newScreen" class:newScreenVisible={newScreen}>
-  <NewScreen onClose={() => (newScreen = false)} />
+  <NewScreen
+    onClose={() => {
+      console.log("close")
+      newScreen = false
+    }}
+  />
 </div>
 
 <style>

@@ -67,7 +67,8 @@
         }
       }
 
-      $goto(`./${screenId}`)
+      // Select and go to new screen
+      store.actions.screens.select(screenId)
     } catch (error) {
       console.log(error)
       notifications.error("Error creating screens")
