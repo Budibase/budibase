@@ -71,13 +71,6 @@ export const deriveStores = context => {
 export const createActions = context => {
   const { columns, stickyColumn, datasource, definition } = context
 
-  // Checks if we have a certain column by name
-  const hasColumn = column => {
-    const $columns = get(columns)
-    const $sticky = get(stickyColumn)
-    return $columns.some(col => col.name === column) || $sticky?.name === column
-  }
-
   // Updates the datasources primary display column
   const changePrimaryDisplay = async column => {
     return await datasource.actions.saveDefinition({
@@ -140,7 +133,6 @@ export const createActions = context => {
     columns: {
       ...columns,
       actions: {
-        hasColumn,
         saveChanges,
         changePrimaryDisplay,
         changeAllColumnWidths,

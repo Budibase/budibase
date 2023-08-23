@@ -192,7 +192,7 @@ export const createActions = context => {
       let erroredColumns = []
       let missingColumns = []
       for (let column of keys) {
-        if (columns.actions.hasColumn(column)) {
+        if (datasource.actions.canUseColumn(column)) {
           erroredColumns.push(column)
         } else {
           missingColumns.push(column)

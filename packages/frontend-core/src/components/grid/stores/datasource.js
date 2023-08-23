@@ -108,6 +108,11 @@ export const createActions = context => {
     return getAPI()?.actions.isDatasourceValid(datasource)
   }
 
+  // Checks if this datasource can use a specific column by name
+  const canUseColumn = name => {
+    return getAPI()?.actions.canUseColumn(name)
+  }
+
   return {
     datasource: {
       ...datasource,
@@ -119,6 +124,7 @@ export const createActions = context => {
         deleteRows,
         getRow,
         isDatasourceValid,
+        canUseColumn,
       },
     },
   }
