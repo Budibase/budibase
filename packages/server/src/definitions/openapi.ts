@@ -34,6 +34,14 @@ export interface paths {
     /** Based on query properties (currently only name) search for queries. */
     post: operations["querySearch"];
   };
+  "/roles/assign": {
+    /** This is a business/enterprise only endpoint */
+    post: operations["roleAssign"];
+  };
+  "/roles/unassign": {
+    /** This is a business/enterprise only endpoint */
+    post: operations["roleUnAssign"];
+  };
   "/tables/{tableId}/rows": {
     /** Creates a row within the specified table. */
     post: operations["rowCreate"];
@@ -256,7 +264,8 @@ export interface components {
                 | "auto"
                 | "json"
                 | "internal"
-                | "barcodeqr";
+                | "barcodeqr"
+                | "bigint";
               /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
               constraints?: {
                 /** @enum {string} */
@@ -362,7 +371,8 @@ export interface components {
                   | "auto"
                   | "json"
                   | "internal"
-                  | "barcodeqr";
+                  | "barcodeqr"
+                  | "bigint";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
                   /** @enum {string} */
@@ -470,7 +480,8 @@ export interface components {
                   | "auto"
                   | "json"
                   | "internal"
-                  | "barcodeqr";
+                  | "barcodeqr"
+                  | "bigint";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
                   /** @enum {string} */
@@ -577,17 +588,17 @@ export interface components {
       lastName?: string;
       /** @description If set to true forces the user to reset their password on first login. */
       forceResetPassword?: boolean;
-      /** @description Describes if the user is a builder user or not. */
+      /** @description Describes if the user is a builder user or not. This field can only be set on a business or enterprise license. */
       builder?: {
         /** @description If set to true the user will be able to build any app in the system. */
         global?: boolean;
       };
-      /** @description Describes if the user is an admin user or not. */
+      /** @description Describes if the user is an admin user or not. This field can only be set on a business or enterprise license. */
       admin?: {
         /** @description If set to true the user will be able to administrate the system. */
         global?: boolean;
       };
-      /** @description Contains the roles of the user per app (assuming they are not a builder user). */
+      /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
       roles: { [key: string]: string };
     };
     userOutput: {
@@ -607,17 +618,17 @@ export interface components {
         lastName?: string;
         /** @description If set to true forces the user to reset their password on first login. */
         forceResetPassword?: boolean;
-        /** @description Describes if the user is a builder user or not. */
+        /** @description Describes if the user is a builder user or not. This field can only be set on a business or enterprise license. */
         builder?: {
           /** @description If set to true the user will be able to build any app in the system. */
           global?: boolean;
         };
-        /** @description Describes if the user is an admin user or not. */
+        /** @description Describes if the user is an admin user or not. This field can only be set on a business or enterprise license. */
         admin?: {
           /** @description If set to true the user will be able to administrate the system. */
           global?: boolean;
         };
-        /** @description Contains the roles of the user per app (assuming they are not a builder user). */
+        /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
         roles: { [key: string]: string };
         /** @description The ID of the user. */
         _id: string;
@@ -640,17 +651,17 @@ export interface components {
         lastName?: string;
         /** @description If set to true forces the user to reset their password on first login. */
         forceResetPassword?: boolean;
-        /** @description Describes if the user is a builder user or not. */
+        /** @description Describes if the user is a builder user or not. This field can only be set on a business or enterprise license. */
         builder?: {
           /** @description If set to true the user will be able to build any app in the system. */
           global?: boolean;
         };
-        /** @description Describes if the user is an admin user or not. */
+        /** @description Describes if the user is an admin user or not. This field can only be set on a business or enterprise license. */
         admin?: {
           /** @description If set to true the user will be able to administrate the system. */
           global?: boolean;
         };
-        /** @description Contains the roles of the user per app (assuming they are not a builder user). */
+        /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
         roles: { [key: string]: string };
         /** @description The ID of the user. */
         _id: string;
@@ -711,6 +722,52 @@ export interface components {
     nameSearch: {
       /** @description The name to be used when searching - this will be used in a case insensitive starts with match. */
       name: string;
+    };
+    rolesAssign: {
+      /** @description Allow setting users to builders per app. */
+      appBuilder?: {
+        /** @description The app that the users should have app builder privileges granted for. */
+        appId: string;
+      };
+      /** @description Add/remove global builder permissions from the list of users. */
+      builder?: boolean;
+      /** @description Add/remove global admin permissions from the list of users. */
+      admin?: boolean;
+      /** @description Add/remove a per-app role, such as BASIC, ADMIN etc. */
+      role?: {
+        /** @description The role ID, such as BASIC, ADMIN or a custom role ID. */
+        roleId: string;
+        /** @description The app that the role relates to. */
+        appId: string;
+      };
+      /** @description The user IDs to be updated to add/remove the specified roles. */
+      userIds: string[];
+    };
+    rolesUnAssign: {
+      /** @description Allow setting users to builders per app. */
+      appBuilder?: {
+        /** @description The app that the users should have app builder privileges granted for. */
+        appId: string;
+      };
+      /** @description Add/remove global builder permissions from the list of users. */
+      builder?: boolean;
+      /** @description Add/remove global admin permissions from the list of users. */
+      admin?: boolean;
+      /** @description Add/remove a per-app role, such as BASIC, ADMIN etc. */
+      role?: {
+        /** @description The role ID, such as BASIC, ADMIN or a custom role ID. */
+        roleId: string;
+        /** @description The app that the role relates to. */
+        appId: string;
+      };
+      /** @description The user IDs to be updated to add/remove the specified roles. */
+      userIds: string[];
+    };
+    rolesOutput: {
+      data: {
+        /** @description The updated users' IDs */
+        userIds: string[];
+      };
     };
   };
   parameters: {
@@ -904,6 +961,38 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["nameSearch"];
+      };
+    };
+  };
+  /** This is a business/enterprise only endpoint */
+  roleAssign: {
+    responses: {
+      /** Returns a list of updated user IDs */
+      200: {
+        content: {
+          "application/json": components["schemas"]["rolesOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["rolesAssign"];
+      };
+    };
+  };
+  /** This is a business/enterprise only endpoint */
+  roleUnAssign: {
+    responses: {
+      /** Returns a list of updated user IDs */
+      200: {
+        content: {
+          "application/json": components["schemas"]["rolesOutput"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["rolesUnAssign"];
       };
     };
   };

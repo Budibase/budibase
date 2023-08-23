@@ -22,7 +22,8 @@
 
   const ERROR = "error",
     SUCCESS = "success",
-    STOPPED = "stopped"
+    STOPPED = "stopped",
+    STOPPED_ERROR = "stopped_error"
   const sidePanel = getContext("side-panel")
 
   let pageInfo = createPaginationStore()
@@ -52,6 +53,7 @@
     { value: SUCCESS, label: "Success" },
     { value: ERROR, label: "Error" },
     { value: STOPPED, label: "Stopped" },
+    { value: STOPPED_ERROR, label: "Stopped - Error" },
   ]
 
   const runHistorySchema = {
