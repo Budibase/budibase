@@ -86,6 +86,10 @@ export const useAuditLogs = () => {
   return useFeature(Feature.AUDIT_LOGS)
 }
 
+export const usePublicApiUserRoles = () => {
+  return useFeature(Feature.USER_ROLE_PUBLIC_API)
+}
+
 export const useScimIntegration = () => {
   return useFeature(Feature.SCIM)
 }
