@@ -1,10 +1,8 @@
 <script>
-  import Panel from "components/design/Panel.svelte"
   import { get } from "svelte/store"
   import { Helpers } from "@budibase/bbui"
   import {
     Input,
-    Layout,
     Checkbox,
     Banner,
     Select,
@@ -133,33 +131,24 @@
   }
 </script>
 
-<Panel
-  title={$selectedScreen.routing.route}
-  icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
-  borderLeft
-  wide
->
-  <Layout gap="S" paddingX="L" paddingY="XL">
-    {#if $selectedScreen.layoutId}
-      <Banner
-        type="warning"
-        extraButtonText="Detach custom layout"
-        extraButtonAction={removeCustomLayout}
-        showCloseButton={false}
-      >
-        This screen uses a custom layout, which is deprecated
-      </Banner>
-    {/if}
-    {#each screenSettings as setting (setting.key)}
-      <PropertyControl
-        control={setting.control}
-        label={setting.label}
-        key={setting.key}
-        value={Helpers.deepGet($selectedScreen, setting.key)}
-        onChange={val => setScreenSetting(setting, val)}
-        props={{ ...setting.props, error: errors[setting.key] }}
-        {bindings}
-      />
-    {/each}
-  </Layout>
-</Panel>
+{#if $selectedScreen.layoutId}
+  <Banner
+    type="warning"
+    extraButtonText="Detach custom layout"
+    extraButtonAction={removeCustomLayout}
+    showCloseButton={false}
+  >
+    This screen uses a custom layout, which is deprecated
+  </Banner>
+{/if}
+{#each screenSettings as setting (setting.key)}
+  <PropertyControl
+    control={setting.control}
+    label={setting.label}
+    key={setting.key}
+    value={Helpers.deepGet($selectedScreen, setting.key)}
+    onChange={val => setScreenSetting(setting, val)}
+    props={{ ...setting.props, error: errors[setting.key] }}
+    {bindings}
+  />
+{/each}
