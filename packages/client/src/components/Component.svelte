@@ -33,7 +33,7 @@
 
   export let instance = {}
   export let isLayout = false
-  export let isScreen = false
+  export let isRoot = false
   export let isBlock = false
 
   // Get parent contexts
@@ -104,7 +104,7 @@
   // Extract component instance info
   $: children = instance._children || []
   $: id = instance._id
-  $: name = isScreen ? "Screen" : instance._instanceName
+  $: name = isRoot ? "Screen" : instance._instanceName
   $: icon = definition?.icon
 
   // Determine if the component is selected or is part of the critical path
@@ -133,13 +133,13 @@
   $: builderInteractive =
     $builderStore.inBuilder && insideScreenslot && !isBlock && !instance.static
   $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
-  $: interactive = builderInteractive || devToolsInteractive
+  $: interactive = !isRoot && (builderInteractive || devToolsInteractive)
   $: editing = editable && selected && $builderStore.editMode
   $: draggable =
     !inDragPath &&
     interactive &&
     !isLayout &&
-    !isScreen &&
+    !isRoot &&
     definition?.draggable !== false
   $: droppable = interactive
   $: builderHidden =
@@ -475,7 +475,7 @@
     node.style.scrollMargin = "100px"
     node.scrollIntoView({
       behavior: "smooth",
-      block: "start",
+      block: "nearest",
       inline: "start",
     })
   }
@@ -538,7 +538,7 @@
             <svelte:self instance={child} />
           {/each}
         {:else if emptyState}
-          {#if isScreen}
+          {#if isRoot}
             <ScreenPlaceholder />
           {:else}
             <EmptyPlaceholder />
