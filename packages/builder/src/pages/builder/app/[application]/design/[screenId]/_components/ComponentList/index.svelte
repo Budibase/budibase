@@ -14,10 +14,10 @@
   let scrolling = false
 
   const toNewComponentRoute = () => {
-    if ($isActive(`./${$store.selectedComponentId}/new`)) {
-      $goto(`./${$store.selectedComponentId}`)
+    if ($isActive(`./:componentId/new`)) {
+      $goto(`./:componentId`)
     } else {
-      $goto(`./${$store.selectedComponentId}/new`)
+      $goto(`./:componentId/new`)
     }
   }
 
