@@ -6,8 +6,8 @@
   import { capitalise } from "helpers"
   import { ActionButton, Layout } from "@budibase/bbui"
 
-  let activeTab = "settings"
-  const tabs = ["settings", "theme"]
+  let activeTab = "general"
+  const tabs = ["general", "theme"]
 </script>
 
 <Panel

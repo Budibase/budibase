@@ -29,13 +29,8 @@
 </script>
 
 <div class="info">
-  <div class="infoHeader">
-    <Icon name="InfoOutline" size="S" />
-    <Body size="XS">CHANGES WILL APPLY TO ALL SCREENS</Body>
-  </div>
-  <Body size="S">
-    Your theme is configured for all the screens within your app.
-  </Body>
+  <Icon name="InfoOutline" size="S" />
+  <Body size="S">These settings apply to all screens</Body>
 </div>
 <Layout noPadding gap="S">
   <Layout noPadding gap="XS">
@@ -68,26 +63,16 @@
   />
 </Layout>
 
-<!-- Add this to its own component -->
 <style>
-  .infoHeader {
-    display: flex;
-    margin-bottom: 5px;
-    border-radius: 4px;
-  }
-
-  .infoHeader :global(svg) {
-    margin-right: 5px;
-    color: var(--grey-6);
-  }
-
-  .infoHeader :global(p) {
-    color: var(--grey-6);
-  }
-
   .info {
     background-color: var(--background-alt);
     padding: 12px;
-    margin-bottom: 12px;
+    display: flex;
+    border-radius: 4px;
+    gap: 4px;
+  }
+  .info :global(svg) {
+    margin-right: 5px;
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
