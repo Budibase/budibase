@@ -72,6 +72,12 @@
     $context.device.height
   )
   $: autoCloseSidePanel = !$builderStore.inBuilder && $sidePanelStore.open
+  $: screenId = $builderStore.inBuilder
+    ? `${$builderStore.screen?._id}-screen`
+    : "screen"
+  $: navigationId = $builderStore.inBuilder
+    ? `${$builderStore.screen?._id}-navigation`
+    : "navigation"
 
   // Scroll navigation into view if selected.
   // Memoize into a primitive to avoid spamming this whenever builder store
@@ -145,27 +151,29 @@
     }
     return style
   }
+
+  $: console.log($builderStore.selectedComponentId)
 </script>
 
 <div
-  class="component screen layout layout--{typeClass}"
+  class="component {screenId} layout layout--{typeClass}"
   use:styleable={$component.styles}
   class:desktop={!mobile}
   class:mobile={!!mobile}
-  data-id={`${$builderStore.screen?._id}-screen`}
+  data-id={screenId}
   data-name="Screen"
   data-icon="WebPage"
 >
-  <div class="screen-dom screen-wrapper layout-body">
+  <div class="{screenId}-dom screen-wrapper layout-body">
     {#if typeClass !== "none"}
       <div
-        class="interactive component navigation"
-        data-id="navigation"
+        class="interactive component {navigationId}"
+        data-id={navigationId}
         data-name="Navigation"
         data-icon="Visibility"
       >
         <div
-          class="nav-wrapper navigation-dom"
+          class="nav-wrapper {navigationId}-dom"
           class:sticky
           class:hidden={$routeStore.queryParams?.peek}
           class:clickable={$builderStore.inBuilder}
