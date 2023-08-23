@@ -1,28 +1,11 @@
-const { flatten } = require("lodash")
-const { cloneDeep } = require("lodash/fp")
+import { PermissionType, PermissionLevel } from "@budibase/types"
+export { PermissionType, PermissionLevel } from "@budibase/types"
+import flatten from "lodash/flatten"
+import cloneDeep from "lodash/fp/cloneDeep"
 
 export type RoleHierarchy = {
   permissionId: string
 }[]
-
-export enum PermissionLevel {
-  READ = "read",
-  WRITE = "write",
-  EXECUTE = "execute",
-  ADMIN = "admin",
-}
-
-// these are the global types, that govern the underlying default behaviour
-export enum PermissionType {
-  APP = "app",
-  TABLE = "table",
-  USER = "user",
-  AUTOMATION = "automation",
-  WEBHOOK = "webhook",
-  BUILDER = "builder",
-  VIEW = "view",
-  QUERY = "query",
-}
 
 export class Permission {
   type: PermissionType
@@ -95,7 +78,6 @@ export const BUILTIN_PERMISSIONS = {
     permissions: [
       new Permission(PermissionType.QUERY, PermissionLevel.READ),
       new Permission(PermissionType.TABLE, PermissionLevel.READ),
-      new Permission(PermissionType.VIEW, PermissionLevel.READ),
     ],
   },
   WRITE: {
@@ -104,7 +86,6 @@ export const BUILTIN_PERMISSIONS = {
     permissions: [
       new Permission(PermissionType.QUERY, PermissionLevel.WRITE),
       new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
-      new Permission(PermissionType.VIEW, PermissionLevel.READ),
       new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
     ],
   },
@@ -115,7 +96,6 @@ export const BUILTIN_PERMISSIONS = {
       new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
       new Permission(PermissionType.USER, PermissionLevel.READ),
       new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
-      new Permission(PermissionType.VIEW, PermissionLevel.READ),
       new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
     ],
   },
@@ -126,7 +106,6 @@ export const BUILTIN_PERMISSIONS = {
       new Permission(PermissionType.TABLE, PermissionLevel.ADMIN),
       new Permission(PermissionType.USER, PermissionLevel.ADMIN),
       new Permission(PermissionType.AUTOMATION, PermissionLevel.ADMIN),
-      new Permission(PermissionType.VIEW, PermissionLevel.ADMIN),
       new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
       new Permission(PermissionType.QUERY, PermissionLevel.ADMIN),
     ],
@@ -173,3 +152,4 @@ export function isPermissionLevelHigherThanRead(level: PermissionLevel) {
 
 // utility as a lot of things need simply the builder permission
 export const BUILDER = PermissionType.BUILDER
+export const GLOBAL_BUILDER = PermissionType.GLOBAL_BUILDER

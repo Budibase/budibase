@@ -30,6 +30,7 @@
   setContext("drawer-actions", {
     hide,
     show,
+    headless,
   })
 
   const easeInOutQuad = x => {

@@ -1,34 +1,33 @@
 import {
-  generateDatasourceID,
-  getDatasourceParams,
-  getQueryParams,
   DocumentType,
-  BudibaseInternalDB,
+  generateDatasourceID,
+  getQueryParams,
   getTableParams,
 } from "../../db/utils"
 import { destroy as tableDestroy } from "./table/internal"
 import { BuildSchemaErrors, InvalidColumns } from "../../constants"
 import { getIntegration } from "../../integrations"
 import { invalidateDynamicVariables } from "../../threads/utils"
-import { db as dbCore, context, events } from "@budibase/backend-core"
+import { context, db as dbCore, events } from "@budibase/backend-core"
 import {
-  UserCtx,
-  Datasource,
-  Row,
-  CreateDatasourceResponse,
-  UpdateDatasourceResponse,
   CreateDatasourceRequest,
-  VerifyDatasourceRequest,
-  VerifyDatasourceResponse,
+  CreateDatasourceResponse,
+  Datasource,
+  DatasourcePlus,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
   IntegrationBase,
-  DatasourcePlus,
+  RestConfig,
   SourceName,
+  UpdateDatasourceResponse,
+  UserCtx,
+  VerifyDatasourceRequest,
+  VerifyDatasourceResponse,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { setupCreationAuth as googleSetupCreationAuth } from "../../integrations/googlesheets"
+import { areRESTVariablesValid } from "../../sdk/app/datasources/datasources"
 
 function getErrorTables(errors: any, errorType: string) {
   return Object.entries(errors)
@@ -119,46 +118,7 @@ async function buildFilteredSchema(datasource: Datasource, filter?: string[]) {
 }
 
 export async function fetch(ctx: UserCtx) {
-  // Get internal tables
-  const db = context.getAppDB()
-  const internalTables = await db.allDocs(
-    getTableParams(null, {
-      include_docs: true,
-    })
-  )
-
-  const internal = internalTables.rows.reduce((acc: any, row: Row) => {
-    const sourceId = row.doc.sourceId || "bb_internal"
-    acc[sourceId] = acc[sourceId] || []
-    acc[sourceId].push(row.doc)
-    return acc
-  }, {})
-
-  const bbInternalDb = {
-    ...BudibaseInternalDB,
-  }
-
-  // Get external datasources
-  const datasources = (
-    await db.allDocs(
-      getDatasourceParams(null, {
-        include_docs: true,
-      })
-    )
-  ).rows.map(row => row.doc)
-
-  const allDatasources: Datasource[] = await sdk.datasources.removeSecrets([
-    bbInternalDb,
-    ...datasources,
-  ])
-
-  for (let datasource of allDatasources) {
-    if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
-      datasource.entities = internal[datasource._id!]
-    }
-  }
-
-  ctx.body = [bbInternalDb, ...datasources]
+  ctx.body = await sdk.datasources.fetch()
 }
 
 export async function verify(
@@ -288,6 +248,14 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   if (auth && !ctx.request.body.auth) {
     // don't strip auth config from DB
     datasource.config!.auth = auth
+  }
+
+  // check all variables are unique
+  if (
+    datasource.source === SourceName.REST &&
+    !sdk.datasources.areRESTVariablesValid(datasource)
+  ) {
+    ctx.throw(400, "Duplicate dynamic/static variable names are invalid.")
   }
 
   const response = await db.put(

@@ -7,7 +7,7 @@ import {
   Operation,
   PaginationJson,
   RelationshipsJson,
-  RelationshipTypes,
+  RelationshipType,
   Row,
   SearchFilters,
   SortJson,
@@ -163,7 +163,7 @@ function generateIdForRow(
       fieldName: field,
       isLinked,
     })
-    if (fieldValue) {
+    if (fieldValue != null) {
       idParts.push(fieldValue)
     }
   }
@@ -577,7 +577,7 @@ export class ExternalRequest {
       ) {
         continue
       }
-      const isMany = field.relationshipType === RelationshipTypes.MANY_TO_MANY
+      const isMany = field.relationshipType === RelationshipType.MANY_TO_MANY
       const tableId = isMany ? field.through : field.tableId
       const { tableName: relatedTableName } = breakExternalTableId(tableId)
       // @ts-ignore

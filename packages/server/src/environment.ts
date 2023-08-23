@@ -1,3 +1,6 @@
+import { env as coreEnv } from "@budibase/backend-core"
+import { ServiceType } from "@budibase/types"
+coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import { join } from "path"
 
 function isTest() {
@@ -35,6 +38,8 @@ function parseIntSafe(number?: string) {
 }
 
 const environment = {
+  // features
+  APP_FEATURES: process.env.APP_FEATURES,
   // important - prefer app port to generic port
   PORT: process.env.APP_PORT || process.env.PORT,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
@@ -81,7 +86,6 @@ const environment = {
   SELF_HOSTED: process.env.SELF_HOSTED,
   HTTP_MB_LIMIT: process.env.HTTP_MB_LIMIT,
   FORKED_PROCESS_NAME: process.env.FORKED_PROCESS_NAME || "main",
-  OFFLINE_MODE: process.env.OFFLINE_MODE,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {

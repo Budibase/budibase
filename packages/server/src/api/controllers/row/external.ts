@@ -8,26 +8,16 @@ import {
   Datasource,
   IncludeRelationship,
   Operation,
+  PatchRowRequest,
+  PatchRowResponse,
   Row,
   Table,
   UserCtx,
+  EmptyFilterOption,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import * as utils from "./utils"
-
-async function getRow(
-  tableId: string,
-  rowId: string,
-  opts?: { relationships?: boolean }
-) {
-  const response = (await handleRequest(Operation.READ, tableId, {
-    id: breakRowIdField(rowId),
-    includeSqlRelationships: opts?.relationships
-      ? IncludeRelationship.INCLUDE
-      : IncludeRelationship.EXCLUDE,
-  })) as Row[]
-  return response ? response[0] : response
-}
+import { dataFilters } from "@budibase/shared-core"
 
 export async function handleRequest(
   operation: Operation,
@@ -50,39 +40,48 @@ export async function handleRequest(
     }
   }
 
+  if (
+    !dataFilters.hasFilters(opts?.filters) &&
+    opts?.filters?.onEmptyFilter === EmptyFilterOption.RETURN_NONE
+  ) {
+    return []
+  }
+
   return new ExternalRequest(operation, tableId, opts?.datasource).run(
     opts || {}
   )
 }
 
-export async function patch(ctx: UserCtx) {
-  const inputs = ctx.request.body
-  const tableId = ctx.params.tableId
-  const id = inputs._id
-  // don't save the ID to db
-  delete inputs._id
-  const validateResult = await utils.validate({
-    row: inputs,
+export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
+  const tableId = utils.getTableId(ctx)
+  const { _id, ...rowData } = ctx.request.body
+
+  const validateResult = await sdk.rows.utils.validate({
+    row: rowData,
     tableId,
   })
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }
   }
   const response = await handleRequest(Operation.UPDATE, tableId, {
-    id: breakRowIdField(id),
-    row: inputs,
+    id: breakRowIdField(_id),
+    row: rowData,
   })
-  const row = await getRow(tableId, id, { relationships: true })
+  const row = await sdk.rows.external.getRow(tableId, _id, {
+    relationships: true,
+  })
+  const table = await sdk.tables.getTable(tableId)
   return {
     ...response,
     row,
+    table,
   }
 }
 
 export async function save(ctx: UserCtx) {
   const inputs = ctx.request.body
-  const tableId = ctx.params.tableId
-  const validateResult = await utils.validate({
+  const tableId = utils.getTableId(ctx)
+  const validateResult = await sdk.rows.utils.validate({
     row: inputs,
     tableId,
   })
@@ -95,7 +94,9 @@ export async function save(ctx: UserCtx) {
   const responseRow = response as { row: Row }
   const rowId = responseRow.row._id
   if (rowId) {
-    const row = await getRow(tableId, rowId, { relationships: true })
+    const row = await sdk.rows.external.getRow(tableId, rowId, {
+      relationships: true,
+    })
     return {
       ...response,
       row,
@@ -107,15 +108,15 @@ export async function save(ctx: UserCtx) {
 
 export async function find(ctx: UserCtx) {
   const id = ctx.params.rowId
-  const tableId = ctx.params.tableId
-  return getRow(tableId, id)
+  const tableId = utils.getTableId(ctx)
+  return sdk.rows.external.getRow(tableId, id)
 }
 
 export async function destroy(ctx: UserCtx) {
-  const tableId = ctx.params.tableId
-  const id = ctx.request.body._id
+  const tableId = utils.getTableId(ctx)
+  const _id = ctx.request.body._id
   const { row } = (await handleRequest(Operation.DELETE, tableId, {
-    id: breakRowIdField(id),
+    id: breakRowIdField(_id),
     includeSqlRelationships: IncludeRelationship.EXCLUDE,
   })) as { row: Row }
   return { response: { ok: true }, row }
@@ -123,7 +124,7 @@ export async function destroy(ctx: UserCtx) {
 
 export async function bulkDestroy(ctx: UserCtx) {
   const { rows } = ctx.request.body
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   let promises: Promise<Row[] | { row: Row; table: Table }>[] = []
   for (let row of rows) {
     promises.push(
@@ -139,7 +140,7 @@ export async function bulkDestroy(ctx: UserCtx) {
 
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const id = ctx.params.rowId
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   const datasource: Datasource = await sdk.datasources.get(datasourceId!)
   if (!tableName) {

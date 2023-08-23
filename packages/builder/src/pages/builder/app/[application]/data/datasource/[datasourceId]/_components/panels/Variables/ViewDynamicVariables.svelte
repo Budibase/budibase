@@ -18,7 +18,7 @@
   const onClick = dynamicVariable => {
     const queryId = dynamicVariable.queryId
     queries.select({ _id: queryId })
-    $goto(`./${queryId}`)
+    $goto(`../../query/${queryId}`)
   }
 
   /**

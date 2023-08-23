@@ -20,11 +20,14 @@ import {
   FieldSchema,
   Operation,
   QueryJson,
-  RelationshipTypes,
+  RelationshipType,
   RenameColumn,
+  SaveTableRequest,
+  SaveTableResponse,
   Table,
   TableRequest,
   UserCtx,
+  ViewV2,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { builderSocket } from "../../../websockets"
@@ -103,12 +106,12 @@ function getDatasourceId(table: Table) {
 }
 
 function otherRelationshipType(type?: string) {
-  if (type === RelationshipTypes.MANY_TO_MANY) {
-    return RelationshipTypes.MANY_TO_MANY
+  if (type === RelationshipType.MANY_TO_MANY) {
+    return RelationshipType.MANY_TO_MANY
   }
-  return type === RelationshipTypes.ONE_TO_MANY
-    ? RelationshipTypes.MANY_TO_ONE
-    : RelationshipTypes.ONE_TO_MANY
+  return type === RelationshipType.ONE_TO_MANY
+    ? RelationshipType.MANY_TO_ONE
+    : RelationshipType.ONE_TO_MANY
 }
 
 function generateManyLinkSchema(
@@ -151,12 +154,12 @@ function generateLinkSchema(
   column: FieldSchema,
   table: Table,
   relatedTable: Table,
-  type: RelationshipTypes
+  type: RelationshipType
 ) {
   if (!table.primary || !relatedTable.primary) {
     throw new Error("Unable to generate link schema, no primary keys")
   }
-  const isOneSide = type === RelationshipTypes.ONE_TO_MANY
+  const isOneSide = type === RelationshipType.ONE_TO_MANY
   const primary = isOneSide ? relatedTable.primary[0] : table.primary[0]
   // generate a foreign key
   const foreignKey = generateForeignKey(column, relatedTable)
@@ -198,8 +201,8 @@ function isRelationshipSetup(column: FieldSchema) {
   return column.foreignKey || column.through
 }
 
-export async function save(ctx: UserCtx) {
-  const inputs: TableRequest = ctx.request.body
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+  const inputs = ctx.request.body
   const renamed = inputs?._rename
   // can't do this right now
   delete inputs.rows
@@ -215,13 +218,24 @@ export async function save(ctx: UserCtx) {
     ...inputs,
   }
 
-  let oldTable
+  let oldTable: Table | undefined
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await sdk.tables.getTable(ctx.request.body._id)
   }
 
   if (hasTypeChanged(tableToSave, oldTable)) {
     ctx.throw(400, "A column type has changed.")
+  }
+
+  for (let view in tableToSave.views) {
+    const tableView = tableToSave.views[view]
+    if (!tableView || !sdk.views.isV2(tableView)) continue
+
+    tableToSave.views[view] = sdk.views.syncSchema(
+      oldTable!.views![view] as ViewV2,
+      tableToSave.schema,
+      renamed
+    )
   }
 
   const db = context.getAppDB()
@@ -251,7 +265,7 @@ export async function save(ctx: UserCtx) {
     }
     const relatedColumnName = schema.fieldName!
     const relationType = schema.relationshipType!
-    if (relationType === RelationshipTypes.MANY_TO_MANY) {
+    if (relationType === RelationshipType.MANY_TO_MANY) {
       const junctionTable = generateManyLinkSchema(
         datasource,
         schema,
@@ -265,7 +279,7 @@ export async function save(ctx: UserCtx) {
       extraTablesToUpdate.push(junctionTable)
     } else {
       const fkTable =
-        relationType === RelationshipTypes.ONE_TO_MANY
+        relationType === RelationshipType.ONE_TO_MANY
           ? tableToSave
           : relatedTable
       const foreignKey = generateLinkSchema(

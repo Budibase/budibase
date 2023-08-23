@@ -11,9 +11,9 @@ import {
   CreateAccount,
   CreatePassswordAccount,
 } from "@budibase/types"
-import _ from "lodash"
+import sample from "lodash/sample"
 
-export const account = (): Account => {
+export const account = (partial: Partial<Account> = {}): Account => {
   return {
     accountId: uuid(),
     tenantId: generator.word(),
@@ -29,6 +29,7 @@ export const account = (): Account => {
     size: "10+",
     profession: "Software Engineer",
     quotaUsage: quotas.usage(),
+    ...partial,
   }
 }
 
@@ -45,13 +46,11 @@ export const cloudAccount = (): CloudAccount => {
 }
 
 function providerType(): AccountSSOProviderType {
-  return _.sample(
-    Object.values(AccountSSOProviderType)
-  ) as AccountSSOProviderType
+  return sample(Object.values(AccountSSOProviderType)) as AccountSSOProviderType
 }
 
 function provider(): AccountSSOProvider {
-  return _.sample(Object.values(AccountSSOProvider)) as AccountSSOProvider
+  return sample(Object.values(AccountSSOProvider)) as AccountSSOProvider
 }
 
 export function ssoAccount(account: Account = cloudAccount()): SSOAccount {

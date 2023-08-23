@@ -109,6 +109,7 @@
         {disableSorting}
         {customPlaceholder}
         allowEditRows={allowEditing}
+        allowEditColumns={allowEditing}
         showAutoColumns={!hideAutocolumns}
         {allowClickRows}
         on:clickrelationship={e => selectRelationship(e.detail)}

@@ -8,6 +8,6 @@ then
   jest --coverage --runInBand --forceExit
 else
   # --maxWorkers performs better in development
-  echo "jest --coverage --forceExit"
-  jest --coverage --forceExit
+  echo "jest --coverage --detectOpenHandles"
+  jest --coverage --detectOpenHandles
 fi

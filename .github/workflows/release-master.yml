@@ -6,9 +6,9 @@ concurrency:
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+"
       # Exclude all pre-releases
-      - "!v*[0-9]+.[0-9]+.[0-9]+-*"
+      - "!*[0-9]+.[0-9]+.[0-9]+-*"
 
 env:
   # Posthog token used by ui at build time
@@ -60,9 +60,9 @@ jobs:
       - name: "Get Current tag"
         id: currenttag
         run: |
-          version=v$(./scripts/getCurrentVersion.sh)
-          echo 'Using tag $version'
-          echo "::set-output name=tag::$resversionult"
+          version=$(./scripts/getCurrentVersion.sh)
+          echo "Using tag $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Build/release Docker images
         run: |
@@ -71,7 +71,7 @@ jobs:
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          BUDIBASE_RELEASE_VERSION: ${{ steps.currenttag.outputs.tag }}
+          BUDIBASE_RELEASE_VERSION: ${{ steps.currenttag.outputs.version }}
 
   release-helm-chart:
     needs: [release-images]
