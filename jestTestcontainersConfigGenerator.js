@@ -9,7 +9,7 @@ module.exports = () => {
       },
       wait: {
         type: "ports",
-        timeout: 10000,
+        timeout: 20000,
       }
     }
   }
