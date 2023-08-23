@@ -18,7 +18,7 @@ import {
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
-import { GenericContainer } from "testcontainers"
+import { GenericContainer, Wait } from "testcontainers"
 
 const config = setup.getConfig()!
 
@@ -42,6 +42,7 @@ describe("postgres integrations", () => {
     const container = await new GenericContainer("postgres")
       .withExposedPorts(5432)
       .withEnv("POSTGRES_PASSWORD", "password")
+      .withWaitStrategy(Wait.forLogMessage("PostgreSQL init process complete; ready for start up."))
       .start()
 
     host = container.getContainerIpAddress()
