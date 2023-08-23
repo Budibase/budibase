@@ -999,14 +999,18 @@ export const getFrontendStore = () => {
         const parent = findComponentParent(screen.props, componentId)
         const index = parent?._children.findIndex(x => x._id === componentId)
 
-        if (componentId === "screen") {
+        // Check for screen and navigation component edge cases
+        const screenComponentId = `${screen._id}-screen`
+        const navComponentId = `${screen._id}-navigation`
+        console.log(componentId, screenComponentId, navComponentId)
+        if (componentId === screenComponentId) {
           return null
         }
-        if (componentId === "navigation") {
-          return "screen"
+        if (componentId === navComponentId) {
+          return screenComponentId
         }
         if (parent._id === screen.props._id && index === 0) {
-          return "navigation"
+          return navComponentId
         }
 
         // If we have siblings above us, choose the sibling or a descendant
@@ -1036,8 +1040,11 @@ export const getFrontendStore = () => {
         const parent = findComponentParent(screen.props, componentId)
         const index = parent?._children.findIndex(x => x._id === componentId)
 
-        if (state.selectedComponentId === "screen") {
-          return "navigation"
+        // Check for screen and navigation component edge cases
+        const screenComponentId = `${screen._id}-screen`
+        const navComponentId = `${screen._id}-navigation`
+        if (state.selectedComponentId === screenComponentId) {
+          return navComponentId
         }
 
         // If we have children, select first child
@@ -1076,6 +1083,7 @@ export const getFrontendStore = () => {
         }
       },
       selectPrevious: () => {
+        console.log("prev")
         const previousId = store.actions.components.getPrevious()
         if (previousId) {
           store.update(state => {
@@ -1085,6 +1093,7 @@ export const getFrontendStore = () => {
         }
       },
       selectNext: () => {
+        console.log("next")
         const nextId = store.actions.components.getNext()
         if (nextId) {
           store.update(state => {
