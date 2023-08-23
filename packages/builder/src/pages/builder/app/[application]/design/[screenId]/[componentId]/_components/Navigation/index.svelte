@@ -64,10 +64,8 @@
         <Detail>Customize</Detail>
       </div>
       <div class="info">
-        <div class="infoHeader">
-          <Icon name="InfoOutline" />
-          <Body size="S">These settings apply to all screens</Body>
-        </div>
+        <Icon name="InfoOutline" size="S" />
+        <Body size="S">These settings apply to all screens</Body>
       </div>
       <div class="configureLinks">
         <LinksEditor />
@@ -210,22 +208,14 @@
   .info {
     background-color: var(--background-alt);
     padding: 12px;
-    margin-bottom: 12px;
-  }
-
-  .infoHeader {
     display: flex;
-    margin-bottom: 5px;
     border-radius: 4px;
+    gap: 4px;
+    margin-bottom: 16px;
   }
-
-  .infoHeader :global(svg) {
+  .info :global(svg) {
     margin-right: 5px;
-    color: var(--grey-6);
-  }
-
-  .infoHeader :global(p) {
-    color: var(--grey-7);
+    color: var(--spectrum-global-color-gray-600);
   }
 
   .configureLinks :global(button) {
