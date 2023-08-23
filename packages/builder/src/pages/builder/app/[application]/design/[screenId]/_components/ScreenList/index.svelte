@@ -9,29 +9,42 @@
 
   let newScreen = false
   let search = false
+  let resizing = false
   let searchValue = ""
   let searchInput
   let screensContainer
   let scrolling = false
+  let height = "210px"
+  let previousHeight = null
+  let dragOffset
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
+
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
   const openSearch = async () => {
     search = true
     await tick()
     searchInput.focus()
     screensContainer.scroll({ top: 0, behavior: "smooth" })
+    previousHeight = height
+    height = "calc(100% + 1px)"
   }
 
-  const closeSearch = () => {
+  const closeSearch = async () => {
+    if (previousHeight) {
+      // Restore previous height and wait for animation
+      height = previousHeight
+      previousHeight = null
+      await sleep(300)
+    }
     search = false
     searchValue = ""
   }
 
   const getFilteredScreens = (screens, search) => {
     return screens.filter(screen => {
-      const searchMatch = !search || screen.routing.route.includes(search)
-      return searchMatch
+      return !search || screen.routing.route.includes(search)
     })
   }
 
@@ -54,17 +67,33 @@
   }
 
   const handleScroll = e => {
-    if (e.target.scrollTop === 0) {
-      scrolling = false
-    } else {
-      scrolling = true
+    scrolling = e.target.scrollTop !== 0
+  }
+
+  const startResizing = e => {
+    resizing = true
+    dragOffset = parseInt(height) - e.clientY
+    document.addEventListener("mousemove", resize)
+    document.addEventListener("mouseup", stopResizing)
+  }
+
+  const resize = e => {
+    const newHeight = Math.max(0, e.clientY + dragOffset)
+    if (newHeight == null || isNaN(newHeight)) {
+      return
     }
+    height = `${newHeight}px`
+  }
+
+  const stopResizing = () => {
+    resizing = false
+    document.removeEventListener("mousemove", resize)
   }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-<div class="screens" class:screenSearch={search}>
-  <div class="header" class:headerScrolling={scrolling}>
+<div class="screens" class:search class:resizing style={`height:${height};`}>
+  <div class="header" class:scrolling>
     <input
       readonly={!search}
       bind:value={searchValue}
@@ -113,6 +142,8 @@
       </Layout>
     {/if}
   </div>
+
+  <div class="divider" on:mousedown={startResizing} />
 </div>
 
 <div class="newScreen" class:newScreenVisible={newScreen}>
@@ -129,20 +160,24 @@
     z-index: 2;
     background-color: var(--background);
   }
-
   .newScreenVisible {
     display: initial;
   }
 
   .screens {
-    height: 210px;
     display: flex;
     flex-direction: column;
-    transition: height 300ms ease-out;
+    min-height: 147px;
+    max-height: calc(100% - 147px);
+    position: relative;
   }
-
-  .screenSearch {
-    height: 100%;
+  .screens.search {
+    transition: height 300ms ease-out;
+    max-height: none;
+  }
+  .screens.resizing {
+    user-select: none;
+    cursor: row-resize;
   }
 
   .header {
@@ -154,11 +189,10 @@
     display: flex;
     align-items: center;
     border-bottom: 2px solid transparent;
-    transition: border-bottom 300ms ease-out;
+    transition: border-bottom 130ms ease-out;
   }
-
-  .headerScrolling {
-    border-bottom: 2px solid var(--grey-2);
+  .header.scrolling {
+    border-bottom: var(--border-light);
   }
 
   .input {
@@ -178,8 +212,7 @@
   .input::placeholder {
     color: var(--spectrum-global-color-gray-600);
   }
-
-  .screenSearch input {
+  .screens.search input {
     display: block;
   }
 
@@ -197,6 +230,9 @@
     overflow: auto;
     flex-grow: 1;
   }
+  .screens.resizing .content {
+    pointer-events: none;
+  }
 
   .screens :global(.nav-item) {
     padding-right: 8px !important;
@@ -208,7 +244,6 @@
     margin-right: 10px;
     opacity: 1;
   }
-
   .searchButton:hover {
     color: var(--ink);
   }
@@ -223,13 +258,12 @@
     cursor: pointer;
     transition: transform 300ms ease-out;
   }
+  .addButton:hover {
+    color: var(--ink);
+  }
 
   .closeButton {
     transform: rotate(45deg);
-  }
-
-  .addButton:hover {
-    color: var(--ink);
   }
 
   .icon {
@@ -239,5 +273,25 @@
 
   .no-results {
     color: var(--spectrum-global-color-gray-600);
+  }
+
+  .divider {
+    position: absolute;
+    bottom: 0;
+    transform: translateY(50%);
+    height: 16px;
+    width: 100%;
+  }
+  .divider:after {
+    content: "";
+    position: absolute;
+    background: var(--spectrum-global-color-gray-200);
+    height: 2px;
+    width: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .divider:hover {
+    cursor: row-resize;
   }
 </style>

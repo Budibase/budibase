@@ -1,6 +1,6 @@
 <script>
   import Panel from "components/design/Panel.svelte"
-  import { goto } from "@roxi/routify"
+  import { goto, url } from "@roxi/routify"
   import { Layout, Search, Icon, Body, notifications } from "@budibase/bbui"
   import structure from "./componentStructure.json"
   import { store, selectedComponent, selectedScreen } from "builderStore"

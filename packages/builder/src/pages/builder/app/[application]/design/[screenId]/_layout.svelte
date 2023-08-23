@@ -4,7 +4,7 @@
   import { syncURLToState } from "helpers/urlStateSync"
   import { store } from "builderStore"
   import { onDestroy } from "svelte"
-  import LeftPanel from "./components/[componentId]/_components/LeftPanel/index.svelte"
+  import LeftPanel from "./_components/LeftPanel.svelte"
 
   $: screenId = $store.selectedScreenId
   $: store.actions.websocket.selectResource(screenId)

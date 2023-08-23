@@ -225,7 +225,7 @@ export const getFrontendStore = () => {
         // Select new screen
         store.update(state => {
           state.selectedScreenId = screen._id
-          state.selectedComponentId = screen.props?._id
+          state.selectedComponentId = "screen"
           return state
         })
       },
