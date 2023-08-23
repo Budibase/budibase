@@ -769,7 +769,7 @@ export const getFrontendStore = () => {
           await store.actions.screens.patch(screen => {
             // Find the selected component
             let selectedComponentId = state.selectedComponentId
-            if (["navigation", "screen"].includes(selectedComponentId)) {
+            if (selectedComponentId.startsWith(`${screen._id}-`)) {
               selectedComponentId = screen?.props._id
             }
             const currentComponent = findComponent(

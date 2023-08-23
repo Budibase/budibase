@@ -1,6 +1,6 @@
 <script>
   import Panel from "components/design/Panel.svelte"
-  import { goto, url } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import { Layout, Search, Icon, Body, notifications } from "@budibase/bbui"
   import structure from "./componentStructure.json"
   import { store, selectedComponent, selectedScreen } from "builderStore"
@@ -31,6 +31,10 @@
   $: orderMap = createComponentOrderMap(componentList)
 
   const getAllowedComponents = (allComponents, screen, component) => {
+    // Default to using the root screen container if no component specified
+    if (!component) {
+      component = screen.props
+    }
     const path = findComponentPath(screen?.props, component?._id)
     if (!path?.length) {
       return []
