@@ -1002,7 +1002,6 @@ export const getFrontendStore = () => {
         // Check for screen and navigation component edge cases
         const screenComponentId = `${screen._id}-screen`
         const navComponentId = `${screen._id}-navigation`
-        console.log(componentId, screenComponentId, navComponentId)
         if (componentId === screenComponentId) {
           return null
         }
@@ -1083,7 +1082,6 @@ export const getFrontendStore = () => {
         }
       },
       selectPrevious: () => {
-        console.log("prev")
         const previousId = store.actions.components.getPrevious()
         if (previousId) {
           store.update(state => {
@@ -1093,7 +1091,6 @@ export const getFrontendStore = () => {
         }
       },
       selectNext: () => {
-        console.log("next")
         const nextId = store.actions.components.getNext()
         if (nextId) {
           store.update(state => {

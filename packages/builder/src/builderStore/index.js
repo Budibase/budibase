@@ -63,9 +63,9 @@ export const selectedComponent = derived(
   ([$store, $selectedScreen]) => {
     if (
       $selectedScreen &&
-      ["navigation", "screen"].includes($store.selectedComponentId)
+      $store.selectedComponentId?.startsWith(`${$selectedScreen._id}-`)
     ) {
-      return findComponent($selectedScreen?.props, $selectedScreen?.props._id)
+      return $selectedScreen?.props
     }
     if (!$selectedScreen || !$store.selectedComponentId) {
       return null
