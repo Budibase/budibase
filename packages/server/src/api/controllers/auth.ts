@@ -4,7 +4,7 @@ import { getFullUser } from "../../utilities/users"
 import { roles, context } from "@budibase/backend-core"
 import { ContextUser, Row, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
-import { processUser } from "src/utilities/global"
+import { processUser } from "../../utilities/global"
 
 const PUBLIC_ROLE = roles.BUILTIN_ROLE_IDS.PUBLIC
 
