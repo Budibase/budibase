@@ -45,6 +45,7 @@
   let enrichedSearchColumns
   let schemaLoaded = false
 
+  $: isDSPlus = dataSource?.type === "table" || dataSource?.type === "viewV2"
   $: fetchSchema(dataSource)
   $: enrichSearchColumns(searchColumns, schema).then(
     val => (enrichedSearchColumns = val)
@@ -53,8 +54,7 @@
   $: editTitle = getEditTitle(detailsFormBlockId, primaryDisplay)
   $: normalFields = getNormalFields(schema)
   $: rowClickActions =
-    clickBehaviour === "actions" ||
-    (dataSource?.type !== "table" && dataSource?.type !== "viewV2")
+    clickBehaviour === "actions" || !isDSPlus
       ? onClick
       : [
           {
@@ -76,7 +76,7 @@
           },
         ]
   $: buttonClickActions =
-    titleButtonClickBehaviour === "actions" || dataSource?.type !== "table"
+    titleButtonClickBehaviour === "actions" || !isDSPlus
       ? onClickTitleButton
       : [
           {
