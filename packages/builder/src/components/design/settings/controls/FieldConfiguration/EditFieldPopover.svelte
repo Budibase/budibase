@@ -3,7 +3,7 @@
   import { store } from "builderStore"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher } from "svelte"
-  import ComponentSettingsSection from "../../../../../pages/builder/app/[application]/design/[screenId]/components/[componentId]/_components/settings/ComponentSettingsSection.svelte"
+  import ComponentSettingsSection from "../../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
 
   export let anchor
   export let field
