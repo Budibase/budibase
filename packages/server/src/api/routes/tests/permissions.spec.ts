@@ -175,7 +175,7 @@ describe("/permission", () => {
       expect(res.body.rows[0]._id).toEqual(row._id)
     })
 
-    it("should be able to access the view data when the table is set to public and with no view permissions overrides", async () => {
+    it("should not be able to access the view data when the table is not public and there are no view permissions overrides", async () => {
       await config.api.permission.revoke({
         roleId: STD_ROLE_ID,
         resourceId: table._id,
