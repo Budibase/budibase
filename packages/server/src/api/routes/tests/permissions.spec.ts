@@ -12,6 +12,7 @@ import {
   PermissionLevel,
   Row,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import * as setup from "./utilities"
 
@@ -27,6 +28,7 @@ describe("/permission", () => {
   let table: Table & { _id: string }
   let perms: Document[]
   let row: Row
+  let view: ViewV2
 
   afterAll(setup.afterAll)
 
@@ -39,6 +41,7 @@ describe("/permission", () => {
 
     table = (await config.createTable()) as typeof table
     row = await config.createRow()
+    view = await config.api.viewV2.create({ tableId: table._id })
     perms = await config.api.permission.set({
       roleId: STD_ROLE_ID,
       resourceId: table._id,
@@ -160,6 +163,29 @@ describe("/permission", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body[0]._id).toEqual(row._id)
+    })
+
+    it("should be able to access the view data when the table is set to public and with no view permissions overrides", async () => {
+      // replicate changes before checking permissions
+      await config.publish()
+
+      const res = await config.api.viewV2.search(view.id, undefined, {
+        usePublicUser: true,
+      })
+      expect(res.body.rows[0]._id).toEqual(row._id)
+    })
+
+    it("should be able to access the view data when the table is set to public and with no view permissions overrides", async () => {
+      await config.api.permission.revoke({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
+
+      await config.api.viewV2.search(view.id, undefined, {
+        expectStatus: 403,
+        usePublicUser: true,
+      })
     })
 
     it("shouldn't allow writing from a public user", async () => {
