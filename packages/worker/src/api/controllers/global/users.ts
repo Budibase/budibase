@@ -25,11 +25,11 @@ import {
 import {
   accounts,
   cache,
+  ErrorCode,
   events,
   migrations,
-  tenancy,
   platform,
-  ErrorCode,
+  tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
@@ -280,7 +280,7 @@ export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
     let bulkCreateReponse = await userSdk.db.bulkCreate(users, [])
 
     // Apply temporary credentials
-    let createWithCredentials = {
+    ctx.body = {
       ...bulkCreateReponse,
       successful: bulkCreateReponse?.successful.map(user => {
         return {
@@ -290,8 +290,6 @@ export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
       }),
       created: true,
     }
-
-    ctx.body = createWithCredentials
   } else {
     ctx.throw(400, "User onboarding failed")
   }
