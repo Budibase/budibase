@@ -5300,25 +5300,26 @@
             "type": "text",
             "label": "Empty text",
             "key": "noRowsMessage",
-            "defaultValue": "We couldn't find a row to display"
+            "defaultValue": "We couldn't find a row to display",
+            "nested": true
           }
         ]
       },
       {
         "section": true,
         "name": "Buttons",
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "View",
+          "invert": true
+        },
         "settings": [
           {
             "type": "text",
             "key": "saveButtonLabel",
             "label": "Save button",
             "nested": true,
-            "defaultValue": "Save",
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
+            "defaultValue": "Save"
           },
           {
             "type": "text",
