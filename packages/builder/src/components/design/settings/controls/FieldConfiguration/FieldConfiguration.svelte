@@ -136,7 +136,7 @@
     } else {
       parentFieldsUpdated[parentFieldIdx] = updatedField
     }
-    // fieldList = parentFieldsUpdated
+
     dispatch("change", getValidColumns(parentFieldsUpdated, options))
   }
 
