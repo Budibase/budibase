@@ -1,5 +1,20 @@
-const { roles } = require("@budibase/backend-core")
-const setup = require("./utilities")
+const mockedSdk = sdk.permissions as jest.Mocked<typeof sdk.permissions>
+jest.mock("../../../sdk/app/permissions", () => ({
+  resourceActionAllowed: jest.fn(),
+}))
+
+import sdk from "../../../sdk"
+
+import { roles } from "@budibase/backend-core"
+import {
+  Document,
+  DocumentType,
+  PermissionLevel,
+  Row,
+  Table,
+} from "@budibase/types"
+import * as setup from "./utilities"
+
 const { basicRow } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -9,29 +24,27 @@ const STD_ROLE_ID = BUILTIN_ROLE_IDS.PUBLIC
 describe("/permission", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let table
-  let perms
-  let row
+  let table: Table & { _id: string }
+  let perms: Document[]
+  let row: Row
 
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
     await config.init()
   })
-  
-  beforeEach(async () => {
-    table = await config.createTable()
-    row = await config.createRow()
-    perms = await config.addPermission(STD_ROLE_ID, table._id)
-  })
 
-  async function getTablePermissions() {
-    return request
-      .get(`/api/permission/${table._id}`)
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-  }
+  beforeEach(async () => {
+    mockedSdk.resourceActionAllowed.mockResolvedValue({ allowed: true })
+
+    table = (await config.createTable()) as typeof table
+    row = await config.createRow()
+    perms = await config.api.permission.set({
+      roleId: STD_ROLE_ID,
+      resourceId: table._id,
+      level: PermissionLevel.READ,
+    })
+  })
 
   describe("levels", () => {
     it("should be able to get levels", async () => {
@@ -65,8 +78,12 @@ describe("/permission", () => {
     })
 
     it("should get resource permissions with multiple roles", async () => {
-      perms = await config.addPermission(HIGHER_ROLE_ID, table._id, "write")
-      const res = await getTablePermissions()
+      perms = await config.api.permission.set({
+        roleId: HIGHER_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.WRITE,
+      })
+      const res = await config.api.permission.get(table._id)
       expect(res.body["read"]).toEqual(STD_ROLE_ID)
       expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
       const allRes = await request
@@ -77,18 +94,58 @@ describe("/permission", () => {
       expect(allRes.body[table._id]["write"]).toEqual(HIGHER_ROLE_ID)
       expect(allRes.body[table._id]["read"]).toEqual(STD_ROLE_ID)
     })
+
+    it("throw forbidden if the action is not allowed for the resource", async () => {
+      mockedSdk.resourceActionAllowed.mockResolvedValue({
+        allowed: false,
+        resourceType: DocumentType.DATASOURCE,
+        level: PermissionLevel.READ,
+      })
+
+      const response = await config.api.permission.set(
+        {
+          roleId: STD_ROLE_ID,
+          resourceId: table._id,
+          level: PermissionLevel.EXECUTE,
+        },
+        { expectStatus: 403 }
+      )
+      expect(response.message).toEqual(
+        "You are not allowed to 'read' the resource type 'datasource'"
+      )
+    })
   })
 
   describe("remove", () => {
     it("should be able to remove the permission", async () => {
-      const res = await request
-        .delete(`/api/permission/${STD_ROLE_ID}/${table._id}/read`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.permission.revoke({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
       expect(res.body[0]._id).toEqual(STD_ROLE_ID)
-      const permsRes = await getTablePermissions()
+      const permsRes = await config.api.permission.get(table._id)
       expect(permsRes.body[STD_ROLE_ID]).toBeUndefined()
+    })
+
+    it("throw forbidden if the action is not allowed for the resource", async () => {
+      mockedSdk.resourceActionAllowed.mockResolvedValue({
+        allowed: false,
+        resourceType: DocumentType.DATASOURCE,
+        level: PermissionLevel.READ,
+      })
+
+      const response = await config.api.permission.revoke(
+        {
+          roleId: STD_ROLE_ID,
+          resourceId: table._id,
+          level: PermissionLevel.EXECUTE,
+        },
+        { expectStatus: 403 }
+      )
+      expect(response.body.message).toEqual(
+        "You are not allowed to 'read' the resource type 'datasource'"
+      )
     })
   })
 
@@ -124,7 +181,9 @@ describe("/permission", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(Array.isArray(res.body)).toEqual(true)
-      const publicPerm = res.body.find(perm => perm._id === "public")
+      const publicPerm = res.body.find(
+        (perm: Document) => perm._id === "public"
+      )
       expect(publicPerm).toBeDefined()
       expect(publicPerm.permissions).toBeDefined()
       expect(publicPerm.name).toBeDefined()
