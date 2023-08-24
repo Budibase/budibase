@@ -1,0 +1,23 @@
+name: deploy-featurebranch
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+      - uses: passeidireto/trigger-external-workflow-action@main
+        env:
+            BRANCH: ${{ steps.extract_branch.outputs.branch }}
+        with:
+          repository: budibase/budibase-deploys
+          event: featurebranch-qa-deploy
+          github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
