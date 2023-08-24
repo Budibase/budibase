@@ -32,11 +32,10 @@ export default function positionDropdown(element, opts) {
       left: null,
       top: null,
     }
-
     // Determine vertical styles
     if (align === "right-outside") {
       styles.top = anchorBounds.top
-    } else if (window.innerHeight - anchorBounds.bottom < 100) {
+    } else if (window.innerHeight - anchorBounds.bottom < (maxHeight || 100)) {
       styles.top = anchorBounds.top - elementBounds.height - offset
       styles.maxHeight = maxHeight || 240
     } else {

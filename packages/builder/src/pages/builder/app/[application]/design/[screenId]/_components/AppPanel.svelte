@@ -1,32 +1,16 @@
 <script>
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
-  import { store, sortedScreens, screenHistoryStore } from "builderStore"
-  import { Select } from "@budibase/bbui"
-  import { RoleUtils } from "@budibase/frontend-core"
+  import { store, screenHistoryStore } from "builderStore"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
-  import { isActive } from "@roxi/routify"
 </script>
 
 <div class="app-panel">
   <div class="header">
     <div class="header-left">
-      <Select
-        placeholder={null}
-        options={$sortedScreens}
-        getOptionLabel={x => x.routing.route}
-        getOptionValue={x => x._id}
-        getOptionColour={x => RoleUtils.getRoleColour(x.routing.roleId)}
-        value={$store.selectedScreenId}
-        on:change={e => store.actions.screens.select(e.detail)}
-        quiet
-        autoWidth
-      />
+      <UndoRedoControl store={screenHistoryStore} />
     </div>
     <div class="header-right">
-      {#if $isActive("./screens") || $isActive("./components")}
-        <UndoRedoControl store={screenHistoryStore} />
-      {/if}
       {#if $store.clientFeatures.devicePreview}
         <DevicePreviewSelect />
       {/if}
@@ -47,36 +31,23 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-m);
-    padding: var(--spacing-l) var(--spacing-xl);
+    padding: 9px var(--spacing-m);
   }
   .header {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--spacing-l);
-    margin: 0 2px;
-    z-index: 1;
+    margin-bottom: 9px;
   }
-  .header-left,
+
+  .header-left :global(div) {
+    border-right: none;
+  }
   .header-right {
+    margin-left: auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xl);
-  }
-  .header-left {
-    flex: 1 1 auto;
-    width: 0;
-  }
-  .header-left :global(> *) {
-    max-width: 100%;
-  }
-  .header-left :global(.spectrum-Picker) {
-    font-weight: 600;
-    color: var(--spectrum-global-color-gray-900);
   }
   .content {
     flex: 1 1 auto;
