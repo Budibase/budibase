@@ -12,6 +12,7 @@ export enum Feature {
   APP_BUILDERS = "appBuilders",
   OFFLINE = "offline",
   USER_ROLE_PUBLIC_API = "userRolePublicApi",
+  VIEW_PERMISSIONS = "viewPermission",
 }
 
 export type PlanFeatures = { [key in PlanType]: Feature[] | undefined }
