@@ -138,9 +138,16 @@ const authorized =
     }
 
     if (hasResource(ctx)) {
-      resourceRoles = await roles.getRequiredResourceRole(permLevel!, ctx)
+      const { resourceId, subResourceId } = ctx
+      resourceRoles = await roles.getRequiredResourceRole(permLevel!, {
+        resourceId,
+        subResourceId,
+      })
       if (opts && opts.schema) {
-        otherLevelRoles = await roles.getRequiredResourceRole(otherLevel, ctx)
+        otherLevelRoles = await roles.getRequiredResourceRole(otherLevel, {
+          resourceId,
+          subResourceId,
+        })
       }
     }
 
