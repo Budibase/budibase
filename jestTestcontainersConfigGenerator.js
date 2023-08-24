@@ -9,18 +9,8 @@ module.exports = () => {
       },
       wait: {
         type: "ports",
-        timeout: 10000,
+        timeout: 20000,
       }
     }
   }
 }
-
-// module.exports = () => {
-//   return {
-//     dockerCompose: {
-//       composeFilePath: "../../hosting",
-//       composeFile: "docker-compose.test.yaml",
-//       startupTimeout: 10000,
-//     },
-//   }
-// }
