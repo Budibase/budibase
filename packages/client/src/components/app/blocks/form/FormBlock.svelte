@@ -56,7 +56,6 @@
 
   $: formattedFields = convertOldFieldFormat(fields)
   $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
-
   $: fetchSchema(dataSource)
   $: dataProvider = `{{ literal ${safe(providerId)} }}`
   $: filter = [
