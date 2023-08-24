@@ -1,3 +1,10 @@
+jest.mock("@budibase/backend-core", () => ({
+  ...jest.requireActual("@budibase/backend-core"),
+  roles: {
+    ...jest.requireActual("@budibase/backend-core").roles,
+    getRequiredResourceRole: jest.fn().mockResolvedValue([]),
+  },
+}))
 jest.mock("../../environment", () => ({
   prod: false,
   isTest: () => true,
@@ -13,8 +20,13 @@ import { PermissionType, PermissionLevel } from "@budibase/types"
 import authorizedMiddleware from "../authorized"
 import env from "../../environment"
 import { generateTableID, generateViewID } from "../../db/utils"
+import { roles } from "@budibase/backend-core"
+import { mocks } from "@budibase/backend-core/tests"
+import { initProMocks } from "../../tests/utilities/mocks/pro"
 
 const APP_ID = ""
+
+initProMocks()
 
 class TestConfiguration {
   middleware: (ctx: any, next: any) => Promise<void>
@@ -80,7 +92,6 @@ class TestConfiguration {
 }
 
 describe("Authorization middleware", () => {
-  const next = jest.fn()
   let config: TestConfiguration
 
   afterEach(() => {
@@ -89,6 +100,7 @@ describe("Authorization middleware", () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mocks.licenses.useCloudFree()
     config = new TestConfiguration()
   })
 
@@ -181,6 +193,11 @@ describe("Authorization middleware", () => {
       const tableId = generateTableID()
       const viewId = generateViewID(tableId)
 
+      const mockedGetRequiredResourceRole =
+        roles.getRequiredResourceRole as jest.MockedFunction<
+          typeof roles.getRequiredResourceRole
+        >
+
       beforeEach(() => {
         config.setMiddlewareRequiredPermission(
           PermissionType.VIEW,
@@ -188,11 +205,47 @@ describe("Authorization middleware", () => {
         )
         config.setResourceId(viewId)
 
+        mockedGetRequiredResourceRole.mockResolvedValue(["PUBLIC"])
+
         config.setUser({
+          _id: "user",
           role: {
-            _id: "",
+            _id: "PUBLIC",
           },
         })
+      })
+
+      it("will ignore view permissions if flag is off", async () => {
+        await config.executeMiddleware()
+
+        expect(config.throw).not.toBeCalled()
+        expect(config.next).toHaveBeenCalled()
+
+        expect(mockedGetRequiredResourceRole).toBeCalledTimes(1)
+        expect(mockedGetRequiredResourceRole).toBeCalledWith(
+          PermissionLevel.READ,
+          expect.objectContaining({
+            resourceId: tableId,
+            subResourceId: undefined,
+          })
+        )
+      })
+
+      it("will use view permissions if flag is on", async () => {
+        mocks.licenses.useViewPermissions()
+        await config.executeMiddleware()
+
+        expect(config.throw).not.toBeCalled()
+        expect(config.next).toHaveBeenCalled()
+
+        expect(mockedGetRequiredResourceRole).toBeCalledTimes(1)
+        expect(mockedGetRequiredResourceRole).toBeCalledWith(
+          PermissionLevel.READ,
+          expect.objectContaining({
+            resourceId: tableId,
+            subResourceId: viewId,
+          })
+        )
       })
 
       it("throw an exception if the resource id is not provided", async () => {
