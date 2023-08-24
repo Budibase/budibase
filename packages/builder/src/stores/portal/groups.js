@@ -80,6 +80,14 @@ export function createGroupsStore() {
     getGroupAppIds: group => {
       return Object.keys(group?.roles || {})
     },
+
+    addGroupAppBuilder: async (groupId, appId) => {
+      return await API.addGroupAppBuilder({ groupId, appId })
+    },
+
+    removeGroupAppBuilder: async (groupId, appId) => {
+      return await API.removeGroupAppBuilder({ groupId, appId })
+    },
   }
 
   return {

@@ -29,7 +29,7 @@
 
   // Initially filter entities without app access
   // Show all when false
-  let filterByAppAccess = true
+  let filterByAppAccess = false
 
   let appInvites = []
   let filteredInvites = []
@@ -106,31 +106,42 @@
     })
     await usersFetch.refresh()
 
-    filteredUsers = $usersFetch.rows.map(user => {
-      const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(
-        user,
-        prodAppId
-      )
-      const isAppBuilder = sdk.users.hasAppBuilderPermissions(user, prodAppId)
-      let role = undefined
-      if (isAdminOrGlobalBuilder) {
-        role = Constants.Roles.ADMIN
-      } else if (isAppBuilder) {
-        role = Constants.Roles.CREATOR
-      } else {
-        const appRole = Object.keys(user.roles).find(x => x === prodAppId)
-        if (appRole) {
-          role = user.roles[appRole]
+    filteredUsers = $usersFetch.rows
+      .map(user => {
+        const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(
+          user,
+          prodAppId
+        )
+        const isAppBuilder = sdk.users.hasAppBuilderPermissions(user, prodAppId)
+        let role = undefined
+        if (isAdminOrGlobalBuilder) {
+          role = Constants.Roles.ADMIN
+        } else if (isAppBuilder) {
+          role = Constants.Roles.CREATOR
+        } else {
+          const appRole = Object.keys(user.roles).find(x => x === prodAppId)
+          if (appRole) {
+            role = user.roles[appRole]
+          }
         }
-      }
 
-      return {
-        ...user,
-        role,
-        isAdminOrGlobalBuilder,
-        isAppBuilder,
-      }
-    })
+        return {
+          ...user,
+          role,
+          isAdminOrGlobalBuilder,
+          isAppBuilder,
+        }
+      })
+      .sort((a, b) => {
+        const roleA = a.role
+        const roleB = b.role
+        if (roleA === undefined && roleB !== undefined) {
+          return 1
+        } else if (roleA !== undefined && roleB === undefined) {
+          return -1
+        }
+        return 0
+      })
   }
 
   const debouncedUpdateFetch = Utils.debounce(searchUsers, 250)
@@ -201,6 +212,9 @@
       return
     }
     try {
+      if (group?.builder?.apps.includes(prodAppId)) {
+        await removeGroupAppBuilder(group._id)
+      }
       await updateAppGroup(group, role)
     } catch {
       notifications.error("Group update failed")
@@ -242,9 +256,11 @@
   const enrichGroupRole = group => {
     return {
       ...group,
-      role: group.roles?.[
-        groups.actions.getGroupAppIds(group).find(x => x === prodAppId)
-      ],
+      role: group?.builder?.apps.includes(prodAppId)
+        ? Constants.Roles.CREATOR
+        : group.roles?.[
+            groups.actions.getGroupAppIds(group).find(x => x === prodAppId)
+          ],
     }
   }
 
@@ -257,8 +273,8 @@
   $: filteredGroups = searchGroups(enrichedGroups, query)
   $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
   $: allUsers = [...filteredUsers, ...groupUsers]
-
-  /*
+  $: console.log(filteredGroups)
+  /*  
     Create pseudo users from the "users" attribute on app groups.
     These users will appear muted in the UI and show the ROLE
     inherited from their parent group. The users allow assigning of user 
@@ -391,6 +407,14 @@
 
   const removeAppBuilder = async userId => {
     await users.removeAppBuilder(userId, prodAppId)
+  }
+
+  const addGroupAppBuilder = async groupId => {
+    await groups.actions.addGroupAppBuilder(groupId, prodAppId)
+  }
+
+  const removeGroupAppBuilder = async groupId => {
+    await groups.actions.removeGroupAppBuilder(groupId, prodAppId)
   }
 
   const initSidePanel = async sidePaneOpen => {
@@ -577,8 +601,12 @@
                     allowRemove={group.role}
                     allowPublic={false}
                     quiet={true}
+                    allowCreator={true}
                     on:change={e => {
                       onUpdateGroup(group, e.detail)
+                    }}
+                    on:addcreator={() => {
+                      addGroupAppBuilder(group._id)
                     }}
                     on:remove={() => {
                       onUpdateGroup(group)
@@ -612,7 +640,7 @@
                     value={user.role}
                     allowRemove={user.role && !user.group}
                     allowPublic={false}
-                    allowCreator
+                    allowCreator={true}
                     quiet={true}
                     on:addcreator={() => {
                       addAppBuilder(user._id)
