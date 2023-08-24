@@ -20,7 +20,6 @@ import * as ViewV2 from "./viewV2"
 import * as Datasource from "./datasource"
 
 const DependencyOrderedStores = [
-  Notifications,
   Sort,
   Filter,
   Bounds,
@@ -40,6 +39,7 @@ const DependencyOrderedStores = [
   Pagination,
   Clipboard,
   Config,
+  Notifications,
 ]
 
 export const attachStores = context => {
