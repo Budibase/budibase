@@ -5282,6 +5282,11 @@
       },
       {
         "section": true,
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "Create",
+          "invert": true
+        },
         "name": "Row details",
         "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
         "settings": [
@@ -5289,23 +5294,13 @@
             "type": "text",
             "label": "Row ID",
             "key": "rowId",
-            "nested": true,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "Create",
-              "invert": true
-            }
+            "nested": true
           },
           {
             "type": "text",
             "label": "Empty text",
             "key": "noRowsMessage",
-            "defaultValue": "We couldn't find a row to display",
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "Create",
-              "invert": true
-            }
+            "defaultValue": "We couldn't find a row to display"
           }
         ]
       },
@@ -5399,6 +5394,7 @@
           {
             "type": "fieldConfiguration",
             "key": "fields",
+            "nested": true,
             "selectAllFields": true
           },
           {

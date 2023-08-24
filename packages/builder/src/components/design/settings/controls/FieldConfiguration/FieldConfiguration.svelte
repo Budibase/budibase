@@ -1,125 +1,74 @@
 <script>
-  import { cloneDeep } from "lodash/fp"
-  import { generate } from "shortid"
+  import { cloneDeep, isEqual } from "lodash/fp"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-  } from "builderStore/dataBinding"
-  import { currentAsset } from "builderStore"
-  import SettingsList from "../SettingsList.svelte"
-  import { createEventDispatcher } from "svelte"
-  import { store, selectedScreen } from "builderStore"
-  import {
     getBindableProperties,
     getComponentBindableProperties,
   } from "builderStore/dataBinding"
-
-  import EditFieldPopover from "./EditFieldPopover.svelte"
+  import { currentAsset } from "builderStore"
+  import DraggableList from "../DraggableList.svelte"
+  import { createEventDispatcher } from "svelte"
+  import { store, selectedScreen } from "builderStore"
+  import FieldSetting from "./FieldSetting.svelte"
+  import { convertOldFieldFormat, getComponentForField } from "./utils"
 
   export let componentInstance
   export let value
 
   const dispatch = createEventDispatcher()
+  let sanitisedFields
+  let fieldList
+  let schema
+  // let assetIdCache
+  let cachedValue
+  // $: value, console.log("VALUE UPDATED")
+  // $: $currentAsset, console.log("currentAsset updated ", $currentAsset)
 
-  // Dean - From the inner form block - make a util
-  const FieldTypeToComponentMap = {
-    string: "stringfield",
-    number: "numberfield",
-    bigint: "bigintfield",
-    options: "optionsfield",
-    array: "multifieldselect",
-    boolean: "booleanfield",
-    longform: "longformfield",
-    datetime: "datetimefield",
-    attachment: "attachmentfield",
-    link: "relationshipfield",
-    json: "jsonfield",
-    barcodeqr: "codescanner",
+  $: bindings = getBindableProperties($selectedScreen, componentInstance._id)
+  $: actionType = componentInstance.actionType
+  let componentBindings = []
+
+  $: if (actionType) {
+    componentBindings = getComponentBindableProperties(
+      $selectedScreen,
+      componentInstance._id
+    )
   }
-
-  // Dean - From the inner form block - make a util
-  const getComponentForField = field => {
-    if (!field || !schema?.[field]) {
-      return null
-    }
-    const type = schema[field].type
-    return FieldTypeToComponentMap[type]
-  }
-
-  let fieldConfigList
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchema($currentAsset, datasource)
+
+  $: if (!isEqual(value, cachedValue)) {
+    cachedValue = value
+    schema = getSchema($currentAsset, datasource)
+  }
+
   $: options = Object.keys(schema || {})
   $: sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
-  $: updateBoundValue(sanitisedValue)
+  $: updateSanitsedFields(sanitisedValue)
 
-  $: fieldConfigList.forEach(column => {
-    if (!column.id) {
-      column.id = generate()
-    }
-  })
-
-  $: bindings = getBindableProperties(
-    $selectedScreen,
-    $store.selectedComponentId
-  )
-  $: console.log("bindings ", bindings)
-
-  $: componentBindings = getComponentBindableProperties(
-    $selectedScreen,
-    $store.selectedComponentId
-  )
-  $: console.log("componentBindings ", componentBindings)
+  $: unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
 
   // Builds unused ones only
-  const buildListOptions = (schema, selected) => {
+  const buildUnconfiguredOptions = (schema, selected) => {
+    if (!schema) {
+      return []
+    }
     let schemaClone = cloneDeep(schema)
     selected.forEach(val => {
-      delete schemaClone[val.name]
+      delete schemaClone[val.field]
     })
 
     return Object.keys(schemaClone)
       .filter(key => !schemaClone[key].autocolumn)
       .map(key => {
         const col = schemaClone[key]
+        let toggleOn = !value
         return {
-          name: key,
-          displayName: key,
-          id: generate(),
-          active: typeof col.active != "boolean" ? !value : col.active,
+          field: key,
+          active: typeof col.active != "boolean" ? toggleOn : col.active,
         }
       })
-  }
-
-  /*
-    SUPPORT 
-      - ["FIELD1", "FIELD2"...]
-          "fields": [ "First Name", "Last Name" ]
-
-      - [{name: "FIELD1", displayName: "FIELD1"}, ... only the currentlyadded fields]
-      * [{name: "FIELD1", displayName: "FIELD1", active: true|false}, all currently available fields] 
-  */
-
-  $: unconfigured = buildListOptions(schema, fieldConfigList)
-
-  const convertOldFieldFormat = fields => {
-    let formFields
-    if (typeof fields?.[0] === "string") {
-      formFields = fields.map(field => ({
-        name: field,
-        displayName: field,
-        active: true,
-      }))
-    } else {
-      formFields = fields
-    }
-    return (formFields || []).map(field => {
-      return {
-        ...field,
-        active: typeof field?.active != "boolean" ? true : field?.active,
-      }
-    })
   }
 
   const getSchema = (asset, datasource) => {
@@ -134,36 +83,61 @@
     return schema
   }
 
-  const updateBoundValue = value => {
-    fieldConfigList = cloneDeep(value)
+  const updateSanitsedFields = value => {
+    sanitisedFields = cloneDeep(value)
   }
 
   const getValidColumns = (columns, options) => {
     if (!Array.isArray(columns) || !columns.length) {
       return []
     }
-    // We need to account for legacy configs which would just be an array
-    // of strings
-    if (typeof columns[0] === "string") {
-      columns = columns.map(col => ({
-        name: col,
-        displayName: col,
-      }))
-    }
+
     return columns.filter(column => {
-      return options.includes(column.name)
+      return options.includes(column.field)
     })
   }
 
-  let listOptions
-  $: if (fieldConfigList) {
-    listOptions = [...fieldConfigList, ...unconfigured].map(column => {
-      const type = getComponentForField(column.name)
-      const _component = `@budibase/standard-components/${type}`
+  const buildSudoInstance = instance => {
+    if (instance._component) {
+      return instance
+    }
 
-      return { ...column, _component } //only necessary if it doesnt exist
+    const type = getComponentForField(instance.field, schema)
+    instance._component = `@budibase/standard-components/${type}`
+
+    const sudoComponentInstance = store.actions.components.createInstance(
+      instance._component,
+      {
+        _instanceName: instance.field,
+        field: instance.field,
+        label: instance.field,
+        placeholder: instance.field,
+      },
+      {}
+    )
+
+    return { ...instance, ...sudoComponentInstance }
+  }
+
+  $: if (sanitisedFields) {
+    fieldList = [...sanitisedFields, ...unconfigured].map(buildSudoInstance)
+  }
+
+  const processItemUpdate = e => {
+    const updatedField = e.detail
+    const parentFieldsUpdated = fieldList ? cloneDeep(fieldList) : []
+
+    let parentFieldIdx = parentFieldsUpdated.findIndex(pSetting => {
+      return pSetting.field === updatedField?.field
     })
-    console.log(listOptions)
+
+    if (parentFieldIdx == -1) {
+      parentFieldsUpdated.push(updatedField)
+    } else {
+      parentFieldsUpdated[parentFieldIdx] = updatedField
+    }
+    // fieldList = parentFieldsUpdated
+    dispatch("change", getValidColumns(parentFieldsUpdated, options))
   }
 
   const listUpdated = e => {
@@ -173,12 +147,19 @@
 </script>
 
 <div class="field-configuration">
-  <SettingsList
-    value={listOptions}
-    on:change={listUpdated}
-    rightButton={EditFieldPopover}
-    rightProps={{ componentBindings, bindings, parent: componentInstance }}
-  />
+  {#if fieldList?.length}
+    <DraggableList
+      on:change={listUpdated}
+      on:itemChange={processItemUpdate}
+      items={fieldList}
+      listItemKey={"_id"}
+      listType={FieldSetting}
+      listTypeProps={{
+        componentBindings,
+        bindings,
+      }}
+    />
+  {/if}
 </div>
 
 <style>
