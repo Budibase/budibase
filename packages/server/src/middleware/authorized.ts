@@ -74,7 +74,8 @@ const checkAuthorizedResource = async (
   }
 }
 
-export default (
+const authorized =
+  (
     permType: PermissionType,
     permLevel?: PermissionLevel,
     opts = { schema: false }
@@ -143,3 +144,14 @@ export default (
     // csrf protection
     return csrf(ctx, next)
   }
+
+export default (
+  permType: PermissionType,
+  permLevel?: PermissionLevel,
+  opts = { schema: false }
+) => authorized(permType, permLevel, opts)
+
+export const authorizedResource = (
+  permType: PermissionType,
+  permLevel?: PermissionLevel
+) => authorized(permType, permLevel)
