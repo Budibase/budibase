@@ -1,6 +1,6 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import { tables as tablesStore } from "stores/backend"
 
   export let value
@@ -28,16 +28,6 @@
     []
   )
   $: options = [...(tables || []), ...(views || [])]
-  $: {
-    // Migrate old table values before "key" existed
-    if (value && !value.key) {
-      console.log("migrate")
-      dispatch(
-        "change",
-        tables.find(x => x.tableId === value.tableId)
-      )
-    }
-  }
 
   const onChange = e => {
     dispatch(
@@ -45,6 +35,15 @@
       options.find(x => x.key === e.detail)
     )
   }
+
+  onMount(() => {
+    // Migrate old values before "key" existed
+    if (value && !value.key) {
+      const view = views.find(x => x.key === value.id)
+      const table = tables.find(x => x.key === value._id)
+      dispatch("change", view || table)
+    }
+  })
 </script>
 
 <Select
