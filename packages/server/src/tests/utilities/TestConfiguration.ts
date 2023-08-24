@@ -620,18 +620,6 @@ class TestConfiguration {
     return this._req(config, null, controllers.role.save)
   }
 
-  async addPermission(roleId: string, resourceId: string, level = "read") {
-    return this._req(
-      null,
-      {
-        roleId,
-        resourceId,
-        level,
-      },
-      controllers.perms.addPermission
-    )
-  }
-
   // VIEW
 
   async createView(config?: any) {
