@@ -40,7 +40,6 @@
   let userLimitReachedModal
 
   let inviteFailureResponse = ""
-
   $: queryIsEmail = emailValidator(query) === true
   $: prodAppId = apps.getProdAppID($store.appId)
   $: promptInvite = showInvite(
@@ -108,10 +107,16 @@
     await usersFetch.refresh()
 
     filteredUsers = $usersFetch.rows.map(user => {
-      const isAdminOrBuilder = sdk.users.isAdminOrBuilder(user, prodAppId)
+      const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(
+        user,
+        prodAppId
+      )
+      const isAppBuilder = sdk.users.hasAppBuilderPermissions(user, prodAppId)
       let role = undefined
-      if (isAdminOrBuilder) {
+      if (isAdminOrGlobalBuilder) {
         role = Constants.Roles.ADMIN
+      } else if (isAppBuilder) {
+        role = Constants.Roles.CREATOR
       } else {
         const appRole = Object.keys(user.roles).find(x => x === prodAppId)
         if (appRole) {
@@ -122,7 +127,8 @@
       return {
         ...user,
         role,
-        isAdminOrBuilder,
+        isAdminOrGlobalBuilder,
+        isAppBuilder,
       }
     })
   }
@@ -159,6 +165,12 @@
     try {
       if (user.role === role) {
         return
+      }
+      if (user.isAppBuilder) {
+        await removeAppBuilder(user._id, prodAppId)
+      }
+      if (role === Constants.Roles.CREATOR) {
+        await removeAppBuilder(user._id, prodAppId)
       }
       await updateAppUser(user, role)
     } catch (error) {
@@ -373,6 +385,14 @@
     })
   }
 
+  const addAppBuilder = async userId => {
+    await users.addAppBuilder(userId, prodAppId)
+  }
+
+  const removeAppBuilder = async userId => {
+    await users.removeAppBuilder(userId, prodAppId)
+  }
+
   const initSidePanel = async sidePaneOpen => {
     if (sidePaneOpen === true) {
       await groups.actions.init()
@@ -388,22 +408,12 @@
     }
   }
 
-  const userTitle = user => {
-    if (sdk.users.isAdmin(user)) {
-      return "Admin"
-    } else if (sdk.users.isBuilder(user, prodAppId)) {
-      return "Developer"
-    } else {
-      return "App user"
-    }
-  }
-
   const getRoleFooter = user => {
     if (user.group) {
       const role = $roles.find(role => role._id === user.role)
       return `This user has been given ${role?.name} access from the ${user.group} group`
     }
-    if (user.isAdminOrBuilder) {
+    if (user.isAdminOrGlobalBuilder) {
       return "This user's role grants admin access to all apps"
     }
     return null
@@ -594,9 +604,6 @@
                   <div class="user-email" title={user.email}>
                     {user.email}
                   </div>
-                  <div class="auth-entity-meta">
-                    {userTitle(user)}
-                  </div>
                 </div>
                 <div class="auth-entity-access" class:muted={user.group}>
                   <RoleSelect
@@ -605,7 +612,11 @@
                     value={user.role}
                     allowRemove={user.role && !user.group}
                     allowPublic={false}
+                    allowCreator
                     quiet={true}
+                    on:addcreator={() => {
+                      addAppBuilder(user._id)
+                    }}
                     on:change={e => {
                       onUpdateUser(user, e.detail)
                     }}
@@ -614,7 +625,7 @@
                     }}
                     autoWidth
                     align="right"
-                    allowedRoles={user.isAdminOrBuilder
+                    allowedRoles={user.isAdminOrGlobalBuilder
                       ? [Constants.Roles.ADMIN]
                       : null}
                   />
