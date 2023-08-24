@@ -33,7 +33,9 @@ describe("/api/global/users/:userId/app/builder", () => {
         MOCK_APP_ID,
         400
       )
-      expect(resp.body.message).toContain("Feature not enabled")
+      expect(resp.body.message).toContain(
+        "appBuilders are not currently enabled"
+      )
     })
   })
 
