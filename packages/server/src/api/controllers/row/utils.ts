@@ -45,13 +45,20 @@ export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
 }
 
 export function getTableId(ctx: Ctx) {
-  if (ctx.request.body && ctx.request.body.tableId) {
-    return ctx.request.body.tableId
+  // top priority, use the URL first
+  if (ctx.params?.sourceId) {
+    return ctx.params.sourceId
   }
-  if (ctx.params && ctx.params.tableId) {
+  // now check for old way of specifying table ID
+  if (ctx.params?.tableId) {
     return ctx.params.tableId
   }
-  if (ctx.params && ctx.params.viewName) {
+  // check body for a table ID
+  if (ctx.request.body?.tableId) {
+    return ctx.request.body.tableId
+  }
+  // now check if a specific view name
+  if (ctx.params?.viewName) {
     return ctx.params.viewName
   }
 }
