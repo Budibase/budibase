@@ -8,6 +8,7 @@ import {
 import { PermissionLevel, PermissionType, Role, UserCtx } from "@budibase/types"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
+import { paramResource } from "./resourceId"
 
 function hasResource(ctx: any) {
   return ctx.resourceId != null
@@ -78,7 +79,8 @@ const authorized =
   (
     permType: PermissionType,
     permLevel?: PermissionLevel,
-    opts = { schema: false }
+    opts = { schema: false },
+    resourceId?: { path: string; transformer?: (val: string) => string }
   ) =>
   async (ctx: any, next: any) => {
     // webhooks don't need authentication, each webhook unique
@@ -99,6 +101,15 @@ const authorized =
         ? PermissionLevel.WRITE
         : PermissionLevel.READ
     const appId = context.getAppId()
+
+    if (resourceId?.path) {
+      // Reusing the existing middleware to extract the value
+      paramResource(resourceId.path)(ctx, () => {})
+      if (resourceId.transformer) {
+        ctx.resourceId = resourceId.transformer(ctx.resourceId)
+      }
+    }
+
     if (appId && hasResource(ctx)) {
       resourceRoles = await roles.getRequiredResourceRole(permLevel!, ctx)
       if (opts && opts.schema) {
@@ -153,5 +164,9 @@ export default (
 
 export const authorizedResource = (
   permType: PermissionType,
-  permLevel?: PermissionLevel
-) => authorized(permType, permLevel)
+  permLevel: PermissionLevel,
+  path: string,
+  transformer?: (val: string) => string
+) => {
+  return authorized(permType, permLevel, undefined, { path, transformer })
+}
