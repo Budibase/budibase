@@ -82,8 +82,14 @@ const resourceIdTranformers: Partial<
 > = {
   [PermissionType.VIEW]: async ctx => {
     const { resourceId } = ctx
+    if (!resourceId) {
+      ctx.throw(400, `Cannot obtain the view id`)
+      return
+    }
+
     if (!isViewID(resourceId)) {
-      ctx.throw(400, `"${resourceId}" is not a valid viewId`)
+      ctx.throw(400, `"${resourceId}" is not a valid view id`)
+      return
     }
 
     if (await features.isViewPermissionEnabled()) {
@@ -121,17 +127,17 @@ const authorized =
       permLevel === PermissionLevel.READ
         ? PermissionLevel.WRITE
         : PermissionLevel.READ
-    const appId = context.getAppId()
 
     if (resourcePath) {
       // Reusing the existing middleware to extract the value
       paramResource(resourcePath)(ctx, () => {})
     }
 
-    if (appId && hasResource(ctx)) {
-      if (resourceIdTranformers[permType]) {
-        await resourceIdTranformers[permType]!(ctx)
-      }
+    if (resourceIdTranformers[permType]) {
+      await resourceIdTranformers[permType]!(ctx)
+    }
+
+    if (hasResource(ctx)) {
       resourceRoles = await roles.getRequiredResourceRole(permLevel!, ctx)
       if (opts && opts.schema) {
         otherLevelRoles = await roles.getRequiredResourceRole(otherLevel, ctx)

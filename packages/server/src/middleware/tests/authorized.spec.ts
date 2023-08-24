@@ -3,13 +3,16 @@ jest.mock("../../environment", () => ({
   isTest: () => true,
   // @ts-ignore
   isProd: () => this.prod,
-  _set: function (key: string, value: string) {
+  _set: function (_key: string, value: string) {
     this.prod = value === "production"
   },
 }))
+
+import { PermissionType, PermissionLevel } from "@budibase/types"
+
 import authorizedMiddleware from "../authorized"
 import env from "../../environment"
-import { PermissionType, PermissionLevel } from "@budibase/types"
+import { generateTableID, generateViewID } from "../../db/utils"
 
 const APP_ID = ""
 
@@ -51,7 +54,7 @@ class TestConfiguration {
     this.middleware = authorizedMiddleware(...perms)
   }
 
-  setResourceId(id: string) {
+  setResourceId(id?: string) {
     this.ctx.resourceId = id
   }
 
@@ -85,6 +88,7 @@ describe("Authorization middleware", () => {
   })
 
   beforeEach(() => {
+    jest.clearAllMocks()
     config = new TestConfiguration()
   })
 
@@ -171,6 +175,45 @@ describe("Authorization middleware", () => {
         403,
         "User does not have permission"
       )
+    })
+
+    describe("view type", () => {
+      const tableId = generateTableID()
+      const viewId = generateViewID(tableId)
+
+      beforeEach(() => {
+        config.setMiddlewareRequiredPermission(
+          PermissionType.VIEW,
+          PermissionLevel.READ
+        )
+        config.setResourceId(viewId)
+
+        config.setUser({
+          role: {
+            _id: "",
+          },
+        })
+      })
+
+      it("throw an exception if the resource id is not provided", async () => {
+        config.setResourceId(undefined)
+        await config.executeMiddleware()
+        expect(config.throw).toHaveBeenNthCalledWith(
+          1,
+          400,
+          "Cannot obtain the view id"
+        )
+      })
+
+      it("throw an exception if the resource id is not a valid view id", async () => {
+        config.setResourceId(tableId)
+        await config.executeMiddleware()
+        expect(config.throw).toHaveBeenNthCalledWith(
+          1,
+          400,
+          `"${tableId}" is not a valid view id`
+        )
+      })
     })
   })
 })
