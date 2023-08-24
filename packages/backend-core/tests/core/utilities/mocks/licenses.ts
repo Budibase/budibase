@@ -102,6 +102,10 @@ export const useAppBuilders = () => {
   return useFeature(Feature.APP_BUILDERS)
 }
 
+export const useViewPermissions = () => {
+  return useFeature(Feature.VIEW_PERMISSIONS)
+}
+
 // QUOTAS
 
 export const setAutomationLogsQuota = (value: number) => {
