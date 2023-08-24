@@ -1,34 +1,40 @@
 jest.mock("../../environment", () => ({
-    prod: false,
-    isTest: () => true,
-    isProd: () => this.prod,
-    _set: function(key, value) {
-      this.prod = value === "production"
-    }
-  })
-)
-const authorizedMiddleware = require("../authorized").default
-const env = require("../../environment")
-const { PermissionType, PermissionLevel } = require("@budibase/types")
+  prod: false,
+  isTest: () => true,
+  // @ts-ignore
+  isProd: () => this.prod,
+  _set: function (key: string, value: string) {
+    this.prod = value === "production"
+  },
+}))
+import authorizedMiddleware from "../authorized"
+import env from "../../environment"
+import { PermissionType, PermissionLevel } from "@budibase/types"
 
 const APP_ID = ""
 
 class TestConfiguration {
-  constructor(role) {
-    this.middleware = authorizedMiddleware(role)
+  middleware: (ctx: any, next: any) => Promise<void>
+  next: () => void
+  throw: () => void
+  headers: Record<string, any>
+  ctx: any
+
+  constructor() {
+    this.middleware = authorizedMiddleware(PermissionType.APP)
     this.next = jest.fn()
     this.throw = jest.fn()
     this.headers = {}
     this.ctx = {
       headers: {},
       request: {
-        url: ""
+        url: "",
       },
       appId: APP_ID,
       auth: {},
       next: this.next,
       throw: this.throw,
-      get: (name) => this.headers[name],
+      get: (name: string) => this.headers[name],
     }
   }
 
@@ -36,32 +42,33 @@ class TestConfiguration {
     return this.middleware(this.ctx, this.next)
   }
 
-  setUser(user) {
+  setUser(user: any) {
     this.ctx.user = user
   }
 
-  setMiddlewareRequiredPermission(...perms) {
+  setMiddlewareRequiredPermission(...perms: any[]) {
+    // @ts-ignore
     this.middleware = authorizedMiddleware(...perms)
   }
 
-  setResourceId(id) {
+  setResourceId(id: string) {
     this.ctx.resourceId = id
   }
 
-  setAuthenticated(isAuthed) {
+  setAuthenticated(isAuthed: boolean) {
     this.ctx.isAuthenticated = isAuthed
   }
 
-  setRequestUrl(url) {
+  setRequestUrl(url: string) {
     this.ctx.request.url = url
   }
 
-  setEnvironment(isProd) {
+  setEnvironment(isProd: boolean) {
     env._set("NODE_ENV", isProd ? "production" : "jest")
   }
 
-  setRequestHeaders(headers) {
-    this.ctx.headers = headers 
+  setRequestHeaders(headers: Record<string, any>) {
+    this.ctx.headers = headers
   }
 
   afterEach() {
@@ -69,10 +76,9 @@ class TestConfiguration {
   }
 }
 
-
 describe("Authorization middleware", () => {
   const next = jest.fn()
-  let config
+  let config: TestConfiguration
 
   afterEach(() => {
     config.afterEach()
@@ -83,8 +89,6 @@ describe("Authorization middleware", () => {
   })
 
   describe("non-webhook call", () => {
-    let config
-
     beforeEach(() => {
       config = new TestConfiguration()
       config.setEnvironment(true)
@@ -102,21 +106,21 @@ describe("Authorization middleware", () => {
         _id: "user",
         role: {
           _id: "ADMIN",
-        }
+        },
       })
 
       await config.executeMiddleware()
 
       expect(config.next).toHaveBeenCalled()
     })
-    
+
     it("throws if the user does not have builder permissions", async () => {
       config.setEnvironment(false)
       config.setMiddlewareRequiredPermission(PermissionType.BUILDER)
       config.setUser({
         role: {
-          _id: ""
-        }
+          _id: "",
+        },
       })
       await config.executeMiddleware()
 
@@ -127,8 +131,8 @@ describe("Authorization middleware", () => {
       config.setResourceId(PermissionType.QUERY)
       config.setUser({
         role: {
-          _id: ""
-        }
+          _id: "",
+        },
       })
       config.setMiddlewareRequiredPermission(PermissionType.QUERY)
 
@@ -139,25 +143,34 @@ describe("Authorization middleware", () => {
     it("throws if the user session is not authenticated", async () => {
       config.setUser({
         role: {
-          _id: ""
+          _id: "",
         },
       })
       config.setAuthenticated(false)
 
       await config.executeMiddleware()
-      expect(config.throw).toHaveBeenCalledWith(403, "Session not authenticated")
+      expect(config.throw).toHaveBeenCalledWith(
+        403,
+        "Session not authenticated"
+      )
     })
 
     it("throws if the user does not have base permissions to perform the operation", async () => {
       config.setUser({
         role: {
-          _id: ""
+          _id: "",
         },
       })
-      config.setMiddlewareRequiredPermission(PermissionType.ADMIN, PermissionLevel.BASIC)
-      
+      config.setMiddlewareRequiredPermission(
+        PermissionType.APP,
+        PermissionLevel.READ
+      )
+
       await config.executeMiddleware()
-      expect(config.throw).toHaveBeenCalledWith(403, "User does not have permission")
+      expect(config.throw).toHaveBeenCalledWith(
+        403,
+        "User does not have permission"
+      )
     })
   })
 })
