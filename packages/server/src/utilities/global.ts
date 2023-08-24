@@ -12,73 +12,63 @@ import { groups } from "@budibase/pro"
 import { UserCtx, ContextUser, User, UserGroup } from "@budibase/types"
 import cloneDeep from "lodash/cloneDeep"
 
-export function updateAppRole(
+export async function processUser(
   user: ContextUser,
-  { appId }: { appId?: string } = {}
+  opts: { appId?: string; groups?: UserGroup[] } = {}
 ) {
-  appId = appId || context.getAppId()
-
   if (!user || (!user.roles && !user.userGroups)) {
     return user
   }
-  // if in an multi-tenancy environment make sure roles are never updated
+  user = cloneDeep(user)
+  delete user.password
+  const appId = opts.appId || context.getAppId()
+  if (!appId) {
+    throw new Error("Unable to process user without app ID")
+  }
+  // if in a multi-tenancy environment and in wrong tenant make sure roles are never updated
   if (env.MULTI_TENANCY && appId && !tenancy.isUserInAppTenant(appId, user)) {
     user = users.removePortalUserPermissions(user)
     user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
     return user
   }
-  // always use the deployed app
-  if (appId && user.roles) {
+  let groupList: UserGroup[] = []
+  if (appId && user?.userGroups?.length) {
+    groupList = opts.groups
+      ? opts.groups
+      : await groups.getBulk(user.userGroups)
+  }
+  // check if a group provides builder access
+  const builderAppIds = await groups.getGroupBuilderAppIds(user, {
+    appId,
+    groups: groupList,
+  })
+  if (builderAppIds.length && !users.isBuilder(user, appId)) {
+    const existingApps = user.builder?.apps || []
+    user.builder = {
+      apps: [...new Set(existingApps.concat(builderAppIds))],
+    }
+  }
+  // builders are always admins within the app
+  if (users.isBuilder(user, appId)) {
+    user.roleId = roles.BUILTIN_ROLE_IDS.ADMIN
+  }
+  // try to get the role from the user list
+  if (!user.roleId && appId && user.roles) {
     user.roleId = user.roles[dbCore.getProdAppID(appId)]
   }
-  // if a role wasn't found then either set as admin (builder) or public (everyone else)
-  if (!user.roleId && users.isBuilder(user, appId)) {
-    user.roleId = roles.BUILTIN_ROLE_IDS.ADMIN
-  } else if (!user.roleId && !user?.userGroups?.length) {
-    user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
-  }
-
-  delete user.roles
-  return user
-}
-
-async function checkGroupRoles(
-  user: ContextUser,
-  opts: { appId?: string; groups?: UserGroup[] } = {}
-) {
-  if (user.roleId && user.roleId !== roles.BUILTIN_ROLE_IDS.PUBLIC) {
-    return user
-  }
-  if (opts.appId) {
-    user.roleId = await groups.getGroupRoleId(user as User, opts.appId, {
-      groups: opts.groups,
+  // try to get the role from the group list
+  if (!user.roleId && groupList) {
+    user.roleId = await groups.getGroupRoleId(user, appId, {
+      groups: groupList,
     })
   }
   // final fallback, simply couldn't find a role - user must be public
   if (!user.roleId) {
     user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
   }
+  // remove the roles as it is now set
+  delete user.roles
   return user
-}
-
-export async function processUser(
-  user: ContextUser,
-  opts: { appId?: string; groups?: UserGroup[] } = {}
-) {
-  let clonedUser = cloneDeep(user)
-  if (clonedUser) {
-    delete clonedUser.password
-  }
-  const appId = opts.appId || context.getAppId()
-  clonedUser = updateAppRole(clonedUser, { appId })
-  if (!clonedUser.roleId && clonedUser?.userGroups?.length) {
-    clonedUser = await checkGroupRoles(clonedUser, {
-      appId,
-      groups: opts?.groups,
-    })
-  }
-
-  return clonedUser
 }
 
 export async function getCachedSelf(ctx: UserCtx, appId: string) {
