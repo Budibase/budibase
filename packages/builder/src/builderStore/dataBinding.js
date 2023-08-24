@@ -657,7 +657,7 @@ export const getEventContextBindings = (
  * @return {{schema: Object, table: Object}}
  */
 export const getSchemaForDatasourcePlus = (resourceId, options) => {
-  const isViewV2 = resourceId?.includes("view_ta_")
+  const isViewV2 = resourceId?.includes("view_")
   const datasource = isViewV2
     ? {
         type: "viewV2",

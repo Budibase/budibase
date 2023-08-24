@@ -81,7 +81,7 @@ export const createDataSourceStore = () => {
 
     // Fetch related table IDs from table schema
     let schema
-    if (options.invalidateRelationships) {
+    if (options.invalidateRelationships && !dataSourceId?.includes("view_")) {
       try {
         const definition = await API.fetchTableDefinition(dataSourceId)
         schema = definition?.schema
