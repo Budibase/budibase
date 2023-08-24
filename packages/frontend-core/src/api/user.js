@@ -250,4 +250,26 @@ export const buildUserEndpoints = API => ({
       url: `/api/global/users/count/${appId}`,
     })
   },
+
+  /**
+   * Adds a per app builder to the selected app
+   * @param appId the applications id
+   * @param userId The id of the user to add as a builder
+   */
+  addAppBuilder: async ({ userId, appId }) => {
+    return await API.post({
+      url: `/api/global/users/${userId}/app/${appId}/builder`,
+    })
+  },
+
+  /**
+   * Removes a per app builder to the selected app
+   * @param appId the applications id
+   * @param userId The id of the user to remove as a builder
+   */
+  removeAppBuilder: async ({ userId, appId }) => {
+    return await API.delete({
+      url: `/api/global/users/${userId}/app/${appId}/builder`,
+    })
+  },
 })

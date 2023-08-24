@@ -71,6 +71,7 @@ export const Features = {
   BRANDING: "branding",
   SCIM: "scim",
   SYNC_AUTOMATIONS: "syncAutomations",
+  APP_BUILDERS: "appBuilders",
 }
 
 // Role IDs
@@ -80,6 +81,7 @@ export const Roles = {
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
+  CREATOR: "CREATOR",
 }
 
 export const Themes = [
