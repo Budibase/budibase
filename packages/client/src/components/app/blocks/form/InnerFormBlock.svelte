@@ -47,7 +47,7 @@
       "##eventHandlerType": "Save Row",
       parameters: {
         providerId: formId,
-        tableId: dataSource?.tableId,
+        tableId: dataSource?.resourceId,
         notificationOverride,
       },
     },
@@ -80,7 +80,7 @@
       "##eventHandlerType": "Delete Row",
       parameters: {
         confirm: true,
-        tableId: dataSource?.tableId,
+        tableId: dataSource?.resourceId,
         rowId: `{{ ${safe(repeaterId)}.${safe("_id")} }}`,
         revId: `{{ ${safe(repeaterId)}.${safe("_rev")} }}`,
         notificationOverride,
