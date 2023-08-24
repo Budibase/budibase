@@ -8,6 +8,8 @@
   import Icon from "../../Icon/Icon.svelte"
   import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Popover from "../../Popover/Popover.svelte"
+  import Tags from "../../Tags/Tags.svelte"
+  import Tag from "../../Tags/Tag.svelte"
 
   export let id = null
   export let disabled = false
@@ -37,6 +39,7 @@
   export let customPopoverHeight
   export let align = "left"
   export let footer = null
+  export let tag = null
 
   const dispatch = createEventDispatcher()
 
@@ -99,7 +102,7 @@
   bind:this={button}
 >
   {#if fieldIcon}
-    {#if !useOptionIconImage}
+    {#if !useOptionIconImage}x
       <span class="option-extra icon">
         <Icon size="S" name={fieldIcon} />
       </span>
@@ -217,6 +220,13 @@
             <span class="spectrum-Menu-itemLabel">
               {getOptionLabel(option, idx)}
             </span>
+            {#if option.tag}
+              <span class="option-tag">
+                <Tags>
+                  <Tag icon="LockClosed">{option.tag}</Tag>
+                </Tags>
+              </span>
+            {/if}
             <svg
               class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
               focusable="false"
@@ -320,5 +330,13 @@
 
   .option-extra.icon.field-icon {
     display: flex;
+  }
+
+  .option-tag {
+    margin: 0 var(--spacing-m) 0 var(--spacing-m);
+  }
+
+  .option-tag :global(.spectrum-Tags-item > .spectrum-Icon) {
+    margin-top: 2px;
   }
 </style>
