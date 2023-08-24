@@ -6,6 +6,7 @@
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
   import EjectBlockButton from "components/design/settings/controls/EjectBlockButton.svelte"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
+  import InfoDisplay from "./InfoDisplay.svelte"
   import analytics, { Events } from "analytics"
 
   export let componentDefinition
@@ -14,15 +15,13 @@
   export let componentBindings
   export let isScreen = false
   export let onUpdateSetting
+  export let showSectionTitle = true
+  export let showInstanceName = true
 
   $: sections = getSections(componentInstance, componentDefinition, isScreen)
 
   const getSections = (instance, definition, isScreen) => {
     const settings = definition?.settings ?? []
-    console.log(
-      "ComponentSettingsSection::definition?.settings",
-      definition?.settings
-    )
     const generalSettings = settings.filter(setting => !setting.section)
     const customSections = settings.filter(setting => setting.section)
     let sections = [
@@ -51,23 +50,22 @@
   }
 
   const updateSetting = async (setting, value) => {
-    if (typeof onUpdateSetting === "function") {
-      onUpdateSetting(setting, value)
-    } else {
-      try {
+    try {
+      if (typeof onUpdateSetting === "function") {
+        await onUpdateSetting(setting, value)
+      } else {
         await store.actions.components.updateSetting(setting.key, value)
-
-        // Send event if required
-        if (setting.sendEvents) {
-          analytics.captureEvent(Events.COMPONENT_UPDATED, {
-            name: componentInstance._component,
-            setting: setting.key,
-            value,
-          })
-        }
-      } catch (error) {
-        notifications.error("Error updating component prop")
       }
+      // Send event if required
+      if (setting.sendEvents) {
+        analytics.captureEvent(Events.COMPONENT_UPDATED, {
+          name: componentInstance._component,
+          setting: setting.key,
+          value,
+        })
+      }
+    } catch (error) {
+      notifications.error("Error updating component prop")
     }
   }
 
@@ -106,7 +104,7 @@
       }
     }
 
-    return true
+    return typeof setting.visible == "boolean" ? setting.visible : true
   }
 
   const canRenderControl = (instance, setting, isScreen) => {
@@ -125,9 +123,22 @@
 
 {#each sections as section, idx (section.name)}
   {#if section.visible}
-    <DetailSummary name={section.name} collapsible={false}>
+    <DetailSummary
+      name={showSectionTitle ? section.name : ""}
+      collapsible={false}
+    >
+      {#if section.info}
+        <div class="section-info">
+          <InfoDisplay body={section.info} />
+        </div>
+      {:else if idx === 0 && section.name === "General" && componentDefinition.info}
+        <InfoDisplay
+          title={componentDefinition.name}
+          body={componentDefinition.info}
+        />
+      {/if}
       <div class="settings">
-        {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen}
+        {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen && showInstanceName}
           <PropertyControl
             control={Input}
             label="Name"
@@ -138,13 +149,10 @@
         {/if}
         {#each section.settings as setting (setting.key)}
           {#if setting.visible}
-            <!-- DEAN - Remove fieldConfiguration label config -->
             <PropertyControl
               type={setting.type}
               control={getComponentForSetting(setting)}
-              label={setting.type != "fieldConfiguration"
-                ? setting.label
-                : undefined}
+              label={setting.label}
               labelHidden={setting.labelHidden}
               key={setting.key}
               value={componentInstance[setting.key]}
@@ -169,6 +177,8 @@
               {componentBindings}
               {componentInstance}
               {componentDefinition}
+              on:drawerShow
+              on:drawerHide
             />
           {/if}
         {/each}

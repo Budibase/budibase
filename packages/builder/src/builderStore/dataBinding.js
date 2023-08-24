@@ -22,6 +22,10 @@ import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
+import {
+  convertOldFieldFormat,
+  getComponentForField,
+} from "components/design/settings/controls/FieldConfiguration/utils"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -328,7 +332,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
       if (context.type === "form") {
         // Forms do not need table schemas
         // Their schemas are built from their component field names
-        schema = buildFormSchema(component)
+        schema = buildFormSchema(component, asset)
         readablePrefix = "Fields"
       } else if (context.type === "static") {
         // Static contexts are fully defined by the components
@@ -370,6 +374,11 @@ const getProviderContextBindings = (asset, dataProviders) => {
       if (runtimeSuffix) {
         providerId += `-${runtimeSuffix}`
       }
+
+      if (!filterCategoryByContext(component, context)) {
+        return
+      }
+
       const safeComponentId = makePropSafe(providerId)
 
       // Create bindable properties for each schema field
@@ -387,6 +396,12 @@ const getProviderContextBindings = (asset, dataProviders) => {
         }
         readableBinding += `.${fieldSchema.name || key}`
 
+        const bindingCategory = getComponentBindingCategory(
+          component,
+          context,
+          def
+        )
+
         // Create the binding object
         bindings.push({
           type: "context",
@@ -399,8 +414,8 @@ const getProviderContextBindings = (asset, dataProviders) => {
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
           component: component._component,
-          category: component._instanceName,
-          icon: def.icon,
+          category: bindingCategory.category,
+          icon: bindingCategory.icon,
           display: {
             name: fieldSchema.name || key,
             type: fieldSchema.type,
@@ -411,6 +426,40 @@ const getProviderContextBindings = (asset, dataProviders) => {
   })
 
   return bindings
+}
+
+// Exclude a data context based on the component settings
+const filterCategoryByContext = (component, context) => {
+  const { _component } = component
+  if (_component.endsWith("formblock")) {
+    if (
+      (component.actionType == "Create" && context.type === "schema") ||
+      (component.actionType == "View" && context.type === "form")
+    ) {
+      return false
+    }
+  }
+  return true
+}
+
+const getComponentBindingCategory = (component, context, def) => {
+  let icon = def.icon
+  let category = component._instanceName
+
+  if (component._component.endsWith("formblock")) {
+    let contextCategorySuffix = {
+      form: "Fields",
+      schema: "Row",
+    }
+    category = `${component._instanceName} - ${
+      contextCategorySuffix[context.type]
+    }`
+    icon = context.type === "form" ? "Form" : "Data"
+  }
+  return {
+    icon,
+    category,
+  }
 }
 
 /**
@@ -507,6 +556,7 @@ const getSelectedRowsBindings = asset => {
         )}.${makePropSafe("selectedRows")}`,
         readableBinding: `${block._instanceName}.Selected rows`,
         category: "Selected rows",
+        icon: "ViewRow",
         display: { name: block._instanceName },
       }))
     )
@@ -835,18 +885,36 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
  * Builds a form schema given a form component.
  * A form schema is a schema of all the fields nested anywhere within a form.
  */
-export const buildFormSchema = component => {
+export const buildFormSchema = (component, asset) => {
   let schema = {}
   if (!component) {
     return schema
   }
 
-  // If this is a form block, simply use the fields setting
   if (component._component.endsWith("formblock")) {
     let schema = {}
-    component.fields?.forEach(field => {
-      schema[field] = { type: "string" }
-    })
+
+    const datasource = getDatasourceForProvider(asset, component)
+    const info = getSchemaForDatasource(component, datasource)
+
+    if (!component.fields) {
+      Object.values(info?.schema)
+        .filter(
+          ({ autocolumn, name }) =>
+            !autocolumn && !["_rev", "_id"].includes(name)
+        )
+        .forEach(({ name }) => {
+          schema[name] = { type: info?.schema[name].type }
+        })
+    } else {
+      // Field conversion
+      const patched = convertOldFieldFormat(component.fields || [])
+      patched?.forEach(({ field, active }) => {
+        if (!active) return
+        schema[field] = { type: info?.schema[field].type }
+      })
+    }
+
     return schema
   }
 
@@ -862,7 +930,7 @@ export const buildFormSchema = component => {
     }
   }
   component._children?.forEach(child => {
-    const childSchema = buildFormSchema(child)
+    const childSchema = buildFormSchema(child, asset)
     schema = { ...schema, ...childSchema }
   })
   return schema

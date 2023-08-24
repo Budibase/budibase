@@ -1,82 +1,88 @@
 <script>
-  import { Toggle, Icon } from "@budibase/bbui"
+  import { Icon } from "@budibase/bbui"
   import { dndzone } from "svelte-dnd-action"
-  import { flip } from "svelte/animate"
   import { createEventDispatcher } from "svelte"
+  import { generate } from "shortid"
 
-  export let value = []
+  export let items = []
   export let showHandle = true
-  export let rightButton
-  export let rightProps = {}
+  export let highlighted
+  export let listType
+  export let listTypeProps = {}
+  export let listItemKey
+  export let draggable = true
 
   const dispatch = createEventDispatcher()
   const flipDurationMs = 150
-  let dragDisabled = false
-  let listOptions = [...value]
-  let anchors = {}
 
-  const updateColumnOrder = e => {
-    listOptions = e.detail.items
+  let anchors = {}
+  let draggableItems = []
+
+  const buildDragable = items => {
+    return items.map(item => {
+      return {
+        id: listItemKey ? item[listItemKey] : generate(),
+        item,
+      }
+    })
+  }
+
+  $: if (items) {
+    draggableItems = buildDragable(items)
+  }
+
+  const updateRowOrder = e => {
+    draggableItems = e.detail.items
+  }
+
+  const serialiseUpdate = () => {
+    return draggableItems.reduce((acc, ele) => {
+      acc.push(ele.item)
+      return acc
+    }, [])
   }
 
   const handleFinalize = e => {
-    updateColumnOrder(e)
-    dispatch("change", listOptions)
-    dragDisabled = false
+    updateRowOrder(e)
+    dispatch("change", serialiseUpdate())
   }
 
-  // This is optional and should be moved.
-  const onToggle = item => {
-    return e => {
-      console.log(`${item.name} toggled: ${e.detail}`)
-      item.active = e.detail
-      dispatch("change", listOptions)
-    }
+  const onItemChanged = e => {
+    dispatch("itemChange", e.detail)
   }
 </script>
 
 <ul
   class="list-wrap"
   use:dndzone={{
-    items: listOptions,
+    items: draggableItems,
     flipDurationMs,
     dropTargetStyle: { outline: "none" },
-    dragDisabled,
+    dragDisabled: !draggable,
   }}
   on:finalize={handleFinalize}
-  on:consider={updateColumnOrder}
+  on:consider={updateRowOrder}
 >
-  {#each listOptions as item (item.id)}
+  {#each draggableItems as draggable (draggable.id)}
     <li
-      animate:flip={{ duration: flipDurationMs }}
-      bind:this={anchors[item.id]}
+      bind:this={anchors[draggable.id]}
+      class:highlighted={draggable.id === highlighted}
     >
       <div class="left-content">
         {#if showHandle}
-          <div
-            class="handle"
-            aria-label="drag-handle"
-            style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
-          >
+          <div class="handle" aria-label="drag-handle">
             <Icon name="DragHandle" size="XL" />
           </div>
         {/if}
-        <!-- slot - left action -->
-        <Toggle on:change={onToggle(item)} text="" value={item.active} thin />
-        {item.name}
       </div>
-      <!-- slot - right action -->
       <div class="right-content">
-        {#if rightButton}
-          <svelte:component
-            this={rightButton}
-            anchor={anchors[item.id]}
-            field={item}
-            componentBindings={rightProps.componentBindings}
-            bindings={rightProps.bindings}
-            parent={rightProps.parent}
-          />
-        {/if}
+        <svelte:component
+          this={listType}
+          anchor={anchors[draggable.item._id]}
+          item={draggable.item}
+          {...listTypeProps}
+          on:change={onItemChanged}
+        />
       </div>
     </li>
   {/each}
@@ -104,7 +110,6 @@
     transition: background-color ease-in-out 130ms;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     border-bottom: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
   }
@@ -122,12 +127,15 @@
     border-top-left-radius: var(--spectrum-table-regular-border-radius);
     border-top-right-radius: var(--spectrum-table-regular-border-radius);
   }
-  .left-content {
-    display: flex;
-    align-items: center;
+  .right-content {
+    flex: 1;
+    min-width: 0;
   }
   .list-wrap li {
     padding-left: var(--spacing-s);
     padding-right: var(--spacing-s);
+  }
+  li.highlighted {
+    background-color: pink;
   }
 </style>
