@@ -418,7 +418,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
  */
 export const getUserBindings = () => {
   let bindings = []
-  const { schema } = getSchemaForTable(TableNames.USERS)
+  const { schema } = getSchemaForDatasourcePlus(TableNames.USERS)
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
 
@@ -647,17 +647,25 @@ export const getEventContextBindings = (
 }
 
 /**
- * Gets the schema for a certain table ID.
+ * Gets the schema for a certain datasource plus.
  * The options which can be passed in are:
  *   formSchema: whether the schema is for a form
  *   searchableSchema: whether to generate a searchable schema, which may have
  *     fewer fields than a readable schema
- * @param tableId the table ID to get the schema for
+ * @param resourceId the DS+ resource ID
  * @param options options for generating the schema
  * @return {{schema: Object, table: Object}}
  */
-export const getSchemaForTable = (tableId, options) => {
-  return getSchemaForDatasource(null, { type: "table", tableId }, options)
+export const getSchemaForDatasourcePlus = (resourceId, options) => {
+  const isViewV2 = resourceId?.includes("view_ta_")
+  const datasource = isViewV2
+    ? {
+        type: "viewV2",
+        id: resourceId,
+        tableId: resourceId.split("_").slice(1, 3).join("_"),
+      }
+    : { type: "table", tableId: resourceId }
+  return getSchemaForDatasource(null, datasource, options)
 }
 
 /**
@@ -738,7 +746,9 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
       } else if (type === "viewV2") {
         // New views which are DS+
-        const view = table.views?.[datasource.name]
+        const view = Object.values(table.views || {}).find(
+          view => view.id === datasource.id
+        )
         schema = cloneDeep(view?.schema)
 
         // Strip hidden fields
