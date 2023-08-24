@@ -15,6 +15,7 @@ import {
   ViewV2,
 } from "@budibase/types"
 import * as setup from "./utilities"
+import { mocks } from "@budibase/backend-core/tests"
 
 const { basicRow } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
@@ -37,6 +38,7 @@ describe("/permission", () => {
   })
 
   beforeEach(async () => {
+    mocks.licenses.useCloudFree()
     mockedSdk.resourceActionAllowed.mockResolvedValue({ allowed: true })
 
     table = (await config.createTable()) as typeof table
@@ -181,11 +183,54 @@ describe("/permission", () => {
         resourceId: table._id,
         level: PermissionLevel.READ,
       })
+      // replicate changes before checking permissions
+      await config.publish()
 
       await config.api.viewV2.search(view.id, undefined, {
         expectStatus: 403,
         usePublicUser: true,
       })
+    })
+
+    it("should ignore the view permissions if the flag is not on", async () => {
+      await config.api.permission.set({
+        roleId: STD_ROLE_ID,
+        resourceId: view.id,
+        level: PermissionLevel.READ,
+      })
+      await config.api.permission.revoke({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
+      // replicate changes before checking permissions
+      await config.publish()
+
+      await config.api.viewV2.search(view.id, undefined, {
+        expectStatus: 403,
+        usePublicUser: true,
+      })
+    })
+
+    it("should use the view permissions if the flag is on", async () => {
+      mocks.licenses.useViewPermissions()
+      await config.api.permission.set({
+        roleId: STD_ROLE_ID,
+        resourceId: view.id,
+        level: PermissionLevel.READ,
+      })
+      await config.api.permission.revoke({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
+      // replicate changes before checking permissions
+      await config.publish()
+
+      const res = await config.api.viewV2.search(view.id, undefined, {
+        usePublicUser: true,
+      })
+      expect(res.body.rows[0]._id).toEqual(row._id)
     })
 
     it("shouldn't allow writing from a public user", async () => {
