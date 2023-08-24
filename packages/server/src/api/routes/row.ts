@@ -5,7 +5,7 @@ import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
 import trimViewRowInfo from "../../middleware/trimViewRowInfo"
-import { extractViewInfoFromID } from "../../db/utils"
+
 const { PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
@@ -270,12 +270,7 @@ router
 
 router.post(
   "/api/v2/views/:viewId/search",
-  authorizedResource(
-    PermissionType.TABLE,
-    PermissionLevel.READ,
-    "viewId",
-    val => extractViewInfoFromID(val).tableId
-  ),
+  authorizedResource(PermissionType.VIEW, PermissionLevel.READ, "viewId"),
   rowController.views.searchView
 )
 
