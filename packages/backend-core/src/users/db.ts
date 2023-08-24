@@ -20,6 +20,8 @@ import {
   SaveUserOpts,
   User,
   UserStatus,
+  UserGroup,
+  ContextUser,
 } from "@budibase/types"
 import {
   getAccountHolderFromUserIds,
@@ -32,8 +34,14 @@ import { hash } from "../utils"
 type QuotaUpdateFn = (change: number, cb?: () => Promise<any>) => Promise<any>
 type GroupUpdateFn = (groupId: string, userIds: string[]) => Promise<any>
 type FeatureFn = () => Promise<Boolean>
+type GroupGetFn = (ids: string[]) => Promise<UserGroup[]>
+type GroupBuildersFn = (user: User) => Promise<string[]>
 type QuotaFns = { addUsers: QuotaUpdateFn; removeUsers: QuotaUpdateFn }
-type GroupFns = { addUsers: GroupUpdateFn }
+type GroupFns = {
+  addUsers: GroupUpdateFn
+  getBulk: GroupGetFn
+  getGroupBuilderAppIds: GroupBuildersFn
+}
 type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
@@ -464,5 +472,13 @@ export class UserDB {
     await eventHelpers.handleDeleteEvents(dbUser)
     await cache.user.invalidateUser(userId)
     await sessions.invalidateSessions(userId, { reason: "deletion" })
+  }
+
+  static async getGroups(groupIds: string[]) {
+    return await this.groups.getBulk(groupIds)
+  }
+
+  static async getGroupBuilderAppIds(user: User) {
+    return await this.groups.getGroupBuilderAppIds(user)
   }
 }
