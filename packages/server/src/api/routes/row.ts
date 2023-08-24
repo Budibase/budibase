@@ -270,8 +270,12 @@ router
 
 router.post(
   "/api/v2/views/:viewId/search",
-  paramResource("viewId", val => extractViewInfoFromID(val).tableId),
-  authorizedResource(PermissionType.TABLE, PermissionLevel.READ),
+  authorizedResource(
+    PermissionType.TABLE,
+    PermissionLevel.READ,
+    "viewId",
+    val => extractViewInfoFromID(val).tableId
+  ),
   rowController.views.searchView
 )
 
