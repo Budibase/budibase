@@ -12,11 +12,13 @@
       <Icon name={icon} />
       {title || ""}
     </div>
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     {@html body}
   {:else}
     <span class="icon">
       <Icon name={icon} />
     </span>
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     {@html body}
   {/if}
 </div>
