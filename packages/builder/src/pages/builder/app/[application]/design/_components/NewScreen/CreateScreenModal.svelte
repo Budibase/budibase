@@ -179,7 +179,7 @@
 <Modal bind:this={datasourceModal}>
   <DatasourceModal
     onConfirm={confirmScreenDatasources}
-    initalScreens={!selectedTemplates ? [] : [...selectedTemplates]}
+    initialScreens={!selectedTemplates ? [] : [...selectedTemplates]}
   />
 </Modal>
 
