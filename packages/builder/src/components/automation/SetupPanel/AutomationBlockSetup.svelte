@@ -67,7 +67,9 @@
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
     : { schema: {} }
-  $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
+  $: schema = getSchemaForDatasourcePlus(tableId, {
+    searchableSchema: true,
+  }).schema
   $: schemaFields = Object.values(schema || {})
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
