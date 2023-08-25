@@ -175,7 +175,7 @@
   }
 </script>
 
-<Modal bind:this={datasourceModal}>
+<Modal bind:this={datasourceModal} autoFocus={false}>
   <DatasourceModal
     onConfirm={confirmScreenDatasources}
     initialScreens={!selectedTemplates ? [] : [...selectedTemplates]}
