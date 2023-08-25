@@ -28,8 +28,8 @@ describe("datasource validators", () => {
           8000
         )}`,
       }
-      env._set("AWS_ACCESS_KEY_ID", "mocked_key")
-      env._set("AWS_SECRET_ACCESS_KEY", "mocked_secret")
+      env._set("AWS_ACCESS_KEY_ID", "mockedkey")
+      env._set("AWS_SECRET_ACCESS_KEY", "mockedsecret")
     })
 
     it("test valid connection string", async () => {

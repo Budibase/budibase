@@ -6,6 +6,7 @@ import {
   IncludeRelationship,
   Row,
   SearchFilters,
+  SearchParams,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import sdk from "../../../../sdk"
@@ -13,7 +14,7 @@ import { handleRequest } from "../../../../api/controllers/row/external"
 import { breakExternalTableId } from "../../../../integrations/utils"
 import { cleanExportRows } from "../utils"
 import { utils } from "@budibase/shared-core"
-import { ExportRowsParams, ExportRowsResult, SearchParams } from "../search"
+import { ExportRowsParams, ExportRowsResult } from "../search"
 import { HTTPError, db } from "@budibase/backend-core"
 import pick from "lodash/pick"
 
