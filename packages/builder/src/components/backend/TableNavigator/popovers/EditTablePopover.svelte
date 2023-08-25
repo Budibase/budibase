@@ -44,7 +44,10 @@
     const isSelected = $params.tableId === table._id
     try {
       await tables.delete(table)
-      await store.actions.screens.delete(templateScreens)
+      // Screens need deleted one at a time because of undo/redo
+      for (let screen of templateScreens) {
+        await store.actions.screens.delete(screen)
+      }
       if (table.type === "external") {
         await datasources.fetch()
       }
