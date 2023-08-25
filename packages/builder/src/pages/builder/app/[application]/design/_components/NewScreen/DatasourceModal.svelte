@@ -72,7 +72,9 @@
           </div>
           <!-- List all tables -->
           {#each entities.filter(table => table._id !== "ta_users") as table}
-            {@const views = Object.values(table.views || {})}
+            {@const views = Object.values(table.views || {}).filter(
+              view => view.version === 2
+            )}
             {@const datasource = {
               ...table,
               // Legacy properties
@@ -84,7 +86,7 @@
               type: "table",
             }}
             {@const selected = selectedScreens.find(
-              x => x.resourceId === datasource.resourceId
+              screen => screen.resourceId === datasource.resourceId
             )}
             <DatasourceTemplateRow
               on:click={() => toggleSelection(datasource)}
