@@ -22,10 +22,7 @@ import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
-import {
-  convertOldFieldFormat,
-  getComponentForField,
-} from "components/design/settings/controls/FieldConfiguration/utils"
+import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g

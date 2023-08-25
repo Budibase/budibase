@@ -129,7 +129,7 @@
         on:drawerShow={e => {
           drawers = [...drawers, e.detail]
         }}
-        on:drawerHide={e => {
+        on:drawerHide={() => {
           drawers = drawers.slice(0, -1)
         }}
       />
