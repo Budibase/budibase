@@ -5466,7 +5466,7 @@
     "settings": [
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "dataSource",
         "required": true
       },
