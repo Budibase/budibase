@@ -35,7 +35,7 @@
       screen => screen.autoTableId === table._id
     )
     willBeDeleted = ["All table data"].concat(
-      templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
+      templateScreens.map(screen => `Screen ${screen.routing?.route || ""}`)
     )
     confirmDeleteDialog.show()
   }

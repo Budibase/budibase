@@ -131,8 +131,7 @@
   const completeDatasourceScreenCreation = async () => {
     const screens = selectedTemplates.map(template => {
       let screenTemplate = template.create()
-      screenTemplate.datasource = template.datasource
-      screenTemplate.autoTableId = template.table
+      screenTemplate.autoTableId = template.resourceId
       return screenTemplate
     })
     await createScreens({ screens, screenAccessRole })
