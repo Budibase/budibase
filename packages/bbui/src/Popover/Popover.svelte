@@ -23,6 +23,7 @@
   export let animate = true
   export let customZindex
 
+  export let handlePostionUpdate
   export let showPopover = true
   export let clickOutsideOverride = false
 
@@ -88,6 +89,7 @@
         maxWidth,
         useAnchorWidth,
         offset,
+        customUpdate: handlePostionUpdate,
       }}
       use:clickOutside={{
         callback: dismissible ? handleOutsideClick : () => {},

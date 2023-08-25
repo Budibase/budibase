@@ -3,14 +3,29 @@
   import { dndzone } from "svelte-dnd-action"
   import { createEventDispatcher } from "svelte"
   import { generate } from "shortid"
+  import { setContext } from "svelte"
+  import { writable } from "svelte/store"
 
   export let items = []
   export let showHandle = true
-  export let highlighted
   export let listType
   export let listTypeProps = {}
   export let listItemKey
   export let draggable = true
+
+  let store = writable({
+    selected: null,
+    actions: {
+      select: id => {
+        store.update(state => ({
+          ...state,
+          selected: id,
+        }))
+      },
+    },
+  })
+
+  setContext("draggable", store)
 
   const dispatch = createEventDispatcher()
   const flipDurationMs = 150
@@ -66,7 +81,7 @@
   {#each draggableItems as draggable (draggable.id)}
     <li
       bind:this={anchors[draggable.id]}
-      class:highlighted={draggable.id === highlighted}
+      class:highlighted={draggable.id === $store.selected}
     >
       <div class="left-content">
         {#if showHandle}
@@ -113,7 +128,8 @@
     border-bottom: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
   }
-  .list-wrap > li:hover {
+  .list-wrap > li:hover,
+  li.highlighted {
     background-color: var(
       --spectrum-table-row-background-color-hover,
       var(--spectrum-alias-highlight-hover)
@@ -134,8 +150,5 @@
   .list-wrap li {
     padding-left: var(--spacing-s);
     padding-right: var(--spacing-s);
-  }
-  li.highlighted {
-    background-color: pink;
   }
 </style>

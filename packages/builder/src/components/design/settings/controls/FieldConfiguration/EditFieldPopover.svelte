@@ -4,17 +4,24 @@
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher } from "svelte"
   import ComponentSettingsSection from "../../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
+  import { getContext } from "svelte"
 
   export let anchor
   export let field
   export let componentBindings
   export let bindings
 
+  const draggable = getContext("draggable")
   const dispatch = createEventDispatcher()
 
   let popover
   let drawers = []
   let sudoComponentInstance
+  let open = false
+
+  $: if (open && $draggable.selected && $draggable.selected != field._id) {
+    popover.hide()
+  }
 
   $: if (field) {
     sudoComponentInstance = field
@@ -61,7 +68,10 @@
   hoverable
   size="S"
   on:click={() => {
-    popover.show()
+    if (!open) {
+      popover.show()
+      open = true
+    }
   }}
 />
 
@@ -69,11 +79,37 @@
   bind:this={popover}
   on:open={() => {
     drawers = []
+    $draggable.actions.select(field._id)
+  }}
+  on:close={() => {
+    open = false
+    if ($draggable.selected == field._id) {
+      $draggable.actions.select()
+    }
   }}
   {anchor}
   align="left-outside"
   showPopover={drawers.length == 0}
   clickOutsideOverride={drawers.length > 0}
+  maxHeight={600}
+  handlePostionUpdate={(anchorBounds, eleBounds, cfg) => {
+    let { left, top } = cfg
+    let percentageOffset = 30
+    // left-outside
+    left = anchorBounds.left - eleBounds.width - 5
+
+    // shift up from the anchor, if space allows
+    let offsetPos = Math.floor(eleBounds.height / 100) * percentageOffset
+    let defaultTop = anchorBounds.top - offsetPos
+
+    if (window.innerHeight - defaultTop < eleBounds.height) {
+      top = window.innerHeight - eleBounds.height - 5
+    } else {
+      top = anchorBounds.top - offsetPos
+    }
+
+    return { ...cfg, left, top }
+  }}
 >
   <span class="popover-wrap">
     <Layout noPadding noGap>
