@@ -12,7 +12,12 @@
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import { groups, licensing, apps, users, auth, admin } from "stores/portal"
-  import { fetchData, Constants, Utils } from "@budibase/frontend-core"
+  import {
+    fetchData,
+    Constants,
+    Utils,
+    RoleUtils,
+  } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import { API } from "api"
   import GroupIcon from "../../../portal/users/groups/_components/GroupIcon.svelte"
@@ -132,16 +137,29 @@
           isAppBuilder,
         }
       })
-      .sort((a, b) => {
-        const roleA = a.role
-        const roleB = b.role
-        if (roleA === undefined && roleB !== undefined) {
-          return 1
-        } else if (roleA !== undefined && roleB === undefined) {
-          return -1
-        }
-        return 0
-      })
+      .sort(sortRoles)
+  }
+
+  const sortRoles = (a, b) => {
+    const roleA = a.role
+    const roleB = b.role
+
+    const priorityA = RoleUtils.getRolePriority(roleA)
+    const priorityB = RoleUtils.getRolePriority(roleB)
+
+    if (roleA === undefined && roleB !== undefined) {
+      return 1
+    } else if (roleA !== undefined && roleB === undefined) {
+      return -1
+    }
+
+    if (priorityA < priorityB) {
+      return 1
+    } else if (priorityA > priorityB) {
+      return -1
+    }
+
+    return 0
   }
 
   const debouncedUpdateFetch = Utils.debounce(searchUsers, 250)
@@ -251,6 +269,7 @@
         return nameMatch
       })
       .map(enrichGroupRole)
+      .sort(sortRoles)
   }
 
   const enrichGroupRole = group => {
