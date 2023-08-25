@@ -9,6 +9,7 @@
   export let fixed = false
   export let inline = false
   export let disableCancel = false
+  export let autoFocus = true
 
   const dispatch = createEventDispatcher()
   let visible = fixed || inline
@@ -53,12 +54,23 @@
   }
 
   async function focusModal(node) {
+    if (!autoFocus) {
+      return
+    }
     await tick()
 
     // Try to focus first input
     const inputs = node.querySelectorAll("input")
     if (inputs?.length) {
       inputs[0].focus()
+    }
+
+    // Otherwise try to focus confirmation button
+    else if (modal) {
+      const confirm = modal.querySelector(".confirm-wrap .spectrum-Button")
+      if (confirm) {
+        confirm.focus()
+      }
     }
   }
 
