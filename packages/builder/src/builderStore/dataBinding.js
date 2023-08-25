@@ -350,12 +350,19 @@ const getProviderContextBindings = (asset, dataProviders) => {
         schema = info.schema
         table = info.table
 
-        // For JSON arrays, use the array name as the readable prefix.
-        // Otherwise use the table name
+        // Determine what to prefix bindings with
         if (datasource.type === "jsonarray") {
+          // For JSON arrays, use the array name as the readable prefix
           const split = datasource.label.split(".")
           readablePrefix = split[split.length - 1]
+        } else if (datasource.type === "viewV2") {
+          // For views, use the view name
+          const view = Object.values(table?.views || {}).find(
+            view => view.id === datasource.id
+          )
+          readablePrefix = view?.name
         } else {
+          // Otherwise use the table name
           readablePrefix = info.table?.name
         }
       }
