@@ -60,14 +60,6 @@
     if (inputs?.length) {
       inputs[0].focus()
     }
-
-    // Otherwise try to focus confirmation button
-    else if (modal) {
-      const confirm = modal.querySelector(".confirm-wrap .spectrum-Button")
-      if (confirm) {
-        confirm.focus()
-      }
-    }
   }
 
   setContext(Context.Modal, { show, hide, toggle, cancel })
