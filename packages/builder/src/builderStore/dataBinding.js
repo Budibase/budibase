@@ -802,12 +802,12 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
 
     // Determine if we should add ID and rev to the schema
     const isInternal = table && !table.sql
-    const isTable = ["table", "link"].includes(datasource.type)
+    const isDSPlus = ["table", "link", "viewV2"].includes(datasource.type)
 
     // ID is part of the readable schema for all tables
     // Rev is part of the readable schema for internal tables only
-    let addId = isTable
-    let addRev = isTable && isInternal
+    let addId = isDSPlus
+    let addRev = isDSPlus && isInternal
 
     // Don't add ID or rev for form schemas
     if (options.formSchema) {
@@ -817,7 +817,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
 
     // ID is only searchable for internal tables
     else if (options.searchableSchema) {
-      addId = isTable && isInternal
+      addId = isDSPlus && isInternal
     }
 
     // Add schema properties if required
