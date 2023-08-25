@@ -74,9 +74,7 @@
     </svelte:fragment>
 
     <svelte:fragment slot="controls">
-      {#if isInternal}
-        <GridCreateViewButton />
-      {/if}
+      <GridCreateViewButton />
       <GridManageAccessButton />
       {#if relationshipsEnabled}
         <GridRelationshipButton />
