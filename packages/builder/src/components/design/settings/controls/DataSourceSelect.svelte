@@ -15,6 +15,8 @@
   import {
     tables as tablesStore,
     queries as queriesStore,
+    viewsV2 as viewsV2Store,
+    views as viewsStore,
   } from "stores/backend"
   import { datasources, integrations } from "stores/backend"
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
@@ -39,32 +41,16 @@
     tableId: m._id,
     type: "table",
   }))
-  $: viewsV1 = $tablesStore.list.reduce(
-    (acc, table) => [
-      ...acc,
-      ...Object.values(table.views || {})
-        .filter(view => view.version !== 2)
-        .map(view => ({
-          ...view,
-          label: view.name,
-          type: "view",
-        })),
-    ],
-    []
-  )
-  $: viewsV2 = $tablesStore.list.reduce(
-    (acc, table) => [
-      ...acc,
-      ...Object.values(table.views || {})
-        .filter(view => view.version === 2)
-        .map(view => ({
-          ...view,
-          label: view.name,
-          type: "viewV2",
-        })),
-    ],
-    []
-  )
+  $: viewsV1 = $viewsStore.list.map(view => ({
+    ...view,
+    label: view.name,
+    type: "view",
+  }))
+  $: viewsV2 = $viewsV2Store.list.map(view => ({
+    ...view,
+    label: view.name,
+    type: "viewV2",
+  }))
   $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
   $: queries = $queriesStore.list
     .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
