@@ -1187,6 +1187,7 @@ describe("/rows", () => {
               sort: sortParams.field,
               sortOrder: sortParams.order,
               sortType: sortParams.type,
+              query: {},
             }
           )
 
@@ -1247,6 +1248,7 @@ describe("/rows", () => {
         const createViewResponse = await config.api.viewV2.create()
         const response = await config.api.viewV2.search(createViewResponse.id, {
           limit,
+          query: {},
         })
 
         expect(response.body.rows).toHaveLength(limit)
@@ -1269,6 +1271,7 @@ describe("/rows", () => {
           {
             paginate: true,
             limit: 4,
+            query: {},
           }
         )
         expect(firstPageResponse.body).toEqual({
@@ -1284,6 +1287,8 @@ describe("/rows", () => {
             paginate: true,
             limit: 4,
             bookmark: firstPageResponse.body.bookmark,
+
+            query: {},
           }
         )
         expect(secondPageResponse.body).toEqual({
@@ -1299,6 +1304,7 @@ describe("/rows", () => {
             paginate: true,
             limit: 4,
             bookmark: secondPageResponse.body.bookmark,
+            query: {},
           }
         )
         expect(lastPageResponse.body).toEqual({
