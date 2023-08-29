@@ -1,4 +1,5 @@
 <script>
+  import { licensing } from "stores/portal"
   import ManageAccessButton from "../ManageAccessButton.svelte"
   import { getContext } from "svelte"
 
@@ -12,6 +13,9 @@
     }
     return datasource.type === "table" ? datasource.tableId : datasource.id
   }
+
+  $: disabled =
+    $datasource.type === "viewV2" && !$licensing.isViewPermissionsEnabled
 </script>
 
-<ManageAccessButton {resourceId} />
+<ManageAccessButton {resourceId} {disabled} />
