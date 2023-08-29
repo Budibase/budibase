@@ -4,11 +4,13 @@
 
   $: isError = !value || value.toLowerCase() === "error"
   $: isStoppedError = value?.toLowerCase() === "stopped_error"
-  $: isStopped = value?.toLowerCase() === "stopped" || isStoppedError
-  $: info = getInfo(isError, isStopped)
+  $: isStopped = value?.toLowerCase() === "stopped"
+  $: info = getInfo(isError, isStopped, isStoppedError)
 
-  const getInfo = (error, stopped) => {
-    if (error) {
+  function getInfo(error, stopped, stoppedError) {
+    if (stoppedError) {
+      return { color: "red", message: "Stopped - Error" }
+    } else if (error) {
       return { color: "red", message: "Error" }
     } else if (stopped) {
       return { color: "yellow", message: "Stopped" }
