@@ -156,13 +156,14 @@ export const buildUserEndpoints = API => ({
     return await API.post({
       url: "/api/global/users/onboard",
       body: payload.map(invite => {
-        const { email, admin, builder, apps } = invite
+        const { email, admin, builder, apps, appBuilder } = invite
         return {
           email,
           userInfo: {
             admin: admin ? { global: true } : undefined,
             builder: builder ? { global: true } : undefined,
             apps: apps ? apps : undefined,
+            appBuilder: appBuilder ? appBuilder : undefined,
           },
         }
       }),

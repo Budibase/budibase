@@ -28,6 +28,19 @@ export const BudibaseRoleOptions = [
   { label: "Admin", value: BudibaseRoles.Admin },
 ]
 
+export const BudibaseRoleOptionsNew = [
+  {
+    label: "Admin",
+    value: "admin",
+    subtitle: "Has full access to all apps and settings in your account",
+  },
+  {
+    label: "Member",
+    value: "appUser",
+    subtitle: "Can only view apps they have access to",
+  },
+]
+
 export const BuilderRoleDescriptions = [
   {
     value: BudibaseRoles.AppUser,
