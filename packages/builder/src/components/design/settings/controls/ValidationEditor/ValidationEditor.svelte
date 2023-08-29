@@ -5,9 +5,8 @@
 
   export let value = []
   export let bindings = []
-  export let componentDefinition
+  export let componentInstance
   export let type
-
   const dispatch = createEventDispatcher()
   let drawer
 
@@ -31,7 +30,7 @@
   <ActionButton on:click={drawer.show}>{text}</ActionButton>
 </div>
 
-<Drawer bind:this={drawer} title="Validation Rules">
+<Drawer bind:this={drawer} title="Validation Rules" on:drawerHide on:drawerShow>
   <svelte:fragment slot="description">
     Configure validation rules for this field.
   </svelte:fragment>
@@ -41,7 +40,7 @@
     bind:rules={value}
     {type}
     {bindings}
-    {componentDefinition}
+    fieldName={componentInstance?.field}
   />
 </Drawer>
 
