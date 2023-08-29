@@ -1,4 +1,4 @@
-import {  ViewV2 } from "@budibase/types"
+import { ViewV2 } from "@budibase/types"
 import { context, HTTPError } from "@budibase/backend-core"
 
 import sdk from "../../../sdk"
