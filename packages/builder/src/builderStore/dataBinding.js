@@ -6,7 +6,7 @@ import {
   findComponentPath,
   getComponentSettings,
 } from "./componentUtils"
-import { store } from "builderStore"
+import { store, currentAsset } from "builderStore"
 import {
   queries as queriesStores,
   tables as tablesStore,
@@ -629,24 +629,36 @@ const getRoleBindings = () => {
 }
 
 /**
- * Gets all bindable properties exposed in an event action flow up until
- * the specified action ID, as well as context provided for the action
- * setting as a whole by the component.
+ * Gets all bindable event context properties provided in the component
+ * setting
  */
-export const getEventContextBindings = (
-  asset,
-  componentId,
+export const getEventContextBindings = ({
   settingKey,
-  actions,
-  actionId
-) => {
+  componentInstance,
+  componentId,
+  componentDefinition,
+  asset,
+}) => {
   let bindings = []
+
+  const selectedAsset = asset ?? get(currentAsset)
+
   // Check if any context bindings are provided by the component for this
   // setting
-  const component = findComponent(asset.props, componentId)
-  const def = store.actions.components.getDefinition(component?._component)
+  const component =
+    componentInstance ?? findComponent(selectedAsset.props, componentId)
+
+  if (!component) {
+    return bindings
+  }
+
+  const definition =
+    componentDefinition ??
+    store.actions.components.getDefinition(component?._component)
+
   const settings = getComponentSettings(component?._component)
   const eventSetting = settings.find(setting => setting.key === settingKey)
+
   if (eventSetting?.context?.length) {
     eventSetting.context.forEach(contextEntry => {
       bindings.push({
@@ -655,14 +667,23 @@ export const getEventContextBindings = (
           contextEntry.key
         )}`,
         category: component._instanceName,
-        icon: def.icon,
+        icon: definition.icon,
         display: {
           name: contextEntry.label,
         },
       })
     })
   }
+  return bindings
+}
 
+/**
+ * Gets all bindable properties exposed in an event action flow up until
+ * the specified action ID, as well as context provided for the action
+ * setting as a whole by the component.
+ */
+export const getActionBindings = (actions, actionId) => {
+  let bindings = []
   // Get the steps leading up to this value
   const index = actions?.findIndex(action => action.id === actionId)
   if (index == null || index === -1) {
@@ -689,7 +710,6 @@ export const getEventContextBindings = (
       })
     }
   })
-
   return bindings
 }
 

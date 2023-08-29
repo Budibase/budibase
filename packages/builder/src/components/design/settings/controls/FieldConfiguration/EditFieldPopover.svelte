@@ -16,7 +16,7 @@
 
   let popover
   let drawers = []
-  let sudoComponentInstance
+  let pseudoComponentInstance
   let open = false
 
   $: if (open && $draggable.selected && $draggable.selected != field._id) {
@@ -24,10 +24,10 @@
   }
 
   $: if (field) {
-    sudoComponentInstance = field
+    pseudoComponentInstance = field
   }
   $: componentDef = store.actions.components.getDefinition(
-    sudoComponentInstance._component
+    pseudoComponentInstance._component
   )
   $: parsedComponentDef = processComponentDefinitionSettings(componentDef)
 
@@ -46,7 +46,7 @@
   }
 
   const updateSetting = async (setting, value) => {
-    const nestedComponentInstance = cloneDeep(sudoComponentInstance)
+    const nestedComponentInstance = cloneDeep(pseudoComponentInstance)
 
     const patchFn = store.actions.components.updateComponentSetting(
       setting.key,
@@ -56,7 +56,7 @@
 
     const update = {
       ...nestedComponentInstance,
-      active: sudoComponentInstance.active,
+      active: pseudoComponentInstance.active,
     }
 
     dispatch("change", update)
@@ -96,7 +96,7 @@
     let { left, top } = cfg
     let percentageOffset = 30
     // left-outside
-    left = anchorBounds.left - eleBounds.width - 5
+    left = anchorBounds.left - eleBounds.width - 18
 
     // shift up from the anchor, if space allows
     let offsetPos = Math.floor(eleBounds.height / 100) * percentageOffset
@@ -115,10 +115,10 @@
     <Layout noPadding noGap>
       <div class="type-icon">
         <Icon name={parsedComponentDef.icon} />
-        <span>{parsedComponentDef.name}</span>
+        <span>{field.field}</span>
       </div>
       <ComponentSettingsSection
-        componentInstance={sudoComponentInstance}
+        componentInstance={pseudoComponentInstance}
         componentDefinition={parsedComponentDef}
         isScreen={false}
         onUpdateSetting={updateSetting}
@@ -139,7 +139,7 @@
 
 <style>
   .popover-wrap {
-    background-color: var(--spectrum-alias-background-color-secondary);
+    background-color: var(--spectrum-alias-background-color-primary);
   }
   .type-icon {
     display: flex;

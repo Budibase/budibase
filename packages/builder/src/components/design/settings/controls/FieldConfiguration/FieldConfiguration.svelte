@@ -20,10 +20,7 @@
   let sanitisedFields
   let fieldList
   let schema
-  // let assetIdCache
   let cachedValue
-  // $: value, console.log("VALUE UPDATED")
-  // $: $currentAsset, console.log("currentAsset updated ", $currentAsset)
 
   $: bindings = getBindableProperties($selectedScreen, componentInstance._id)
   $: actionType = componentInstance.actionType
@@ -46,7 +43,6 @@
   $: options = Object.keys(schema || {})
   $: sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
   $: updateSanitsedFields(sanitisedValue)
-
   $: unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
 
   // Builds unused ones only
@@ -105,7 +101,7 @@
     const type = getComponentForField(instance.field, schema)
     instance._component = `@budibase/standard-components/${type}`
 
-    const sudoComponentInstance = store.actions.components.createInstance(
+    const pseudoComponentInstance = store.actions.components.createInstance(
       instance._component,
       {
         _instanceName: instance.field,
@@ -116,7 +112,7 @@
       {}
     )
 
-    return { ...instance, ...sudoComponentInstance }
+    return { ...instance, ...pseudoComponentInstance }
   }
 
   $: if (sanitisedFields) {
