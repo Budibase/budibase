@@ -28,6 +28,7 @@
   export let getOptionIcon = () => null
   export let useOptionIconImage = false
   export let getOptionColour = () => null
+  export let getOptionSubtitle = () => null
   export let open = false
   export let readonly = false
   export let quiet = false
@@ -39,8 +40,8 @@
   export let customPopoverHeight
   export let align = "left"
   export let footer = null
-  export let tag = null
-
+  export let onlyPopover = false
+  export let customAnchor = null
   const dispatch = createEventDispatcher()
 
   let searchTerm = null
@@ -90,61 +91,62 @@
   }
 </script>
 
-<button
-  {id}
-  class="spectrum-Picker spectrum-Picker--sizeM"
-  class:spectrum-Picker--quiet={quiet}
-  {disabled}
-  class:is-invalid={!!error}
-  class:is-open={open}
-  aria-haspopup="listbox"
-  on:click={onClick}
-  bind:this={button}
->
-  {#if fieldIcon}
-    {#if !useOptionIconImage}x
-      <span class="option-extra icon">
-        <Icon size="S" name={fieldIcon} />
-      </span>
-    {:else}
-      <span class="option-extra icon field-icon">
-        <img src={fieldIcon} alt="icon" width="15" height="15" />
+{#if !onlyPopover}
+  <button
+    {id}
+    class="spectrum-Picker spectrum-Picker--sizeM"
+    class:spectrum-Picker--quiet={quiet}
+    {disabled}
+    class:is-invalid={!!error}
+    class:is-open={open}
+    aria-haspopup="listbox"
+    on:click={onClick}
+    bind:this={button}
+  >
+    {#if fieldIcon}
+      {#if !useOptionIconImage}x
+        <span class="option-extra icon">
+          <Icon size="S" name={fieldIcon} />
+        </span>
+      {:else}
+        <span class="option-extra icon field-icon">
+          <img src={fieldIcon} alt="icon" width="15" height="15" />
+        </span>
+      {/if}
+    {/if}
+    {#if fieldColour}
+      <span class="option-extra">
+        <StatusLight square color={fieldColour} />
       </span>
     {/if}
-  {/if}
-  {#if fieldColour}
-    <span class="option-extra">
-      <StatusLight square color={fieldColour} />
+    <span
+      class="spectrum-Picker-label"
+      class:is-placeholder={isPlaceholder}
+      class:auto-width={autoWidth}
+    >
+      {fieldText}
     </span>
-  {/if}
-  <span
-    class="spectrum-Picker-label"
-    class:is-placeholder={isPlaceholder}
-    class:auto-width={autoWidth}
-  >
-    {fieldText}
-  </span>
-  {#if error}
+    {#if error}
+      <svg
+        class="spectrum-Icon spectrum-Icon--sizeM spectrum-Picker-validationIcon"
+        focusable="false"
+        aria-hidden="true"
+        aria-label="Folder"
+      >
+        <use xlink:href="#spectrum-icon-18-Alert" />
+      </svg>
+    {/if}
     <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Picker-validationIcon"
+      class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
       focusable="false"
       aria-hidden="true"
-      aria-label="Folder"
     >
-      <use xlink:href="#spectrum-icon-18-Alert" />
+      <use xlink:href="#spectrum-css-icon-Chevron100" />
     </svg>
-  {/if}
-  <svg
-    class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
-    focusable="false"
-    aria-hidden="true"
-  >
-    <use xlink:href="#spectrum-css-icon-Chevron100" />
-  </svg>
-</button>
-
+  </button>
+{/if}
 <Popover
-  anchor={button}
+  anchor={!onlyPopover ? button : customAnchor}
   align={align || "left"}
   bind:this={popover}
   {open}
@@ -218,6 +220,12 @@
               </span>
             {/if}
             <span class="spectrum-Menu-itemLabel">
+              {#if getOptionSubtitle(option, idx)}
+                <span class="subtitle-text"
+                  >{getOptionSubtitle(option, idx)}</span
+                >
+              {/if}
+
               {getOptionLabel(option, idx)}
             </span>
             {#if option.tag}
@@ -252,6 +260,17 @@
     width: 100%;
     box-shadow: none;
   }
+
+  .subtitle-text {
+    font-size: 12px;
+    line-height: 15px;
+    font-weight: 500;
+    top: 10px;
+    color: var(--spectrum-global-color-gray-600);
+    display: block;
+    margin-bottom: var(--spacing-s);
+  }
+
   .spectrum-Picker-label.auto-width {
     margin-right: var(--spacing-xs);
   }
