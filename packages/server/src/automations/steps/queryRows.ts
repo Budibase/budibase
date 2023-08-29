@@ -11,7 +11,6 @@ import {
   AutomationStepInput,
   AutomationStepSchema,
   AutomationStepType,
-  EmptyFilterOption,
   SearchFilters,
   Table,
 } from "@budibase/types"
@@ -25,6 +24,16 @@ enum SortOrder {
 const SortOrderPretty = {
   [SortOrder.ASCENDING]: "Ascending",
   [SortOrder.DESCENDING]: "Descending",
+}
+
+enum EmptyFilterOption {
+  RETURN_ALL = "all",
+  RETURN_NONE = "none",
+}
+
+const EmptyFilterOptionPretty = {
+  [EmptyFilterOption.RETURN_ALL]: "Return all table rows",
+  [EmptyFilterOption.RETURN_NONE]: "Return no rows",
 }
 
 export const definition: AutomationStepSchema = {
@@ -67,6 +76,12 @@ export const definition: AutomationStepSchema = {
           type: AutomationIOType.NUMBER,
           title: "Limit",
           customType: AutomationCustomIOType.QUERY_LIMIT,
+        },
+        onEmptyFilter: {
+          pretty: Object.values(EmptyFilterOptionPretty),
+          enum: Object.values(EmptyFilterOption),
+          type: AutomationIOType.STRING,
+          title: "When Filter Empty",
         },
       },
       required: ["tableId"],

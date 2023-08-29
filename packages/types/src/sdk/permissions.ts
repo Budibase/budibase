@@ -14,5 +14,6 @@ export enum PermissionType {
   WEBHOOK = "webhook",
   BUILDER = "builder",
   GLOBAL_BUILDER = "globalBuilder",
+  VIEW = "view",
   QUERY = "query",
 }

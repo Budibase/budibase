@@ -4,8 +4,6 @@ import * as context from "../context"
 import * as platform from "../platform"
 import env from "../environment"
 import * as accounts from "../accounts"
-import { UserDB } from "../users"
-import { sdk } from "@budibase/shared-core"
 
 const EXPIRY_SECONDS = 3600
 
@@ -61,18 +59,6 @@ export async function getUser(
   if (user && !user.tenantId && tenantId) {
     // make sure the tenant ID is always correct/set
     user.tenantId = tenantId
-  }
-  // if has groups, could have builder permissions granted by a group
-  if (user.userGroups && !sdk.users.isGlobalBuilder(user)) {
-    await context.doInTenant(tenantId, async () => {
-      const appIds = await UserDB.getGroupBuilderAppIds(user)
-      if (appIds.length) {
-        const existing = user.builder?.apps || []
-        user.builder = {
-          apps: [...new Set(existing.concat(appIds))],
-        }
-      }
-    })
   }
   return user
 }

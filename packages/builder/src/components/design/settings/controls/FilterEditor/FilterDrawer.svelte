@@ -17,7 +17,7 @@
   import { generate } from "shortid"
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { getFields } from "helpers/searchFields"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
 
   export let schemaFields
   export let filters = []
@@ -35,28 +35,22 @@
     { value: "and", label: "Match all filters" },
     { value: "or", label: "Match any filter" },
   ]
-  const onEmptyOptions = [
-    { value: "all", label: "Return all table rows" },
-    { value: "none", label: "Return no rows" },
-  ]
 
   let rawFilters
   let matchAny = false
-  let onEmptyFilter = "all"
 
   $: parseFilters(filters)
-  $: dispatch("change", enrichFilters(rawFilters, matchAny, onEmptyFilter))
+  $: dispatch("change", enrichFilters(rawFilters, matchAny))
   $: enrichedSchemaFields = getFields(schemaFields || [], { allowLinks: true })
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
-  // Remove field key prefixes and determine which behaviours to use
+  // Remove field key prefixes and determine whether to use the "match all"
+  // or "match any" behaviour
   const parseFilters = filters => {
     matchAny = filters?.find(filter => filter.operator === "allOr") != null
-    onEmptyFilter =
-      filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
     rawFilters = (filters || [])
-      .filter(filter => filter.operator !== "allOr" && !filter.onEmptyFilter)
+      .filter(filter => filter.operator !== "allOr")
       .map(filter => {
         const { field } = filter
         let newFilter = { ...filter }
@@ -70,18 +64,9 @@
       })
   }
 
-  onMount(() => {
-    parseFilters(filters)
-    rawFilters.forEach(filter => {
-      filter.type =
-        schemaFields.find(field => field.name === filter.field)?.type ||
-        filter.type
-    })
-  })
-
   // Add field key prefixes and a special metadata filter object to indicate
-  // how to handle filter behaviour
-  const enrichFilters = (rawFilters, matchAny, onEmptyFilter) => {
+  // whether to use the "match all" or "match any" behaviour
+  const enrichFilters = (rawFilters, matchAny) => {
     let count = 1
     return rawFilters
       .filter(filter => filter.field)
@@ -90,7 +75,6 @@
         field: `${count++}:${filter.field}`,
       }))
       .concat(matchAny ? [{ operator: "allOr" }] : [])
-      .concat([{ onEmptyFilter }])
   }
 
   const addFilter = () => {
@@ -202,17 +186,6 @@
             on:change={e => (matchAny = e.detail === "or")}
             placeholder={null}
           />
-          {#if datasource?.type === "table"}
-            <Select
-              label="When filter empty"
-              value={onEmptyFilter}
-              options={onEmptyOptions}
-              getOptionLabel={opt => opt.label}
-              getOptionValue={opt => opt.value}
-              on:change={e => (onEmptyFilter = e.detail)}
-              placeholder={null}
-            />
-          {/if}
         </div>
         <div>
           <div class="filter-label">

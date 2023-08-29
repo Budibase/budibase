@@ -8,16 +8,22 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "incremental": true,
-    "types": ["node", "jest"],
+    "types": [ "node", "jest" ],
     "outDir": "dist",
     "skipLibCheck": true,
     "paths": {
       "@budibase/types": ["../types/src"],
       "@budibase/backend-core": ["../backend-core/src"],
-      "@budibase/backend-core/*": ["../backend-core/*"],
-      "@budibase/shared-core": ["../shared-core/src"]
+      "@budibase/backend-core/*": ["../backend-core/*"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.spec.js"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.spec.js"
+  ]
 }

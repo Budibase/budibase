@@ -5,12 +5,11 @@ import env from "../environment"
 
 export default async (ctx: UserCtx, next: any) => {
   const appId = getAppId()
-  const builderFn =
-    env.isWorker() || !appId
-      ? hasBuilderPermissions
-      : env.isApps()
-      ? isBuilder
-      : undefined
+  const builderFn = env.isWorker()
+    ? hasBuilderPermissions
+    : env.isApps()
+    ? isBuilder
+    : undefined
   if (!builderFn) {
     throw new Error("Service name unknown - middleware inactive.")
   }

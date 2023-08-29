@@ -1,6 +1,5 @@
 const { roles, events, permissions } = require("@budibase/backend-core")
 const setup = require("./utilities")
-const { PermissionLevel } = require("@budibase/types")
 const { basicRole } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
 const { BuiltinPermissionID } = permissions
@@ -17,7 +16,7 @@ describe("/roles", () => {
 
   const createRole = async (role) => {
     if (!role) {
-      role = basicRole()
+      role =  basicRole()
     }
 
     return request
@@ -99,7 +98,7 @@ describe("/roles", () => {
 
     it("should be able to get the role with a permission added", async () => {
       const table = await config.createTable()
-      await config.api.permission.set({ roleId: BUILTIN_ROLE_IDS.POWER, resourceId: table._id, level: PermissionLevel.READ })
+      await config.addPermission(BUILTIN_ROLE_IDS.POWER, table._id)
       const res = await request
         .get(`/api/roles`)
         .set(config.defaultHeaders())
