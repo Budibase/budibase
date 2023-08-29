@@ -48,7 +48,7 @@
         {
           _id: CreatorID,
           name: "Creator",
-          tag: !$licensing.perAppBuildersEnabled && "Business",
+          tag: !$licensing.perAppBuildersEnabled && Constants.PlanType.BUSINESS,
         },
         ...newRoles,
       ]
@@ -108,13 +108,8 @@
     getOptionValue={role => role._id}
     getOptionColour={getColor}
     getOptionIcon={getIcon}
-    isOptionEnabled={option => {
-      if (option._id == CreatorID && !$licensing.perAppBuildersEnabled) {
-        return false
-      } else {
-        return true
-      }
-    }}
+    isOptionEnabled={option =>
+      option._id !== CreatorID || $licensing.perAppBuildersEnabled}
     {placeholder}
     {error}
   />
@@ -132,13 +127,8 @@
     getOptionValue={role => role._id}
     getOptionColour={getColor}
     getOptionIcon={getIcon}
-    isOptionEnabled={option => {
-      if (option._id == CreatorID && !$licensing.perAppBuildersEnabled) {
-        return false
-      } else {
-        return true
-      }
-    }}
+    isOptionEnabled={option =>
+      option._id !== CreatorID || $licensing.perAppBuildersEnabled}
     {placeholder}
     {error}
   />

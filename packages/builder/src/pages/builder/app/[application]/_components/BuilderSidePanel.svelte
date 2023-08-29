@@ -80,16 +80,18 @@
     if (!filterByAppAccess && !query) {
       filteredInvites =
         appInvites.length > 100 ? appInvites.slice(0, 100) : [...appInvites]
+      filteredInvites.sort(sortInviteRoles)
       return
     }
-
-    filteredInvites = appInvites.filter(invite => {
-      const inviteInfo = invite.info?.apps
-      if (!query && inviteInfo && prodAppId) {
-        return Object.keys(inviteInfo).includes(prodAppId)
-      }
-      return invite.email.includes(query)
-    })
+    filteredInvites = appInvites
+      .filter(invite => {
+        const inviteInfo = invite.info?.apps
+        if (!query && inviteInfo && prodAppId) {
+          return Object.keys(inviteInfo).includes(prodAppId)
+        }
+        return invite.email.includes(query)
+      })
+      .sort(sortInviteRoles)
   }
 
   $: filterByAppAccess, prodAppId, filterInvites(query)
@@ -148,6 +150,19 @@
         }
       })
       .sort(sortRoles)
+  }
+
+  const sortInviteRoles = (a, b) => {
+    const aIsEmpty = !a.info.apps || Object.keys(a.info.apps).length === 0
+    const bIsEmpty = !b.info.apps || Object.keys(b.info.apps).length === 0
+
+    return aIsEmpty
+      ? bIsEmpty
+        ? 0
+        : 1 // Put items with empty "apps" at the bottom
+      : bIsEmpty
+      ? -1
+      : 0 // Put items with non-empty "apps" above the empty ones
   }
 
   const sortRoles = (a, b) => {
@@ -357,10 +372,8 @@
     const payload = [
       {
         email: newUserEmail,
-        builder:
-          creationRoleType === Constants.BudibaseRoles.Admin ? true : false,
-        admin:
-          creationRoleType === Constants.BudibaseRoles.Admin ? true : false,
+        builder: !!creationRoleType === Constants.BudibaseRoles.Admin,
+        admin: !!creationRoleType === Constants.BudibaseRoles.Admin,
       },
     ]
 
@@ -387,6 +400,7 @@
   }
 
   const onInviteUser = async () => {
+    form.validate()
     userOnboardResponse = await inviteUser()
     const originalQuery = query + ""
     query = null
@@ -563,20 +577,13 @@
           <div class="invite-header">
             <Heading size="XS">No user found</Heading>
             <div class="invite-directions">
-              Add a valid email to invite a new user
+              Try searching a different email or <span
+                class="underlined"
+                on:click={$licensing.userLimitReached
+                  ? userLimitReachedModal.show
+                  : openInviteFlow}>invite a new user</span
+              >
             </div>
-          </div>
-          <div class="invite-form">
-            <span>{query || ""}</span>
-            <ActionButton
-              icon="UserAdd"
-              disabled={!queryIsEmail || inviting}
-              on:click={$licensing.userLimitReached
-                ? userLimitReachedModal.show
-                : openInviteFlow}
-            >
-              Add user
-            </ActionButton>
           </div>
         </Layout>
       {/if}
@@ -752,6 +759,7 @@
               value={query}
               on:change={e => {
                 email = e.detail
+                query = e.detail
               }}
               validate={() => {
                 if (!email) {
@@ -770,7 +778,7 @@
                   )}
               label="Role"
             />
-            {#if creationRoleType !== Constants.Roles.ADMIN}
+            {#if creationRoleType !== Constants.BudibaseRoles.Admin}
               <RoleSelect
                 placeholder={false}
                 bind:value={creationAccessType}
@@ -783,14 +791,19 @@
               />
             {/if}
           </FancyForm>
-          {#if creationRoleType === Constants.Roles.ADMIN}
+          {#if creationRoleType === Constants.BudibaseRoles.Admin}
             <div class="admin-info">
               <Icon name="Info" />
               Admins will get full access to all apps and settings
             </div>
           {/if}
           <span class="add-user">
-            <Button newStyles cta on:click={onInviteUser}>Add user</Button>
+            <Button
+              newStyles
+              cta
+              disabled={!query.length && !email?.length}
+              on:click={onInviteUser}>Add user</Button
+            >
           </span>
         </div>
       </Layout>
@@ -818,13 +831,18 @@
   }
 
   .admin-info {
-    padding: var(--spacing-l) var(--spacing-l) var(--spacing-xs)
-      var(--spacing-l);
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-l) var(--spacing-l) var(--spacing-l) var(--spacing-l);
     display: flex;
     align-items: center;
     gap: var(--spacing-xl);
-    height: 50px;
+    height: 30px;
     background-color: var(--background-alt);
+  }
+
+  .underlined {
+    text-decoration: underline;
+    cursor: pointer;
   }
 
   .search-input {
