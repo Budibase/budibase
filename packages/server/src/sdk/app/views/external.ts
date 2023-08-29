@@ -4,13 +4,18 @@ import { context, HTTPError } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 import { enrichSchema, isV2 } from "."
+import { breakExternalTableId } from "../../../integrations/utils"
 
 export async function get(
   viewId: string,
   opts?: { enriched: boolean }
 ): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
-  const table = await sdk.tables.getTable(tableId)
+
+  const { datasourceId, tableName } = breakExternalTableId(tableId)
+  const ds = await sdk.datasources.get(datasourceId!)
+
+  const table = ds.entities![tableName!]
   const views = Object.values(table.views!)
   const found = views.find(v => isV2(v) && v.id === viewId)
   if (!found) {
@@ -35,20 +40,23 @@ export async function create(
 
   const db = context.getAppDB()
 
-  const table = await sdk.tables.getTable(tableId)
-  table.views ??= {}
-
-  table.views[view.name] = view
-  await db.put(table)
+  const { datasourceId, tableName } = breakExternalTableId(tableId)
+  const ds = await sdk.datasources.get(datasourceId!)
+  ds.entities![tableName!].views ??= {}
+  ds.entities![tableName!].views![view.name] = view
+  await db.put(ds)
   return view
 }
 
 export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
   const db = context.getAppDB()
-  const table = await sdk.tables.getTable(tableId)
-  table.views ??= {}
 
-  const existingView = Object.values(table.views).find(
+  const { datasourceId, tableName } = breakExternalTableId(tableId)
+  const ds = await sdk.datasources.get(datasourceId!)
+  ds.entities![tableName!].views ??= {}
+  const views = ds.entities![tableName!].views!
+
+  const existingView = Object.values(views).find(
     v => isV2(v) && v.id === view.id
   )
   if (!existingView) {
@@ -56,9 +64,9 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
   }
 
   console.log("set to", view)
-  delete table.views[existingView.name]
-  table.views[view.name] = view
-  await db.put(table)
+  delete views[existingView.name]
+  views[view.name] = view
+  await db.put(ds)
   return view
 }
 
@@ -66,12 +74,15 @@ export async function remove(viewId: string): Promise<ViewV2> {
   const db = context.getAppDB()
 
   const view = await get(viewId)
-  const table = await sdk.tables.getTable(view?.tableId)
+
   if (!view) {
     throw new HTTPError(`View ${viewId} not found`, 404)
   }
 
-  delete table.views![view?.name]
-  await db.put(table)
+  const { datasourceId, tableName } = breakExternalTableId(view.tableId)
+  const ds = await sdk.datasources.get(datasourceId!)
+
+  delete ds.entities![tableName!].views![view?.name]
+  await db.put(ds)
   return view
 }
