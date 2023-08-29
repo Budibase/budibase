@@ -121,32 +121,6 @@ describe("/v2/views", () => {
       })
     })
 
-    it("throw an exception if the schema overrides a non UI field", async () => {
-      const newView: CreateViewRequest = {
-        name: generator.name(),
-        tableId: config.table!._id!,
-        schema: {
-          Price: {
-            name: "Price",
-            type: FieldType.NUMBER,
-            visible: true,
-          },
-          Category: {
-            name: "Category",
-            type: FieldType.STRING,
-            constraints: {
-              type: "string",
-              presence: true,
-            },
-          },
-        } as Record<string, FieldSchema>,
-      }
-
-      await config.api.viewV2.create(newView, {
-        expectStatus: 400,
-      })
-    })
-
     it("will not throw an exception if the schema is 'deleting' non UI fields", async () => {
       const newView: CreateViewRequest = {
         name: generator.name(),
@@ -371,32 +345,6 @@ describe("/v2/views", () => {
         id: view.id,
         version: 2,
       })
-    })
-
-    it("throw an exception if the schema overrides a non UI field", async () => {
-      await config.api.viewV2.update(
-        {
-          ...view,
-          schema: {
-            Price: {
-              name: "Price",
-              type: FieldType.NUMBER,
-              visible: true,
-            },
-            Category: {
-              name: "Category",
-              type: FieldType.STRING,
-              constraints: {
-                type: "string",
-                presence: true,
-              },
-            },
-          } as Record<string, FieldSchema>,
-        },
-        {
-          expectStatus: 400,
-        }
-      )
     })
 
     it("will not throw an exception if the schema is 'deleting' non UI fields", async () => {

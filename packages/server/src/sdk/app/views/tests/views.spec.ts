@@ -121,25 +121,21 @@ describe("table sdk", () => {
       expect(res).toEqual({
         ...view,
         schema: {
-          ...basicTable.schema,
           name: {
-            type: "string",
-            name: "name",
+            ...basicTable.schema.name,
             visible: true,
-            order: 2,
-            width: 80,
-            constraints: {
-              type: "string",
-            },
+          },
+          description: {
+            ...basicTable.schema.description,
+            visible: false,
           },
           id: {
-            type: "number",
-            name: "id",
+            ...basicTable.schema.id,
             visible: true,
-            order: 1,
-            constraints: {
-              type: "number",
-            },
+          },
+          hiddenField: {
+            ...basicTable.schema.hiddenField,
+            visible: false,
           },
         },
       })
@@ -160,24 +156,27 @@ describe("table sdk", () => {
 
       const res = enrichSchema(view, basicTable.schema)
 
-      expect(res).toEqual(
-        expect.objectContaining({
-          ...view,
-          schema: {
-            ...basicTable.schema,
-            name: {
-              type: "string",
-              name: "name",
-              order: 2,
-              visible: true,
-              width: 80,
-              constraints: {
-                type: "string",
-              },
-            },
+      expect(res).toEqual({
+        ...view,
+        schema: {
+          name: {
+            ...basicTable.schema.name,
+            visible: true,
           },
-        })
-      )
+          description: {
+            ...basicTable.schema.description,
+            visible: false,
+          },
+          id: {
+            ...basicTable.schema.id,
+            visible: false,
+          },
+          hiddenField: {
+            ...basicTable.schema.hiddenField,
+            visible: false,
+          },
+        },
+      })
     })
 
     it("if the view schema overrides the schema UI, the table schema should be overridden", async () => {

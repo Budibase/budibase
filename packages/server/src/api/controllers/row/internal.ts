@@ -94,8 +94,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 
 export async function save(ctx: UserCtx) {
   let inputs = ctx.request.body
-  const tableId = utils.getTableId(ctx)
-  inputs.tableId = tableId
+  inputs.tableId = utils.getTableId(ctx)
 
   if (!inputs._rev && !inputs._id) {
     inputs._id = generateRowID(inputs.tableId)

@@ -44,7 +44,9 @@ function checkAutoColumns(table: Table, oldTable?: Table) {
 export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const db = context.getAppDB()
   const { rows, ...rest } = ctx.request.body
-  let tableToSave: TableRequest = {
+  let tableToSave: Table & {
+    _rename?: { old: string; updated: string } | undefined
+  } = {
     type: "table",
     _id: generateTableID(),
     views: {},
@@ -104,12 +106,6 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   for (let view in tableToSave.views) {
     const tableView = tableToSave.views[view]
     if (!tableView) continue
-
-    if (sdk.views.isV2(tableView)) {
-      // We don't want to modify views from the tables controller
-      tableToSave.views[view] = oldTable!.views![view]
-      continue
-    }
 
     if (sdk.views.isV2(tableView)) {
       tableToSave.views[view] = sdk.views.syncSchema(

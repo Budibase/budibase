@@ -5,7 +5,10 @@ import { cloneDeep } from "lodash"
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
 
-export async function get(viewId: string): Promise<ViewV2> {
+export async function get(
+  viewId: string,
+  opts?: { enriched: boolean }
+): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
   const table = await sdk.tables.getTable(tableId)
   const views = Object.values(table.views!)
@@ -13,7 +16,11 @@ export async function get(viewId: string): Promise<ViewV2> {
   if (!found) {
     throw new Error("No view found")
   }
-  return found as ViewV2
+  if (opts?.enriched) {
+    return enrichSchema(found, table.schema) as ViewV2
+  } else {
+    return found as ViewV2
+  }
 }
 
 export async function create(
@@ -47,6 +54,7 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
     throw new HTTPError(`View ${view.id} not found in table ${tableId}`, 404)
   }
 
+  console.log("set to", view)
   delete table.views[existingView.name]
   table.views[view.name] = view
   await db.put(table)
@@ -57,7 +65,7 @@ export function isV2(view: View | ViewV2): view is ViewV2 {
   return (view as ViewV2).version === 2
 }
 
-export async function remove(viewId: string): Promise<void> {
+export async function remove(viewId: string): Promise<ViewV2> {
   const db = context.getAppDB()
 
   const view = await get(viewId)
@@ -68,6 +76,7 @@ export async function remove(viewId: string): Promise<void> {
 
   delete table.views![view?.name]
   await db.put(table)
+  return view
 }
 
 export function allowedFields(view: View | ViewV2) {

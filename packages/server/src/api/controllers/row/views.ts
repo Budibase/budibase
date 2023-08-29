@@ -6,9 +6,11 @@ import {
   SearchViewRowRequest,
   RequiredKeys,
   SearchParams,
+  SearchFilters,
 } from "@budibase/types"
 import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
+import { db } from "@budibase/backend-core"
 
 export async function searchView(
   ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
@@ -19,15 +21,41 @@ export async function searchView(
   if (!view) {
     ctx.throw(404, `View ${viewId} not found`)
   }
-
   if (view.version !== 2) {
     ctx.throw(400, `This method only supports viewsV2`)
   }
 
   const viewFields = Object.keys(view.schema || {})
-
   const { body } = ctx.request
-  const query = dataFilters.buildLuceneQuery(view.query || [])
+
+  // Enrich saved query with ephemeral query params.
+  // We prevent searching on any fields that are saved as part of the query, as
+  // that could let users find rows they should not be allowed to access.
+  let query = dataFilters.buildLuceneQuery(view.query || [])
+  if (body.query) {
+    // Extract existing fields
+    const existingFields =
+      view.query
+        ?.filter(filter => filter.field)
+        .map(filter => db.removeKeyNumbering(filter.field)) || []
+
+    // Delete extraneous search params that cannot be overridden
+    delete body.query.allOr
+    delete body.query.onEmptyFilter
+
+    // Carry over filters for unused fields
+    Object.keys(body.query).forEach(key => {
+      const operator = key as keyof Omit<
+        SearchFilters,
+        "allOr" | "onEmptyFilter"
+      >
+      Object.keys(body.query[operator] || {}).forEach(field => {
+        if (!existingFields.includes(db.removeKeyNumbering(field))) {
+          query[operator]![field] = body.query[operator]![field]
+        }
+      })
+    })
+  }
 
   const searchOptions: RequiredKeys<SearchViewRowRequest> &
     RequiredKeys<Pick<SearchParams, "tableId" | "query" | "fields">> = {
