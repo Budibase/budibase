@@ -5,7 +5,6 @@ import query from "./query"
 import user from "./user"
 import metrics from "./metrics"
 import misc from "./misc"
-import roles from "./roles"
 
 export const examples = {
   ...application.getExamples(),
@@ -24,5 +23,4 @@ export const schemas = {
   ...query.getSchemas(),
   ...user.getSchemas(),
   ...misc.getSchemas(),
-  ...roles.getSchemas(),
 }

@@ -1,5 +1,5 @@
 import { permissions, roles } from "@budibase/backend-core"
-import { DocumentType, VirtualDocumentType } from "../db/utils"
+import { DocumentType } from "../db/utils"
 
 export const CURRENTLY_SUPPORTED_LEVELS: string[] = [
   permissions.PermissionLevel.WRITE,
@@ -11,10 +11,9 @@ export function getPermissionType(resourceId: string) {
   const docType = Object.values(DocumentType).filter(docType =>
     resourceId.startsWith(docType)
   )[0]
-  switch (docType as DocumentType | VirtualDocumentType) {
+  switch (docType) {
     case DocumentType.TABLE:
     case DocumentType.ROW:
-    case VirtualDocumentType.VIEW:
       return permissions.PermissionType.TABLE
     case DocumentType.AUTOMATION:
       return permissions.PermissionType.AUTOMATION
@@ -23,6 +22,9 @@ export function getPermissionType(resourceId: string) {
     case DocumentType.QUERY:
     case DocumentType.DATASOURCE:
       return permissions.PermissionType.QUERY
+    default:
+      // views don't have an ID, will end up here
+      return permissions.PermissionType.VIEW
   }
 }
 

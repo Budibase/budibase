@@ -42,6 +42,7 @@
         <ColorPicker
           value={column.background}
           on:change={e => (column.background = e.detail)}
+          alignRight
           spectrumTheme={$store.theme}
         />
       </Layout>
@@ -50,6 +51,7 @@
         <ColorPicker
           value={column.color}
           on:change={e => (column.color = e.detail)}
+          alignRight
           spectrumTheme={$store.theme}
         />
       </Layout>

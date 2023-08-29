@@ -32,8 +32,8 @@ function getTestContainerSettings(
 ): string | null {
   const entry = Object.entries(global).find(
     ([k]) =>
-      k.includes(`${serverName.toUpperCase()}`) &&
-      k.includes(`${key.toUpperCase()}`)
+      k.includes(`_${serverName.toUpperCase()}`) &&
+      k.includes(`_${key.toUpperCase()}__`)
   )
   if (!entry) {
     return null
@@ -67,14 +67,27 @@ function getContainerInfo(containerName: string, port: number) {
 }
 
 function getCouchConfig() {
-  return getContainerInfo("couchdb", 5984)
+  return getContainerInfo("couchdb-service", 5984)
+}
+
+function getMinioConfig() {
+  return getContainerInfo("minio-service", 9000)
+}
+
+function getRedisConfig() {
+  return getContainerInfo("redis-service", 6379)
 }
 
 export function setupEnv(...envs: any[]) {
-  const couch = getCouchConfig()
+  const couch = getCouchConfig(),
+    minio = getCouchConfig(),
+    redis = getRedisConfig()
   const configs = [
     { key: "COUCH_DB_PORT", value: couch.port },
     { key: "COUCH_DB_URL", value: couch.url },
+    { key: "MINIO_PORT", value: minio.port },
+    { key: "MINIO_URL", value: minio.url },
+    { key: "REDIS_URL", value: redis.url },
   ]
 
   for (const config of configs.filter(x => !!x.value)) {

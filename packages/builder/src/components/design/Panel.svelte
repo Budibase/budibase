@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Body } from "@budibase/bbui"
+  import { Icon, Heading } from "@budibase/bbui"
 
   export let title
   export let icon
@@ -25,7 +25,7 @@
       <Icon name={icon} />
     {/if}
     <div class="title">
-      <Body size="S">{title}</Body>
+      <Heading size="XXS">{title || ""}</Heading>
     </div>
     {#if showAddButton}
       <div class="add-button" on:click={onClickAddButton}>
@@ -78,14 +78,15 @@
     align-items: center;
     padding: 0 var(--spacing-l);
     border-bottom: var(--border-light);
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
   }
   .title {
     flex: 1 1 auto;
     width: 0;
   }
-  .title :global(p) {
+  .title :global(h1) {
     overflow: hidden;
+    font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
   }

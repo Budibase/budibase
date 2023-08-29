@@ -18,7 +18,7 @@ import {
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
-import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
+import { GenericContainer } from "testcontainers"
 
 const config = setup.getConfig()!
 
@@ -37,34 +37,20 @@ describe("postgres integrations", () => {
 
   let host: string
   let port: number
-  const containers: StartedTestContainer[] = []
 
   beforeAll(async () => {
-    const containerPostgres = await new GenericContainer("postgres")
+    const container = await new GenericContainer("postgres")
       .withExposedPorts(5432)
       .withEnv("POSTGRES_PASSWORD", "password")
-      .withWaitStrategy(
-        Wait.forLogMessage(
-          "PostgreSQL init process complete; ready for start up."
-        )
-      )
       .start()
 
-    host = containerPostgres.getContainerIpAddress()
-    port = containerPostgres.getMappedPort(5432)
+    host = container.getContainerIpAddress()
+    port = container.getMappedPort(5432)
 
     await config.init()
     const apiKey = await config.generateApiKey()
 
-    containers.push(containerPostgres)
-
     makeRequest = generateMakeRequest(apiKey, true)
-  })
-
-  afterAll(async () => {
-    for (let container of containers) {
-      await container.stop()
-    }
   })
 
   function pgDatasourceConfig() {
