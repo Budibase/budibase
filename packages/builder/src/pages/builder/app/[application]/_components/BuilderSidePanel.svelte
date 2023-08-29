@@ -1,6 +1,7 @@
 <script>
   import {
     Icon,
+    Divider,
     Heading,
     Layout,
     Input,
@@ -9,6 +10,10 @@
     ActionButton,
     CopyInput,
     Modal,
+    FancyForm,
+    FancyInput,
+    Button,
+    FancySelect,
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import { groups, licensing, apps, users, auth, admin } from "stores/portal"
@@ -31,10 +36,16 @@
   let loaded = false
   let inviting = false
   let searchFocus = false
-
+  let invitingFlow = false
   // Initially filter entities without app access
   // Show all when false
   let filterByAppAccess = false
+
+  let email
+  let error
+  let form
+  let creationRoleType = "appUser"
+  let creationAccessType = "BASIC"
 
   let appInvites = []
   let filteredInvites = []
@@ -54,7 +65,6 @@
     query
   )
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
-
   const showInvite = (invites, users, groups, query) => {
     return !invites?.length && !users?.length && !groups?.length && query
   }
@@ -292,7 +302,6 @@
   $: filteredGroups = searchGroups(enrichedGroups, query)
   $: groupUsers = buildGroupUsers(filteredGroups, filteredUsers)
   $: allUsers = [...filteredUsers, ...groupUsers]
-  $: console.log(filteredGroups)
   /*  
     Create pseudo users from the "users" attribute on app groups.
     These users will appear muted in the UI and show the ROLE
@@ -348,11 +357,20 @@
     const payload = [
       {
         email: newUserEmail,
-        builder: false,
-        admin: false,
-        apps: { [prodAppId]: Constants.Roles.BASIC },
+        builder:
+          creationRoleType === Constants.BudibaseRoles.Admin ? true : false,
+        admin:
+          creationRoleType === Constants.BudibaseRoles.Admin ? true : false,
       },
     ]
+
+    if (creationAccessType === Constants.Roles.CREATOR) {
+      payload[0].appBuilder = prodAppId
+    } else {
+      payload[0].apps = {
+        [prodAppId]: creationAccessType,
+      }
+    }
     let userInviteResponse
     try {
       userInviteResponse = await users.onboard(payload)
@@ -362,6 +380,10 @@
     }
     inviting = false
     return userInviteResponse
+  }
+
+  const openInviteFlow = () => {
+    invitingFlow = true
   }
 
   const onInviteUser = async () => {
@@ -391,6 +413,7 @@
       notifications.error(inviteFailureResponse)
     }
     userOnboardResponse = null
+    invitingFlow = false
   }
 
   const onUpdateUserInvite = async (invite, role) => {
@@ -476,7 +499,17 @@
   }}
 >
   <div class="builder-side-panel-header">
-    <Heading size="S">Users</Heading>
+    <div
+      on:click={() => {
+        invitingFlow = false
+      }}
+      class="header"
+    >
+      {#if invitingFlow}
+        <Icon name="BackAndroid" />
+      {/if}
+      <Heading size="S">{invitingFlow ? "Invite new user" : "Users"}</Heading>
+    </div>
     <Icon
       color="var(--spectrum-global-color-gray-600)"
       name="RailRightClose"
@@ -489,219 +522,280 @@
       }}
     />
   </div>
-  <div class="search" class:focused={searchFocus}>
-    <span class="search-input">
-      <Input
-        placeholder={"Add users and groups to your app"}
-        autocomplete="off"
-        disabled={inviting}
-        value={query}
-        on:input={e => {
-          query = e.target.value.trim()
-        }}
-        on:focus={() => (searchFocus = true)}
-        on:blur={() => (searchFocus = false)}
-      />
-    </span>
+  {#if !invitingFlow}
+    <div class="search" class:focused={searchFocus}>
+      <span class="search-input">
+        <Input
+          placeholder={"Add users and groups to your app"}
+          autocomplete="off"
+          disabled={inviting}
+          value={query}
+          on:input={e => {
+            query = e.target.value.trim()
+          }}
+          on:focus={() => (searchFocus = true)}
+          on:blur={() => (searchFocus = false)}
+        />
+      </span>
 
-    <span
-      class="search-input-icon"
-      class:searching={query || !filterByAppAccess}
-      on:click={() => {
-        if (!filterByAppAccess) {
+      <span
+        class="search-input-icon"
+        class:searching={query || !filterByAppAccess}
+        on:click={() => {
+          if (!filterByAppAccess) {
+            filterByAppAccess = true
+          }
+          if (!query) {
+            return
+          }
+          query = null
+          userOnboardResponse = null
           filterByAppAccess = true
-        }
-        if (!query) {
-          return
-        }
-        query = null
-        userOnboardResponse = null
-        filterByAppAccess = true
-      }}
-    >
-      <Icon name={!filterByAppAccess || query ? "Close" : "Search"} />
-    </span>
-  </div>
+        }}
+      >
+        <Icon name={!filterByAppAccess || query ? "Close" : "Search"} />
+      </span>
+    </div>
 
-  <div class="body">
-    {#if promptInvite && !userOnboardResponse}
-      <Layout gap="S" paddingX="XL">
-        <div class="invite-header">
-          <Heading size="XS">No user found</Heading>
-          <div class="invite-directions">
-            Add a valid email to invite a new user
+    <div class="body">
+      {#if promptInvite && !userOnboardResponse}
+        <Layout gap="S" paddingX="XL">
+          <div class="invite-header">
+            <Heading size="XS">No user found</Heading>
+            <div class="invite-directions">
+              Add a valid email to invite a new user
+            </div>
           </div>
-        </div>
-        <div class="invite-form">
-          <span>{query || ""}</span>
-          <ActionButton
-            icon="UserAdd"
-            disabled={!queryIsEmail || inviting}
-            on:click={$licensing.userLimitReached
-              ? userLimitReachedModal.show
-              : onInviteUser}
-          >
-            Add user
-          </ActionButton>
-        </div>
-      </Layout>
-    {/if}
+          <div class="invite-form">
+            <span>{query || ""}</span>
+            <ActionButton
+              icon="UserAdd"
+              disabled={!queryIsEmail || inviting}
+              on:click={$licensing.userLimitReached
+                ? userLimitReachedModal.show
+                : openInviteFlow}
+            >
+              Add user
+            </ActionButton>
+          </div>
+        </Layout>
+      {/if}
 
-    {#if !promptInvite}
+      {#if !promptInvite}
+        <Layout gap="L" noPadding>
+          {#if filteredInvites?.length}
+            <Layout noPadding gap="XS">
+              <div class="auth-entity-header">
+                <div class="auth-entity-title">Pending invites</div>
+                <div class="auth-entity-access-title">Access</div>
+              </div>
+              {#each filteredInvites as invite}
+                <div class="auth-entity">
+                  <div class="details">
+                    <div class="user-email" title={invite.email}>
+                      {invite.email}
+                    </div>
+                  </div>
+                  <div class="auth-entity-access">
+                    <RoleSelect
+                      placeholder={false}
+                      value={invite.info.apps?.[prodAppId]}
+                      allowRemove={invite.info.apps?.[prodAppId]}
+                      allowPublic={false}
+                      allowCreator={true}
+                      quiet={true}
+                      on:addcreator={() => {
+                        onUpdateUserInvite(invite, Constants.Roles.CREATOR)
+                      }}
+                      on:change={e => {
+                        onUpdateUserInvite(invite, e.detail)
+                      }}
+                      on:remove={() => {
+                        onUninviteAppUser(invite)
+                      }}
+                      autoWidth
+                      align="right"
+                    />
+                  </div>
+                </div>
+              {/each}
+            </Layout>
+          {/if}
+
+          {#if $licensing.groupsEnabled && filteredGroups?.length}
+            <Layout noPadding gap="XS">
+              <div class="auth-entity-header">
+                <div class="auth-entity-title">Groups</div>
+                <div class="auth-entity-access-title">Access</div>
+              </div>
+              {#each filteredGroups as group}
+                <div
+                  class="auth-entity group"
+                  on:click={() => {
+                    if (selectedGroup != group._id) {
+                      selectedGroup = group._id
+                    } else {
+                      selectedGroup = null
+                    }
+                  }}
+                  on:keydown={() => {}}
+                >
+                  <div class="details">
+                    <GroupIcon {group} size="S" />
+                    <div>
+                      {group.name}
+                    </div>
+                    <div class="auth-entity-meta">
+                      {`${group.users?.length} user${
+                        group.users?.length != 1 ? "s" : ""
+                      }`}
+                    </div>
+                  </div>
+                  <div class="auth-entity-access">
+                    <RoleSelect
+                      placeholder={false}
+                      value={group.role}
+                      allowRemove={group.role}
+                      allowPublic={false}
+                      quiet={true}
+                      allowCreator={true}
+                      on:change={e => {
+                        onUpdateGroup(group, e.detail)
+                      }}
+                      on:addcreator={() => {
+                        addGroupAppBuilder(group._id)
+                      }}
+                      on:remove={() => {
+                        onUpdateGroup(group)
+                      }}
+                      autoWidth
+                      align="right"
+                    />
+                  </div>
+                </div>
+              {/each}
+            </Layout>
+          {/if}
+
+          {#if filteredUsers?.length}
+            <div class="auth-entity-section">
+              <div class="auth-entity-header">
+                <div class="auth-entity-title">Users</div>
+                <div class="auth-entity-access-title">Access</div>
+              </div>
+              {#each allUsers as user}
+                <div class="auth-entity">
+                  <div class="details">
+                    <div class="user-email" title={user.email}>
+                      {user.email}
+                    </div>
+                  </div>
+                  <div class="auth-entity-access" class:muted={user.group}>
+                    <RoleSelect
+                      footer={getRoleFooter(user)}
+                      placeholder={false}
+                      value={user.role}
+                      allowRemove={user.role && !user.group}
+                      allowPublic={false}
+                      allowCreator={true}
+                      quiet={true}
+                      on:addcreator={() => {
+                        addAppBuilder(user._id)
+                      }}
+                      on:change={e => {
+                        onUpdateUser(user, e.detail)
+                      }}
+                      on:remove={() => {
+                        onUpdateUser(user)
+                      }}
+                      autoWidth
+                      align="right"
+                      allowedRoles={user.isAdminOrGlobalBuilder
+                        ? [Constants.Roles.ADMIN]
+                        : null}
+                    />
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </Layout>
+      {/if}
+
+      {#if userOnboardResponse?.created}
+        <Layout gap="S" paddingX="XL">
+          <div class="invite-header">
+            <Heading size="XS">User added!</Heading>
+            <div class="invite-directions">
+              Email invites are not available without SMTP configuration. Here
+              is the password that has been generated for this user.
+            </div>
+          </div>
+          <div>
+            <CopyInput
+              value={userOnboardResponse.successful[0]?.password}
+              label="Password"
+            />
+          </div>
+        </Layout>
+      {/if}
+    </div>
+  {:else}
+    <Divider />
+    <div class="body">
       <Layout gap="L" noPadding>
-        {#if filteredInvites?.length}
-          <Layout noPadding gap="XS">
-            <div class="auth-entity-header">
-              <div class="auth-entity-title">Pending invites</div>
-              <div class="auth-entity-access-title">Access</div>
+        <div class="user-form">
+          <FancyForm bind:this={form}>
+            <FancyInput
+              disabled={false}
+              label="Email"
+              value={query}
+              on:change={e => {
+                email = e.detail
+              }}
+              validate={() => {
+                if (!email) {
+                  return "Please enter an email"
+                }
+                return null
+              }}
+              {error}
+            />
+            <FancySelect
+              bind:value={creationRoleType}
+              options={sdk.users.isAdmin($auth.user)
+                ? Constants.BudibaseRoleOptionsNew
+                : Constants.BudibaseRoleOptionsNew.filter(
+                    option => option.value !== Constants.BudibaseRoles.Admin
+                  )}
+              label="Role"
+            />
+            {#if creationRoleType !== "ADMIN"}
+              <RoleSelect
+                placeholder={false}
+                bind:value={creationAccessType}
+                allowPublic={false}
+                allowCreator={true}
+                quiet={true}
+                autoWidth
+                align="right"
+                fancySelect
+              />
+            {/if}
+          </FancyForm>
+          {#if creationRoleType === Constants.Roles.ADMIN}
+            <div class="admin-info">
+              <Icon name="Info" />
+              Admins will get full access to all apps and settings
             </div>
-            {#each filteredInvites as invite}
-              <div class="auth-entity">
-                <div class="details">
-                  <div class="user-email" title={invite.email}>
-                    {invite.email}
-                  </div>
-                </div>
-                <div class="auth-entity-access">
-                  <RoleSelect
-                    placeholder={false}
-                    value={invite.info.apps?.[prodAppId]}
-                    allowRemove={invite.info.apps?.[prodAppId]}
-                    allowPublic={false}
-                    quiet={true}
-                    on:change={e => {
-                      onUpdateUserInvite(invite, e.detail)
-                    }}
-                    on:remove={() => {
-                      onUninviteAppUser(invite)
-                    }}
-                    autoWidth
-                    align="right"
-                  />
-                </div>
-              </div>
-            {/each}
-          </Layout>
-        {/if}
-
-        {#if $licensing.groupsEnabled && filteredGroups?.length}
-          <Layout noPadding gap="XS">
-            <div class="auth-entity-header">
-              <div class="auth-entity-title">Groups</div>
-              <div class="auth-entity-access-title">Access</div>
-            </div>
-            {#each filteredGroups as group}
-              <div
-                class="auth-entity group"
-                on:click={() => {
-                  if (selectedGroup != group._id) {
-                    selectedGroup = group._id
-                  } else {
-                    selectedGroup = null
-                  }
-                }}
-                on:keydown={() => {}}
-              >
-                <div class="details">
-                  <GroupIcon {group} size="S" />
-                  <div>
-                    {group.name}
-                  </div>
-                  <div class="auth-entity-meta">
-                    {`${group.users?.length} user${
-                      group.users?.length != 1 ? "s" : ""
-                    }`}
-                  </div>
-                </div>
-                <div class="auth-entity-access">
-                  <RoleSelect
-                    placeholder={false}
-                    value={group.role}
-                    allowRemove={group.role}
-                    allowPublic={false}
-                    quiet={true}
-                    allowCreator={true}
-                    on:change={e => {
-                      onUpdateGroup(group, e.detail)
-                    }}
-                    on:addcreator={() => {
-                      addGroupAppBuilder(group._id)
-                    }}
-                    on:remove={() => {
-                      onUpdateGroup(group)
-                    }}
-                    autoWidth
-                    align="right"
-                  />
-                </div>
-              </div>
-            {/each}
-          </Layout>
-        {/if}
-
-        {#if filteredUsers?.length}
-          <div class="auth-entity-section">
-            <div class="auth-entity-header">
-              <div class="auth-entity-title">Users</div>
-              <div class="auth-entity-access-title">Access</div>
-            </div>
-            {#each allUsers as user}
-              <div class="auth-entity">
-                <div class="details">
-                  <div class="user-email" title={user.email}>
-                    {user.email}
-                  </div>
-                </div>
-                <div class="auth-entity-access" class:muted={user.group}>
-                  <RoleSelect
-                    footer={getRoleFooter(user)}
-                    placeholder={false}
-                    value={user.role}
-                    allowRemove={user.role && !user.group}
-                    allowPublic={false}
-                    allowCreator={true}
-                    quiet={true}
-                    on:addcreator={() => {
-                      addAppBuilder(user._id)
-                    }}
-                    on:change={e => {
-                      onUpdateUser(user, e.detail)
-                    }}
-                    on:remove={() => {
-                      onUpdateUser(user)
-                    }}
-                    autoWidth
-                    align="right"
-                    allowedRoles={user.isAdminOrGlobalBuilder
-                      ? [Constants.Roles.ADMIN]
-                      : null}
-                  />
-                </div>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </Layout>
-    {/if}
-
-    {#if userOnboardResponse?.created}
-      <Layout gap="S" paddingX="XL">
-        <div class="invite-header">
-          <Heading size="XS">User added!</Heading>
-          <div class="invite-directions">
-            Email invites are not available without SMTP configuration. Here is
-            the password that has been generated for this user.
-          </div>
-        </div>
-        <div>
-          <CopyInput
-            value={userOnboardResponse.successful[0]?.password}
-            label="Password"
-          />
+          {/if}
+          <span class="add-user">
+            <Button newStyles cta on:click={onInviteUser}>Add user</Button>
+          </span>
         </div>
       </Layout>
-    {/if}
-  </div>
+    </div>
+  {/if}
   <Modal bind:this={userLimitReachedModal}>
     <UpgradeModal {isOwner} />
   </Modal>
@@ -715,6 +809,22 @@
   .search {
     display: flex;
     align-items: center;
+  }
+
+  .add-user {
+    padding-top: var(--spacing-xl);
+    width: 100%;
+    display: grid;
+  }
+
+  .admin-info {
+    padding: var(--spacing-l) var(--spacing-l) var(--spacing-xs)
+      var(--spacing-l);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+    height: 50px;
+    background-color: var(--background-alt);
   }
 
   .search-input {
@@ -854,6 +964,16 @@
     display: flex;
     gap: var(--spacing-s);
     flex-direction: column;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lf);
+  }
+
+  .user-form {
+    padding: var(--spacing-xl);
   }
 
   .body {

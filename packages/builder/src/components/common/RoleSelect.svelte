@@ -1,5 +1,5 @@
 <script>
-  import { Select } from "@budibase/bbui"
+  import { Select, FancySelect } from "@budibase/bbui"
   import { roles } from "stores/backend"
   import { licensing } from "stores/portal"
 
@@ -18,6 +18,7 @@
   export let footer = null
   export let allowedRoles = null
   export let allowCreator = false
+  export let fancySelect = false
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
@@ -47,7 +48,7 @@
         {
           _id: CreatorID,
           name: "Creator",
-          tag: $licensing.perAppBuildersEnabled && null,
+          tag: !$licensing.perAppBuildersEnabled && "Business",
         },
         ...newRoles,
       ]
@@ -82,7 +83,6 @@
   }
 
   const onChange = e => {
-    console.log(e.detail)
     if (allowRemove && e.detail === RemoveID) {
       dispatch("remove")
     } else if (e.detail === CreatorID) {
@@ -93,26 +93,53 @@
   }
 </script>
 
-<Select
-  {autoWidth}
-  {quiet}
-  {disabled}
-  {align}
-  {footer}
-  bind:value
-  on:change={onChange}
-  {options}
-  getOptionLabel={role => role.name}
-  getOptionValue={role => role._id}
-  getOptionColour={getColor}
-  getOptionIcon={getIcon}
-  isOptionEnabled={option => {
-    if (option._id == CreatorID && !$licensing.perAppBuildersEnabled) {
-      return false
-    } else {
-      return true
-    }
-  }}
-  {placeholder}
-  {error}
-/>
+{#if fancySelect}
+  <FancySelect
+    {autoWidth}
+    {quiet}
+    {disabled}
+    {align}
+    {footer}
+    bind:value
+    on:change={onChange}
+    {options}
+    label="Access on this app"
+    getOptionLabel={role => role.name}
+    getOptionValue={role => role._id}
+    getOptionColour={getColor}
+    getOptionIcon={getIcon}
+    isOptionEnabled={option => {
+      if (option._id == CreatorID && !$licensing.perAppBuildersEnabled) {
+        return false
+      } else {
+        return true
+      }
+    }}
+    {placeholder}
+    {error}
+  />
+{:else}
+  <Select
+    {autoWidth}
+    {quiet}
+    {disabled}
+    {align}
+    {footer}
+    bind:value
+    on:change={onChange}
+    {options}
+    getOptionLabel={role => role.name}
+    getOptionValue={role => role._id}
+    getOptionColour={getColor}
+    getOptionIcon={getIcon}
+    isOptionEnabled={option => {
+      if (option._id == CreatorID && !$licensing.perAppBuildersEnabled) {
+        return false
+      } else {
+        return true
+      }
+    }}
+    {placeholder}
+    {error}
+  />
+{/if}
