@@ -17,7 +17,6 @@ import * as pro from "@budibase/pro"
 import * as api from "./api"
 import sdk from "./sdk"
 import { initialise as initialiseWebsockets } from "./websockets"
-import { automationsEnabled } from "./features"
 
 let STARTUP_RAN = false
 
@@ -98,9 +97,7 @@ export async function startup(app?: any, server?: any) {
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))
-  if (automationsEnabled()) {
-    queuePromises.push(automations.init())
-  }
+  queuePromises.push(automations.init())
   queuePromises.push(initPro())
   if (app) {
     // bring routes online as final step once everything ready

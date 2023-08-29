@@ -39,12 +39,6 @@ export enum DocumentType {
   AUDIT_LOG = "al",
 }
 
-// these documents don't really exist, they are part of other
-// documents or enriched into existence as part of get requests
-export enum VirtualDocumentType {
-  VIEW = "view",
-}
-
 export interface Document {
   _id?: string
   _rev?: string

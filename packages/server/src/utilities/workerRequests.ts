@@ -8,9 +8,10 @@ import {
   logging,
   env as coreEnv,
 } from "@budibase/backend-core"
-import { Ctx, User, EmailInvite } from "@budibase/types"
+import { updateAppRole } from "./global"
+import { BBContext, User, EmailInvite } from "@budibase/types"
 
-export function request(ctx?: Ctx, request?: any) {
+export function request(ctx?: BBContext, request?: any) {
   if (!request.headers) {
     request.headers = {}
   }
@@ -42,7 +43,7 @@ export function request(ctx?: Ctx, request?: any) {
 async function checkResponse(
   response: any,
   errorMsg: string,
-  { ctx }: { ctx?: Ctx } = {}
+  { ctx }: { ctx?: BBContext } = {}
 ) {
   if (response.status !== 200) {
     let error
@@ -104,7 +105,21 @@ export async function sendSmtpEmail({
   return checkResponse(response, "send email")
 }
 
-export async function removeAppFromUserRoles(ctx: Ctx, appId: string) {
+export async function getGlobalSelf(ctx: BBContext, appId?: string) {
+  const endpoint = `/api/global/self`
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + endpoint),
+    // we don't want to use API key when getting self
+    request(ctx, { method: "GET" })
+  )
+  let json = await checkResponse(response, "get self globally", { ctx })
+  if (appId) {
+    json = updateAppRole(json)
+  }
+  return json
+}
+
+export async function removeAppFromUserRoles(ctx: BBContext, appId: string) {
   const prodAppId = dbCore.getProdAppID(appId)
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodAppId}`),
@@ -115,7 +130,7 @@ export async function removeAppFromUserRoles(ctx: Ctx, appId: string) {
   return checkResponse(response, "remove app role")
 }
 
-export async function allGlobalUsers(ctx: Ctx) {
+export async function allGlobalUsers(ctx: BBContext) {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
     // we don't want to use API key when getting self
@@ -124,7 +139,7 @@ export async function allGlobalUsers(ctx: Ctx) {
   return checkResponse(response, "get users", { ctx })
 }
 
-export async function saveGlobalUser(ctx: Ctx) {
+export async function saveGlobalUser(ctx: BBContext) {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
     // we don't want to use API key when getting self
@@ -133,7 +148,7 @@ export async function saveGlobalUser(ctx: Ctx) {
   return checkResponse(response, "save user", { ctx })
 }
 
-export async function deleteGlobalUser(ctx: Ctx) {
+export async function deleteGlobalUser(ctx: BBContext) {
   const response = await fetch(
     checkSlashesInUrl(
       env.WORKER_URL + `/api/global/users/${ctx.params.userId}`
@@ -144,7 +159,7 @@ export async function deleteGlobalUser(ctx: Ctx) {
   return checkResponse(response, "delete user", { ctx })
 }
 
-export async function readGlobalUser(ctx: Ctx): Promise<User> {
+export async function readGlobalUser(ctx: BBContext): Promise<User> {
   const response = await fetch(
     checkSlashesInUrl(
       env.WORKER_URL + `/api/global/users/${ctx.params.userId}`

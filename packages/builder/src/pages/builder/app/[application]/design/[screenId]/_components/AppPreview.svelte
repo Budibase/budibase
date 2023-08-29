@@ -1,7 +1,13 @@
 <script>
   import { get } from "svelte/store"
   import { onMount, onDestroy } from "svelte"
-  import { store, selectedScreen, currentAsset } from "builderStore"
+  import {
+    store,
+    selectedComponent,
+    selectedScreen,
+    selectedLayout,
+    currentAsset,
+  } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ProgressCircle,
@@ -14,10 +20,12 @@
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "builderStore/componentUtils"
   import { isActive, goto } from "@roxi/routify"
+  import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
 
   let iframe
   let layout
   let screen
+  let selectedComponentId
   let confirmDeleteDialog
   let idToDelete
   let loading = true
@@ -31,11 +39,36 @@
     BUDIBASE: "type",
   }
 
+  const placeholderScreen = new Screen()
+    .name("Screen Placeholder")
+    .route("/")
+    .component("@budibase/standard-components/screenslot")
+    .instanceName("Content Placeholder")
+    .normalStyle({ flex: "1 1 auto" })
+    .json()
+
   // Extract data to pass to the iframe
-  $: screen = $selectedScreen
+  $: {
+    // If viewing legacy layouts, always show the custom layout
+    if ($isActive("./layouts")) {
+      screen = placeholderScreen
+      layout = $selectedLayout
+    } else {
+      screen = $selectedScreen
+      layout = $store.layouts.find(layout => layout._id === screen?.layoutId)
+    }
+  }
 
   // Determine selected component ID
-  $: selectedComponentId = $store.selectedComponentId
+  $: {
+    if ($isActive("./components")) {
+      selectedComponentId = $store.selectedComponentId
+    } else if ($isActive("./navigation")) {
+      selectedComponentId = "navigation"
+    } else {
+      selectedComponentId = null
+    }
+  }
 
   $: previewData = {
     appId: $store.appId,
@@ -65,7 +98,9 @@
   $: refreshContent(json)
 
   // Determine if the add component menu is active
-  $: isAddingComponent = $isActive(`./${selectedComponentId}/new`)
+  $: isAddingComponent = $isActive(
+    `./components/${$selectedComponent?._id}/new`
+  )
 
   // Register handler to send custom to the preview
   $: sendPreviewEvent = (name, payload) => {
@@ -117,6 +152,9 @@
       error = event.error || "An unknown error occurred"
     } else if (type === "select-component" && data.id) {
       $store.selectedComponentId = data.id
+      if (!$isActive("./components")) {
+        $goto("./components")
+      }
     } else if (type === "update-prop") {
       await store.actions.components.updateSetting(data.prop, data.value)
     } else if (type === "update-styles") {
@@ -155,6 +193,10 @@
       if (source && destination) {
         store.actions.components.copy(source, true, false)
         await store.actions.components.paste(destination, data.mode)
+      }
+    } else if (type === "click-nav") {
+      if (!$isActive("./navigation")) {
+        $goto("./navigation")
       }
     } else if (type === "request-add-component") {
       toggleAddComponent()
@@ -205,10 +247,11 @@
   }
 
   const toggleAddComponent = () => {
-    if ($isActive(`./:componentId/new`)) {
-      $goto(`./:componentId`)
+    if (isAddingComponent) {
+      $goto(`../${$selectedScreen._id}/components/${$selectedComponent?._id}`)
     } else {
-      $goto(`./:componentId/new`)
+      const id = $selectedComponent?._id || $selectedScreen?.props?._id
+      $goto(`../${$selectedScreen._id}/components/${id}/new`)
     }
   }
 

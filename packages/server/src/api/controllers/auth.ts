@@ -2,9 +2,9 @@ import { outputProcessing } from "../../utilities/rowProcessor"
 import { InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
 import { roles, context } from "@budibase/backend-core"
-import { ContextUser, Row, UserCtx } from "@budibase/types"
+import { groups } from "@budibase/pro"
+import { ContextUser, User, Row, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
-import { processUser } from "../../utilities/global"
 
 const PUBLIC_ROLE = roles.BUILTIN_ROLE_IDS.PUBLIC
 
@@ -26,7 +26,7 @@ export async function fetchSelf(ctx: UserCtx) {
   }
 
   const appId = context.getAppId()
-  let user: ContextUser = await getFullUser(ctx, userId)
+  const user: ContextUser = await getFullUser(ctx, userId)
   // this shouldn't be returned by the app self
   delete user.roles
   // forward the csrf token from the session
@@ -36,7 +36,8 @@ export async function fetchSelf(ctx: UserCtx) {
     const db = context.getAppDB()
     // check for group permissions
     if (!user.roleId || user.roleId === PUBLIC_ROLE) {
-      user = await processUser(user, { appId })
+      const groupRoleId = await groups.getGroupRoleId(user as User, appId)
+      user.roleId = groupRoleId || user.roleId
     }
     // remove the full roles structure
     delete user.roles

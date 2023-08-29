@@ -20,7 +20,6 @@ import {
   AutomationMetadata,
   AutomationStatus,
   AutomationStep,
-  AutomationStepStatus,
 } from "@budibase/types"
 import {
   AutomationContext,
@@ -453,10 +452,7 @@ class Orchestrator {
         this.executionOutput.steps.splice(loopStepNumber + 1, 0, {
           id: step.id,
           stepId: step.stepId,
-          outputs: {
-            status: AutomationStepStatus.NO_ITERATIONS,
-            success: true,
-          },
+          outputs: { status: AutomationStatus.NO_ITERATIONS, success: true },
           inputs: {},
         })
 
