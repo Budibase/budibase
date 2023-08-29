@@ -44,8 +44,8 @@
   let email
   let error
   let form
-  let creationRoleType = "appUser"
-  let creationAccessType = "BASIC"
+  let creationRoleType = BudibaseRoles.AppUser
+  let creationAccessType = Constants.Roles.BASIC
 
   let appInvites = []
   let filteredInvites = []
@@ -770,7 +770,7 @@
                   )}
               label="Role"
             />
-            {#if creationRoleType !== "ADMIN"}
+            {#if creationRoleType !== Constants.Roles.ADMIN}
               <RoleSelect
                 placeholder={false}
                 bind:value={creationAccessType}
