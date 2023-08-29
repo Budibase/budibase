@@ -10,6 +10,8 @@ import {
   ViewV2,
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
+import { buildExternalTableId } from "../../../integrations/utils"
+import { generateDatasourceID } from "../../../db/utils"
 
 function priceTable(): Table {
   return {
@@ -32,27 +34,52 @@ function priceTable(): Table {
   }
 }
 
-describe("/v2/views", () => {
-  const config = setup.getConfig()
+const config = setup.getConfig()
 
-  afterAll(setup.afterAll)
+beforeAll(async () => {
+  await config.init()
+})
+
+describe.each([
+  // ["internal ds", () => config.createTable(priceTable())],
+  [
+    "external ds",
+    async () => {
+      const datasource = await config.createDatasource({
+        datasource: {
+          ...setup.structures.basicDatasource().datasource,
+          plus: true,
+          _id: generateDatasourceID({ plus: true }),
+        },
+      })
+
+      return config.createTable({
+        ...priceTable(),
+        sourceId: datasource._id,
+        type: "external",
+      })
+    },
+  ],
+])("/v2/views (%s)", (_, tableBuilder) => {
+  let table: Table
 
   beforeAll(async () => {
-    await config.init()
-    await config.createTable(priceTable())
+    table = await tableBuilder()
   })
+
+  afterAll(setup.afterAll)
 
   describe("create", () => {
     it("persist the view when the view is successfully created", async () => {
       const newView: CreateViewRequest = {
         name: generator.name(),
-        tableId: config.table!._id!,
+        tableId: table._id!,
       }
       const res = await config.api.viewV2.create(newView)
 
       expect(res).toEqual({
         ...newView,
-        id: expect.stringMatching(new RegExp(`${config.table?._id!}_`)),
+        id: expect.stringMatching(new RegExp(`${table._id!}_`)),
         version: 2,
       })
     })
@@ -60,7 +87,7 @@ describe("/v2/views", () => {
     it("can persist views with all fields", async () => {
       const newView: Required<CreateViewRequest> = {
         name: generator.name(),
-        tableId: config.table!._id!,
+        tableId: table._id!,
         primaryDisplay: generator.word(),
         query: [{ operator: "equal", field: "field", value: "value" }],
         sort: {
@@ -87,7 +114,7 @@ describe("/v2/views", () => {
     it("persist only UI schema overrides", async () => {
       const newView: CreateViewRequest = {
         name: generator.name(),
-        tableId: config.table!._id!,
+        tableId: table._id!,
         schema: {
           Price: {
             name: "Price",
@@ -124,7 +151,7 @@ describe("/v2/views", () => {
     it("will not throw an exception if the schema is 'deleting' non UI fields", async () => {
       const newView: CreateViewRequest = {
         name: generator.name(),
-        tableId: config.table!._id!,
+        tableId: table._id!,
         schema: {
           Price: {
             name: "Price",
@@ -153,7 +180,7 @@ describe("/v2/views", () => {
     })
 
     it("can update an existing view data", async () => {
-      const tableId = config.table!._id!
+      const tableId = table._id!
       await config.api.viewV2.update({
         ...view,
         query: [{ operator: "equal", field: "newField", value: "thatValue" }],
@@ -176,7 +203,7 @@ describe("/v2/views", () => {
     })
 
     it("can update all fields", async () => {
-      const tableId = config.table!._id!
+      const tableId = table._id!
 
       const updatedData: Required<UpdateViewRequest> = {
         version: view.version,
@@ -210,7 +237,7 @@ describe("/v2/views", () => {
           [view.name]: {
             ...updatedData,
             schema: {
-              ...config.table!.schema,
+              ...table.schema,
               Category: expect.objectContaining({
                 visible: false,
               }),
@@ -226,7 +253,7 @@ describe("/v2/views", () => {
     })
 
     it("can update an existing view name", async () => {
-      const tableId = config.table!._id!
+      const tableId = table._id!
       await config.api.viewV2.update({ ...view, name: "View B" })
 
       expect(await config.api.table.get(tableId)).toEqual(
@@ -239,7 +266,7 @@ describe("/v2/views", () => {
     })
 
     it("cannot update an unexisting views nor edit ids", async () => {
-      const tableId = config.table!._id!
+      const tableId = table._id!
       await config.api.viewV2.update(
         { ...view, id: generator.guid() },
         { expectStatus: 404 }
@@ -258,7 +285,7 @@ describe("/v2/views", () => {
     })
 
     it("cannot update views with the wrong tableId", async () => {
-      const tableId = config.table!._id!
+      const tableId = table._id!
       await config.api.viewV2.update(
         {
           ...view,
@@ -379,7 +406,7 @@ describe("/v2/views", () => {
     })
 
     it("can delete an existing view", async () => {
-      const tableId = config.table!._id!
+      const tableId = table._id!
       const getPersistedView = async () =>
         (await config.api.table.get(tableId)).views![view.name]
 
