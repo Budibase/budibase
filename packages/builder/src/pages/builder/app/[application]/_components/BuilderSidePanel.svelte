@@ -44,7 +44,7 @@
   let email
   let error
   let form
-  let creationRoleType = BudibaseRoles.AppUser
+  let creationRoleType = Constants.BudibaseRoles.AppUser
   let creationAccessType = Constants.Roles.BASIC
 
   let appInvites = []
@@ -744,7 +744,7 @@
     <Divider />
     <div class="body">
       <Layout gap="L" noPadding>
-        <div class="user-form">
+        <div class="user-invite-form">
           <FancyForm bind:this={form}>
             <FancyInput
               disabled={false}
@@ -969,11 +969,11 @@
   .header {
     display: flex;
     align-items: center;
-    gap: var(--spacing-lf);
+    gap: var(--spacing-l);
   }
 
-  .user-form {
-    padding: var(--spacing-xl);
+  .user-invite-form {
+    padding: 0 var(--spacing-xl) var(--spacing-xl) var(--spacing-xl);
   }
 
   .body {
