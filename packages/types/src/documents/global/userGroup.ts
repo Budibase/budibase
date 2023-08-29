@@ -7,6 +7,10 @@ export interface UserGroup extends Document {
   color: string
   users?: GroupUser[]
   roles?: UserGroupRoles
+  // same structure as users
+  builder?: {
+    apps: string[]
+  }
   createdAt?: number
   scimInfo?: {
     externalId: string

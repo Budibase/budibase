@@ -69,11 +69,7 @@ jobs:
       # Run build all the projects
       - name: Build
         run: |
-          if ${{ env.USE_NX_AFFECTED }}; then
-            yarn build --since=${{ env.NX_BASE_BRANCH }}
-          else
-            yarn build
-          fi
+          yarn build
       # Check the types of the projects built via esbuild
       - name: Check types
         run: |
@@ -198,7 +194,8 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - run: yarn build --scope @budibase/server --scope @budibase/worker --scope @budibase/client
+      - name: Build packages
+        run: yarn build --scope @budibase/server --scope @budibase/worker --scope @budibase/client --scope @budibase/backend-core
       - name: Run tests
         run: |
           cd qa-core

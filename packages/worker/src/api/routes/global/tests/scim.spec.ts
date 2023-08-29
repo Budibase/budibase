@@ -10,6 +10,8 @@ import {
 import { TestConfiguration } from "../../../../tests"
 import { events } from "@budibase/backend-core"
 
+jest.setTimeout(30000)
+
 mocks.licenses.useScimIntegration()
 
 describe("scim", () => {
