@@ -1,0 +1,19 @@
+name: deploy-featurebranch
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: passeidireto/trigger-external-workflow-action@main
+        env:
+            BRANCH: ${{ github.head_ref }}
+        with:
+          repository: budibase/budibase-deploys
+          event: featurebranch-qa-deploy
+          github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
