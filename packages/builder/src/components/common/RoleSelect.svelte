@@ -5,6 +5,7 @@
 
   import { Constants, RoleUtils } from "@budibase/frontend-core"
   import { createEventDispatcher } from "svelte"
+  import { capitalise } from "helpers"
 
   export let value
   export let error
@@ -48,7 +49,9 @@
         {
           _id: CreatorID,
           name: "Creator",
-          tag: !$licensing.perAppBuildersEnabled && Constants.PlanType.BUSINESS,
+          tag:
+            !$licensing.perAppBuildersEnabled &&
+            capitalise(Constants.PlanType.BUSINESS),
         },
         ...newRoles,
       ]
