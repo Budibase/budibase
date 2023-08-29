@@ -1,64 +1,38 @@
 import { RenameColumn, TableSchema, View, ViewV2 } from "@budibase/types"
-import { context, db as dbCore, HTTPError } from "@budibase/backend-core"
+import { db as dbCore } from "@budibase/backend-core"
 import { cloneDeep } from "lodash"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
+import { isExternalTable } from "../../../integrations/utils"
+
+import * as internal from "./internal"
+import * as external from "./external"
+
+function pickApi(tableId: any) {
+  if (isExternalTable(tableId)) {
+    return external
+  }
+  return internal
+}
 
 export async function get(
   viewId: string,
   opts?: { enriched: boolean }
 ): Promise<ViewV2> {
   const { tableId } = utils.extractViewInfoFromID(viewId)
-  const table = await sdk.tables.getTable(tableId)
-  const views = Object.values(table.views!)
-  const found = views.find(v => isV2(v) && v.id === viewId)
-  if (!found) {
-    throw new Error("No view found")
-  }
-  if (opts?.enriched) {
-    return enrichSchema(found, table.schema) as ViewV2
-  } else {
-    return found as ViewV2
-  }
+  return pickApi(tableId).get(viewId, opts)
 }
 
 export async function create(
   tableId: string,
   viewRequest: Omit<ViewV2, "id" | "version">
 ): Promise<ViewV2> {
-  const view: ViewV2 = {
-    ...viewRequest,
-    id: utils.generateViewID(tableId),
-    version: 2,
-  }
-
-  const db = context.getAppDB()
-  const table = await sdk.tables.getTable(tableId)
-  table.views ??= {}
-
-  table.views[view.name] = view
-  await db.put(table)
-  return view
+  return pickApi(tableId).create(tableId, viewRequest)
 }
 
 export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
-  const db = context.getAppDB()
-  const table = await sdk.tables.getTable(tableId)
-  table.views ??= {}
-
-  const existingView = Object.values(table.views).find(
-    v => isV2(v) && v.id === view.id
-  )
-  if (!existingView) {
-    throw new HTTPError(`View ${view.id} not found in table ${tableId}`, 404)
-  }
-
-  console.log("set to", view)
-  delete table.views[existingView.name]
-  table.views[view.name] = view
-  await db.put(table)
-  return view
+  return pickApi(tableId).update(tableId, view)
 }
 
 export function isV2(view: View | ViewV2): view is ViewV2 {
@@ -66,17 +40,8 @@ export function isV2(view: View | ViewV2): view is ViewV2 {
 }
 
 export async function remove(viewId: string): Promise<ViewV2> {
-  const db = context.getAppDB()
-
-  const view = await get(viewId)
-  const table = await sdk.tables.getTable(view?.tableId)
-  if (!view) {
-    throw new HTTPError(`View ${viewId} not found`, 404)
-  }
-
-  delete table.views![view?.name]
-  await db.put(table)
-  return view
+  const { tableId } = utils.extractViewInfoFromID(viewId)
+  return pickApi(tableId).remove(viewId)
 }
 
 export function allowedFields(view: View | ViewV2) {
