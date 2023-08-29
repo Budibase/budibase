@@ -60,4 +60,7 @@
   .info :global(a:hover) {
     color: var(--spectrum-global-color-gray-900);
   }
+  .info :global(a) {
+    text-decoration: underline;
+  }
 </style>

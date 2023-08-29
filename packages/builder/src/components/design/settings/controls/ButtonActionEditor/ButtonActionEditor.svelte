@@ -13,6 +13,7 @@
   export let name
   export let bindings
   export let nested
+  export let componentInstance
 
   let drawer
   let tmpValue
@@ -86,6 +87,7 @@
     {bindings}
     {key}
     {nested}
+    {componentInstance}
   />
 </Drawer>
 
