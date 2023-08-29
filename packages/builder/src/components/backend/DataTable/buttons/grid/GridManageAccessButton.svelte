@@ -20,7 +20,7 @@
       const requiredLicense = $admin?.cloud ? "Premium" : "Business"
       requiresLicence = {
         tier: requiredLicense,
-        message: `A ${requiredLicense} subscription is required to specify access level role for this view.`,
+        message: `A ${requiredLicense} subscription is required to specify access level roles for this view.`,
       }
     }
   }
