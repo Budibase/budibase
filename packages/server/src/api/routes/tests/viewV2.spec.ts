@@ -10,7 +10,6 @@ import {
   ViewV2,
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
-import { buildExternalTableId } from "../../../integrations/utils"
 import { generateDatasourceID } from "../../../db/utils"
 
 function priceTable(): Table {
@@ -41,7 +40,7 @@ beforeAll(async () => {
 })
 
 describe.each([
-  // ["internal ds", () => config.createTable(priceTable())],
+  ["internal ds", () => config.createTable(priceTable())],
   [
     "external ds",
     async () => {
@@ -175,7 +174,8 @@ describe.each([
     let view: ViewV2
 
     beforeEach(async () => {
-      await config.createTable(priceTable())
+      table = await tableBuilder()
+
       view = await config.api.viewV2.create({ name: "View A" })
     })
 
@@ -186,19 +186,12 @@ describe.each([
         query: [{ operator: "equal", field: "newField", value: "thatValue" }],
       })
 
-      expect(await config.api.table.get(tableId)).toEqual({
-        ...config.table,
-        views: {
-          [view.name]: {
-            ...view,
-            query: [
-              { operator: "equal", field: "newField", value: "thatValue" },
-            ],
-            schema: expect.anything(),
-          },
+      expect((await config.api.table.get(tableId)).views).toEqual({
+        [view.name]: {
+          ...view,
+          query: [{ operator: "equal", field: "newField", value: "thatValue" }],
+          schema: expect.anything(),
         },
-        _rev: expect.any(String),
-        updatedAt: expect.any(String),
       })
     })
 
@@ -231,24 +224,19 @@ describe.each([
       }
       await config.api.viewV2.update(updatedData)
 
-      expect(await config.api.table.get(tableId)).toEqual({
-        ...config.table,
-        views: {
-          [view.name]: {
-            ...updatedData,
-            schema: {
-              ...table.schema,
-              Category: expect.objectContaining({
-                visible: false,
-              }),
-              Price: expect.objectContaining({
-                visible: false,
-              }),
-            },
+      expect((await config.api.table.get(tableId)).views).toEqual({
+        [view.name]: {
+          ...updatedData,
+          schema: {
+            ...table.schema,
+            Category: expect.objectContaining({
+              visible: false,
+            }),
+            Price: expect.objectContaining({
+              visible: false,
+            }),
           },
         },
-        _rev: expect.any(String),
-        updatedAt: expect.any(String),
       })
     })
 
@@ -401,7 +389,6 @@ describe.each([
     let view: ViewV2
 
     beforeAll(async () => {
-      await config.createTable(priceTable())
       view = await config.api.viewV2.create()
     })
 
@@ -420,8 +407,6 @@ describe.each([
 
   describe("fetch view (through table)", () => {
     it("should be able to fetch a view V2", async () => {
-      const table = await config.createTable(priceTable())
-
       const newView: CreateViewRequest = {
         name: generator.name(),
         tableId: table._id!,
