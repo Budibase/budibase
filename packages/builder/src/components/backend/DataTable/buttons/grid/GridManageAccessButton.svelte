@@ -1,5 +1,5 @@
 <script>
-  import { licensing } from "stores/portal"
+  import { licensing, admin } from "stores/portal"
   import ManageAccessButton from "../ManageAccessButton.svelte"
   import { getContext } from "svelte"
 
@@ -14,8 +14,16 @@
     return datasource.type === "table" ? datasource.tableId : datasource.id
   }
 
-  $: disabled =
-    $datasource.type === "viewV2" && !$licensing.isViewPermissionsEnabled
+  var requiresLicence
+  $: {
+    if ($datasource.type === "viewV2" && !$licensing.isViewPermissionsEnabled) {
+      const requiredLicense = $admin?.cloud ? "Premium" : "Business"
+      requiresLicence = {
+        tier: requiredLicense,
+        message: `A ${requiredLicense} subscription is required to specify access level role for this view.`,
+      }
+    }
+  }
 </script>
 
-<ManageAccessButton {resourceId} {disabled} />
+<ManageAccessButton {resourceId} {requiresLicence} />
