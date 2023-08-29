@@ -3,8 +3,6 @@ import { search as stringSearch, addRev } from "./utils"
 import * as controller from "../application"
 import * as deployController from "../deploy"
 import { Application } from "../../../definitions/common"
-import { UserCtx } from "@budibase/types"
-import { Next } from "koa"
 
 function fixAppID(app: Application, params: any) {
   if (!params) {
@@ -16,7 +14,7 @@ function fixAppID(app: Application, params: any) {
   return app
 }
 
-async function setResponseApp(ctx: UserCtx) {
+async function setResponseApp(ctx: any) {
   const appId = ctx.body?.appId
   if (appId && (!ctx.params || !ctx.params.appId)) {
     ctx.params = { appId }
@@ -30,14 +28,14 @@ async function setResponseApp(ctx: UserCtx) {
   }
 }
 
-export async function search(ctx: UserCtx, next: Next) {
+export async function search(ctx: any, next: any) {
   const { name } = ctx.request.body
   const apps = await dbCore.getAllApps({ all: true })
   ctx.body = stringSearch(apps, name)
   await next()
 }
 
-export async function create(ctx: UserCtx, next: Next) {
+export async function create(ctx: any, next: any) {
   if (!ctx.request.body || !ctx.request.body.useTemplate) {
     ctx.request.body = {
       useTemplate: false,
@@ -49,14 +47,14 @@ export async function create(ctx: UserCtx, next: Next) {
   await next()
 }
 
-export async function read(ctx: UserCtx, next: Next) {
+export async function read(ctx: any, next: any) {
   await context.doInAppContext(ctx.params.appId, async () => {
     await setResponseApp(ctx)
     await next()
   })
 }
 
-export async function update(ctx: UserCtx, next: Next) {
+export async function update(ctx: any, next: any) {
   ctx.request.body = await addRev(fixAppID(ctx.request.body, ctx.params))
   await context.doInAppContext(ctx.params.appId, async () => {
     await controller.update(ctx)
@@ -65,7 +63,7 @@ export async function update(ctx: UserCtx, next: Next) {
   })
 }
 
-export async function destroy(ctx: UserCtx, next: Next) {
+export async function destroy(ctx: any, next: any) {
   await context.doInAppContext(ctx.params.appId, async () => {
     // get the app before deleting it
     await setResponseApp(ctx)
@@ -77,14 +75,14 @@ export async function destroy(ctx: UserCtx, next: Next) {
   })
 }
 
-export async function unpublish(ctx: UserCtx, next: Next) {
+export async function unpublish(ctx: any, next: any) {
   await context.doInAppContext(ctx.params.appId, async () => {
     await controller.unpublish(ctx)
     await next()
   })
 }
 
-export async function publish(ctx: UserCtx, next: Next) {
+export async function publish(ctx: any, next: any) {
   await context.doInAppContext(ctx.params.appId, async () => {
     await deployController.publishApp(ctx)
     await next()

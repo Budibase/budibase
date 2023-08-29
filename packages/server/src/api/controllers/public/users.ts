@@ -7,18 +7,16 @@ import {
 import { publicApiUserFix } from "../../../utilities/users"
 import { db as dbCore } from "@budibase/backend-core"
 import { search as stringSearch } from "./utils"
-import { UserCtx, User } from "@budibase/types"
-import { Next } from "koa"
-import { sdk } from "@budibase/pro"
+import { BBContext, User } from "@budibase/types"
 
-function isLoggedInUser(ctx: UserCtx, user: User) {
+function isLoggedInUser(ctx: BBContext, user: User) {
   const loggedInId = ctx.user?._id
   const globalUserId = dbCore.getGlobalIDFromUserMetadataID(loggedInId!)
   // check both just incase
   return globalUserId === user._id || loggedInId === user._id
 }
 
-function getUser(ctx: UserCtx, userId?: string) {
+function getUser(ctx: BBContext, userId?: string) {
   if (userId) {
     ctx.params = { userId }
   } else if (!ctx.params?.userId) {
@@ -27,38 +25,42 @@ function getUser(ctx: UserCtx, userId?: string) {
   return readGlobalUser(ctx)
 }
 
-export async function search(ctx: UserCtx, next: Next) {
+export async function search(ctx: BBContext, next: any) {
   const { name } = ctx.request.body
   const users = await allGlobalUsers(ctx)
   ctx.body = stringSearch(users, name, "email")
   await next()
 }
 
-export async function create(ctx: UserCtx, next: Next) {
-  ctx = publicApiUserFix(await sdk.publicApi.users.roleCheck(ctx))
-  const response = await saveGlobalUser(ctx)
+export async function create(ctx: BBContext, next: any) {
+  const response = await saveGlobalUser(publicApiUserFix(ctx))
   ctx.body = await getUser(ctx, response._id)
   await next()
 }
 
-export async function read(ctx: UserCtx, next: Next) {
+export async function read(ctx: BBContext, next: any) {
   ctx.body = await readGlobalUser(ctx)
   await next()
 }
 
-export async function update(ctx: UserCtx, next: Next) {
+export async function update(ctx: BBContext, next: any) {
   const user = await readGlobalUser(ctx)
   ctx.request.body = {
     ...ctx.request.body,
     _rev: user._rev,
   }
-  ctx = publicApiUserFix(await sdk.publicApi.users.roleCheck(ctx, user))
-  const response = await saveGlobalUser(ctx)
+  // disallow updating your own role - always overwrite with DB roles
+  if (isLoggedInUser(ctx, user)) {
+    ctx.request.body.builder = user.builder
+    ctx.request.body.admin = user.admin
+    ctx.request.body.roles = user.roles
+  }
+  const response = await saveGlobalUser(publicApiUserFix(ctx))
   ctx.body = await getUser(ctx, response._id)
   await next()
 }
 
-export async function destroy(ctx: UserCtx, next: Next) {
+export async function destroy(ctx: BBContext, next: any) {
   const user = await getUser(ctx)
   // disallow deleting yourself
   if (isLoggedInUser(ctx, user)) {

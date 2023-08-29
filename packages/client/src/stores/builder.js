@@ -80,6 +80,9 @@ const createBuilderStore = () => {
       }
       store.update(state => ({ ...state, editMode: enabled }))
     },
+    clickNav: () => {
+      eventStore.actions.dispatchEvent("click-nav")
+    },
     requestAddComponent: () => {
       eventStore.actions.dispatchEvent("request-add-component")
     },

@@ -32,7 +32,7 @@
 <Popover
   bind:open
   {anchor}
-  align={$renderedColumns.length ? "right" : "left"}
+  align="right"
   offset={0}
   popoverTarget={document.getElementById(`add-column-button`)}
   animate={false}

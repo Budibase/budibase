@@ -38,8 +38,6 @@ function parseIntSafe(number?: string) {
 }
 
 const environment = {
-  // features
-  APP_FEATURES: process.env.APP_FEATURES,
   // important - prefer app port to generic port
   PORT: process.env.APP_PORT || process.env.PORT,
   COUCH_DB_URL: process.env.COUCH_DB_URL,

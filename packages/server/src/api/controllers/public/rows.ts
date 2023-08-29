@@ -1,8 +1,7 @@
 import * as rowController from "../row"
 import { addRev } from "./utils"
-import { Row, UserCtx } from "@budibase/types"
+import { Row } from "@budibase/types"
 import { convertBookmark } from "../../../utilities"
-import { Next } from "koa"
 
 // makes sure that the user doesn't need to pass in the type, tableId or _id params for
 // the call to be correct
@@ -22,7 +21,7 @@ export function fixRow(row: Row, params: any) {
   return row
 }
 
-export async function search(ctx: UserCtx, next: Next) {
+export async function search(ctx: any, next: any) {
   let { sort, paginate, bookmark, limit, query } = ctx.request.body
   // update the body to the correct format of the internal search
   if (!sort) {
@@ -41,25 +40,25 @@ export async function search(ctx: UserCtx, next: Next) {
   await next()
 }
 
-export async function create(ctx: UserCtx, next: Next) {
+export async function create(ctx: any, next: any) {
   ctx.request.body = fixRow(ctx.request.body, ctx.params)
   await rowController.save(ctx)
   await next()
 }
 
-export async function read(ctx: UserCtx, next: Next) {
+export async function read(ctx: any, next: any) {
   await rowController.fetchEnrichedRow(ctx)
   await next()
 }
 
-export async function update(ctx: UserCtx, next: Next) {
+export async function update(ctx: any, next: any) {
   const { tableId } = ctx.params
   ctx.request.body = await addRev(fixRow(ctx.request.body, ctx.params), tableId)
   await rowController.save(ctx)
   await next()
 }
 
-export async function destroy(ctx: UserCtx, next: Next) {
+export async function destroy(ctx: any, next: any) {
   const { tableId } = ctx.params
   // set the body as expected, with the _id and _rev fields
   ctx.request.body = await addRev(

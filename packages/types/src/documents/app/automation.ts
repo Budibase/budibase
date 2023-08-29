@@ -179,15 +179,12 @@ export interface AutomationTrigger extends AutomationTriggerSchema {
   id: string
 }
 
-export enum AutomationStepStatus {
-  NO_ITERATIONS = "no_iterations",
-}
-
 export enum AutomationStatus {
   SUCCESS = "success",
   ERROR = "error",
   STOPPED = "stopped",
   STOPPED_ERROR = "stopped_error",
+  NO_ITERATIONS = "no_iterations",
 }
 
 export interface AutomationResults {

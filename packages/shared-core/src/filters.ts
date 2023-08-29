@@ -1,12 +1,4 @@
-import {
-  Datasource,
-  FieldType,
-  SortDirection,
-  SortType,
-  SearchFilter,
-  SearchQuery,
-  SearchQueryFields,
-} from "@budibase/types"
+import { Datasource, FieldType, SortDirection, SortType } from "@budibase/types"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
 
@@ -81,13 +73,13 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotEquals.value,
   OperatorOptions.Contains.value,
   OperatorOptions.NotContains.value,
-] as (keyof SearchQueryFields)[]
+] as (keyof QueryFields)[]
 
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
  */
-const cleanupQuery = (query: SearchQuery) => {
+const cleanupQuery = (query: Query) => {
   if (!query) {
     return query
   }
@@ -118,12 +110,66 @@ const removeKeyNumbering = (key: string) => {
   }
 }
 
+type Filter = {
+  operator: keyof Query
+  field: string
+  type: any
+  value: any
+  externalType: keyof typeof SqlNumberTypeRangeMap
+}
+
+type Query = QueryFields & QueryConfig
+type QueryFields = {
+  string?: {
+    [key: string]: string
+  }
+  fuzzy?: {
+    [key: string]: string
+  }
+  range?: {
+    [key: string]: {
+      high: number | string
+      low: number | string
+    }
+  }
+  equal?: {
+    [key: string]: any
+  }
+  notEqual?: {
+    [key: string]: any
+  }
+  empty?: {
+    [key: string]: any
+  }
+  notEmpty?: {
+    [key: string]: any
+  }
+  oneOf?: {
+    [key: string]: any[]
+  }
+  contains?: {
+    [key: string]: any[]
+  }
+  notContains?: {
+    [key: string]: any[]
+  }
+  containsAny?: {
+    [key: string]: any[]
+  }
+}
+
+type QueryConfig = {
+  allOr?: boolean
+}
+
+type QueryFieldsType = keyof QueryFields
+
 /**
  * Builds a lucene JSON query from the filter structure generated in the builder
  * @param filter the builder filter structure
  */
-export const buildLuceneQuery = (filter: SearchFilter[]) => {
-  let query: SearchQuery = {
+export const buildLuceneQuery = (filter: Filter[]) => {
+  let query: Query = {
     string: {},
     fuzzy: {},
     range: {},
@@ -138,17 +184,12 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
-      let { operator, field, type, value, externalType, onEmptyFilter } =
-        expression
+      let { operator, field, type, value, externalType } = expression
       const isHbs =
         typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
       // Parse all values into correct types
       if (operator === "allOr") {
         query.allOr = true
-        return
-      }
-      if (onEmptyFilter) {
-        query.onEmptyFilter = onEmptyFilter
         return
       }
       if (
@@ -186,13 +227,9 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
       }
       if (operator.startsWith("range") && query.range) {
         const minint =
-          SqlNumberTypeRangeMap[
-            externalType as keyof typeof SqlNumberTypeRangeMap
-          ]?.min || Number.MIN_SAFE_INTEGER
+          SqlNumberTypeRangeMap[externalType]?.min || Number.MIN_SAFE_INTEGER
         const maxint =
-          SqlNumberTypeRangeMap[
-            externalType as keyof typeof SqlNumberTypeRangeMap
-          ]?.max || Number.MAX_SAFE_INTEGER
+          SqlNumberTypeRangeMap[externalType]?.max || Number.MAX_SAFE_INTEGER
         if (!query.range[field]) {
           query.range[field] = {
             low: type === "number" ? minint : "0000-00-00T00:00:00.000Z",
@@ -208,7 +245,7 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
         ) {
           query.range[field].high = value
         }
-      } else if (query[operator] && operator !== "onEmptyFilter") {
+      } else if (query[operator]) {
         if (type === "boolean") {
           // Transform boolean filters to cope with null.
           // "equals false" needs to be "not equals true"
@@ -238,7 +275,7 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
  * @param docs the data
  * @param query the JSON lucene query
  */
-export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
+export const runLuceneQuery = (docs: any[], query?: Query) => {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -252,7 +289,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
   // Iterates over a set of filters and evaluates a fail function against a doc
   const match =
     (
-      type: keyof SearchQueryFields,
+      type: QueryFieldsType,
       failFn: (docValue: any, testValue: any) => boolean
     ) =>
     (doc: any) => {
@@ -419,11 +456,11 @@ export const luceneLimit = (docs: any[], limit: string) => {
   return docs.slice(0, numLimit)
 }
 
-export const hasFilters = (query?: SearchQuery) => {
+export const hasFilters = (query?: Query) => {
   if (!query) {
     return false
   }
-  const skipped = ["allOr", "onEmptyFilter"]
+  const skipped = ["allOr"]
   for (let [key, value] of Object.entries(query)) {
     if (skipped.includes(key) || typeof value !== "object") {
       continue

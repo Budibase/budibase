@@ -6,15 +6,13 @@
     Select,
     Toggle,
     RadioGroup,
-    Icon,
     DatePicker,
     Modal,
     notifications,
     OptionSelectDnD,
     Layout,
-    AbsTooltip,
   } from "@budibase/bbui"
-  import { createEventDispatcher, getContext, onMount } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/backend"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
@@ -49,7 +47,6 @@
 
   export let field
 
-  let mounted = false
   let fieldDefinitions = cloneDeep(FIELDS)
   let originalName
   let linkEditDisabled
@@ -416,22 +413,16 @@
     }
     return newError
   }
-
-  onMount(() => {
-    mounted = true
-  })
 </script>
 
 <Layout noPadding gap="S">
-  {#if mounted}
-    <Input
-      autofocus
-      bind:value={editableColumn.name}
-      disabled={uneditable ||
-        (linkEditDisabled && editableColumn.type === LINK_TYPE)}
-      error={errors?.name}
-    />
-  {/if}
+  <Input
+    bind:value={editableColumn.name}
+    disabled={uneditable ||
+      (linkEditDisabled && editableColumn.type === LINK_TYPE)}
+    error={errors?.name}
+  />
+
   <Select
     disabled={!typeEnabled}
     bind:value={editableColumn.type}
@@ -461,17 +452,12 @@
     />
   {:else if editableColumn.type === "longform"}
     <div>
-      <div class="tooltip-alignment">
-        <Label size="M">Formatting</Label>
-        <AbsTooltip
-          position="top"
-          type="info"
-          text={"Rich text includes support for images, link"}
-        >
-          <Icon size="XS" name="InfoOutline" />
-        </AbsTooltip>
-      </div>
-
+      <Label
+        size="M"
+        tooltip="Rich text includes support for images, links, tables, lists and more"
+      >
+        Formatting
+      </Label>
       <Toggle
         bind:value={editableColumn.useRichText}
         text="Enable rich text support (markdown)"
@@ -502,18 +488,13 @@
     </div>
     {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
       <div>
-        <div>
-          <Label>Time zones</Label>
-          <AbsTooltip
-            position="top"
-            type="info"
-            text={isCreating
-              ? null
-              : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
-          >
-            <Icon size="XS" name="InfoOutline" />
-          </AbsTooltip>
-        </div>
+        <Label
+          tooltip={isCreating
+            ? null
+            : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
+        >
+          Time zones
+        </Label>
         <Toggle
           bind:value={editableColumn.ignoreTimezones}
           text="Ignore time zones"
@@ -688,12 +669,6 @@
   .split-label {
     display: flex;
     align-items: center;
-  }
-
-  .tooltip-alignment {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
   }
 
   .label-length {
