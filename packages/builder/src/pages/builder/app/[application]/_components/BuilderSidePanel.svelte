@@ -7,7 +7,6 @@
     Input,
     clickOutside,
     notifications,
-    ActionButton,
     CopyInput,
     Modal,
     FancyForm,
@@ -930,12 +929,6 @@
 
   #builder-side-panel-container .auth-entity .details {
     box-sizing: border-box;
-  }
-
-  .invite-form {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
   }
 
   #builder-side-panel-container .search {

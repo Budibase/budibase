@@ -23,7 +23,7 @@ export const BudibaseRoles = {
 }
 
 export const BudibaseRoleOptions = [
-  { label: "App User", value: BudibaseRoles.AppUser },
+  { label: "Member", value: BudibaseRoles.AppUser },
   { label: "Developer", value: BudibaseRoles.Developer },
   { label: "Admin", value: BudibaseRoles.Admin },
 ]
