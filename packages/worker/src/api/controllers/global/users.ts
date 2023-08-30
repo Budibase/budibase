@@ -267,8 +267,8 @@ export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
       // Temp password to be passed to the user.
       createdPasswords[invite.email] = password
       let builder: { global: boolean; apps?: string[] } = { global: false }
-      if (invite.userInfo.appBuilder) {
-        builder.apps = [invite.userInfo.appBuilder]
+      if (invite.userInfo.appBuilders) {
+        builder.apps = invite.userInfo.appBuilders
       }
       return {
         email: invite.email,
@@ -371,6 +371,15 @@ export const updateInvite = async (ctx: any) => {
     ...invite,
   }
 
+  if (!updateBody?.appBuilders || !updateBody.appBuilders?.length) {
+    updated.info.appBuilders = []
+  } else {
+    updated.info.appBuilders = [
+      ...(invite.info.appBuilders ?? []),
+      ...updateBody.appBuilders,
+    ]
+  }
+
   if (!updateBody?.apps || !Object.keys(updateBody?.apps).length) {
     updated.info.apps = []
   } else {
@@ -405,8 +414,8 @@ export const inviteAccept = async (
       }
       let builder: { global: boolean; apps?: string[] } = { global: false }
 
-      if (info.appBuilder) {
-        builder.apps = [info.appBuilder]
+      if (info.appBuilders) {
+        builder.apps = info.appBuilders
         request.builder = builder
       }
       delete info.apps
