@@ -19,7 +19,7 @@
 <style>
   .data-source-entry {
     cursor: pointer;
-    grid-gap: 12px;
+    grid-gap: var(--spacing-m);
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
