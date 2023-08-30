@@ -10,7 +10,7 @@
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
-  import ComponentInfoSection from "./ComponentInfoSection.svelte"
+
   import {
     getBindableProperties,
     getComponentBindableProperties,
@@ -75,9 +75,6 @@
         </div>
       </span>
       {#if section == "settings"}
-        {#if componentDefinition?.info}
-          <ComponentInfoSection {componentDefinition} />
-        {/if}
         <ComponentSettingsSection
           {componentInstance}
           {componentDefinition}
