@@ -41,7 +41,7 @@ describe("license management", () => {
         const checkoutSessionUrl = checkoutSessionRes[1].url
         expect(checkoutSessionUrl).toContain("checkout.stripe.com")
 
-        // Create stripe customer
+        // TODO: Mimic checkout success & Create stripe customer - Following steps also needed
         // Create subscription for premium plan
 
         // Create portal session

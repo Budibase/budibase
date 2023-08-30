@@ -41,10 +41,10 @@ describe("license activation", () => {
             await config.accountsApi.licenses.getLicenseKey()
 
 
-        // Activate license key
+        // TODO: Activate license key
         //await config.internalApi.license.activateLicenseKey()
 
-        // Verify license updated with new feature
+        // TODO: Verify license updated with new feature
 
         // Remove license key
         await config.internalApi.license.deleteLicenseKey()
@@ -52,6 +52,6 @@ describe("license activation", () => {
         // Verify license key not found
         await config.internalApi.license.getLicenseKey({ status: 404 })
 
-        // Verify user downgraded to free license
+        // TODO: Verify user downgraded to free license
     })
 })
