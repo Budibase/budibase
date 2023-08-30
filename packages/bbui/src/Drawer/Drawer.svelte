@@ -4,6 +4,8 @@
   import Body from "../Typography/Body.svelte"
   import Heading from "../Typography/Heading.svelte"
   import { setContext } from "svelte"
+  import { createEventDispatcher } from "svelte"
+  import { generate } from "shortid"
 
   export let title
   export let fillWidth
@@ -11,13 +13,17 @@
   export let width = "calc(100% - 626px)"
   export let headless = false
 
+  const dispatch = createEventDispatcher()
+
   let visible = false
+  let drawerId = generate()
 
   export function show() {
     if (visible) {
       return
     }
     visible = true
+    dispatch("drawerShow", drawerId)
   }
 
   export function hide() {
@@ -25,6 +31,7 @@
       return
     }
     visible = false
+    dispatch("drawerHide", drawerId)
   }
 
   setContext("drawer-actions", {

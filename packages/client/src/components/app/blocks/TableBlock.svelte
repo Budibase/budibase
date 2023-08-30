@@ -45,6 +45,9 @@
   let enrichedSearchColumns
   let schemaLoaded = false
 
+  // Accommodate old config to ensure delete button does not reappear
+  $: deleteLabel = sidePanelShowDelete === false ? "" : sidePanelDeleteLabel
+
   $: fetchSchema(dataSource)
   $: enrichSearchColumns(searchColumns, schema).then(
     val => (enrichedSearchColumns = val)
@@ -245,10 +248,8 @@
             bind:id={detailsFormBlockId}
             props={{
               dataSource,
-              showSaveButton: true,
-              showDeleteButton: sidePanelShowDelete,
-              saveButtonLabel: sidePanelSaveLabel,
-              deleteButtonLabel: sidePanelDeleteLabel,
+              saveButtonLabel: sidePanelSaveLabel || "Save", //always show
+              deleteButtonLabel: deleteLabel, //respect config
               actionType: "Update",
               rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
               fields: sidePanelFields || normalFields,
