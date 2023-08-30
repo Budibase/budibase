@@ -13,6 +13,7 @@
   export let name
   export let bindings
   export let nested
+  export let componentInstance
 
   let drawer
   let tmpValue
@@ -74,7 +75,7 @@
   <ActionButton on:click={openDrawer}>{actionText}</ActionButton>
 </div>
 
-<Drawer bind:this={drawer} title={"Actions"}>
+<Drawer bind:this={drawer} title={"Actions"} on:drawerHide on:drawerShow>
   <svelte:fragment slot="description">
     Define what actions to run.
   </svelte:fragment>
@@ -86,6 +87,7 @@
     {bindings}
     {key}
     {nested}
+    {componentInstance}
   />
 </Drawer>
 
