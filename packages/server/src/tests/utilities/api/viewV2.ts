@@ -78,12 +78,16 @@ export class ViewV2API extends TestAPI {
   search = async (
     viewId: string,
     params?: SearchViewRowRequest,
-    { expectStatus } = { expectStatus: 200 }
+    { expectStatus = 200, usePublicUser = false } = {}
   ) => {
     return this.request
       .post(`/api/v2/views/${viewId}/search`)
       .send(params)
-      .set(this.config.defaultHeaders())
+      .set(
+        usePublicUser
+          ? this.config.publicHeaders()
+          : this.config.defaultHeaders()
+      )
       .expect("Content-Type", /json/)
       .expect(expectStatus)
   }

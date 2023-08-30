@@ -1,10 +1,11 @@
 import Router from "@koa/router"
 import * as rowController from "../controllers/row"
-import authorized from "../../middleware/authorized"
+import authorized, { authorizedResource } from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { internalSearchValidator } from "./utils/validators"
 import trimViewRowInfo from "../../middleware/trimViewRowInfo"
+
 const { PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
@@ -269,8 +270,7 @@ router
 
 router.post(
   "/api/v2/views/:viewId/search",
-  paramResource("viewId"),
-  authorized(PermissionType.TABLE, PermissionLevel.READ),
+  authorizedResource(PermissionType.VIEW, PermissionLevel.READ, "viewId"),
   rowController.views.searchView
 )
 
