@@ -87,7 +87,7 @@
     {selectedLabel || ""}
   </div>
 
-  <div class="align">
+  <div class="align arrow-alignment">
     <Icon name="ChevronDown" />
   </div>
 </FancyField>
@@ -138,6 +138,10 @@
     color: var(--spectrum-global-color-gray-900);
     transition: transform 130ms ease-out, opacity 130ms ease-out;
     transform: translateY(9px);
+  }
+
+  .arrow-alignment {
+    transform: translateY(-2px);
   }
   .value.placeholder {
     transform: translateY(0);
