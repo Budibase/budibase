@@ -11,6 +11,18 @@
   $: views = Object.keys($definition?.views || {})
   $: nameExists = views.includes(name?.trim())
 
+  const enrichSchema = schema => {
+    // We need to sure that "visible" is set to true for any fields which have
+    // not yet been saved with grid metadata attached
+    const cloned = { ...schema }
+    Object.entries(cloned).forEach(([field, fieldSchema]) => {
+      if (fieldSchema.visible == null) {
+        cloned[field] = { ...cloned[field], visible: true }
+      }
+    })
+    return cloned
+  }
+
   const saveView = async () => {
     name = name?.trim()
     try {
@@ -22,13 +34,12 @@
           field: $sort.column,
           order: $sort.order,
         },
-        schema: $definition.schema,
+        schema: enrichSchema($definition.schema),
         primaryDisplay: $definition.primaryDisplay,
       })
       notifications.success(`View ${name} created`)
       $goto(`../../view/v2/${newView.id}`)
     } catch (error) {
-      console.log(error)
       notifications.error("Error creating view")
     }
   }
