@@ -523,17 +523,22 @@
       {/if}
       <Heading size="S">{invitingFlow ? "Invite new user" : "Users"}</Heading>
     </div>
-    <Icon
-      color="var(--spectrum-global-color-gray-600)"
-      name="RailRightClose"
-      hoverable
-      on:click={() => {
-        store.update(state => {
-          state.builderSidePanel = false
-          return state
-        })
-      }}
-    />
+    <div class="header">
+      <Button on:click={() => (invitingFlow = true)} size="S" cta
+        >Invite user</Button
+      >
+      <Icon
+        color="var(--spectrum-global-color-gray-600)"
+        name="RailRightClose"
+        hoverable
+        on:click={() => {
+          store.update(state => {
+            state.builderSidePanel = false
+            return state
+          })
+        }}
+      />
+    </div>
   </div>
   {#if !invitingFlow}
     <div class="search" class:focused={searchFocus}>
@@ -555,15 +560,11 @@
         class="search-input-icon"
         class:searching={query || !filterByAppAccess}
         on:click={() => {
-          if (!filterByAppAccess) {
-            filterByAppAccess = true
-          }
           if (!query) {
             return
           }
           query = null
           userOnboardResponse = null
-          filterByAppAccess = true
         }}
       >
         <Icon name={!filterByAppAccess || query ? "Close" : "Search"} />
@@ -800,7 +801,7 @@
             <Button
               newStyles
               cta
-              disabled={!query.length && !email?.length}
+              disabled={!email?.length}
               on:click={onInviteUser}>Add user</Button
             >
           </span>
