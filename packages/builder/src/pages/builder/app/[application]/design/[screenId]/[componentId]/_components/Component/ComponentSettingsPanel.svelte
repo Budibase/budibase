@@ -1,11 +1,6 @@
 <script>
   import Panel from "components/design/Panel.svelte"
-  import {
-    store,
-    selectedComponent,
-    selectedScreen,
-    themeStore,
-  } from "builderStore"
+  import { store, selectedComponent, selectedScreen } from "builderStore"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
@@ -26,20 +21,6 @@
     $selectedScreen,
     $store.selectedComponentId
   )
-
-  // frontend Constant Themes
-  $: globalBindings = [
-    ...bindings,
-    {
-      type: "context",
-      runtimeBinding: `[device].[theme]`, //app.settings?
-      readableBinding: `App.Theme`,
-      category: "Settings",
-      icon: "Settings",
-      display: { type: "string", name: "Theme" },
-    },
-  ]
-  $: console.log(globalBindings)
 
   $: componentBindings = getComponentBindableProperties(
     $selectedScreen,
@@ -78,28 +59,24 @@
         <ComponentSettingsSection
           {componentInstance}
           {componentDefinition}
-          bindings={globalBindings}
+          {bindings}
           {componentBindings}
           {isScreen}
         />
       {/if}
       {#if section == "styles"}
-        <DesignSection
-          {componentInstance}
-          {componentDefinition}
-          bindings={globalBindings}
-        />
+        <DesignSection {componentInstance} {componentDefinition} {bindings} />
         <CustomStylesSection
           {componentInstance}
           {componentDefinition}
-          bindings={globalBindings}
+          {bindings}
         />
       {/if}
       {#if section == "conditions"}
         <ConditionalUISection
           {componentInstance}
           {componentDefinition}
-          bindings={globalBindings}
+          {bindings}
         />
       {/if}
     </Panel>

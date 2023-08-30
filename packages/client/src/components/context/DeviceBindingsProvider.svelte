@@ -15,7 +15,6 @@
   })
 
   $: theme = $themeStore.theme
-  $: baseTheme = $themeStore.baseTheme
 
   $: data = {
     mobile: width && width < tabletBreakpoint,
@@ -23,7 +22,6 @@
     width,
     height,
     theme,
-    baseTheme,
   }
 
   onMount(() => {
