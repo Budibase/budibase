@@ -74,6 +74,8 @@
   {/if}
 </div>
 <Drawer
+  on:drawerHide
+  on:drawerShow
   {fillWidth}
   bind:this={bindingDrawer}
   {title}
