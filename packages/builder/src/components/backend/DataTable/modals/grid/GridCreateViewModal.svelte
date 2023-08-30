@@ -8,8 +8,8 @@
 
   let name
 
-  $: views = Object.keys($definition?.views || {})
-  $: nameExists = views.includes(name?.trim())
+  $: views = Object.keys($definition?.views || {}).map(x => x.toLowerCase())
+  $: nameExists = views.includes(name?.trim().toLowerCase())
 
   const enrichSchema = schema => {
     // We need to sure that "visible" is set to true for any fields which have
