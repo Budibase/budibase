@@ -7,7 +7,11 @@
   export let row
 
   $: priviliged = sdk.users.isAdminOrBuilder(row)
-  $: count = priviliged ? $apps.length : value?.length || 0
+  $: count = priviliged
+    ? $apps.length
+    : sdk.users.hasAppBuilderPermissions(row)
+    ? row?.builder?.apps?.length
+    : value?.length || 0
 </script>
 
 <div class="align">
