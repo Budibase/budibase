@@ -33,10 +33,6 @@ export const createActions = context => {
   }
 
   const deleteRows = async rows => {
-    // Ensure we delete _viewId from rows as otherwise this throws a 500
-    rows?.forEach(row => {
-      delete row?._viewId
-    })
     await API.deleteRows({
       tableId: get(datasource).id,
       rows,
