@@ -100,6 +100,8 @@
       {key}
       {type}
       {...props}
+      on:drawerHide
+      on:drawerShow
     />
   </div>
   {#if info}
