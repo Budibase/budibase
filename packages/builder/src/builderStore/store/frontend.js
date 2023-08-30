@@ -111,6 +111,7 @@ export const getFrontendStore = () => {
     }
     let clone = cloneDeep(screen)
     const result = patchFn(clone)
+
     if (result === false) {
       return
     }
@@ -837,6 +838,7 @@ export const getFrontendStore = () => {
           return
         }
         const patchScreen = screen => {
+          // findComponent looks in the tree not comp.settings[0]
           let component = findComponent(screen.props, componentId)
           if (!component) {
             return false
@@ -1226,7 +1228,12 @@ export const getFrontendStore = () => {
         })
       },
       updateSetting: async (name, value) => {
-        await store.actions.components.patch(component => {
+        await store.actions.components.patch(
+          store.actions.components.updateComponentSetting(name, value)
+        )
+      },
+      updateComponentSetting: (name, value) => {
+        return component => {
           if (!name || !component) {
             return false
           }
@@ -1254,9 +1261,8 @@ export const getFrontendStore = () => {
               component[key] = columnNames
             })
           }
-
           component[name] = value
-        })
+        }
       },
       requestEjectBlock: componentId => {
         store.actions.preview.sendEvent("eject-block", componentId)
