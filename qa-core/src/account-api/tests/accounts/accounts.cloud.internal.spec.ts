@@ -1,7 +1,7 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
-import {generator} from "../../../shared"
-import {Hosting} from "@budibase/types";
+import { generator } from "../../../shared"
+import { Hosting } from "@budibase/types"
 
 describe("Account Internal Operations", () => {
   const config = new TestConfiguration()
@@ -22,7 +22,7 @@ describe("Account Internal Operations", () => {
     // Create new account
     const [_, account] = await config.api.accounts.create({
       ...fixtures.accounts.generateAccount({
-        hosting: Hosting.CLOUD
+        hosting: Hosting.CLOUD,
       }),
     })
 

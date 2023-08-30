@@ -1,13 +1,14 @@
 import { Response } from "node-fetch"
 import {
   ActivateLicenseKeyRequest,
-  ActivateOfflineLicenseTokenRequest, GetLicenseKeyResponse,
+  ActivateOfflineLicenseTokenRequest,
+  GetLicenseKeyResponse,
   GetOfflineIdentifierResponse,
   GetOfflineLicenseTokenResponse,
 } from "@budibase/types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import BaseAPI from "./BaseAPI"
-import {APIRequestOpts} from "../../../types";
+import { APIRequestOpts } from "../../../types"
 
 export default class LicenseAPI extends BaseAPI {
   constructor(client: BudibaseInternalAPIClient) {
@@ -46,17 +47,14 @@ export default class LicenseAPI extends BaseAPI {
   }
 
   async getLicenseKey(
-      opts: { status?: number } = {}
+    opts: { status?: number } = {}
   ): Promise<[Response, GetLicenseKeyResponse]> {
-    const [response, body] = await this.get(
-        `/global/license/key`,
-        opts.status
-    )
+    const [response, body] = await this.get(`/global/license/key`, opts.status)
     return [response, body]
   }
 
   async activateLicenseKey(
-      body: ActivateLicenseKeyRequest
+    body: ActivateLicenseKeyRequest
   ): Promise<[Response]> {
     const [response] = await this.post(`/global/license/key`, body)
     return [response]

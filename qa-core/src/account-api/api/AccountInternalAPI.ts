@@ -1,5 +1,11 @@
 import AccountInternalAPIClient from "./AccountInternalAPIClient"
-import {AccountAPI, LicenseAPI, AuthAPI, StripeAPI, EnvironmentAPI} from "./apis"
+import {
+  AccountAPI,
+  LicenseAPI,
+  AuthAPI,
+  StripeAPI,
+  EnvironmentAPI,
+} from "./apis"
 import { State } from "../../types"
 
 export default class AccountInternalAPI {
