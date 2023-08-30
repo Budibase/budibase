@@ -92,25 +92,30 @@
   </div>
 </FancyField>
 
-<Picker
-  customAnchor={wrapper}
-  onlyPopover={true}
-  bind:open
-  {error}
-  {disabled}
-  {options}
-  {getOptionLabel}
-  {getOptionValue}
-  {getOptionSubtitle}
-  {getOptionColour}
-  {isOptionEnabled}
-  isPlaceholder={value == null || value === ""}
-  placeholderOption={placeholder === false ? null : placeholder}
-  onSelectOption={onChange}
-  isOptionSelected={option => option === value}
-/>
+<div id="picker-wrapper">
+  <Picker
+    customAnchor={wrapper}
+    onlyPopover={true}
+    bind:open
+    {error}
+    {disabled}
+    {options}
+    {getOptionLabel}
+    {getOptionValue}
+    {getOptionSubtitle}
+    {getOptionColour}
+    {isOptionEnabled}
+    isPlaceholder={value == null || value === ""}
+    placeholderOption={placeholder === false ? null : placeholder}
+    onSelectOption={onChange}
+    isOptionSelected={option => option === value}
+  />
+</div>
 
 <style>
+  #picker-wrapper :global(.spectrum-Picker) {
+    display: none;
+  }
   .value {
     display: block;
     flex: 1 1 auto;

@@ -40,7 +40,6 @@
   export let customPopoverHeight
   export let align = "left"
   export let footer = null
-  export let onlyPopover = false
   export let customAnchor = null
   const dispatch = createEventDispatcher()
 
@@ -91,62 +90,60 @@
   }
 </script>
 
-{#if !onlyPopover}
-  <button
-    {id}
-    class="spectrum-Picker spectrum-Picker--sizeM"
-    class:spectrum-Picker--quiet={quiet}
-    {disabled}
-    class:is-invalid={!!error}
-    class:is-open={open}
-    aria-haspopup="listbox"
-    on:click={onClick}
-    bind:this={button}
-  >
-    {#if fieldIcon}
-      {#if !useOptionIconImage}x
-        <span class="option-extra icon">
-          <Icon size="S" name={fieldIcon} />
-        </span>
-      {:else}
-        <span class="option-extra icon field-icon">
-          <img src={fieldIcon} alt="icon" width="15" height="15" />
-        </span>
-      {/if}
-    {/if}
-    {#if fieldColour}
-      <span class="option-extra">
-        <StatusLight square color={fieldColour} />
+<button
+  {id}
+  class="spectrum-Picker spectrum-Picker--sizeM"
+  class:spectrum-Picker--quiet={quiet}
+  {disabled}
+  class:is-invalid={!!error}
+  class:is-open={open}
+  aria-haspopup="listbox"
+  on:click={onClick}
+  bind:this={button}
+>
+  {#if fieldIcon}
+    {#if !useOptionIconImage}x
+      <span class="option-extra icon">
+        <Icon size="S" name={fieldIcon} />
+      </span>
+    {:else}
+      <span class="option-extra icon field-icon">
+        <img src={fieldIcon} alt="icon" width="15" height="15" />
       </span>
     {/if}
-    <span
-      class="spectrum-Picker-label"
-      class:is-placeholder={isPlaceholder}
-      class:auto-width={autoWidth}
-    >
-      {fieldText}
+  {/if}
+  {#if fieldColour}
+    <span class="option-extra">
+      <StatusLight square color={fieldColour} />
     </span>
-    {#if error}
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeM spectrum-Picker-validationIcon"
-        focusable="false"
-        aria-hidden="true"
-        aria-label="Folder"
-      >
-        <use xlink:href="#spectrum-icon-18-Alert" />
-      </svg>
-    {/if}
+  {/if}
+  <span
+    class="spectrum-Picker-label"
+    class:is-placeholder={isPlaceholder}
+    class:auto-width={autoWidth}
+  >
+    {fieldText}
+  </span>
+  {#if error}
     <svg
-      class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
+      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Picker-validationIcon"
       focusable="false"
       aria-hidden="true"
+      aria-label="Folder"
     >
-      <use xlink:href="#spectrum-css-icon-Chevron100" />
+      <use xlink:href="#spectrum-icon-18-Alert" />
     </svg>
-  </button>
-{/if}
+  {/if}
+  <svg
+    class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
+    focusable="false"
+    aria-hidden="true"
+  >
+    <use xlink:href="#spectrum-css-icon-Chevron100" />
+  </svg>
+</button>
 <Popover
-  anchor={!onlyPopover ? button : customAnchor}
+  anchor={customAnchor ? customAnchor : button}
   align={align || "left"}
   bind:this={popover}
   {open}

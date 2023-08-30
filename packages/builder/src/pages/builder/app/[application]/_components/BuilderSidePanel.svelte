@@ -253,6 +253,8 @@
       notifications.error("A group must be specified")
       return
     }
+    console.log(group)
+    console.log(role)
     try {
       if (group?.builder?.apps.includes(prodAppId)) {
         await removeGroupAppBuilder(group._id)
