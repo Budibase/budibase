@@ -6,7 +6,7 @@ import {
   findComponentPath,
   getComponentSettings,
 } from "./componentUtils"
-import { store } from "builderStore"
+import { store, currentAsset } from "builderStore"
 import {
   queries as queriesStores,
   tables as tablesStore,
@@ -22,6 +22,7 @@ import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
+import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -328,7 +329,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
       if (context.type === "form") {
         // Forms do not need table schemas
         // Their schemas are built from their component field names
-        schema = buildFormSchema(component)
+        schema = buildFormSchema(component, asset)
         readablePrefix = "Fields"
       } else if (context.type === "static") {
         // Static contexts are fully defined by the components
@@ -377,6 +378,11 @@ const getProviderContextBindings = (asset, dataProviders) => {
       if (runtimeSuffix) {
         providerId += `-${runtimeSuffix}`
       }
+
+      if (!filterCategoryByContext(component, context)) {
+        return
+      }
+
       const safeComponentId = makePropSafe(providerId)
 
       // Create bindable properties for each schema field
@@ -394,6 +400,12 @@ const getProviderContextBindings = (asset, dataProviders) => {
         }
         readableBinding += `.${fieldSchema.name || key}`
 
+        const bindingCategory = getComponentBindingCategory(
+          component,
+          context,
+          def
+        )
+
         // Create the binding object
         bindings.push({
           type: "context",
@@ -406,8 +418,8 @@ const getProviderContextBindings = (asset, dataProviders) => {
           // Table ID is used by JSON fields to know what table the field is in
           tableId: table?._id,
           component: component._component,
-          category: component._instanceName,
-          icon: def.icon,
+          category: bindingCategory.category,
+          icon: bindingCategory.icon,
           display: {
             name: fieldSchema.name || key,
             type: fieldSchema.type,
@@ -418,6 +430,40 @@ const getProviderContextBindings = (asset, dataProviders) => {
   })
 
   return bindings
+}
+
+// Exclude a data context based on the component settings
+const filterCategoryByContext = (component, context) => {
+  const { _component } = component
+  if (_component.endsWith("formblock")) {
+    if (
+      (component.actionType == "Create" && context.type === "schema") ||
+      (component.actionType == "View" && context.type === "form")
+    ) {
+      return false
+    }
+  }
+  return true
+}
+
+const getComponentBindingCategory = (component, context, def) => {
+  let icon = def.icon
+  let category = component._instanceName
+
+  if (component._component.endsWith("formblock")) {
+    let contextCategorySuffix = {
+      form: "Fields",
+      schema: "Row",
+    }
+    category = `${component._instanceName} - ${
+      contextCategorySuffix[context.type]
+    }`
+    icon = context.type === "form" ? "Form" : "Data"
+  }
+  return {
+    icon,
+    category,
+  }
 }
 
 /**
@@ -514,6 +560,7 @@ const getSelectedRowsBindings = asset => {
         )}.${makePropSafe("selectedRows")}`,
         readableBinding: `${block._instanceName}.Selected rows`,
         category: "Selected rows",
+        icon: "ViewRow",
         display: { name: block._instanceName },
       }))
     )
@@ -589,24 +636,36 @@ const getRoleBindings = () => {
 }
 
 /**
- * Gets all bindable properties exposed in an event action flow up until
- * the specified action ID, as well as context provided for the action
- * setting as a whole by the component.
+ * Gets all bindable event context properties provided in the component
+ * setting
  */
-export const getEventContextBindings = (
-  asset,
-  componentId,
+export const getEventContextBindings = ({
   settingKey,
-  actions,
-  actionId
-) => {
+  componentInstance,
+  componentId,
+  componentDefinition,
+  asset,
+}) => {
   let bindings = []
+
+  const selectedAsset = asset ?? get(currentAsset)
+
   // Check if any context bindings are provided by the component for this
   // setting
-  const component = findComponent(asset.props, componentId)
-  const def = store.actions.components.getDefinition(component?._component)
+  const component =
+    componentInstance ?? findComponent(selectedAsset.props, componentId)
+
+  if (!component) {
+    return bindings
+  }
+
+  const definition =
+    componentDefinition ??
+    store.actions.components.getDefinition(component?._component)
+
   const settings = getComponentSettings(component?._component)
   const eventSetting = settings.find(setting => setting.key === settingKey)
+
   if (eventSetting?.context?.length) {
     eventSetting.context.forEach(contextEntry => {
       bindings.push({
@@ -615,14 +674,23 @@ export const getEventContextBindings = (
           contextEntry.key
         )}`,
         category: component._instanceName,
-        icon: def.icon,
+        icon: definition.icon,
         display: {
           name: contextEntry.label,
         },
       })
     })
   }
+  return bindings
+}
 
+/**
+ * Gets all bindable properties exposed in an event action flow up until
+ * the specified action ID, as well as context provided for the action
+ * setting as a whole by the component.
+ */
+export const getActionBindings = (actions, actionId) => {
+  let bindings = []
   // Get the steps leading up to this value
   const index = actions?.findIndex(action => action.id === actionId)
   if (index == null || index === -1) {
@@ -649,7 +717,6 @@ export const getEventContextBindings = (
       })
     }
   })
-
   return bindings
 }
 
@@ -862,18 +929,36 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
  * Builds a form schema given a form component.
  * A form schema is a schema of all the fields nested anywhere within a form.
  */
-export const buildFormSchema = component => {
+export const buildFormSchema = (component, asset) => {
   let schema = {}
   if (!component) {
     return schema
   }
 
-  // If this is a form block, simply use the fields setting
   if (component._component.endsWith("formblock")) {
     let schema = {}
-    component.fields?.forEach(field => {
-      schema[field] = { type: "string" }
-    })
+
+    const datasource = getDatasourceForProvider(asset, component)
+    const info = getSchemaForDatasource(component, datasource)
+
+    if (!component.fields) {
+      Object.values(info?.schema)
+        .filter(
+          ({ autocolumn, name }) =>
+            !autocolumn && !["_rev", "_id"].includes(name)
+        )
+        .forEach(({ name }) => {
+          schema[name] = { type: info?.schema[name].type }
+        })
+    } else {
+      // Field conversion
+      const patched = convertOldFieldFormat(component.fields || [])
+      patched?.forEach(({ field, active }) => {
+        if (!active) return
+        schema[field] = { type: info?.schema[field].type }
+      })
+    }
+
     return schema
   }
 
@@ -889,7 +974,7 @@ export const buildFormSchema = component => {
     }
   }
   component._children?.forEach(child => {
-    const childSchema = buildFormSchema(child)
+    const childSchema = buildFormSchema(child, asset)
     schema = { ...schema, ...childSchema }
   })
   return schema

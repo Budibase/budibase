@@ -6,6 +6,7 @@
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
   import EjectBlockButton from "components/design/settings/controls/EjectBlockButton.svelte"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
+  import InfoDisplay from "./InfoDisplay.svelte"
   import analytics, { Events } from "analytics"
 
   export let componentDefinition
@@ -13,6 +14,9 @@
   export let bindings
   export let componentBindings
   export let isScreen = false
+  export let onUpdateSetting
+  export let showSectionTitle = true
+  export let showInstanceName = true
 
   $: sections = getSections(componentInstance, componentDefinition, isScreen)
 
@@ -47,8 +51,11 @@
 
   const updateSetting = async (setting, value) => {
     try {
-      await store.actions.components.updateSetting(setting.key, value)
-
+      if (typeof onUpdateSetting === "function") {
+        await onUpdateSetting(setting, value)
+      } else {
+        await store.actions.components.updateSetting(setting.key, value)
+      }
       // Send event if required
       if (setting.sendEvents) {
         analytics.captureEvent(Events.COMPONENT_UPDATED, {
@@ -97,7 +104,7 @@
       }
     }
 
-    return true
+    return typeof setting.visible == "boolean" ? setting.visible : true
   }
 
   const canRenderControl = (instance, setting, isScreen) => {
@@ -116,9 +123,22 @@
 
 {#each sections as section, idx (section.name)}
   {#if section.visible}
-    <DetailSummary name={section.name} collapsible={false}>
+    <DetailSummary
+      name={showSectionTitle ? section.name : ""}
+      collapsible={false}
+    >
+      {#if section.info}
+        <div class="section-info">
+          <InfoDisplay body={section.info} />
+        </div>
+      {:else if idx === 0 && section.name === "General" && componentDefinition.info}
+        <InfoDisplay
+          title={componentDefinition.name}
+          body={componentDefinition.info}
+        />
+      {/if}
       <div class="settings">
-        {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen}
+        {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen && showInstanceName}
           <PropertyControl
             control={Input}
             label="Name"
@@ -157,6 +177,8 @@
               {componentBindings}
               {componentInstance}
               {componentDefinition}
+              on:drawerShow
+              on:drawerHide
             />
           {/if}
         {/each}
