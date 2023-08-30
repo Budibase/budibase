@@ -9,6 +9,7 @@ const RolePriorities = {
 }
 const RoleColours = {
   [Roles.ADMIN]: "var(--spectrum-global-color-static-red-400)",
+  [Roles.CREATOR]: "var(--spectrum-global-color-static-magenta-600)",
   [Roles.POWER]: "var(--spectrum-global-color-static-orange-400)",
   [Roles.BASIC]: "var(--spectrum-global-color-static-green-400)",
   [Roles.PUBLIC]: "var(--spectrum-global-color-static-blue-400)",

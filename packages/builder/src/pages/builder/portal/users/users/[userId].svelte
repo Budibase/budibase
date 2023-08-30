@@ -89,7 +89,7 @@
   $: scimEnabled = $features.isScimEnabled
   $: isSSO = !!user?.provider
   $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
-  $: privileged = sdk.users.isAdminOrBuilder(user)
+  $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
   $: filteredGroups = getFilteredGroups($groups, searchTerm)
   $: availableApps = getAvailableApps($apps, privileged, user?.roles)
@@ -108,7 +108,8 @@
     let availableApps = appList.slice()
     if (!privileged) {
       availableApps = availableApps.filter(x => {
-        return Object.keys(roles || {}).find(y => {
+        let roleKeys = Object.keys(roles || {})
+        return roleKeys.concat(user?.builder?.apps).find(y => {
           return x.appId === apps.extractAppId(y)
         })
       })
@@ -119,7 +120,11 @@
         name: app.name,
         devId: app.devId,
         icon: app.icon,
-        role: privileged ? Constants.Roles.ADMIN : roles[prodAppId],
+        role: privileged
+          ? Constants.Roles.ADMIN
+          : user?.builder?.apps.includes(prodAppId)
+          ? Constants.Roles.CREATOR
+          : roles[prodAppId],
       }
     })
   }
