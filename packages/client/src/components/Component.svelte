@@ -292,7 +292,7 @@
           }
           if (!val.resourceId) {
             if (val.type === "viewV2") {
-              val.resourceId = val.id || val.tableId
+              val.resourceId = val.id
             } else {
               val.resourceId = val.tableId
             }
