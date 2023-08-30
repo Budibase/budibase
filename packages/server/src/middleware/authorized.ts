@@ -6,8 +6,11 @@ import {
   users,
 } from "@budibase/backend-core"
 import { PermissionLevel, PermissionType, Role, UserCtx } from "@budibase/types"
+import { features } from "@budibase/pro"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
+import { paramResource } from "./resourceId"
+import { extractViewInfoFromID, isViewID } from "../db/utils"
 
 function hasResource(ctx: any) {
   return ctx.resourceId != null
@@ -74,10 +77,37 @@ const checkAuthorizedResource = async (
   }
 }
 
-export default (
+const resourceIdTranformers: Partial<
+  Record<PermissionType, (ctx: UserCtx) => Promise<void>>
+> = {
+  [PermissionType.VIEW]: async ctx => {
+    const { resourceId } = ctx
+    if (!resourceId) {
+      ctx.throw(400, `Cannot obtain the view id`)
+      return
+    }
+
+    if (!isViewID(resourceId)) {
+      ctx.throw(400, `"${resourceId}" is not a valid view id`)
+      return
+    }
+
+    if (await features.isViewPermissionEnabled()) {
+      ctx.subResourceId = ctx.resourceId
+      ctx.resourceId = extractViewInfoFromID(resourceId).tableId
+    } else {
+      ctx.resourceId = extractViewInfoFromID(resourceId).tableId
+      delete ctx.subResourceId
+    }
+  },
+}
+
+const authorized =
+  (
     permType: PermissionType,
     permLevel?: PermissionLevel,
-    opts = { schema: false }
+    opts = { schema: false },
+    resourcePath?: string
   ) =>
   async (ctx: any, next: any) => {
     // webhooks don't need authentication, each webhook unique
@@ -97,11 +127,27 @@ export default (
       permLevel === PermissionLevel.READ
         ? PermissionLevel.WRITE
         : PermissionLevel.READ
-    const appId = context.getAppId()
-    if (appId && hasResource(ctx)) {
-      resourceRoles = await roles.getRequiredResourceRole(permLevel!, ctx)
+
+    if (resourcePath) {
+      // Reusing the existing middleware to extract the value
+      paramResource(resourcePath)(ctx, () => {})
+    }
+
+    if (resourceIdTranformers[permType]) {
+      await resourceIdTranformers[permType]!(ctx)
+    }
+
+    if (hasResource(ctx)) {
+      const { resourceId, subResourceId } = ctx
+      resourceRoles = await roles.getRequiredResourceRole(permLevel!, {
+        resourceId,
+        subResourceId,
+      })
       if (opts && opts.schema) {
-        otherLevelRoles = await roles.getRequiredResourceRole(otherLevel, ctx)
+        otherLevelRoles = await roles.getRequiredResourceRole(otherLevel, {
+          resourceId,
+          subResourceId,
+        })
       }
     }
 
@@ -143,3 +189,17 @@ export default (
     // csrf protection
     return csrf(ctx, next)
   }
+
+export default (
+  permType: PermissionType,
+  permLevel?: PermissionLevel,
+  opts = { schema: false }
+) => authorized(permType, permLevel, opts)
+
+export const authorizedResource = (
+  permType: PermissionType,
+  permLevel: PermissionLevel,
+  resourcePath: string
+) => {
+  return authorized(permType, permLevel, undefined, resourcePath)
+}
