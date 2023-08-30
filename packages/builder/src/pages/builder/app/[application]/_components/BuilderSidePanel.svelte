@@ -39,7 +39,6 @@
   // Initially filter entities without app access
   // Show all when false
   let filterByAppAccess = false
-
   let email
   let error
   let form
@@ -55,7 +54,7 @@
   let userLimitReachedModal
 
   let inviteFailureResponse = ""
-  $: queryIsEmail = emailValidator(query) === true
+  $: validEmail = emailValidator(email) === true
   $: prodAppId = apps.getProdAppID($store.appId)
   $: promptInvite = showInvite(
     filteredInvites,
@@ -152,16 +151,13 @@
   }
 
   const sortInviteRoles = (a, b) => {
-    const aIsEmpty = !a.info.apps || Object.keys(a.info.apps).length === 0
-    const bIsEmpty = !b.info.apps || Object.keys(b.info.apps).length === 0
+    const aEmpty =
+      !a.info?.appBuilders?.length && Object.keys(a.info.apps).length === 0
+    const bEmpty =
+      !b.info?.appBuilders?.length && Object.keys(b.info.apps).length === 0
 
-    return aIsEmpty
-      ? bIsEmpty
-        ? 0
-        : 1 // Put items with empty "apps" at the bottom
-      : bIsEmpty
-      ? -1
-      : 0 // Put items with non-empty "apps" above the empty ones
+    if (aEmpty && !bEmpty) return 1
+    if (!aEmpty && bEmpty) return -1
   }
 
   const sortRoles = (a, b) => {
@@ -361,11 +357,11 @@
   }
 
   async function inviteUser() {
-    if (!queryIsEmail) {
+    if (!validEmail) {
       notifications.error("Email is not valid")
       return
     }
-    const newUserEmail = query + ""
+    const newUserEmail = email + ""
     inviting = true
 
     const payload = [
@@ -377,7 +373,7 @@
     ]
 
     if (creationAccessType === Constants.Roles.CREATOR) {
-      payload[0].appBuilder = prodAppId
+      payload[0].appBuilders = [prodAppId]
     } else {
       payload[0].apps = {
         [prodAppId]: creationAccessType,
@@ -395,20 +391,22 @@
   }
 
   const openInviteFlow = () => {
-    invitingFlow = true
+    $licensing.userLimitReached
+      ? userLimitReachedModal.show()
+      : (invitingFlow = true)
   }
 
   const onInviteUser = async () => {
     form.validate()
     userOnboardResponse = await inviteUser()
-    const originalQuery = query + ""
-    query = null
+    const originalQuery = email + ""
+    email = null
 
     const newUser = userOnboardResponse?.successful.find(
       user => user.email === originalQuery
     )
     if (newUser) {
-      query = originalQuery
+      email = originalQuery
       notifications.success(
         userOnboardResponse.created
           ? "User created successfully"
@@ -427,16 +425,26 @@
     }
     userOnboardResponse = null
     invitingFlow = false
+    // trigger reload of the users
+    query = ""
   }
 
   const onUpdateUserInvite = async (invite, role) => {
-    await users.updateInvite({
+    let updateBody = {
       code: invite.code,
       apps: {
         ...invite.apps,
         [prodAppId]: role,
       },
-    })
+    }
+
+    if (role === Constants.Roles.CREATOR) {
+      updateBody.appBuilders = [...(updateBody.appBuilders ?? []), prodAppId]
+      delete updateBody?.apps?.[prodAppId]
+    } else if (role !== Constants.Roles.CREATOR && invite?.appBuilders) {
+      invite.appBuilders = []
+    }
+    await users.updateInvite(updateBody)
     await filterInvites(query)
   }
 
@@ -482,7 +490,7 @@
   $: initSidePanel($store.builderSidePanel)
 
   function handleKeyDown(evt) {
-    if (evt.key === "Enter" && queryIsEmail && !inviting) {
+    if (evt.key === "Enter" && validEmail && !inviting) {
       onInviteUser()
     }
   }
@@ -524,9 +532,7 @@
       <Heading size="S">{invitingFlow ? "Invite new user" : "Users"}</Heading>
     </div>
     <div class="header">
-      <Button on:click={() => (invitingFlow = true)} size="S" cta
-        >Invite user</Button
-      >
+      <Button on:click={openInviteFlow} size="S" cta>Invite user</Button>
       <Icon
         color="var(--spectrum-global-color-gray-600)"
         name="RailRightClose"
@@ -579,9 +585,7 @@
             <div class="invite-directions">
               Try searching a different email or <span
                 class="underlined"
-                on:click={$licensing.userLimitReached
-                  ? userLimitReachedModal.show
-                  : openInviteFlow}>invite a new user</span
+                on:click={openInviteFlow}>invite a new user</span
               >
             </div>
           </div>
@@ -606,7 +610,9 @@
                   <div class="auth-entity-access">
                     <RoleSelect
                       placeholder={false}
-                      value={invite.info.apps?.[prodAppId]}
+                      value={invite.info?.appBuilders?.includes(prodAppId)
+                        ? Constants.Roles.CREATOR
+                        : invite.info.apps?.[prodAppId]}
                       allowRemove={invite.info.apps?.[prodAppId]}
                       allowPublic={false}
                       allowCreator={true}
@@ -756,10 +762,9 @@
             <FancyInput
               disabled={false}
               label="Email"
-              value={query}
+              value={email}
               on:change={e => {
                 email = e.detail
-                query = e.detail
               }}
               validate={() => {
                 if (!email) {

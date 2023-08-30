@@ -156,14 +156,14 @@ export const buildUserEndpoints = API => ({
     return await API.post({
       url: "/api/global/users/onboard",
       body: payload.map(invite => {
-        const { email, admin, builder, apps, appBuilder } = invite
+        const { email, admin, builder, apps, appBuilders } = invite
         return {
           email,
           userInfo: {
             admin: admin ? { global: true } : undefined,
             builder: builder ? { global: true } : undefined,
             apps: apps ? apps : undefined,
-            appBuilder: appBuilder ? appBuilder : undefined,
+            appBuilders: appBuilders ? appBuilders : undefined,
           },
         }
       }),
@@ -176,10 +176,12 @@ export const buildUserEndpoints = API => ({
    * @param invite the invite code sent in the email
    */
   updateUserInvite: async invite => {
+    console.log(invite)
     await API.post({
       url: `/api/global/users/invite/update/${invite.code}`,
       body: {
         apps: invite.apps,
+        appBuilders: invite.appBuilders ? invite.appBuilders : undefined,
       },
     })
   },
