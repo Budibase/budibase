@@ -171,10 +171,7 @@
     }
 
     // Check for a matching viewV2
-    const selectedViewV2 = viewsV2.selected?.name
-    const viewV2Table = options.find(table => {
-      return table.views?.[selectedViewV2] != null
-    })
+    const viewV2Table = options.find(x => x._id === viewsV2.selected?.tableId)
     return viewV2Table != null
   }
 </script>
