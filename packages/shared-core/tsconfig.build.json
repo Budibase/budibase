@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "moduleResolution": "node",
+    "module": "commonjs",
     "lib": ["es2020"],
     "strict": true,
     "noImplicitAny": true,
@@ -12,7 +12,10 @@
     "declaration": true,
     "types": ["node"],
     "outDir": "dist",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@budibase/types": ["../types/src"]
+    }
   },
   "include": ["**/*.js", "**/*.ts"],
   "exclude": [
