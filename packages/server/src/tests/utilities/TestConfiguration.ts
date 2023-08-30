@@ -78,7 +78,7 @@ class TestConfiguration {
   table?: Table
   linkedTable: any
   automation: any
-  datasource: any
+  datasource?: Datasource
   tenantId?: string
   defaultUserValues: DefaultUserValues
   api: API
@@ -528,7 +528,7 @@ class TestConfiguration {
   // TABLE
 
   async updateTable(
-    config?: any,
+    config?: Table,
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
@@ -543,6 +543,11 @@ class TestConfiguration {
     if (config != null && config._id) {
       delete config._id
     }
+    config = config || basicTable()
+    if (this.datasource && !config.sourceId) {
+      config.sourceId = this.datasource._id
+    }
+
     return this.updateTable(config, options)
   }
 
@@ -678,17 +683,17 @@ class TestConfiguration {
     config = config || basicDatasource()
     const response = await this._req(config, null, controllers.datasource.save)
     this.datasource = response.datasource
-    return this.datasource
+    return this.datasource!
   }
 
-  async updateDatasource(datasource: any) {
+  async updateDatasource(datasource: Datasource): Promise<Datasource> {
     const response = await this._req(
       datasource,
       { datasourceId: datasource._id },
       controllers.datasource.update
     )
     this.datasource = response.datasource
-    return this.datasource
+    return this.datasource!
   }
 
   async restDatasource(cfg?: any) {
@@ -772,7 +777,7 @@ class TestConfiguration {
     if (!this.datasource && !config) {
       throw "No datasource created for query."
     }
-    config = config || basicQuery(this.datasource._id)
+    config = config || basicQuery(this.datasource!._id!)
     return this._req(config, null, controllers.query.save)
   }
 
