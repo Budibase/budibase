@@ -147,31 +147,7 @@ export async function fetch(ctx: UserCtx) {
 
 export async function getResourcePerms(ctx: UserCtx) {
   const resourceId = ctx.params.resourceId
-  const db = context.getAppDB()
-  const body = await db.allDocs(
-    getRoleParams(null, {
-      include_docs: true,
-    })
-  )
-  const rolesList = body.rows.map(row => row.doc)
-  let permissions: Record<string, string> = {}
-  for (let level of SUPPORTED_LEVELS) {
-    // update the various roleIds in the resource permissions
-    for (let role of rolesList) {
-      const rolePerms = roles.checkForRoleResourceArray(
-        role.permissions,
-        resourceId
-      )
-      if (
-        rolePerms &&
-        rolePerms[resourceId] &&
-        rolePerms[resourceId].indexOf(level) !== -1
-      ) {
-        permissions[level] = roles.getExternalRoleID(role._id, role.version)!
-      }
-    }
-  }
-  ctx.body = Object.assign(getBasePermissions(resourceId), permissions)
+  ctx.body = await sdk.permissions.getResourcePerms(resourceId)
 }
 
 export async function addPermission(ctx: UserCtx) {
