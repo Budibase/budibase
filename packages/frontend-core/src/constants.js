@@ -2,7 +2,6 @@
  * Operator options for lucene queries
  */
 export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
-export { Feature as Features } from "@budibase/types"
 
 // Cookie names
 export const Cookies = {
