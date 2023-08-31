@@ -3,6 +3,9 @@ import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
 
 export default function (datasources) {
+  if (!Array.isArray(datasources)) {
+    return []
+  }
   return datasources.map(datasource => {
     return {
       name: `${datasource.name} - List`,
