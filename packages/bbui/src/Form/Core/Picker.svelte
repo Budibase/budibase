@@ -38,6 +38,8 @@
   export let fetchTerm = null
   export let useFetch = false
   export let customPopoverHeight
+  export let customPopoverOffsetBelow
+  export let customPopoverMaxHeight
   export let align = "left"
   export let footer = null
   export let customAnchor = null
@@ -150,7 +152,9 @@
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
   maxWidth={autoWidth ? 400 : null}
+  maxHeight={customPopoverMaxHeight}
   customHeight={customPopoverHeight}
+  offsetBelow={customPopoverOffsetBelow}
 >
   <div
     class="popover-content"

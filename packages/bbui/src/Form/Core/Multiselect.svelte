@@ -17,6 +17,8 @@
   export let fetchTerm = null
   export let useFetch = false
   export let customPopoverHeight
+  export let customPopoverOffsetBelow
+  export let customPopoverMaxHeight
   export let open = false
 
   const dispatch = createEventDispatcher()
@@ -98,4 +100,6 @@
   {sort}
   {autoWidth}
   {customPopoverHeight}
+  {customPopoverOffsetBelow}
+  {customPopoverMaxHeight}
 />
