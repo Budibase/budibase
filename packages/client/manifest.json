@@ -3647,9 +3647,9 @@
       },
       {
         "type": "boolean",
-        "label": "Autocomplete",
+        "label": "Search",
         "key": "autocomplete",
-        "defaultValue": false
+        "defaultValue": true
       },
       {
         "type": "boolean",

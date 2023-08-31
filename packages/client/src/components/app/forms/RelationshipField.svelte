@@ -1,6 +1,6 @@
 <script>
-  import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
-  import { fetchData } from "@budibase/frontend-core"
+  import { CoreSelect, CoreMultiselect, Input } from "@budibase/bbui"
+  import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
   import { FieldTypes } from "../../../constants"
@@ -12,7 +12,7 @@
   export let placeholder
   export let disabled = false
   export let validation
-  export let autocomplete = false
+  export let autocomplete = true
   export let defaultValue
   export let onChange
   export let filter
@@ -21,6 +21,16 @@
   let fieldApi
   let fieldSchema
   let tableDefinition
+  let primaryDisplay
+  let options
+  let initiallySelectedOptions = []
+
+  let searchResults
+  let searchString
+  let searching = false
+  let lastSearchString
+  let lastSearchId
+  let candidateIndex
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
@@ -36,12 +46,42 @@
     },
   })
   $: fetch.update({ filter })
-  $: options = $fetch.rows
+  $: {
+    options = $fetch.rows
+    if (!filter?.filter(f => !!f.field)?.length) {
+      options = [...options, ...initiallySelectedOptions]
+    }
+  }
   $: tableDefinition = $fetch.definition
+  $: primaryDisplay = tableDefinition?.primaryDisplay || "_id"
   $: singleValue = flatten(fieldState?.value)?.[0]
   $: multiValue = flatten(fieldState?.value) ?? []
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: expandedDefaultValue = expand(defaultValue)
+  $: debouncedSearch(searchString)
+
+  $: {
+    if (
+      primaryDisplay !== "_id" &&
+      fieldState?.value?.length &&
+      !initiallySelectedOptions?.length
+    ) {
+      API.searchTable({
+        paginate: false,
+        tableId: linkedTableId,
+        limit: 100,
+        query: {
+          oneOf: {
+            [`1:${primaryDisplay}`]: fieldState?.value?.map(
+              value => value.primaryDisplay
+            ),
+          },
+        },
+      }).then(response => {
+        initiallySelectedOptions = response.rows
+      })
+    }
+  }
 
   const flatten = values => {
     if (!values) {
@@ -81,6 +121,57 @@
       onChange({ value })
     }
   }
+
+  // Search for rows based on the search string
+  const search = async (searchString, force = false) => {
+    // Avoid update state at all if we've already handled the update and this is
+    // a wasted search due to svelte reactivity
+    if (!force && !searchString && !lastSearchString) {
+      return
+    }
+
+    // Reset state if this search is invalid
+    if (!linkedTableId) {
+      lastSearchString = null
+      candidateIndex = null
+      searchResults = []
+      return
+    }
+
+    // Search for results, using IDs to track invocations and ensure we're
+    // handling the latest update
+    lastSearchId = Math.random()
+    searching = true
+    const thisSearchId = lastSearchId
+    const results = await API.searchTable({
+      paginate: false,
+      tableId: linkedTableId,
+      limit: 100,
+      query: {
+        string: {
+          [`1:${primaryDisplay}`]: searchString || "",
+        },
+      },
+    })
+    searching = false
+
+    // In case searching takes longer than our debounced update, abandon these
+    // results
+    if (thisSearchId !== lastSearchId) {
+      return
+    }
+
+    // Process results
+    searchResults = results.rows?.map(row => ({
+      ...row,
+      primaryDisplay: row[primaryDisplay],
+    }))
+    candidateIndex = searchResults?.length ? 0 : null
+    lastSearchString = searchString
+  }
+
+  // Debounced version of searching
+  const debouncedSearch = Utils.debounce(search, 250)
 </script>
 
 <Field
@@ -95,10 +186,21 @@
   bind:fieldSchema
 >
   {#if fieldState}
+    {#if autocomplete}
+      <div class="search">
+        <Input
+          autofocus
+          quiet
+          type="text"
+          bind:value={searchString}
+          placeholder={primaryDisplay ? `Search by ${primaryDisplay}` : null}
+        />
+      </div>
+    {/if}
     <svelte:component
       this={component}
       {options}
-      {autocomplete}
+      autocomplete={false}
       value={multiselect ? multiValue : singleValue}
       on:change={multiselect ? multiHandler : singleHandler}
       id={fieldState.fieldId}
@@ -111,3 +213,23 @@
     />
   {/if}
 </Field>
+
+<style>
+  .search {
+    flex: 0 0 calc(var(--default-row-height) - 1px);
+    display: flex;
+    align-items: center;
+    margin: 4px var(--cell-padding);
+    width: calc(100% - 2 * var(--cell-padding));
+  }
+  .search :global(.spectrum-Textfield) {
+    min-width: 0;
+    width: 100%;
+  }
+  .search :global(.spectrum-Textfield-input) {
+    font-size: 13px;
+  }
+  .search :global(.spectrum-Form-item) {
+    flex: 1 1 auto;
+  }
+</style>
