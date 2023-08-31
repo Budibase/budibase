@@ -17,7 +17,6 @@
     focusedCellAPI,
     focusedRowId,
     notifications,
-    canAddRows,
   } = getContext("grid")
 
   $: style = makeStyle($menu)
@@ -68,9 +67,7 @@
       </MenuItem>
       <MenuItem
         icon="Maximize"
-        disabled={isNewRow ||
-          !$config.allowEditRows ||
-          !$config.allowExpandRows}
+        disabled={isNewRow || !$config.canEditRows || !$config.canExpandRows}
         on:click={() => dispatch("edit-row", $focusedRow)}
         on:click={menu.actions.close}
       >
@@ -94,14 +91,14 @@
       </MenuItem>
       <MenuItem
         icon="Duplicate"
-        disabled={isNewRow || !$canAddRows}
+        disabled={isNewRow || !$config.canAddRows}
         on:click={duplicate}
       >
         Duplicate row
       </MenuItem>
       <MenuItem
         icon="Delete"
-        disabled={isNewRow || !$config.allowDeleteRows}
+        disabled={isNewRow || !$config.canDeleteRows}
         on:click={deleteRow}
       >
         Delete row

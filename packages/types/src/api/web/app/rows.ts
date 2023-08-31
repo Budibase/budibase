@@ -16,7 +16,13 @@ export interface SearchRowRequest extends Omit<SearchParams, "tableId"> {}
 export interface SearchViewRowRequest
   extends Pick<
     SearchRowRequest,
-    "sort" | "sortOrder" | "sortType" | "limit" | "bookmark" | "paginate"
+    | "sort"
+    | "sortOrder"
+    | "sortType"
+    | "limit"
+    | "bookmark"
+    | "paginate"
+    | "query"
   > {}
 
 export interface SearchRowResponse {

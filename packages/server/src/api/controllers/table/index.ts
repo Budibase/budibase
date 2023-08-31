@@ -1,16 +1,16 @@
 import * as internal from "./internal"
 import * as external from "./external"
 import {
-  validate as validateSchema,
-  isSchema,
   isRows,
+  isSchema,
+  validate as validateSchema,
 } from "../../../utilities/schema"
 import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { events } from "@budibase/backend-core"
 import {
   FetchTablesResponse,
-  SaveTableResponse,
   SaveTableRequest,
+  SaveTableResponse,
   Table,
   TableResponse,
   UserCtx,
@@ -51,8 +51,7 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     }
   })
 
-  const response = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
-  ctx.body = response
+  ctx.body = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
 }
 
 export async function find(ctx: UserCtx<void, TableResponse>) {
@@ -94,7 +93,7 @@ export async function destroy(ctx: UserCtx) {
   ctx.status = 200
   ctx.table = deletedTable
   ctx.body = { message: `Table ${tableId} deleted.` }
-  builderSocket?.emitTableDeletion(ctx, tableId)
+  builderSocket?.emitTableDeletion(ctx, deletedTable)
 }
 
 export async function bulkImport(ctx: UserCtx) {

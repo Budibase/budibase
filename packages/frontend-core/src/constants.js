@@ -2,6 +2,7 @@
  * Operator options for lucene queries
  */
 export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
+export { Feature as Features } from "@budibase/types"
 
 // Cookie names
 export const Cookies = {
@@ -61,17 +62,6 @@ export const PlanType = {
  *   - Coerce types for search endpoint
  */
 export const ApiVersion = "1"
-
-export const Features = {
-  USER_GROUPS: "userGroups",
-  BACKUPS: "appBackups",
-  ENVIRONMENT_VARIABLES: "environmentVariables",
-  AUDIT_LOGS: "auditLogs",
-  ENFORCEABLE_SSO: "enforceableSSO",
-  BRANDING: "branding",
-  SCIM: "scim",
-  SYNC_AUTOMATIONS: "syncAutomations",
-}
 
 // Role IDs
 export const Roles = {

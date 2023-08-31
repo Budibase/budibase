@@ -8,6 +8,15 @@ import { permissions } from "@budibase/backend-core"
 const router: Router = new Router()
 
 router
+  .get(
+    "/api/v2/views/:viewId",
+    paramResource("viewId"),
+    authorized(
+      permissions.PermissionType.TABLE,
+      permissions.PermissionLevel.READ
+    ),
+    viewController.v2.get
+  )
   .post(
     "/api/v2/views",
     authorized(permissions.BUILDER),
