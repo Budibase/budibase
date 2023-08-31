@@ -24,7 +24,6 @@ export const BudibaseRoles = {
 
 export const BudibaseRoleOptions = [
   { label: "Member", value: BudibaseRoles.AppUser },
-  { label: "Developer", value: BudibaseRoles.Developer },
   { label: "Admin", value: BudibaseRoles.Admin },
 ]
 
