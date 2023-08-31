@@ -239,8 +239,8 @@
           getOptionLabel={getDisplayName}
           getOptionValue={option => option._id}
           {placeholder}
-          customPopoverOffsetBelow={autocomplete ? 32 : 5}
-          customPopoverMaxHeight={240}
+          customPopoverOffsetBelow={autocomplete ? 32 : null}
+          customPopoverMaxHeight={autocomplete ? 240 : null}
           sort={true}
         />
       </div>
