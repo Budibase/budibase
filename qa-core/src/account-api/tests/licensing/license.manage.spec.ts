@@ -1,6 +1,6 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
-import {Hosting, PlanType} from "@budibase/types"
+import { Hosting, PlanType } from "@budibase/types"
 
 describe("license management", () => {
   const config = new TestConfiguration()

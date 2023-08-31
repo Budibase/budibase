@@ -134,7 +134,9 @@ export default class LicenseAPI extends BaseAPI {
     }, opts)
   }
 
-  async licenseUsageTriggered(opts: { status?: number } = {}): Promise<Response> {
+  async licenseUsageTriggered(
+    opts: { status?: number } = {}
+  ): Promise<Response> {
     const [response, json] = await this.client.post(
       `/api/license/usage/triggered`
     )
