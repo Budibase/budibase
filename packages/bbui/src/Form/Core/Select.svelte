@@ -22,6 +22,7 @@
   export let align
   export let footer = null
   export let open = false
+  export let tag = null
 
   const dispatch = createEventDispatcher()
 
@@ -82,6 +83,7 @@
   {isOptionEnabled}
   {autocomplete}
   {sort}
+  {tag}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder === false ? null : placeholder}
   isOptionSelected={option => option === value}
