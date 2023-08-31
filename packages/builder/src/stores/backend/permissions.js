@@ -21,7 +21,7 @@ export function createPermissionStore() {
       })
     },
     forResource: async resourceId => {
-      return await API.getPermissionForResource(resourceId)
+      return (await API.getPermissionForResource(resourceId)).permissions
     },
   }
 }
