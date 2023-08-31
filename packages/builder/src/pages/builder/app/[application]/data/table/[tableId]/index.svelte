@@ -1,5 +1,5 @@
 <script>
-  import TableDataTable from "components/backend/DataTable/DataTable.svelte"
+  import TableDataTable from "components/backend/DataTable/TableDataTable.svelte"
   import { tables, database } from "stores/backend"
   import { Banner } from "@budibase/bbui"
 

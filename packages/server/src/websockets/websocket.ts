@@ -270,7 +270,7 @@ export class BaseSocket {
 
   // Emit an event to everyone in a room, including metadata of whom
   // the originator of the request was
-  emitToRoom(ctx: any, room: string, event: string, payload: any) {
+  emitToRoom(ctx: any, room: string | string[], event: string, payload: any) {
     this.io.in(room).emit(event, {
       ...payload,
       apiSessionId: ctx.headers?.[Header.SESSION_ID],

@@ -109,7 +109,13 @@
       type: "View",
       name: view.name,
       icon: "Remove",
-      action: () => $goto(`./data/view/${view.name}`),
+      action: () => {
+        if (view.version === 2) {
+          $goto(`./data/view/v2/${view.id}`)
+        } else {
+          $goto(`./data/view/${view.name}`)
+        }
+      },
     })) ?? []),
     ...($queries?.list?.map(query => ({
       type: "Query",
