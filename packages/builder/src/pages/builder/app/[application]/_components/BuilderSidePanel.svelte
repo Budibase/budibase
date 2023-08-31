@@ -81,17 +81,15 @@
       filteredInvites.sort(sortInviteRoles)
       return
     }
-    filteredInvites = appInvites
-      .filter(invite => {
-        const inviteInfo = invite.info?.apps
-        if (!query && inviteInfo && prodAppId) {
-          return Object.keys(inviteInfo).includes(prodAppId)
-        }
-        return invite.email.includes(query)
-      })
-      .sort(sortInviteRoles)
+    filteredInvites = appInvites.filter(invite => {
+      const inviteInfo = invite.info?.apps
+      if (!query && inviteInfo && prodAppId) {
+        return Object.keys(inviteInfo).includes(prodAppId)
+      }
+      return invite.email.includes(query)
+    })
+    filteredInvites.sort(sortInviteRoles)
   }
-
   $: filterByAppAccess, prodAppId, filterInvites(query)
   $: if (searchFocus === true) {
     filterByAppAccess = false
@@ -122,21 +120,22 @@
     await usersFetch.refresh()
 
     filteredUsers = $usersFetch.rows
+      .filter(user => !user?.admin?.global) // filter out global admins
       .map(user => {
         const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(
           user,
           prodAppId
         )
         const isAppBuilder = sdk.users.hasAppBuilderPermissions(user, prodAppId)
-        let role = undefined
+        let role
         if (isAdminOrGlobalBuilder) {
           role = Constants.Roles.ADMIN
         } else if (isAppBuilder) {
           role = Constants.Roles.CREATOR
         } else {
-          const appRole = Object.keys(user.roles).find(x => x === prodAppId)
+          const appRole = user.roles[prodAppId]
           if (appRole) {
-            role = user.roles[appRole]
+            role = appRole
           }
         }
 
@@ -617,9 +616,6 @@
                       allowPublic={false}
                       allowCreator={true}
                       quiet={true}
-                      on:addcreator={() => {
-                        onUpdateUserInvite(invite, Constants.Roles.CREATOR)
-                      }}
                       on:change={e => {
                         onUpdateUserInvite(invite, e.detail)
                       }}
@@ -673,10 +669,11 @@
                       quiet={true}
                       allowCreator={true}
                       on:change={e => {
-                        onUpdateGroup(group, e.detail)
-                      }}
-                      on:addcreator={() => {
-                        addGroupAppBuilder(group._id)
+                        if (e.detail === Constants.Roles.CREATOR) {
+                          addGroupAppBuilder(group._id)
+                        } else {
+                          onUpdateGroup(group, e.detail)
+                        }
                       }}
                       on:remove={() => {
                         onUpdateGroup(group)
@@ -712,11 +709,13 @@
                       allowPublic={false}
                       allowCreator={true}
                       quiet={true}
-                      on:addcreator={() => {
-                        addAppBuilder(user._id)
-                      }}
+                      on:addcreator={() => {}}
                       on:change={e => {
-                        onUpdateUser(user, e.detail)
+                        if (e.detail === Constants.Roles.CREATOR) {
+                          addAppBuilder(user._id)
+                        } else {
+                          onUpdateUser(user, e.detail)
+                        }
                       }}
                       on:remove={() => {
                         onUpdateUser(user)
