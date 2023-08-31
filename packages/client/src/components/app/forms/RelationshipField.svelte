@@ -35,9 +35,7 @@
   let searchResults
   let searchString
   let searching = false
-  let lastSearchString
   let lastSearchId
-  let candidateIndex
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
@@ -151,8 +149,6 @@
   const search = async searchString => {
     // Reset state if this search is invalid
     if (!linkedTableId || !searchString) {
-      lastSearchString = null
-      candidateIndex = null
       searchResults = null
       return
     }
@@ -194,8 +190,6 @@
       ...row,
       primaryDisplay: row[primaryDisplay],
     }))
-    candidateIndex = searchResults?.length ? 0 : null
-    lastSearchString = searchString
   }
 
   // Debounced version of searching
