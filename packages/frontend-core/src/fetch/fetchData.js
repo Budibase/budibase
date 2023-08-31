@@ -1,5 +1,6 @@
 import TableFetch from "./TableFetch.js"
 import ViewFetch from "./ViewFetch.js"
+import ViewV2Fetch from "./ViewV2Fetch.js"
 import QueryFetch from "./QueryFetch.js"
 import RelationshipFetch from "./RelationshipFetch.js"
 import NestedProviderFetch from "./NestedProviderFetch.js"
@@ -11,6 +12,7 @@ import GroupUserFetch from "./GroupUserFetch.js"
 const DataFetchMap = {
   table: TableFetch,
   view: ViewFetch,
+  viewV2: ViewV2Fetch,
   query: QueryFetch,
   link: RelationshipFetch,
   user: UserFetch,

@@ -5,6 +5,7 @@
 
   export let resourceId
   export let disabled = false
+  export let requiresLicence
 
   let modal
   let resourcePermissions
@@ -21,6 +22,7 @@
 <Modal bind:this={modal}>
   <ManageAccessModal
     {resourceId}
+    {requiresLicence}
     levels={$permissions}
     permissions={resourcePermissions}
   />

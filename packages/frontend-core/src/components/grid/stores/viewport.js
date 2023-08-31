@@ -10,7 +10,7 @@ export const deriveStores = context => {
   const {
     rowHeight,
     visibleColumns,
-    enrichedRows,
+    rows,
     scrollTop,
     scrollLeft,
     width,
@@ -35,9 +35,9 @@ export const deriveStores = context => {
     0
   )
   const renderedRows = derived(
-    [enrichedRows, scrolledRowCount, visualRowCapacity],
-    ([$enrichedRows, $scrolledRowCount, $visualRowCapacity]) => {
-      return $enrichedRows.slice(
+    [rows, scrolledRowCount, visualRowCapacity],
+    ([$rows, $scrolledRowCount, $visualRowCapacity]) => {
+      return $rows.slice(
         $scrolledRowCount,
         $scrolledRowCount + $visualRowCapacity
       )

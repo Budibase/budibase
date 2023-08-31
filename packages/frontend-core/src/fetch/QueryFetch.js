@@ -29,6 +29,10 @@ export default class QueryFetch extends DataFetch {
     }
   }
 
+  getDefaultSortColumn() {
+    return null
+  }
+
   async getData() {
     const { datasource, limit, paginate } = this.options
     const { supportsPagination } = this.features

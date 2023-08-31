@@ -12,8 +12,10 @@ import {
   PermissionLevel,
   Row,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import * as setup from "./utilities"
+import { mocks } from "@budibase/backend-core/tests"
 
 const { basicRow } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
@@ -27,6 +29,7 @@ describe("/permission", () => {
   let table: Table & { _id: string }
   let perms: Document[]
   let row: Row
+  let view: ViewV2
 
   afterAll(setup.afterAll)
 
@@ -35,10 +38,12 @@ describe("/permission", () => {
   })
 
   beforeEach(async () => {
+    mocks.licenses.useCloudFree()
     mockedSdk.resourceActionAllowed.mockResolvedValue({ allowed: true })
 
     table = (await config.createTable()) as typeof table
     row = await config.createRow()
+    view = await config.api.viewV2.create({ tableId: table._id })
     perms = await config.api.permission.set({
       roleId: STD_ROLE_ID,
       resourceId: table._id,
@@ -160,6 +165,72 @@ describe("/permission", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body[0]._id).toEqual(row._id)
+    })
+
+    it("should be able to access the view data when the table is set to public and with no view permissions overrides", async () => {
+      // replicate changes before checking permissions
+      await config.publish()
+
+      const res = await config.api.viewV2.search(view.id, undefined, {
+        usePublicUser: true,
+      })
+      expect(res.body.rows[0]._id).toEqual(row._id)
+    })
+
+    it("should not be able to access the view data when the table is not public and there are no view permissions overrides", async () => {
+      await config.api.permission.revoke({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
+      // replicate changes before checking permissions
+      await config.publish()
+
+      await config.api.viewV2.search(view.id, undefined, {
+        expectStatus: 403,
+        usePublicUser: true,
+      })
+    })
+
+    it("should ignore the view permissions if the flag is not on", async () => {
+      await config.api.permission.set({
+        roleId: STD_ROLE_ID,
+        resourceId: view.id,
+        level: PermissionLevel.READ,
+      })
+      await config.api.permission.revoke({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
+      // replicate changes before checking permissions
+      await config.publish()
+
+      await config.api.viewV2.search(view.id, undefined, {
+        expectStatus: 403,
+        usePublicUser: true,
+      })
+    })
+
+    it("should use the view permissions if the flag is on", async () => {
+      mocks.licenses.useViewPermissions()
+      await config.api.permission.set({
+        roleId: STD_ROLE_ID,
+        resourceId: view.id,
+        level: PermissionLevel.READ,
+      })
+      await config.api.permission.revoke({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
+      // replicate changes before checking permissions
+      await config.publish()
+
+      const res = await config.api.viewV2.search(view.id, undefined, {
+        usePublicUser: true,
+      })
+      expect(res.body.rows[0]._id).toEqual(row._id)
     })
 
     it("shouldn't allow writing from a public user", async () => {
