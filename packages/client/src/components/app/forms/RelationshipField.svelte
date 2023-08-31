@@ -48,7 +48,13 @@
   $: fetch.update({ filter })
   $: {
     options = $fetch.rows
-    if (!filter?.filter(f => !!f.field)?.length) {
+    // Append initially selected options if there is no filter and it does not already exist
+    if (
+      !filter?.filter(f => !!f.field)?.length &&
+      !options?.some(option =>
+        initiallySelectedOptions?.map(opt => opt._id).includes(option._id)
+      )
+    ) {
       options = [...options, ...initiallySelectedOptions]
     }
   }
