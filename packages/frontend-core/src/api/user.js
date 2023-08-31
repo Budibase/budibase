@@ -163,7 +163,7 @@ export const buildUserEndpoints = API => ({
             admin: admin ? { global: true } : undefined,
             builder: builder ? { global: true } : undefined,
             apps: apps ? apps : undefined,
-            appBuilders: appBuilders ? appBuilders : undefined,
+            appBuilders,
           },
         }
       }),
@@ -181,7 +181,7 @@ export const buildUserEndpoints = API => ({
       url: `/api/global/users/invite/update/${invite.code}`,
       body: {
         apps: invite.apps,
-        appBuilders: invite.appBuilders ? invite.appBuilders : undefined,
+        appBuilders: invite.appBuilders,
       },
     })
   },

@@ -23,7 +23,6 @@
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
-  const CreatorID = "CREATOR"
 
   $: options = getOptions(
     $roles,
@@ -47,7 +46,7 @@
     if (allowCreator) {
       newRoles = [
         {
-          _id: CreatorID,
+          _id: Constants.Roles.CREATOR,
           name: "Creator",
           tag:
             !$licensing.perAppBuildersEnabled &&
@@ -88,8 +87,6 @@
   const onChange = e => {
     if (allowRemove && e.detail === RemoveID) {
       dispatch("remove")
-    } else if (e.detail === CreatorID) {
-      dispatch("addcreator")
     } else {
       dispatch("change", e.detail)
     }
@@ -112,7 +109,8 @@
     getOptionColour={getColor}
     getOptionIcon={getIcon}
     isOptionEnabled={option =>
-      option._id !== CreatorID || $licensing.perAppBuildersEnabled}
+      option._id !== Constants.Roles.CREATOR ||
+      $licensing.perAppBuildersEnabled}
     {placeholder}
     {error}
   />
@@ -131,7 +129,8 @@
     getOptionColour={getColor}
     getOptionIcon={getIcon}
     isOptionEnabled={option =>
-      option._id !== CreatorID || $licensing.perAppBuildersEnabled}
+      option._id !== Constants.Roles.CREATOR ||
+      $licensing.perAppBuildersEnabled}
     {placeholder}
     {error}
   />

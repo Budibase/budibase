@@ -120,11 +120,7 @@
         name: app.name,
         devId: app.devId,
         icon: app.icon,
-        role: privileged
-          ? Constants.Roles.ADMIN
-          : user?.builder?.apps.includes(prodAppId)
-          ? Constants.Roles.CREATOR
-          : roles[prodAppId],
+        role: getRole(prodAppId, roles),
       }
     })
   }
@@ -135,6 +131,18 @@
     }
     search = search.toLowerCase()
     return groups.filter(group => group.name?.toLowerCase().includes(search))
+  }
+
+  const getRole = (prodAppId, roles) => {
+    if (privileged) {
+      return Constants.Roles.ADMIN
+    }
+
+    if (user?.builder?.apps.includes(prodAppId)) {
+      return Constants.Roles.CREATOR
+    }
+
+    return roles[prodAppId]
   }
 
   const getNameLabel = user => {
