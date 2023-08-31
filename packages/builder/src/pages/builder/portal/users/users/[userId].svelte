@@ -98,11 +98,7 @@
       return y._id === userId
     })
   })
-  $: globalRole = sdk.users.isAdmin(user)
-    ? "admin"
-    : sdk.users.isBuilder(user)
-    ? "developer"
-    : "appUser"
+  $: globalRole = sdk.users.isAdmin(user) ? "admin" : "appUser"
 
   const getAvailableApps = (appList, privileged, roles) => {
     let availableApps = appList.slice()

@@ -5,7 +5,7 @@
   export let row
 
   const TooltipMap = {
-    appUser: "Only has access to published apps",
+    appUser: "Only has access to assigned apps",
     developer: "Access to the app builder",
     admin: "Full access",
   }
