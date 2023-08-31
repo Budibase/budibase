@@ -1,4 +1,4 @@
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
 
 export const initialise = context => {
   const { scrolledRowCount, rows, visualRowCapacity } = context
@@ -11,13 +11,12 @@ export const initialise = context => {
     [scrolledRowCount, rowCount, visualRowCapacity],
     ([$scrolledRowCount, $rowCount, $visualRowCapacity]) => {
       return Math.max(0, $rowCount - $scrolledRowCount - $visualRowCapacity)
-    },
-    100
+    }
   )
 
   // Fetch next page when fewer than 25 remaining rows to scroll
   remainingRows.subscribe(remaining => {
-    if (remaining < 25) {
+    if (remaining < 25 && get(rowCount)) {
       rows.actions.loadNextPage()
     }
   })

@@ -25,8 +25,7 @@ export interface ViewV2 {
     order?: SortOrder
     type?: SortType
   }
-  columns?: string[]
-  schemaUI?: Record<string, UIFieldMetadata>
+  schema?: Record<string, UIFieldMetadata>
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema

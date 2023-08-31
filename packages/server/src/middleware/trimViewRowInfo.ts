@@ -23,39 +23,27 @@ export default async (ctx: Ctx<Row>, next: Next) => {
 
   // don't need to trim delete requests
   if (ctx?.method?.toLowerCase() !== "delete") {
-    const { _viewId, ...trimmedView } = await trimViewFields(
-      viewId,
-      tableId,
-      body
-    )
-    ctx.request.body = trimmedView
+    await trimViewFields(ctx.request.body, viewId)
   }
 
   ctx.params.sourceId = tableId
+  ctx.params.viewId = viewId
 
   return next()
 }
 
+// have to mutate the koa context, can't return
 export async function trimViewFields<T extends Row>(
-  viewId: string,
-  tableId: string,
-  data: T
-): Promise<T> {
+  body: Row,
+  viewId: string
+): Promise<void> {
   const view = await sdk.views.get(viewId)
-  if (!view?.columns || !Object.keys(view.columns).length) {
-    return data
+  const allowedKeys = sdk.views.allowedFields(view)
+  // have to mutate the context, can't update reference
+  const toBeRemoved = Object.keys(body).filter(
+    key => !allowedKeys.includes(key)
+  )
+  for (let removeKey of toBeRemoved) {
+    delete body[removeKey]
   }
-
-  const table = await sdk.tables.getTable(tableId)
-  const { schema } = sdk.views.enrichSchema(view!, table.schema)
-  const result: Record<string, any> = {}
-  for (const key of [
-    ...Object.keys(schema),
-    ...db.CONSTANT_EXTERNAL_ROW_COLS,
-    ...db.CONSTANT_INTERNAL_ROW_COLS,
-  ]) {
-    result[key] = data[key] !== null ? data[key] : undefined
-  }
-
-  return result as T
 }

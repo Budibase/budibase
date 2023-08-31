@@ -15,6 +15,7 @@
   $: tempValue = filters || []
   $: schemaFields = Object.values(schema || {})
   $: text = getText(filters)
+  $: selected = tempValue.filter(x => !x.onEmptyFilter)?.length > 0
 
   const getText = filters => {
     const count = filters?.filter(filter => filter.field)?.length
@@ -22,13 +23,7 @@
   }
 </script>
 
-<ActionButton
-  icon="Filter"
-  quiet
-  {disabled}
-  on:click={modal.show}
-  selected={tempValue?.length > 0}
->
+<ActionButton icon="Filter" quiet {disabled} on:click={modal.show} {selected}>
   {text}
 </ActionButton>
 <Modal bind:this={modal}>

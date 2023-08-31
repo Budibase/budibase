@@ -56,6 +56,7 @@
     popover.hide()
     editIsOpen = false
   }
+
   const onMouseDown = e => {
     if (e.button === 0 && orderable) {
       timeout = setTimeout(() => {
@@ -116,6 +117,7 @@
     columns.actions.saveChanges()
     open = false
   }
+
   onMount(() => subscribe("close-edit-column", cancelEdit))
 </script>
 
@@ -170,7 +172,6 @@
   align="right"
   offset={0}
   popoverTarget={document.getElementById(`grid-${rand}`)}
-  animate={false}
   customZindex={100}
 >
   {#if editIsOpen}
@@ -187,7 +188,7 @@
       <MenuItem
         icon="Edit"
         on:click={editColumn}
-        disabled={!$config.allowSchemaChanges || column.schema.disabled}
+        disabled={!$config.canEditColumns || column.schema.disabled}
       >
         Edit column
       </MenuItem>
@@ -195,7 +196,6 @@
         icon="Label"
         on:click={makeDisplayColumn}
         disabled={idx === "sticky" ||
-          !$config.allowSchemaChanges ||
           bannedDisplayColumnTypes.includes(column.schema.type)}
       >
         Use as display column
