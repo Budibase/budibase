@@ -78,7 +78,19 @@ export function createGroupsStore() {
     },
 
     getGroupAppIds: group => {
-      return Object.keys(group?.roles || {})
+      let groupAppIds = Object.keys(group?.roles || {})
+      if (group?.builder?.apps) {
+        groupAppIds = groupAppIds.concat(group.builder.apps)
+      }
+      return groupAppIds
+    },
+
+    addGroupAppBuilder: async (groupId, appId) => {
+      return await API.addGroupAppBuilder({ groupId, appId })
+    },
+
+    removeGroupAppBuilder: async (groupId, appId) => {
+      return await API.removeGroupAppBuilder({ groupId, appId })
     },
   }
 

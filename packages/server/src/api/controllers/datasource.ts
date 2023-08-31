@@ -17,7 +17,6 @@ import {
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
   IntegrationBase,
-  RestConfig,
   SourceName,
   UpdateDatasourceResponse,
   UserCtx,
@@ -27,7 +26,6 @@ import {
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { setupCreationAuth as googleSetupCreationAuth } from "../../integrations/googlesheets"
-import { areRESTVariablesValid } from "../../sdk/app/datasources/datasources"
 
 function getErrorTables(errors: any, errorType: string) {
   return Object.entries(errors)
