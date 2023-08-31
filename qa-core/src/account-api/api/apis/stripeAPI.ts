@@ -21,7 +21,7 @@ export default class StripeAPI extends BaseAPI {
     }, opts)
   }
 
-  async createCheckoutSuccess(opts: APIRequestOpts = { status: 200 }) {
+  async checkoutSuccess(opts: APIRequestOpts = { status: 200 }) {
     return this.doRequest(() => {
       return this.client.post(`/api/stripe/checkout-success`)
     }, opts)
@@ -38,7 +38,7 @@ export default class StripeAPI extends BaseAPI {
     }, opts)
   }
 
-  async createLink(opts: APIRequestOpts = { status: 200 }) {
+  async linkStripeCustomer(opts: APIRequestOpts = { status: 200 }) {
     return this.doRequest(() => {
       return this.client.post(`/api/stripe/link`)
     }, opts)

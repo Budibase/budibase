@@ -1,6 +1,6 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
-import { Hosting } from "@budibase/types"
+import {Hosting, PlanType} from "@budibase/types"
 
 describe("license management", () => {
   const config = new TestConfiguration()
@@ -21,7 +21,7 @@ describe("license management", () => {
 
     // Self response has free license
     const [selfRes, selfBody] = await config.api.accounts.self()
-    expect(selfBody.license.plan.type).toBe("free")
+    expect(selfBody.license.plan.type).toBe(PlanType.FREE)
 
     // Retrieve plans
     const [plansRes, planBody] = await config.api.licenses.getPlans()
@@ -29,7 +29,7 @@ describe("license management", () => {
     // Select priceId from premium plan
     let premiumPriceId = null
     for (const plan of planBody) {
-      if (plan.type === "premium") {
+      if (plan.type === PlanType.PREMIUM) {
         premiumPriceId = plan.prices[0].priceId
         break
       }

@@ -114,7 +114,7 @@ export default class LicenseAPI extends BaseAPI {
     }, opts)
   }
 
-  async updateAccountLicense(
+  async refreshAccountLicense(
     accountId: string,
     opts: { status?: number } = {}
   ): Promise<Response> {
@@ -134,7 +134,7 @@ export default class LicenseAPI extends BaseAPI {
     }, opts)
   }
 
-  async updateLicenseUsage(opts: { status?: number } = {}): Promise<Response> {
+  async licenseUsageTriggered(opts: { status?: number } = {}): Promise<Response> {
     const [response, json] = await this.client.post(
       `/api/license/usage/triggered`
     )
