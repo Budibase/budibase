@@ -21,10 +21,9 @@
   export let sort = false
   export let align
   export let footer = null
+  export let open = false
 
   const dispatch = createEventDispatcher()
-
-  let open = false
 
   $: fieldText = getFieldText(value, options, placeholder)
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)

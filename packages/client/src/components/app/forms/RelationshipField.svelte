@@ -1,5 +1,10 @@
 <script>
-  import { CoreSelect, CoreMultiselect, Input } from "@budibase/bbui"
+  import {
+    CoreSelect,
+    CoreMultiselect,
+    Input,
+    ProgressCircle,
+  } from "@budibase/bbui"
   import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
@@ -24,6 +29,7 @@
   let primaryDisplay
   let options
   let selectedOptions = []
+  let isOpen = false
 
   let searchResults
   let searchString
@@ -65,6 +71,11 @@
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: expandedDefaultValue = expand(defaultValue)
   $: debouncedSearch(searchString)
+  $: {
+    if (searching) {
+      isOpen = true
+    }
+  }
 
   $: {
     if (
@@ -135,7 +146,7 @@
   }
 
   // Search for rows based on the search string
-  const search = async (searchString, force = false) => {
+  const search = async searchString => {
     // Reset state if this search is invalid
     if (!linkedTableId || !searchString) {
       lastSearchString = null
@@ -201,10 +212,16 @@
           bind:value={searchString}
           placeholder={primaryDisplay ? `Search by ${primaryDisplay}` : null}
         />
+        {#if searching}
+          <div class="searching">
+            <ProgressCircle size="S" />
+          </div>
+        {/if}
       </div>
     {/if}
     <svelte:component
       this={component}
+      bind:open={isOpen}
       {options}
       autocomplete={false}
       value={multiselect ? multiValue : singleValue}
