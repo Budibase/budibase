@@ -35,6 +35,13 @@ export function isAdminOrBuilder(
   return isBuilder(user, appId) || isAdmin(user)
 }
 
+export function isAdminOrGlobalBuilder(
+  user: User | ContextUser,
+  appId?: string
+): boolean {
+  return isGlobalBuilder(user) || isAdmin(user)
+}
+
 // check if they are a builder within an app (not necessarily a global builder)
 export function hasAppBuilderPermissions(user?: User | ContextUser): boolean {
   if (!user) {
