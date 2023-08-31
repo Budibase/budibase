@@ -21,4 +21,17 @@ export const buildPermissionsEndpoints = API => ({
       url: `/api/permission/${roleId}/${resourceId}/${level}`,
     })
   },
+
+  /**
+   * Remove the the permissions for a certain resource
+   * @param resourceId the ID of the resource to update
+   * @param roleId the ID of the role to update the permissions of
+   * @param level the level to remove the role for this resource
+   * @return {Promise<*>}
+   */
+  removePermissionFromResource: async ({ resourceId, roleId, level }) => {
+    return await API.delete({
+      url: `/api/permission/${roleId}/${resourceId}/${level}`,
+    })
+  },
 })
