@@ -23,7 +23,8 @@ export class ViewV2API extends TestAPI {
     if (!tableId && !this.config.table) {
       throw "Test requires table to be configured."
     }
-    tableId = this.config.table!._id!
+    const table = this.config.table
+    tableId = table!._id!
     const view = {
       tableId,
       name: generator.guid(),

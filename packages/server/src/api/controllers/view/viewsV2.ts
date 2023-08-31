@@ -2,51 +2,19 @@ import sdk from "../../../sdk"
 import {
   CreateViewRequest,
   Ctx,
+  RequiredKeys,
   UIFieldMetadata,
   UpdateViewRequest,
   ViewResponse,
   ViewV2,
-  RequiredKeys,
 } from "@budibase/types"
+import { builderSocket, gridSocket } from "../../../websockets"
 
-async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
+async function parseSchema(view: CreateViewRequest) {
   if (!view.schema) {
     return
   }
-
-  function hasOverrides(
-    newObj: Record<string, any>,
-    existingObj: Record<string, any>
-  ) {
-    const result = Object.entries(newObj).some(([key, value]) => {
-      const isObject = typeof value === "object"
-      const existing = existingObj[key]
-      if (isObject && hasOverrides(value, existing || {})) {
-        return true
-      }
-      if (!isObject && value !== existing) {
-        return true
-      }
-    })
-
-    return result
-  }
-
-  const table = await sdk.tables.getTable(view.tableId)
-  for (const [
-    fieldName,
-    { order, width, visible, icon, ...schemaNonUI },
-  ] of Object.entries(view.schema)) {
-    const overrides = hasOverrides(schemaNonUI, table.schema[fieldName])
-    if (overrides) {
-      ctx.throw(
-        400,
-        "This endpoint does not support overriding non UI fields in the schema"
-      )
-    }
-  }
-
-  const schemaUI =
+  const finalViewSchema =
     view.schema &&
     Object.entries(view.schema).reduce((p, [fieldName, schemaValue]) => {
       const fieldSchema: RequiredKeys<UIFieldMetadata> = {
@@ -63,22 +31,32 @@ async function parseSchemaUI(ctx: Ctx, view: CreateViewRequest) {
       p[fieldName] = fieldSchema
       return p
     }, {} as Record<string, RequiredKeys<UIFieldMetadata>>)
-  return schemaUI
+  for (let [key, column] of Object.entries(finalViewSchema)) {
+    if (!column.visible) {
+      delete finalViewSchema[key]
+    }
+  }
+  return finalViewSchema
+}
+
+export async function get(ctx: Ctx<void, ViewResponse>) {
+  ctx.body = {
+    data: await sdk.views.get(ctx.params.viewId, { enriched: true }),
+  }
 }
 
 export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   const view = ctx.request.body
   const { tableId } = view
 
-  const schemaUI = await parseSchemaUI(ctx, view)
+  const schema = await parseSchema(view)
 
   const parsedView: Omit<RequiredKeys<ViewV2>, "id" | "version"> = {
     name: view.name,
     tableId: view.tableId,
     query: view.query,
     sort: view.sort,
-    columns: view.schema && Object.keys(view.schema),
-    schemaUI,
+    schema,
     primaryDisplay: view.primaryDisplay,
   }
   const result = await sdk.views.create(tableId, parsedView)
@@ -86,6 +64,10 @@ export async function create(ctx: Ctx<CreateViewRequest, ViewResponse>) {
   ctx.body = {
     data: result,
   }
+
+  const table = await sdk.tables.getTable(tableId)
+  builderSocket?.emitTableUpdate(ctx, table)
+  gridSocket?.emitViewUpdate(ctx, result)
 }
 
 export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
@@ -101,7 +83,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
 
   const { tableId } = view
 
-  const schemaUI = await parseSchemaUI(ctx, view)
+  const schema = await parseSchema(view)
   const parsedView: RequiredKeys<ViewV2> = {
     id: view.id,
     name: view.name,
@@ -109,8 +91,7 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
     tableId: view.tableId,
     query: view.query,
     sort: view.sort,
-    columns: view.schema && Object.keys(view.schema),
-    schemaUI,
+    schema,
     primaryDisplay: view.primaryDisplay,
   }
 
@@ -118,11 +99,19 @@ export async function update(ctx: Ctx<UpdateViewRequest, ViewResponse>) {
   ctx.body = {
     data: result,
   }
+
+  const table = await sdk.tables.getTable(tableId)
+  builderSocket?.emitTableUpdate(ctx, table)
+  gridSocket?.emitViewUpdate(ctx, result)
 }
 
 export async function remove(ctx: Ctx) {
   const { viewId } = ctx.params
 
-  await sdk.views.remove(viewId)
+  const view = await sdk.views.remove(viewId)
   ctx.status = 204
+
+  const table = await sdk.tables.getTable(view.tableId)
+  builderSocket?.emitTableUpdate(ctx, table)
+  gridSocket?.emitViewDeletion(ctx, view)
 }
