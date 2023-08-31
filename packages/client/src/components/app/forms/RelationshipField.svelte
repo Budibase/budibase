@@ -54,14 +54,13 @@
   $: fetch.update({ filter })
   $: {
     options = searchResults ? searchResults : $fetch.rows
-    // Append initially selected options if there is no filter and it does not already exist
-    if (
-      !filter?.filter(f => !!f.field)?.length &&
-      !options?.some(option =>
-        selectedOptions?.map(opt => opt._id).includes(option._id)
-      )
-    ) {
-      options = [...options, ...selectedOptions]
+    const nonMatchingOptions = selectedOptions.filter(
+      option => !options.map(opt => opt._id).includes(option._id)
+    )
+    // Append initially selected options if there is no filter
+    // and hasn't already been appended
+    if (!filter?.filter(f => !!f.field)?.length) {
+      options = [...options, ...nonMatchingOptions]
     }
   }
   $: tableDefinition = $fetch.definition
@@ -95,7 +94,8 @@
           },
         },
       }).then(response => {
-        selectedOptions = response.rows
+        const value = multiselect ? multiValue : singleValue
+        selectedOptions = response.rows.filter(row => value.includes(row._id))
       })
     }
   }
