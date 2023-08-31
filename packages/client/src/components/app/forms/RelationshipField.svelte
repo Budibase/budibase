@@ -23,7 +23,7 @@
   let tableDefinition
   let primaryDisplay
   let options
-  let initiallySelectedOptions = []
+  let selectedOptions = []
 
   let searchResults
   let searchString
@@ -47,15 +47,15 @@
   })
   $: fetch.update({ filter })
   $: {
-    options = $fetch.rows
+    options = searchResults ? searchResults : $fetch.rows
     // Append initially selected options if there is no filter and it does not already exist
     if (
       !filter?.filter(f => !!f.field)?.length &&
       !options?.some(option =>
-        initiallySelectedOptions?.map(opt => opt._id).includes(option._id)
+        selectedOptions?.map(opt => opt._id).includes(option._id)
       )
     ) {
-      options = [...options, ...initiallySelectedOptions]
+      options = [...options, ...selectedOptions]
     }
   }
   $: tableDefinition = $fetch.definition
@@ -70,7 +70,7 @@
     if (
       primaryDisplay !== "_id" &&
       fieldState?.value?.length &&
-      !initiallySelectedOptions?.length
+      !selectedOptions?.length
     ) {
       API.searchTable({
         paginate: false,
@@ -84,7 +84,7 @@
           },
         },
       }).then(response => {
-        initiallySelectedOptions = response.rows
+        selectedOptions = response.rows
       })
     }
   }
@@ -123,6 +123,12 @@
 
   const handleChange = value => {
     const changed = fieldApi.setValue(value)
+    selectedOptions = value.map(val => ({
+      _id: val,
+      [`${primaryDisplay}`]: options.find(option => option._id === val)[
+        `${primaryDisplay}`
+      ],
+    }))
     if (onChange && changed) {
       onChange({ value })
     }
@@ -130,17 +136,11 @@
 
   // Search for rows based on the search string
   const search = async (searchString, force = false) => {
-    // Avoid update state at all if we've already handled the update and this is
-    // a wasted search due to svelte reactivity
-    if (!force && !searchString && !lastSearchString) {
-      return
-    }
-
     // Reset state if this search is invalid
-    if (!linkedTableId) {
+    if (!linkedTableId || !searchString) {
       lastSearchString = null
       candidateIndex = null
-      searchResults = []
+      searchResults = null
       return
     }
 
