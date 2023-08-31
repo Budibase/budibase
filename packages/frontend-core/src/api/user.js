@@ -156,13 +156,14 @@ export const buildUserEndpoints = API => ({
     return await API.post({
       url: "/api/global/users/onboard",
       body: payload.map(invite => {
-        const { email, admin, builder, apps } = invite
+        const { email, admin, builder, apps, appBuilders } = invite
         return {
           email,
           userInfo: {
             admin: admin ? { global: true } : undefined,
             builder: builder ? { global: true } : undefined,
             apps: apps ? apps : undefined,
+            appBuilders,
           },
         }
       }),
@@ -175,10 +176,12 @@ export const buildUserEndpoints = API => ({
    * @param invite the invite code sent in the email
    */
   updateUserInvite: async invite => {
+    console.log(invite)
     await API.post({
       url: `/api/global/users/invite/update/${invite.code}`,
       body: {
         apps: invite.apps,
+        appBuilders: invite.appBuilders,
       },
     })
   },
@@ -248,6 +251,28 @@ export const buildUserEndpoints = API => ({
   getUserCountByApp: async ({ appId }) => {
     return await API.get({
       url: `/api/global/users/count/${appId}`,
+    })
+  },
+
+  /**
+   * Adds a per app builder to the selected app
+   * @param appId the applications id
+   * @param userId The id of the user to add as a builder
+   */
+  addAppBuilder: async ({ userId, appId }) => {
+    return await API.post({
+      url: `/api/global/users/${userId}/app/${appId}/builder`,
+    })
+  },
+
+  /**
+   * Removes a per app builder to the selected app
+   * @param appId the applications id
+   * @param userId The id of the user to remove as a builder
+   */
+  removeAppBuilder: async ({ userId, appId }) => {
+    return await API.delete({
+      url: `/api/global/users/${userId}/app/${appId}/builder`,
     })
   },
 })
