@@ -10,13 +10,13 @@
   let modal
   let resourcePermissions
 
-  async function openDropdown() {
+  async function openModal() {
     resourcePermissions = await permissions.forResource(resourceId)
     modal.show()
   }
 </script>
 
-<ActionButton icon="LockClosed" quiet on:click={openDropdown} {disabled}>
+<ActionButton icon="LockClosed" quiet on:click={openModal} {disabled}>
   Access
 </ActionButton>
 <Modal bind:this={modal}>
