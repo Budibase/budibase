@@ -3,9 +3,14 @@ import { features } from "@budibase/pro"
 import {
   DocumentType,
   PermissionLevel,
+  Role,
   VirtualDocumentType,
 } from "@budibase/types"
-import { getRoleParams, isViewID } from "../../../db/utils"
+import {
+  extractViewInfoFromID,
+  getRoleParams,
+  isViewID,
+} from "../../../db/utils"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
@@ -41,15 +46,31 @@ export async function resourceActionAllowed({
   }
 }
 
-export async function getResourcePerms(resourceId: string) {
+type ResourcePermissions = Record<
+  string,
+  {
+    role: string
+    inherited?: boolean | undefined
+  }
+>
+
+export async function getResourcePerms(
+  resourceId: string
+): Promise<ResourcePermissions> {
   const db = context.getAppDB()
   const body = await db.allDocs(
     getRoleParams(null, {
       include_docs: true,
     })
   )
-  const rolesList = body.rows.map(row => row.doc)
-  let permissions: Record<string, string> = {}
+  const rolesList = body.rows.map<Role>(row => row.doc)
+  let permissions: Record<string, { role: string; inherited?: boolean }> = {}
+
+  let parentResourceToCheck
+  if (isViewID(resourceId) && (await features.isViewPermissionEnabled())) {
+    parentResourceToCheck = extractViewInfoFromID(resourceId).tableId
+  }
+
   for (let level of CURRENTLY_SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
     for (let role of rolesList) {
@@ -57,15 +78,28 @@ export async function getResourcePerms(resourceId: string) {
         role.permissions,
         resourceId
       )
-      if (
-        rolePerms &&
-        rolePerms[resourceId] &&
-        rolePerms[resourceId].indexOf(level) !== -1
+      if (rolePerms[resourceId]?.indexOf(level) > -1) {
+        permissions[level] = {
+          role: roles.getExternalRoleID(role._id!, role.version),
+        }
+      } else if (
+        parentResourceToCheck &&
+        rolePerms[parentResourceToCheck]?.indexOf(level) > -1
       ) {
-        permissions[level] = roles.getExternalRoleID(role._id, role.version)!
+        permissions[level] = {
+          role: roles.getExternalRoleID(role._id!, role.version),
+          inherited: true,
+        }
       }
     }
   }
 
-  return Object.assign(getBasePermissions(resourceId), permissions)
+  const basePermissions = Object.entries(
+    getBasePermissions(resourceId)
+  ).reduce<ResourcePermissions>((p, [level, role]) => {
+    p[level] = { role }
+    return p
+  }, {})
+  const result = Object.assign(basePermissions, permissions)
+  return result
 }
