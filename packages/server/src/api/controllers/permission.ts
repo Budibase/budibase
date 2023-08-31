@@ -147,7 +147,9 @@ export async function fetch(ctx: UserCtx) {
 
 export async function getResourcePerms(ctx: UserCtx) {
   const resourceId = ctx.params.resourceId
-  ctx.body = await sdk.permissions.getResourcePerms(resourceId)
+  ctx.body = {
+    permissions: await sdk.permissions.getResourcePerms(resourceId),
+  }
 }
 
 export async function addPermission(ctx: UserCtx) {
