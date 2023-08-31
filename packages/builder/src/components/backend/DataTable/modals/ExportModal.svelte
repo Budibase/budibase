@@ -42,7 +42,7 @@
   let exportFormat
   let filterLookup
 
-  $: if (options) {
+  $: if (options && !exportFormat) {
     exportFormat = Array.isArray(options) ? options[0]?.key : []
   }
 
