@@ -30,6 +30,7 @@
   let options
   let selectedOptions = []
   let isOpen = false
+  let hasFilter
 
   let searchResults
   let searchString
@@ -51,6 +52,7 @@
       limit: 100,
     },
   })
+  $: hasFilter = !!filter?.filter(f => !!f.field)?.length
   $: fetch.update({ filter })
   $: {
     options = searchResults ? searchResults : $fetch.rows
@@ -59,7 +61,7 @@
     )
     // Append initially selected options if there is no filter
     // and hasn't already been appended
-    if (!filter?.filter(f => !!f.field)?.length) {
+    if (!hasFilter) {
       options = [...options, ...nonMatchingOptions]
     }
   }
@@ -152,6 +154,15 @@
       lastSearchString = null
       candidateIndex = null
       searchResults = null
+      return
+    }
+
+    // If a filter exists, then do a client side search
+    if (hasFilter) {
+      searchResults = $fetch.rows.filter(option =>
+        option[`${primaryDisplay}`].startsWith(searchString)
+      )
+      isOpen = true
       return
     }
 
