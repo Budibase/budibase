@@ -138,7 +138,7 @@
       return Constants.Roles.ADMIN
     }
 
-    if (user?.builder?.apps.includes(prodAppId)) {
+    if (user?.builder?.apps?.includes(prodAppId)) {
       return Constants.Roles.CREATOR
     }
 
