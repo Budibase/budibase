@@ -45,7 +45,7 @@
       return
     }
     nextIndicators[idx].visible =
-      nextIndicators[idx].isSidePanel || entries[0].isIntersecting
+      nextIndicators[idx].insideSidePanel || entries[0].isIntersecting
     if (++callbackCount === observers.length) {
       indicators = nextIndicators
       updating = false
@@ -125,7 +125,7 @@
         width: elBounds.width + 4,
         height: elBounds.height + 4,
         visible: false,
-        isSidePanel: child.classList.contains("side-panel"),
+        insideSidePanel: !!child.closest(".side-panel"),
       })
     })
   }

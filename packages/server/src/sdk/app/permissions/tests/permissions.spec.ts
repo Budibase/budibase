@@ -1,12 +1,13 @@
-import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { PermissionLevel } from "@budibase/types"
 import { mocks, structures } from "@budibase/backend-core/tests"
 import { resourceActionAllowed } from ".."
 import { generateViewID } from "../../../../db/utils"
+import { initProMocks } from "../../../../tests/utilities/mocks/pro"
+
+initProMocks()
 
 describe("permissions sdk", () => {
   beforeEach(() => {
-    new TestConfiguration()
     mocks.licenses.useCloudFree()
   })
 

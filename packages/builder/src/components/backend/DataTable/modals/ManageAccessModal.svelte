@@ -7,11 +7,14 @@
     notifications,
     Body,
     ModalContent,
+    Tags,
+    Tag,
   } from "@budibase/bbui"
   import { capitalise } from "helpers"
 
   export let resourceId
   export let permissions
+  export let requiresLicence
 
   async function changePermission(level, role) {
     try {
@@ -30,22 +33,36 @@
   }
 </script>
 
-<ModalContent title="Manage Access" showCancelButton={false} confirmText="Done">
-  <Body size="S">Specify the minimum access level role for this data.</Body>
-  <div class="row">
-    <Label extraSmall grey>Level</Label>
-    <Label extraSmall grey>Role</Label>
-    {#each Object.keys(permissions) as level}
-      <Input value={capitalise(level)} disabled />
-      <Select
-        value={permissions[level]}
-        on:change={e => changePermission(level, e.detail)}
-        options={$roles}
-        getOptionLabel={x => x.name}
-        getOptionValue={x => x._id}
-      />
-    {/each}
-  </div>
+<ModalContent showCancelButton={false} confirmText="Done">
+  <span slot="header">
+    Manage Access
+    {#if requiresLicence}
+      <span class="lock-tag">
+        <Tags>
+          <Tag icon="LockClosed">{requiresLicence.tier}</Tag>
+        </Tags>
+      </span>
+    {/if}
+  </span>
+  {#if requiresLicence}
+    <Body size="S">{requiresLicence.message}</Body>
+  {:else}
+    <Body size="S">Specify the minimum access level role for this data.</Body>
+    <div class="row">
+      <Label extraSmall grey>Level</Label>
+      <Label extraSmall grey>Role</Label>
+      {#each Object.keys(permissions) as level}
+        <Input value={capitalise(level)} disabled />
+        <Select
+          value={permissions[level]}
+          on:change={e => changePermission(level, e.detail)}
+          options={$roles}
+          getOptionLabel={x => x.name}
+          getOptionValue={x => x._id}
+        />
+      {/each}
+    </div>
+  {/if}
 </ModalContent>
 
 <style>
@@ -53,5 +70,9 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-gap: var(--spacing-s);
+  }
+
+  .lock-tag {
+    padding-left: var(--spacing-s);
   }
 </style>
