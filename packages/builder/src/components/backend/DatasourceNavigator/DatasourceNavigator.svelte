@@ -1,7 +1,14 @@
 <script>
   import { goto, isActive, params } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
-  import { database, datasources, queries, tables, views } from "stores/backend"
+  import {
+    database,
+    datasources,
+    queries,
+    tables,
+    views,
+    viewsV2,
+  } from "stores/backend"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
@@ -24,6 +31,7 @@
     $tables,
     $queries,
     $views,
+    $viewsV2,
     openDataSources
   )
   $: openDataSource = enrichedDataSources.find(x => x.open)
@@ -41,6 +49,7 @@
     tables,
     queries,
     views,
+    viewsV2,
     openDataSources
   ) => {
     if (!datasources?.list?.length) {
@@ -57,7 +66,8 @@
         isActive,
         tables,
         queries,
-        views
+        views,
+        viewsV2
       )
       const onlySource = datasources.list.length === 1
       return {
@@ -106,7 +116,8 @@
     isActive,
     tables,
     queries,
-    views
+    views,
+    viewsV2
   ) => {
     // Check for being on a datasource page
     if (params.datasourceId === datasource._id) {
@@ -152,10 +163,16 @@
 
     // Check for a matching view
     const selectedView = views.selected?.name
-    const table = options.find(table => {
+    const viewTable = options.find(table => {
       return table.views?.[selectedView] != null
     })
-    return table != null
+    if (viewTable) {
+      return true
+    }
+
+    // Check for a matching viewV2
+    const viewV2Table = options.find(x => x._id === viewsV2.selected?.tableId)
+    return viewV2Table != null
   }
 </script>
 

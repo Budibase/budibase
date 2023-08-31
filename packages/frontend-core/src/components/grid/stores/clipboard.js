@@ -8,7 +8,7 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const createActions = context => {
   const { copiedCell, focusedCellAPI } = context
 
   const copy = () => {
