@@ -13,6 +13,13 @@ export function createPermissionStore() {
         level,
       })
     },
+    remove: async ({ level, role, resource }) => {
+      return await API.removePermissionFromResource({
+        resourceId: resource,
+        roleId: role,
+        level,
+      })
+    },
     forResource: async resourceId => {
       return await API.getPermissionForResource(resourceId)
     },
