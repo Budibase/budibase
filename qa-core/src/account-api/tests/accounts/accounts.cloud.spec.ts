@@ -52,7 +52,8 @@ describe("Accounts", () => {
       await config.loginAsAccount(createAccountRequest)
 
       // Verify self response matches account
-      await config.api.accounts.self()
+      const [selfRes, selfBody] = await config.api.accounts.self()
+      expect(selfBody.email).toBe(email)
 
       // Delete account
       await config.api.accounts.deleteCurrentAccount()
