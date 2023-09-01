@@ -4,7 +4,7 @@
 
   export let text = null
   export let condition = true
-  export let duration = 3000
+  export let duration = 5000
   export let position
   export let type
 
