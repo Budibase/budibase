@@ -26,6 +26,9 @@ export function createPermissionStore() {
     forResourceDetailed: async resourceId => {
       return await API.getPermissionForResource(resourceId)
     },
+    getDependantsCount: async resourceId => {
+      return (await API.getDependants(resourceId)).total
+    },
   }
 }
 

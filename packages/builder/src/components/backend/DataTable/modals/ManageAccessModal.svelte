@@ -9,6 +9,7 @@
     ModalContent,
     Tags,
     Tag,
+    Icon,
   } from "@budibase/bbui"
   import { capitalise } from "helpers"
   import { get } from "svelte/store"
@@ -63,6 +64,12 @@
   )
 
   $: requiresPlanToModify = permissions.requiresPlanToModify
+
+  let dependantResources
+  async function loadDependantResources() {
+    dependantResources = await permissionsStore.getDependantsCount(resourceId)
+  }
+  loadDependantResources()
 </script>
 
 <ModalContent showCancelButton={false} confirmText="Done">
@@ -93,6 +100,17 @@
       />
     {/each}
   </div>
+
+  {#if dependantResources}
+    <div class="inheriting-resources">
+      <Icon name="Alert" />
+      <Body size="S">
+        <i>
+          {dependantResources} resource/s are inheriting this access.
+        </i>
+      </Body>
+    </div>
+  {/if}
 </ModalContent>
 
 <style>
@@ -104,5 +122,10 @@
 
   .lock-tag {
     padding-left: var(--spacing-s);
+  }
+
+  .inheriting-resources {
+    display: flex;
+    gap: var(--spacing-s);
   }
 </style>

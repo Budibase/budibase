@@ -6,6 +6,7 @@ import {
   PermissionLevel,
   GetResourcePermsResponse,
   ResourcePermissionInfo,
+  GetDependantResourcesResponse,
 } from "@budibase/types"
 import { getRoleParams } from "../../db/utils"
 import {
@@ -176,6 +177,15 @@ export async function getResourcePerms(
     requiresPlanToModify: (
       await sdk.permissions.allowsExplicitPermissions(resourceId)
     ).minPlan,
+  }
+}
+
+export async function getDependantResources(
+  ctx: UserCtx<void, GetDependantResourcesResponse>
+) {
+  const resourceId = ctx.params.resourceId
+  ctx.body = {
+    total: await sdk.permissions.getDependantResources(resourceId),
   }
 }
 

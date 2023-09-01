@@ -10,3 +10,7 @@ export interface GetResourcePermsResponse {
   permissions: Record<string, ResourcePermissionInfo>
   requiresPlanToModify?: PlanType
 }
+
+export interface GetDependantResourcesResponse {
+  total: number
+}

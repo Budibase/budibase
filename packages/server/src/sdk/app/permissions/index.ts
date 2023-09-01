@@ -1,4 +1,4 @@
-import { context, env, roles } from "@budibase/backend-core"
+import { context, db, env, roles } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import {
   DocumentType,
@@ -16,6 +16,8 @@ import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
 } from "../../../utilities/security"
+import sdk from "../../../sdk"
+import { isV2 } from "../views"
 
 type ResourceActionAllowedResult =
   | { allowed: true }
@@ -133,4 +135,30 @@ export async function getResourcePerms(
   }, {})
   const result = Object.assign(basePermissions, permissions)
   return result
+}
+
+export async function getDependantResources(resourceId: string) {
+  if (db.isTableId(resourceId)) {
+    const dependants = new Set<string>()
+
+    const table = await sdk.tables.getTable(resourceId)
+    const views = Object.values(table.views || {})
+
+    for (const view of views) {
+      if (!isV2(view)) {
+        continue
+      }
+
+      const permissions = await getResourcePerms(view.id)
+      for (const [level, roleInfo] of Object.entries(permissions)) {
+        if (roleInfo.type === PermissionSource.INHERITED) {
+          dependants.add(view.id)
+        }
+      }
+    }
+
+    return dependants.size
+  }
+
+  return 0
 }
