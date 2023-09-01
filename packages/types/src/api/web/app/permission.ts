@@ -12,5 +12,5 @@ export interface GetResourcePermsResponse {
 }
 
 export interface GetDependantResourcesResponse {
-  total: number
+  resourceByType?: Record<string, number>
 }

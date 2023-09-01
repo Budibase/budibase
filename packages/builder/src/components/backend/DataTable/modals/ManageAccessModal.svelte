@@ -65,11 +65,27 @@
 
   $: requiresPlanToModify = permissions.requiresPlanToModify
 
-  let dependantResources
-  async function loadDependantResources() {
-    dependantResources = await permissionsStore.getDependantsCount(resourceId)
+  let dependantsInfoMessage
+  async function loadDependantInfo() {
+    const dependantsInfo = await permissionsStore.getDependantsInfo(resourceId)
+
+    const resourceByType = dependantsInfo?.resourceByType
+
+    if (resourceByType) {
+      const total = Object.values(resourceByType).reduce((p, c) => p + c, 0)
+      let resourceDisplay =
+        Object.keys(resourceByType).length === 1 && resourceByType.view
+          ? "view"
+          : "resource"
+
+      if (total === 1) {
+        dependantsInfoMessage = `1 ${resourceDisplay} is inheriting this access.`
+      } else if (total > 1) {
+        dependantsInfoMessage = `${total} ${resourceDisplay}s are inheriting this access.`
+      }
+    }
   }
-  loadDependantResources()
+  loadDependantInfo()
 </script>
 
 <ModalContent showCancelButton={false} confirmText="Done">
@@ -101,12 +117,12 @@
     {/each}
   </div>
 
-  {#if dependantResources}
+  {#if dependantsInfoMessage}
     <div class="inheriting-resources">
       <Icon name="Alert" />
       <Body size="S">
         <i>
-          {dependantResources} resource/s are inheriting this access.
+          {dependantsInfoMessage}
         </i>
       </Body>
     </div>

@@ -185,7 +185,7 @@ export async function getDependantResources(
 ) {
   const resourceId = ctx.params.resourceId
   ctx.body = {
-    total: await sdk.permissions.getDependantResources(resourceId),
+    resourceByType: await sdk.permissions.getDependantResources(resourceId),
   }
 }
 
