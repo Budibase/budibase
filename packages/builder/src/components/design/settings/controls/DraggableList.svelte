@@ -33,17 +33,19 @@
   let anchors = {}
   let draggableItems = []
 
-  const buildDragable = items => {
-    return items.map(item => {
-      return {
-        id: listItemKey ? item[listItemKey] : generate(),
-        item,
-      }
-    })
+  const buildDraggable = items => {
+    return items
+      .map(item => {
+        return {
+          id: listItemKey ? item[listItemKey] : generate(),
+          item,
+        }
+      })
+      .filter(item => item.id)
   }
 
   $: if (items) {
-    draggableItems = buildDragable(items)
+    draggableItems = buildDraggable(items)
   }
 
   const updateRowOrder = e => {

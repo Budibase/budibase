@@ -46,13 +46,13 @@
 </script>
 
 <ModalContent
-  title="Create View"
-  confirmText="Create View"
+  title="Create view"
+  confirmText="Create view"
   onConfirm={saveView}
   disabled={nameExists}
 >
   <Input
-    label="View Name"
+    label="View name"
     thin
     bind:value={name}
     error={nameExists ? "A view already exists with that name" : null}
