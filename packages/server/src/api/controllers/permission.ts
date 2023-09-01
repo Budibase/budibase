@@ -1,5 +1,11 @@
 import { permissions, roles, context, HTTPError } from "@budibase/backend-core"
-import { UserCtx, Database, Role, PermissionLevel } from "@budibase/types"
+import {
+  UserCtx,
+  Database,
+  Role,
+  PermissionLevel,
+  GetResourcePermsResponse,
+} from "@budibase/types"
 import { getRoleParams } from "../../db/utils"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
@@ -145,10 +151,27 @@ export async function fetch(ctx: UserCtx) {
   ctx.body = finalPermissions
 }
 
-export async function getResourcePerms(ctx: UserCtx) {
+export async function getResourcePerms(
+  ctx: UserCtx<void, GetResourcePermsResponse>
+) {
   const resourceId = ctx.params.resourceId
+  const resourcePermissions = await sdk.permissions.getResourcePerms(resourceId)
+
   ctx.body = {
-    permissions: await sdk.permissions.getResourcePerms(resourceId),
+    permissions: Object.entries(resourcePermissions).reduce(
+      (p, [level, role]) => {
+        p[level] = role.role
+        return p
+      },
+      {} as Record<string, string>
+    ),
+    permissionType: Object.entries(resourcePermissions).reduce(
+      (p, [level, role]) => {
+        p[level] = role.type
+        return p
+      },
+      {} as Record<string, string>
+    ),
   }
 }
 
