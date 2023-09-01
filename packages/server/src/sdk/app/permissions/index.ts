@@ -91,7 +91,11 @@ export async function getResourcePerms(
           role: roles.getExternalRoleID(role._id!, role.version),
           type: PermissionSource.EXPLICIT,
         }
-      } else if (permsToInherit && permsToInherit[level]) {
+      } else if (
+        !permissions[level] &&
+        permsToInherit &&
+        permsToInherit[level]
+      ) {
         permissions[level] = {
           role: permsToInherit[level].role,
           type: PermissionSource.INHERITED,
