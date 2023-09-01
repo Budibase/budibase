@@ -46,16 +46,24 @@ export async function resourceActionAllowed({
   }
 }
 
-enum PermissionType {
-  EXPLICIT = "explicit",
-  INHERITED = "inherited",
-  BASE = "base",
+enum PermissionSource {
+  EXPLICIT = "EXPLICIT",
+  INHERITED = "INHERITED",
+  BASE = "BASE",
 }
 
 type ResourcePermissions = Record<
   string,
-  { role: string; type: PermissionType }
+  { role: string; type: PermissionSource }
 >
+
+export async function getInheritablePermissions(
+  resourceId: string
+): Promise<ResourcePermissions | undefined> {
+  if (isViewID(resourceId) && (await features.isViewPermissionEnabled())) {
+    return await getResourcePerms(extractViewInfoFromID(resourceId).tableId)
+  }
+}
 
 export async function getResourcePerms(
   resourceId: string
@@ -69,12 +77,7 @@ export async function getResourcePerms(
   const rolesList = body.rows.map<Role>(row => row.doc)
   let permissions: ResourcePermissions = {}
 
-  let permsToInherit: ResourcePermissions | undefined
-  if (isViewID(resourceId) && (await features.isViewPermissionEnabled())) {
-    permsToInherit = await getResourcePerms(
-      extractViewInfoFromID(resourceId).tableId
-    )
-  }
+  const permsToInherit = await getInheritablePermissions(resourceId)
 
   for (let level of CURRENTLY_SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
@@ -86,12 +89,12 @@ export async function getResourcePerms(
       if (rolePerms[resourceId]?.indexOf(level) > -1) {
         permissions[level] = {
           role: roles.getExternalRoleID(role._id!, role.version),
-          type: PermissionType.EXPLICIT,
+          type: PermissionSource.EXPLICIT,
         }
       } else if (permsToInherit && permsToInherit[level]) {
         permissions[level] = {
           role: permsToInherit[level].role,
-          type: PermissionType.INHERITED,
+          type: PermissionSource.INHERITED,
         }
       }
     }
@@ -100,7 +103,7 @@ export async function getResourcePerms(
   const basePermissions = Object.entries(
     getBasePermissions(resourceId)
   ).reduce<ResourcePermissions>((p, [level, role]) => {
-    p[level] = { role, type: PermissionType.BASE }
+    p[level] = { role, type: PermissionSource.BASE }
     return p
   }, {})
   const result = Object.assign(basePermissions, permissions)
