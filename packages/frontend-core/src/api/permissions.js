@@ -36,7 +36,7 @@ export const buildPermissionsEndpoints = API => ({
   },
 
   /**
-   * Gets the resources that depend on this resource permissions
+   * Gets info about the resources that depend on this resource permissions
    * @param resourceId the resource ID to check
    */
   getDependants: async resourceId => {
