@@ -156,6 +156,8 @@ export async function getResourcePerms(
 ) {
   const resourceId = ctx.params.resourceId
   const resourcePermissions = await sdk.permissions.getResourcePerms(resourceId)
+  const inheritablePermissions =
+    await sdk.permissions.getInheritablePermissions(resourceId)
 
   ctx.body = {
     permissions: Object.entries(resourcePermissions).reduce(
@@ -172,6 +174,12 @@ export async function getResourcePerms(
       },
       {} as Record<string, string>
     ),
+    inheritablePermissions:
+      inheritablePermissions &&
+      Object.entries(inheritablePermissions).reduce((p, [level, role]) => {
+        p[level] = role.role
+        return p
+      }, {} as Record<string, string>),
   }
 }
 
