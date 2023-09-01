@@ -1,5 +1,12 @@
+import { PlanType } from "../../../sdk"
+
+export interface ResourcePermissionInfo {
+  role: string
+  permissionType: string
+  inheritablePermission?: string
+}
+
 export interface GetResourcePermsResponse {
-  permissions: Record<string, string>
-  permissionType: Record<string, string>
-  inheritablePermissions?: Record<string, string>
+  permissions: Record<string, ResourcePermissionInfo>
+  requiresPlanToModify?: PlanType
 }
