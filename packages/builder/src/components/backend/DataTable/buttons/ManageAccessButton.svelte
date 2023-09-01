@@ -11,7 +11,7 @@
   let resourcePermissions
 
   async function openModal() {
-    resourcePermissions = await permissions.forResource(resourceId)
+    resourcePermissions = await permissions.forResourceDetailed(resourceId)
     modal.show()
   }
 </script>

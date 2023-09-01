@@ -11,6 +11,7 @@
     Tag,
   } from "@budibase/bbui"
   import { capitalise } from "helpers"
+  import { get } from "svelte/store"
 
   export let resourceId
   export let permissions
@@ -18,19 +19,53 @@
 
   async function changePermission(level, role) {
     try {
-      await permissionsStore.save({
-        level,
-        role,
-        resource: resourceId,
-      })
+      if (role === "inherited") {
+        await permissionsStore.remove({
+          level,
+          role,
+          resource: resourceId,
+        })
+      } else {
+        await permissionsStore.save({
+          level,
+          role,
+          resource: resourceId,
+        })
+      }
 
       // Show updated permissions in UI: REMOVE
-      permissions = await permissionsStore.forResource(resourceId)
+      permissions = await permissionsStore.forResourceDetailed(resourceId)
       notifications.success("Updated permissions")
     } catch (error) {
       notifications.error("Error updating permissions")
     }
   }
+
+  $: computedPermissions = Object.keys(permissions.permissions).reduce(
+    (p, c) => {
+      p[c] = {
+        selected:
+          permissions.permissionType[c] === "INHERITED"
+            ? "inherited"
+            : permissions.permissions[c],
+        options: [...get(roles)],
+      }
+
+      if (permissions.inheritablePermissions) {
+        p[c].inheritOption = permissions.inheritablePermissions[c]
+        p[c].options.unshift({
+          _id: "inherited",
+          name: `Inherit (${
+            get(roles).find(
+              x => x._id === permissions.inheritablePermissions[c]
+            ).name
+          })`,
+        })
+      }
+      return p
+    },
+    {}
+  )
 </script>
 
 <ModalContent showCancelButton={false} confirmText="Done">
@@ -51,12 +86,13 @@
     <div class="row">
       <Label extraSmall grey>Level</Label>
       <Label extraSmall grey>Role</Label>
-      {#each Object.keys(permissions) as level}
+      {#each Object.keys(computedPermissions) as level}
         <Input value={capitalise(level)} disabled />
         <Select
           placeholder={false}
+          value={computedPermissions[level].selected}
           on:change={e => changePermission(level, e.detail)}
-          options={$roles}
+          options={computedPermissions[level].options}
           getOptionLabel={x => x.name}
           getOptionValue={x => x._id}
         />
