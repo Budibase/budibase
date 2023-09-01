@@ -627,6 +627,7 @@ export const getFrontendStore = () => {
               component[setting.key] = {
                 label: defaultDS.name,
                 tableId: defaultDS._id,
+                resourceId: defaultDS._id,
                 type: "table",
               }
             } else if (setting.type === "dataProvider") {
