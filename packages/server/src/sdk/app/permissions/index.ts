@@ -137,9 +137,11 @@ export async function getResourcePerms(
   return result
 }
 
-export async function getDependantResources(resourceId: string) {
+export async function getDependantResources(
+  resourceId: string
+): Promise<Record<string, number> | undefined> {
   if (db.isTableId(resourceId)) {
-    const dependants = new Set<string>()
+    const dependants: Record<string, Set<string>> = {}
 
     const table = await sdk.tables.getTable(resourceId)
     const views = Object.values(table.views || {})
@@ -152,13 +154,17 @@ export async function getDependantResources(resourceId: string) {
       const permissions = await getResourcePerms(view.id)
       for (const [level, roleInfo] of Object.entries(permissions)) {
         if (roleInfo.type === PermissionSource.INHERITED) {
-          dependants.add(view.id)
+          dependants[VirtualDocumentType.VIEW] ??= new Set()
+          dependants[VirtualDocumentType.VIEW].add(view.id)
         }
       }
     }
 
-    return dependants.size
+    return Object.entries(dependants).reduce((p, [type, resources]) => {
+      p[type] = resources.size
+      return p
+    }, {} as Record<string, number>)
   }
 
-  return 0
+  return
 }
