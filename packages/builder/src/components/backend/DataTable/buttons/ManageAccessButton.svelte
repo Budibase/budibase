@@ -23,7 +23,6 @@
   <ManageAccessModal
     {resourceId}
     {requiresLicence}
-    levels={$permissions}
     permissions={resourcePermissions}
   />
 </Modal>
