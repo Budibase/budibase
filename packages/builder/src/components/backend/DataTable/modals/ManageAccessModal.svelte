@@ -71,31 +71,28 @@
     {#if requiresPlanToModify}
       <span class="lock-tag">
         <Tags>
-          <Tag icon="LockClosed">{requiresPlanToModify}</Tag>
+          <Tag icon="LockClosed">{capitalise(requiresPlanToModify)}</Tag>
         </Tags>
       </span>
     {/if}
   </span>
-  {#if requiresPlanToModify}
-    <Body size="S">{requiresPlanToModify}</Body>
-  {:else}
-    <Body size="S">Specify the minimum access level role for this data.</Body>
-    <div class="row">
-      <Label extraSmall grey>Level</Label>
-      <Label extraSmall grey>Role</Label>
-      {#each Object.keys(computedPermissions) as level}
-        <Input value={capitalise(level)} disabled />
-        <Select
-          placeholder={false}
-          value={computedPermissions[level].selectedValue}
-          on:change={e => changePermission(level, e.detail)}
-          options={computedPermissions[level].options}
-          getOptionLabel={x => x.name}
-          getOptionValue={x => x._id}
-        />
-      {/each}
-    </div>
-  {/if}
+  <Body size="S">Specify the minimum access level role for this data.</Body>
+  <div class="row">
+    <Label extraSmall grey>Level</Label>
+    <Label extraSmall grey>Role</Label>
+    {#each Object.keys(computedPermissions) as level}
+      <Input value={capitalise(level)} disabled />
+      <Select
+        disabled={requiresPlanToModify}
+        placeholder={false}
+        value={computedPermissions[level].selectedValue}
+        on:change={e => changePermission(level, e.detail)}
+        options={computedPermissions[level].options}
+        getOptionLabel={x => x.name}
+        getOptionValue={x => x._id}
+      />
+    {/each}
+  </div>
 </ModalContent>
 
 <style>
