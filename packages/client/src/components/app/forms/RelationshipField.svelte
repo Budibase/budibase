@@ -209,6 +209,23 @@
 >
   {#if fieldState}
     <div class={autocomplete ? "field-with-search" : ""}>
+      <svelte:component
+        this={component}
+        bind:open={isOpen}
+        {options}
+        autocomplete={false}
+        value={multiselect ? multiValue : singleValue}
+        on:change={multiselect ? multiHandler : singleHandler}
+        id={fieldState.fieldId}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
+        getOptionLabel={getDisplayName}
+        getOptionValue={option => option._id}
+        {placeholder}
+        customPopoverOffsetBelow={autocomplete ? 32 : null}
+        customPopoverMaxHeight={autocomplete ? 240 : null}
+        sort={true}
+      />
       {#if autocomplete}
         <div class="search">
           <Input
@@ -225,25 +242,6 @@
           {/if}
         </div>
       {/if}
-      <div class={autocomplete ? "picker-with-search" : ""}>
-        <svelte:component
-          this={component}
-          bind:open={isOpen}
-          {options}
-          autocomplete={false}
-          value={multiselect ? multiValue : singleValue}
-          on:change={multiselect ? multiHandler : singleHandler}
-          id={fieldState.fieldId}
-          disabled={fieldState.disabled}
-          error={fieldState.error}
-          getOptionLabel={getDisplayName}
-          getOptionValue={option => option._id}
-          {placeholder}
-          customPopoverOffsetBelow={autocomplete ? 32 : null}
-          customPopoverMaxHeight={autocomplete ? 240 : null}
-          sort={true}
-        />
-      </div>
     </div>
   {/if}
 </Field>
@@ -266,11 +264,7 @@
   .search :global(.spectrum-Form-item) {
     flex: 1 1 auto;
   }
-  .picker-with-search {
-    margin-top: -64px;
-  }
   .field-with-search {
     min-height: 80px;
-    padding-top: 32px;
   }
 </style>
