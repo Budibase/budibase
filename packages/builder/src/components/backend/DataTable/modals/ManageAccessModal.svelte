@@ -54,7 +54,7 @@
       {#each Object.keys(permissions) as level}
         <Input value={capitalise(level)} disabled />
         <Select
-          value={permissions[level]}
+          placeholder={false}
           on:change={e => changePermission(level, e.detail)}
           options={$roles}
           getOptionLabel={x => x.name}
