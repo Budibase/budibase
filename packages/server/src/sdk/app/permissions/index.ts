@@ -1,8 +1,9 @@
-import { context, roles } from "@budibase/backend-core"
+import { context, env, roles } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import {
   DocumentType,
   PermissionLevel,
+  PlanType,
   Role,
   VirtualDocumentType,
 } from "@budibase/types"
@@ -60,9 +61,27 @@ type ResourcePermissions = Record<
 export async function getInheritablePermissions(
   resourceId: string
 ): Promise<ResourcePermissions | undefined> {
-  if (isViewID(resourceId) && (await features.isViewPermissionEnabled())) {
+  if (isViewID(resourceId)) {
     return await getResourcePerms(extractViewInfoFromID(resourceId).tableId)
   }
+}
+
+export async function allowsExplicitPermissions(resourceId: string) {
+  if (isViewID(resourceId)) {
+    const allowed = await features.isViewPermissionEnabled()
+    const minPlan = !allowed
+      ? env.SELF_HOSTED
+        ? PlanType.BUSINESS
+        : PlanType.PREMIUM
+      : undefined
+
+    return {
+      allowed,
+      minPlan,
+    }
+  }
+
+  return { allowed: true }
 }
 
 export async function getResourcePerms(
@@ -79,13 +98,15 @@ export async function getResourcePerms(
 
   const permsToInherit = await getInheritablePermissions(resourceId)
 
+  const allowsExplicitPerm = (await allowsExplicitPermissions(resourceId))
+    .allowed
+
   for (let level of CURRENTLY_SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
     for (let role of rolesList) {
-      const rolePerms = roles.checkForRoleResourceArray(
-        role.permissions,
-        resourceId
-      )
+      const rolePerms = allowsExplicitPerm
+        ? roles.checkForRoleResourceArray(role.permissions, resourceId)
+        : {}
       if (rolePerms[resourceId]?.indexOf(level) > -1) {
         permissions[level] = {
           role: roles.getExternalRoleID(role._id!, role.version),

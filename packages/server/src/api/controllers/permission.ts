@@ -5,6 +5,7 @@ import {
   Role,
   PermissionLevel,
   GetResourcePermsResponse,
+  ResourcePermissionInfo,
 } from "@budibase/types"
 import { getRoleParams } from "../../db/utils"
 import {
@@ -162,24 +163,19 @@ export async function getResourcePerms(
   ctx.body = {
     permissions: Object.entries(resourcePermissions).reduce(
       (p, [level, role]) => {
-        p[level] = role.role
+        p[level] = {
+          role: role.role,
+          permissionType: role.type,
+          inheritablePermission:
+            inheritablePermissions && inheritablePermissions[level].role,
+        }
         return p
       },
-      {} as Record<string, string>
+      {} as Record<string, ResourcePermissionInfo>
     ),
-    permissionType: Object.entries(resourcePermissions).reduce(
-      (p, [level, role]) => {
-        p[level] = role.type
-        return p
-      },
-      {} as Record<string, string>
-    ),
-    inheritablePermissions:
-      inheritablePermissions &&
-      Object.entries(inheritablePermissions).reduce((p, [level, role]) => {
-        p[level] = role.role
-        return p
-      }, {} as Record<string, string>),
+    requiresPlanToModify: (
+      await sdk.permissions.allowsExplicitPermissions(resourceId)
+    ).minPlan,
   }
 }
 

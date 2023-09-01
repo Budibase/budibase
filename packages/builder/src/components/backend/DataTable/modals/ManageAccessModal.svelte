@@ -15,7 +15,6 @@
 
   export let resourceId
   export let permissions
-  export let requiresLicence
 
   async function changePermission(level, role) {
     try {
@@ -41,24 +40,20 @@
     }
   }
 
-  $: computedPermissions = Object.keys(permissions.permissions).reduce(
-    (p, c) => {
-      p[c] = {
-        selected:
-          permissions.permissionType[c] === "INHERITED"
-            ? "inherited"
-            : permissions.permissions[c],
+  $: computedPermissions = Object.entries(permissions.permissions).reduce(
+    (p, [level, roleInfo]) => {
+      p[level] = {
+        selectedValue:
+          roleInfo.permissionType === "INHERITED" ? "inherited" : roleInfo.role,
         options: [...get(roles)],
       }
 
-      if (permissions.inheritablePermissions) {
-        p[c].inheritOption = permissions.inheritablePermissions[c]
-        p[c].options.unshift({
+      if (roleInfo.inheritablePermission) {
+        p[level].inheritOption = roleInfo.inheritablePermission
+        p[level].options.unshift({
           _id: "inherited",
           name: `Inherit (${
-            get(roles).find(
-              x => x._id === permissions.inheritablePermissions[c]
-            ).name
+            get(roles).find(x => x._id === roleInfo.inheritablePermission).name
           })`,
         })
       }
@@ -66,21 +61,23 @@
     },
     {}
   )
+
+  $: requiresPlanToModify = permissions.requiresPlanToModify
 </script>
 
 <ModalContent showCancelButton={false} confirmText="Done">
   <span slot="header">
     Manage Access
-    {#if requiresLicence}
+    {#if requiresPlanToModify}
       <span class="lock-tag">
         <Tags>
-          <Tag icon="LockClosed">{requiresLicence.tier}</Tag>
+          <Tag icon="LockClosed">{requiresPlanToModify}</Tag>
         </Tags>
       </span>
     {/if}
   </span>
-  {#if requiresLicence}
-    <Body size="S">{requiresLicence.message}</Body>
+  {#if requiresPlanToModify}
+    <Body size="S">{requiresPlanToModify}</Body>
   {:else}
     <Body size="S">Specify the minimum access level role for this data.</Body>
     <div class="row">
@@ -90,7 +87,7 @@
         <Input value={capitalise(level)} disabled />
         <Select
           placeholder={false}
-          value={computedPermissions[level].selected}
+          value={computedPermissions[level].selectedValue}
           on:change={e => changePermission(level, e.detail)}
           options={computedPermissions[level].options}
           getOptionLabel={x => x.name}
