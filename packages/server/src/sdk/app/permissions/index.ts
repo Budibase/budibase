@@ -46,12 +46,15 @@ export async function resourceActionAllowed({
   }
 }
 
+enum PermissionType {
+  EXPLICIT = "explicit",
+  INHERITED = "inherited",
+  BASE = "base",
+}
+
 type ResourcePermissions = Record<
   string,
-  {
-    role: string
-    inherited?: boolean | undefined
-  }
+  { role: string; type: PermissionType }
 >
 
 export async function getResourcePerms(
@@ -64,11 +67,13 @@ export async function getResourcePerms(
     })
   )
   const rolesList = body.rows.map<Role>(row => row.doc)
-  let permissions: Record<string, { role: string; inherited?: boolean }> = {}
+  let permissions: ResourcePermissions = {}
 
-  let parentResourceToCheck
+  let permsToInherit: ResourcePermissions | undefined
   if (isViewID(resourceId) && (await features.isViewPermissionEnabled())) {
-    parentResourceToCheck = extractViewInfoFromID(resourceId).tableId
+    permsToInherit = await getResourcePerms(
+      extractViewInfoFromID(resourceId).tableId
+    )
   }
 
   for (let level of CURRENTLY_SUPPORTED_LEVELS) {
@@ -81,14 +86,12 @@ export async function getResourcePerms(
       if (rolePerms[resourceId]?.indexOf(level) > -1) {
         permissions[level] = {
           role: roles.getExternalRoleID(role._id!, role.version),
+          type: PermissionType.EXPLICIT,
         }
-      } else if (
-        parentResourceToCheck &&
-        rolePerms[parentResourceToCheck]?.indexOf(level) > -1
-      ) {
+      } else if (permsToInherit && permsToInherit[level]) {
         permissions[level] = {
-          role: roles.getExternalRoleID(role._id!, role.version),
-          inherited: true,
+          role: permsToInherit[level].role,
+          type: PermissionType.INHERITED,
         }
       }
     }
@@ -97,7 +100,7 @@ export async function getResourcePerms(
   const basePermissions = Object.entries(
     getBasePermissions(resourceId)
   ).reduce<ResourcePermissions>((p, [level, role]) => {
-    p[level] = { role }
+    p[level] = { role, type: PermissionType.BASE }
     return p
   }, {})
   const result = Object.assign(basePermissions, permissions)
