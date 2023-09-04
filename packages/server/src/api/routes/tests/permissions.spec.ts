@@ -1,5 +1,6 @@
 const mockedSdk = sdk.permissions as jest.Mocked<typeof sdk.permissions>
 jest.mock("../../../sdk/app/permissions", () => ({
+  ...jest.requireActual("../../../sdk/app/permissions"),
   resourceActionAllowed: jest.fn(),
 }))
 
@@ -78,8 +79,12 @@ describe("/permission", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body["read"]).toEqual(STD_ROLE_ID)
-      expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
+      expect(res.body).toEqual({
+        permissions: {
+          read: { permissionType: "EXPLICIT", role: STD_ROLE_ID },
+          write: { permissionType: "BASE", role: HIGHER_ROLE_ID },
+        },
+      })
     })
 
     it("should get resource permissions with multiple roles", async () => {
@@ -89,15 +94,20 @@ describe("/permission", () => {
         level: PermissionLevel.WRITE,
       })
       const res = await config.api.permission.get(table._id)
-      expect(res.body["read"]).toEqual(STD_ROLE_ID)
-      expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
+      expect(res.body).toEqual({
+        permissions: {
+          read: { permissionType: "EXPLICIT", role: STD_ROLE_ID },
+          write: { permissionType: "EXPLICIT", role: HIGHER_ROLE_ID },
+        },
+      })
+
       const allRes = await request
         .get(`/api/permission`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(allRes.body[table._id]["write"]).toEqual(HIGHER_ROLE_ID)
       expect(allRes.body[table._id]["read"]).toEqual(STD_ROLE_ID)
+      expect(allRes.body[table._id]["write"]).toEqual(HIGHER_ROLE_ID)
     })
 
     it("throw forbidden if the action is not allowed for the resource", async () => {
