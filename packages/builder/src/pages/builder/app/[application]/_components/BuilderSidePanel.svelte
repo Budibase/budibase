@@ -366,18 +366,21 @@
     const payload = [
       {
         email: newUserEmail,
-        builder: !!creationRoleType === Constants.BudibaseRoles.Admin,
-        admin: !!creationRoleType === Constants.BudibaseRoles.Admin,
+        builder: creationRoleType === Constants.BudibaseRoles.Admin,
+        admin: creationRoleType === Constants.BudibaseRoles.Admin,
       },
     ]
 
-    if (creationAccessType === Constants.Roles.CREATOR) {
-      payload[0].appBuilders = [prodAppId]
-    } else {
-      payload[0].apps = {
-        [prodAppId]: creationAccessType,
+    if (creationRoleType !== Constants.BudibaseRoles.Admin) {
+      if (creationAccessType === Constants.Roles.CREATOR) {
+        payload[0].appBuilders = [prodAppId]
+      } else {
+        payload[0].apps = {
+          [prodAppId]: creationAccessType,
+        }
       }
     }
+
     let userInviteResponse
     try {
       userInviteResponse = await users.onboard(payload)
@@ -494,6 +497,18 @@
     }
   }
 
+  const getInviteRoleValue = invite => {
+    if (invite.info?.admin?.global && invite.info?.builder?.global) {
+      return Constants.Roles.ADMIN
+    }
+
+    if (invite.info?.appBuilders?.includes(prodAppId)) {
+      return Constants.Roles.CREATOR
+    }
+
+    return invite.info.apps?.[prodAppId]
+  }
+
   const getRoleFooter = user => {
     if (user.group) {
       const role = $roles.find(role => role._id === user.role)
@@ -600,6 +615,11 @@
                 <div class="auth-entity-access-title">Access</div>
               </div>
               {#each filteredInvites as invite}
+                {@const user = {
+                  isAdminOrGlobalBuilder:
+                    invite.info?.admin?.global && invite.info?.builder?.global,
+                }}
+
                 <div class="auth-entity">
                   <div class="details">
                     <div class="user-email" title={invite.email}>
@@ -608,10 +628,9 @@
                   </div>
                   <div class="auth-entity-access">
                     <RoleSelect
+                      footer={getRoleFooter(user)}
                       placeholder={false}
-                      value={invite.info?.appBuilders?.includes(prodAppId)
-                        ? Constants.Roles.CREATOR
-                        : invite.info.apps?.[prodAppId]}
+                      value={getInviteRoleValue(invite)}
                       allowRemove={invite.info.apps?.[prodAppId]}
                       allowPublic={false}
                       allowCreator={true}
@@ -624,6 +643,9 @@
                       }}
                       autoWidth
                       align="right"
+                      allowedRoles={user.isAdminOrGlobalBuilder
+                        ? [Constants.Roles.ADMIN]
+                        : null}
                     />
                   </div>
                 </div>
