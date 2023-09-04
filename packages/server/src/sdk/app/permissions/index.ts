@@ -3,6 +3,7 @@ import { features } from "@budibase/pro"
 import {
   DocumentType,
   PermissionLevel,
+  PermissionSource,
   PlanType,
   Role,
   VirtualDocumentType,
@@ -47,12 +48,6 @@ export async function resourceActionAllowed({
     level,
     resourceType: VirtualDocumentType.VIEW,
   }
-}
-
-enum PermissionSource {
-  EXPLICIT = "EXPLICIT",
-  INHERITED = "INHERITED",
-  BASE = "BASE",
 }
 
 type ResourcePermissions = Record<

@@ -17,3 +17,9 @@ export enum PermissionType {
   QUERY = "query",
   VIEW = "view",
 }
+
+export enum PermissionSource {
+  EXPLICIT = "EXPLICIT",
+  INHERITED = "INHERITED",
+  BASE = "BASE",
+}

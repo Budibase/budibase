@@ -1,4 +1,5 @@
 <script>
+  import { PermissionSource } from "@budibase/types"
   import { roles, permissions as permissionsStore } from "stores/backend"
   import {
     Label,
@@ -17,9 +18,11 @@
   export let resourceId
   export let permissions
 
+  const inheritedRoleId = "inherited"
+
   async function changePermission(level, role) {
     try {
-      if (role === "inherited") {
+      if (role === inheritedRoleId) {
         await permissionsStore.remove({
           level,
           role,
@@ -45,14 +48,16 @@
     (p, [level, roleInfo]) => {
       p[level] = {
         selectedValue:
-          roleInfo.permissionType === "INHERITED" ? "inherited" : roleInfo.role,
+          roleInfo.permissionType === PermissionSource.INHERITED
+            ? inheritedRoleId
+            : roleInfo.role,
         options: [...get(roles)],
       }
 
       if (roleInfo.inheritablePermission) {
         p[level].inheritOption = roleInfo.inheritablePermission
         p[level].options.unshift({
-          _id: "inherited",
+          _id: inheritedRoleId,
           name: `Inherit (${
             get(roles).find(x => x._id === roleInfo.inheritablePermission).name
           })`,
