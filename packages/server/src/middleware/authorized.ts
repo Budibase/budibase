@@ -8,6 +8,8 @@ import {
 import { PermissionLevel, PermissionType, Role, UserCtx } from "@budibase/types"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
+import { paramResource } from "./resourceId"
+import sdk from "../sdk"
 
 function hasResource(ctx: any) {
   return ctx.resourceId != null
@@ -74,10 +76,12 @@ const checkAuthorizedResource = async (
   }
 }
 
-export default (
+const authorized =
+  (
     permType: PermissionType,
     permLevel?: PermissionLevel,
-    opts = { schema: false }
+    opts = { schema: false },
+    resourcePath?: string
   ) =>
   async (ctx: any, next: any) => {
     // webhooks don't need authentication, each webhook unique
@@ -91,17 +95,40 @@ export default (
     }
 
     // get the resource roles
-    let resourceRoles: any = []
-    let otherLevelRoles: any = []
+    let resourceRoles: string[] = []
+    let otherLevelRoles: string[] = []
     const otherLevel =
       permLevel === PermissionLevel.READ
         ? PermissionLevel.WRITE
         : PermissionLevel.READ
-    const appId = context.getAppId()
-    if (appId && hasResource(ctx)) {
-      resourceRoles = await roles.getRequiredResourceRole(permLevel!, ctx)
+
+    if (resourcePath) {
+      // Reusing the existing middleware to extract the value
+      paramResource(resourcePath)(ctx, () => {})
+    }
+
+    if (hasResource(ctx)) {
+      const { resourceId, subResourceId } = ctx
+
+      const permissions = await sdk.permissions.getResourcePerms(resourceId)
+      const subPermissions =
+        !!subResourceId &&
+        (await sdk.permissions.getResourcePerms(subResourceId))
+
+      function getPermLevel(permLevel: string) {
+        let result: string[] = []
+        if (permissions[permLevel]) {
+          result.push(permissions[permLevel].role)
+        }
+        if (subPermissions && subPermissions[permLevel]) {
+          result.push(subPermissions[permLevel].role)
+        }
+        return result
+      }
+
+      resourceRoles = getPermLevel(permLevel!)
       if (opts && opts.schema) {
-        otherLevelRoles = await roles.getRequiredResourceRole(otherLevel, ctx)
+        otherLevelRoles = getPermLevel(otherLevel!)
       }
     }
 
@@ -143,3 +170,17 @@ export default (
     // csrf protection
     return csrf(ctx, next)
   }
+
+export default (
+  permType: PermissionType,
+  permLevel?: PermissionLevel,
+  opts = { schema: false }
+) => authorized(permType, permLevel, opts)
+
+export const authorizedResource = (
+  permType: PermissionType,
+  permLevel: PermissionLevel,
+  resourcePath: string
+) => {
+  return authorized(permType, permLevel, undefined, resourcePath)
+}

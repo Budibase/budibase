@@ -45,6 +45,9 @@
   let enrichedSearchColumns
   let schemaLoaded = false
 
+  // Accommodate old config to ensure delete button does not reappear
+  $: deleteLabel = sidePanelShowDelete === false ? "" : sidePanelDeleteLabel
+  $: isDSPlus = dataSource?.type === "table" || dataSource?.type === "viewV2"
   $: fetchSchema(dataSource)
   $: enrichSearchColumns(searchColumns, schema).then(
     val => (enrichedSearchColumns = val)
@@ -53,7 +56,7 @@
   $: editTitle = getEditTitle(detailsFormBlockId, primaryDisplay)
   $: normalFields = getNormalFields(schema)
   $: rowClickActions =
-    clickBehaviour === "actions" || dataSource?.type !== "table"
+    clickBehaviour === "actions" || !isDSPlus
       ? onClick
       : [
           {
@@ -75,7 +78,7 @@
           },
         ]
   $: buttonClickActions =
-    titleButtonClickBehaviour === "actions" || dataSource?.type !== "table"
+    titleButtonClickBehaviour === "actions" || !isDSPlus
       ? onClickTitleButton
       : [
           {
@@ -245,10 +248,8 @@
             bind:id={detailsFormBlockId}
             props={{
               dataSource,
-              showSaveButton: true,
-              showDeleteButton: sidePanelShowDelete,
-              saveButtonLabel: sidePanelSaveLabel,
-              deleteButtonLabel: sidePanelDeleteLabel,
+              saveButtonLabel: sidePanelSaveLabel || "Save", //always show
+              deleteButtonLabel: deleteLabel, //respect config
               actionType: "Update",
               rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
               fields: sidePanelFields || normalFields,

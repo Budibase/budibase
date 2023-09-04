@@ -57,10 +57,8 @@
   function calculateIndicatorLength() {
     if (!vertical) {
       width = $tab.info?.width + "px"
-      height = $tab.info?.height
     } else {
       height = $tab.info?.height + 4 + "px"
-      width = $tab.info?.width
     }
   }
 

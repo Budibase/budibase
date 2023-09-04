@@ -77,18 +77,19 @@ async function initDeployedApp(prodAppId: any) {
     )
   ).rows.map((row: any) => row.doc)
   await clearMetadata()
-  console.log("You have " + automations.length + " automations")
+  const { count } = await disableAllCrons(prodAppId)
   const promises = []
-  console.log("Disabling prod crons..")
-  await disableAllCrons(prodAppId)
-  console.log("Prod Cron triggers disabled..")
-  console.log("Enabling cron triggers for deployed app..")
   for (let automation of automations) {
     promises.push(enableCronTrigger(prodAppId, automation))
   }
-  await Promise.all(promises)
-  console.log("Enabled cron triggers for deployed app..")
-  // sync the automations back to the dev DB - since there is now cron
+  const results = await Promise.all(promises)
+  const enabledCount = results
+    .map(result => result.enabled)
+    .filter(result => result).length
+  console.log(
+    `Cleared ${count} old CRON, enabled ${enabledCount} new CRON triggers for app deployment`
+  )
+  // sync the automations back to the dev DB - since there is now CRON
   // information attached
   await sdk.applications.syncApp(dbCore.getDevAppID(prodAppId), {
     automationOnly: true,

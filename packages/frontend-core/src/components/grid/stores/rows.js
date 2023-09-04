@@ -3,30 +3,24 @@ import { fetchData } from "../../../fetch/fetchData"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import { tick } from "svelte"
 
-const SuppressErrors = true
-
 export const createStores = () => {
   const rows = writable([])
-  const table = writable(null)
   const loading = writable(false)
   const loaded = writable(false)
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
   const error = writable(null)
+  const fetch = writable(null)
 
   // Generate a lookup map to quick find a row by ID
-  const rowLookupMap = derived(
-    rows,
-    $rows => {
-      let map = {}
-      for (let i = 0; i < $rows.length; i++) {
-        map[$rows[i]._id] = i
-      }
-      return map
-    },
-    {}
-  )
+  const rowLookupMap = derived(rows, $rows => {
+    let map = {}
+    for (let i = 0; i < $rows.length; i++) {
+      map[$rows[i]._id] = i
+    }
+    return map
+  })
 
   // Mark loaded as true if we've ever stopped loading
   let hasStartedLoading = false
@@ -38,10 +32,25 @@ export const createStores = () => {
     }
   })
 
+  // Enrich rows with an index property and any pending changes
+  const enrichedRows = derived(
+    [rows, rowChangeCache],
+    ([$rows, $rowChangeCache]) => {
+      return $rows.map((row, idx) => ({
+        ...row,
+        ...$rowChangeCache[row._id],
+        __idx: idx,
+      }))
+    }
+  )
+
   return {
-    rows,
+    rows: {
+      ...rows,
+      subscribe: enrichedRows.subscribe,
+    },
+    fetch,
     rowLookupMap,
-    table,
     loaded,
     loading,
     rowChangeCache,
@@ -51,15 +60,15 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const createActions = context => {
   const {
     rows,
     rowLookupMap,
-    table,
+    definition,
     filter,
     loading,
     sort,
-    tableId,
+    datasource,
     API,
     scroll,
     validation,
@@ -71,37 +80,29 @@ export const deriveStores = context => {
     hasNextPage,
     error,
     notifications,
+    fetch,
   } = context
   const instanceLoaded = writable(false)
-  const fetch = writable(null)
 
   // Local cache of row IDs to speed up checking if a row exists
   let rowCacheMap = {}
 
-  // Enrich rows with an index property and any pending changes
-  const enrichedRows = derived(
-    [rows, rowChangeCache],
-    ([$rows, $rowChangeCache]) => {
-      return $rows.map((row, idx) => ({
-        ...row,
-        ...$rowChangeCache[row._id],
-        __idx: idx,
-      }))
-    },
-    []
-  )
-
-  // Reset everything when table ID changes
+  // Reset everything when datasource changes
   let unsubscribe = null
   let lastResetKey = null
-  tableId.subscribe(async $tableId => {
+  datasource.subscribe(async $datasource => {
     // Unsub from previous fetch if one exists
     unsubscribe?.()
     fetch.set(null)
     instanceLoaded.set(false)
     loading.set(true)
 
-    // Tick to allow other reactive logic to update stores when table ID changes
+    // Abandon if we don't have a valid datasource
+    if (!datasource.actions.isDatasourceValid($datasource)) {
+      return
+    }
+
+    // Tick to allow other reactive logic to update stores when datasource changes
     // before proceeding. This allows us to wipe filters etc if needed.
     await tick()
     const $filter = get(filter)
@@ -110,10 +111,7 @@ export const deriveStores = context => {
     // Create new fetch model
     const newFetch = fetchData({
       API,
-      datasource: {
-        type: "table",
-        tableId: $tableId,
-      },
+      datasource: $datasource,
       options: {
         filter: $filter,
         sortColumn: $sort.column,
@@ -142,7 +140,7 @@ export const deriveStores = context => {
         const previousResetKey = lastResetKey
         lastResetKey = $fetch.resetKey
 
-        // If resetting rows due to a table change, wipe data and wait for
+        // If resetting rows due to a datasource change, wipe data and wait for
         // derived stores to compute. This prevents stale data being passed
         // to cells when we save the new schema.
         if (!$instanceLoaded && previousResetKey) {
@@ -152,16 +150,12 @@ export const deriveStores = context => {
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
-          table.set($fetch.definition)
-          sort.set({
-            column: $fetch.sortColumn,
-            order: $fetch.sortOrder,
-          })
+          definition.set($fetch.definition)
         }
 
         // Reset scroll state when data changes
         if (!$instanceLoaded) {
-          // Reset both top and left for a new table ID
+          // Reset both top and left for a new datasource ID
           instanceLoaded.set(true)
           scroll.set({ top: 0, left: 0 })
         } else if (resetRows) {
@@ -178,19 +172,6 @@ export const deriveStores = context => {
     })
 
     fetch.set(newFetch)
-  })
-
-  // Update fetch when filter or sort config changes
-  filter.subscribe($filter => {
-    get(fetch)?.update({
-      filter: $filter,
-    })
-  })
-  sort.subscribe($sort => {
-    get(fetch)?.update({
-      sortOrder: $sort.order,
-      sortColumn: $sort.column,
-    })
   })
 
   // Gets a row by ID
@@ -211,7 +192,7 @@ export const deriveStores = context => {
       let erroredColumns = []
       let missingColumns = []
       for (let column of keys) {
-        if (columns.actions.hasColumn(column)) {
+        if (datasource.actions.canUseColumn(column)) {
           erroredColumns.push(column)
         } else {
           missingColumns.push(column)
@@ -252,11 +233,9 @@ export const deriveStores = context => {
   // Adds a new row
   const addRow = async (row, idx, bubble = false) => {
     try {
-      // Create row
-      const newRow = await API.saveRow(
-        { ...row, tableId: get(tableId) },
-        SuppressErrors
-      )
+      // Create row. Spread row so we can mutate and enrich safely.
+      let newRow = { ...row }
+      newRow = await datasource.actions.addRow(newRow)
 
       // Update state
       if (idx != null) {
@@ -294,21 +273,6 @@ export const deriveStores = context => {
     }
   }
 
-  // Fetches a row by ID using the search endpoint
-  const fetchRow = async id => {
-    const res = await API.searchTable({
-      tableId: get(tableId),
-      limit: 1,
-      query: {
-        equal: {
-          _id: id,
-        },
-      },
-      paginate: false,
-    })
-    return res?.rows?.[0]
-  }
-
   // Replaces a row in state with the newly defined row, handling updates,
   // addition and deletion
   const replaceRow = (id, row) => {
@@ -337,7 +301,7 @@ export const deriveStores = context => {
 
   // Refreshes a specific row
   const refreshRow = async id => {
-    const row = await fetchRow(id)
+    const row = await datasource.actions.getRow(id)
     replaceRow(id, row)
   }
 
@@ -347,7 +311,7 @@ export const deriveStores = context => {
   }
 
   // Patches a row with some changes
-  const updateRow = async (rowId, changes) => {
+  const updateRow = async (rowId, changes, options = { save: true }) => {
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[rowId]
@@ -377,16 +341,23 @@ export const deriveStores = context => {
       },
     }))
 
+    // Stop here if we don't want to persist the change
+    if (!options?.save) {
+      return
+    }
+
     // Save change
     try {
       inProgressChanges.update(state => ({
         ...state,
         [rowId]: true,
       }))
-      const saved = await API.saveRow(
-        { ...row, ...get(rowChangeCache)[rowId] },
-        SuppressErrors
-      )
+
+      // Update row
+      const saved = await datasource.actions.updateRow({
+        ...row,
+        ...get(rowChangeCache)[rowId],
+      })
 
       // Update state after a successful change
       if (saved?._id) {
@@ -412,8 +383,8 @@ export const deriveStores = context => {
   }
 
   // Updates a value of a row
-  const updateValue = async (rowId, column, value) => {
-    return await updateRow(rowId, { [column]: value })
+  const updateValue = async ({ rowId, column, value, save = true }) => {
+    return await updateRow(rowId, { [column]: value }, { save })
   }
 
   // Deletes an array of rows
@@ -426,10 +397,7 @@ export const deriveStores = context => {
     rowsToDelete.forEach(row => {
       delete row.__idx
     })
-    await API.deleteRows({
-      tableId: get(tableId),
-      rows: rowsToDelete,
-    })
+    await datasource.actions.deleteRows(rowsToDelete)
 
     // Update state
     handleRemoveRows(rowsToDelete)
@@ -473,12 +441,6 @@ export const deriveStores = context => {
     get(fetch)?.nextPage()
   }
 
-  // Refreshes the schema of the data fetch subscription
-  const refreshTableDefinition = async () => {
-    const definition = await API.fetchTableDefinition(get(tableId))
-    table.set(definition)
-  }
-
   // Checks if we have a row with a certain ID
   const hasRow = id => {
     if (id === NewRowID) {
@@ -498,7 +460,6 @@ export const deriveStores = context => {
   })
 
   return {
-    enrichedRows,
     rows: {
       ...rows,
       actions: {
@@ -513,7 +474,6 @@ export const deriveStores = context => {
         refreshRow,
         replaceRow,
         refreshData,
-        refreshTableDefinition,
       },
     },
   }

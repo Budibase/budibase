@@ -1,5 +1,6 @@
 <script>
   import { setContext, onMount } from "svelte"
+  import { writable } from "svelte/store"
   import { fade } from "svelte/transition"
   import { clickOutside, ProgressCircle } from "@budibase/bbui"
   import { createEventManagers } from "../lib/events"
@@ -28,14 +29,15 @@
   } from "../lib/constants"
 
   export let API = null
-  export let tableId = null
+  export let datasource = null
   export let schemaOverrides = null
   export let columnWhitelist = null
-  export let allowAddRows = true
-  export let allowExpandRows = true
-  export let allowEditRows = true
-  export let allowDeleteRows = true
-  export let allowSchemaChanges = true
+  export let canAddRows = true
+  export let canExpandRows = true
+  export let canEditRows = true
+  export let canDeleteRows = true
+  export let canEditColumns = true
+  export let canSaveSchema = true
   export let stripeRows = false
   export let collaboration = true
   export let showAvatars = true
@@ -50,11 +52,14 @@
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
 
+  // Store props in a store for reference in other stores
+  const props = writable($$props)
+
   // Build up context
   let context = {
     API: API || createAPIClient(),
     rand,
-    props: $$props,
+    props,
   }
   context = { ...context, ...createEventManagers() }
   context = attachStores(context)
@@ -71,19 +76,19 @@
     contentLines,
     gridFocused,
     error,
-    canAddRows,
   } = context
 
   // Keep config store up to date with props
-  $: config.set({
-    tableId,
+  $: props.set({
+    datasource,
     schemaOverrides,
     columnWhitelist,
-    allowAddRows,
-    allowExpandRows,
-    allowEditRows,
-    allowDeleteRows,
-    allowSchemaChanges,
+    canAddRows,
+    canExpandRows,
+    canEditRows,
+    canDeleteRows,
+    canEditColumns,
+    canSaveSchema,
     stripeRows,
     collaboration,
     showAvatars,
@@ -155,7 +160,7 @@
           </HeaderRow>
           <GridBody />
         </div>
-        {#if $canAddRows}
+        {#if $config.canAddRows}
           <NewRow />
         {/if}
         <div class="overlays">
@@ -179,7 +184,7 @@
       <ProgressCircle />
     </div>
   {/if}
-  {#if allowDeleteRows}
+  {#if $config.canDeleteRows}
     <BulkDeleteHandler />
   {/if}
   <KeyboardManager />

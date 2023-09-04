@@ -7,6 +7,7 @@
 
   let anchor
   let open = false
+
   $: columnsWidth = $renderedColumns.reduce(
     (total, col) => (total += col.width),
     0
@@ -17,6 +18,7 @@
   const close = () => {
     open = false
   }
+
   onMount(() => subscribe("close-edit-column", close))
 </script>
 
@@ -32,10 +34,9 @@
 <Popover
   bind:open
   {anchor}
-  align="right"
+  align={$renderedColumns.length ? "right" : "left"}
   offset={0}
   popoverTarget={document.getElementById(`add-column-button`)}
-  animate={false}
   customZindex={100}
 >
   <div

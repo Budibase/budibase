@@ -2,9 +2,9 @@ import { default as threadUtils } from "./utils"
 import { Job } from "bull"
 threadUtils.threadSetup()
 import {
-  isRecurring,
   disableCronById,
   isErrorInOutput,
+  isRecurring,
 } from "../automations/utils"
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
@@ -15,17 +15,18 @@ import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
 import {
   Automation,
-  AutomationStep,
-  AutomationStatus,
-  AutomationMetadata,
-  AutomationJob,
   AutomationData,
+  AutomationJob,
+  AutomationMetadata,
+  AutomationStatus,
+  AutomationStep,
+  AutomationStepStatus,
 } from "@budibase/types"
 import {
-  LoopStep,
-  LoopInput,
-  TriggerOutput,
   AutomationContext,
+  LoopInput,
+  LoopStep,
+  TriggerOutput,
 } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
@@ -34,6 +35,8 @@ import { cloneDeep } from "lodash/fp"
 import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
+import sdk from "../sdk"
+
 const FILTER_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
@@ -450,7 +453,10 @@ class Orchestrator {
         this.executionOutput.steps.splice(loopStepNumber + 1, 0, {
           id: step.id,
           stepId: step.stepId,
-          outputs: { status: AutomationStatus.NO_ITERATIONS, success: true },
+          outputs: {
+            status: AutomationStepStatus.NO_ITERATIONS,
+            success: true,
+          },
           inputs: {},
         })
 
@@ -486,10 +492,13 @@ class Orchestrator {
     const end = performance.now()
     const executionTime = end - start
 
-    console.info(`Execution time: ${executionTime} milliseconds`, {
-      _logKey: "automation",
-      executionTime,
-    })
+    console.info(
+      `Automation ID: ${automation._id} Execution time: ${executionTime} milliseconds`,
+      {
+        _logKey: "automation",
+        executionTime,
+      }
+    )
 
     // store the logs for the automation run
     try {
@@ -511,7 +520,8 @@ class Orchestrator {
 
 export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   const appId = job.data.event.appId
-  const automationId = job.data.automation._id
+  const automation = job.data.automation
+  const automationId = automation._id
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
   }
@@ -522,10 +532,30 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
     appId,
     automationId,
     task: async () => {
+      let automation = job.data.automation,
+        isCron = sdk.automations.isCron(job.data.automation),
+        notFound = false
+      try {
+        automation = await sdk.automations.get(automationId)
+      } catch (err: any) {
+        // automation no longer exists
+        notFound = err
+      }
+      const disabled = sdk.automations.disabled(automation)
+      const stopAutomation = disabled || notFound
       const envVars = await sdkUtils.getEnvironmentVariables()
       // put into automation thread for whole context
       await context.doInEnvironmentContext(envVars, async () => {
         const automationOrchestrator = new Orchestrator(job)
+        // hard stop on automations
+        if (isCron && stopAutomation) {
+          await automationOrchestrator.stopCron(
+            disabled ? "disabled" : "not_found"
+          )
+        }
+        if (stopAutomation) {
+          return
+        }
         try {
           const response = await automationOrchestrator.execute()
           callback(null, response)
@@ -554,11 +584,10 @@ export function executeSynchronously(job: Job) {
     // put into automation thread for whole context
     return context.doInEnvironmentContext(envVars, async () => {
       const automationOrchestrator = new Orchestrator(job)
-      const response = await Promise.race([
+      return await Promise.race([
         automationOrchestrator.execute(),
         timeoutPromise,
       ])
-      return response
     })
   })
 }
