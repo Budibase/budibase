@@ -18,6 +18,7 @@ import {
   generator,
   structures,
 } from "@budibase/backend-core/tests"
+import { basicDatasource } from "../../../tests/utilities/structures"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -37,6 +38,12 @@ describe("/rows", () => {
   })
 
   beforeEach(async () => {
+    await config.createDatasource({
+      datasource: {
+        ...basicDatasource().datasource,
+        plus: false,
+      },
+    })
     table = await config.createTable()
     row = basicRow(table._id!)
   })
