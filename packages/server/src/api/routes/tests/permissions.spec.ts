@@ -270,4 +270,21 @@ describe("/permission", () => {
       expect(publicPerm.name).toBeDefined()
     })
   })
+
+  describe("default permissions", () => {
+    it("legacy views", async () => {
+      const legacyView = await config.createLegacyView()
+
+      const res = await config.api.permission.get(legacyView.name)
+
+      expect(res.body).toEqual({
+        permissions: {
+          read: {
+            permissionType: "BASE",
+            role: "BASIC",
+          },
+        },
+      })
+    })
+  })
 })

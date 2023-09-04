@@ -50,9 +50,9 @@ describe("migrations", () => {
         await config.createRole()
         await config.createRole()
         await config.createTable()
-        await config.createView()
+        await config.createLegacyView()
         await config.createTable()
-        await config.createView(structures.view(config.table!._id!))
+        await config.createLegacyView(structures.view(config.table!._id!))
         await config.createScreen()
         await config.createScreen()
 

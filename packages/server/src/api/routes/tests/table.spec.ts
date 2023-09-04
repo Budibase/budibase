@@ -87,7 +87,7 @@ describe("/tables", () => {
 
     it("updates all the row fields for a table when a schema key is renamed", async () => {
       const testTable = await config.createTable()
-      await config.createView({
+      await config.createLegacyView({
         name: "TestView",
         field: "Price",
         calculation: "stats",
@@ -254,7 +254,7 @@ describe("/tables", () => {
       }))
 
       await config.api.viewV2.create({ tableId })
-      await config.createView({ tableId, name: generator.guid() })
+      await config.createLegacyView({ tableId, name: generator.guid() })
 
       const res = await config.api.table.fetch()
 
