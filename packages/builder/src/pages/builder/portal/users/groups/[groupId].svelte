@@ -21,6 +21,7 @@
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
   import { sdk } from "@budibase/shared-core"
+  import { Constants } from "@budibase/frontend-core"
 
   export let groupId
 
@@ -45,7 +46,7 @@
 
   let loaded = false
   let editModal, deleteModal
-
+  $: console.log(group)
   $: scimEnabled = $features.isScimEnabled
   $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
   $: group = $groups.find(x => x._id === groupId)
@@ -57,8 +58,11 @@
     )
     .map(app => ({
       ...app,
-      role: group?.roles?.[apps.getProdAppID(app.devId)],
+      role: group?.builder?.apps.includes(apps.getProdAppID(app.devId))
+        ? Constants.Roles.CREATOR
+        : group?.roles?.[apps.getProdAppID(app.devId)],
     }))
+  $: console.log(groupApps)
   $: {
     if (loaded && !group?._id) {
       $goto("./")
