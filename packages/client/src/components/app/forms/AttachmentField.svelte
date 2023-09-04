@@ -11,6 +11,7 @@
   export let extensions
   export let onChange
   export let maximum = undefined
+  export let span
 
   let fieldState
   let fieldApi
@@ -72,6 +73,7 @@
   {field}
   {disabled}
   {validation}
+  {span}
   type="attachment"
   bind:fieldState
   bind:fieldApi
