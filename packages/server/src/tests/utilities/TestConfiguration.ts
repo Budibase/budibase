@@ -684,7 +684,11 @@ class TestConfiguration {
     datasource: Datasource
   }): Promise<Datasource> {
     config = config || basicDatasource()
-    const response = await this._req(config, null, controllers.datasource.save)
+    const response = await this._req(
+      { ...config },
+      null,
+      controllers.datasource.save
+    )
     this.datasource = response.datasource
     return this.datasource!
   }
