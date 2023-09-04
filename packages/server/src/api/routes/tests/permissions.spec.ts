@@ -278,7 +278,12 @@ describe("/permission", () => {
       const res = await config.api.permission.get(legacyView.name)
 
       expect(res.body).toEqual({
-        read: "BASIC",
+        permissions: {
+          read: {
+            permissionType: "BASE",
+            role: "BASIC",
+          },
+        },
       })
     })
   })
