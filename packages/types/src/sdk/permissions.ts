@@ -18,3 +18,9 @@ export enum PermissionType {
   VIEW = "view",
   LEGACY_VIEW = "legacy_view",
 }
+
+export enum PermissionSource {
+  EXPLICIT = "EXPLICIT",
+  INHERITED = "INHERITED",
+  BASE = "BASE",
+}
