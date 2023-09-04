@@ -546,6 +546,9 @@ class TestConfiguration {
     config = config || basicTable()
     if (this.datasource && !config.sourceId) {
       config.sourceId = this.datasource._id
+      if (this.datasource.plus) {
+        config.type = "external"
+      }
     }
 
     return this.updateTable(config, options)
