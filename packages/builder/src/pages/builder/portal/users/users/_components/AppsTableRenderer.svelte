@@ -5,7 +5,6 @@
 
   export let value
   export let row
-  $: console.log(row)
   $: priviliged = sdk.users.isAdminOrBuilder(row)
   $: count = getCount(row)
 
