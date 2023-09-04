@@ -16,6 +16,7 @@ export enum PermissionType {
   GLOBAL_BUILDER = "globalBuilder",
   QUERY = "query",
   VIEW = "view",
+  LEGACY_VIEW = "legacy_view",
 }
 
 export enum PermissionSource {

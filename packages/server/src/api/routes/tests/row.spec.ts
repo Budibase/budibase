@@ -670,7 +670,7 @@ describe("/rows", () => {
     })
 
     it("should be able to run on a view", async () => {
-      const view = await config.createView()
+      const view = await config.createLegacyView()
       const row = await config.createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
