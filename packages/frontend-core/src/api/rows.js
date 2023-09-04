@@ -23,7 +23,23 @@ export const buildRowEndpoints = API => ({
       return
     }
     return await API.post({
-      url: `/api/${row.tableId}/rows`,
+      url: `/api/${row._viewId || row.tableId}/rows`,
+      body: row,
+      suppressErrors,
+    })
+  },
+
+  /**
+   * Patches a row in a table.
+   * @param row the row to patch
+   * @param suppressErrors whether or not to suppress error notifications
+   */
+  patchRow: async (row, suppressErrors = false) => {
+    if (!row?.tableId && !row?._viewId) {
+      return
+    }
+    return await API.patch({
+      url: `/api/${row._viewId || row.tableId}/rows`,
       body: row,
       suppressErrors,
     })
@@ -31,7 +47,7 @@ export const buildRowEndpoints = API => ({
 
   /**
    * Deletes a row from a table.
-   * @param tableId the ID of the table to delete from
+   * @param tableId the ID of the table or view to delete from
    * @param rowId the ID of the row to delete
    * @param revId the rev of the row to delete
    */
@@ -50,10 +66,13 @@ export const buildRowEndpoints = API => ({
 
   /**
    * Deletes multiple rows from a table.
-   * @param tableId the table ID to delete the rows from
+   * @param tableId the table or view ID to delete the rows from
    * @param rows the array of rows to delete
    */
   deleteRows: async ({ tableId, rows }) => {
+    rows?.forEach(row => {
+      delete row?._viewId
+    })
     return await API.delete({
       url: `/api/${tableId}/rows`,
       body: {

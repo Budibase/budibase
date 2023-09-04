@@ -39,9 +39,8 @@ import {
 } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { stringToReadStream } from "../../utilities"
-import { doesUserHaveLock, getLocksById } from "../../utilities/redis"
+import { doesUserHaveLock } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
-import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { groups, licensing, quotas } from "@budibase/pro"
 import {
@@ -51,7 +50,6 @@ import {
   PlanType,
   Screen,
   UserCtx,
-  ContextUser,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -283,12 +281,7 @@ async function performAppCreate(ctx: UserCtx) {
         title: name,
         navWidth: "Large",
         navBackground: "var(--spectrum-global-color-gray-100)",
-        links: [
-          {
-            url: "/home",
-            text: "Home",
-          },
-        ],
+        links: [],
       },
       theme: "spectrum--light",
       customTheme: {
@@ -316,6 +309,11 @@ async function performAppCreate(ctx: UserCtx) {
           newApplication[key] = existing[key]
         }
       })
+
+      // Keep existing validation setting
+      if (!existing.features?.componentValidation) {
+        newApplication.features!.componentValidation = false
+      }
 
       // Migrate navigation settings and screens if required
       if (existing) {

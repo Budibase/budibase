@@ -6,13 +6,13 @@ import {
   isSQL,
 } from "../../../integrations/utils"
 import {
-  Table,
   Database,
+  Table,
   TableResponse,
   TableViewsResponse,
 } from "@budibase/types"
 import datasources from "../datasources"
-import { populateExternalTableSchemas, isEditableColumn } from "./validation"
+import { isEditableColumn, populateExternalTableSchemas } from "./validation"
 import sdk from "../../../sdk"
 
 async function getAllInternalTables(db?: Database): Promise<Table[]> {
@@ -62,7 +62,7 @@ async function getTable(tableId: any): Promise<Table> {
 }
 
 function enrichViewSchemas(table: Table): TableResponse {
-  const result: TableResponse = {
+  return {
     ...table,
     views: Object.values(table.views ?? [])
       .map(v => sdk.views.enrichSchema(v, table.schema))
@@ -71,8 +71,6 @@ function enrichViewSchemas(table: Table): TableResponse {
         return p
       }, {} as TableViewsResponse),
   }
-
-  return result
 }
 
 export default {

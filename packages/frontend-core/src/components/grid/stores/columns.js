@@ -35,20 +35,10 @@ export const createStores = () => {
     []
   )
 
-  // Checks if we have a certain column by name
-  const hasColumn = column => {
-    const $columns = get(columns)
-    const $sticky = get(stickyColumn)
-    return $columns.some(col => col.name === column) || $sticky?.name === column
-  }
-
   return {
     columns: {
       ...columns,
       subscribe: enrichedColumns.subscribe,
-      actions: {
-        hasColumn,
-      },
     },
     stickyColumn,
     visibleColumns,
@@ -56,12 +46,35 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { table, columns, stickyColumn, API, dispatch, config } = context
+  const { columns, stickyColumn } = context
 
-  // Updates the tables primary display column
+  // Derive if we have any normal columns
+  const hasNonAutoColumn = derived(
+    [columns, stickyColumn],
+    ([$columns, $stickyColumn]) => {
+      let allCols = $columns || []
+      if ($stickyColumn) {
+        allCols = [...allCols, $stickyColumn]
+      }
+      const normalCols = allCols.filter(column => {
+        return !column.schema?.autocolumn
+      })
+      return normalCols.length > 0
+    }
+  )
+
+  return {
+    hasNonAutoColumn,
+  }
+}
+
+export const createActions = context => {
+  const { columns, stickyColumn, datasource, definition } = context
+
+  // Updates the datasources primary display column
   const changePrimaryDisplay = async column => {
-    return await saveTable({
-      ...get(table),
+    return await datasource.actions.saveDefinition({
+      ...get(definition),
       primaryDisplay: column,
     })
   }
@@ -83,29 +96,14 @@ export const deriveStores = context => {
     await saveChanges()
   }
 
-  // Derive if we have any normal columns
-  const hasNonAutoColumn = derived(
-    [columns, stickyColumn],
-    ([$columns, $stickyColumn]) => {
-      let allCols = $columns || []
-      if ($stickyColumn) {
-        allCols = [...allCols, $stickyColumn]
-      }
-      const normalCols = allCols.filter(column => {
-        return !column.schema?.autocolumn
-      })
-      return normalCols.length > 0
-    }
-  )
-
-  // Persists column changes by saving metadata against table schema
+  // Persists column changes by saving metadata against datasource schema
   const saveChanges = async () => {
     const $columns = get(columns)
-    const $table = get(table)
+    const $definition = get(definition)
     const $stickyColumn = get(stickyColumn)
-    const newSchema = cloneDeep($table.schema)
+    const newSchema = cloneDeep($definition.schema)
 
-    // Build new updated table schema
+    // Build new updated datasource schema
     Object.keys(newSchema).forEach(column => {
       // Respect order specified by columns
       const index = $columns.findIndex(x => x.name === column)
@@ -125,31 +123,17 @@ export const deriveStores = context => {
       }
     })
 
-    await saveTable({ ...$table, schema: newSchema })
-  }
-
-  const saveTable = async newTable => {
-    // Update local state
-    table.set(newTable)
-
-    // Update server
-    if (get(config).allowSchemaChanges) {
-      await API.saveTable(newTable)
-    }
-
-    // Broadcast change to external state can be updated, as this change
-    // will not be received by the builder websocket because we caused it ourselves
-    dispatch("updatetable", newTable)
+    await datasource.actions.saveDefinition({
+      ...$definition,
+      schema: newSchema,
+    })
   }
 
   return {
-    hasNonAutoColumn,
     columns: {
       ...columns,
       actions: {
-        ...columns.actions,
         saveChanges,
-        saveTable,
         changePrimaryDisplay,
         changeAllColumnWidths,
       },
@@ -158,51 +142,7 @@ export const deriveStores = context => {
 }
 
 export const initialise = context => {
-  const { table, columns, stickyColumn, schemaOverrides, columnWhitelist } =
-    context
-
-  const schema = derived(
-    [table, schemaOverrides, columnWhitelist],
-    ([$table, $schemaOverrides, $columnWhitelist]) => {
-      if (!$table?.schema) {
-        return null
-      }
-      let newSchema = { ...$table?.schema }
-
-      // Edge case to temporarily allow deletion of duplicated user
-      // fields that were saved with the "disabled" flag set.
-      // By overriding the saved schema we ensure only overrides can
-      // set the disabled flag.
-      // TODO: remove in future
-      Object.keys(newSchema).forEach(field => {
-        newSchema[field] = {
-          ...newSchema[field],
-          disabled: false,
-        }
-      })
-
-      // Apply schema overrides
-      Object.keys($schemaOverrides || {}).forEach(field => {
-        if (newSchema[field]) {
-          newSchema[field] = {
-            ...newSchema[field],
-            ...$schemaOverrides[field],
-          }
-        }
-      })
-
-      // Apply whitelist if specified
-      if ($columnWhitelist?.length) {
-        Object.keys(newSchema).forEach(key => {
-          if (!$columnWhitelist.includes(key)) {
-            delete newSchema[key]
-          }
-        })
-      }
-
-      return newSchema
-    }
-  )
+  const { definition, columns, stickyColumn, schema } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
   schema.subscribe($schema => {
@@ -211,12 +151,12 @@ export const initialise = context => {
       stickyColumn.set(null)
       return
     }
-    const $table = get(table)
+    const $definition = get(definition)
 
     // Find primary display
     let primaryDisplay
-    if ($table.primaryDisplay && $schema[$table.primaryDisplay]) {
-      primaryDisplay = $table.primaryDisplay
+    if ($definition.primaryDisplay && $schema[$definition.primaryDisplay]) {
+      primaryDisplay = $definition.primaryDisplay
     }
 
     // Get field list

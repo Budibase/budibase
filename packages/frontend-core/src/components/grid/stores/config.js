@@ -1,12 +1,12 @@
-import { writable } from "svelte/store"
 import { derivedMemo } from "../../../utils"
+import { derived } from "svelte/store"
 
 export const createStores = context => {
-  const config = writable(context.props)
-  const getProp = prop => derivedMemo(config, $config => $config[prop])
+  const { props } = context
+  const getProp = prop => derivedMemo(props, $props => $props[prop])
 
   // Derive and memoize some props so that we can react to them in isolation
-  const tableId = getProp("tableId")
+  const datasource = getProp("datasource")
   const initialSortColumn = getProp("initialSortColumn")
   const initialSortOrder = getProp("initialSortOrder")
   const initialFilter = getProp("initialFilter")
@@ -17,8 +17,7 @@ export const createStores = context => {
   const notifyError = getProp("notifyError")
 
   return {
-    config,
-    tableId,
+    datasource,
     initialSortColumn,
     initialSortOrder,
     initialFilter,
@@ -27,5 +26,33 @@ export const createStores = context => {
     columnWhitelist,
     notifySuccess,
     notifyError,
+  }
+}
+
+export const deriveStores = context => {
+  const { props, hasNonAutoColumn } = context
+
+  // Derive features
+  const config = derived(
+    [props, hasNonAutoColumn],
+    ([$props, $hasNonAutoColumn]) => {
+      let config = { ...$props }
+
+      // Disable some features if we're editing a view
+      if ($props.datasource?.type === "viewV2") {
+        config.canEditColumns = false
+      }
+
+      // Disable adding rows if we don't have any valid columns
+      if (!$hasNonAutoColumn) {
+        config.canAddRows = false
+      }
+
+      return config
+    }
+  )
+
+  return {
+    config,
   }
 }

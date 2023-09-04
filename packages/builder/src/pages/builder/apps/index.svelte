@@ -28,30 +28,18 @@
   let userInfoModal
   let changePasswordModal
 
-  onMount(async () => {
-    try {
-      await organisation.init()
-      await apps.load()
-      await groups.actions.init()
-    } catch (error) {
-      notifications.error("Error loading apps")
-    }
-    loaded = true
-  })
-  const publishedAppsOnly = app => app.status === AppStatus.DEPLOYED
-
   $: userGroups = $groups.filter(group =>
     group.users.find(user => user._id === $auth.user?._id)
   )
-  $: publishedApps = $apps.filter(publishedAppsOnly)
-  $: userApps = getUserApps($auth.user)
+  $: publishedApps = $apps.filter(app => app.status === AppStatus.DEPLOYED)
+  $: userApps = getUserApps(publishedApps, userGroups, $auth.user)
 
-  function getUserApps(user) {
+  function getUserApps(publishedApps, userGroups, user) {
     if (sdk.users.isAdmin(user)) {
       return publishedApps
     }
     return publishedApps.filter(app => {
-      if (sdk.users.isBuilder(user, app.appId)) {
+      if (sdk.users.isBuilder(user, app.prodId)) {
         return true
       }
       if (!Object.keys(user?.roles).length && user?.userGroups) {
@@ -84,6 +72,17 @@
       // Swallow error and do nothing
     }
   }
+
+  onMount(async () => {
+    try {
+      await organisation.init()
+      await apps.load()
+      await groups.actions.init()
+    } catch (error) {
+      notifications.error("Error loading apps")
+    }
+    loaded = true
+  })
 </script>
 
 {#if $auth.user && loaded}
@@ -143,7 +142,12 @@
             <div class="group">
               <Layout gap="S" noPadding>
                 {#each userApps as app (app.appId)}
-                  <a class="app" target="_blank" href={getUrl(app)}>
+                  <a
+                    class="app"
+                    target="_blank"
+                    rel="noreferrer"
+                    href={getUrl(app)}
+                  >
                     <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>

@@ -17,6 +17,7 @@ export default function positionDropdown(element, opts) {
       maxWidth,
       useAnchorWidth,
       offset = 5,
+      customUpdate,
     } = opts
     if (!anchor) {
       return
@@ -33,33 +34,41 @@ export default function positionDropdown(element, opts) {
       top: null,
     }
 
-    // Determine vertical styles
-    if (align === "right-outside") {
-      styles.top = anchorBounds.top
-    } else if (window.innerHeight - anchorBounds.bottom < 100) {
-      styles.top = anchorBounds.top - elementBounds.height - offset
-      styles.maxHeight = maxHeight || 240
+    if (typeof customUpdate === "function") {
+      styles = customUpdate(anchorBounds, elementBounds, styles)
     } else {
-      styles.top = anchorBounds.bottom + offset
-      styles.maxHeight =
-        maxHeight || window.innerHeight - anchorBounds.bottom - 20
-    }
+      // Determine vertical styles
+      if (align === "right-outside") {
+        styles.top = anchorBounds.top
+      } else if (
+        window.innerHeight - anchorBounds.bottom <
+        (maxHeight || 100)
+      ) {
+        styles.top = anchorBounds.top - elementBounds.height - offset
+        styles.maxHeight = maxHeight || 240
+      } else {
+        styles.top = anchorBounds.bottom + offset
+        styles.maxHeight =
+          maxHeight || window.innerHeight - anchorBounds.bottom - 20
+      }
 
-    // Determine horizontal styles
-    if (!maxWidth && useAnchorWidth) {
-      styles.maxWidth = anchorBounds.width
-    }
-    if (useAnchorWidth) {
-      styles.minWidth = anchorBounds.width
-    }
-    if (align === "right") {
-      styles.left = anchorBounds.left + anchorBounds.width - elementBounds.width
-    } else if (align === "right-outside") {
-      styles.left = anchorBounds.right + offset
-    } else if (align === "left-outside") {
-      styles.left = anchorBounds.left - elementBounds.width - offset
-    } else {
-      styles.left = anchorBounds.left
+      // Determine horizontal styles
+      if (!maxWidth && useAnchorWidth) {
+        styles.maxWidth = anchorBounds.width
+      }
+      if (useAnchorWidth) {
+        styles.minWidth = anchorBounds.width
+      }
+      if (align === "right") {
+        styles.left =
+          anchorBounds.left + anchorBounds.width - elementBounds.width
+      } else if (align === "right-outside") {
+        styles.left = anchorBounds.right + offset
+      } else if (align === "left-outside") {
+        styles.left = anchorBounds.left - elementBounds.width - offset
+      } else {
+        styles.left = anchorBounds.left
+      }
     }
 
     // Apply styles

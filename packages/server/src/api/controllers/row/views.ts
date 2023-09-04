@@ -1,77 +1,87 @@
 import { quotas } from "@budibase/pro"
 import {
   UserCtx,
-  SearchResponse,
-  SortOrder,
-  SortType,
   ViewV2,
+  SearchRowResponse,
+  SearchViewRowRequest,
+  RequiredKeys,
+  SearchParams,
+  SearchFilters,
 } from "@budibase/types"
+import { dataFilters } from "@budibase/shared-core"
 import sdk from "../../../sdk"
+import { db } from "@budibase/backend-core"
 
-export async function searchView(ctx: UserCtx<void, SearchResponse>) {
+export async function searchView(
+  ctx: UserCtx<SearchViewRowRequest, SearchRowResponse>
+) {
   const { viewId } = ctx.params
 
   const view = await sdk.views.get(viewId)
   if (!view) {
     ctx.throw(404, `View ${viewId} not found`)
   }
-
   if (view.version !== 2) {
     ctx.throw(400, `This method only supports viewsV2`)
   }
 
-  const table = await sdk.tables.getTable(view?.tableId)
+  const viewFields = Object.keys(view.schema || {})
+  const { body } = ctx.request
 
-  const viewFields =
-    (view.columns &&
-      Object.entries(view.columns).length &&
-      Object.keys(sdk.views.enrichSchema(view, table.schema).schema)) ||
-    undefined
+  // Enrich saved query with ephemeral query params.
+  // We prevent searching on any fields that are saved as part of the query, as
+  // that could let users find rows they should not be allowed to access.
+  let query = dataFilters.buildLuceneQuery(view.query || [])
+  if (body.query) {
+    // Extract existing fields
+    const existingFields =
+      view.query
+        ?.filter(filter => filter.field)
+        .map(filter => db.removeKeyNumbering(filter.field)) || []
 
-  ctx.status = 200
-  const result = await quotas.addQuery(
-    () =>
-      sdk.rows.search({
-        tableId: view.tableId,
-        query: view.query || {},
-        fields: viewFields,
-        ...getSortOptions(ctx, view),
-      }),
-    {
-      datasourceId: view.tableId,
-    }
-  )
+    // Delete extraneous search params that cannot be overridden
+    delete body.query.allOr
+    delete body.query.onEmptyFilter
+
+    // Carry over filters for unused fields
+    Object.keys(body.query).forEach(key => {
+      const operator = key as keyof Omit<
+        SearchFilters,
+        "allOr" | "onEmptyFilter"
+      >
+      Object.keys(body.query[operator] || {}).forEach(field => {
+        if (!existingFields.includes(db.removeKeyNumbering(field))) {
+          query[operator]![field] = body.query[operator]![field]
+        }
+      })
+    })
+  }
+
+  const searchOptions: RequiredKeys<SearchViewRowRequest> &
+    RequiredKeys<Pick<SearchParams, "tableId" | "query" | "fields">> = {
+    tableId: view.tableId,
+    query,
+    fields: viewFields,
+    ...getSortOptions(body, view),
+    limit: body.limit,
+    bookmark: body.bookmark,
+    paginate: body.paginate,
+  }
+
+  const result = await quotas.addQuery(() => sdk.rows.search(searchOptions), {
+    datasourceId: view.tableId,
+  })
 
   result.rows.forEach(r => (r._viewId = view.id))
   ctx.body = result
 }
 
-function getSortOptions(
-  ctx: UserCtx,
-  view: ViewV2
-):
-  | {
-      sort: string
-      sortOrder?: SortOrder
-      sortType?: SortType
-    }
-  | undefined {
-  const { sort_column, sort_order, sort_type } = ctx.query
-  if (Array.isArray(sort_column)) {
-    ctx.throw(400, "sort_column cannot be an array")
-  }
-  if (Array.isArray(sort_order)) {
-    ctx.throw(400, "sort_order cannot be an array")
-  }
-  if (Array.isArray(sort_type)) {
-    ctx.throw(400, "sort_type cannot be an array")
-  }
-
-  if (sort_column) {
+function getSortOptions(request: SearchViewRowRequest, view: ViewV2) {
+  if (request.sort) {
     return {
-      sort: sort_column,
-      sortOrder: sort_order as SortOrder,
-      sortType: sort_type as SortType,
+      sort: request.sort,
+      sortOrder: request.sortOrder,
+      sortType: request.sortType,
     }
   }
   if (view.sort) {
@@ -82,5 +92,9 @@ function getSortOptions(
     }
   }
 
-  return
+  return {
+    sort: undefined,
+    sortOrder: undefined,
+    sortType: undefined,
+  }
 }

@@ -72,19 +72,27 @@
     $context.device.height
   )
   $: autoCloseSidePanel = !$builderStore.inBuilder && $sidePanelStore.open
+  $: screenId = $builderStore.inBuilder
+    ? `${$builderStore.screen?._id}-screen`
+    : "screen"
+  $: navigationId = $builderStore.inBuilder
+    ? `${$builderStore.screen?._id}-navigation`
+    : "navigation"
 
-  // Scroll navigation into view if selected
+  // Scroll navigation into view if selected.
+  // Memoize into a primitive to avoid spamming this whenever builder store
+  // changes.
+  $: selected =
+    $builderStore.inBuilder &&
+    $builderStore.selectedComponentId?.endsWith("-navigation")
   $: {
-    if (
-      $builderStore.inBuilder &&
-      $builderStore.selectedComponentId === "navigation"
-    ) {
+    if (selected) {
       const node = document.getElementsByClassName("nav-wrapper")?.[0]
       if (node) {
         node.style.scrollMargin = "100px"
         node.scrollIntoView({
           behavior: "smooth",
-          block: "start",
+          block: "nearest",
           inline: "start",
         })
       }
@@ -146,26 +154,29 @@
 </script>
 
 <div
-  class="layout layout--{typeClass}"
+  class="component {screenId} layout layout--{typeClass}"
   use:styleable={$component.styles}
   class:desktop={!mobile}
   class:mobile={!!mobile}
+  data-id={screenId}
+  data-name="Screen"
+  data-icon="WebPage"
 >
-  <div class="layout-body">
+  <div class="{screenId}-dom screen-wrapper layout-body">
     {#if typeClass !== "none"}
       <div
-        class="interactive component navigation"
-        data-id="navigation"
+        class="interactive component {navigationId}"
+        data-id={navigationId}
         data-name="Navigation"
-        data-icon="Link"
+        data-icon="Visibility"
       >
         <div
-          class="nav-wrapper"
+          class="nav-wrapper {navigationId}-dom"
           class:sticky
           class:hidden={$routeStore.queryParams?.peek}
           class:clickable={$builderStore.inBuilder}
           on:click={$builderStore.inBuilder
-            ? builderStore.actions.clickNav
+            ? builderStore.actions.selectComponent(navigationId)
             : null}
           style={navStyle}
         >
