@@ -10,6 +10,7 @@
   import ManageAccessButton from "./buttons/ManageAccessButton.svelte"
   import HideAutocolumnButton from "./buttons/HideAutocolumnButton.svelte"
   import { notifications } from "@budibase/bbui"
+  import { ROW_EXPORT_FORMATS } from "constants/backend"
 
   export let view = {}
 
@@ -19,6 +20,14 @@
   let type = "internal"
 
   $: name = view.name
+  $: calculation = view.calculation
+
+  $: supportedFormats = Object.values(ROW_EXPORT_FORMATS).filter(key => {
+    if (calculation && key === ROW_EXPORT_FORMATS.JSON_WITH_SCHEMA) {
+      return false
+    }
+    return true
+  })
 
   // Fetch rows for specified view
   $: fetchViewData(name, view.field, view.groupBy, view.calculation)
@@ -68,5 +77,5 @@
   {/if}
   <ManageAccessButton resourceId={decodeURI(name)} />
   <HideAutocolumnButton bind:hideAutocolumns />
-  <ExportButton view={view.name} />
+  <ExportButton view={view.name} formats={supportedFormats} />
 </Table>
