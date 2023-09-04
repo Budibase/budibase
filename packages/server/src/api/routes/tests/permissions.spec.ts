@@ -263,11 +263,11 @@ describe("/permission", () => {
 
   describe("default permissions", () => {
     it("legacy views", async () => {
-      const legacyView = await config.createView()
+      const legacyView = await config.createLegacyView()
 
       const res = await config.api.permission.get(legacyView.name)
 
-      expect(res.body).toBe({
+      expect(res.body).toEqual({
         read: "BASIC",
       })
     })
