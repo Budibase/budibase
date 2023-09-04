@@ -12,13 +12,12 @@ import {
   FieldType,
   RelationshipType,
   Row,
-  SourceName,
   Table,
 } from "@budibase/types"
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
-import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
+import { testDatasourceConfig } from "../integrations/tests/utils"
 
 const config = setup.getConfig()!
 
@@ -35,61 +34,19 @@ describe("postgres integrations", () => {
     manyToOneRelationshipInfo: ForeignTableInfo,
     manyToManyRelationshipInfo: ForeignTableInfo
 
-  let host: string
-  let port: number
-  const containers: StartedTestContainer[] = []
+  let pgDatasourceConfig: Datasource
 
   beforeAll(async () => {
-    const containerPostgres = await new GenericContainer("postgres")
-      .withExposedPorts(5432)
-      .withEnv("POSTGRES_PASSWORD", "password")
-      .withWaitStrategy(
-        Wait.forLogMessage(
-          "PostgreSQL init process complete; ready for start up."
-        )
-      )
-      .start()
-
-    host = containerPostgres.getContainerIpAddress()
-    port = containerPostgres.getMappedPort(5432)
+    pgDatasourceConfig = await testDatasourceConfig.postgres()
 
     await config.init()
     const apiKey = await config.generateApiKey()
 
-    containers.push(containerPostgres)
-
     makeRequest = generateMakeRequest(apiKey, true)
   })
 
-  afterAll(async () => {
-    for (let container of containers) {
-      await container.stop()
-    }
-  })
-
-  function pgDatasourceConfig() {
-    return {
-      datasource: {
-        type: "datasource",
-        source: SourceName.POSTGRES,
-        plus: true,
-        config: {
-          host,
-          port,
-          database: "postgres",
-          user: "postgres",
-          password: "password",
-          schema: "public",
-          ssl: false,
-          rejectUnauthorized: false,
-          ca: false,
-        },
-      },
-    }
-  }
-
   beforeEach(async () => {
-    postgresDatasource = await config.createDatasource(pgDatasourceConfig())
+    postgresDatasource = await config.api.datasource.create(pgDatasourceConfig)
 
     async function createAuxTable(prefix: string) {
       return await config.createTable({
@@ -357,9 +314,9 @@ describe("postgres integrations", () => {
       config: {
         ca: false,
         database: "postgres",
-        host,
+        host: postgresDatasource.config!.host,
         password: "--secret-value--",
-        port,
+        port: postgresDatasource.config!.port,
         rejectUnauthorized: false,
         schema: "public",
         ssl: false,
@@ -1046,24 +1003,21 @@ describe("postgres integrations", () => {
 
   describe("POST /api/datasources/verify", () => {
     it("should be able to verify the connection", async () => {
-      const config = pgDatasourceConfig()
-      const response = await makeRequest(
-        "post",
-        "/api/datasources/verify",
-        config
-      )
+      const response = await config.api.datasource.verify({
+        datasource: pgDatasourceConfig,
+      })
       expect(response.status).toBe(200)
       expect(response.body.connected).toBe(true)
     })
 
     it("should state an invalid datasource cannot connect", async () => {
-      const config = pgDatasourceConfig()
-      config.datasource.config.password = "wrongpassword"
-      const response = await makeRequest(
-        "post",
-        "/api/datasources/verify",
-        config
-      )
+      const response = await config.api.datasource.verify({
+        datasource: {
+          ...pgDatasourceConfig,
+          config: { ...pgDatasourceConfig.config, password: "wrongpassword" },
+        },
+      })
+
       expect(response.status).toBe(200)
       expect(response.body.connected).toBe(false)
       expect(response.body.error).toBeDefined()
