@@ -23,6 +23,9 @@ export function getPermissionType(resourceId: string) {
     case DocumentType.QUERY:
     case DocumentType.DATASOURCE:
       return permissions.PermissionType.QUERY
+    default:
+      // legacy views don't have an ID, will end up here
+      return permissions.PermissionType.LEGACY_VIEW
   }
 }
 
