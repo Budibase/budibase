@@ -60,7 +60,7 @@ function tarFilesToTmp(tmpDir: string, files: string[]) {
 export async function exportDB(
   dbName: string,
   opts: DBDumpOpts = {}
-): Promise<DBDumpOpts> {
+): Promise<string> {
   const exportOpts = {
     filter: opts?.filter,
     batch_size: 1000,
