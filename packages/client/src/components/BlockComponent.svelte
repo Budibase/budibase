@@ -26,6 +26,7 @@
   $: id = `${block.id}-${context ?? rand}`
   $: parentId = $component?.id
   $: inBuilder = $builderStore.inBuilder
+  $: blockSelected = $builderStore.selectedComponentId === block.id
   $: instance = {
     ...props,
     _component: getComponent(type),
@@ -77,6 +78,6 @@
   })
 </script>
 
-<Component {instance} isBlock {onClick}>
+<Component {instance} isBlock onClick={blockSelected ? onClick : null}>
   <slot />
 </Component>
