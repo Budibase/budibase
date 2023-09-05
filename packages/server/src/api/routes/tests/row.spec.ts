@@ -4,10 +4,12 @@ import * as setup from "./utilities"
 import { context, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  Datasource,
   FieldType,
   MonthlyQuotaName,
   QuotaUsageType,
   Row,
+  SaveTableRequest,
   SortOrder,
   SortType,
   StaticQuotaName,
@@ -18,18 +20,22 @@ import {
   generator,
   structures,
 } from "@budibase/backend-core/tests"
-import { basicDatasource } from "../../../tests/utilities/structures"
+import { databaseTestProviders } from "../../../integrations/tests/utils"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
 
 const { basicRow } = setup.structures
 
-describe("/rows", () => {
+describe.each([
+  ["internal", undefined],
+  ["postgres", databaseTestProviders.postgres],
+])("/rows (%s)", (_, dsProvider) => {
   let request = setup.getRequest()
   let config = setup.getConfig()
   let table: Table
   let row: Row
+  let datasource: Datasource | undefined
 
   afterAll(setup.afterAll)
 
@@ -38,13 +44,48 @@ describe("/rows", () => {
   })
 
   beforeEach(async () => {
-    await config.createDatasource({
-      datasource: {
-        ...basicDatasource().datasource,
-        plus: false,
+    let tableConfig: SaveTableRequest = {
+      name: "TestTable",
+      type: "table",
+      primary: ["id"],
+      schema: {
+        id: {
+          type: FieldType.AUTO,
+          name: "id",
+          autocolumn: true,
+          constraints: {
+            presence: true,
+          },
+        },
+        name: {
+          type: FieldType.STRING,
+          name: "name",
+          constraints: {
+            type: "string",
+          },
+        },
+        description: {
+          type: FieldType.STRING,
+          name: "description",
+          constraints: {
+            type: "string",
+          },
+        },
       },
-    })
-    table = await config.createTable()
+    }
+
+    if (dsProvider) {
+      datasource = await config.api.datasource.create(
+        await dsProvider.getDsConfig()
+      )
+
+      tableConfig.sourceId = datasource._id
+      if (datasource.plus) {
+        tableConfig.type = "external"
+      }
+    }
+
+    table = await config.api.table.create(tableConfig)
     row = basicRow(table._id!)
   })
 
