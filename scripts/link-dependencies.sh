@@ -54,24 +54,36 @@ if [ -d "../account-portal" ]; then
   yarn bootstrap
   
   cd packages/server
-  echo "Linking backend-core to account-portal"
+  echo "Linking backend-core to account-portal (server)"
   yarn link "@budibase/backend-core"
 
-  echo "Linking string-templates to account-portal"
+  echo "Linking string-templates to account-portal (server)"
   yarn link "@budibase/string-templates"
 
-  echo "Linking types to account-portal"
+  echo "Linking types to account-portal (server)"
   yarn link "@budibase/types"
 
+  echo "Linking shared-core to account-portal (server)"
+  yarn link "@budibase/shared-core"
+
   if [ $pro_loaded_locally = true ]; then
-    echo "Linking pro to account-portal"
+    echo "Linking pro to account-portal (server)"
     yarn link "@budibase/pro"
   fi
 
   cd ../ui
-  echo "Linking bbui to account-portal"
+  echo "Linking bbui to account-portal (ui)"
   yarn link "@budibase/bbui"
 
-  echo "Linking frontend-core to account-portal"
+  echo "Linking shared-core to account-portal (ui)"
+  yarn link "@budibase/shared-core"
+
+  echo "Linking string-templates to account-portal (ui)"
+  yarn link "@budibase/string-templates"
+
+  echo "Linking types to account-portal (ui)"
+  yarn link "@budibase/types"
+
+  echo "Linking frontend-core to account-portal (ui)"
   yarn link "@budibase/frontend-core"
 fi

@@ -9,7 +9,10 @@ export function createViewsStore() {
   const derivedStore = derived([store, tables], ([$store, $tables]) => {
     let list = []
     $tables.list?.forEach(table => {
-      list = list.concat(Object.values(table?.views || {}))
+      const views = Object.values(table?.views || {}).filter(view => {
+        return view.version !== 2
+      })
+      list = list.concat(views)
     })
     return {
       ...$store,

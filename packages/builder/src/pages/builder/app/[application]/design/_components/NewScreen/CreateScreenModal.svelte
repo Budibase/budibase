@@ -110,7 +110,7 @@
     if (mode === "table") {
       datasourceModal.show()
     } else if (mode === "blank") {
-      let templates = getTemplates($store, $tables.list)
+      let templates = getTemplates($tables.list)
       const blankScreenTemplate = templates.find(
         t => t.id === "createFromScratch"
       )
@@ -131,8 +131,7 @@
   const completeDatasourceScreenCreation = async () => {
     const screens = selectedTemplates.map(template => {
       let screenTemplate = template.create()
-      screenTemplate.datasource = template.datasource
-      screenTemplate.autoTableId = template.table
+      screenTemplate.autoTableId = template.resourceId
       return screenTemplate
     })
     await createScreens({ screens, screenAccessRole })
@@ -176,10 +175,10 @@
   }
 </script>
 
-<Modal bind:this={datasourceModal}>
+<Modal bind:this={datasourceModal} autoFocus={false}>
   <DatasourceModal
     onConfirm={confirmScreenDatasources}
-    initalScreens={!selectedTemplates ? [] : [...selectedTemplates]}
+    initialScreens={!selectedTemplates ? [] : [...selectedTemplates]}
   />
 </Modal>
 

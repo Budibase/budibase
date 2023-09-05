@@ -108,12 +108,12 @@ export default class BuilderSocket extends BaseSocket {
     gridSocket?.emitTableUpdate(ctx, table)
   }
 
-  emitTableDeletion(ctx: any, id: string) {
+  emitTableDeletion(ctx: any, table: Table) {
     this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.TableChange, {
-      id,
+      id: table._id,
       table: null,
     })
-    gridSocket?.emitTableDeletion(ctx, id)
+    gridSocket?.emitTableDeletion(ctx, table)
   }
 
   emitDatasourceUpdate(ctx: any, datasource: Datasource) {
