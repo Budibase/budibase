@@ -26,6 +26,8 @@ jest.setTimeout(30000)
 jest.unmock("pg")
 jest.mock("../websockets")
 
+const provider = new PostgresProvider()
+
 describe("postgres integrations", () => {
   let makeRequest: MakeRequestResponse,
     postgresDatasource: Datasource,
@@ -34,11 +36,7 @@ describe("postgres integrations", () => {
     manyToOneRelationshipInfo: ForeignTableInfo,
     manyToManyRelationshipInfo: ForeignTableInfo
 
-  let provider: PostgresProvider
-
   beforeAll(async () => {
-    provider = await PostgresProvider.init()
-
     await config.init()
     const apiKey = await config.generateApiKey()
 
@@ -47,7 +45,7 @@ describe("postgres integrations", () => {
 
   beforeEach(async () => {
     postgresDatasource = await config.api.datasource.create(
-      provider.getDsConfig()
+      await provider.getDsConfig()
     )
 
     async function createAuxTable(prefix: string) {
@@ -1006,14 +1004,14 @@ describe("postgres integrations", () => {
   describe("POST /api/datasources/verify", () => {
     it("should be able to verify the connection", async () => {
       const response = await config.api.datasource.verify({
-        datasource: provider.getDsConfig(),
+        datasource: await provider.getDsConfig(),
       })
       expect(response.status).toBe(200)
       expect(response.body.connected).toBe(true)
     })
 
     it("should state an invalid datasource cannot connect", async () => {
-      const dbConfig = provider.getDsConfig()
+      const dbConfig = await provider.getDsConfig()
       const response = await config.api.datasource.verify({
         datasource: {
           ...dbConfig,

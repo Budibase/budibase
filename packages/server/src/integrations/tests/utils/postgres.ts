@@ -1,40 +1,33 @@
 import { Datasource, SourceName } from "@budibase/types"
-import { GenericContainer, Wait } from "testcontainers"
+import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
 import { DatabasePlusTestProvider } from "."
 
 export class PostgresProvider implements DatabasePlusTestProvider {
-  private host: string
-  private port: number
+  private container?: StartedTestContainer
 
-  private constructor(host: string, port: number) {
-    this.host = host
-    this.port = port
-  }
-
-  static async init() {
-    const containerPostgres = await new GenericContainer("postgres")
-      .withExposedPorts(5432)
-      .withEnv("POSTGRES_PASSWORD", "password")
-      .withWaitStrategy(
-        Wait.forLogMessage(
-          "PostgreSQL init process complete; ready for start up."
+  async getDsConfig(): Promise<Datasource> {
+    if (!this.container) {
+      this.container = await new GenericContainer("postgres")
+        .withExposedPorts(5432)
+        .withEnv("POSTGRES_PASSWORD", "password")
+        .withWaitStrategy(
+          Wait.forLogMessage(
+            "PostgreSQL init process complete; ready for start up."
+          )
         )
-      )
-      .start()
+        .start()
+    }
 
-    const host = containerPostgres.getContainerIpAddress()
-    const port = containerPostgres.getMappedPort(5432)
-    return new PostgresProvider(host, port)
-  }
+    const host = this.container.getContainerIpAddress()
+    const port = this.container.getMappedPort(5432)
 
-  getDsConfig(): Datasource {
     return {
       type: "datasource_plus",
       source: SourceName.POSTGRES,
       plus: true,
       config: {
-        host: this.host,
-        port: this.port,
+        host,
+        port,
         database: "postgres",
         user: "postgres",
         password: "password",
