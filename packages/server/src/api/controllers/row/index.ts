@@ -95,7 +95,7 @@ export async function fetchView(ctx: any) {
     () =>
       sdk.rows.fetchView(tableId, viewName, {
         calculation,
-        group,
+        group: calculation ? group : null,
         field,
       }),
     {
