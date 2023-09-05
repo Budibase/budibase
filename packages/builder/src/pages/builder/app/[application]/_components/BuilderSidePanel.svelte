@@ -368,14 +368,12 @@
       },
     ]
 
-    if (creationRoleType !== Constants.BudibaseRoles.Admin) {
-      if (creationAccessType === Constants.Roles.CREATOR) {
-        payload[0].builder.apps = [prodAppId]
-      } else {
-        payload[0].apps = {
-          [prodAppId]: creationAccessType,
-        }
-      }
+    const notCreatingAdmin = creationRoleType !== Constants.BudibaseRoles.Admin
+    const isCreator = creationAccessType === Constants.Roles.CREATOR
+    if (notCreatingAdmin && isCreator) {
+      payload[0].builder.apps = [prodAppId]
+    } else if (notCreatingAdmin && !isCreator) {
+      payload[0].apps = { [prodAppId]: creationAccessType }
     }
 
     let userInviteResponse
