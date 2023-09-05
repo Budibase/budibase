@@ -266,17 +266,14 @@ export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
 
       // Temp password to be passed to the user.
       createdPasswords[invite.email] = password
-      let builder: { global: boolean; apps?: string[] } = { global: false }
-      if (invite.userInfo.appBuilders) {
-        builder.apps = invite.userInfo.appBuilders
-      }
+
       return {
         email: invite.email,
         password,
         forceResetPassword: true,
         roles: invite.userInfo.apps,
-        admin: { global: false },
-        builder,
+        admin: invite.userInfo.admin,
+        builder: invite.userInfo.builder,
         tenantId: tenancy.getTenantId(),
       }
     })
@@ -371,13 +368,10 @@ export const updateInvite = async (ctx: any) => {
     ...invite,
   }
 
-  if (!updateBody?.appBuilders || !updateBody.appBuilders?.length) {
-    updated.info.appBuilders = []
-  } else {
-    updated.info.appBuilders = [
-      ...(invite.info.appBuilders ?? []),
-      ...updateBody.appBuilders,
-    ]
+  if (!updateBody?.builder?.apps && updated.info?.builder?.apps) {
+    updated.info.builder.apps = []
+  } else if (updateBody?.builder) {
+    updated.info.builder = updateBody.builder
   }
 
   if (!updateBody?.apps || !Object.keys(updateBody?.apps).length) {
@@ -409,15 +403,17 @@ export const inviteAccept = async (
         lastName,
         password,
         email,
+        admin: { global: info?.admin?.global || false },
         roles: info.apps,
         tenantId: info.tenantId,
       }
-      let builder: { global: boolean; apps?: string[] } = { global: false }
+      let builder: { global: boolean; apps?: string[] } = {
+        global: info?.builder?.global || false,
+      }
 
-      if (info.appBuilders) {
-        builder.apps = info.appBuilders
+      if (info?.builder?.apps) {
+        builder.apps = info.builder.apps
         request.builder = builder
-        delete info.appBuilders
       }
       delete info.apps
       request = {

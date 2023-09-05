@@ -1,11 +1,12 @@
 import tk from "timekeeper"
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
-import { context, tenancy } from "@budibase/backend-core"
+import { context, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   FieldType,
   MonthlyQuotaName,
+  PermissionLevel,
   QuotaUsageType,
   Row,
   SortOrder,
@@ -16,6 +17,7 @@ import {
 import {
   expectAnyInternalColsAttributes,
   generator,
+  mocks,
   structures,
 } from "@budibase/backend-core/tests"
 
@@ -37,6 +39,7 @@ describe("/rows", () => {
   })
 
   beforeEach(async () => {
+    mocks.licenses.useCloudFree()
     table = await config.createTable()
     row = basicRow(table._id!)
   })
@@ -670,7 +673,7 @@ describe("/rows", () => {
     })
 
     it("should be able to run on a view", async () => {
-      const view = await config.createView()
+      const view = await config.createLegacyView()
       const row = await config.createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
@@ -1312,6 +1315,85 @@ describe("/rows", () => {
           totalRows: 10,
           hasNextPage: false,
           bookmark: expect.any(String),
+        })
+      })
+
+      describe("permissions", () => {
+        let viewId: string
+        let tableId: string
+
+        beforeAll(async () => {
+          const table = await config.createTable(userTable())
+          const rows = []
+          for (let i = 0; i < 10; i++) {
+            rows.push(await config.createRow({ tableId: table._id }))
+          }
+
+          const createViewResponse = await config.api.viewV2.create()
+
+          tableId = table._id!
+          viewId = createViewResponse.id
+        })
+
+        beforeEach(() => {
+          mocks.licenses.useViewPermissions()
+        })
+
+        it("does not allow public users to fetch by default", async () => {
+          await config.publish()
+          await config.api.viewV2.search(viewId, undefined, {
+            expectStatus: 403,
+            usePublicUser: true,
+          })
+        })
+
+        it("allow public users to fetch when permissions are explicit", async () => {
+          await config.api.permission.set({
+            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+            level: PermissionLevel.READ,
+            resourceId: viewId,
+          })
+          await config.publish()
+
+          const response = await config.api.viewV2.search(viewId, undefined, {
+            usePublicUser: true,
+          })
+
+          expect(response.body.rows).toHaveLength(10)
+        })
+
+        it("allow public users to fetch when permissions are inherited", async () => {
+          await config.api.permission.set({
+            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+            level: PermissionLevel.READ,
+            resourceId: tableId,
+          })
+          await config.publish()
+
+          const response = await config.api.viewV2.search(viewId, undefined, {
+            usePublicUser: true,
+          })
+
+          expect(response.body.rows).toHaveLength(10)
+        })
+
+        it("respects inherited permissions, not allowing not public views from public tables", async () => {
+          await config.api.permission.set({
+            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+            level: PermissionLevel.READ,
+            resourceId: tableId,
+          })
+          await config.api.permission.set({
+            roleId: roles.BUILTIN_ROLE_IDS.POWER,
+            level: PermissionLevel.READ,
+            resourceId: viewId,
+          })
+          await config.publish()
+
+          await config.api.viewV2.search(viewId, undefined, {
+            usePublicUser: true,
+            expectStatus: 403,
+          })
         })
       })
     })

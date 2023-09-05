@@ -1,28 +1,20 @@
-jest.mock("@budibase/backend-core", () => ({
-  ...jest.requireActual("@budibase/backend-core"),
-  roles: {
-    ...jest.requireActual("@budibase/backend-core").roles,
-    getRequiredResourceRole: jest.fn().mockResolvedValue([]),
-  },
-}))
-jest.mock("../../environment", () => ({
-  prod: false,
-  isTest: () => true,
-  // @ts-ignore
-  isProd: () => this.prod,
-  _set: function (_key: string, value: string) {
-    this.prod = value === "production"
-  },
+jest.mock("../../sdk/app/permissions", () => ({
+  ...jest.requireActual("../../sdk/app/permissions"),
+  getResourcePerms: jest.fn().mockResolvedValue([]),
 }))
 
-import { PermissionType, PermissionLevel } from "@budibase/types"
+import {
+  PermissionType,
+  PermissionLevel,
+  PermissionSource,
+} from "@budibase/types"
 
 import authorizedMiddleware from "../authorized"
 import env from "../../environment"
 import { generateTableID, generateViewID } from "../../db/utils"
-import { roles } from "@budibase/backend-core"
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import { initProMocks } from "../../tests/utilities/mocks/pro"
+import { getResourcePerms } from "../../sdk/app/permissions"
 
 const APP_ID = ""
 
@@ -189,23 +181,26 @@ describe("Authorization middleware", () => {
       )
     })
 
-    describe("view type", () => {
-      const tableId = generateTableID()
-      const viewId = generateViewID(tableId)
-
-      const mockedGetRequiredResourceRole =
-        roles.getRequiredResourceRole as jest.MockedFunction<
-          typeof roles.getRequiredResourceRole
-        >
+    describe("with resource", () => {
+      let resourceId: string
+      const mockedGetResourcePerms = getResourcePerms as jest.MockedFunction<
+        typeof getResourcePerms
+      >
 
       beforeEach(() => {
         config.setMiddlewareRequiredPermission(
           PermissionType.VIEW,
           PermissionLevel.READ
         )
-        config.setResourceId(viewId)
+        resourceId = generator.guid()
+        config.setResourceId(resourceId)
 
-        mockedGetRequiredResourceRole.mockResolvedValue(["PUBLIC"])
+        mockedGetResourcePerms.mockResolvedValue({
+          [PermissionLevel.READ]: {
+            role: "PUBLIC",
+            type: PermissionSource.BASE,
+          },
+        })
 
         config.setUser({
           _id: "user",
@@ -215,57 +210,14 @@ describe("Authorization middleware", () => {
         })
       })
 
-      it("will ignore view permissions if flag is off", async () => {
+      it("will fetch resource permissions when resource is set", async () => {
         await config.executeMiddleware()
 
         expect(config.throw).not.toBeCalled()
         expect(config.next).toHaveBeenCalled()
 
-        expect(mockedGetRequiredResourceRole).toBeCalledTimes(1)
-        expect(mockedGetRequiredResourceRole).toBeCalledWith(
-          PermissionLevel.READ,
-          expect.objectContaining({
-            resourceId: tableId,
-            subResourceId: undefined,
-          })
-        )
-      })
-
-      it("will use view permissions if flag is on", async () => {
-        mocks.licenses.useViewPermissions()
-        await config.executeMiddleware()
-
-        expect(config.throw).not.toBeCalled()
-        expect(config.next).toHaveBeenCalled()
-
-        expect(mockedGetRequiredResourceRole).toBeCalledTimes(1)
-        expect(mockedGetRequiredResourceRole).toBeCalledWith(
-          PermissionLevel.READ,
-          expect.objectContaining({
-            resourceId: tableId,
-            subResourceId: viewId,
-          })
-        )
-      })
-
-      it("throw an exception if the resource id is not provided", async () => {
-        config.setResourceId(undefined)
-        await config.executeMiddleware()
-        expect(config.throw).toHaveBeenNthCalledWith(
-          1,
-          400,
-          "Cannot obtain the view id"
-        )
-      })
-
-      it("throw an exception if the resource id is not a valid view id", async () => {
-        config.setResourceId(tableId)
-        await config.executeMiddleware()
-        expect(config.throw).toHaveBeenNthCalledWith(
-          1,
-          400,
-          `"${tableId}" is not a valid view id`
-        )
+        expect(mockedGetResourcePerms).toBeCalledTimes(1)
+        expect(mockedGetResourcePerms).toBeCalledWith(resourceId)
       })
     })
   })
