@@ -13,10 +13,10 @@
       return $apps.length
     } else {
       return sdk.users.hasAppBuilderPermissions(row)
-        ? row.builder.apps.length +
-            Object.keys(row.roles || {}).filter(appId =>
-              row.builder.apps.includes(appId)
-            ).length
+        ? row?.builder?.apps?.length +
+            Object.keys(row.roles || {}).filter(appId => {
+              row?.builder?.apps?.includes(appId)
+            }).length
         : value?.length || 0
     }
   }
