@@ -10,7 +10,7 @@
     admin: "Full access",
   }
 
-  $: role = Constants.BudibaseRoleOptions.find(
+  $: role = Constants.BudibaseRoleOptionsOld.find(
     x => x.value === users.getUserRole(row)
   )
   $: value = role?.label || "Not available"

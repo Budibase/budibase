@@ -1,7 +1,7 @@
 import Router from "@koa/router"
 import * as viewController from "../controllers/view"
 import * as rowController from "../controllers/row"
-import authorized from "../../middleware/authorized"
+import authorized, { authorizedResource } from "../../middleware/authorized"
 import { paramResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 
@@ -10,10 +10,10 @@ const router: Router = new Router()
 router
   .get(
     "/api/v2/views/:viewId",
-    paramResource("viewId"),
-    authorized(
-      permissions.PermissionType.TABLE,
-      permissions.PermissionLevel.READ
+    authorizedResource(
+      permissions.PermissionType.VIEW,
+      permissions.PermissionLevel.READ,
+      "viewId"
     ),
     viewController.v2.get
   )

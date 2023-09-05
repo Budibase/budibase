@@ -6,11 +6,10 @@ import {
   users,
 } from "@budibase/backend-core"
 import { PermissionLevel, PermissionType, Role, UserCtx } from "@budibase/types"
-import { features } from "@budibase/pro"
 import builderMiddleware from "./builder"
 import { isWebhookEndpoint } from "./utils"
 import { paramResource } from "./resourceId"
-import { extractViewInfoFromID, isViewID } from "../db/utils"
+import sdk from "../sdk"
 
 function hasResource(ctx: any) {
   return ctx.resourceId != null
@@ -77,31 +76,6 @@ const checkAuthorizedResource = async (
   }
 }
 
-const resourceIdTranformers: Partial<
-  Record<PermissionType, (ctx: UserCtx) => Promise<void>>
-> = {
-  [PermissionType.VIEW]: async ctx => {
-    const { resourceId } = ctx
-    if (!resourceId) {
-      ctx.throw(400, `Cannot obtain the view id`)
-      return
-    }
-
-    if (!isViewID(resourceId)) {
-      ctx.throw(400, `"${resourceId}" is not a valid view id`)
-      return
-    }
-
-    if (await features.isViewPermissionEnabled()) {
-      ctx.subResourceId = ctx.resourceId
-      ctx.resourceId = extractViewInfoFromID(resourceId).tableId
-    } else {
-      ctx.resourceId = extractViewInfoFromID(resourceId).tableId
-      delete ctx.subResourceId
-    }
-  },
-}
-
 const authorized =
   (
     permType: PermissionType,
@@ -121,8 +95,8 @@ const authorized =
     }
 
     // get the resource roles
-    let resourceRoles: any = []
-    let otherLevelRoles: any = []
+    let resourceRoles: string[] = []
+    let otherLevelRoles: string[] = []
     const otherLevel =
       permLevel === PermissionLevel.READ
         ? PermissionLevel.WRITE
@@ -133,21 +107,28 @@ const authorized =
       paramResource(resourcePath)(ctx, () => {})
     }
 
-    if (resourceIdTranformers[permType]) {
-      await resourceIdTranformers[permType]!(ctx)
-    }
-
     if (hasResource(ctx)) {
       const { resourceId, subResourceId } = ctx
-      resourceRoles = await roles.getRequiredResourceRole(permLevel!, {
-        resourceId,
-        subResourceId,
-      })
+
+      const permissions = await sdk.permissions.getResourcePerms(resourceId)
+      const subPermissions =
+        !!subResourceId &&
+        (await sdk.permissions.getResourcePerms(subResourceId))
+
+      function getPermLevel(permLevel: string) {
+        let result: string[] = []
+        if (permissions[permLevel]) {
+          result.push(permissions[permLevel].role)
+        }
+        if (subPermissions && subPermissions[permLevel]) {
+          result.push(subPermissions[permLevel].role)
+        }
+        return result
+      }
+
+      resourceRoles = getPermLevel(permLevel!)
       if (opts && opts.schema) {
-        otherLevelRoles = await roles.getRequiredResourceRole(otherLevel, {
-          resourceId,
-          subResourceId,
-        })
+        otherLevelRoles = getPermLevel(otherLevel!)
       }
     }
 
