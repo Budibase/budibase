@@ -40,6 +40,7 @@ export const styleable = (node, styles = {}) => {
 
     const componentId = newStyles.id
     const customStyles = newStyles.custom || ""
+    const { isBlock, onClick } = newStyles
     const normalStyles = { ...baseStyles, ...newStyles.normal }
     const hoverStyles = {
       ...normalStyles,
@@ -67,7 +68,11 @@ export const styleable = (node, styles = {}) => {
     // Handler to select a component in the builder when clicking it in the
     // builder preview
     selectComponent = event => {
-      builderStore.actions.selectComponent(componentId)
+      if (isBlock && onClick) {
+        onClick()
+      } else {
+        builderStore.actions.selectComponent(componentId, isBlock)
+      }
       event.preventDefault()
       event.stopPropagation()
       return false
@@ -76,6 +81,9 @@ export const styleable = (node, styles = {}) => {
     // Handler to start editing a component (if applicable) when double
     // clicking in the builder preview
     editComponent = event => {
+      if (isBlock) {
+        return
+      }
       if (newStyles.interactive && newStyles.editable) {
         builderStore.actions.setEditMode(true)
       }

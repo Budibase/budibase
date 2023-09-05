@@ -11,6 +11,7 @@
   export let name
   export let order = 0
   export let containsSlot = false
+  export let onClick = null
 
   // ID is only exposed as a prop so that it can be bound to from parent
   // block components
@@ -26,15 +27,15 @@
   $: parentId = $component?.id
   $: inBuilder = $builderStore.inBuilder
   $: instance = {
+    ...props,
     _component: getComponent(type),
     _id: id,
     _instanceName: getInstanceName(name, type),
+    _containsSlot: containsSlot,
     _styles: {
       ...styles,
       normal: styles?.normal || {},
     },
-    _containsSlot: containsSlot,
-    ...props,
   }
 
   // Register this block component if we're inside the builder so it can be
@@ -76,6 +77,6 @@
   })
 </script>
 
-<Component {instance} isBlock>
+<Component {instance} isBlock {onClick}>
   <slot />
 </Component>
