@@ -150,13 +150,10 @@
   }
 
   const sortInviteRoles = (a, b) => {
-    const aEmpty =
-      !a.info?.appBuilders?.length && Object.keys(a.info.apps).length === 0
-    const bEmpty =
-      !b.info?.appBuilders?.length && Object.keys(b.info.apps).length === 0
+    const aAppsEmpty = !a.info?.apps?.length && !a.info?.builder?.apps?.length
+    const bAppsEmpty = !b.info?.apps?.length && !b.info?.builder?.apps?.length
 
-    if (aEmpty && !bEmpty) return 1
-    if (!aEmpty && bEmpty) return -1
+    return aAppsEmpty && !bAppsEmpty ? 1 : !aAppsEmpty && bAppsEmpty ? -1 : 0
   }
 
   const sortRoles = (a, b) => {
@@ -366,14 +363,14 @@
     const payload = [
       {
         email: newUserEmail,
-        builder: creationRoleType === Constants.BudibaseRoles.Admin,
-        admin: creationRoleType === Constants.BudibaseRoles.Admin,
+        builder: { global: creationRoleType === Constants.BudibaseRoles.Admin },
+        admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
       },
     ]
 
     if (creationRoleType !== Constants.BudibaseRoles.Admin) {
       if (creationAccessType === Constants.Roles.CREATOR) {
-        payload[0].appBuilders = [prodAppId]
+        payload[0].builder.apps = [prodAppId]
       } else {
         payload[0].apps = {
           [prodAppId]: creationAccessType,
@@ -441,10 +438,11 @@
     }
 
     if (role === Constants.Roles.CREATOR) {
-      updateBody.appBuilders = [...(updateBody.appBuilders ?? []), prodAppId]
+      updateBody.builder = updateBody.builder || {}
+      updateBody.builder.apps = [...(updateBody.builder.apps ?? []), prodAppId]
       delete updateBody?.apps?.[prodAppId]
-    } else if (role !== Constants.Roles.CREATOR && invite?.appBuilders) {
-      invite.appBuilders = []
+    } else if (role !== Constants.Roles.CREATOR && invite?.builder?.apps) {
+      invite.builder.apps = []
     }
     await users.updateInvite(updateBody)
     await filterInvites(query)
@@ -502,7 +500,7 @@
       return Constants.Roles.ADMIN
     }
 
-    if (invite.info?.appBuilders?.includes(prodAppId)) {
+    if (invite.info?.builder?.apps?.includes(prodAppId)) {
       return Constants.Roles.CREATOR
     }
 
@@ -546,7 +544,9 @@
       <Heading size="S">{invitingFlow ? "Invite new user" : "Users"}</Heading>
     </div>
     <div class="header">
-      <Button on:click={openInviteFlow} size="S" cta>Invite user</Button>
+      {#if !invitingFlow}
+        <Button on:click={openInviteFlow} size="S" cta>Invite user</Button>
+      {/if}
       <Icon
         color="var(--spectrum-global-color-gray-600)"
         name="RailRightClose"
