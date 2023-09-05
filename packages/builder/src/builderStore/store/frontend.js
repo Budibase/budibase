@@ -1246,6 +1246,16 @@ export const getFrontendStore = () => {
           const settings = getComponentSettings(component._component)
           const updatedSetting = settings.find(setting => setting.key === name)
 
+          const resetFields = settings.filter(
+            setting => name === setting.resetOn
+          )
+          resetFields?.forEach(setting => {
+            console.log(setting.key, component)
+            if (component[setting.key]) {
+              component[setting.key] = null
+            }
+          })
+
           if (
             updatedSetting?.type === "dataSource" ||
             updatedSetting?.type === "table"
