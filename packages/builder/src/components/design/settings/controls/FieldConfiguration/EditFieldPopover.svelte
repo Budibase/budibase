@@ -2,9 +2,10 @@
   import { Icon, Popover, Layout } from "@budibase/bbui"
   import { store } from "builderStore"
   import { cloneDeep } from "lodash/fp"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onDestroy, onMount } from "svelte"
   import ComponentSettingsSection from "../../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
   import { getContext } from "svelte"
+  import { onPreviewEvent } from "builderStore/previewEvents"
 
   export let anchor
   export let field
@@ -61,6 +62,21 @@
 
     dispatch("change", update)
   }
+
+  const handlePreviewEvent = event => {
+    const { type, data } = event?.data || {}
+    if (type === "click-form-block-field") {
+      if (data.field === field.field) {
+        popover.show()
+        open = true
+      } else {
+        popover.hide()
+        open = false
+      }
+    }
+  }
+
+  onMount(() => onPreviewEvent(handlePreviewEvent))
 </script>
 
 <Icon

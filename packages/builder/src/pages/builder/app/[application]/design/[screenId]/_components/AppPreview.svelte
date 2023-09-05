@@ -14,6 +14,7 @@
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "builderStore/componentUtils"
   import { isActive, goto } from "@roxi/routify"
+  import { emitPreviewEvent } from "builderStore/previewEvents"
 
   let iframe
   let layout
@@ -36,12 +37,14 @@
 
   // Determine selected component ID
   $: selectedComponentId = $store.selectedComponentId
+  $: selectedBlockComponentId = $store.selectedBlockComponentId
 
   $: previewData = {
     appId: $store.appId,
     layout,
     screen,
     selectedComponentId,
+    selectedBlockComponentId,
     theme: $store.theme,
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
@@ -93,6 +96,7 @@
     // Await the event handler
     try {
       await handleBudibaseEvent(message)
+      emitPreviewEvent(message)
     } catch (error) {
       notifications.error(error || "Error handling event from app preview")
     }
@@ -181,6 +185,8 @@
     } else if (type === "add-parent-component") {
       const { componentId, parentType } = data
       await store.actions.components.addParent(componentId, parentType)
+    } else if (type === "click-form-block-field") {
+      // Swallow and let this be handled by form block settings
     } else {
       console.warn(`Client sent unknown event type: ${type}`)
     }

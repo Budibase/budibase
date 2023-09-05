@@ -34,6 +34,7 @@
     bb_reference: "bbreferencefield",
   }
   const context = getContext("context")
+  const { builderStore } = getContext("sdk")
 
   let formId
 
@@ -223,6 +224,11 @@
                   type={getComponentForField(field)}
                   props={getPropsForField(field)}
                   order={idx}
+                  interactive
+                  name={field?.field}
+                  onClick={() => {
+                    builderStore.actions.clickFormBlockField(field?.field)
+                  }}
                 />
               {/if}
             {/each}

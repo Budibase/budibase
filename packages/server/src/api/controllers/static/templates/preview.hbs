@@ -63,6 +63,7 @@
       // Extract data from message
       const {
         selectedComponentId,
+        selectedBlockComponentId,
         layout,
         screen,
         appId,
@@ -81,6 +82,7 @@
       window["##BUDIBASE_PREVIEW_LAYOUT##"] = layout
       window["##BUDIBASE_PREVIEW_SCREEN##"] = screen
       window["##BUDIBASE_SELECTED_COMPONENT_ID##"] = selectedComponentId
+      window["##BUDIBASE_SELECTED_BLOCK_COMPONENT_ID##"] = selectedBlockComponentId
       window["##BUDIBASE_PREVIEW_ID##"] = Math.random()
       window["##BUDIBASE_PREVIEW_THEME##"] = theme
       window["##BUDIBASE_PREVIEW_CUSTOM_THEME##"] = customTheme
