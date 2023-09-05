@@ -6,7 +6,9 @@
   "typesVersions": {
     "*": {
       "*": [
-        "./dist/index.d.ts",
+        "./dist/src/index.d.ts"
+      ],
+      "tests": [
         "./dist/tests/index.d.ts"
       ]
     }
