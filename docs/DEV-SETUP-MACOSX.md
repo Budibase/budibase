@@ -55,7 +55,7 @@ yarn setup
 The yarn setup command runs several build steps i.e.
 
 ```
-node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev
+node ./hosting/scripts/setup.js && yarn && yarn build && yarn dev
 ```
 
 So this command will actually run the application in dev mode. It creates .env files under `./packages/server` and `./packages/worker` and runs docker containers for each service via docker-compose.
