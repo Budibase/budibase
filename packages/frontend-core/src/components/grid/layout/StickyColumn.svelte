@@ -16,7 +16,7 @@
     renderedRows,
     focusedCellId,
     hoveredRowId,
-    canAddRows,
+    config,
     selectedCellMap,
     focusedRow,
     scrollLeft,
@@ -94,7 +94,7 @@
           {/if}
         </div>
       {/each}
-      {#if $canAddRows}
+      {#if $config.canAddRows}
         <div
           class="row new"
           on:mouseenter={$isDragging

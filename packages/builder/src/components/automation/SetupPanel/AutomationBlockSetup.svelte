@@ -39,7 +39,7 @@
   import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
   import { LuceneUtils } from "@budibase/frontend-core"
   import {
-    getSchemaForTable,
+    getSchemaForDatasourcePlus,
     getEnvironmentBindings,
   } from "builderStore/dataBinding"
   import { Utils } from "@budibase/frontend-core"
@@ -67,7 +67,9 @@
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
     : { schema: {} }
-  $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
+  $: schema = getSchemaForDatasourcePlus(tableId, {
+    searchableSchema: true,
+  }).schema
   $: schemaFields = Object.values(schema || {})
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
   $: isTrigger = block?.type === "TRIGGER"
@@ -158,7 +160,7 @@
     // instead fetch the schema in the backend at runtime.
     let schema
     if (e.detail?.tableId) {
-      schema = getSchemaForTable(e.detail.tableId, {
+      schema = getSchemaForDatasourcePlus(e.detail.tableId, {
         searchableSchema: true,
       }).schema
     }

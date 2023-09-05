@@ -34,7 +34,7 @@
     column.schema.autocolumn ||
     column.schema.disabled ||
     column.schema.type === "formula" ||
-    (!$config.allowEditRows && row._id)
+    (!$config.canEditRows && row._id)
 
   // Register this cell API if the row is focused
   $: {
@@ -58,9 +58,14 @@
     isReadonly: () => readonly,
     getType: () => column.schema.type,
     getValue: () => row[column.name],
-    setValue: value => {
+    setValue: (value, options = { save: true }) => {
       validation.actions.setError(cellId, null)
-      updateValue(row._id, column.name, value)
+      updateValue({
+        rowId: row._id,
+        column: column.name,
+        value,
+        save: options?.save,
+      })
     },
   }
 </script>

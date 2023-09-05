@@ -2,31 +2,29 @@ import sanitizeUrl from "./utils/sanitizeUrl"
 import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
 
-export default function (tables) {
-  return tables.map(table => {
+export default function (datasources) {
+  if (!Array.isArray(datasources)) {
+    return []
+  }
+  return datasources.map(datasource => {
     return {
-      name: `${table.name} - List`,
-      create: () => createScreen(table),
+      name: `${datasource.name} - List`,
+      create: () => createScreen(datasource),
       id: ROW_LIST_TEMPLATE,
-      table: table._id,
+      resourceId: datasource.resourceId,
     }
   })
 }
 
 export const ROW_LIST_TEMPLATE = "ROW_LIST_TEMPLATE"
-export const rowListUrl = table => sanitizeUrl(`/${table.name}`)
+export const rowListUrl = datasource => sanitizeUrl(`/${datasource.name}`)
 
-const generateTableBlock = table => {
+const generateTableBlock = datasource => {
   const tableBlock = new Component("@budibase/standard-components/tableblock")
   tableBlock
     .customProps({
-      title: table.name,
-      dataSource: {
-        label: table.name,
-        name: table._id,
-        tableId: table._id,
-        type: "table",
-      },
+      title: datasource.name,
+      dataSource: datasource,
       sortOrder: "Ascending",
       size: "spectrum--medium",
       paginate: true,
@@ -36,14 +34,14 @@ const generateTableBlock = table => {
       titleButtonText: "Create row",
       titleButtonClickBehaviour: "new",
     })
-    .instanceName(`${table.name} - Table block`)
+    .instanceName(`${datasource.name} - Table block`)
   return tableBlock
 }
 
-const createScreen = table => {
+const createScreen = datasource => {
   return new Screen()
-    .route(rowListUrl(table))
-    .instanceName(`${table.name} - List`)
-    .addChild(generateTableBlock(table))
+    .route(rowListUrl(datasource))
+    .instanceName(`${datasource.name} - List`)
+    .addChild(generateTableBlock(datasource))
     .json()
 }
