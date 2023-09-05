@@ -17,7 +17,7 @@ import {
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
-import { PostgresProvider } from "../integrations/tests/utils"
+import { databaseTestProviders } from "../integrations/tests/utils"
 
 const config = setup.getConfig()!
 
@@ -25,8 +25,6 @@ jest.setTimeout(30000)
 
 jest.unmock("pg")
 jest.mock("../websockets")
-
-const provider = new PostgresProvider()
 
 describe("postgres integrations", () => {
   let makeRequest: MakeRequestResponse,
@@ -45,7 +43,7 @@ describe("postgres integrations", () => {
 
   beforeEach(async () => {
     postgresDatasource = await config.api.datasource.create(
-      await provider.getDsConfig()
+      await databaseTestProviders.postgres.getDsConfig()
     )
 
     async function createAuxTable(prefix: string) {
@@ -1004,14 +1002,14 @@ describe("postgres integrations", () => {
   describe("POST /api/datasources/verify", () => {
     it("should be able to verify the connection", async () => {
       const response = await config.api.datasource.verify({
-        datasource: await provider.getDsConfig(),
+        datasource: await databaseTestProviders.postgres.getDsConfig(),
       })
       expect(response.status).toBe(200)
       expect(response.body.connected).toBe(true)
     })
 
     it("should state an invalid datasource cannot connect", async () => {
-      const dbConfig = await provider.getDsConfig()
+      const dbConfig = await databaseTestProviders.postgres.getDsConfig()
       const response = await config.api.datasource.verify({
         datasource: {
           ...dbConfig,

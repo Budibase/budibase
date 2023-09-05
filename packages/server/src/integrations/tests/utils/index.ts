@@ -1,6 +1,10 @@
 import { Datasource } from "@budibase/types"
-export * from "./postgres"
+import * as pg from "./postgres"
 
 export interface DatabasePlusTestProvider {
   getDsConfig(): Promise<Datasource>
+}
+
+export const databaseTestProviders = {
+  postgres: pg,
 }
