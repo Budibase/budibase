@@ -414,7 +414,6 @@ export const inviteAccept = async (
       if (info?.builder?.apps) {
         builder.apps = info.builder.apps
         request.builder = builder
-        delete info.builder.apps
       }
       delete info.apps
       request = {
