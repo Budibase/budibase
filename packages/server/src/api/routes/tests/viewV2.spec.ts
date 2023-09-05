@@ -296,7 +296,7 @@ describe.each([
     })
 
     it("cannot update views v1", async () => {
-      const viewV1 = await config.createView()
+      const viewV1 = await config.createLegacyView()
       await config.api.viewV2.update(
         {
           ...viewV1,
