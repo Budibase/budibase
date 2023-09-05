@@ -5,25 +5,19 @@
 
   export let resourceId
   export let disabled = false
-  export let requiresLicence
 
   let modal
   let resourcePermissions
 
-  async function openDropdown() {
-    resourcePermissions = await permissions.forResource(resourceId)
+  async function openModal() {
+    resourcePermissions = await permissions.forResourceDetailed(resourceId)
     modal.show()
   }
 </script>
 
-<ActionButton icon="LockClosed" quiet on:click={openDropdown} {disabled}>
+<ActionButton icon="LockClosed" quiet on:click={openModal} {disabled}>
   Access
 </ActionButton>
 <Modal bind:this={modal}>
-  <ManageAccessModal
-    {resourceId}
-    {requiresLicence}
-    levels={$permissions}
-    permissions={resourcePermissions}
-  />
+  <ManageAccessModal {resourceId} permissions={resourcePermissions} />
 </Modal>
