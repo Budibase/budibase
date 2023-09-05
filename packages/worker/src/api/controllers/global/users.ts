@@ -403,15 +403,15 @@ export const inviteAccept = async (
         lastName,
         password,
         email,
-        admin: { global: info.admin.global || false },
+        admin: { global: info?.admin?.global || false },
         roles: info.apps,
         tenantId: info.tenantId,
       }
       let builder: { global: boolean; apps?: string[] } = {
-        global: info.builder.global || false,
+        global: info?.builder?.global || false,
       }
 
-      if (info.builder.apps) {
+      if (info?.builder?.apps) {
         builder.apps = info.builder.apps
         request.builder = builder
         delete info.builder.apps

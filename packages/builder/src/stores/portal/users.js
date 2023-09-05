@@ -121,8 +121,11 @@ export function createUsersStore() {
   }
 
   const getUserRole = user =>
-    sdk.users.isAdminOrGlobalBuilder(user) ? "admin" : "appUser"
-
+    sdk.users.isAdmin(user)
+      ? "admin"
+      : sdk.users.isBuilder(user)
+      ? "developer"
+      : "appUser"
   const refreshUsage =
     fn =>
     async (...args) => {
