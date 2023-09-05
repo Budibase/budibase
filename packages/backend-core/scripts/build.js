@@ -17,5 +17,6 @@ for (const file of inputFiles) {
     skipMeta: true,
     bundle: false,
     forcedFormat: "cjs",
+    silent: true,
   })
 }
