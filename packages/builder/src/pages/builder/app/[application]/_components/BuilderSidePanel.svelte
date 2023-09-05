@@ -120,7 +120,7 @@
     await usersFetch.refresh()
 
     filteredUsers = $usersFetch.rows
-      .filter(user => !user?.admin?.global) // filter out global admins
+      .filter(user => user.email !== $auth.user.email)
       .map(user => {
         const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(
           user,
