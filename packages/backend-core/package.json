@@ -3,7 +3,14 @@
   "version": "0.0.0",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/index.js",
-  "types": "dist/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/index.d.ts",
+        "./dist/tests/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": "./dist/index.js",
     "./tests": "./dist/tests/index.js",
