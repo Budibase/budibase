@@ -76,6 +76,8 @@
     }
   }
 
+  // Fetch the initially selected values
+  // as they may not be within the first 100 records
   $: {
     if (
       primaryDisplay !== "_id" &&
@@ -136,8 +138,8 @@
     const changed = fieldApi.setValue(value)
     selectedOptions = value.map(val => ({
       _id: val,
-      [`${primaryDisplay}`]: options.find(option => option._id === val)[
-        `${primaryDisplay}`
+      [primaryDisplay]: options.find(option => option._id === val)[
+        primaryDisplay
       ],
     }))
     if (onChange && changed) {
@@ -156,7 +158,7 @@
     // If a filter exists, then do a client side search
     if (hasFilter) {
       searchResults = $fetch.rows.filter(option =>
-        option[`${primaryDisplay}`].startsWith(searchString)
+        option[primaryDisplay].startsWith(searchString)
       )
       isOpen = true
       return
