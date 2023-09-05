@@ -35,6 +35,14 @@
     open = false
   }
 
+  export const toggle = () => {
+    if (!open) {
+      show()
+    } else {
+      hide()
+    }
+  }
+
   const handleOutsideClick = e => {
     if (open) {
       // Stop propagation if the source is the anchor

@@ -86,6 +86,10 @@ export const useAuditLogs = () => {
   return useFeature(Feature.AUDIT_LOGS)
 }
 
+export const usePublicApiUserRoles = () => {
+  return useFeature(Feature.USER_ROLE_PUBLIC_API)
+}
+
 export const useScimIntegration = () => {
   return useFeature(Feature.SCIM)
 }
@@ -96,6 +100,10 @@ export const useSyncAutomations = () => {
 
 export const useAppBuilders = () => {
   return useFeature(Feature.APP_BUILDERS)
+}
+
+export const useViewPermissions = () => {
+  return useFeature(Feature.VIEW_PERMISSIONS)
 }
 
 // QUOTAS
