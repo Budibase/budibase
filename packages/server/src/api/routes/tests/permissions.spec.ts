@@ -1,5 +1,6 @@
 const mockedSdk = sdk.permissions as jest.Mocked<typeof sdk.permissions>
 jest.mock("../../../sdk/app/permissions", () => ({
+  ...jest.requireActual("../../../sdk/app/permissions"),
   resourceActionAllowed: jest.fn(),
 }))
 
@@ -12,8 +13,10 @@ import {
   PermissionLevel,
   Row,
   Table,
+  ViewV2,
 } from "@budibase/types"
 import * as setup from "./utilities"
+import { mocks } from "@budibase/backend-core/tests"
 
 const { basicRow } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
@@ -27,6 +30,7 @@ describe("/permission", () => {
   let table: Table & { _id: string }
   let perms: Document[]
   let row: Row
+  let view: ViewV2
 
   afterAll(setup.afterAll)
 
@@ -35,10 +39,12 @@ describe("/permission", () => {
   })
 
   beforeEach(async () => {
+    mocks.licenses.useCloudFree()
     mockedSdk.resourceActionAllowed.mockResolvedValue({ allowed: true })
 
     table = (await config.createTable()) as typeof table
     row = await config.createRow()
+    view = await config.api.viewV2.create({ tableId: table._id })
     perms = await config.api.permission.set({
       roleId: STD_ROLE_ID,
       resourceId: table._id,
@@ -73,8 +79,12 @@ describe("/permission", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body["read"]).toEqual(STD_ROLE_ID)
-      expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
+      expect(res.body).toEqual({
+        permissions: {
+          read: { permissionType: "EXPLICIT", role: STD_ROLE_ID },
+          write: { permissionType: "BASE", role: HIGHER_ROLE_ID },
+        },
+      })
     })
 
     it("should get resource permissions with multiple roles", async () => {
@@ -84,15 +94,20 @@ describe("/permission", () => {
         level: PermissionLevel.WRITE,
       })
       const res = await config.api.permission.get(table._id)
-      expect(res.body["read"]).toEqual(STD_ROLE_ID)
-      expect(res.body["write"]).toEqual(HIGHER_ROLE_ID)
+      expect(res.body).toEqual({
+        permissions: {
+          read: { permissionType: "EXPLICIT", role: STD_ROLE_ID },
+          write: { permissionType: "EXPLICIT", role: HIGHER_ROLE_ID },
+        },
+      })
+
       const allRes = await request
         .get(`/api/permission`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(allRes.body[table._id]["write"]).toEqual(HIGHER_ROLE_ID)
       expect(allRes.body[table._id]["read"]).toEqual(STD_ROLE_ID)
+      expect(allRes.body[table._id]["write"]).toEqual(HIGHER_ROLE_ID)
     })
 
     it("throw forbidden if the action is not allowed for the resource", async () => {
@@ -162,6 +177,72 @@ describe("/permission", () => {
       expect(res.body[0]._id).toEqual(row._id)
     })
 
+    it("should be able to access the view data when the table is set to public and with no view permissions overrides", async () => {
+      // replicate changes before checking permissions
+      await config.publish()
+
+      const res = await config.api.viewV2.search(view.id, undefined, {
+        usePublicUser: true,
+      })
+      expect(res.body.rows[0]._id).toEqual(row._id)
+    })
+
+    it("should not be able to access the view data when the table is not public and there are no view permissions overrides", async () => {
+      await config.api.permission.revoke({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
+      // replicate changes before checking permissions
+      await config.publish()
+
+      await config.api.viewV2.search(view.id, undefined, {
+        expectStatus: 403,
+        usePublicUser: true,
+      })
+    })
+
+    it("should ignore the view permissions if the flag is not on", async () => {
+      await config.api.permission.set({
+        roleId: STD_ROLE_ID,
+        resourceId: view.id,
+        level: PermissionLevel.READ,
+      })
+      await config.api.permission.revoke({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
+      // replicate changes before checking permissions
+      await config.publish()
+
+      await config.api.viewV2.search(view.id, undefined, {
+        expectStatus: 403,
+        usePublicUser: true,
+      })
+    })
+
+    it("should use the view permissions if the flag is on", async () => {
+      mocks.licenses.useViewPermissions()
+      await config.api.permission.set({
+        roleId: STD_ROLE_ID,
+        resourceId: view.id,
+        level: PermissionLevel.READ,
+      })
+      await config.api.permission.revoke({
+        roleId: STD_ROLE_ID,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
+      // replicate changes before checking permissions
+      await config.publish()
+
+      const res = await config.api.viewV2.search(view.id, undefined, {
+        usePublicUser: true,
+      })
+      expect(res.body.rows[0]._id).toEqual(row._id)
+    })
+
     it("shouldn't allow writing from a public user", async () => {
       const res = await request
         .post(`/api/${table._id}/rows`)
@@ -187,6 +268,23 @@ describe("/permission", () => {
       expect(publicPerm).toBeDefined()
       expect(publicPerm.permissions).toBeDefined()
       expect(publicPerm.name).toBeDefined()
+    })
+  })
+
+  describe("default permissions", () => {
+    it("legacy views", async () => {
+      const legacyView = await config.createLegacyView()
+
+      const res = await config.api.permission.get(legacyView.name)
+
+      expect(res.body).toEqual({
+        permissions: {
+          read: {
+            permissionType: "BASE",
+            role: "BASIC",
+          },
+        },
+      })
     })
   })
 })

@@ -622,7 +622,7 @@ class TestConfiguration {
 
   // VIEW
 
-  async createView(config?: any) {
+  async createLegacyView(config?: any) {
     if (!this.table) {
       throw "Test requires table to be configured."
     }

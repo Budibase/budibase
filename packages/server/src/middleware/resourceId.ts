@@ -43,6 +43,7 @@ export class ResourceIdGetter {
   }
 }
 
+/** @deprecated we should use the authorizedResource middleware instead */
 export function paramResource(main: string) {
   return new ResourceIdGetter("params").mainResource(main).build()
 }

@@ -15,4 +15,12 @@ export enum PermissionType {
   BUILDER = "builder",
   GLOBAL_BUILDER = "globalBuilder",
   QUERY = "query",
+  VIEW = "view",
+  LEGACY_VIEW = "legacy_view",
+}
+
+export enum PermissionSource {
+  EXPLICIT = "EXPLICIT",
+  INHERITED = "INHERITED",
+  BASE = "BASE",
 }
