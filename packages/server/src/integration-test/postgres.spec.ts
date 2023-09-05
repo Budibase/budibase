@@ -17,7 +17,7 @@ import {
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
-import { testDatasourceConfig } from "../integrations/tests/utils"
+import { PostgresProvider } from "../integrations/tests/utils"
 
 const config = setup.getConfig()!
 
@@ -34,10 +34,10 @@ describe("postgres integrations", () => {
     manyToOneRelationshipInfo: ForeignTableInfo,
     manyToManyRelationshipInfo: ForeignTableInfo
 
-  let pgDatasourceConfig: Datasource
+  let provider: PostgresProvider
 
   beforeAll(async () => {
-    pgDatasourceConfig = await testDatasourceConfig.postgres()
+    provider = await PostgresProvider.init()
 
     await config.init()
     const apiKey = await config.generateApiKey()
@@ -46,7 +46,9 @@ describe("postgres integrations", () => {
   })
 
   beforeEach(async () => {
-    postgresDatasource = await config.api.datasource.create(pgDatasourceConfig)
+    postgresDatasource = await config.api.datasource.create(
+      provider.getDsConfig()
+    )
 
     async function createAuxTable(prefix: string) {
       return await config.createTable({
@@ -1004,17 +1006,21 @@ describe("postgres integrations", () => {
   describe("POST /api/datasources/verify", () => {
     it("should be able to verify the connection", async () => {
       const response = await config.api.datasource.verify({
-        datasource: pgDatasourceConfig,
+        datasource: provider.getDsConfig(),
       })
       expect(response.status).toBe(200)
       expect(response.body.connected).toBe(true)
     })
 
     it("should state an invalid datasource cannot connect", async () => {
+      const dbConfig = provider.getDsConfig()
       const response = await config.api.datasource.verify({
         datasource: {
-          ...pgDatasourceConfig,
-          config: { ...pgDatasourceConfig.config, password: "wrongpassword" },
+          ...dbConfig,
+          config: {
+            ...dbConfig.config,
+            password: "wrongpassword",
+          },
         },
       })
 

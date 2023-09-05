@@ -1,5 +1,6 @@
-import * as postgres from "./postgres"
+import { Datasource } from "@budibase/types"
+export * from "./postgres"
 
-export const testDatasourceConfig = {
-  postgres: postgres.getDatasourceConfig,
+export interface DatabasePlusTestProvider {
+  getDsConfig(): Datasource
 }
