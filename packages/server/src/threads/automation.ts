@@ -1,13 +1,17 @@
-import {default as threadUtils} from "./utils"
-import {Job} from "bull"
-import {disableCronById, isErrorInOutput, isRecurring} from "../automations/utils"
+import { default as threadUtils } from "./utils"
+import { Job } from "bull"
+import {
+  disableCronById,
+  isErrorInOutput,
+  isRecurring,
+} from "../automations/utils"
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
-import {default as AutomationEmitter} from "../events/AutomationEmitter"
-import {generateAutomationMetadataID, isProdAppID} from "../db/utils"
-import {definitions as triggerDefs} from "../automations/triggerInfo"
-import {AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS} from "../constants"
-import {storeLog} from "../automations/logging"
+import { default as AutomationEmitter } from "../events/AutomationEmitter"
+import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
+import { definitions as triggerDefs } from "../automations/triggerInfo"
+import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
+import { storeLog } from "../automations/logging"
 import {
   Automation,
   AutomationData,
@@ -17,12 +21,17 @@ import {
   AutomationStep,
   AutomationStepStatus,
 } from "@budibase/types"
-import {AutomationContext, LoopInput, LoopStep, TriggerOutput} from "../definitions/automations"
-import {WorkerCallback} from "./definitions"
-import {context, logging} from "@budibase/backend-core"
-import {processObject} from "@budibase/string-templates"
-import {cloneDeep} from "lodash/fp"
-import {performance} from "perf_hooks"
+import {
+  AutomationContext,
+  LoopInput,
+  LoopStep,
+  TriggerOutput,
+} from "../definitions/automations"
+import { WorkerCallback } from "./definitions"
+import { context, logging } from "@budibase/backend-core"
+import { processObject } from "@budibase/string-templates"
+import { cloneDeep } from "lodash/fp"
+import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
 
