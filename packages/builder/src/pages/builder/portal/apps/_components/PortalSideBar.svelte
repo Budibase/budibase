@@ -75,9 +75,10 @@
     flex: 1 1 auto;
     padding: 0 38px 0 var(--spacing);
     color: var(--spectrum-global-color-gray-800);
-    font-size: 12px;
+    font-size: 14px;
     border: 1px solid transparent;
     transition: border 130ms ease-out;
+    font-family: var(--font-sans);
   }
   input::placeholder {
     color: var(--spectrum-global-color-gray-700);
