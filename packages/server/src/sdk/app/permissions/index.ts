@@ -84,13 +84,16 @@ export async function allowsExplicitPermissions(resourceId: string) {
 export async function getResourcePerms(
   resourceId: string
 ): Promise<ResourcePermissions> {
-  const db = context.getAppDB()
-  const body = await db.allDocs(
-    getRoleParams(null, {
-      include_docs: true,
-    })
-  )
-  const rolesList = body.rows.map<Role>(row => row.doc)
+  let rolesList: Role[] = []
+  if (context.hasAppId()) {
+    const db = context.getAppDB()
+    const body = await db.allDocs(
+      getRoleParams(null, {
+        include_docs: true,
+      })
+    )
+    rolesList = body.rows.map<Role>(row => row.doc)
+  }
   let permissions: ResourcePermissions = {}
 
   const permsToInherit = await getInheritablePermissions(resourceId)
@@ -128,8 +131,7 @@ export async function getResourcePerms(
     p[level] = { role, type: PermissionSource.BASE }
     return p
   }, {})
-  const result = Object.assign(basePermissions, permissions)
-  return result
+  return Object.assign(basePermissions, permissions)
 }
 
 export async function getDependantResources(
