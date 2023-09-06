@@ -627,6 +627,7 @@ export const getFrontendStore = () => {
               component[setting.key] = {
                 label: defaultDS.name,
                 tableId: defaultDS._id,
+                resourceId: defaultDS._id,
                 type: "table",
               }
             } else if (setting.type === "dataProvider") {
@@ -1244,6 +1245,13 @@ export const getFrontendStore = () => {
 
           const settings = getComponentSettings(component._component)
           const updatedSetting = settings.find(setting => setting.key === name)
+
+          const resetFields = settings.filter(
+            setting => name === setting.resetOn
+          )
+          resetFields?.forEach(setting => {
+            component[setting.key] = null
+          })
 
           if (
             updatedSetting?.type === "dataSource" ||
