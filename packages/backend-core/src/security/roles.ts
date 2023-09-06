@@ -380,8 +380,8 @@ export function getDBRoleID(roleName: string) {
 export function getExternalRoleID(roleId: string, version?: string) {
   // for built-in roles we want to remove the DB role ID element (role_)
   if (
-    (roleId.startsWith(DocumentType.ROLE) && isBuiltin(roleId)) ||
-    version === RoleIDVersion.NAME
+    roleId.startsWith(DocumentType.ROLE) &&
+    (isBuiltin(roleId) || version === RoleIDVersion.NAME)
   ) {
     return roleId.split(`${DocumentType.ROLE}${SEPARATOR}`)[1]
   }
