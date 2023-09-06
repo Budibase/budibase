@@ -208,11 +208,6 @@ export function getAutomationId(): string | undefined {
   return context?.automationId
 }
 
-export function hasAppId(): boolean {
-  const appId = getAppId()
-  return !!appId
-}
-
 export function getAppId(): string | undefined {
   const context = Context.get()
   const foundId = context?.appId
