@@ -52,7 +52,7 @@
       Fullscreen
     </ActionButton>
   </div>
-  <iframe src={iframeUrl} />
+  <iframe src={iframeUrl} title={app.name} />
 </div>
 
 <style>
