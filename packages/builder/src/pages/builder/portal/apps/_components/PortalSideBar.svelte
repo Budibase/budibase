@@ -1,10 +1,13 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Icon, Body } from "@budibase/bbui"
   import PortalSideNavItem from "./PortalSideNavItem.svelte"
-  import { apps } from "stores/portal"
+  import { apps, sideBarCollapsed } from "stores/portal"
   import { params, goto } from "@roxi/routify"
+  import { tick } from "svelte"
 
+  let searchInput
   let searchString
+  let searching = false
 
   $: filteredApps = $apps.filter(app => {
     return (
@@ -12,17 +15,34 @@
       app.name.toLowerCase().includes(searchString.toLowerCase())
     )
   })
+
+  const startSearching = async () => {
+    searching = true
+    searchString = ""
+    await tick()
+    searchInput.focus()
+  }
+
+  const stopSearching = () => {
+    searching = false
+    searchString = ""
+  }
 </script>
 
-<div class="side-bar">
+<div class="side-bar" class:collapsed={$sideBarCollapsed}>
   <div class="side-bar-controls">
-    <div class="search">
-      <input bind:value={searchString} placeholder="Search" />
-      <Icon name="Search" size="S" />
-    </div>
-    <div class="add-app" on:click={() => $goto("./create")}>
-      <Icon name="Add" />
-    </div>
+    {#if searching}
+      <input
+        bind:this={searchInput}
+        bind:value={searchString}
+        placeholder="Search"
+      />
+      <Icon hoverable on:click={stopSearching} name="Close" size="S" />
+    {:else}
+      <Body size="S">Apps</Body>
+      <Icon name="Search" size="S" hoverable on:click={startSearching} />
+    {/if}
+    <Icon name="Add" hoverable on:click={() => $goto("./create")} />
   </div>
   <div class="side-bar-nav">
     <PortalSideNavItem
@@ -45,82 +65,60 @@
 
 <style>
   .side-bar {
-    --spacing: 10px;
-    --radius: 8px;
-
     flex: 0 0 300px;
-    padding: var(--spacing);
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: var(--spacing);
+    border-right: var(--border-light);
+    background: var(--spectrum-global-color-gray-100);
+    overflow: hidden;
+    transition: margin-left 300ms ease-out;
   }
+  .side-bar.collapsed {
+    margin-left: -302px;
+  }
+
   .side-bar-controls {
+    flex: 0 0 32px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: stretch;
-    gap: var(--spacing);
-  }
-  .search {
-    flex: 1 1 auto;
-    display: flex;
     align-items: center;
-    justify-content: flex-start;
-    position: relative;
+    gap: var(--spacing-l);
+    padding: 0 var(--spacing-l);
+    margin: var(--spacing-s);
   }
+  .side-bar-controls :global(.spectrum-Body),
+  .side-bar-controls input {
+    flex: 1 1 auto;
+  }
+  .side-bar-controls :global(.spectrum-Icon) {
+    color: var(--spectrum-global-color-gray-600);
+  }
+
   input {
     outline: none;
+    border: none;
     max-width: none;
     flex: 1 1 auto;
-    padding: 0 38px 0 var(--spacing);
+    padding: 0 38px 0 0;
     color: var(--spectrum-global-color-gray-800);
     font-size: 14px;
-    border: 1px solid transparent;
     transition: border 130ms ease-out;
     font-family: var(--font-sans);
+    background: inherit;
   }
   input::placeholder {
     color: var(--spectrum-global-color-gray-700);
     transition: color 130ms ease-out;
   }
-  input:hover {
-    border: 1px solid var(--spectrum-global-color-gray-300);
-  }
   input:hover::placeholder {
     color: var(--spectrum-global-color-gray-800);
   }
-  input:focus {
-    border: 1px solid var(--spectrum-global-color-blue-400);
-  }
 
-  .search :global(.spectrum-Icon) {
-    position: absolute;
-    right: 10px;
-  }
-  .add-app {
-    flex: 0 0 32px;
-    display: grid;
-    place-items: center;
-    transition: background 130ms ease-out;
-  }
-  .add-app:hover {
-    cursor: pointer;
-    background: var(--spectrum-global-color-gray-200);
-  }
-  .search input,
-  .add-app {
-    height: 32px;
-  }
-  .search input,
-  .add-app,
-  .side-bar-nav {
-    background: var(--spectrum-global-color-gray-100);
-    border-radius: var(--radius);
-  }
   .side-bar-nav {
     flex: 1 1 auto;
-    padding: var(--spacing);
+    padding: 0 16px;
     display: flex;
     flex-direction: column;
     justify-items: flex-start;

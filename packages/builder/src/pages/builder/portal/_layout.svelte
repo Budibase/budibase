@@ -99,7 +99,7 @@
     justify-content: flex-start;
     align-items: center;
     border-bottom: var(--border-light);
-    padding: 0 24px;
+    padding: 0 var(--spacing-l);
     gap: 24px;
     position: relative;
   }

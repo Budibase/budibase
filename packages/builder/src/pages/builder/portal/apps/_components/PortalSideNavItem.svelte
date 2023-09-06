@@ -17,11 +17,11 @@
 <style>
   .container {
     padding: 8px 12px;
-    border-radius: var(--radius);
+    border-radius: var(--spacing-s);
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: var(--spacing);
+    gap: var(--spacing-l);
     transition: background 130ms ease-out;
   }
   .container:hover {
