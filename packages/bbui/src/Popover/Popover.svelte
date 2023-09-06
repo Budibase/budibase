@@ -19,6 +19,7 @@
   export let useAnchorWidth = false
   export let dismissible = true
   export let offset = 5
+  export let offsetBelow
   export let customHeight
   export let animate = true
   export let customZindex
@@ -89,6 +90,7 @@
         maxWidth,
         useAnchorWidth,
         offset,
+        offsetBelow,
         customUpdate: handlePostionUpdate,
       }}
       use:clickOutside={{
