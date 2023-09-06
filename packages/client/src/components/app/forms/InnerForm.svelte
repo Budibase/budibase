@@ -136,7 +136,7 @@
     // Check arrays - remove any values not present in the field schema and
     // convert any values supplied to strings
     if (Array.isArray(value) && type === "array" && schema) {
-      const options = schema?.constraints.inclusion || []
+      const options = schema?.constraints?.inclusion || []
       return value.map(opt => String(opt)).filter(opt => options.includes(opt))
     }
     return value

@@ -6,11 +6,11 @@ import { isDevAppID } from "../db/utils"
 // need this to call directly, so we can get a response
 import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"
+import * as utils from "./utils"
 import env from "../environment"
 import { context, db as dbCore } from "@budibase/backend-core"
 import { Automation, Row, AutomationData, AutomationJob } from "@budibase/types"
 import { executeSynchronously } from "../threads/automation"
-import sdk from "../sdk"
 
 export const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
@@ -142,7 +142,7 @@ export async function rebootTrigger() {
       let automations = await getAllAutomations()
       let rebootEvents = []
       for (let automation of automations) {
-        if (sdk.automations.isReboot(automation)) {
+        if (utils.isRebootTrigger(automation)) {
           const job = {
             automation,
             event: {
