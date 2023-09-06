@@ -1,6 +1,6 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixures from "../../fixtures"
-import { Feature, Hosting, PlanType } from "@budibase/types"
+import { Feature, Hosting } from "@budibase/types"
 
 describe("license activation", () => {
   const config = new TestConfiguration()
@@ -25,7 +25,17 @@ describe("license activation", () => {
       hosting: Hosting.SELF,
     })
     const [createAccountRes, account] =
-      await config.accountsApi.accounts.create(createAccountRequest)
+      await config.accountsApi.accounts.create(createAccountRequest, { autoVerify: true })
+
+    let licenseKey: string
+    await config.doInNewState(async () => {
+      await config.loginAsAccount(createAccountRequest)
+      // Retrieve license key
+      const [res, body] =
+        await config.accountsApi.licenses.getLicenseKey()
+      licenseKey = body.licenseKey
+    })
+
     const accountId = account.accountId!
     const tenantId = account.tenantId!
 
@@ -38,10 +48,6 @@ describe("license activation", () => {
         },
       }
     )
-
-    // Retrieve license key
-    const [getLicenseRes, body] =
-      await config.accountsApi.licenses.getLicenseKey()
 
     // TODO: Activate license key
     //await config.internalApi.license.activateLicenseKey()
