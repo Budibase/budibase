@@ -1,3 +1,5 @@
+import { databaseTestProviders } from "../../../integrations/tests/utils"
+
 import tk from "timekeeper"
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
@@ -20,7 +22,6 @@ import {
   generator,
   structures,
 } from "@budibase/backend-core/tests"
-import { databaseTestProviders } from "../../../integrations/tests/utils"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
