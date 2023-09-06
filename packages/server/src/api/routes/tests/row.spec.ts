@@ -46,7 +46,7 @@ describe.each([
 
   beforeEach(async () => {
     let tableConfig: SaveTableRequest = {
-      name: "TestTable",
+      name: generator.guid(),
       type: "table",
       primary: ["id"],
       schema: {
@@ -124,6 +124,8 @@ describe.each([
     expect(usage).toBe(expected)
   }
 
+  const createRow = () => config.api.row.save(table._id!, basicRow(table._id!))
+
   describe("save, load, update", () => {
     it("returns a success message when the row is created", async () => {
       const rowUsage = await getRowUsage()
@@ -200,7 +202,7 @@ describe.each([
     })
 
     it("updates a row successfully", async () => {
-      const existing = await config.createRow()
+      const existing = await createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
