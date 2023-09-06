@@ -1250,9 +1250,7 @@ export const getFrontendStore = () => {
             setting => name === setting.resetOn
           )
           resetFields?.forEach(setting => {
-            if (component[setting.key]) {
-              component[setting.key] = null
-            }
+            component[setting.key] = null
           })
 
           if (
