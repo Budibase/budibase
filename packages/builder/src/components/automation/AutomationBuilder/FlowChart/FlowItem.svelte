@@ -73,7 +73,7 @@
     if (!perms["execute"]) {
       role = "BASIC"
     } else {
-      role = perms["execute"]
+      role = perms["execute"].role
     }
   }
 
