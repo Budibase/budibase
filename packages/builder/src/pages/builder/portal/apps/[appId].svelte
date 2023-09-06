@@ -58,14 +58,14 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-s);
-    padding: var(--spacing-s) var(--spacing-l) var(--spacing-l) var(--spacing-l);
+    padding: 0 var(--spacing-l) var(--spacing-l) var(--spacing-l);
   }
   .header {
     display: flex;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xs);
+    flex: 0 0 50px;
   }
   iframe {
     flex: 1 1 auto;

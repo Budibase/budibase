@@ -1,9 +1,9 @@
 <script>
   import { Icon, Body } from "@budibase/bbui"
-  import PortalSideNavItem from "./PortalSideNavItem.svelte"
   import { apps, sideBarCollapsed } from "stores/portal"
   import { params, goto } from "@roxi/routify"
   import { tick } from "svelte"
+  import NavItem from "components/common/NavItem.svelte"
 
   let searchInput
   let searchString
@@ -35,29 +35,34 @@
       <input
         bind:this={searchInput}
         bind:value={searchString}
-        placeholder="Search"
+        placeholder="Search for apps"
       />
-      <Icon hoverable on:click={stopSearching} name="Close" size="S" />
     {:else}
       <Body size="S">Apps</Body>
       <Icon name="Search" size="S" hoverable on:click={startSearching} />
     {/if}
-    <Icon name="Add" hoverable on:click={() => $goto("./create")} />
+    <div class="rotational" class:rotated={searching}>
+      <Icon
+        name="Add"
+        hoverable
+        on:click={searching ? stopSearching : () => $goto("./create")}
+      />
+    </div>
   </div>
   <div class="side-bar-nav">
-    <PortalSideNavItem
+    <NavItem
       icon="WebPages"
       text="All apps"
-      url="./"
+      on:click={() => $goto("./")}
       selected={!$params.appId}
     />
     {#each filteredApps as app}
-      <PortalSideNavItem
+      <NavItem
+        text={app.name}
         icon={app.icon?.name || "Apps"}
         iconColor={app.icon?.color}
-        text={app.name}
-        url={`./${app.appId}`}
         selected={$params.appId === app.appId}
+        on:click={() => $goto(`./${app.appId}`)}
       />
     {/each}
   </div>
@@ -65,7 +70,7 @@
 
 <style>
   .side-bar {
-    flex: 0 0 300px;
+    flex: 0 0 260px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -75,25 +80,29 @@
     transition: margin-left 300ms ease-out;
   }
   .side-bar.collapsed {
-    margin-left: -302px;
+    margin-left: -262px;
+  }
+  @media (max-width: 640px) {
+    .side-bar {
+      margin-left: -262px;
+    }
   }
 
   .side-bar-controls {
-    flex: 0 0 32px;
+    flex: 0 0 50px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-l);
     padding: 0 var(--spacing-l);
-    margin: var(--spacing-s);
   }
   .side-bar-controls :global(.spectrum-Body),
   .side-bar-controls input {
     flex: 1 1 auto;
   }
   .side-bar-controls :global(.spectrum-Icon) {
-    color: var(--spectrum-global-color-gray-600);
+    color: var(--spectrum-global-color-gray-700);
   }
 
   input {
@@ -101,9 +110,9 @@
     border: none;
     max-width: none;
     flex: 1 1 auto;
-    padding: 0 38px 0 0;
     color: var(--spectrum-global-color-gray-800);
     font-size: 14px;
+    padding: 0;
     transition: border 130ms ease-out;
     font-family: var(--font-sans);
     background: inherit;
@@ -118,13 +127,14 @@
 
   .side-bar-nav {
     flex: 1 1 auto;
-    padding: 0 16px;
-    display: flex;
-    flex-direction: column;
-    justify-items: flex-start;
-    align-items: stretch;
-    gap: 6px;
     overflow: auto;
     overflow-x: hidden;
+  }
+
+  div.rotational {
+    transition: transform 130ms ease-out;
+  }
+  div.rotational.rotated {
+    transform: rotate(45deg);
   }
 </style>
