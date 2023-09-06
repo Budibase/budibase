@@ -4745,7 +4745,8 @@
             "dependsOn": {
               "setting": "clickBehaviour",
               "value": "details"
-            }
+            },
+            "resetOn": "dataSource"
           },
           {
             "label": "Save button",
@@ -5397,6 +5398,7 @@
             "type": "fieldConfiguration",
             "key": "fields",
             "nested": true,
+            "resetOn": "dataSource",
             "selectAllFields": true
           },
           {
