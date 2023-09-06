@@ -101,46 +101,4 @@ export default class LicenseAPI extends BaseAPI {
       return this.client.post(`/api/license/key/regenerate`, {})
     }, opts)
   }
-
-  async getPlans(opts: APIRequestOpts = { status: 200 }) {
-    return this.doRequest(() => {
-      return this.client.get(`/api/plans`)
-    }, opts)
-  }
-
-  async updatePlan(opts: APIRequestOpts = { status: 200 }) {
-    return this.doRequest(() => {
-      return this.client.put(`/api/license/plan`)
-    }, opts)
-  }
-
-  async refreshAccountLicense(
-    accountId: string,
-    opts: { status?: number } = {}
-  ): Promise<Response> {
-    const [response, json] = await this.client.post(
-      `/api/accounts/${accountId}/license/refresh`,
-      {
-        internal: true,
-      }
-    )
-    expect(response.status).toBe(opts.status ? opts.status : 201)
-    return response
-  }
-
-  async getLicenseUsage(opts: APIRequestOpts = { status: 200 }) {
-    return this.doRequest(() => {
-      return this.client.get(`/api/license/usage`)
-    }, opts)
-  }
-
-  async licenseUsageTriggered(
-    opts: { status?: number } = {}
-  ): Promise<Response> {
-    const [response, json] = await this.client.post(
-      `/api/license/usage/triggered`
-    )
-    expect(response.status).toBe(opts.status ? opts.status : 201)
-    return response
-  }
 }
