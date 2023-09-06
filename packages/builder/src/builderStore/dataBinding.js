@@ -955,7 +955,9 @@ export const buildFormSchema = (component, asset) => {
       const patched = convertOldFieldFormat(component.fields || [])
       patched?.forEach(({ field, active }) => {
         if (!active) return
-        schema[field] = { type: info?.schema[field].type }
+        if (info?.schema[field]) {
+          schema[field] = { type: info?.schema[field].type }
+        }
       })
     }
 

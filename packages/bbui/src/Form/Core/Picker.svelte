@@ -38,6 +38,8 @@
   export let fetchTerm = null
   export let useFetch = false
   export let customPopoverHeight
+  export let customPopoverOffsetBelow
+  export let customPopoverMaxHeight
   export let align = "left"
   export let footer = null
   export let customAnchor = null
@@ -102,7 +104,7 @@
   bind:this={button}
 >
   {#if fieldIcon}
-    {#if !useOptionIconImage}x
+    {#if !useOptionIconImage}
       <span class="option-extra icon">
         <Icon size="S" name={fieldIcon} />
       </span>
@@ -150,7 +152,9 @@
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
   maxWidth={autoWidth ? 400 : null}
+  maxHeight={customPopoverMaxHeight}
   customHeight={customPopoverHeight}
+  offsetBelow={customPopoverOffsetBelow}
 >
   <div
     class="popover-content"

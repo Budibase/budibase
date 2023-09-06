@@ -67,7 +67,6 @@ jobs:
       - name: Bootstrap and build (CLI)
         run: |
           yarn
-          yarn bootstrap
           yarn build
 
       - name: Build OpenAPI spec

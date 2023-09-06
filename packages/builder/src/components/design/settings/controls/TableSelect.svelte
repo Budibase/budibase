@@ -8,15 +8,16 @@
   const dispatch = createEventDispatcher()
 
   $: tables = $tablesStore.list.map(table => ({
-    ...table,
     type: "table",
     label: table.name,
+    tableId: table._id,
     resourceId: table._id,
   }))
   $: views = $viewsV2.list.map(view => ({
-    ...view,
     type: "viewV2",
+    id: view.id,
     label: view.name,
+    tableId: view.tableId,
     resourceId: view.id,
   }))
   $: options = [...(tables || []), ...(views || [])]
@@ -32,7 +33,7 @@
     // Migrate old values before "resourceId" existed
     if (value && !value.resourceId) {
       const view = views.find(x => x.resourceId === value.id)
-      const table = tables.find(x => x.resourceId === value._id)
+      const table = tables.find(x => x.resourceId === value.tableId)
       dispatch("change", view || table)
     }
   })

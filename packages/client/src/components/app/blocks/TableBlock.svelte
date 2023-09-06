@@ -275,7 +275,7 @@
               dataSource,
               showSaveButton: true,
               showDeleteButton: false,
-              saveButtonLabel: sidePanelSaveLabel,
+              saveButtonLabel: sidePanelSaveLabel || "Save", //always show
               actionType: "Create",
               fields: sidePanelFields || normalFields,
               title: "Create Row",
