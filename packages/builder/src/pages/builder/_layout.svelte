@@ -3,6 +3,7 @@
   import { admin, auth, licensing } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
+  import { banner, BANNER_TYPES } from "@budibase/bbui"
   import { API } from "api"
   import Branding from "./Branding.svelte"
 
@@ -16,6 +17,32 @@
   $: user = $auth.user
 
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
+  let showVerificationPrompt = false
+
+  const checkVerification = (user) => {
+    console.log('checking')
+    if (!showVerificationPrompt && user?.account?.verified === false) {
+      console.log('show it')
+      showVerificationPrompt = true
+      banner.queue([{
+        message: `Please verify your account. We've sent the verification link to ${user.email}`,
+        type: BANNER_TYPES.NEUTRAL,
+        showCloseButton: false,
+        extraButtonAction: () => {
+          fetch(`${$admin.accountPortalUrl}/api/auth/reset`, {
+            method: 'POST',
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: user.email })
+          })
+        },
+        extraButtonText: 'Resend email'
+      }])
+    }
+  }
+
+  $: checkVerification(user)
 
   const validateTenantId = async () => {
     const host = window.location.host
