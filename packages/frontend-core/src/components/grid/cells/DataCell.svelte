@@ -56,10 +56,7 @@
     isActive: () => api?.isActive?.() ?? false,
     onKeyDown: (...params) => api?.onKeyDown(...params),
     isReadonly: () => readonly,
-    getType: () => {
-      console.log("getType", column)
-      return column.schema.type
-    },
+    getType: () => column.schema.type,
     getValue: () => row[column.name],
     setValue: (value, options = { save: true }) => {
       validation.actions.setError(cellId, null)
