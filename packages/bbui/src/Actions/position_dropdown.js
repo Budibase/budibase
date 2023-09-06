@@ -18,6 +18,7 @@ export default function positionDropdown(element, opts) {
       useAnchorWidth,
       offset = 5,
       customUpdate,
+      offsetBelow,
     } = opts
     if (!anchor) {
       return
@@ -47,7 +48,7 @@ export default function positionDropdown(element, opts) {
         styles.top = anchorBounds.top - elementBounds.height - offset
         styles.maxHeight = maxHeight || 240
       } else {
-        styles.top = anchorBounds.bottom + offset
+        styles.top = anchorBounds.bottom + (offsetBelow || offset)
         styles.maxHeight =
           maxHeight || window.innerHeight - anchorBounds.bottom - 20
       }

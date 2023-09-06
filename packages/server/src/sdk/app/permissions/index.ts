@@ -1,18 +1,13 @@
-import { context, db, env, roles } from "@budibase/backend-core"
+import { db, env, roles } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import {
   DocumentType,
   PermissionLevel,
   PermissionSource,
   PlanType,
-  Role,
   VirtualDocumentType,
 } from "@budibase/types"
-import {
-  extractViewInfoFromID,
-  getRoleParams,
-  isViewID,
-} from "../../../db/utils"
+import { extractViewInfoFromID, isViewID } from "../../../db/utils"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
@@ -84,13 +79,8 @@ export async function allowsExplicitPermissions(resourceId: string) {
 export async function getResourcePerms(
   resourceId: string
 ): Promise<ResourcePermissions> {
-  const db = context.getAppDB()
-  const body = await db.allDocs(
-    getRoleParams(null, {
-      include_docs: true,
-    })
-  )
-  const rolesList = body.rows.map<Role>(row => row.doc)
+  const rolesList = await roles.getAllRoles()
+
   let permissions: ResourcePermissions = {}
 
   const permsToInherit = await getInheritablePermissions(resourceId)

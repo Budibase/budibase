@@ -75,43 +75,37 @@
             {@const views = Object.values(table.views || {}).filter(
               view => view.version === 2
             )}
-            {@const datasource = {
-              ...table,
-              // Legacy properties
+            {@const tableDS = {
               tableId: table._id,
               label: table.name,
-              // New consistent properties
               resourceId: table._id,
-              name: table.name,
               type: "table",
             }}
             {@const selected = selectedScreens.find(
-              screen => screen.resourceId === datasource.resourceId
+              screen => screen.resourceId === tableDS.resourceId
             )}
             <DatasourceTemplateRow
-              on:click={() => toggleSelection(datasource)}
+              on:click={() => toggleSelection(tableDS)}
               {selected}
-              {datasource}
+              datasource={tableDS}
             />
 
             <!-- List all views inside this table -->
             {#each views as view}
-              {@const datasource = {
-                ...view,
-                // Legacy properties
+              {@const viewDS = {
                 label: view.name,
-                // New consistent properties
+                id: view.id,
                 resourceId: view.id,
-                name: view.name,
+                tableId: view.tableId,
                 type: "viewV2",
               }}
               {@const selected = selectedScreens.find(
-                x => x.resourceId === datasource.resourceId
+                x => x.resourceId === viewDS.resourceId
               )}
               <DatasourceTemplateRow
-                on:click={() => toggleSelection(datasource)}
+                on:click={() => toggleSelection(viewDS)}
                 {selected}
-                {datasource}
+                datasource={viewDS}
               />
             {/each}
           {/each}
