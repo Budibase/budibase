@@ -102,7 +102,7 @@
   bind:this={button}
 >
   {#if fieldIcon}
-    {#if !useOptionIconImage}x
+    {#if !useOptionIconImage}
       <span class="option-extra icon">
         <Icon size="S" name={fieldIcon} />
       </span>
