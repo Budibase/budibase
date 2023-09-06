@@ -15,7 +15,11 @@ const { nodeExternalsPlugin } = require("esbuild-node-externals")
 
 var argv = require("minimist")(process.argv.slice(2))
 
-function runBuild(entry, outfile, opts = { skipMeta: false, bundle: true }) {
+function runBuild(
+  entry,
+  outfile,
+  opts = { skipMeta: false, bundle: true, silent: false }
+) {
   const isDev = process.env.NODE_ENV !== "production"
   const tsconfig = argv["p"] || `tsconfig.build.json`
   const tsconfigPathPluginContent = JSON.parse(
@@ -70,10 +74,11 @@ function runBuild(entry, outfile, opts = { skipMeta: false, bundle: true }) {
         fs.copyFileSync(file, `${process.cwd()}/dist/${path.basename(file)}`)
       }
 
-      console.log(
-        "\x1b[32m%s\x1b[0m",
-        `Build successfully in ${(Date.now() - start) / 1000} seconds`
-      )
+      !opts.silent &&
+        console.log(
+          "\x1b[32m%s\x1b[0m",
+          `Build successfully in ${(Date.now() - start) / 1000} seconds`
+        )
     })
 
     if (metafile) {
