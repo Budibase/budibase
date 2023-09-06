@@ -211,17 +211,19 @@
           {/if}
         </BlockComponent>
       {/if}
-      <BlockComponent type="fieldgroup" props={{ labelPosition }} order={1}>
-        {#each fields as field, idx}
-          {#if getComponentForField(field) && field.active}
-            <BlockComponent
-              type={getComponentForField(field)}
-              props={getPropsForField(field)}
-              order={idx}
-            />
-          {/if}
-        {/each}
-      </BlockComponent>
+      {#key fields}
+        <BlockComponent type="fieldgroup" props={{ labelPosition }} order={1}>
+          {#each fields as field, idx}
+            {#if getComponentForField(field) && field.active}
+              <BlockComponent
+                type={getComponentForField(field)}
+                props={getPropsForField(field)}
+                order={idx}
+              />
+            {/if}
+          {/each}
+        </BlockComponent>
+      {/key}
     </BlockComponent>
   </BlockComponent>
 {:else}
