@@ -17,17 +17,16 @@ import {
 import sdk from "../sdk"
 import { automationsEnabled } from "../features"
 
+const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
+const CRON_STEP_ID = definitions.CRON.stepId
 let Runner: Thread
 if (automationsEnabled()) {
   Runner = new Thread(ThreadType.AUTOMATION)
 }
 
-function loggingArgs(
-  job: AutomationJob,
-  timing?: { start: number; complete?: boolean }
-) {
-  const logs: any[] = [
+function loggingArgs(job: AutomationJob) {
+  return [
     {
       _logKey: "automation",
       trigger: job.data.automation.definition.trigger.event,
@@ -37,53 +36,24 @@ function loggingArgs(
       jobId: job.id,
     },
   ]
-  if (timing?.start) {
-    logs.push({
-      _logKey: "startTime",
-      start: timing.start,
-    })
-  }
-  if (timing?.start && timing?.complete) {
-    const end = new Date().getTime()
-    const duration = end - timing.start
-    logs.push({
-      _logKey: "endTime",
-      end,
-    })
-    logs.push({
-      _logKey: "duration",
-      duration,
-    })
-  }
-  return logs
 }
 
 export async function processEvent(job: AutomationJob) {
   const appId = job.data.event.appId!
   const automationId = job.data.automation._id!
-  const start = new Date().getTime()
   const task = async () => {
     try {
       // need to actually await these so that an error can be captured properly
-      console.log("automation running", ...loggingArgs(job, { start }))
+      console.log("automation running", ...loggingArgs(job))
 
       const runFn = () => Runner.run(job)
       const result = await quotas.addAutomation(runFn, {
         automationId,
       })
-      const end = new Date().getTime()
-      const duration = end - start
-      console.log(
-        "automation completed",
-        ...loggingArgs(job, { start, complete: true })
-      )
+      console.log("automation completed", ...loggingArgs(job))
       return result
     } catch (err) {
-      console.error(
-        `automation was unable to run`,
-        err,
-        ...loggingArgs(job, { start, complete: true })
-      )
+      console.error(`automation was unable to run`, err, ...loggingArgs(job))
       return { err }
     }
   }
@@ -163,6 +133,19 @@ export async function clearMetadata() {
   await db.bulkDocs(automationMetadata)
 }
 
+export function isCronTrigger(auto: Automation) {
+  return (
+    auto &&
+    auto.definition.trigger &&
+    auto.definition.trigger.stepId === CRON_STEP_ID
+  )
+}
+
+export function isRebootTrigger(auto: Automation) {
+  const trigger = auto ? auto.definition.trigger : null
+  return isCronTrigger(auto) && trigger?.inputs.cron === REBOOT_CRON
+}
+
 /**
  * This function handles checking of any cron jobs that need to be enabled/updated.
  * @param {string} appId The ID of the app in which we are checking for webhooks
@@ -170,14 +153,14 @@ export async function clearMetadata() {
  */
 export async function enableCronTrigger(appId: any, automation: Automation) {
   const trigger = automation ? automation.definition.trigger : null
-  const validCron = sdk.automations.isCron(automation) && trigger?.inputs.cron
-  const needsCreated =
-    !sdk.automations.isReboot(automation) &&
-    !sdk.automations.disabled(automation)
   let enabled = false
 
   // need to create cron job
-  if (validCron && needsCreated) {
+  if (
+    isCronTrigger(automation) &&
+    !isRebootTrigger(automation) &&
+    trigger?.inputs.cron
+  ) {
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${newid()}`
     const job: any = await automationQueue.add(
