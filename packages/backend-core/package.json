@@ -4,13 +4,6 @@
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "tests": [
-        "./dist/tests/index.d.ts"
-      ]
-    }
-  },
   "exports": {
     ".": "./dist/index.js",
     "./tests": "./dist/tests/index.js",
@@ -21,7 +14,7 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "prepack": "cp package.json dist",
-    "build": "node ./scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
+    "build": "tsc -p tsconfig.build.json --paths null && node ./scripts/build.js",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "test": "bash scripts/test.sh",
