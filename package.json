@@ -33,21 +33,18 @@
   "scripts": {
     "preinstall": "node scripts/syncProPackage.js",
     "setup": "git config submodule.recurse true && git submodule update && node ./hosting/scripts/setup.js && yarn && yarn build && yarn dev",
-    "bootstrap": "./scripts/link-dependencies.sh && echo '***BOOTSTRAP ONLY REQUIRED FOR USE WITH ACCOUNT PORTAL***'",
     "build": "lerna run build --stream",
     "build:dev": "lerna run --stream prebuild && yarn nx run-many --target=build --output-style=dynamic --watch --preserveWatchOutput",
     "check:types": "lerna run check:types",
-    "backend:bootstrap": "./scripts/scopeBackend.sh && yarn run bootstrap",
-    "backend:build": "./scripts/scopeBackend.sh 'lerna run --stream build'",
     "build:sdk": "lerna run --stream build:sdk",
     "deps:circular": "madge packages/server/dist/index.js packages/worker/src/index.ts packages/backend-core/dist/src/index.js packages/cli/src/index.js --circular",
     "release": "lerna publish from-package --yes --force-publish --no-git-tag-version --no-push --no-git-reset",
     "release:develop": "yarn release --dist-tag develop",
-    "restore": "yarn run clean && yarn run bootstrap && yarn run build",
+    "restore": "yarn run clean && yarn && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
     "nuke:docker": "lerna run --stream dev:stack:nuke",
-    "clean": "lerna clean",
+    "clean": "lerna clean -y",
     "kill-builder": "kill-port 3000",
     "kill-server": "kill-port 4001 4002",
     "kill-all": "yarn run kill-builder && yarn run kill-server",
@@ -93,9 +90,8 @@
     "mode:account": "yarn mode:cloud && yarn env:account:enable",
     "security:audit": "node scripts/audit.js",
     "postinstall": "husky install",
-    "dep:clean": "yarn clean -y && yarn bootstrap",
-    "submodules:load": "git submodule init && git submodule update && yarn && yarn bootstrap",
-    "submodules:unload": "git submodule deinit --all && yarn && yarn bootstrap"
+    "submodules:load": "git submodule init && git submodule update && yarn",
+    "submodules:unload": "git submodule deinit --all && yarn"
   },
   "workspaces": {
     "packages": [
