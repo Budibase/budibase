@@ -8,7 +8,7 @@ export default function (datasources) {
   }
   return datasources.map(datasource => {
     return {
-      name: `${datasource.name} - List`,
+      name: `${datasource.label} - List`,
       create: () => createScreen(datasource),
       id: ROW_LIST_TEMPLATE,
       resourceId: datasource.resourceId,
@@ -17,13 +17,13 @@ export default function (datasources) {
 }
 
 export const ROW_LIST_TEMPLATE = "ROW_LIST_TEMPLATE"
-export const rowListUrl = datasource => sanitizeUrl(`/${datasource.name}`)
+export const rowListUrl = datasource => sanitizeUrl(`/${datasource.label}`)
 
 const generateTableBlock = datasource => {
   const tableBlock = new Component("@budibase/standard-components/tableblock")
   tableBlock
     .customProps({
-      title: datasource.name,
+      title: datasource.label,
       dataSource: datasource,
       sortOrder: "Ascending",
       size: "spectrum--medium",
@@ -34,14 +34,14 @@ const generateTableBlock = datasource => {
       titleButtonText: "Create row",
       titleButtonClickBehaviour: "new",
     })
-    .instanceName(`${datasource.name} - Table block`)
+    .instanceName(`${datasource.label} - Table block`)
   return tableBlock
 }
 
 const createScreen = datasource => {
   return new Screen()
     .route(rowListUrl(datasource))
-    .instanceName(`${datasource.name} - List`)
+    .instanceName(`${datasource.label} - List`)
     .addChild(generateTableBlock(datasource))
     .json()
 }
