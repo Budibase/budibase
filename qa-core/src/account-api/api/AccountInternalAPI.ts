@@ -4,7 +4,6 @@ import {
   LicenseAPI,
   AuthAPI,
   StripeAPI,
-  EnvironmentAPI,
 } from "./apis"
 import { State } from "../../types"
 
@@ -15,7 +14,6 @@ export default class AccountInternalAPI {
   accounts: AccountAPI
   licenses: LicenseAPI
   stripe: StripeAPI
-  environment: EnvironmentAPI
 
   constructor(state: State) {
     this.client = new AccountInternalAPIClient(state)
@@ -23,6 +21,5 @@ export default class AccountInternalAPI {
     this.accounts = new AccountAPI(this.client)
     this.licenses = new LicenseAPI(this.client)
     this.stripe = new StripeAPI(this.client)
-    this.environment = new EnvironmentAPI(this.client)
   }
 }
