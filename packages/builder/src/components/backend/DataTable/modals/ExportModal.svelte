@@ -9,29 +9,42 @@
   import download from "downloadjs"
   import { API } from "api"
   import { Constants, LuceneUtils } from "@budibase/frontend-core"
-
-  const FORMATS = [
-    {
-      name: "CSV",
-      key: "csv",
-    },
-    {
-      name: "JSON",
-      key: "json",
-    },
-    {
-      name: "JSON with Schema",
-      key: "jsonWithSchema",
-    },
-  ]
+  import { ROW_EXPORT_FORMATS } from "constants/backend"
 
   export let view
   export let filters
   export let sorting
   export let selectedRows = []
+  export let formats
 
-  let exportFormat = FORMATS[0].key
+  const FORMATS = [
+    {
+      name: "CSV",
+      key: ROW_EXPORT_FORMATS.CSV,
+    },
+    {
+      name: "JSON",
+      key: ROW_EXPORT_FORMATS.JSON,
+    },
+    {
+      name: "JSON with Schema",
+      key: ROW_EXPORT_FORMATS.JSON_WITH_SCHEMA,
+    },
+  ]
+
+  $: options = FORMATS.filter(format => {
+    if (formats && !formats.includes(format.key)) {
+      return false
+    }
+    return true
+  })
+
+  let exportFormat
   let filterLookup
+
+  $: if (options && !exportFormat) {
+    exportFormat = Array.isArray(options) ? options[0]?.key : []
+  }
 
   $: luceneFilter = LuceneUtils.buildLuceneQuery(filters)
   $: exportOpDisplay = buildExportOpDisplay(sorting, filterDisplay, filters)
@@ -190,7 +203,7 @@
   <Select
     label="Format"
     bind:value={exportFormat}
-    options={FORMATS}
+    {options}
     placeholder={null}
     getOptionLabel={x => x.name}
     getOptionValue={x => x.key}
