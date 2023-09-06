@@ -212,8 +212,10 @@
 
   // Focuses the cell and starts entering a new value
   const startEnteringValue = (key, keyCode) => {
+    console.log("start", $focusedCellAPI, $focusedCellAPI.isReadonly())
     if ($focusedCellAPI && !$focusedCellAPI.isReadonly()) {
       const type = $focusedCellAPI.getType()
+      console.log(type)
       if (type === "number" && keyCodeIsNumber(keyCode)) {
         // Update the value locally but don't save it yet
         $focusedCellAPI.setValue(parseInt(key), { save: false })
