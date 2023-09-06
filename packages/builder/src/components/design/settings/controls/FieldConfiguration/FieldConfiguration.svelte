@@ -99,6 +99,9 @@
     }
 
     const type = getComponentForField(instance.field, schema)
+    if (!type) {
+      return null
+    }
     instance._component = `@budibase/standard-components/${type}`
 
     const pseudoComponentInstance = store.actions.components.createInstance(
@@ -116,7 +119,9 @@
   }
 
   $: if (sanitisedFields) {
-    fieldList = [...sanitisedFields, ...unconfigured].map(buildSudoInstance)
+    fieldList = [...sanitisedFields, ...unconfigured]
+      .map(buildSudoInstance)
+      .filter(x => x != null)
   }
 
   const processItemUpdate = e => {

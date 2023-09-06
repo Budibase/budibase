@@ -110,7 +110,7 @@
     if (mode === "table") {
       datasourceModal.show()
     } else if (mode === "blank") {
-      let templates = getTemplates($store, $tables.list)
+      let templates = getTemplates($tables.list)
       const blankScreenTemplate = templates.find(
         t => t.id === "createFromScratch"
       )

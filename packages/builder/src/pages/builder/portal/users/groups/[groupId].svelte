@@ -46,7 +46,7 @@
 
   let loaded = false
   let editModal, deleteModal
-  $: console.log(group)
+
   $: scimEnabled = $features.isScimEnabled
   $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
   $: group = $groups.find(x => x._id === groupId)
@@ -62,7 +62,7 @@
         ? Constants.Roles.CREATOR
         : group?.roles?.[apps.getProdAppID(app.devId)],
     }))
-  $: console.log(groupApps)
+
   $: {
     if (loaded && !group?._id) {
       $goto("./")
