@@ -1,10 +1,12 @@
 <script>
   import { params, goto } from "@roxi/routify"
-  import { apps, sideBarCollapsed } from "stores/portal"
+  import { apps, auth, sideBarCollapsed } from "stores/portal"
   import { ActionButton } from "@budibase/bbui"
+  import { sdk } from "@budibase/shared-core"
 
   $: app = $apps.find(app => app.appId === $params.appId)
   $: iframeUrl = getIframeURL(app)
+  $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
 
   const getIframeURL = app => {
     if (app.status === "published") {
@@ -33,13 +35,15 @@
         Collapse
       </ActionButton>
     {/if}
-    <ActionButton
-      quiet
-      icon="Edit"
-      on:click={() => $goto(`../../app/${app.devId}`)}
-    >
-      Edit
-    </ActionButton>
+    {#if isBuilder}
+      <ActionButton
+        quiet
+        icon="Edit"
+        on:click={() => $goto(`../../app/${app.devId}`)}
+      >
+        Edit
+      </ActionButton>
+    {/if}
     <ActionButton
       quiet
       icon="LinkOut"
