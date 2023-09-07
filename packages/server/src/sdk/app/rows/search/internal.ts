@@ -34,11 +34,6 @@ import pick from "lodash/pick"
 export async function search(options: SearchParams) {
   const { tableId } = options
 
-  // Fetch the whole table when running in cypress, as search doesn't work
-  if (!env.COUCH_DB_URL && env.isCypress()) {
-    return { rows: await fetch(tableId) }
-  }
-
   const { paginate, query } = options
 
   const params: InternalSearchParams<any> = {
