@@ -93,6 +93,9 @@
   "workspaces": {
     "packages": [
       "packages/*"
+    ],
+    "nohoist": [
+      "**/axios"
     ]
   },
   "resolutions": {
