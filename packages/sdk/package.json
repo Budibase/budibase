@@ -10,14 +10,10 @@
     "generate": "cd scripts && bash generate-sdk.sh",
     "build:sdk": "yarn run generate && rollup -c"
   },
-  "dependencies": {
-    "superagent": "^5.3.0"
-  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^18.0.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
     "rollup": "^2.44.0",
-    "rollup-plugin-polyfill-node": "^0.8.0",
-    "rollup-plugin-terser": "^7.0.2"
+    "rollup-plugin-polyfill-node": "^0.8.0"
   }
 }

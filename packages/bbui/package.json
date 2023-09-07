@@ -20,8 +20,6 @@
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
-    "cross-env": "^7.0.2",
-    "nollup": "^0.14.1",
     "postcss": "^8.2.9",
     "rollup": "^2.45.2",
     "rollup-plugin-postcss": "^4.0.0",
