@@ -264,15 +264,13 @@ Sometimes, things go wrong. This can be due to incompatible updates on the budib
 
 ### Running tests
 
-#### End-to-end Tests
+#### Unit Tests
 
-Budibase uses Cypress to run a number of E2E tests. To run the tests execute the following command in the root folder:
+Budibase uses Jest to run a number of tests. To run the tests execute the following command in the root folder:
 
 ```
-yarn test:e2e
+yarn test
 ```
-
-Or if you are in the builder you can run `yarn cy:test`.
 
 ### Other Useful Information
 
