@@ -9,7 +9,6 @@
     "esbuild": "^0.18.17",
     "esbuild-node-externals": "^1.8.0",
     "eslint": "^8.44.0",
-    "eslint-plugin-cypress": "^2.11.3",
     "husky": "^8.0.3",
     "js-yaml": "^4.1.0",
     "kill-port": "^1.6.1",
