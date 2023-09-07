@@ -225,10 +225,12 @@ jobs:
           echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
 
           if [[ $branch == "master" ]]; then
-            base_commit=$(git rev-parse origin/master)
+            base_branch=master
           else
-            base_commit=$(git rev-parse origin/develop)
+            base_branch=develop
           fi
+          git fetch origin $base_branch
+          base_commit=$(git rev-parse $base_branch)
 
           echo "target_branch=$branch"
           echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
