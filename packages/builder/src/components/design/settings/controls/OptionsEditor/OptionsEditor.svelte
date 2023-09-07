@@ -24,11 +24,22 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Define Options</ActionButton>
-<Drawer bind:this={drawer} title="Options">
+<div class="options-wrap">
+  <div />
+  <div><ActionButton on:click={drawer.show}>Define Options</ActionButton></div>
+</div>
+<Drawer bind:this={drawer} title="Options" on:drawerHide on:drawerShow>
   <svelte:fragment slot="description">
     Define the options for this picker.
   </svelte:fragment>
   <Button cta slot="buttons" on:click={saveOptions}>Save</Button>
   <OptionsDrawer bind:options={tempValue} slot="body" />
 </Drawer>
+
+<style>
+  .options-wrap {
+    gap: 8px;
+    display: grid;
+    grid-template-columns: 90px 1fr;
+  }
+</style>

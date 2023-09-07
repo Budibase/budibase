@@ -1,4 +1,4 @@
-FROM node:14-slim
+FROM node:18-slim
 
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-check="scripts/watchtower-hooks/pre-check.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-hooks/pre-update.sh"
@@ -18,7 +18,7 @@ ENV TOP_LEVEL_PATH=/
 
 # handle node-gyp
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends g++ make python
+    && apt-get install -y --no-install-recommends g++ make python3
 RUN yarn global add pm2
 
 # Install client for oracle datasource

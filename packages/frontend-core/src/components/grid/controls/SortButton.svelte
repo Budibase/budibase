@@ -8,7 +8,6 @@
   let anchor
 
   $: columnOptions = getColumnOptions($stickyColumn, $columns)
-  $: checkValidSortColumn($sort.column, $stickyColumn, $columns)
   $: orderOptions = getOrderOptions($sort.column, columnOptions)
 
   const getColumnOptions = (stickyColumn, columns) => {
@@ -46,8 +45,8 @@
 
   const updateSortColumn = e => {
     sort.update(state => ({
-      ...state,
       column: e.detail,
+      order: e.detail ? state.order : "ascending",
     }))
   }
 
@@ -56,29 +55,6 @@
       ...state,
       order: e.detail,
     }))
-  }
-
-  // Ensure we never have a sort column selected that is not visible
-  const checkValidSortColumn = (sortColumn, stickyColumn, columns) => {
-    if (!sortColumn) {
-      return
-    }
-    if (
-      sortColumn !== stickyColumn?.name &&
-      !columns.some(col => col.name === sortColumn)
-    ) {
-      if (stickyColumn) {
-        sort.update(state => ({
-          ...state,
-          column: stickyColumn.name,
-        }))
-      } else {
-        sort.update(state => ({
-          ...state,
-          column: columns[0]?.name,
-        }))
-      }
-    }
   }
 </script>
 
@@ -98,21 +74,23 @@
 <Popover bind:open {anchor} align="left">
   <div class="content">
     <Select
-      placeholder={null}
+      placeholder="Default"
       value={$sort.column}
       options={columnOptions}
       autoWidth
       on:change={updateSortColumn}
       label="Column"
     />
-    <Select
-      placeholder={null}
-      value={$sort.order}
-      options={orderOptions}
-      autoWidth
-      on:change={updateSortOrder}
-      label="Order"
-    />
+    {#if $sort.column}
+      <Select
+        placeholder={null}
+        value={$sort.order || "ascending"}
+        options={orderOptions}
+        autoWidth
+        on:change={updateSortOrder}
+        label="Order"
+      />
+    {/if}
   </div>
 </Popover>
 

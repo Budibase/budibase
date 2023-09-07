@@ -1,8 +1,15 @@
 import { GenericContainer } from "testcontainers"
 
-import { Datasource, FieldType, Row, SourceName, Table } from "@budibase/types"
+import {
+  Datasource,
+  FieldType,
+  Row,
+  SourceName,
+  Table,
+  SearchParams,
+} from "@budibase/types"
+
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
-import { SearchParams } from "../../search"
 import { search } from "../external"
 import {
   expectAnyExternalColsAttributes,

@@ -109,7 +109,13 @@
       type: "View",
       name: view.name,
       icon: "Remove",
-      action: () => $goto(`./data/view/${view.name}`),
+      action: () => {
+        if (view.version === 2) {
+          $goto(`./data/view/v2/${view.id}`)
+        } else {
+          $goto(`./data/view/${view.name}`)
+        }
+      },
     })) ?? []),
     ...($queries?.list?.map(query => ({
       type: "Query",
@@ -121,7 +127,9 @@
       type: "Screen",
       name: screen.routing.route,
       icon: "WebPage",
-      action: () => $goto(`./design/${screen._id}/components`),
+      action: () => {
+        $goto(`./design/${screen._id}/${screen._id}-screen`)
+      },
     })),
     ...($automationStore?.automations?.map(automation => ({
       type: "Automation",
