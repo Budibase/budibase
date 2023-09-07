@@ -16,7 +16,6 @@
     themeStore,
     appStore,
     devToolsStore,
-    environmentStore,
     devToolsEnabled,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
