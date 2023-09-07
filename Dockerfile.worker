@@ -31,7 +31,7 @@ COPY packages/ packages/
 COPY scripts/build.js scripts/build.js
 COPY nx.json .
 
-RUN yarn build --projects=@budibase/worker
+RUN yarn build --scope @budibase/worker
 
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
 RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json

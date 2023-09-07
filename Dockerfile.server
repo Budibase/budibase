@@ -23,6 +23,7 @@ COPY packages/types/package.json packages/types/
 COPY packages/worker/package.json packages/worker/
 COPY packages/pro/package.json packages/pro/
 
+
 # We will never want to sync pro, but the script is still required
 RUN mkdir scripts && echo '' > scripts/syncProPackage.js
 RUN yarn install --frozen-lockfile && yarn cache clean
@@ -31,7 +32,7 @@ COPY packages/ packages/
 COPY scripts/build.js scripts/build.js
 COPY nx.json .
 
-RUN yarn build --projects=@budibase/client,@budibase/builder,@budibase/server
+RUN yarn build --scope @budibase/client --scope @budibase/builder --scope @budibase/server
 
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
 RUN ./scripts/removeWorkspaceDependencies.sh packages/server/package.json
