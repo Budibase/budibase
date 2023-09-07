@@ -55,7 +55,7 @@
   let linkEditDisabled
   let primaryDisplay
   let indexes = [...($tables.selected.indexes || [])]
-  let isCreating
+  let isCreating = undefined
 
   let table = $tables.selected
   let confirmDeleteDialog
@@ -75,11 +75,11 @@
   }
 
   const initialiseField = (field, savingColumn) => {
+    isCreating = !field
     if (field && !savingColumn) {
       editableColumn = cloneDeep(field)
       originalName = editableColumn.name ? editableColumn.name + "" : null
       linkEditDisabled = originalName != null
-      isCreating = originalName == null
       primaryDisplay =
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
@@ -584,6 +584,7 @@
               { label: "Dynamic", value: "dynamic" },
               { label: "Static", value: "static" },
             ]}
+            disabled={!isCreating}
             getOptionLabel={option => option.label}
             getOptionValue={option => option.value}
             tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
