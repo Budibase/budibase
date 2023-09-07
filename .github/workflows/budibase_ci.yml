@@ -214,6 +214,7 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
 
       - name: Check pro commit
         id: get_pro_commits
@@ -225,14 +226,10 @@ jobs:
           echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
 
           if [[ $branch == "master" ]]; then
-            base_branch=master
+            base_commit=$(git rev-parse origin/master)
           else
-            base_branch=develop
+            base_commit=$(git rev-parse origin/develop)
           fi
-          echo "Running git fetch"
-          git fetch
-          echo "Running git rev-parse $base_branch"
-          base_commit=$(git rev-parse $base_branch)
 
           echo "target_branch=$branch"
           echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
