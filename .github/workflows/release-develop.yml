@@ -46,7 +46,7 @@ jobs:
         with:
           node-version: 18.x
 
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable --immutable-cach
       - name: Update versions
         run: ./scripts/updateVersions.sh
       - run: yarn build

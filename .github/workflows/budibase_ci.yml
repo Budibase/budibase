@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-      - run: yarn --frozen-lockfile
+      - run: yarn --immutable --immutable-cach
       - run: yarn lint
 
   build:
@@ -64,7 +64,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-      - run: yarn --frozen-lockfile
+      - run: yarn --immutable --immutable-cach
 
       # Run build all the projects
       - name: Build
@@ -100,7 +100,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-      - run: yarn --frozen-lockfile
+      - run: yarn --immutable --immutable-cach
       - name: Test
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
@@ -135,7 +135,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-      - run: yarn --frozen-lockfile
+      - run: yarn --immutable --immutable-cach
       - name: Test worker and server
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
@@ -166,7 +166,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-      - run: yarn --frozen-lockfile
+      - run: yarn --immutable --immutable-cach
       - name: Test
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
@@ -193,7 +193,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-      - run: yarn --frozen-lockfile
+      - run: yarn --immutable --immutable-cach
       - name: Build packages
         run: yarn build --scope @budibase/server --scope @budibase/worker --scope @budibase/client --scope @budibase/backend-core
       - name: Run tests
