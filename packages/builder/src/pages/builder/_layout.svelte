@@ -19,26 +19,26 @@
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
   let showVerificationPrompt = false
 
-  const checkVerification = (user) => {
-    console.log('checking')
+  const checkVerification = user => {
     if (!showVerificationPrompt && user?.account?.verified === false) {
-      console.log('show it')
       showVerificationPrompt = true
-      banner.queue([{
-        message: `Please verify your account. We've sent the verification link to ${user.email}`,
-        type: BANNER_TYPES.NEUTRAL,
-        showCloseButton: false,
-        extraButtonAction: () => {
-          fetch(`${$admin.accountPortalUrl}/api/auth/reset`, {
-            method: 'POST',
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email: user.email })
-          })
+      banner.queue([
+        {
+          message: `Please verify your account. We've sent the verification link to ${user.email}`,
+          type: BANNER_TYPES.NEUTRAL,
+          showCloseButton: false,
+          extraButtonAction: () => {
+            fetch(`${$admin.accountPortalUrl}/api/auth/reset`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email: user.email }),
+            })
+          },
+          extraButtonText: "Resend email",
         },
-        extraButtonText: 'Resend email'
-      }])
+      ])
     }
   }
 

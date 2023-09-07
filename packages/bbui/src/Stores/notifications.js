@@ -29,7 +29,7 @@ export const createNotificationStore = () => {
       action = null,
       actionMessage = null,
       wide = false,
-      dismissTimeout = NOTIFICATION_TIMEOUT
+      dismissTimeout = NOTIFICATION_TIMEOUT,
     }
   ) => {
     if (block) {
@@ -48,7 +48,7 @@ export const createNotificationStore = () => {
           action,
           actionMessage,
           wide,
-          dismissTimeout
+          dismissTimeout,
         },
       ]
     })
