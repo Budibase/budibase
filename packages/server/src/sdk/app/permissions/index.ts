@@ -92,7 +92,7 @@ export async function getResourcePerms(
     // update the various roleIds in the resource permissions
     for (let role of rolesList) {
       const rolePerms = allowsExplicitPerm
-        ? roles.checkForRoleResourceArray(role.permissions, resourceId)
+        ? roles.checkForRoleResourceArray(role.permissions || {}, resourceId)
         : {}
       if (rolePerms[resourceId]?.indexOf(level) > -1) {
         permissions[level] = {
