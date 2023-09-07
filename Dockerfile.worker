@@ -1,4 +1,4 @@
-FROM node:14-slim as builder
+FROM node:18-slim as builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
 
@@ -37,7 +37,7 @@ COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.
 RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 
 
-FROM node:14-alpine as runner
+FROM node:18-alpine as runner
 
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-check="scripts/watchtower-hooks/pre-check.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-hooks/pre-update.sh"
