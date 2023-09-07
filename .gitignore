@@ -106,4 +106,4 @@ budibase-datasource
 
 *.iml
 
-.yarn-cache
+.yarn/

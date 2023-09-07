@@ -26,6 +26,8 @@ COPY packages/pro/package.json packages/pro/
 
 # We will never want to sync pro, but the script is still required
 RUN mkdir scripts && echo '' > scripts/syncProPackage.js
+
+COPY .yarnrc .
 RUN yarn install --frozen-lockfile && yarn cache clean
 
 COPY packages/ packages/

@@ -31,8 +31,8 @@ services:
     depends_on:
       - worker-service
       - redis-service
-  #    volumes:
-  #      - /some/path/to/plugins:/plugins
+    volumes:
+      - yarn-cache:/builder/.yarn/cache
 
   worker-service:
     build:
