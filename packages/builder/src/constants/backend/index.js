@@ -287,3 +287,9 @@ export const DatasourceTypes = {
   GRAPH: "Graph",
   API: "API",
 }
+
+export const ROW_EXPORT_FORMATS = {
+  CSV: "csv",
+  JSON: "json",
+  JSON_WITH_SCHEMA: "jsonWithSchema",
+}

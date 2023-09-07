@@ -21,10 +21,12 @@
   export let sort = false
   export let align
   export let footer = null
+  export let open = false
+  export let tag = null
+  export let customPopoverOffsetBelow
+  export let customPopoverMaxHeight
 
   const dispatch = createEventDispatcher()
-
-  let open = false
 
   $: fieldText = getFieldText(value, options, placeholder)
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
@@ -83,6 +85,9 @@
   {isOptionEnabled}
   {autocomplete}
   {sort}
+  {tag}
+  {customPopoverOffsetBelow}
+  {customPopoverMaxHeight}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder === false ? null : placeholder}
   isOptionSelected={option => option === value}

@@ -272,8 +272,8 @@ export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
         password,
         forceResetPassword: true,
         roles: invite.userInfo.apps,
-        admin: { global: false },
-        builder: { global: false },
+        admin: invite.userInfo.admin,
+        builder: invite.userInfo.builder,
         tenantId: tenancy.getTenantId(),
       }
     })
@@ -368,6 +368,12 @@ export const updateInvite = async (ctx: any) => {
     ...invite,
   }
 
+  if (!updateBody?.builder?.apps && updated.info?.builder?.apps) {
+    updated.info.builder.apps = []
+  } else if (updateBody?.builder) {
+    updated.info.builder = updateBody.builder
+  }
+
   if (!updateBody?.apps || !Object.keys(updateBody?.apps).length) {
     updated.info.apps = []
   } else {
@@ -392,17 +398,24 @@ export const inviteAccept = async (
     // info is an extension of the user object that was stored by global
     const { email, info }: any = await checkInviteCode(inviteCode)
     const user = await tenancy.doInTenant(info.tenantId, async () => {
-      let request = {
+      let request: any = {
         firstName,
         lastName,
         password,
         email,
+        admin: { global: info?.admin?.global || false },
         roles: info.apps,
         tenantId: info.tenantId,
       }
+      let builder: { global: boolean; apps?: string[] } = {
+        global: info?.builder?.global || false,
+      }
 
+      if (info?.builder?.apps) {
+        builder.apps = info.builder.apps
+        request.builder = builder
+      }
       delete info.apps
-
       request = {
         ...request,
         ...info,
