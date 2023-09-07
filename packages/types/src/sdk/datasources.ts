@@ -166,6 +166,12 @@ export interface IntegrationBase {
   delete?(query: any): Promise<any[] | any>
   testConnection?(): Promise<ConnectionInfo>
   getExternalSchema?(): Promise<string>
+  defineTypeCastingFromSchema?(schema: {
+    [key: string]: {
+      name: string
+      type: string
+    }
+  }): void
 }
 
 export interface DatasourcePlus extends IntegrationBase {

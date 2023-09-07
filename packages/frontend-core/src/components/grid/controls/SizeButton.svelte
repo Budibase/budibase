@@ -8,8 +8,14 @@
     SmallRowHeight,
   } from "../lib/constants"
 
-  const { stickyColumn, columns, rowHeight, table, fixedRowHeight } =
-    getContext("grid")
+  const {
+    stickyColumn,
+    columns,
+    rowHeight,
+    definition,
+    fixedRowHeight,
+    datasource,
+  } = getContext("grid")
 
   // Some constants for column width options
   const smallColSize = 120
@@ -60,8 +66,8 @@
   ]
 
   const changeRowHeight = height => {
-    columns.actions.saveTable({
-      ...$table,
+    datasource.actions.saveDefinition({
+      ...$definition,
       rowHeight: height,
     })
   }
