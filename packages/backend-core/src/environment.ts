@@ -2,15 +2,15 @@ import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
 
 function isTest() {
-  return isCypress() || isJest()
+  return isJest()
 }
 
 function isJest() {
-  return !!(process.env.NODE_ENV === "jest" || process.env.JEST_WORKER_ID)
-}
-
-function isCypress() {
-  return process.env.NODE_ENV === "cypress"
+  return (
+    process.env.NODE_ENV === "jest" ||
+    (process.env.JEST_WORKER_ID != null &&
+      process.env.JEST_WORKER_ID !== "null")
+  )
 }
 
 function isDev() {
