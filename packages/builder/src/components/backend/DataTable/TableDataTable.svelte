@@ -26,12 +26,14 @@
   $: id = $tables.selected?._id
   $: isUsersTable = id === TableNames.USERS
   $: isInternal = $tables.selected?.type !== "external"
-
-  $: datasource = $datasources.list.find(datasource => {
+  $: gridDatasource = {
+    type: "table",
+    tableId: id,
+  }
+  $: tableDatasource = $datasources.list.find(datasource => {
     return datasource._id === $tables.selected?.sourceId
   })
-
-  $: relationshipsEnabled = relationshipSupport(datasource)
+  $: relationshipsEnabled = relationshipSupport(tableDatasource)
 
   const relationshipSupport = datasource => {
     const integration = $integrations[datasource?.source]
@@ -54,12 +56,12 @@
 <div class="wrapper">
   <Grid
     {API}
-    tableId={id}
-    allowAddRows={!isUsersTable}
-    allowDeleteRows={!isUsersTable}
+    datasource={gridDatasource}
+    canAddRows={!isUsersTable}
+    canDeleteRows={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
-    on:updatetable={handleGridTableUpdate}
+    on:updatedatasource={handleGridTableUpdate}
   >
     <svelte:fragment slot="filter">
       <GridFilterButton />
@@ -72,9 +74,7 @@
     </svelte:fragment>
 
     <svelte:fragment slot="controls">
-      {#if isInternal}
-        <GridCreateViewButton />
-      {/if}
+      <GridCreateViewButton />
       <GridManageAccessButton />
       {#if relationshipsEnabled}
         <GridRelationshipButton />

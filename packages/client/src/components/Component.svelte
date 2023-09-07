@@ -272,9 +272,33 @@
       return missing
     })
 
+    // Run any migrations
+    runMigrations(instance, settingsDefinition)
+
     // Force an initial enrichment of the new settings
     enrichComponentSettings(get(context), settingsDefinitionMap, {
       force: true,
+    })
+  }
+
+  const runMigrations = (instance, settingsDefinition) => {
+    settingsDefinition.forEach(setting => {
+      // Migrate "table" settings to ensure they have a type and resource ID
+      if (setting.type === "table") {
+        const val = instance[setting.key]
+        if (val) {
+          if (!val.type) {
+            val.type = "table"
+          }
+          if (!val.resourceId) {
+            if (val.type === "viewV2") {
+              val.resourceId = val.id
+            } else {
+              val.resourceId = val.tableId
+            }
+          }
+        }
+      }
     })
   }
 

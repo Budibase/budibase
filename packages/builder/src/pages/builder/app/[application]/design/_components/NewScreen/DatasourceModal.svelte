@@ -1,41 +1,30 @@
 <script>
-  import { store } from "builderStore"
-  import {
-    ModalContent,
-    Layout,
-    notifications,
-    Icon,
-    Body,
-  } from "@budibase/bbui"
-  import { tables, datasources } from "stores/backend"
-  import getTemplates from "builderStore/store/screenTemplates"
+  import { ModalContent, Layout, notifications, Body } from "@budibase/bbui"
+  import { datasources } from "stores/backend"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "constants"
   import { onMount } from "svelte"
+  import rowListScreen from "builderStore/store/screenTemplates/rowListScreen"
+  import DatasourceTemplateRow from "./DatasourceTemplateRow.svelte"
 
   export let onCancel
   export let onConfirm
-  export let initalScreens = []
+  export let initialScreens = []
 
-  let selectedScreens = [...initalScreens]
+  let selectedScreens = [...initialScreens]
 
-  const toggleScreenSelection = (table, datasource) => {
-    if (selectedScreens.find(s => s.table === table._id)) {
+  $: filteredSources = $datasources.list?.filter(datasource => {
+    return datasource.source !== IntegrationNames.REST && datasource["entities"]
+  })
+
+  const toggleSelection = datasource => {
+    const { resourceId } = datasource
+    if (selectedScreens.find(s => s.resourceId === resourceId)) {
       selectedScreens = selectedScreens.filter(
-        screen => screen.table !== table._id
+        screen => screen.resourceId !== resourceId
       )
     } else {
-      let partialTemplates = getTemplates($store, $tables.list).reduce(
-        (acc, template) => {
-          if (template.table === table._id) {
-            template.datasource = datasource.name
-            acc.push(template)
-          }
-          return acc
-        },
-        []
-      )
-      selectedScreens = [...partialTemplates, ...selectedScreens]
+      selectedScreens = [...selectedScreens, rowListScreen([datasource])[0]]
     }
   }
 
@@ -44,18 +33,6 @@
       templates: selectedScreens,
     })
   }
-
-  $: filteredSources = Array.isArray($datasources.list)
-    ? $datasources.list.reduce((acc, datasource) => {
-        if (
-          datasource.source !== IntegrationNames.REST &&
-          datasource["entities"]
-        ) {
-          acc.push(datasource)
-        }
-        return acc
-      }, [])
-    : []
 
   onMount(async () => {
     try {
@@ -81,6 +58,9 @@
     </Body>
     <Layout noPadding gap="S">
       {#each filteredSources as datasource}
+        {@const entities = Array.isArray(datasource.entities)
+          ? datasource.entities
+          : Object.values(datasource.entities || {})}
         <div class="data-source-wrap">
           <div class="data-source-header">
             <svelte:component
@@ -90,64 +70,45 @@
             />
             <div class="data-source-name">{datasource.name}</div>
           </div>
-          {#if Array.isArray(datasource.entities)}
-            {#each datasource.entities.filter(table => table._id !== "ta_users") as table}
-              <div
-                class="data-source-entry"
-                class:selected={selectedScreens.find(
-                  x => x.table === table._id
-                )}
-                on:click={() => toggleScreenSelection(table, datasource)}
-              >
-                <svg
-                  width="16px"
-                  height="16px"
-                  class="spectrum-Icon"
-                  style="color: white"
-                  focusable="false"
-                >
-                  <use xlink:href="#spectrum-icon-18-Table" />
-                </svg>
-                {table.name}
-                {#if selectedScreens.find(x => x.table === table._id)}
-                  <span class="data-source-check">
-                    <Icon size="S" name="CheckmarkCircle" />
-                  </span>
-                {/if}
-              </div>
+          <!-- List all tables -->
+          {#each entities.filter(table => table._id !== "ta_users") as table}
+            {@const views = Object.values(table.views || {}).filter(
+              view => view.version === 2
+            )}
+            {@const tableDS = {
+              tableId: table._id,
+              label: table.name,
+              resourceId: table._id,
+              type: "table",
+            }}
+            {@const selected = selectedScreens.find(
+              screen => screen.resourceId === tableDS.resourceId
+            )}
+            <DatasourceTemplateRow
+              on:click={() => toggleSelection(tableDS)}
+              {selected}
+              datasource={tableDS}
+            />
+
+            <!-- List all views inside this table -->
+            {#each views as view}
+              {@const viewDS = {
+                label: view.name,
+                id: view.id,
+                resourceId: view.id,
+                tableId: view.tableId,
+                type: "viewV2",
+              }}
+              {@const selected = selectedScreens.find(
+                x => x.resourceId === viewDS.resourceId
+              )}
+              <DatasourceTemplateRow
+                on:click={() => toggleSelection(viewDS)}
+                {selected}
+                datasource={viewDS}
+              />
             {/each}
-          {/if}
-          {#if datasource["entities"] && !Array.isArray(datasource.entities)}
-            {#each Object.keys(datasource.entities).filter(table => table._id !== "ta_users") as table_key}
-              <div
-                class="data-source-entry"
-                class:selected={selectedScreens.find(
-                  x => x.table === datasource.entities[table_key]._id
-                )}
-                on:click={() =>
-                  toggleScreenSelection(
-                    datasource.entities[table_key],
-                    datasource
-                  )}
-              >
-                <svg
-                  width="16px"
-                  height="16px"
-                  class="spectrum-Icon"
-                  style="color: white"
-                  focusable="false"
-                >
-                  <use xlink:href="#spectrum-icon-18-Table" />
-                </svg>
-                {datasource.entities[table_key].name}
-                {#if selectedScreens.find(x => x.table === datasource.entities[table_key]._id)}
-                  <span class="data-source-check">
-                    <Icon size="S" name="CheckmarkCircle" />
-                  </span>
-                {/if}
-              </div>
-            {/each}
-          {/if}
+          {/each}
         </div>
       {/each}
     </Layout>
@@ -160,42 +121,10 @@
     display: grid;
     grid-gap: var(--spacing-s);
   }
-
   .data-source-header {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
     padding-bottom: var(--spacing-xs);
-  }
-
-  .data-source-entry {
-    cursor: pointer;
-    grid-gap: var(--spectrum-alias-grid-margin-xsmall);
-    padding: var(--spectrum-alias-item-padding-s);
-    background: var(--spectrum-alias-background-color-secondary);
-    transition: 0.3s all;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 4px;
-    border-width: 1px;
-    display: flex;
-    align-items: center;
-  }
-
-  .data-source-entry:hover,
-  .selected {
-    background: var(--spectrum-alias-background-color-tertiary);
-  }
-
-  .data-source-entry .data-source-check {
-    margin-left: auto;
-  }
-
-  .data-source-entry :global(.spectrum-Icon) {
-    min-width: 16px;
-  }
-
-  .data-source-entry .data-source-check :global(.spectrum-Icon) {
-    color: var(--spectrum-global-color-green-600);
-    display: block;
   }
 </style>

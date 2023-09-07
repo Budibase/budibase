@@ -206,7 +206,7 @@
                     {/if}
                   </div>
 
-                  {#if !$builderStore.inBuilder && licensing.logoEnabled() && $environmentStore.cloud}
+                  {#if !$builderStore.inBuilder && licensing.logoEnabled()}
                     <FreeFooter />
                   {/if}
                 </div>

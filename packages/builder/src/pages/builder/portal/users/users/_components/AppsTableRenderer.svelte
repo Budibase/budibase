@@ -5,9 +5,21 @@
 
   export let value
   export let row
-
   $: priviliged = sdk.users.isAdminOrBuilder(row)
-  $: count = priviliged ? $apps.length : value?.length || 0
+  $: count = getCount(row)
+
+  const getCount = () => {
+    if (priviliged) {
+      return $apps.length
+    } else {
+      return sdk.users.hasAppBuilderPermissions(row)
+        ? row?.builder?.apps?.length +
+            Object.keys(row.roles || {}).filter(appId => {
+              row?.builder?.apps?.includes(appId)
+            }).length
+        : value?.length || 0
+    }
+  }
 </script>
 
 <div class="align">
