@@ -229,7 +229,7 @@ jobs:
           else
             base_branch=develop
           fi
-          git fetch origin $base_branch
+          git fetch
           base_commit=$(git rev-parse $base_branch)
 
           echo "target_branch=$branch"
