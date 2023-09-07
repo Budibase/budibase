@@ -10,6 +10,6 @@ export const fetch = async (ctx: Ctx) => {
     accountPortalUrl: env.ACCOUNT_PORTAL_URL,
     disableAccountPortal: env.DISABLE_ACCOUNT_PORTAL,
     baseUrl: env.PLATFORM_URL,
-    isDev: env.isDev(),
+    isDev: env.isDev() && !env.isTest(),
   }
 }
