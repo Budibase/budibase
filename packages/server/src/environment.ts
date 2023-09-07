@@ -3,28 +3,8 @@ import { ServiceType } from "@budibase/types"
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import { join } from "path"
 
-function isTest() {
-  return isCypress() || isJest()
-}
-
-function isJest() {
-  return (
-    process.env.NODE_ENV === "jest" ||
-    (process.env.JEST_WORKER_ID != null &&
-      process.env.JEST_WORKER_ID !== "null")
-  )
-}
-
-function isDev() {
-  return process.env.NODE_ENV !== "production"
-}
-
-function isCypress() {
-  return process.env.NODE_ENV === "cypress"
-}
-
 let LOADED = false
-if (!LOADED && isDev() && !isTest()) {
+if (!LOADED && coreEnv.isDev() && !coreEnv.isTest()) {
   require("dotenv").config({
     path: join(__dirname, "..", ".env"),
   })
@@ -93,12 +73,12 @@ const environment = {
     // @ts-ignore
     environment[key] = value
   },
-  isTest,
-  isJest,
-  isCypress,
-  isDev,
+  isTest: coreEnv.isTest,
+  isJest: coreEnv.isJest,
+
+  isDev: coreEnv.isDev,
   isProd: () => {
-    return !isDev()
+    return !coreEnv.isDev()
   },
   isInThread: () => {
     return process.env.FORKED_PROCESS
@@ -108,7 +88,7 @@ const environment = {
 }
 
 // threading can cause memory issues with node-ts in development
-if (isDev() && environment.DISABLE_THREADING == null) {
+if (coreEnv.isDev() && environment.DISABLE_THREADING == null) {
   environment._set("DISABLE_THREADING", "1")
 }
 
