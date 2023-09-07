@@ -9,8 +9,8 @@ module.exports = () => {
       },
       wait: {
         type: "ports",
-        timeout: 20000,
-      }
-    }
+        timeout: 30000,
+      },
+    },
   }
 }

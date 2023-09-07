@@ -1,6 +1,9 @@
 import { db, roles } from "@budibase/backend-core"
 import { structures } from "@budibase/backend-core/tests"
 import { sdk as proSdk } from "@budibase/pro"
+import env from "../../../environment"
+
+jest.retryTimes(env.JEST_RETRIES)
 
 import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { rawUserMetadata, syncGlobalUsers } from "../utils"

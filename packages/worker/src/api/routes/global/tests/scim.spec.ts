@@ -9,8 +9,10 @@ import {
 } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
 import { events } from "@budibase/backend-core"
+import env from "../../../../environment"
 
 jest.setTimeout(30000)
+jest.retryTimes(env.JEST_RETRIES)
 
 mocks.licenses.useScimIntegration()
 

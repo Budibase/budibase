@@ -57,6 +57,7 @@ const environment = {
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
   PLUGINS_DIR: process.env.PLUGINS_DIR || "/plugins",
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  JEST_RETRIES: parseIntSafe(process.env.JEST_RETRIES) || 2,
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
