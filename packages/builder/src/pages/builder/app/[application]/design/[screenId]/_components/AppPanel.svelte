@@ -3,12 +3,19 @@
   import AppPreview from "./AppPreview.svelte"
   import { store, screenHistoryStore } from "builderStore"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
+  import { ActionButton } from "@budibase/bbui"
 </script>
 
 <div class="app-panel">
   <div class="header">
     <div class="header-left">
       <UndoRedoControl store={screenHistoryStore} />
+      <ActionButton
+        quiet
+        icon="Brackets"
+        selected={$store.previewDevice === "bindings"}
+        on:click={() => store.actions.preview.setDevice("bindings")}
+      />
     </div>
     <div class="header-right">
       {#if $store.clientFeatures.devicePreview}
@@ -37,7 +44,10 @@
     display: flex;
     margin-bottom: 9px;
   }
-
+  .header-left {
+    display: flex;
+    flex-direction: row;
+  }
   .header-left :global(div) {
     border-right: none;
   }

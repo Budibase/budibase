@@ -486,6 +486,12 @@ export const getFrontendStore = () => {
       },
     },
     preview: {
+      setBindingsMode: (device) => {
+        store.update(state => {
+          state.previewDevice = device
+          return state
+        })
+      },
       setDevice: device => {
         store.update(state => {
           state.previewDevice = device

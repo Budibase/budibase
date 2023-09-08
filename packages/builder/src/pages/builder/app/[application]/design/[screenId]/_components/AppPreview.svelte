@@ -13,6 +13,7 @@
   } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "builderStore/componentUtils"
+  import BindingsEditor from "./BindingsEditor/BindingsEditor.svelte"
   import { isActive, goto } from "@roxi/routify"
 
   let iframe
@@ -221,37 +222,42 @@
   })
 </script>
 
-<div class="component-container">
-  {#if loading}
-    <div class="center">
-      <ProgressCircle />
+{#if $store.previewDevice === "bindings"}
+  <BindingsEditor></BindingsEditor>
+{:else}
+  <div class="component-container">
+    {#if loading}
+      <div class="center">
+        <ProgressCircle />
+      </div>
+    {:else if error}
+      <div class="center error">
+        <Layout justifyItems="center" gap="S">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html ErrorSVG}
+          <Heading size="L">App preview failed to load</Heading>
+          <Body size="S">{error}</Body>
+        </Layout>
+      </div>
+    {/if}
+    <iframe
+      title="componentPreview"
+      bind:this={iframe}
+      src="/app/preview"
+      class:hidden={loading || error}
+      class:tablet={$store.previewDevice === "tablet"}
+      class:mobile={$store.previewDevice === "mobile"}
+    />
+    <div
+      class="add-component"
+      class:active={isAddingComponent}
+      on:click={toggleAddComponent}
+    >
+      <Icon size="XL" name="Add">Component</Icon>
     </div>
-  {:else if error}
-    <div class="center error">
-      <Layout justifyItems="center" gap="S">
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-        {@html ErrorSVG}
-        <Heading size="L">App preview failed to load</Heading>
-        <Body size="S">{error}</Body>
-      </Layout>
-    </div>
-  {/if}
-  <iframe
-    title="componentPreview"
-    bind:this={iframe}
-    src="/app/preview"
-    class:hidden={loading || error}
-    class:tablet={$store.previewDevice === "tablet"}
-    class:mobile={$store.previewDevice === "mobile"}
-  />
-  <div
-    class="add-component"
-    class:active={isAddingComponent}
-    on:click={toggleAddComponent}
-  >
-    <Icon size="XL" name="Add">Component</Icon>
   </div>
-</div>
+{/if}
+
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
