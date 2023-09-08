@@ -8,7 +8,7 @@
 
 <div class="data-source-entry" class:selected on:click>
   <Icon name={icon} color="var(--spectrum-global-color-gray-600)" />
-  {datasource.name}
+  {datasource.label}
   {#if selected}
     <span class="data-source-check">
       <Icon size="S" name="CheckmarkCircle" />

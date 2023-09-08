@@ -10,7 +10,6 @@ mocks.licenses.useUnlimited()
 import { init as dbInit } from "../../db"
 dbInit()
 import env from "../../environment"
-import { env as coreEnv } from "@budibase/backend-core"
 import {
   basicTable,
   basicRow,
@@ -33,6 +32,7 @@ import {
   encryption,
   auth,
   roles,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import * as controllers from "./controllers"
 import { cleanup } from "../../utilities/fileSystem"
@@ -51,7 +51,6 @@ import {
   UserRoles,
   Automation,
 } from "@budibase/types"
-import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
 
 import API from "./api"
 
@@ -317,7 +316,7 @@ class TestConfiguration {
     }
   }
 
-  async createGroup(roleId: string = BUILTIN_ROLE_IDS.BASIC) {
+  async createGroup(roleId: string = roles.BUILTIN_ROLE_IDS.BASIC) {
     return context.doInTenant(this.tenantId!, async () => {
       const baseGroup = structures.userGroups.userGroup()
       baseGroup.roles = {

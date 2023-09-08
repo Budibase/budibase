@@ -253,7 +253,7 @@ export function checkForRoleResourceArray(
  * Given an app ID this will retrieve all of the roles that are currently within that app.
  * @return {Promise<object[]>} An array of the role objects that were found.
  */
-export async function getAllRoles(appId?: string) {
+export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
   if (appId) {
     return doWithDB(appId, internal)
   } else {
@@ -310,37 +310,6 @@ export async function getAllRoles(appId?: string) {
     }
     return roles
   }
-}
-
-/**
- * This retrieves the required role for a resource
- * @param permLevel The level of request
- * @param resourceId The resource being requested
- * @param subResourceId The sub resource being requested
- * @return {Promise<{permissions}|Object>} returns the permissions required to access.
- */
-export async function getRequiredResourceRole(
-  permLevel: string,
-  { resourceId, subResourceId }: { resourceId?: string; subResourceId?: string }
-) {
-  const roles = await getAllRoles()
-  let main = [],
-    sub = []
-  for (let role of roles) {
-    // no permissions, ignore it
-    if (!role.permissions) {
-      continue
-    }
-    const mainRes = resourceId ? role.permissions[resourceId] : undefined
-    const subRes = subResourceId ? role.permissions[subResourceId] : undefined
-    if (mainRes && mainRes.indexOf(permLevel) !== -1) {
-      main.push(role._id)
-    } else if (subRes && subRes.indexOf(permLevel) !== -1) {
-      sub.push(role._id)
-    }
-  }
-  // for now just return the IDs
-  return main.concat(sub)
 }
 
 export class AccessController {
@@ -411,8 +380,8 @@ export function getDBRoleID(roleName: string) {
 export function getExternalRoleID(roleId: string, version?: string) {
   // for built-in roles we want to remove the DB role ID element (role_)
   if (
-    (roleId.startsWith(DocumentType.ROLE) && isBuiltin(roleId)) ||
-    version === RoleIDVersion.NAME
+    roleId.startsWith(DocumentType.ROLE) &&
+    (isBuiltin(roleId) || version === RoleIDVersion.NAME)
   ) {
     return roleId.split(`${DocumentType.ROLE}${SEPARATOR}`)[1]
   }
