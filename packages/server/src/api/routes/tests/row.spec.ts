@@ -12,6 +12,7 @@ import {
   PermissionLevel,
   QuotaUsageType,
   Row,
+  SaveRowRequest,
   SaveTableRequest,
   SortOrder,
   SortType,
@@ -34,6 +35,8 @@ describe.each([
   ["internal", undefined],
   ["postgres", databaseTestProviders.postgres],
 ])("/rows (%s)", (_, dsProvider) => {
+  const isInternal = !dsProvider
+
   let request = setup.getRequest()
   let config = setup.getConfig()
   let table: Table
@@ -127,9 +130,20 @@ describe.each([
     expect(usage).toBe(expected)
   }
 
-  const createRow = () => config.api.row.save(table._id!, basicRow(table._id!))
+  const createRow = (row?: SaveRowRequest) =>
+    config.api.row.save(table._id!, row || basicRow(table._id!))
 
   describe("save, load, update", () => {
+    function getDefaultFields() {
+      if (isInternal) {
+        return {
+          type: "row",
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        }
+      }
+    }
+
     it("returns a success message when the row is created", async () => {
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
@@ -230,7 +244,7 @@ describe.each([
     })
 
     it("should load a row", async () => {
-      const existing = await config.createRow()
+      const existing = await createRow()
       const queryUsage = await getQueryUsage()
 
       const res = await request
@@ -243,9 +257,8 @@ describe.each([
         ...row,
         _id: existing._id,
         _rev: existing._rev,
-        type: "row",
-        createdAt: timestamp,
-        updatedAt: timestamp,
+        id: existing.id,
+        ...getDefaultFields(),
       })
       await assertQueryUsage(queryUsage + 1)
     })
@@ -256,8 +269,8 @@ describe.each([
         name: "Second Contact",
         status: "new",
       }
-      await config.createRow()
-      await config.createRow(newRow)
+      await createRow()
+      await createRow(newRow)
       const queryUsage = await getQueryUsage()
 
       const res = await request
@@ -273,14 +286,12 @@ describe.each([
     })
 
     it("load should return 404 when row does not exist", async () => {
-      await config.createRow()
+      await createRow()
       const queryUsage = await getQueryUsage()
 
-      await request
-        .get(`/api/${table._id}/rows/not-a-valid-id`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(404)
+      await config.api.row.get(table._id!, "1234567", {
+        expectStatus: 404,
+      })
       await assertQueryUsage(queryUsage) // no change
     })
 
