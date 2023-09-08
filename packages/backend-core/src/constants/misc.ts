@@ -22,6 +22,8 @@ export enum Header {
   TENANT_ID = "x-budibase-tenant-id",
   VERIFICATION_CODE = "x-budibase-verification-code",
   RETURN_VERIFICATION_CODE = "x-budibase-return-verification-code",
+  RESET_PASSWORD_CODE = "x-budibase-reset-password-code",
+  RETURN_RESET_PASSWORD_CODE = "x-budibase-return-reset-password-code",
   TOKEN = "x-budibase-token",
   CSRF_TOKEN = "x-csrf-token",
   CORRELATION_ID = "x-budibase-correlation-id",

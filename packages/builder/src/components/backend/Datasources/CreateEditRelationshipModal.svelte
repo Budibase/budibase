@@ -33,7 +33,7 @@
   }
 
   // action is one of 'created', 'updated' or 'deleted'
-  async function saveRelationship(action) {
+  async function saveRelationship({ action }) {
     try {
       await beforeSave({ action, datasource })
 
