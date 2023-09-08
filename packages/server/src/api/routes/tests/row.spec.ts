@@ -503,7 +503,7 @@ describe.each([
 
   describe("patch", () => {
     it("should update only the fields that are supplied", async () => {
-      const existing = await config.createRow()
+      const existing = await createRow()
 
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
@@ -530,7 +530,7 @@ describe.each([
     })
 
     it("should throw an error when given improper types", async () => {
-      const existing = await config.createRow()
+      const existing = await createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -552,7 +552,7 @@ describe.each([
 
   describe("destroy", () => {
     it("should be able to delete a row", async () => {
-      const createdRow = await config.createRow(row)
+      const createdRow = await createRow(row)
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
