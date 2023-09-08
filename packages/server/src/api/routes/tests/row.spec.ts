@@ -710,54 +710,61 @@ describe.each([
     })
   })
 
-  describe("fetchView", () => {
-    it("should be able to fetch tables contents via 'view'", async () => {
-      const row = await config.createRow()
-      const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
+  // Legacy views are not available for external
+  isInternal &&
+    describe("fetchView", () => {
+      it("should be able to fetch tables contents via 'view'", async () => {
+        const row = await createRow()
+        const rowUsage = await getRowUsage()
+        const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .get(`/api/views/${table._id}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.length).toEqual(1)
-      expect(res.body[0]._id).toEqual(row._id)
-      await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage + 1)
+        const res = await request
+          .get(`/api/views/${table._id}`)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(200)
+        expect(res.body.length).toEqual(1)
+        expect(res.body[0]._id).toEqual(row._id)
+        await assertRowUsage(rowUsage)
+        await assertQueryUsage(queryUsage + 1)
+      })
+
+      it("should throw an error if view doesn't exist", async () => {
+        const rowUsage = await getRowUsage()
+        const queryUsage = await getQueryUsage()
+
+        await request
+          .get(`/api/views/derp`)
+          .set(config.defaultHeaders())
+          .expect(404)
+
+        await assertRowUsage(rowUsage)
+        await assertQueryUsage(queryUsage)
+      })
+
+      it("should be able to run on a view", async () => {
+        const view = await config.createLegacyView({
+          tableId: table._id!,
+          name: "ViewTest",
+          filters: [],
+          schema: {},
+        })
+        const row = await createRow()
+        const rowUsage = await getRowUsage()
+        const queryUsage = await getQueryUsage()
+
+        const res = await request
+          .get(`/api/views/${view.name}`)
+          .set(config.defaultHeaders())
+          .expect("Content-Type", /json/)
+          .expect(200)
+        expect(res.body.length).toEqual(1)
+        expect(res.body[0]._id).toEqual(row._id)
+
+        await assertRowUsage(rowUsage)
+        await assertQueryUsage(queryUsage + 1)
+      })
     })
-
-    it("should throw an error if view doesn't exist", async () => {
-      const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
-
-      await request
-        .get(`/api/views/derp`)
-        .set(config.defaultHeaders())
-        .expect(404)
-
-      await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage)
-    })
-
-    it("should be able to run on a view", async () => {
-      const view = await config.createLegacyView()
-      const row = await config.createRow()
-      const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
-
-      const res = await request
-        .get(`/api/views/${view.name}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.length).toEqual(1)
-      expect(res.body[0]._id).toEqual(row._id)
-
-      await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage + 1)
-    })
-  })
 
   describe("fetchEnrichedRows", () => {
     it("should allow enriching some linked rows", async () => {
