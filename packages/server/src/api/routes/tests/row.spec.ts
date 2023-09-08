@@ -20,6 +20,7 @@ import {
   Table,
 } from "@budibase/types"
 import {
+  expectAnyExternalColsAttributes,
   expectAnyInternalColsAttributes,
   generator,
   mocks,
@@ -1178,8 +1179,18 @@ describe.each([
         expect(response.body.rows).toHaveLength(5)
         expect(response.body).toEqual({
           rows: expect.arrayContaining(
-            expectedRows.map(expect.objectContaining)
+            expectedRows.map(r => ({
+              _viewId: createViewResponse.id,
+              tableId: table._id,
+              name: r.name,
+              age: r.age,
+              _id: r._id,
+              _rev: r._rev,
+              ...defaultRowFields,
+            }))
           ),
+          hasNextPage: false,
+          bookmark: null,
         })
       })
 
@@ -1277,9 +1288,9 @@ describe.each([
           const response = await config.api.viewV2.search(createViewResponse.id)
 
           expect(response.body.rows).toHaveLength(4)
-          expect(response.body).toEqual({
-            rows: expected.map(name => expect.objectContaining({ name })),
-          })
+          expect(response.body.rows).toEqual(
+            expected.map(name => expect.objectContaining({ name }))
+          )
         }
       )
 
@@ -1320,9 +1331,9 @@ describe.each([
           )
 
           expect(response.body.rows).toHaveLength(4)
-          expect(response.body).toEqual({
-            rows: expected.map(name => expect.objectContaining({ name })),
-          })
+          expect(response.body.rows).toEqual(
+            expected.map(name => expect.objectContaining({ name }))
+          )
         }
       )
 
@@ -1348,7 +1359,9 @@ describe.each([
         expect(response.body.rows).toEqual(
           expect.arrayContaining(
             rows.map(r => ({
-              ...expectAnyInternalColsAttributes,
+              ...(isInternal
+                ? expectAnyInternalColsAttributes
+                : expectAnyExternalColsAttributes),
               _viewId: view.id,
               name: r.name,
             }))
