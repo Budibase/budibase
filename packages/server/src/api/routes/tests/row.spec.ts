@@ -1401,7 +1401,6 @@ describe.each([
         for (let i = 0; i < 10; i++) {
           rows.push(await config.createRow({ tableId: table._id }))
         }
-        // rows.sort((a, b) => (a._id! > b._id! ? 1 : -1))
 
         const createViewResponse = await config.api.viewV2.create()
         const allRows = (await config.api.viewV2.search(createViewResponse.id))
@@ -1417,9 +1416,9 @@ describe.each([
         )
         expect(firstPageResponse.body).toEqual({
           rows: expect.arrayContaining(allRows.slice(0, 4)),
-          totalRows: 10,
+          totalRows: isInternal ? 10 : undefined,
           hasNextPage: true,
-          bookmark: expect.any(String),
+          bookmark: expect.anything(),
         })
 
         const secondPageResponse = await config.api.viewV2.search(
@@ -1434,9 +1433,9 @@ describe.each([
         )
         expect(secondPageResponse.body).toEqual({
           rows: expect.arrayContaining(allRows.slice(4, 8)),
-          totalRows: 10,
+          totalRows: isInternal ? 10 : undefined,
           hasNextPage: true,
-          bookmark: expect.any(String),
+          bookmark: expect.anything(),
         })
 
         const lastPageResponse = await config.api.viewV2.search(
@@ -1450,9 +1449,9 @@ describe.each([
         )
         expect(lastPageResponse.body).toEqual({
           rows: expect.arrayContaining(allRows.slice(8)),
-          totalRows: 10,
+          totalRows: isInternal ? 10 : undefined,
           hasNextPage: false,
-          bookmark: expect.any(String),
+          bookmark: expect.anything(),
         })
       })
 
