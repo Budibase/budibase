@@ -50,6 +50,7 @@ import {
   SearchFilters,
   UserRoles,
   Automation,
+  View,
 } from "@budibase/types"
 
 import API from "./api"
@@ -629,12 +630,12 @@ class TestConfiguration {
 
   // VIEW
 
-  async createLegacyView(config?: any) {
-    if (!this.table) {
+  async createLegacyView(config?: View) {
+    if (!this.table && !config) {
       throw "Test requires table to be configured."
     }
     const view = config || {
-      tableId: this.table._id,
+      tableId: this.table!._id,
       name: "ViewTest",
     }
     return this._req(view, null, controllers.view.v1.save)
