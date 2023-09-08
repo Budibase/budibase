@@ -137,17 +137,15 @@ describe.each([
   const createRow = (tableId = table._id!, row?: SaveRowRequest) =>
     config.api.row.save(tableId, row || basicRow(table._id!))
 
-  describe("save, load, update", () => {
-    function getDefaultFields() {
-      if (isInternal) {
-        return {
-          type: "row",
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        }
+  const defaultRowFields = isInternal
+    ? {
+        type: "row",
+        createdAt: timestamp,
+        updatedAt: timestamp,
       }
-    }
+    : undefined
 
+  describe("save, load, update", () => {
     it("returns a success message when the row is created", async () => {
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
@@ -262,7 +260,7 @@ describe.each([
         _id: existing._id,
         _rev: existing._rev,
         id: existing.id,
-        ...getDefaultFields(),
+        ...defaultRowFields,
       })
       await assertQueryUsage(queryUsage + 1)
     })
@@ -835,7 +833,7 @@ describe.each([
     it("should allow enriching attachment rows", async () => {
       const table = await config.createAttachmentTable()
       const attachmentId = `${structures.uuid()}.csv`
-      const row = await config.createRow({
+      const row = await createRow(table._id, {
         name: "test",
         description: "test",
         attachment: [
@@ -906,15 +904,24 @@ describe.each([
     function userTable(): Table {
       return {
         name: "user",
-        type: "user",
+        type: "table",
+        primary: ["id"],
         schema: {
+          id: {
+            type: FieldType.AUTO,
+            name: "id",
+            autocolumn: true,
+            constraints: {
+              presence: true,
+            },
+          },
           name: {
             type: FieldType.STRING,
             name: "name",
           },
           surname: {
             type: FieldType.STRING,
-            name: "name",
+            name: "surname",
           },
           age: {
             type: FieldType.NUMBER,
@@ -965,11 +972,10 @@ describe.each([
           surname: data.surname,
           address: data.address,
           tableId: config.table!._id,
-          type: "row",
-          _id: expect.any(String),
-          _rev: expect.any(String),
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          _id: newRow._id,
+          _rev: newRow._rev,
+          id: newRow.id,
+          ...defaultRowFields,
         })
         expect(row.body._viewId).toBeUndefined()
         expect(row.body.age).toBeUndefined()
@@ -1006,13 +1012,12 @@ describe.each([
         const row = await config.api.row.get(tableId, newRow._id!)
         expect(row.body).toEqual({
           ...newRow,
-          type: "row",
           name: newData.name,
           address: newData.address,
-          _id: expect.any(String),
+          _id: newRow._id,
           _rev: expect.any(String),
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          id: newRow.id,
+          ...defaultRowFields,
         })
         expect(row.body._viewId).toBeUndefined()
         expect(row.body.age).toBeUndefined()
