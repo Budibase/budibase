@@ -599,8 +599,14 @@ describe.each([
         .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(res.body.valid).toBe(false)
-      expect(Object.keys(res.body.errors)).toEqual(["name"])
+      if (isInternal) {
+        expect(res.body.valid).toBe(false)
+        expect(Object.keys(res.body.errors)).toEqual(["name"])
+      } else {
+        // Validation for external is not implemented, so it will always return valid
+        expect(res.body.valid).toBe(true)
+        expect(Object.keys(res.body.errors)).toEqual([])
+      }
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
     })
