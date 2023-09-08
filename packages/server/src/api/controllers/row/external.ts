@@ -106,7 +106,7 @@ export async function save(ctx: UserCtx) {
   }
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx): Promise<Row> {
   const id = ctx.params.rowId
   const tableId = utils.getTableId(ctx)
   return sdk.rows.external.getRow(tableId, id)
