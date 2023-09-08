@@ -125,7 +125,7 @@ export async function destroy(ctx: UserCtx) {
     id: breakRowIdField(_id),
     includeSqlRelationships: IncludeRelationship.EXCLUDE,
   })) as { row: Row }
-  return { response: { ok: true }, row }
+  return { response: { ok: true, id: _id }, row }
 }
 
 export async function bulkDestroy(ctx: UserCtx) {
