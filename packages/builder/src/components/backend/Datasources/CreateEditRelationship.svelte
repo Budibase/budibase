@@ -290,11 +290,11 @@
     datasource.entities[getTable(toId).name].schema[toRelationship.name] =
       toRelationship
 
-    await save()
+    await save({ action: "saved" })
   }
   async function deleteRelationship() {
     removeExistingRelationship()
-    await save()
+    await save({ action: "deleted" })
     await tables.fetch()
     close()
   }

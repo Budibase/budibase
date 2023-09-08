@@ -351,12 +351,19 @@ const getProviderContextBindings = (asset, dataProviders) => {
         schema = info.schema
         table = info.table
 
-        // For JSON arrays, use the array name as the readable prefix.
-        // Otherwise use the table name
+        // Determine what to prefix bindings with
         if (datasource.type === "jsonarray") {
+          // For JSON arrays, use the array name as the readable prefix
           const split = datasource.label.split(".")
           readablePrefix = split[split.length - 1]
+        } else if (datasource.type === "viewV2") {
+          // For views, use the view name
+          const view = Object.values(table?.views || {}).find(
+            view => view.id === datasource.id
+          )
+          readablePrefix = view?.name
         } else {
+          // Otherwise use the table name
           readablePrefix = info.table?.name
         }
       }
@@ -464,7 +471,7 @@ const getComponentBindingCategory = (component, context, def) => {
  */
 export const getUserBindings = () => {
   let bindings = []
-  const { schema } = getSchemaForTable(TableNames.USERS)
+  const { schema } = getSchemaForDatasourcePlus(TableNames.USERS)
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
 
@@ -725,17 +732,25 @@ export const getActionBindings = (actions, actionId) => {
 }
 
 /**
- * Gets the schema for a certain table ID.
+ * Gets the schema for a certain datasource plus.
  * The options which can be passed in are:
  *   formSchema: whether the schema is for a form
  *   searchableSchema: whether to generate a searchable schema, which may have
  *     fewer fields than a readable schema
- * @param tableId the table ID to get the schema for
+ * @param resourceId the DS+ resource ID
  * @param options options for generating the schema
  * @return {{schema: Object, table: Object}}
  */
-export const getSchemaForTable = (tableId, options) => {
-  return getSchemaForDatasource(null, { type: "table", tableId }, options)
+export const getSchemaForDatasourcePlus = (resourceId, options) => {
+  const isViewV2 = resourceId?.includes("view_")
+  const datasource = isViewV2
+    ? {
+        type: "viewV2",
+        id: resourceId,
+        tableId: resourceId.split("_").slice(1, 3).join("_"),
+      }
+    : { type: "table", tableId: resourceId }
+  return getSchemaForDatasource(null, datasource, options)
 }
 
 /**
@@ -812,9 +827,21 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     // Determine the schema from the backing entity if not already determined
     if (table && !schema) {
       if (type === "view") {
-        // For views, the schema is pulled from the `views` property of the
-        // table
+        // Old views
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
+      } else if (type === "viewV2") {
+        // New views which are DS+
+        const view = Object.values(table.views || {}).find(
+          view => view.id === datasource.id
+        )
+        schema = cloneDeep(view?.schema)
+
+        // Strip hidden fields
+        Object.keys(schema || {}).forEach(field => {
+          if (!schema[field].visible) {
+            delete schema[field]
+          }
+        })
       } else if (
         type === "query" &&
         (options.formSchema || options.searchableSchema)
@@ -860,12 +887,12 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
 
     // Determine if we should add ID and rev to the schema
     const isInternal = table && !table.sql
-    const isTable = ["table", "link"].includes(datasource.type)
+    const isDSPlus = ["table", "link", "viewV2"].includes(datasource.type)
 
     // ID is part of the readable schema for all tables
     // Rev is part of the readable schema for internal tables only
-    let addId = isTable
-    let addRev = isTable && isInternal
+    let addId = isDSPlus
+    let addRev = isDSPlus && isInternal
 
     // Don't add ID or rev for form schemas
     if (options.formSchema) {
@@ -875,7 +902,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
 
     // ID is only searchable for internal tables
     else if (options.searchableSchema) {
-      addId = isTable && isInternal
+      addId = isDSPlus && isInternal
     }
 
     // Add schema properties if required
@@ -939,7 +966,9 @@ export const buildFormSchema = (component, asset) => {
       const patched = convertOldFieldFormat(component.fields || [])
       patched?.forEach(({ field, active }) => {
         if (!active) return
-        schema[field] = { type: info?.schema[field].type }
+        if (info?.schema[field]) {
+          schema[field] = { type: info?.schema[field].type }
+        }
       })
     }
 

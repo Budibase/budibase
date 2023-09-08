@@ -95,7 +95,7 @@ export async function fetchView(ctx: any) {
     () =>
       sdk.rows.fetchView(tableId, viewName, {
         calculation,
-        group,
+        group: calculation ? group : null,
         field,
       }),
     {
@@ -159,7 +159,7 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 
   for (let row of rows) {
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-    gridSocket?.emitRowDeletion(ctx, row._id!)
+    gridSocket?.emitRowDeletion(ctx, row)
   }
 
   return rows
@@ -175,7 +175,7 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   await quotas.removeRow()
 
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
-  gridSocket?.emitRowDeletion(ctx, resp.row._id!)
+  gridSocket?.emitRowDeletion(ctx, resp.row)
 
   return resp
 }

@@ -39,6 +39,14 @@ export const deriveStores = context => {
     }
   )
 
+  return {
+    selectedCellMap,
+  }
+}
+
+export const createActions = context => {
+  const { users } = context
+
   const updateUser = user => {
     const $users = get(users)
     if (!$users.some(x => x.sessionId === user.sessionId)) {
@@ -66,6 +74,5 @@ export const deriveStores = context => {
         removeUser,
       },
     },
-    selectedCellMap,
   }
 }

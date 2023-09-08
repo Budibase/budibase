@@ -47,7 +47,7 @@
 
   // Accommodate old config to ensure delete button does not reappear
   $: deleteLabel = sidePanelShowDelete === false ? "" : sidePanelDeleteLabel
-
+  $: isDSPlus = dataSource?.type === "table" || dataSource?.type === "viewV2"
   $: fetchSchema(dataSource)
   $: enrichSearchColumns(searchColumns, schema).then(
     val => (enrichedSearchColumns = val)
@@ -56,7 +56,7 @@
   $: editTitle = getEditTitle(detailsFormBlockId, primaryDisplay)
   $: normalFields = getNormalFields(schema)
   $: rowClickActions =
-    clickBehaviour === "actions" || dataSource?.type !== "table"
+    clickBehaviour === "actions" || !isDSPlus
       ? onClick
       : [
           {
@@ -78,7 +78,7 @@
           },
         ]
   $: buttonClickActions =
-    titleButtonClickBehaviour === "actions" || dataSource?.type !== "table"
+    titleButtonClickBehaviour === "actions" || !isDSPlus
       ? onClickTitleButton
       : [
           {
@@ -275,7 +275,7 @@
               dataSource,
               showSaveButton: true,
               showDeleteButton: false,
-              saveButtonLabel: sidePanelSaveLabel,
+              saveButtonLabel: sidePanelSaveLabel || "Save", //always show
               actionType: "Create",
               fields: sidePanelFields || normalFields,
               title: "Create Row",

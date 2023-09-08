@@ -2,6 +2,7 @@
  * Operator options for lucene queries
  */
 export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
+export { Feature as Features } from "@budibase/types"
 
 // Cookie names
 export const Cookies = {
@@ -22,10 +23,27 @@ export const BudibaseRoles = {
   Admin: "admin",
 }
 
-export const BudibaseRoleOptions = [
-  { label: "App User", value: BudibaseRoles.AppUser },
+export const BudibaseRoleOptionsOld = [
   { label: "Developer", value: BudibaseRoles.Developer },
+  { label: "Member", value: BudibaseRoles.AppUser },
   { label: "Admin", value: BudibaseRoles.Admin },
+]
+export const BudibaseRoleOptions = [
+  { label: "Member", value: BudibaseRoles.AppUser },
+  { label: "Admin", value: BudibaseRoles.Admin },
+]
+
+export const BudibaseRoleOptionsNew = [
+  {
+    label: "Admin",
+    value: "admin",
+    subtitle: "Has full access to all apps and settings in your account",
+  },
+  {
+    label: "Member",
+    value: "appUser",
+    subtitle: "Can only view apps they have access to",
+  },
 ]
 
 export const BuilderRoleDescriptions = [
@@ -62,17 +80,6 @@ export const PlanType = {
  */
 export const ApiVersion = "1"
 
-export const Features = {
-  USER_GROUPS: "userGroups",
-  BACKUPS: "appBackups",
-  ENVIRONMENT_VARIABLES: "environmentVariables",
-  AUDIT_LOGS: "auditLogs",
-  ENFORCEABLE_SSO: "enforceableSSO",
-  BRANDING: "branding",
-  SCIM: "scim",
-  SYNC_AUTOMATIONS: "syncAutomations",
-}
-
 // Role IDs
 export const Roles = {
   ADMIN: "ADMIN",
@@ -80,6 +87,7 @@ export const Roles = {
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
+  CREATOR: "CREATOR",
 }
 
 export const Themes = [

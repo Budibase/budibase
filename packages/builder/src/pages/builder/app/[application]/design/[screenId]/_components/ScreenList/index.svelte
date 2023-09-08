@@ -297,8 +297,12 @@
     width: 100%;
     top: 50%;
     transform: translateY(-50%);
+    transition: background 130ms ease-out;
   }
   .divider:hover {
     cursor: row-resize;
+  }
+  .divider:hover:after {
+    background: var(--spectrum-global-color-gray-300);
   }
 </style>

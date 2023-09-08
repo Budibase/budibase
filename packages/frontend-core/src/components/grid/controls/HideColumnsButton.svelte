@@ -3,7 +3,7 @@
   import { ActionButton, Popover, Toggle, Icon } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
 
-  const { columns, stickyColumn } = getContext("grid")
+  const { columns, stickyColumn, dispatch } = getContext("grid")
 
   let open = false
   let anchor
@@ -11,33 +11,36 @@
   $: anyHidden = $columns.some(col => !col.visible)
   $: text = getText($columns)
 
-  const toggleVisibility = (column, visible) => {
+  const toggleVisibility = async (column, visible) => {
     columns.update(state => {
       const index = state.findIndex(col => col.name === column.name)
       state[index].visible = visible
       return state.slice()
     })
-    columns.actions.saveChanges()
+    await columns.actions.saveChanges()
+    dispatch(visible ? "show-column" : "hide-column")
   }
 
-  const showAll = () => {
+  const showAll = async () => {
     columns.update(state => {
       return state.map(col => ({
         ...col,
         visible: true,
       }))
     })
-    columns.actions.saveChanges()
+    await columns.actions.saveChanges()
+    dispatch("show-column")
   }
 
-  const hideAll = () => {
+  const hideAll = async () => {
     columns.update(state => {
       return state.map(col => ({
         ...col,
         visible: false,
       }))
     })
-    columns.actions.saveChanges()
+    await columns.actions.saveChanges()
+    dispatch("hide-column")
   }
 
   const getText = columns => {

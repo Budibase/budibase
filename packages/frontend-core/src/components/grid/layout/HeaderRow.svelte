@@ -1,12 +1,11 @@
 <script>
   import NewColumnButton from "./NewColumnButton.svelte"
-
   import { getContext } from "svelte"
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import HeaderCell from "../cells/HeaderCell.svelte"
   import { TempTooltip, TooltipType } from "@budibase/bbui"
 
-  const { renderedColumns, config, hasNonAutoColumn, tableId, loading } =
+  const { renderedColumns, config, hasNonAutoColumn, datasource, loading } =
     getContext("grid")
 </script>
 
@@ -20,8 +19,8 @@
       {/each}
     </div>
   </GridScrollWrapper>
-  {#if $config.allowSchemaChanges}
-    {#key $tableId}
+  {#if $config.canEditColumns}
+    {#key $datasource}
       <TempTooltip
         text="Click here to create your first column"
         type={TooltipType.Info}

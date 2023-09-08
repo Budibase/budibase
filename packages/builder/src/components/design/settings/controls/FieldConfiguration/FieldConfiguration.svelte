@@ -21,6 +21,9 @@
   let fieldList
   let schema
   let cachedValue
+  let options
+  let sanitisedValue
+  let unconfigured
 
   $: bindings = getBindableProperties($selectedScreen, componentInstance._id)
   $: actionType = componentInstance.actionType
@@ -34,16 +37,24 @@
   }
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: resourceId = datasource.resourceId || datasource.tableId
 
   $: if (!isEqual(value, cachedValue)) {
-    cachedValue = value
-    schema = getSchema($currentAsset, datasource)
+    cachedValue = cloneDeep(value)
   }
 
-  $: options = Object.keys(schema || {})
-  $: sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
-  $: updateSanitsedFields(sanitisedValue)
-  $: unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
+  const updateState = value => {
+    schema = getSchema($currentAsset, datasource)
+    options = Object.keys(schema || {})
+    sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
+    updateSanitsedFields(sanitisedValue)
+    unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
+    fieldList = [...sanitisedFields, ...unconfigured]
+      .map(buildSudoInstance)
+      .filter(x => x != null)
+  }
+
+  $: updateState(cachedValue, resourceId)
 
   // Builds unused ones only
   const buildUnconfiguredOptions = (schema, selected) => {
@@ -97,8 +108,10 @@
     if (instance._component) {
       return instance
     }
-
     const type = getComponentForField(instance.field, schema)
+    if (!type) {
+      return null
+    }
     instance._component = `@budibase/standard-components/${type}`
 
     const pseudoComponentInstance = store.actions.components.createInstance(
@@ -113,10 +126,6 @@
     )
 
     return { ...instance, ...pseudoComponentInstance }
-  }
-
-  $: if (sanitisedFields) {
-    fieldList = [...sanitisedFields, ...unconfigured].map(buildSudoInstance)
   }
 
   const processItemUpdate = e => {

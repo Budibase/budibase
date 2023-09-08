@@ -6,7 +6,7 @@
   "types": "dist/src/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./tests": "./dist/tests.js",
+    "./tests": "./dist/tests/index.js",
     "./*": "./dist/*.js"
   },
   "author": "Budibase",
@@ -14,7 +14,7 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "prepack": "cp package.json dist",
-    "build": "node ./scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
+    "build": "tsc -p tsconfig.build.json --paths null && node ./scripts/build.js",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "test": "bash scripts/test.sh",
@@ -68,8 +68,8 @@
     "@types/jest": "29.5.3",
     "@types/koa": "2.13.4",
     "@types/lodash": "4.14.180",
-    "@types/node": "14.18.20",
-    "@types/node-fetch": "2.6.1",
+    "@types/node": "18.17.0",
+    "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "6.4.0",
     "@types/redlock": "4.0.3",
     "@types/semver": "7.3.7",
