@@ -31,7 +31,7 @@
       datasource.source === IntegrationTypes.DYNAMODB ||
       datasource.source === IntegrationTypes.S3
     ) {
-      return `${datasource.config.endpoint}:${datasource.config.region}`
+      return `${datasource.config.endpoint || "*"}:${datasource.config.region}`
     }
     if (datasource.source === IntegrationTypes.ELASTICSEARCH) {
       return datasource.config.url
