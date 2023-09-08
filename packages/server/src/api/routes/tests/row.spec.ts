@@ -614,8 +614,8 @@ describe.each([
 
   describe("bulkDelete", () => {
     it("should be able to delete a bulk set of rows", async () => {
-      const row1 = await config.createRow()
-      const row2 = await config.createRow()
+      const row1 = await createRow()
+      const row2 = await createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -635,9 +635,9 @@ describe.each([
     })
 
     it("should be able to delete a variety of row set types", async () => {
-      const row1 = await config.createRow()
-      const row2 = await config.createRow()
-      const row3 = await config.createRow()
+      const row1 = await createRow()
+      const row2 = await createRow()
+      const row3 = await createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -657,7 +657,7 @@ describe.each([
     })
 
     it("should accept a valid row object and delete the row", async () => {
-      const row1 = await config.createRow()
+      const row1 = await createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
