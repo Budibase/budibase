@@ -14,6 +14,7 @@ import {
   SearchRowResponse,
   SearchRowRequest,
   SearchParams,
+  GetRowResponse,
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
@@ -111,7 +112,7 @@ export async function fetch(ctx: any) {
   })
 }
 
-export async function find(ctx: any) {
+export async function find(ctx: UserCtx<void, GetRowResponse>) {
   const tableId = utils.getTableId(ctx)
   ctx.body = await quotas.addQuery(() => pickApi(tableId).find(ctx), {
     datasourceId: tableId,

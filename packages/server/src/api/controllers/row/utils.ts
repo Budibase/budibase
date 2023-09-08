@@ -27,7 +27,7 @@ validateJs.extend(validateJs.validators.datetime, {
 
 export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
   const db = context.getAppDB()
-  let row
+  let row: Row
   // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {
     ctx.params = {
