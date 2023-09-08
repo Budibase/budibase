@@ -12,7 +12,7 @@ import {
   TableViewsResponse,
 } from "@budibase/types"
 import datasources from "../datasources"
-import { isEditableColumn, populateExternalTableSchemas } from "./validation"
+import { populateExternalTableSchemas } from "./validation"
 import sdk from "../../../sdk"
 
 async function getAllInternalTables(db?: Database): Promise<Table[]> {
@@ -73,12 +73,23 @@ function enrichViewSchemas(table: Table): TableResponse {
   }
 }
 
+async function saveTable(table: Table) {
+  const db = context.getAppDB()
+  if (isExternalTable(table._id!)) {
+    const datasource = await sdk.datasources.get(table.sourceId!)
+    datasource.entities![table.name] = table
+    await db.put(datasource)
+  } else {
+    await db.put(table)
+  }
+}
+
 export default {
   getAllInternalTables,
   getAllExternalTables,
   getExternalTable,
   getTable,
   populateExternalTableSchemas,
-  isEditableColumn,
   enrichViewSchemas,
+  saveTable,
 }
