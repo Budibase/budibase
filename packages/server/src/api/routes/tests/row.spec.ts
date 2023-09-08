@@ -772,22 +772,36 @@ describe.each([
 
   describe("fetchEnrichedRows", () => {
     it("should allow enriching some linked rows", async () => {
-      const { table, firstRow, secondRow } = await tenancy.doInTenant(
+      const { linkedTable, firstRow, secondRow } = await tenancy.doInTenant(
         config.getTenantId(),
         async () => {
-          const table = await config.createLinkedTable()
-          const firstRow = await config.createRow({
+          const linkedTable = await config.createLinkedTable({
+            name: generator.guid(),
+            type: "table",
+            primary: ["id"],
+            schema: {
+              id: {
+                type: FieldType.AUTO,
+                name: "id",
+                autocolumn: true,
+                constraints: {
+                  presence: true,
+                },
+              },
+            },
+          })
+          const firstRow = await createRow(table._id, {
             name: "Test Contact",
             description: "original description",
             tableId: table._id,
           })
-          const secondRow = await config.createRow({
+          const secondRow = await createRow(linkedTable._id, {
             name: "Test 2",
             description: "og desc",
             link: [{ _id: firstRow._id }],
-            tableId: table._id,
+            tableId: linkedTable._id,
           })
-          return { table, firstRow, secondRow }
+          return { linkedTable, firstRow, secondRow }
         }
       )
       const rowUsage = await getRowUsage()
@@ -795,16 +809,16 @@ describe.each([
 
       // test basic enrichment
       const resBasic = await request
-        .get(`/api/${table._id}/rows/${secondRow._id}`)
+        .get(`/api/${linkedTable._id}/rows/${secondRow._id}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(resBasic.body.link[0]._id).toBe(firstRow._id)
-      expect(resBasic.body.link[0].primaryDisplay).toBe("Test Contact")
+      expect(resBasic.body.link.length).toBe(1)
+      expect(resBasic.body.link[0]).toEqual({ _id: firstRow._id })
 
       // test full enrichment
       const resEnriched = await request
-        .get(`/api/${table._id}/${secondRow._id}/enrich`)
+        .get(`/api/${linkedTable._id}/${secondRow._id}/enrich`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
