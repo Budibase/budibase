@@ -1094,11 +1094,20 @@ describe.each([
 
     describe("view search", () => {
       const viewSchema = { age: { visible: true }, name: { visible: true } }
-      function userTable(): Table {
+      async function userTable(): Promise<Table> {
         return {
-          name: "user",
-          type: "user",
+          name: `users_${generator.guid()}`,
+          type: "table",
+          primary: ["id"],
           schema: {
+            id: {
+              type: FieldType.AUTO,
+              name: "id",
+              autocolumn: true,
+              constraints: {
+                presence: true,
+              },
+            },
             name: {
               type: FieldType.STRING,
               name: "name",
@@ -1110,11 +1119,12 @@ describe.each([
               constraints: {},
             },
           },
+          ...(await tableDatasourceConfig()),
         }
       }
 
-      it("returns table rows from view", async () => {
-        const table = await config.createTable(userTable())
+      it.only("returns table rows from view", async () => {
+        const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
           rows.push(await config.createRow({ tableId: table._id }))
@@ -1130,7 +1140,7 @@ describe.each([
       })
 
       it("searching respects the view filters", async () => {
-        const table = await config.createTable(userTable())
+        const table = await config.createTable(await userTable())
         const expectedRows = []
         for (let i = 0; i < 10; i++)
           await config.createRow({
@@ -1235,7 +1245,7 @@ describe.each([
       it.each(sortTestOptions)(
         "allow sorting (%s)",
         async (sortParams, expected) => {
-          await config.createTable(userTable())
+          await config.createTable(await userTable())
           const users = [
             { name: "Alice", age: 25 },
             { name: "Bob", age: 30 },
@@ -1266,7 +1276,7 @@ describe.each([
       it.each(sortTestOptions)(
         "allow override the default view sorting (%s)",
         async (sortParams, expected) => {
-          await config.createTable(userTable())
+          await config.createTable(await userTable())
           const users = [
             { name: "Alice", age: 25 },
             { name: "Bob", age: 30 },
@@ -1307,7 +1317,7 @@ describe.each([
       )
 
       it("when schema is defined, defined columns and row attributes are returned", async () => {
-        const table = await config.createTable(userTable())
+        const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
           rows.push(
@@ -1337,7 +1347,7 @@ describe.each([
       })
 
       it("views without data can be returned", async () => {
-        await config.createTable(userTable())
+        await config.createTable(await userTable())
 
         const createViewResponse = await config.api.viewV2.create()
         const response = await config.api.viewV2.search(createViewResponse.id)
@@ -1346,7 +1356,7 @@ describe.each([
       })
 
       it("respects the limit parameter", async () => {
-        const table = await config.createTable(userTable())
+        const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
           rows.push(await config.createRow({ tableId: table._id }))
@@ -1363,7 +1373,7 @@ describe.each([
       })
 
       it("can handle pagination", async () => {
-        const table = await config.createTable(userTable())
+        const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
           rows.push(await config.createRow({ tableId: table._id }))
@@ -1428,7 +1438,7 @@ describe.each([
         let tableId: string
 
         beforeAll(async () => {
-          const table = await config.createTable(userTable())
+          const table = await config.createTable(await userTable())
           const rows = []
           for (let i = 0; i < 10; i++) {
             rows.push(await config.createRow({ tableId: table._id }))

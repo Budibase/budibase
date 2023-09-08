@@ -51,6 +51,8 @@ import {
   UserRoles,
   Automation,
   View,
+  FieldType,
+  RelationshipType,
 } from "@budibase/types"
 
 import API from "./api"
@@ -76,7 +78,6 @@ class TestConfiguration {
   globalUserId: any
   userMetadataId: any
   table?: Table
-  linkedTable: any
   automation: any
   datasource?: Datasource
   tenantId?: string
@@ -559,25 +560,34 @@ class TestConfiguration {
     return this._req(null, { tableId }, controllers.table.find)
   }
 
-  async createLinkedTable(relationshipType?: string, links: any = ["link"]) {
+  async createLinkedTable(
+    config?: Table,
+    relationshipType = RelationshipType.ONE_TO_MANY,
+    links: any = ["link"]
+  ) {
     if (!this.table) {
       throw "Must have created a table first."
     }
-    const tableConfig: any = basicTable()
+    const tableConfig = config || basicTable()
     tableConfig.primaryDisplay = "name"
     for (let link of links) {
       tableConfig.schema[link] = {
-        type: "link",
+        type: FieldType.LINK,
         fieldName: link,
         tableId: this.table._id,
         name: link,
-      }
-      if (relationshipType) {
-        tableConfig.schema[link].relationshipType = relationshipType
+        relationshipType,
       }
     }
-    const linkedTable = await this.createTable(tableConfig)
-    this.linkedTable = linkedTable
+
+    if (this.datasource && !tableConfig.sourceId) {
+      tableConfig.sourceId = this.datasource._id
+      if (this.datasource.plus) {
+        tableConfig.type = "external"
+      }
+    }
+
+    const linkedTable = await this.api.table.create(tableConfig)
     return linkedTable
   }
 
