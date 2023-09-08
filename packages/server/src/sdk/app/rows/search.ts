@@ -20,7 +20,7 @@ function pickApi(tableId: any) {
 export async function search(options: SearchParams): Promise<{
   rows: any[]
   hasNextPage?: boolean
-  bookmark?: number | null
+  bookmark?: number | string | null
 }> {
   return pickApi(options.tableId).search(options)
 }
