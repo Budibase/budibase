@@ -15,6 +15,7 @@ import {
   SearchRowRequest,
   SearchParams,
   GetRowResponse,
+  ValidateResponse,
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
@@ -215,11 +216,11 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   })
 }
 
-export async function validate(ctx: Ctx) {
+export async function validate(ctx: Ctx<Row, ValidateResponse>) {
   const tableId = utils.getTableId(ctx)
   // external tables are hard to validate currently
   if (isExternalTable(tableId)) {
-    ctx.body = { valid: true }
+    ctx.body = { valid: true, errors: {} }
   } else {
     ctx.body = await sdk.rows.utils.validate({
       row: ctx.request.body,
