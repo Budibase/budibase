@@ -2,3 +2,5 @@
 !dist/**/*
 dist/tsconfig.build.tsbuildinfo
 !package.json
+!src/**
+!tests/**
