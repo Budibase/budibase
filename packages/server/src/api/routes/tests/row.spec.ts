@@ -1123,7 +1123,7 @@ describe.each([
         }
       }
 
-      it.only("returns table rows from view", async () => {
+      it("returns empty rows from view when no schema is passed", async () => {
         const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
@@ -1135,7 +1135,17 @@ describe.each([
 
         expect(response.body.rows).toHaveLength(10)
         expect(response.body).toEqual({
-          rows: expect.arrayContaining(rows.map(expect.objectContaining)),
+          rows: expect.arrayContaining(
+            rows.map(r => ({
+              _viewId: createViewResponse.id,
+              tableId: table._id,
+              _id: r._id,
+              _rev: r._rev,
+              ...defaultRowFields,
+            }))
+          ),
+          hasNextPage: false,
+          bookmark: null,
         })
       })
 
