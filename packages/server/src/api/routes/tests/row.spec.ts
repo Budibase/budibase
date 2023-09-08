@@ -49,37 +49,39 @@ describe.each([
     await config.init()
   })
 
-  beforeEach(async () => {
-    mocks.licenses.useCloudFree()
-    let tableConfig: SaveTableRequest = {
-      name: generator.guid(),
-      type: "table",
-      primary: ["id"],
-      schema: {
-        id: {
-          type: FieldType.AUTO,
-          name: "id",
-          autocolumn: true,
-          constraints: {
-            presence: true,
-          },
-        },
-        name: {
-          type: FieldType.STRING,
-          name: "name",
-          constraints: {
-            type: "string",
-          },
-        },
-        description: {
-          type: FieldType.STRING,
-          name: "description",
-          constraints: {
-            type: "string",
-          },
+  const generateTableConfig: () => SaveTableRequest = () => ({
+    name: generator.guid(),
+    type: "table",
+    primary: ["id"],
+    schema: {
+      id: {
+        type: FieldType.AUTO,
+        name: "id",
+        autocolumn: true,
+        constraints: {
+          presence: true,
         },
       },
-    }
+      name: {
+        type: FieldType.STRING,
+        name: "name",
+        constraints: {
+          type: "string",
+        },
+      },
+      description: {
+        type: FieldType.STRING,
+        name: "description",
+        constraints: {
+          type: "string",
+        },
+      },
+    },
+  })
+
+  beforeEach(async () => {
+    mocks.licenses.useCloudFree()
+    const tableConfig = generateTableConfig()
 
     if (dsProvider) {
       datasource = await config.api.datasource.create(
@@ -93,6 +95,8 @@ describe.each([
     }
 
     table = await config.api.table.create(tableConfig)
+    config.table = table
+    config.datasource = datasource
     row = basicRow(table._id!)
   })
 
@@ -130,8 +134,8 @@ describe.each([
     expect(usage).toBe(expected)
   }
 
-  const createRow = (row?: SaveRowRequest) =>
-    config.api.row.save(table._id!, row || basicRow(table._id!))
+  const createRow = (tableId = table._id!, row?: SaveRowRequest) =>
+    config.api.row.save(tableId, row || basicRow(table._id!))
 
   describe("save, load, update", () => {
     function getDefaultFields() {
@@ -270,7 +274,7 @@ describe.each([
         status: "new",
       }
       await createRow()
-      await createRow(newRow)
+      await createRow(table._id, newRow)
       const queryUsage = await getQueryUsage()
 
       const res = await request
@@ -552,7 +556,7 @@ describe.each([
 
   describe("destroy", () => {
     it("should be able to delete a row", async () => {
-      const createdRow = await createRow(row)
+      const createdRow = await createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
