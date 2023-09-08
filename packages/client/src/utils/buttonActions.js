@@ -42,7 +42,7 @@ const saveRowHandler = async (action, context) => {
     }
 
     // Refresh related datasources
-    await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+    await dataSourceStore.actions.invalidateDataSource(tableId, {
       invalidateRelationships: true,
     })
 
@@ -75,7 +75,7 @@ const duplicateRowHandler = async (action, context) => {
       }
 
       // Refresh related datasources
-      await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+      await dataSourceStore.actions.invalidateDataSource(tableId, {
         invalidateRelationships: true,
       })
 

@@ -8,6 +8,8 @@
   import Icon from "../../Icon/Icon.svelte"
   import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Popover from "../../Popover/Popover.svelte"
+  import Tags from "../../Tags/Tags.svelte"
+  import Tag from "../../Tags/Tag.svelte"
 
   export let id = null
   export let disabled = false
@@ -26,6 +28,7 @@
   export let getOptionIcon = () => null
   export let useOptionIconImage = false
   export let getOptionColour = () => null
+  export let getOptionSubtitle = () => null
   export let open = false
   export let readonly = false
   export let quiet = false
@@ -35,9 +38,11 @@
   export let fetchTerm = null
   export let useFetch = false
   export let customPopoverHeight
+  export let customPopoverOffsetBelow
+  export let customPopoverMaxHeight
   export let align = "left"
   export let footer = null
-
+  export let customAnchor = null
   const dispatch = createEventDispatcher()
 
   let searchTerm = null
@@ -139,16 +144,17 @@
     <use xlink:href="#spectrum-css-icon-Chevron100" />
   </svg>
 </button>
-
 <Popover
-  anchor={button}
+  anchor={customAnchor ? customAnchor : button}
   align={align || "left"}
   bind:this={popover}
   {open}
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
   maxWidth={autoWidth ? 400 : null}
+  maxHeight={customPopoverMaxHeight}
   customHeight={customPopoverHeight}
+  offsetBelow={customPopoverOffsetBelow}
 >
   <div
     class="popover-content"
@@ -215,8 +221,21 @@
               </span>
             {/if}
             <span class="spectrum-Menu-itemLabel">
+              {#if getOptionSubtitle(option, idx)}
+                <span class="subtitle-text"
+                  >{getOptionSubtitle(option, idx)}</span
+                >
+              {/if}
+
               {getOptionLabel(option, idx)}
             </span>
+            {#if option.tag}
+              <span class="option-tag">
+                <Tags>
+                  <Tag icon="LockClosed">{option.tag}</Tag>
+                </Tags>
+              </span>
+            {/if}
             <svg
               class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
               focusable="false"
@@ -242,6 +261,17 @@
     width: 100%;
     box-shadow: none;
   }
+
+  .subtitle-text {
+    font-size: 12px;
+    line-height: 15px;
+    font-weight: 500;
+    top: 10px;
+    color: var(--spectrum-global-color-gray-600);
+    display: block;
+    margin-bottom: var(--spacing-s);
+  }
+
   .spectrum-Picker-label.auto-width {
     margin-right: var(--spacing-xs);
   }
@@ -320,5 +350,13 @@
 
   .option-extra.icon.field-icon {
     display: flex;
+  }
+
+  .option-tag {
+    margin: 0 var(--spacing-m) 0 var(--spacing-m);
+  }
+
+  .option-tag :global(.spectrum-Tags-item > .spectrum-Icon) {
+    margin-top: 2px;
   }
 </style>

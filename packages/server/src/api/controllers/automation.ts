@@ -20,7 +20,7 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationResults,
-  Ctx,
+  BBContext,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
@@ -73,7 +73,7 @@ function cleanAutomationInputs(automation: Automation) {
   return automation
 }
 
-export async function create(ctx: Ctx) {
+export async function create(ctx: BBContext) {
   const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
@@ -142,7 +142,7 @@ export async function handleStepEvents(
   }
 }
 
-export async function update(ctx: Ctx) {
+export async function update(ctx: BBContext) {
   const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
@@ -193,7 +193,7 @@ export async function update(ctx: Ctx) {
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
-export async function fetch(ctx: Ctx) {
+export async function fetch(ctx: BBContext) {
   const db = context.getAppDB()
   const response = await db.allDocs(
     getAutomationParams(null, {
@@ -203,11 +203,12 @@ export async function fetch(ctx: Ctx) {
   ctx.body = response.rows.map(row => row.doc)
 }
 
-export async function find(ctx: Ctx) {
-  ctx.body = await sdk.automations.get(ctx.params.id)
+export async function find(ctx: BBContext) {
+  const db = context.getAppDB()
+  ctx.body = await db.get(ctx.params.id)
 }
 
-export async function destroy(ctx: Ctx) {
+export async function destroy(ctx: BBContext) {
   const db = context.getAppDB()
   const automationId = ctx.params.id
   const oldAutomation = await db.get<Automation>(automationId)
@@ -221,11 +222,11 @@ export async function destroy(ctx: Ctx) {
   builderSocket?.emitAutomationDeletion(ctx, automationId)
 }
 
-export async function logSearch(ctx: Ctx) {
+export async function logSearch(ctx: BBContext) {
   ctx.body = await automations.logs.logSearch(ctx.request.body)
 }
 
-export async function clearLogError(ctx: Ctx) {
+export async function clearLogError(ctx: BBContext) {
   const { automationId, appId } = ctx.request.body
   await context.doInAppContext(appId, async () => {
     const db = context.getProdAppDB()
@@ -244,15 +245,15 @@ export async function clearLogError(ctx: Ctx) {
   })
 }
 
-export async function getActionList(ctx: Ctx) {
+export async function getActionList(ctx: BBContext) {
   ctx.body = await getActionDefinitions()
 }
 
-export async function getTriggerList(ctx: Ctx) {
+export async function getTriggerList(ctx: BBContext) {
   ctx.body = getTriggerDefinitions()
 }
 
-export async function getDefinitionList(ctx: Ctx) {
+export async function getDefinitionList(ctx: BBContext) {
   ctx.body = {
     trigger: getTriggerDefinitions(),
     action: await getActionDefinitions(),
@@ -265,7 +266,7 @@ export async function getDefinitionList(ctx: Ctx) {
  *                   *
  *********************/
 
-export async function trigger(ctx: Ctx) {
+export async function trigger(ctx: BBContext) {
   const db = context.getAppDB()
   let automation = await db.get<Automation>(ctx.params.id)
 
@@ -310,7 +311,7 @@ function prepareTestInput(input: any) {
   return input
 }
 
-export async function test(ctx: Ctx) {
+export async function test(ctx: BBContext) {
   const db = context.getAppDB()
   let automation = await db.get<Automation>(ctx.params.id)
   await setTestFlag(automation._id!)

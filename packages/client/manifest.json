@@ -3647,9 +3647,9 @@
       },
       {
         "type": "boolean",
-        "label": "Autocomplete",
+        "label": "Search",
         "key": "autocomplete",
-        "defaultValue": false
+        "defaultValue": true
       },
       {
         "type": "boolean",
@@ -4622,14 +4622,15 @@
             "type": "field/sortable",
             "label": "Sort by",
             "key": "sortColumn",
-            "placeholder": "None"
+            "placeholder": "Default"
           },
           {
             "type": "select",
             "label": "Sort order",
             "key": "sortOrder",
             "options": ["Ascending", "Descending"],
-            "defaultValue": "Ascending"
+            "defaultValue": "Ascending",
+            "dependsOn": "sortColumn"
           },
           {
             "type": "select",
@@ -4744,7 +4745,8 @@
             "dependsOn": {
               "setting": "clickBehaviour",
               "value": "details"
-            }
+            },
+            "resetOn": "dataSource"
           },
           {
             "label": "Save button",
@@ -5271,7 +5273,7 @@
       },
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "dataSource"
       },
       {
@@ -5396,6 +5398,7 @@
             "type": "fieldConfiguration",
             "key": "fields",
             "nested": true,
+            "resetOn": "dataSource",
             "selectAllFields": true
           },
           {
@@ -5443,7 +5446,7 @@
     "settings": [
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "dataSource",
         "required": true
       },
@@ -5534,7 +5537,7 @@
     "settings": [
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "table",
         "required": true
       },
@@ -5560,7 +5563,8 @@
         "label": "Sort order",
         "key": "initialSortOrder",
         "options": ["Ascending", "Descending"],
-        "defaultValue": "Ascending"
+        "defaultValue": "Ascending",
+        "dependsOn": "initialSortColumn"
       },
       {
         "type": "select",

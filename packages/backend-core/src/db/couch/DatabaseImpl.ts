@@ -8,7 +8,6 @@ import {
   DatabasePutOpts,
   DatabaseCreateIndexOpts,
   DatabaseDeleteIndexOpts,
-  DocExistsResponse,
   Document,
   isDocument,
 } from "@budibase/types"
@@ -119,19 +118,6 @@ export class DatabaseImpl implements Database {
       throw new Error("Unable to get doc without a valid _id.")
     }
     return this.updateOutput(() => db.get(id))
-  }
-
-  async docExists(docId: string): Promise<DocExistsResponse> {
-    const db = await this.checkSetup()
-    let _rev, exists
-    try {
-      const { etag } = await db.head(docId)
-      _rev = etag
-      exists = true
-    } catch (err) {
-      exists = false
-    }
-    return { _rev, exists }
   }
 
   async remove(idOrDoc: string | Document, rev?: string) {
