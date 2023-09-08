@@ -49,51 +49,57 @@ describe.each([
     await config.init()
   })
 
-  const generateTableConfig: () => SaveTableRequest = () => ({
-    name: generator.guid(),
-    type: "table",
-    primary: ["id"],
-    schema: {
-      id: {
-        type: FieldType.AUTO,
-        name: "id",
-        autocolumn: true,
-        constraints: {
-          presence: true,
-        },
-      },
-      name: {
-        type: FieldType.STRING,
-        name: "name",
-        constraints: {
-          type: "string",
-        },
-      },
-      description: {
-        type: FieldType.STRING,
-        name: "description",
-        constraints: {
-          type: "string",
-        },
-      },
-    },
-  })
-
-  beforeEach(async () => {
-    mocks.licenses.useCloudFree()
-    const tableConfig = generateTableConfig()
-
+  const tableDatasourceConfig = async () => {
+    const result: Partial<SaveTableRequest> = {}
     if (dsProvider) {
       datasource = await config.api.datasource.create(
         await dsProvider.getDsConfig()
       )
 
-      tableConfig.sourceId = datasource._id
+      result.sourceId = datasource._id
       if (datasource.plus) {
-        tableConfig.type = "external"
+        result.type = "external"
       }
     }
+    return result
+  }
 
+  const generateTableConfig: () => Promise<SaveTableRequest> = async () => {
+    return {
+      name: generator.guid(),
+      type: "table",
+      primary: ["id"],
+      schema: {
+        id: {
+          type: FieldType.AUTO,
+          name: "id",
+          autocolumn: true,
+          constraints: {
+            presence: true,
+          },
+        },
+        name: {
+          type: FieldType.STRING,
+          name: "name",
+          constraints: {
+            type: "string",
+          },
+        },
+        description: {
+          type: FieldType.STRING,
+          name: "description",
+          constraints: {
+            type: "string",
+          },
+        },
+      },
+      ...(await tableDatasourceConfig()),
+    }
+  }
+
+  beforeEach(async () => {
+    mocks.licenses.useCloudFree()
+    const tableConfig = await generateTableConfig()
     table = await config.api.table.create(tableConfig)
     config.table = table
     config.datasource = datasource
@@ -901,9 +907,9 @@ describe.each([
   })
 
   describe("view 2.0", () => {
-    function userTable(): Table {
+    async function userTable(): Promise<Table> {
       return {
-        name: "user",
+        name: `users_${generator.guid()}`,
         type: "table",
         primary: ["id"],
         schema: {
@@ -936,6 +942,7 @@ describe.each([
             name: "jobTitle",
           },
         },
+        ...(await tableDatasourceConfig()),
       }
     }
 
@@ -949,7 +956,7 @@ describe.each([
 
     describe("create", () => {
       it("should persist a new row with only the provided view fields", async () => {
-        const table = await config.createTable(userTable())
+        const table = await config.createTable(await userTable())
         const view = await config.api.viewV2.create({
           tableId: table._id!,
           schema: {
@@ -985,7 +992,7 @@ describe.each([
 
     describe("patch", () => {
       it("should update only the view fields for a row", async () => {
-        const table = await config.createTable(userTable())
+        const table = await config.createTable(await userTable())
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
@@ -1027,7 +1034,7 @@ describe.each([
 
     describe("destroy", () => {
       it("should be able to delete a row", async () => {
-        const table = await config.createTable(userTable())
+        const table = await config.createTable(await userTable())
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
@@ -1037,7 +1044,7 @@ describe.each([
           },
         })
 
-        const createdRow = await config.createRow()
+        const createdRow = await createRow()
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
@@ -1052,7 +1059,7 @@ describe.each([
       })
 
       it("should be able to delete multiple rows", async () => {
-        const table = await config.createTable(userTable())
+        const table = await config.createTable(await userTable())
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
@@ -1063,9 +1070,9 @@ describe.each([
         })
 
         const rows = [
-          await config.createRow(),
-          await config.createRow(),
-          await config.createRow(),
+          await createRow(tableId),
+          await createRow(tableId),
+          await createRow(tableId),
         ]
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
