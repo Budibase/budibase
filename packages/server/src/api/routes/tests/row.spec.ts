@@ -177,8 +177,8 @@ describe.each([
       const queryUsage = await getQueryUsage()
 
       const newTable = await config.createTable({
+        ...table,
         name: "TestTableAuto",
-        type: "table",
         schema: {
           ...table.schema,
           "Row ID": {
@@ -189,7 +189,7 @@ describe.each([
             autocolumn: true,
             constraints: {
               type: "number",
-              presence: false,
+              presence: true,
               numericality: {
                 greaterThanOrEqualTo: "",
                 lessThanOrEqualTo: "",
