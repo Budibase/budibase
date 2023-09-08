@@ -11,3 +11,8 @@ export interface DeleteRow {
 }
 
 export type DeleteRowRequest = DeleteRows | DeleteRow
+
+export interface ValidateResponse {
+  valid: boolean
+  errors: Record<string, any>
+}
