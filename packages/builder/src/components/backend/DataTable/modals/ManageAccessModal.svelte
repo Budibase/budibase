@@ -97,15 +97,18 @@
 
 <ModalContent showCancelButton={false} confirmText="Done">
   <span slot="header">
-    Manage Access
-    {#if requiresPlanToModify}
-      <span class="lock-tag">
-        <Tags>
-          <Tag icon="LockClosed">{capitalise(requiresPlanToModify)}</Tag>
-        </Tags>
-      </span>
-    {/if}
+    <div class="access-header">
+      Manage Access
+      {#if requiresPlanToModify}
+        <span class="lock-tag">
+          <Tags>
+            <Tag icon="LockClosed">{capitalise(requiresPlanToModify)}</Tag>
+          </Tags>
+        </span>
+      {/if}
+    </div>
   </span>
+
   <Body size="S">Specify the minimum access level role for this data.</Body>
   <div class="row">
     <Label extraSmall grey>Level</Label>
@@ -149,6 +152,12 @@
 
   .inheriting-resources {
     display: flex;
+    gap: var(--spacing-s);
+  }
+
+  .access-header {
+    display: flex;
+    align-items: center;
     gap: var(--spacing-s);
   }
 </style>
