@@ -669,4 +669,17 @@ describe("SQL query builder", () => {
       sql: `insert into \"test\" (\"name\") values ($1) returning *`,
     })
   })
+
+  it("should parse and trim valid string as Date", () => {
+    const dateObj = new Date("2023-09-09T03:21:06.024Z")
+    let query = new Sql(SqlClient.POSTGRES, limit)._query(
+      generateCreateJson(TABLE_NAME, {
+        name: " 2023-09-09T03:21:06.024Z ",
+      })
+    )
+    expect(query).toEqual({
+      bindings: [dateObj],
+      sql: `insert into \"test\" (\"name\") values ($1) returning *`,
+    })
+  })
 })
