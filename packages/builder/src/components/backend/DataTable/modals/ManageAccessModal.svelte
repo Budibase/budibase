@@ -1,6 +1,7 @@
 <script>
   import { PermissionSource } from "@budibase/types"
   import { roles, permissions as permissionsStore } from "stores/backend"
+  import { licensing } from "stores/portal"
   import {
     Label,
     Input,
@@ -19,6 +20,7 @@
   export let permissions
 
   const inheritedRoleId = "inherited"
+  $: brandingEnabled = $licensing.isViewPermissionsEnabled
 
   async function changePermission(level, role) {
     try {
@@ -111,7 +113,7 @@
     {#each Object.keys(computedPermissions) as level}
       <Input value={capitalise(level)} disabled />
       <Select
-        disabled={requiresPlanToModify}
+        disabled={!brandingEnabled}
         placeholder={false}
         value={computedPermissions[level].selectedValue}
         on:change={e => changePermission(level, e.detail)}
