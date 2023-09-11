@@ -182,7 +182,7 @@ export function getSqlQuery(query: SqlQuery | string): SqlQuery {
 export const isSQL = helpers.isSQL
 
 export function isIsoDateString(str: string) {
-  if (!/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(str)) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(str.trim())) {
     return false
   }
   let d = new Date(str)
