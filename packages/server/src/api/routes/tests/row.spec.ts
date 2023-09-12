@@ -471,7 +471,12 @@ describe.each([
     function orderTable(): Table {
       return {
         name: "orders",
+        primary: ["id"],
         schema: {
+          id: {
+            type: FieldType.AUTO,
+            name: "id",
+          },
           Country: {
             type: FieldType.STRING,
             name: "Country",
@@ -494,19 +499,35 @@ describe.each([
       const createViewResponse = await config.api.viewV2.create({
         tableId: table._id,
         schema: {
-          Country: {},
-          OrderID: {},
+          Country: {
+            visible: true,
+          },
+          OrderID: {
+            visible: true,
+          },
         },
       })
 
-      const response = await config.api.row.save(createViewResponse.id, {
-        Country: "Aussy",
-        OrderID: "1111",
-        Story: "aaaaa",
-      })
+      const createRowResponse = await config.api.row.save(
+        createViewResponse.id,
+        {
+          OrderID: "1111",
+          Country: "Aussy",
+          Story: "aaaaa",
+        }
+      )
 
-      const row = await config.api.row.get(table._id!, response._id!)
+      const row = await config.api.row.get(table._id!, createRowResponse._id!)
       expect(row.body.Story).toBeUndefined()
+      expect(row.body).toEqual({
+        ...defaultRowFields,
+        OrderID: "1111",
+        Country: "Aussy",
+        id: 1,
+        _id: "%5B1%5D",
+        _rev: createRowResponse._rev,
+        tableId: table._id,
+      })
     })
   })
 
