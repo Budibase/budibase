@@ -87,8 +87,6 @@ describe.each([
 
   beforeEach(async () => {
     mocks.licenses.useCloudFree()
-    const tableConfig = generateTableConfig()
-    table = await config.createTable(tableConfig)
   })
 
   const loadRow = async (id: string, tbl_Id: string, status = 200) =>
@@ -133,6 +131,7 @@ describe.each([
       }
     : undefined
 
+  describe("save, load, update", () => {
     let tableId: string
 
     beforeAll(async () => {
@@ -446,8 +445,8 @@ describe.each([
   })
 
   describe("view save", () => {
-    async function orderTable(): Promise<Table> {
-      return {
+    it("views have extra data trimmed", async () => {
+      const table = await config.createTable({
         name: "orders",
         primary: ["OrderID"],
         schema: {
@@ -464,11 +463,7 @@ describe.each([
             name: "Story",
           },
         },
-      }
-    }
-
-    it("views have extra data trimmed", async () => {
-      const table = await config.createTable(await orderTable())
+      })
 
       const createViewResponse = await config.createView({
         name: generator.word(),
@@ -505,6 +500,11 @@ describe.each([
   })
 
   describe("patch", () => {
+    beforeEach(async () => {
+      const tableConfig = generateTableConfig()
+      table = await config.createTable(tableConfig)
+    })
+
     it("should update only the fields that are supplied", async () => {
       const existing = await config.createRow()
 
@@ -554,6 +554,11 @@ describe.each([
   })
 
   describe("destroy", () => {
+    beforeEach(async () => {
+      const tableConfig = generateTableConfig()
+      table = await config.createTable(tableConfig)
+    })
+
     it("should be able to delete a row", async () => {
       const createdRow = await config.createRow()
       const rowUsage = await getRowUsage()
@@ -574,6 +579,11 @@ describe.each([
   })
 
   describe("validate", () => {
+    beforeEach(async () => {
+      const tableConfig = generateTableConfig()
+      table = await config.createTable(tableConfig)
+    })
+
     it("should return no errors on valid row", async () => {
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
@@ -616,6 +626,11 @@ describe.each([
   })
 
   describe("bulkDelete", () => {
+    beforeEach(async () => {
+      const tableConfig = generateTableConfig()
+      table = await config.createTable(tableConfig)
+    })
+
     it("should be able to delete a bulk set of rows", async () => {
       const row1 = await config.createRow()
       const row2 = await config.createRow()
@@ -716,6 +731,11 @@ describe.each([
   // Legacy views are not available for external
   isInternal &&
     describe("fetchView", () => {
+      beforeEach(async () => {
+        const tableConfig = generateTableConfig()
+        table = await config.createTable(tableConfig)
+      })
+
       it("should be able to fetch tables contents via 'view'", async () => {
         const row = await config.createRow()
         const rowUsage = await getRowUsage()
@@ -770,6 +790,11 @@ describe.each([
     })
 
   describe("fetchEnrichedRows", () => {
+    beforeEach(async () => {
+      const tableConfig = generateTableConfig()
+      table = await config.createTable(tableConfig)
+    })
+
     it("should allow enriching some linked rows", async () => {
       const { linkedTable, firstRow, secondRow } = await tenancy.doInTenant(
         config.getTenantId(),
@@ -836,6 +861,11 @@ describe.each([
 
   isInternal &&
     describe("attachments", () => {
+      beforeEach(async () => {
+        const tableConfig = generateTableConfig()
+        table = await config.createTable(tableConfig)
+      })
+
       it("should allow enriching attachment rows", async () => {
         const table = await config.createAttachmentTable()
         const attachmentId = `${structures.uuid()}.csv`
@@ -862,6 +892,11 @@ describe.each([
     })
 
   describe("exportData", () => {
+    beforeEach(async () => {
+      const tableConfig = generateTableConfig()
+      table = await config.createTable(tableConfig)
+    })
+
     it("should allow exporting all columns", async () => {
       const existing = await config.createRow()
       const res = await request
