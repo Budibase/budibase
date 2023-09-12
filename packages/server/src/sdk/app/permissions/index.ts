@@ -61,11 +61,7 @@ export async function getInheritablePermissions(
 export async function allowsExplicitPermissions(resourceId: string) {
   if (isViewID(resourceId)) {
     const allowed = await features.isViewPermissionEnabled()
-    const minPlan = !allowed
-      ? env.SELF_HOSTED
-        ? PlanType.BUSINESS
-        : PlanType.PREMIUM
-      : undefined
+    const minPlan = !allowed ? PlanType.BUSINESS : undefined
 
     return {
       allowed,
