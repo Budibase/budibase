@@ -43,20 +43,9 @@
       "/node_modules/(?!svelte).+\\.js$",
       ".*string-templates.*"
     ],
-    "modulePathIgnorePatterns": [
-      "<rootDir>/cypress/"
-    ],
     "setupFilesAfterEnv": [
       "@testing-library/jest-dom/extend-expect"
     ]
-  },
-  "eslintConfig": {
-    "extends": [
-      "plugin:cypress/recommended"
-    ],
-    "rules": {
-      "cypress/no-unnecessary-waiting": "off"
-    }
   },
   "dependencies": {
     "@budibase/bbui": "0.0.0",
@@ -104,9 +93,6 @@
     "@testing-library/jest-dom": "5.17.0",
     "@testing-library/svelte": "^3.2.2",
     "babel-jest": "29.6.2",
-    "cypress": "^9.3.1",
-    "cypress-multi-reporters": "^1.6.0",
-    "cypress-terminal-report": "^1.4.1",
     "identity-obj-proxy": "^3.0.0",
     "jest": "29.6.2",
     "jsdom": "^21.1.1",
@@ -133,9 +119,7 @@
         "dependsOn": [
           {
             "projects": [
-              "@budibase/shared-core",
-              "@budibase/string-templates",
-              "@budibase/types"
+              "@budibase/string-templates"
             ],
             "target": "build"
           }
@@ -145,9 +129,7 @@
         "dependsOn": [
           {
             "projects": [
-              "@budibase/shared-core",
-              "@budibase/string-templates",
-              "@budibase/types"
+              "@budibase/string-templates"
             ],
             "target": "build"
           }
@@ -157,9 +139,7 @@
         "dependsOn": [
           {
             "projects": [
-              "@budibase/shared-core",
-              "@budibase/string-templates",
-              "@budibase/types"
+              "@budibase/string-templates"
             ],
             "target": "build"
           }

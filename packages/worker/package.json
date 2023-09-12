@@ -22,7 +22,7 @@
     "predocker": "yarn build && cp ../../yarn.lock ./dist/",
     "build:docker": "yarn predocker && docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
-    "dev:builder": "npm run dev:stack:init && rimraf dist/ && nodemon",
+    "dev:builder": "npm run dev:stack:init && nodemon",
     "dev:built": "yarn run dev:stack:init && yarn run run:docker",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watch",
@@ -82,8 +82,8 @@
     "@types/koa": "2.13.4",
     "@types/koa__router": "8.0.8",
     "@types/lodash": "^4.14.191",
-    "@types/node": "14.18.20",
-    "@types/node-fetch": "2.6.1",
+    "@types/node": "18.17.0",
+    "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "6.4.0",
     "@types/server-destroy": "1.0.1",
     "@types/supertest": "2.0.12",
@@ -102,5 +102,20 @@
     "tsconfig-paths": "4.0.0",
     "typescript": "4.7.3",
     "update-dotenv": "1.1.1"
+  },
+  "nx": {
+    "targets": {
+      "dev:builder": {
+        "dependsOn": [
+          {
+            "comment": "Required for pro usage when submodule not loaded",
+            "projects": [
+              "@budibase/backend-core"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }

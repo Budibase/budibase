@@ -13,8 +13,6 @@
   export let title
   export let saveButtonLabel
   export let deleteButtonLabel
-  export let showSaveButton
-  export let showDeleteButton
   export let schema
   export let repeaterId
   export let notificationOverride
@@ -47,7 +45,7 @@
       "##eventHandlerType": "Save Row",
       parameters: {
         providerId: formId,
-        tableId: dataSource?.tableId,
+        tableId: dataSource?.resourceId,
         notificationOverride,
       },
     },
@@ -80,7 +78,7 @@
       "##eventHandlerType": "Delete Row",
       parameters: {
         confirm: true,
-        tableId: dataSource?.tableId,
+        tableId: dataSource?.resourceId,
         rowId: `{{ ${safe(repeaterId)}.${safe("_id")} }}`,
         revId: `{{ ${safe(repeaterId)}.${safe("_rev")} }}`,
         notificationOverride,
@@ -100,17 +98,32 @@
     },
   ]
 
-  $: renderDeleteButton = showDeleteButton && actionType === "Update"
-  $: renderSaveButton = showSaveButton && actionType !== "View"
+  $: renderDeleteButton = deleteButtonLabel && actionType === "Update"
+  $: renderSaveButton = saveButtonLabel && actionType !== "View"
   $: renderButtons = renderDeleteButton || renderSaveButton
   $: renderHeader = renderButtons || title
 
   const getComponentForField = field => {
-    if (!field || !schema?.[field]) {
+    const fieldSchemaName = field.field || field.name
+    if (!fieldSchemaName || !schema?.[fieldSchemaName]) {
       return null
     }
-    const type = schema[field].type
+    const type = schema[fieldSchemaName].type
     return FieldTypeToComponentMap[type]
+  }
+
+  const getPropsForField = field => {
+    let fieldProps = field._component
+      ? {
+          ...field,
+        }
+      : {
+          field: field.name,
+          label: field.name,
+          placeholder: field.name,
+          _instanceName: field.name,
+        }
+    return fieldProps
   }
 </script>
 
@@ -175,7 +188,7 @@
                 <BlockComponent
                   type="button"
                   props={{
-                    text: deleteButtonLabel || "Delete",
+                    text: deleteButtonLabel,
                     onClick: onDelete,
                     quiet: true,
                     type: "secondary",
@@ -187,7 +200,7 @@
                 <BlockComponent
                   type="button"
                   props={{
-                    text: saveButtonLabel || "Save",
+                    text: saveButtonLabel,
                     onClick: onSave,
                     type: "cta",
                   }}
@@ -198,22 +211,19 @@
           {/if}
         </BlockComponent>
       {/if}
-      <BlockComponent type="fieldgroup" props={{ labelPosition }} order={1}>
-        {#each fields as field, idx}
-          {#if getComponentForField(field.name)}
-            <BlockComponent
-              type={getComponentForField(field.name)}
-              props={{
-                validation: field.validation,
-                field: field.name,
-                label: field.displayName,
-                placeholder: field.displayName,
-              }}
-              order={idx}
-            />
-          {/if}
-        {/each}
-      </BlockComponent>
+      {#key fields}
+        <BlockComponent type="fieldgroup" props={{ labelPosition }} order={1}>
+          {#each fields as field, idx}
+            {#if getComponentForField(field) && field.active}
+              <BlockComponent
+                type={getComponentForField(field)}
+                props={getPropsForField(field)}
+                order={idx}
+              />
+            {/if}
+          {/each}
+        </BlockComponent>
+      {/key}
     </BlockComponent>
   </BlockComponent>
 {:else}

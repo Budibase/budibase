@@ -10,7 +10,6 @@ mocks.licenses.useUnlimited()
 import { init as dbInit } from "../../db"
 dbInit()
 import env from "../../environment"
-import { env as coreEnv } from "@budibase/backend-core"
 import {
   basicTable,
   basicRow,
@@ -33,6 +32,7 @@ import {
   encryption,
   auth,
   roles,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import * as controllers from "./controllers"
 import { cleanup } from "../../utilities/fileSystem"
@@ -51,7 +51,6 @@ import {
   UserRoles,
   Automation,
 } from "@budibase/types"
-import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
 
 import API from "./api"
 
@@ -87,7 +86,7 @@ class TestConfiguration {
     if (openServer) {
       // use a random port because it doesn't matter
       env.PORT = "0"
-      this.server = require("../../app").default
+      this.server = require("../../app").getServer()
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
       this.started = true
@@ -178,7 +177,7 @@ class TestConfiguration {
     if (this.server) {
       this.server.close()
     } else {
-      require("../../app").default.close()
+      require("../../app").getServer().close()
     }
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
@@ -317,7 +316,7 @@ class TestConfiguration {
     }
   }
 
-  async createGroup(roleId: string = BUILTIN_ROLE_IDS.BASIC) {
+  async createGroup(roleId: string = roles.BUILTIN_ROLE_IDS.BASIC) {
     return context.doInTenant(this.tenantId!, async () => {
       const baseGroup = structures.userGroups.userGroup()
       baseGroup.roles = {
@@ -620,21 +619,9 @@ class TestConfiguration {
     return this._req(config, null, controllers.role.save)
   }
 
-  async addPermission(roleId: string, resourceId: string, level = "read") {
-    return this._req(
-      null,
-      {
-        roleId,
-        resourceId,
-        level,
-      },
-      controllers.perms.addPermission
-    )
-  }
-
   // VIEW
 
-  async createView(config?: any) {
+  async createLegacyView(config?: any) {
     if (!this.table) {
       throw "Test requires table to be configured."
     }

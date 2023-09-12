@@ -82,6 +82,7 @@ globals:
   posthogToken: "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
   selfHosted: "1" # set to 0 for budibase cloud environment, set to 1 for self-hosted setup
   multiTenancy: "0" # set to 0 to disable multiple orgs, set to 1 to enable multiple orgs
+  offlineMode: "0" # set to 1 to enable offline mode
   accountPortalUrl: ""
   accountPortalApiKey: ""
   cookieDomain: ""
@@ -136,7 +137,6 @@ services:
         path: /health
         port: 10000
         scheme: HTTP
-      enabled: true
       periodSeconds: 3
       failureThreshold: 1
     livenessProbe:
@@ -169,7 +169,6 @@ services:
         path: /health
         port: 4002
         scheme: HTTP
-      enabled: true
       periodSeconds: 3
       failureThreshold: 1
     livenessProbe:
@@ -203,7 +202,6 @@ services:
         path: /health
         port: 4003
         scheme: HTTP
-      enabled: true
       periodSeconds: 3
       failureThreshold: 1
     livenessProbe:
@@ -410,14 +408,12 @@ couchdb:
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
   # FOR COUCHDB
   livenessProbe:
-    enabled: true
     failureThreshold: 3
     initialDelaySeconds: 0
     periodSeconds: 10
     successThreshold: 1
     timeoutSeconds: 1
   readinessProbe:
-    enabled: true
     failureThreshold: 3
     initialDelaySeconds: 0
     periodSeconds: 10

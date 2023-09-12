@@ -39,7 +39,7 @@
       return publishedApps
     }
     return publishedApps.filter(app => {
-      if (sdk.users.isBuilder(user, app.appId)) {
+      if (sdk.users.isBuilder(user, app.prodId)) {
         return true
       }
       if (!Object.keys(user?.roles).length && user?.userGroups) {
@@ -142,7 +142,12 @@
             <div class="group">
               <Layout gap="S" noPadding>
                 {#each userApps as app (app.appId)}
-                  <a class="app" target="_blank" href={getUrl(app)}>
+                  <a
+                    class="app"
+                    target="_blank"
+                    rel="noreferrer"
+                    href={getUrl(app)}
+                  >
                     <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>

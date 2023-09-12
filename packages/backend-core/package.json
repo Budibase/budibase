@@ -2,10 +2,10 @@
   "name": "@budibase/backend-core",
   "version": "0.0.0",
   "description": "Budibase backend core libraries used in server and worker",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
   "exports": {
-    ".": "./dist/src/index.js",
+    ".": "./dist/index.js",
     "./tests": "./dist/tests/index.js",
     "./*": "./dist/*.js"
   },
@@ -14,7 +14,7 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "prepack": "cp package.json dist",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json --paths null && node ./scripts/build.js",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "test": "bash scripts/test.sh",
@@ -68,8 +68,8 @@
     "@types/jest": "29.5.3",
     "@types/koa": "2.13.4",
     "@types/lodash": "4.14.180",
-    "@types/node": "14.18.20",
-    "@types/node-fetch": "2.6.1",
+    "@types/node": "18.17.0",
+    "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "6.4.0",
     "@types/redlock": "4.0.3",
     "@types/semver": "7.3.7",
@@ -88,5 +88,20 @@
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
     "typescript": "4.7.3"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/shared-core",
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }

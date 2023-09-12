@@ -3,50 +3,47 @@ import * as utils from "../db/utils"
 import sdk from "../sdk"
 import { db } from "@budibase/backend-core"
 import { Next } from "koa"
+import { getTableId } from "../api/controllers/row/utils"
 
 export default async (ctx: Ctx<Row>, next: Next) => {
   const { body } = ctx.request
-  const { _viewId: viewId } = body
+  let { _viewId: viewId } = body
+
+  const possibleViewId = getTableId(ctx)
+  if (utils.isViewID(possibleViewId)) {
+    viewId = possibleViewId
+  }
+
+  // nothing to do, it is not a view (just a table ID)
   if (!viewId) {
-    return ctx.throw(400, "_viewId is required")
+    return next()
   }
 
-  if (!ctx.params.viewId) {
-    return ctx.throw(400, "viewId path is required")
+  const { tableId } = utils.extractViewInfoFromID(viewId)
+
+  // don't need to trim delete requests
+  if (ctx?.method?.toLowerCase() !== "delete") {
+    await trimViewFields(ctx.request.body, viewId)
   }
 
-  const { tableId } = utils.extractViewInfoFromID(ctx.params.viewId)
-  const { _viewId, ...trimmedView } = await trimViewFields(
-    viewId,
-    tableId,
-    body
-  )
-  ctx.request.body = trimmedView
-  ctx.params.tableId = tableId
+  ctx.params.sourceId = tableId
+  ctx.params.viewId = viewId
 
   return next()
 }
 
+// have to mutate the koa context, can't return
 export async function trimViewFields<T extends Row>(
-  viewId: string,
-  tableId: string,
-  data: T
-): Promise<T> {
+  body: Row,
+  viewId: string
+): Promise<void> {
   const view = await sdk.views.get(viewId)
-  if (!view?.columns || !Object.keys(view.columns).length) {
-    return data
+  const allowedKeys = sdk.views.allowedFields(view)
+  // have to mutate the context, can't update reference
+  const toBeRemoved = Object.keys(body).filter(
+    key => !allowedKeys.includes(key)
+  )
+  for (let removeKey of toBeRemoved) {
+    delete body[removeKey]
   }
-
-  const table = await sdk.tables.getTable(tableId)
-  const { schema } = sdk.views.enrichSchema(view!, table.schema)
-  const result: Record<string, any> = {}
-  for (const key of [
-    ...Object.keys(schema),
-    ...db.CONSTANT_EXTERNAL_ROW_COLS,
-    ...db.CONSTANT_INTERNAL_ROW_COLS,
-  ]) {
-    result[key] = data[key] !== null ? data[key] : undefined
-  }
-
-  return result as T
 }

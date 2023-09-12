@@ -1,6 +1,5 @@
-import { SortOrder, SortType } from "../../api"
-import { SearchFilters } from "../../sdk"
-import { TableSchema, UIFieldMetadata } from "./table"
+import { SearchFilter, SortOrder, SortType } from "../../api"
+import { UIFieldMetadata } from "./table"
 
 export interface View {
   name: string
@@ -20,14 +19,13 @@ export interface ViewV2 {
   name: string
   primaryDisplay?: string
   tableId: string
-  query?: SearchFilters
+  query?: SearchFilter[]
   sort?: {
     field: string
     order?: SortOrder
     type?: SortType
   }
-  columns?: string[]
-  schemaUI?: Record<string, UIFieldMetadata>
+  schema?: Record<string, UIFieldMetadata>
 }
 
 export type ViewSchema = ViewCountOrSumSchema | ViewStatisticsSchema

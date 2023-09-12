@@ -14,7 +14,7 @@ export const createStores = context => {
   const focusedCellAPI = writable(null)
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
-  const rowHeight = writable(props.fixedRowHeight || DefaultRowHeight)
+  const rowHeight = writable(get(props).fixedRowHeight || DefaultRowHeight)
   const previousFocusedRowId = writable(null)
   const gridFocused = writable(false)
   const isDragging = writable(false)
@@ -61,23 +61,13 @@ export const createStores = context => {
 }
 
 export const deriveStores = context => {
-  const {
-    focusedCellId,
-    selectedRows,
-    hoveredRowId,
-    enrichedRows,
-    rowLookupMap,
-    rowHeight,
-    stickyColumn,
-    width,
-    hasNonAutoColumn,
-    config,
-  } = context
+  const { focusedCellId, rows, rowLookupMap, rowHeight, stickyColumn, width } =
+    context
 
   // Derive the row that contains the selected cell
   const focusedRow = derived(
-    [focusedCellId, rowLookupMap, enrichedRows],
-    ([$focusedCellId, $rowLookupMap, $enrichedRows]) => {
+    [focusedCellId, rowLookupMap, rows],
+    ([$focusedCellId, $rowLookupMap, $rows]) => {
       const rowId = $focusedCellId?.split("-")[0]
 
       // Edge case for new rows
@@ -87,17 +77,10 @@ export const deriveStores = context => {
 
       // All normal rows
       const index = $rowLookupMap[rowId]
-      return $enrichedRows[index]
+      return $rows[index]
     },
     null
   )
-
-  // Callback when leaving the grid, deselecting all focussed or selected items
-  const blur = () => {
-    focusedCellId.set(null)
-    selectedRows.set({})
-    hoveredRowId.set(null)
-  }
 
   // Derive the amount of content lines to show in cells depending on row height
   const contentLines = derived(rowHeight, $rowHeight => {
@@ -114,19 +97,24 @@ export const deriveStores = context => {
     return ($stickyColumn?.width || 0) + $width + GutterWidth < 1100
   })
 
-  // Derive if we're able to add rows
-  const canAddRows = derived(
-    [config, hasNonAutoColumn],
-    ([$config, $hasNonAutoColumn]) => {
-      return $config.allowAddRows && $hasNonAutoColumn
-    }
-  )
-
   return {
-    canAddRows,
     focusedRow,
     contentLines,
     compact,
+  }
+}
+
+export const createActions = context => {
+  const { focusedCellId, selectedRows, hoveredRowId } = context
+
+  // Callback when leaving the grid, deselecting all focussed or selected items
+  const blur = () => {
+    focusedCellId.set(null)
+    selectedRows.set({})
+    hoveredRowId.set(null)
+  }
+
+  return {
     ui: {
       actions: {
         blur,
@@ -143,7 +131,7 @@ export const initialise = context => {
     focusedCellId,
     selectedRows,
     hoveredRowId,
-    table,
+    definition,
     rowHeight,
     fixedRowHeight,
   } = context
@@ -199,9 +187,9 @@ export const initialise = context => {
   })
 
   // Pull row height from table as long as we don't have a fixed height
-  table.subscribe($table => {
+  definition.subscribe($definition => {
     if (!get(fixedRowHeight)) {
-      rowHeight.set($table?.rowHeight || DefaultRowHeight)
+      rowHeight.set($definition?.rowHeight || DefaultRowHeight)
     }
   })
 
@@ -210,7 +198,7 @@ export const initialise = context => {
     if (height) {
       rowHeight.set(height)
     } else {
-      rowHeight.set(get(table)?.rowHeight || DefaultRowHeight)
+      rowHeight.set(get(definition)?.rowHeight || DefaultRowHeight)
     }
   })
 }

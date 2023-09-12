@@ -283,12 +283,7 @@ async function performAppCreate(ctx: UserCtx) {
         title: name,
         navWidth: "Large",
         navBackground: "var(--spectrum-global-color-gray-100)",
-        links: [
-          {
-            url: "/home",
-            text: "Home",
-          },
-        ],
+        links: [],
       },
       theme: "spectrum--light",
       customTheme: {

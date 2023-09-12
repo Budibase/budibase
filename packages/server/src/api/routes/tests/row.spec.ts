@@ -1,31 +1,30 @@
 import tk from "timekeeper"
-const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
-tk.freeze(timestamp)
-
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
-const { basicRow } = setup.structures
-import { context, tenancy } from "@budibase/backend-core"
+import { context, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
-  QuotaUsageType,
-  StaticQuotaName,
-  MonthlyQuotaName,
-  Row,
-  Table,
   FieldType,
-  SortType,
+  MonthlyQuotaName,
+  PermissionLevel,
+  QuotaUsageType,
+  Row,
   SortOrder,
-  DeleteRow,
+  SortType,
+  StaticQuotaName,
+  Table,
 } from "@budibase/types"
 import {
   expectAnyInternalColsAttributes,
   generator,
+  mocks,
   structures,
 } from "@budibase/backend-core/tests"
-import trimViewRowInfoMiddleware from "../../../middleware/trimViewRowInfo"
-import noViewDataMiddleware from "../../../middleware/noViewData"
-import router from "../row"
+
+const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
+tk.freeze(timestamp)
+
+const { basicRow } = setup.structures
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -40,6 +39,7 @@ describe("/rows", () => {
   })
 
   beforeEach(async () => {
+    mocks.licenses.useCloudFree()
     table = await config.createTable()
     row = basicRow(table._id!)
   })
@@ -394,25 +394,48 @@ describe("/rows", () => {
       expect(saved.arrayFieldArrayStrKnown).toEqual(["One"])
       expect(saved.optsFieldStrKnown).toEqual("Alpha")
     })
+  })
 
-    it("should throw an error when creating a table row with view id data", async () => {
-      const res = await request
-        .post(`/api/${row.tableId}/rows`)
-        .send({ ...row, _viewId: generator.guid() })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(400)
-      expect(res.body.message).toEqual(
-        "Table row endpoints cannot contain view info"
-      )
-    })
+  describe("view save", () => {
+    function orderTable(): Table {
+      return {
+        name: "orders",
+        schema: {
+          Country: {
+            type: FieldType.STRING,
+            name: "Country",
+          },
+          OrderID: {
+            type: FieldType.STRING,
+            name: "OrderID",
+          },
+          Story: {
+            type: FieldType.STRING,
+            name: "Story",
+          },
+        },
+      }
+    }
 
-    it("should setup the noViewData middleware", async () => {
-      const route = router.stack.find(
-        r => r.methods.includes("POST") && r.path === "/api/:tableId/rows"
-      )
-      expect(route).toBeDefined()
-      expect(route?.stack).toContainEqual(noViewDataMiddleware)
+    it("views have extra data trimmed", async () => {
+      const table = await config.createTable(orderTable())
+
+      const createViewResponse = await config.api.viewV2.create({
+        tableId: table._id,
+        schema: {
+          Country: {},
+          OrderID: {},
+        },
+      })
+
+      const response = await config.api.row.save(createViewResponse.id, {
+        Country: "Aussy",
+        OrderID: "1111",
+        Story: "aaaaa",
+      })
+
+      const row = await config.api.row.get(table._id!, response._id!)
+      expect(row.body.Story).toBeUndefined()
     })
   })
 
@@ -462,33 +485,6 @@ describe("/rows", () => {
 
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
-    })
-
-    it("should throw an error when creating a table row with view id data", async () => {
-      const existing = await config.createRow()
-
-      const res = await config.api.row.patch(
-        table._id!,
-        {
-          ...existing,
-          _id: existing._id!,
-          _rev: existing._rev!,
-          tableId: table._id!,
-          _viewId: generator.guid(),
-        },
-        { expectStatus: 400 }
-      )
-      expect(res.body.message).toEqual(
-        "Table row endpoints cannot contain view info"
-      )
-    })
-
-    it("should setup the noViewData middleware", async () => {
-      const route = router.stack.find(
-        r => r.methods.includes("PATCH") && r.path === "/api/:tableId/rows"
-      )
-      expect(route).toBeDefined()
-      expect(route?.stack).toContainEqual(noViewDataMiddleware)
     })
   })
 
@@ -677,7 +673,7 @@ describe("/rows", () => {
     })
 
     it("should be able to run on a view", async () => {
-      const view = await config.createView()
+      const view = await config.createLegacyView()
       const row = await config.createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
@@ -758,7 +754,7 @@ describe("/rows", () => {
       })
       // the environment needs configured for this
       await setup.switchToSelfHosted(async () => {
-        context.doInAppContext(config.getAppId(), async () => {
+        return context.doInAppContext(config.getAppId(), async () => {
           const enriched = await outputProcessing(table, [row])
           expect((enriched as Row[])[0].attachment[0].url).toBe(
             `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
@@ -864,7 +860,7 @@ describe("/rows", () => {
         })
 
         const data = randomRowData()
-        const newRow = await config.api.viewV2.row.create(view.id, {
+        const newRow = await config.api.row.save(view.id, {
           tableId: config.table!._id,
           _viewId: view.id,
           ...data,
@@ -886,16 +882,6 @@ describe("/rows", () => {
         expect(row.body.age).toBeUndefined()
         expect(row.body.jobTitle).toBeUndefined()
       })
-
-      it("should setup the trimViewRowInfo middleware", async () => {
-        const route = router.stack.find(
-          r =>
-            r.methods.includes("POST") &&
-            r.path === "/api/v2/views/:viewId/rows"
-        )
-        expect(route).toBeDefined()
-        expect(route?.stack).toContainEqual(trimViewRowInfoMiddleware)
-      })
     })
 
     describe("patch", () => {
@@ -910,13 +896,13 @@ describe("/rows", () => {
           },
         })
 
-        const newRow = await config.api.viewV2.row.create(view.id, {
+        const newRow = await config.api.row.save(view.id, {
           tableId,
           _viewId: view.id,
           ...randomRowData(),
         })
         const newData = randomRowData()
-        await config.api.viewV2.row.update(view.id, newRow._id!, {
+        await config.api.row.patch(view.id, {
           tableId,
           _viewId: view.id,
           _id: newRow._id!,
@@ -939,16 +925,6 @@ describe("/rows", () => {
         expect(row.body.age).toBeUndefined()
         expect(row.body.jobTitle).toBeUndefined()
       })
-
-      it("should setup the trimViewRowInfo middleware", async () => {
-        const route = router.stack.find(
-          r =>
-            r.methods.includes("PATCH") &&
-            r.path === "/api/v2/views/:viewId/rows/:rowId"
-        )
-        expect(route).toBeDefined()
-        expect(route?.stack).toContainEqual(trimViewRowInfoMiddleware)
-      })
     })
 
     describe("destroy", () => {
@@ -967,10 +943,7 @@ describe("/rows", () => {
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
-        const body: DeleteRow = {
-          _id: createdRow._id!,
-        }
-        await config.api.viewV2.row.delete(view.id, body)
+        await config.api.row.delete(view.id, [createdRow])
 
         await assertRowUsage(rowUsage - 1)
         await assertQueryUsage(queryUsage + 1)
@@ -999,9 +972,7 @@ describe("/rows", () => {
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
-        await config.api.viewV2.row.delete(view.id, {
-          rows: [rows[0], rows[2]],
-        })
+        await config.api.row.delete(view.id, [rows[0], rows[2]])
 
         await assertRowUsage(rowUsage - 2)
         await assertQueryUsage(queryUsage + 1)
@@ -1017,6 +988,7 @@ describe("/rows", () => {
     })
 
     describe("view search", () => {
+      const viewSchema = { age: { visible: true }, name: { visible: true } }
       function userTable(): Table {
         return {
           name: "user",
@@ -1072,7 +1044,8 @@ describe("/rows", () => {
           )
 
         const createViewResponse = await config.api.viewV2.create({
-          query: { equal: { age: 40 } },
+          query: [{ operator: "equal", field: "age", value: 40 }],
+          schema: viewSchema,
         })
 
         const response = await config.api.viewV2.search(createViewResponse.id)
@@ -1173,6 +1146,7 @@ describe("/rows", () => {
 
           const createViewResponse = await config.api.viewV2.create({
             sort: sortParams,
+            schema: viewSchema,
           })
 
           const response = await config.api.viewV2.search(createViewResponse.id)
@@ -1207,6 +1181,7 @@ describe("/rows", () => {
               order: SortOrder.ASCENDING,
               type: SortType.STRING,
             },
+            schema: viewSchema,
           })
 
           const response = await config.api.viewV2.search(
@@ -1215,6 +1190,7 @@ describe("/rows", () => {
               sort: sortParams.field,
               sortOrder: sortParams.order,
               sortType: sortParams.type,
+              query: {},
             }
           )
 
@@ -1239,7 +1215,7 @@ describe("/rows", () => {
         }
 
         const view = await config.api.viewV2.create({
-          schema: { name: {} },
+          schema: { name: { visible: true } },
         })
         const response = await config.api.viewV2.search(view.id)
 
@@ -1256,12 +1232,169 @@ describe("/rows", () => {
       })
 
       it("views without data can be returned", async () => {
-        const table = await config.createTable(userTable())
+        await config.createTable(userTable())
 
         const createViewResponse = await config.api.viewV2.create()
         const response = await config.api.viewV2.search(createViewResponse.id)
 
         expect(response.body.rows).toHaveLength(0)
+      })
+
+      it("respects the limit parameter", async () => {
+        const table = await config.createTable(userTable())
+        const rows = []
+        for (let i = 0; i < 10; i++) {
+          rows.push(await config.createRow({ tableId: table._id }))
+        }
+        const limit = generator.integer({ min: 1, max: 8 })
+
+        const createViewResponse = await config.api.viewV2.create()
+        const response = await config.api.viewV2.search(createViewResponse.id, {
+          limit,
+          query: {},
+        })
+
+        expect(response.body.rows).toHaveLength(limit)
+      })
+
+      it("can handle pagination", async () => {
+        const table = await config.createTable(userTable())
+        const rows = []
+        for (let i = 0; i < 10; i++) {
+          rows.push(await config.createRow({ tableId: table._id }))
+        }
+        // rows.sort((a, b) => (a._id! > b._id! ? 1 : -1))
+
+        const createViewResponse = await config.api.viewV2.create()
+        const allRows = (await config.api.viewV2.search(createViewResponse.id))
+          .body.rows
+
+        const firstPageResponse = await config.api.viewV2.search(
+          createViewResponse.id,
+          {
+            paginate: true,
+            limit: 4,
+            query: {},
+          }
+        )
+        expect(firstPageResponse.body).toEqual({
+          rows: expect.arrayContaining(allRows.slice(0, 4)),
+          totalRows: 10,
+          hasNextPage: true,
+          bookmark: expect.any(String),
+        })
+
+        const secondPageResponse = await config.api.viewV2.search(
+          createViewResponse.id,
+          {
+            paginate: true,
+            limit: 4,
+            bookmark: firstPageResponse.body.bookmark,
+
+            query: {},
+          }
+        )
+        expect(secondPageResponse.body).toEqual({
+          rows: expect.arrayContaining(allRows.slice(4, 8)),
+          totalRows: 10,
+          hasNextPage: true,
+          bookmark: expect.any(String),
+        })
+
+        const lastPageResponse = await config.api.viewV2.search(
+          createViewResponse.id,
+          {
+            paginate: true,
+            limit: 4,
+            bookmark: secondPageResponse.body.bookmark,
+            query: {},
+          }
+        )
+        expect(lastPageResponse.body).toEqual({
+          rows: expect.arrayContaining(allRows.slice(8)),
+          totalRows: 10,
+          hasNextPage: false,
+          bookmark: expect.any(String),
+        })
+      })
+
+      describe("permissions", () => {
+        let viewId: string
+        let tableId: string
+
+        beforeAll(async () => {
+          const table = await config.createTable(userTable())
+          const rows = []
+          for (let i = 0; i < 10; i++) {
+            rows.push(await config.createRow({ tableId: table._id }))
+          }
+
+          const createViewResponse = await config.api.viewV2.create()
+
+          tableId = table._id!
+          viewId = createViewResponse.id
+        })
+
+        beforeEach(() => {
+          mocks.licenses.useViewPermissions()
+        })
+
+        it("does not allow public users to fetch by default", async () => {
+          await config.publish()
+          await config.api.viewV2.search(viewId, undefined, {
+            expectStatus: 403,
+            usePublicUser: true,
+          })
+        })
+
+        it("allow public users to fetch when permissions are explicit", async () => {
+          await config.api.permission.set({
+            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+            level: PermissionLevel.READ,
+            resourceId: viewId,
+          })
+          await config.publish()
+
+          const response = await config.api.viewV2.search(viewId, undefined, {
+            usePublicUser: true,
+          })
+
+          expect(response.body.rows).toHaveLength(10)
+        })
+
+        it("allow public users to fetch when permissions are inherited", async () => {
+          await config.api.permission.set({
+            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+            level: PermissionLevel.READ,
+            resourceId: tableId,
+          })
+          await config.publish()
+
+          const response = await config.api.viewV2.search(viewId, undefined, {
+            usePublicUser: true,
+          })
+
+          expect(response.body.rows).toHaveLength(10)
+        })
+
+        it("respects inherited permissions, not allowing not public views from public tables", async () => {
+          await config.api.permission.set({
+            roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+            level: PermissionLevel.READ,
+            resourceId: tableId,
+          })
+          await config.api.permission.set({
+            roleId: roles.BUILTIN_ROLE_IDS.POWER,
+            level: PermissionLevel.READ,
+            resourceId: viewId,
+          })
+          await config.publish()
+
+          await config.api.viewV2.search(viewId, undefined, {
+            usePublicUser: true,
+            expectStatus: 403,
+          })
+        })
       })
     })
   })

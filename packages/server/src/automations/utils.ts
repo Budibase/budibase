@@ -15,11 +15,15 @@ import {
   WebhookActionType,
 } from "@budibase/types"
 import sdk from "../sdk"
+import { automationsEnabled } from "../features"
 
 const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
-const Runner = new Thread(ThreadType.AUTOMATION)
+let Runner: Thread
+if (automationsEnabled()) {
+  Runner = new Thread(ThreadType.AUTOMATION)
+}
 
 function loggingArgs(job: AutomationJob) {
   return [
@@ -100,7 +104,8 @@ export async function disableAllCrons(appId: any) {
       }
     }
   }
-  return Promise.all(promises)
+  const results = await Promise.all(promises)
+  return { count: results.length / 2 }
 }
 
 export async function disableCronById(jobId: number | string) {
@@ -148,6 +153,7 @@ export function isRebootTrigger(auto: Automation) {
  */
 export async function enableCronTrigger(appId: any, automation: Automation) {
   const trigger = automation ? automation.definition.trigger : null
+  let enabled = false
 
   // need to create cron job
   if (
@@ -174,8 +180,9 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
       automation._id = response.id
       automation._rev = response.rev
     })
+    enabled = true
   }
-  return automation
+  return { enabled, automation }
 }
 
 /**

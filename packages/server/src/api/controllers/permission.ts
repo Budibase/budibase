@@ -1,11 +1,20 @@
-import { permissions, roles, context } from "@budibase/backend-core"
+import { permissions, roles, context, HTTPError } from "@budibase/backend-core"
+import {
+  UserCtx,
+  Database,
+  Role,
+  PermissionLevel,
+  GetResourcePermsResponse,
+  ResourcePermissionInfo,
+  GetDependantResourcesResponse,
+} from "@budibase/types"
 import { getRoleParams } from "../../db/utils"
 import {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
 } from "../../utilities/security"
 import { removeFromArray } from "../../utilities"
-import { UserCtx, Database, Role } from "@budibase/types"
+import sdk from "../../sdk"
 
 const PermissionUpdateType = {
   REMOVE: "remove",
@@ -25,14 +34,25 @@ async function getAllDBRoles(db: Database) {
 }
 
 async function updatePermissionOnRole(
-  appId: string,
   {
     roleId,
     resourceId,
     level,
-  }: { roleId: string; resourceId: string; level: string },
+  }: { roleId: string; resourceId: string; level: PermissionLevel },
   updateType: string
 ) {
+  const allowedAction = await sdk.permissions.resourceActionAllowed({
+    resourceId,
+    level,
+  })
+
+  if (!allowedAction.allowed) {
+    throw new HTTPError(
+      `You are not allowed to '${allowedAction.level}' the resource type '${allowedAction.resourceType}'`,
+      403
+    )
+  }
+
   const db = context.getAppDB()
   const remove = updateType === PermissionUpdateType.REMOVE
   const isABuiltin = roles.isBuiltin(roleId)
@@ -133,46 +153,48 @@ export async function fetch(ctx: UserCtx) {
   ctx.body = finalPermissions
 }
 
-export async function getResourcePerms(ctx: UserCtx) {
+export async function getResourcePerms(
+  ctx: UserCtx<void, GetResourcePermsResponse>
+) {
   const resourceId = ctx.params.resourceId
-  const db = context.getAppDB()
-  const body = await db.allDocs(
-    getRoleParams(null, {
-      include_docs: true,
-    })
-  )
-  const rolesList = body.rows.map(row => row.doc)
-  let permissions: Record<string, string> = {}
-  for (let level of SUPPORTED_LEVELS) {
-    // update the various roleIds in the resource permissions
-    for (let role of rolesList) {
-      const rolePerms = roles.checkForRoleResourceArray(
-        role.permissions,
-        resourceId
-      )
-      if (
-        rolePerms &&
-        rolePerms[resourceId] &&
-        rolePerms[resourceId].indexOf(level) !== -1
-      ) {
-        permissions[level] = roles.getExternalRoleID(role._id, role.version)!
-      }
-    }
+  const resourcePermissions = await sdk.permissions.getResourcePerms(resourceId)
+  const inheritablePermissions =
+    await sdk.permissions.getInheritablePermissions(resourceId)
+
+  ctx.body = {
+    permissions: Object.entries(resourcePermissions).reduce(
+      (p, [level, role]) => {
+        p[level] = {
+          role: role.role,
+          permissionType: role.type,
+          inheritablePermission:
+            inheritablePermissions && inheritablePermissions[level].role,
+        }
+        return p
+      },
+      {} as Record<string, ResourcePermissionInfo>
+    ),
+    requiresPlanToModify: (
+      await sdk.permissions.allowsExplicitPermissions(resourceId)
+    ).minPlan,
   }
-  ctx.body = Object.assign(getBasePermissions(resourceId), permissions)
+}
+
+export async function getDependantResources(
+  ctx: UserCtx<void, GetDependantResourcesResponse>
+) {
+  const resourceId = ctx.params.resourceId
+  ctx.body = {
+    resourceByType: await sdk.permissions.getDependantResources(resourceId),
+  }
 }
 
 export async function addPermission(ctx: UserCtx) {
-  ctx.body = await updatePermissionOnRole(
-    ctx.appId,
-    ctx.params,
-    PermissionUpdateType.ADD
-  )
+  ctx.body = await updatePermissionOnRole(ctx.params, PermissionUpdateType.ADD)
 }
 
 export async function removePermission(ctx: UserCtx) {
   ctx.body = await updatePermissionOnRole(
-    ctx.appId,
     ctx.params,
     PermissionUpdateType.REMOVE
   )

@@ -38,7 +38,7 @@
 
   export let instance = {}
   export let isLayout = false
-  export let isScreen = false
+  export let isRoot = false
   export let isBlock = false
 
   // Get parent contexts
@@ -116,7 +116,7 @@
   // Extract component instance info
   $: children = instance._children || []
   $: id = instance._id
-  $: name = isScreen ? "Screen" : instance._instanceName
+  $: name = isRoot ? "Screen" : instance._instanceName
   $: icon = definition?.icon
 
   // Determine if the component is selected or is part of the critical path
@@ -145,13 +145,13 @@
   $: builderInteractive =
     $builderStore.inBuilder && insideScreenslot && !isBlock && !instance.static
   $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
-  $: interactive = builderInteractive || devToolsInteractive
+  $: interactive = !isRoot && (builderInteractive || devToolsInteractive)
   $: editing = editable && selected && $builderStore.editMode
   $: draggable =
     !inDragPath &&
     interactive &&
     !isLayout &&
-    !isScreen &&
+    !isRoot &&
     definition?.draggable !== false
   $: droppable = interactive
   $: builderHidden =
@@ -296,11 +296,40 @@
         return sanitizedBinding
       }
     })
+
+    // Run any migrations
+    runMigrations(instance, settingsDefinition)
+
+    // Force an initial enrichment of the new settings
+    enrichComponentSettings(get(context), settingsDefinitionMap, {
+      force: true,
+    })
     bindingString = bindings.join(" ")
     knownContextKeyMap = {}
 
     // Force an initial enrichment of the new settings
     enrichComponentSettings($context, settingsDefinitionMap)
+  }
+
+  const runMigrations = (instance, settingsDefinition) => {
+    settingsDefinition.forEach(setting => {
+      // Migrate "table" settings to ensure they have a type and resource ID
+      if (setting.type === "table") {
+        const val = instance[setting.key]
+        if (val) {
+          if (!val.type) {
+            val.type = "table"
+          }
+          if (!val.resourceId) {
+            if (val.type === "viewV2") {
+              val.resourceId = val.id
+            } else {
+              val.resourceId = val.tableId
+            }
+          }
+        }
+      }
+    })
   }
 
   const getSettingsDefinitionMap = settingsDefinition => {
@@ -490,7 +519,7 @@
     node.style.scrollMargin = "100px"
     node.scrollIntoView({
       behavior: "smooth",
-      block: "start",
+      block: "nearest",
       inline: "start",
     })
   }
@@ -571,7 +600,7 @@
             <svelte:self instance={child} />
           {/each}
         {:else if emptyState}
-          {#if isScreen}
+          {#if isRoot}
             <ScreenPlaceholder />
           {:else}
             <EmptyPlaceholder />

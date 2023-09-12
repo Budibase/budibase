@@ -6,13 +6,15 @@
     Select,
     Toggle,
     RadioGroup,
+    Icon,
     DatePicker,
     Modal,
     notifications,
     OptionSelectDnD,
     Layout,
+    AbsTooltip,
   } from "@budibase/bbui"
-  import { createEventDispatcher, getContext } from "svelte"
+  import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/backend"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
@@ -47,12 +49,13 @@
 
   export let field
 
+  let mounted = false
   let fieldDefinitions = cloneDeep(FIELDS)
   let originalName
   let linkEditDisabled
   let primaryDisplay
   let indexes = [...($tables.selected.indexes || [])]
-  let isCreating
+  let isCreating = undefined
 
   let table = $tables.selected
   let confirmDeleteDialog
@@ -72,11 +75,11 @@
   }
 
   const initialiseField = (field, savingColumn) => {
+    isCreating = !field
     if (field && !savingColumn) {
       editableColumn = cloneDeep(field)
       originalName = editableColumn.name ? editableColumn.name + "" : null
       linkEditDisabled = originalName != null
-      isCreating = originalName == null
       primaryDisplay =
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
@@ -413,16 +416,22 @@
     }
     return newError
   }
+
+  onMount(() => {
+    mounted = true
+  })
 </script>
 
 <Layout noPadding gap="S">
-  <Input
-    bind:value={editableColumn.name}
-    disabled={uneditable ||
-      (linkEditDisabled && editableColumn.type === LINK_TYPE)}
-    error={errors?.name}
-  />
-
+  {#if mounted}
+    <Input
+      autofocus
+      bind:value={editableColumn.name}
+      disabled={uneditable ||
+        (linkEditDisabled && editableColumn.type === LINK_TYPE)}
+      error={errors?.name}
+    />
+  {/if}
   <Select
     disabled={!typeEnabled}
     bind:value={editableColumn.type}
@@ -452,12 +461,17 @@
     />
   {:else if editableColumn.type === "longform"}
     <div>
-      <Label
-        size="M"
-        tooltip="Rich text includes support for images, links, tables, lists and more"
-      >
-        Formatting
-      </Label>
+      <div class="tooltip-alignment">
+        <Label size="M">Formatting</Label>
+        <AbsTooltip
+          position="top"
+          type="info"
+          text={"Rich text includes support for images, link"}
+        >
+          <Icon size="XS" name="InfoOutline" />
+        </AbsTooltip>
+      </div>
+
       <Toggle
         bind:value={editableColumn.useRichText}
         text="Enable rich text support (markdown)"
@@ -488,13 +502,18 @@
     </div>
     {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
       <div>
-        <Label
-          tooltip={isCreating
-            ? null
-            : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
-        >
-          Time zones
-        </Label>
+        <div>
+          <Label>Time zones</Label>
+          <AbsTooltip
+            position="top"
+            type="info"
+            text={isCreating
+              ? null
+              : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
+          >
+            <Icon size="XS" name="InfoOutline" />
+          </AbsTooltip>
+        </div>
         <Toggle
           bind:value={editableColumn.ignoreTimezones}
           text="Ignore time zones"
@@ -565,6 +584,7 @@
               { label: "Dynamic", value: "dynamic" },
               { label: "Static", value: "static" },
             ]}
+            disabled={!isCreating}
             getOptionLabel={option => option.label}
             getOptionValue={option => option.value}
             tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered or sorted by,
@@ -669,6 +689,12 @@
   .split-label {
     display: flex;
     align-items: center;
+  }
+
+  .tooltip-alignment {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
   }
 
   .label-length {

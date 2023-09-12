@@ -2401,6 +2401,13 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+
+      {
+        "type": "text",
+        "label": "Initial form step",
+        "key": "initialFormStep",
+        "defaultValue": 1
       }
     ],
     "context": [
@@ -2438,6 +2445,7 @@
     "name": "Form Step",
     "icon": "AssetsAdded",
     "hasChildren": true,
+    "requiredAncestors": ["form"],
     "illegalChildren": ["section", "form", "formstep", "formblock"],
     "styles": ["size"],
     "size": {
@@ -2457,6 +2465,7 @@
   "fieldgroup": {
     "name": "Field Group",
     "icon": "Group",
+    "requiredAncestors": ["form"],
     "illegalChildren": ["section"],
     "styles": ["size"],
     "hasChildren": true,
@@ -3630,9 +3639,9 @@
       },
       {
         "type": "boolean",
-        "label": "Autocomplete",
+        "label": "Search",
         "key": "autocomplete",
-        "defaultValue": false
+        "defaultValue": true
       },
       {
         "type": "boolean",
@@ -4602,14 +4611,15 @@
             "type": "field/sortable",
             "label": "Sort by",
             "key": "sortColumn",
-            "placeholder": "None"
+            "placeholder": "Default"
           },
           {
             "type": "select",
             "label": "Sort order",
             "key": "sortOrder",
             "options": ["Ascending", "Descending"],
-            "defaultValue": "Ascending"
+            "defaultValue": "Ascending",
+            "dependsOn": "sortColumn"
           },
           {
             "type": "select",
@@ -4717,27 +4727,18 @@
             ]
           },
           {
-            "label": "Fields",
+            "label": "",
             "type": "fieldConfiguration",
             "key": "sidePanelFields",
             "nested": true,
             "dependsOn": {
               "setting": "clickBehaviour",
               "value": "details"
-            }
+            },
+            "resetOn": "dataSource"
           },
           {
-            "label": "Show delete",
-            "type": "boolean",
-            "key": "sidePanelShowDelete",
-            "nested": true,
-            "dependsOn": {
-              "setting": "clickBehaviour",
-              "value": "details"
-            }
-          },
-          {
-            "label": "Save label",
+            "label": "Save button",
             "type": "text",
             "key": "sidePanelSaveLabel",
             "defaultValue": "Save",
@@ -4748,7 +4749,7 @@
             }
           },
           {
-            "label": "Delete label",
+            "label": "Delete button",
             "type": "text",
             "key": "sidePanelDeleteLabel",
             "defaultValue": "Delete",
@@ -5261,19 +5262,8 @@
       },
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "dataSource"
-      },
-      {
-        "type": "text",
-        "label": "Row ID",
-        "key": "rowId",
-        "nested": true,
-        "dependsOn": {
-          "setting": "actionType",
-          "value": "Create",
-          "invert": true
-        }
       },
       {
         "type": "text",
@@ -5282,116 +5272,55 @@
         "nested": true
       },
       {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ],
-        "defaultValue": "spectrum--medium"
-      },
-      {
-        "type": "text",
-        "label": "Empty text",
-        "key": "noRowsMessage",
-        "defaultValue": "We couldn't find a row to display",
+        "section": true,
         "dependsOn": {
           "setting": "actionType",
           "value": "Create",
           "invert": true
-        }
-      },
-      {
-        "section": true,
-        "name": "Fields",
+        },
+        "name": "Row details",
+        "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
         "settings": [
           {
-            "type": "fieldConfiguration",
-            "label": "Fields",
-            "key": "fields",
-            "selectAllFields": true
+            "type": "text",
+            "label": "Row ID",
+            "key": "rowId",
+            "nested": true
           },
           {
-            "type": "select",
-            "label": "Field labels",
-            "key": "labelPosition",
-            "defaultValue": "left",
-            "options": [
-              {
-                "label": "Left",
-                "value": "left"
-              },
-              {
-                "label": "Above",
-                "value": "above"
-              }
-            ]
-          },
-          {
-            "type": "boolean",
-            "label": "Disabled",
-            "key": "disabled",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
+            "type": "text",
+            "label": "Empty text",
+            "key": "noRowsMessage",
+            "defaultValue": "We couldn't find a row to display",
+            "nested": true
           }
         ]
       },
       {
         "section": true,
         "name": "Buttons",
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "View",
+          "invert": true
+        },
         "settings": [
-          {
-            "type": "boolean",
-            "label": "Show save button",
-            "key": "showSaveButton",
-            "defaultValue": true,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
-          },
           {
             "type": "text",
             "key": "saveButtonLabel",
-            "label": "Save button label",
+            "label": "Save button",
             "nested": true,
-            "defaultValue": "Save",
-            "dependsOn": {
-              "setting": "showSaveButton",
-              "value": true
-            }
-          },
-          {
-            "type": "boolean",
-            "label": "Allow delete",
-            "key": "showDeleteButton",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "Update"
-            }
+            "defaultValue": "Save"
           },
           {
             "type": "text",
             "key": "deleteButtonLabel",
-            "label": "Delete button label",
+            "label": "Delete button",
             "nested": true,
             "defaultValue": "Delete",
             "dependsOn": {
-              "setting": "showDeleteButton",
-              "value": true
+              "setting": "actionType",
+              "value": "Update"
             }
           },
           {
@@ -5409,7 +5338,68 @@
             "type": "boolean",
             "label": "Hide notifications",
             "key": "notificationOverride",
-            "defaultValue": false
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
+            }
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Fields",
+        "settings": [
+          {
+            "type": "select",
+            "label": "Align labels",
+            "key": "labelPosition",
+            "defaultValue": "left",
+            "options": [
+              {
+                "label": "Left",
+                "value": "left"
+              },
+              {
+                "label": "Above",
+                "value": "above"
+              }
+            ]
+          },
+          {
+            "type": "select",
+            "label": "Size",
+            "key": "size",
+            "options": [
+              {
+                "label": "Medium",
+                "value": "spectrum--medium"
+              },
+              {
+                "label": "Large",
+                "value": "spectrum--large"
+              }
+            ],
+            "defaultValue": "spectrum--medium"
+          },
+          {
+            "type": "fieldConfiguration",
+            "key": "fields",
+            "nested": true,
+            "resetOn": "dataSource",
+            "selectAllFields": true
+          },
+          {
+            "type": "boolean",
+            "label": "Disabled",
+            "key": "disabled",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
+            }
           }
         ]
       }
@@ -5445,7 +5435,7 @@
     "settings": [
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "dataSource",
         "required": true
       },
@@ -5553,7 +5543,7 @@
     "settings": [
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "table",
         "required": true
       },
@@ -5579,7 +5569,8 @@
         "label": "Sort order",
         "key": "initialSortOrder",
         "options": ["Ascending", "Descending"],
-        "defaultValue": "Ascending"
+        "defaultValue": "Ascending",
+        "dependsOn": "initialSortColumn"
       },
       {
         "type": "select",

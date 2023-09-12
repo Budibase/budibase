@@ -9,10 +9,10 @@
     renderedRows,
     renderedColumns,
     rowVerticalInversionIndex,
-    canAddRows,
     hoveredRowId,
     dispatch,
     isDragging,
+    config,
   } = getContext("grid")
 
   let body
@@ -43,7 +43,7 @@
         invertY={idx >= $rowVerticalInversionIndex}
       />
     {/each}
-    {#if $canAddRows}
+    {#if $config.canAddRows}
       <div
         class="blank"
         class:highlighted={$hoveredRowId === BlankRowID}

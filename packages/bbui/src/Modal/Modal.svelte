@@ -9,6 +9,7 @@
   export let fixed = false
   export let inline = false
   export let disableCancel = false
+  export let autoFocus = true
 
   const dispatch = createEventDispatcher()
   let visible = fixed || inline
@@ -53,6 +54,9 @@
   }
 
   async function focusModal(node) {
+    if (!autoFocus) {
+      return
+    }
     await tick()
 
     // Try to focus first input
