@@ -533,7 +533,7 @@ class TestConfiguration {
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
-    const response = await this._req(config, null, controllers.table.save)
+    const response = await this.api.table.create(config)
     if (!skipReassigning) {
       this.table = response
     }
@@ -694,12 +694,8 @@ class TestConfiguration {
     datasource: Datasource
   }): Promise<Datasource> {
     config = config || basicDatasource()
-    const response = await this._req(
-      { ...config },
-      null,
-      controllers.datasource.save
-    )
-    this.datasource = response.datasource
+    const response = await this.api.datasource.create({ ...config.datasource })
+    this.datasource = response
     return this.datasource!
   }
 
