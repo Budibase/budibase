@@ -17,7 +17,6 @@ describe("getExternalSchema", () => {
     }
 
     beforeAll(async () => {
-      // This is left on propose without a tag, so if a new version introduces a breaking change we will be notified
       const container = await new GenericContainer("postgres:13.12")
         .withExposedPorts(5432)
         .withEnv("POSTGRES_PASSWORD", "password")
