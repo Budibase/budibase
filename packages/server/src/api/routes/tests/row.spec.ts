@@ -70,6 +70,7 @@ describe.each([
       name: generator.guid(),
       type: "table",
       primary: ["id"],
+      primaryDisplay: "name",
       schema: {
         id: {
           type: FieldType.AUTO,
@@ -801,6 +802,7 @@ describe.each([
             name: generator.guid(),
             type: "table",
             primary: ["id"],
+            primaryDisplay: "id",
             schema: {
               id: {
                 type: FieldType.AUTO,
@@ -836,7 +838,10 @@ describe.each([
         .expect("Content-Type", /json/)
         .expect(200)
       expect(resBasic.body.link.length).toBe(1)
-      expect(resBasic.body.link[0]).toEqual({ _id: firstRow._id })
+      expect(resBasic.body.link[0]).toEqual({
+        _id: firstRow._id,
+        primaryDisplay: firstRow.name,
+      })
 
       // test full enrichment
       const resEnriched = await request
