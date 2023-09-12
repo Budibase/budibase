@@ -67,7 +67,7 @@ describe.each([
 
   const generateTableConfig: () => Promise<SaveTableRequest> = async () => {
     return {
-      name: generator.guid(),
+      name: generator.word(),
       type: "table",
       primary: ["id"],
       primaryDisplay: "name",
@@ -799,7 +799,7 @@ describe.each([
         config.getTenantId(),
         async () => {
           const linkedTable = await config.createLinkedTable({
-            name: generator.guid(),
+            name: generator.word(),
             type: "table",
             primary: ["id"],
             primaryDisplay: "id",
@@ -933,7 +933,7 @@ describe.each([
   describe("view 2.0", () => {
     async function userTable(): Promise<Table> {
       return {
-        name: `users_${generator.guid()}`,
+        name: `users_${generator.word()}`,
         type: "table",
         primary: ["id"],
         schema: {
@@ -1120,7 +1120,7 @@ describe.each([
       const viewSchema = { age: { visible: true }, name: { visible: true } }
       async function userTable(): Promise<Table> {
         return {
-          name: `users_${generator.guid()}`,
+          name: `users_${generator.word()}`,
           type: "table",
           primary: ["id"],
           schema: {
