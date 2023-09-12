@@ -76,4 +76,16 @@ export class RowAPI extends TestAPI {
       .expect("Content-Type", /json/)
       .expect(expectStatus)
   }
+
+  fetch = async (
+    sourceId: string,
+    { expectStatus } = { expectStatus: 200 }
+  ): Promise<Row[]> => {
+    const request = this.request
+      .get(`/api/${sourceId}/rows`)
+      .set(this.config.defaultHeaders())
+      .expect(expectStatus)
+
+    return (await request).body
+  }
 }
