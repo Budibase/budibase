@@ -21,6 +21,7 @@
     $selectedScreen,
     $store.selectedComponentId
   )
+
   $: componentBindings = getComponentBindableProperties(
     $selectedScreen,
     $store.selectedComponentId
