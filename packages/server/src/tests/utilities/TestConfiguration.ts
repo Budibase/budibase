@@ -557,11 +557,6 @@ class TestConfiguration {
     return this.updateTable(config, options)
   }
 
-  async getTable(tableId?: string) {
-    tableId = tableId || this.table?._id
-    return this._req(null, { tableId }, controllers.table.find)
-  }
-
   async createLinkedTable(
     config?: Table,
     relationshipType = RelationshipType.ONE_TO_MANY,
@@ -609,11 +604,7 @@ class TestConfiguration {
     }
     const tableId = (config && config.tableId) || this.table._id
     config = config || basicRow(tableId!)
-    return this._req(config, { tableId }, controllers.row.save)
-  }
-
-  async getRow(tableId: string, rowId: string): Promise<Row> {
-    return this._req(null, { tableId, rowId }, controllers.row.find)
+    return this.api.row.save(tableId!, config)
   }
 
   async getRows(tableId: string) {
@@ -648,7 +639,7 @@ class TestConfiguration {
     }
     const view = config || {
       tableId: this.table!._id,
-      name: "ViewTest",
+      name: generator.guid(),
     }
     return this._req(view, null, controllers.view.v1.save)
   }
@@ -721,12 +712,8 @@ class TestConfiguration {
   }
 
   async updateDatasource(datasource: Datasource): Promise<Datasource> {
-    const response = await this._req(
-      datasource,
-      { datasourceId: datasource._id },
-      controllers.datasource.update
-    )
-    this.datasource = response.datasource
+    const response = await this.api.datasource.update(datasource)
+    this.datasource = response
     return this.datasource!
   }
 

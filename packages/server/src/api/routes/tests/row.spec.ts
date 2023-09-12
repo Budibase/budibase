@@ -6,13 +6,11 @@ import * as setup from "./utilities"
 import { context, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
-  Datasource,
   FieldType,
   MonthlyQuotaName,
   PermissionLevel,
   QuotaUsageType,
   Row,
-  SaveRowRequest,
   SaveTableRequest,
   SortOrder,
   SortType,
