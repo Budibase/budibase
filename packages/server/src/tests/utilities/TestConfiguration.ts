@@ -53,6 +53,8 @@ import {
   View,
   FieldType,
   RelationshipType,
+  ViewV2,
+  CreateViewRequest,
 } from "@budibase/types"
 
 import API from "./api"
@@ -649,6 +651,25 @@ class TestConfiguration {
       name: "ViewTest",
     }
     return this._req(view, null, controllers.view.v1.save)
+  }
+
+  async createView(
+    config?: Omit<CreateViewRequest, "tableId" | "name"> & {
+      name?: string
+      tableId?: string
+    }
+  ) {
+    if (!this.table && !config?.tableId) {
+      throw "Test requires table to be configured."
+    }
+
+    const view: CreateViewRequest = {
+      ...config,
+      tableId: config?.tableId || this.table!._id!,
+      name: config?.name || generator.word(),
+    }
+
+    return await this.api.viewV2.create(view)
   }
 
   // AUTOMATION

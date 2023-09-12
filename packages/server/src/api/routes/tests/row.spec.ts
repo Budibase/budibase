@@ -474,8 +474,8 @@ describe.each([
     it("views have extra data trimmed", async () => {
       const table = await config.createTable(await orderTable())
 
-      const createViewResponse = await config.api.viewV2.create({
-        tableId: table._id,
+      const createViewResponse = await config.createView({
+        name: generator.word(),
         schema: {
           Country: {
             visible: true,
@@ -960,8 +960,7 @@ describe.each([
     describe("create", () => {
       it("should persist a new row with only the provided view fields", async () => {
         const table = await config.createTable(await userTable())
-        const view = await config.api.viewV2.create({
-          tableId: table._id!,
+        const view = await config.createView({
           schema: {
             name: { visible: true },
             surname: { visible: true },
@@ -997,8 +996,7 @@ describe.each([
       it("should update only the view fields for a row", async () => {
         const table = await config.createTable(await userTable())
         const tableId = table._id!
-        const view = await config.api.viewV2.create({
-          tableId,
+        const view = await config.createView({
           schema: {
             name: { visible: true },
             address: { visible: true },
@@ -1039,8 +1037,7 @@ describe.each([
       it("should be able to delete a row", async () => {
         const table = await config.createTable(await userTable())
         const tableId = table._id!
-        const view = await config.api.viewV2.create({
-          tableId,
+        const view = await config.createView({
           schema: {
             name: { visible: true },
             address: { visible: true },
@@ -1064,8 +1061,7 @@ describe.each([
       it("should be able to delete multiple rows", async () => {
         const table = await config.createTable(await userTable())
         const tableId = table._id!
-        const view = await config.api.viewV2.create({
-          tableId,
+        const view = await config.createView({
           schema: {
             name: { visible: true },
             address: { visible: true },
@@ -1134,9 +1130,7 @@ describe.each([
           )
         }
 
-        const createViewResponse = await config.api.viewV2.create({
-          tableId: table._id,
-        })
+        const createViewResponse = await config.createView()
         const response = await config.api.viewV2.search(createViewResponse.id)
 
         expect(response.body.rows).toHaveLength(10)
@@ -1174,8 +1168,7 @@ describe.each([
             })
           )
 
-        const createViewResponse = await config.api.viewV2.create({
-          tableId: table._id!,
+        const createViewResponse = await config.createView({
           query: [{ operator: "equal", field: "age", value: 40 }],
           schema: viewSchema,
         })
@@ -1286,8 +1279,7 @@ describe.each([
             })
           }
 
-          const createViewResponse = await config.api.viewV2.create({
-            tableId: table._id,
+          const createViewResponse = await config.createView({
             sort: sortParams,
             schema: viewSchema,
           })
@@ -1318,8 +1310,7 @@ describe.each([
             })
           }
 
-          const createViewResponse = await config.api.viewV2.create({
-            tableId: table._id,
+          const createViewResponse = await config.createView({
             sort: {
               field: "name",
               order: SortOrder.ASCENDING,
@@ -1358,8 +1349,7 @@ describe.each([
           )
         }
 
-        const view = await config.api.viewV2.create({
-          tableId: table._id,
+        const view = await config.createView({
           schema: { name: { visible: true } },
         })
         const response = await config.api.viewV2.search(view.id)
@@ -1381,9 +1371,7 @@ describe.each([
       it("views without data can be returned", async () => {
         const table = await config.createTable(await userTable())
 
-        const createViewResponse = await config.api.viewV2.create({
-          tableId: table._id,
-        })
+        const createViewResponse = await config.createView()
         const response = await config.api.viewV2.search(createViewResponse.id)
 
         expect(response.body.rows).toHaveLength(0)
@@ -1397,9 +1385,7 @@ describe.each([
         }
         const limit = generator.integer({ min: 1, max: 8 })
 
-        const createViewResponse = await config.api.viewV2.create({
-          tableId: table._id,
-        })
+        const createViewResponse = await config.createView()
         const response = await config.api.viewV2.search(createViewResponse.id, {
           limit,
           query: {},
@@ -1415,9 +1401,7 @@ describe.each([
           rows.push(await config.createRow())
         }
 
-        const createViewResponse = await config.api.viewV2.create({
-          tableId: table._id,
-        })
+        const createViewResponse = await config.createView()
         const allRows = (await config.api.viewV2.search(createViewResponse.id))
           .body.rows
 
@@ -1481,9 +1465,7 @@ describe.each([
             rows.push(await config.createRow())
           }
 
-          const createViewResponse = await config.api.viewV2.create({
-            tableId: table._id,
-          })
+          const createViewResponse = await config.createView()
 
           tableId = table._id!
           viewId = createViewResponse.id
