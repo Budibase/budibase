@@ -102,7 +102,7 @@ class Orchestrator {
   }
 
   cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
-    if (stepId === CRON_STEP_ID) {
+    if (stepId === CRON_STEP_ID && !triggerOutput.timestamp) {
       triggerOutput.timestamp = Date.now()
     }
     return triggerOutput
