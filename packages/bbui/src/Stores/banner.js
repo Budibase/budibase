@@ -1,6 +1,7 @@
 import { writable } from "svelte/store"
 
 export const BANNER_TYPES = {
+  NEUTRAL: "neutral",
   INFO: "info",
   NEGATIVE: "negative",
   WARNING: "warning",
