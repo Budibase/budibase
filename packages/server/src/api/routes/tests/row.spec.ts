@@ -133,19 +133,26 @@ describe.each([
       }
     : undefined
 
-  describe("save, load, update", () => {
+    let tableId: string
+
+    beforeAll(async () => {
+      const tableConfig = generateTableConfig()
+      const table = await config.createTable(tableConfig)
+      tableId = table._id!
+    })
+
     it("returns a success message when the row is created", async () => {
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
       const res = await request
-        .post(`/api/${config.table!._id}/rows`)
-        .send(basicRow(config.table!._id!))
+        .post(`/api/${tableId}/rows`)
+        .send(basicRow(tableId))
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect((res as any).res.statusMessage).toEqual(
-        `${table.name} saved successfully`
+        `${config.table!.name} saved successfully`
       )
       expect(res.body.name).toEqual("Test Contact")
       expect(res.body._rev).toBeDefined()
@@ -158,28 +165,31 @@ describe.each([
       const queryUsage = await getQueryUsage()
 
       const tableConfig = generateTableConfig()
-      const newTable = await config.createTable({
-        ...tableConfig,
-        name: "TestTableAuto",
-        schema: {
-          ...tableConfig.schema,
-          "Row ID": {
-            name: "Row ID",
-            type: FieldType.NUMBER,
-            subtype: "autoID",
-            icon: "ri-magic-line",
-            autocolumn: true,
-            constraints: {
-              type: "number",
-              presence: true,
-              numericality: {
-                greaterThanOrEqualTo: "",
-                lessThanOrEqualTo: "",
+      const newTable = await config.createTable(
+        {
+          ...tableConfig,
+          name: "TestTableAuto",
+          schema: {
+            ...tableConfig.schema,
+            "Row ID": {
+              name: "Row ID",
+              type: FieldType.NUMBER,
+              subtype: "autoID",
+              icon: "ri-magic-line",
+              autocolumn: true,
+              constraints: {
+                type: "number",
+                presence: true,
+                numericality: {
+                  greaterThanOrEqualTo: "",
+                  lessThanOrEqualTo: "",
+                },
               },
             },
           },
         },
-      })
+        { skipReassigning: true }
+      )
 
       const ids = [1, 2, 3]
 
@@ -214,22 +224,14 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .post(`/api/${table._id}/rows`)
-        .send({
-          _id: existing._id,
-          _rev: existing._rev,
-          tableId: table._id,
-          name: "Updated Name",
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.save(tableId, {
+        _id: existing._id,
+        _rev: existing._rev,
+        tableId,
+        name: "Updated Name",
+      })
 
-      expect((res as any).res.statusMessage).toEqual(
-        `${table.name} updated successfully.`
-      )
-      expect(res.body.name).toEqual("Updated Name")
+      expect(res.name).toEqual("Updated Name")
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage + 1)
     })
@@ -238,11 +240,7 @@ describe.each([
       const existing = await config.createRow()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .get(`/api/${table._id}/rows/${existing._id}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.get(tableId, existing._id!)
 
       expect(res.body).toEqual({
         ...existing,
@@ -252,24 +250,24 @@ describe.each([
     })
 
     it("should list all rows for given tableId", async () => {
+      const table = await config.createTable(generateTableConfig(), {
+        skipReassigning: true,
+      })
+      const tableId = table._id!
       const newRow = {
-        tableId: table._id,
+        tableId,
         name: "Second Contact",
-        status: "new",
+        description: "new",
       }
-      const firstRow = await config.createRow()
+      const firstRow = await config.createRow({ tableId })
       await config.createRow(newRow)
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .get(`/api/${table._id}/rows`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.fetch(tableId)
 
-      expect(res.body.length).toBe(2)
-      expect(res.body.find((r: Row) => r.name === newRow.name)).toBeDefined()
-      expect(res.body.find((r: Row) => r.name === firstRow.name)).toBeDefined()
+      expect(res.length).toBe(2)
+      expect(res.find((r: Row) => r.name === newRow.name)).toBeDefined()
+      expect(res.find((r: Row) => r.name === firstRow.name)).toBeDefined()
       await assertQueryUsage(queryUsage + 1)
     })
 
@@ -277,7 +275,7 @@ describe.each([
       await config.createRow()
       const queryUsage = await getQueryUsage()
 
-      await config.api.row.get(table._id!, "1234567", {
+      await config.api.row.get(tableId, "1234567", {
         expectStatus: 404,
       })
       await assertQueryUsage(queryUsage) // no change
@@ -325,52 +323,52 @@ describe.each([
           sortable: false,
         }
         const optsField = {
-            fieldName: "Sample Opts",
-            name: "Sample Opts",
-            type: FieldType.OPTIONS,
-            constraints: {
-              type: "string",
-              presence: false,
-              inclusion: ["Alpha", "Beta", "Gamma"],
-            },
+          fieldName: "Sample Opts",
+          name: "Sample Opts",
+          type: FieldType.OPTIONS,
+          constraints: {
+            type: "string",
+            presence: false,
+            inclusion: ["Alpha", "Beta", "Gamma"],
           },
-          table = await config.createTable({
-            name: "TestTable2",
-            type: "table",
-            schema: {
-              name: str,
-              stringUndefined: str,
-              stringNull: str,
-              stringString: str,
-              numberEmptyString: number,
-              numberNull: number,
-              numberUndefined: number,
-              numberString: number,
-              numberNumber: number,
-              datetimeEmptyString: datetime,
-              datetimeNull: datetime,
-              datetimeUndefined: datetime,
-              datetimeString: datetime,
-              datetimeDate: datetime,
-              boolNull: bool,
-              boolEmpty: bool,
-              boolUndefined: bool,
-              boolString: bool,
-              boolBool: bool,
-              attachmentNull: attachment,
-              attachmentUndefined: attachment,
-              attachmentEmpty: attachment,
-              attachmentEmptyArrayStr: attachment,
-              arrayFieldEmptyArrayStr: arrayField,
-              arrayFieldArrayStrKnown: arrayField,
-              arrayFieldNull: arrayField,
-              arrayFieldUndefined: arrayField,
-              optsFieldEmptyStr: optsField,
-              optsFieldUndefined: optsField,
-              optsFieldNull: optsField,
-              optsFieldStrKnown: optsField,
-            },
-          })
+        }
+        const table = await config.createTable({
+          name: "TestTable2",
+          type: "table",
+          schema: {
+            name: str,
+            stringUndefined: str,
+            stringNull: str,
+            stringString: str,
+            numberEmptyString: number,
+            numberNull: number,
+            numberUndefined: number,
+            numberString: number,
+            numberNumber: number,
+            datetimeEmptyString: datetime,
+            datetimeNull: datetime,
+            datetimeUndefined: datetime,
+            datetimeString: datetime,
+            datetimeDate: datetime,
+            boolNull: bool,
+            boolEmpty: bool,
+            boolUndefined: bool,
+            boolString: bool,
+            boolBool: bool,
+            attachmentNull: attachment,
+            attachmentUndefined: attachment,
+            attachmentEmpty: attachment,
+            attachmentEmptyArrayStr: attachment,
+            arrayFieldEmptyArrayStr: arrayField,
+            arrayFieldArrayStrKnown: arrayField,
+            arrayFieldNull: arrayField,
+            arrayFieldUndefined: arrayField,
+            optsFieldEmptyStr: optsField,
+            optsFieldUndefined: optsField,
+            optsFieldNull: optsField,
+            optsFieldStrKnown: optsField,
+          },
+        })
 
         const row = {
           name: "Test Row",
