@@ -58,7 +58,7 @@ function parse(input: any) {
     return null
   }
   if (isIsoDateString(input)) {
-    return new Date(input)
+    return new Date(input.trim())
   }
   return input
 }
