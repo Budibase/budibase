@@ -531,10 +531,12 @@
     ],
     "context": [
       {
-        "type": "schema"
+        "type": "schema",
+        "scope": "local"
       },
       {
         "type": "static",
+        "scope": "local",
         "values": [
           {
             "label": "Row index",
