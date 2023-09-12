@@ -22,6 +22,21 @@ export class RowAPI extends TestAPI {
     return request
   }
 
+  getEnriched = async (
+    sourceId: string,
+    rowId: string,
+    { expectStatus } = { expectStatus: 200 }
+  ) => {
+    const request = this.request
+      .get(`/api/${sourceId}/rows/${rowId}/enrich`)
+      .set(this.config.defaultHeaders())
+      .expect(expectStatus)
+    if (expectStatus !== 404) {
+      request.expect("Content-Type", /json/)
+    }
+    return request
+  }
+
   save = async (
     sourceId: string,
     row: SaveRowRequest,
@@ -51,7 +66,7 @@ export class RowAPI extends TestAPI {
 
   delete = async (
     sourceId: string,
-    rows: Row[],
+    rows: Row | string | (Row | string)[],
     { expectStatus } = { expectStatus: 200 }
   ) => {
     return this.request
