@@ -139,3 +139,9 @@ export async function validate({
   }
   return { valid: Object.keys(errors).length === 0, errors }
 }
+
+// don't do a pure falsy check, as 0 is included
+// https://github.com/Budibase/budibase/issues/10118
+export function invalidFilter(value: any) {
+  return value == null || value === ""
+}

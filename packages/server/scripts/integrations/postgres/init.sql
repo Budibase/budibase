@@ -1,7 +1,7 @@
 SELECT 'CREATE DATABASE main'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'main')\gexec
 CREATE SCHEMA "test-1";
-CREATE TYPE person_job AS ENUM ('qa', 'programmer', 'designer');
+CREATE TYPE person_job AS ENUM ('qa', 'programmer', 'designer', 'support');
 CREATE TABLE Persons (
     PersonID SERIAL PRIMARY KEY,
     LastName varchar(255),
@@ -51,6 +51,7 @@ CREATE TABLE CompositeTable (
 );
 INSERT INTO Persons (FirstName, LastName, Address, City, Type) VALUES ('Mike', 'Hughes', '123 Fake Street', 'Belfast', 'qa');
 INSERT INTO Persons (FirstName, LastName, Address, City, Type) VALUES ('John', 'Smith', '64 Updown Road', 'Dublin', 'programmer');
+INSERT INTO Persons (FirstName, LastName, Address, City, Type, Age) VALUES ('Foo', 'Bar', 'Foo Street', 'Bartown', 'support', 0);
 INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (1, 2, 'assembling', TRUE);
 INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (2, 1, 'processing', FALSE);
 INSERT INTO Products (ProductName) VALUES ('Computers');
