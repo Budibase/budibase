@@ -523,7 +523,7 @@
   {:else if editableColumn.type === "number" && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
-        <Label size="M">Max Value</Label>
+        <Label size="M">Min Value</Label>
       </div>
       <div class="input-length">
         <Input
