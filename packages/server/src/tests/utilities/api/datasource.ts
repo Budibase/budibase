@@ -29,6 +29,23 @@ export class DatasourceAPI extends TestAPI {
     return result.body.datasource as Datasource
   }
 
+  update = async (
+    config: Datasource,
+    { expectStatus } = { expectStatus: 200 }
+  ): Promise<Datasource> => {
+    const body: CreateDatasourceRequest = {
+      datasource: config,
+      tablesFilter: [],
+    }
+    const result = await this.request
+      .put(`/api/datasources/${config._id}`)
+      .send(body)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expectStatus)
+    return result.body.datasource as Datasource
+  }
+
   verify = async (
     data: VerifyDatasourceRequest,
     { expectStatus } = { expectStatus: 200 }
