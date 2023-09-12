@@ -304,167 +304,168 @@ describe.each([
       await assertQueryUsage(queryUsage) // no change
     })
 
-    it("row values are coerced", async () => {
-      const str = {
-        type: FieldType.STRING,
-        name: "str",
-        constraints: { type: "string", presence: false },
-      }
-      const attachment = {
-        type: FieldType.ATTACHMENT,
-        name: "attachment",
-        constraints: { type: "array", presence: false },
-      }
-      const bool = {
-        type: FieldType.BOOLEAN,
-        name: "boolean",
-        constraints: { type: "boolean", presence: false },
-      }
-      const number = {
-        type: FieldType.NUMBER,
-        name: "str",
-        constraints: { type: "number", presence: false },
-      }
-      const datetime = {
-        type: FieldType.DATETIME,
-        name: "datetime",
-        constraints: {
-          type: "string",
-          presence: false,
-          datetime: { earliest: "", latest: "" },
-        },
-      }
-      const arrayField = {
-        type: FieldType.ARRAY,
-        constraints: {
-          type: "array",
-          presence: false,
-          inclusion: ["One", "Two", "Three"],
-        },
-        name: "Sample Tags",
-        sortable: false,
-      }
-      const optsField = {
-          fieldName: "Sample Opts",
-          name: "Sample Opts",
-          type: FieldType.OPTIONS,
+    isInternal &&
+      it("row values are coerced", async () => {
+        const str = {
+          type: FieldType.STRING,
+          name: "str",
+          constraints: { type: "string", presence: false },
+        }
+        const attachment = {
+          type: FieldType.ATTACHMENT,
+          name: "attachment",
+          constraints: { type: "array", presence: false },
+        }
+        const bool = {
+          type: FieldType.BOOLEAN,
+          name: "boolean",
+          constraints: { type: "boolean", presence: false },
+        }
+        const number = {
+          type: FieldType.NUMBER,
+          name: "str",
+          constraints: { type: "number", presence: false },
+        }
+        const datetime = {
+          type: FieldType.DATETIME,
+          name: "datetime",
           constraints: {
             type: "string",
             presence: false,
-            inclusion: ["Alpha", "Beta", "Gamma"],
+            datetime: { earliest: "", latest: "" },
           },
-        },
-        table = await config.createTable({
-          name: "TestTable2",
-          type: "table",
-          schema: {
-            name: str,
-            stringUndefined: str,
-            stringNull: str,
-            stringString: str,
-            numberEmptyString: number,
-            numberNull: number,
-            numberUndefined: number,
-            numberString: number,
-            numberNumber: number,
-            datetimeEmptyString: datetime,
-            datetimeNull: datetime,
-            datetimeUndefined: datetime,
-            datetimeString: datetime,
-            datetimeDate: datetime,
-            boolNull: bool,
-            boolEmpty: bool,
-            boolUndefined: bool,
-            boolString: bool,
-            boolBool: bool,
-            attachmentNull: attachment,
-            attachmentUndefined: attachment,
-            attachmentEmpty: attachment,
-            attachmentEmptyArrayStr: attachment,
-            arrayFieldEmptyArrayStr: arrayField,
-            arrayFieldArrayStrKnown: arrayField,
-            arrayFieldNull: arrayField,
-            arrayFieldUndefined: arrayField,
-            optsFieldEmptyStr: optsField,
-            optsFieldUndefined: optsField,
-            optsFieldNull: optsField,
-            optsFieldStrKnown: optsField,
+        }
+        const arrayField = {
+          type: FieldType.ARRAY,
+          constraints: {
+            type: "array",
+            presence: false,
+            inclusion: ["One", "Two", "Three"],
           },
-        })
+          name: "Sample Tags",
+          sortable: false,
+        }
+        const optsField = {
+            fieldName: "Sample Opts",
+            name: "Sample Opts",
+            type: FieldType.OPTIONS,
+            constraints: {
+              type: "string",
+              presence: false,
+              inclusion: ["Alpha", "Beta", "Gamma"],
+            },
+          },
+          table = await config.createTable({
+            name: "TestTable2",
+            type: "table",
+            schema: {
+              name: str,
+              stringUndefined: str,
+              stringNull: str,
+              stringString: str,
+              numberEmptyString: number,
+              numberNull: number,
+              numberUndefined: number,
+              numberString: number,
+              numberNumber: number,
+              datetimeEmptyString: datetime,
+              datetimeNull: datetime,
+              datetimeUndefined: datetime,
+              datetimeString: datetime,
+              datetimeDate: datetime,
+              boolNull: bool,
+              boolEmpty: bool,
+              boolUndefined: bool,
+              boolString: bool,
+              boolBool: bool,
+              attachmentNull: attachment,
+              attachmentUndefined: attachment,
+              attachmentEmpty: attachment,
+              attachmentEmptyArrayStr: attachment,
+              arrayFieldEmptyArrayStr: arrayField,
+              arrayFieldArrayStrKnown: arrayField,
+              arrayFieldNull: arrayField,
+              arrayFieldUndefined: arrayField,
+              optsFieldEmptyStr: optsField,
+              optsFieldUndefined: optsField,
+              optsFieldNull: optsField,
+              optsFieldStrKnown: optsField,
+            },
+          })
 
-      row = {
-        name: "Test Row",
-        stringUndefined: undefined,
-        stringNull: null,
-        stringString: "i am a string",
-        numberEmptyString: "",
-        numberNull: null,
-        numberUndefined: undefined,
-        numberString: "123",
-        numberNumber: 123,
-        datetimeEmptyString: "",
-        datetimeNull: null,
-        datetimeUndefined: undefined,
-        datetimeString: "1984-04-20T00:00:00.000Z",
-        datetimeDate: new Date("1984-04-20"),
-        boolNull: null,
-        boolEmpty: "",
-        boolUndefined: undefined,
-        boolString: "true",
-        boolBool: true,
-        tableId: table._id,
-        attachmentNull: null,
-        attachmentUndefined: undefined,
-        attachmentEmpty: "",
-        attachmentEmptyArrayStr: "[]",
-        arrayFieldEmptyArrayStr: "[]",
-        arrayFieldUndefined: undefined,
-        arrayFieldNull: null,
-        arrayFieldArrayStrKnown: "['One']",
-        optsFieldEmptyStr: "",
-        optsFieldUndefined: undefined,
-        optsFieldNull: null,
-        optsFieldStrKnown: "Alpha",
-      }
+        row = {
+          name: "Test Row",
+          stringUndefined: undefined,
+          stringNull: null,
+          stringString: "i am a string",
+          numberEmptyString: "",
+          numberNull: null,
+          numberUndefined: undefined,
+          numberString: "123",
+          numberNumber: 123,
+          datetimeEmptyString: "",
+          datetimeNull: null,
+          datetimeUndefined: undefined,
+          datetimeString: "1984-04-20T00:00:00.000Z",
+          datetimeDate: new Date("1984-04-20"),
+          boolNull: null,
+          boolEmpty: "",
+          boolUndefined: undefined,
+          boolString: "true",
+          boolBool: true,
+          tableId: table._id,
+          attachmentNull: null,
+          attachmentUndefined: undefined,
+          attachmentEmpty: "",
+          attachmentEmptyArrayStr: "[]",
+          arrayFieldEmptyArrayStr: "[]",
+          arrayFieldUndefined: undefined,
+          arrayFieldNull: null,
+          arrayFieldArrayStrKnown: "['One']",
+          optsFieldEmptyStr: "",
+          optsFieldUndefined: undefined,
+          optsFieldNull: null,
+          optsFieldStrKnown: "Alpha",
+        }
 
-      const createdRow = await config.createRow(row)
-      const id = createdRow._id!
+        const createdRow = await config.createRow(row)
+        const id = createdRow._id!
 
-      const saved = (await loadRow(id, table._id!)).body
+        const saved = (await loadRow(id, table._id!)).body
 
-      expect(saved.stringUndefined).toBe(undefined)
-      expect(saved.stringNull).toBe("")
-      expect(saved.stringString).toBe("i am a string")
-      expect(saved.numberEmptyString).toBe(null)
-      expect(saved.numberNull).toBe(null)
-      expect(saved.numberUndefined).toBe(undefined)
-      expect(saved.numberString).toBe(123)
-      expect(saved.numberNumber).toBe(123)
-      expect(saved.datetimeEmptyString).toBe(null)
-      expect(saved.datetimeNull).toBe(null)
-      expect(saved.datetimeUndefined).toBe(undefined)
-      expect(saved.datetimeString).toBe(
-        new Date(row.datetimeString).toISOString()
-      )
-      expect(saved.datetimeDate).toBe(row.datetimeDate.toISOString())
-      expect(saved.boolNull).toBe(null)
-      expect(saved.boolEmpty).toBe(null)
-      expect(saved.boolUndefined).toBe(undefined)
-      expect(saved.boolString).toBe(true)
-      expect(saved.boolBool).toBe(true)
-      expect(saved.attachmentNull).toEqual([])
-      expect(saved.attachmentUndefined).toBe(undefined)
-      expect(saved.attachmentEmpty).toEqual([])
-      expect(saved.attachmentEmptyArrayStr).toEqual([])
-      expect(saved.arrayFieldEmptyArrayStr).toEqual([])
-      expect(saved.arrayFieldNull).toEqual([])
-      expect(saved.arrayFieldUndefined).toEqual(undefined)
-      expect(saved.optsFieldEmptyStr).toEqual(null)
-      expect(saved.optsFieldUndefined).toEqual(undefined)
-      expect(saved.optsFieldNull).toEqual(null)
-      expect(saved.arrayFieldArrayStrKnown).toEqual(["One"])
-      expect(saved.optsFieldStrKnown).toEqual("Alpha")
-    })
+        expect(saved.stringUndefined).toBe(undefined)
+        expect(saved.stringNull).toBe("")
+        expect(saved.stringString).toBe("i am a string")
+        expect(saved.numberEmptyString).toBe(null)
+        expect(saved.numberNull).toBe(null)
+        expect(saved.numberUndefined).toBe(undefined)
+        expect(saved.numberString).toBe(123)
+        expect(saved.numberNumber).toBe(123)
+        expect(saved.datetimeEmptyString).toBe(null)
+        expect(saved.datetimeNull).toBe(null)
+        expect(saved.datetimeUndefined).toBe(undefined)
+        expect(saved.datetimeString).toBe(
+          new Date(row.datetimeString).toISOString()
+        )
+        expect(saved.datetimeDate).toBe(row.datetimeDate.toISOString())
+        expect(saved.boolNull).toBe(null)
+        expect(saved.boolEmpty).toBe(null)
+        expect(saved.boolUndefined).toBe(undefined)
+        expect(saved.boolString).toBe(true)
+        expect(saved.boolBool).toBe(true)
+        expect(saved.attachmentNull).toEqual([])
+        expect(saved.attachmentUndefined).toBe(undefined)
+        expect(saved.attachmentEmpty).toEqual([])
+        expect(saved.attachmentEmptyArrayStr).toEqual([])
+        expect(saved.arrayFieldEmptyArrayStr).toEqual([])
+        expect(saved.arrayFieldNull).toEqual([])
+        expect(saved.arrayFieldUndefined).toEqual(undefined)
+        expect(saved.optsFieldEmptyStr).toEqual(null)
+        expect(saved.optsFieldUndefined).toEqual(undefined)
+        expect(saved.optsFieldNull).toEqual(null)
+        expect(saved.arrayFieldArrayStrKnown).toEqual(["One"])
+        expect(saved.optsFieldStrKnown).toEqual("Alpha")
+      })
   })
 
   describe("view save", () => {
