@@ -471,18 +471,14 @@ describe.each([
     function orderTable(): Table {
       return {
         name: "orders",
-        primary: ["id"],
+        primary: ["OrderID"],
         schema: {
-          id: {
-            type: FieldType.AUTO,
-            name: "id",
-          },
           Country: {
             type: FieldType.STRING,
             name: "Country",
           },
           OrderID: {
-            type: FieldType.STRING,
+            type: FieldType.NUMBER,
             name: "OrderID",
           },
           Story: {
@@ -521,10 +517,9 @@ describe.each([
       expect(row.body.Story).toBeUndefined()
       expect(row.body).toEqual({
         ...defaultRowFields,
-        OrderID: "1111",
+        OrderID: 1111,
         Country: "Aussy",
-        id: 1,
-        _id: "%5B1%5D",
+        _id: createRowResponse._id,
         _rev: createRowResponse._rev,
         tableId: table._id,
       })
