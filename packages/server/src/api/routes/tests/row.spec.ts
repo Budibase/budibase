@@ -853,31 +853,32 @@ describe.each([
     })
   })
 
-  describe("attachments", () => {
-    it("should allow enriching attachment rows", async () => {
-      const table = await config.createAttachmentTable()
-      const attachmentId = `${structures.uuid()}.csv`
-      const row = await createRow(table._id, {
-        name: "test",
-        description: "test",
-        attachment: [
-          {
-            key: `${config.getAppId()}/attachments/${attachmentId}`,
-          },
-        ],
-        tableId: table._id,
-      })
-      // the environment needs configured for this
-      await setup.switchToSelfHosted(async () => {
-        return context.doInAppContext(config.getAppId(), async () => {
-          const enriched = await outputProcessing(table, [row])
-          expect((enriched as Row[])[0].attachment[0].url).toBe(
-            `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
-          )
+  isInternal &&
+    describe("attachments", () => {
+      it("should allow enriching attachment rows", async () => {
+        const table = await config.createAttachmentTable()
+        const attachmentId = `${structures.uuid()}.csv`
+        const row = await createRow(table._id, {
+          name: "test",
+          description: "test",
+          attachment: [
+            {
+              key: `${config.getAppId()}/attachments/${attachmentId}`,
+            },
+          ],
+          tableId: table._id,
+        })
+        // the environment needs configured for this
+        await setup.switchToSelfHosted(async () => {
+          return context.doInAppContext(config.getAppId(), async () => {
+            const enriched = await outputProcessing(table, [row])
+            expect((enriched as Row[])[0].attachment[0].url).toBe(
+              `/files/signed/prod-budi-app-assets/${config.getProdAppId()}/attachments/${attachmentId}`
+            )
+          })
         })
       })
     })
-  })
 
   describe("exportData", () => {
     it("should allow exporting all columns", async () => {
