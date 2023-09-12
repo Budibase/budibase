@@ -126,7 +126,7 @@
           user,
           prodAppId
         )
-        const isAppBuilder = sdk.users.hasAppBuilderPermissions(user, prodAppId)
+        const isAppBuilder = user.builder?.apps?.includes(prodAppId)
         let role
         if (isAdminOrGlobalBuilder) {
           role = Constants.Roles.ADMIN
