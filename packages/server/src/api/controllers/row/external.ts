@@ -32,12 +32,12 @@ export async function handleRequest(
       }
       // @ts-ignore
       for (let [key, value] of Object.entries(opts.filters[filterField])) {
-        if (!value || value === "") {
+        if (utils.invalidFilter(value)) {
           // @ts-ignore
           delete opts.filters[filterField][key]
         }
       }
-    }
+    
   }
 
   if (
