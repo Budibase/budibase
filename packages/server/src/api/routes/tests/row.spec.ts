@@ -39,6 +39,7 @@ describe.each([
   let request = setup.getRequest()
   let config = setup.getConfig()
   let table: Table
+  let tableId: string
 
   afterAll(setup.afterAll)
 
@@ -131,15 +132,13 @@ describe.each([
       }
     : undefined
 
+  beforeAll(async () => {
+    const tableConfig = generateTableConfig()
+    const table = await config.createTable(tableConfig)
+    tableId = table._id!
+  })
+
   describe("save, load, update", () => {
-    let tableId: string
-
-    beforeAll(async () => {
-      const tableConfig = generateTableConfig()
-      const table = await config.createTable(tableConfig)
-      tableId = table._id!
-    })
-
     it("returns a success message when the row is created", async () => {
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
@@ -626,7 +625,7 @@ describe.each([
   })
 
   describe("bulkDelete", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       const tableConfig = generateTableConfig()
       table = await config.createTable(tableConfig)
     })
@@ -790,7 +789,7 @@ describe.each([
     })
 
   describe("fetchEnrichedRows", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       const tableConfig = generateTableConfig()
       table = await config.createTable(tableConfig)
     })
@@ -861,7 +860,7 @@ describe.each([
 
   isInternal &&
     describe("attachments", () => {
-      beforeEach(async () => {
+      beforeAll(async () => {
         const tableConfig = generateTableConfig()
         table = await config.createTable(tableConfig)
       })
@@ -892,7 +891,7 @@ describe.each([
     })
 
   describe("exportData", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       const tableConfig = generateTableConfig()
       table = await config.createTable(tableConfig)
     })
