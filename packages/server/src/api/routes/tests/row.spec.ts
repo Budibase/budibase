@@ -177,11 +177,12 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
+      const tableConfig = await generateTableConfig()
       const newTable = await config.createTable({
-        ...table,
+        ...tableConfig,
         name: "TestTableAuto",
         schema: {
-          ...table.schema,
+          ...tableConfig.schema,
           "Row ID": {
             name: "Row ID",
             type: FieldType.NUMBER,
@@ -356,7 +357,7 @@ describe.each([
               inclusion: ["Alpha", "Beta", "Gamma"],
             },
           },
-          table = await config.createTable({
+          table = await config.api.table.create({
             name: "TestTable2",
             type: "table",
             schema: {
@@ -392,6 +393,7 @@ describe.each([
               optsFieldNull: optsField,
               optsFieldStrKnown: optsField,
             },
+            ...(await tableDatasourceConfig()),
           })
 
         row = {
@@ -470,7 +472,7 @@ describe.each([
   })
 
   describe("view save", () => {
-    function orderTable(): Table {
+    async function orderTable(): Promise<Table> {
       return {
         name: "orders",
         primary: ["OrderID"],
@@ -488,11 +490,12 @@ describe.each([
             name: "Story",
           },
         },
+        ...(await tableDatasourceConfig()),
       }
     }
 
     it("views have extra data trimmed", async () => {
-      const table = await config.createTable(orderTable())
+      const table = await config.api.table.create(await orderTable())
 
       const createViewResponse = await config.api.viewV2.create({
         tableId: table._id,
@@ -887,7 +890,7 @@ describe.each([
 
   describe("exportData", () => {
     it("should allow exporting all columns", async () => {
-      const existing = await config.createRow()
+      const existing = await createRow()
       const res = await request
         .post(`/api/${table._id}/rows/exportRows?format=json`)
         .set(config.defaultHeaders())
@@ -910,7 +913,7 @@ describe.each([
     })
 
     it("should allow exporting only certain columns", async () => {
-      const existing = await config.createRow()
+      const existing = await createRow()
       const res = await request
         .post(`/api/${table._id}/rows/exportRows?format=json`)
         .set(config.defaultHeaders())
@@ -980,7 +983,7 @@ describe.each([
 
     describe("create", () => {
       it("should persist a new row with only the provided view fields", async () => {
-        const table = await config.createTable(await userTable())
+        const table = await config.api.table.create(await userTable())
         const view = await config.api.viewV2.create({
           tableId: table._id!,
           schema: {
@@ -992,7 +995,7 @@ describe.each([
 
         const data = randomRowData()
         const newRow = await config.api.row.save(view.id, {
-          tableId: config.table!._id,
+          tableId: table!._id,
           _viewId: view.id,
           ...data,
         })
@@ -1002,7 +1005,7 @@ describe.each([
           name: data.name,
           surname: data.surname,
           address: data.address,
-          tableId: config.table!._id,
+          tableId: table!._id,
           _id: newRow._id,
           _rev: newRow._rev,
           id: newRow.id,
@@ -1016,7 +1019,7 @@ describe.each([
 
     describe("patch", () => {
       it("should update only the view fields for a row", async () => {
-        const table = await config.createTable(await userTable())
+        const table = await config.api.table.create(await userTable())
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
@@ -1058,7 +1061,7 @@ describe.each([
 
     describe("destroy", () => {
       it("should be able to delete a row", async () => {
-        const table = await config.createTable(await userTable())
+        const table = await config.api.table.create(await userTable())
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
@@ -1083,7 +1086,7 @@ describe.each([
       })
 
       it("should be able to delete multiple rows", async () => {
-        const table = await config.createTable(await userTable())
+        const table = await config.api.table.create(await userTable())
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
@@ -1148,13 +1151,17 @@ describe.each([
       }
 
       it("returns empty rows from view when no schema is passed", async () => {
-        const table = await config.createTable(await userTable())
+        const table = await config.api.table.create(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
-          rows.push(await config.createRow({ tableId: table._id }))
+          rows.push(
+            await config.api.row.save(table._id!, { tableId: table._id })
+          )
         }
 
-        const createViewResponse = await config.api.viewV2.create()
+        const createViewResponse = await config.api.viewV2.create({
+          tableId: table._id,
+        })
         const response = await config.api.viewV2.search(createViewResponse.id)
 
         expect(response.body.rows).toHaveLength(10)
@@ -1174,10 +1181,10 @@ describe.each([
       })
 
       it("searching respects the view filters", async () => {
-        const table = await config.createTable(await userTable())
+        const table = await config.api.table.create(await userTable())
         const expectedRows = []
         for (let i = 0; i < 10; i++)
-          await config.createRow({
+          await config.api.row.save(table._id!, {
             tableId: table._id,
             name: generator.name(),
             age: generator.integer({ min: 10, max: 30 }),
@@ -1185,7 +1192,7 @@ describe.each([
 
         for (let i = 0; i < 5; i++)
           expectedRows.push(
-            await config.createRow({
+            await config.api.row.save(table._id!, {
               tableId: table._id,
               name: generator.name(),
               age: 40,
@@ -1193,6 +1200,7 @@ describe.each([
           )
 
         const createViewResponse = await config.api.viewV2.create({
+          tableId: table._id!,
           query: [{ operator: "equal", field: "age", value: 40 }],
           schema: viewSchema,
         })
@@ -1289,7 +1297,7 @@ describe.each([
       it.each(sortTestOptions)(
         "allow sorting (%s)",
         async (sortParams, expected) => {
-          await config.createTable(await userTable())
+          const table = await config.api.table.create(await userTable())
           const users = [
             { name: "Alice", age: 25 },
             { name: "Bob", age: 30 },
@@ -1297,13 +1305,14 @@ describe.each([
             { name: "Danny", age: 15 },
           ]
           for (const user of users) {
-            await config.createRow({
-              tableId: config.table!._id,
+            await config.api.row.save(table._id!, {
+              tableId: table._id,
               ...user,
             })
           }
 
           const createViewResponse = await config.api.viewV2.create({
+            tableId: table._id,
             sort: sortParams,
             schema: viewSchema,
           })
@@ -1320,7 +1329,7 @@ describe.each([
       it.each(sortTestOptions)(
         "allow override the default view sorting (%s)",
         async (sortParams, expected) => {
-          await config.createTable(await userTable())
+          const table = await config.api.table.create(await userTable())
           const users = [
             { name: "Alice", age: 25 },
             { name: "Bob", age: 30 },
@@ -1328,13 +1337,14 @@ describe.each([
             { name: "Danny", age: 15 },
           ]
           for (const user of users) {
-            await config.createRow({
-              tableId: config.table!._id,
+            await config.api.row.save(table._id!, {
+              tableId: table._id,
               ...user,
             })
           }
 
           const createViewResponse = await config.api.viewV2.create({
+            tableId: table._id,
             sort: {
               field: "name",
               order: SortOrder.ASCENDING,
@@ -1361,11 +1371,11 @@ describe.each([
       )
 
       it("when schema is defined, defined columns and row attributes are returned", async () => {
-        const table = await config.createTable(await userTable())
+        const table = await config.api.table.create(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
           rows.push(
-            await config.createRow({
+            await config.api.row.save(table._id!, {
               tableId: table._id,
               name: generator.name(),
               age: generator.age(),
@@ -1374,6 +1384,7 @@ describe.each([
         }
 
         const view = await config.api.viewV2.create({
+          tableId: table._id,
           schema: { name: { visible: true } },
         })
         const response = await config.api.viewV2.search(view.id)
@@ -1393,23 +1404,27 @@ describe.each([
       })
 
       it("views without data can be returned", async () => {
-        await config.createTable(await userTable())
+        const table = await config.api.table.create(await userTable())
 
-        const createViewResponse = await config.api.viewV2.create()
+        const createViewResponse = await config.api.viewV2.create({
+          tableId: table._id,
+        })
         const response = await config.api.viewV2.search(createViewResponse.id)
 
         expect(response.body.rows).toHaveLength(0)
       })
 
       it("respects the limit parameter", async () => {
-        const table = await config.createTable(await userTable())
+        const table = await config.api.table.create(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
-          rows.push(await config.createRow({ tableId: table._id }))
+          rows.push(await createRow(table._id, { tableId: table._id }))
         }
         const limit = generator.integer({ min: 1, max: 8 })
 
-        const createViewResponse = await config.api.viewV2.create()
+        const createViewResponse = await config.api.viewV2.create({
+          tableId: table._id,
+        })
         const response = await config.api.viewV2.search(createViewResponse.id, {
           limit,
           query: {},
@@ -1419,13 +1434,15 @@ describe.each([
       })
 
       it("can handle pagination", async () => {
-        const table = await config.createTable(await userTable())
+        const table = await config.api.table.create(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
-          rows.push(await config.createRow({ tableId: table._id }))
+          rows.push(await createRow(table._id, { tableId: table._id }))
         }
 
-        const createViewResponse = await config.api.viewV2.create()
+        const createViewResponse = await config.api.viewV2.create({
+          tableId: table._id,
+        })
         const allRows = (await config.api.viewV2.search(createViewResponse.id))
           .body.rows
 
@@ -1483,13 +1500,15 @@ describe.each([
         let tableId: string
 
         beforeAll(async () => {
-          const table = await config.createTable(await userTable())
+          const table = await config.api.table.create(await userTable())
           const rows = []
           for (let i = 0; i < 10; i++) {
-            rows.push(await config.createRow({ tableId: table._id }))
+            rows.push(await createRow(table._id, { tableId: table._id }))
           }
 
-          const createViewResponse = await config.api.viewV2.create()
+          const createViewResponse = await config.api.viewV2.create({
+            tableId: table._id,
+          })
 
           tableId = table._id!
           viewId = createViewResponse.id
