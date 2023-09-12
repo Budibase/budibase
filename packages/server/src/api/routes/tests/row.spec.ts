@@ -127,9 +127,6 @@ describe.each([
     expect(usage).toBe(expected)
   }
 
-  const createRow = (tableId = table._id!, row?: SaveRowRequest) =>
-    config.api.row.save(tableId, row || basicRow(table._id!))
-
   const defaultRowFields = isInternal
     ? {
         type: "row",
@@ -215,7 +212,7 @@ describe.each([
     })
 
     it("updates a row successfully", async () => {
-      const existing = await createRow()
+      const existing = await config.createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -240,7 +237,7 @@ describe.each([
     })
 
     it("should load a row", async () => {
-      const existing = await createRow()
+      const existing = await config.createRow()
       const queryUsage = await getQueryUsage()
 
       const res = await request
@@ -262,8 +259,8 @@ describe.each([
         name: "Second Contact",
         status: "new",
       }
-      const firstRow = await createRow()
-      await createRow(table._id, newRow)
+      const firstRow = await config.createRow()
+      await config.createRow(newRow)
       const queryUsage = await getQueryUsage()
 
       const res = await request
@@ -279,7 +276,7 @@ describe.each([
     })
 
     it("load should return 404 when row does not exist", async () => {
-      await createRow()
+      await config.createRow()
       const queryUsage = await getQueryUsage()
 
       await config.api.row.get(table._id!, "1234567", {
@@ -513,7 +510,7 @@ describe.each([
 
   describe("patch", () => {
     it("should update only the fields that are supplied", async () => {
-      const existing = await createRow()
+      const existing = await config.createRow()
 
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
@@ -540,7 +537,7 @@ describe.each([
     })
 
     it("should throw an error when given improper types", async () => {
-      const existing = await createRow()
+      const existing = await config.createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -562,7 +559,7 @@ describe.each([
 
   describe("destroy", () => {
     it("should be able to delete a row", async () => {
-      const createdRow = await createRow()
+      const createdRow = await config.createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -624,8 +621,8 @@ describe.each([
 
   describe("bulkDelete", () => {
     it("should be able to delete a bulk set of rows", async () => {
-      const row1 = await createRow()
-      const row2 = await createRow()
+      const row1 = await config.createRow()
+      const row2 = await config.createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -645,9 +642,9 @@ describe.each([
     })
 
     it("should be able to delete a variety of row set types", async () => {
-      const row1 = await createRow()
-      const row2 = await createRow()
-      const row3 = await createRow()
+      const row1 = await config.createRow()
+      const row2 = await config.createRow()
+      const row3 = await config.createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -667,7 +664,7 @@ describe.each([
     })
 
     it("should accept a valid row object and delete the row", async () => {
-      const row1 = await createRow()
+      const row1 = await config.createRow()
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -724,7 +721,7 @@ describe.each([
   isInternal &&
     describe("fetchView", () => {
       it("should be able to fetch tables contents via 'view'", async () => {
-        const row = await createRow()
+        const row = await config.createRow()
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
@@ -759,7 +756,7 @@ describe.each([
           filters: [],
           schema: {},
         })
-        const row = await createRow()
+        const row = await config.createRow()
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
@@ -797,12 +794,12 @@ describe.each([
               },
             },
           })
-          const firstRow = await createRow(table._id, {
+          const firstRow = await config.createRow({
             name: "Test Contact",
             description: "original description",
             tableId: table._id,
           })
-          const secondRow = await createRow(linkedTable._id, {
+          const secondRow = await config.createRow({
             name: "Test 2",
             description: "og desc",
             link: [{ _id: firstRow._id }],
@@ -846,7 +843,7 @@ describe.each([
       it("should allow enriching attachment rows", async () => {
         const table = await config.createAttachmentTable()
         const attachmentId = `${structures.uuid()}.csv`
-        const row = await createRow(table._id, {
+        const row = await config.createRow({
           name: "test",
           description: "test",
           attachment: [
@@ -870,7 +867,7 @@ describe.each([
 
   describe("exportData", () => {
     it("should allow exporting all columns", async () => {
-      const existing = await createRow()
+      const existing = await config.createRow()
       const res = await request
         .post(`/api/${table._id}/rows/exportRows?format=json`)
         .set(config.defaultHeaders())
@@ -893,7 +890,7 @@ describe.each([
     })
 
     it("should allow exporting only certain columns", async () => {
-      const existing = await createRow()
+      const existing = await config.createRow()
       const res = await request
         .post(`/api/${table._id}/rows/exportRows?format=json`)
         .set(config.defaultHeaders())
@@ -1050,7 +1047,7 @@ describe.each([
           },
         })
 
-        const createdRow = await createRow()
+        const createdRow = await config.createRow()
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
@@ -1075,11 +1072,11 @@ describe.each([
           },
         })
 
-        const rows = [
-          await createRow(tableId),
-          await createRow(tableId),
-          await createRow(tableId),
-        ]
+        const rows = await Promise.all([
+          config.createRow(),
+          config.createRow(),
+          config.createRow(),
+        ])
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
@@ -1396,7 +1393,7 @@ describe.each([
         const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
-          rows.push(await createRow(table._id, { tableId: table._id }))
+          rows.push(await config.createRow())
         }
         const limit = generator.integer({ min: 1, max: 8 })
 
@@ -1415,7 +1412,7 @@ describe.each([
         const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
-          rows.push(await createRow(table._id, { tableId: table._id }))
+          rows.push(await config.createRow())
         }
 
         const createViewResponse = await config.api.viewV2.create({
@@ -1481,7 +1478,7 @@ describe.each([
           const table = await config.createTable(await userTable())
           const rows = []
           for (let i = 0; i < 10; i++) {
-            rows.push(await createRow(table._id, { tableId: table._id }))
+            rows.push(await config.createRow())
           }
 
           const createViewResponse = await config.api.viewV2.create({
