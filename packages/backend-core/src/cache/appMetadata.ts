@@ -55,7 +55,7 @@ export async function getAppMetadata(appId: string): Promise<App | DeletedApp> {
         throw err
       }
     }
-    // needed for cypress/some scenarios where the caching happens
+    // needed for some scenarios where the caching happens
     // so quickly the requests can get slightly out of sync
     // might store its invalid just before it stores its valid
     if (isInvalid(metadata)) {
