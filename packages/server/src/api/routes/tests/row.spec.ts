@@ -500,7 +500,7 @@ describe.each([
   })
 
   describe("patch", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       const tableConfig = generateTableConfig()
       table = await config.createTable(tableConfig)
     })
@@ -554,7 +554,7 @@ describe.each([
   })
 
   describe("destroy", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       const tableConfig = generateTableConfig()
       table = await config.createTable(tableConfig)
     })
@@ -579,7 +579,7 @@ describe.each([
   })
 
   describe("validate", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       const tableConfig = generateTableConfig()
       table = await config.createTable(tableConfig)
     })
