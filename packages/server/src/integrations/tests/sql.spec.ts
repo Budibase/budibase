@@ -657,4 +657,29 @@ describe("SQL query builder", () => {
       sql: `select * from (select top (@p0) * from [test] order by [test].[id] asc) as [test]`,
     })
   })
+
+  it("should not parse JSON string as Date", () => {
+    let query = new Sql(SqlClient.POSTGRES, limit)._query(
+      generateCreateJson(TABLE_NAME, {
+        name: '{ "created_at":"2023-09-09T03:21:06.024Z" }',
+      })
+    )
+    expect(query).toEqual({
+      bindings: ['{ "created_at":"2023-09-09T03:21:06.024Z" }'],
+      sql: `insert into \"test\" (\"name\") values ($1) returning *`,
+    })
+  })
+
+  it("should parse and trim valid string as Date", () => {
+    const dateObj = new Date("2023-09-09T03:21:06.024Z")
+    let query = new Sql(SqlClient.POSTGRES, limit)._query(
+      generateCreateJson(TABLE_NAME, {
+        name: " 2023-09-09T03:21:06.024Z ",
+      })
+    )
+    expect(query).toEqual({
+      bindings: [dateObj],
+      sql: `insert into \"test\" (\"name\") values ($1) returning *`,
+    })
+  })
 })
