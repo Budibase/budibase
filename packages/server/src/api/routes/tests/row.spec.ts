@@ -41,31 +41,20 @@ describe.each([
   let request = setup.getRequest()
   let config = setup.getConfig()
   let table: Table
-  let row: Row
-  let datasource: Datasource | undefined
 
   afterAll(setup.afterAll)
 
   beforeAll(async () => {
     await config.init()
+
+    if (dsProvider) {
+      await config.createDatasource({
+        datasource: await dsProvider.getDsConfig(),
+      })
+    }
   })
 
-  const tableDatasourceConfig = async () => {
-    const result: Partial<SaveTableRequest> = {}
-    if (dsProvider) {
-      datasource = await config.api.datasource.create(
-        await dsProvider.getDsConfig()
-      )
-
-      result.sourceId = datasource._id
-      if (datasource.plus) {
-        result.type = "external"
-      }
-    }
-    return result
-  }
-
-  const generateTableConfig: () => Promise<SaveTableRequest> = async () => {
+  const generateTableConfig: () => SaveTableRequest = () => {
     return {
       name: generator.word(),
       type: "table",
@@ -95,17 +84,13 @@ describe.each([
           },
         },
       },
-      ...(await tableDatasourceConfig()),
     }
   }
 
   beforeEach(async () => {
     mocks.licenses.useCloudFree()
-    const tableConfig = await generateTableConfig()
-    table = await config.api.table.create(tableConfig)
-    config.table = table
-    config.datasource = datasource
-    row = basicRow(table._id!)
+    const tableConfig = generateTableConfig()
+    table = await config.createTable(tableConfig)
   })
 
   const loadRow = async (id: string, tbl_Id: string, status = 200) =>
@@ -159,8 +144,8 @@ describe.each([
       const queryUsage = await getQueryUsage()
 
       const res = await request
-        .post(`/api/${row.tableId}/rows`)
-        .send(row)
+        .post(`/api/${config.table!._id}/rows`)
+        .send(basicRow(config.table!._id!))
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -177,7 +162,7 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const tableConfig = await generateTableConfig()
+      const tableConfig = generateTableConfig()
       const newTable = await config.createTable({
         ...tableConfig,
         name: "TestTableAuto",
@@ -265,10 +250,7 @@ describe.each([
         .expect(200)
 
       expect(res.body).toEqual({
-        ...row,
-        _id: existing._id,
-        _rev: existing._rev,
-        id: existing.id,
+        ...existing,
         ...defaultRowFields,
       })
       await assertQueryUsage(queryUsage + 1)
@@ -280,7 +262,7 @@ describe.each([
         name: "Second Contact",
         status: "new",
       }
-      await createRow()
+      const firstRow = await createRow()
       await createRow(table._id, newRow)
       const queryUsage = await getQueryUsage()
 
@@ -292,7 +274,7 @@ describe.each([
 
       expect(res.body.length).toBe(2)
       expect(res.body.find((r: Row) => r.name === newRow.name)).toBeDefined()
-      expect(res.body.find((r: Row) => r.name === row.name)).toBeDefined()
+      expect(res.body.find((r: Row) => r.name === firstRow.name)).toBeDefined()
       await assertQueryUsage(queryUsage + 1)
     })
 
@@ -357,7 +339,7 @@ describe.each([
               inclusion: ["Alpha", "Beta", "Gamma"],
             },
           },
-          table = await config.api.table.create({
+          table = await config.createTable({
             name: "TestTable2",
             type: "table",
             schema: {
@@ -393,10 +375,9 @@ describe.each([
               optsFieldNull: optsField,
               optsFieldStrKnown: optsField,
             },
-            ...(await tableDatasourceConfig()),
           })
 
-        row = {
+        const row = {
           name: "Test Row",
           stringUndefined: undefined,
           stringNull: null,
@@ -490,12 +471,11 @@ describe.each([
             name: "Story",
           },
         },
-        ...(await tableDatasourceConfig()),
       }
     }
 
     it("views have extra data trimmed", async () => {
-      const table = await config.api.table.create(await orderTable())
+      const table = await config.createTable(await orderTable())
 
       const createViewResponse = await config.api.viewV2.create({
         tableId: table._id,
@@ -969,7 +949,6 @@ describe.each([
             name: "jobTitle",
           },
         },
-        ...(await tableDatasourceConfig()),
       }
     }
 
@@ -983,7 +962,7 @@ describe.each([
 
     describe("create", () => {
       it("should persist a new row with only the provided view fields", async () => {
-        const table = await config.api.table.create(await userTable())
+        const table = await config.createTable(await userTable())
         const view = await config.api.viewV2.create({
           tableId: table._id!,
           schema: {
@@ -1019,7 +998,7 @@ describe.each([
 
     describe("patch", () => {
       it("should update only the view fields for a row", async () => {
-        const table = await config.api.table.create(await userTable())
+        const table = await config.createTable(await userTable())
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
@@ -1061,7 +1040,7 @@ describe.each([
 
     describe("destroy", () => {
       it("should be able to delete a row", async () => {
-        const table = await config.api.table.create(await userTable())
+        const table = await config.createTable(await userTable())
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
@@ -1086,7 +1065,7 @@ describe.each([
       })
 
       it("should be able to delete multiple rows", async () => {
-        const table = await config.api.table.create(await userTable())
+        const table = await config.createTable(await userTable())
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId,
@@ -1146,12 +1125,11 @@ describe.each([
               constraints: {},
             },
           },
-          ...(await tableDatasourceConfig()),
         }
       }
 
       it("returns empty rows from view when no schema is passed", async () => {
-        const table = await config.api.table.create(await userTable())
+        const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
           rows.push(
@@ -1181,7 +1159,7 @@ describe.each([
       })
 
       it("searching respects the view filters", async () => {
-        const table = await config.api.table.create(await userTable())
+        const table = await config.createTable(await userTable())
         const expectedRows = []
         for (let i = 0; i < 10; i++)
           await config.api.row.save(table._id!, {
@@ -1297,7 +1275,7 @@ describe.each([
       it.each(sortTestOptions)(
         "allow sorting (%s)",
         async (sortParams, expected) => {
-          const table = await config.api.table.create(await userTable())
+          const table = await config.createTable(await userTable())
           const users = [
             { name: "Alice", age: 25 },
             { name: "Bob", age: 30 },
@@ -1329,7 +1307,7 @@ describe.each([
       it.each(sortTestOptions)(
         "allow override the default view sorting (%s)",
         async (sortParams, expected) => {
-          const table = await config.api.table.create(await userTable())
+          const table = await config.createTable(await userTable())
           const users = [
             { name: "Alice", age: 25 },
             { name: "Bob", age: 30 },
@@ -1371,7 +1349,7 @@ describe.each([
       )
 
       it("when schema is defined, defined columns and row attributes are returned", async () => {
-        const table = await config.api.table.create(await userTable())
+        const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
           rows.push(
@@ -1404,7 +1382,7 @@ describe.each([
       })
 
       it("views without data can be returned", async () => {
-        const table = await config.api.table.create(await userTable())
+        const table = await config.createTable(await userTable())
 
         const createViewResponse = await config.api.viewV2.create({
           tableId: table._id,
@@ -1415,7 +1393,7 @@ describe.each([
       })
 
       it("respects the limit parameter", async () => {
-        const table = await config.api.table.create(await userTable())
+        const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
           rows.push(await createRow(table._id, { tableId: table._id }))
@@ -1434,7 +1412,7 @@ describe.each([
       })
 
       it("can handle pagination", async () => {
-        const table = await config.api.table.create(await userTable())
+        const table = await config.createTable(await userTable())
         const rows = []
         for (let i = 0; i < 10; i++) {
           rows.push(await createRow(table._id, { tableId: table._id }))
@@ -1500,7 +1478,7 @@ describe.each([
         let tableId: string
 
         beforeAll(async () => {
-          const table = await config.api.table.create(await userTable())
+          const table = await config.createTable(await userTable())
           const rows = []
           for (let i = 0; i < 10; i++) {
             rows.push(await createRow(table._id, { tableId: table._id }))
