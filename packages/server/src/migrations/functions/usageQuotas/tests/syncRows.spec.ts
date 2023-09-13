@@ -5,7 +5,7 @@ import { QuotaUsageType, StaticQuotaName } from "@budibase/types"
 import { db as dbCore, context } from "@budibase/backend-core"
 
 describe("syncRows", () => {
-  let config = new TestConfig(false)
+  let config = new TestConfig()
 
   beforeEach(async () => {
     await config.init()
