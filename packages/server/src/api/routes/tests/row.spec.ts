@@ -771,11 +771,10 @@ describe.each([
       const queryUsage = await getQueryUsage()
 
       // test basic enrichment
-      const resBasic = await request
-        .get(`/api/${linkedTable._id}/rows/${secondRow._id}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const resBasic = await config.api.row.get(
+        linkedTable._id!,
+        secondRow._id!
+      )
       expect(resBasic.body.link.length).toBe(1)
       expect(resBasic.body.link[0]).toEqual({
         _id: firstRow._id,
@@ -783,11 +782,10 @@ describe.each([
       })
 
       // test full enrichment
-      const resEnriched = await request
-        .get(`/api/${linkedTable._id}/${secondRow._id}/enrich`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const resEnriched = await config.api.row.getEnriched(
+        linkedTable._id!,
+        secondRow._id!
+      )
       expect(resEnriched.body.link.length).toBe(1)
       expect(resEnriched.body.link[0]._id).toBe(firstRow._id)
       expect(resEnriched.body.link[0].name).toBe("Test Contact")
@@ -837,14 +835,9 @@ describe.each([
 
     it("should allow exporting all columns", async () => {
       const existing = await config.createRow()
-      const res = await request
-        .post(`/api/${table._id}/rows/exportRows?format=json`)
-        .set(config.defaultHeaders())
-        .send({
-          rows: [existing._id],
-        })
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.exportRows(table._id!, {
+        rows: [existing._id!],
+      })
       const results = JSON.parse(res.text)
       expect(results.length).toEqual(1)
       const row = results[0]
@@ -860,15 +853,10 @@ describe.each([
 
     it("should allow exporting only certain columns", async () => {
       const existing = await config.createRow()
-      const res = await request
-        .post(`/api/${table._id}/rows/exportRows?format=json`)
-        .set(config.defaultHeaders())
-        .send({
-          rows: [existing._id],
-          columns: ["_id"],
-        })
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.exportRows(table._id!, {
+        rows: [existing._id!],
+        columns: ["_id"],
+      })
       const results = JSON.parse(res.text)
       expect(results.length).toEqual(1)
       const row = results[0]
