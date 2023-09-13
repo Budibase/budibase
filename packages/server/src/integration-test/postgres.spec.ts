@@ -299,7 +299,7 @@ describe("postgres integrations", () => {
     )
   }
 
-  it.only("validate table schema", async () => {
+  it("validate table schema", async () => {
     const res = await makeRequest(
       "get",
       `/api/datasources/${postgresDatasource._id}`
