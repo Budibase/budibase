@@ -21,8 +21,6 @@ import { databaseTestProviders } from "../integrations/tests/utils"
 
 const config = setup.getConfig()!
 
-jest.setTimeout(30000)
-
 jest.unmock("pg")
 jest.mock("../websockets")
 
@@ -39,13 +37,13 @@ describe("postgres integrations", () => {
     const apiKey = await config.generateApiKey()
 
     makeRequest = generateMakeRequest(apiKey, true)
-  })
 
-  beforeEach(async () => {
     postgresDatasource = await config.api.datasource.create(
       await databaseTestProviders.postgres.getDsConfig()
     )
+  })
 
+  beforeEach(async () => {
     async function createAuxTable(prefix: string) {
       return await config.createTable({
         name: `${prefix}_${generator.word({ length: 6 })}`,
@@ -345,12 +343,16 @@ describe("postgres integrations", () => {
 
       it("multiple rows can be persisted", async () => {
         const numberOfRows = 10
-        const newRows = Array(numberOfRows).fill(generateRandomPrimaryRowData())
+        const newRows: Row[] = Array(numberOfRows).fill(
+          generateRandomPrimaryRowData()
+        )
 
-        for (const newRow of newRows) {
-          const res = await createRow(primaryPostgresTable._id, newRow)
-          expect(res.status).toBe(200)
-        }
+        await Promise.all(
+          newRows.map(async newRow => {
+            const res = await createRow(primaryPostgresTable._id, newRow)
+            expect(res.status).toBe(200)
+          })
+        )
 
         const persistedRows = await config.getRows(primaryPostgresTable._id!)
         expect(persistedRows).toHaveLength(numberOfRows)
