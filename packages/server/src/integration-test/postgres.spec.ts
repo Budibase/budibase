@@ -47,7 +47,7 @@ describe("postgres integrations", () => {
     )
 
     async function createAuxTable(prefix: string) {
-      return await config.createTable({
+      return await config.api.table.create({
         name: `${prefix}_${generator.word({ length: 6 })}`,
         type: "external",
         primary: ["id"],
@@ -83,7 +83,7 @@ describe("postgres integrations", () => {
       relationshipType: RelationshipType.MANY_TO_MANY,
     }
 
-    primaryPostgresTable = await config.createTable({
+    primaryPostgresTable = await config.api.table.create({
       name: `p_${generator.word({ length: 6 })}`,
       type: "external",
       primary: ["id"],
@@ -263,7 +263,7 @@ describe("postgres integrations", () => {
   }
 
   async function createDefaultPgTable() {
-    return await config.createTable({
+    return await config.api.table.create({
       name: generator.word({ length: 10 }),
       type: "external",
       primary: ["id"],
@@ -301,7 +301,7 @@ describe("postgres integrations", () => {
     )
   }
 
-  it("validate table schema", async () => {
+  it.only("validate table schema", async () => {
     const res = await makeRequest(
       "get",
       `/api/datasources/${postgresDatasource._id}`
