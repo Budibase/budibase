@@ -563,9 +563,9 @@ class TestConfiguration {
   }
 
   async createLinkedTable(
-    config?: Table,
     relationshipType = RelationshipType.ONE_TO_MANY,
-    links: any = ["link"]
+    links: any = ["link"],
+    config?: Table
   ) {
     if (!this.table) {
       throw "Must have created a table first."
