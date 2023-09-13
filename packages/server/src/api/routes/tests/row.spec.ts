@@ -1105,8 +1105,12 @@ describe.each([
               ...defaultRowFields,
             }))
           ),
-          hasNextPage: false,
-          bookmark: null,
+          ...(isInternal
+            ? {}
+            : {
+                hasNextPage: false,
+                bookmark: null,
+              }),
         })
       })
 
@@ -1153,8 +1157,12 @@ describe.each([
               ...defaultRowFields,
             }))
           ),
-          hasNextPage: false,
-          bookmark: null,
+          ...(isInternal
+            ? {}
+            : {
+                hasNextPage: false,
+                bookmark: null,
+              }),
         })
       })
 
