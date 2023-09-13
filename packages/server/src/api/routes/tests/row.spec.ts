@@ -10,6 +10,7 @@ import {
   MonthlyQuotaName,
   PermissionLevel,
   QuotaUsageType,
+  RelationshipType,
   Row,
   SaveTableRequest,
   SortOrder,
@@ -737,22 +738,26 @@ describe.each([
       const { linkedTable, firstRow, secondRow } = await tenancy.doInTenant(
         config.getTenantId(),
         async () => {
-          const linkedTable = await config.createLinkedTable({
-            name: generator.word(),
-            type: "table",
-            primary: ["id"],
-            primaryDisplay: "id",
-            schema: {
-              id: {
-                type: FieldType.AUTO,
-                name: "id",
-                autocolumn: true,
-                constraints: {
-                  presence: true,
+          const linkedTable = await config.createLinkedTable(
+            RelationshipType.ONE_TO_MANY,
+            ["link"],
+            {
+              name: generator.word(),
+              type: "table",
+              primary: ["id"],
+              primaryDisplay: "id",
+              schema: {
+                id: {
+                  type: FieldType.AUTO,
+                  name: "id",
+                  autocolumn: true,
+                  constraints: {
+                    presence: true,
+                  },
                 },
               },
-            },
-          })
+            }
+          )
           const firstRow = await config.createRow({
             name: "Test Contact",
             description: "original description",
