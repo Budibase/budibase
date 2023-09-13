@@ -1,5 +1,5 @@
 <script>
-  import dayjs from "dayjs"
+  import { dayjs } from "dayjs"
   import { CoreDatePicker, Icon } from "@budibase/bbui"
   import { onMount } from "svelte"
 
