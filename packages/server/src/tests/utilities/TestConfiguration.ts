@@ -535,7 +535,7 @@ class TestConfiguration {
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
-    const response = await this.api.table.create(config)
+    const response = await this._req(config, null, controllers.table.save)
     if (!skipReassigning) {
       this.table = response
     }
@@ -589,7 +589,7 @@ class TestConfiguration {
       }
     }
 
-    const linkedTable = await this.api.table.create(tableConfig)
+    const linkedTable = await this.createTable(tableConfig)
     return linkedTable
   }
 
@@ -609,7 +609,7 @@ class TestConfiguration {
     }
     const tableId = (config && config.tableId) || this.table._id
     config = config || basicRow(tableId!)
-    return this.api.row.save(tableId!, config)
+    return this._req(config, { tableId }, controllers.row.save)
   }
 
   async getRow(tableId: string, rowId: string): Promise<Row> {
@@ -715,14 +715,18 @@ class TestConfiguration {
     datasource: Datasource
   }): Promise<Datasource> {
     config = config || basicDatasource()
-    const response = await this.api.datasource.create({ ...config.datasource })
-    this.datasource = response
+    const response = await this._req(config, null, controllers.datasource.save)
+    this.datasource = response.datasource
     return this.datasource!
   }
 
   async updateDatasource(datasource: Datasource): Promise<Datasource> {
-    const response = await this.api.datasource.update(datasource)
-    this.datasource = response
+    const response = await this._req(
+      datasource,
+      { datasourceId: datasource._id },
+      controllers.datasource.update
+    )
+    this.datasource = response.datasource
     return this.datasource!
   }
 
