@@ -3,6 +3,7 @@ import {
   SaveRowRequest,
   Row,
   ValidateResponse,
+  ExportRowsRequest,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
@@ -33,7 +34,7 @@ export class RowAPI extends TestAPI {
     { expectStatus } = { expectStatus: 200 }
   ) => {
     const request = this.request
-      .get(`/api/${sourceId}/rows/${rowId}/enrich`)
+      .get(`/api/${sourceId}/${rowId}/enrich`)
       .set(this.config.defaultHeaders())
       .expect(expectStatus)
     if (expectStatus !== 404) {
@@ -106,5 +107,19 @@ export class RowAPI extends TestAPI {
       .expect(expectStatus)
 
     return (await request).body
+  }
+
+  exportRows = async (
+    tableId: string,
+    body: ExportRowsRequest,
+    { expectStatus } = { expectStatus: 200 }
+  ) => {
+    const request = this.request
+      .post(`/api/${tableId}/rows/exportRows?format=json`)
+      .set(this.config.defaultHeaders())
+      .send(body)
+      .expect("Content-Type", /json/)
+      .expect(expectStatus)
+    return request
   }
 }

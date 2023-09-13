@@ -16,6 +16,8 @@ import {
   SearchParams,
   GetRowResponse,
   ValidateResponse,
+  ExportRowsRequest,
+  ExportRowsResponse,
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
@@ -239,7 +241,9 @@ export async function fetchEnrichedRow(ctx: any) {
   )
 }
 
-export const exportRows = async (ctx: any) => {
+export const exportRows = async (
+  ctx: Ctx<ExportRowsRequest, ExportRowsResponse>
+) => {
   const tableId = utils.getTableId(ctx)
 
   const format = ctx.query.format
