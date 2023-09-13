@@ -67,15 +67,13 @@ function cleanupRelationships(
   tables: Record<string, Table>,
   oldTable?: Table
 ) {
-  const isUpdate = !!oldTable
-  if (!isUpdate) {
-    return
-  }
-
-  // When updating a table, we want to detect if some relationships were removed.
-  // If so, we want to remove the relationship from the other end
-  for (let [key, schema] of Object.entries(oldTable.schema)) {
-    if (schema.type === FieldTypes.LINK && !table.schema[key]) {
+  const tableToIterate = oldTable ? oldTable : table
+  // clean up relationships in couch table schemas
+  for (let [key, schema] of Object.entries(tableToIterate.schema)) {
+    if (
+      schema.type === FieldTypes.LINK &&
+      (!oldTable || table.schema[key] == null)
+    ) {
       const relatedTable = Object.values(tables).find(
         table => table._id === schema.tableId
       )
