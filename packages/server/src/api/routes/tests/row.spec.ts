@@ -652,9 +652,11 @@ describe.each([
     })
 
     it("should be able to delete a variety of row set types", async () => {
-      const row1 = await config.createRow()
-      const row2 = await config.createRow()
-      const row3 = await config.createRow()
+      const [row1, row2, row3] = await Promise.all([
+        config.createRow(),
+        config.createRow(),
+        config.createRow(),
+      ])
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
@@ -1153,12 +1155,11 @@ describe.each([
 
       it("returns empty rows from view when no schema is passed", async () => {
         const table = await config.createTable(await userTable())
-        const rows = []
-        for (let i = 0; i < 10; i++) {
-          rows.push(
-            await config.api.row.save(table._id!, { tableId: table._id })
+        const rows = await Promise.all(
+          Array.from({ length: 10 }, () =>
+            config.api.row.save(table._id!, { tableId: table._id })
           )
-        }
+        )
 
         const createViewResponse = await config.createView()
         const response = await config.api.viewV2.search(createViewResponse.id)
@@ -1181,22 +1182,26 @@ describe.each([
 
       it("searching respects the view filters", async () => {
         const table = await config.createTable(await userTable())
-        const expectedRows = []
-        for (let i = 0; i < 10; i++)
-          await config.api.row.save(table._id!, {
-            tableId: table._id,
-            name: generator.name(),
-            age: generator.integer({ min: 10, max: 30 }),
-          })
 
-        for (let i = 0; i < 5; i++)
-          expectedRows.push(
-            await config.api.row.save(table._id!, {
+        await Promise.all(
+          Array.from({ length: 10 }, () =>
+            config.api.row.save(table._id!, {
+              tableId: table._id,
+              name: generator.name(),
+              age: generator.integer({ min: 10, max: 30 }),
+            })
+          )
+        )
+
+        const expectedRows = await Promise.all(
+          Array.from({ length: 5 }, () =>
+            config.api.row.save(table._id!, {
               tableId: table._id,
               name: generator.name(),
               age: 40,
             })
           )
+        )
 
         const createViewResponse = await config.createView({
           query: [{ operator: "equal", field: "age", value: 40 }],
@@ -1292,9 +1297,8 @@ describe.each([
         ],
       ]
 
-      it.each(sortTestOptions)(
-        "allow sorting (%s)",
-        async (sortParams, expected) => {
+      describe("sorting", () => {
+        beforeAll(async () => {
           const table = await config.createTable(await userTable())
           const users = [
             { name: "Alice", age: 25 },
@@ -1302,82 +1306,76 @@ describe.each([
             { name: "Charly", age: 27 },
             { name: "Danny", age: 15 },
           ]
-          for (const user of users) {
-            await config.api.row.save(table._id!, {
-              tableId: table._id,
-              ...user,
+          await Promise.all(
+            users.map(u =>
+              config.api.row.save(table._id!, {
+                tableId: table._id,
+                ...u,
+              })
+            )
+          )
+        })
+
+        it.each(sortTestOptions)(
+          "allow sorting (%s)",
+          async (sortParams, expected) => {
+            const createViewResponse = await config.createView({
+              sort: sortParams,
+              schema: viewSchema,
             })
+
+            const response = await config.api.viewV2.search(
+              createViewResponse.id
+            )
+
+            expect(response.body.rows).toHaveLength(4)
+            expect(response.body.rows).toEqual(
+              expected.map(name => expect.objectContaining({ name }))
+            )
           }
+        )
 
-          const createViewResponse = await config.createView({
-            sort: sortParams,
-            schema: viewSchema,
-          })
-
-          const response = await config.api.viewV2.search(createViewResponse.id)
-
-          expect(response.body.rows).toHaveLength(4)
-          expect(response.body.rows).toEqual(
-            expected.map(name => expect.objectContaining({ name }))
-          )
-        }
-      )
-
-      it.each(sortTestOptions)(
-        "allow override the default view sorting (%s)",
-        async (sortParams, expected) => {
-          const table = await config.createTable(await userTable())
-          const users = [
-            { name: "Alice", age: 25 },
-            { name: "Bob", age: 30 },
-            { name: "Charly", age: 27 },
-            { name: "Danny", age: 15 },
-          ]
-          for (const user of users) {
-            await config.api.row.save(table._id!, {
-              tableId: table._id,
-              ...user,
+        it.each(sortTestOptions)(
+          "allow override the default view sorting (%s)",
+          async (sortParams, expected) => {
+            const createViewResponse = await config.createView({
+              sort: {
+                field: "name",
+                order: SortOrder.ASCENDING,
+                type: SortType.STRING,
+              },
+              schema: viewSchema,
             })
+
+            const response = await config.api.viewV2.search(
+              createViewResponse.id,
+              {
+                sort: sortParams.field,
+                sortOrder: sortParams.order,
+                sortType: sortParams.type,
+                query: {},
+              }
+            )
+
+            expect(response.body.rows).toHaveLength(4)
+            expect(response.body.rows).toEqual(
+              expected.map(name => expect.objectContaining({ name }))
+            )
           }
-
-          const createViewResponse = await config.createView({
-            sort: {
-              field: "name",
-              order: SortOrder.ASCENDING,
-              type: SortType.STRING,
-            },
-            schema: viewSchema,
-          })
-
-          const response = await config.api.viewV2.search(
-            createViewResponse.id,
-            {
-              sort: sortParams.field,
-              sortOrder: sortParams.order,
-              sortType: sortParams.type,
-              query: {},
-            }
-          )
-
-          expect(response.body.rows).toHaveLength(4)
-          expect(response.body.rows).toEqual(
-            expected.map(name => expect.objectContaining({ name }))
-          )
-        }
-      )
+        )
+      })
 
       it("when schema is defined, defined columns and row attributes are returned", async () => {
         const table = await config.createTable(await userTable())
-        const rows = []
-        for (let i = 0; i < 10; i++) {
-          rows.push(
-            await config.api.row.save(table._id!, {
+        const rows = await Promise.all(
+          Array.from({ length: 10 }, () =>
+            config.api.row.save(table._id!, {
               tableId: table._id,
               name: generator.name(),
               age: generator.age(),
             })
           )
-        }
+        )
 
         const view = await config.createView({
           schema: { name: { visible: true } },
@@ -1408,11 +1406,9 @@ describe.each([
       })
 
       it("respects the limit parameter", async () => {
-        const table = await config.createTable(await userTable())
-        const rows = []
-        for (let i = 0; i < 10; i++) {
-          rows.push(await config.createRow())
-        }
+        await config.createTable(await userTable())
+        await Promise.all(Array.from({ length: 10 }, () => config.createRow()))
+
         const limit = generator.integer({ min: 1, max: 8 })
 
         const createViewResponse = await config.createView()
@@ -1425,11 +1421,8 @@ describe.each([
       })
 
       it("can handle pagination", async () => {
-        const table = await config.createTable(await userTable())
-        const rows = []
-        for (let i = 0; i < 10; i++) {
-          rows.push(await config.createRow())
-        }
+        await config.createTable(await userTable())
+        await Promise.all(Array.from({ length: 10 }, () => config.createRow()))
 
         const createViewResponse = await config.createView()
         const allRows = (await config.api.viewV2.search(createViewResponse.id))
@@ -1489,11 +1482,10 @@ describe.each([
         let tableId: string
 
         beforeAll(async () => {
-          const table = await config.createTable(await userTable())
-          const rows = []
-          for (let i = 0; i < 10; i++) {
-            rows.push(await config.createRow())
-          }
+          await config.createTable(await userTable())
+          await Promise.all(
+            Array.from({ length: 10 }, () => config.createRow())
+          )
 
           const createViewResponse = await config.createView()
 
