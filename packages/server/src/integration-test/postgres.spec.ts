@@ -181,32 +181,16 @@ describe("postgres integrations", () => {
     let { rowData } = opts as any
     let foreignRows: ForeignRowsInfo[] = []
 
-    async function createForeignRow(tableInfo: ForeignTableInfo) {
-      const foreignKey = `fk_${tableInfo.table.name}_${tableInfo.fieldName}`
-
-      const foreignRow = await config.createRow({
-        tableId: tableInfo.table._id,
-        title: generator.name(),
-      })
-
-      rowData = {
-        ...rowData,
-        [foreignKey]: foreignRow.id,
-      }
-      foreignRows.push({
-        row: foreignRow,
-
-        relationshipType: tableInfo.relationshipType,
-      })
-    }
-
     if (opts?.createForeignRows?.createOneToMany) {
       const foreignKey = `fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`
 
-      const foreignRow = await config.createRow({
-        tableId: oneToManyRelationshipInfo.table._id,
-        title: generator.name(),
-      })
+      const foreignRow = await config.api.row.save(
+        oneToManyRelationshipInfo.table._id!,
+        {
+          tableId: oneToManyRelationshipInfo.table._id,
+          title: generator.name(),
+        }
+      )
 
       rowData = {
         ...rowData,
@@ -219,10 +203,13 @@ describe("postgres integrations", () => {
     }
 
     for (let i = 0; i < (opts?.createForeignRows?.createManyToOne || 0); i++) {
-      const foreignRow = await config.createRow({
-        tableId: manyToOneRelationshipInfo.table._id,
-        title: generator.name(),
-      })
+      const foreignRow = await config.api.row.save(
+        manyToOneRelationshipInfo.table._id!,
+        {
+          tableId: manyToOneRelationshipInfo.table._id,
+          title: generator.name(),
+        }
+      )
 
       rowData = {
         ...rowData,
@@ -237,10 +224,13 @@ describe("postgres integrations", () => {
     }
 
     for (let i = 0; i < (opts?.createForeignRows?.createManyToMany || 0); i++) {
-      const foreignRow = await config.createRow({
-        tableId: manyToManyRelationshipInfo.table._id,
-        title: generator.name(),
-      })
+      const foreignRow = await config.api.row.save(
+        manyToManyRelationshipInfo.table._id!,
+        {
+          tableId: manyToManyRelationshipInfo.table._id,
+          title: generator.name(),
+        }
+      )
 
       rowData = {
         ...rowData,
@@ -254,7 +244,7 @@ describe("postgres integrations", () => {
       })
     }
 
-    const row = await config.createRow({
+    const row = await config.api.row.save(primaryPostgresTable._id!, {
       tableId: primaryPostgresTable._id,
       ...rowData,
     })
@@ -274,6 +264,14 @@ describe("postgres integrations", () => {
         },
       },
       sourceId: postgresDatasource._id,
+    })
+  }
+
+  const createRandomTableWithRows = async () => {
+    const tableId = (await createDefaultPgTable())._id!
+    return await config.api.row.save(tableId, {
+      tableId,
+      title: generator.name(),
     })
   }
 
@@ -685,12 +683,6 @@ describe("postgres integrations", () => {
       describe("given than multiple tables have multiple rows", () => {
         const rowsCount = 6
         beforeEach(async () => {
-          const createRandomTableWithRows = async () =>
-            await config.createRow({
-              tableId: (await createDefaultPgTable())._id,
-              title: generator.name(),
-            })
-
           await createRandomTableWithRows()
           await createRandomTableWithRows()
 
@@ -978,12 +970,6 @@ describe("postgres integrations", () => {
       const rowsCount = 6
 
       beforeEach(async () => {
-        const createRandomTableWithRows = async () =>
-          await config.createRow({
-            tableId: (await createDefaultPgTable())._id,
-            title: generator.name(),
-          })
-
         await createRandomTableWithRows()
         await populatePrimaryRows(rowsCount)
         await createRandomTableWithRows()
