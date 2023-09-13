@@ -39,7 +39,7 @@ const datasets = {
 }
 
 describe("Rest Importer", () => {
-  const config = new TestConfig()
+  const config = new TestConfig(false)
 
   beforeAll(async () => {
     await config.init()
