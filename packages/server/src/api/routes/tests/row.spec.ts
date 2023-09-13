@@ -690,11 +690,7 @@ describe.each([
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
-        const res = await request
-          .get(`/api/views/${table._id}`)
-          .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(200)
+        const res = await config.api.legacyView.get(table._id!)
         expect(res.body.length).toEqual(1)
         expect(res.body[0]._id).toEqual(row._id)
         await assertRowUsage(rowUsage)
@@ -705,10 +701,7 @@ describe.each([
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
-        await request
-          .get(`/api/views/derp`)
-          .set(config.defaultHeaders())
-          .expect(404)
+        await config.api.legacyView.get("derp", { expectStatus: 404 })
 
         await assertRowUsage(rowUsage)
         await assertQueryUsage(queryUsage)
@@ -725,11 +718,7 @@ describe.each([
         const rowUsage = await getRowUsage()
         const queryUsage = await getQueryUsage()
 
-        const res = await request
-          .get(`/api/views/${view.name}`)
-          .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(200)
+        const res = await config.api.legacyView.get(view.name)
         expect(res.body.length).toEqual(1)
         expect(res.body[0]._id).toEqual(row._id)
 
