@@ -47,7 +47,7 @@ describe("postgres integrations", () => {
     )
 
     async function createAuxTable(prefix: string) {
-      return await config.api.table.create({
+      return await config.createTable({
         name: `${prefix}_${generator.word({ length: 6 })}`,
         type: "external",
         primary: ["id"],
@@ -83,7 +83,7 @@ describe("postgres integrations", () => {
       relationshipType: RelationshipType.MANY_TO_MANY,
     }
 
-    primaryPostgresTable = await config.api.table.create({
+    primaryPostgresTable = await config.createTable({
       name: `p_${generator.word({ length: 6 })}`,
       type: "external",
       primary: ["id"],
@@ -184,13 +184,10 @@ describe("postgres integrations", () => {
     if (opts?.createForeignRows?.createOneToMany) {
       const foreignKey = `fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`
 
-      const foreignRow = await config.api.row.save(
-        oneToManyRelationshipInfo.table._id!,
-        {
-          tableId: oneToManyRelationshipInfo.table._id,
-          title: generator.name(),
-        }
-      )
+      const foreignRow = await config.createRow({
+        tableId: oneToManyRelationshipInfo.table._id,
+        title: generator.name(),
+      })
 
       rowData = {
         ...rowData,
@@ -203,13 +200,10 @@ describe("postgres integrations", () => {
     }
 
     for (let i = 0; i < (opts?.createForeignRows?.createManyToOne || 0); i++) {
-      const foreignRow = await config.api.row.save(
-        manyToOneRelationshipInfo.table._id!,
-        {
-          tableId: manyToOneRelationshipInfo.table._id,
-          title: generator.name(),
-        }
-      )
+      const foreignRow = await config.createRow({
+        tableId: manyToOneRelationshipInfo.table._id,
+        title: generator.name(),
+      })
 
       rowData = {
         ...rowData,
@@ -224,13 +218,10 @@ describe("postgres integrations", () => {
     }
 
     for (let i = 0; i < (opts?.createForeignRows?.createManyToMany || 0); i++) {
-      const foreignRow = await config.api.row.save(
-        manyToManyRelationshipInfo.table._id!,
-        {
-          tableId: manyToManyRelationshipInfo.table._id,
-          title: generator.name(),
-        }
-      )
+      const foreignRow = await config.createRow({
+        tableId: manyToManyRelationshipInfo.table._id,
+        title: generator.name(),
+      })
 
       rowData = {
         ...rowData,
@@ -244,7 +235,7 @@ describe("postgres integrations", () => {
       })
     }
 
-    const row = await config.api.row.save(primaryPostgresTable._id!, {
+    const row = await config.createRow({
       tableId: primaryPostgresTable._id,
       ...rowData,
     })
@@ -253,7 +244,7 @@ describe("postgres integrations", () => {
   }
 
   async function createDefaultPgTable() {
-    return await config.api.table.create({
+    return await config.createTable({
       name: generator.word({ length: 10 }),
       type: "external",
       primary: ["id"],
@@ -395,7 +386,7 @@ describe("postgres integrations", () => {
         expect(res.status).toBe(200)
         expect(res.body).toEqual(updatedRow)
 
-        const persistedRow = await config.api.row.get(
+        const persistedRow = await config.getRow(
           primaryPostgresTable._id!,
           row.id
         )
@@ -520,13 +511,19 @@ describe("postgres integrations", () => {
           foreignRows = createdRow.foreignRows
         })
 
-        it("only one to many foreign keys are retrieved", async () => {
+        it("only one to primary keys are retrieved", async () => {
           const res = await getRow(primaryPostgresTable._id, row.id)
 
           expect(res.status).toBe(200)
 
           const one2ManyForeignRows = foreignRows.filter(
             x => x.relationshipType === RelationshipType.ONE_TO_MANY
+          )
+          const many2OneForeignRows = foreignRows.filter(
+            x => x.relationshipType === RelationshipType.MANY_TO_ONE
+          )
+          const many2ManyForeignRows = foreignRows.filter(
+            x => x.relationshipType === RelationshipType.MANY_TO_MANY
           )
           expect(one2ManyForeignRows).toHaveLength(1)
 
@@ -538,9 +535,25 @@ describe("postgres integrations", () => {
             _rev: expect.any(String),
             [`fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`]:
               one2ManyForeignRows[0].row.id,
+            [oneToManyRelationshipInfo.fieldName]: expect.arrayContaining(
+              one2ManyForeignRows.map(r => ({
+                _id: r.row._id,
+                primaryDisplay: r.row.title,
+              }))
+            ),
+            [manyToOneRelationshipInfo.fieldName]: expect.arrayContaining(
+              many2OneForeignRows.map(r => ({
+                _id: r.row._id,
+                primaryDisplay: r.row.title,
+              }))
+            ),
+            [manyToManyRelationshipInfo.fieldName]: expect.arrayContaining(
+              many2ManyForeignRows.map(r => ({
+                _id: r.row._id,
+                primaryDisplay: r.row.title,
+              }))
+            ),
           })
-
-          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
         })
       })
 
@@ -569,9 +582,13 @@ describe("postgres integrations", () => {
             _rev: expect.any(String),
             [`fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`]:
               foreignRows[0].row.id,
+            [oneToManyRelationshipInfo.fieldName]: expect.arrayContaining(
+              foreignRows.map(r => ({
+                _id: r.row._id,
+                primaryDisplay: r.row.title,
+              }))
+            ),
           })
-
-          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
         })
       })
 
@@ -598,9 +615,13 @@ describe("postgres integrations", () => {
             tableId: row.tableId,
             _id: expect.any(String),
             _rev: expect.any(String),
+            [manyToOneRelationshipInfo.fieldName]: expect.arrayContaining(
+              foreignRows.map(r => ({
+                _id: r.row._id,
+                primaryDisplay: r.row.title,
+              }))
+            ),
           })
-
-          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
         })
       })
 
@@ -627,9 +648,13 @@ describe("postgres integrations", () => {
             tableId: row.tableId,
             _id: expect.any(String),
             _rev: expect.any(String),
+            [manyToManyRelationshipInfo.fieldName]: expect.arrayContaining(
+              foreignRows.map(r => ({
+                _id: r.row._id,
+                primaryDisplay: r.row.title,
+              }))
+            ),
           })
-
-          expect(res.body[oneToManyRelationshipInfo.fieldName]).toBeUndefined()
         })
       })
     })
