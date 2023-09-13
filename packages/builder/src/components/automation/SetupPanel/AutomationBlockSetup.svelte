@@ -82,33 +82,6 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
-  /**
-   * TODO - Remove after November 2023
-   * *******************************
-   * Code added to provide backwards compatibility between Values 1,2,3,4,5
-   * and the new JSON body.
-   */
-  let deprecatedSchemaProperties
-  $: {
-    if (block?.stepId === "integromat" || block?.stepId === "zapier") {
-      deprecatedSchemaProperties = schemaProperties.filter(
-        prop => !prop[0].startsWith("value")
-      )
-      if (!deprecatedSchemaProperties.map(entry => entry[0]).includes("body")) {
-        deprecatedSchemaProperties.push([
-          "body",
-          {
-            title: "Payload",
-            type: "json",
-          },
-        ])
-      }
-    } else {
-      deprecatedSchemaProperties = schemaProperties
-    }
-  }
-  /****************************************************/
-
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
@@ -117,30 +90,6 @@
     if (block.event === "app:trigger" && !newInputData?.fields) {
       newInputData = cloneDeep(blockInputs)
     }
-
-    /**
-     * TODO - Remove after November 2023
-     * *******************************
-     * Code added to provide backwards compatibility between Values 1,2,3,4,5
-     * and the new JSON body.
-     */
-    if (
-      (block?.stepId === "integromat" || block?.stepId === "zapier") &&
-      !newInputData?.body?.value
-    ) {
-      let deprecatedValues = {
-        ...newInputData,
-      }
-      delete deprecatedValues.url
-      delete deprecatedValues.body
-      newInputData = {
-        url: newInputData.url,
-        body: {
-          value: JSON.stringify(deprecatedValues),
-        },
-      }
-    }
-    /**********************************/
 
     inputData = newInputData
     setDefaultEnumValues()
@@ -337,7 +286,7 @@
 </script>
 
 <div class="fields">
-  {#each deprecatedSchemaProperties as [key, value]}
+  {#each schemaProperties as [key, value]}
     {#if canShowField(key, value)}
       <div class="block-field">
         {#if key !== "fields" && value.type !== "boolean"}
@@ -362,18 +311,6 @@
             mode="json"
             value={inputData[key]?.value}
             on:change={e => {
-              /**
-               * TODO - Remove after November 2023
-               * *******************************
-               * Code added to provide backwards compatibility between Values 1,2,3,4,5
-               * and the new JSON body.
-               */
-              delete inputData.value1
-              delete inputData.value2
-              delete inputData.value3
-              delete inputData.value4
-              delete inputData.value5
-              /***********************/
               onChange(e, key)
             }}
           />
