@@ -59,11 +59,7 @@ export async function search(options: SearchParams) {
   if (paginate) {
     response = await paginatedSearch(query, params)
   } else {
-    response = {
-      ...(await fullSearch(query, params)),
-      hasNextPage: false,
-      bookmark: null,
-    }
+    response = await fullSearch(query, params)
   }
 
   // Enrich search results with relationships
