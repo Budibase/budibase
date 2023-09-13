@@ -323,10 +323,25 @@
             />
           </div>
         {:else if value.type === "date"}
-          <DatePicker
-            value={inputData[key]}
-            on:change={e => onChange(e, key)}
-          />
+          {#if block.rowControl}
+            <DrawerBindableInput
+              fillWidth
+              title={value.title}
+              panel={AutomationBindingPanel}
+              type={value.customType}
+              value={inputData[key]}
+              on:change={e => onChange(e, key)}
+              {bindings}
+              allowJS={true}
+              updateOnChange={false}
+              drawerLeft="260px"
+            />
+          {:else}
+            <DatePicker
+              value={inputData[key]}
+              on:change={e => onChange(e, key)}
+            />
+          {/if}
         {:else if value.customType === "column"}
           <Select
             on:change={e => onChange(e, key)}
