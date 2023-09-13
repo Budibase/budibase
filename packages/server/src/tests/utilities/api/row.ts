@@ -1,4 +1,9 @@
-import { PatchRowRequest, SaveRowRequest, Row } from "@budibase/types"
+import {
+  PatchRowRequest,
+  SaveRowRequest,
+  Row,
+  ValidateResponse,
+} from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 
@@ -51,6 +56,20 @@ export class RowAPI extends TestAPI {
     return resp.body as Row
   }
 
+  validate = async (
+    sourceId: string,
+    row: SaveRowRequest,
+    { expectStatus } = { expectStatus: 200 }
+  ): Promise<ValidateResponse> => {
+    const resp = await this.request
+      .post(`/api/${sourceId}/rows/validate`)
+      .send(row)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expectStatus)
+    return resp.body as ValidateResponse
+  }
+
   patch = async (
     sourceId: string,
     row: PatchRowRequest,
@@ -71,7 +90,7 @@ export class RowAPI extends TestAPI {
   ) => {
     return this.request
       .delete(`/api/${sourceId}/rows`)
-      .send({ rows })
+      .send(Array.isArray(rows) ? { rows } : rows)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(expectStatus)

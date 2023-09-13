@@ -36,8 +36,8 @@ describe.each([
 ])("/rows (%s)", (_, dsProvider) => {
   const isInternal = !dsProvider
 
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const request = setup.getRequest()
+  const config = setup.getConfig()
   let table: Table
   let tableId: string
 
@@ -90,12 +90,8 @@ describe.each([
     mocks.licenses.useCloudFree()
   })
 
-  const loadRow = async (id: string, tbl_Id: string, status = 200) =>
-    await request
-      .get(`/api/${tbl_Id}/rows/${id}`)
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(status)
+  const loadRow = (id: string, tbl_Id: string, status = 200) =>
+    config.api.row.get(tbl_Id, id, { expectStatus: status })
 
   const getRowUsage = async () => {
     const { total } = await config.doInContext(null, () =>
@@ -193,20 +189,12 @@ describe.each([
 
       // Performing several create row requests should increment the autoID fields accordingly
       const createRow = async (id: number) => {
-        const res = await request
-          .post(`/api/${newTable._id}/rows`)
-          .send({
-            name: "row_" + id,
-          })
-          .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(200)
-        expect((res as any).res.statusMessage).toEqual(
-          `${newTable.name} saved successfully`
-        )
-        expect(res.body.name).toEqual("row_" + id)
-        expect(res.body._rev).toBeDefined()
-        expect(res.body["Row ID"]).toEqual(id)
+        const res = await config.api.row.save(newTable._id!, {
+          name: "row_" + id,
+        })
+        expect(res.name).toEqual("row_" + id)
+        expect(res._rev).toBeDefined()
+        expect(res["Row ID"]).toEqual(id)
       }
 
       for (let i = 0; i < ids.length; i++) {
@@ -563,14 +551,7 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .delete(`/api/${table._id}/rows`)
-        .send({
-          rows: [createdRow],
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.delete(table._id!, [createdRow])
       expect(res.body[0]._id).toEqual(createdRow._id)
       await assertRowUsage(rowUsage - 1)
       await assertQueryUsage(queryUsage + 1)
@@ -587,15 +568,10 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .post(`/api/${table._id}/rows/validate`)
-        .send({ name: "ivan" })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.validate(table._id!, { name: "ivan" })
 
-      expect(res.body.valid).toBe(true)
-      expect(Object.keys(res.body.errors)).toEqual([])
+      expect(res.valid).toBe(true)
+      expect(Object.keys(res.errors)).toEqual([])
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
     })
@@ -604,20 +580,15 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .post(`/api/${table._id}/rows/validate`)
-        .send({ name: 1 })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.validate(table._id!, { name: 1 })
 
       if (isInternal) {
-        expect(res.body.valid).toBe(false)
-        expect(Object.keys(res.body.errors)).toEqual(["name"])
+        expect(res.valid).toBe(false)
+        expect(Object.keys(res.errors)).toEqual(["name"])
       } else {
         // Validation for external is not implemented, so it will always return valid
-        expect(res.body.valid).toBe(true)
-        expect(Object.keys(res.body.errors)).toEqual([])
+        expect(res.valid).toBe(true)
+        expect(Object.keys(res.errors)).toEqual([])
       }
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
@@ -636,14 +607,7 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .delete(`/api/${table._id}/rows`)
-        .send({
-          rows: [row1, row2],
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.delete(table._id!, [row1, row2])
 
       expect(res.body.length).toEqual(2)
       await loadRow(row1._id!, table._id!, 404)
@@ -660,14 +624,11 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .delete(`/api/${table._id}/rows`)
-        .send({
-          rows: [row1, row2._id, { _id: row3._id }],
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.delete(table._id!, [
+        row1,
+        row2._id,
+        { _id: row3._id },
+      ])
 
       expect(res.body.length).toEqual(3)
       await loadRow(row1._id!, table._id!, 404)
@@ -680,12 +641,7 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .delete(`/api/${table._id}/rows`)
-        .send(row1)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.api.row.delete(table._id!, row1)
 
       expect(res.body.id).toEqual(row1._id)
       await loadRow(row1._id!, table._id!, 404)
@@ -697,31 +653,23 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await request
-        .delete(`/api/${table._id}/rows`)
-        .send({ not: "valid" })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(400)
-
+      const res = await config.api.row.delete(
+        table._id!,
+        { not: "valid" },
+        { expectStatus: 400 }
+      )
       expect(res.body.message).toEqual("Invalid delete rows request")
 
-      const res2 = await request
-        .delete(`/api/${table._id}/rows`)
-        .send({ rows: 123 })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(400)
-
+      const res2 = await config.api.row.delete(
+        table._id!,
+        { rows: 123 },
+        { expectStatus: 400 }
+      )
       expect(res2.body.message).toEqual("Invalid delete rows request")
 
-      const res3 = await request
-        .delete(`/api/${table._id}/rows`)
-        .send("invalid")
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(400)
-
+      const res3 = await config.api.row.delete(table._id!, "invalid", {
+        expectStatus: 400,
+      })
       expect(res3.body.message).toEqual("Invalid delete rows request")
 
       await assertRowUsage(rowUsage)
