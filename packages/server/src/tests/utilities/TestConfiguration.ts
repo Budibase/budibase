@@ -557,6 +557,11 @@ class TestConfiguration {
     return this.updateTable(config, options)
   }
 
+  async getTable(tableId?: string) {
+    tableId = tableId || this.table!._id!
+    return this._req(null, { tableId }, controllers.table.find)
+  }
+
   async createLinkedTable(
     config?: Table,
     relationshipType = RelationshipType.ONE_TO_MANY,
@@ -605,6 +610,10 @@ class TestConfiguration {
     const tableId = (config && config.tableId) || this.table._id
     config = config || basicRow(tableId!)
     return this.api.row.save(tableId!, config)
+  }
+
+  async getRow(tableId: string, rowId: string): Promise<Row> {
+    return this._req(null, { tableId, rowId }, controllers.row.find)
   }
 
   async getRows(tableId: string) {
