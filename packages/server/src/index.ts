@@ -11,7 +11,6 @@ function runServer() {
   process.env.GLOBAL_AGENT_FORCE_GLOBAL_AGENT = "false"
   bootstrap()
   require("./app")
-  console.log("test")
 }
 
 runServer()
