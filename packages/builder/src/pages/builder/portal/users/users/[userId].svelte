@@ -111,7 +111,7 @@
       })
     }
     return availableApps.map(app => {
-      const prodAppId = apps.getProdAppID(app.appId)
+      const prodAppId = apps.getProdAppID(app.devId)
       return {
         name: app.name,
         devId: app.devId,
