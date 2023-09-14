@@ -122,7 +122,7 @@ export const FIELDS = {
   },
   USER: {
     name: "User",
-    type: "internal",
+    type: "bb_reference",
     subtype: "user",
     icon: "User",
   },
