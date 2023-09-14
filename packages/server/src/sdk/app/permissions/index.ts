@@ -61,11 +61,7 @@ export async function getInheritablePermissions(
 export async function allowsExplicitPermissions(resourceId: string) {
   if (isViewID(resourceId)) {
     const allowed = await features.isViewPermissionEnabled()
-    const minPlan = !allowed
-      ? env.SELF_HOSTED
-        ? PlanType.BUSINESS
-        : PlanType.PREMIUM
-      : undefined
+    const minPlan = !allowed ? PlanType.BUSINESS : undefined
 
     return {
       allowed,
@@ -92,7 +88,7 @@ export async function getResourcePerms(
     // update the various roleIds in the resource permissions
     for (let role of rolesList) {
       const rolePerms = allowsExplicitPerm
-        ? roles.checkForRoleResourceArray(role.permissions, resourceId)
+        ? roles.checkForRoleResourceArray(role.permissions || {}, resourceId)
         : {}
       if (rolePerms[resourceId]?.indexOf(level) > -1) {
         permissions[level] = {

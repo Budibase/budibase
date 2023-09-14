@@ -53,11 +53,6 @@ export const BuilderRoleDescriptions = [
     label: "App user - Only has access to published apps",
   },
   {
-    value: BudibaseRoles.Developer,
-    icon: "Hammer",
-    label: "Developer - Access to the app builder",
-  },
-  {
     value: BudibaseRoles.Admin,
     icon: "Draw",
     label: "Admin - Full access",
