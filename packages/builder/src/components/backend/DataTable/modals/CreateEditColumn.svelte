@@ -20,7 +20,6 @@
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
-    DEV_FIELDS,
     RelationshipType,
     ALLOWABLE_STRING_OPTIONS,
     ALLOWABLE_NUMBER_OPTIONS,
@@ -73,6 +72,30 @@
   }
 
   const typeMapping = {}
+  if (!$admin.isDev) {
+    delete fieldDefinitions.USER
+  }
+
+  // Handling fields with subtypes
+  fieldDefinitions = Object.entries(fieldDefinitions).reduce(
+    (p, [key, field]) => {
+      if (field.subtype) {
+        const composedType = `${field.type}_${field.subtype}`
+        p[key] = {
+          ...field,
+          type: composedType,
+        }
+        typeMapping[composedType] = {
+          type: field.type,
+          subtype: field.subtype,
+        }
+      } else {
+        p[key] = field
+      }
+      return p
+    },
+    {}
+  )
 
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
@@ -348,33 +371,9 @@
       return ALLOWABLE_NUMBER_OPTIONS
     }
 
-    let devFieldDefinitions = {}
-    if ($admin.isDev) {
-      devFieldDefinitions = Object.entries(DEV_FIELDS).reduce(
-        (p, [key, field]) => {
-          if (field.subtype) {
-            const composedType = `${field.type}_${field.subtype}`
-            p[key] = {
-              ...field,
-              type: composedType,
-            }
-            typeMapping[composedType] = {
-              type: field.type,
-              subtype: field.subtype,
-            }
-          } else {
-            p[key] = field
-          }
-          return p
-        },
-        {}
-      )
-    }
-
     if (!external) {
       return [
         ...Object.values(fieldDefinitions),
-        ...Object.values(devFieldDefinitions),
         { name: "Auto Column", type: AUTO_TYPE },
       ]
     } else {
@@ -393,6 +392,7 @@
       if (!external || table.sql) {
         fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
       }
+      // fields = [...fields, ...Object.values(devFieldDefinitions)]
       return fields
     }
   }
