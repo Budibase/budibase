@@ -72,6 +72,11 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
 
+  // user metadata doesn't exist yet - don't allow creation
+  if (utils.isUserMetadataTable(tableId) && !body._rev) {
+    ctx.throw(400, "Cannot create new user entry.")
+  }
+
   // if it has an ID already then its a patch
   if (body && body._id) {
     return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
