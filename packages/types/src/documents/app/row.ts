@@ -16,6 +16,7 @@ export enum FieldType {
   INTERNAL = "internal",
   BARCODEQR = "barcodeqr",
   BIGINT = "bigint",
+  BB_REFERENCE = "bb_reference",
 }
 
 export interface RowAttachment {
