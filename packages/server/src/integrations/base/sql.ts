@@ -11,6 +11,7 @@ import { QueryOptions } from "../../definitions/datasource"
 import { isIsoDateString, SqlClient } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import environment from "../../environment"
+import { isValidFilter } from "../../api/controllers/row/utils"
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -261,15 +262,15 @@ class InternalBuilder {
         if (isEmptyObject(value.high)) {
           value.high = ""
         }
-        if (value.low && value.high) {
+        if (isValidFilter(value.low) && isValidFilter(value.high)) {
           // Use a between operator if we have 2 valid range values
           const fnc = allOr ? "orWhereBetween" : "whereBetween"
           query = query[fnc](key, [value.low, value.high])
-        } else if (value.low) {
+        } else if (isValidFilter(value.low)) {
           // Use just a single greater than operator if we only have a low
           const fnc = allOr ? "orWhere" : "where"
           query = query[fnc](key, ">", value.low)
-        } else if (value.high) {
+        } else if (isValidFilter(value.high)) {
           // Use just a single less than operator if we only have a high
           const fnc = allOr ? "orWhere" : "where"
           query = query[fnc](key, "<", value.high)
