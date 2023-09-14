@@ -1,8 +1,15 @@
 import { InternalTables } from "../../../db/utils"
 import * as userController from "../user"
 import { context } from "@budibase/backend-core"
-import { Ctx, FieldType, Row, Table, UserCtx } from "@budibase/types"
-import { FieldTypes } from "../../../constants"
+import {
+  Ctx,
+  FieldType,
+  Row,
+  SearchFilters,
+  Table,
+  UserCtx,
+} from "@budibase/types"
+import { FieldTypes, NoEmptyFilterStrings } from "../../../constants"
 import sdk from "../../../sdk"
 
 import validateJs from "validate.js"
@@ -27,7 +34,7 @@ validateJs.extend(validateJs.validators.datetime, {
 
 export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
   const db = context.getAppDB()
-  let row
+  let row: Row
   // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {
     ctx.params = {
@@ -138,4 +145,33 @@ export async function validate({
     if (res) errors[fieldName] = res
   }
   return { valid: Object.keys(errors).length === 0, errors }
+}
+
+// don't do a pure falsy check, as 0 is included
+// https://github.com/Budibase/budibase/issues/10118
+export function removeEmptyFilters(filters: SearchFilters) {
+  for (let filterField of NoEmptyFilterStrings) {
+    if (!filters[filterField]) {
+      continue
+    }
+
+    for (let filterType of Object.keys(filters)) {
+      if (filterType !== filterField) {
+        continue
+      }
+      // don't know which one we're checking, type could be anything
+      const value = filters[filterType] as unknown
+      if (typeof value === "object") {
+        for (let [key, value] of Object.entries(
+          filters[filterType] as object
+        )) {
+          if (value == null || value === "") {
+            // @ts-ignore
+            delete filters[filterField][key]
+          }
+        }
+      }
+    }
+  }
+  return filters
 }
