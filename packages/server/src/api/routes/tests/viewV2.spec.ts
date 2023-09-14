@@ -6,6 +6,7 @@ import {
   SortOrder,
   SortType,
   Table,
+  UIFieldMetadata,
   UpdateViewRequest,
   ViewV2,
 } from "@budibase/types"
@@ -418,9 +419,12 @@ describe.each([
       const res = await config.api.viewV2.create(newView)
       const view = await config.api.viewV2.get(res.id)
       expect(view!.schema?.Price).toBeUndefined()
-      const updatedTable = await config.getTable(table._id!)
-      const viewSchema = updatedTable.views[view!.name!].schema
-      expect(viewSchema.Price.visible).toEqual(false)
+      const updatedTable = await config.api.table.get(table._id!)
+      const viewSchema = updatedTable.views![view!.name!].schema as Record<
+        string,
+        UIFieldMetadata
+      >
+      expect(viewSchema.Price?.visible).toEqual(false)
     })
   })
 })

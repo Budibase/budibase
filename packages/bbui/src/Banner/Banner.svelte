@@ -66,6 +66,10 @@
     pointer-events: all;
     width: 100%;
   }
+
+  .spectrum-Toast--neutral {
+    background-color: var(--grey-2);
+  }
   .spectrum-Button {
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
