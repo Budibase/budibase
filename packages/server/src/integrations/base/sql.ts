@@ -1,4 +1,8 @@
 import { Knex, knex } from "knex"
+import { db as dbCore } from "@budibase/backend-core"
+import { QueryOptions } from "../../definitions/datasource"
+import { isIsoDateString, SqlClient } from "../utils"
+import SqlTableQueryBuilder from "./sqlTable"
 import {
   Operation,
   QueryJson,
@@ -6,12 +10,8 @@ import {
   SearchFilters,
   SortDirection,
 } from "@budibase/types"
-import { db as dbCore } from "@budibase/backend-core"
-import { QueryOptions } from "../../definitions/datasource"
-import { isIsoDateString, SqlClient } from "../utils"
-import SqlTableQueryBuilder from "./sqlTable"
 import environment from "../../environment"
-import { isValidFilter } from "../../api/controllers/row/utils"
+import { isValidFilter } from "../utils"
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -262,15 +262,17 @@ class InternalBuilder {
         if (isEmptyObject(value.high)) {
           value.high = ""
         }
-        if (isValidFilter(value.low) && isValidFilter(value.high)) {
+        const lowValid = isValidFilter(value.low),
+          highValid = isValidFilter(value.high)
+        if (lowValid && highValid) {
           // Use a between operator if we have 2 valid range values
           const fnc = allOr ? "orWhereBetween" : "whereBetween"
           query = query[fnc](key, [value.low, value.high])
-        } else if (isValidFilter(value.low)) {
+        } else if (lowValid) {
           // Use just a single greater than operator if we only have a low
           const fnc = allOr ? "orWhere" : "where"
           query = query[fnc](key, ">", value.low)
-        } else if (isValidFilter(value.high)) {
+        } else if (highValid) {
           // Use just a single less than operator if we only have a high
           const fnc = allOr ? "orWhere" : "where"
           query = query[fnc](key, "<", value.high)

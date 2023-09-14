@@ -18,7 +18,6 @@ import {
 import sdk from "../../../sdk"
 import * as utils from "./utils"
 import { dataFilters } from "@budibase/shared-core"
-import { removeEmptyFilters } from "./utils"
 
 export async function handleRequest(
   operation: Operation,
@@ -27,7 +26,7 @@ export async function handleRequest(
 ) {
   // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
   if (opts && opts.filters) {
-    opts.filters = utils.removeEmptyFilters(opts.filters)
+    opts.filters = sdk.rows.removeEmptyFilters(opts.filters)
   }
   if (
     !dataFilters.hasFilters(opts?.filters) &&
