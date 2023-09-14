@@ -78,9 +78,9 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   ctx.status = 200
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitTable(`table:save`, appId, savedTable)
+    ctx.eventEmitter.emitTable(`table:save`, appId, { ...savedTable })
   ctx.body = savedTable
-  builderSocket?.emitTableUpdate(ctx, savedTable)
+  builderSocket?.emitTableUpdate(ctx, { ...savedTable })
 }
 
 export async function destroy(ctx: UserCtx) {
