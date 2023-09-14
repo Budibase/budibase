@@ -35,6 +35,7 @@
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
   import { admin } from "stores/portal"
+  import { FieldType } from "@budibase/types"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -71,7 +72,7 @@
     fieldName: $tables.selected.name,
   }
 
-  const typeMapping = {}
+  const bbRefTypeMapping = {}
   if (!$admin.isDev) {
     delete fieldDefinitions.USER
   }
@@ -79,13 +80,13 @@
   // Handling fields with subtypes
   fieldDefinitions = Object.entries(fieldDefinitions).reduce(
     (p, [key, field]) => {
-      if (field.subtype) {
+      if (field.type === FieldType.BB_REFERENCE) {
         const composedType = `${field.type}_${field.subtype}`
         p[key] = {
           ...field,
           type: composedType,
         }
-        typeMapping[composedType] = {
+        bbRefTypeMapping[composedType] = {
           type: field.type,
           subtype: field.subtype,
         }
@@ -112,7 +113,7 @@
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
 
-      const mapped = Object.entries(typeMapping).find(
+      const mapped = Object.entries(bbRefTypeMapping).find(
         ([_, v]) => v.type === field.type && v.subtype === field.subtype
       )
       if (mapped) {
@@ -217,8 +218,11 @@
 
     let saveColumn = cloneDeep(editableColumn)
 
-    if (typeMapping[saveColumn.type]) {
-      saveColumn = { ...saveColumn, ...typeMapping[saveColumn.type] }
+    if (bbRefTypeMapping[saveColumn.type]) {
+      saveColumn = {
+        ...saveColumn,
+        ...bbRefTypeMapping[saveColumn.type],
+      }
     }
 
     if (saveColumn.type === AUTO_TYPE) {
