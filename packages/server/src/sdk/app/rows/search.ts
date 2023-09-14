@@ -3,6 +3,7 @@ import { isExternalTable } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
 import { Format } from "../../../api/controllers/view/exporters"
+export { isValidFilter, removeEmptyFilters } from "../../../integrations/utils"
 
 export interface ViewParams {
   calculation: string
