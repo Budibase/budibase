@@ -396,6 +396,9 @@
       if (!external || table.sql) {
         fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
       }
+      if (fieldDefinitions.USER) {
+        fields.push(fieldDefinitions.USER)
+      }
       return fields
     }
   }
