@@ -392,7 +392,6 @@
       if (!external || table.sql) {
         fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
       }
-      // fields = [...fields, ...Object.values(devFieldDefinitions)]
       return fields
     }
   }
