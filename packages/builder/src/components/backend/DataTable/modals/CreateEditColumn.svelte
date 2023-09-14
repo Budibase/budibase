@@ -72,8 +72,28 @@
     fieldName: $tables.selected.name,
   }
 
+  const typeMapping = {}
+
   if ($admin.isDev) {
-    fieldDefinitions = { ...fieldDefinitions, ...cloneDeep(DEV_FIELDS) }
+    fieldDefinitions = {
+      ...fieldDefinitions,
+      ...Object.entries(DEV_FIELDS).reduce((p, [key, field]) => {
+        if (field.subtype) {
+          const composedType = `${field.type}_${field.subtype}`
+          p[key] = {
+            ...field,
+            type: composedType,
+          }
+          typeMapping[composedType] = {
+            type: field.type,
+            subtype: field.subtype,
+          }
+        } else {
+          p[key] = field
+        }
+        return p
+      }, {}),
+    }
   }
 
   $: if (primaryDisplay) {
@@ -82,6 +102,7 @@
 
   const initialiseField = (field, savingColumn) => {
     isCreating = !field
+
     if (field && !savingColumn) {
       editableColumn = cloneDeep(field)
       originalName = editableColumn.name ? editableColumn.name + "" : null
@@ -89,6 +110,14 @@
       primaryDisplay =
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
+
+      const mapped = Object.entries(typeMapping).find(
+        ([_, v]) => v.type === field.type && v.subtype === field.subtype
+      )
+      if (mapped) {
+        editableColumn.type = mapped[0]
+        delete editableColumn.subtype
+      }
     } else if (!savingColumn) {
       let highestNumber = 0
       Object.keys(table.schema).forEach(columnName => {
@@ -105,6 +134,7 @@
         editableColumn.name = "Column 01"
       }
     }
+
     allowedTypes = getAllowedTypes()
   }
 
@@ -185,6 +215,10 @@
     }
 
     let saveColumn = cloneDeep(editableColumn)
+
+    if (typeMapping[saveColumn.type]) {
+      saveColumn = { ...saveColumn, ...typeMapping[saveColumn.type] }
+    }
 
     if (saveColumn.type === AUTO_TYPE) {
       saveColumn = buildAutoColumn(
@@ -426,6 +460,8 @@
   onMount(() => {
     mounted = true
   })
+
+  $: console.log({ type: editableColumn.type, allowedTypes, typeMapping })
 </script>
 
 <Layout noPadding gap="S">
