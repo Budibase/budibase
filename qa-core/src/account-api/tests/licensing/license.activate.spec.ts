@@ -27,7 +27,7 @@ describe("license activation", () => {
     const [createAccountRes, account] =
       await config.accountsApi.accounts.create(createAccountRequest, { autoVerify: true })
 
-    let licenseKey: string
+    let licenseKey: string = " "
     await config.doInNewState(async () => {
       await config.loginAsAccount(createAccountRequest)
       // Retrieve license key
@@ -37,7 +37,6 @@ describe("license activation", () => {
     })
 
     const accountId = account.accountId!
-    const tenantId = account.tenantId!
 
     // Update license to have paid feature
     const [res, acc] = await config.accountsApi.licenses.updateLicense(
@@ -49,10 +48,15 @@ describe("license activation", () => {
       }
     )
 
-    // TODO: Activate license key
-    //await config.internalApi.license.activateLicenseKey()
+    // Activate license key
+    await config.internalApi.license.activateLicenseKey({licenseKey})
 
-    // TODO: Verify license updated with new feature
+    // Verify license updated with new feature
+    await config.doInNewState(async () => {
+      await config.loginAsAccount(createAccountRequest)
+      const [selfRes, body] = await config.api.accounts.self()
+      expect(body.license.features[0]).toBe("appBackups")
+    })
 
     // Remove license key
     await config.internalApi.license.deleteLicenseKey()
@@ -60,6 +64,11 @@ describe("license activation", () => {
     // Verify license key not found
     await config.internalApi.license.getLicenseKey({ status: 404 })
 
-    // TODO: Verify user downgraded to free license
+    // Verify user downgraded to free license
+    await config.doInNewState(async () => {
+      await config.loginAsAccount(createAccountRequest)
+      const [selfRes, body] = await config.api.accounts.self()
+      expect(body.license.plan.type).toBe("free")
+    })
   })
 })
