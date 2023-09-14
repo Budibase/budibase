@@ -109,7 +109,6 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await initPro()
   await redis.init()
-  console.log("test")
 })
 
 process.on("uncaughtException", err => {
