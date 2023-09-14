@@ -27,7 +27,7 @@ describe("license activation", () => {
     const [createAccountRes, account] =
       await config.accountsApi.accounts.create(createAccountRequest, { autoVerify: true })
 
-    let licenseKey: string
+    let licenseKey: string = " "
     await config.doInNewState(async () => {
       await config.loginAsAccount(createAccountRequest)
       // Retrieve license key
