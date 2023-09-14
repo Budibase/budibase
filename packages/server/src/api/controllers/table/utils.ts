@@ -422,13 +422,11 @@ export function hasTypeChanged(table: Table, oldTable: Table | undefined) {
   if (!oldTable) {
     return false
   }
-  let key: any
-  let field: any
-  for ([key, field] of Object.entries(oldTable.schema)) {
-    const oldType = field.type
+  for (let [key, field] of Object.entries(oldTable.schema)) {
     if (!table.schema[key]) {
       continue
     }
+    const oldType = field.type
     const newType = table.schema[key].type
     if (oldType !== newType && !areSwitchableTypes(oldType, newType)) {
       return true
