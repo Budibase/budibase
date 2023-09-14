@@ -120,9 +120,6 @@ export const FIELDS = {
       presence: false,
     },
   },
-}
-
-export const DEV_FIELDS = {
   USER: {
     name: "User",
     type: "internal",
