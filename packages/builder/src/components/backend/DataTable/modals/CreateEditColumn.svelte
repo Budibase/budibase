@@ -66,7 +66,7 @@
   let jsonSchemaModal
   let allowedTypes = []
   let editableColumn = {
-    type: "string",
+    type: fieldDefinitions.STRING.type,
     constraints: fieldDefinitions.STRING.constraints,
     // Initial value for column name in other table for linked records
     fieldName: $tables.selected.name,
