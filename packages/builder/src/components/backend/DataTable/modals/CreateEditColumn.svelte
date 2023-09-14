@@ -464,8 +464,6 @@
   onMount(() => {
     mounted = true
   })
-
-  $: console.log({ type: editableColumn.type, allowedTypes, typeMapping })
 </script>
 
 <Layout noPadding gap="S">
