@@ -122,6 +122,15 @@ export const FIELDS = {
   },
 }
 
+export const DEV_FIELDS = {
+  USER: {
+    name: "User",
+    type: "internal",
+    subtype: "user",
+    icon: "User",
+  },
+}
+
 export const AUTO_COLUMN_SUB_TYPES = {
   AUTO_ID: "autoID",
   CREATED_BY: "createdBy",
