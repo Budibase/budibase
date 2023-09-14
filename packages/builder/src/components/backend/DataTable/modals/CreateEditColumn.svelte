@@ -20,6 +20,7 @@
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
+    DEV_FIELDS,
     RelationshipType,
     ALLOWABLE_STRING_OPTIONS,
     ALLOWABLE_NUMBER_OPTIONS,
@@ -34,6 +35,7 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
+  import { admin } from "stores/portal"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -68,6 +70,10 @@
     constraints: fieldDefinitions.STRING.constraints,
     // Initial value for column name in other table for linked records
     fieldName: $tables.selected.name,
+  }
+
+  if ($admin.isDev) {
+    fieldDefinitions = { ...fieldDefinitions, ...cloneDeep(DEV_FIELDS) }
   }
 
   $: if (primaryDisplay) {
