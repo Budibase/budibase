@@ -10,7 +10,7 @@
   export let vAlign
   export let gap
 
-  const { Provider } = getContext("sdk")
+  const { Provider, ContextScopes } = getContext("sdk")
   const component = getContext("component")
 
   $: rows = dataProvider?.rows ?? []
@@ -22,7 +22,7 @@
     <Placeholder />
   {:else if rows.length > 0}
     {#each rows as row, index}
-      <Provider data={{ ...row, index }}>
+      <Provider data={{ ...row, index }} scope={ContextScopes.Local}>
         <slot />
       </Provider>
     {/each}
