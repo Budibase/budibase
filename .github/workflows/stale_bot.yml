@@ -2,7 +2,7 @@ name: Close stale issues and PRs # https://github.com/actions/stale
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 1 * * *' # 1:30 every morning
+    - cron: '*/30 * * * *' # Every 30 mins
 
 jobs:
   stale:
