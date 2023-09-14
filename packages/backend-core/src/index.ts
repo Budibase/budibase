@@ -50,5 +50,6 @@ export * from "./constants"
 // expose package init function
 import * as db from "./db"
 export const init = (opts: any = {}) => {
+  console.log("test")
   db.init(opts.db)
 }
