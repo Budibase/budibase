@@ -74,28 +74,6 @@
 
   const typeMapping = {}
 
-  if ($admin.isDev) {
-    fieldDefinitions = {
-      ...fieldDefinitions,
-      ...Object.entries(DEV_FIELDS).reduce((p, [key, field]) => {
-        if (field.subtype) {
-          const composedType = `${field.type}_${field.subtype}`
-          p[key] = {
-            ...field,
-            type: composedType,
-          }
-          typeMapping[composedType] = {
-            type: field.type,
-            subtype: field.subtype,
-          }
-        } else {
-          p[key] = field
-        }
-        return p
-      }, {}),
-    }
-  }
-
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
@@ -368,9 +346,35 @@
       ALLOWABLE_NUMBER_TYPES.indexOf(editableColumn.type) !== -1
     ) {
       return ALLOWABLE_NUMBER_OPTIONS
-    } else if (!external) {
+    }
+
+    let devFieldDefinitions = {}
+    if ($admin.isDev) {
+      devFieldDefinitions = Object.entries(DEV_FIELDS).reduce(
+        (p, [key, field]) => {
+          if (field.subtype) {
+            const composedType = `${field.type}_${field.subtype}`
+            p[key] = {
+              ...field,
+              type: composedType,
+            }
+            typeMapping[composedType] = {
+              type: field.type,
+              subtype: field.subtype,
+            }
+          } else {
+            p[key] = field
+          }
+          return p
+        },
+        {}
+      )
+    }
+
+    if (!external) {
       return [
         ...Object.values(fieldDefinitions),
+        ...Object.values(devFieldDefinitions),
         { name: "Auto Column", type: AUTO_TYPE },
       ]
     } else {
