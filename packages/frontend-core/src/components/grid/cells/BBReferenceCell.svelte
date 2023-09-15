@@ -1,10 +1,10 @@
 <script>
   import RelationshipCell from "./RelationshipCell.svelte"
-  import { TableNames } from "constants"
-  // import { FieldSubtype } from "@budibase/types"
+  import { FieldSubtype } from "@budibase/types"
+  import { TableNames } from "../../../constants"
 
   const subtypeToTable = {
-    ["user"]: TableNames.USERS,
+    [FieldSubtype.USER]: TableNames.USERS,
   }
 
   const schema = {
