@@ -168,7 +168,7 @@ export async function inputProcessing(
       }
     }
 
-    if (field.type === FieldTypes.BB_REFERENCE) {
+    if (field.type === FieldTypes.BB_REFERENCE && value) {
       clonedRow[key] = await processInputBBReferences(
         value,
         field.subtype as FieldSubtype

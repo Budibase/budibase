@@ -62,7 +62,7 @@ describe("rowProcessor - inputProcessing", () => {
     expect(row).toEqual({ ...newRow, user })
   })
 
-  it("it does not processe BB references if on the schema but it is not populated", async () => {
+  it("it does not process BB references if on the schema but it is not populated", async () => {
     const userId = generator.guid()
 
     const table: Table = {
@@ -100,7 +100,49 @@ describe("rowProcessor - inputProcessing", () => {
     expect(row).toEqual({ ...newRow, user: undefined })
   })
 
-  it("it does not processe BB references if not in the schema", async () => {
+  it.each([undefined, null, ""])(
+    "it does not process BB references the field is $%",
+    async userValue => {
+      const userId = generator.guid()
+
+      const table: Table = {
+        _id: generator.guid(),
+        name: "TestTable",
+        type: "table",
+        schema: {
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+            constraints: {
+              presence: true,
+              type: "string",
+            },
+          },
+          user: {
+            type: FieldType.BB_REFERENCE,
+            subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+            name: "user",
+            constraints: {
+              presence: false,
+              type: "string",
+            },
+          },
+        },
+      }
+
+      const newRow = {
+        name: "Jack",
+        user: userValue,
+      }
+
+      const { row } = await inputProcessing(userId, table, newRow)
+
+      expect(bbReferenceProcessor.processInputBBReferences).not.toBeCalled()
+      expect(row).toEqual(newRow)
+    }
+  )
+
+  it("it does not process BB references if not in the schema", async () => {
     const userId = generator.guid()
 
     const table: Table = {
