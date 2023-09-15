@@ -67,9 +67,5 @@ export async function processOutputBBReferences(
       throw utils.unreachable(subtype)
   }
 
-  if (result.length > 1) {
-    return result
-  }
-
-  return result[0]
+  return result
 }
