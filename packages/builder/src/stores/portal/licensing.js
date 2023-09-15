@@ -107,7 +107,7 @@ export const createLicensingStore = () => {
         Constants.Features.USER_GROUPS
       )
       const backupsEnabled = license.features.includes(
-        Constants.Features.BACKUPS
+        Constants.Features.APP_BACKUPS
       )
       const scimEnabled = license.features.includes(Constants.Features.SCIM)
       const environmentVariablesEnabled = license.features.includes(

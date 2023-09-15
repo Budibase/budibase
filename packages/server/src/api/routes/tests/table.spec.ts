@@ -1,6 +1,6 @@
 import { generator } from "@budibase/backend-core/tests"
 import { events, context } from "@budibase/backend-core"
-import { FieldType, Table } from "@budibase/types"
+import { FieldType, Table, ViewCalculation } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 const { basicTable } = setup.structures
@@ -90,8 +90,10 @@ describe("/tables", () => {
       await config.createLegacyView({
         name: "TestView",
         field: "Price",
-        calculation: "stats",
-        tableId: testTable._id,
+        calculation: ViewCalculation.STATISTICS,
+        tableId: testTable._id!,
+        schema: {},
+        filters: [],
       })
 
       const testRow = await request
@@ -254,7 +256,7 @@ describe("/tables", () => {
       }))
 
       await config.api.viewV2.create({ tableId })
-      await config.createLegacyView({ tableId, name: generator.guid() })
+      await config.createLegacyView()
 
       const res = await config.api.table.fetch()
 
@@ -366,7 +368,7 @@ describe("/tables", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
-      const dependentTable = await config.getTable(linkedTable._id)
+      const dependentTable = await config.api.table.get(linkedTable._id!)
       expect(dependentTable.schema.TestTable).not.toBeDefined()
     })
 

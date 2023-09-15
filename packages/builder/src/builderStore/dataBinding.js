@@ -504,22 +504,33 @@ const getDeviceBindings = () => {
   let bindings = []
   if (get(store).clientFeatures?.deviceAwareness) {
     const safeDevice = makePropSafe("device")
-    bindings.push({
-      type: "context",
-      runtimeBinding: `${safeDevice}.${makePropSafe("mobile")}`,
-      readableBinding: `Device.Mobile`,
-      category: "Device",
-      icon: "DevicePhone",
-      display: { type: "boolean", name: "mobile" },
-    })
-    bindings.push({
-      type: "context",
-      runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
-      readableBinding: `Device.Tablet`,
-      category: "Device",
-      icon: "DevicePhone",
-      display: { type: "boolean", name: "tablet" },
-    })
+
+    bindings = [
+      {
+        type: "context",
+        runtimeBinding: `${safeDevice}.${makePropSafe("mobile")}`,
+        readableBinding: `Device.Mobile`,
+        category: "Device",
+        icon: "DevicePhone",
+        display: { type: "boolean", name: "mobile" },
+      },
+      {
+        type: "context",
+        runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
+        readableBinding: `Device.Tablet`,
+        category: "Device",
+        icon: "DevicePhone",
+        display: { type: "boolean", name: "tablet" },
+      },
+      {
+        type: "context",
+        runtimeBinding: `${safeDevice}.${makePropSafe("theme")}`,
+        readableBinding: `App.Theme`,
+        category: "Device",
+        icon: "DevicePhone",
+        display: { type: "string", name: "App Theme" },
+      },
+    ]
   }
   return bindings
 }
@@ -955,7 +966,9 @@ export const buildFormSchema = (component, asset) => {
       const patched = convertOldFieldFormat(component.fields || [])
       patched?.forEach(({ field, active }) => {
         if (!active) return
-        schema[field] = { type: info?.schema[field].type }
+        if (info?.schema[field]) {
+          schema[field] = { type: info?.schema[field].type }
+        }
       })
     }
 
