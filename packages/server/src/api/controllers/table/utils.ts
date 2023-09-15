@@ -113,7 +113,7 @@ export function importToRows(
 
     // We use a reference to table here and update it after input processing,
     // so that we can auto increment auto IDs in imported data properly
-    const processed = inputProcessing(user, table, row, {
+    const processed = inputProcessing(user?._id, table, row, {
       noAutoRelationships: true,
     })
     row = processed.row

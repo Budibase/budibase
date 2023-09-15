@@ -5,8 +5,8 @@ import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import { Row, RowAttachment, Table, ContextUser } from "@budibase/types"
-const { cloneDeep } = require("lodash/fp")
+import { Row, RowAttachment, Table } from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {
@@ -48,12 +48,12 @@ function getRemovedAttachmentKeys(
  * for automatic ID purposes.
  */
 export function processAutoColumn(
-  user: ContextUser | null,
+  userId: string | null | undefined,
   table: Table,
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
-  let noUser = !user || !user.userId
+  let noUser = !userId
   let isUserTable = table._id === InternalTables.USER_METADATA
   let now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
@@ -70,8 +70,8 @@ export function processAutoColumn(
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
-        if (creating && shouldUpdateUserFields && user) {
-          row[key] = [user.userId]
+        if (creating && shouldUpdateUserFields && userId) {
+          row[key] = [userId]
         }
         break
       case AutoFieldSubTypes.CREATED_AT:
@@ -80,8 +80,8 @@ export function processAutoColumn(
         }
         break
       case AutoFieldSubTypes.UPDATED_BY:
-        if (shouldUpdateUserFields && user) {
-          row[key] = [user.userId]
+        if (shouldUpdateUserFields && userId) {
+          row[key] = [userId]
         }
         break
       case AutoFieldSubTypes.UPDATED_AT:
@@ -131,7 +131,7 @@ export function coerce(row: any, type: string) {
  * @returns {object} the row which has been prepared to be written to the DB.
  */
 export function inputProcessing(
-  user: ContextUser | null,
+  userId: string | null | undefined,
   table: Table,
   row: Row,
   opts?: AutoColumnProcessingOpts
@@ -174,7 +174,7 @@ export function inputProcessing(
   }
 
   // handle auto columns - this returns an object like {table, row}
-  return processAutoColumn(user, table, clonedRow, opts)
+  return processAutoColumn(userId, table, clonedRow, opts)
 }
 
 /**
