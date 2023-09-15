@@ -32,5 +32,4 @@
   {schema}
   {searchFunction}
   primaryDisplay={"email"}
-  relationshipType={"many-to-one"}
 />
