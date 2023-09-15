@@ -30,6 +30,8 @@
   export let invertX = false
   export let invertY = false
   export let contentLines = 1
+  export let searchFunction = API.searchTable
+  export let primaryDisplay
 
   const { API, dispatch } = getContext("grid")
   const color = getColor(0)
@@ -38,7 +40,6 @@
   let searchResults
   let searchString
   let lastSearchString
-  let primaryDisplay
   let candidateIndex
   let lastSearchId
   let searching = false
@@ -96,7 +97,7 @@
     lastSearchId = Math.random()
     searching = true
     const thisSearchId = lastSearchId
-    const results = await API.searchTable({
+    const results = await searchFunction({
       paginate: false,
       tableId: schema.tableId,
       limit: 20,
