@@ -28,24 +28,24 @@ describe("bbReferenceProcessor", () => {
   describe("processInputBBReferences", () => {
     describe("subtype user", () => {
       it("validate valid string id", async () => {
-        const input = generator.guid()
+        const userId = generator.guid()
 
         const userFromCache = structures.users.user()
         mockedCacheGetUser.mockResolvedValueOnce(userFromCache)
 
-        const result = await processInputBBReferences(input, FieldSubtype.USER)
+        const result = await processInputBBReferences(userId, FieldSubtype.USER)
 
-        expect(result).toEqual(input)
+        expect(result).toEqual(userId)
         expect(mockedCacheGetUser).toBeCalledTimes(1)
-        expect(mockedCacheGetUser).toBeCalledWith(input)
+        expect(mockedCacheGetUser).toBeCalledWith(userId)
       })
 
       it("throws an error given an invalid id", async () => {
-        const input = generator.guid()
+        const userId = generator.guid()
 
         await expect(
-          processInputBBReferences(input, FieldSubtype.USER)
-        ).rejects.toThrowError(new InvalidBBRefError(input, FieldSubtype.USER))
+          processInputBBReferences(userId, FieldSubtype.USER)
+        ).rejects.toThrowError(new InvalidBBRefError(userId, FieldSubtype.USER))
       })
 
       it("validates valid user ids as csv", async () => {
@@ -57,8 +57,11 @@ describe("bbReferenceProcessor", () => {
           userIds.push(userId)
         }
 
-        const input = userIds.join(" ,  ")
-        const result = await processInputBBReferences(input, FieldSubtype.USER)
+        const userIdCsv = userIds.join(" ,  ")
+        const result = await processInputBBReferences(
+          userIdCsv,
+          FieldSubtype.USER
+        )
 
         expect(result).toEqual(userIds.join(","))
         expect(mockedCacheGetUser).toBeCalledTimes(5)
@@ -78,13 +81,45 @@ describe("bbReferenceProcessor", () => {
           structures.users.user({ _id: userId2 })
         )
 
-        const input = [userId1, userId2, userId3].join(" ,  ")
+        const userIdCsv = [userId1, userId2, userId3].join(" ,  ")
 
         await expect(
-          processInputBBReferences(input, FieldSubtype.USER)
+          processInputBBReferences(userIdCsv, FieldSubtype.USER)
         ).rejects.toThrowError(
           new InvalidBBRefError(userId3, FieldSubtype.USER)
         )
+      })
+
+      it("validate valid user object", async () => {
+        const userId = generator.guid()
+
+        const userFromCache = structures.users.user()
+        mockedCacheGetUser.mockResolvedValueOnce(userFromCache)
+
+        const result = await processInputBBReferences(
+          { _id: userId },
+          FieldSubtype.USER
+        )
+
+        expect(result).toEqual(userId)
+        expect(mockedCacheGetUser).toBeCalledTimes(1)
+        expect(mockedCacheGetUser).toBeCalledWith(userId)
+      })
+
+      it("validate valid user object array", async () => {
+        const users = Array.from({ length: 3 }, () => ({
+          _id: generator.guid(),
+        }))
+
+        mockedCacheGetUser.mockResolvedValue(structures.users.user())
+
+        const result = await processInputBBReferences(users, FieldSubtype.USER)
+
+        expect(result).toEqual(users.map(x => x._id).join(","))
+        expect(mockedCacheGetUser).toBeCalledTimes(3)
+        for (const user of users) {
+          expect(mockedCacheGetUser).toBeCalledWith(user._id)
+        }
       })
     })
   })
