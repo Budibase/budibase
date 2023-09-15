@@ -1,6 +1,6 @@
 import { cache } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import { Document, FieldSubtype } from "@budibase/types"
+import { FieldSubtype } from "@budibase/types"
 import { InvalidBBRefError } from "./errors"
 
 export async function processInputBBReferences(
@@ -38,4 +38,32 @@ export async function processInputBBReferences(
   }
 
   return result.join(",")
+}
+
+export async function processOutputBBReferences(
+  value: string,
+  subtype: FieldSubtype
+) {
+  const result = []
+
+  switch (subtype) {
+    case FieldSubtype.USER:
+      for (const id of value.split(",")) {
+        try {
+          const user = await cache.user.getUser(id)
+          if (user) {
+            result.push(user)
+          }
+        } catch {}
+      }
+      break
+    default:
+      throw utils.unreachable(subtype)
+  }
+
+  if (result.length > 1) {
+    return result
+  }
+
+  return result[0]
 }
