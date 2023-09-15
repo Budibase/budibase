@@ -328,12 +328,12 @@
             fillWidth
             title={value.title}
             panel={AutomationBindingPanel}
-            type={value.customType}
+            type={"date"}
             value={inputData[key]}
             on:change={e => onChange(e, key)}
             {bindings}
             allowJS={true}
-            updateOnChange={false}
+            updateOnChange={true}
             drawerLeft="260px"
           >
             <DatePicker

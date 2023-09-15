@@ -21,6 +21,7 @@
   export let allowHelpers = true
   export let updateOnChange = true
   export let drawerLeft
+  export let type
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -49,20 +50,40 @@
   const onBlur = () => {
     dispatch("blur", currentVal)
   }
+
+  const isDate = value => {
+    return !value || !isNaN(new Date(value).valueOf())
+  }
 </script>
 
 <div class="control" class:disabled>
-  <slot
-    {label}
-    {disabled}
-    readonly={isJS}
-    value={isJS ? "(JavaScript function)" : readableValue}
-    {placeholder}
-    {updateOnChange}
-  />
+  {#if type === "date" && !isDate(value)}
+    <Input
+      {label}
+      {disabled}
+      readonly={isJS}
+      value={isJS ? "(JavaScript function)" : readableValue}
+      on:change={event => onChange(event.detail)}
+      on:blur={onBlur}
+      {placeholder}
+      {updateOnChange}
+    />
+    <div class="icon" on:click={() => (value = "")}>
+      <Icon size="S" name="Calendar" />
+    </div>
+  {:else}
+    <slot
+      {label}
+      {disabled}
+      readonly={isJS}
+      value={isJS ? "(JavaScript function)" : readableValue}
+      {placeholder}
+      {updateOnChange}
+    />
+  {/if}
   {#if !disabled}
     <div
-      class="icon"
+      class={`icon ${type === "date" ? "slot-icon" : ""}`}
       on:click={() => {
         bindingDrawer.show()
       }}
@@ -102,6 +123,10 @@
   .control {
     flex: 1;
     position: relative;
+  }
+
+  .slot-icon {
+    right: 32px !important;
   }
 
   .icon {
