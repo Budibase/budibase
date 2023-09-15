@@ -145,7 +145,7 @@ describe("bbReferenceProcessor", () => {
           FieldSubtype.USER
         )
 
-        expect(result).toEqual(userFromCache)
+        expect(result).toEqual([userFromCache])
         expect(mockedCacheGetUser).toBeCalledTimes(1)
         expect(mockedCacheGetUser).toBeCalledWith(userId)
       })
