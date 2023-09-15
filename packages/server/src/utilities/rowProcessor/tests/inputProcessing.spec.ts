@@ -1,20 +1,13 @@
-import TestConfiguration from "../../../tests/utilities/TestConfiguration"
 import { inputProcessing } from ".."
 import { generator, structures } from "@budibase/backend-core/tests"
 import { FieldType, FieldTypeSubtypes, Table } from "@budibase/types"
 import * as bbReferenceProcessor from "../bbReferenceProcessor"
-
-const config = new TestConfiguration()
 
 jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
   processOutputBBReferences: jest.fn(),
 }))
 
 describe("rowProcessor - inputProcessing", () => {
-  beforeAll(async () => {
-    await config.init()
-  })
-
   beforeEach(() => {
     jest.resetAllMocks()
   })
