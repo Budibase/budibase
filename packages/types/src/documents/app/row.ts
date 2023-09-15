@@ -34,3 +34,13 @@ export interface Row extends Document {
   _viewId?: string
   [key: string]: any
 }
+
+export enum FieldSubtype {
+  USER = "user",
+}
+
+export const FieldTypeSubtypes = {
+  BB_REFERENCE: {
+    USER: FieldSubtype.USER,
+  },
+}
