@@ -58,7 +58,9 @@ export async function processOutputBBReferences(
           if (user) {
             result.push(user)
           }
-        } catch {}
+        } catch {
+          // If user cannot be found, we just strip it
+        }
       }
       break
     default:
