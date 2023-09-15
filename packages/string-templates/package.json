@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@budibase/handlebars-helpers": "^0.11.9",
-    "dayjs": "^1.10.4",
+    "dayjs": "^1.10.8",
     "handlebars": "^4.7.6",
     "handlebars-utils": "^1.0.6",
     "lodash": "^4.17.20",
