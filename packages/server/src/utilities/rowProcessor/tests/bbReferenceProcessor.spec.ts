@@ -1,6 +1,9 @@
 import * as backendCore from "@budibase/backend-core"
 import { FieldSubtype, User } from "@budibase/types"
-import { processInputBBReferences } from "../bbReferenceProcessor"
+import {
+  processInputBBReferences,
+  processOutputBBReferences,
+} from "../bbReferenceProcessor"
 import { generator, structures } from "@budibase/backend-core/tests"
 import { InvalidBBRefError } from "../errors"
 
@@ -125,6 +128,46 @@ describe("bbReferenceProcessor", () => {
         for (const user of users) {
           expect(mockedCacheGetUser).toBeCalledWith(user._id)
         }
+      })
+    })
+  })
+
+  describe("processOutputBBReferences", () => {
+    describe("subtype user", () => {
+      it("fetches user given a valid string id", async () => {
+        const userId = generator.guid()
+
+        const userFromCache = structures.users.user()
+        mockedCacheGetUser.mockResolvedValueOnce(userFromCache)
+
+        const result = await processOutputBBReferences(
+          userId,
+          FieldSubtype.USER
+        )
+
+        expect(result).toEqual(userFromCache)
+        expect(mockedCacheGetUser).toBeCalledTimes(1)
+        expect(mockedCacheGetUser).toBeCalledWith(userId)
+      })
+
+      it("fetches user given a valid string id csv", async () => {
+        const userId1 = generator.guid()
+        const userId2 = generator.guid()
+
+        const userFromCache1 = structures.users.user({ _id: userId1 })
+        const userFromCache2 = structures.users.user({ _id: userId2 })
+        mockedCacheGetUser.mockResolvedValueOnce(userFromCache1)
+        mockedCacheGetUser.mockResolvedValueOnce(userFromCache2)
+
+        const result = await processOutputBBReferences(
+          [userId1, userId2].join(","),
+          FieldSubtype.USER
+        )
+
+        expect(result).toEqual([userFromCache1, userFromCache2])
+        expect(mockedCacheGetUser).toBeCalledTimes(2)
+        expect(mockedCacheGetUser).toBeCalledWith(userId1)
+        expect(mockedCacheGetUser).toBeCalledWith(userId2)
       })
     })
   })
