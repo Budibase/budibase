@@ -68,8 +68,15 @@
       {placeholder}
       {updateOnChange}
     />
-    <div class="icon" on:click={() => (value = "")}>
-      <Icon size="S" name="Cancel" />
+    <div
+      class="icon"
+      on:click={() => {
+        if (!isJS) {
+          value = ""
+        }
+      }}
+    >
+      <Icon disabled={isJS} size="S" name="Cancel" />
     </div>
   {:else}
     <slot
