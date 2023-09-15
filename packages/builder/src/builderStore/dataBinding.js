@@ -261,17 +261,16 @@ export const getComponentContexts = (
  * Gets all data provider components above a component.
  */
 export const getActionProviderComponents = (asset, componentId, actionType) => {
-  if (!asset || !componentId) {
+  if (!asset) {
     return []
   }
-
-  // Get the component tree leading up to this component, ignoring the component
-  // itself
-  const path = findComponentPath(asset.props, componentId)
-  path.pop()
-
-  // Filter by only data provider components
-  return path.filter(component => {
+  const components = findAllComponents(asset.props)
+  return components.filter(component => {
+    // Ignore ourselves
+    if (componentId && component._id === componentId) {
+      return false
+    }
+    // Find components when expose this action
     const def = store.actions.components.getDefinition(component._component)
     return def?.actions?.includes(actionType)
   })
