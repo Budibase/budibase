@@ -15,7 +15,11 @@ describe("rowProcessor - inputProcessing", () => {
     await config.init()
   })
 
-  it("populate user BB references", async () => {
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
+
+  it("processes BB references if on the schema and it's populated", async () => {
     const userId = generator.guid()
 
     const table: Table = {
@@ -63,5 +67,84 @@ describe("rowProcessor - inputProcessing", () => {
     )
 
     expect(row).toEqual({ ...newRow, user })
+  })
+
+  it("it does not processe BB references if on the schema but it is not populated", async () => {
+    const userId = generator.guid()
+
+    const table: Table = {
+      _id: generator.guid(),
+      name: "TestTable",
+      type: "table",
+      schema: {
+        name: {
+          type: FieldType.STRING,
+          name: "name",
+          constraints: {
+            presence: true,
+            type: "string",
+          },
+        },
+        user: {
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          name: "user",
+          constraints: {
+            presence: false,
+            type: "string",
+          },
+        },
+      },
+    }
+
+    const newRow = {
+      name: "Jack",
+    }
+
+    const { row } = await inputProcessing(userId, table, newRow)
+
+    expect(bbReferenceProcessor.processOutputBBReferences).not.toBeCalled()
+    expect(row).toEqual({ ...newRow, user: undefined })
+  })
+
+  it("it does not processe BB references if not in the schema", async () => {
+    const userId = generator.guid()
+
+    const table: Table = {
+      _id: generator.guid(),
+      name: "TestTable",
+      type: "table",
+      schema: {
+        name: {
+          type: FieldType.STRING,
+          name: "name",
+          constraints: {
+            presence: true,
+            type: "string",
+          },
+        },
+        user: {
+          type: FieldType.NUMBER,
+          name: "user",
+          constraints: {
+            presence: true,
+            type: "string",
+          },
+        },
+      },
+    }
+
+    const newRow = {
+      name: "Jack",
+      user: "123",
+    }
+
+    const { row } = await inputProcessing(userId, table, newRow)
+
+    expect(bbReferenceProcessor.processOutputBBReferences).not.toBeCalled()
+    expect(row).toEqual({
+      name: "Jack",
+      user: 123,
+    })
   })
 })
