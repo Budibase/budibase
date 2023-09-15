@@ -69,7 +69,7 @@
       {updateOnChange}
     />
     <div class="icon" on:click={() => (value = "")}>
-      <Icon size="S" name="Calendar" />
+      <Icon size="S" name="Cancel" />
     </div>
   {:else}
     <slot
