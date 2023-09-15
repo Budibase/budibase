@@ -23,6 +23,7 @@
   import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import CodeEditorModal from "./CodeEditorModal.svelte"
   import QuerySelector from "./QuerySelector.svelte"
@@ -323,25 +324,23 @@
             />
           </div>
         {:else if value.type === "date"}
-          {#if block.rowControl}
-            <DrawerBindableInput
-              fillWidth
-              title={value.title}
-              panel={AutomationBindingPanel}
-              type={value.customType}
-              value={inputData[key]}
-              on:change={e => onChange(e, key)}
-              {bindings}
-              allowJS={true}
-              updateOnChange={false}
-              drawerLeft="260px"
-            />
-          {:else}
+          <DrawerBindableSlot
+            fillWidth
+            title={value.title}
+            panel={AutomationBindingPanel}
+            type={value.customType}
+            value={inputData[key]}
+            on:change={e => onChange(e, key)}
+            {bindings}
+            allowJS={true}
+            updateOnChange={false}
+            drawerLeft="260px"
+          >
             <DatePicker
               value={inputData[key]}
               on:change={e => onChange(e, key)}
             />
-          {/if}
+          </DrawerBindableSlot>
         {:else if value.customType === "column"}
           <Select
             on:change={e => onChange(e, key)}

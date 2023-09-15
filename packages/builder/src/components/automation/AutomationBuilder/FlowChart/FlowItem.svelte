@@ -41,8 +41,7 @@
   $: automationId = $selectedAutomation?._id
   $: showBindingPicker =
     block.stepId === ActionStepID.CREATE_ROW ||
-    block.stepId === ActionStepID.UPDATE_ROW ||
-    block.stepId === ActionStepID.SEND_EMAIL_SMTP
+    block.stepId === ActionStepID.UPDATE_ROW
   $: isTrigger = block.type === "TRIGGER"
   $: steps = $selectedAutomation?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block.id)
