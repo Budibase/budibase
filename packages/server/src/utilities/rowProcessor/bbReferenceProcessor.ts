@@ -44,6 +44,10 @@ export async function processOutputBBReferences(
   value: string,
   subtype: FieldSubtype
 ) {
+  if (typeof value !== "string") {
+    return value
+  }
+
   const result = []
 
   switch (subtype) {
