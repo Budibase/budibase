@@ -5,6 +5,7 @@ import * as bbReferenceProcessor from "../bbReferenceProcessor"
 
 jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
   processInputBBReferences: jest.fn(),
+  processOutputBBReferences: jest.fn(),
 }))
 
 describe("rowProcessor - inputProcessing", () => {
