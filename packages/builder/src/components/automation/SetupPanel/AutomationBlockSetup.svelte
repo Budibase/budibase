@@ -333,7 +333,7 @@
             on:change={e => onChange(e, key)}
             {bindings}
             allowJS={true}
-            updateOnChange={true}
+            updateOnChange={false}
             drawerLeft="260px"
           >
             <DatePicker
