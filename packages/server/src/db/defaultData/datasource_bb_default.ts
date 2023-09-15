@@ -34,9 +34,9 @@ function syncLastIds(table: Table, rowCount: number) {
   })
 }
 
-function tableImport(table: Table, data: Row[]) {
+async function tableImport(table: Table, data: Row[]) {
   const cloneTable = cloneDeep(table)
-  const rowDocs = importToRows(data, cloneTable)
+  const rowDocs = await importToRows(data, cloneTable)
   syncLastIds(cloneTable, rowDocs.length)
   return { rows: rowDocs, table: cloneTable }
 }
@@ -601,20 +601,20 @@ export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
   },
 }
 
-export function buildDefaultDocs() {
-  const inventoryData = tableImport(
+export async function buildDefaultDocs() {
+  const inventoryData = await tableImport(
     DEFAULT_INVENTORY_TABLE_SCHEMA,
     inventoryImport
   )
 
-  const employeeData = tableImport(
+  const employeeData = await tableImport(
     DEFAULT_EMPLOYEE_TABLE_SCHEMA,
     employeeImport
   )
 
-  const jobData = tableImport(DEFAULT_JOBS_TABLE_SCHEMA, jobsImport)
+  const jobData = await tableImport(DEFAULT_JOBS_TABLE_SCHEMA, jobsImport)
 
-  const expensesData = tableImport(
+  const expensesData = await tableImport(
     DEFAULT_EXPENSES_TABLE_SCHEMA,
     expensesImport
   )
