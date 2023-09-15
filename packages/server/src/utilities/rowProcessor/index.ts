@@ -7,7 +7,7 @@ import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
-import { processOutputBBReferences } from "./bbReferenceProcessor"
+import { processInputBBReferences } from "./bbReferenceProcessor"
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {
@@ -169,7 +169,7 @@ export async function inputProcessing(
     }
 
     if (field.type === FieldTypes.BB_REFERENCE) {
-      clonedRow[key] = await processOutputBBReferences(
+      clonedRow[key] = await processInputBBReferences(
         value,
         field.subtype as FieldSubtype
       )

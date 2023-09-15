@@ -4,7 +4,7 @@ import { FieldType, FieldTypeSubtypes, Table } from "@budibase/types"
 import * as bbReferenceProcessor from "../bbReferenceProcessor"
 
 jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
-  processOutputBBReferences: jest.fn(),
+  processInputBBReferences: jest.fn(),
 }))
 
 describe("rowProcessor - inputProcessing", () => {
@@ -48,13 +48,13 @@ describe("rowProcessor - inputProcessing", () => {
     const user = structures.users.user()
 
     ;(
-      bbReferenceProcessor.processOutputBBReferences as jest.Mock
+      bbReferenceProcessor.processInputBBReferences as jest.Mock
     ).mockResolvedValue(user)
 
     const { row } = await inputProcessing(userId, table, newRow)
 
-    expect(bbReferenceProcessor.processOutputBBReferences).toBeCalledTimes(1)
-    expect(bbReferenceProcessor.processOutputBBReferences).toBeCalledWith(
+    expect(bbReferenceProcessor.processInputBBReferences).toBeCalledTimes(1)
+    expect(bbReferenceProcessor.processInputBBReferences).toBeCalledWith(
       "123",
       "user"
     )
@@ -96,7 +96,7 @@ describe("rowProcessor - inputProcessing", () => {
 
     const { row } = await inputProcessing(userId, table, newRow)
 
-    expect(bbReferenceProcessor.processOutputBBReferences).not.toBeCalled()
+    expect(bbReferenceProcessor.processInputBBReferences).not.toBeCalled()
     expect(row).toEqual({ ...newRow, user: undefined })
   })
 
@@ -134,7 +134,7 @@ describe("rowProcessor - inputProcessing", () => {
 
     const { row } = await inputProcessing(userId, table, newRow)
 
-    expect(bbReferenceProcessor.processOutputBBReferences).not.toBeCalled()
+    expect(bbReferenceProcessor.processInputBBReferences).not.toBeCalled()
     expect(row).toEqual({
       name: "Jack",
       user: 123,
