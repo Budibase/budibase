@@ -1,5 +1,5 @@
 <script>
-  import { getContextProviderComponents } from "builderStore/dataBinding"
+  import { getComponentContexts } from "builderStore/dataBinding"
   import {
     Button,
     Popover,
@@ -22,6 +22,7 @@
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
+  import { findAllComponents } from "builderStore/componentUtils"
 
   export let value = {}
   export let otherSources
@@ -60,12 +61,13 @@
       ...query,
       type: "query",
     }))
-  $: contextProviders = getContextProviderComponents(
-    $currentAsset,
-    $store.selectedComponentId
-  )
-  $: dataProviders = contextProviders
-    .filter(component => component._component?.endsWith("/dataprovider"))
+  $: dataProviders = findAllComponents($currentAsset.props)
+    .filter(component => {
+      return (
+        component._component?.endsWith("/dataprovider") &&
+        component._id !== $store.selectedComponentId
+      )
+    })
     .map(provider => ({
       label: provider._instanceName,
       name: provider._instanceName,

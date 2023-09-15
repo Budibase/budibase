@@ -261,20 +261,6 @@ export const getComponentContexts = (
 /**
  * Gets all data provider components above a component.
  */
-export const getContextProviderComponents = (
-  asset,
-  componentId,
-  type,
-  options = { includeSelf: false }
-) => {
-  return getComponentContexts(asset, componentId, type, options).map(
-    entry => entry.component
-  )
-}
-
-/**
- * Gets all data provider components above a component.
- */
 export const getActionProviderComponents = (asset, componentId, actionType) => {
   if (!asset || !componentId) {
     return []

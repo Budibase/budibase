@@ -97,7 +97,7 @@ export const findAllComponents = rootComponent => {
 }
 
 /**
- * Finds the closes parent component which matches certain criteria
+ * Finds the closest parent component which matches certain criteria
  */
 export const findClosestMatchingComponent = (
   rootComponent,
