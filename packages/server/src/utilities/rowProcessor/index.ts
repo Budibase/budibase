@@ -130,7 +130,7 @@ export function coerce(row: any, type: string) {
  * @param {object} opts some input processing options (like disabling auto-column relationships).
  * @returns {object} the row which has been prepared to be written to the DB.
  */
-export function inputProcessing(
+export async function inputProcessing(
   userId: string | null | undefined,
   table: Table,
   row: Row,
