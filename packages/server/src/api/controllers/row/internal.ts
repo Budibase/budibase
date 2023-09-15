@@ -59,7 +59,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableClone = cloneDeep(dbTable)
 
   // this returns the table and row incase they have been updated
-  let { table, row } = inputProcessing(ctx.user, tableClone, combinedRow)
+  let { table, row } = inputProcessing(ctx.user?._id, tableClone, combinedRow)
   const validateResult = await sdk.rows.utils.validate({
     row,
     table,
@@ -106,7 +106,7 @@ export async function save(ctx: UserCtx) {
   // need to copy the table so it can be differenced on way out
   const tableClone = cloneDeep(dbTable)
 
-  let { table, row } = inputProcessing(ctx.user, tableClone, inputs)
+  let { table, row } = inputProcessing(ctx.user?._id, tableClone, inputs)
 
   const validateResult = await sdk.rows.utils.validate({
     row,

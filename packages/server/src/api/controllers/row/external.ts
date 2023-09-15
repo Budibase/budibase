@@ -93,7 +93,7 @@ export async function save(ctx: UserCtx) {
 
   const table = await sdk.tables.getTable(tableId)
   const { table: updatedTable, row } = inputProcessing(
-    ctx.user,
+    ctx.user?._id,
     cloneDeep(table),
     inputs
   )
