@@ -52,7 +52,7 @@ export async function processOutputBBReferences(
 
   switch (subtype) {
     case FieldSubtype.USER:
-      for (const id of value.split(",")) {
+      for (const id of value.split(",").filter(x => !!x)) {
         try {
           const user = await cache.user.getUser(id)
           if (user) {
