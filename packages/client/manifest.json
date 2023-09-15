@@ -3715,7 +3715,7 @@
     },
     "settings": [
       {
-        "type": "field/attachment",
+        "type": "field/s3",
         "label": "Field",
         "key": "field",
         "required": true

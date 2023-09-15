@@ -50,6 +50,11 @@ import {
   SearchFilters,
   UserRoles,
   Automation,
+  View,
+  FieldType,
+  RelationshipType,
+  ViewV2,
+  CreateViewRequest,
 } from "@budibase/types"
 
 import API from "./api"
@@ -75,9 +80,8 @@ class TestConfiguration {
   globalUserId: any
   userMetadataId: any
   table?: Table
-  linkedTable: any
   automation: any
-  datasource: any
+  datasource?: Datasource
   tenantId?: string
   defaultUserValues: DefaultUserValues
   api: API
@@ -527,7 +531,7 @@ class TestConfiguration {
   // TABLE
 
   async updateTable(
-    config?: any,
+    config?: Table,
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
@@ -542,33 +546,50 @@ class TestConfiguration {
     if (config != null && config._id) {
       delete config._id
     }
+    config = config || basicTable()
+    if (this.datasource && !config.sourceId) {
+      config.sourceId = this.datasource._id
+      if (this.datasource.plus) {
+        config.type = "external"
+      }
+    }
+
     return this.updateTable(config, options)
   }
 
   async getTable(tableId?: string) {
-    tableId = tableId || this.table?._id
+    tableId = tableId || this.table!._id!
     return this._req(null, { tableId }, controllers.table.find)
   }
 
-  async createLinkedTable(relationshipType?: string, links: any = ["link"]) {
+  async createLinkedTable(
+    relationshipType = RelationshipType.ONE_TO_MANY,
+    links: any = ["link"],
+    config?: Table
+  ) {
     if (!this.table) {
       throw "Must have created a table first."
     }
-    const tableConfig: any = basicTable()
+    const tableConfig = config || basicTable()
     tableConfig.primaryDisplay = "name"
     for (let link of links) {
       tableConfig.schema[link] = {
-        type: "link",
+        type: FieldType.LINK,
         fieldName: link,
         tableId: this.table._id,
         name: link,
-      }
-      if (relationshipType) {
-        tableConfig.schema[link].relationshipType = relationshipType
+        relationshipType,
       }
     }
+
+    if (this.datasource && !tableConfig.sourceId) {
+      tableConfig.sourceId = this.datasource._id
+      if (this.datasource.plus) {
+        tableConfig.type = "external"
+      }
+    }
+
     const linkedTable = await this.createTable(tableConfig)
-    this.linkedTable = linkedTable
     return linkedTable
   }
 
@@ -621,15 +642,34 @@ class TestConfiguration {
 
   // VIEW
 
-  async createLegacyView(config?: any) {
-    if (!this.table) {
+  async createLegacyView(config?: View) {
+    if (!this.table && !config) {
       throw "Test requires table to be configured."
     }
     const view = config || {
-      tableId: this.table._id,
-      name: "ViewTest",
+      tableId: this.table!._id,
+      name: generator.guid(),
     }
     return this._req(view, null, controllers.view.v1.save)
+  }
+
+  async createView(
+    config?: Omit<CreateViewRequest, "tableId" | "name"> & {
+      name?: string
+      tableId?: string
+    }
+  ) {
+    if (!this.table && !config?.tableId) {
+      throw "Test requires table to be configured."
+    }
+
+    const view: CreateViewRequest = {
+      ...config,
+      tableId: config?.tableId || this.table!._id!,
+      name: config?.name || generator.word(),
+    }
+
+    return await this.api.viewV2.create(view)
   }
 
   // AUTOMATION
@@ -677,17 +717,17 @@ class TestConfiguration {
     config = config || basicDatasource()
     const response = await this._req(config, null, controllers.datasource.save)
     this.datasource = response.datasource
-    return this.datasource
+    return this.datasource!
   }
 
-  async updateDatasource(datasource: any) {
+  async updateDatasource(datasource: Datasource): Promise<Datasource> {
     const response = await this._req(
       datasource,
       { datasourceId: datasource._id },
       controllers.datasource.update
     )
     this.datasource = response.datasource
-    return this.datasource
+    return this.datasource!
   }
 
   async restDatasource(cfg?: any) {
@@ -771,7 +811,7 @@ class TestConfiguration {
     if (!this.datasource && !config) {
       throw "No datasource created for query."
     }
-    config = config || basicQuery(this.datasource._id)
+    config = config || basicQuery(this.datasource!._id!)
     return this._req(config, null, controllers.query.save)
   }
 
