@@ -199,7 +199,12 @@ export const getComponentBindableProperties = (asset, componentId) => {
  * both global and local bindings, taking into account a component's position
  * in the component tree.
  */
-const getComponentContexts = (asset, componentId, type) => {
+export const getComponentContexts = (
+  asset,
+  componentId,
+  type,
+  options = { includeSelf: false }
+) => {
   if (!asset || !componentId) {
     return []
   }
@@ -245,6 +250,11 @@ const getComponentContexts = (asset, componentId, type) => {
   const localComponents = findComponentPath(asset.props, componentId)
   localComponents.forEach(processContexts("local"))
 
+  // Exclude self if required
+  if (!options?.includeSelf) {
+    delete map[componentId]
+  }
+
   return Object.values(map)
 }
 
@@ -257,17 +267,9 @@ export const getContextProviderComponents = (
   type,
   options = { includeSelf: false }
 ) => {
-  let componentContexts = getComponentContexts(asset, componentId, type)
-
-  // Exclude self if required
-  if (!options?.includeSelf) {
-    componentContexts = componentContexts.filter(
-      entry => entry.component._id !== componentId
-    )
-  }
-
-  // Ignore contexts and just return the component instances
-  return componentContexts.map(entry => entry.component)
+  return getComponentContexts(asset, componentId, type, options).map(
+    entry => entry.component
+  )
 }
 
 /**
