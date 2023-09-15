@@ -97,6 +97,9 @@ export const getAuthBindings = () => {
   return bindings
 }
 
+/**
+ * Gets all bindings for environment variables
+ */
 export const getEnvironmentBindings = () => {
   let envVars = get(environment).variables
   return envVars.map(variable => {
@@ -125,26 +128,22 @@ export const toBindingsArray = (valueMap, prefix, category) => {
     if (!binding) {
       return acc
     }
-
     let config = {
       type: "context",
       runtimeBinding: binding,
       readableBinding: `${prefix}.${binding}`,
       icon: "Brackets",
     }
-
     if (category) {
       config.category = category
     }
-
     acc.push(config)
-
     return acc
   }, [])
 }
 
 /**
- * Utility - coverting a map of readable bindings to runtime
+ * Utility to covert a map of readable bindings to runtime
  */
 export const readableToRuntimeMap = (bindings, ctx) => {
   if (!bindings || !ctx) {
@@ -333,6 +332,9 @@ const getContextBindings = (asset, componentId) => {
     .flat()
 }
 
+/**
+ * Generates a set of bindings for a given component context
+ */
 const generateComponentContextBindings = (asset, componentContext) => {
   const { component, definition, contexts } = componentContext
   if (!component || !definition || !contexts?.length) {
@@ -577,6 +579,7 @@ const getDeviceBindings = () => {
 
 /**
  * Gets all selected rows bindings for tables in the current asset.
+ * TODO: remove in future because we don't need a separate store for this
  */
 const getSelectedRowsBindings = asset => {
   let bindings = []
@@ -619,6 +622,9 @@ const getSelectedRowsBindings = asset => {
   return bindings
 }
 
+/**
+ * Generates a state binding for a certain key name
+ */
 export const makeStateBinding = key => {
   return {
     type: "context",
@@ -673,6 +679,9 @@ const getUrlBindings = asset => {
   return urlParamBindings.concat([queryParamsBinding])
 }
 
+/**
+ * Generates all bindings for role IDs
+ */
 const getRoleBindings = () => {
   return (get(rolesStore) || []).map(role => {
     return {
