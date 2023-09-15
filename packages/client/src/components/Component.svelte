@@ -35,6 +35,10 @@
     findHBSBlocks,
     isJSBinding,
   } from "@budibase/string-templates"
+  import {
+    getActionContextKey,
+    getActionDependentContextKeys,
+  } from "../utils/buttonActions.js"
 
   export let instance = {}
   export let isLayout = false
@@ -165,9 +169,6 @@
       hasMissingRequiredSettings)
   $: emptyState = empty && showEmptyState
 
-  // Enrich component settings
-  // $: enrichComponentSettings($context, settingsDefinitionMap)
-
   // Evaluate conditional UI settings and store any component setting changes
   // which need to be made
   $: evaluateConditions(conditions)
@@ -296,18 +297,42 @@
       }
     })
 
+    // The known context key map is built up at runtime, as changes to keys are
+    // encountered. We manually seed this to the required action keys as these
+    // are not encountered at runtime and so need computed in advance.
+    knownContextKeyMap = generateActionKeyMap(instance, settingsDefinition)
+    bindingString = bindings.join(" ")
+
     // Run any migrations
     runMigrations(instance, settingsDefinition)
 
     // Force an initial enrichment of the new settings
-    enrichComponentSettings(get(context), settingsDefinitionMap, {
-      force: true,
-    })
-    bindingString = bindings.join(" ")
-    knownContextKeyMap = {}
+    enrichComponentSettings(get(context), settingsDefinitionMap)
+  }
 
-    // Force an initial enrichment of the new settings
-    enrichComponentSettings($context, settingsDefinitionMap)
+  // Extracts a map of all context keys which are required by action settings
+  // to provide the functions to evaluate at runtime. This needs done manually
+  // as the action definitions themselves do not specify bindings for action
+  // keys, meaning we cannot do this while doing the other normal bindings.
+  const generateActionKeyMap = (instance, settingsDefinition) => {
+    let map = {}
+    settingsDefinition.forEach(setting => {
+      if (setting.type === "event") {
+        instance[setting.key]?.forEach(action => {
+          // We depend on the actual action key
+          const actionKey = getActionContextKey(action)
+          if (actionKey) {
+            map[actionKey] = true
+          }
+
+          // We also depend on any manually declared context keys
+          getActionDependentContextKeys(action)?.forEach(key => {
+            map[key] = true
+          })
+        })
+      }
+    })
+    return map
   }
 
   const runMigrations = (instance, settingsDefinition) => {
