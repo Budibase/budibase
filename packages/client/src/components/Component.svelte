@@ -9,7 +9,7 @@
 </script>
 
 <script>
-  import { getContext, setContext, onMount, onDestroy } from "svelte"
+  import { getContext, setContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
   import {
     enrichProps,
@@ -86,7 +86,6 @@
 
   // Keep track of stringified representations of context and instance
   // to avoid enriching bindings as much as possible
-  let lastContextKey
   let lastInstanceKey
 
   // Visibility flag used by conditional UI
@@ -540,33 +539,30 @@
     }
   }
 
+  // Register an unregister component instance
   onMount(() => {
-    if (
-      $appStore.isDevApp &&
-      !componentStore.actions.isComponentRegistered(id)
-    ) {
-      componentStore.actions.registerInstance(id, {
-        component: instance._component,
-        getSettings: () => cachedSettings,
-        getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
-        getDataContext: () => get(context),
-        reload: () => initialise(instance, true),
-        setEphemeralStyles: styles => (ephemeralStyles = styles),
-        state: store,
-      })
+    if ($appStore.isDevApp) {
+      if (!componentStore.actions.isComponentRegistered(id)) {
+        componentStore.actions.registerInstance(id, {
+          component: instance._component,
+          getSettings: () => cachedSettings,
+          getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
+          getDataContext: () => get(context),
+          reload: () => initialise(instance, true),
+          setEphemeralStyles: styles => (ephemeralStyles = styles),
+          state: store,
+        })
+      }
+      return () => {
+        if (componentStore.actions.isComponentRegistered(id)) {
+          componentStore.actions.unregisterInstance(id)
+        }
+      }
     }
   })
 
+  // Observe changes to context
   onMount(() => context.actions.observeChanges(handleContextChange))
-
-  onDestroy(() => {
-    if (
-      $appStore.isDevApp &&
-      componentStore.actions.isComponentRegistered(id)
-    ) {
-      componentStore.actions.unregisterInstance(id)
-    }
-  })
 </script>
 
 {#if constructor && initialSettings && (visible || inSelectedPath) && !builderHidden}
