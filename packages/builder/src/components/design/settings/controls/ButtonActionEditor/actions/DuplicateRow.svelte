@@ -3,7 +3,7 @@
   import { store, currentAsset } from "builderStore"
   import { tables, viewsV2 } from "stores/backend"
   import {
-    getContextProviderComponents,
+    getComponentContexts,
     getSchemaForDatasourcePlus,
   } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
@@ -11,18 +11,18 @@
   export let parameters
   export let bindings = []
 
-  $: formComponents = getContextProviderComponents(
+  $: formContexts = getComponentContexts(
     $currentAsset,
     $store.selectedComponentId,
     "form"
   )
-  $: schemaComponents = getContextProviderComponents(
+  $: schemaContexts = getComponentContexts(
     $currentAsset,
     $store.selectedComponentId,
     "schema"
   )
-  $: providerOptions = getProviderOptions(formComponents, schemaComponents)
-  $: schemaFields = getSchemaFields($currentAsset, parameters?.tableId)
+  $: providerOptions = getProviderOptions(formContexts, schemaContexts)
+  $: schemaFields = getSchemaFields(parameters?.tableId)
   $: tableOptions = $tables.list.map(table => ({
     label: table.name,
     resourceId: table._id,
@@ -33,44 +33,32 @@
   }))
   $: options = [...(tableOptions || []), ...(viewOptions || [])]
 
-  // Gets a context definition of a certain type from a component definition
-  const extractComponentContext = (component, contextType) => {
-    const def = store.actions.components.getDefinition(component?._component)
-    if (!def) {
-      return null
-    }
-    const contexts = Array.isArray(def.context) ? def.context : [def.context]
-    return contexts.find(context => context?.type === contextType)
-  }
-
   // Gets options for valid context keys which provide valid data to submit
-  const getProviderOptions = (formComponents, schemaComponents) => {
-    const formContexts = formComponents.map(component => ({
-      component,
-      context: extractComponentContext(component, "form"),
-    }))
-    const schemaContexts = schemaComponents.map(component => ({
-      component,
-      context: extractComponentContext(component, "schema"),
-    }))
+  const getProviderOptions = (formContexts, schemaContexts) => {
     const allContexts = formContexts.concat(schemaContexts)
-
-    return allContexts.map(({ component, context }) => {
+    let options = []
+    allContexts.forEach(({ component, contexts }) => {
       let runtimeBinding = component._id
-      if (context.suffix) {
-        runtimeBinding += `-${context.suffix}`
-      }
-      return {
-        label: component._instanceName,
-        value: runtimeBinding,
-      }
+      contexts.forEach(context => {
+        if (context.suffix) {
+          runtimeBinding += `-${context.suffix}`
+        }
+        options.push({
+          label: component._instanceName,
+          value: runtimeBinding,
+        })
+      })
     })
+    return options
   }
 
-  const getSchemaFields = (asset, tableId) => {
-    const { schema } = getSchemaForDatasourcePlus(tableId)
+  const getSchemaFields = resourceId => {
+    let { schema } = getSchemaForDatasourcePlus(resourceId)
+
+    // Since we're duplicating, we don't want to allow changing the ID or rev
     delete schema._id
     delete schema._rev
+
     return Object.values(schema || {})
   }
 
