@@ -19,7 +19,7 @@ const TypeIconMap = {
   formula: "Calculator",
   json: "Brackets",
   bigint: "TagBold",
-  internal: {
+  bb_reference: {
     user: "User",
   },
 }
