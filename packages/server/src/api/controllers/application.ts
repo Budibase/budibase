@@ -168,7 +168,7 @@ export const addSampleData = async (ctx: UserCtx) => {
     // Check if default datasource exists before creating it
     await sdk.datasources.get(DEFAULT_BB_DATASOURCE_ID)
   } catch (err: any) {
-    const defaultDbDocs = buildDefaultDocs()
+    const defaultDbDocs = await buildDefaultDocs()
 
     // add in the default db data docs - tables, datasource, rows and links
     await db.bulkDocs([...defaultDbDocs])
