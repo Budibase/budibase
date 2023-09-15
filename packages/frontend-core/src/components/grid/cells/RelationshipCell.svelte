@@ -260,14 +260,16 @@
       on:wheel={e => (focused ? e.stopPropagation() : null)}
     >
       {#each value || [] as relationship}
-        {#if relationship.primaryDisplay}
+        {#if relationship[primaryDisplay] || relationship.primaryDisplay}
           <div class="badge">
             <span
               on:click={editable
                 ? () => showRelationship(relationship._id)
                 : null}
             >
-              {readable(relationship.primaryDisplay)}
+              {readable(
+                relationship[primaryDisplay] || relationship.primaryDisplay
+              )}
             </span>
             {#if editable}
               <Icon
