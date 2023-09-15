@@ -43,6 +43,11 @@ describe("bbReferenceProcessor", () => {
       it("throws an error given an invalid id", async () => {
         const userId = generator.guid()
 
+        mockedCacheGetUser.mockRejectedValue({
+          status: 404,
+          error: "not_found",
+        })
+
         await expect(
           processInputBBReferences(userId, FieldSubtype.USER)
         ).rejects.toThrowError(new InvalidBBRefError(userId, FieldSubtype.USER))
