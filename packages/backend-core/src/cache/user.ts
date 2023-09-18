@@ -115,11 +115,18 @@ export async function getUsers(userIds: string[], tenantId: string) {
   // try cache
   let usersFromCache = await client.bulkGet(userIds)
   const missingUsersFromCache = userIds.filter(uid => !usersFromCache[uid])
-  const usersFromDb = await populateUsersFromDB(missingUsersFromCache, tenantId)
-  for (const userToCache of usersFromDb) {
-    await client.store(userToCache._id, userToCache, EXPIRY_SECONDS)
+  const users = Object.values(usersFromCache)
+
+  if (missingUsersFromCache.length) {
+    const usersFromDb = await populateUsersFromDB(
+      missingUsersFromCache,
+      tenantId
+    )
+    for (const userToCache of usersFromDb) {
+      await client.store(userToCache._id, userToCache, EXPIRY_SECONDS)
+    }
+    users.push(...usersFromDb)
   }
-  const users = [...Object.values(usersFromCache), ...usersFromDb]
   return users
 }
 
