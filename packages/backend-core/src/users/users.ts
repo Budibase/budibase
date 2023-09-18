@@ -20,7 +20,7 @@ import {
 } from "@budibase/types"
 import { getGlobalDB } from "../context"
 import * as context from "../context"
-import { user as userCache } from "../cache"
+import { isCreator } from "./utils"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -253,6 +253,19 @@ export async function getUserCount() {
     include_docs: false,
   })
   return response.total_rows
+}
+
+export async function getCreatorCount() {
+  let creators = 0
+  async function iterate(startPage?: string) {
+    const page = await paginatedUsers({ page: startPage })
+    creators += page.data.filter(isCreator).length
+    if (page.hasNextPage) {
+      await iterate(page.nextPage)
+    }
+  }
+  await iterate()
+  return creators
 }
 
 // used to remove the builder/admin permissions, for processing the

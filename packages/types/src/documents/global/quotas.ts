@@ -32,6 +32,7 @@ export interface StaticUsage {
   [StaticQuotaName.APPS]: number
   [StaticQuotaName.PLUGINS]: number
   [StaticQuotaName.USERS]: number
+  [StaticQuotaName.CREATORS]: number
   [StaticQuotaName.USER_GROUPS]: number
   [StaticQuotaName.ROWS]: number
   triggers: {

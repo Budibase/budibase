@@ -59,6 +59,7 @@ export const usage = (): QuotaUsage => {
       apps: 0,
       plugins: 0,
       users: 0,
+      creators: 0,
       userGroups: 0,
       rows: 0,
       triggers: {},

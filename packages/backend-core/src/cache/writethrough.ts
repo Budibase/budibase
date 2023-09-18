@@ -4,7 +4,7 @@ import { logWarn } from "../logging"
 import { Database, Document, LockName, LockType } from "@budibase/types"
 import * as locks from "../redis/redlockImpl"
 
-const DEFAULT_WRITE_RATE_MS = 10000
+const DEFAULT_WRITE_RATE_MS = 5000
 let CACHE: BaseCache | null = null
 
 interface CacheItem {
