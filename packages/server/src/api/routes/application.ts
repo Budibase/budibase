@@ -58,5 +58,10 @@ router
     authorized(permissions.GLOBAL_BUILDER),
     controller.destroy
   )
+  .post(
+    "/api/applications/:appId/update",
+    authorized(permissions.BUILDER),
+    controller.updateWithExport
+  )
 
 export default router

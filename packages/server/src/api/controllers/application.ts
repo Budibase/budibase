@@ -575,6 +575,8 @@ export async function sync(ctx: UserCtx) {
   }
 }
 
+export async function updateWithExport(ctx: UserCtx) {}
+
 export async function updateAppPackage(appPackage: any, appId: any) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
