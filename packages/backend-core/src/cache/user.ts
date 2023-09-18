@@ -27,6 +27,31 @@ async function populateFromDB(userId: string, tenantId: string) {
   return user
 }
 
+async function populateUsersFromDB(userIds: string[], tenantId: string) {
+  const db = tenancy.getTenantDB(tenantId)
+  const allDocsResponse = await db.allDocs<any>({
+    keys: userIds,
+    include_docs: true,
+    limit: userIds.length,
+  })
+
+  const users = allDocsResponse.rows.map(r => r.doc)
+  await Promise.all(
+    users.map(async user => {
+      user.budibaseAccess = true
+      if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+        const account = await accounts.getAccount(user.email)
+        if (account) {
+          user.account = account
+          user.accountPortalAccess = true
+        }
+      }
+    })
+  )
+
+  return users
+}
+
 /**
  * Get the requested user by id.
  * Use redis cache to first read the user.
@@ -75,6 +100,27 @@ export async function getUser(
     })
   }
   return user
+}
+
+/**
+ * Get the requested users by id.
+ * Use redis cache to first read the users.
+ * If not present fallback to loading the users directly and re-caching.
+ * @param {*} userIds the ids of the user to get
+ * @param {*} tenantId the tenant of the users to get
+ * @returns
+ */
+export async function getUsers(userIds: string[], tenantId: string) {
+  const client = await redis.getUserClient()
+  // try cache
+  let usersFromCache = await client.bulkGet(userIds)
+  const missingUsersFromCache = userIds.filter(uid => !usersFromCache[uid])
+  const usersFromDb = await populateUsersFromDB(missingUsersFromCache, tenantId)
+  for (const userToCache of usersFromDb) {
+    await client.store(userToCache._id, userToCache, EXPIRY_SECONDS)
+  }
+  const users = [...Object.values(usersFromCache), ...usersFromDb]
+  return users
 }
 
 export async function invalidateUser(userId: string) {
