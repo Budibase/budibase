@@ -346,51 +346,52 @@
   }
 
   function getRelationshipOptions(field) {
-    switch (field.type) {
-      case FieldType.LINK:
-        if (!field || !field.tableId) {
-          return null
-        }
-        const linkTable = tableOptions?.find(
-          table => table._id === field.tableId
-        )
-        if (!linkTable) {
-          return null
-        }
-        const thisName = truncate(table.name, { length: 14 }),
-          linkName = truncate(linkTable.name, { length: 14 })
-        return [
-          {
-            name: `Many ${thisName} rows → many ${linkName} rows`,
-            alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
-            value: RelationshipType.MANY_TO_MANY,
-          },
-          {
-            name: `One ${linkName} row → many ${thisName} rows`,
-            alt: `One ${linkTable.name} rows → many ${table.name} rows`,
-            value: RelationshipType.ONE_TO_MANY,
-          },
-          {
-            name: `One ${thisName} row → many ${linkName} rows`,
-            alt: `One ${table.name} rows → many ${linkTable.name} rows`,
-            value: RelationshipType.MANY_TO_ONE,
-          },
-        ]
-      case BB_USER_REFERENCE_TYPE:
-        return [
-          {
-            name: `Single user`,
-            alt: `Single user`,
-            value: RelationshipType.ONE_TO_MANY,
-          },
-          {
-            name: `Multiple users`,
-            alt: `Multiple users`,
-            value: RelationshipType.MANY_TO_ONE,
-          },
-        ]
-      default:
+    if (!field) {
+      return null
+    }
+
+    if (field.type === FieldType.LINK) {
+      if (!field.tableId) {
         return null
+      }
+      const linkTable = tableOptions?.find(table => table._id === field.tableId)
+      if (!linkTable) {
+        return null
+      }
+      const thisName = truncate(table.name, { length: 14 }),
+        linkName = truncate(linkTable.name, { length: 14 })
+      return [
+        {
+          name: `Many ${thisName} rows → many ${linkName} rows`,
+          alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
+          value: RelationshipType.MANY_TO_MANY,
+        },
+        {
+          name: `One ${linkName} row → many ${thisName} rows`,
+          alt: `One ${linkTable.name} rows → many ${table.name} rows`,
+          value: RelationshipType.ONE_TO_MANY,
+        },
+        {
+          name: `One ${thisName} row → many ${linkName} rows`,
+          alt: `One ${table.name} rows → many ${linkTable.name} rows`,
+          value: RelationshipType.MANY_TO_ONE,
+        },
+      ]
+    } else if (field.type === BB_USER_REFERENCE_TYPE) {
+      return [
+        {
+          name: `Single user`,
+          alt: `Single user`,
+          value: RelationshipType.ONE_TO_MANY,
+        },
+        {
+          name: `Multiple users`,
+          alt: `Multiple users`,
+          value: RelationshipType.MANY_TO_ONE,
+        },
+      ]
+    } else {
+      return null
     }
   }
 
