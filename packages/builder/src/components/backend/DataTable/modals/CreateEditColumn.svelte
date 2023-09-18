@@ -46,7 +46,7 @@
   const DATE_TYPE = FIELDS.DATETIME.type
   const BB_REFERENCE_TYPE = FieldType.BB_REFERENCE
   const BB_USER_REFERENCE_TYPE = composeType(
-    FieldType.BB_REFERENCE,
+    BB_REFERENCE_TYPE,
     FieldSubtype.USER
   )
 
@@ -107,8 +107,6 @@
     {}
   )
 
-  $: isBBReference = !!bbRefTypeMapping[editableColumn.type]
-
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
@@ -152,6 +150,8 @@
   }
 
   $: initialiseField(field, savingColumn)
+
+  $: isBBReference = !!bbRefTypeMapping[editableColumn.type]
 
   $: checkConstraints(editableColumn)
   $: required = !!editableColumn?.constraints?.presence || primaryDisplay
