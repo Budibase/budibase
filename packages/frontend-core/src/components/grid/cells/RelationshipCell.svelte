@@ -21,6 +21,8 @@
   import { Icon, Input, ProgressCircle, clickOutside } from "@budibase/bbui"
   import { debounce } from "../../../utils/utils"
 
+  const { API, dispatch } = getContext("grid")
+
   export let value
   export let api
   export let readonly
@@ -33,7 +35,6 @@
   export let searchFunction = API.searchTable
   export let primaryDisplay
 
-  const { API, dispatch } = getContext("grid")
   const color = getColor(0)
 
   let isOpen = false
