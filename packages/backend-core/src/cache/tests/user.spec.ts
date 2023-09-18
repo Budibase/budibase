@@ -1,5 +1,5 @@
 import { User } from "@budibase/types"
-import { tenancy } from "../.."
+import { cache, tenancy } from "../.."
 import { generator, structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
 import { getUsers } from "../user"
@@ -7,6 +7,7 @@ import { getGlobalDB, getGlobalDBName } from "../../context"
 import _ from "lodash"
 import { getDB } from "../../db"
 import type * as TenancyType from "../../tenancy"
+import * as redis from "../../redis/init"
 
 const config = new DBTestConfiguration()
 
@@ -38,8 +39,11 @@ describe("user cache", () => {
       })
     })
 
-    beforeEach(() => {
+    beforeEach(async () => {
       jest.clearAllMocks()
+
+      const redisClient = await redis.getUserClient()
+      await redisClient.clear()
     })
 
     it("when no user is in cache, all of them are retrieved from db", async () => {
@@ -82,14 +86,50 @@ describe("user cache", () => {
 
       expect(resultsFromCache).toHaveLength(5)
       expect(resultsFromCache).toEqual(
-        usersToRequest.map(u => ({
-          ...u,
-          budibaseAccess: true,
-          _rev: expect.any(String),
-        }))
+        expect.arrayContaining(
+          usersToRequest.map(u => ({
+            ...u,
+            budibaseAccess: true,
+            _rev: expect.any(String),
+          }))
+        )
       )
 
       expect(staticDb.allDocs).toBeCalledTimes(1)
+    })
+
+    it("when some users are cached, only the missing ones are retrieved from db", async () => {
+      const usersToRequest = _.sampleSize(users, 5)
+
+      const userIdsToRequest = usersToRequest.map(x => x._id!)
+
+      jest.spyOn(staticDb, "allDocs")
+
+      await getUsers(
+        [userIdsToRequest[0], userIdsToRequest[3]],
+        config.tenantId
+      )
+      ;(staticDb.allDocs as jest.Mock).mockClear()
+
+      const results = await getUsers(userIdsToRequest, config.tenantId)
+
+      expect(results).toHaveLength(5)
+      expect(results).toEqual(
+        expect.arrayContaining(
+          usersToRequest.map(u => ({
+            ...u,
+            budibaseAccess: true,
+            _rev: expect.any(String),
+          }))
+        )
+      )
+
+      expect(staticDb.allDocs).toBeCalledTimes(1)
+      expect(staticDb.allDocs).toBeCalledWith({
+        keys: [userIdsToRequest[1], userIdsToRequest[2], userIdsToRequest[4]],
+        include_docs: true,
+        limit: 3,
+      })
     })
   })
 })
