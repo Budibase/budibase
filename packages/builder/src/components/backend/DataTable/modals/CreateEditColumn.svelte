@@ -35,7 +35,7 @@
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
   import { admin } from "stores/portal"
-  import { FieldType } from "@budibase/types"
+  import { FieldSubtype, FieldType } from "@budibase/types"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -44,6 +44,11 @@
   const NUMBER_TYPE = FIELDS.NUMBER.type
   const JSON_TYPE = FIELDS.JSON.type
   const DATE_TYPE = FIELDS.DATETIME.type
+  const BB_REFERENCE_TYPE = FieldType.BB_REFERENCE
+  const BB_USER_REFERENCE_TYPE = composeType(
+    FieldType.BB_REFERENCE,
+    FieldSubtype.USER
+  )
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -77,11 +82,15 @@
     delete fieldDefinitions.USER
   }
 
+  function composeType(fieldType, subtype) {
+    return `${fieldType}_${subtype}`
+  }
+
   // Handling fields with subtypes
   fieldDefinitions = Object.entries(fieldDefinitions).reduce(
     (p, [key, field]) => {
-      if (field.type === FieldType.BB_REFERENCE) {
-        const composedType = `${field.type}_${field.subtype}`
+      if (field.type === BB_REFERENCE_TYPE) {
+        const composedType = composeType(field.type, field.subtype)
         p[key] = {
           ...field,
           type: composedType,
@@ -97,6 +106,8 @@
     },
     {}
   )
+
+  $: isBBReference = !!bbRefTypeMapping[editableColumn.type]
 
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
@@ -303,9 +314,10 @@
     // Default relationships many to many
     if (editableColumn.type === LINK_TYPE) {
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
-    }
-    if (editableColumn.type === FORMULA_TYPE) {
+    } else if (editableColumn.type === FORMULA_TYPE) {
       editableColumn.formulaType = "dynamic"
+    } else if (editableColumn.type === BB_USER_REFERENCE_TYPE) {
+      editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
     }
   }
 
@@ -334,32 +346,52 @@
   }
 
   function getRelationshipOptions(field) {
-    if (!field || !field.tableId) {
-      return null
+    switch (field.type) {
+      case FieldType.LINK:
+        if (!field || !field.tableId) {
+          return null
+        }
+        const linkTable = tableOptions?.find(
+          table => table._id === field.tableId
+        )
+        if (!linkTable) {
+          return null
+        }
+        const thisName = truncate(table.name, { length: 14 }),
+          linkName = truncate(linkTable.name, { length: 14 })
+        return [
+          {
+            name: `Many ${thisName} rows → many ${linkName} rows`,
+            alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
+            value: RelationshipType.MANY_TO_MANY,
+          },
+          {
+            name: `One ${linkName} row → many ${thisName} rows`,
+            alt: `One ${linkTable.name} rows → many ${table.name} rows`,
+            value: RelationshipType.ONE_TO_MANY,
+          },
+          {
+            name: `One ${thisName} row → many ${linkName} rows`,
+            alt: `One ${table.name} rows → many ${linkTable.name} rows`,
+            value: RelationshipType.MANY_TO_ONE,
+          },
+        ]
+      case BB_USER_REFERENCE_TYPE:
+        return [
+          {
+            name: `Single user`,
+            alt: `Single user`,
+            value: RelationshipType.ONE_TO_MANY,
+          },
+          {
+            name: `Multiple users`,
+            alt: `Multiple users`,
+            value: RelationshipType.MANY_TO_ONE,
+          },
+        ]
+      default:
+        return null
     }
-    const linkTable = tableOptions?.find(table => table._id === field.tableId)
-    if (!linkTable) {
-      return null
-    }
-    const thisName = truncate(table.name, { length: 14 }),
-      linkName = truncate(linkTable.name, { length: 14 })
-    return [
-      {
-        name: `Many ${thisName} rows → many ${linkName} rows`,
-        alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipType.MANY_TO_MANY,
-      },
-      {
-        name: `One ${linkName} row → many ${thisName} rows`,
-        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
-        value: RelationshipType.ONE_TO_MANY,
-      },
-      {
-        name: `One ${thisName} row → many ${linkName} rows`,
-        alt: `One ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipType.MANY_TO_ONE,
-      },
-    ]
   }
 
   function getAllowedTypes() {
@@ -666,6 +698,16 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
+  {:else if isBBReference}
+    <RadioGroup
+      disabled={linkEditDisabled}
+      label="Define the relationship"
+      bind:value={editableColumn.relationshipType}
+      options={relationshipOptions}
+      getOptionLabel={option => option.name}
+      getOptionValue={option => option.value}
+      getOptionTitle={option => option.alt}
+    />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
     <Select
