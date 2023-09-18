@@ -216,6 +216,7 @@
     errorState,
     parent: id,
     ancestors: [...($component?.ancestors ?? []), instance._component],
+    path: [...($component?.path ?? []), id],
   })
 
   const initialise = (instance, force = false) => {
