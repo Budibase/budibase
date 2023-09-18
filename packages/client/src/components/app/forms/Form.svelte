@@ -63,7 +63,18 @@
     // ancestor that matches our datasource. This is for backwards compatibility
     // as previously we could use the "closest" context.
     for (let id of path.reverse().slice(1)) {
-      if (context[id]?.tableId === dataSource.tableId) {
+      // Check for matching view datasource
+      if (
+        dataSource.type === "viewV2" &&
+        context[id]?._viewId === dataSource.id
+      ) {
+        return context[id]
+      }
+      // Check for matching table datasource
+      if (
+        dataSource.type === "table" &&
+        context[id]?.tableId === dataSource.tableId
+      ) {
         return context[id]
       }
     }

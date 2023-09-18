@@ -80,20 +80,21 @@ const saveRowHandler = async (action, context) => {
     }
   }
   if (tableId) {
-    payload.tableId = tableId
+    if (tableId.startsWith("view")) {
+      payload._viewId = tableId
+    } else {
+      payload.tableId = tableId
+    }
   }
   try {
     const row = await API.saveRow(payload)
-
     if (!notificationOverride) {
       notificationStore.actions.success("Row saved")
     }
-
     // Refresh related datasources
     await dataSourceStore.actions.invalidateDataSource(tableId, {
       invalidateRelationships: true,
     })
-
     return { row }
   } catch (error) {
     // Abort next actions
@@ -112,7 +113,11 @@ const duplicateRowHandler = async (action, context) => {
       }
     }
     if (tableId) {
-      payload.tableId = tableId
+      if (tableId.startsWith("view")) {
+        payload._viewId = tableId
+      } else {
+        payload.tableId = tableId
+      }
     }
     delete payload._id
     delete payload._rev
@@ -121,12 +126,10 @@ const duplicateRowHandler = async (action, context) => {
       if (!notificationOverride) {
         notificationStore.actions.success("Row saved")
       }
-
       // Refresh related datasources
       await dataSourceStore.actions.invalidateDataSource(tableId, {
         invalidateRelationships: true,
       })
-
       return { row }
     } catch (error) {
       // Abort next actions
