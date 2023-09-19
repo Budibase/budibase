@@ -17,6 +17,13 @@
   let fieldApi
   let localFiles = []
 
+  $: {
+    // If the field state is reset, clear the local files
+    if (!fieldState?.value?.length) {
+      localFiles = []
+    }
+  }
+
   const { API, notificationStore, uploadStore } = getContext("sdk")
   const component = getContext("component")
 
