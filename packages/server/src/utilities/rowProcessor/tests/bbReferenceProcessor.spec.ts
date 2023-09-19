@@ -60,7 +60,7 @@ describe("bbReferenceProcessor", () => {
         const userIds: string[] = []
         for (let i = 0; i < 5; i++) {
           const userId = generator.guid()
-          const user = structures.users.user({ _id: userId, userId })
+          const user = structures.users.user({ _id: userId })
           mockedCacheGetUser.mockResolvedValueOnce(user)
           userIds.push(userId)
         }
