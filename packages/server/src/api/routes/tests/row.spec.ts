@@ -3,7 +3,7 @@ import { databaseTestProviders } from "../../../integrations/tests/utils"
 import tk from "timekeeper"
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
-import { context, roles, tenancy } from "@budibase/backend-core"
+import { context, InternalTable, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   FieldType,
@@ -1414,6 +1414,23 @@ describe.each([
           bookmark: expect.anything(),
         })
       })
+
+      isInternal &&
+        it("doesn't allow creating in user table", async () => {
+          const userTableId = InternalTable.USER_METADATA
+          const response = await config.api.row.save(
+            userTableId,
+            {
+              tableId: userTableId,
+              firstName: "Joe",
+              lastName: "Joe",
+              email: "joe@joe.com",
+              roles: {},
+            },
+            { expectStatus: 400 }
+          )
+          expect(response.message).toBe("Cannot create new user entry.")
+        })
 
       describe("permissions", () => {
         let viewId: string
