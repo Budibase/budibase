@@ -575,7 +575,16 @@ export async function sync(ctx: UserCtx) {
   }
 }
 
-export async function updateWithExport(ctx: UserCtx) {}
+export async function importToApp(ctx: UserCtx) {
+  const { appId } = ctx.params
+  const appExport = ctx.request.files?.appExport
+  const password = ctx.request.body.encryptionPassword
+  if (!appExport) {
+    ctx.throw(400, "Must supply app export to import")
+  }
+  console.log(appExport)
+  ctx.body = { message: "app updated" }
+}
 
 export async function updateAppPackage(appPackage: any, appId: any) {
   return context.doInAppContext(appId, async () => {

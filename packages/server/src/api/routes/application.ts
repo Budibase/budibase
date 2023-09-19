@@ -4,6 +4,7 @@ import * as deploymentController from "../controllers/deploy"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { applicationValidator } from "./utils/validators"
+import { importToApp } from "../controllers/application"
 
 const router: Router = new Router()
 
@@ -59,9 +60,9 @@ router
     controller.destroy
   )
   .post(
-    "/api/applications/:appId/update",
+    "/api/applications/:appId/import",
     authorized(permissions.BUILDER),
-    controller.updateWithExport
+    controller.importToApp
   )
 
 export default router
