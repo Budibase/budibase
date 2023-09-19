@@ -28,20 +28,8 @@ export async function handleRequest(
 ) {
   // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
   if (opts && opts.filters) {
-    for (let filterField of NoEmptyFilterStrings) {
-      if (!opts.filters[filterField]) {
-        continue
-      }
-      // @ts-ignore
-      for (let [key, value] of Object.entries(opts.filters[filterField])) {
-        if (!value || value === "") {
-          // @ts-ignore
-          delete opts.filters[filterField][key]
-        }
-      }
-    }
+    opts.filters = utils.removeEmptyFilters(opts.filters)
   }
-
   if (
     !dataFilters.hasFilters(opts?.filters) &&
     opts?.filters?.onEmptyFilter === EmptyFilterOption.RETURN_NONE
