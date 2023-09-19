@@ -55,14 +55,14 @@ describe("user cache", () => {
 
       const results = await getUsers(userIdsToRequest, config.tenantId)
 
-      expect(results).toHaveLength(5)
-      expect(results).toEqual(
-        usersToRequest.map(u => ({
+      expect(results.users).toHaveLength(5)
+      expect(results).toEqual({
+        users: usersToRequest.map(u => ({
           ...u,
           budibaseAccess: true,
           _rev: expect.any(String),
-        }))
-      )
+        })),
+      })
 
       expect(tenancy.getTenantDB).toBeCalledTimes(1)
       expect(tenancy.getTenantDB).toBeCalledWith(config.tenantId)
@@ -84,16 +84,16 @@ describe("user cache", () => {
       await getUsers(userIdsToRequest, config.tenantId)
       const resultsFromCache = await getUsers(userIdsToRequest, config.tenantId)
 
-      expect(resultsFromCache).toHaveLength(5)
-      expect(resultsFromCache).toEqual(
-        expect.arrayContaining(
+      expect(resultsFromCache.users).toHaveLength(5)
+      expect(resultsFromCache).toEqual({
+        users: expect.arrayContaining(
           usersToRequest.map(u => ({
             ...u,
             budibaseAccess: true,
             _rev: expect.any(String),
           }))
-        )
-      )
+        ),
+      })
 
       expect(staticDb.allDocs).toBeCalledTimes(1)
     })
@@ -113,22 +113,46 @@ describe("user cache", () => {
 
       const results = await getUsers(userIdsToRequest, config.tenantId)
 
-      expect(results).toHaveLength(5)
-      expect(results).toEqual(
-        expect.arrayContaining(
+      expect(results.users).toHaveLength(5)
+      expect(results).toEqual({
+        users: expect.arrayContaining(
           usersToRequest.map(u => ({
             ...u,
             budibaseAccess: true,
             _rev: expect.any(String),
           }))
-        )
-      )
+        ),
+      })
 
       expect(staticDb.allDocs).toBeCalledTimes(1)
       expect(staticDb.allDocs).toBeCalledWith({
         keys: [userIdsToRequest[1], userIdsToRequest[2], userIdsToRequest[4]],
         include_docs: true,
         limit: 3,
+      })
+    })
+
+    it("requesting existing and unexisting ids will return found ones", async () => {
+      const usersToRequest = _.sampleSize(users, 3)
+      const missingIds = [generator.guid(), generator.guid()]
+
+      const userIdsToRequest = _.shuffle([
+        ...missingIds,
+        ...usersToRequest.map(x => x._id!),
+      ])
+
+      const results = await getUsers(userIdsToRequest, config.tenantId)
+
+      expect(results.users).toHaveLength(3)
+      expect(results).toEqual({
+        users: expect.arrayContaining(
+          usersToRequest.map(u => ({
+            ...u,
+            budibaseAccess: true,
+            _rev: expect.any(String),
+          }))
+        ),
+        notFoundIds: expect.arrayContaining(missingIds),
       })
     })
   })

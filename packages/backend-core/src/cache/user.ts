@@ -6,6 +6,7 @@ import env from "../environment"
 import * as accounts from "../accounts"
 import { UserDB } from "../users"
 import { sdk } from "@budibase/shared-core"
+import { User } from "@budibase/types"
 
 const EXPIRY_SECONDS = 3600
 
@@ -27,7 +28,10 @@ async function populateFromDB(userId: string, tenantId: string) {
   return user
 }
 
-async function populateUsersFromDB(userIds: string[], tenantId: string) {
+async function populateUsersFromDB(
+  userIds: string[],
+  tenantId: string
+): Promise<{ users: User[]; notFoundIds?: string[] }> {
   const db = tenancy.getTenantDB(tenantId)
   const allDocsResponse = await db.allDocs<any>({
     keys: userIds,
@@ -35,9 +39,22 @@ async function populateUsersFromDB(userIds: string[], tenantId: string) {
     limit: userIds.length,
   })
 
-  const users = allDocsResponse.rows.map(r => r.doc)
+  const { users, notFoundIds } = allDocsResponse.rows.reduce(
+    (p, c) => {
+      if (c.doc) {
+        p.users.push(c.doc)
+      } else {
+        p.notFoundIds ??= []
+        p.notFoundIds.push(c.key)
+      }
+      return p
+    },
+    {
+      users: [],
+    } as { users: User[]; notFoundIds?: string[] }
+  )
   await Promise.all(
-    users.map(async user => {
+    users.map(async (user: any) => {
       user.budibaseAccess = true
       if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
         const account = await accounts.getAccount(user.email)
@@ -49,7 +66,7 @@ async function populateUsersFromDB(userIds: string[], tenantId: string) {
     })
   )
 
-  return users
+  return { users, notFoundIds: notFoundIds }
 }
 
 /**
@@ -110,12 +127,16 @@ export async function getUser(
  * @param {*} tenantId the tenant of the users to get
  * @returns
  */
-export async function getUsers(userIds: string[], tenantId?: string) {
+export async function getUsers(
+  userIds: string[],
+  tenantId?: string
+): Promise<{ users: User[]; notFoundIds?: string[] }> {
   const client = await redis.getUserClient()
   // try cache
-  let usersFromCache = await client.bulkGet(userIds)
+  let usersFromCache = await client.bulkGet<User>(userIds)
   const missingUsersFromCache = userIds.filter(uid => !usersFromCache[uid])
   const users = Object.values(usersFromCache)
+  let notFoundIds
 
   if (missingUsersFromCache.length) {
     tenantId ??= context.getTenantId()
@@ -123,12 +144,14 @@ export async function getUsers(userIds: string[], tenantId?: string) {
       missingUsersFromCache,
       tenantId
     )
-    for (const userToCache of usersFromDb) {
-      await client.store(userToCache._id, userToCache, EXPIRY_SECONDS)
+
+    notFoundIds = usersFromDb.notFoundIds
+    for (const userToCache of usersFromDb.users) {
+      await client.store(userToCache._id!, userToCache, EXPIRY_SECONDS)
     }
-    users.push(...usersFromDb)
+    users.push(...usersFromDb.users)
   }
-  return users
+  return { users, notFoundIds: notFoundIds }
 }
 
 export async function invalidateUser(userId: string) {

@@ -242,7 +242,7 @@ class RedisWrapper {
     }
   }
 
-  async bulkGet(keys: string[]) {
+  async bulkGet<T>(keys: string[]) {
     const db = this._db
     if (keys.length === 0) {
       return {}
