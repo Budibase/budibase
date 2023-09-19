@@ -235,7 +235,7 @@
     const baseExtensions = buildBaseExtensions()
 
     editor = new EditorView({
-      doc: value,
+      doc: value?.toString(),
       extensions: buildExtensions(baseExtensions),
       parent: textarea,
     })

@@ -1,8 +1,15 @@
 import { InternalTables } from "../../../db/utils"
 import * as userController from "../user"
 import { context } from "@budibase/backend-core"
-import { Ctx, FieldType, Row, Table, UserCtx } from "@budibase/types"
-import { FieldTypes } from "../../../constants"
+import {
+  Ctx,
+  FieldType,
+  Row,
+  SearchFilters,
+  Table,
+  UserCtx,
+} from "@budibase/types"
+import { FieldTypes, NoEmptyFilterStrings } from "../../../constants"
 import sdk from "../../../sdk"
 
 import validateJs from "validate.js"
