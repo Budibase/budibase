@@ -110,7 +110,7 @@ export async function getUser(
  * @param {*} tenantId the tenant of the users to get
  * @returns
  */
-export async function getUsers(userIds: string[], tenantId: string) {
+export async function getUsers(userIds: string[], tenantId?: string) {
   const client = await redis.getUserClient()
   // try cache
   let usersFromCache = await client.bulkGet(userIds)
@@ -118,6 +118,7 @@ export async function getUsers(userIds: string[], tenantId: string) {
   const users = Object.values(usersFromCache)
 
   if (missingUsersFromCache.length) {
+    tenantId ??= context.getTenantId()
     const usersFromDb = await populateUsersFromDB(
       missingUsersFromCache,
       tenantId
