@@ -39,9 +39,8 @@ import {
 } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { stringToReadStream } from "../../utilities"
-import { doesUserHaveLock, getLocksById } from "../../utilities/redis"
+import { doesUserHaveLock } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
-import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { groups, licensing, quotas } from "@budibase/pro"
 import {
@@ -51,7 +50,6 @@ import {
   PlanType,
   Screen,
   UserCtx,
-  ContextUser,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -578,11 +576,15 @@ export async function sync(ctx: UserCtx) {
 export async function importToApp(ctx: UserCtx) {
   const { appId } = ctx.params
   const appExport = ctx.request.files?.appExport
-  const password = ctx.request.body.encryptionPassword
+  const password = ctx.request.body.encryptionPassword as string
   if (!appExport) {
     ctx.throw(400, "Must supply app export to import")
   }
-  console.log(appExport)
+  if (Array.isArray(appExport)) {
+    ctx.throw(400, "Must only supply one app export")
+  }
+  const fileAttributes = { type: appExport.type!, path: appExport.path! }
+  await sdk.applications.updateWithExport(appId, fileAttributes, password)
   ctx.body = { message: "app updated" }
 }
 
