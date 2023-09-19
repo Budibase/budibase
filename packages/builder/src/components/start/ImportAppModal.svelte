@@ -1,5 +1,7 @@
 <script>
-  import { ModalContent, Toggle, Input, Layout, Dropzone } from "@budibase/bbui"
+  import { ModalContent, Toggle, Input, Layout, Dropzone, notifications } from "@budibase/bbui"
+  import { API } from "api"
+  import { automationStore, store } from "../../builderStore"
 
   export let app
 
@@ -8,8 +10,22 @@
     password
   let file
 
-  function updateApp() {
-    console.log("confirm")
+  async function updateApp() {
+    try {
+      let data = new FormData()
+      data.append("appExport", file)
+      if (encrypted) {
+        data.append("encryptionPassword", password.trim())
+      }
+      const appId = app.devId
+      await API.updateAppFromExport(appId, data)
+      const pkg = await API.fetchAppPackage(appId)
+      await store.actions.initialise(pkg)
+      await automationStore.actions.fetch()
+      notifications.success("App updated successfully")
+    } catch (err) {
+      notifications.error(`Failed to update app - ${err.message || err}`)
+    }
   }
 </script>
 
