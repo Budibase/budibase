@@ -1,23 +1,14 @@
 import { User } from "@budibase/types"
-import { cache, tenancy } from "../.."
 import { generator, structures } from "../../../tests"
 import { DBTestConfiguration } from "../../../tests/extra"
 import { getUsers } from "../user"
-import { getGlobalDB, getGlobalDBName } from "../../context"
+import { getGlobalDB } from "../../context"
 import _ from "lodash"
-import { getDB } from "../../db"
-import type * as TenancyType from "../../tenancy"
+
 import * as redis from "../../redis/init"
+import { UserDB } from "../../users"
 
 const config = new DBTestConfiguration()
-
-// This mock is required to ensure that getTenantDB returns always as a singleton.
-// This will allow us to spy on the db
-const staticDb = getDB(getGlobalDBName(config.tenantId))
-jest.mock("../../tenancy", (): typeof TenancyType => ({
-  ...jest.requireActual("../../tenancy"),
-  getTenantDB: jest.fn().mockImplementation(() => staticDb),
-}))
 
 describe("user cache", () => {
   describe("getUsers", () => {
@@ -51,27 +42,21 @@ describe("user cache", () => {
 
       const userIdsToRequest = usersToRequest.map(x => x._id!)
 
-      jest.spyOn(staticDb, "allDocs")
+      jest.spyOn(UserDB, "bulkGet")
 
-      const results = await getUsers(userIdsToRequest, config.tenantId)
+      const results = await config.doInTenant(() => getUsers(userIdsToRequest))
 
-      expect(results).toHaveLength(5)
-      expect(results).toEqual(
-        usersToRequest.map(u => ({
+      expect(results.users).toHaveLength(5)
+      expect(results).toEqual({
+        users: usersToRequest.map(u => ({
           ...u,
           budibaseAccess: true,
           _rev: expect.any(String),
-        }))
-      )
-
-      expect(tenancy.getTenantDB).toBeCalledTimes(1)
-      expect(tenancy.getTenantDB).toBeCalledWith(config.tenantId)
-      expect(staticDb.allDocs).toBeCalledTimes(1)
-      expect(staticDb.allDocs).toBeCalledWith({
-        keys: userIdsToRequest,
-        include_docs: true,
-        limit: 5,
+        })),
       })
+
+      expect(UserDB.bulkGet).toBeCalledTimes(1)
+      expect(UserDB.bulkGet).toBeCalledWith(userIdsToRequest)
     })
 
     it("on a second all, all of them are retrieved from cache", async () => {
@@ -79,23 +64,25 @@ describe("user cache", () => {
 
       const userIdsToRequest = usersToRequest.map(x => x._id!)
 
-      jest.spyOn(staticDb, "allDocs")
+      jest.spyOn(UserDB, "bulkGet")
 
-      await getUsers(userIdsToRequest, config.tenantId)
-      const resultsFromCache = await getUsers(userIdsToRequest, config.tenantId)
+      await config.doInTenant(() => getUsers(userIdsToRequest))
+      const resultsFromCache = await config.doInTenant(() =>
+        getUsers(userIdsToRequest)
+      )
 
-      expect(resultsFromCache).toHaveLength(5)
-      expect(resultsFromCache).toEqual(
-        expect.arrayContaining(
+      expect(resultsFromCache.users).toHaveLength(5)
+      expect(resultsFromCache).toEqual({
+        users: expect.arrayContaining(
           usersToRequest.map(u => ({
             ...u,
             budibaseAccess: true,
             _rev: expect.any(String),
           }))
-        )
-      )
+        ),
+      })
 
-      expect(staticDb.allDocs).toBeCalledTimes(1)
+      expect(UserDB.bulkGet).toBeCalledTimes(1)
     })
 
     it("when some users are cached, only the missing ones are retrieved from db", async () => {
@@ -103,32 +90,55 @@ describe("user cache", () => {
 
       const userIdsToRequest = usersToRequest.map(x => x._id!)
 
-      jest.spyOn(staticDb, "allDocs")
+      jest.spyOn(UserDB, "bulkGet")
 
-      await getUsers(
-        [userIdsToRequest[0], userIdsToRequest[3]],
-        config.tenantId
+      await config.doInTenant(() =>
+        getUsers([userIdsToRequest[0], userIdsToRequest[3]])
       )
-      ;(staticDb.allDocs as jest.Mock).mockClear()
+      ;(UserDB.bulkGet as jest.Mock).mockClear()
 
-      const results = await getUsers(userIdsToRequest, config.tenantId)
+      const results = await config.doInTenant(() => getUsers(userIdsToRequest))
 
-      expect(results).toHaveLength(5)
-      expect(results).toEqual(
-        expect.arrayContaining(
+      expect(results.users).toHaveLength(5)
+      expect(results).toEqual({
+        users: expect.arrayContaining(
           usersToRequest.map(u => ({
             ...u,
             budibaseAccess: true,
             _rev: expect.any(String),
           }))
-        )
-      )
+        ),
+      })
 
-      expect(staticDb.allDocs).toBeCalledTimes(1)
-      expect(staticDb.allDocs).toBeCalledWith({
-        keys: [userIdsToRequest[1], userIdsToRequest[2], userIdsToRequest[4]],
-        include_docs: true,
-        limit: 3,
+      expect(UserDB.bulkGet).toBeCalledTimes(1)
+      expect(UserDB.bulkGet).toBeCalledWith([
+        userIdsToRequest[1],
+        userIdsToRequest[2],
+        userIdsToRequest[4],
+      ])
+    })
+
+    it("requesting existing and unexisting ids will return found ones", async () => {
+      const usersToRequest = _.sampleSize(users, 3)
+      const missingIds = [generator.guid(), generator.guid()]
+
+      const userIdsToRequest = _.shuffle([
+        ...missingIds,
+        ...usersToRequest.map(x => x._id!),
+      ])
+
+      const results = await config.doInTenant(() => getUsers(userIdsToRequest))
+
+      expect(results.users).toHaveLength(3)
+      expect(results).toEqual({
+        users: expect.arrayContaining(
+          usersToRequest.map(u => ({
+            ...u,
+            budibaseAccess: true,
+            _rev: expect.any(String),
+          }))
+        ),
+        notFoundIds: expect.arrayContaining(missingIds),
       })
     })
   })
