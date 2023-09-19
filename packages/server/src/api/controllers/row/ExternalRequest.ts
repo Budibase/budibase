@@ -1,4 +1,5 @@
 import {
+  AutoReason,
   Datasource,
   FieldSchema,
   FieldType,
@@ -24,7 +25,7 @@ import {
   isSQL,
 } from "../../../integrations/utils"
 import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
-import { FieldTypes } from "../../../constants"
+import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { processDates, processFormulas } from "../../../utilities/rowProcessor"
@@ -259,6 +260,15 @@ function isOneSide(field: FieldSchema) {
   )
 }
 
+function isEditableColumn(column: FieldSchema) {
+  const isExternalAutoColumn =
+    column.autocolumn &&
+    column.autoReason !== AutoReason.FOREIGN_KEY &&
+    column.subtype !== AutoFieldSubTypes.AUTO_ID
+  const isFormula = column.type === FieldTypes.FORMULA
+  return !(isExternalAutoColumn || isFormula)
+}
+
 export class ExternalRequest {
   private operation: Operation
   private tableId: string
@@ -295,11 +305,7 @@ export class ExternalRequest {
       manyRelationships: ManyRelationship[] = []
     for (let [key, field] of Object.entries(table.schema)) {
       // if set already, or not set just skip it
-      if (
-        row[key] == null ||
-        newRow[key] ||
-        !sdk.tables.isEditableColumn(field)
-      ) {
+      if (row[key] == null || newRow[key] || !isEditableColumn(field)) {
         continue
       }
       // if its an empty string then it means return the column to null (if possible)
