@@ -45,14 +45,17 @@ export async function processOutputBBReferences(
   subtype: FieldSubtype
 ) {
   if (typeof value !== "string") {
+    // Already processed or nothing to process
     return value
   }
 
   const result = []
 
+  const validIds = value.split(",").filter(id => !!id)
+
   switch (subtype) {
     case FieldSubtype.USER:
-      for (const id of value.split(",").filter(x => !!x)) {
+      for (const id of validIds) {
         try {
           const user = await cache.user.getUser(id)
           if (user) {
