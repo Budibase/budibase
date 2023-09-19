@@ -29,30 +29,15 @@ async function populateFromDB(userId: string, tenantId: string) {
 }
 
 async function populateUsersFromDB(
-  userIds: string[],
-  tenantId: string
+  userIds: string[]
 ): Promise<{ users: User[]; notFoundIds?: string[] }> {
-  const db = tenancy.getTenantDB(tenantId)
-  const allDocsResponse = await db.allDocs<any>({
-    keys: userIds,
-    include_docs: true,
-    limit: userIds.length,
-  })
+  const getUsersResponse = await UserDB.bulkGet(userIds)
 
-  const { users, notFoundIds } = allDocsResponse.rows.reduce(
-    (p, c) => {
-      if (c.doc) {
-        p.users.push(c.doc)
-      } else {
-        p.notFoundIds ??= []
-        p.notFoundIds.push(c.key)
-      }
-      return p
-    },
-    {
-      users: [],
-    } as { users: User[]; notFoundIds?: string[] }
-  )
+  // Handle missed user ids
+  const notFoundIds = userIds.filter((uid, i) => !getUsersResponse[i])
+
+  const users = getUsersResponse.filter(x => x)
+
   await Promise.all(
     users.map(async (user: any) => {
       user.budibaseAccess = true
@@ -66,7 +51,10 @@ async function populateUsersFromDB(
     })
   )
 
-  return { users, notFoundIds: notFoundIds }
+  if (notFoundIds.length) {
+    return { users, notFoundIds }
+  }
+  return { users }
 }
 
 /**
@@ -128,8 +116,7 @@ export async function getUser(
  * @returns
  */
 export async function getUsers(
-  userIds: string[],
-  tenantId?: string
+  userIds: string[]
 ): Promise<{ users: User[]; notFoundIds?: string[] }> {
   const client = await redis.getUserClient()
   // try cache
@@ -139,11 +126,7 @@ export async function getUsers(
   let notFoundIds
 
   if (missingUsersFromCache.length) {
-    tenantId ??= context.getTenantId()
-    const usersFromDb = await populateUsersFromDB(
-      missingUsersFromCache,
-      tenantId
-    )
+    const usersFromDb = await populateUsersFromDB(missingUsersFromCache)
 
     notFoundIds = usersFromDb.notFoundIds
     for (const userToCache of usersFromDb.users) {
