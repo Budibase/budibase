@@ -35,7 +35,7 @@
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
   import { admin } from "stores/portal"
-  import { FieldType } from "@budibase/types"
+  import { FieldSubtype, FieldType } from "@budibase/types"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -44,6 +44,11 @@
   const NUMBER_TYPE = FIELDS.NUMBER.type
   const JSON_TYPE = FIELDS.JSON.type
   const DATE_TYPE = FIELDS.DATETIME.type
+  const BB_REFERENCE_TYPE = FieldType.BB_REFERENCE
+  const BB_USER_REFERENCE_TYPE = composeType(
+    BB_REFERENCE_TYPE,
+    FieldSubtype.USER
+  )
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -77,11 +82,15 @@
     delete fieldDefinitions.USER
   }
 
+  function composeType(fieldType, subtype) {
+    return `${fieldType}_${subtype}`
+  }
+
   // Handling fields with subtypes
   fieldDefinitions = Object.entries(fieldDefinitions).reduce(
     (p, [key, field]) => {
-      if (field.type === FieldType.BB_REFERENCE) {
-        const composedType = `${field.type}_${field.subtype}`
+      if (field.type === BB_REFERENCE_TYPE) {
+        const composedType = composeType(field.type, field.subtype)
         p[key] = {
           ...field,
           type: composedType,
@@ -141,6 +150,8 @@
   }
 
   $: initialiseField(field, savingColumn)
+
+  $: isBBReference = !!bbRefTypeMapping[editableColumn.type]
 
   $: checkConstraints(editableColumn)
   $: required = !!editableColumn?.constraints?.presence || primaryDisplay
@@ -303,9 +314,10 @@
     // Default relationships many to many
     if (editableColumn.type === LINK_TYPE) {
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
-    }
-    if (editableColumn.type === FORMULA_TYPE) {
+    } else if (editableColumn.type === FORMULA_TYPE) {
       editableColumn.formulaType = "dynamic"
+    } else if (editableColumn.type === BB_USER_REFERENCE_TYPE) {
+      editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
     }
   }
 
@@ -666,6 +678,17 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
+  {:else if isBBReference}
+    <Toggle
+      value={editableColumn.relationshipType === RelationshipType.MANY_TO_MANY}
+      on:change={e =>
+        (editableColumn.relationshipType = e.detail
+          ? RelationshipType.MANY_TO_MANY
+          : RelationshipType.ONE_TO_MANY)}
+      disabled={!isCreating}
+      thin
+      text="Allow multiple users"
+    />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
     <Select
