@@ -7,7 +7,10 @@ import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
-import { processInputBBReferences } from "./bbReferenceProcessor"
+import {
+  processInputBBReferences,
+  processOutputBBReferences,
+} from "./bbReferenceProcessor"
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {
@@ -223,6 +226,16 @@ export async function outputProcessing<T extends Row[] | Row>(
         row[property].forEach((attachment: RowAttachment) => {
           attachment.url = objectStore.getAppFileUrl(attachment.key)
         })
+      }
+    } else if (column.type == FieldTypes.BB_REFERENCE) {
+      for (let row of enriched) {
+        if (!row[property]) {
+          continue
+        }
+        row[property] = await processOutputBBReferences(
+          row[property],
+          column.subtype as FieldSubtype
+        )
       }
     }
   }
