@@ -502,7 +502,7 @@
     </div>
     {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
       <div>
-        <div>
+        <div class="row">
           <Label>Time zones</Label>
           <AbsTooltip
             position="top"
@@ -523,7 +523,7 @@
   {:else if editableColumn.type === "number" && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
-        <Label size="M">Max Value</Label>
+        <Label size="M">Min Value</Label>
       </div>
       <div class="input-length">
         <Input
@@ -690,18 +690,19 @@
     display: flex;
     align-items: center;
   }
-
   .tooltip-alignment {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
   }
-
   .label-length {
     flex-basis: 40%;
   }
-
   .input-length {
     flex-grow: 1;
+  }
+  .row {
+    gap: 8px;
+    display: flex;
   }
 </style>
