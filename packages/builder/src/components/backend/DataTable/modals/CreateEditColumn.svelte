@@ -564,7 +564,7 @@
     </div>
     {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
       <div>
-        <div>
+        <div class="row">
           <Label>Time zones</Label>
           <AbsTooltip
             position="top"
@@ -763,18 +763,19 @@
     display: flex;
     align-items: center;
   }
-
   .tooltip-alignment {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
   }
-
   .label-length {
     flex-basis: 40%;
   }
-
   .input-length {
     flex-grow: 1;
+  }
+  .row {
+    gap: 8px;
+    display: flex;
   }
 </style>
