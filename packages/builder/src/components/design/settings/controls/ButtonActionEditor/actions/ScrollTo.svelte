@@ -1,6 +1,5 @@
 <script>
   import { currentAsset, store } from "builderStore"
-  import { onMount } from "svelte"
   import { Label, Combobox, Select } from "@budibase/bbui"
   import {
     getActionProviderComponents,
