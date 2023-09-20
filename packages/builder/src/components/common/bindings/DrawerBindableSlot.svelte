@@ -90,7 +90,9 @@
   {/if}
   {#if !disabled}
     <div
-      class={`icon ${type === "date" ? "slot-icon" : ""}`}
+      class={`icon ${
+        type !== "string" && type !== "number" ? "slot-icon" : ""
+      }`}
       on:click={() => {
         bindingDrawer.show()
       }}
@@ -133,7 +135,10 @@
   }
 
   .slot-icon {
-    right: 32px !important;
+    right: 31px !important;
+    border-right: 1px solid var(--spectrum-alias-border-color);
+    border-top-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
   }
 
   .icon {

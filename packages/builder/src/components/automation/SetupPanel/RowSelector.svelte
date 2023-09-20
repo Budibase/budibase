@@ -2,6 +2,7 @@
   import { tables } from "stores/backend"
   import { Select, Checkbox } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
@@ -131,14 +132,27 @@
       {#if !schema.autocolumn}
         {#if schema.type !== "attachment"}
           {#if !rowControl}
-            <RowSelectorTypes
-              {isTestModal}
-              {field}
-              {schema}
-              bindings={parsedBindings}
+            <DrawerBindableSlot
+              fillWidth
+              title={value.title}
+              panel={AutomationBindingPanel}
+              type={schema.type}
               {value}
-              {onChange}
-            />
+              on:change={onChange}
+              {bindings}
+              allowJS={true}
+              updateOnChange={false}
+              drawerLeft="260px"
+            >
+              <RowSelectorTypes
+                {isTestModal}
+                {field}
+                {schema}
+                bindings={parsedBindings}
+                {value}
+                {onChange}
+              />
+            </DrawerBindableSlot>
           {:else}
             <div>
               <svelte:component
