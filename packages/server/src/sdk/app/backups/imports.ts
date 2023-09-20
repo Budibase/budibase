@@ -151,7 +151,8 @@ export function getListOfAppsInMulti(tmpPath: string) {
 export async function importApp(
   appId: string,
   db: Database,
-  template: TemplateType
+  template: TemplateType,
+  opts: { objStore: boolean } = { objStore: true }
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
   let dbStream: any
@@ -165,7 +166,7 @@ export async function importApp(
     }
     const contents = fs.readdirSync(tmpPath)
     // have to handle object import
-    if (contents.length) {
+    if (contents.length && opts.objStore) {
       let promises = []
       let excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
       for (let filename of contents) {

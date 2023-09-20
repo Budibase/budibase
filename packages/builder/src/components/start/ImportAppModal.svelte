@@ -1,5 +1,13 @@
 <script>
-  import { ModalContent, Toggle, Input, Layout, Dropzone, notifications } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Toggle,
+    Input,
+    Layout,
+    Dropzone,
+    notifications,
+    Body,
+  } from "@budibase/bbui"
   import { API } from "api"
   import { automationStore, store } from "../../builderStore"
 
@@ -35,6 +43,11 @@
   onConfirm={updateApp}
   bind:disabled
 >
+  <Body size="S"
+    >Updating an app using an app export will replace all tables, datasources,
+    queries, screens and automations. It is recommended to perform a backup
+    before running this operation.</Body
+  >
   <Layout noPadding gap="XS">
     <Dropzone
       gallery={false}
