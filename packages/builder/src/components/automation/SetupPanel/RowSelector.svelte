@@ -132,27 +132,14 @@
       {#if !schema.autocolumn}
         {#if schema.type !== "attachment"}
           {#if !rowControl}
-            <DrawerBindableSlot
-              fillWidth
-              title={value.title}
-              panel={AutomationBindingPanel}
-              type={schema.type}
+            <RowSelectorTypes
+              {isTestModal}
+              {field}
+              {schema}
+              bindings={parsedBindings}
               {value}
-              on:change={onChange}
-              {bindings}
-              allowJS={true}
-              updateOnChange={false}
-              drawerLeft="260px"
-            >
-              <RowSelectorTypes
-                {isTestModal}
-                {field}
-                {schema}
-                bindings={parsedBindings}
-                {value}
-                {onChange}
-              />
-            </DrawerBindableSlot>
+              {onChange}
+            />
           {:else}
             <div>
               <svelte:component

@@ -43,7 +43,12 @@
   })
 
   const onChange = value => {
-    currentVal = readableToRuntimeBinding(bindings, value)
+    if (type === "link" && hasValidLinks(value)) {
+      currentVal = value.split(",")
+      readableValue = currentVal
+    } else {
+      currentVal = readableToRuntimeBinding(bindings, value)
+    }
     dispatch("change", currentVal)
   }
 
@@ -51,13 +56,37 @@
     dispatch("blur", currentVal)
   }
 
-  const isDate = value => {
+  const isValidDate = value => {
     return !value || !isNaN(new Date(value).valueOf())
+  }
+
+  const hasValidLinks = value => {
+    console.log("VAL ", value)
+    let links = []
+    if (Array.isArray(value)) {
+      links = value
+    } else if (value && typeof value === "string") {
+      links = value.split(",")
+    } else {
+      return !value
+    }
+
+    return links.every(link => link.startsWith("ro_"))
+  }
+
+  const isValid = value => {
+    if (type === "date") {
+      return isValidDate(value)
+    }
+    if (type === "link") {
+      return hasValidLinks(value)
+    }
+    return true
   }
 </script>
 
 <div class="control" class:disabled>
-  {#if type === "date" && !isDate(value)}
+  {#if !isValid(value)}
     <Input
       {label}
       {disabled}
