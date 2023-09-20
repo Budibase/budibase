@@ -47,7 +47,13 @@ export async function processOutputBBReferences(
   switch (subtype) {
     case FieldSubtype.USER:
       const { users } = await cache.user.getUsers(ids)
-      return users
+      return users.map(u => ({
+        _id: u._id,
+        primaryDisplay: u.email,
+        email: u.email,
+        firstName: u.firstName,
+        lastName: u.lastName,
+      }))
 
     default:
       throw utils.unreachable(subtype)
