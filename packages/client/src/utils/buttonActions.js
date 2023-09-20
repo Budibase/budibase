@@ -532,19 +532,6 @@ export const enrichButtonActions = (actions, context) => {
           const result = await callback()
           if (result === false) {
             return
-          }
-          if (result?.valid === false) {
-            await scrollHandler(
-              {
-                [`##eventHandlerType`]: "Scroll To Field",
-                parameters: {
-                  block: "start",
-                  componentId: action.parameters.componentId,
-                  field: result.fields?.find(field => !field.valid)?.field,
-                },
-              },
-              context
-            )
           } else {
             buttonContext.push(result)
           }

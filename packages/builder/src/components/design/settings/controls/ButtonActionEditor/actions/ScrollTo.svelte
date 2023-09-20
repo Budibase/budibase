@@ -10,12 +10,6 @@
 
   export let parameters
 
-  onMount(() => {
-    if (!parameters.block) {
-      parameters.block = "start"
-    }
-  })
-
   $: formComponent = findComponent($currentAsset.props, parameters.componentId)
   $: formSchema = buildFormSchema(formComponent)
   $: fieldOptions = Object.keys(formSchema || {})
@@ -36,15 +30,6 @@
   />
   <Label small>Field</Label>
   <Combobox bind:value={parameters.field} options={fieldOptions} />
-  <Label small>Vertical alignment</Label>
-  <Select
-    bind:value={parameters.block}
-    options={[
-      { label: "Start", value: "start" },
-      { label: "Center", value: "center" },
-      { label: "End", value: "end" },
-    ]}
-  />
 </div>
 
 <style>
