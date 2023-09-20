@@ -42,26 +42,14 @@ export async function processOutputBBReferences(
     return value
   }
 
-  const result = []
-
-  const validIds = value.split(",").filter(id => !!id)
+  const ids = value.split(",").filter(id => !!id)
 
   switch (subtype) {
     case FieldSubtype.USER:
-      for (const id of validIds) {
-        try {
-          const user = await cache.user.getUser(id)
-          if (user) {
-            result.push(user)
-          }
-        } catch {
-          // If user cannot be found, we just strip it
-        }
-      }
-      break
+      const { users } = await cache.user.getUsers(ids)
+      return users
+
     default:
       throw utils.unreachable(subtype)
   }
-
-  return result
 }

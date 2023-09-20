@@ -142,39 +142,45 @@ describe("bbReferenceProcessor", () => {
   describe("processOutputBBReferences", () => {
     describe("subtype user", () => {
       it("fetches user given a valid string id", async () => {
-        const userId = generator.guid()
+        const user = _.sample(users)!
+        const userId = user._id!
 
-        const userFromCache = structures.users.user()
-        mockedCacheGetUser.mockResolvedValueOnce(userFromCache)
-
-        const result = await processOutputBBReferences(
-          userId,
-          FieldSubtype.USER
+        const result = await config.doInTenant(() =>
+          processOutputBBReferences(userId, FieldSubtype.USER)
         )
 
-        expect(result).toEqual([userFromCache])
-        expect(mockedCacheGetUser).toBeCalledTimes(1)
-        expect(mockedCacheGetUser).toBeCalledWith(userId)
+        expect(result).toEqual([
+          {
+            ...user,
+            budibaseAccess: true,
+            _rev: expect.any(String),
+          },
+        ])
+        expect(cacheGetUsersSpy).toBeCalledTimes(1)
+        expect(cacheGetUsersSpy).toBeCalledWith([userId])
       })
 
       it("fetches user given a valid string id csv", async () => {
-        const userId1 = generator.guid()
-        const userId2 = generator.guid()
+        const [user1, user2] = _.sampleSize(users, 2)
+        const userId1 = user1._id!
+        const userId2 = user2._id!
 
-        const userFromCache1 = structures.users.user({ _id: userId1 })
-        const userFromCache2 = structures.users.user({ _id: userId2 })
-        mockedCacheGetUser.mockResolvedValueOnce(userFromCache1)
-        mockedCacheGetUser.mockResolvedValueOnce(userFromCache2)
-
-        const result = await processOutputBBReferences(
-          [userId1, userId2].join(","),
-          FieldSubtype.USER
+        const result = await config.doInTenant(() =>
+          processOutputBBReferences(
+            [userId1, userId2].join(","),
+            FieldSubtype.USER
+          )
         )
 
-        expect(result).toEqual([userFromCache1, userFromCache2])
-        expect(mockedCacheGetUser).toBeCalledTimes(2)
-        expect(mockedCacheGetUser).toBeCalledWith(userId1)
-        expect(mockedCacheGetUser).toBeCalledWith(userId2)
+        expect(result).toEqual(
+          [user1, user2].map(u => ({
+            ...u,
+            budibaseAccess: true,
+            _rev: expect.any(String),
+          }))
+        )
+        expect(cacheGetUsersSpy).toBeCalledTimes(1)
+        expect(cacheGetUsersSpy).toBeCalledWith([userId1, userId2])
       })
     })
   })
