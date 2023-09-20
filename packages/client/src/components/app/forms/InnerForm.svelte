@@ -428,10 +428,7 @@
 
   // Action context to pass to children
   const actions = [
-    {
-      type: ActionTypes.ValidateForm,
-      callback: formApi.validate,
-    },
+    { type: ActionTypes.ValidateForm, callback: formApi.validate },
     { type: ActionTypes.ClearForm, callback: formApi.reset },
     { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
     { type: ActionTypes.UpdateFieldValue, callback: handleUpdateFieldValue },
