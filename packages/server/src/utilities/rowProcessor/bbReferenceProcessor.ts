@@ -19,19 +19,12 @@ export async function processInputBBReferences(
         result.push(...value.split(",").map((id: string) => id.trim()))
       }
 
-      for (const id of result) {
-        try {
-          const user = await cache.user.getUser(id)
-          if (!user) {
-            throw new InvalidBBRefError(id, FieldSubtype.USER)
-          }
-        } catch (err: any) {
-          if (err != null && err.status === 404 && err.error === "not_found") {
-            throw new InvalidBBRefError(id, FieldSubtype.USER)
-          }
-          throw err
-        }
+      const { notFoundIds } = await cache.user.getUsers(result)
+
+      if (notFoundIds?.length) {
+        throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
       }
+
       break
     default:
       throw utils.unreachable(subtype)
