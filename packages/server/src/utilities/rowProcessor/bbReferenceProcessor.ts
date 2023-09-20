@@ -6,20 +6,25 @@ import { InvalidBBRefError } from "./errors"
 export async function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
   subtype: FieldSubtype
-): Promise<string> {
-  const result: string[] = []
+): Promise<string | undefined> {
+  const referenceIds: string[] = []
+
+  if (Array.isArray(value)) {
+    referenceIds.push(...value.map(x => (typeof x === "string" ? x : x._id)))
+  } else if (typeof value !== "string") {
+    referenceIds.push(value._id)
+  } else {
+    referenceIds.push(
+      ...value
+        .split(",")
+        .filter(x => x)
+        .map((id: string) => id.trim())
+    )
+  }
 
   switch (subtype) {
     case FieldSubtype.USER:
-      if (Array.isArray(value)) {
-        result.push(...value.map(x => (typeof x === "string" ? x : x._id)))
-      } else if (typeof value !== "string") {
-        result.push(value._id)
-      } else {
-        result.push(...value.split(",").map((id: string) => id.trim()))
-      }
-
-      const { notFoundIds } = await cache.user.getUsers(result)
+      const { notFoundIds } = await cache.user.getUsers(referenceIds)
 
       if (notFoundIds?.length) {
         throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
@@ -30,7 +35,7 @@ export async function processInputBBReferences(
       throw utils.unreachable(subtype)
   }
 
-  return result.join(",")
+  return referenceIds.join(",") || undefined
 }
 
 export async function processOutputBBReferences(
@@ -47,6 +52,10 @@ export async function processOutputBBReferences(
   switch (subtype) {
     case FieldSubtype.USER:
       const { users } = await cache.user.getUsers(ids)
+      if (!users.length) {
+        return undefined
+      }
+
       return users.map(u => ({
         _id: u._id,
         primaryDisplay: u.email,
