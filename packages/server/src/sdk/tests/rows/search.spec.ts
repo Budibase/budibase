@@ -1,8 +1,8 @@
-import * as utils from "../utils"
+import * as search from "../../app/rows/search"
 
 describe("removeEmptyFilters", () => {
   it("0 should not be removed", () => {
-    const filters = utils.removeEmptyFilters({
+    const filters = search.removeEmptyFilters({
       equal: {
         column: 0,
       },
@@ -11,7 +11,7 @@ describe("removeEmptyFilters", () => {
   })
 
   it("empty string should be removed", () => {
-    const filters = utils.removeEmptyFilters({
+    const filters = search.removeEmptyFilters({
       equal: {
         column: "",
       },
