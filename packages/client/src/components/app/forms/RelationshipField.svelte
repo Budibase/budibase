@@ -16,6 +16,7 @@
   export let defaultValue
   export let onChange
   export let filter
+  export let datasourceType = "table"
 
   let fieldState
   let fieldApi
@@ -29,7 +30,7 @@
   $: fetch = fetchData({
     API,
     datasource: {
-      type: "table",
+      type: datasourceType,
       tableId: linkedTableId,
     },
     options: {
