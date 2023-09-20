@@ -17,6 +17,7 @@
   export let onChange
   export let filter
   export let datasourceType = "table"
+  export let primaryDisplay
 
   let fieldState
   let fieldApi
@@ -24,6 +25,9 @@
   let tableDefinition
   let searchTerm
   let open
+
+  $: type =
+    datasourceType === "table" ? FieldTypes.LINK : FieldTypes.BB_REFERENCE
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
@@ -45,7 +49,7 @@
     : flatten(fieldState?.value)?.[0]
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: expandedDefaultValue = expand(defaultValue)
-  $: primaryDisplay = tableDefinition?.primaryDisplay
+  $: primaryDisplay = primaryDisplay || tableDefinition?.primaryDisplay
 
   let optionsObj = {}
   let initialValuesProcessed
@@ -162,7 +166,7 @@
   {disabled}
   {validation}
   defaultValue={expandedDefaultValue}
-  type={FieldTypes.LINK}
+  {type}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
