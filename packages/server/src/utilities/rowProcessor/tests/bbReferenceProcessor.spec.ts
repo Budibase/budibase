@@ -97,12 +97,14 @@ describe("bbReferenceProcessor", () => {
       })
 
       it("throws an error given an invalid id in a csv", async () => {
-        const expectedUsers = _.sampleSize(users, 2).map(x => x._id!)
+        const expectedUserIds = _.sampleSize(users, 2).map(x => x._id!)
         const wrongId = generator.guid()
 
-        const userIdCsv = [expectedUsers[0], wrongId, expectedUsers[1]].join(
-          " ,  "
-        )
+        const userIdCsv = [
+          expectedUserIds[0],
+          wrongId,
+          expectedUserIds[1],
+        ].join(" ,  ")
 
         await expect(
           config.doInTenant(() =>
