@@ -1,4 +1,4 @@
-import { Checkbox, Select, RadioGroup, Stepper } from "@budibase/bbui"
+import { Checkbox, Select, RadioGroup, Stepper, Input } from "@budibase/bbui"
 import DataSourceSelect from "./controls/DataSourceSelect.svelte"
 import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
@@ -60,6 +60,7 @@ const componentMap = {
   "field/longform": FormFieldSelect,
   "field/datetime": FormFieldSelect,
   "field/attachment": FormFieldSelect,
+  "field/s3": Input,
   "field/link": FormFieldSelect,
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,

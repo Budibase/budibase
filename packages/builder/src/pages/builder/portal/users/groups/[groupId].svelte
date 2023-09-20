@@ -21,6 +21,7 @@
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
   import { sdk } from "@budibase/shared-core"
+  import { Constants } from "@budibase/frontend-core"
 
   export let groupId
 
@@ -57,8 +58,11 @@
     )
     .map(app => ({
       ...app,
-      role: group?.roles?.[apps.getProdAppID(app.devId)],
+      role: group?.builder?.apps.includes(apps.getProdAppID(app.devId))
+        ? Constants.Roles.CREATOR
+        : group?.roles?.[apps.getProdAppID(app.devId)],
     }))
+
   $: {
     if (loaded && !group?._id) {
       $goto("./")

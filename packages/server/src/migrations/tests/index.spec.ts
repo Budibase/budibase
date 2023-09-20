@@ -11,6 +11,7 @@ import { MIGRATIONS } from "../"
 import * as helpers from "./helpers"
 
 import tk from "timekeeper"
+import { View } from "@budibase/types"
 const timestamp = new Date().toISOString()
 tk.freeze(timestamp)
 
@@ -50,9 +51,11 @@ describe("migrations", () => {
         await config.createRole()
         await config.createRole()
         await config.createTable()
-        await config.createView()
+        await config.createLegacyView()
         await config.createTable()
-        await config.createView(structures.view(config.table!._id!))
+        await config.createLegacyView(
+          structures.view(config.table!._id!) as View
+        )
         await config.createScreen()
         await config.createScreen()
 

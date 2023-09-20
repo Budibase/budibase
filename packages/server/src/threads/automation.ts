@@ -1,10 +1,9 @@
 import { default as threadUtils } from "./utils"
 import { Job } from "bull"
-threadUtils.threadSetup()
 import {
-  isRecurring,
   disableCronById,
   isErrorInOutput,
+  isRecurring,
 } from "../automations/utils"
 import * as actions from "../automations/actions"
 import * as automationUtils from "../automations/automationUtils"
@@ -15,17 +14,18 @@ import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
 import {
   Automation,
-  AutomationStep,
-  AutomationStatus,
-  AutomationMetadata,
-  AutomationJob,
   AutomationData,
+  AutomationJob,
+  AutomationMetadata,
+  AutomationStatus,
+  AutomationStep,
+  AutomationStepStatus,
 } from "@budibase/types"
 import {
-  LoopStep,
-  LoopInput,
-  TriggerOutput,
   AutomationContext,
+  LoopInput,
+  LoopStep,
+  TriggerOutput,
 } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 import { context, logging } from "@budibase/backend-core"
@@ -34,6 +34,8 @@ import { cloneDeep } from "lodash/fp"
 import { performance } from "perf_hooks"
 import * as sdkUtils from "../sdk/utils"
 import env from "../environment"
+
+threadUtils.threadSetup()
 const FILTER_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.BUILTIN_ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
@@ -100,7 +102,7 @@ class Orchestrator {
   }
 
   cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
-    if (stepId === CRON_STEP_ID) {
+    if (stepId === CRON_STEP_ID && !triggerOutput.timestamp) {
       triggerOutput.timestamp = Date.now()
     }
     return triggerOutput
@@ -450,7 +452,10 @@ class Orchestrator {
         this.executionOutput.steps.splice(loopStepNumber + 1, 0, {
           id: step.id,
           stepId: step.stepId,
-          outputs: { status: AutomationStatus.NO_ITERATIONS, success: true },
+          outputs: {
+            status: AutomationStepStatus.NO_ITERATIONS,
+            success: true,
+          },
           inputs: {},
         })
 
@@ -557,11 +562,10 @@ export function executeSynchronously(job: Job) {
     // put into automation thread for whole context
     return context.doInEnvironmentContext(envVars, async () => {
       const automationOrchestrator = new Orchestrator(job)
-      const response = await Promise.race([
+      return await Promise.race([
         automationOrchestrator.execute(),
         timeoutPromise,
       ])
-      return response
     })
   })
 }

@@ -6,28 +6,28 @@ import {
 } from "../../../db/utils"
 import * as userController from "../user"
 import {
+  cleanupAttachments,
   inputProcessing,
   outputProcessing,
-  cleanupAttachments,
 } from "../../../utilities/rowProcessor"
 import { FieldTypes } from "../../../constants"
 import * as utils from "./utils"
 import { cloneDeep } from "lodash/fp"
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
 import {
-  UserCtx,
   LinkDocumentValue,
-  Row,
-  Table,
   PatchRowRequest,
   PatchRowResponse,
+  Row,
+  Table,
+  UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
+  const tableId = utils.getTableId(ctx)
   const inputs = ctx.request.body
-  const tableId = inputs.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
   const dbTable = await sdk.tables.getTable(tableId)
@@ -94,7 +94,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 
 export async function save(ctx: UserCtx) {
   let inputs = ctx.request.body
-  inputs.tableId = ctx.params.tableId
+  inputs.tableId = utils.getTableId(ctx)
 
   if (!inputs._rev && !inputs._id) {
     inputs._id = generateRowID(inputs.tableId)
@@ -131,21 +131,23 @@ export async function save(ctx: UserCtx) {
   })
 }
 
-export async function find(ctx: UserCtx) {
-  const db = dbCore.getDB(ctx.appId)
-  const table = await sdk.tables.getTable(ctx.params.tableId)
-  let row = await utils.findRow(ctx, ctx.params.tableId, ctx.params.rowId)
+export async function find(ctx: UserCtx): Promise<Row> {
+  const tableId = utils.getTableId(ctx),
+    rowId = ctx.params.rowId
+  const table = await sdk.tables.getTable(tableId)
+  let row = await utils.findRow(ctx, tableId, rowId)
   row = await outputProcessing(table, row)
   return row
 }
 
 export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
+  const tableId = utils.getTableId(ctx)
   const { _id } = ctx.request.body
   let row = await db.get<Row>(_id)
   let _rev = ctx.request.body._rev || row._rev
 
-  if (row.tableId !== ctx.params.tableId) {
+  if (row.tableId !== tableId) {
     throw "Supplied tableId doesn't match the row's tableId"
   }
   const table = await sdk.tables.getTable(row.tableId)
@@ -163,7 +165,7 @@ export async function destroy(ctx: UserCtx) {
   await updateRelatedFormula(table, row)
 
   let response
-  if (ctx.params.tableId === InternalTables.USER_METADATA) {
+  if (tableId === InternalTables.USER_METADATA) {
     ctx.params = {
       id: _id,
     }
@@ -176,7 +178,7 @@ export async function destroy(ctx: UserCtx) {
 }
 
 export async function bulkDestroy(ctx: UserCtx) {
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   const table = await sdk.tables.getTable(tableId)
   let { rows } = ctx.request.body
 
@@ -216,7 +218,7 @@ export async function bulkDestroy(ctx: UserCtx) {
 
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const db = context.getAppDB()
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   const rowId = ctx.params.rowId
   // need table to work out where links go in row
   let [table, row] = await Promise.all([

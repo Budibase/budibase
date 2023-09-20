@@ -13,9 +13,9 @@
   import { generate } from "shortid"
   import {
     getEventContextBindings,
+    getActionBindings,
     makeStateBinding,
   } from "builderStore/dataBinding"
-  import { currentAsset, store } from "builderStore"
   import { cloneDeep } from "lodash/fp"
 
   const flipDurationMs = 150
@@ -26,6 +26,7 @@
   export let actions
   export let bindings = []
   export let nested
+  export let componentInstance
 
   let actionQuery
   let selectedAction = actions?.length ? actions[0] : null
@@ -68,15 +69,19 @@
     acc[action.type].push(action)
     return acc
   }, {})
+
   // These are ephemeral bindings which only exist while executing actions
-  $: eventContexBindings = getEventContextBindings(
-    $currentAsset,
-    $store.selectedComponentId,
-    key,
-    actions,
-    selectedAction?.id
+  $: eventContextBindings = getEventContextBindings({
+    componentInstance,
+    settingKey: key,
+  })
+  $: actionContextBindings = getActionBindings(actions, selectedAction?.id)
+
+  $: allBindings = getAllBindings(
+    bindings,
+    [...eventContextBindings, ...actionContextBindings],
+    actions
   )
-  $: allBindings = getAllBindings(bindings, eventContexBindings, actions)
   $: {
     // Ensure each action has a unique ID
     if (actions) {
