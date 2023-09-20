@@ -371,16 +371,11 @@ const exportDataHandler = async action => {
 }
 
 const continueIfHandler = action => {
-  const { type, value, operator, referenceValue, finalActions } =
-    action.parameters
+  const { type, value, operator, referenceValue } = action.parameters
   if (!type || !operator) {
     return
   }
   let match = false
-  let response = {
-    finalActions,
-    continue: true,
-  }
   if (value == null && referenceValue == null) {
     match = true
   } else if (value === referenceValue) {
@@ -389,11 +384,10 @@ const continueIfHandler = action => {
     match = JSON.stringify(value) === JSON.stringify(referenceValue)
   }
   if (type === "continue") {
-    response.continue = operator === "equal" ? match : !match
+    return operator === "equal" ? match : !match
   } else {
-    response.continue = operator === "equal" ? !match : match
+    return operator === "equal" ? !match : match
   }
-  return response
 }
 
 const showNotificationHandler = action => {
@@ -474,7 +468,6 @@ export const enrichButtonActions = (actions, context) => {
     // before a confirmable action since this breaks the chain.
     let buttonContext = context.actions || []
 
-    let finalActions = []
     for (let i = 0; i < handlers.length; i++) {
       try {
         // Skip any non-existent action definitions
@@ -536,31 +529,9 @@ export const enrichButtonActions = (actions, context) => {
 
         // For non-confirmable actions, execute the handler immediately
         else {
-          if (
-            finalActions?.length > 0 &&
-            !finalActions.includes(action["##eventHandlerType"])
-          ) {
-            continue
-          }
           const result = await callback()
-          if (result?.valid === false) {
-            await scrollHandler(
-              {
-                [`##eventHandlerType`]: "Scroll To Field",
-                parameters: {
-                  block: "start",
-                  componentId: action.parameters.componentId,
-                  field: result.fields?.find(field => !field.valid)?.field,
-                },
-              },
-              context
-            )
-          }
-          if (result?.continue === false) {
-            finalActions = result.finalActions
-            if (!finalActions?.length) {
-              return
-            }
+          if (result === false) {
+            return
           } else {
             buttonContext.push(result)
           }
