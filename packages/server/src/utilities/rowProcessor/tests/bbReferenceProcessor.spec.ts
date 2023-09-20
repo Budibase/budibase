@@ -153,9 +153,11 @@ describe("bbReferenceProcessor", () => {
 
         expect(result).toEqual([
           {
-            ...user,
-            budibaseAccess: true,
-            _rev: expect.any(String),
+            _id: user._id,
+            primaryDisplay: user.email,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
           },
         ])
         expect(cacheGetUsersSpy).toBeCalledTimes(1)
@@ -176,9 +178,11 @@ describe("bbReferenceProcessor", () => {
 
         expect(result).toEqual(
           [user1, user2].map(u => ({
-            ...u,
-            budibaseAccess: true,
-            _rev: expect.any(String),
+            _id: u._id,
+            primaryDisplay: u.email,
+            email: u.email,
+            firstName: u.firstName,
+            lastName: u.lastName,
           }))
         )
         expect(cacheGetUsersSpy).toBeCalledTimes(1)
