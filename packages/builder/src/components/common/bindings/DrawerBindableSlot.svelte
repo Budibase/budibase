@@ -32,6 +32,8 @@
   $: tempValue = readableValue
   $: isJS = isJSBinding(value)
 
+  $: console.log("READABLE ", readableValue)
+
   const saveBinding = () => {
     onChange(tempValue)
     onBlur()
@@ -49,6 +51,7 @@
     } else {
       currentVal = readableToRuntimeBinding(bindings, value)
     }
+    console.log("CURRENT VAL ", currentVal)
     dispatch("change", currentVal)
   }
 
@@ -61,7 +64,6 @@
   }
 
   const hasValidLinks = value => {
-    console.log("VAL ", value)
     let links = []
     if (Array.isArray(value)) {
       links = value
