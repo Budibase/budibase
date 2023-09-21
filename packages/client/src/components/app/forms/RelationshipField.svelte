@@ -45,14 +45,25 @@
   $: expandedDefaultValue = expand(defaultValue)
   $: primaryDisplay = tableDefinition?.primaryDisplay || "_id"
 
-  let prevTerm
+  let lastFetchedTerm
   $: {
-    // Check if the fetch changed, ignoring differences between empty/null/undefined
-    if (primaryDisplay && prevTerm != fetchTerm) {
-      prevTerm = fetchTerm
-      fetch.update({
-        query: { string: { [primaryDisplay]: fetchTerm } },
-      })
+    const termChangedSinceFetch = (lastFetchedTerm || "") !== (fetchTerm || "")
+
+    const allRowsFetched =
+      !lastFetchedTerm && $fetch.rows.length === $fetch.totalRows
+    if (!allRowsFetched && termChangedSinceFetch) {
+      debugger
+      // Don't request until we have the primary display
+      if (primaryDisplay) {
+        lastFetchedTerm = fetchTerm
+        fetch.update({
+          query: { string: { [primaryDisplay]: fetchTerm } },
+        })
+      }
+    } else {
+      options = fetchTerm
+        ? $fetch.rows.filter(row => row[primaryDisplay].includes(fetchTerm))
+        : $fetch.rows
     }
   }
 
