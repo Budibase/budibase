@@ -139,6 +139,39 @@ write.push(
 
 /**
  * @openapi
+ * /applications/{appId}/import:
+ *   post:
+ *     operationId: appImport
+ *     summary: Import an app to an existing app
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appIdUrl'
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               encryptedPassword:
+ *                 description: Password for the export if it is encrypted.
+ *                 type: string
+ *               appExport:
+ *                 description: The app export to import.
+ *                 type: string
+ *                 format: binary
+ *             required:
+ *               - appExport
+ *     responses:
+ *       204:
+ *         description: Application has been updated.
+ */
+write.push(
+  new Endpoint("post", "/applications/:appId/import", controller.importToApp)
+)
+
+/**
+ * @openapi
  * /applications/{appId}:
  *   get:
  *     operationId: appGetById

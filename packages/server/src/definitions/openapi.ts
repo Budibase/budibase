@@ -18,6 +18,9 @@ export interface paths {
   "/applications/{appId}/publish": {
     post: operations["appPublish"];
   };
+  "/applications/{appId}/import": {
+    post: operations["appImport"];
+  };
   "/applications/search": {
     /** Based on application properties (currently only name) search for applications. */
     post: operations["appSearch"];
@@ -885,6 +888,31 @@ export interface operations {
       200: {
         content: {
           "application/json": components["schemas"]["deploymentOutput"];
+        };
+      };
+    };
+  };
+  appImport: {
+    parameters: {
+      path: {
+        /** The ID of the app which this request is targeting. */
+        appId: components["parameters"]["appIdUrl"];
+      };
+    };
+    responses: {
+      /** Application has been updated. */
+      204: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /** @description Password for the export if it is encrypted. */
+          encryptedPassword?: string;
+          /**
+           * Format: binary
+           * @description The app export to import.
+           */
+          appExport: string;
         };
       };
     };
