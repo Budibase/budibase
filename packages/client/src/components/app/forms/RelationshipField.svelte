@@ -21,6 +21,7 @@
   let fieldApi
   let fieldSchema
   let tableDefinition
+  let fetchTerm
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
@@ -35,13 +36,25 @@
       limit: 100,
     },
   })
-  $: fetch.update({ filter })
+
   $: options = $fetch.rows
   $: tableDefinition = $fetch.definition
   $: singleValue = flatten(fieldState?.value)?.[0]
   $: multiValue = flatten(fieldState?.value) ?? []
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: expandedDefaultValue = expand(defaultValue)
+  $: primaryDisplay = tableDefinition?.primaryDisplay || "_id"
+
+  let prevTerm
+  $: {
+    // Check if the fetch changed, ignoring differences between empty/null/undefined
+    if (primaryDisplay && prevTerm != fetchTerm) {
+      prevTerm = fetchTerm
+      fetch.update({
+        query: { string: { [primaryDisplay]: fetchTerm } },
+      })
+    }
+  }
 
   const flatten = values => {
     if (!values) {
@@ -54,7 +67,7 @@
   }
 
   const getDisplayName = row => {
-    return row?.[tableDefinition?.primaryDisplay || "_id"] || "-"
+    return row?.[primaryDisplay] || "-"
   }
 
   const singleHandler = e => {
@@ -107,7 +120,9 @@
       getOptionLabel={getDisplayName}
       getOptionValue={option => option._id}
       {placeholder}
-      sort={true}
+      sort
+      useFetch
+      bind:fetchTerm
     />
   {/if}
 </Field>
