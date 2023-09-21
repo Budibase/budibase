@@ -18,6 +18,8 @@ import {
 import sdk from "../../../sdk"
 import * as utils from "./utils"
 import { dataFilters } from "@budibase/shared-core"
+import { inputProcessing } from "../../../utilities/rowProcessor"
+import { cloneDeep, isEqual } from "lodash"
 
 export async function handleRequest(
   operation: Operation,
@@ -26,20 +28,8 @@ export async function handleRequest(
 ) {
   // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
   if (opts && opts.filters) {
-    for (let filterField of NoEmptyFilterStrings) {
-      if (!opts.filters[filterField]) {
-        continue
-      }
-      // @ts-ignore
-      for (let [key, value] of Object.entries(opts.filters[filterField])) {
-        if (!value || value === "") {
-          // @ts-ignore
-          delete opts.filters[filterField][key]
-        }
-      }
-    }
+    opts.filters = sdk.rows.removeEmptyFilters(opts.filters)
   }
-
   if (
     !dataFilters.hasFilters(opts?.filters) &&
     opts?.filters?.onEmptyFilter === EmptyFilterOption.RETURN_NONE
@@ -88,10 +78,24 @@ export async function save(ctx: UserCtx) {
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }
   }
+
+  const table = await sdk.tables.getTable(tableId)
+  const { table: updatedTable, row } = inputProcessing(
+    ctx.user,
+    cloneDeep(table),
+    inputs
+  )
+
   const response = await handleRequest(Operation.CREATE, tableId, {
-    row: inputs,
+    row,
   })
+
   const responseRow = response as { row: Row }
+
+  if (!isEqual(table, updatedTable)) {
+    await sdk.tables.saveTable(updatedTable)
+  }
+
   const rowId = responseRow.row._id
   if (rowId) {
     const row = await sdk.rows.external.getRow(tableId, rowId, {
@@ -106,10 +110,18 @@ export async function save(ctx: UserCtx) {
   }
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx): Promise<Row> {
   const id = ctx.params.rowId
   const tableId = utils.getTableId(ctx)
-  return sdk.rows.external.getRow(tableId, id)
+  const row = await sdk.rows.external.getRow(tableId, id, {
+    relationships: true,
+  })
+
+  if (!row) {
+    ctx.throw(404)
+  }
+
+  return row
 }
 
 export async function destroy(ctx: UserCtx) {
@@ -119,7 +131,7 @@ export async function destroy(ctx: UserCtx) {
     id: breakRowIdField(_id),
     includeSqlRelationships: IncludeRelationship.EXCLUDE,
   })) as { row: Row }
-  return { response: { ok: true }, row }
+  return { response: { ok: true, id: _id }, row }
 }
 
 export async function bulkDestroy(ctx: UserCtx) {

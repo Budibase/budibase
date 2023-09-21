@@ -6,7 +6,7 @@ const { RelationshipType } = require("../../constants")
 const { cloneDeep } = require("lodash/fp")
 
 describe("test the link controller", () => {
-  let config = new TestConfig(false)
+  let config = new TestConfig()
   let table1, table2, appId
 
   beforeAll(async () => {

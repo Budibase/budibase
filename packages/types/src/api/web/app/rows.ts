@@ -1,5 +1,6 @@
-import { SearchParams } from "../../../sdk"
+import { SearchFilters, SearchParams } from "../../../sdk"
 import { Row } from "../../../documents"
+import { ReadStream } from "fs"
 
 export interface SaveRowRequest extends Row {}
 
@@ -28,3 +29,11 @@ export interface SearchViewRowRequest
 export interface SearchRowResponse {
   rows: any[]
 }
+
+export interface ExportRowsRequest {
+  rows: string[]
+  columns?: string[]
+  query?: SearchFilters
+}
+
+export type ExportRowsResponse = ReadStream
