@@ -49,9 +49,8 @@
   $: {
     const termChangedSinceFetch = (lastFetchedTerm || "") !== (fetchTerm || "")
 
-    const allRowsFetched = !lastFetchedTerm / !$fetch.hasNextPage
+    const allRowsFetched = !lastFetchedTerm && !$fetch.hasNextPage
     if (!allRowsFetched && termChangedSinceFetch) {
-      debugger
       // Don't request until we have the primary display
       if (primaryDisplay) {
         lastFetchedTerm = fetchTerm
