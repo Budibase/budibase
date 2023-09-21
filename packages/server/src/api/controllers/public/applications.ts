@@ -80,6 +80,8 @@ export async function destroy(ctx: UserCtx, next: Next) {
 export async function unpublish(ctx: UserCtx, next: Next) {
   await context.doInAppContext(ctx.params.appId, async () => {
     await controller.unpublish(ctx)
+    ctx.body = undefined
+    ctx.status = 204
     await next()
   })
 }
@@ -91,12 +93,23 @@ export async function publish(ctx: UserCtx, next: Next) {
   })
 }
 
+export async function importToApp(ctx: UserCtx, next: Next) {
+  await context.doInAppContext(ctx.params.appId, async () => {
+    // TODO: paid control
+    await controller.importToApp(ctx)
+    ctx.body = undefined
+    ctx.status = 204
+    await next()
+  })
+}
+
 export default {
   create,
   update,
   read,
   destroy,
   search,
-  publish,
   unpublish,
+  publish,
+  importToApp,
 }
