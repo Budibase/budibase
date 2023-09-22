@@ -37,17 +37,28 @@
     },
   })
 
-  $: options = $fetch.rows
   $: tableDefinition = $fetch.definition
   $: selectedValue = multiselect
     ? flatten(fieldState?.value) ?? []
     : flatten(fieldState?.value)?.[0]
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: expandedDefaultValue = expand(defaultValue)
-  $: primaryDisplay = tableDefinition?.primaryDisplay || "_id"
+  $: primaryDisplay = tableDefinition?.primaryDisplay
+
+  $: initialValues =
+    initialValues ||
+    (primaryDisplay &&
+      fieldState?.value?.map(x => ({
+        _id: x._id,
+        [primaryDisplay]: x.primaryDisplay,
+      })))
+
+  $: options = processOptions(selectedValue, $fetch.rows, initialValues)
 
   let lastFetchedTerm
-  $: {
+  $: search(fetchTerm)
+
+  const search = fetchTerm => {
     const termChangedSinceFetch = (lastFetchedTerm || "") !== (fetchTerm || "")
 
     const allRowsFetched = !lastFetchedTerm && !$fetch.hasNextPage
@@ -74,6 +85,22 @@
       values = [values]
     }
     return values.map(value => (typeof value === "object" ? value._id : value))
+  }
+
+  const processOptions = (selectedValue, fetchedRows, initialValues = []) => {
+    selectedValue ??= []
+    if (!Array.isArray(selectedValue)) {
+      selectedValue = [selectedValue]
+    }
+
+    const missingItems = selectedValue
+      .filter(v => !fetchedRows.find(r => r._id === v))
+      .map(v => initialValues.find(o => o._id === v))
+      .filter(x => x)
+
+    const result = [...missingItems, ...fetchedRows]
+
+    return result
   }
 
   const getDisplayName = row => {
