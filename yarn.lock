@@ -3643,7 +3643,7 @@
     "@types/istanbul-lib-coverage" "^2.0.0"
     collect-v8-coverage "^1.0.0"
 
-"@jest/test-sequencer@29.6.2", "@jest/test-sequencer@^29.6.2":
+"@jest/test-sequencer@^29.6.2":
   version "29.6.2"
   resolved "https://registry.yarnpkg.com/@jest/test-sequencer/-/test-sequencer-29.6.2.tgz#585eff07a68dd75225a7eacf319780cb9f6b9bf4"
   integrity sha512-GVYi6PfPwVejO7slw6IDO0qKVum5jtrJ3KoLGbgBWyr2qr4GaxFV6su+ZAjdTX75Sr1DkMFRk09r2ZVa+wtCGw==
@@ -10757,13 +10757,6 @@ elliptic@^6.5.3:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-emitter-listener@1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/emitter-listener/-/emitter-listener-1.1.2.tgz#56b140e8f6992375b3d7cb2cab1cc7432d9632e8"
-  integrity sha512-Bt1sBAGFHY9DKY+4/2cV6izcKJUf5T7/gkdmkxzX/qv9CcGH8xSwVRW5mtX03SWJtRTWSOpzCuWN9rBFYZepZQ==
-  dependencies:
-    shimmer "^1.2.0"
-
 emittery@^0.13.1:
   version "0.13.1"
   resolved "https://registry.yarnpkg.com/emittery/-/emittery-0.13.1.tgz#c04b8c3457490e0847ae51fced3af52d338e3dad"
@@ -15660,7 +15653,7 @@ jsonschema@1.4.0:
   resolved "https://registry.yarnpkg.com/jsonschema/-/jsonschema-1.4.0.tgz#1afa34c4bc22190d8e42271ec17ac8b3404f87b2"
   integrity sha512-/YgW6pRMr6M7C+4o8kS+B/2myEpHCrxO4PEWnqJNBFMjn7EWXqlQ4tGwL6xTHeRplwuZmcAncdvfOad1nT2yMw==
 
-jsonwebtoken@8.5.1, jsonwebtoken@^8.2.0:
+jsonwebtoken@8.5.1:
   version "8.5.1"
   resolved "https://registry.yarnpkg.com/jsonwebtoken/-/jsonwebtoken-8.5.1.tgz#00e71e0b8df54c2121a1f26137df2280673bcc0d"
   integrity sha512-XjwVfRS6jTMsqYs0EsuJ4LGxXV14zQybNd4L2r0UvbVnSF9Af8x7p5MzbJ90Ioz/9TI41/hTCvznF/loiSzn8w==
@@ -16563,7 +16556,7 @@ lodash.includes@^4.3.0:
   resolved "https://registry.yarnpkg.com/lodash.includes/-/lodash.includes-4.3.0.tgz#60bb98a87cb923c68ca1e51325483314849f553f"
   integrity sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==
 
-lodash.isarguments@3.1.0, lodash.isarguments@^3.1.0:
+lodash.isarguments@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/lodash.isarguments/-/lodash.isarguments-3.1.0.tgz#2f573d85c6a24289ff00663b491c1d338ff3458a"
   integrity sha512-chi4NHZlZqZD18a0imDHnZPrDeBbTtVN7GXMwuGdRH9qotxAjYs3aVLKc7zNOG9eddR5Ksd8rvFEBc9SsggPpg==
@@ -19178,14 +19171,6 @@ passport-google-oauth@2.0.0:
   dependencies:
     passport-google-oauth1 "1.x.x"
     passport-google-oauth20 "2.x.x"
-
-passport-jwt@4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/passport-jwt/-/passport-jwt-4.0.0.tgz#7f0be7ba942e28b9f5d22c2ebbb8ce96ef7cf065"
-  integrity sha512-BwC0n2GP/1hMVjR4QpnvqA61TxenUMlmfNjYNgK0ZAs0HK4SOQkHcSv4L328blNTLtHq7DbmvyNJiH+bn6C5Mg==
-  dependencies:
-    jsonwebtoken "^8.2.0"
-    passport-strategy "^1.0.0"
 
 passport-local@1.0.0:
   version "1.0.0"
@@ -22104,11 +22089,6 @@ shell-quote@^1.7.3:
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/shell-quote/-/shell-quote-1.8.1.tgz#6dbf4db75515ad5bac63b4f1894c3a154c766680"
   integrity sha512-6j1W9l1iAs/4xYBI1SYOVZyFcCis9b4KCLQ8fgAGG07QvzaRLVVRQvAy85yNmmZSjYjg4MWh4gNvlPujU/5LpA==
-
-shimmer@^1.2.0:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/shimmer/-/shimmer-1.2.1.tgz#610859f7de327b587efebf501fb43117f9aff337"
-  integrity sha512-sQTKC1Re/rM6XyFM6fIAGHRPVGvyXfgzIDvzoq608vM+jeyVD0Tu1E6Np0Kc2zAIFWIj963V2800iF/9LPieQw==
 
 shortid@2.2.15:
   version "2.2.15"

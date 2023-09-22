@@ -131,7 +131,6 @@
     "@babel/core": "7.17.4",
     "@babel/preset-env": "7.16.11",
     "@budibase/standard-components": "^0.9.139",
-    "@jest/test-sequencer": "29.6.2",
     "@swc/core": "1.3.71",
     "@swc/jest": "0.2.27",
     "@trendyol/jest-testcontainers": "2.1.1",
