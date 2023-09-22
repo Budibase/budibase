@@ -36,6 +36,7 @@
   export let autocomplete = false
   export let sort = false
   export let fetchTerm = null
+  export let searchTerm = null
   export let useFetch = false
   export let customPopoverHeight
   export let customPopoverOffsetBelow
@@ -45,7 +46,6 @@
   export let customAnchor = null
   const dispatch = createEventDispatcher()
 
-  let searchTerm = null
   let button
   let popover
 

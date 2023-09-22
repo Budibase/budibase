@@ -21,7 +21,7 @@
   let fieldApi
   let fieldSchema
   let tableDefinition
-  let fetchTerm
+  let searchTerm
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
@@ -61,25 +61,20 @@
     }, {}),
   }
 
-  $: options = fetchTerm
-    ? Object.values(allOptions).filter(row =>
-        row[primaryDisplay].includes(fetchTerm)
-      )
-    : Object.values(allOptions)
+  $: options = Object.values(allOptions)
 
-  let lastFetchedTerm
-  $: fetchRows(fetchTerm)
+  $: fetchRows(searchTerm, primaryDisplay)
 
-  const fetchRows = fetchTerm => {
-    const termChangedSinceFetch = (lastFetchedTerm || "") !== (fetchTerm || "")
-
-    const allRowsFetched = !lastFetchedTerm && !$fetch.hasNextPage
-    if (!allRowsFetched && termChangedSinceFetch) {
+  const fetchRows = (searchTerm, primaryDisplay) => {
+    const allRowsFetched =
+      $fetch.loaded &&
+      !Object.keys($fetch.query.string).length &&
+      !$fetch.hasNextPage
+    if (!allRowsFetched) {
       // Don't request until we have the primary display
       if (primaryDisplay) {
-        lastFetchedTerm = fetchTerm
         fetch.update({
-          query: { string: { [primaryDisplay]: fetchTerm } },
+          query: { string: { [primaryDisplay]: searchTerm } },
         })
       }
     }
@@ -150,8 +145,8 @@
       getOptionValue={option => option._id}
       {placeholder}
       sort
-      useFetch
-      bind:fetchTerm
+      useFetch={false}
+      bind:searchTerm
     />
   {/if}
 </Field>
