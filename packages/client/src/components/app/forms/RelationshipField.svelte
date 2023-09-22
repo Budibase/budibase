@@ -122,7 +122,9 @@
       this={component}
       {options}
       {autocomplete}
-      value={selectedValue}
+      value={selectedValue?.map(value =>
+        typeof value === "object" ? value._id : value
+      )}
       on:change={multiselect ? multiHandler : singleHandler}
       id={fieldState.fieldId}
       disabled={fieldState.disabled}
