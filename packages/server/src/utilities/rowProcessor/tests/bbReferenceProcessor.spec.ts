@@ -1,133 +1,142 @@
+import _ from "lodash"
 import * as backendCore from "@budibase/backend-core"
 import { FieldSubtype, User } from "@budibase/types"
 import {
   processInputBBReferences,
   processOutputBBReferences,
 } from "../bbReferenceProcessor"
-import { generator, structures } from "@budibase/backend-core/tests"
+import {
+  DBTestConfiguration,
+  generator,
+  structures,
+} from "@budibase/backend-core/tests"
 import { InvalidBBRefError } from "../errors"
 
 jest.mock("@budibase/backend-core", (): typeof backendCore => {
-  const actual = jest.requireActual("@budibase/backend-core")
+  const actual: typeof backendCore = jest.requireActual(
+    "@budibase/backend-core"
+  )
   return {
     ...actual,
     cache: {
       ...actual.cache,
       user: {
-        getUser: jest.fn(),
-        invalidateUser: jest.fn(),
+        ...actual.cache.user,
+        getUsers: jest.fn(actual.cache.user.getUsers),
       },
     },
   }
 })
 
+const config = new DBTestConfiguration()
+
 describe("bbReferenceProcessor", () => {
-  const mockedCacheGetUser = backendCore.cache.user.getUser as jest.Mock
+  const cacheGetUsersSpy = backendCore.cache.user
+    .getUsers as jest.MockedFunction<typeof backendCore.cache.user.getUsers>
+
+  const users: User[] = []
+  beforeAll(async () => {
+    const userCount = 10
+    const userIds = generator.arrayOf(() => generator.guid(), {
+      min: userCount,
+      max: userCount,
+    })
+
+    await config.doInTenant(async () => {
+      const db = backendCore.context.getGlobalDB()
+      for (const userId of userIds) {
+        const user = structures.users.user({ _id: userId })
+        await db.put(user)
+        users.push(user)
+      }
+    })
+  })
 
   beforeEach(() => {
-    jest.resetAllMocks()
+    jest.clearAllMocks()
   })
 
   describe("processInputBBReferences", () => {
     describe("subtype user", () => {
       it("validate valid string id", async () => {
-        const userId = generator.guid()
+        const user = _.sample(users)
+        const userId = user!._id!
 
-        const userFromCache = structures.users.user()
-        mockedCacheGetUser.mockResolvedValueOnce(userFromCache)
-
-        const result = await processInputBBReferences(userId, FieldSubtype.USER)
+        const result = await config.doInTenant(() =>
+          processInputBBReferences(userId, FieldSubtype.USER)
+        )
 
         expect(result).toEqual(userId)
-        expect(mockedCacheGetUser).toBeCalledTimes(1)
-        expect(mockedCacheGetUser).toBeCalledWith(userId)
+        expect(cacheGetUsersSpy).toBeCalledTimes(1)
+        expect(cacheGetUsersSpy).toBeCalledWith([userId])
       })
 
       it("throws an error given an invalid id", async () => {
         const userId = generator.guid()
 
-        mockedCacheGetUser.mockRejectedValue({
-          status: 404,
-          error: "not_found",
-        })
-
         await expect(
-          processInputBBReferences(userId, FieldSubtype.USER)
+          config.doInTenant(() =>
+            processInputBBReferences(userId, FieldSubtype.USER)
+          )
         ).rejects.toThrowError(new InvalidBBRefError(userId, FieldSubtype.USER))
+        expect(cacheGetUsersSpy).toBeCalledTimes(1)
+        expect(cacheGetUsersSpy).toBeCalledWith([userId])
       })
 
       it("validates valid user ids as csv", async () => {
-        const userIds: string[] = []
-        for (let i = 0; i < 5; i++) {
-          const userId = generator.guid()
-          const user = structures.users.user({ _id: userId })
-          mockedCacheGetUser.mockResolvedValueOnce(user)
-          userIds.push(userId)
-        }
+        const userIds = _.sampleSize(users, 5).map(x => x._id!)
 
         const userIdCsv = userIds.join(" ,  ")
-        const result = await processInputBBReferences(
-          userIdCsv,
-          FieldSubtype.USER
+        const result = await config.doInTenant(() =>
+          processInputBBReferences(userIdCsv, FieldSubtype.USER)
         )
 
         expect(result).toEqual(userIds.join(","))
-        expect(mockedCacheGetUser).toBeCalledTimes(5)
-        userIds.forEach(userId => {
-          expect(mockedCacheGetUser).toBeCalledWith(userId)
-        })
+        expect(cacheGetUsersSpy).toBeCalledTimes(1)
+        expect(cacheGetUsersSpy).toBeCalledWith(userIds)
       })
 
       it("throws an error given an invalid id in a csv", async () => {
-        const userId1 = generator.guid()
-        const userId2 = generator.guid()
-        const userId3 = generator.guid()
-        mockedCacheGetUser.mockResolvedValueOnce(
-          structures.users.user({ _id: userId1 })
-        )
-        mockedCacheGetUser.mockResolvedValueOnce(
-          structures.users.user({ _id: userId2 })
-        )
+        const expectedUserIds = _.sampleSize(users, 2).map(x => x._id!)
+        const wrongId = generator.guid()
 
-        const userIdCsv = [userId1, userId2, userId3].join(" ,  ")
+        const userIdCsv = [
+          expectedUserIds[0],
+          wrongId,
+          expectedUserIds[1],
+        ].join(" ,  ")
 
         await expect(
-          processInputBBReferences(userIdCsv, FieldSubtype.USER)
+          config.doInTenant(() =>
+            processInputBBReferences(userIdCsv, FieldSubtype.USER)
+          )
         ).rejects.toThrowError(
-          new InvalidBBRefError(userId3, FieldSubtype.USER)
+          new InvalidBBRefError(wrongId, FieldSubtype.USER)
         )
       })
 
       it("validate valid user object", async () => {
-        const userId = generator.guid()
+        const userId = _.sample(users)!._id!
 
-        const userFromCache = structures.users.user()
-        mockedCacheGetUser.mockResolvedValueOnce(userFromCache)
-
-        const result = await processInputBBReferences(
-          { _id: userId },
-          FieldSubtype.USER
+        const result = await config.doInTenant(() =>
+          processInputBBReferences({ _id: userId }, FieldSubtype.USER)
         )
 
         expect(result).toEqual(userId)
-        expect(mockedCacheGetUser).toBeCalledTimes(1)
-        expect(mockedCacheGetUser).toBeCalledWith(userId)
+        expect(cacheGetUsersSpy).toBeCalledTimes(1)
+        expect(cacheGetUsersSpy).toBeCalledWith([userId])
       })
 
       it("validate valid user object array", async () => {
-        const users = Array.from({ length: 3 }, () => ({
-          _id: generator.guid(),
-        }))
+        const userIds = _.sampleSize(users, 3).map(x => x._id!)
 
-        mockedCacheGetUser.mockResolvedValue(structures.users.user())
+        const result = await config.doInTenant(() =>
+          processInputBBReferences(userIds, FieldSubtype.USER)
+        )
 
-        const result = await processInputBBReferences(users, FieldSubtype.USER)
-
-        expect(result).toEqual(users.map(x => x._id).join(","))
-        expect(mockedCacheGetUser).toBeCalledTimes(3)
-        for (const user of users) {
-          expect(mockedCacheGetUser).toBeCalledWith(user._id)
-        }
+        expect(result).toEqual(userIds.join(","))
+        expect(cacheGetUsersSpy).toBeCalledTimes(1)
+        expect(cacheGetUsersSpy).toBeCalledWith(userIds)
       })
     })
   })
@@ -135,39 +144,45 @@ describe("bbReferenceProcessor", () => {
   describe("processOutputBBReferences", () => {
     describe("subtype user", () => {
       it("fetches user given a valid string id", async () => {
-        const userId = generator.guid()
+        const user = _.sample(users)!
+        const userId = user._id!
 
-        const userFromCache = structures.users.user()
-        mockedCacheGetUser.mockResolvedValueOnce(userFromCache)
-
-        const result = await processOutputBBReferences(
-          userId,
-          FieldSubtype.USER
+        const result = await config.doInTenant(() =>
+          processOutputBBReferences(userId, FieldSubtype.USER)
         )
 
-        expect(result).toEqual([userFromCache])
-        expect(mockedCacheGetUser).toBeCalledTimes(1)
-        expect(mockedCacheGetUser).toBeCalledWith(userId)
+        expect(result).toEqual([
+          {
+            ...user,
+            budibaseAccess: true,
+            _rev: expect.any(String),
+          },
+        ])
+        expect(cacheGetUsersSpy).toBeCalledTimes(1)
+        expect(cacheGetUsersSpy).toBeCalledWith([userId])
       })
 
       it("fetches user given a valid string id csv", async () => {
-        const userId1 = generator.guid()
-        const userId2 = generator.guid()
+        const [user1, user2] = _.sampleSize(users, 2)
+        const userId1 = user1._id!
+        const userId2 = user2._id!
 
-        const userFromCache1 = structures.users.user({ _id: userId1 })
-        const userFromCache2 = structures.users.user({ _id: userId2 })
-        mockedCacheGetUser.mockResolvedValueOnce(userFromCache1)
-        mockedCacheGetUser.mockResolvedValueOnce(userFromCache2)
-
-        const result = await processOutputBBReferences(
-          [userId1, userId2].join(","),
-          FieldSubtype.USER
+        const result = await config.doInTenant(() =>
+          processOutputBBReferences(
+            [userId1, userId2].join(","),
+            FieldSubtype.USER
+          )
         )
 
-        expect(result).toEqual([userFromCache1, userFromCache2])
-        expect(mockedCacheGetUser).toBeCalledTimes(2)
-        expect(mockedCacheGetUser).toBeCalledWith(userId1)
-        expect(mockedCacheGetUser).toBeCalledWith(userId2)
+        expect(result).toEqual(
+          [user1, user2].map(u => ({
+            ...u,
+            budibaseAccess: true,
+            _rev: expect.any(String),
+          }))
+        )
+        expect(cacheGetUsersSpy).toBeCalledTimes(1)
+        expect(cacheGetUsersSpy).toBeCalledWith([userId1, userId2])
       })
     })
   })
