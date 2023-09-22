@@ -83,7 +83,7 @@
       primaryDisplay !== "_id" &&
       fieldState?.value?.length &&
       !selectedOptions?.length &&
-      $fetch.rows?.length > 100
+      $fetch.rows?.length >= 100
     ) {
       API.searchTable({
         paginate: false,
