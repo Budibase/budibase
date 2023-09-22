@@ -6,6 +6,7 @@ import * as backupController from "../backup"
 import { Application } from "../../../definitions/common"
 import { UserCtx } from "@budibase/types"
 import { Next } from "koa"
+import { sdk as proSdk } from "@budibase/pro"
 
 function fixAppID(app: Application, params: any) {
   if (!params) {
@@ -94,30 +95,13 @@ export async function publish(ctx: UserCtx, next: Next) {
   })
 }
 
-export async function importToApp(ctx: UserCtx, next: Next) {
-  if (!ctx.request.files?.appExport) {
-    ctx.throw(400, "Must provide app export file for import.")
-  }
-  await context.doInAppContext(ctx.params.appId, async () => {
-    await controller.importToApp(ctx)
-    ctx.body = undefined
-    ctx.status = 204
-    await next()
-  })
-}
-
-export async function exportApp(ctx: UserCtx, next: Next) {
-  const { encryptPassword, excludeRows } = ctx.request.body
-  await context.doInAppContext(ctx.params.appId, async () => {
-    // make sure no other inputs
-    ctx.request.body = {
-      encryptPassword,
-      excludeRows,
-    }
-    await backupController.exportAppDump(ctx)
-    await next()
-  })
-}
+// get licensed endpoints from pro
+export const importToApp = proSdk.publicApi.applications.buildImportFn(
+  controller.importToApp
+)
+export const exportApp = proSdk.publicApi.applications.buildExportFn(
+  backupController.exportAppDump
+)
 
 export default {
   create,
