@@ -256,7 +256,7 @@
   <div class="controls">
     <div class="select">
       <Multiselect
-        bind:fetchTerm={userSearchTerm}
+        bind:searchTerm={userSearchTerm}
         useFetch
         placeholder="All users"
         label="Users"
