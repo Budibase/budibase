@@ -11,7 +11,7 @@ export enum Feature {
   SYNC_AUTOMATIONS = "syncAutomations",
   APP_BUILDERS = "appBuilders",
   OFFLINE = "offline",
-  USER_ROLE_PUBLIC_API = "userRolePublicApi",
+  EXPANDED_PUBLIC_API = "expandedPublicApi",
   VIEW_PERMISSIONS = "viewPermissions",
 }
 

@@ -584,7 +584,14 @@ export async function importToApp(ctx: UserCtx) {
     ctx.throw(400, "Must only supply one app export")
   }
   const fileAttributes = { type: appExport.type!, path: appExport.path! }
-  await sdk.applications.updateWithExport(appId, fileAttributes, password)
+  try {
+    await sdk.applications.updateWithExport(appId, fileAttributes, password)
+  } catch (err: any) {
+    ctx.throw(
+      500,
+      `Unable to perform update, please retry - ${err?.message || err}`
+    )
+  }
   ctx.body = { message: "app updated" }
 }
 
