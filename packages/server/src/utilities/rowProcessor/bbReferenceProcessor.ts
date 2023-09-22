@@ -10,7 +10,11 @@ export async function processInputBBReferences(
   const referenceIds: string[] = []
 
   if (Array.isArray(value)) {
-    referenceIds.push(...value.map(x => (typeof x === "string" ? x : x._id)))
+    referenceIds.push(
+      ...value.map(idOrDoc =>
+        typeof idOrDoc === "string" ? idOrDoc : idOrDoc._id
+      )
+    )
   } else if (typeof value !== "string") {
     referenceIds.push(value._id)
   } else {
