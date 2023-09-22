@@ -82,6 +82,7 @@
 </script>
 
 <Picker
+  on:loadMore
   {id}
   {error}
   {disabled}

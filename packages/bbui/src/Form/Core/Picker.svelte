@@ -2,7 +2,7 @@
   import "@spectrum-css/picker/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onDestroy } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Search from "./Search.svelte"
   import Icon from "../../Icon/Icon.svelte"
@@ -43,10 +43,12 @@
   export let align = "left"
   export let footer = null
   export let customAnchor = null
+
   const dispatch = createEventDispatcher()
 
   let button
   let popover
+  let component
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -89,6 +91,20 @@
     }
     return options
   }
+
+  const onScroll = e => {
+    const scrollPxThreshold = 100
+    const scrollPositionFromBottom =
+      e.target.scrollHeight - e.target.clientHeight - e.target.scrollTop
+    if (scrollPositionFromBottom < scrollPxThreshold) {
+      dispatch("loadMore")
+    }
+  }
+
+  $: component?.addEventListener("scroll", onScroll)
+  onDestroy(() => {
+    component?.removeEventListener("scroll", null)
+  })
 </script>
 
 <button
@@ -168,7 +184,7 @@
         placeholder="Search"
       />
     {/if}
-    <ul class="spectrum-Menu" role="listbox">
+    <ul class="spectrum-Menu" role="listbox" bind:this={component}>
       {#if placeholderOption}
         <li
           class="spectrum-Menu-item placeholder"

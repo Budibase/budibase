@@ -118,6 +118,12 @@
       onChange({ value })
     }
   }
+
+  const loadMore = () => {
+    if (!$fetch.loading) {
+      fetch.nextPage()
+    }
+  }
 </script>
 
 <Field
@@ -138,6 +144,7 @@
       {autocomplete}
       value={selectedValue}
       on:change={multiselect ? multiHandler : singleHandler}
+      on:loadMore={loadMore}
       id={fieldState.fieldId}
       disabled={fieldState.disabled}
       error={fieldState.error}
