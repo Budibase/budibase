@@ -20,6 +20,11 @@ export interface CreatePassswordAccount extends CreateAccount {
   password: string
 }
 
+export interface CreateVerifiableSSOAccount extends CreateAccount {
+  provider?: AccountSSOProvider
+  thirdPartyProfile?: any
+}
+
 export const isCreatePasswordAccount = (
   account: CreateAccount
 ): account is CreatePassswordAccount => account.authType === AuthType.PASSWORD
@@ -50,6 +55,8 @@ export interface Account extends CreateAccount {
   licenseKeyActivatedAt?: number
   licenseRequestedAt?: number
   licenseOverrides?: LicenseOverrides
+  provider?: AccountSSOProvider
+  providerType?: AccountSSOProviderType
   quotaUsage?: QuotaUsage
   offlineLicenseToken?: string
 }

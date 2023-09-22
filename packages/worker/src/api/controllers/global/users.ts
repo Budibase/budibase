@@ -95,7 +95,8 @@ const parseBooleanParam = (param: any) => {
 export const adminUser = async (
   ctx: Ctx<CreateAdminUserRequest, CreateAdminUserResponse>
 ) => {
-  const { email, password, tenantId } = ctx.request.body
+  // @ts-ignore
+  const { email, password, tenantId, ssoId } = ctx.request.body
 
   if (await platform.tenants.exists(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
@@ -136,6 +137,8 @@ export const adminUser = async (
         global: true,
       },
       tenantId,
+      // @ts-ignore
+      ssoId,
     }
     try {
       // always bust checklist beforehand, if an error occurs but can proceed, don't get

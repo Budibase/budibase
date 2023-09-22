@@ -4,7 +4,7 @@ import env from "../environment"
 import {
   PlatformUser,
   PlatformUserByEmail,
-  PlatformUserById,
+  PlatformUserById, PlatformUserBySsoId,
   User,
 } from "@budibase/types"
 
@@ -45,6 +45,20 @@ function newUserEmailDoc(
   }
 }
 
+function newUserSsoIdDoc(
+  ssoId: string,
+  email: string,
+  userId: string,
+  tenantId: string,
+): PlatformUserBySsoId {
+  return {
+    _id: ssoId,
+    userId,
+    email,
+    tenantId,
+  }
+}
+
 /**
  * Add a new user id or email doc if it doesn't exist.
  */
@@ -64,11 +78,17 @@ async function addUserDoc(emailOrId: string, newDocFn: () => PlatformUser) {
   }
 }
 
-export async function addUser(tenantId: string, userId: string, email: string) {
-  await Promise.all([
+export async function addUser(tenantId: string, userId: string, email: string, ssoId?: string) {
+  const promises = [
     addUserDoc(userId, () => newUserIdDoc(userId, tenantId)),
     addUserDoc(email, () => newUserEmailDoc(userId, email, tenantId)),
-  ])
+  ]
+
+  if (ssoId) {
+    promises.push(addUserDoc(ssoId, () => newUserSsoIdDoc(ssoId, email, userId, tenantId)))
+  }
+
+  await Promise.all(promises)
 }
 
 // DELETE
