@@ -82,7 +82,8 @@
     if (
       primaryDisplay !== "_id" &&
       fieldState?.value?.length &&
-      !selectedOptions?.length
+      !selectedOptions?.length &&
+      $fetch.rows?.length > 100
     ) {
       API.searchTable({
         paginate: false,
@@ -231,7 +232,6 @@
       {#if autocomplete}
         <div class="search">
           <Input
-            autofocus
             quiet
             type="text"
             bind:value={searchString}
