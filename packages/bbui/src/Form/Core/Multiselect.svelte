@@ -20,6 +20,7 @@
   export let customPopoverOffsetBelow
   export let customPopoverMaxHeight
   export let open = false
+  export let loading
 
   const dispatch = createEventDispatcher()
 
@@ -103,4 +104,5 @@
   {customPopoverHeight}
   {customPopoverOffsetBelow}
   {customPopoverMaxHeight}
+  {loading}
 />

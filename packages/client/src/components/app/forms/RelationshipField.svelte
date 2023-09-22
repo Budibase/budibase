@@ -154,6 +154,7 @@
       sort
       useFetch={false}
       bind:searchTerm
+      loading={$fetch.loading}
     />
   {/if}
 </Field>
