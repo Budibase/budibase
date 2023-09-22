@@ -10,6 +10,7 @@
   import Popover from "../../Popover/Popover.svelte"
   import Tags from "../../Tags/Tags.svelte"
   import Tag from "../../Tags/Tag.svelte"
+  import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
 
   export let id = null
   export let disabled = false
@@ -43,6 +44,7 @@
   export let align = "left"
   export let footer = null
   export let customAnchor = null
+  export let loading
 
   const dispatch = createEventDispatcher()
 
@@ -260,6 +262,11 @@
           </li>
         {/each}
       {/if}
+      {#if loading}
+        <li class="spectrum-Menu-item loading">
+          <ProgressCircle size="S" />
+        </li>
+      {/if}
     </ul>
 
     {#if footer}
@@ -372,5 +379,9 @@
 
   .option-tag :global(.spectrum-Tags-item > .spectrum-Icon) {
     margin-top: 2px;
+  }
+
+  .loading {
+    justify-content: center;
   }
 </style>

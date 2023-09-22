@@ -26,6 +26,7 @@
   export let customPopoverOffsetBelow
   export let customPopoverMaxHeight
   export let searchTerm = null
+  export let loading
 
   const dispatch = createEventDispatcher()
 
@@ -95,4 +96,5 @@
   placeholderOption={placeholder === false ? null : placeholder}
   isOptionSelected={option => option === value}
   onSelectOption={selectOption}
+  {loading}
 />
