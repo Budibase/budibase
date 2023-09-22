@@ -25,7 +25,6 @@
   export let tag = null
   export let customPopoverOffsetBelow
   export let customPopoverMaxHeight
-  export let fetchTerm = null
   export let searchTerm = null
 
   const dispatch = createEventDispatcher()
@@ -67,7 +66,6 @@
 <Picker
   on:click
   bind:open
-  bind:fetchTerm
   bind:searchTerm
   {quiet}
   {id}

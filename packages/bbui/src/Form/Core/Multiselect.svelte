@@ -14,7 +14,6 @@
   export let autocomplete = false
   export let sort = false
   export let autoWidth = false
-  export let fetchTerm = null
   export let searchTerm = null
   export let useFetch = false
   export let customPopoverHeight
@@ -91,7 +90,6 @@
   {options}
   isPlaceholder={!arrayValue.length}
   {autocomplete}
-  bind:fetchTerm
   bind:searchTerm
   bind:open
   {useFetch}

@@ -16,7 +16,7 @@
   export let sort = false
   export let autoWidth = false
   export let autocomplete = false
-  export let fetchTerm = null
+  export let searchTerm = null
   export let useFetch = false
   export let customPopoverHeight
 
@@ -41,7 +41,7 @@
     {autoWidth}
     {autocomplete}
     {customPopoverHeight}
-    bind:fetchTerm
+    bind:searchTerm
     {useFetch}
     on:change={onChange}
     on:click

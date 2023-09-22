@@ -35,7 +35,6 @@
   export let autoWidth = false
   export let autocomplete = false
   export let sort = false
-  export let fetchTerm = null
   export let searchTerm = null
   export let useFetch = false
   export let customPopoverHeight
@@ -82,7 +81,7 @@
   }
 
   const getFilteredOptions = (options, term, getLabel) => {
-    if (autocomplete && term && !fetchTerm) {
+    if (autocomplete && term && !useFetch) {
       const lowerCaseTerm = term.toLowerCase()
       return options.filter(option => {
         return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
@@ -163,9 +162,8 @@
   >
     {#if autocomplete}
       <Search
-        value={useFetch ? fetchTerm : searchTerm}
-        on:change={event =>
-          useFetch ? (fetchTerm = event.detail) : (searchTerm = event.detail)}
+        value={searchTerm}
+        on:change={event => (searchTerm = event.detail)}
         {disabled}
         placeholder="Search"
       />
