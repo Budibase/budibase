@@ -39,8 +39,9 @@
 
   $: options = $fetch.rows
   $: tableDefinition = $fetch.definition
-  $: singleValue = flatten(fieldState?.value)?.[0]
-  $: multiValue = flatten(fieldState?.value) ?? []
+  $: selectedValue = multiselect
+    ? flatten(fieldState?.value) ?? []
+    : flatten(fieldState?.value)?.[0]
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: expandedDefaultValue = expand(defaultValue)
   $: primaryDisplay = tableDefinition?.primaryDisplay || "_id"
@@ -121,7 +122,7 @@
       this={component}
       {options}
       {autocomplete}
-      value={multiselect ? multiValue : singleValue}
+      value={selectedValue}
       on:change={multiselect ? multiHandler : singleHandler}
       id={fieldState.fieldId}
       disabled={fieldState.disabled}
