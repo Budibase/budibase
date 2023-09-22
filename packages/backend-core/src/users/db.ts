@@ -278,7 +278,7 @@ export class UserDB {
         builtUser._rev = response.rev
 
         await eventHelpers.handleSaveEvents(builtUser, dbUser)
-        await platform.users.addUser(tenantId, builtUser._id!, builtUser.email)
+        await platform.users.addUser(tenantId, builtUser._id!, builtUser.email, builtUser.ssoId)
         await cache.user.invalidateUser(response.id)
 
         await Promise.all(groupPromises)
