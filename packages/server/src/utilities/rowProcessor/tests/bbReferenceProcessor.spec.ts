@@ -138,6 +138,22 @@ describe("bbReferenceProcessor", () => {
         expect(cacheGetUsersSpy).toBeCalledTimes(1)
         expect(cacheGetUsersSpy).toBeCalledWith(userIds)
       })
+
+      it("empty strings will return undefined", async () => {
+        const result = await config.doInTenant(() =>
+          processInputBBReferences("", FieldSubtype.USER)
+        )
+
+        expect(result).toEqual(undefined)
+      })
+
+      it("empty arrays will return undefined", async () => {
+        const result = await config.doInTenant(() =>
+          processInputBBReferences([], FieldSubtype.USER)
+        )
+
+        expect(result).toEqual(undefined)
+      })
     })
   })
 
@@ -153,9 +169,11 @@ describe("bbReferenceProcessor", () => {
 
         expect(result).toEqual([
           {
-            ...user,
-            budibaseAccess: true,
-            _rev: expect.any(String),
+            _id: user._id,
+            primaryDisplay: user.email,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
           },
         ])
         expect(cacheGetUsersSpy).toBeCalledTimes(1)
@@ -174,12 +192,17 @@ describe("bbReferenceProcessor", () => {
           )
         )
 
+        expect(result).toHaveLength(2)
         expect(result).toEqual(
-          [user1, user2].map(u => ({
-            ...u,
-            budibaseAccess: true,
-            _rev: expect.any(String),
-          }))
+          expect.arrayContaining(
+            [user1, user2].map(u => ({
+              _id: u._id,
+              primaryDisplay: u.email,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+            }))
+          )
         )
         expect(cacheGetUsersSpy).toBeCalledTimes(1)
         expect(cacheGetUsersSpy).toBeCalledWith([userId1, userId2])

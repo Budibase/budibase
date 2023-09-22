@@ -20,6 +20,8 @@
     const results = await API.searchUsers({
       ...searchParams,
     })
+
+    // Mapping to the expected data within RelationshipCell
     return {
       ...results,
       data: undefined,
