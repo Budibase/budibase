@@ -152,7 +152,6 @@
       getOptionValue={option => option._id}
       {placeholder}
       sort
-      useFetch={false}
       bind:searchTerm
       loading={$fetch.loading}
     />
