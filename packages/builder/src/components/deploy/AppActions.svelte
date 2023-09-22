@@ -226,6 +226,7 @@
                 on:click={() => {
                   if (isPublished) {
                     viewApp()
+                    appActionPopover.hide()
                   } else {
                     appActionPopover.hide()
                     updateAppModal.show()
