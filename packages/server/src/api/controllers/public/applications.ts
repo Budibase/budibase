@@ -2,6 +2,7 @@ import { db as dbCore, context } from "@budibase/backend-core"
 import { search as stringSearch, addRev } from "./utils"
 import * as controller from "../application"
 import * as deployController from "../deploy"
+import * as backupController from "../backup"
 import { Application } from "../../../definitions/common"
 import { UserCtx } from "@budibase/types"
 import { Next } from "koa"
@@ -94,11 +95,26 @@ export async function publish(ctx: UserCtx, next: Next) {
 }
 
 export async function importToApp(ctx: UserCtx, next: Next) {
+  if (!ctx.request.files?.appExport) {
+    ctx.throw(400, "Must provide app export file for import.")
+  }
   await context.doInAppContext(ctx.params.appId, async () => {
-    // TODO: paid control
     await controller.importToApp(ctx)
     ctx.body = undefined
     ctx.status = 204
+    await next()
+  })
+}
+
+export async function exportApp(ctx: UserCtx, next: Next) {
+  const { encryptPassword, excludeRows } = ctx.request.body
+  await context.doInAppContext(ctx.params.appId, async () => {
+    // make sure no other inputs
+    ctx.request.body = {
+      encryptPassword,
+      excludeRows,
+    }
+    await backupController.exportAppDump(ctx)
     await next()
   })
 }
@@ -112,4 +128,5 @@ export default {
   unpublish,
   publish,
   importToApp,
+  exportApp,
 }

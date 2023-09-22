@@ -19,7 +19,12 @@ export interface paths {
     post: operations["appPublish"];
   };
   "/applications/{appId}/import": {
+    /** This endpoint is only available on a business or enterprise license. */
     post: operations["appImport"];
+  };
+  "/applications/{appId}/export": {
+    /** This endpoint is only available on a business or enterprise license. */
+    post: operations["appExport"];
   };
   "/applications/search": {
     /** Based on application properties (currently only name) search for applications. */
@@ -160,6 +165,12 @@ export interface components {
         /** @description The URL of the published app */
         appUrl: string;
       };
+    };
+    appExport: {
+      /** @description An optional password used to encrypt the export. */
+      encryptPassword: string;
+      /** @description Set whether the internal table rows should be excluded from the export. */
+      excludeRows: boolean;
     };
     /** @description The row to be created/updated, based on the table schema. */
     row: { [key: string]: unknown };
@@ -892,6 +903,7 @@ export interface operations {
       };
     };
   };
+  /** This endpoint is only available on a business or enterprise license. */
   appImport: {
     parameters: {
       path: {
@@ -914,6 +926,28 @@ export interface operations {
            */
           appExport: string;
         };
+      };
+    };
+  };
+  /** This endpoint is only available on a business or enterprise license. */
+  appExport: {
+    parameters: {
+      path: {
+        /** The ID of the app which this request is targeting. */
+        appId: components["parameters"]["appIdUrl"];
+      };
+    };
+    responses: {
+      /** A gzip tarball containing the app export, encrypted if password provided. */
+      200: {
+        content: {
+          "application/gzip": string;
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["appExport"];
       };
     };
   };
