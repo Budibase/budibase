@@ -67,6 +67,7 @@
   on:click
   bind:open
   bind:searchTerm
+  on:loadMore
   {quiet}
   {id}
   {error}
