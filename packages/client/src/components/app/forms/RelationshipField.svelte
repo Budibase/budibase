@@ -53,12 +53,24 @@
         [primaryDisplay]: x.primaryDisplay,
       })))
 
-  $: options = processOptions(selectedValue, $fetch.rows, initialValues)
+  $: allOptions = {
+    ...(allOptions || {}),
+    ...[...($fetch.rows || []), ...(initialValues || [])]?.reduce((p, c) => {
+      p[c._id] = c
+      return p
+    }, {}),
+  }
+
+  $: options = fetchTerm
+    ? Object.values(allOptions).filter(row =>
+        row[primaryDisplay].includes(fetchTerm)
+      )
+    : Object.values(allOptions)
 
   let lastFetchedTerm
-  $: search(fetchTerm)
+  $: fetchRows(fetchTerm)
 
-  const search = fetchTerm => {
+  const fetchRows = fetchTerm => {
     const termChangedSinceFetch = (lastFetchedTerm || "") !== (fetchTerm || "")
 
     const allRowsFetched = !lastFetchedTerm && !$fetch.hasNextPage
@@ -70,10 +82,6 @@
           query: { string: { [primaryDisplay]: fetchTerm } },
         })
       }
-    } else {
-      options = fetchTerm
-        ? $fetch.rows.filter(row => row[primaryDisplay].includes(fetchTerm))
-        : $fetch.rows
     }
   }
 
@@ -85,22 +93,6 @@
       values = [values]
     }
     return values.map(value => (typeof value === "object" ? value._id : value))
-  }
-
-  const processOptions = (selectedValue, fetchedRows, initialValues = []) => {
-    selectedValue ??= []
-    if (!Array.isArray(selectedValue)) {
-      selectedValue = [selectedValue]
-    }
-
-    const missingItems = selectedValue
-      .filter(v => !fetchedRows.find(r => r._id === v))
-      .map(v => initialValues.find(o => o._id === v))
-      .filter(x => x)
-
-    const result = [...missingItems, ...fetchedRows]
-
-    return result
   }
 
   const getDisplayName = row => {
