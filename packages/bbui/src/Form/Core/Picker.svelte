@@ -37,7 +37,6 @@
   export let autocomplete = false
   export let sort = false
   export let searchTerm = null
-  export let useFetch = false
   export let customPopoverHeight
   export let customPopoverOffsetBelow
   export let customPopoverMaxHeight
@@ -85,7 +84,7 @@
   }
 
   const getFilteredOptions = (options, term, getLabel) => {
-    if (autocomplete && term && !useFetch) {
+    if (autocomplete && term) {
       const lowerCaseTerm = term.toLowerCase()
       return options.filter(option => {
         return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
