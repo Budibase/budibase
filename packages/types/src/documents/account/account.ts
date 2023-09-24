@@ -94,6 +94,10 @@ export enum AccountSSOProvider {
   MICROSOFT = "microsoft",
 }
 
+export enum VerifiableSSOProviders {
+  MICROSOFT = "microsoft"
+}
+
 export interface AccountSSO {
   provider: AccountSSOProvider
   providerType: AccountSSOProviderType
