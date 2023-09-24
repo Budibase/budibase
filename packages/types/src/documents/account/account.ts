@@ -94,8 +94,9 @@ export enum AccountSSOProvider {
   MICROSOFT = "microsoft",
 }
 
-export enum VerifiableSSOProviders {
-  MICROSOFT = "microsoft"
+const verifiableSSOProviders: AccountSSOProvider[] = [AccountSSOProvider.MICROSOFT]
+export function isVerifiableSSOProvider(provider: AccountSSOProvider): boolean {
+  return verifiableSSOProviders.includes(provider);
 }
 
 export interface AccountSSO {
