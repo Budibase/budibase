@@ -95,7 +95,6 @@ const parseBooleanParam = (param: any) => {
 export const adminUser = async (
   ctx: Ctx<CreateAdminUserRequest, CreateAdminUserResponse>
 ) => {
-  // @ts-ignore
   const { email, password, tenantId, ssoId } = ctx.request.body
 
   if (await platform.tenants.exists(tenantId)) {
@@ -137,7 +136,6 @@ export const adminUser = async (
         global: true,
       },
       tenantId,
-      // @ts-ignore
       ssoId,
     }
     try {

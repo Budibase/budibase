@@ -24,4 +24,7 @@ export interface PlatformUserBySsoId extends Document {
   email: string
 }
 
-export type PlatformUser = PlatformUserByEmail | PlatformUserById | PlatformUserBySsoId
+export type PlatformUser =
+  | PlatformUserByEmail
+  | PlatformUserById
+  | PlatformUserBySsoId
