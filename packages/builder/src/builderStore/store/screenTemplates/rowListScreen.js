@@ -34,7 +34,7 @@ const generateTableBlock = datasource => {
       titleButtonText: "Create row",
       titleButtonClickBehaviour: "new",
       sidePanelSaveLabel: "Save",
-      sidePanelDeleteLabel: "Delete"
+      sidePanelDeleteLabel: "Delete",
     })
     .instanceName(`${datasource.label} - Table block`)
   return tableBlock
