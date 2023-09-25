@@ -8,6 +8,7 @@
   import Logo from "./_components/Logo.svelte"
   import UserDropdown from "./_components/UserDropdown.svelte"
   import HelpMenu from "components/common/HelpMenu.svelte"
+  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
   import { sdk } from "@budibase/shared-core"
 
   let loaded = false
@@ -55,6 +56,7 @@
   {:else}
     <HelpMenu />
     <div class="container">
+      <VerificationPromptBanner />
       <div class="nav">
         <div class="branding">
           <Logo />
