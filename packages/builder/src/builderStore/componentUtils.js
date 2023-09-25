@@ -6,6 +6,8 @@ import {
   findHBSBlocks,
 } from "@budibase/string-templates"
 
+// some random comment
+
 /**
  * Recursively searches for a specific component ID
  */
