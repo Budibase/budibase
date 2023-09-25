@@ -32,8 +32,6 @@
   $: tempValue = readableValue
   $: isJS = isJSBinding(value)
 
-  $: console.log("READABLE ", readableValue)
-
   const saveBinding = () => {
     onChange(tempValue)
     onBlur()
@@ -47,11 +45,9 @@
   const onChange = value => {
     if (type === "link" && hasValidLinks(value)) {
       currentVal = value.split(",")
-      readableValue = currentVal
     } else {
       currentVal = readableToRuntimeBinding(bindings, value)
     }
-    console.log("CURRENT VAL ", currentVal)
     dispatch("change", currentVal)
   }
 
