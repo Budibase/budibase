@@ -19,7 +19,7 @@ function isArrayResponse(ctx: Ctx) {
 }
 
 function noResponse(ctx: Ctx) {
-  return Object.keys(ctx.body).length === 0
+  return !Array.isArray(ctx.body) && Object.keys(ctx.body).length === 0
 }
 
 function processApplications(ctx: Ctx) {
