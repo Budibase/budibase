@@ -55,9 +55,14 @@
     bind:value={value[field]}
     label={field}
     options={schema.constraints.inclusion}
+    on:change={e => onChange(e, field)}
   />
 {:else if schema.type === "longform"}
-  <TextArea label={field} bind:value={value[field]} />
+  <TextArea
+    label={field}
+    bind:value={value[field]}
+    on:change={e => onChange(e, field)}
+  />
 {:else if schema.type === "json"}
   <span>
     <Label>{field}</Label>
@@ -73,7 +78,11 @@
     />
   </span>
 {:else if schema.type === "link"}
-  <LinkedRowSelector bind:linkedRows={value[field]} {schema} />
+  <LinkedRowSelector
+    bind:linkedRows={value[field]}
+    {schema}
+    on:change={e => onChange(e, field)}
+  />
 {:else if schema.type === "string" || schema.type === "number"}
   <svelte:component
     this={isTestModal ? ModalBindableInput : DrawerBindableInput}
