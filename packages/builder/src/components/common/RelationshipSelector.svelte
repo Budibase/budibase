@@ -10,6 +10,7 @@
   export let linkEditDisabled
   export let tableOptions
   export let errors
+  $: console.log(relationshipPart1)
 </script>
 
 <div class="relationship-container">
@@ -64,6 +65,6 @@
   }
 
   .relationship-part {
-    flex-basis: 45%;
+    flex-basis: 60%;
   }
 </style>
