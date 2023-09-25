@@ -12,6 +12,23 @@ export type FileAttributes = {
   path: string
 }
 
+function mergeUpdateAndDeleteDocuments(
+  updateDocs: Document[],
+  deleteDocs: Document[]
+) {
+  // compress the documents to create and to delete (if same ID, then just update the rev)
+  const finalToDelete = []
+  for (let deleteDoc of deleteDocs) {
+    const found = updateDocs.find(doc => doc._id === deleteDoc._id)
+    if (found) {
+      found._rev = deleteDoc._rev
+    } else {
+      finalToDelete.push(deleteDoc)
+    }
+  }
+  return [...updateDocs, ...finalToDelete]
+}
+
 async function removeImportableDocuments(db: Database) {
   // get the references to the documents, not the whole document
   const docPromises = []
@@ -74,11 +91,11 @@ export async function updateWithExport(
       importObjStoreContents: false,
     })
     // get the documents to copy
-    const documents = await getImportableDocuments(tempDb)
+    const toUpdate = await getImportableDocuments(tempDb)
     // clear out the old documents
     const toDelete = await removeImportableDocuments(appDb)
-    // now write the import documents
-    await appDb.bulkDocs([...toDelete, documents])
+    // now bulk update documents - add new ones, delete old ones and update common ones
+    await appDb.bulkDocs(mergeUpdateAndDeleteDocuments(toUpdate, toDelete))
   } finally {
     await tempDb.destroy()
   }
