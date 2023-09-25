@@ -23,13 +23,15 @@
   import QueryViewerSavePromptModal from "./QueryViewerSavePromptModal.svelte"
   import { Utils } from "@budibase/frontend-core"
 
-  let showSidePanel = false
 
   export let query
   let queryHash
 
   let loading = false
   let modified = false
+  let valid = false
+  let showSidePanel = false
+  let nameError
 
   let newQuery
 
@@ -37,14 +39,11 @@
   let integration
 
   let responseRows = []
-  let responseSchema
+  let responseSchema = {}
 
   const parseQuery = query => {
     loading = false
     modified = false
-
-    responseRows = []
-    responseSchema = {}
 
     queryHash = JSON.stringify(query)
     newQuery = cloneDeep(query)
@@ -53,7 +52,9 @@
     integration = $integrations[datasource.source]
   }
 
+
   $: parseQuery(query)
+
 
   const checkIsModified = newQuery => {
     const newQueryHash = JSON.stringify(newQuery)
@@ -64,7 +65,13 @@
 
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
+  const markInvalid = () => {
+    console.log('invalid');
+    valid = false;
+  }
+
   $: debouncedCheckIsModified(newQuery)
+  $: markInvalid(newQuery)
 
   async function runQuery({ suppressErrors = true }) {
     try {
@@ -78,12 +85,12 @@
         return
       }
 
+      valid = true
       responseRows = response.rows
-      responseSchema = response.schema
+      responseSchema = { ...responseSchema, ...response.schema }
       notifications.success("Query executed successfully")
     } catch (error) {
-      responseRows = []
-      responseSchema = {}
+      valid = false
       notifications.error(`Query Error: ${error.message}`)
 
       if (!suppressErrors) {
@@ -106,14 +113,14 @@
       notifications.success("Query saved successfully")
       return response
     } catch (error) {
+      valid = false
       notifications.error(error.message || "Error saving query")
     } finally {
       loading = false
     }
   }
 
-  // TODO temp
-  let nameError
+
   function resetDependentFields() {
     if (newQuery.fields.extra) {
       newQuery.fields.extra = {}
@@ -150,7 +157,8 @@
           on:click={async () => {
             const response = await saveQuery()
 
-            if (response._id) {
+            // When creating a new query the initally passed in query object will have no id.
+            if (response._id && !newQuery._id) {
               // Set the comparison query hash to match the new query so that the user doesn't
               // get nagged when navigating to the edit view
               queryHash = JSON.stringify(newQuery)
@@ -158,6 +166,7 @@
             }
           }}
           disabled={loading ||
+            !valid ||
             !newQuery.name ||
             nameError ||
             responseRows.length === 0}

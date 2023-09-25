@@ -55,6 +55,7 @@
     <Label>{label}</Label>
   {/if}
   <Select
+    {disabled}
     value={roleId}
     on:change={e => updateRole(e.detail)}
     options={$roles}
