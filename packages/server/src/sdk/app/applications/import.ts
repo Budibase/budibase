@@ -1,6 +1,6 @@
 import { db as dbCore } from "@budibase/backend-core"
 import {
-  DocumentsToImport,
+  DocumentTypesToImport,
   Document,
   Database,
   RowValue,
@@ -15,7 +15,7 @@ export type FileAttributes = {
 async function removeImportableDocuments(db: Database) {
   // get the references to the documents, not the whole document
   const docPromises = []
-  for (let docType of DocumentsToImport) {
+  for (let docType of DocumentTypesToImport) {
     docPromises.push(db.allDocs(dbCore.getDocParams(docType)))
   }
   let documentRefs: { _id: string; _rev: string }[] = []
@@ -28,15 +28,13 @@ async function removeImportableDocuments(db: Database) {
     )
   }
   // add deletion key
-  documentRefs = documentRefs.map(ref => ({ _deleted: true, ...ref }))
-  // perform deletion
-  await db.bulkDocs(documentRefs)
+  return documentRefs.map(ref => ({ _deleted: true, ...ref }))
 }
 
 async function getImportableDocuments(db: Database) {
   // get the whole document
   const docPromises = []
-  for (let docType of DocumentsToImport) {
+  for (let docType of DocumentTypesToImport) {
     docPromises.push(
       db.allDocs(dbCore.getDocParams(docType, null, { include_docs: true }))
     )
@@ -78,9 +76,9 @@ export async function updateWithExport(
     // get the documents to copy
     const documents = await getImportableDocuments(tempDb)
     // clear out the old documents
-    await removeImportableDocuments(appDb)
+    const toDelete = await removeImportableDocuments(appDb)
     // now write the import documents
-    await appDb.bulkDocs(documents)
+    await appDb.bulkDocs([...toDelete, documents])
   } finally {
     await tempDb.destroy()
   }
