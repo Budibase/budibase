@@ -53,7 +53,6 @@ import {
   View,
   FieldType,
   RelationshipType,
-  ViewV2,
   CreateViewRequest,
 } from "@budibase/types"
 
