@@ -37,6 +37,7 @@
 
   let datasource
   let integration
+  let schemaType
 
   let responseRows = []
   let responseSchema = {}
@@ -48,7 +49,7 @@
 
     datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
     integration = $integrations[datasource.source]
-    const schemaType = integration.query[query.queryVerb].type
+    schemaType = integration.query[query.queryVerb].type
 
     newQuery = cloneDeep(query)
     // Set the location where the query code will be written to an empty string so that it doesn't
@@ -231,7 +232,17 @@
           <Heading weight="L" size="XS">Query</Heading>
         </div>
         <div class="copy">
-          <Body size="S">Todo placeholder text</Body>
+          <Body size="S">
+            {#if schemaType === 'sql'}
+              Add some SQL to query your data
+            {:else if schemaType === 'json'}
+              Add some JSON to query your data
+            {:else if schemaType === 'fields'}
+              Add some fields to query your data
+            {:else}
+              Enter your query below
+            {/if}
+          </Body>
         </div>
         <IntegrationQueryEditor
           disabled={loading}
