@@ -82,18 +82,18 @@
     if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
       // Determine the relationship type based on the selected values of both parts
       if (
-        relationshipPart1 === PrettyRelationshipDefinitions.Many &&
-        relationshipPart2 === PrettyRelationshipDefinitions.One
+        relationshipPart1 === PrettyRelationshipDefinitions.MANY &&
+        relationshipPart2 === PrettyRelationshipDefinitions.ONE
       ) {
         editableColumn.relationshipType = RelationshipType.MANY_TO_ONE
       } else if (
-        relationshipPart1 === PrettyRelationshipDefinitions.Many &&
+        relationshipPart1 === PrettyRelationshipDefinitions.MANY &&
         relationshipPart2 === PrettyRelationshipDefinitions.MANY
       ) {
         editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
       } else if (
-        relationshipPart1 === PrettyRelationshipDefinitions.One &&
-        relationshipPart2 === PrettyRelationshipDefinitions.Many
+        relationshipPart1 === PrettyRelationshipDefinitions.ONE &&
+        relationshipPart2 === PrettyRelationshipDefinitions.MANY
       ) {
         editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
       }
@@ -133,18 +133,18 @@
     if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
       relationshipTableIdSecondary = editableColumn.tableId
       if (editableColumn.relationshipType === RelationshipType.MANY_TO_ONE) {
-        relationshipPart1 = PrettyRelationshipDefinitions.Many
-        relationshipPart2 = PrettyRelationshipDefinitions.One
+        relationshipPart1 = PrettyRelationshipDefinitions.MANY
+        relationshipPart2 = PrettyRelationshipDefinitions.ONE
       } else if (
         editableColumn.relationshipType === RelationshipType.MANY_TO_MANY
       ) {
-        relationshipPart1 = PrettyRelationshipDefinitions.Many
-        relationshipPart2 = PrettyRelationshipDefinitions.Many
+        relationshipPart1 = PrettyRelationshipDefinitions.MANY
+        relationshipPart2 = PrettyRelationshipDefinitions.MANY
       } else if (
         editableColumn.relationshipType === RelationshipType.ONE_TO_MANY
       ) {
-        relationshipPart1 = PrettyRelationshipDefinitions.One
-        relationshipPart2 = PrettyRelationshipDefinitions.Many
+        relationshipPart1 = PrettyRelationshipDefinitions.ONE
+        relationshipPart2 = PrettyRelationshipDefinitions.MANY
       }
     }
   }
