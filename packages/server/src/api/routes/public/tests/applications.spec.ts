@@ -70,12 +70,22 @@ describe("check export/import", () => {
   it("should be able to export app", async () => {
     mocks.licenses.useExpandedPublicApi()
     const res = await runExport()
+    expect(res.headers["content-disposition"]).toMatch(
+      /attachment; filename=".*-export-.*\.tar.gz"/g
+    )
+    expect(res.body instanceof Buffer).toBe(true)
     expect(res.status).toBe(200)
   })
 
   it("should be able to import app", async () => {
     mocks.licenses.useExpandedPublicApi()
     const res = await runImport()
+    expect(Object.keys(res.body).length).toBe(0)
+    // check screens imported correctly
+    const screens = await config.api.screen.list()
+    expect(screens.length).toBe(2)
+    expect(screens[0].routing.route).toBe("/derp")
+    expect(screens[1].routing.route).toBe("/blank")
     expect(res.status).toBe(204)
   })
 })
