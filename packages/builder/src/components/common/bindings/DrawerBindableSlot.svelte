@@ -107,7 +107,7 @@
     return true
   }
 
-  const getIconClass = value => {
+  const getIconClass = (value, type) => {
     if (type === "longform" && isValidLongFormText(value)) {
       return "text-area-slot-icon"
     }
@@ -152,7 +152,7 @@
   {/if}
   {#if !disabled}
     <div
-      class={`icon ${getIconClass(value)}`}
+      class={`icon ${getIconClass(value, type)}`}
       on:click={() => {
         bindingDrawer.show()
       }}
