@@ -86,15 +86,16 @@
   $: userPage = $userPageInfo.page
   $: logsPage = $logsPageInfo.page
 
-  $: userList = {
-    ...(userList || {}),
-    ...$users.data?.reduce((p, c) => {
-      p[c._id] = c
-      return p
+  let usersObj = {}
+  $: usersObj = {
+    ...usersObj,
+    ...$users.data?.reduce((accumulator, user) => {
+      accumulator[user._id] = user
+      return accumulator
     }, {}),
   }
   $: sortedUsers = sort(
-    enrich(Object.values(userList), selectedUsers, "_id"),
+    enrich(Object.values(usersObj), selectedUsers, "_id"),
     "email"
   )
   $: sortedEvents = sort(

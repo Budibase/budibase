@@ -45,30 +45,37 @@
   $: expandedDefaultValue = expand(defaultValue)
   $: primaryDisplay = tableDefinition?.primaryDisplay
 
-  $: initialValues =
-    initialValues ||
-    (primaryDisplay &&
-      fieldState?.value?.map(x => ({
-        _id: x._id,
-        [primaryDisplay]: x.primaryDisplay,
-      })))
-
-  $: allOptions = {
-    ...(allOptions || {}),
-    ...[...($fetch.rows || []), ...(initialValues || [])]?.reduce((p, c) => {
-      p[c._id] = c
-      return p
+  let optionsObj = {}
+  let initialValuesProcessed
+  $: {
+    if (!initialValuesProcessed && primaryDisplay) {
+      initialValuesProcessed = true
+      optionsObj = {
+        ...optionsObj,
+        ...fieldState?.value?.reduce((accumulator, value) => {
+          accumulator[value._id] = {
+            _id: value._id,
+            [primaryDisplay]: value.primaryDisplay,
+          }
+          return accumulator
+        }, {}),
+      }
+    }
+  }
+  $: optionsObj = {
+    ...optionsObj,
+    ...($fetch.rows || [])?.reduce((accumulator, row) => {
+      accumulator[row._id] = row
+      return accumulator
     }, {}),
   }
-
-  $: options = Object.values(allOptions)
 
   $: fetchRows(searchTerm, primaryDisplay)
 
   const fetchRows = (searchTerm, primaryDisplay) => {
     const allRowsFetched =
       $fetch.loaded &&
-      !Object.keys($fetch.query.string).length &&
+      !Object.keys($fetch.query?.string || {}).length &&
       !$fetch.hasNextPage
     if (!allRowsFetched) {
       // Don't request until we have the primary display
@@ -140,7 +147,7 @@
   {#if fieldState}
     <svelte:component
       this={component}
-      {options}
+      options={Object.values(optionsObj)}
       {autocomplete}
       value={selectedValue}
       on:change={multiselect ? multiHandler : singleHandler}
