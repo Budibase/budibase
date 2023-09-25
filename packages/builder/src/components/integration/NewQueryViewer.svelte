@@ -250,8 +250,8 @@
         <div class="copy">
           <Body size="S">
             Bindings come in two parts: the binding name, and a default/fallback
-            value. These bindings can be used as Handlebars expressions throughout the
-            query.
+            value. These bindings can be used as Handlebars expressions
+            throughout the query.
           </Body>
         </div>
         {#key newQuery.parameters}
