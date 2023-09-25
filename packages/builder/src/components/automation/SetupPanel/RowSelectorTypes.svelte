@@ -73,7 +73,11 @@
     />
   </span>
 {:else if schema.type === "link"}
-  <LinkedRowSelector bind:linkedRows={value[field]} {schema} />
+  <LinkedRowSelector
+    bind:linkedRows={value[field]}
+    {schema}
+    on:change={e => onChange(e, field)}
+  />
 {:else if schema.type === "string" || schema.type === "number"}
   <svelte:component
     this={isTestModal ? ModalBindableInput : DrawerBindableInput}

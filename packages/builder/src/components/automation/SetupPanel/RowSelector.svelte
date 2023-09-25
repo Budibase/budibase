@@ -83,8 +83,7 @@
       if (Array.isArray(value)) {
         return value
       }
-
-      return [value]
+      return value.split(/[\s,]+/).map(x => x.trim())
     }
 
     if (type === "json") {
