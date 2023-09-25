@@ -153,7 +153,6 @@
     "@types/server-destroy": "1.0.1",
     "@types/supertest": "2.0.12",
     "@types/tar": "6.1.5",
-    "@typescript-eslint/parser": "5.45.0",
     "apidoc": "0.50.4",
     "babel-jest": "29.6.2",
     "copyfiles": "2.4.1",
