@@ -72,7 +72,9 @@ export async function updateWithExport(
     }
     // get a temporary version of the import
     // don't need obj store, the existing app already has everything we need
-    await backups.importApp(devId, tempDb, template, { objStore: false })
+    await backups.importApp(devId, tempDb, template, {
+      importObjStoreContents: false,
+    })
     // get the documents to copy
     const documents = await getImportableDocuments(tempDb)
     // clear out the old documents
