@@ -62,6 +62,6 @@
     getOptionLabel={getPrettyName}
     getOptionValue={row => row._id}
     sort
-    on:change={e => dispatch("change", linkedIds)}
+    on:change={() => dispatch("change", linkedIds)}
   />
 {/if}
