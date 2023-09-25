@@ -348,7 +348,7 @@
   }
 
   .bodyInner {
-    max-width: 600px;
+    max-width: 520px;
     margin: auto;
   }
 

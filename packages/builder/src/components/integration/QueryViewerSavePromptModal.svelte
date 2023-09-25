@@ -48,6 +48,6 @@
       resumeNavigation()
     }}
   >
-    <Body>Leaving this section will mean losing and changes to your query</Body>
+    <Body>Leaving this section will mean losing any changes to your query</Body>
   </ModalContent>
 </Modal>
