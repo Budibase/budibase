@@ -48,8 +48,6 @@
       currentVal = value.split(",")
     } else if (type === "array" && value && hasValidOptions(value)) {
       currentVal = value.split(",")
-    } else if (type === "boolean" && isValidBoolean(value)) {
-      currentVal = value === "true" || value === true
     } else {
       currentVal = readableToRuntimeBinding(bindings, value)
     }
@@ -90,12 +88,7 @@
   }
 
   const isValidBoolean = value => {
-    return (
-      typeof value === "boolean" ||
-      value === "false" ||
-      value === "true" ||
-      value == ""
-    )
+    return value === "false" || value === "true" || value == ""
   }
 
   const isValid = value => {
@@ -124,7 +117,7 @@
     if (type === "json" && !isJSBinding(value)) {
       return "json-slot-icon"
     }
-    if (type !== "string" && type !== "number" && type !== "boolean") {
+    if (type !== "string" && type !== "number") {
       return "slot-icon"
     }
     return ""

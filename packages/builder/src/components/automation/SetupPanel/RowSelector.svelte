@@ -13,7 +13,6 @@
   export let value
   export let meta
   export let bindings
-  export let block
   export let isTestModal
   export let isUpdateRow
 
@@ -26,15 +25,6 @@
   let table
   let schemaFields
 
-  let placeholders = {
-    number: 10,
-    boolean: "true",
-    datetime: "2022-02-16T12:00:00.000Z ",
-    options: "1",
-    array: "1 2 3 4",
-    link: "ro_ta_123_456",
-    longform: "long form text",
-  }
   $: {
     table = $tables.list.find(table => table._id === value?.tableId)
     schemaFields = Object.entries(table?.schema ?? {})
@@ -57,19 +47,13 @@
       return value
     }
 
-    if (type === "boolean") {
-      if (typeof value === "boolean") {
-        return value
-      }
-      return value === "true"
-    }
     if (type === "number") {
       if (typeof value === "number") {
         return value
       }
       return Number(value)
     }
-    if (type === "options") {
+    if (type === "options" || type === "boolean") {
       return value
     }
     if (type === "array") {

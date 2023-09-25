@@ -420,7 +420,6 @@
           />
         {:else if value.customType === "row"}
           <RowSelector
-            {block}
             value={inputData[key]}
             meta={inputData["meta"] || {}}
             on:change={e => {
