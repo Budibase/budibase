@@ -344,18 +344,19 @@
   /* Search styles inside popover */
   .popover-content :global(.spectrum-Search) {
     margin-top: -1px;
-    margin-left: -1px;
-    width: calc(100% + 2px);
+    width: 100%;
   }
   .popover-content :global(.spectrum-Search input) {
     height: auto;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+    border-left: 0;
+    border-right: 0;
     padding-top: var(--spectrum-global-dimension-size-100);
     padding-bottom: var(--spectrum-global-dimension-size-100);
   }
   .popover-content :global(.spectrum-Search .spectrum-ClearButton) {
-    right: 1px;
+    right: 2px;
     top: 2px;
   }
   .popover-content :global(.spectrum-Search .spectrum-Textfield-icon) {
