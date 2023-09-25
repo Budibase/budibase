@@ -170,6 +170,11 @@ export const RelationshipType = {
   MANY_TO_ONE: "many-to-one",
 }
 
+export const PrettyRelationshipDefinitions = {
+  MANY: "Many rows",
+  ONE: "One row",
+}
+
 export const ALLOWABLE_STRING_OPTIONS = [
   FIELDS.STRING,
   FIELDS.OPTIONS,

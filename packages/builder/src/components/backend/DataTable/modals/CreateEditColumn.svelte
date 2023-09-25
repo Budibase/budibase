@@ -5,7 +5,6 @@
     Label,
     Select,
     Toggle,
-    RadioGroup,
     Icon,
     DatePicker,
     Modal,
@@ -26,10 +25,10 @@
     ALLOWABLE_STRING_TYPES,
     ALLOWABLE_NUMBER_TYPES,
     SWITCHABLE_TYPES,
+    PrettyRelationshipDefinitions,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { truncate } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
@@ -58,8 +57,8 @@
   let indexes = [...($tables.selected.indexes || [])]
   let isCreating = undefined
 
-  let relationshipPart1 = "Many rows"
-  let relationshipPart2 = "To one row"
+  let relationshipPart1 = PrettyRelationshipDefinitions.Many
+  let relationshipPart2 = PrettyRelationshipDefinitions.One
 
   let relationshipTableIdSecondary = null
   let table = $tables.selected
@@ -80,22 +79,21 @@
   }
 
   $: {
-    console.log("test")
-    if (editableColumn.type === LINK_TYPE) {
+    if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
       // Determine the relationship type based on the selected values of both parts
       if (
-        relationshipPart1 === "Many rows" &&
-        relationshipPart2 === "To one row"
+        relationshipPart1 === PrettyRelationshipDefinitions.Many &&
+        relationshipPart2 === PrettyRelationshipDefinitions.One
       ) {
         editableColumn.relationshipType = RelationshipType.MANY_TO_ONE
       } else if (
-        relationshipPart1 === "Many rows" &&
-        relationshipPart2 === "To many rows"
+        relationshipPart1 === PrettyRelationshipDefinitions.Many &&
+        relationshipPart2 === PrettyRelationshipDefinitions.MANY
       ) {
         editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
       } else if (
-        relationshipPart1 === "One row" &&
-        relationshipPart2 === "To many rows"
+        relationshipPart1 === PrettyRelationshipDefinitions.One &&
+        relationshipPart2 === PrettyRelationshipDefinitions.Many
       ) {
         editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
       }
@@ -134,23 +132,19 @@
 
     if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
       relationshipTableIdSecondary = editableColumn.tableId
-      console.log("test?")
-      console.log(editableColumn.relationshipType)
-      console.log(RelationshipType.MANY_TO_MANY)
       if (editableColumn.relationshipType === RelationshipType.MANY_TO_ONE) {
-        relationshipPart1 = "Many rows"
-        relationshipPart2 = "To one row"
+        relationshipPart1 = PrettyRelationshipDefinitions.Many
+        relationshipPart2 = PrettyRelationshipDefinitions.One
       } else if (
         editableColumn.relationshipType === RelationshipType.MANY_TO_MANY
       ) {
-        console.log("asdasdasd?")
-        relationshipPart1 = "Many rows"
-        relationshipPart2 = "To many rows"
+        relationshipPart1 = PrettyRelationshipDefinitions.Many
+        relationshipPart2 = PrettyRelationshipDefinitions.Many
       } else if (
         editableColumn.relationshipType === RelationshipType.ONE_TO_MANY
       ) {
-        relationshipPart1 = "One row"
-        relationshipPart2 = "To many rows"
+        relationshipPart1 = PrettyRelationshipDefinitions.One
+        relationshipPart2 = PrettyRelationshipDefinitions.Many
       }
     }
   }
@@ -210,7 +204,6 @@
     !uneditable &&
     editableColumn?.type !== AUTO_TYPE &&
     !editableColumn.autocolumn
-  $: relationshipOptions = getRelationshipOptions(editableColumn)
   $: external = table.type === "external"
   // in the case of internal tables the sourceId will just be undefined
   $: tableOptions = $tables.list.filter(
@@ -339,35 +332,6 @@
   function extractColumnNumber(columnName) {
     const match = columnName.match(/Column (\d+)/)
     return match ? parseInt(match[1]) : 0
-  }
-
-  function getRelationshipOptions(field) {
-    if (!field || !field.tableId) {
-      return null
-    }
-    const linkTable = tableOptions?.find(table => table._id === field.tableId)
-    if (!linkTable) {
-      return null
-    }
-    const thisName = truncate(table.name, { length: 14 }),
-      linkName = truncate(linkTable.name, { length: 14 })
-    return [
-      {
-        name: `Many ${thisName} rows → many ${linkName} rows`,
-        alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipType.MANY_TO_MANY,
-      },
-      {
-        name: `One ${linkName} row → many ${thisName} rows`,
-        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
-        value: RelationshipType.ONE_TO_MANY,
-      },
-      {
-        name: `One ${thisName} row → many ${linkName} rows`,
-        alt: `One ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipType.MANY_TO_ONE,
-      },
-    ]
   }
 
   function getAllowedTypes() {
