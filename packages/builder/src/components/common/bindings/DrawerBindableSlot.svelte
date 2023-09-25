@@ -89,10 +89,6 @@
     return links.every(link => schema?.constraints?.inclusion?.includes(link))
   }
 
-  const isValidLongFormText = value => {
-    return !isJSBinding(value)
-  }
-
   const isValidBoolean = value => {
     return (
       typeof value === "boolean" ||
@@ -112,8 +108,8 @@
     if (type === "array") {
       return hasValidOptions(value)
     }
-    if (type === "longform") {
-      return isValidLongFormText(value)
+    if (type === "longform" || type === "json") {
+      return !isJSBinding(value)
     }
     if (type === "boolean") {
       return isValidBoolean(value)
@@ -122,8 +118,11 @@
   }
 
   const getIconClass = (value, type) => {
-    if (type === "longform" && isValidLongFormText(value)) {
+    if (type === "longform" && !isJSBinding(value)) {
       return "text-area-slot-icon"
+    }
+    if (type === "json" && !isJSBinding(value)) {
+      return "json-slot-icon"
     }
     if (type !== "string" && type !== "number" && type !== "boolean") {
       return "slot-icon"
@@ -219,6 +218,12 @@
     border-bottom: 1px solid var(--spectrum-alias-border-color);
     border-bottom-right-radius: 0px !important;
     top: 26px !important;
+  }
+  .json-slot-icon {
+    border-bottom: 1px solid var(--spectrum-alias-border-color);
+    border-bottom-right-radius: 0px !important;
+    top: 23px !important;
+    right: 0px !important;
   }
 
   .icon {
