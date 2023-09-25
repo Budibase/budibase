@@ -66,7 +66,6 @@
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
   const markInvalid = () => {
-    console.log('invalid');
     valid = false;
   }
 
@@ -235,7 +234,7 @@
           disabled={loading}
           noLabel
           {datasource}
-          query={newQuery}
+          bind:query={newQuery}
           height={200}
           schema={integration.query[newQuery.queryVerb]}
         />
