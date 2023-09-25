@@ -34,6 +34,7 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
+  import RelationshipSelector from "components/common/RelationshipSelector.svelte"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -57,6 +58,10 @@
   let indexes = [...($tables.selected.indexes || [])]
   let isCreating = undefined
 
+  let relationshipPart1 = "Many rows"
+  let relationshipPart2 = "To one row"
+
+  let relationshipTableIdSecondary = null
   let table = $tables.selected
   let confirmDeleteDialog
   let savingColumn
@@ -72,6 +77,32 @@
 
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
+  }
+
+  $: {
+    console.log("test")
+    if (editableColumn.type === LINK_TYPE) {
+      // Determine the relationship type based on the selected values of both parts
+      if (
+        relationshipPart1 === "Many rows" &&
+        relationshipPart2 === "To one row"
+      ) {
+        editableColumn.relationshipType = RelationshipType.MANY_TO_ONE
+      } else if (
+        relationshipPart1 === "Many rows" &&
+        relationshipPart2 === "To many rows"
+      ) {
+        editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
+      } else if (
+        relationshipPart1 === "One row" &&
+        relationshipPart2 === "To many rows"
+      ) {
+        editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
+      }
+
+      // Set the tableId based on the selected table
+      editableColumn.tableId = relationshipTableIdSecondary
+    }
   }
 
   const initialiseField = (field, savingColumn) => {
@@ -100,6 +131,28 @@
       }
     }
     allowedTypes = getAllowedTypes()
+
+    if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
+      relationshipTableIdSecondary = editableColumn.tableId
+      console.log("test?")
+      console.log(editableColumn.relationshipType)
+      console.log(RelationshipType.MANY_TO_MANY)
+      if (editableColumn.relationshipType === RelationshipType.MANY_TO_ONE) {
+        relationshipPart1 = "Many rows"
+        relationshipPart2 = "To one row"
+      } else if (
+        editableColumn.relationshipType === RelationshipType.MANY_TO_MANY
+      ) {
+        console.log("asdasdasd?")
+        relationshipPart1 = "Many rows"
+        relationshipPart2 = "To many rows"
+      } else if (
+        editableColumn.relationshipType === RelationshipType.ONE_TO_MANY
+      ) {
+        relationshipPart1 = "One row"
+        relationshipPart2 = "To many rows"
+      }
+    }
   }
 
   $: initialiseField(field, savingColumn)
@@ -546,30 +599,15 @@
       </div>
     </div>
   {:else if editableColumn.type === "link"}
-    <Select
-      label="Table"
-      disabled={linkEditDisabled}
-      bind:value={editableColumn.tableId}
-      options={tableOptions}
-      getOptionLabel={table => table.name}
-      getOptionValue={table => table._id}
-    />
-    {#if relationshipOptions && relationshipOptions.length > 0}
-      <RadioGroup
-        disabled={linkEditDisabled}
-        label="Define the relationship"
-        bind:value={editableColumn.relationshipType}
-        options={relationshipOptions}
-        getOptionLabel={option => option.name}
-        getOptionValue={option => option.value}
-        getOptionTitle={option => option.alt}
-      />
-    {/if}
-    <Input
-      disabled={linkEditDisabled}
-      label={`Column name in other table`}
-      bind:value={editableColumn.fieldName}
-      error={errors.relatedName}
+    <RelationshipSelector
+      bind:relationshipPart1
+      bind:relationshipPart2
+      bind:relationshipTableIdPrimary={table.name}
+      bind:relationshipTableIdSecondary
+      bind:editableColumn
+      {linkEditDisabled}
+      {tableOptions}
+      {errors}
     />
   {:else if editableColumn.type === FORMULA_TYPE}
     {#if !table.sql}
