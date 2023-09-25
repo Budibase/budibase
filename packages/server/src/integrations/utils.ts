@@ -1,6 +1,11 @@
-import { SourceName, SqlQuery, Datasource, Table } from "@budibase/types"
+import { SqlQuery, Table, SearchFilters } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
-import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
+import {
+  FieldTypes,
+  BuildSchemaErrors,
+  InvalidColumns,
+  NoEmptyFilterStrings,
+} from "../constants"
 import { helpers } from "@budibase/shared-core"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
@@ -342,4 +347,37 @@ export function getPrimaryDisplay(testValue: unknown): string | undefined {
     return undefined
   }
   return testValue as string
+}
+
+export function isValidFilter(value: any) {
+  return value != null && value !== ""
+}
+
+// don't do a pure falsy check, as 0 is included
+// https://github.com/Budibase/budibase/issues/10118
+export function removeEmptyFilters(filters: SearchFilters) {
+  for (let filterField of NoEmptyFilterStrings) {
+    if (!filters[filterField]) {
+      continue
+    }
+
+    for (let filterType of Object.keys(filters)) {
+      if (filterType !== filterField) {
+        continue
+      }
+      // don't know which one we're checking, type could be anything
+      const value = filters[filterType] as unknown
+      if (typeof value === "object") {
+        for (let [key, value] of Object.entries(
+          filters[filterType] as object
+        )) {
+          if (value == null || value === "") {
+            // @ts-ignore
+            delete filters[filterField][key]
+          }
+        }
+      }
+    }
+  }
+  return filters
 }
