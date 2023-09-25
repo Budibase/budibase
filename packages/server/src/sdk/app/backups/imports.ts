@@ -152,7 +152,7 @@ export async function importApp(
   appId: string,
   db: Database,
   template: TemplateType,
-  opts: { objStore: boolean } = { objStore: true }
+  opts: { importObjStoreContents: boolean } = { importObjStoreContents: true }
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
   let dbStream: any
@@ -166,7 +166,7 @@ export async function importApp(
     }
     const contents = fs.readdirSync(tmpPath)
     // have to handle object import
-    if (contents.length && opts.objStore) {
+    if (contents.length && opts.importObjStoreContents) {
       let promises = []
       let excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
       for (let filename of contents) {
