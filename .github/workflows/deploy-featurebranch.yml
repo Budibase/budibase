@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: passeidireto/trigger-external-workflow-action@main
         env:
-            BRANCH: ${{ github.head_ref }}
+          PAYLOAD_BRANCH: ${{ github.head_ref }}
         with:
           repository: budibase/budibase-deploys
           event: featurebranch-qa-deploy
