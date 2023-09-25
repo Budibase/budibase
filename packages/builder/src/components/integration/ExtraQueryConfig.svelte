@@ -19,33 +19,22 @@
 </script>
 
 {#each extraFields as { key, displayName, type }}
-  <div class="config-field">
-    <Label>{displayName}</Label>
-    {#if type === "string"}
-      <Input
-        {disabled}
-        on:change={() => populateExtraQuery(extraQueryFields)}
-        bind:value={extraQueryFields[key]}
-      />
-    {/if}
+  <Label>{displayName}</Label>
+  {#if type === "string"}
+    <Input
+      {disabled}
+      on:change={() => populateExtraQuery(extraQueryFields)}
+      bind:value={extraQueryFields[key]}
+    />
+  {/if}
 
-    {#if type === "list"}
-      <Select
-        {disabled}
-        on:change={() => populateExtraQuery(extraQueryFields)}
-        bind:value={extraQueryFields[key]}
-        options={config[key].data[query.queryVerb]}
-        getOptionLabel={current => current}
-      />
-    {/if}
-  </div>
+  {#if type === "list"}
+    <Select
+      {disabled}
+      on:change={() => populateExtraQuery(extraQueryFields)}
+      bind:value={extraQueryFields[key]}
+      options={config[key].data[query.queryVerb]}
+      getOptionLabel={current => current}
+    />
+  {/if}
 {/each}
-
-<style>
-  .config-field {
-    display: grid;
-    grid-template-columns: 20% 1fr;
-    grid-gap: var(--spacing-l);
-    align-items: center;
-  }
-</style>

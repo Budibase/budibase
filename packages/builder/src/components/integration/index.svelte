@@ -36,7 +36,6 @@
 
   function updateQuery({ detail }) {
     query.fields[schema.type] = detail.value
-    query = query
   }
 
   function updateEditorsOnDelete(deleteIndex) {

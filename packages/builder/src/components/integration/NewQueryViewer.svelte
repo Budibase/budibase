@@ -23,7 +23,6 @@
   import QueryViewerSavePromptModal from "./QueryViewerSavePromptModal.svelte"
   import { Utils } from "@budibase/frontend-core"
 
-
   export let query
   let queryHash
 
@@ -44,17 +43,21 @@
   const parseQuery = query => {
     loading = false
     modified = false
+    valid = false
 
-    queryHash = JSON.stringify(query)
-    newQuery = cloneDeep(query)
-
-    datasource = $datasources.list.find(ds => ds._id === newQuery.datasourceId)
+    datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
     integration = $integrations[datasource.source]
+    const schemaType = integration.query[query.queryVerb].type
+
+    newQuery = cloneDeep(query)
+    // Set the location where the query code will be written to an empty string so that it doesn't
+    // get changed from undefined -> "" by the input, breaking our unsaved changes checks
+    newQuery.fields[schemaType] ??= ""
+
+    queryHash = JSON.stringify(newQuery)
   }
 
-
   $: parseQuery(query)
-
 
   const checkIsModified = newQuery => {
     const newQueryHash = JSON.stringify(newQuery)
@@ -66,7 +69,7 @@
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
   const markInvalid = () => {
-    valid = false;
+    valid = false
   }
 
   $: debouncedCheckIsModified(newQuery)
@@ -118,7 +121,6 @@
       loading = false
     }
   }
-
 
   function resetDependentFields() {
     if (newQuery.fields.extra) {
@@ -178,104 +180,100 @@
     </div>
 
     <div class="body">
-      <div class="config">
-        <div class="config-field">
-          <Label>Query Name</Label>
-          <Input
+      <div class="bodyInner">
+        <div class="config">
+          <div class="config-field">
+            <Label>Name</Label>
+            <Input
+              disabled={loading}
+              value={newQuery.name}
+              on:input={e => {
+                let newValue = e.target.value || ""
+                if (newValue.match(ValidQueryNameRegex)) {
+                  newQuery.name = newValue.trim()
+                  nameError = null
+                } else {
+                  nameError = "Invalid query name"
+                }
+              }}
+              error={nameError}
+            />
+            {#if integration.query}
+              <Label>Function</Label>
+              <Select
+                disabled={loading}
+                bind:value={newQuery.queryVerb}
+                on:change={resetDependentFields}
+                options={Object.keys(integration.query)}
+                getOptionLabel={verb =>
+                  integration.query[verb]?.displayName || capitalise(verb)}
+              />
+              <Label>Access</Label>
+              <AccessLevelSelect disabled={loading} query={newQuery} />
+              {#if integration?.extra && newQuery.queryVerb}
+                <ExtraQueryConfig
+                  disabled={loading}
+                  query={newQuery}
+                  {populateExtraQuery}
+                  config={integration.extra}
+                />
+              {/if}
+            {/if}
+          </div>
+        </div>
+
+        <Divider />
+
+        <div class="config">
+          <Heading size="S">Query</Heading>
+          <Body size="S">Todo placeholder text</Body>
+          <IntegrationQueryEditor
             disabled={loading}
-            value={newQuery.name}
-            on:input={e => {
-              let newValue = e.target.value || ""
-              if (newValue.match(ValidQueryNameRegex)) {
-                newQuery.name = newValue.trim()
-                nameError = null
-              } else {
-                nameError = "Invalid query name"
-              }
-            }}
-            error={nameError}
+            noLabel
+            {datasource}
+            bind:query={newQuery}
+            height={200}
+            schema={integration.query[newQuery.queryVerb]}
           />
         </div>
-        {#if integration.query}
-          <div class="config-field">
-            <Label>Function</Label>
-            <Select
-              disabled={loading}
-              bind:value={newQuery.queryVerb}
-              on:change={resetDependentFields}
-              options={Object.keys(integration.query)}
-              getOptionLabel={verb =>
-                integration.query[verb]?.displayName || capitalise(verb)}
-            />
-          </div>
-          <div class="config-field">
-            <AccessLevelSelect
-              disabled={loading}
-              query={newQuery}
-              label="Access Level"
-            />
-          </div>
-          {#if integration?.extra && newQuery.queryVerb}
-            <ExtraQueryConfig
-              disabled={loading}
-              query={newQuery}
-              {populateExtraQuery}
-              config={integration.extra}
-            />
-          {/if}
-        {/if}
-      </div>
-
-      <Divider />
-      <div class="config">
-        <Heading size="S">Fields</Heading>
-        <Body size="S">Fill in the fields specific to this query.</Body>
-        <IntegrationQueryEditor
-          disabled={loading}
-          noLabel
-          {datasource}
-          bind:query={newQuery}
-          height={200}
-          schema={integration.query[newQuery.queryVerb]}
-        />
-      </div>
-      <Divider />
-      <div class="config">
-        <Heading size="S">Bindings</Heading>
-        {#key newQuery.parameters}
-          <div class="binding-wrap">
-            <BindingBuilder
-              disabled={loading}
-              hideHeading
-              queryBindings={newQuery.parameters}
-              bindable={false}
-              on:change={e => {
-                newQuery.parameters = e.detail.map(binding => {
-                  return {
-                    name: binding.name,
-                    default: binding.value,
-                  }
-                })
-              }}
-            />
-          </div>
-        {/key}
-      </div>
-      <Divider />
-      <div class="config">
-        <div class="help-heading">
-          <Heading size="S">Transformer</Heading>
+        <Divider />
+        <div class="config">
+          <Heading size="S">Bindings</Heading>
+          {#key newQuery.parameters}
+            <div class="binding-wrap">
+              <BindingBuilder
+                disabled={loading}
+                hideHeading
+                queryBindings={newQuery.parameters}
+                bindable={false}
+                on:change={e => {
+                  newQuery.parameters = e.detail.map(binding => {
+                    return {
+                      name: binding.name,
+                      default: binding.value,
+                    }
+                  })
+                }}
+              />
+            </div>
+          {/key}
         </div>
-        <Body size="S">
-          Add a JavaScript function to transform the query result.
-        </Body>
-        <CodeMirrorEditor
-          disabled={loading}
-          height={200}
-          value={newQuery.transformer}
-          resize="vertical"
-          on:change={e => (newQuery.transformer = e.detail)}
-        />
+        <Divider />
+        <div class="config">
+          <div class="help-heading">
+            <Heading size="S">Transformer</Heading>
+          </div>
+          <Body size="S">
+            Add a JavaScript function to transform the query result.
+          </Body>
+          <CodeMirrorEditor
+            disabled={loading}
+            height={200}
+            value={newQuery.transformer}
+            resize="vertical"
+            on:change={e => (newQuery.transformer = e.detail)}
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -307,6 +305,10 @@
     flex: 1;
   }
 
+  .queryViewer :global(.spectrum-Divider) {
+    margin: 50px 0;
+  }
+
   .main {
     flex-grow: 1;
     height: 100%;
@@ -323,8 +325,13 @@
   .body {
     flex-grow: 1;
     overflow-y: scroll;
-    padding: 0px 23px 23px;
+    padding: 23px 23px 80px;
     box-sizing: border-box;
+  }
+
+  .bodyInner {
+    max-width: 600px;
+    margin: auto;
   }
 
   .title {
@@ -358,6 +365,13 @@
     pointer-events: none;
     background-color: transparent;
     color: var(--grey-3);
+  }
+
+  .config-field {
+    display: grid;
+    grid-template-columns: 20% 1fr;
+    grid-gap: var(--spacing-l);
+    align-items: center;
   }
 
   .sidePanel {

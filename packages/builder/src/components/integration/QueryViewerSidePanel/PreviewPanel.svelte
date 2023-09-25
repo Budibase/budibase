@@ -7,7 +7,7 @@
 
   $: rowsCopy = cloneDeep(rows)
 
-   // Cast field in query preview response to number if specified by schema
+  // Cast field in query preview response to number if specified by schema
   $: {
     for (let i = 0; i < rowsCopy.length; i++) {
       let row = rowsCopy[i]
