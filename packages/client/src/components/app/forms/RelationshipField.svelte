@@ -54,30 +54,24 @@
       // Persist the initial values as options, allowing them to be present in the dropdown,
       // even if they are not in the inital fetch results
       initialValuesProcessed = true
-      optionsObj = {
-        ...optionsObj,
-        ...fieldState?.value?.reduce((accumulator, value) => {
-          accumulator[value._id] = {
-            _id: value._id,
-            [primaryDisplay]: value.primaryDisplay,
-          }
-          return accumulator
-        }, {}),
-      }
+      optionsObj = fieldState?.value?.reduce((accumulator, value) => {
+        accumulator[value._id] = {
+          _id: value._id,
+          [primaryDisplay]: value.primaryDisplay,
+        }
+        return accumulator
+      }, optionsObj)
     }
   }
 
   $: enrichedOptions = enrichOptions(optionsObj, $fetch.rows)
   const enrichOptions = (optionsObj, fetchResults) => {
-    const result = {
-      ...optionsObj,
-      ...(fetchResults || [])?.reduce((accumulator, row) => {
-        if (!optionsObj[row._id]) {
-          accumulator[row._id] = row
-        }
-        return accumulator
-      }, {}),
-    }
+    const result = (fetchResults || [])?.reduce((accumulator, row) => {
+      if (!accumulator[row._id]) {
+        accumulator[row._id] = row
+      }
+      return accumulator
+    }, optionsObj)
 
     return Object.values(result)
   }
