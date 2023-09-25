@@ -2539,7 +2539,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2629,7 +2630,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2685,7 +2687,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2736,7 +2739,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2841,7 +2845,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "boolean",
@@ -2960,7 +2965,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3143,7 +3149,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3200,7 +3207,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3301,7 +3309,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3355,7 +3364,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "boolean",
@@ -3622,7 +3632,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3689,7 +3700,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
