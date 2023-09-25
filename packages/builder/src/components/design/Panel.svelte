@@ -12,11 +12,12 @@
   export let borderLeft = false
   export let borderRight = false
   export let wide = false
+  export let extraWide = false
 
   $: customHeaderContent = $$slots["panel-header-content"]
 </script>
 
-<div class="panel" class:wide class:borderLeft class:borderRight>
+<div class="panel" class:wide class:extraWide class:borderLeft class:borderRight>
   <div class="header" class:custom={customHeaderContent}>
     {#if showBackButton}
       <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
@@ -69,6 +70,10 @@
   .panel.wide {
     width: 310px;
     flex: 0 0 310px;
+  }
+  .panel.extraWide {
+    width: 450px;
+    flex: 0 0 450px;
   }
   .header {
     flex: 0 0 48px;

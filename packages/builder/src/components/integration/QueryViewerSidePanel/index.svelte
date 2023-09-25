@@ -21,7 +21,7 @@
   title="Query results"
   icon={"SQLQuery"}
   borderLeft
-  wide
+  extraWide
 >
   <div slot="panel-header-content">
     <div class="settings-tabs">

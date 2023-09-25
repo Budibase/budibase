@@ -419,6 +419,6 @@
   }
 
   .showSidePanel {
-    width: 310px;
+    width: 450px;
   }
 </style>
