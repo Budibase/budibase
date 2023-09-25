@@ -14,13 +14,14 @@
   import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
   import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
+  import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
 
   const userSchemaOverrides = {
-    firstName: { displayName: "First name", disabled: true },
-    lastName: { displayName: "Last name", disabled: true },
-    email: { displayName: "Email", disabled: true },
-    roleId: { displayName: "Role", disabled: true },
-    status: { displayName: "Status", disabled: true },
+    firstName: { displayName: "First name" },
+    lastName: { displayName: "Last name" },
+    email: { displayName: "Email" },
+    roleId: { displayName: "Role" },
+    status: { displayName: "Status" },
   }
 
   $: id = $tables.selected?._id
@@ -59,22 +60,22 @@
     datasource={gridDatasource}
     canAddRows={!isUsersTable}
     canDeleteRows={!isUsersTable}
+    canEditRows={!isUsersTable}
+    canEditColumns={!isUsersTable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}
   >
     <svelte:fragment slot="filter">
+      {#if isUsersTable}
+        <GridUsersTableButton />
+      {/if}
       <GridFilterButton />
     </svelte:fragment>
-    <svelte:fragment slot="edit-column">
-      <GridEditColumnModal />
-    </svelte:fragment>
-    <svelte:fragment slot="add-column">
-      <GridAddColumnModal />
-    </svelte:fragment>
-
     <svelte:fragment slot="controls">
-      <GridCreateViewButton />
+      {#if !isUsersTable}
+        <GridCreateViewButton />
+      {/if}
       <GridManageAccessButton />
       {#if relationshipsEnabled}
         <GridRelationshipButton />
@@ -84,13 +85,18 @@
       {:else}
         <GridImportButton />
       {/if}
-
       <GridExportButton />
       {#if isUsersTable}
         <GridEditUserModal />
       {:else}
         <GridCreateEditRowModal />
       {/if}
+    </svelte:fragment>
+    <svelte:fragment slot="edit-column">
+      <GridEditColumnModal />
+    </svelte:fragment>
+    <svelte:fragment slot="add-column">
+      <GridAddColumnModal />
     </svelte:fragment>
   </Grid>
 </div>
