@@ -30,6 +30,7 @@
   import { themeStore } from "builderStore"
   import { createEventDispatcher, onMount } from "svelte"
 
+  export let disabled = false
   export let mode = EditorModes.JS
   export let value = ""
   export let height = 300
@@ -126,12 +127,22 @@
   </div>
 {/if}
 <div
+  class:disabled
   style={`--code-mirror-height: ${height}px; --code-mirror-resize: ${resize}`}
 >
   <textarea tabindex="0" bind:this={textarea} readonly {value} />
 </div>
 
 <style>
+  .disabled {
+    pointer-events: none;
+    opacity: 50%;
+  }
+
+  .disabled :global(.CodeMirror) {
+    pointer-events: none;
+  }
+
   div :global(.CodeMirror) {
     height: var(--code-mirror-height);
     min-height: var(--code-mirror-height);

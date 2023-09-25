@@ -15,6 +15,7 @@
 
   let dispatch = createEventDispatcher()
 
+  export let disabled = false
   export let defaults
   export let object = defaults || {}
   export let activity = {}
@@ -34,6 +35,7 @@
   export let bindings = []
   export let bindingDrawerLeft
   export let allowHelpers = true
+  export let customButtonText = null
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -105,13 +107,19 @@
   >
     {#each fields as field, idx}
       <Input
+        {disabled}
         placeholder={keyPlaceholder}
         readonly={readOnly}
         bind:value={field.name}
         on:blur={changed}
       />
       {#if options}
-        <Select bind:value={field.value} on:change={changed} {options} />
+        <Select
+          {disabled}
+          bind:value={field.value}
+          on:change={changed}
+          {options}
+        />
       {:else if bindings && bindings.length}
         <DrawerBindableInput
           {bindings}
@@ -120,7 +128,7 @@
             field.value = e.detail
             changed()
           }}
-          disabled={readOnly}
+          disabled={disabled || readOnly}
           value={field.value}
           allowJS={false}
           {allowHelpers}
@@ -129,6 +137,7 @@
         />
       {:else}
         <Input
+          {disabled}
           placeholder={valuePlaceholder}
           readonly={readOnly}
           bind:value={field.value}
@@ -136,13 +145,22 @@
         />
       {/if}
       {#if toggle}
-        <Toggle bind:value={fieldActivity[idx]} on:change={changed} />
+        <Toggle
+          {disabled}
+          bind:value={fieldActivity[idx]}
+          on:change={changed}
+        />
       {/if}
       {#if !readOnly}
-        <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
+        <Icon
+          {disabled}
+          hoverable
+          name="Close"
+          on:click={() => deleteEntry(idx)}
+        />
       {/if}
       {#if menuItems?.length > 0 && showMenu}
-        <ActionMenu>
+        <ActionMenu {disabled}>
           <div slot="control" class="control icon">
             <Icon size="S" hoverable name="MoreSmallList" />
           </div>
@@ -158,9 +176,20 @@
 {/if}
 {#if !readOnly && !noAddButton}
   <div>
-    <ActionButton icon="Add" secondary thin outline on:click={addEntry}
-      >Add{name ? ` ${lowercase(name)}` : ""}</ActionButton
+    <ActionButton
+      {disabled}
+      icon="Add"
+      secondary
+      thin
+      outline
+      on:click={addEntry}
     >
+      {#if customButtonText}
+        {customButtonText}
+      {:else}
+        {`Add${name ? ` ${lowercase(name)}` : ""}`}
+      {/if}
+    </ActionButton>
   </div>
 {/if}
 

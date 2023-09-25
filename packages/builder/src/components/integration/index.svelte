@@ -23,6 +23,8 @@
   export let schema
   export let editable = true
   export let height = 500
+  export let noLabel = false
+  export let disabled = false
 
   let stepEditors = []
 
@@ -74,8 +76,9 @@
   {#key query._id}
     {#if schema.type === QueryTypes.SQL}
       <Editor
+        {disabled}
         editorHeight={height}
-        label="Query"
+        label={noLabel ? null : "Query"}
         mode="sql"
         on:change={updateQuery}
         readOnly={!editable}
@@ -85,7 +88,7 @@
     {:else if shouldDisplayJsonBox}
       <Editor
         editorHeight={height}
-        label="Query"
+        label={noLabel ? null : "Query"}
         mode="json"
         on:change={updateQuery}
         readOnly={!editable}
@@ -105,7 +108,7 @@
       {#if !query.fields.steps?.length}
         <div class="controls">
           <Button
-            disabled={!editable}
+            disabled={disabled || !editable}
             secondary
             slot="buttons"
             on:click={() => {
@@ -132,7 +135,7 @@
                       {#if index > 0}
                         <ActionButton
                           quiet
-                          disabled={!editable}
+                          disabled={disabled || !editable}
                           on:click={() => {
                             updateEditorsOnSwap(index, index - 1)
                             const target = query.fields.steps[index - 1].key
@@ -146,7 +149,7 @@
                       {#if index < query.fields.steps.length - 1}
                         <ActionButton
                           quiet
-                          disabled={!editable}
+                          disabled={disabled || !editable}
                           on:click={() => {
                             updateEditorsOnSwap(index, index + 1)
                             const target = query.fields.steps[index + 1].key
@@ -159,7 +162,7 @@
                       {/if}
                     </div>
                     <ActionButton
-                      disabled={!editable}
+                      disabled={disabled || !editable}
                       on:click={() => {
                         updateEditorsOnDelete(index)
                         query.fields.steps.splice(index, 1)
@@ -173,7 +176,7 @@
                   <div class="fields">
                     <div class="block-field">
                       <Select
-                        disabled={!editable}
+                        disabled={disabled || !editable}
                         value={step.key}
                         options={schema.steps.map(s => s.key)}
                         on:change={({ detail }) => {
@@ -200,7 +203,7 @@
             <div class="separator" />
             {#if index === query.fields.steps.length - 1}
               <Icon
-                disabled={!editable}
+                disabled={disabled || !editable}
                 hoverable
                 name="AddCircle"
                 size="S"

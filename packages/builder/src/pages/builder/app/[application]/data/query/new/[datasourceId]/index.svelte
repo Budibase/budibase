@@ -1,7 +1,7 @@
 <script>
   import { params, redirect } from "@roxi/routify"
   import { database, datasources } from "stores/backend"
-  import QueryViewer from "components/integration/QueryViewer.svelte"
+  import QueryViewer from "components/integration/NewQueryViewer.svelte"
   import RestQueryViewer from "components/integration/RestQueryViewer.svelte"
   import { IntegrationTypes } from "constants/backend"
 
@@ -33,6 +33,8 @@
   {#if isRestQuery}
     <RestQueryViewer />
   {:else}
-    <QueryViewer {query} />
+    <QueryViewer
+      query={{ ...query, name: "Untitled query", transformer: "return data" }}
+    />
   {/if}
 {/if}

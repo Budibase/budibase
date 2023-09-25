@@ -5,6 +5,7 @@
 
   export let query
   export let label
+  export let disabled = false
 
   $: getPermissions(query)
 
@@ -33,6 +34,7 @@
       loaded = true
       return
     }
+
     fetched = queryToFetch
     if (!queryToFetch || !queryToFetch._id) {
       roleId = Constants.Roles.BASIC

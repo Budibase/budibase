@@ -1,9 +1,11 @@
 <script>
-  import { Body, Heading, Layout } from "@budibase/bbui"
+  import { Body, Layout } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { getUserBindings } from "builderStore/dataBinding"
+  export let disabled = false
   export let bindable = true
   export let queryBindings = []
+  export let hideHeading = false
 
   const userBindings = getUserBindings()
 
@@ -14,9 +16,6 @@
 </script>
 
 <Layout noPadding={bindable} gap="S">
-  <div class="controls" class:height={!bindable}>
-    <Heading size="XS">Bindings</Heading>
-  </div>
   <Body size="S">
     {#if !bindable}
       Bindings come in two parts: the binding name, and a default/fallback
@@ -29,9 +28,11 @@
   </Body>
   <div class="bindings" class:bindable>
     <KeyValueBuilder
+      {disabled}
       bind:object={internalBindings}
       tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
       name="binding"
+      customButtonText="Bindings"
       headings
       keyPlaceholder="Binding name"
       valuePlaceholder="Default"
@@ -42,15 +43,3 @@
     />
   </div>
 </Layout>
-
-<style>
-  .controls {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .height {
-    height: 40px;
-  }
-</style>

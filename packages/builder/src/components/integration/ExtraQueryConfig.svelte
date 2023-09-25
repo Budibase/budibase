@@ -8,6 +8,7 @@
   export let populateExtraQuery
   export let config
   export let query
+  export let disabled = false
 
   $: extraFields = Object.keys(config).map(key => ({
     ...config[key],
@@ -22,6 +23,7 @@
     <Label>{displayName}</Label>
     {#if type === "string"}
       <Input
+        {disabled}
         on:change={() => populateExtraQuery(extraQueryFields)}
         bind:value={extraQueryFields[key]}
       />
@@ -29,6 +31,7 @@
 
     {#if type === "list"}
       <Select
+        {disabled}
         on:change={() => populateExtraQuery(extraQueryFields)}
         bind:value={extraQueryFields[key]}
         options={config[key].data[query.queryVerb]}
