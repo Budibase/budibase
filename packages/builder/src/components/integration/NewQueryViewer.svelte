@@ -29,6 +29,7 @@
   let loading = false
   let modified = false
   let valid = false
+  let scrolling = false
   let showSidePanel = false
   let nameError
 
@@ -131,6 +132,10 @@
   function populateExtraQuery(extraQueryFields) {
     newQuery.fields.extra = extraQueryFields
   }
+
+  const handleScroll = e => {
+    scrolling = e.target.scrollTop !== 0
+  }
 </script>
 
 <QueryViewerSavePromptModal
@@ -139,9 +144,9 @@
 />
 <div class="queryViewer">
   <div class="main">
-    <div class="header">
+    <div class="header" class:scrolling>
       <div class="title">
-        <Body>
+        <Body size="S">
           {newQuery.name || "Untitled query"}<span class="unsaved"
             >{modified ? "*" : ""}</span
           >
@@ -179,101 +184,108 @@
       </div>
     </div>
 
-    <div class="body">
+    <div class="body" on:scroll={handleScroll}>
       <div class="bodyInner">
-        <div class="config">
-          <div class="config-field">
-            <Label>Name</Label>
-            <Input
-              disabled={loading}
-              value={newQuery.name}
-              on:input={e => {
-                let newValue = e.target.value || ""
-                if (newValue.match(ValidQueryNameRegex)) {
-                  newQuery.name = newValue.trim()
-                  nameError = null
-                } else {
-                  nameError = "Invalid query name"
-                }
-              }}
-              error={nameError}
-            />
-            {#if integration.query}
-              <Label>Function</Label>
-              <Select
-                disabled={loading}
-                bind:value={newQuery.queryVerb}
-                on:change={resetDependentFields}
-                options={Object.keys(integration.query)}
-                getOptionLabel={verb =>
-                  integration.query[verb]?.displayName || capitalise(verb)}
-              />
-              <Label>Access</Label>
-              <AccessLevelSelect disabled={loading} query={newQuery} />
-              {#if integration?.extra && newQuery.queryVerb}
-                <ExtraQueryConfig
-                  disabled={loading}
-                  query={newQuery}
-                  {populateExtraQuery}
-                  config={integration.extra}
-                />
-              {/if}
-            {/if}
-          </div>
-        </div>
-
-        <Divider />
-
-        <div class="config">
-          <Heading size="S">Query</Heading>
-          <Body size="S">Todo placeholder text</Body>
-          <IntegrationQueryEditor
+        <div class="configField">
+          <Label>Name</Label>
+          <Input
             disabled={loading}
-            noLabel
-            {datasource}
-            bind:query={newQuery}
-            height={200}
-            schema={integration.query[newQuery.queryVerb]}
+            value={newQuery.name}
+            on:input={e => {
+              let newValue = e.target.value || ""
+              if (newValue.match(ValidQueryNameRegex)) {
+                newQuery.name = newValue.trim()
+                nameError = null
+              } else {
+                nameError = "Invalid query name"
+              }
+            }}
+            error={nameError}
           />
-        </div>
-        <Divider />
-        <div class="config">
-          <Heading size="S">Bindings</Heading>
-          {#key newQuery.parameters}
-            <div class="binding-wrap">
-              <BindingBuilder
+          {#if integration.query}
+            <Label>Function</Label>
+            <Select
+              disabled={loading}
+              bind:value={newQuery.queryVerb}
+              on:change={resetDependentFields}
+              options={Object.keys(integration.query)}
+              getOptionLabel={verb =>
+                integration.query[verb]?.displayName || capitalise(verb)}
+            />
+            <Label>Access</Label>
+            <AccessLevelSelect disabled={loading} query={newQuery} />
+            {#if integration?.extra && newQuery.queryVerb}
+              <ExtraQueryConfig
                 disabled={loading}
-                hideHeading
-                queryBindings={newQuery.parameters}
-                bindable={false}
-                on:change={e => {
-                  newQuery.parameters = e.detail.map(binding => {
-                    return {
-                      name: binding.name,
-                      default: binding.value,
-                    }
-                  })
-                }}
+                query={newQuery}
+                {populateExtraQuery}
+                config={integration.extra}
               />
-            </div>
-          {/key}
+            {/if}
+          {/if}
         </div>
+
         <Divider />
-        <div class="config">
-          <div class="help-heading">
-            <Heading size="S">Transformer</Heading>
-          </div>
+
+        <div class="heading">
+          <Heading weight="L" size="XS">Query</Heading>
+        </div>
+        <div class="copy">
+          <Body size="S">Todo placeholder text</Body>
+        </div>
+        <IntegrationQueryEditor
+          disabled={loading}
+          noLabel
+          {datasource}
+          bind:query={newQuery}
+          height={200}
+          schema={integration.query[newQuery.queryVerb]}
+        />
+
+        <Divider />
+
+        <div class="heading">
+          <Heading weight="L" size="XS">Bindings</Heading>
+        </div>
+        <div class="copy">
+          <Body size="S">
+            Bindings come in two parts: the binding name, and a default/fallback
+            value. These bindings can be used as Handlebars expressions throughout the
+            query.
+          </Body>
+        </div>
+        {#key newQuery.parameters}
+          <BindingBuilder
+            disabled={loading}
+            hideHeading
+            queryBindings={newQuery.parameters}
+            on:change={e => {
+              newQuery.parameters = e.detail.map(binding => {
+                return {
+                  name: binding.name,
+                  default: binding.value,
+                }
+              })
+            }}
+          />
+        {/key}
+
+        <Divider />
+        <div class="heading">
+          <Heading weight="L" size="XS">Transformer</Heading>
+        </div>
+        <div class="copy">
           <Body size="S">
             Add a JavaScript function to transform the query result.
           </Body>
-          <CodeMirrorEditor
-            disabled={loading}
-            height={200}
-            value={newQuery.transformer}
-            resize="vertical"
-            on:change={e => (newQuery.transformer = e.detail)}
-          />
         </div>
+        <CodeMirrorEditor
+          disabled={loading}
+          height={200}
+          value={newQuery.transformer}
+          resize="vertical"
+          on:change={e => (newQuery.transformer = e.detail)}
+        />
       </div>
     </div>
   </div>
@@ -306,7 +318,7 @@
   }
 
   .queryViewer :global(.spectrum-Divider) {
-    margin: 50px 0;
+    margin: 35px 0;
   }
 
   .main {
@@ -320,6 +332,12 @@
     align-items: center;
     padding: 10px 10px 10px 16px;
     display: flex;
+    border-bottom: 2px solid transparent;
+    transition: border-bottom 130ms ease-out;
+  }
+
+  .header.scrolling {
+    border-bottom: var(--border-light);
   }
 
   .body {
@@ -367,11 +385,27 @@
     color: var(--grey-3);
   }
 
-  .config-field {
+  .configField {
     display: grid;
     grid-template-columns: 20% 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+
+  .configField :global(label) {
+    color: var(--grey-6);
+  }
+
+  .heading {
+    margin-bottom: 8px;
+  }
+
+  .copy {
+    margin-bottom: 14px;
+  }
+
+  .copy :global(p) {
+    color: var(--grey-7);
   }
 
   .sidePanel {

@@ -1,5 +1,4 @@
 <script>
-  import { Body, Layout } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { getUserBindings } from "builderStore/dataBinding"
   export let disabled = false
@@ -15,31 +14,17 @@
   }, {})
 </script>
 
-<Layout noPadding={bindable} gap="S">
-  <Body size="S">
-    {#if !bindable}
-      Bindings come in two parts: the binding name, and a default/fallback
-      value. These bindings can be used as Handlebars expressions throughout the
-      query.
-    {:else}
-      Enter a value for each binding. The default values will be used for any
-      values left blank.
-    {/if}
-  </Body>
-  <div class="bindings" class:bindable>
-    <KeyValueBuilder
-      {disabled}
-      bind:object={internalBindings}
-      tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
-      name="binding"
-      customButtonText="Bindings"
-      headings
-      keyPlaceholder="Binding name"
-      valuePlaceholder="Default"
-      bindings={[...userBindings]}
-      bindingDrawerLeft="260px"
-      allowHelpers={false}
-      on:change
-    />
-  </div>
-</Layout>
+<KeyValueBuilder
+  {disabled}
+  bind:object={internalBindings}
+  tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
+  name="binding"
+  customButtonText="Bindings"
+  headings
+  keyPlaceholder="Binding name"
+  valuePlaceholder="Default"
+  bindings={[...userBindings]}
+  bindingDrawerLeft="260px"
+  allowHelpers={false}
+  on:change
+/>
