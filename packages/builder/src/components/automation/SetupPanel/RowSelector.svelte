@@ -35,7 +35,6 @@
     link: "ro_ta_123_456",
     longform: "long form text",
   }
-  $: rowControl = block.rowControl
   $: {
     table = $tables.list.find(table => table._id === value?.tableId)
     schemaFields = Object.entries(table?.schema ?? {})
@@ -128,47 +127,25 @@
 {#if schemaFields.length}
   <div class="schema-fields">
     {#each schemaFields as [field, schema]}
-      {#if !schema.autocolumn}
-        {#if schema.type !== "attachment"}
-          {#if !rowControl}
-            <RowSelectorTypes
-              {isTestModal}
-              {field}
-              {schema}
-              bindings={parsedBindings}
-              {value}
-              {onChange}
-            />
-          {:else}
-            <div>
-              <svelte:component
-                this={isTestModal ? ModalBindableInput : DrawerBindableInput}
-                placeholder={placeholders[schema.type]}
-                panel={AutomationBindingPanel}
-                value={Array.isArray(value[field])
-                  ? value[field].join(",")
-                  : value[field]}
-                on:change={e => onChange(e, field, schema.type)}
-                label={field}
-                type="string"
-                bindings={parsedBindings}
-                fillWidth={true}
-                allowJS={true}
-                updateOnChange={false}
-              />
-              {#if isUpdateRow && schema.type === "link"}
-                <div class="checkbox-field">
-                  <Checkbox
-                    value={meta.fields?.[field]?.clearRelationships}
-                    text={"Clear relationships if empty?"}
-                    size={"S"}
-                    on:change={e => onChangeSetting(e, field)}
-                  />
-                </div>
-              {/if}
-            </div>
-          {/if}
-        {/if}
+      {#if !schema.autocolumn && schema.type !== "attachment"}
+        <RowSelectorTypes
+          {isTestModal}
+          {field}
+          {schema}
+          bindings={parsedBindings}
+          {value}
+          {onChange}
+        />
+      {/if}
+      {#if isUpdateRow && schema.type === "link"}
+        <div class="checkbox-field">
+          <Checkbox
+            value={meta.fields?.[field]?.clearRelationships}
+            text={"Clear relationships if empty?"}
+            size={"S"}
+            on:change={e => onChangeSetting(e, field)}
+          />
+        </div>
       {/if}
     {/each}
   </div>
