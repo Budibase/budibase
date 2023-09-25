@@ -48,8 +48,11 @@
 
   let optionsObj = {}
   let initialValuesProcessed
+
   $: {
     if (!initialValuesProcessed && primaryDisplay) {
+      // Persist the initial values as options, allowing them to be present in the dropdown,
+      // even if they are not in the inital fetch results
       initialValuesProcessed = true
       optionsObj = {
         ...optionsObj,
@@ -63,19 +66,22 @@
       }
     }
   }
-  $: optionsObj = {
-    ...optionsObj,
-    ...($fetch.rows || [])?.reduce((accumulator, row) => {
-      accumulator[row._id] = row
-      return accumulator
-    }, {}),
-  }
 
-  $: options = Object.values(optionsObj)
+  $: enrichedOptions = enrichOptions(optionsObj, $fetch.rows)
+  const enrichOptions = (optionsObj, fetchResults) => {
+    const result = {
+      ...optionsObj,
+      ...(fetchResults || [])?.reduce((accumulator, row) => {
+        accumulator[row._id] = row
+        return accumulator
+      }, {}),
+    }
+    return Object.values(result)
+  }
   $: {
     // We don't want to reorder while the dropdown is open, to avoid UX jumps
     if (!open) {
-      options = options.sort((a, b) => {
+      enrichedOptions = enrichedOptions.sort((a, b) => {
         const selectedValues = flatten(fieldState?.value) || []
 
         const aIsSelected = selectedValues.find(v => v === a._id)
@@ -166,7 +172,7 @@
   {#if fieldState}
     <svelte:component
       this={component}
-      {options}
+      options={enrichedOptions}
       {autocomplete}
       value={selectedValue}
       on:change={multiselect ? multiHandler : singleHandler}
