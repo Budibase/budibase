@@ -77,13 +77,11 @@
       $fetch.loaded &&
       !Object.keys($fetch.query?.string || {}).length &&
       !$fetch.hasNextPage
-    if (!allRowsFetched) {
-      // Don't request until we have the primary display
-      if (primaryDisplay) {
-        fetch.update({
-          query: { string: { [primaryDisplay]: searchTerm } },
-        })
-      }
+    // Don't request until we have the primary display
+    if (!allRowsFetched && primaryDisplay) {
+      fetch.update({
+        query: { string: { [primaryDisplay]: searchTerm } },
+      })
     }
   }
 
