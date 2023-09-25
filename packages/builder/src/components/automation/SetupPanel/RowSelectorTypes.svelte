@@ -58,7 +58,11 @@
     on:change={e => onChange(e, field)}
   />
 {:else if schema.type === "longform"}
-  <TextArea label={field} bind:value={value[field]} />
+  <TextArea
+    label={field}
+    bind:value={value[field]}
+    on:change={e => onChange(e, field)}
+  />
 {:else if schema.type === "json"}
   <span>
     <Label>{field}</Label>
