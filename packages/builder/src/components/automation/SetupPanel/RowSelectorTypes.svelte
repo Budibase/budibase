@@ -55,6 +55,7 @@
     bind:value={value[field]}
     label={field}
     options={schema.constraints.inclusion}
+    on:change={e => onChange(e, field)}
   />
 {:else if schema.type === "longform"}
   <TextArea label={field} bind:value={value[field]} />
