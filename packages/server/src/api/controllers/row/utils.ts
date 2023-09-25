@@ -175,3 +175,7 @@ export function removeEmptyFilters(filters: SearchFilters) {
   }
   return filters
 }
+
+export function isUserMetadataTable(tableId: string) {
+  return tableId === InternalTables.USER_METADATA
+}

@@ -92,7 +92,7 @@ describe("no user role update in free", () => {
 describe("no user role update in business", () => {
   beforeAll(() => {
     updateMock()
-    mocks.licenses.usePublicApiUserRoles()
+    mocks.licenses.useExpandedPublicApi()
   })
 
   it("should allow 'roles' to be updated", async () => {
@@ -105,7 +105,7 @@ describe("no user role update in business", () => {
   })
 
   it("should allow 'admin' to be updated", async () => {
-    mocks.licenses.usePublicApiUserRoles()
+    mocks.licenses.useExpandedPublicApi()
     const res = await makeRequest("post", "/users", {
       ...base(),
       admin: { global: true },
@@ -115,7 +115,7 @@ describe("no user role update in business", () => {
   })
 
   it("should allow 'builder' to be updated", async () => {
-    mocks.licenses.usePublicApiUserRoles()
+    mocks.licenses.useExpandedPublicApi()
     const res = await makeRequest("post", "/users", {
       ...base(),
       builder: { global: true },

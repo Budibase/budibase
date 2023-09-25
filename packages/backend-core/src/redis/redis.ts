@@ -250,7 +250,7 @@ class RedisWrapper {
     const prefixedKeys = keys.map(key => addDbPrefix(db, key))
     let response = await this.getClient().mget(prefixedKeys)
     if (Array.isArray(response)) {
-      let final: any = {}
+      let final: Record<string, any> = {}
       let count = 0
       for (let result of response) {
         if (result) {
