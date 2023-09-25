@@ -1,12 +1,8 @@
 <script>
   import { tables } from "stores/backend"
   import { Select, Checkbox } from "@budibase/bbui"
-  import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
-  import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
-  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
-  import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
 
   const dispatch = createEventDispatcher()
 

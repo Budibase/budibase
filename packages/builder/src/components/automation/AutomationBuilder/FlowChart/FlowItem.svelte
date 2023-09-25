@@ -7,7 +7,6 @@
     Detail,
     Modal,
     Button,
-    Select,
     ActionButton,
     notifications,
     Label,
