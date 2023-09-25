@@ -87,6 +87,10 @@
     return links.every(link => schema?.constraints?.inclusion?.includes(link))
   }
 
+  const isValidLongFormText = value => {
+    return !isJSBinding(value)
+  }
+
   const isValid = value => {
     if (type?.startsWith("date")) {
       return isValidDate(value)
@@ -97,7 +101,20 @@
     if (type === "array") {
       return hasValidOptions(value)
     }
+    if (type === "longform") {
+      return isValidLongFormText(value)
+    }
     return true
+  }
+
+  const getIconClass = value => {
+    if (type === "longform" && isValidLongFormText(value)) {
+      return "text-area-slot-icon"
+    }
+    if (type !== "string" && type !== "number") {
+      return "slot-icon"
+    }
+    return ""
   }
 </script>
 
@@ -135,9 +152,7 @@
   {/if}
   {#if !disabled}
     <div
-      class={`icon ${
-        type !== "string" && type !== "number" ? "slot-icon" : ""
-      }`}
+      class={`icon ${getIconClass(value)}`}
       on:click={() => {
         bindingDrawer.show()
       }}
@@ -184,6 +199,12 @@
     border-right: 1px solid var(--spectrum-alias-border-color);
     border-top-right-radius: 0px !important;
     border-bottom-right-radius: 0px !important;
+  }
+
+  .text-area-slot-icon {
+    border-bottom: 1px solid var(--spectrum-alias-border-color);
+    border-bottom-right-radius: 0px !important;
+    top: 26px !important;
   }
 
   .icon {
