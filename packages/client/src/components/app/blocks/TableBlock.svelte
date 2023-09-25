@@ -249,7 +249,7 @@
             props={{
               dataSource,
               saveButtonLabel: sidePanelSaveLabel || "Save", //always show
-              deleteButtonLabel: deleteLabel, //respect config
+              deleteButtonLabel: deleteLabel == "" ? "" : "Delete",
               actionType: "Update",
               rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
               fields: sidePanelFields || normalFields,
