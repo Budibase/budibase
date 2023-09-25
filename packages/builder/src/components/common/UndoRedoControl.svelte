@@ -38,14 +38,12 @@
     hoverable
     on:click={store.undo}
     disabled={!$store.canUndo}
-    tooltip="Undo latest change"
   />
   <Icon
     name="Redo"
     hoverable
     on:click={store.redo}
     disabled={!$store.canRedo}
-    tooltip="Redo latest undo"
   />
 </div>
 
