@@ -22,6 +22,7 @@
   let fieldSchema
   let tableDefinition
   let searchTerm
+  let open
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
@@ -68,6 +69,26 @@
       accumulator[row._id] = row
       return accumulator
     }, {}),
+  }
+
+  $: options = Object.values(optionsObj)
+  $: {
+    // We don't want to reorder while the dropdown is open, to avoid UX jumps
+    if (!open) {
+      options = options.sort((a, b) => {
+        const selectedValues = flatten(fieldState?.value) || []
+
+        const aIsSelected = selectedValues.find(v => v === a._id)
+        const bIsSelected = selectedValues.find(v => v === b._id)
+        if (aIsSelected && !bIsSelected) {
+          return -1
+        } else if (!aIsSelected && bIsSelected) {
+          return 1
+        }
+
+        return a[primaryDisplay] > b[primaryDisplay]
+      })
+    }
   }
 
   $: fetchRows(searchTerm, primaryDisplay)
@@ -145,7 +166,7 @@
   {#if fieldState}
     <svelte:component
       this={component}
-      options={Object.values(optionsObj)}
+      {options}
       {autocomplete}
       value={selectedValue}
       on:change={multiselect ? multiHandler : singleHandler}
@@ -156,9 +177,9 @@
       getOptionLabel={getDisplayName}
       getOptionValue={option => option._id}
       {placeholder}
-      sort
       bind:searchTerm
       loading={$fetch.loading}
+      bind:open
     />
   {/if}
 </Field>
