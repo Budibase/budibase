@@ -5,7 +5,7 @@
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
     "@nx/js": "16.4.3",
     "@rollup/plugin-json": "^4.0.2",
-    "@typescript-eslint/parser": "5.45.0",
+    "@typescript-eslint/parser": "6.7.2",
     "esbuild": "^0.18.17",
     "esbuild-node-externals": "^1.8.0",
     "eslint": "^8.44.0",
