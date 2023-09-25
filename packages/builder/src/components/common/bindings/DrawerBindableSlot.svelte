@@ -43,7 +43,7 @@
   })
 
   const onChange = value => {
-    if (type === "link" && hasValidLinks(value)) {
+    if (type === "link" && value && hasValidLinks(value)) {
       currentVal = value.split(",")
     } else {
       currentVal = readableToRuntimeBinding(bindings, value)
@@ -73,7 +73,7 @@
   }
 
   const isValid = value => {
-    if (type === "date") {
+    if (type?.startsWith("date")) {
       return isValidDate(value)
     }
     if (type === "link") {
@@ -99,11 +99,11 @@
       class="icon"
       on:click={() => {
         if (!isJS) {
-          value = ""
+          dispatch("change", "")
         }
       }}
     >
-      <Icon disabled={isJS} size="S" name="Cancel" />
+      <Icon disabled={isJS} size="S" name="Close" />
     </div>
   {:else}
     <slot

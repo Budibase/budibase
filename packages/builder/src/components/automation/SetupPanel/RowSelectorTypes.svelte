@@ -35,6 +35,7 @@
 <DrawerBindableSlot
   fillWidth
   title={value.title}
+  label={field}
   panel={AutomationBindingPanel}
   type={schema.type}
   value={value[field]}
