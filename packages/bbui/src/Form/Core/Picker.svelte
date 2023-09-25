@@ -261,12 +261,13 @@
           </li>
         {/each}
       {/if}
-      {#if loading}
-        <li class="spectrum-Menu-item loading">
-          <ProgressCircle size="S" />
-        </li>
-      {/if}
     </ul>
+
+    {#if loading}
+      <div class="loading" class:loading--withAutocomplete={autocomplete}>
+        <ProgressCircle size="S" />
+      </div>
+    {/if}
 
     {#if footer}
       <div class="footer">
@@ -381,6 +382,12 @@
   }
 
   .loading {
+    position: fixed;
     justify-content: center;
+    right: var(--spacing-s);
+    top: var(--spacing-s);
+  }
+  .loading--withAutocomplete {
+    top: calc(34px + var(--spacing-m));
   }
 </style>
