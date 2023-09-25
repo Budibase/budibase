@@ -72,10 +72,13 @@
     const result = {
       ...optionsObj,
       ...(fetchResults || [])?.reduce((accumulator, row) => {
-        accumulator[row._id] = row
+        if (!optionsObj[row._id]) {
+          accumulator[row._id] = row
+        }
         return accumulator
       }, {}),
     }
+
     return Object.values(result)
   }
   $: {
