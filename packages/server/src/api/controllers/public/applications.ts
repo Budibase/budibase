@@ -2,9 +2,11 @@ import { db as dbCore, context } from "@budibase/backend-core"
 import { search as stringSearch, addRev } from "./utils"
 import * as controller from "../application"
 import * as deployController from "../deploy"
+import * as backupController from "../backup"
 import { Application } from "../../../definitions/common"
 import { UserCtx } from "@budibase/types"
 import { Next } from "koa"
+import { sdk as proSdk } from "@budibase/pro"
 
 function fixAppID(app: Application, params: any) {
   if (!params) {
@@ -80,6 +82,8 @@ export async function destroy(ctx: UserCtx, next: Next) {
 export async function unpublish(ctx: UserCtx, next: Next) {
   await context.doInAppContext(ctx.params.appId, async () => {
     await controller.unpublish(ctx)
+    ctx.body = undefined
+    ctx.status = 204
     await next()
   })
 }
@@ -91,12 +95,22 @@ export async function publish(ctx: UserCtx, next: Next) {
   })
 }
 
+// get licensed endpoints from pro
+export const importToApp = proSdk.publicApi.applications.buildImportFn(
+  controller.importToApp
+)
+export const exportApp = proSdk.publicApi.applications.buildExportFn(
+  backupController.exportAppDump
+)
+
 export default {
   create,
   update,
   read,
   destroy,
   search,
-  publish,
   unpublish,
+  publish,
+  importToApp,
+  exportApp,
 }
