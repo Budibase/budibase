@@ -1,3 +1,5 @@
+import { writable } from "svelte/store"
+
 export { organisation } from "./organisation"
 export { users } from "./users"
 export { admin } from "./admin"
@@ -14,3 +16,5 @@ export { environment } from "./environment"
 export { menu } from "./menu"
 export { auditLogs } from "./auditLogs"
 export { features } from "./features"
+
+export const sideBarCollapsed = writable(false)
