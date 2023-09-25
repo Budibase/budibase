@@ -2,7 +2,7 @@
   import "@spectrum-css/picker/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onDestroy } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Search from "./Search.svelte"
   import Icon from "../../Icon/Icon.svelte"
@@ -10,6 +10,7 @@
   import Popover from "../../Popover/Popover.svelte"
   import Tags from "../../Tags/Tags.svelte"
   import Tag from "../../Tags/Tag.svelte"
+  import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
 
   export let id = null
   export let disabled = false
@@ -35,19 +36,20 @@
   export let autoWidth = false
   export let autocomplete = false
   export let sort = false
-  export let fetchTerm = null
-  export let useFetch = false
+  export let searchTerm = null
   export let customPopoverHeight
   export let customPopoverOffsetBelow
   export let customPopoverMaxHeight
   export let align = "left"
   export let footer = null
   export let customAnchor = null
+  export let loading
+
   const dispatch = createEventDispatcher()
 
-  let searchTerm = null
   let button
   let popover
+  let component
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -82,7 +84,7 @@
   }
 
   const getFilteredOptions = (options, term, getLabel) => {
-    if (autocomplete && term && !fetchTerm) {
+    if (autocomplete && term) {
       const lowerCaseTerm = term.toLowerCase()
       return options.filter(option => {
         return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
@@ -90,6 +92,20 @@
     }
     return options
   }
+
+  const onScroll = e => {
+    const scrollPxThreshold = 100
+    const scrollPositionFromBottom =
+      e.target.scrollHeight - e.target.clientHeight - e.target.scrollTop
+    if (scrollPositionFromBottom < scrollPxThreshold) {
+      dispatch("loadMore")
+    }
+  }
+
+  $: component?.addEventListener("scroll", onScroll)
+  onDestroy(() => {
+    component?.removeEventListener("scroll", null)
+  })
 </script>
 
 <button
@@ -163,14 +179,13 @@
   >
     {#if autocomplete}
       <Search
-        value={useFetch ? fetchTerm : searchTerm}
-        on:change={event =>
-          useFetch ? (fetchTerm = event.detail) : (searchTerm = event.detail)}
+        value={searchTerm}
+        on:change={event => (searchTerm = event.detail)}
         {disabled}
         placeholder="Search"
       />
     {/if}
-    <ul class="spectrum-Menu" role="listbox">
+    <ul class="spectrum-Menu" role="listbox" bind:this={component}>
       {#if placeholderOption}
         <li
           class="spectrum-Menu-item placeholder"
@@ -248,6 +263,12 @@
       {/if}
     </ul>
 
+    {#if loading}
+      <div class="loading" class:loading--withAutocomplete={autocomplete}>
+        <ProgressCircle size="S" />
+      </div>
+    {/if}
+
     {#if footer}
       <div class="footer">
         {footer}
@@ -323,18 +344,19 @@
   /* Search styles inside popover */
   .popover-content :global(.spectrum-Search) {
     margin-top: -1px;
-    margin-left: -1px;
-    width: calc(100% + 2px);
+    width: 100%;
   }
   .popover-content :global(.spectrum-Search input) {
     height: auto;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+    border-left: 0;
+    border-right: 0;
     padding-top: var(--spectrum-global-dimension-size-100);
     padding-bottom: var(--spectrum-global-dimension-size-100);
   }
   .popover-content :global(.spectrum-Search .spectrum-ClearButton) {
-    right: 1px;
+    right: 2px;
     top: 2px;
   }
   .popover-content :global(.spectrum-Search .spectrum-Textfield-icon) {
@@ -358,5 +380,15 @@
 
   .option-tag :global(.spectrum-Tags-item > .spectrum-Icon) {
     margin-top: 2px;
+  }
+
+  .loading {
+    position: fixed;
+    justify-content: center;
+    right: var(--spacing-s);
+    top: var(--spacing-s);
+  }
+  .loading--withAutocomplete {
+    top: calc(34px + var(--spacing-m));
   }
 </style>

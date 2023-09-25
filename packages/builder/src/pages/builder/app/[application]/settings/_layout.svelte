@@ -32,9 +32,9 @@
             active={$isActive("./embed")}
           />
           <SideNavItem
-            text="Export"
-            url={$url("./export")}
-            active={$isActive("./export")}
+            text="Export/Import"
+            url={$url("./exportImport")}
+            active={$isActive("./exportImport")}
           />
           <SideNavItem
             text="Name and URL"
