@@ -22,6 +22,7 @@
   export let updateOnChange = true
   export let drawerLeft
   export let type
+  export let schema
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -44,6 +45,8 @@
 
   const onChange = value => {
     if (type === "link" && value && hasValidLinks(value)) {
+      currentVal = value.split(",")
+    } else if (type === "array" && value && hasValidOptions(value)) {
       currentVal = value.split(",")
     } else {
       currentVal = readableToRuntimeBinding(bindings, value)
@@ -72,12 +75,27 @@
     return links.every(link => link.startsWith("ro_"))
   }
 
+  const hasValidOptions = value => {
+    let links = []
+    if (Array.isArray(value)) {
+      links = value
+    } else if (value && typeof value === "string") {
+      links = value.split(",")
+    } else {
+      return !value
+    }
+    return links.every(link => schema?.constraints?.inclusion?.includes(link))
+  }
+
   const isValid = value => {
     if (type?.startsWith("date")) {
       return isValidDate(value)
     }
     if (type === "link") {
       return hasValidLinks(value)
+    }
+    if (type === "array") {
+      return hasValidOptions(value)
     }
     return true
   }
