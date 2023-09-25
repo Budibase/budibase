@@ -84,8 +84,7 @@
       if (Array.isArray(value)) {
         return value
       }
-
-      return [value]
+      return value.split(",").map(x => x.trim())
     }
 
     if (type === "json") {
@@ -147,7 +146,7 @@
                 placeholder={placeholders[schema.type]}
                 panel={AutomationBindingPanel}
                 value={Array.isArray(value[field])
-                  ? value[field].join(" ")
+                  ? value[field].join(",")
                   : value[field]}
                 on:change={e => onChange(e, field, schema.type)}
                 label={field}
