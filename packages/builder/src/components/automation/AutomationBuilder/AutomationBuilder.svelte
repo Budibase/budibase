@@ -1,6 +1,7 @@
 <script>
   import { selectedAutomation } from "builderStore"
   import Flowchart from "./FlowChart/FlowChart.svelte"
+  // Test
 </script>
 
 {#if $selectedAutomation}
