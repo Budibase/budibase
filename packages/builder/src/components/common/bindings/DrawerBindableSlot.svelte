@@ -48,6 +48,8 @@
       currentVal = value.split(",")
     } else if (type === "array" && value && hasValidOptions(value)) {
       currentVal = value.split(",")
+    } else if (type === "boolean" && isValidBoolean(value)) {
+      currentVal = value === "true" || value === true
     } else {
       currentVal = readableToRuntimeBinding(bindings, value)
     }
@@ -91,6 +93,15 @@
     return !isJSBinding(value)
   }
 
+  const isValidBoolean = value => {
+    return (
+      typeof value === "boolean" ||
+      value === "false" ||
+      value === "true" ||
+      value == ""
+    )
+  }
+
   const isValid = value => {
     if (type?.startsWith("date")) {
       return isValidDate(value)
@@ -104,6 +115,9 @@
     if (type === "longform") {
       return isValidLongFormText(value)
     }
+    if (type === "boolean") {
+      return isValidBoolean(value)
+    }
     return true
   }
 
@@ -111,7 +125,7 @@
     if (type === "longform" && isValidLongFormText(value)) {
       return "text-area-slot-icon"
     }
-    if (type !== "string" && type !== "number") {
+    if (type !== "string" && type !== "number" && type !== "boolean") {
       return "slot-icon"
     }
     return ""
