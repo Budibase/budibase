@@ -13,7 +13,7 @@
   export let borderRight = false
   export let wide = false
   export let extraWide = false
-  export let closeButtonIcon = 'Close'
+  export let closeButtonIcon = "Close"
 
   $: customHeaderContent = $$slots["panel-header-content"]
 </script>

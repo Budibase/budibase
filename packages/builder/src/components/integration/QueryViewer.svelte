@@ -92,7 +92,7 @@
       responseRows = response.rows
 
       if (Object.keys(newQuery.schema).length === 0) {
-        newQuery.schema = response.schema;
+        newQuery.schema = response.schema
       }
 
       notifications.success("Query executed successfully")
