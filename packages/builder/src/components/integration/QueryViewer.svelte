@@ -11,6 +11,7 @@
     Body,
     Divider,
     Button,
+    AbsTooltip
   } from "@budibase/bbui"
   import { capitalise } from "helpers"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
@@ -172,28 +173,30 @@
             <Icon size="S" name="Play" />
             Run query</Button
         >
-        <Button
-          on:click={async () => {
-            const response = await saveQuery()
+        <div class="tooltip" title="Run your query to enable saving">
+          <Button
+            on:click={async () => {
+              const response = await saveQuery()
 
-            // When creating a new query the initally passed in query object will have no id.
-            if (response._id && !newQuery._id) {
-              // Set the comparison query hash to match the new query so that the user doesn't
-              // get nagged when navigating to the edit view
-              queryHash = JSON.stringify(newQuery)
-              $goto(`../../${response._id}`)
-            }
-          }}
-          disabled={loading ||
-            !valid ||
-            !newQuery.name ||
-            nameError ||
-            rows.length === 0}
-          overBackground
-        >
-          <Icon size="S" name="SaveFloppy" />
-          Save
-        </Button>
+              // When creating a new query the initally passed in query object will have no id.
+              if (response._id && !newQuery._id) {
+                // Set the comparison query hash to match the new query so that the user doesn't
+                // get nagged when navigating to the edit view
+                queryHash = JSON.stringify(newQuery)
+                $goto(`../../${response._id}`)
+              }
+            }}
+            disabled={loading ||
+              !valid ||
+              !newQuery.name ||
+              nameError ||
+              rows.length === 0}
+            overBackground
+          >
+            <Icon size="S" name="SaveFloppy" />
+            Save
+          </Button>
+        </div>
       </div>
     </div>
 
@@ -388,6 +391,10 @@
 
   .controls {
     flex-shrink: 0;
+  }
+
+  .tooltip {
+    display: inline-block;
   }
 
   .controls :global(button) {
