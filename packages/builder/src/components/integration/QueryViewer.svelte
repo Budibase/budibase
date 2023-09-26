@@ -2,6 +2,7 @@
   import { goto } from "@roxi/routify"
   import { datasources, integrations, queries } from "stores/backend"
   import {
+    Icon, 
     Select,
     Input,
     Label,
@@ -39,6 +40,7 @@
   let integration
   let schemaType
 
+  let autoSchema = {}
   let rows = []
 
   const parseQuery = query => {
@@ -88,12 +90,14 @@
         return
       }
 
+      if (Object.keys(newQuery.schema).length === 0) {
+        // Assign this to a variable instead of directly to the newQuery.schema so that it doesn't instantly
+        // invalide the query after it's been validated
+        autoSchema = response.schema
+      }
+
       valid = true
       rows = response.rows
-
-      if (Object.keys(newQuery.schema).length === 0) {
-        newQuery.schema = response.schema
-      }
 
       notifications.success("Query executed successfully")
     } catch (error) {
@@ -112,7 +116,11 @@
     try {
       showSidePanel = true
       loading = true
-      const response = await queries.save(newQuery.datasourceId, newQuery)
+      const response = await queries.save(newQuery.datasourceId, 
+        { ...newQuery,
+          schema: Object.keys(newQuery.schema).length === 0 ? autoSchema : newQuery.schema
+        }
+      )
 
       notifications.success("Query saved successfully")
       return response
@@ -137,6 +145,7 @@
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
+
 </script>
 
 <QueryViewerSavePromptModal
@@ -158,7 +167,10 @@
           disabled={loading}
           on:click={runQuery}
           overBackground
-          icon="Play">Run query</Button
+            >
+
+            <Icon size="S" name="Play" />
+            Run query</Button
         >
         <Button
           on:click={async () => {
@@ -178,8 +190,8 @@
             nameError ||
             rows.length === 0}
           overBackground
-          icon="SaveFloppy"
         >
+          <Icon size="S" name="SaveFloppy" />
           Save
         </Button>
       </div>
@@ -309,7 +321,7 @@
         newQuery.schema = newSchema
       }}
       {rows}
-      schema={newQuery.schema}
+      schema={Object.keys(newQuery.schema).length === 0 ? autoSchema : newQuery.schema}
     />
   </div>
 </div>
@@ -393,6 +405,15 @@
     pointer-events: none;
     background-color: transparent;
     color: var(--grey-3);
+  }
+
+  .controls :global(span) {
+    display: flex;
+    align-items: center;
+  }
+
+  .controls :global(.icon) {
+    margin-right: 8px;
   }
 
   .configField {
