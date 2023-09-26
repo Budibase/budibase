@@ -73,6 +73,8 @@
     // Initial value for column name in other table for linked records
     fieldName: $tables.selected.name,
   }
+  let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
+  let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
 
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
@@ -95,6 +97,21 @@
 
   $: {
     if (editableColumn.type === LINK_TYPE) {
+      if (relationshipPart1 === PrettyRelationshipDefinitions.ONE) {
+        relationshipOpts2 = relationshipOpts2.filter(
+          opt => opt !== PrettyRelationshipDefinitions.ONE
+        )
+      } else {
+        relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
+      }
+
+      if (relationshipPart2 === PrettyRelationshipDefinitions.ONE) {
+        relationshipOpts1 = relationshipOpts1.filter(
+          opt => opt !== PrettyRelationshipDefinitions.ONE
+        )
+      } else {
+        relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
+      }
       // Determine the relationship type based on the selected values of both parts
       editableColumn.relationshipType = Object.entries(relationshipMap).find(
         ([_, parts]) =>
@@ -104,7 +121,6 @@
       editableColumn.tableId = relationshipTableIdSecondary
     }
   }
-
   const initialiseField = (field, savingColumn) => {
     isCreating = !field
     if (field && !savingColumn) {
@@ -564,6 +580,8 @@
       bind:relationshipTableIdPrimary={table.name}
       bind:relationshipTableIdSecondary
       bind:editableColumn
+      {relationshipOpts1}
+      {relationshipOpts2}
       {linkEditDisabled}
       {tableOptions}
       {errors}

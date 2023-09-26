@@ -10,6 +10,8 @@
   export let linkEditDisabled
   export let tableOptions
   export let errors
+  export let relationshipOpts1
+  export let relationshipOpts2
 </script>
 
 <div class="relationship-container">
@@ -17,7 +19,7 @@
     <Select
       disabled={linkEditDisabled}
       bind:value={relationshipPart1}
-      options={Object.values(PrettyRelationshipDefinitions)}
+      options={relationshipOpts1}
     />
   </div>
   <div class="relationship-label">in</div>
@@ -34,7 +36,7 @@
     <Select
       disabled={linkEditDisabled}
       bind:value={relationshipPart2}
-      options={Object.values(PrettyRelationshipDefinitions)}
+      options={relationshipOpts2}
       getOptionLabel={option => "To " + option.toLowerCase()}
     />
   </div>
