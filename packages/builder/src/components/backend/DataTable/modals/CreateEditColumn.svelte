@@ -5,7 +5,6 @@
     Label,
     Select,
     Toggle,
-    RadioGroup,
     Icon,
     DatePicker,
     Modal,
@@ -26,14 +25,15 @@
     ALLOWABLE_STRING_TYPES,
     ALLOWABLE_NUMBER_TYPES,
     SWITCHABLE_TYPES,
+    PrettyRelationshipDefinitions,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { truncate } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
+  import RelationshipSelector from "components/common/RelationshipSelector.svelte"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -57,6 +57,10 @@
   let indexes = [...($tables.selected.indexes || [])]
   let isCreating = undefined
 
+  let relationshipPart1 = PrettyRelationshipDefinitions.Many
+  let relationshipPart2 = PrettyRelationshipDefinitions.One
+
+  let relationshipTableIdSecondary = null
   let table = $tables.selected
   let confirmDeleteDialog
   let savingColumn
@@ -72,6 +76,33 @@
 
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
+  }
+
+  let relationshipMap = {
+    [RelationshipType.MANY_TO_ONE]: {
+      part1: PrettyRelationshipDefinitions.MANY,
+      part2: PrettyRelationshipDefinitions.ONE,
+    },
+    [RelationshipType.MANY_TO_MANY]: {
+      part1: PrettyRelationshipDefinitions.MANY,
+      part2: PrettyRelationshipDefinitions.MANY,
+    },
+    [RelationshipType.ONE_TO_MANY]: {
+      part1: PrettyRelationshipDefinitions.ONE,
+      part2: PrettyRelationshipDefinitions.MANY,
+    },
+  }
+
+  $: {
+    if (editableColumn.type === LINK_TYPE) {
+      // Determine the relationship type based on the selected values of both parts
+      editableColumn.relationshipType = Object.entries(relationshipMap).find(
+        ([_, parts]) =>
+          parts.part1 === relationshipPart1 && parts.part2 === relationshipPart2
+      )?.[0]
+      // Set the tableId based on the selected table
+      editableColumn.tableId = relationshipTableIdSecondary
+    }
   }
 
   const initialiseField = (field, savingColumn) => {
@@ -100,6 +131,16 @@
       }
     }
     allowedTypes = getAllowedTypes()
+
+    if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
+      relationshipTableIdSecondary = editableColumn.tableId
+      if (editableColumn.relationshipType in relationshipMap) {
+        const { part1, part2 } =
+          relationshipMap[editableColumn.relationshipType]
+        relationshipPart1 = part1
+        relationshipPart2 = part2
+      }
+    }
   }
 
   $: initialiseField(field, savingColumn)
@@ -157,7 +198,6 @@
     !uneditable &&
     editableColumn?.type !== AUTO_TYPE &&
     !editableColumn.autocolumn
-  $: relationshipOptions = getRelationshipOptions(editableColumn)
   $: external = table.type === "external"
   // in the case of internal tables the sourceId will just be undefined
   $: tableOptions = $tables.list.filter(
@@ -286,35 +326,6 @@
   function extractColumnNumber(columnName) {
     const match = columnName.match(/Column (\d+)/)
     return match ? parseInt(match[1]) : 0
-  }
-
-  function getRelationshipOptions(field) {
-    if (!field || !field.tableId) {
-      return null
-    }
-    const linkTable = tableOptions?.find(table => table._id === field.tableId)
-    if (!linkTable) {
-      return null
-    }
-    const thisName = truncate(table.name, { length: 14 }),
-      linkName = truncate(linkTable.name, { length: 14 })
-    return [
-      {
-        name: `Many ${thisName} rows → many ${linkName} rows`,
-        alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipType.MANY_TO_MANY,
-      },
-      {
-        name: `One ${linkName} row → many ${thisName} rows`,
-        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
-        value: RelationshipType.ONE_TO_MANY,
-      },
-      {
-        name: `One ${thisName} row → many ${linkName} rows`,
-        alt: `One ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipType.MANY_TO_ONE,
-      },
-    ]
   }
 
   function getAllowedTypes() {
@@ -547,30 +558,15 @@
       </div>
     </div>
   {:else if editableColumn.type === "link"}
-    <Select
-      label="Table"
-      disabled={linkEditDisabled}
-      bind:value={editableColumn.tableId}
-      options={tableOptions}
-      getOptionLabel={table => table.name}
-      getOptionValue={table => table._id}
-    />
-    {#if relationshipOptions && relationshipOptions.length > 0}
-      <RadioGroup
-        disabled={linkEditDisabled}
-        label="Define the relationship"
-        bind:value={editableColumn.relationshipType}
-        options={relationshipOptions}
-        getOptionLabel={option => option.name}
-        getOptionValue={option => option.value}
-        getOptionTitle={option => option.alt}
-      />
-    {/if}
-    <Input
-      disabled={linkEditDisabled}
-      label={`Column name in other table`}
-      bind:value={editableColumn.fieldName}
-      error={errors.relatedName}
+    <RelationshipSelector
+      bind:relationshipPart1
+      bind:relationshipPart2
+      bind:relationshipTableIdPrimary={table.name}
+      bind:relationshipTableIdSecondary
+      bind:editableColumn
+      {linkEditDisabled}
+      {tableOptions}
+      {errors}
     />
   {:else if editableColumn.type === FORMULA_TYPE}
     {#if !table.sql}
