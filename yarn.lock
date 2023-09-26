@@ -15418,11 +15418,6 @@ koa-compress@4.0.1:
     koa-is-json "^1.0.0"
     statuses "^2.0.0"
 
-koa-connect@2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/koa-connect/-/koa-connect-2.1.0.tgz#16bce0a917c4cb24233aaac83fbc5b83804b4a1c"
-  integrity sha512-O9pcFafHk0oQsBevlbTBlB9co+2RUQJ4zCzu3qJPmGlGoeEZkne+7gWDkecqDPSbCtED6LmhlQladxs6NjOnMQ==
-
 koa-convert@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/koa-convert/-/koa-convert-2.0.0.tgz#86a0c44d81d40551bae22fee6709904573eea4f5"
@@ -15487,16 +15482,6 @@ koa-send@5.0.1, koa-send@^5.0.0:
     debug "^4.1.1"
     http-errors "^1.7.3"
     resolve-path "^1.4.0"
-
-koa-session@5.12.0:
-  version "5.12.0"
-  resolved "https://registry.yarnpkg.com/koa-session/-/koa-session-5.12.0.tgz#1e6c6cea86b8ca2cca921c4a8881cfbfcc2628e0"
-  integrity sha512-2jBKF6Hp609Qh19NO4jT0Pehmp/49RiX0DetuCvSB6zmx32BRPOdNp6H6873xsvL9CyLGtaSJxvwxmAFBd1viw==
-  dependencies:
-    crc "^3.4.4"
-    debug "^3.1.0"
-    is-type-of "^1.0.0"
-    uuid "^3.3.2"
 
 koa-session@5.13.1:
   version "5.13.1"
