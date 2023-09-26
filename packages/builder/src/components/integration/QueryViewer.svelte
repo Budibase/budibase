@@ -29,7 +29,6 @@
 
   let loading = false
   let modified = false
-  let valid = false
   let scrolling = false
   let showSidePanel = false
   let nameError
@@ -45,7 +44,6 @@
 
   const parseQuery = query => {
     modified = false
-    valid = false
 
     datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
     integration = $integrations[datasource.source]
@@ -70,12 +68,7 @@
 
   const debouncedCheckIsModified = Utils.debounce(checkIsModified, 1000)
 
-  const markInvalid = () => {
-    valid = false
-  }
-
   $: debouncedCheckIsModified(newQuery)
-  $: markInvalid(newQuery)
 
   async function runQuery({ suppressErrors = true }) {
     try {
@@ -90,17 +83,16 @@
       }
 
       if (Object.keys(newQuery.schema).length === 0) {
-        // Assign this to a variable instead of directly to the newQuery.schema so that it doesn't instantly
-        // invalide the query after it's been validated
+        // Assign this to a variable instead of directly to the newQuery.schema so that a user
+        // can change the table they're querying and have the schema update until they first
+        // edit it
         autoSchema = response.schema
       }
 
-      valid = true
       rows = response.rows
 
       notifications.success("Query executed successfully")
     } catch (error) {
-      valid = false
       notifications.error(`Query Error: ${error.message}`)
 
       if (!suppressErrors) {
@@ -124,7 +116,6 @@
       notifications.success("Query saved successfully")
       return response
     } catch (error) {
-      valid = false
       notifications.error(error.message || "Error saving query")
     } finally {
       loading = false
@@ -184,7 +175,6 @@
               }
             }}
             disabled={loading ||
-              !valid ||
               !newQuery.name ||
               nameError ||
               rows.length === 0}
