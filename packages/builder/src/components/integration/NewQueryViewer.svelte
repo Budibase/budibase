@@ -233,11 +233,11 @@
         </div>
         <div class="copy">
           <Body size="S">
-            {#if schemaType === 'sql'}
+            {#if schemaType === "sql"}
               Add some SQL to query your data
-            {:else if schemaType === 'json'}
+            {:else if schemaType === "json"}
               Add some JSON to query your data
-            {:else if schemaType === 'fields'}
+            {:else if schemaType === "fields"}
               Add some fields to query your data
             {:else}
               Enter your query below

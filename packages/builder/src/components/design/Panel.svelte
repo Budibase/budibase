@@ -17,7 +17,13 @@
   $: customHeaderContent = $$slots["panel-header-content"]
 </script>
 
-<div class="panel" class:wide class:extraWide class:borderLeft class:borderRight>
+<div
+  class="panel"
+  class:wide
+  class:extraWide
+  class:borderLeft
+  class:borderRight
+>
   <div class="header" class:custom={customHeaderContent}>
     {#if showBackButton}
       <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
