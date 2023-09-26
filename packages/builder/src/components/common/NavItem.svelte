@@ -102,7 +102,7 @@
       </div>
     {/if}
     <div class="text" title={showTooltip ? text : null}>
-      {text}
+      <span title={text}>{text}</span>
       {#if selectedBy}
         <UserAvatars size="XS" users={selectedBy} />
       {/if}
@@ -227,9 +227,6 @@
   .text {
     font-weight: 600;
     font-size: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     flex: 1 1 auto;
     color: var(--spectrum-global-color-gray-900);
     order: 2;
@@ -237,6 +234,11 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+  .text span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .scrollable .text {
     flex: 0 0 auto;
