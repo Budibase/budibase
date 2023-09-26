@@ -422,6 +422,7 @@
   .sidePanel {
     height: 100%;
     width: 0;
+    overflow: hidden;
     transition: width 150ms;
   }
 

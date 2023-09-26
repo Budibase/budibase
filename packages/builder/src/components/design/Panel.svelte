@@ -13,6 +13,7 @@
   export let borderRight = false
   export let wide = false
   export let extraWide = false
+  export let closeButtonIcon = 'Close'
 
   $: customHeaderContent = $$slots["panel-header-content"]
 </script>
@@ -40,7 +41,7 @@
       </div>
     {/if}
     {#if showCloseButton}
-      <Icon name="Close" hoverable on:click={onClickCloseButton} />
+      <Icon name={closeButtonIcon} hoverable on:click={onClickCloseButton} />
     {/if}
   </div>
 
