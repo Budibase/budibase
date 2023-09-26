@@ -5,7 +5,6 @@
 
   export let query
   export let label
-  export let disabled = false
 
   $: getPermissions(query)
 
@@ -55,7 +54,6 @@
     <Label>{label}</Label>
   {/if}
   <Select
-    {disabled}
     value={roleId}
     on:change={e => updateRole(e.detail)}
     options={$roles}

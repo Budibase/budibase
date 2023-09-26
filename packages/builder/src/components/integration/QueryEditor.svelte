@@ -11,7 +11,6 @@
     LIGHT: "default",
   }
 
-  export let disabled = false
   export let label
   export let value = ""
   export let readOnly = false
@@ -172,22 +171,12 @@
   <Label small>{label}</Label>
 {/if}
 <div
-  class:disabled
   style={`--code-mirror-height: ${editorHeight}px; --code-mirror-width: ${editorWidth}px;`}
 >
   <textarea tabindex="0" bind:this={refs.editor} readonly {value} />
 </div>
 
 <style>
-  .disabled {
-    opacity: 50%;
-    pointer-events: none;
-  }
-
-  .disabled :global(.CodeMirror) {
-    pointer-events: none;
-  }
-
   textarea {
     visibility: hidden;
   }

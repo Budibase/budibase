@@ -15,7 +15,6 @@
 
   let dispatch = createEventDispatcher()
 
-  export let disabled = false
   export let defaults
   export let object = defaults || {}
   export let activity = {}
@@ -107,7 +106,6 @@
   >
     {#each fields as field, idx}
       <Input
-        {disabled}
         placeholder={keyPlaceholder}
         readonly={readOnly}
         bind:value={field.name}
@@ -115,7 +113,6 @@
       />
       {#if options}
         <Select
-          {disabled}
           bind:value={field.value}
           on:change={changed}
           {options}
@@ -128,7 +125,7 @@
             field.value = e.detail
             changed()
           }}
-          disabled={disabled || readOnly}
+          disabled={readOnly}
           value={field.value}
           allowJS={false}
           {allowHelpers}
@@ -137,7 +134,6 @@
         />
       {:else}
         <Input
-          {disabled}
           placeholder={valuePlaceholder}
           readonly={readOnly}
           bind:value={field.value}
@@ -146,21 +142,19 @@
       {/if}
       {#if toggle}
         <Toggle
-          {disabled}
           bind:value={fieldActivity[idx]}
           on:change={changed}
         />
       {/if}
       {#if !readOnly}
         <Icon
-          {disabled}
           hoverable
           name="Close"
           on:click={() => deleteEntry(idx)}
         />
       {/if}
       {#if menuItems?.length > 0 && showMenu}
-        <ActionMenu {disabled}>
+        <ActionMenu>
           <div slot="control" class="control icon">
             <Icon size="S" hoverable name="MoreSmallList" />
           </div>
@@ -177,7 +171,6 @@
 {#if !readOnly && !noAddButton}
   <div>
     <ActionButton
-      {disabled}
       icon="Add"
       secondary
       thin

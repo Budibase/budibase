@@ -4,7 +4,6 @@
 
   export let schema
   export let onSchemaChange = () => {}
-  export let disabled = false
 
   const handleChange = e => {
     let newSchema = {}
@@ -20,7 +19,6 @@
 
 {#key schema}
   <KeyValueBuilder
-    {disabled}
     on:change={handleChange}
     object={schema}
     name="field"

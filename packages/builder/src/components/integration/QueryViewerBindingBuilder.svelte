@@ -1,7 +1,6 @@
 <script>
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { getUserBindings } from "builderStore/dataBinding"
-  export let disabled = false
   export let bindable = true
   export let queryBindings = []
   export let hideHeading = false
@@ -15,7 +14,6 @@
 </script>
 
 <KeyValueBuilder
-  {disabled}
   bind:object={internalBindings}
   tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
   name="binding"

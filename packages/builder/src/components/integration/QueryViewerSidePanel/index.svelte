@@ -8,7 +8,6 @@
   export let rows
   export let schema
   export let onSchemaChange = () => {}
-  export let disabled = false
   export let onClose = () => {}
 
   const tabs = ["JSON", "Schema", "Preview"]
@@ -44,7 +43,7 @@
     {#if activeTab === "JSON"}
       <JSONPanel {schema} />
     {:else if activeTab === "Schema"}
-      <SchemaPanel {disabled} {onSchemaChange} {schema} />
+      <SchemaPanel {onSchemaChange} {schema} />
     {:else}
       <PreviewPanel {schema} {rows} />
     {/if}
