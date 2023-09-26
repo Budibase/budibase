@@ -54,7 +54,6 @@
     "@types/jest": "29.5.3",
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "^6.4.0",
-    "eslint": "^7.20.0",
     "renamer": "^4.0.0",
     "ts-node": "^10.9.1",
     "typescript": "5.2.2"
