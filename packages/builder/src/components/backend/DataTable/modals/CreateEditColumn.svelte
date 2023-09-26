@@ -511,7 +511,7 @@
         <DatePicker bind:value={editableColumn.constraints.datetime.latest} />
       </div>
     </div>
-    {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
+    {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER" && !editableColumn.dateOnly}
       <div>
         <div class="row">
           <Label>Time zones</Label>
@@ -531,6 +531,7 @@
         />
       </div>
     {/if}
+    <Toggle bind:value={editableColumn.dateOnly} text="Date only" />
   {:else if editableColumn.type === "number" && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">

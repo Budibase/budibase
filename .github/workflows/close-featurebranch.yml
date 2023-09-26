@@ -1,7 +1,8 @@
-name: deploy-featurebranch
+name: close-featurebranch
 
 on:
   pull_request:
+    types: [closed]
     branches:
       - develop
 
@@ -16,5 +17,5 @@ jobs:
           PAYLOAD_PR_NUMBER: ${{ github.ref }}
         with:
           repository: budibase/budibase-deploys
-          event: featurebranch-qa-deploy
+          event: featurebranch-qa-close
           github_pat: ${{ secrets.GH_ACCESS_TOKEN }}

@@ -1,3 +1,5 @@
+import { sdk } from "@budibase/shared-core"
+
 export const buildAppEndpoints = API => ({
   /**
    * Fetches screen definition for an app.
@@ -77,6 +79,22 @@ export const buildAppEndpoints = API => ({
     return await API.post({
       url: "/api/applications",
       body: app,
+      json: false,
+    })
+  },
+
+  /**
+   * Update an application using an export - the body
+   * should be of type FormData, with a "file" and a "password" if encrypted.
+   * @param appId The ID of the app to update - this will always be
+   * converted to development ID.
+   * @param body a FormData body with a file and password.
+   */
+  updateAppFromExport: async (appId, body) => {
+    const devId = sdk.applications.getDevAppID(appId)
+    return await API.post({
+      url: `/api/applications/${devId}/import`,
+      body,
       json: false,
     })
   },
