@@ -10,7 +10,6 @@
   export let linkEditDisabled
   export let tableOptions
   export let errors
-  $: console.log(relationshipPart1)
 </script>
 
 <div class="relationship-container">
