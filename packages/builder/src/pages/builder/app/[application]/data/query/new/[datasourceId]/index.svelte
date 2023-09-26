@@ -1,7 +1,7 @@
 <script>
   import { params, redirect } from "@roxi/routify"
   import { database, datasources } from "stores/backend"
-  import QueryViewer from "components/integration/NewQueryViewer.svelte"
+  import QueryViewer from "components/integration/QueryViewer.svelte"
   import RestQueryViewer from "components/integration/RestQueryViewer.svelte"
   import { IntegrationTypes } from "constants/backend"
 
