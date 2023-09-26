@@ -2,7 +2,7 @@
   import { goto } from "@roxi/routify"
   import { datasources, integrations, queries } from "stores/backend"
   import {
-    Icon, 
+    Icon,
     Select,
     Input,
     Label,
@@ -107,11 +107,13 @@
     try {
       showSidePanel = true
       loading = true
-      const response = await queries.save(newQuery.datasourceId, 
-        { ...newQuery,
-          schema: Object.keys(newQuery.schema).length === 0 ? autoSchema : newQuery.schema
-        }
-      )
+      const response = await queries.save(newQuery.datasourceId, {
+        ...newQuery,
+        schema:
+          Object.keys(newQuery.schema).length === 0
+            ? autoSchema
+            : newQuery.schema,
+      })
 
       notifications.success("Query saved successfully")
       return response
@@ -135,7 +137,6 @@
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
-
 </script>
 
 <QueryViewerSavePromptModal
@@ -153,13 +154,9 @@
         </Body>
       </div>
       <div class="controls">
-        <Button
-          disabled={loading}
-          on:click={runQuery}
-          overBackground
-            >
-            <Icon size="S" name="Play" />
-            Run query</Button
+        <Button disabled={loading} on:click={runQuery} overBackground>
+          <Icon size="S" name="Play" />
+          Run query</Button
         >
         <div class="tooltip" title="Run your query to enable saving">
           <Button
@@ -214,7 +211,7 @@
                 integration.query[verb]?.displayName || capitalise(verb)}
             />
             <Label>Access</Label>
-            <AccessLevelSelect  query={newQuery} />
+            <AccessLevelSelect query={newQuery} />
             {#if integration?.extra && newQuery.queryVerb}
               <ExtraQueryConfig
                 query={newQuery}
@@ -304,7 +301,9 @@
         newQuery.schema = newSchema
       }}
       {rows}
-      schema={Object.keys(newQuery.schema).length === 0 ? autoSchema : newQuery.schema}
+      schema={Object.keys(newQuery.schema).length === 0
+        ? autoSchema
+        : newQuery.schema}
     />
   </div>
 </div>
@@ -372,7 +371,6 @@
   .controls {
     flex-shrink: 0;
   }
-
 
   .tooltip {
     display: inline-block;

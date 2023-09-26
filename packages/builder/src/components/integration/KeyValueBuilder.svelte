@@ -112,11 +112,7 @@
         on:blur={changed}
       />
       {#if options}
-        <Select
-          bind:value={field.value}
-          on:change={changed}
-          {options}
-        />
+        <Select bind:value={field.value} on:change={changed} {options} />
       {:else if bindings && bindings.length}
         <DrawerBindableInput
           {bindings}
@@ -141,17 +137,10 @@
         />
       {/if}
       {#if toggle}
-        <Toggle
-          bind:value={fieldActivity[idx]}
-          on:change={changed}
-        />
+        <Toggle bind:value={fieldActivity[idx]} on:change={changed} />
       {/if}
       {#if !readOnly}
-        <Icon
-          hoverable
-          name="Close"
-          on:click={() => deleteEntry(idx)}
-        />
+        <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
       {/if}
       {#if menuItems?.length > 0 && showMenu}
         <ActionMenu>
@@ -170,13 +159,7 @@
 {/if}
 {#if !readOnly && !noAddButton}
   <div>
-    <ActionButton
-      icon="Add"
-      secondary
-      thin
-      outline
-      on:click={addEntry}
-    >
+    <ActionButton icon="Add" secondary thin outline on:click={addEntry}>
       {#if customButtonText}
         {customButtonText}
       {:else}
