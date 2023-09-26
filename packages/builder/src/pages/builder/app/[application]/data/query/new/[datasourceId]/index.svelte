@@ -16,6 +16,9 @@
 
   const buildNewQuery = isRestQuery => {
     let query = {
+      name: "Untitled query",
+      transformer: "return data",
+      schema: {},
       datasourceId: $params.datasourceId,
       parameters: [],
       fields: {},
@@ -33,8 +36,6 @@
   {#if isRestQuery}
     <RestQueryViewer />
   {:else}
-    <QueryViewer
-      query={{ ...query, name: "Untitled query", transformer: "return data" }}
-    />
+    <QueryViewer {query} />
   {/if}
 {/if}

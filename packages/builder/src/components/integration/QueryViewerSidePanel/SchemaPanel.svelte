@@ -18,11 +18,13 @@
   }
 </script>
 
-<KeyValueBuilder
-  {disabled}
-  on:change={handleChange}
-  object={schema}
-  name="field"
-  headings
-  options={SchemaTypeOptions}
-/>
+{#key schema}
+  <KeyValueBuilder
+    {disabled}
+    on:change={handleChange}
+    object={schema}
+    name="field"
+    headings
+    options={SchemaTypeOptions}
+  />
+{/key}

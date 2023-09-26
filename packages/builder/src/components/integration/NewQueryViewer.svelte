@@ -40,7 +40,6 @@
   let schemaType
 
   let responseRows = []
-  let responseSchema = {}
 
   const parseQuery = query => {
     loading = false
@@ -91,7 +90,11 @@
 
       valid = true
       responseRows = response.rows
-      responseSchema = { ...responseSchema, ...response.schema }
+
+      if (Object.keys(newQuery.schema).length === 0) {
+        newQuery.schema = response.schema;
+      }
+
       notifications.success("Query executed successfully")
     } catch (error) {
       valid = false
@@ -109,10 +112,7 @@
     try {
       showSidePanel = true
       loading = true
-      const response = await queries.save(newQuery.datasourceId, {
-        ...newQuery,
-        schema: responseSchema,
-      })
+      const response = await queries.save(newQuery.datasourceId, newQuery)
 
       notifications.success("Query saved successfully")
       return response
@@ -306,11 +306,10 @@
       onClose={() => (showSidePanel = false)}
       disabled={loading}
       onSchemaChange={newSchema => {
-        console.log(newSchema)
-        responseSchema = newSchema
+        newQuery.schema = newSchema
       }}
       rows={responseRows}
-      schema={responseSchema}
+      schema={newQuery.schema}
     />
   </div>
 </div>
