@@ -5625,8 +5625,9 @@
     ]
   },
   "bbreferencefield": {
-    "name": "BB Reference field",
-    "icon": "Link",
+    "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
+    "name": "User Field",
+    "icon": "User",
     "styles": ["size"],
     "requiredAncestors": ["form"],
     "editable": true,
@@ -5635,6 +5636,12 @@
       "height": 50
     },
     "settings": [
+      {
+        "type": "field/bb_reference",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
       {
         "type": "text",
         "label": "Label",
