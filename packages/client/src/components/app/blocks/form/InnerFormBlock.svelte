@@ -30,6 +30,7 @@
     link: "relationshipfield",
     json: "jsonfield",
     barcodeqr: "codescanner",
+    bb_reference: "bbreferencefield",
   }
 
   let formId
