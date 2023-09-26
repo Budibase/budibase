@@ -22,4 +22,13 @@
   }
 </script>
 
+<div class="table">
 <Table {schema} data={rowsCopy} type="external" allowEditing={false} />
+  </div>
+
+
+<style>
+  .table :global(.spectrum-Table-cell) {
+    min-width: 100px;
+  }
+</style>
