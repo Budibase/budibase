@@ -5178,11 +5178,6 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/accordion/-/accordion-3.0.24.tgz#f89066c120c57b0cfc9aba66d60c39fc1cf69f74"
   integrity sha512-jNOmUsxmiT3lRLButnN5KKHM94fd+87fjiF8L0c4uRNgJl6ZsBuxPXrM15lV4y1f8D2IACAw01/ZkGRAeaCOFA==
 
-"@spectrum-css/accordion@^3.0.24":
-  version "3.0.34"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/accordion/-/accordion-3.0.34.tgz#59973b96d9de69d548e69ba84d95463fb42bf068"
-  integrity sha512-VUYIvy2L96uVWl3rh89OTBbs/jDtRfJHnm3HenTqtkkFD7eX7swIdG4ewLuRwHWfAqxFJjNZL/22iRA5rMaYyA==
-
 "@spectrum-css/actionbutton@1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@spectrum-css/actionbutton/-/actionbutton-1.0.1.tgz#9c75da37ea6915919fb574c74bd60dacc03b6577"
@@ -24244,11 +24239,6 @@ uuid@8.1.0:
   version "8.1.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.1.0.tgz#6f1536eb43249f473abc6bd58ff983da1ca30d8d"
   integrity sha512-CI18flHDznR0lq54xBycOVmphdCYnQLKn8abKn7PXUiKUGdEd+/l9LWNJmugXel4hXq7S+RMNl34ecyC9TntWg==
-
-uuid@8.3.1:
-  version "8.3.1"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.1.tgz#2ba2e6ca000da60fce5a196954ab241131e05a31"
-  integrity sha512-FOmRr+FmWEIG8uhZv6C2bTgEVXsHk08kE7mPlrBbEe+c3r9pjceVPgupIfNIhc4yx55H69OXANrUaSuu9eInKg==
 
 uuid@8.3.2, uuid@^8.3.0, uuid@^8.3.1, uuid@^8.3.2:
   version "8.3.2"
