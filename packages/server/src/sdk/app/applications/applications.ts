@@ -41,7 +41,7 @@ export async function fetch(status: AppStatus, user: ContextUser) {
     for (let app of apps) {
       const lock = locks[app.appId]
       if (lock) {
-        app.lockedBy = lock
+        app.lockedBy = lock as any
       } else {
         // make sure its definitely not present
         delete app.lockedBy
