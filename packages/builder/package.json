@@ -65,7 +65,6 @@
     "@fortawesome/free-brands-svg-icons": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@sentry/browser": "5.19.1",
-    "@spectrum-css/accordion": "^3.0.24",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
     "codemirror": "^5.59.0",
@@ -79,7 +78,6 @@
     "svelte-dnd-action": "^0.9.8",
     "svelte-loading-spinners": "^0.1.1",
     "svelte-portal": "1.0.0",
-    "uuid": "8.3.1",
     "yup": "0.29.2"
   },
   "devDependencies": {
