@@ -340,7 +340,7 @@
 
   .header {
     align-items: center;
-    padding: 10px 10px 10px 16px;
+    padding: 8px 10px 8px 16px;
     display: flex;
     border-bottom: 2px solid transparent;
     transition: border-bottom 130ms ease-out;
