@@ -33,7 +33,6 @@
       loaded = true
       return
     }
-
     fetched = queryToFetch
     if (!queryToFetch || !queryToFetch._id) {
       roleId = Constants.Roles.BASIC

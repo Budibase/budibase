@@ -8,7 +8,8 @@
   const handleChange = e => {
     let newSchema = {}
 
-    // KeyValueBuilder on change event returns an array of objects containing the updated object
+    // KeyValueBuilder on change event returns an array of objects with each object
+    // containing a field
     e.detail.forEach(({ name, value }) => {
       newSchema[name] = value
     })
