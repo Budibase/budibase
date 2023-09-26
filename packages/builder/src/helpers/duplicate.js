@@ -3,16 +3,17 @@
  * e.g.
  *    name           all names          result
  *   ------        -----------         --------
- * ("foo")       ["foo"]              "foo (1)"
- * ("foo")       ["foo", "foo (1)"]   "foo (2)"
- * ("foo (1)")   ["foo", "foo (1)"]   "foo (2)"
- * ("foo")       ["foo", "foo (2)"]   "foo (1)"
+ * ("foo")       ["foo"]              "foo 1"
+ * ("foo")       ["foo", "foo 1"]     "foo 2"
+ * ("foo 1")     ["foo", "foo 1"]     "foo 2"
+ * ("foo")       ["foo", "foo 2"]     "foo 1"
  *
  * Repl
  */
 export const duplicateName = (name, allNames) => {
-  const baseName = name.split(" (")[0]
-  const isDuplicate = new RegExp(`${baseName}\\s\\((\\d+)\\)$`)
+  const duplicatePattern = new RegExp(`\\s(\\d+)$`)
+  const baseName = name.split(duplicatePattern)[0]
+  const isDuplicate = new RegExp(`${baseName}\\s(\\d+)$`)
 
   // get the sequence from matched names
   const sequence = []
@@ -28,7 +29,6 @@ export const duplicateName = (name, allNames) => {
     return false
   })
   sequence.sort((a, b) => a - b)
-
   // get the next number in the sequence
   let number
   if (sequence.length === 0) {
@@ -46,5 +46,5 @@ export const duplicateName = (name, allNames) => {
     }
   }
 
-  return `${baseName} (${number})`
+  return `${baseName} ${number}`
 }
