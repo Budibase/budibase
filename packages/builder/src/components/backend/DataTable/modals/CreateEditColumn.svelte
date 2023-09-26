@@ -82,9 +82,6 @@
   }
 
   const bbRefTypeMapping = {}
-  if (!$admin.isDev) {
-    delete fieldDefinitions.USER
-  }
 
   function composeType(fieldType, subtype) {
     return `${fieldType}_${subtype}`
