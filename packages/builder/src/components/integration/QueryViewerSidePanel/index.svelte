@@ -41,7 +41,7 @@
   </div>
   <div class="content">
     {#if activeTab === "JSON"}
-      <JSONPanel {schema} />
+      <JSONPanel data={rows[0] || {}} />
     {:else if activeTab === "Schema"}
       <SchemaPanel {onSchemaChange} {schema} />
     {:else}

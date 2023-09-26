@@ -1,7 +1,7 @@
 <script>
-  export let schema
+  export let data
 
-  $: string = JSON.stringify(schema || {}, null, 2)
+  $: string = JSON.stringify(data || {}, null, 2)
 </script>
 
 <textarea class="json" disabled value={string} />
