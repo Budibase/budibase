@@ -39,7 +39,7 @@
       <ActionButton
         quiet
         icon="Edit"
-        on:click={() => $goto(`../../app/${app.devId}`)}
+        on:click={() => $goto(`/builder/app/${app.devId}`)}
       >
         Edit
       </ActionButton>
