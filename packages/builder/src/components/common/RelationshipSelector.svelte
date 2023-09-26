@@ -1,6 +1,5 @@
 <script>
   import { Select, Input } from "@budibase/bbui"
-  import { PrettyRelationshipDefinitions } from "constants/backend"
 
   export let relationshipPart1
   export let relationshipPart2
