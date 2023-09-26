@@ -78,26 +78,28 @@
     editableColumn.constraints.presence = { allowEmpty: false }
   }
 
-  $: {
-    if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
-      // Determine the relationship type based on the selected values of both parts
-      if (
-        relationshipPart1 === PrettyRelationshipDefinitions.MANY &&
-        relationshipPart2 === PrettyRelationshipDefinitions.ONE
-      ) {
-        editableColumn.relationshipType = RelationshipType.MANY_TO_ONE
-      } else if (
-        relationshipPart1 === PrettyRelationshipDefinitions.MANY &&
-        relationshipPart2 === PrettyRelationshipDefinitions.MANY
-      ) {
-        editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
-      } else if (
-        relationshipPart1 === PrettyRelationshipDefinitions.ONE &&
-        relationshipPart2 === PrettyRelationshipDefinitions.MANY
-      ) {
-        editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
-      }
+  let relationshipMap = {
+    [RelationshipType.MANY_TO_ONE]: {
+      part1: PrettyRelationshipDefinitions.MANY,
+      part2: PrettyRelationshipDefinitions.ONE,
+    },
+    [RelationshipType.MANY_TO_MANY]: {
+      part1: PrettyRelationshipDefinitions.MANY,
+      part2: PrettyRelationshipDefinitions.MANY,
+    },
+    [RelationshipType.ONE_TO_MANY]: {
+      part1: PrettyRelationshipDefinitions.ONE,
+      part2: PrettyRelationshipDefinitions.MANY,
+    },
+  }
 
+  $: {
+    if (editableColumn.type === LINK_TYPE) {
+      // Determine the relationship type based on the selected values of both parts
+      editableColumn.relationshipType = Object.entries(relationshipMap).find(
+        ([_, parts]) =>
+          parts.part1 === relationshipPart1 && parts.part2 === relationshipPart2
+      )?.[0]
       // Set the tableId based on the selected table
       editableColumn.tableId = relationshipTableIdSecondary
     }
@@ -132,19 +134,11 @@
 
     if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
       relationshipTableIdSecondary = editableColumn.tableId
-      if (editableColumn.relationshipType === RelationshipType.MANY_TO_ONE) {
-        relationshipPart1 = PrettyRelationshipDefinitions.MANY
-        relationshipPart2 = PrettyRelationshipDefinitions.ONE
-      } else if (
-        editableColumn.relationshipType === RelationshipType.MANY_TO_MANY
-      ) {
-        relationshipPart1 = PrettyRelationshipDefinitions.MANY
-        relationshipPart2 = PrettyRelationshipDefinitions.MANY
-      } else if (
-        editableColumn.relationshipType === RelationshipType.ONE_TO_MANY
-      ) {
-        relationshipPart1 = PrettyRelationshipDefinitions.ONE
-        relationshipPart2 = PrettyRelationshipDefinitions.MANY
+      if (editableColumn.relationshipType in relationshipMap) {
+        const { part1, part2 } =
+          relationshipMap[editableColumn.relationshipType]
+        relationshipPart1 = part1
+        relationshipPart2 = part2
       }
     }
   }
