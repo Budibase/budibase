@@ -59,7 +59,7 @@
       // Persist the initial values as options, allowing them to be present in the dropdown,
       // even if they are not in the inital fetch results
       initialValuesProcessed = true
-      optionsObj = fieldState?.value?.reduce((accumulator, value) => {
+      optionsObj = (fieldState?.value || []).reduce((accumulator, value) => {
         accumulator[value._id] = {
           _id: value._id,
           [primaryDisplay]: value.primaryDisplay,
