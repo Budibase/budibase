@@ -39,7 +39,7 @@
   let integration
   let schemaType
 
-  let responseRows = []
+  let rows = []
 
   const parseQuery = query => {
     loading = false
@@ -89,7 +89,7 @@
       }
 
       valid = true
-      responseRows = response.rows
+      rows = response.rows
 
       if (Object.keys(newQuery.schema).length === 0) {
         newQuery.schema = response.schema
@@ -176,7 +176,7 @@
             !valid ||
             !newQuery.name ||
             nameError ||
-            responseRows.length === 0}
+            rows.length === 0}
           overBackground
           icon="SaveFloppy"
         >
@@ -308,7 +308,7 @@
       onSchemaChange={newSchema => {
         newQuery.schema = newSchema
       }}
-      rows={responseRows}
+      {rows}
       schema={newQuery.schema}
     />
   </div>
@@ -419,6 +419,7 @@
   }
 
   .sidePanel {
+    flex-shrink: 0;
     height: 100%;
     width: 0;
     overflow: hidden;
