@@ -11,7 +11,6 @@
     Body,
     Divider,
     Button,
-    AbsTooltip
   } from "@budibase/bbui"
   import { capitalise } from "helpers"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
@@ -45,7 +44,6 @@
   let rows = []
 
   const parseQuery = query => {
-    loading = false
     modified = false
     valid = false
 
@@ -169,7 +167,6 @@
           on:click={runQuery}
           overBackground
             >
-
             <Icon size="S" name="Play" />
             Run query</Button
         >
@@ -205,7 +202,6 @@
         <div class="configField">
           <Label>Name</Label>
           <Input
-            disabled={loading}
             value={newQuery.name}
             on:input={e => {
               let newValue = e.target.value || ""
@@ -221,7 +217,6 @@
           {#if integration.query}
             <Label>Function</Label>
             <Select
-              disabled={loading}
               bind:value={newQuery.queryVerb}
               on:change={resetDependentFields}
               options={Object.keys(integration.query)}
@@ -229,10 +224,9 @@
                 integration.query[verb]?.displayName || capitalise(verb)}
             />
             <Label>Access</Label>
-            <AccessLevelSelect disabled={loading} query={newQuery} />
+            <AccessLevelSelect  query={newQuery} />
             {#if integration?.extra && newQuery.queryVerb}
               <ExtraQueryConfig
-                disabled={loading}
                 query={newQuery}
                 {populateExtraQuery}
                 config={integration.extra}
@@ -260,7 +254,6 @@
           </Body>
         </div>
         <IntegrationQueryEditor
-          disabled={loading}
           noLabel
           {datasource}
           bind:query={newQuery}
@@ -282,7 +275,6 @@
         </div>
         {#key newQuery.parameters}
           <BindingBuilder
-            disabled={loading}
             hideHeading
             queryBindings={newQuery.parameters}
             on:change={e => {
@@ -306,7 +298,6 @@
           </Body>
         </div>
         <CodeMirrorEditor
-          disabled={loading}
           height={200}
           value={newQuery.transformer}
           resize="vertical"
@@ -319,7 +310,6 @@
   <div class:showSidePanel class="sidePanel">
     <QueryViewerSidePanel
       onClose={() => (showSidePanel = false)}
-      disabled={loading}
       onSchemaChange={newSchema => {
         newQuery.schema = newSchema
       }}
@@ -392,6 +382,7 @@
   .controls {
     flex-shrink: 0;
   }
+
 
   .tooltip {
     display: inline-block;
