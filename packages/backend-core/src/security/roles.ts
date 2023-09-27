@@ -215,21 +215,23 @@ async function getAllUserRoles(userRoleId?: string): Promise<RoleDoc[]> {
   return roles
 }
 
+export async function getUserRoleIdHierarchy(
+  userRoleId?: string
+): Promise<string[]> {
+  const roles = await getUserRoleHierarchy(userRoleId)
+  return roles.map(role => role._id!)
+}
+
 /**
  * Returns an ordered array of the user's inherited role IDs, this can be used
  * to determine if a user can access something that requires a specific role.
  * @param {string} userRoleId The user's role ID, this can be found in their access token.
- * @param {object} opts Various options, such as whether to only retrieve the IDs (default true).
- * @returns {Promise<string[]|object[]>} returns an ordered array of the roles, with the first being their
+ * @returns {Promise<object[]>} returns an ordered array of the roles, with the first being their
  * highest level of access and the last being the lowest level.
  */
-export async function getUserRoleHierarchy(
-  userRoleId?: string,
-  opts = { idOnly: true }
-) {
+export async function getUserRoleHierarchy(userRoleId?: string) {
   // special case, if they don't have a role then they are a public user
-  const roles = await getAllUserRoles(userRoleId)
-  return opts.idOnly ? roles.map(role => role._id) : roles
+  return getAllUserRoles(userRoleId)
 }
 
 // this function checks that the provided permissions are in an array format
@@ -247,6 +249,11 @@ export function checkForRoleResourceArray(
     }
   }
   return rolePerms
+}
+
+export async function getAllRoleIds(appId?: string) {
+  const roles = await getAllRoles(appId)
+  return roles.map(role => role._id)
 }
 
 /**
@@ -332,9 +339,7 @@ export class AccessController {
     }
     let roleIds = userRoleId ? this.userHierarchies[userRoleId] : null
     if (!roleIds && userRoleId) {
-      roleIds = (await getUserRoleHierarchy(userRoleId, {
-        idOnly: true,
-      })) as string[]
+      roleIds = await getUserRoleIdHierarchy(userRoleId)
       this.userHierarchies[userRoleId] = roleIds
     }
 
