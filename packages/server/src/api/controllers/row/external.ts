@@ -73,7 +73,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   })
   return {
     ...response,
-    row,
+    row: await outputProcessing(table, row),
     table,
   }
 }
@@ -114,7 +114,7 @@ export async function save(ctx: UserCtx) {
     })
     return {
       ...response,
-      row,
+      row: await outputProcessing(table, row),
     }
   } else {
     return response
@@ -132,7 +132,8 @@ export async function find(ctx: UserCtx): Promise<Row> {
     ctx.throw(404)
   }
 
-  return row
+  const table = await sdk.tables.getTable(tableId)
+  return await outputProcessing(table, row)
 }
 
 export async function destroy(ctx: UserCtx) {

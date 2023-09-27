@@ -1518,8 +1518,16 @@ describe.each([
   describe("bb reference fields", () => {
     let tableId: string
     let users: User[]
+
     beforeAll(async () => {
       const tableConfig = generateTableConfig()
+
+      if (config.datasource) {
+        tableConfig.sourceId = config.datasource._id
+        if (config.datasource.plus) {
+          tableConfig.type = "external"
+        }
+      }
       const table = await config.api.table.create({
         ...tableConfig,
         schema: {
@@ -1559,10 +1567,11 @@ describe.each([
       expect(row).toEqual({
         name: rowData.name,
         description: rowData.description,
-        type: "row",
         tableId,
         _id: expect.any(String),
         _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
       })
     })
 
@@ -1579,7 +1588,6 @@ describe.each([
       expect(row).toEqual({
         name: rowData.name,
         description: rowData.description,
-        type: "row",
         tableId,
         user: [
           {
@@ -1592,6 +1600,8 @@ describe.each([
         ],
         _id: expect.any(String),
         _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
       })
     })
 
@@ -1608,7 +1618,6 @@ describe.each([
       expect(row).toEqual({
         name: rowData.name,
         description: rowData.description,
-        type: "row",
         tableId,
         users: selectedUsers.map(u => ({
           _id: u._id,
@@ -1619,6 +1628,8 @@ describe.each([
         })),
         _id: expect.any(String),
         _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
       })
     })
 
@@ -1634,14 +1645,13 @@ describe.each([
       expect(retrieved).toEqual({
         name: rowData.name,
         description: rowData.description,
-        type: "row",
         tableId,
         user: undefined,
         users: undefined,
         _id: row._id,
         _rev: expect.any(String),
-        createdAt: timestamp,
-        updatedAt: timestamp,
+        id: isInternal ? undefined : expect.any(Number),
+        ...defaultRowFields,
       })
     })
 
@@ -1661,7 +1671,6 @@ describe.each([
       expect(retrieved).toEqual({
         name: rowData.name,
         description: rowData.description,
-        type: "row",
         tableId,
         user: [user1].map(u => ({
           _id: u._id,
@@ -1679,8 +1688,8 @@ describe.each([
         })),
         _id: row._id,
         _rev: expect.any(String),
-        createdAt: timestamp,
-        updatedAt: timestamp,
+        id: isInternal ? undefined : expect.any(Number),
+        ...defaultRowFields,
       })
     })
 
@@ -1703,7 +1712,6 @@ describe.each([
       expect(updatedRow).toEqual({
         name: rowData.name,
         description: rowData.description,
-        type: "row",
         tableId,
         user: [
           {
@@ -1723,6 +1731,8 @@ describe.each([
         })),
         _id: row._id,
         _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
       })
     })
 
@@ -1745,12 +1755,13 @@ describe.each([
       expect(updatedRow).toEqual({
         name: rowData.name,
         description: rowData.description,
-        type: "row",
         tableId,
-        user: null,
-        users: null,
+        user: isInternal ? null : undefined,
+        users: isInternal ? null : undefined,
         _id: row._id,
         _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
       })
     })
 
@@ -1796,7 +1807,6 @@ describe.each([
           rows.map(r => ({
             name: r.name,
             description: r.description,
-            type: "row",
             tableId,
             user: r.user?.map(u => ({
               _id: u._id,
@@ -1814,8 +1824,8 @@ describe.each([
             })),
             _id: expect.any(String),
             _rev: expect.any(String),
-            createdAt: timestamp,
-            updatedAt: timestamp,
+            id: isInternal ? undefined : expect.any(Number),
+            ...defaultRowFields,
           }))
         )
       )
@@ -1863,7 +1873,6 @@ describe.each([
           rows.map(r => ({
             name: r.name,
             description: r.description,
-            type: "row",
             tableId,
             user: r.user?.map(u => ({
               _id: u._id,
@@ -1881,10 +1890,16 @@ describe.each([
             })),
             _id: expect.any(String),
             _rev: expect.any(String),
-            createdAt: timestamp,
-            updatedAt: timestamp,
+            id: isInternal ? undefined : expect.any(Number),
+            ...defaultRowFields,
           }))
         ),
+        ...(isInternal
+          ? {}
+          : {
+              hasNextPage: false,
+              bookmark: null,
+            }),
       })
     })
   })
