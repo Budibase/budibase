@@ -1539,7 +1539,7 @@ describe.each([
       tableId = table._id!
     })
 
-    it("can save and retrieve when BB reference fields are empty", async () => {
+    it("can save a row when BB reference fields are empty", async () => {
       const rowData = {
         ...basicRow(tableId),
         name: generator.name(),
@@ -1557,7 +1557,7 @@ describe.each([
       })
     })
 
-    it("can save and retrieve a row with a single BB reference field", async () => {
+    it("can save a row with a single BB reference field", async () => {
       const user = await config.createUser()
       const rowData = {
         ...basicRow(tableId),
@@ -1586,13 +1586,13 @@ describe.each([
       })
     })
 
-    it("can save and retrieve a row with a multiple BB reference field", async () => {
+    it("can save a row with a multiple BB reference field", async () => {
       const users = [await config.createUser(), await config.createUser()]
       const rowData = {
         ...basicRow(tableId),
         name: generator.name(),
         description: generator.name(),
-        user: users,
+        users: users,
       }
       const row = await config.api.row.save(tableId, rowData)
 
@@ -1601,7 +1601,7 @@ describe.each([
         description: rowData.description,
         type: "row",
         tableId,
-        user: users.map(u => ({
+        users: users.map(u => ({
           _id: u._id,
           email: u.email,
           firstName: u.firstName,
@@ -1609,6 +1609,52 @@ describe.each([
           primaryDisplay: u.email,
         })),
         _id: expect.any(String),
+        _rev: expect.any(String),
+      })
+    })
+
+    it("can update an existing populated row", async () => {
+      const [user1, user2, user3] = [
+        await config.createUser(),
+        await config.createUser(),
+        await config.createUser(),
+      ]
+
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+        users: [user1, user2],
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      const updatedRow = await config.api.row.save(tableId, {
+        ...row,
+        user: [user3],
+        users: [user3, user2],
+      })
+      expect(updatedRow).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        type: "row",
+        tableId,
+        user: [
+          {
+            _id: user3._id,
+            email: user3.email,
+            firstName: user3.firstName,
+            lastName: user3.lastName,
+            primaryDisplay: user3.email,
+          },
+        ],
+        users: [user3, user2].map(u => ({
+          _id: u._id,
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          primaryDisplay: u.email,
+        })),
+        _id: row._id,
         _rev: expect.any(String),
       })
     })
