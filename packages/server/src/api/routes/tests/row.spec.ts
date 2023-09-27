@@ -18,6 +18,7 @@ import {
   SortType,
   StaticQuotaName,
   Table,
+  User,
 } from "@budibase/types"
 import {
   expectAnyExternalColsAttributes,
@@ -26,6 +27,7 @@ import {
   mocks,
   structures,
 } from "@budibase/backend-core/tests"
+import _ from "lodash"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -35,7 +37,7 @@ const { basicRow } = setup.structures
 describe.each([
   ["internal", undefined],
   ["postgres", databaseTestProviders.postgres],
-])("/rows (%s)", (_, dsProvider) => {
+])("/rows (%s)", (__, dsProvider) => {
   const isInternal = !dsProvider
 
   const request = setup.getRequest()
@@ -1515,6 +1517,7 @@ describe.each([
 
   describe("bb reference fields", () => {
     let tableId: string
+    let users: User[]
     beforeAll(async () => {
       const tableConfig = generateTableConfig()
       const table = await config.api.table.create({
@@ -1536,6 +1539,13 @@ describe.each([
         },
       })
       tableId = table._id!
+
+      users = [
+        await config.createUser(),
+        await config.createUser(),
+        await config.createUser(),
+        await config.createUser(),
+      ]
     })
 
     it("can save a row when BB reference fields are empty", async () => {
@@ -1557,7 +1567,7 @@ describe.each([
     })
 
     it("can save a row with a single BB reference field", async () => {
-      const user = await config.createUser()
+      const user = _.sample(users)!
       const rowData = {
         ...basicRow(tableId),
         name: generator.name(),
@@ -1586,12 +1596,12 @@ describe.each([
     })
 
     it("can save a row with a multiple BB reference field", async () => {
-      const users = [await config.createUser(), await config.createUser()]
+      const selectedUsers = _.sampleSize(users, 2)
       const rowData = {
         ...basicRow(tableId),
         name: generator.name(),
         description: generator.name(),
-        users: users,
+        users: selectedUsers,
       }
       const row = await config.api.row.save(tableId, rowData)
 
@@ -1600,7 +1610,7 @@ describe.each([
         description: rowData.description,
         type: "row",
         tableId,
-        users: users.map(u => ({
+        users: selectedUsers.map(u => ({
           _id: u._id,
           email: u.email,
           firstName: u.firstName,
@@ -1636,10 +1646,7 @@ describe.each([
     })
 
     it("can retrieve rows with populated BB references", async () => {
-      const [user1, user2] = [
-        await config.createUser(),
-        await config.createUser(),
-      ]
+      const [user1, user2] = _.sampleSize(users, 2)
 
       const rowData = {
         ...basicRow(tableId),
@@ -1678,11 +1685,7 @@ describe.each([
     })
 
     it("can update an existing populated row", async () => {
-      const [user1, user2, user3] = [
-        await config.createUser(),
-        await config.createUser(),
-        await config.createUser(),
-      ]
+      const [user1, user2, user3] = _.sampleSize(users, 3)
 
       const rowData = {
         ...basicRow(tableId),
@@ -1724,10 +1727,7 @@ describe.each([
     })
 
     it("can wipe an existing populated BB references in row", async () => {
-      const [user1, user2] = [
-        await config.createUser(),
-        await config.createUser(),
-      ]
+      const [user1, user2] = _.sampleSize(users, 2)
 
       const rowData = {
         ...basicRow(tableId),
