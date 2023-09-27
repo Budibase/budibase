@@ -30,6 +30,7 @@ class BudibaseInternalAPIClient {
         body: JSON.stringify(options.body),
         headers: {
           "x-budibase-app-id": this.state.appId,
+          "x-budibase-tenant-id": this.state.tenantId,
           "Content-Type": "application/json",
           Accept: "application/json",
           cookie: this.state.cookie,
