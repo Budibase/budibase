@@ -60,8 +60,7 @@
   })
   setContext("layout", store)
 
-  $: accessibleRoles = $roleStore
-  $: validLinks = getValidLinks(links)
+  $: validLinks = getValidLinks(links, $roleStore)
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
   $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
   $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
@@ -99,12 +98,12 @@
     }
   }
 
-  const getValidLinks = allLinks => {
+  const getValidLinks = (allLinks, userRoleHierarchy) => {
     // Strip links missing required info
     let validLinks = (allLinks || []).filter(link => link.text && link.url)
     // Filter to only links allowed by the current role
     return validLinks.filter(link => {
-      return accessibleRoles?.find(roleId => roleId === link.roleId)
+      return userRoleHierarchy?.find(roleId => roleId === link.roleId)
     })
   }
 

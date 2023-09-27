@@ -1,5 +1,6 @@
 import { API } from "api"
 import { writable } from "svelte/store"
+import { currentRole } from "./derived"
 
 const createRoleStore = () => {
   const store = writable([])
@@ -9,6 +10,7 @@ const createRoleStore = () => {
     const accessible = await API.getAccessibleRoles()
     // Use the app self if present, otherwise fallback to the global self
     store.set(accessible || [])
+    return accessible
   }
 
   return {
@@ -18,3 +20,5 @@ const createRoleStore = () => {
 }
 
 export const roleStore = createRoleStore()
+
+currentRole.subscribe(roleStore.actions.fetchAccessibleRoles)
