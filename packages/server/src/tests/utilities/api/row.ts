@@ -122,4 +122,16 @@ export class RowAPI extends TestAPI {
       .expect(expectStatus)
     return request
   }
+
+  search = async (
+    sourceId: string,
+    { expectStatus } = { expectStatus: 200 }
+  ): Promise<Row[]> => {
+    const request = this.request
+      .post(`/api/${sourceId}/search`)
+      .set(this.config.defaultHeaders())
+      .expect(expectStatus)
+
+    return (await request).body
+  }
 }
