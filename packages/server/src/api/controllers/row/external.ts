@@ -133,7 +133,11 @@ export async function find(ctx: UserCtx): Promise<Row> {
   }
 
   const table = await sdk.tables.getTable(tableId)
-  return await outputProcessing(table, row)
+  // Preserving links, as the outputProcessing does not support external rows yet and we don't need it in this use case
+  return await outputProcessing(table, row, {
+    squash: false,
+    preserveLinks: true,
+  })
 }
 
 export async function destroy(ctx: UserCtx) {

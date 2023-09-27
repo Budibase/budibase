@@ -200,7 +200,10 @@ export async function inputProcessing(
 export async function outputProcessing<T extends Row[] | Row>(
   table: Table,
   rows: T,
-  opts = { squash: true }
+  opts: { squash?: boolean; preserveLinks?: boolean } = {
+    squash: true,
+    preserveLinks: false,
+  }
 ): Promise<T> {
   let safeRows: Row[]
   let wasArray = true
@@ -211,7 +214,9 @@ export async function outputProcessing<T extends Row[] | Row>(
     safeRows = rows
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(table, safeRows)
+  let enriched = !opts.preserveLinks
+    ? await linkRows.attachFullLinkedDocs(table, safeRows)
+    : safeRows
 
   // process formulas
   enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
