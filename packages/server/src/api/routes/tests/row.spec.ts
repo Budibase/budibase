@@ -26,7 +26,6 @@ import {
   mocks,
   structures,
 } from "@budibase/backend-core/tests"
-import { async } from "validate.js"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -1654,6 +1653,37 @@ describe.each([
           lastName: u.lastName,
           primaryDisplay: u.email,
         })),
+        _id: row._id,
+        _rev: expect.any(String),
+      })
+    })
+
+    it("can wipe an existing populated BB references in row", async () => {
+      const [user1, user2] = [
+        await config.createUser(),
+        await config.createUser(),
+      ]
+
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+        users: [user1, user2],
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      const updatedRow = await config.api.row.save(tableId, {
+        ...row,
+        user: null,
+        users: null,
+      })
+      expect(updatedRow).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        type: "row",
+        tableId,
+        user: null,
+        users: null,
         _id: row._id,
         _rev: expect.any(String),
       })
