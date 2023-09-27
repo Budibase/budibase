@@ -40,7 +40,7 @@ export const buildRoleEndpoints = API => ({
   },
 
   /**
-   * For the logging in user and current app - retrieves accessible roles.
+   * For the logged in user and current app - retrieves accessible roles.
    */
   getAccessibleRoles: async () => {
     return await API.get({
