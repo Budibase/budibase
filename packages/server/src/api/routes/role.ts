@@ -3,10 +3,17 @@ import * as controller from "../controllers/role"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { roleValidator } from "./utils/validators"
+import { PermissionLevel, PermissionType } from "@budibase/types"
 
 const router: Router = new Router()
 
 router
+  // retrieve a list of the roles a user can access
+  .get(
+    "/api/roles/accessible",
+    authorized(PermissionType.APP, PermissionLevel.READ),
+    controller.accessible
+  )
   .post(
     "/api/roles",
     authorized(permissions.BUILDER),

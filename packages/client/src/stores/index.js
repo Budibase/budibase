@@ -11,12 +11,13 @@ export { stateStore } from "./state"
 export { themeStore } from "./theme"
 export { devToolsStore } from "./devTools"
 export { componentStore } from "./components"
-export { uploadStore } from "./uploads.js"
-export { rowSelectionStore } from "./rowSelection.js"
-export { blockStore } from "./blocks.js"
+export { uploadStore } from "./uploads"
+export { rowSelectionStore } from "./rowSelection"
+export { blockStore } from "./blocks"
 export { environmentStore } from "./environment"
-export { eventStore } from "./events.js"
-export { orgStore } from "./org.js"
+export { eventStore } from "./events"
+export { orgStore } from "./org"
+export { roleStore } from "./roles"
 export {
   dndStore,
   dndIndex,
@@ -25,7 +26,7 @@ export {
   dndIsNewComponent,
   dndIsDragging,
 } from "./dnd"
-export { sidePanelStore } from "./sidePanel.js"
+export { sidePanelStore } from "./sidePanel"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"

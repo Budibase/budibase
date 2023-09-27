@@ -8,7 +8,7 @@ import path from "path"
  * @param args Any number of string arguments to add to a path
  * @returns {string} The final path ready to use
  */
-export function join(...args: any) {
+export function join(...args: string[]) {
   return path.join(...args)
 }
 
@@ -17,6 +17,6 @@ export function join(...args: any) {
  * @param args Any number of string arguments to add to a path
  * @returns {string} The final path ready to use
  */
-export function resolve(...args: any) {
+export function resolve(...args: string[]) {
   return path.resolve(...args)
 }
