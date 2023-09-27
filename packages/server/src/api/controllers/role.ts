@@ -139,8 +139,8 @@ export async function accessible(ctx: UserCtx) {
   }
   if (ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)) {
     const appId = context.getAppId()
-    ctx.body = await roles.getAllRoles(appId, { idOnly: true })
+    ctx.body = await roles.getAllRoleIds(appId)
   } else {
-    ctx.body = await roles.getUserRoleHierarchy(roleId!, { idOnly: true })
+    ctx.body = await roles.getUserRoleIdHierarchy(roleId!)
   }
 }
