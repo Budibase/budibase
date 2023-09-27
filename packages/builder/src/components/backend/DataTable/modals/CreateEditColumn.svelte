@@ -170,6 +170,13 @@
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
 
+      const mapped = Object.entries(bbRefTypeMapping).find(
+        ([_, v]) => v.type === field.type && v.subtype === field.subtype
+      )
+      if (mapped) {
+        editableColumn.type = mapped[0]
+        delete editableColumn.subtype
+      }
       // Here we are setting the relationship values based on the editableColumn
       // This part of the code is used when viewing an existing field hence the check
       // for the tableId
@@ -182,13 +189,6 @@
           relationshipPart1 = part1
           relationshipPart2 = part2
         }
-      
-      const mapped = Object.entries(bbRefTypeMapping).find(
-        ([_, v]) => v.type === field.type && v.subtype === field.subtype
-      )
-      if (mapped) {
-        editableColumn.type = mapped[0]
-        delete editableColumn.subtype
       }
     } else if (!savingColumn) {
       let highestNumber = 0
