@@ -60,7 +60,9 @@
   let relationshipPart1 = PrettyRelationshipDefinitions.Many
   let relationshipPart2 = PrettyRelationshipDefinitions.One
 
+  let relationshipTableIdPrimary = null
   let relationshipTableIdSecondary = null
+
   let table = $tables.selected
   let confirmDeleteDialog
   let savingColumn
@@ -96,7 +98,10 @@
   }
 
   $: {
+    // this parses any changes the user has made when creating a new internal relationship
+    // into what we expect the schema to look like
     if (editableColumn.type === LINK_TYPE) {
+      relationshipTableIdPrimary = table._id
       if (relationshipPart1 === PrettyRelationshipDefinitions.ONE) {
         relationshipOpts2 = relationshipOpts2.filter(
           opt => opt !== PrettyRelationshipDefinitions.ONE
@@ -130,6 +135,20 @@
       primaryDisplay =
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
+
+      // Here we are setting the relationship values based on the editableColumn
+      // This part of the code is used when viewing an existing field hence the check
+      // for the tableId
+      if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
+        relationshipTableIdPrimary = table._id
+        relationshipTableIdSecondary = editableColumn.tableId
+        if (editableColumn.relationshipType in relationshipMap) {
+          const { part1, part2 } =
+            relationshipMap[editableColumn.relationshipType]
+          relationshipPart1 = part1
+          relationshipPart2 = part2
+        }
+      }
     } else if (!savingColumn) {
       let highestNumber = 0
       Object.keys(table.schema).forEach(columnName => {
@@ -147,16 +166,6 @@
       }
     }
     allowedTypes = getAllowedTypes()
-
-    if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
-      relationshipTableIdSecondary = editableColumn.tableId
-      if (editableColumn.relationshipType in relationshipMap) {
-        const { part1, part2 } =
-          relationshipMap[editableColumn.relationshipType]
-        relationshipPart1 = part1
-        relationshipPart2 = part2
-      }
-    }
   }
 
   $: initialiseField(field, savingColumn)
@@ -217,10 +226,7 @@
   $: external = table.type === "external"
   // in the case of internal tables the sourceId will just be undefined
   $: tableOptions = $tables.list.filter(
-    opt =>
-      opt._id !== $tables.selected._id &&
-      opt.type === table.type &&
-      table.sourceId === opt.sourceId
+    opt => opt.type === table.type && table.sourceId === opt.sourceId
   )
   $: typeEnabled =
     !originalName ||
@@ -577,7 +583,7 @@
     <RelationshipSelector
       bind:relationshipPart1
       bind:relationshipPart2
-      bind:relationshipTableIdPrimary={table.name}
+      bind:relationshipTableIdPrimary
       bind:relationshipTableIdSecondary
       bind:editableColumn
       {relationshipOpts1}

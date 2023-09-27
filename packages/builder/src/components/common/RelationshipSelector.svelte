@@ -25,8 +25,10 @@
   <div class="relationship-part">
     <Select
       disabled
-      options={[relationshipTableIdPrimary]}
-      value={relationshipTableIdPrimary}
+      options={tableOptions}
+      getOptionLabel={table => table.name}
+      getOptionValue={table => table._id}
+      bind:value={relationshipTableIdPrimary}
     />
   </div>
 </div>
@@ -44,7 +46,9 @@
     <Select
       disabled={linkEditDisabled}
       bind:value={relationshipTableIdSecondary}
-      options={tableOptions}
+      options={tableOptions.filter(
+        table => table._id !== relationshipTableIdPrimary
+      )}
       getOptionLabel={table => table.name}
       getOptionValue={table => table._id}
     />
