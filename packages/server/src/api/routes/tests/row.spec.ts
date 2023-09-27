@@ -1612,6 +1612,71 @@ describe.each([
       })
     })
 
+    it("can retrieve rows with no populated BB references", async () => {
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      const { body: retrieved } = await config.api.row.get(tableId, row._id!)
+      expect(retrieved).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        type: "row",
+        tableId,
+        user: undefined,
+        users: undefined,
+        _id: row._id,
+        _rev: expect.any(String),
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      })
+    })
+
+    it("can retrieve rows with populated BB references", async () => {
+      const [user1, user2] = [
+        await config.createUser(),
+        await config.createUser(),
+      ]
+
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+        users: [user1, user2],
+        user: [user1],
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      const { body: retrieved } = await config.api.row.get(tableId, row._id!)
+      expect(retrieved).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        type: "row",
+        tableId,
+        user: [user1].map(u => ({
+          _id: u._id,
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          primaryDisplay: u.email,
+        })),
+        users: [user1, user2].map(u => ({
+          _id: u._id,
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          primaryDisplay: u.email,
+        })),
+        _id: row._id,
+        _rev: expect.any(String),
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      })
+    })
+
     it("can update an existing populated row", async () => {
       const [user1, user2, user3] = [
         await config.createUser(),
