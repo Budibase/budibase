@@ -818,7 +818,10 @@ export class ExternalRequest {
     // can't really use response right now
     const response = await getDatasourceAndQuery(json)
     // handle many to many relationships now if we know the ID (could be auto increment)
-    if (operation !== Operation.READ && processed.manyRelationships) {
+    if (
+      operation !== Operation.READ &&
+      processed.manyRelationships?.length > 0
+    ) {
       await this.handleManyRelationships(
         table._id || "",
         response[0],
