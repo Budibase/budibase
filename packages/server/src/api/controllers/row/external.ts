@@ -49,20 +49,20 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = utils.getTableId(ctx)
   const { _id, ...rowData } = ctx.request.body
 
-  const validateResult = await sdk.rows.utils.validate({
-    row: rowData,
-    tableId,
-  })
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
-
   const table = await sdk.tables.getTable(tableId)
   const { row: dataToUpdate } = await inputProcessing(
     ctx.user?._id,
     cloneDeep(table),
     rowData
   )
+
+  const validateResult = await sdk.rows.utils.validate({
+    row: dataToUpdate,
+    tableId,
+  })
+  if (!validateResult.valid) {
+    throw { validation: validateResult.errors }
+  }
 
   const response = await handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(_id),
@@ -81,13 +81,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 export async function save(ctx: UserCtx) {
   const inputs = ctx.request.body
   const tableId = utils.getTableId(ctx)
-  const validateResult = await sdk.rows.utils.validate({
-    row: inputs,
-    tableId,
-  })
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
 
   const table = await sdk.tables.getTable(tableId)
   const { table: updatedTable, row } = await inputProcessing(
@@ -95,6 +88,14 @@ export async function save(ctx: UserCtx) {
     cloneDeep(table),
     inputs
   )
+
+  const validateResult = await sdk.rows.utils.validate({
+    row,
+    tableId,
+  })
+  if (!validateResult.valid) {
+    throw { validation: validateResult.errors }
+  }
 
   const response = await handleRequest(Operation.CREATE, tableId, {
     row,
