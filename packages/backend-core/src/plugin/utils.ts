@@ -69,6 +69,7 @@ function validateDatasource(schema: any) {
     schema: joi.object({
       docs: joi.string(),
       plus: joi.boolean().optional(),
+      isSQL: joi.boolean().optional(),
       auth: joi
         .object({
           type: joi.string().required(),
