@@ -44,12 +44,12 @@ export class RowAPI extends TestAPI {
   }
 
   save = async (
-    sourceId: string,
+    tableId: string,
     row: SaveRowRequest,
     { expectStatus } = { expectStatus: 200 }
   ): Promise<Row> => {
     const resp = await this.request
-      .post(`/api/${sourceId}/rows`)
+      .post(`/api/${tableId}/rows`)
       .send(row)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
