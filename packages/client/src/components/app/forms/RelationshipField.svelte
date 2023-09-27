@@ -1,11 +1,6 @@
 <script>
-  import {
-    CoreSelect,
-    CoreMultiselect,
-    Input,
-    ProgressCircle,
-  } from "@budibase/bbui"
-  import { fetchData, Utils } from "@budibase/frontend-core"
+  import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
+  import { fetchData } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
   import { FieldTypes } from "../../../constants"
@@ -21,28 +16,25 @@
   export let defaultValue
   export let onChange
   export let filter
+  export let datasourceType = "table"
+  export let primaryDisplay
 
   let fieldState
   let fieldApi
   let fieldSchema
   let tableDefinition
-  let primaryDisplay
-  let options
-  let selectedOptions = []
-  let isOpen = false
-  let hasFilter
+  let searchTerm
+  let open
 
-  let searchResults
-  let searchString
-  let searching = false
-  let lastSearchId
+  $: type =
+    datasourceType === "table" ? FieldTypes.LINK : FieldTypes.BB_REFERENCE
 
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
   $: fetch = fetchData({
     API,
     datasource: {
-      type: "table",
+      type: datasourceType,
       tableId: linkedTableId,
     },
     options: {
@@ -50,54 +42,74 @@
       limit: 100,
     },
   })
-  $: hasFilter = !!filter?.filter(f => !!f.field)?.length
-  $: fetch.update({ filter })
-  $: {
-    options = searchResults ? searchResults : $fetch.rows
-    const nonMatchingOptions = selectedOptions.filter(
-      option => !options.map(opt => opt._id).includes(option._id)
-    )
-    // Append initially selected options if there is no filter
-    // and hasn't already been appended
-    if (!hasFilter) {
-      options = [...options, ...nonMatchingOptions]
-    }
-  }
+
   $: tableDefinition = $fetch.definition
-  $: primaryDisplay = tableDefinition?.primaryDisplay || "_id"
-  $: singleValue = flatten(fieldState?.value)?.[0]
-  $: multiValue = flatten(fieldState?.value) ?? []
+  $: selectedValue = multiselect
+    ? flatten(fieldState?.value) ?? []
+    : flatten(fieldState?.value)?.[0]
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: expandedDefaultValue = expand(defaultValue)
-  $: debouncedSearch(searchString)
+  $: primaryDisplay = primaryDisplay || tableDefinition?.primaryDisplay
+
+  let optionsObj = {}
+  let initialValuesProcessed
+
   $: {
-    if (searching) {
-      isOpen = true
+    if (!initialValuesProcessed && primaryDisplay) {
+      // Persist the initial values as options, allowing them to be present in the dropdown,
+      // even if they are not in the inital fetch results
+      initialValuesProcessed = true
+      optionsObj = (fieldState?.value || []).reduce((accumulator, value) => {
+        accumulator[value._id] = {
+          _id: value._id,
+          [primaryDisplay]: value.primaryDisplay,
+        }
+        return accumulator
+      }, optionsObj)
     }
   }
 
-  // Fetch the initially selected values
-  // as they may not be within the first 100 records
+  $: enrichedOptions = enrichOptions(optionsObj, $fetch.rows)
+  const enrichOptions = (optionsObj, fetchResults) => {
+    const result = (fetchResults || [])?.reduce((accumulator, row) => {
+      if (!accumulator[row._id]) {
+        accumulator[row._id] = row
+      }
+      return accumulator
+    }, optionsObj)
+
+    return Object.values(result)
+  }
   $: {
-    if (
-      primaryDisplay !== "_id" &&
-      fieldState?.value?.length &&
-      !selectedOptions?.length
-    ) {
-      API.searchTable({
-        paginate: false,
-        tableId: linkedTableId,
-        limit: 100,
-        query: {
-          oneOf: {
-            [`1:${primaryDisplay}`]: fieldState?.value?.map(
-              value => value.primaryDisplay
-            ),
-          },
-        },
-      }).then(response => {
-        const value = multiselect ? multiValue : singleValue
-        selectedOptions = response.rows.filter(row => value.includes(row._id))
+    // We don't want to reorder while the dropdown is open, to avoid UX jumps
+    if (!open) {
+      enrichedOptions = enrichedOptions.sort((a, b) => {
+        const selectedValues = flatten(fieldState?.value) || []
+
+        const aIsSelected = selectedValues.find(v => v === a._id)
+        const bIsSelected = selectedValues.find(v => v === b._id)
+        if (aIsSelected && !bIsSelected) {
+          return -1
+        } else if (!aIsSelected && bIsSelected) {
+          return 1
+        }
+
+        return a[primaryDisplay] > b[primaryDisplay]
+      })
+    }
+  }
+
+  $: fetchRows(searchTerm, primaryDisplay)
+
+  const fetchRows = (searchTerm, primaryDisplay) => {
+    const allRowsFetched =
+      $fetch.loaded &&
+      !Object.keys($fetch.query?.string || {}).length &&
+      !$fetch.hasNextPage
+    // Don't request until we have the primary display
+    if (!allRowsFetched && primaryDisplay) {
+      fetch.update({
+        query: { string: { [primaryDisplay]: searchTerm } },
       })
     }
   }
@@ -113,7 +125,7 @@
   }
 
   const getDisplayName = row => {
-    return row?.[tableDefinition?.primaryDisplay || "_id"] || "-"
+    return row?.[primaryDisplay] || "-"
   }
 
   const singleHandler = e => {
@@ -136,66 +148,16 @@
 
   const handleChange = value => {
     const changed = fieldApi.setValue(value)
-    selectedOptions = value.map(val => ({
-      _id: val,
-      [primaryDisplay]: options.find(option => option._id === val)[
-        primaryDisplay
-      ],
-    }))
     if (onChange && changed) {
       onChange({ value })
     }
   }
 
-  // Search for rows based on the search string
-  const search = async searchString => {
-    // Reset state if this search is invalid
-    if (!linkedTableId || !searchString) {
-      searchResults = null
-      return
+  const loadMore = () => {
+    if (!$fetch.loading) {
+      fetch.nextPage()
     }
-
-    // If a filter exists, then do a client side search
-    if (hasFilter) {
-      searchResults = $fetch.rows.filter(option =>
-        option[primaryDisplay].startsWith(searchString)
-      )
-      isOpen = true
-      return
-    }
-
-    // Search for results, using IDs to track invocations and ensure we're
-    // handling the latest update
-    lastSearchId = Math.random()
-    searching = true
-    const thisSearchId = lastSearchId
-    const results = await API.searchTable({
-      paginate: false,
-      tableId: linkedTableId,
-      limit: 100,
-      query: {
-        string: {
-          [`1:${primaryDisplay}`]: searchString || "",
-        },
-      },
-    })
-    searching = false
-
-    // In case searching takes longer than our debounced update, abandon these
-    // results
-    if (thisSearchId !== lastSearchId) {
-      return
-    }
-
-    // Process results
-    searchResults = results.rows?.map(row => ({
-      ...row,
-      primaryDisplay: row[primaryDisplay],
-    }))
   }
-
-  // Debounced version of searching
-  const debouncedSearch = Utils.debounce(search, 250)
 </script>
 
 <Field
@@ -204,69 +166,29 @@
   {disabled}
   {validation}
   defaultValue={expandedDefaultValue}
-  type={FieldTypes.LINK}
+  {type}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
 >
   {#if fieldState}
-    <div class={autocomplete ? "field-with-search" : ""}>
-      <svelte:component
-        this={component}
-        bind:open={isOpen}
-        {options}
-        autocomplete={false}
-        value={multiselect ? multiValue : singleValue}
-        on:change={multiselect ? multiHandler : singleHandler}
-        id={fieldState.fieldId}
-        disabled={fieldState.disabled}
-        error={fieldState.error}
-        getOptionLabel={getDisplayName}
-        getOptionValue={option => option._id}
-        {placeholder}
-        customPopoverOffsetBelow={autocomplete ? 32 : null}
-        customPopoverMaxHeight={autocomplete ? 240 : null}
-        sort={true}
-      />
-      {#if autocomplete}
-        <div class="search">
-          <Input
-            autofocus
-            quiet
-            type="text"
-            bind:value={searchString}
-            placeholder={primaryDisplay ? `Search by ${primaryDisplay}` : null}
-          />
-          {#if searching}
-            <div>
-              <ProgressCircle size="S" />
-            </div>
-          {/if}
-        </div>
-      {/if}
-    </div>
+    <svelte:component
+      this={component}
+      options={enrichedOptions}
+      {autocomplete}
+      value={selectedValue}
+      on:change={multiselect ? multiHandler : singleHandler}
+      on:loadMore={loadMore}
+      id={fieldState.fieldId}
+      disabled={fieldState.disabled}
+      error={fieldState.error}
+      getOptionLabel={getDisplayName}
+      getOptionValue={option => option._id}
+      {placeholder}
+      bind:searchTerm
+      loading={$fetch.loading}
+      bind:open
+      customPopoverMaxHeight={400}
+    />
   {/if}
 </Field>
-
-<style>
-  .search {
-    flex: 0 0 calc(var(--default-row-height) - 1px);
-    display: flex;
-    align-items: center;
-    margin: 4px var(--cell-padding);
-    width: calc(100% - 2 * var(--cell-padding));
-  }
-  .search :global(.spectrum-Textfield) {
-    min-width: 0;
-    width: 100%;
-  }
-  .search :global(.spectrum-Textfield-input) {
-    font-size: 13px;
-  }
-  .search :global(.spectrum-Form-item) {
-    flex: 1 1 auto;
-  }
-  .field-with-search {
-    min-height: 80px;
-  }
-</style>
