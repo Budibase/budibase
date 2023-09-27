@@ -18,7 +18,10 @@ import {
 import sdk from "../../../sdk"
 import * as utils from "./utils"
 import { dataFilters } from "@budibase/shared-core"
-import { inputProcessing } from "../../../utilities/rowProcessor"
+import {
+  inputProcessing,
+  outputProcessing,
+} from "../../../utilities/rowProcessor"
 import { cloneDeep, isEqual } from "lodash"
 
 export async function handleRequest(
@@ -121,7 +124,8 @@ export async function find(ctx: UserCtx): Promise<Row> {
     ctx.throw(404)
   }
 
-  return row
+  const table = await sdk.tables.getTable(tableId)
+  return await outputProcessing(table, row)
 }
 
 export async function destroy(ctx: UserCtx) {
