@@ -5,8 +5,12 @@ import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import { Row, RowAttachment, Table, ContextUser } from "@budibase/types"
-const { cloneDeep } = require("lodash/fp")
+import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
+import {
+  processInputBBReferences,
+  processOutputBBReferences,
+} from "./bbReferenceProcessor"
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {
@@ -48,12 +52,12 @@ function getRemovedAttachmentKeys(
  * for automatic ID purposes.
  */
 export function processAutoColumn(
-  user: ContextUser | null,
+  userId: string | null | undefined,
   table: Table,
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
-  let noUser = !user || !user.userId
+  let noUser = !userId
   let isUserTable = table._id === InternalTables.USER_METADATA
   let now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
@@ -70,8 +74,8 @@ export function processAutoColumn(
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
-        if (creating && shouldUpdateUserFields && user) {
-          row[key] = [user.userId]
+        if (creating && shouldUpdateUserFields && userId) {
+          row[key] = [userId]
         }
         break
       case AutoFieldSubTypes.CREATED_AT:
@@ -80,8 +84,8 @@ export function processAutoColumn(
         }
         break
       case AutoFieldSubTypes.UPDATED_BY:
-        if (shouldUpdateUserFields && user) {
-          row[key] = [user.userId]
+        if (shouldUpdateUserFields && userId) {
+          row[key] = [userId]
         }
         break
       case AutoFieldSubTypes.UPDATED_AT:
@@ -130,8 +134,8 @@ export function coerce(row: any, type: string) {
  * @param {object} opts some input processing options (like disabling auto-column relationships).
  * @returns {object} the row which has been prepared to be written to the DB.
  */
-export function inputProcessing(
-  user: ContextUser | null,
+export async function inputProcessing(
+  userId: string | null | undefined,
   table: Table,
   row: Row,
   opts?: AutoColumnProcessingOpts
@@ -166,6 +170,13 @@ export function inputProcessing(
         })
       }
     }
+
+    if (field.type === FieldTypes.BB_REFERENCE && value) {
+      clonedRow[key] = await processInputBBReferences(
+        value,
+        field.subtype as FieldSubtype
+      )
+    }
   }
 
   if (!clonedRow._id || !clonedRow._rev) {
@@ -174,7 +185,7 @@ export function inputProcessing(
   }
 
   // handle auto columns - this returns an object like {table, row}
-  return processAutoColumn(user, table, clonedRow, opts)
+  return processAutoColumn(userId, table, clonedRow, opts)
 }
 
 /**
@@ -215,6 +226,16 @@ export async function outputProcessing<T extends Row[] | Row>(
         row[property].forEach((attachment: RowAttachment) => {
           attachment.url = objectStore.getAppFileUrl(attachment.key)
         })
+      }
+    } else if (column.type == FieldTypes.BB_REFERENCE) {
+      for (let row of enriched) {
+        if (row[property] == null) {
+          continue
+        }
+        row[property] = await processOutputBBReferences(
+          row[property],
+          column.subtype as FieldSubtype
+        )
       }
     }
   }

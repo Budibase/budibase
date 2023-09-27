@@ -96,8 +96,8 @@
     {disabled}
     {readonly}
     {id}
-    value={value || ""}
-    placeholder={placeholder || ""}
+    value={value ?? ""}
+    placeholder={placeholder ?? ""}
     on:click
     on:blur
     on:focus

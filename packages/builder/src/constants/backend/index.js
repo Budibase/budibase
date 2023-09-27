@@ -120,6 +120,12 @@ export const FIELDS = {
       presence: false,
     },
   },
+  USER: {
+    name: "User",
+    type: "bb_reference",
+    subtype: "user",
+    icon: "User",
+  },
 }
 
 export const AUTO_COLUMN_SUB_TYPES = {
