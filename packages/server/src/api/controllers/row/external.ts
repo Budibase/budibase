@@ -56,14 +56,21 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }
   }
+
+  const table = await sdk.tables.getTable(tableId)
+  const { row: dataToUpdate } = await inputProcessing(
+    ctx.user?._id,
+    cloneDeep(table),
+    rowData
+  )
+
   const response = await handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(_id),
-    row: rowData,
+    row: dataToUpdate,
   })
   const row = await sdk.rows.external.getRow(tableId, _id, {
     relationships: true,
   })
-  const table = await sdk.tables.getTable(tableId)
   return {
     ...response,
     row,
@@ -107,9 +114,11 @@ export async function save(ctx: UserCtx) {
     return {
       ...response,
       row,
+      // row: await outputProcessing(table, row),
     }
   } else {
     return response
+    // return outputProcessing(table, response)
   }
 }
 
