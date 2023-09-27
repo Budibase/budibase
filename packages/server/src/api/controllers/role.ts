@@ -1,6 +1,6 @@
-import { roles, context, events, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, events, roles } from "@budibase/backend-core"
 import { getUserMetadataParams, InternalTables } from "../../db/utils"
-import { UserCtx, Database, UserRoles, Role } from "@budibase/types"
+import { Database, Role, UserCtx, UserRoles } from "@budibase/types"
 import sdk from "../../sdk"
 
 const UpdateRolesOptions = {
@@ -94,7 +94,6 @@ export async function save(ctx: UserCtx) {
   )
   role._rev = result.rev
   ctx.body = role
-  ctx.message = `Role '${role.name}' created successfully.`
 }
 
 export async function destroy(ctx: UserCtx) {
@@ -129,5 +128,12 @@ export async function destroy(ctx: UserCtx) {
     role.version
   )
   ctx.message = `Role ${ctx.params.roleId} deleted successfully`
-  ctx.status = 200
+}
+
+export async function accessible(ctx: UserCtx) {
+  const user = ctx.user
+  if (!user || !user.roleId) {
+    ctx.throw(400, "User does not have a valid role")
+  }
+  ctx.body = await roles.getUserRoleHierarchy(user.roleId!)
 }
