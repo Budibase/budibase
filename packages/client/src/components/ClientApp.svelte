@@ -85,7 +85,6 @@
   onMount(async () => {
     await initialise()
     await authStore.actions.fetchUser()
-    await roleStore.actions.fetchAccessibleRoles()
     dataLoaded = true
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
