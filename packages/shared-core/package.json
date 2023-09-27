@@ -17,7 +17,6 @@
     "@budibase/types": "0.0.0"
   },
   "devDependencies": {
-    "concurrently": "^7.6.0",
     "rimraf": "3.0.2",
     "typescript": "5.2.2"
   },

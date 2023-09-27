@@ -10,7 +10,7 @@ import {
   Event,
   TenantResolutionStrategy,
 } from "@budibase/types"
-import { SetOption } from "cookies"
+import type { SetOption } from "cookies"
 const jwt = require("jsonwebtoken")
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR

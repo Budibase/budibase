@@ -14,10 +14,12 @@ import {
   Table,
   TableResponse,
   UserCtx,
+  Datasource,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
+import { cloneDeep } from "lodash"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
@@ -35,16 +37,16 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
 export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
   const internal = await sdk.tables.getAllInternalTables()
 
-  const externalTables = await sdk.datasources.getExternalDatasources()
+  const datasources = await sdk.datasources.getExternalDatasources()
 
-  const external = externalTables.flatMap(table => {
-    let entities = table.entities
+  const external = datasources.flatMap(datasource => {
+    let entities = datasource.entities
     if (entities) {
       return Object.values(entities).map<Table>((entity: Table) => ({
         ...entity,
         type: "external",
-        sourceId: table._id,
-        sql: isSQL(table),
+        sourceId: datasource._id,
+        sql: isSQL(datasource),
       }))
     } else {
       return []
@@ -80,7 +82,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:save`, appId, { ...savedTable })
   ctx.body = savedTable
-  builderSocket?.emitTableUpdate(ctx, { ...savedTable })
+  builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 
 export async function destroy(ctx: UserCtx) {
