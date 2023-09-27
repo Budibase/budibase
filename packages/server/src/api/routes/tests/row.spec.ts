@@ -1753,5 +1753,139 @@ describe.each([
         _rev: expect.any(String),
       })
     })
+
+    it("fetch all will populate the BB references", async () => {
+      const [user1, user2, user3] = _.sampleSize(users, 3)
+
+      const rows: {
+        name: string
+        description: string
+        user?: User[]
+        users?: User[]
+        tableId: string
+      }[] = [
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          users: [user1, user2],
+        },
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          user: [user1],
+          users: [user1, user3],
+        },
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          users: [user3],
+        },
+      ]
+
+      await config.api.row.save(tableId, rows[0])
+      await config.api.row.save(tableId, rows[1])
+      await config.api.row.save(tableId, rows[2])
+
+      const res = await config.api.row.fetch(tableId)
+
+      expect(res).toEqual(
+        expect.arrayContaining(
+          rows.map(r => ({
+            name: r.name,
+            description: r.description,
+            type: "row",
+            tableId,
+            user: r.user?.map(u => ({
+              _id: u._id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              primaryDisplay: u.email,
+            })),
+            users: r.users?.map(u => ({
+              _id: u._id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              primaryDisplay: u.email,
+            })),
+            _id: expect.any(String),
+            _rev: expect.any(String),
+            createdAt: timestamp,
+            updatedAt: timestamp,
+          }))
+        )
+      )
+    })
+
+    it("search all will populate the BB references", async () => {
+      const [user1, user2, user3] = _.sampleSize(users, 3)
+
+      const rows: {
+        name: string
+        description: string
+        user?: User[]
+        users?: User[]
+        tableId: string
+      }[] = [
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          users: [user1, user2],
+        },
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          user: [user1],
+          users: [user1, user3],
+        },
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          users: [user3],
+        },
+      ]
+
+      await config.api.row.save(tableId, rows[0])
+      await config.api.row.save(tableId, rows[1])
+      await config.api.row.save(tableId, rows[2])
+
+      const res = await config.api.row.search(tableId)
+
+      expect(res).toEqual({
+        rows: expect.arrayContaining(
+          rows.map(r => ({
+            name: r.name,
+            description: r.description,
+            type: "row",
+            tableId,
+            user: r.user?.map(u => ({
+              _id: u._id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              primaryDisplay: u.email,
+            })),
+            users: r.users?.map(u => ({
+              _id: u._id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              primaryDisplay: u.email,
+            })),
+            _id: expect.any(String),
+            _rev: expect.any(String),
+            createdAt: timestamp,
+            updatedAt: timestamp,
+          }))
+        ),
+      })
+    })
   })
 })
