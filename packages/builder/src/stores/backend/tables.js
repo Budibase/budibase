@@ -81,12 +81,13 @@ export function createTablesStore() {
     replaceTable(savedTable._id, savedTable)
     select(savedTable._id)
     // make sure tables up to date (related)
-    const tableIdsToFetch = []
+    let tableIdsToFetch = []
     for (let column of Object.values(updatedTable?.schema || {})) {
       if (column.type === FIELDS.LINK.type) {
         tableIdsToFetch.push(column.tableId)
       }
     }
+    tableIdsToFetch = [...new Set(tableIdsToFetch)]
     // too many tables to fetch, just get all
     if (tableIdsToFetch.length > 3) {
       await fetch()
@@ -114,7 +115,6 @@ export function createTablesStore() {
     indexes,
   }) => {
     let draft = cloneDeep(get(derivedStore).selected)
-    console.log(draft)
 
     // delete the original if renaming
     // need to handle if the column had no name, empty string
