@@ -305,12 +305,7 @@ export class ExternalRequest {
       manyRelationships: ManyRelationship[] = []
     for (let [key, field] of Object.entries(table.schema)) {
       // if set already, or not set just skip it
-      if (row[key] == null || newRow[key] || !isEditableColumn(field)) {
-        continue
-      }
-      // if its an empty string then it means return the column to null (if possible)
-      if (row[key] === "") {
-        newRow[key] = null
+      if (row[key] === undefined || newRow[key] || !isEditableColumn(field)) {
         continue
       }
       // parse floats/numbers

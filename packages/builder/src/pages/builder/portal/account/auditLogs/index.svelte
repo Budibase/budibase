@@ -86,8 +86,16 @@
   $: userPage = $userPageInfo.page
   $: logsPage = $logsPageInfo.page
 
+  let usersObj = {}
+  $: usersObj = {
+    ...usersObj,
+    ...$users.data?.reduce((accumulator, user) => {
+      accumulator[user._id] = user
+      return accumulator
+    }, {}),
+  }
   $: sortedUsers = sort(
-    enrich($users.data || [], selectedUsers, "_id"),
+    enrich(Object.values(usersObj), selectedUsers, "_id"),
     "email"
   )
   $: sortedEvents = sort(
@@ -256,8 +264,7 @@
   <div class="controls">
     <div class="select">
       <Multiselect
-        bind:fetchTerm={userSearchTerm}
-        useFetch
+        bind:searchTerm={userSearchTerm}
         placeholder="All users"
         label="Users"
         autocomplete
