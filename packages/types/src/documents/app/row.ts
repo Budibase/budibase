@@ -16,6 +16,7 @@ export enum FieldType {
   INTERNAL = "internal",
   BARCODEQR = "barcodeqr",
   BIGINT = "bigint",
+  BB_REFERENCE = "bb_reference",
 }
 
 export interface RowAttachment {
@@ -32,4 +33,14 @@ export interface Row extends Document {
   tableId?: string
   _viewId?: string
   [key: string]: any
+}
+
+export enum FieldSubtype {
+  USER = "user",
+}
+
+export const FieldTypeSubtypes = {
+  BB_REFERENCE: {
+    USER: FieldSubtype.USER,
+  },
 }

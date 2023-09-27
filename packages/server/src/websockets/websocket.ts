@@ -150,7 +150,7 @@ export class BaseSocket {
     if (room) {
       const sessionIds = await this.getRoomSessionIds(room)
       const keys = sessionIds.map(this.getSessionKey.bind(this))
-      const sessions = await this.redisClient?.bulkGet(keys)
+      const sessions = await this.redisClient?.bulkGet<SocketSession>(keys)
       return Object.values(sessions || {})
     } else {
       return []
