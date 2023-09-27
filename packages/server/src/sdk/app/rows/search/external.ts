@@ -17,7 +17,6 @@ import { utils } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "../search"
 import { HTTPError, db } from "@budibase/backend-core"
 import pick from "lodash/pick"
-import { outputProcessing } from "../../../../utilities/rowProcessor"
 
 export async function search(options: SearchParams) {
   const { tableId } = options
@@ -75,9 +74,6 @@ export async function search(options: SearchParams) {
       const fields = [...options.fields, ...db.CONSTANT_EXTERNAL_ROW_COLS]
       rows = rows.map((r: any) => pick(r, fields))
     }
-
-    const table = await sdk.tables.getTable(tableId)
-    rows = await outputProcessing(table, rows)
 
     // need wrapper object for bookmarks etc when paginating
     return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
