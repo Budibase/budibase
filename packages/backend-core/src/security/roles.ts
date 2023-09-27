@@ -253,7 +253,10 @@ export function checkForRoleResourceArray(
  * Given an app ID this will retrieve all of the roles that are currently within that app.
  * @return {Promise<object[]>} An array of the role objects that were found.
  */
-export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
+export async function getAllRoles(
+  appId?: string,
+  opts?: { idOnly: boolean }
+): Promise<RoleDoc[]> {
   if (appId) {
     return doWithDB(appId, internal)
   } else {
@@ -308,7 +311,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
         )
       }
     }
-    return roles
+    return opts?.idOnly ? roles.map(role => role._id) : roles
   }
 }
 
