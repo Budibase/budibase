@@ -132,8 +132,7 @@ export async function find(ctx: UserCtx): Promise<Row> {
     ctx.throw(404)
   }
 
-  const table = await sdk.tables.getTable(tableId)
-  return await outputProcessing(table, row)
+  return row
 }
 
 export async function destroy(ctx: UserCtx) {
