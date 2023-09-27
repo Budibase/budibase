@@ -115,11 +115,9 @@ export async function save(ctx: UserCtx) {
     return {
       ...response,
       row,
-      // row: await outputProcessing(table, row),
     }
   } else {
     return response
-    // return outputProcessing(table, response)
   }
 }
 
