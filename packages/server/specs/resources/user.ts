@@ -92,7 +92,7 @@ const userSchema = object(
       },
     },
   },
-  { required: ["email", "roles"] }
+  { required: ["email"] }
 )
 
 const userOutputSchema = {
