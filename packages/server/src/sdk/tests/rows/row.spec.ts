@@ -7,9 +7,14 @@ import { HTTPError } from "@budibase/backend-core"
 import { Operation } from "@budibase/types"
 
 const mockDatasourcesGet = jest.fn()
+const mockTableGet = jest.fn()
 sdk.datasources.get = mockDatasourcesGet
+sdk.tables.getTable = mockTableGet
 
 jest.mock("../../../api/controllers/row/ExternalRequest")
+jest.mock("../../../utilities/rowProcessor", () => ({
+  outputProcessing: jest.fn((_, rows) => rows),
+}))
 
 jest.mock("../../../api/controllers/view/exporters", () => ({
   ...jest.requireActual("../../../api/controllers/view/exporters"),
