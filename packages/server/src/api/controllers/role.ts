@@ -1,6 +1,7 @@
 import { context, db as dbCore, events, roles } from "@budibase/backend-core"
 import { getUserMetadataParams, InternalTables } from "../../db/utils"
 import { Database, Role, UserCtx, UserRoles } from "@budibase/types"
+import { sdk as sharedSdk } from "@budibase/shared-core"
 import sdk from "../../sdk"
 
 const UpdateRolesOptions = {
@@ -128,12 +129,18 @@ export async function destroy(ctx: UserCtx) {
     role.version
   )
   ctx.message = `Role ${ctx.params.roleId} deleted successfully`
+  ctx.status = 200
 }
 
 export async function accessible(ctx: UserCtx) {
-  const user = ctx.user
-  if (!user || !user.roleId) {
-    ctx.throw(400, "User does not have a valid role")
+  let roleId = ctx.user?.roleId
+  if (!roleId) {
+    roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
   }
-  ctx.body = await roles.getUserRoleHierarchy(user.roleId!)
+  if (ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)) {
+    const appId = context.getAppId()
+    ctx.body = await roles.getAllRoles(appId, { idOnly: true })
+  } else {
+    ctx.body = await roles.getUserRoleHierarchy(roleId!, { idOnly: true })
+  }
 }

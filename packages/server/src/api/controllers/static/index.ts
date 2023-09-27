@@ -199,8 +199,9 @@ export const serveBuilderPreview = async function (ctx: any) {
 
 export const serveClientLibrary = async function (ctx: any) {
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
-  if (!fs.existsSync(rootPath)) {
-    rootPath = join(__dirname, "..", "..", "..", "..", "client")
+  // incase running from TS directly
+  if (env.isDev() && !fs.existsSync(rootPath)) {
+    rootPath = join(require.resolve("@budibase/client"), "..")
   }
   return send(ctx, "budibase-client.js", {
     root: rootPath,
