@@ -1,4 +1,4 @@
-import { Account } from "../../documents"
+import { Account, AccountSSOProvider } from "../../documents"
 import { Hosting } from "../../sdk"
 
 export interface CreateAccountRequest {
@@ -11,6 +11,8 @@ export interface CreateAccountRequest {
   tenantName?: string
   name?: string
   password: string
+  provider?: AccountSSOProvider
+  thirdPartyProfile: object
 }
 
 export interface SearchAccountsRequest {
