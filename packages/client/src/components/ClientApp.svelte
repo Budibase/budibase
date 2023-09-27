@@ -15,7 +15,6 @@
     builderStore,
     themeStore,
     appStore,
-    roleStore,
     devToolsStore,
     devToolsEnabled,
   } from "stores"
