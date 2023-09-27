@@ -7,6 +7,7 @@ import { context, InternalTable, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   FieldType,
+  FieldTypeSubtypes,
   MonthlyQuotaName,
   PermissionLevel,
   QuotaUsageType,
@@ -25,6 +26,7 @@ import {
   mocks,
   structures,
 } from "@budibase/backend-core/tests"
+import { async } from "validate.js"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -1508,6 +1510,106 @@ describe.each([
             expectStatus: 403,
           })
         })
+      })
+    })
+  })
+
+  describe("bb reference fields", () => {
+    let tableId: string
+    beforeAll(async () => {
+      const tableConfig = generateTableConfig()
+      const table = await config.api.table.create({
+        ...tableConfig,
+        schema: {
+          ...tableConfig.schema,
+          user: {
+            name: "user",
+            type: FieldType.BB_REFERENCE,
+            subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+          },
+          users: {
+            name: "users",
+            type: FieldType.BB_REFERENCE,
+            subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+          },
+        },
+      })
+      tableId = table._id!
+    })
+
+    it("can save and retrieve when BB reference fields are empty", async () => {
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      expect(row).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        type: "row",
+        tableId,
+        _id: expect.any(String),
+        _rev: expect.any(String),
+      })
+    })
+
+    it("can save and retrieve a row with a single BB reference field", async () => {
+      const user = await config.createUser()
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+        user: user,
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      expect(row).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        type: "row",
+        tableId,
+        user: [
+          {
+            _id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            primaryDisplay: user.email,
+          },
+        ],
+        _id: expect.any(String),
+        _rev: expect.any(String),
+      })
+    })
+
+    it("can save and retrieve a row with a multiple BB reference field", async () => {
+      const users = [await config.createUser(), await config.createUser()]
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+        user: users,
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      expect(row).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        type: "row",
+        tableId,
+        user: users.map(u => ({
+          _id: u._id,
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          primaryDisplay: u.email,
+        })),
+        _id: expect.any(String),
+        _rev: expect.any(String),
       })
     })
   })
