@@ -37,6 +37,9 @@
   let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
   let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
 
+  let relationshipPart1 = PrettyRelationshipDefinitions.MANY
+  let relationshipPart2 = PrettyRelationshipDefinitions.ONE
+
   let originalFromColumnName = toRelationship.name,
     originalToColumnName = fromRelationship.name
   let originalFromTable = plusTables.find(
@@ -53,12 +56,13 @@
   )
   let errors = {}
   let fromPrimary, fromForeign, fromColumn, toColumn
-  $: fromId = null
-  $: toId = null
 
   let throughId, throughToKey, throughFromKey
   let isManyToMany, isManyToOne, relationshipType
   let hasValidated = false
+
+  $: fromId = null
+  $: toId = null
 
   $: tableOptions = plusTables.map(table => ({
     label: table.name,
@@ -78,7 +82,6 @@
       hasValidated = false
     })
   }
-  $: console.log(relationshipType)
   $: valid = getErrorCount(errors) === 0 && allRequiredAttributesSet()
   $: isManyToMany = relationshipType === RelationshipType.MANY_TO_MANY
   $: isManyToOne = relationshipType === RelationshipType.MANY_TO_ONE
@@ -350,8 +353,6 @@
       fromPrimary = selectedFromTable?.primary[0] || null
     }
   })
-  let relationshipPart1 = PrettyRelationshipDefinitions.MANY
-  let relationshipPart2 = PrettyRelationshipDefinitions.ONE
 </script>
 
 <ModalContent
@@ -367,10 +368,10 @@
   <RelationshipSelector
     bind:relationshipPart1
     bind:relationshipPart2
-    {relationshipOpts1}
-    {relationshipOpts2}
     bind:relationshipTableIdPrimary={fromId}
     bind:relationshipTableIdSecondary={toId}
+    {relationshipOpts1}
+    {relationshipOpts2}
     {tableOptions}
     {errors}
     primaryDisabled={selectedFromTable}
