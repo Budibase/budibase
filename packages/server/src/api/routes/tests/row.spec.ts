@@ -7,6 +7,7 @@ import { context, InternalTable, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   FieldType,
+  FieldTypeSubtypes,
   MonthlyQuotaName,
   PermissionLevel,
   QuotaUsageType,
@@ -17,6 +18,7 @@ import {
   SortType,
   StaticQuotaName,
   Table,
+  User,
 } from "@budibase/types"
 import {
   expectAnyExternalColsAttributes,
@@ -25,6 +27,7 @@ import {
   mocks,
   structures,
 } from "@budibase/backend-core/tests"
+import _ from "lodash"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -34,7 +37,7 @@ const { basicRow } = setup.structures
 describe.each([
   ["internal", undefined],
   ["postgres", databaseTestProviders.postgres],
-])("/rows (%s)", (_, dsProvider) => {
+])("/rows (%s)", (__, dsProvider) => {
   const isInternal = !dsProvider
 
   const request = setup.getRequest()
@@ -1508,6 +1511,395 @@ describe.each([
             expectStatus: 403,
           })
         })
+      })
+    })
+  })
+
+  describe("bb reference fields", () => {
+    let tableId: string
+    let users: User[]
+
+    beforeAll(async () => {
+      const tableConfig = generateTableConfig()
+
+      if (config.datasource) {
+        tableConfig.sourceId = config.datasource._id
+        if (config.datasource.plus) {
+          tableConfig.type = "external"
+        }
+      }
+      const table = await config.api.table.create({
+        ...tableConfig,
+        schema: {
+          ...tableConfig.schema,
+          user: {
+            name: "user",
+            type: FieldType.BB_REFERENCE,
+            subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+            relationshipType: RelationshipType.ONE_TO_MANY,
+          },
+          users: {
+            name: "users",
+            type: FieldType.BB_REFERENCE,
+            subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+            relationshipType: RelationshipType.MANY_TO_MANY,
+          },
+        },
+      })
+      tableId = table._id!
+
+      users = [
+        await config.createUser(),
+        await config.createUser(),
+        await config.createUser(),
+        await config.createUser(),
+      ]
+    })
+
+    it("can save a row when BB reference fields are empty", async () => {
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      expect(row).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        tableId,
+        _id: expect.any(String),
+        _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
+      })
+    })
+
+    it("can save a row with a single BB reference field", async () => {
+      const user = _.sample(users)!
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+        user: user,
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      expect(row).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        tableId,
+        user: [
+          {
+            _id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            primaryDisplay: user.email,
+          },
+        ],
+        _id: expect.any(String),
+        _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
+      })
+    })
+
+    it("can save a row with a multiple BB reference field", async () => {
+      const selectedUsers = _.sampleSize(users, 2)
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+        users: selectedUsers,
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      expect(row).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        tableId,
+        users: selectedUsers.map(u => ({
+          _id: u._id,
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          primaryDisplay: u.email,
+        })),
+        _id: expect.any(String),
+        _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
+      })
+    })
+
+    it("can retrieve rows with no populated BB references", async () => {
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      const { body: retrieved } = await config.api.row.get(tableId, row._id!)
+      expect(retrieved).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        tableId,
+        user: undefined,
+        users: undefined,
+        _id: row._id,
+        _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        ...defaultRowFields,
+      })
+    })
+
+    it("can retrieve rows with populated BB references", async () => {
+      const [user1, user2] = _.sampleSize(users, 2)
+
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+        users: [user1, user2],
+        user: [user1],
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      const { body: retrieved } = await config.api.row.get(tableId, row._id!)
+      expect(retrieved).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        tableId,
+        user: [user1].map(u => ({
+          _id: u._id,
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          primaryDisplay: u.email,
+        })),
+        users: [user1, user2].map(u => ({
+          _id: u._id,
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          primaryDisplay: u.email,
+        })),
+        _id: row._id,
+        _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        ...defaultRowFields,
+      })
+    })
+
+    it("can update an existing populated row", async () => {
+      const [user1, user2, user3] = _.sampleSize(users, 3)
+
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+        users: [user1, user2],
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      const updatedRow = await config.api.row.save(tableId, {
+        ...row,
+        user: [user3],
+        users: [user3, user2],
+      })
+      expect(updatedRow).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        tableId,
+        user: [
+          {
+            _id: user3._id,
+            email: user3.email,
+            firstName: user3.firstName,
+            lastName: user3.lastName,
+            primaryDisplay: user3.email,
+          },
+        ],
+        users: [user3, user2].map(u => ({
+          _id: u._id,
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          primaryDisplay: u.email,
+        })),
+        _id: row._id,
+        _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
+      })
+    })
+
+    it("can wipe an existing populated BB references in row", async () => {
+      const [user1, user2] = _.sampleSize(users, 2)
+
+      const rowData = {
+        ...basicRow(tableId),
+        name: generator.name(),
+        description: generator.name(),
+        users: [user1, user2],
+      }
+      const row = await config.api.row.save(tableId, rowData)
+
+      const updatedRow = await config.api.row.save(tableId, {
+        ...row,
+        user: null,
+        users: null,
+      })
+      expect(updatedRow).toEqual({
+        name: rowData.name,
+        description: rowData.description,
+        tableId,
+        user: isInternal ? null : undefined,
+        users: isInternal ? null : undefined,
+        _id: row._id,
+        _rev: expect.any(String),
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
+      })
+    })
+
+    it("fetch all will populate the BB references", async () => {
+      const [user1, user2, user3] = _.sampleSize(users, 3)
+
+      const rows: {
+        name: string
+        description: string
+        user?: User[]
+        users?: User[]
+        tableId: string
+      }[] = [
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          users: [user1, user2],
+        },
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          user: [user1],
+          users: [user1, user3],
+        },
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          users: [user3],
+        },
+      ]
+
+      await config.api.row.save(tableId, rows[0])
+      await config.api.row.save(tableId, rows[1])
+      await config.api.row.save(tableId, rows[2])
+
+      const res = await config.api.row.fetch(tableId)
+
+      expect(res).toEqual(
+        expect.arrayContaining(
+          rows.map(r => ({
+            name: r.name,
+            description: r.description,
+            tableId,
+            user: r.user?.map(u => ({
+              _id: u._id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              primaryDisplay: u.email,
+            })),
+            users: r.users?.map(u => ({
+              _id: u._id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              primaryDisplay: u.email,
+            })),
+            _id: expect.any(String),
+            _rev: expect.any(String),
+            id: isInternal ? undefined : expect.any(Number),
+            ...defaultRowFields,
+          }))
+        )
+      )
+    })
+
+    it("search all will populate the BB references", async () => {
+      const [user1, user2, user3] = _.sampleSize(users, 3)
+
+      const rows: {
+        name: string
+        description: string
+        user?: User[]
+        users?: User[]
+        tableId: string
+      }[] = [
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          users: [user1, user2],
+        },
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          user: [user1],
+          users: [user1, user3],
+        },
+        {
+          ...basicRow(tableId),
+          name: generator.name(),
+          description: generator.name(),
+          users: [user3],
+        },
+      ]
+
+      await config.api.row.save(tableId, rows[0])
+      await config.api.row.save(tableId, rows[1])
+      await config.api.row.save(tableId, rows[2])
+
+      const res = await config.api.row.search(tableId)
+
+      expect(res).toEqual({
+        rows: expect.arrayContaining(
+          rows.map(r => ({
+            name: r.name,
+            description: r.description,
+            tableId,
+            user: r.user?.map(u => ({
+              _id: u._id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              primaryDisplay: u.email,
+            })),
+            users: r.users?.map(u => ({
+              _id: u._id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              primaryDisplay: u.email,
+            })),
+            _id: expect.any(String),
+            _rev: expect.any(String),
+            id: isInternal ? undefined : expect.any(Number),
+            ...defaultRowFields,
+          }))
+        ),
+        ...(isInternal
+          ? {}
+          : {
+              hasNextPage: false,
+              bookmark: null,
+            }),
       })
     })
   })
