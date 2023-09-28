@@ -322,14 +322,14 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       case Operation.UPDATE:
         return this.update({
           // exclude the header row and zero index
-          rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
+          rowIndex: json.extra?.idFilter?.equal?.rowNumber,
           sheet,
           row: json.body,
         })
       case Operation.DELETE:
         return this.delete({
           // exclude the header row and zero index
-          rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
+          rowIndex: json.extra?.idFilter?.equal?.rowNumber,
           sheet,
         })
       case Operation.CREATE_TABLE:
@@ -540,12 +540,21 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
+  private async getRowByIndex(sheetTitle: string, rowIndex: number) {
+    const sheet = this.client.sheetsByTitle[sheetTitle]
+    const rows = await sheet.getRows()
+    // We substract 2, as the SDK is skipping the header automatically and Google Spreadsheets is base 1
+    const row = rows[rowIndex - 2]
+    return { sheet, row }
+  }
+
   async update(query: { sheet: string; rowIndex: number; row: any }) {
     try {
       await this.connect()
-      const sheet = this.client.sheetsByTitle[query.sheet]
-      const rows = await sheet.getRows()
-      const row = rows[query.rowIndex]
+      const { sheet, row } = await this.getRowByIndex(
+        query.sheet,
+        query.rowIndex
+      )
       if (row) {
         const updateValues =
           typeof query.row === "string" ? JSON.parse(query.row) : query.row
@@ -571,9 +580,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async delete(query: { sheet: string; rowIndex: number }) {
     await this.connect()
-    const sheet = this.client.sheetsByTitle[query.sheet]
-    const rows = await sheet.getRows()
-    const row = rows[query.rowIndex]
+    const { row } = await this.getRowByIndex(query.sheet, query.rowIndex)
     if (row) {
       await row.delete()
       return [
