@@ -212,7 +212,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       await setupCreationAuth(this.config)
 
       // Initialise oAuth client
-      let googleConfig = await configs.getGoogleDatasourceConfig()
+      const googleConfig = await configs.getGoogleDatasourceConfig()
       if (!googleConfig) {
         throw new HTTPError("Google config not found", 400)
       }
@@ -551,6 +551,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           typeof query.row === "string" ? JSON.parse(query.row) : query.row
         for (let key in updateValues) {
           row[key] = updateValues[key]
+
+          if (row[key] === null) {
+            row[key] = ""
+          }
         }
         await row.save()
         return [
