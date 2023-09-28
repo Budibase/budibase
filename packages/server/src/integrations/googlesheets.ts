@@ -1,6 +1,5 @@
 import {
   ConnectionInfo,
-  Datasource,
   DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
@@ -23,7 +22,6 @@ import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
 import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
-import sdk from "../sdk"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
