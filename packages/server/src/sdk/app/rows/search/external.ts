@@ -77,7 +77,7 @@ export async function search(options: SearchParams) {
     }
 
     const table = await sdk.tables.getTable(tableId)
-    rows = await outputProcessing(table, rows)
+    rows = await outputProcessing(table, rows, { preserveLinks: true })
 
     // need wrapper object for bookmarks etc when paginating
     return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
@@ -174,7 +174,7 @@ export async function fetch(tableId: string) {
     includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
   const table = await sdk.tables.getTable(tableId)
-  return await outputProcessing(table, response)
+  return await outputProcessing(table, response, { preserveLinks: true })
 }
 
 export async function fetchView(viewName: string) {
