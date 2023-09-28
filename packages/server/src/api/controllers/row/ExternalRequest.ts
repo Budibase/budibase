@@ -269,13 +269,25 @@ function isEditableColumn(column: FieldSchema) {
   return !(isExternalAutoColumn || isFormula)
 }
 
-export class ExternalRequest {
-  private operation: Operation
-  private tableId: string
+export type ExternalRequestReturnType<T> = T extends Operation.READ
+  ?
+      | Row[]
+      | {
+          row: Row
+          table: Table
+        }
+  : {
+      row: Row
+      table: Table
+    }
+
+export class ExternalRequest<T extends Operation> {
+  private readonly operation: T
+  private readonly tableId: string
   private datasource?: Datasource
   private tables: { [key: string]: Table } = {}
 
-  constructor(operation: Operation, tableId: string, datasource?: Datasource) {
+  constructor(operation: T, tableId: string, datasource?: Datasource) {
     this.operation = operation
     this.tableId = tableId
     this.datasource = datasource
@@ -739,7 +751,7 @@ export class ExternalRequest {
     return fields
   }
 
-  async run(config: RunConfig) {
+  async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
     const { operation, tableId } = this
     let { datasourceId, tableName } = breakExternalTableId(tableId)
     if (!tableName) {
@@ -830,8 +842,11 @@ export class ExternalRequest {
     }
     const output = this.outputProcessing(response, table, relationships)
     // if reading it'll just be an array of rows, return whole thing
-    return operation === Operation.READ && Array.isArray(response)
-      ? output
-      : { row: output[0], table }
+    const result = (
+      operation === Operation.READ && Array.isArray(response)
+        ? output
+        : { row: output[0], table }
+    ) as ExternalRequestReturnType<T>
+    return result
   }
 }
