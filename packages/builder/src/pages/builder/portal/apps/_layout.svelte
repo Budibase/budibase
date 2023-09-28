@@ -46,7 +46,9 @@
 
 {#if loaded}
   <div class="page">
-    <PortalSideBar />
+    {#if $apps.length > 0}
+      <PortalSideBar />
+    {/if}
     <slot />
   </div>
 {/if}
