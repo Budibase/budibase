@@ -6,7 +6,7 @@ import { InvalidBBRefError } from "./errors"
 export async function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
   subtype: FieldSubtype
-): Promise<string | undefined> {
+): Promise<string | null> {
   const referenceIds: string[] = []
 
   if (Array.isArray(value)) {
@@ -39,7 +39,7 @@ export async function processInputBBReferences(
       throw utils.unreachable(subtype)
   }
 
-  return referenceIds.join(",") || undefined
+  return referenceIds.join(",") || null
 }
 
 export async function processOutputBBReferences(

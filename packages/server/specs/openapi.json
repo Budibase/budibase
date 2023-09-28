@@ -1567,8 +1567,7 @@
           }
         },
         "required": [
-          "email",
-          "roles"
+          "email"
         ]
       },
       "userOutput": {
@@ -1639,7 +1638,6 @@
             },
             "required": [
               "email",
-              "roles",
               "_id"
             ]
           }
@@ -1718,7 +1716,6 @@
               },
               "required": [
                 "email",
-                "roles",
                 "_id"
               ]
             }

@@ -139,20 +139,20 @@ describe("bbReferenceProcessor", () => {
         expect(cacheGetUsersSpy).toBeCalledWith(userIds)
       })
 
-      it("empty strings will return undefined", async () => {
+      it("empty strings will return null", async () => {
         const result = await config.doInTenant(() =>
           processInputBBReferences("", FieldSubtype.USER)
         )
 
-        expect(result).toEqual(undefined)
+        expect(result).toEqual(null)
       })
 
-      it("empty arrays will return undefined", async () => {
+      it("empty arrays will return null", async () => {
         const result = await config.doInTenant(() =>
           processInputBBReferences([], FieldSubtype.USER)
         )
 
-        expect(result).toEqual(undefined)
+        expect(result).toEqual(null)
       })
     })
   })
