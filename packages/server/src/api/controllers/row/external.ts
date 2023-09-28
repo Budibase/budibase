@@ -72,10 +72,15 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     id: breakRowIdField(_id),
     row: dataToUpdate,
   })
-  const row = await outputProcessing(table, response.row)
+  const row = await sdk.rows.external.getRow(tableId, _id, {
+    relationships: true,
+  })
+  const enrichedRow = await outputProcessing(table, row, {
+    preserveLinks: true,
+  })
   return {
     ...response,
-    row,
+    row: enrichedRow,
     table,
   }
 }
@@ -116,7 +121,7 @@ export async function save(ctx: UserCtx) {
     })
     return {
       ...response,
-      row: await outputProcessing(table, row),
+      row: await outputProcessing(table, row, { preserveLinks: true }),
     }
   } else {
     return response
