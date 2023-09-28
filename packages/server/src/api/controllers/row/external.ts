@@ -1,9 +1,13 @@
-import { FieldTypes, NoEmptyFilterStrings } from "../../../constants"
+import { FieldTypes } from "../../../constants"
 import {
   breakExternalTableId,
   breakRowIdField,
 } from "../../../integrations/utils"
-import { ExternalRequest, RunConfig } from "./ExternalRequest"
+import {
+  ExternalRequest,
+  ExternalRequestReturnType,
+  RunConfig,
+} from "./ExternalRequest"
 import {
   Datasource,
   IncludeRelationship,
@@ -24,11 +28,11 @@ import {
 } from "../../../utilities/rowProcessor"
 import { cloneDeep, isEqual } from "lodash"
 
-export async function handleRequest(
-  operation: Operation,
+export async function handleRequest<T extends Operation>(
+  operation: T,
   tableId: string,
   opts?: RunConfig
-) {
+): Promise<ExternalRequestReturnType<T>> {
   // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
   if (opts && opts.filters) {
     opts.filters = sdk.rows.removeEmptyFilters(opts.filters)
@@ -37,7 +41,7 @@ export async function handleRequest(
     !dataFilters.hasFilters(opts?.filters) &&
     opts?.filters?.onEmptyFilter === EmptyFilterOption.RETURN_NONE
   ) {
-    return []
+    return [] as any
   }
 
   return new ExternalRequest(operation, tableId, opts?.datasource).run(
