@@ -1,6 +1,5 @@
 import {
   ConnectionInfo,
-  Datasource,
   DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
@@ -23,7 +22,6 @@ import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
 import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
-import sdk from "../sdk"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -56,6 +54,7 @@ const ALLOWED_TYPES = [
   FieldType.OPTIONS,
   FieldType.BOOLEAN,
   FieldType.BARCODEQR,
+  FieldType.BB_REFERENCE,
 ]
 
 const SCHEMA: Integration = {
@@ -213,7 +212,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       await setupCreationAuth(this.config)
 
       // Initialise oAuth client
-      let googleConfig = await configs.getGoogleDatasourceConfig()
+      const googleConfig = await configs.getGoogleDatasourceConfig()
       if (!googleConfig) {
         throw new HTTPError("Google config not found", 400)
       }
@@ -552,6 +551,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           typeof query.row === "string" ? JSON.parse(query.row) : query.row
         for (let key in updateValues) {
           row[key] = updateValues[key]
+
+          if (row[key] === null) {
+            row[key] = ""
+          }
         }
         await row.save()
         return [
