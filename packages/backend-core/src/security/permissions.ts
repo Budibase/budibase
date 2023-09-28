@@ -1,7 +1,8 @@
-import { PermissionType, PermissionLevel } from "@budibase/types"
-export { PermissionType, PermissionLevel } from "@budibase/types"
+import { PermissionLevel, PermissionType } from "@budibase/types"
 import flatten from "lodash/flatten"
 import cloneDeep from "lodash/fp/cloneDeep"
+
+export { PermissionType, PermissionLevel } from "@budibase/types"
 
 export type RoleHierarchy = {
   permissionId: string
@@ -78,6 +79,7 @@ export const BUILTIN_PERMISSIONS = {
     permissions: [
       new Permission(PermissionType.QUERY, PermissionLevel.READ),
       new Permission(PermissionType.TABLE, PermissionLevel.READ),
+      new Permission(PermissionType.APP, PermissionLevel.READ),
     ],
   },
   WRITE: {
@@ -88,6 +90,7 @@ export const BUILTIN_PERMISSIONS = {
       new Permission(PermissionType.TABLE, PermissionLevel.WRITE),
       new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
       new Permission(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
+      new Permission(PermissionType.APP, PermissionLevel.READ),
     ],
   },
   POWER: {
@@ -99,6 +102,7 @@ export const BUILTIN_PERMISSIONS = {
       new Permission(PermissionType.AUTOMATION, PermissionLevel.EXECUTE),
       new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
       new Permission(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
+      new Permission(PermissionType.APP, PermissionLevel.READ),
     ],
   },
   ADMIN: {
@@ -111,6 +115,7 @@ export const BUILTIN_PERMISSIONS = {
       new Permission(PermissionType.WEBHOOK, PermissionLevel.READ),
       new Permission(PermissionType.QUERY, PermissionLevel.ADMIN),
       new Permission(PermissionType.LEGACY_VIEW, PermissionLevel.READ),
+      new Permission(PermissionType.APP, PermissionLevel.READ),
     ],
   },
 }
