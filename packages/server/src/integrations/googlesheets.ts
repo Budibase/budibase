@@ -56,6 +56,7 @@ const ALLOWED_TYPES = [
   FieldType.OPTIONS,
   FieldType.BOOLEAN,
   FieldType.BARCODEQR,
+  FieldType.BB_REFERENCE,
 ]
 
 const SCHEMA: Integration = {
