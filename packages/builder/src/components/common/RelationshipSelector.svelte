@@ -6,11 +6,14 @@
   export let relationshipTableIdPrimary
   export let relationshipTableIdSecondary
   export let editableColumn
-  export let linkEditDisabled
+  export let linkEditDisabled = false
   export let tableOptions
   export let errors
   export let relationshipOpts1
   export let relationshipOpts2
+  export let primaryTableChanged
+  export let secondaryTableChanged
+  export let primaryDisabled = true
 </script>
 
 <div class="relationship-container">
@@ -19,16 +22,19 @@
       disabled={linkEditDisabled}
       bind:value={relationshipPart1}
       options={relationshipOpts1}
+      bind:error={errors.relationshipType}
     />
   </div>
   <div class="relationship-label">in</div>
   <div class="relationship-part">
     <Select
-      disabled
+      disabled={primaryDisabled}
       options={tableOptions}
       getOptionLabel={table => table.name}
       getOptionValue={table => table._id}
       bind:value={relationshipTableIdPrimary}
+      on:change={primaryTableChanged}
+      bind:error={errors.fromTable}
     />
   </div>
 </div>
@@ -46,20 +52,24 @@
     <Select
       disabled={linkEditDisabled}
       bind:value={relationshipTableIdSecondary}
+      bind:error={errors.toTable}
       options={tableOptions.filter(
         table => table._id !== relationshipTableIdPrimary
       )}
       getOptionLabel={table => table.name}
       getOptionValue={table => table._id}
+      on:change={secondaryTableChanged}
     />
   </div>
 </div>
-<Input
-  disabled={linkEditDisabled}
-  label={`Column name in other table`}
-  bind:value={editableColumn.fieldName}
-  error={errors.relatedName}
-/>
+{#if editableColumn}
+  <Input
+    disabled={linkEditDisabled}
+    label={`Column name in other table`}
+    bind:value={editableColumn.fieldName}
+    error={errors.relatedName}
+  />
+{/if}
 
 <style>
   .relationship-container {
