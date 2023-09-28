@@ -15,4 +15,16 @@ export interface PlatformUserById extends Document {
   tenantId: string
 }
 
-export type PlatformUser = PlatformUserByEmail | PlatformUserById
+/**
+ * doc id is a unique SSO provider ID for the user
+ */
+export interface PlatformUserBySsoId extends Document {
+  tenantId: string
+  userId: string
+  email: string
+}
+
+export type PlatformUser =
+  | PlatformUserByEmail
+  | PlatformUserById
+  | PlatformUserBySsoId

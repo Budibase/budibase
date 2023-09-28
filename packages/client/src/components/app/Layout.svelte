@@ -4,15 +4,14 @@
   import { Heading, Icon, clickOutside } from "@budibase/bbui"
   import { FieldTypes } from "constants"
   import active from "svelte-spa-router/active"
-  import { RoleUtils } from "@budibase/frontend-core"
 
   const sdk = getContext("sdk")
   const {
     routeStore,
+    roleStore,
     styleable,
     linkable,
     builderStore,
-    currentRole,
     sidePanelStore,
   } = sdk
   const component = getContext("component")
@@ -61,7 +60,7 @@
   })
   setContext("layout", store)
 
-  $: validLinks = getValidLinks(links, $currentRole)
+  $: validLinks = getValidLinks(links, $roleStore)
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
   $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
   $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
@@ -99,14 +98,12 @@
     }
   }
 
-  const getValidLinks = (allLinks, role) => {
+  const getValidLinks = (allLinks, userRoleHierarchy) => {
     // Strip links missing required info
     let validLinks = (allLinks || []).filter(link => link.text && link.url)
-
     // Filter to only links allowed by the current role
-    const priority = RoleUtils.getRolePriority(role)
     return validLinks.filter(link => {
-      return !link.roleId || RoleUtils.getRolePriority(link.roleId) <= priority
+      return userRoleHierarchy?.find(roleId => roleId === link.roleId)
     })
   }
 

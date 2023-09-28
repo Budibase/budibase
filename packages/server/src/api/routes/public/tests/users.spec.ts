@@ -68,6 +68,7 @@ describe("no user role update in free", () => {
     })
     expect(res.status).toBe(200)
     expect(res.body.data.roles["app_a"]).toBeUndefined()
+    expect(res.body.message).toBeDefined()
   })
 
   it("should not allow 'admin' to be updated", async () => {
@@ -77,6 +78,7 @@ describe("no user role update in free", () => {
     })
     expect(res.status).toBe(200)
     expect(res.body.data.admin).toBeUndefined()
+    expect(res.body.message).toBeDefined()
   })
 
   it("should not allow 'builder' to be updated", async () => {
@@ -86,6 +88,7 @@ describe("no user role update in free", () => {
     })
     expect(res.status).toBe(200)
     expect(res.body.data.builder).toBeUndefined()
+    expect(res.body.message).toBeDefined()
   })
 })
 
@@ -102,6 +105,7 @@ describe("no user role update in business", () => {
     })
     expect(res.status).toBe(200)
     expect(res.body.data.roles["app_a"]).toBe("BASIC")
+    expect(res.body.message).toBeUndefined()
   })
 
   it("should allow 'admin' to be updated", async () => {
@@ -112,6 +116,7 @@ describe("no user role update in business", () => {
     })
     expect(res.status).toBe(200)
     expect(res.body.data.admin.global).toBe(true)
+    expect(res.body.message).toBeUndefined()
   })
 
   it("should allow 'builder' to be updated", async () => {
@@ -122,5 +127,6 @@ describe("no user role update in business", () => {
     })
     expect(res.status).toBe(200)
     expect(res.body.data.builder.global).toBe(true)
+    expect(res.body.message).toBeUndefined()
   })
 })

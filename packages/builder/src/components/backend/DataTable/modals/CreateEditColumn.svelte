@@ -33,7 +33,7 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
-  import { FieldSubtype, FieldType } from "@budibase/types"
+  import { FieldType } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
 
   const AUTO_TYPE = "auto"
@@ -43,11 +43,7 @@
   const NUMBER_TYPE = FIELDS.NUMBER.type
   const JSON_TYPE = FIELDS.JSON.type
   const DATE_TYPE = FIELDS.DATETIME.type
-  const BB_REFERENCE_TYPE = FieldType.BB_REFERENCE
-  const BB_USER_REFERENCE_TYPE = composeType(
-    BB_REFERENCE_TYPE,
-    FieldSubtype.USER
-  )
+  const USER_REFRENCE_TYPE = FIELDS.BB_REFERENCE_USER.compositeType
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -83,33 +79,6 @@
   }
   let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
   let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
-
-  const bbRefTypeMapping = {}
-
-  function composeType(fieldType, subtype) {
-    return `${fieldType}_${subtype}`
-  }
-
-  // Handling fields with subtypes
-  fieldDefinitions = Object.entries(fieldDefinitions).reduce(
-    (p, [key, field]) => {
-      if (field.type === BB_REFERENCE_TYPE) {
-        const composedType = composeType(field.type, field.subtype)
-        p[key] = {
-          ...field,
-          type: composedType,
-        }
-        bbRefTypeMapping[composedType] = {
-          type: field.type,
-          subtype: field.subtype,
-        }
-      } else {
-        p[key] = field
-      }
-      return p
-    },
-    {}
-  )
 
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
@@ -170,12 +139,8 @@
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
 
-      const mapped = Object.entries(bbRefTypeMapping).find(
-        ([_, v]) => v.type === field.type && v.subtype === field.subtype
-      )
-      if (mapped) {
-        editableColumn.type = mapped[0]
-        delete editableColumn.subtype
+      if (editableColumn.type === FieldType.BB_REFERENCE) {
+        editableColumn.type = `${editableColumn.type}_${editableColumn.subtype}`
       }
       // Here we are setting the relationship values based on the editableColumn
       // This part of the code is used when viewing an existing field hence the check
@@ -211,8 +176,6 @@
   }
 
   $: initialiseField(field, savingColumn)
-
-  $: isBBReference = !!bbRefTypeMapping[editableColumn.type]
 
   $: checkConstraints(editableColumn)
   $: required = !!editableColumn?.constraints?.presence || primaryDisplay
@@ -286,11 +249,12 @@
 
     let saveColumn = cloneDeep(editableColumn)
 
-    if (bbRefTypeMapping[saveColumn.type]) {
-      saveColumn = {
-        ...saveColumn,
-        ...bbRefTypeMapping[saveColumn.type],
-      }
+    // Handle types on composite types
+    const definition = fieldDefinitions[saveColumn.type.toUpperCase()]
+    if (definition && saveColumn.type === definition.compositeType) {
+      saveColumn.type = definition.type
+      saveColumn.subtype = definition.subtype
+      delete saveColumn.compositeType
     }
 
     if (saveColumn.type === AUTO_TYPE) {
@@ -373,7 +337,7 @@
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     } else if (editableColumn.type === FORMULA_TYPE) {
       editableColumn.formulaType = "dynamic"
-    } else if (editableColumn.type === BB_USER_REFERENCE_TYPE) {
+    } else if (editableColumn.type === USER_REFRENCE_TYPE) {
       editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
     }
   }
@@ -431,13 +395,11 @@
         FIELDS.BOOLEAN,
         FIELDS.FORMULA,
         FIELDS.BIGINT,
+        FIELDS.BB_REFERENCE_USER,
       ]
       // no-sql or a spreadsheet
       if (!external || table.sql) {
         fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
-      }
-      if (fieldDefinitions.USER) {
-        fields.push(fieldDefinitions.USER)
       }
       return fields
     }
@@ -447,8 +409,9 @@
     if (!fieldToCheck) {
       return
     }
+
     // most types need this, just make sure its always present
-    if (fieldToCheck && !fieldToCheck.constraints) {
+    if (!fieldToCheck.constraints) {
       fieldToCheck.constraints = {}
     }
     // some string types may have been built by server, may not always have constraints
@@ -528,7 +491,7 @@
     on:change={handleTypeChange}
     options={allowedTypes}
     getOptionLabel={field => field.name}
-    getOptionValue={field => field.type}
+    getOptionValue={field => field.compositeType || field.type}
     getOptionIcon={field => field.icon}
     isOptionEnabled={option => {
       if (option.type == AUTO_TYPE) {
@@ -694,7 +657,7 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
-  {:else if isBBReference}
+  {:else if editableColumn.type === USER_REFRENCE_TYPE}
     <Toggle
       value={editableColumn.relationshipType === RelationshipType.MANY_TO_MANY}
       on:change={e =>

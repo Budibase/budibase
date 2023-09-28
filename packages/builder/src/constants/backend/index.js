@@ -120,10 +120,11 @@ export const FIELDS = {
       presence: false,
     },
   },
-  USER: {
+  BB_REFERENCE_USER: {
     name: "User",
     type: "bb_reference",
     subtype: "user",
+    compositeType: "bb_reference_user", // Used for working with the subtype on CreateEditColumn as is it was a primary type
     icon: "User",
   },
 }

@@ -1,32 +1,39 @@
 <script>
   import { Heading, Select, ActionButton } from "@budibase/bbui"
-  import { devToolsStore, appStore } from "../../stores"
-  import { getContext } from "svelte"
+  import { devToolsStore, appStore, roleStore } from "../../stores"
+  import { getContext, onMount } from "svelte"
 
   const context = getContext("context")
+  const SELF_ROLE = "self"
 
-  $: previewOptions = [
-    {
+  let staticRoleList
+
+  $: previewOptions = buildRoleList(staticRoleList)
+
+  function buildRoleList(roleIds) {
+    const list = []
+    list.push({
       label: "View as yourself",
-      value: "self",
-    },
-    {
-      label: "View as public user",
-      value: "PUBLIC",
-    },
-    {
-      label: "View as basic user",
-      value: "BASIC",
-    },
-    {
-      label: "View as power user",
-      value: "POWER",
-    },
-    {
-      label: "View as admin user",
-      value: "ADMIN",
-    },
-  ]
+      value: SELF_ROLE,
+    })
+    if (!roleIds) {
+      return list
+    }
+    for (let roleId of roleIds) {
+      list.push({
+        label: `View as ${roleId.toLowerCase()} user`,
+        value: roleId,
+      })
+    }
+    devToolsStore.actions.changeRole(SELF_ROLE)
+    return list
+  }
+
+  onMount(async () => {
+    // make sure correct before starting
+    await devToolsStore.actions.changeRole(SELF_ROLE)
+    staticRoleList = await roleStore.actions.fetchAccessibleRoles()
+  })
 </script>
 
 <div class="dev-preview-header" class:mobile={$context.device.mobile}>
@@ -34,7 +41,7 @@
   <Select
     quiet
     options={previewOptions}
-    value={$devToolsStore.role || "self"}
+    value={$devToolsStore.role || SELF_ROLE}
     placeholder={null}
     autoWidth
     on:change={e => devToolsStore.actions.changeRole(e.detail)}
