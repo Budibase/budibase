@@ -72,12 +72,10 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     id: breakRowIdField(_id),
     row: dataToUpdate,
   })
-  const row = await sdk.rows.external.getRow(tableId, _id, {
-    relationships: true,
-  })
+  const row = await outputProcessing(table, response.row)
   return {
     ...response,
-    row: await outputProcessing(table, row),
+    row,
     table,
   }
 }
