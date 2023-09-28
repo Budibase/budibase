@@ -613,7 +613,7 @@ export interface components {
         global?: boolean;
       };
       /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
-      roles: { [key: string]: string };
+      roles?: { [key: string]: string };
     };
     userOutput: {
       data: {
@@ -643,7 +643,7 @@ export interface components {
           global?: boolean;
         };
         /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
-        roles: { [key: string]: string };
+        roles?: { [key: string]: string };
         /** @description The ID of the user. */
         _id: string;
       };
@@ -676,7 +676,7 @@ export interface components {
           global?: boolean;
         };
         /** @description Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license. */
-        roles: { [key: string]: string };
+        roles?: { [key: string]: string };
         /** @description The ID of the user. */
         _id: string;
       }[];
