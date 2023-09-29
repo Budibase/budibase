@@ -346,7 +346,7 @@ export class ExternalRequest<T extends Operation> {
           }
           newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
         } else {
-          //
+          // Removing from both new and row, as we don't know if it has already been processed
           row[field.foreignKey || linkTablePrimary] = null
           newRow[field.foreignKey || linkTablePrimary] = null
         }
