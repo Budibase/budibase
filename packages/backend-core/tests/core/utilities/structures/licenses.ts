@@ -123,6 +123,10 @@ export function customer(): Customer {
 export function subscription(): Subscription {
   return {
     amount: 10000,
+    amounts: {
+      user: 10000,
+      creator: 0,
+    },
     cancelAt: undefined,
     currency: "usd",
     currentPeriodEnd: 0,
@@ -131,6 +135,10 @@ export function subscription(): Subscription {
     duration: PriceDuration.MONTHLY,
     pastDueAt: undefined,
     quantity: 0,
+    quantities: {
+      user: 0,
+      creator: 0,
+    },
     status: "active",
   }
 }

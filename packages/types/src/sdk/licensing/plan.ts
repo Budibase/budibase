@@ -30,6 +30,7 @@ export interface AvailablePrice {
 
 export enum PlanModel {
   PER_USER = "perUser",
+  PER_CREATOR_PER_USER = "per_creator_per_user",
   DAY_PASS = "dayPass",
 }
 
