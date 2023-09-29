@@ -152,7 +152,7 @@
       {updateOnChange}
     />
   {/if}
-  {#if !disabled}
+  {#if !disabled && type !== "formula"}
     <div
       class={`icon ${getIconClass(value, type)}`}
       on:click={() => {
