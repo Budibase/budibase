@@ -251,10 +251,12 @@ export async function outputProcessing<T extends Row[] | Row>(
     )) as Row[]
   }
   // remove null properties to match internal API
-  for (let row of enriched) {
-    for (let key of Object.keys(row)) {
-      if (row[key] === null) {
-        delete row[key]
+  if (table.sourceId) {
+    for (let row of enriched) {
+      for (let key of Object.keys(row)) {
+        if (row[key] === null) {
+          delete row[key]
+        }
       }
     }
   }
