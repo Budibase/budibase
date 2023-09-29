@@ -9,7 +9,7 @@ import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent } from "../../../threads/definitions"
-import { Query, UserCtx } from "@budibase/types"
+import { ConfigType, Query, UserCtx } from "@budibase/types"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -107,7 +107,7 @@ export async function find(ctx: UserCtx) {
 
 //Required to discern between OIDC OAuth config entries
 function getOAuthConfigCookieId(ctx: UserCtx) {
-  if (ctx.user.providerType === constants.Config.OIDC) {
+  if (ctx.user.providerType === ConfigType.OIDC) {
     return utils.getCookie(ctx, constants.Cookie.OIDC_CONFIG)
   }
 }
@@ -135,7 +135,7 @@ export async function preview(ctx: UserCtx) {
       const db = context.getAppDB()
       const existing = (await db.get(queryId)) as Query
       existingSchema = existing.schema
-    } catch (err) {
+    } catch (err: any) {
       if (err.status !== 404) {
         ctx.throw(500, "Unable to retrieve existing query")
       }
@@ -210,7 +210,7 @@ export async function preview(ctx: UserCtx) {
       info,
       extra,
     }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 }
@@ -276,7 +276,7 @@ async function execute(
     } else {
       ctx.body = { data: rows, pagination, ...extra, ...info }
     }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 }
