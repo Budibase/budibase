@@ -235,9 +235,6 @@ export async function outputProcessing<T extends Row[] | Row>(
       }
     } else if (column.type == FieldTypes.BB_REFERENCE) {
       for (let row of enriched) {
-        if (row[property] == null) {
-          continue
-        }
         row[property] = await processOutputBBReferences(
           row[property],
           column.subtype as FieldSubtype
