@@ -60,6 +60,9 @@
       // even if they are not in the inital fetch results
       initialValuesProcessed = true
       optionsObj = (fieldState?.value || []).reduce((accumulator, value) => {
+        if (!value._id) {
+          return accumulator
+        }
         accumulator[value._id] = {
           _id: value._id,
           [primaryDisplay]: value.primaryDisplay,
