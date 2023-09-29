@@ -1337,7 +1337,6 @@ components:
               role ID, e.g. ADMIN.
       required:
         - email
-        - roles
     userOutput:
       type: object
       properties:
@@ -1398,7 +1397,6 @@ components:
               type: string
           required:
             - email
-            - roles
             - _id
       required:
         - data
@@ -1464,7 +1462,6 @@ components:
                 type: string
             required:
               - email
-              - roles
               - _id
       required:
         - data

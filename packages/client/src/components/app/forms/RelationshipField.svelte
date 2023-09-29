@@ -16,6 +16,8 @@
   export let defaultValue
   export let onChange
   export let filter
+  export let datasourceType = "table"
+  export let primaryDisplay
 
   let fieldState
   let fieldApi
@@ -24,12 +26,15 @@
   let searchTerm
   let open
 
+  $: type =
+    datasourceType === "table" ? FieldTypes.LINK : FieldTypes.BB_REFERENCE
+
   $: multiselect = fieldSchema?.relationshipType !== "one-to-many"
   $: linkedTableId = fieldSchema?.tableId
   $: fetch = fetchData({
     API,
     datasource: {
-      type: "table",
+      type: datasourceType,
       tableId: linkedTableId,
     },
     options: {
@@ -44,7 +49,7 @@
     : flatten(fieldState?.value)?.[0]
   $: component = multiselect ? CoreMultiselect : CoreSelect
   $: expandedDefaultValue = expand(defaultValue)
-  $: primaryDisplay = tableDefinition?.primaryDisplay
+  $: primaryDisplay = primaryDisplay || tableDefinition?.primaryDisplay
 
   let optionsObj = {}
   let initialValuesProcessed
@@ -54,7 +59,7 @@
       // Persist the initial values as options, allowing them to be present in the dropdown,
       // even if they are not in the inital fetch results
       initialValuesProcessed = true
-      optionsObj = fieldState?.value?.reduce((accumulator, value) => {
+      optionsObj = (fieldState?.value || []).reduce((accumulator, value) => {
         accumulator[value._id] = {
           _id: value._id,
           [primaryDisplay]: value.primaryDisplay,
@@ -116,7 +121,12 @@
     if (!Array.isArray(values)) {
       values = [values]
     }
-    return values.map(value => (typeof value === "object" ? value._id : value))
+    values = values.map(value =>
+      typeof value === "object" ? value._id : value
+    )
+    // Make sure field state is valid
+    fieldApi.setValue(values)
+    return values
   }
 
   const getDisplayName = row => {
@@ -161,7 +171,7 @@
   {disabled}
   {validation}
   defaultValue={expandedDefaultValue}
-  type={FieldTypes.LINK}
+  {type}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
