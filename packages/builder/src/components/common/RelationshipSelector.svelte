@@ -1,6 +1,5 @@
 <script>
   import { Select, Input } from "@budibase/bbui"
-  import { PrettyRelationshipDefinitions } from "constants/backend"
 
   export let relationshipPart1
   export let relationshipPart2
@@ -10,6 +9,8 @@
   export let linkEditDisabled
   export let tableOptions
   export let errors
+  export let relationshipOpts1
+  export let relationshipOpts2
 </script>
 
 <div class="relationship-container">
@@ -17,15 +18,17 @@
     <Select
       disabled={linkEditDisabled}
       bind:value={relationshipPart1}
-      options={Object.values(PrettyRelationshipDefinitions)}
+      options={relationshipOpts1}
     />
   </div>
   <div class="relationship-label">in</div>
   <div class="relationship-part">
     <Select
       disabled
-      options={[relationshipTableIdPrimary]}
-      value={relationshipTableIdPrimary}
+      options={tableOptions}
+      getOptionLabel={table => table.name}
+      getOptionValue={table => table._id}
+      bind:value={relationshipTableIdPrimary}
     />
   </div>
 </div>
@@ -34,7 +37,7 @@
     <Select
       disabled={linkEditDisabled}
       bind:value={relationshipPart2}
-      options={Object.values(PrettyRelationshipDefinitions)}
+      options={relationshipOpts2}
       getOptionLabel={option => "To " + option.toLowerCase()}
     />
   </div>
@@ -43,7 +46,9 @@
     <Select
       disabled={linkEditDisabled}
       bind:value={relationshipTableIdSecondary}
-      options={tableOptions}
+      options={tableOptions.filter(
+        table => table._id !== relationshipTableIdPrimary
+      )}
       getOptionLabel={table => table.name}
       getOptionValue={table => table._id}
     />
