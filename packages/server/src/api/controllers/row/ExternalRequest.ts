@@ -340,10 +340,16 @@ export class ExternalRequest<T extends Operation> {
       // one to many
       if (isOneSide(field)) {
         let id = row[key][0]
-        if (typeof row[key] === "string") {
-          id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
+        if (id) {
+          if (typeof row[key] === "string") {
+            id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
+          }
+          newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
+        } else {
+          //
+          row[field.foreignKey || linkTablePrimary] = null
+          newRow[field.foreignKey || linkTablePrimary] = null
         }
-        newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
       }
       // many to many
       else if (field.through) {
