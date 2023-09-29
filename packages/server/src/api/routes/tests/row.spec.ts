@@ -1787,19 +1787,14 @@ describe.each([
         user: null,
         users: null,
       })
-      const toCompare: any = {
+      expect(updatedRow).toEqual({
         name: rowData.name,
         description: rowData.description,
         tableId,
         _id: row._id,
         _rev: expect.any(String),
         type: "row",
-      }
-      if (!isInternal) {
-        toCompare.user = null
-        toCompare.users = null
-      }
-      expect(updatedRow).toEqual(toCompare)
+      })
     })
 
     it("fetch all will populate the relationships", async () => {
