@@ -48,7 +48,7 @@ export async function processOutputBBReferences(
 ) {
   if (typeof value !== "string") {
     // Already processed or nothing to process
-    return value
+    return value || undefined
   }
 
   const ids = value.split(",").filter(id => !!id)

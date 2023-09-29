@@ -108,13 +108,11 @@ export async function save(ctx: UserCtx) {
     row,
   })
 
-  const responseRow = response as { row: Row }
-
   if (!isEqual(table, updatedTable)) {
     await sdk.tables.saveTable(updatedTable)
   }
 
-  const rowId = responseRow.row._id
+  const rowId = response.row._id
   if (rowId) {
     const row = await sdk.rows.external.getRow(tableId, rowId, {
       relationships: true,

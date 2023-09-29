@@ -18,7 +18,6 @@ import {
   SortType,
   StaticQuotaName,
   Table,
-  User,
 } from "@budibase/types"
 import {
   expectAnyExternalColsAttributes,
@@ -1515,9 +1514,82 @@ describe.each([
     })
   })
 
-  describe("bb reference fields", () => {
+  let o2mTable: Table
+  let m2mTable: Table
+  beforeAll(async () => {
+    o2mTable = await config.createTable(
+      { ...generateTableConfig(), name: "o2m" },
+      {
+        skipReassigning: true,
+      }
+    )
+    m2mTable = await config.createTable(
+      { ...generateTableConfig(), name: "m2m" },
+      {
+        skipReassigning: true,
+      }
+    )
+  })
+
+  describe.each([
+    [
+      "relationship fields",
+      () => ({
+        user: {
+          name: "user",
+          relationshipType: RelationshipType.ONE_TO_MANY,
+          type: FieldType.LINK,
+          tableId: o2mTable._id!,
+          fieldName: "fk_o2m",
+        },
+        users: {
+          name: "users",
+          relationshipType: RelationshipType.MANY_TO_MANY,
+          type: FieldType.LINK,
+          tableId: m2mTable._id!,
+          fieldName: "fk_m2m",
+        },
+      }),
+      (tableId: string) =>
+        config.api.row.save(tableId, {
+          name: generator.word(),
+          description: generator.paragraph(),
+          tableId,
+        }),
+      (row: Row) => ({
+        _id: row._id,
+        primaryDisplay: row.name,
+      }),
+    ],
+    [
+      "bb reference fields",
+      () => ({
+        user: {
+          name: "user",
+          relationshipType: RelationshipType.ONE_TO_MANY,
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+        },
+        users: {
+          name: "users",
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
+          relationshipType: RelationshipType.MANY_TO_MANY,
+        },
+      }),
+      () => config.createUser(),
+      (row: Row) => ({
+        _id: row._id,
+        email: row.email,
+        firstName: row.firstName,
+        lastName: row.lastName,
+        primaryDisplay: row.email,
+      }),
+    ],
+  ])("links - %s", (__, relSchema, dataGenerator, resultMapper) => {
     let tableId: string
-    let users: User[]
+    let o2mData: Row[]
+    let m2mData: Row[]
 
     beforeAll(async () => {
       const tableConfig = generateTableConfig()
@@ -1532,31 +1604,27 @@ describe.each([
         ...tableConfig,
         schema: {
           ...tableConfig.schema,
-          user: {
-            name: "user",
-            type: FieldType.BB_REFERENCE,
-            subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
-            relationshipType: RelationshipType.ONE_TO_MANY,
-          },
-          users: {
-            name: "users",
-            type: FieldType.BB_REFERENCE,
-            subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
-            relationshipType: RelationshipType.MANY_TO_MANY,
-          },
+          ...relSchema(),
         },
       })
       tableId = table._id!
 
-      users = [
-        await config.createUser(),
-        await config.createUser(),
-        await config.createUser(),
-        await config.createUser(),
+      o2mData = [
+        await dataGenerator(o2mTable._id!),
+        await dataGenerator(o2mTable._id!),
+        await dataGenerator(o2mTable._id!),
+        await dataGenerator(o2mTable._id!),
+      ]
+
+      m2mData = [
+        await dataGenerator(m2mTable._id!),
+        await dataGenerator(m2mTable._id!),
+        await dataGenerator(m2mTable._id!),
+        await dataGenerator(m2mTable._id!),
       ]
     })
 
-    it("can save a row when BB reference fields are empty", async () => {
+    it("can save a row when relationship fields are empty", async () => {
       const rowData = {
         ...basicRow(tableId),
         name: generator.name(),
@@ -1575,13 +1643,13 @@ describe.each([
       })
     })
 
-    it("can save a row with a single BB reference field", async () => {
-      const user = _.sample(users)!
+    it("can save a row with a single relationship field", async () => {
+      const user = _.sample(o2mData)!
       const rowData = {
         ...basicRow(tableId),
         name: generator.name(),
         description: generator.name(),
-        user: user,
+        user: [user],
       }
       const row = await config.api.row.save(tableId, rowData)
 
@@ -1589,24 +1657,17 @@ describe.each([
         name: rowData.name,
         description: rowData.description,
         tableId,
-        user: [
-          {
-            _id: user._id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            primaryDisplay: user.email,
-          },
-        ],
+        user: [user].map(u => resultMapper(u)),
         _id: expect.any(String),
         _rev: expect.any(String),
         id: isInternal ? undefined : expect.any(Number),
         type: isInternal ? "row" : undefined,
+        [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user.id,
       })
     })
 
-    it("can save a row with a multiple BB reference field", async () => {
-      const selectedUsers = _.sampleSize(users, 2)
+    it("can save a row with a multiple relationship field", async () => {
+      const selectedUsers = _.sampleSize(m2mData, 2)
       const rowData = {
         ...basicRow(tableId),
         name: generator.name(),
@@ -1619,13 +1680,7 @@ describe.each([
         name: rowData.name,
         description: rowData.description,
         tableId,
-        users: selectedUsers.map(u => ({
-          _id: u._id,
-          email: u.email,
-          firstName: u.firstName,
-          lastName: u.lastName,
-          primaryDisplay: u.email,
-        })),
+        users: expect.arrayContaining(selectedUsers.map(u => resultMapper(u))),
         _id: expect.any(String),
         _rev: expect.any(String),
         id: isInternal ? undefined : expect.any(Number),
@@ -1633,7 +1688,7 @@ describe.each([
       })
     })
 
-    it("can retrieve rows with no populated BB references", async () => {
+    it("can retrieve rows with no populated relationships", async () => {
       const rowData = {
         ...basicRow(tableId),
         name: generator.name(),
@@ -1655,14 +1710,15 @@ describe.each([
       })
     })
 
-    it("can retrieve rows with populated BB references", async () => {
-      const [user1, user2] = _.sampleSize(users, 2)
+    it("can retrieve rows with populated relationships", async () => {
+      const user1 = _.sample(o2mData)!
+      const [user2, user3] = _.sampleSize(m2mData, 2)
 
       const rowData = {
         ...basicRow(tableId),
         name: generator.name(),
         description: generator.name(),
-        users: [user1, user2],
+        users: [user2, user3],
         user: [user1],
       }
       const row = await config.api.row.save(tableId, rowData)
@@ -1672,72 +1728,51 @@ describe.each([
         name: rowData.name,
         description: rowData.description,
         tableId,
-        user: [user1].map(u => ({
-          _id: u._id,
-          email: u.email,
-          firstName: u.firstName,
-          lastName: u.lastName,
-          primaryDisplay: u.email,
-        })),
-        users: [user1, user2].map(u => ({
-          _id: u._id,
-          email: u.email,
-          firstName: u.firstName,
-          lastName: u.lastName,
-          primaryDisplay: u.email,
-        })),
+        user: expect.arrayContaining([user1].map(u => resultMapper(u))),
+        users: expect.arrayContaining([user2, user3].map(u => resultMapper(u))),
         _id: row._id,
         _rev: expect.any(String),
         id: isInternal ? undefined : expect.any(Number),
+        [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user1.id,
         ...defaultRowFields,
       })
     })
 
     it("can update an existing populated row", async () => {
-      const [user1, user2, user3] = _.sampleSize(users, 3)
+      const user = _.sample(o2mData)!
+      const [users1, users2, users3] = _.sampleSize(m2mData, 3)
 
       const rowData = {
         ...basicRow(tableId),
         name: generator.name(),
         description: generator.name(),
-        users: [user1, user2],
+        users: [users1, users2],
       }
       const row = await config.api.row.save(tableId, rowData)
 
       const updatedRow = await config.api.row.save(tableId, {
         ...row,
-        user: [user3],
-        users: [user3, user2],
+        user: [user],
+        users: [users3, users1],
       })
       expect(updatedRow).toEqual({
         name: rowData.name,
         description: rowData.description,
         tableId,
-        user: [
-          {
-            _id: user3._id,
-            email: user3.email,
-            firstName: user3.firstName,
-            lastName: user3.lastName,
-            primaryDisplay: user3.email,
-          },
-        ],
-        users: [user3, user2].map(u => ({
-          _id: u._id,
-          email: u.email,
-          firstName: u.firstName,
-          lastName: u.lastName,
-          primaryDisplay: u.email,
-        })),
+        user: expect.arrayContaining([user].map(u => resultMapper(u))),
+        users: expect.arrayContaining(
+          [users3, users1].map(u => resultMapper(u))
+        ),
         _id: row._id,
         _rev: expect.any(String),
         id: isInternal ? undefined : expect.any(Number),
         type: isInternal ? "row" : undefined,
+        [`fk_${o2mTable.name}_fk_o2m`]: isInternal ? undefined : user.id,
       })
     })
 
-    it("can wipe an existing populated BB references in row", async () => {
-      const [user1, user2] = _.sampleSize(users, 2)
+    it("can wipe an existing populated relationships in row", async () => {
+      const [user1, user2] = _.sampleSize(m2mData, 2)
 
       const rowData = {
         ...basicRow(tableId),
@@ -1756,8 +1791,6 @@ describe.each([
         name: rowData.name,
         description: rowData.description,
         tableId,
-        user: isInternal ? null : undefined,
-        users: isInternal ? null : undefined,
         _id: row._id,
         _rev: expect.any(String),
         id: isInternal ? undefined : expect.any(Number),
@@ -1765,34 +1798,35 @@ describe.each([
       })
     })
 
-    it("fetch all will populate the BB references", async () => {
-      const [user1, user2, user3] = _.sampleSize(users, 3)
+    it("fetch all will populate the relationships", async () => {
+      const [user1] = _.sampleSize(o2mData, 1)
+      const [users1, users2, users3] = _.sampleSize(m2mData, 3)
 
       const rows: {
         name: string
         description: string
-        user?: User[]
-        users?: User[]
+        user?: Row[]
+        users?: Row[]
         tableId: string
       }[] = [
         {
           ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
-          users: [user1, user2],
+          users: [users1, users2],
         },
         {
           ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
           user: [user1],
-          users: [user1, user3],
+          users: [users1, users3],
         },
         {
           ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
-          users: [user3],
+          users: [users3],
         },
       ]
 
@@ -1808,57 +1842,50 @@ describe.each([
             name: r.name,
             description: r.description,
             tableId,
-            user: r.user?.map(u => ({
-              _id: u._id,
-              email: u.email,
-              firstName: u.firstName,
-              lastName: u.lastName,
-              primaryDisplay: u.email,
-            })),
-            users: r.users?.map(u => ({
-              _id: u._id,
-              email: u.email,
-              firstName: u.firstName,
-              lastName: u.lastName,
-              primaryDisplay: u.email,
-            })),
+            user: r.user?.map(u => resultMapper(u)),
+            users: r.users?.length
+              ? expect.arrayContaining(r.users?.map(u => resultMapper(u)))
+              : undefined,
             _id: expect.any(String),
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
+            [`fk_${o2mTable.name}_fk_o2m`]:
+              isInternal || !r.user?.length ? undefined : r.user[0].id,
             ...defaultRowFields,
           }))
         )
       )
     })
 
-    it("search all will populate the BB references", async () => {
-      const [user1, user2, user3] = _.sampleSize(users, 3)
+    it("search all will populate the relationships", async () => {
+      const [user1] = _.sampleSize(o2mData, 1)
+      const [users1, users2, users3] = _.sampleSize(m2mData, 3)
 
       const rows: {
         name: string
         description: string
-        user?: User[]
-        users?: User[]
+        user?: Row[]
+        users?: Row[]
         tableId: string
       }[] = [
         {
           ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
-          users: [user1, user2],
+          users: [users1, users2],
         },
         {
           ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
           user: [user1],
-          users: [user1, user3],
+          users: [users1, users3],
         },
         {
           ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
-          users: [user3],
+          users: [users3],
         },
       ]
 
@@ -1874,23 +1901,15 @@ describe.each([
             name: r.name,
             description: r.description,
             tableId,
-            user: r.user?.map(u => ({
-              _id: u._id,
-              email: u.email,
-              firstName: u.firstName,
-              lastName: u.lastName,
-              primaryDisplay: u.email,
-            })),
-            users: r.users?.map(u => ({
-              _id: u._id,
-              email: u.email,
-              firstName: u.firstName,
-              lastName: u.lastName,
-              primaryDisplay: u.email,
-            })),
+            user: r.user?.map(u => resultMapper(u)),
+            users: r.users?.length
+              ? expect.arrayContaining(r.users?.map(u => resultMapper(u)))
+              : undefined,
             _id: expect.any(String),
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
+            [`fk_${o2mTable.name}_fk_o2m`]:
+              isInternal || !r.user?.length ? undefined : r.user[0].id,
             ...defaultRowFields,
           }))
         ),
