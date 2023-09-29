@@ -6,7 +6,7 @@ export interface Query extends Document {
   parameters: QueryParameter[]
   fields: RestQueryFields | any
   transformer: string | null
-  schema: any
+  schema: Record<string, { name?: string; type: string }>
   readable: boolean
   queryVerb: string
 }
