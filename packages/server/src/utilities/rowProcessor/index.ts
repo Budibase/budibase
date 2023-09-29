@@ -250,6 +250,14 @@ export async function outputProcessing<T extends Row[] | Row>(
       enriched
     )) as Row[]
   }
+  // remove null properties to match internal API
+  for (let row of enriched) {
+    for (let key of Object.keys(row)) {
+      if (row[key] === null) {
+        delete row[key]
+      }
+    }
+  }
   return (wasArray ? enriched : enriched[0]) as T
 }
 
