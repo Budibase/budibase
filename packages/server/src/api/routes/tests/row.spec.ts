@@ -1793,7 +1793,8 @@ describe.each([
         tableId,
         _id: row._id,
         _rev: expect.any(String),
-        type: "row",
+        id: isInternal ? undefined : expect.any(Number),
+        type: isInternal ? "row" : undefined,
       })
     })
 
