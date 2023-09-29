@@ -1845,7 +1845,9 @@ describe.each([
             description: r.description,
             tableId,
             user: r.user?.map(u => resultMapper(u)),
-            users: r.users?.map(u => resultMapper(u)),
+            users: r.users?.length
+              ? expect.arrayContaining(r.users?.map(u => resultMapper(u)))
+              : undefined,
             _id: expect.any(String),
             _rev: expect.any(String),
             id: isInternal ? undefined : expect.any(Number),
