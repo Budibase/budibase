@@ -91,23 +91,19 @@
     return value === "false" || value === "true" || value == ""
   }
 
+  const validationMap = {
+    date: isValidDate,
+    datetime: isValidDate,
+    link: hasValidLinks,
+    array: hasValidOptions,
+    longform: value => !isJSBinding(value),
+    json: value => !isJSBinding(value),
+    boolean: isValidBoolean,
+  }
+
   const isValid = value => {
-    if (type?.startsWith("date")) {
-      return isValidDate(value)
-    }
-    if (type === "link") {
-      return hasValidLinks(value)
-    }
-    if (type === "array") {
-      return hasValidOptions(value)
-    }
-    if (type === "longform" || type === "json") {
-      return !isJSBinding(value)
-    }
-    if (type === "boolean") {
-      return isValidBoolean(value)
-    }
-    return true
+    const validate = validationMap[type]
+    return validate ? validate(value) : true
   }
 
   const getIconClass = (value, type) => {
