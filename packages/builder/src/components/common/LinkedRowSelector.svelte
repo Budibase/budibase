@@ -11,11 +11,11 @@
   const dispatch = createEventDispatcher()
 
   let rows = []
-  let linkedIds = (Array.isArray(linkedRows) ? linkedRows : [])?.map(
+  let linkedIds = []
+
+  $: linkedIds = (Array.isArray(linkedRows) ? linkedRows : [])?.map(
     row => row?._id || row
   )
-
-  $: linkedRows = linkedIds
   $: label = capitalise(schema.name)
   $: linkedTableId = schema.tableId
   $: linkedTable = $tables.list.find(table => table._id === linkedTableId)
