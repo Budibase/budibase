@@ -5621,6 +5621,21 @@
         "label": "High contrast",
         "key": "stripeRows",
         "defaultValue": false
+      },
+      {
+        "type": "event",
+        "label": "On row click",
+        "key": "onRowClick",
+        "context": [
+          {
+            "label": "Clicked row",
+            "key": "row"
+          }
+        ],
+        "dependsOn": {
+          "setting": "allowEditRows",
+          "value": false
+        }
       }
     ]
   },
