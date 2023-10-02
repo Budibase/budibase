@@ -70,20 +70,20 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: false
-          pull: true
+          push: true
+          # pull: true
           platforms: linux/amd64,linux/arm64
-          tags: budibase/budibase,budibase/budibase:${{ env.RELEASE_VERSION }}
+          tags: budibase/budibase-test:develop
           file: ./hosting/single/Dockerfile
-          cache-from: type=registry,ref=budibase/budibase:latest
+          cache-from: type=registry,ref=budibase/budibase-test:develop
           cache-to: type=inline
-      - name: Tag and release Budibase Azure App Service docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          pull: true
-          platforms: linux/amd64
-          build-args: TARGETBUILD=aas
-          tags: budibase/budibase-aas,budibase/budibase-aas:${{ env.RELEASE_VERSION }}
-          file: ./hosting/single/Dockerfile
+      # - name: Tag and release Budibase Azure App Service docker image
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: .
+      #     push: false
+      #     pull: true
+      #     platforms: linux/amd64
+      #     build-args: TARGETBUILD=aas
+      #     tags: budibase/budibase-aas,budibase/budibase-aas:${{ env.RELEASE_VERSION }}
+      #     file: ./hosting/single/Dockerfile
