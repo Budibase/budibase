@@ -172,6 +172,16 @@
             "target": "build"
           }
         ]
+      },
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/client"
+            ],
+            "target": "build"
+          }
+        ]
       }
     }
   }
