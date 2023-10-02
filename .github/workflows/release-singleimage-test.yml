@@ -73,9 +73,9 @@ jobs:
           push: true
           # pull: true
           platforms: linux/amd64,linux/arm64
-          tags: budibase/budibase:test
+          tags: budibase/budibase-test:test
           file: ./hosting/single/Dockerfile
-          cache-from: type=registry,ref=budibase/budibase:test
+          cache-from: type=registry,ref=budibase/budibase-test:test
           cache-to: type=inline
       # - name: Tag and release Budibase Azure App Service docker image
       #   uses: docker/build-push-action@v5
