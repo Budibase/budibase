@@ -25,7 +25,6 @@
         value: roleId,
       })
     }
-    devToolsStore.actions.changeRole(SELF_ROLE)
     return list
   }
 
