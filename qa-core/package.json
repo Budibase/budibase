@@ -38,7 +38,7 @@
     "ts-jest": "29.1.1",
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
-    "typescript": "4.7.3"
+    "typescript": "5.2.2"
   },
   "dependencies": {
     "@budibase/backend-core": "^2.3.17",

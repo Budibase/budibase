@@ -4,11 +4,32 @@ import {
   BuilderUser,
   SSOAuthDetails,
   SSOUser,
+  User,
 } from "@budibase/types"
-import { user } from "./shared"
 import { authDetails } from "./sso"
+import { uuid } from "./common"
+import { generator } from "./generator"
+import { tenant } from "."
 
-export { user, newEmail } from "./shared"
+export const newEmail = () => {
+  return `${uuid()}@test.com`
+}
+
+export const user = (userProps?: Partial<Omit<User, "userId">>): User => {
+  const userId = userProps?._id
+  return {
+    _id: userId,
+    userId,
+    email: newEmail(),
+    password: "test",
+    roles: { app_test: "admin" },
+    firstName: generator.first(),
+    lastName: generator.last(),
+    pictureUrl: "http://test.com",
+    tenantId: tenant.id(),
+    ...userProps,
+  }
+}
 
 export const adminUser = (userProps?: any): AdminUser => {
   return {
@@ -31,7 +52,7 @@ export const adminOnlyUser = (userProps?: any): AdminOnlyUser => {
   }
 }
 
-export const builderUser = (userProps?: any): BuilderUser => {
+export const builderUser = (userProps?: Partial<User>): BuilderUser => {
   return {
     ...user(userProps),
     builder: {
