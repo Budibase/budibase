@@ -30,7 +30,7 @@ COPY packages/worker/dist packages/server/dist
 RUN rm -rf scripts/
 
 
-FROM budibase/couchdb
+FROM budibase/couchdb as runner
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
