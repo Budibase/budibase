@@ -52,7 +52,7 @@ RUN apt install software-properties-common apt-transport-https gpg -y \
 
 # install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx
 WORKDIR /nodejs
-RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh && \
+RUN curl -sL https://deb.nodesource.com/setup_18.x -o /tmp/nodesource_setup.sh && \
   bash /tmp/nodesource_setup.sh && \
   apt-get install -y --no-install-recommends libaio1 nodejs && \
   npm install --global yarn pm2
