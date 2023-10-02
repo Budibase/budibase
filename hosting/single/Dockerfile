@@ -20,7 +20,8 @@ RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 
 # We will never want to sync pro, but the script is still required
 RUN echo '' > scripts/syncProPackage.js
-RUN yarn install --frozen-lockfile --production=true && yarn cache clean
+RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
+RUN yarn install --production && yarn cache clean
 
 # copy the actual code
 COPY packages/server/dist packages/server/dist
