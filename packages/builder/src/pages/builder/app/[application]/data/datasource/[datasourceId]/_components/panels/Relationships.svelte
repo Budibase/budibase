@@ -27,6 +27,7 @@
 
         const columnId =
           column.through ||
+          column._id ||
           (column.main
             ? `${tableId}_${column.fieldName}__${column.tableId}_${column.foreignKey}`
             : `${column.tableId}_${column.foreignKey}__${tableId}_${column.fieldName}`)
